@@ -68,11 +68,13 @@ COBALT requires Java 11+ and can be run with the minimum set of arguments as fol
 
 ```
 java -jar -Xmx8G cobalt.jar \
-    -reference COLO829R -reference_bam /run_dir/COLO829R.bam \ 
-    -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
-    -output_dir /run_dir/cobalt \ 
-    -threads 16 \ 
-    -gc_profile /path/to/GC_profile.1000bp.37.cnp
+    -reference SAMPLE_ID_R \
+    -reference_bam /sample_data/SAMPLE_ID_R.bam \ 
+    -tumor SAMPLE_ID \
+    -tumor_bam /sample_data/SAMPLE_ID.bam \ 
+    -output_dir /sample_data/ \ 
+    -threads 10 \ 
+    -gc_profile /ref_data/GC_profile.1000bp.37.cnp
 ```
 
 ## Mandatory Arguments

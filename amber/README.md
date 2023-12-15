@@ -61,12 +61,14 @@ AMBER supports both BAM and CRAM file formats.
 ### Example Usage
 
 ```
-java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
-   -reference COLO829R -reference_bam /run_dir/COLO829R.bam \ 
-   -tumor COLO829T -tumor_bam /run_dir/COLO829T.bam \ 
-   -output_dir /run_dir/amber/ \
-   -threads 16 \
-   -loci /path/to/GermlineHetPon.37.vcf.gz 
+java -jar amber.jar com.hartwig.hmftools.amber.AmberApplication \
+    -reference SAMPLE_ID_R \
+    -reference_bam /sample_data/SAMPLE_ID_R.bam \ 
+    -tumor SAMPLE_ID \
+    -tumor_bam /sample_data/SAMPLE_ID.bam \ 
+    -output_dir /sample_data/ \
+    -threads 10 \
+    -loci /path/to/GermlineHetPon.37.vcf.gz 
 ```
 
 ## Tumor Only Mode
