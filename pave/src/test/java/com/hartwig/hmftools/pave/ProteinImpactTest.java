@@ -75,7 +75,7 @@ public class ProteinImpactTest
         int codingEnd = codingStart + codingBases.length() - 1;
         int transEnd = codingEnd + prePostCoding;
 
-        mPosTrans =  createTransExons(
+        mPosTrans = createTransExons(
                 GENE_ID_1, TRANS_ID_1, POS_STRAND, new int[] {transStart}, transEnd - transStart,
                 codingStart, codingEnd, false, "");
 
