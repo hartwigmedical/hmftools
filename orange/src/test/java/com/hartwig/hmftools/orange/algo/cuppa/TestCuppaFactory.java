@@ -41,9 +41,9 @@ public final class TestCuppaFactory
     public static Cuppa2Data createMinimalCuppa2Data()
     {
         ProbabilityEntry minimalTopPrediction = ImmutableProbabilityEntry.builder().
-                clfName("dummy_clf_name").
+                classifierName("dummy_classifier_name").
                 cancerType("dummy_cancer_type_1").
-                dataValue(0.95).
+                probability(0.95).
                 rank(1).
                 rankGroup(0).
                 build();
@@ -51,11 +51,11 @@ public final class TestCuppaFactory
         List<ProbabilityEntry> minimalProbs = Arrays.asList(minimalTopPrediction);
 
         FeatureContributionEntry minimalFeatureContributionEntry = ImmutableFeatureContributionEntry.builder().
-                clfName("dummy_clf_name").
-                featName("dummy_feat_name").
-                featValue(0.0).
+                classifierName("dummy_classifier_name").
+                featureName("dummy_feat_name").
+                featureValue(0.0).
                 cancerType("dummy_cancer_type_1").
-                dataValue(0.0).
+                featureContribution(0.0).
                 rank(1).
                 rankGroup(1).
                 build();
@@ -63,10 +63,10 @@ public final class TestCuppaFactory
         List<FeatureContributionEntry> minimalFeatContribs = Arrays.asList(minimalFeatureContributionEntry);
 
         SignatureQuantileEntry minimalSignatureQuantileEntry = ImmutableSignatureQuantileEntry.builder().
-                featName("dummy_feat_name").
-                featValue(0.0).
+                signatureName("dummy_feat_name").
+                signatureCount(0.0).
                 cancerType("dummy_cancer_type_1").
-                dataValue(0.0).
+                signatureQuantile(0.0).
                 rank(1).
                 rankGroup(2).
                 build();
@@ -75,9 +75,9 @@ public final class TestCuppaFactory
 
         return ImmutableCuppa2Data.builder().
                 topPrediction(minimalTopPrediction).
-                probs(minimalProbs).
-                featContribs(minimalFeatContribs).
-                sigQuantiles(minimalSigQuantiles).
+                probabilities(minimalProbs).
+                featureContributions(minimalFeatContribs).
+                signatureQuantiles(minimalSigQuantiles).
                 build();
     }
 }

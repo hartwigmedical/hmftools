@@ -10,12 +10,18 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface FeatureContributionEntry
 {
-    String clfName();
-    String featName();
-    double featValue();
+    String classifierName();
+
+    String featureName();
+
+    double featureValue();
+
     String cancerType();
-    double dataValue();
+
+    double featureContribution();
+
     int rank();
+
     int rankGroup();
 }
 

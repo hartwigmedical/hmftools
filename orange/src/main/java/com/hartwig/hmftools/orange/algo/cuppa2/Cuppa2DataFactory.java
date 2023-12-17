@@ -20,9 +20,9 @@ public class Cuppa2DataFactory
     {
         return ImmutableCuppa2Data.builder()
                 .topPrediction(getTopPrediction(visData))
-                .probs(getProbabilities(visData))
-                .featContribs(getFeatureContributions(visData))
-                .sigQuantiles(getSignatureQuantiles(visData))
+                .probabilities(getProbabilities(visData))
+                .featureContributions(getFeatureContributions(visData))
+                .signatureQuantiles(getSignatureQuantiles(visData))
                 .build();
     }
 
@@ -38,9 +38,9 @@ public class Cuppa2DataFactory
                 .get(0);
 
         return ImmutableProbabilityEntry.builder()
-                .clfName(visDataEntry.ClfName.toString())
+                .classifierName(visDataEntry.ClfName.toString())
                 .cancerType(visDataEntry.CancerType)
-                .dataValue(visDataEntry.DataValue)
+                .probability(visDataEntry.DataValue)
                 .rank(visDataEntry.Rank)
                 .rankGroup(visDataEntry.RankGroup)
                 .build();
@@ -55,9 +55,9 @@ public class Cuppa2DataFactory
         for(CuppaVisDataEntry visDataEntry : probs.VisDataEntries)
         {
             ImmutableProbabilityEntry probabilityEntry = ImmutableProbabilityEntry.builder()
-                    .clfName(visDataEntry.ClfName.toString())
+                    .classifierName(visDataEntry.ClfName.toString())
                     .cancerType(visDataEntry.CancerType)
-                    .dataValue(visDataEntry.DataValue)
+                    .probability(visDataEntry.DataValue)
                     .rank(visDataEntry.Rank)
                     .rankGroup(visDataEntry.RankGroup)
                     .build();
@@ -75,11 +75,11 @@ public class Cuppa2DataFactory
         for(CuppaVisDataEntry visDataEntry : contribs.VisDataEntries)
         {
             ImmutableFeatureContributionEntry contribsEntry = ImmutableFeatureContributionEntry.builder()
-                    .clfName(visDataEntry.ClfName.toString())
-                    .featName(visDataEntry.FeatName)
-                    .featValue(visDataEntry.FeatValue)
+                    .classifierName(visDataEntry.ClfName.toString())
+                    .featureName(visDataEntry.FeatName)
+                    .featureValue(visDataEntry.FeatValue)
                     .cancerType(visDataEntry.CancerType)
-                    .dataValue(visDataEntry.DataValue)
+                    .featureContribution(visDataEntry.DataValue)
                     .rank(visDataEntry.Rank)
                     .rankGroup(visDataEntry.RankGroup)
                     .build();
@@ -98,10 +98,10 @@ public class Cuppa2DataFactory
         for(CuppaVisDataEntry visDataEntry : sigQuantiles.VisDataEntries)
         {
             ImmutableSignatureQuantileEntry sigQuantilesEntry = ImmutableSignatureQuantileEntry.builder()
-                    .featName(visDataEntry.FeatName)
-                    .featValue(visDataEntry.FeatValue)
+                    .signatureName(visDataEntry.FeatName)
+                    .signatureCount(visDataEntry.FeatValue)
                     .cancerType(visDataEntry.CancerType)
-                    .dataValue(visDataEntry.DataValue)
+                    .signatureQuantile(visDataEntry.DataValue)
                     .rank(visDataEntry.Rank)
                     .rankGroup(visDataEntry.RankGroup)
                     .build();

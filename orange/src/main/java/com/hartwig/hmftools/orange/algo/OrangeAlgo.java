@@ -587,7 +587,7 @@ public class OrangeAlgo
         LOGGER.info(
                 " Predicted cancer type '{}' with likelihood {}",
                 cuppa2Data.topPrediction().cancerType(),
-                cuppa2Data.topPrediction().dataValue()
+                cuppa2Data.topPrediction().probability()
         );
 
         return cuppa2Data;

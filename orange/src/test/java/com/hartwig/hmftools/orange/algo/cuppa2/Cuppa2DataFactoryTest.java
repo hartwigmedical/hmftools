@@ -53,8 +53,8 @@ public class Cuppa2DataFactoryTest
     {
         ImmutableCuppa2Data data = Cuppa2DataFactory.create(cuppaPredictions);
         assert data.topPrediction().cancerType().equals("Breast: Triple negative");
-        assert data.probs().size()==320;
-        assert data.featContribs().size()==640;
-        assert data.sigQuantiles().size()==200;
+        assert data.probabilities().size()==320;
+        assert data.featureContributions().size()==640;
+        assert data.signatureQuantiles().size()==200;
     }
 }

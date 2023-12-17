@@ -10,11 +10,16 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface SignatureQuantileEntry
 {
-    String featName();
-    double featValue();
+    String signatureName();
+
+    double signatureCount();
+
     String cancerType();
-    double dataValue();
+
+    double signatureQuantile();
+
     int rank();
+
     int rankGroup();
 }
 

@@ -10,10 +10,14 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface ProbabilityEntry
 {
-    String clfName();
+    String classifierName();
+
     String cancerType();
-    double dataValue();
+
+    double probability();
+
     int rank();
+
     int rankGroup();
 }
 

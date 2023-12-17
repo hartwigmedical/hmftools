@@ -16,11 +16,11 @@ public interface Cuppa2Data
     ProbabilityEntry topPrediction();
 
     @NotNull
-    List<ProbabilityEntry> probs();
+    List<ProbabilityEntry> probabilities();
 
     @NotNull
-    List<FeatureContributionEntry> featContribs();
+    List<FeatureContributionEntry> featureContributions();
 
     @NotNull
-    List<SignatureQuantileEntry> sigQuantiles();
+    List<SignatureQuantileEntry> signatureQuantiles();
 }
