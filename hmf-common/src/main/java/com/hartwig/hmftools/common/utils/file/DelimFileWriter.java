@@ -10,8 +10,10 @@ import java.io.Writer;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -19,16 +21,33 @@ import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.util.BiConsumer;
 
-
 /**
+ * Write delimited files such as CSV / TSV.
+ *
  * Example usage:
- *    new DelimFileWriter().write(fileName, List.of(CHROMOSOME, MEDIAN_RATIO, COUNT), ratios,
- *           (medianRatio, row) -> {
- *               row.set(CHROMOSOME, medianRatio.chromosome());
- *               row.set(MEDIAN_RATIO, medianRatio.medianRatio(), FORMAT);
- *               row.set(COUNT, medianRatio.count()); });
+ *
+ *    try(DelimFileWriter<Ratio> writer = new DelimFileWriter<>(fileName, List.of(CHROMOSOME, MEDIAN_RATIO, COUNT),
+ *           (ratio, row) -> {
+ *               row.set(CHROMOSOME, ratio.chromosome());
+ *               row.set(MEDIAN_RATIO, ratio.medianRatio(), FORMAT);
+ *               row.set(COUNT, ratio.count()); })
+ *    {
+ *        writer.setDelimiter(",");
+ *        for(Data d : dataList)
+ *        {
+ *            writer.writeRow(d);
+ *        }
+ *    }
+ *
+ *  There is also a convenience overload to write a file from a collection / iterable of objects:
+ *
+ *    DelimFileWriter.write(fileName, List.of(CHROMOSOME, MEDIAN_RATIO, COUNT), ratios,
+ *           (ratio, row) -> {
+ *               row.set(CHROMOSOME, ratio.chromosome());
+ *               row.set(MEDIAN_RATIO, ratio.medianRatio(), FORMAT);
+ *               row.set(COUNT, ratio.count()); });
  */
-public class DelimFileWriter
+public class DelimFileWriter<T> implements AutoCloseable
 {
     // by default, use 4 decimal places for doubles
     private static final NumberFormat sDefaultNumberFormat = new DecimalFormat("#.####", new DecimalFormatSymbols(Locale.ENGLISH));
@@ -36,18 +55,100 @@ public class DelimFileWriter
 
     String mDelim = TSV_DELIM;
 
-    public DelimFileWriter()
+    final Writer mWriter;
+
+    final List<String> mColumns;
+
+    final BiConsumer<T, Row> mRowEncoder;
+
+    Map<String, Integer> mColumnIndexMap = null;
+
+    public DelimFileWriter(String filename, Iterable<String> columns, BiConsumer<T, Row> rowEncoder)
     {
+        this(createBufferedWriterUnchecked(filename), columns, rowEncoder);
+    }
+
+    public DelimFileWriter(Writer writer, Iterable<String> columns, BiConsumer<T, Row> rowEncoder)
+    {
+        mWriter = writer;
+        mColumns = new ArrayList<>();
+        columns.forEach(mColumns::add);
+        mRowEncoder = rowEncoder;
+    }
+
+    public DelimFileWriter(String filename, Enum<?>[] columns, BiConsumer<T, Row> rowEncoder)
+    {
+        this(filename, Arrays.stream(columns).map(Enum::name).collect(Collectors.toList()), rowEncoder);
+    }
+
+    public DelimFileWriter(Writer writer, Enum<?>[] columns, BiConsumer<T, Row> rowEncoder)
+    {
+        this(writer, Arrays.stream(columns).map(Enum::name).collect(Collectors.toList()), rowEncoder);
     }
 
     public void setDelimiter(String delimiter)
     {
+        if(mColumnIndexMap != null)
+        {
+            throw new IllegalStateException("cannot change delimiter after writing started");
+        }
         mDelim = delimiter;
     }
 
+    public void writeRow(T obj)
+    {
+        try
+        {
+            if(mColumnIndexMap == null)
+            {
+                // create a map of indices
+                mColumnIndexMap = new HashMap<>();
+                int i = 0;
+                for(String c : mColumns)
+                {
+                    if(mColumnIndexMap.putIfAbsent(c, i++) != null)
+                    {
+                        throw new RuntimeException("duplicate column: " + c);
+                    }
+                }
+
+                mWriter.write(String.join(mDelim, mColumns));
+                mWriter.write('\n');
+            }
+
+            Row row = new Row(mColumnIndexMap, mColumns.size());
+            mRowEncoder.accept(obj, row);
+            StringJoiner joiner = new StringJoiner(mDelim);
+            for(String e : row.mValues)
+            {
+                joiner.add(e != null ? e : sNullIndicator);
+            }
+            mWriter.write(joiner.toString());
+            mWriter.write('\n');
+        }
+        catch(IOException e)
+        {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    @Override
+    public void close()
+    {
+        try
+        {
+            mWriter.close();
+        }
+        catch(IOException e)
+        {
+            throw new UncheckedIOException(e);
+        }
+    }
+
     /**
+     * Overload for convenience
      * Example usage:
-     *    new DelimFileWriter().write(fileName, List.of(CHROMOSOME, MEDIAN_RATIO, COUNT), ratios,
+     *    DelimFileWriter.write(fileName, List.of(CHROMOSOME, MEDIAN_RATIO, COUNT), ratios,
      *           (medianRatio, row) -> {
      *               row.set(CHROMOSOME, medianRatio.chromosome());
      *               row.set(MEDIAN_RATIO, medianRatio.medianRatio(), FORMAT);
@@ -56,13 +157,13 @@ public class DelimFileWriter
      * @param filename   path to the file.
      * @param columns    column names of the file.
      * @param objects    iterable of objects to serialised.
-     * @param mapper     function to populate a Row given an object of type T.
+     * @param rowEncoder function to populate a Row given an object of type T.
      */
-    public <T> void write(String filename, Iterable<String> columns, Iterable<T> objects, BiConsumer<T, Row> mapper)
+    public static <T> void write(String filename, Iterable<String> columns, Iterable<T> objects, BiConsumer<T, Row> rowEncoder)
     {
         try(BufferedWriter writer = createBufferedWriter(filename))
         {
-            write(writer, columns, objects, mapper);
+            write(writer, columns, objects, rowEncoder);
         }
         catch (IOException e)
         {
@@ -71,58 +172,33 @@ public class DelimFileWriter
     }
 
     /**
-     * Write to the input buffered writer.
-     * @param writer     buffedWriter
+     * Overload for convenience.
+     * Write to the input writer.
+     * @param writer     writer
      * @param columns    column names of the file.
      * @param objects    iterable of objects to serialised.
-     * @param mapper     function to populate a Row given an object of type T.
+     * @param rowEncoder     function to populate a Row given an object of type T.
      */
-    public <T> void write(Writer writer, Iterable<String> columns, Iterable<T> objects, BiConsumer<T, Row> mapper)
+    public static <T> void write(Writer writer, Iterable<String> columns, Iterable<T> objects, BiConsumer<T, Row> rowEncoder)
     {
-        try
+        try(DelimFileWriter<T> delimFileWriter = new DelimFileWriter<>(writer, columns, rowEncoder))
         {
-            // create a map of indices
-            Map<String, Integer> columnIndexMap = new HashMap<>();
-            int i = 0;
-            for (String c : columns)
+            for(T obj : objects)
             {
-                if (columnIndexMap.putIfAbsent(c, i++) != null)
-                {
-                    throw new RuntimeException("duplicate column: " + c);
-                }
+                delimFileWriter.writeRow(obj);
             }
-
-            writer.write(String.join(mDelim, columns));
-            writer.write('\n');
-
-            for (T obj : objects)
-            {
-                Row row = new Row(columnIndexMap, i); // i is the number of columns
-                mapper.accept(obj, row);
-                StringJoiner joiner = new StringJoiner(mDelim);
-                for(String e : row.mValues)
-                {
-                    joiner.add(e != null ? e : sNullIndicator);
-                }
-                writer.write(joiner.toString());
-                writer.write('\n');
-            }
-        }
-        catch (IOException e)
-        {
-            throw new UncheckedIOException(e);
         }
     }
 
     // overload that allows using enum as columns
-    public <T> void write(String filename, Enum<?>[] columns, Iterable<T> objects, BiConsumer<T, Row> mapper)
+    public static <T> void write(String filename, Enum<?>[] columns, Iterable<T> objects, BiConsumer<T, Row> rowEncoder)
     {
-        write(filename, Arrays.stream(columns).map(Enum::name).collect(Collectors.toList()), objects, mapper);
+        write(filename, Arrays.stream(columns).map(Enum::name).collect(Collectors.toList()), objects, rowEncoder);
     }
 
-    public <T> void write(Writer writer, Enum<?>[] columns, Iterable<T> objects, BiConsumer<T, Row> mapper)
+    public static <T> void write(Writer writer, Enum<?>[] columns, Iterable<T> objects, BiConsumer<T, Row> rowEncoder)
     {
-        write(writer, Arrays.stream(columns).map(Enum::name).collect(Collectors.toList()), objects, mapper);
+        write(writer, Arrays.stream(columns).map(Enum::name).collect(Collectors.toList()), objects, rowEncoder);
     }
 
     public static class Row
@@ -135,91 +211,55 @@ public class DelimFileWriter
             mColumnIndexMap = columnIndexMap;
             mValues = new String[numColumns];
         }
-        public void set(String column, String value)
+        public void set(String key, String value)
         {
-            Integer columnIndex = mColumnIndexMap.get(column);
+            Integer columnIndex = mColumnIndexMap.get(key);
             if (columnIndex == null)
             {
-                throw new IllegalArgumentException("invalid column: " + column);
+                throw new IllegalArgumentException("invalid column: " + key);
             }
             mValues[columnIndex] = value;
         }
-        public void set(String column, int value)
-        {
-            set(column, Integer.toString(value));
-        }
-
-        // we store null as empty string
-        public void setNull(String column)
-        {
-            set(column, sNullIndicator);
-        }
+        public void set(String key, int value) { set(key, Integer.toString(value)); }
 
         // store bool as 1 and 0
-        public void set(String column, boolean value)
-        {
-            set(column, value ? 1 : 0);
-        }
+        public void set(String key, boolean value) { set(key, value ? 1 : 0); }
 
-        public void set(String column, char value)
-        {
-            set(column, String.valueOf(value));
-        }
+        public void set(String key, char value) { set(key, String.valueOf(value)); }
 
-        public void set(String column, byte value)
-        {
-            set(column, Byte.toString(value));
-        }
+        public void set(String key, byte value) { set(key, Byte.toString(value)); }
 
-        public void set(String column, double value)
-        {
-            set(column, value, sDefaultNumberFormat);
-        }
+        public void set(String key, double value) { set(key, value, sDefaultNumberFormat); }
 
-        // row.set("rate", 0.27562, "%.3f");
-        public void set(String column, double value, String format)
-        {
-            set(column, String.format(format, value));
-        }
+        //
+        //  record.set("rate", 0.27562, "%.3f");
+        //
+        public void set(String key, double value, String format) { set(key, String.format(format, value)); }
 
-        // row.set("rate", 0.27572, new DecimalFormat("#.####", new DecimalFormatSymbols(Locale.ENGLISH)));
-        public void set(String column, double value, NumberFormat format)
-        {
-            set(column, format.format(value));
-        }
+        // record.set("rate", 0.27572, new DecimalFormat("#.####", new DecimalFormatSymbols(Locale.ENGLISH)));
+        public void set(String key, double value, NumberFormat format) { set(key, format.format(value)); }
 
-        // overloads to allow using enum as column
-        public void set(Enum<?> column, String value)
+        // overloads to allow using enum as key
+        public void set(Enum<?> key, String value) { set(key.name(), value); }
+        public void set(Enum<?> key, int value) { set(key.name(), value); }
+        public void set(Enum<?> key, boolean value) { set(key.name(), value); }
+        public void set(Enum<?> key, char value) { set(key.name(), value); }
+        public void set(Enum<?> key, byte value) { set(key.name(), value); }
+        public void set(Enum<?> key, double value) { set(key.name(), value); }
+        public void set(Enum<?> key, double value, String format) { set(key.name(), value, format); }
+        public void set(Enum<?> key, double value, NumberFormat format) { set(key.name(), value, format); }
+    }
+
+    // convert to unchecked IO exception to allow usage in streams
+    private static BufferedWriter createBufferedWriterUnchecked(String filename)
+    {
+        try
         {
-            set(column.name(), value);
+            return createBufferedWriter(filename);
         }
-        public void set(Enum<?> column, int value)
+        catch(IOException e)
         {
-            set(column.name(), value);
-        }
-        public void set(Enum<?> column, boolean value)
-        {
-            set(column.name(), value);
-        }
-        public void set(Enum<?> column, char value)
-        {
-            set(column.name(), value);
-        }
-        public void set(Enum<?> column, byte value)
-        {
-            set(column.name(), value);
-        }
-        public void set(Enum<?> column, double value)
-        {
-            set(column.name(), value);
-        }
-        public void set(Enum<?> column, double value, String format)
-        {
-            set(column.name(), value, format);
-        }
-        public void set(Enum<?> column, double value, NumberFormat format)
-        {
-            set(column.name(), value, format);
+            throw new UncheckedIOException(e);
         }
     }
 }
