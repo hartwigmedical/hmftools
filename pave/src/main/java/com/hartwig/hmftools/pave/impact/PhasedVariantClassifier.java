@@ -17,6 +17,8 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_IN
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_MISSENSE;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_SYNONYMOUS;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_ACCEPTOR;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_DONOR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
@@ -26,6 +28,7 @@ import static com.hartwig.hmftools.pave.impact.ProteinUtils.trimAminoAcids;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -430,8 +433,7 @@ public class PhasedVariantClassifier
         {
             if(ssEffect == STOP_LOST || ssEffect == START_LOST)
             {
-                combinedEffects.remove(MISSENSE); // superceded if present so remove
-                combinedEffects.remove(FRAMESHIFT); // superceded if present so remove
+                combinedEffects.remove(PHASED_MISSENSE); // superceded if present so remove
             }
 
             combinedEffects.add(ssEffect);
@@ -439,14 +441,6 @@ public class PhasedVariantClassifier
 
         combinedPc.IsPhased = true;
         combinedPc.Hgvs = HgvsProtein.generate(combinedPc, combinedEffects);
-
-        // now convert missense / synonymous to phased inframe so it's clearer what has happened
-        if(combinedEffects.contains(SYNONYMOUS) || combinedEffects.contains(MISSENSE))
-        {
-            combinedEffects.remove(MISSENSE);
-            combinedEffects.remove(SYNONYMOUS);
-            combinedEffects.add(indelBaseTotal > 0 ? PHASED_INFRAME_INSERTION : PHASED_INFRAME_DELETION);
-        }
 
         for(int i = 0; i < transImpacts.size(); ++i)
         {
@@ -466,8 +460,13 @@ public class PhasedVariantClassifier
 
             transImpact.codingContext().IsFrameShift = false;
 
+            // check for any splice variants and if found maintain this effect
+            List<VariantEffect> spliceEffects = transImpact.effects().stream()
+                    .filter(x -> x == SPLICE_ACCEPTOR || x == SPLICE_DONOR).collect(Collectors.toList());
+
             transImpact.effects().clear();
             combinedEffects.forEach(x -> transImpact.addEffect(x));
+            spliceEffects.forEach(x -> transImpact.addEffect(x));
         }
     }
 
