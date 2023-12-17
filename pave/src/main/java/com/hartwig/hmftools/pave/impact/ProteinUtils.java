@@ -208,7 +208,7 @@ public final class ProteinUtils
         // extend the range of up and downstream codons for INDELs to help determine the net differences in amino acids
         extendIndelCodonBases(variant, cc, pc, transData, exon, refGenome, downstreamAltOpenCodonBases);
 
-        trimAminoAcids(variant, cc, pc);
+        trimAminoAcids(variant, pc);
 
         // check for a duplication of AAs
         checkInsertDuplication(variant, cc, pc, transData, exon, refGenome);
@@ -216,7 +216,8 @@ public final class ProteinUtils
         return pc;
     }
 
-    public static void extendIndelCodonBases(final VariantData variant, final CodingContext cc, final ProteinContext pc,
+    public static void extendIndelCodonBases(
+            final VariantData variant, final CodingContext cc, final ProteinContext pc,
             final TranscriptData transData, final ExonData exon, final RefGenomeInterface refGenome, int downstreamAltOpenCodonBases)
     {
         if(!variant.isIndel())
@@ -319,8 +320,7 @@ public final class ProteinUtils
         }
     }
 
-    private static void trimAminoAcids(
-            final VariantData variant, final CodingContext codingContext, final ProteinContext proteinContext)
+    private static void trimAminoAcids(final VariantData variant, final ProteinContext proteinContext)
     {
         // trim matching amino acids from the start and end to align any differences to the most 3'UTR end in protein space
         if(proteinContext.RefAminoAcids.equals(proteinContext.AltAminoAcids))
@@ -330,13 +330,11 @@ public final class ProteinUtils
         // MNVs: strip off any synonymous AAs from either end
         // DEL: strip off the initial AA if it doesn't overlap a deleted base
         // INS:
-        boolean canTrimStart = variant.isBaseChange()
-                || variant.isDeletion()
-                || variant.isInsert(); //  && !proteinContext.ExtraUpstreamCodon);
+        boolean canTrimStart = variant.isBaseChange() || variant.isDeletion() || variant.isInsert();
 
-        boolean repeatStartRemoval = canTrimStart && variant.isIndel(); // (codingContext.IsFrameShift || variant.isDeletion());
+        boolean repeatStartRemoval = canTrimStart && variant.isIndel();
 
-        boolean repeatEndRemoval = variant.isInsert(); // && codingContext.IsFrameShift;
+        boolean repeatEndRemoval = variant.isInsert();
 
         trimAminoAcids(proteinContext, canTrimStart, repeatStartRemoval, repeatEndRemoval);
     }

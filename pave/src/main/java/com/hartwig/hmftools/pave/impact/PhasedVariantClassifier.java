@@ -195,11 +195,11 @@ public class PhasedVariantClassifier
 
             boolean overlapsOnStart = false;
 
-            ImpactedRefCodingData transRefCodingData = getImpactedRefCodingData(refCodingImpacts, transImpact);
+            ImpactedRefCodingData transRefCodingData = getImpactedRefCodingData(refCodingImpacts, variant, transImpact);
 
             if(prevTransImpact != null && prevTransImpact.hasCodingBases())
             {
-                ImpactedRefCodingData prevRefCodingData = getImpactedRefCodingData(refCodingImpacts, prevTransImpact);
+                ImpactedRefCodingData prevRefCodingData = getImpactedRefCodingData(refCodingImpacts, variants.get(i - 1), prevTransImpact);
                 overlapsOnStart = prevRefCodingData.PosEnd >= transRefCodingData.PosStart;
             }
 
@@ -211,7 +211,7 @@ public class PhasedVariantClassifier
                 nextTransImpact = i < transImpacts.size() - 1 ? transImpacts.get(i + 1) : null;
                 if(nextTransImpact != null && nextTransImpact.hasCodingBases())
                 {
-                    ImpactedRefCodingData nextRefCodingData = getImpactedRefCodingData(refCodingImpacts, nextTransImpact);
+                    ImpactedRefCodingData nextRefCodingData = getImpactedRefCodingData(refCodingImpacts, variants.get(i + 1), nextTransImpact);
                     overlapsOnEnd = transRefCodingData.PosEnd >= nextRefCodingData.PosStart;
                 }
             }
@@ -268,7 +268,7 @@ public class PhasedVariantClassifier
 
             // a distinction is made between the recorded ref codon bases and those actually involved in / impact by the variant
             // for the purposes of checking for an overlap, the impacted bases are compared
-            ImpactedRefCodingData transRefCodingData = getImpactedRefCodingData(refCodingImpacts, transImpact);
+            ImpactedRefCodingData transRefCodingData = getImpactedRefCodingData(refCodingImpacts, variant, transImpact);
             int impactedRefCodonStart = transRefCodingData.PosStart;
             int impactedRefCodonEnd = transRefCodingData.PosEnd;
             int refCodonStart = transImpact.proteinContext().refCodingBaseStart();
@@ -280,7 +280,7 @@ public class PhasedVariantClassifier
 
             if(nextTransImpact != null && nextTransImpact.hasCodingBases())
             {
-                ImpactedRefCodingData nextRefCodingData = getImpactedRefCodingData(refCodingImpacts, nextTransImpact);
+                ImpactedRefCodingData nextRefCodingData = getImpactedRefCodingData(refCodingImpacts, variants.get(i + 1), nextTransImpact);
                 nextImpactedRefCodonStart = nextRefCodingData.PosStart;
             }
 
@@ -346,6 +346,7 @@ public class PhasedVariantClassifier
             }
             else
             {
+                /*
                 // fill in any missing gaps in the codons
                 if(lastRefCodonEnd > 0 && refCodonStart > lastRefCodonEnd + 1)
                 {
@@ -356,6 +357,26 @@ public class PhasedVariantClassifier
 
                 combinedRefCodons += transImpact.proteinContext().RefCodonBases;
                 combinedAltCodons += transImpact.proteinContext().AltCodonBases;
+                */
+                if(lastRefCodonEnd == 0 )
+                {
+                    combinedRefCodons += transImpact.proteinContext().RefCodonBases;
+                    combinedAltCodons += transImpact.proteinContext().AltCodonBases;
+                }
+                else if(refCodonStart > lastRefCodonEnd + 1)
+                {
+                    // fill in any missing gaps in the codons
+                    String gapCodonBases = refGenome.getBaseString(chromosome, lastRefCodonEnd + 1, refCodonStart - 1);
+                    combinedRefCodons += gapCodonBases;
+                    combinedAltCodons += gapCodonBases;
+                    combinedRefCodons += transImpact.proteinContext().RefCodonBases;
+                    combinedAltCodons += transImpact.proteinContext().AltCodonBases;
+                }
+                else
+                {
+                    combinedRefCodons += transImpact.proteinContext().RefCodonBases.substring(lastRefCodonEnd - refCodonStart + 1);
+                    combinedAltCodons += transImpact.proteinContext().AltCodonBases.substring(lastRefCodonEnd - refCodonStart + 1);
+                }
             }
 
             lastRefCodonEnd = max(refCodonEnd, lastRefCodonEnd);
@@ -465,20 +486,20 @@ public class PhasedVariantClassifier
     }
 
     private ImpactedRefCodingData getImpactedRefCodingData(
-            final Map<VariantTransImpact,ImpactedRefCodingData> impactMap, final VariantTransImpact transImpact)
+            final Map<VariantTransImpact,ImpactedRefCodingData> impactMap, final VariantData variant, final VariantTransImpact transImpact)
     {
         ImpactedRefCodingData impactData = impactMap.get(transImpact);
 
         if(impactData == null)
         {
-            impactData = impactedRefCodingBasePosition(transImpact);
+            impactData = impactedRefCodingBasePosition(variant, transImpact);
             impactMap.put(transImpact, impactData);
         }
 
         return impactData;
     }
 
-    private ImpactedRefCodingData impactedRefCodingBasePosition(final VariantTransImpact transImpact)
+    private ImpactedRefCodingData impactedRefCodingBasePosition(final VariantData variant, final VariantTransImpact transImpact)
     {
         boolean inframeIndel = transImpact.hasEffect(INFRAME_DELETION) || transImpact.hasEffect(INFRAME_INSERTION);
         final ProteinContext pc = transImpact.proteinContext();
@@ -491,9 +512,8 @@ public class PhasedVariantClassifier
             return new ImpactedRefCodingData(refCodingBaseStart, refCodingBaseEnd);
         }
 
-        // special case for inframe INDELs which have included a full ref codon at the start and/or at end to aid with AA evaluation
-        int netCodonImpact = pc.NetCodonIndexRange[SE_END] - pc.NetCodonIndexRange[SE_START] + 1;
         int refCodonLengthDiff = abs(pc.RefCodonBases.length() - pc.AltCodonBases.length());
+        int netCodonImpact = pc.NetCodonIndexRange[SE_END] - pc.NetCodonIndexRange[SE_START] + 1;
 
         if(netCodonImpact > 0 && refCodonLengthDiff == netCodonImpact * CODON_LENGTH)
         {
@@ -515,4 +535,43 @@ public class PhasedVariantClassifier
         // no extension was required so use the standard positions
         return new ImpactedRefCodingData(refCodingBaseStart, refCodingBaseEnd);
     }
+
+    /*
+    private ImpactedRefCodingData impactedRefCodingBasePositionNew(final VariantData variant, final VariantTransImpact transImpact)
+    {
+        final ProteinContext pc = transImpact.proteinContext();
+
+        int refCodingBaseStart = pc.refCodingBasePosition(SE_START);
+        int refCodingBaseEnd = pc.refCodingBasePosition(SE_END);
+
+        if(!variant.isIndel())
+        {
+            return new ImpactedRefCodingData(refCodingBaseStart, refCodingBaseEnd);
+        }
+
+        // trim down the ref codon bases to only the codons affected by the variant, getting rid of extra ref bases that were added
+        // to build up amino acid impacts
+        int netCodonImpact = variant.isInsert() ? 1 : pc.NetCodonIndexRange[SE_END] - pc.NetCodonIndexRange[SE_START] + 1;
+
+        if(netCodonImpact * CODON_LENGTH < pc.RefCodonBases.length())
+        {
+            int netRefAminoAcidLength = variant.isInsert() ? 1 : pc.NetRefAminoAcids.length();
+            int netVsFullBaseDiff = (pc.RefAminoAcids.length() - netRefAminoAcidLength) * CODON_LENGTH;
+
+            if(pc.CodonIndex < pc.NetCodonIndexRange[SE_START])
+            {
+                refCodingBaseStart += CODON_LENGTH;
+                netVsFullBaseDiff -= CODON_LENGTH;
+            }
+
+            if(netVsFullBaseDiff > 0)
+            {
+                refCodingBaseStart -= netVsFullBaseDiff;
+            }
+        }
+
+        // no extension was required so use the standard positions
+        return new ImpactedRefCodingData(refCodingBaseStart, refCodingBaseEnd);
+    }
+    */
 }

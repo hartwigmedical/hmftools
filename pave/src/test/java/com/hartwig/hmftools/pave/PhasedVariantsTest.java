@@ -576,11 +576,11 @@ public class PhasedVariantsTest
     public void testMixedOverlaps2()
     {
         TranscriptData transData = createTransExons(
-                GENE_ID_1, TRANS_ID_1, NEG_STRAND, new int[] { 0, 100 }, 80, 5, 191, false, "");
+                GENE_ID_1, TRANS_ID_1, NEG_STRAND, new int[] { 0 }, 80, 5, 70, false, "");
 
         // positions:      0123456789012345678901234567890123456789012345678901234567
         //                 0         10        20        30        40        50
-        String refBases = "XCCCCATGAAAAAAAAAACCCCCCCCCCGGGGGGGAAGCTGATGTTCAGGAGTG" + generateRandomBases(150);
+        String refBases = "XCCCCATGAAAAAAAAAACCCCCCCCCCGGGGGGGAAGCTGATGTTCAGGAGTG" + generateRandomBases(40);
         mRefGenome.RefGenomeMap.put(CHR_1, refBases);
 
         // pos(12:50384540-50384542) variant(GA>G)"
@@ -620,9 +620,9 @@ public class PhasedVariantsTest
 
         mClassifier.processPhasedVariants(NO_LOCAL_PHASE_SET);
 
-        assertEquals("CTGATGTTCTTCAGG", impact4.proteinContext().RefCodonBases);
-        assertEquals("CTGTCTTCTCAAGACTTCAGCTTG", impact4.proteinContext().AltCodonBases);
-        assertEquals("p.Pro38_His41delinsGlnAlaGluValLeuArgArg", impact4.hgvsProtein());
+        assertEquals("CTGATGTTCAGG", impact4.proteinContext().RefCodonBases);
+        assertEquals("CTGTCTTCTCAAGACAGCTTG", impact4.proteinContext().AltCodonBases);
+        assertEquals("p.Pro8_His10delinsGlnAlaValLeuArgArg", impact4.hgvsProtein());
 
         assertFalse(impact3.codingContext().IsFrameShift);
         assertFalse(impact3.hasEffect(FRAMESHIFT));

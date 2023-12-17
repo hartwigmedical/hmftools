@@ -26,7 +26,7 @@ public class ProteinContext
 
     // strips off any ref codon present in both
     public boolean ExtraUpstreamCodon;
-    public int[] NetCodonIndexRange;
+    public int[] NetCodonIndexRange; // range of net red amino acids in codon-index terms
     public String NetRefAminoAcids;
     public String NetAltAminoAcids;
     public boolean IsDuplication;
