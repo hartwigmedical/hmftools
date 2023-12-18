@@ -288,7 +288,18 @@ public final class HgvsCoding
         // 	n.210-64739_210-64734dupGTGTGT
 
         int codingBase = codingContext.CodingBase;
+
+        if(codingContext.RegionType == EXONIC && codingContext.Strand == POS_STRAND)
+        {
+            // move forward to the start of the duplicated section
+            // Neg strand doesn't need this adjustment because it's coding base is on the upper side of the INDEL
+            ++codingBase;
+        }
+
+        // intronic bases with a +ve nearest exon need to be similarly shifted +1 to the start of the duplication
         int nearestExon = codingContext.NearestExonDistance;
+        int intronBaseAdjustment = codingContext.Strand == POS_STRAND ? 1 : (nearestExon < 0 ? -1 : 0);
+
         String insertedBases = variant.Alt.substring(1);
         int insertLength = insertedBases.length();
 
@@ -297,7 +308,9 @@ public final class HgvsCoding
             addCodingBase(codingContext, codingBase, sb, false);
 
             if(codingContext.RegionType == INTRONIC)
-                addIntronicPosition(nearestExon, sb);
+            {
+                addIntronicPosition(nearestExon + intronBaseAdjustment, sb);
+            }
         }
         else
         {
@@ -329,10 +342,15 @@ public final class HgvsCoding
                 intronBaseStart = codingContext.RegionType == INTRONIC ? nearestExon - baseShift : nearestExon;
             }
 
+            intronBaseStart += intronBaseAdjustment;
+            intronBaseEnd += intronBaseAdjustment;
+
             addCodingBase(codingContext, codingBaseStart, sb, false);
 
             if(codingContext.RegionType == INTRONIC)
+            {
                 addIntronicPosition(intronBaseStart, sb);
+            }
 
             addCodingBase(codingContext, codingBaseEnd, sb, true);
 
