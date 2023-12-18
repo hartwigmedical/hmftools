@@ -183,7 +183,7 @@ public final class CobaltRatioFile
 
                 CobaltRatio ratio = ImmutableCobaltRatio.builder()
                         .chromosome(chromosome)
-                        .position(row.getInterger(posIndex))
+                        .position(row.getInt(posIndex))
                         .referenceReadDepth(refReadDepth)
                         .tumorReadDepth(tumorReadDepth)
                         .tumorGCRatio(tumorGCRatio)
@@ -225,11 +225,10 @@ public final class CobaltRatioFile
     {
         List<CobaltRatio> sorted = new ArrayList<>(ratios);
         Collections.sort(sorted);
-        DelimFileWriter delim = new DelimFileWriter();
 
         try(BufferedWriter writer = createGzipBufferedWriter(fileName))
         {
-            delim.write(writer, Column.values(), sorted,
+            DelimFileWriter.write(writer, Column.values(), sorted,
                 (ratio, row) -> {
                     row.set(Column.chromosome, ratio.chromosome());
                     row.set(Column.position, ratio.position());
