@@ -20,6 +20,11 @@ import static com.hartwig.hmftools.common.utils.Doubles.round;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_BASE_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_MAP_QUALITY;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_NM_COUNT;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.FRAG_STRAND_BIAS;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vis.ColorUtil.DARK_BLUE;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.FINAL_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MAP_QUAL_COL;
@@ -34,11 +39,6 @@ import static com.hartwig.hmftools.sage.vis.SageVisConstants.READ_HEIGHT_PX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.VARIANT_INFO_SPACING_SIZE;
 import static com.hartwig.hmftools.sage.vis.SvgRender.renderBaseSeq;
 import static com.hartwig.hmftools.sage.vis.SvgRender.renderCoords;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_BASE_QUAL;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_MAP_QUALITY;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_NM_COUNT;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.FRAG_STRAND_BIAS;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_STRAND_BIAS;
 
 import static htsjdk.variant.vcf.VCFConstants.ALLELE_FREQUENCY_KEY;
 import static j2html.TagCreator.body;
@@ -66,7 +66,9 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.StringJoiner;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -102,6 +104,8 @@ public class VariantVis
             .sorted(Comparator.comparingInt(x -> x.SortKey))
             .collect(Collectors.toList());
 
+    private static Map<String, SortedSet<String>> VARIANT_INDEXED_BASES_MAP = Maps.newHashMap();
+
     private final SageConfig mConfig;
     private final String mSample;
     private final SimpleVariant mVariant;
@@ -113,6 +117,8 @@ public class VariantVis
     private final BaseSeqViewModel mRefViewModel;
     private final BaseSeqViewModel mContextViewModel;
     private final EnumMap<ReadContextCounter.MatchType, Integer> mReadCountByType;
+    private final String mVariantKey;
+    private final String mIndexedBasesKey;
 
     private int mReadCount;
 
@@ -125,6 +131,7 @@ public class VariantVis
         mVariantTier = variantTier;
         mReadEvidenceRecordsByType = Maps.newEnumMap(ReadContextCounter.MatchType.class);
         mReadContext = readContext;
+        mVariantKey = mVariant.chromosome() + "_" + mVariant.position() + "_" + mVariant.ref() + "_" + mVariant.alt();
 
         IndexedBases indexedBases = mReadContext.indexedBases();
         int indelSize = mVariant.ref().length() - mVariant.alt().length();
@@ -162,8 +169,25 @@ public class VariantVis
         mRefViewModel = BaseSeqViewModel.fromStr(refBases, refPosStart);
         mContextViewModel = BaseSeqViewModel.fromVariant(indexedBases, mVariant.ref(), mVariant.alt());
 
+        StringJoiner indexedBasesKeyBuilder = new StringJoiner("_");
+        indexedBasesKeyBuilder.add(String.valueOf(indexedBases.Index));
+        indexedBasesKeyBuilder.add(String.valueOf(indexedBases.LeftCoreIndex));
+        indexedBasesKeyBuilder.add(String.valueOf(indexedBases.RightCoreIndex));
+        indexedBasesKeyBuilder.add(String.valueOf(indexedBases.FlankSize));
+        indexedBasesKeyBuilder.add(new String(indexedBases.Bases));
+        mIndexedBasesKey = indexedBasesKeyBuilder.toString();
+
         mReadCountByType = Maps.newEnumMap(ReadContextCounter.MatchType.class);
         mReadCount = 0;
+
+        SortedSet<String> indexedBasesKeySet = VARIANT_INDEXED_BASES_MAP.get(mVariantKey);
+        if(indexedBasesKeySet == null)
+        {
+            indexedBasesKeySet = new TreeSet<>();
+            VARIANT_INDEXED_BASES_MAP.put(mVariantKey, indexedBasesKeySet);
+        }
+
+        indexedBasesKeySet.add(mIndexedBasesKey);
     }
 
     private static DomContent styledTable(final List<DomContent> elems, final CssBuilder style)
@@ -351,20 +375,14 @@ public class VariantVis
 
     private String getFilename()
     {
-        IndexedBases indexedBases = mReadContext.indexedBases();
+        String filename = mVariantKey;
+        SortedSet<String> indexedBasesKeySet = VARIANT_INDEXED_BASES_MAP.get(mVariantKey);
+        if(indexedBasesKeySet.size() == 1)
+            return filename + ".html";
 
-        StringJoiner filenameBuilder = new StringJoiner("_");
-        filenameBuilder.add(mVariant.chromosome());
-        filenameBuilder.add(String.valueOf(mReadContext.Position));
-        filenameBuilder.add(mVariant.ref());
-        filenameBuilder.add(mVariant.alt());
-        filenameBuilder.add(String.valueOf(indexedBases.Index));
-        filenameBuilder.add(String.valueOf(indexedBases.LeftCoreIndex));
-        filenameBuilder.add(String.valueOf(indexedBases.RightCoreIndex));
-        filenameBuilder.add(String.valueOf(indexedBases.FlankSize));
-        filenameBuilder.add(new String(indexedBases.Bases));
-
-        return filenameBuilder + ".html";
+        int variantFileNum = indexedBasesKeySet.headSet(mIndexedBasesKey).size() + 1;
+        String formatStr = format("%%0%dd", String.valueOf(indexedBasesKeySet.size()).length());
+        return filename + "_" + format(formatStr, variantFileNum) + ".html";
     }
 
     public void addEvidence(final SAMRecord read, @Nullable final FragmentData fragment, final ReadContextCounter.MatchType matchType,
