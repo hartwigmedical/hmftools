@@ -183,8 +183,9 @@ public class DepthTask implements Callable
                 genotype.getExtendedAttributes().put(refVcfTag, sampleCounts.RefSupport);
                 genotype.getExtendedAttributes().put(refPairVcfTag, sampleCounts.RefPairSupport);
 
-                int variantFrags = getGenotypeAttributeAsInt(genotype, SV_FRAGMENT_COUNT, 0) +
-                        getGenotypeAttributeAsInt(genotype, SGL_FRAGMENT_COUNT, 0);
+                int variantFrags = variantInfo.IsSgl ?
+                        getGenotypeAttributeAsInt(genotype, SGL_FRAGMENT_COUNT, 0) :
+                        getGenotypeAttributeAsInt(genotype, SV_FRAGMENT_COUNT, 0);
 
                 double total = variantFrags + sampleCounts.total();
                 double af = variantFrags / total;

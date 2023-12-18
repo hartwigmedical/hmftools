@@ -21,6 +21,7 @@ public class VariantInfo
     public final int Position;
     public final int PositionMin;
     public final int PositionMax;
+    public final boolean IsSgl;
     public final byte Orientation;
 
     public final RefSupportCounts[] SampleSupportCounts;
@@ -28,7 +29,8 @@ public class VariantInfo
     public VariantInfo(final VariantContext variant, final List<Integer> genotypeIds, double vafCap)
     {
         Position = variant.getStart();
-        Orientation = getOrientation(variant);
+        IsSgl = isSingleBreakend(variant);
+        Orientation = IsSgl ? parseSingleOrientation(variant) : parseSvOrientation(variant);
 
         final int[] homology = { 0, 0 };
 
