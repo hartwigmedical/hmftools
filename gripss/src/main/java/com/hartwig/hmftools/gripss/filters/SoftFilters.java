@@ -79,9 +79,9 @@ public class SoftFilters
 
                 if(!sv.isSgl())
                     filterCache.addBreakendFilters(sv.breakendEnd(), Lists.newArrayList(MODIFIED_AF));
-
-                return;
             }
+
+            return;
         }
 
         List<FilterType> beStartFilters = null;
@@ -185,6 +185,9 @@ public class SoftFilters
 
     private boolean qualPerAD(final Breakend breakend)
     {
+        if(mFilterConstants.QualPerAD == 0)
+            return false;
+
         int indelCount = getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_IC, 0);
         int ad = indelCount + breakend.TumorFragments;
 
@@ -197,6 +200,11 @@ public class SoftFilters
 
     private boolean modifiedAF(final SvData sv, boolean isHotspot)
     {
+        double afLimit = isHotspot ? mFilterConstants.ModifiedAfHotspot : mFilterConstants.ModifiedAf;
+
+        if(afLimit == 0)
+            return false;
+
         double modifiedAf = calcModifiedAf(sv.breakendStart());
 
         if(!sv.isSgl())
@@ -204,7 +212,6 @@ public class SoftFilters
             modifiedAf = min(modifiedAf, calcModifiedAf(sv.breakendEnd()));
         }
 
-        double afLimit = isHotspot ? mFilterConstants.ModifiedAfHotspot : mFilterConstants.ModifiedAf;
         return modifiedAf < afLimit;
     }
 
