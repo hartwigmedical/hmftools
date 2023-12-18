@@ -156,14 +156,6 @@ public class PurpleConfig
         return tumorOnlyMode() ? RunMode.TUMOR : (germlineMode() ? RunMode.GERMLINE : RunMode.TUMOR_GERMLINE);
     }
 
-    protected static double getConfigDecimal(final ConfigBuilder configBuilder, final String configName, final double defaultValue)
-    {
-        if(configBuilder.hasValue(configName))
-            return configBuilder.getDecimal(configName);
-
-        return defaultValue;
-    }
-
     public static void addOptions(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);

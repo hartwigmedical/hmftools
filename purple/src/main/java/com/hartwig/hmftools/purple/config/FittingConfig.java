@@ -2,9 +2,10 @@ package com.hartwig.hmftools.purple.config;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.config.ConfigBuilder.getConfigDecimal;
+import static com.hartwig.hmftools.common.utils.config.ConfigBuilder.getConfigInteger;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.DECIMAL;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.INTEGER;
-import static com.hartwig.hmftools.purple.config.PurpleConfig.getConfigDecimal;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_PLOIDY_DEFAULT;
@@ -84,11 +85,11 @@ public class FittingConfig
         MinPloidy = configBuilder.getDecimal(MIN_PLOIDY);
         MaxPloidy = configBuilder.getDecimal(MAX_PLOIDY);
 
-        MinDiploidTumorRatioCount = (int)getConfigDecimal(
+        MinDiploidTumorRatioCount = getConfigInteger(
                 configBuilder, MIN_DIPLOID_TUMOR_RATIO_COUNT,
                 targetedMode ? TARGETED_MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT : MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT);
 
-        MinDiploidTumorRatioCountAtCentromere = (int)getConfigDecimal(
+        MinDiploidTumorRatioCountAtCentromere = getConfigInteger(
                 configBuilder, MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE,
                 targetedMode ? TARGETED_MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT : MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT);
 

@@ -187,6 +187,22 @@ public class ConfigBuilder
     public int getInteger(final String name) { return getItem(name).integer(); }
     public boolean hasFlag(final String name) { return getItem(name).bool(); }
 
+    public static double getConfigDecimal(final ConfigBuilder configBuilder, final String configName, final double defaultValue)
+    {
+        if(configBuilder.hasValue(configName))
+            return configBuilder.getDecimal(configName);
+
+        return defaultValue;
+    }
+
+    public static int getConfigInteger(final ConfigBuilder configBuilder, final String configName, final int defaultValue)
+    {
+        if(configBuilder.hasValue(configName))
+            return configBuilder.getInteger(configName);
+
+        return defaultValue;
+    }
+
     public boolean isValid()
     {
         for(ConfigItem item : mItems)
