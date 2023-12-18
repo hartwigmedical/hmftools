@@ -81,9 +81,6 @@ public interface OrangeWGSRefConfig
     @Nullable
     String cuppa2VisPlot();
 
-    @Nullable
-    String cuppa2PredSumm();
-
     @NotNull
     String sigsAllocationTsv();
 
@@ -125,7 +122,6 @@ public interface OrangeWGSRefConfig
         String cuppaDir = pathResolver.resolveMandatoryToolDirectory(CUPPA_DIR_CFG, CUPPA_DIR);
         builder.cuppa2VisData(mandatoryPath(Cuppa2DataFiles.generateVisDataPath(cuppaDir, tumorSampleId)));
         builder.cuppa2VisPlot(mandatoryPath(Cuppa2DataFiles.generateVisPlotPath(cuppaDir, tumorSampleId)));
-        builder.cuppa2PredSumm(mandatoryPath(Cuppa2DataFiles.generatePredSummPath(cuppaDir, tumorSampleId)));
 
         String sigsDir = pathResolver.resolveMandatoryToolDirectory(SIGS_DIR_CFG, SIGS_DIR);
         builder.sigsAllocationTsv(mandatoryPath(SignatureAllocationFile.generateFilename(sigsDir, tumorSampleId)));

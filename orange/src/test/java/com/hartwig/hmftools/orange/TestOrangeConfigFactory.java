@@ -50,7 +50,6 @@ public final class TestOrangeConfigFactory
     private static final String CHORD_PREDICTION_TXT = RUN_DIRECTORY + "/chord/tumor_sample_chord_prediction.txt";
     private static final String CUPPA2_VIS_DATA_TSV = RUN_DIRECTORY + "/cuppa2/tumor_sample.cuppa.vis_data.tsv";
     private static final String CUPPA2_VIS_PLOT = RUN_DIRECTORY + "/cuppa2/tumor_sample.cuppa.vis.png";
-    private static final String CUPPA2_PRED_SUMM = RUN_DIRECTORY + "/cuppa2/tumor_sample.cuppa.pred_summ.png";
     private static final String PEACH_GENOTYPE_TSV = RUN_DIRECTORY + "/peach/tumor_sample.peach.genotype.tsv";
     private static final String SIGS_ALLOCATION_TSV = RUN_DIRECTORY + "/sigs/tumor_sample.sig.allocation.tsv";
 
@@ -106,7 +105,6 @@ public final class TestOrangeConfigFactory
                         .chordPredictionTxt(CHORD_PREDICTION_TXT)
                         .cuppa2VisData(CUPPA2_VIS_DATA_TSV)
                         .cuppa2VisPlot(CUPPA2_VIS_PLOT)
-                        .cuppa2PredSumm(CUPPA2_PRED_SUMM)
                         .sigsAllocationTsv(SIGS_ALLOCATION_TSV)
                         .build())
                 .build();
