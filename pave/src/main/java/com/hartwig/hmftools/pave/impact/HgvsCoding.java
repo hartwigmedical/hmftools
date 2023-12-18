@@ -311,7 +311,7 @@ public final class HgvsCoding
 
             if(codingContext.RegionType == INTRONIC)
             {
-                addIntronicPosition(nearestExon + 1, sb);
+                addIntronicPosition(nearestExon + intronBaseAdjustment, sb);
             }
         }
         else

@@ -112,6 +112,20 @@ public class HgvsCodingTest
         assertEquals("c.7_9dupTGT", impact.codingContext().Hgvs);
         assertEquals("p.Cys3dup", impact.proteinContext().Hgvs);
 
+        // duplication of 1 intronic base
+        pos = 40;
+        ref = refBases.substring(pos, pos + 1);
+        alt = refBases.substring(pos, pos + 2);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        altBases = alt.substring(1);
+        var.setVariantDetails(NO_LOCAL_PHASE_SET, altBases, altBases, 1);
+
+        impact = classifier.classifyVariant(var, posTrans);
+        assertEquals(VariantEffect.INTRONIC, impact.topEffect());
+        assertEquals(6, impact.codingContext().NearestExonDistance);
+        assertEquals("c.15+7dupG", impact.codingContext().Hgvs);
+
         // duplication of 2 intronic bases
         pos = 40;
         ref = refBases.substring(pos, pos + 1);
