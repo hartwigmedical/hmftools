@@ -106,9 +106,9 @@ public class PurpleConfig
             mIsValid &= createDirectory(Charting.PlotDirectory);
         }
 
-        Fitting = new FittingConfig(configBuilder);
-        SomaticFitting = new SomaticFitConfig(configBuilder);
         TargetRegionsMode = configBuilder.hasValue(TARGET_REGIONS_BED);
+        Fitting = new FittingConfig(configBuilder, TargetRegionsMode);
+        SomaticFitting = new SomaticFitConfig(configBuilder);
         Threads = parseThreads(configBuilder);
 
         RunDrivers = DriverGenePanelConfig.isConfigured(configBuilder);
@@ -154,6 +154,14 @@ public class PurpleConfig
     public RunMode runMode()
     {
         return tumorOnlyMode() ? RunMode.TUMOR : (germlineMode() ? RunMode.GERMLINE : RunMode.TUMOR_GERMLINE);
+    }
+
+    protected static double getConfigDecimal(final ConfigBuilder configBuilder, final String configName, final double defaultValue)
+    {
+        if(configBuilder.hasValue(configName))
+            return configBuilder.getDecimal(configName);
+
+        return defaultValue;
     }
 
     public static void addOptions(final ConfigBuilder configBuilder)
