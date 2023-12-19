@@ -311,13 +311,10 @@ public class ReadContextCounter//  extends SimpleVariant
         if(exceedsMaxCoverage())
             return MAX_COVERAGE;
 
-        if(mTier != VariantTier.HOTSPOT)
+        if(mTier != VariantTier.HOTSPOT && record.getMappingQuality() < EVIDENCE_MIN_MAP_QUAL)
         {
-            if(mConfig.Quality.MapQualityRatioFactor == 0 && record.getMappingQuality() < EVIDENCE_MIN_MAP_QUAL)
-            {
-                addVariantVisRecord(record, MatchType.NONE, null, fragmentData);
-                return MAP_QUAL;
-            }
+            addVariantVisRecord(record, MatchType.NONE, null, fragmentData);
+            return MAP_QUAL;
         }
 
         if(mConfig.Quality.HighBaseMode && isChimericRead(record))

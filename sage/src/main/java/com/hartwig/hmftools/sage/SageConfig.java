@@ -159,10 +159,7 @@ public class SageConfig
         Quality = new QualityConfig(configBuilder);
         QualityRecalibration = new BqrConfig(configBuilder);
 
-        if(Quality.MapQualityRatioFactor > 0)
-            MinMapQuality = 0; // force to zero so all reads are considered
-        else
-            MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
+        MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
 
         TrackUMIs = configBuilder.hasFlag(TRACK_UMIS);
         WriteFragmentLengths = configBuilder.hasFlag(WRITE_FRAG_LENGTHS);
