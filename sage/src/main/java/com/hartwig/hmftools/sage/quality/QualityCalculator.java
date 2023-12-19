@@ -160,7 +160,7 @@ public class QualityCalculator
 
     public byte[] getTrinucleotideContext(int refPosition)
     {
-        return mRefBases.trinucleotideContext(refPosition);
+        return mRefBases.containsPosition(refPosition) ? mRefBases.trinucleotideContext(refPosition) : null;
     }
 
     private double lookupRecalibrateQuality(final byte[] trinucleotideContext, byte altBase, byte rawQuality)

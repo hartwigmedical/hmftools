@@ -80,6 +80,12 @@ public class IndexedBases
         return position - Position + Index;
     }
 
+    public boolean containsPosition(int position)
+    {
+        int index = index(position);
+        return index >= 0 && index < Bases.length;
+    }
+
     public int length() { return RightFlankIndex - LeftFlankIndex + 1; }
     public int coreLength()
     {
@@ -94,10 +100,7 @@ public class IndexedBases
     public int corePositionStart() { return Position - (Index - LeftCoreIndex); }
     public int corePositionEnd() { return Position + RightCoreIndex - Index; } // doesn't take into account INDEL bases
 
-    public byte base(int position)
-    {
-        return Bases[position - Position + Index];
-    }
+    public byte base(int position) { return Bases[index(position)]; }
 
     public int maxFlankLength()
     {
