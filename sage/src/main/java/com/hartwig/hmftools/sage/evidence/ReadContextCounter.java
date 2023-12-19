@@ -147,7 +147,8 @@ public class ReadContextCounter//  extends SimpleVariant
         mReadContext = readContext;
         mVariant = variant;
 
-        mVariantVis = config.VisOutputDir == null ? null : new VariantVis(mConfig, mSample, mVariant, mReadContext, mTier);
+        mVariantVis = config.Visualiser.Enabled && config.Visualiser.processVariant(variant)
+                ? new VariantVis(mConfig, mSample, mVariant, mReadContext, mTier) : null;
 
         // set local state to avoid testing on each read
         mIsMnv = variant.isMNV();
@@ -251,10 +252,7 @@ public class ReadContextCounter//  extends SimpleVariant
     public int minNumberOfEvents() { return mMinNumberOfEvents; }
 
     @Nullable
-    public VariantVis variantVis()
-    {
-        return mVariantVis;
-    }
+    public VariantVis variantVis() { return mVariantVis; }
 
     public double averageAltBaseQuality()
     {

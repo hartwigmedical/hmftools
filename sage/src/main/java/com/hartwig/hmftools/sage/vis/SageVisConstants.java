@@ -20,6 +20,8 @@ public class SageVisConstants
     public static final int DISPLAY_EVERY_NTH_COORD = 10;
     public static final int MAX_MAPQ_SHADING_CUTTOFF = 60;
     public static final int INSERT_SIZE_CUTTOFF = 1000;
+
+    public static final int MAX_READ_UPPER_LIMIT = 1000;
     public static final EnumMap<ReadContextCounter.MatchType, Integer> MAX_READS_PER_TYPE;
 
     static

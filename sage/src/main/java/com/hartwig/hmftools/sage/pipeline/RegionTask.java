@@ -185,7 +185,6 @@ public class RegionTask
 
     private void finaliseResults()
     {
-        mSageVariants.forEach(variant -> VariantVis.writeToHtmlFile(variant, mConfig.TumorIds, mConfig.Common.ReferenceIds));
         mSageVariants.stream().filter(x -> x.isPassing() && x.hasLocalPhaseSets()).forEach(x -> mPassingPhaseSets.addAll(x.localPhaseSets()));
 
         List<SageVariant> finalVariants = mSageVariants.stream()
@@ -195,6 +194,12 @@ public class RegionTask
         VariantPhaser.removeUninformativeLps(finalVariants, mPassingPhaseSets);
 
         mResults.addFinalVariants(mTaskId, finalVariants);
+
+        if(mConfig.Common.Visualiser.Enabled)
+        {
+            mSageVariants.forEach(variant -> VariantVis.writeToHtmlFile(
+                    variant, mConfig.TumorIds, mConfig.Common.ReferenceIds, mConfig.Common.Visualiser));
+        }
 
         mResults.addTotalReads(mCandidateState.totalReadsProcessed());
 

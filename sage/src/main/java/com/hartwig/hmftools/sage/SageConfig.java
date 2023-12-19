@@ -39,6 +39,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.sage.bqr.BqrConfig;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.quality.QualityConfig;
+import com.hartwig.hmftools.sage.vis.VisConfig;
 
 import org.apache.logging.log4j.util.Strings;
 
@@ -67,13 +68,13 @@ public class SageConfig
     public final int MaxPartitionSlices;
     public final ValidationStringency BamStringency;
 
+    public final VisConfig Visualiser;
+
     public final String Version;
     public final int Threads;
 
     public final boolean TrackUMIs;
     public final boolean WriteFragmentLengths;
-
-    public final String VisOutputDir;
 
     // debug
     public final SpecificRegions SpecificChrRegions;
@@ -101,7 +102,6 @@ public class SageConfig
     private static final String TRACK_UMIS = "track_umis";
     private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
     private static final String MAX_PARTITION_SLICES = "max_partition_slices";
-    private static final String VIS_OUTPUT_DIR = "vis_output_dir";
 
     private static final String SPECIFIC_POSITIONS = "specific_positions";
     private static final String LOG_EVIDENCE_READS = "log_evidence_reads";
@@ -167,15 +167,7 @@ public class SageConfig
         TrackUMIs = configBuilder.hasFlag(TRACK_UMIS);
         WriteFragmentLengths = configBuilder.hasFlag(WRITE_FRAG_LENGTHS);
 
-        if(configBuilder.hasValue(VIS_OUTPUT_DIR))
-        {
-            String visDir = checkAddDirSeparator(configBuilder.getValue(VIS_OUTPUT_DIR));
-            VisOutputDir = SampleDataDir != null ? SampleDataDir + visDir : visDir;
-        }
-        else
-        {
-            VisOutputDir = null;
-        }
+        Visualiser = new VisConfig(configBuilder, outputDir());
 
         SpecificPositions = Sets.newHashSet();
         if(configBuilder.hasValue(SPECIFIC_POSITIONS))
@@ -247,6 +239,17 @@ public class SageConfig
         }
 
         final File outputDir = new File(OutputFile).getParentFile();
+        if(!makeOutputDir(outputDir))
+            return false;
+
+        if(Visualiser.Enabled && !makeOutputDir(new File(Visualiser.OutputDir)))
+            return false;
+
+        return true;
+    }
+
+    public boolean makeOutputDir(final File outputDir)
+    {
         if(outputDir != null && !outputDir.exists() && !outputDir.mkdirs())
         {
             SG_LOGGER.error("unable to write directory({})", outputDir.toString());
@@ -297,12 +300,13 @@ public class SageConfig
         configBuilder.addFlag(NO_FRAGMENT_SYNC, "Disable fragment reads sync in evidence phase");
         configBuilder.addFlag(TRACK_UMIS, "Record counts of UMI types");
         configBuilder.addFlag(WRITE_FRAG_LENGTHS, "Write fragment lengths to file");
-        configBuilder.addPrefixedPath(VIS_OUTPUT_DIR, false, "Output dir for variant vis html files", SAMPLE_DATA_DIR_CFG);
         addValidationStringencyOption(configBuilder);
 
         FilterConfig.registerConfig(configBuilder);
         QualityConfig.registerConfig(configBuilder);
         BqrConfig.registerConfig(configBuilder);
+
+        VisConfig.registerConfig(configBuilder);
 
         addSpecificChromosomesRegionsConfig(configBuilder);
         configBuilder.addFlag(LOG_EVIDENCE_READS, "Write evidence read data");
@@ -345,7 +349,7 @@ public class SageConfig
         BamStringency = ValidationStringency.DEFAULT_STRINGENCY;
         TrackUMIs = false;
         WriteFragmentLengths = false;
-        VisOutputDir = null;
+        Visualiser = new VisConfig();
         SyncFragments = true;
         SpecificPositions = Sets.newHashSet();
         LogEvidenceReads = false;

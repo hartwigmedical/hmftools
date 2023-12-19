@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.util.Map.entry;
 
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.getMateAlignmentEnd;
@@ -35,6 +36,7 @@ import static com.hartwig.hmftools.sage.vis.ReadTableColumn.ORIENTATION_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.RAW_BASE_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.BASE_FONT_STYLE;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.DISPLAY_EVERY_NTH_COORD;
+import static com.hartwig.hmftools.sage.vis.SageVisConstants.MAX_READ_UPPER_LIMIT;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.READ_HEIGHT_PX;
 import static com.hartwig.hmftools.sage.vis.SageVisConstants.VARIANT_INFO_SPACING_SIZE;
 import static com.hartwig.hmftools.sage.vis.SvgRender.renderBaseSeq;
@@ -77,6 +79,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.IndexedBases;
@@ -98,15 +101,18 @@ import j2html.tags.specialized.TdTag;
 public class VariantVis
 {
     private static final AtomicReference<DomContent> JAVASCRIPT = new AtomicReference<>(null);
+
     private static final DomContent JQUERY_SCRIPT =
             rawHtml("<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js\"></script>");
+
     private static final List<ReadContextCounter.MatchType> SORTED_MATCH_TYPES = Arrays.stream(ReadContextCounter.MatchType.values())
             .sorted(Comparator.comparingInt(x -> x.SortKey))
             .collect(Collectors.toList());
 
     private static Map<String, SortedSet<String>> VARIANT_INDEXED_BASES_MAP = Maps.newHashMap();
 
-    private final SageConfig mConfig;
+    private final VisConfig mConfig;
+
     private final String mSample;
     private final SimpleVariant mVariant;
     private final VariantTier mVariantTier;
@@ -122,10 +128,11 @@ public class VariantVis
 
     private int mReadCount;
 
-    public VariantVis(final SageConfig config, final String sample, final SimpleVariant variant, final ReadContext readContext,
+    public VariantVis(
+            final SageConfig config, final String sample, final SimpleVariant variant, final ReadContext readContext,
             final VariantTier variantTier)
     {
-        mConfig = config;
+        mConfig = config.Visualiser;
         mSample = sample;
         mVariant = variant;
         mVariantTier = variantTier;
@@ -195,20 +202,24 @@ public class VariantVis
         return table().with(elems).withStyle(BASE_FONT_STYLE.merge(style).toString());
     }
 
-    public static void writeToHtmlFile(final SageVariant sageVariant, final List<String> tumorIds, final List<String> normalIds)
+    public static void writeToHtmlFile(
+            final SageVariant sageVariant, final List<String> tumorIds, final List<String> normalIds, final VisConfig config)
     {
+        if(config.PassOnly && !sageVariant.isPassing())
+            return;
+
         List<ReadContextCounter> tumorReadCounters = sageVariant.tumorReadCounters();
         List<ReadContextCounter> normalReadCounters = sageVariant.normalReadCounters();
 
-        List<VariantVis> tumorVis =
-                tumorReadCounters.stream().map(ReadContextCounter::variantVis).filter(x -> x != null).collect(Collectors.toList());
-        List<VariantVis> normalVis =
-                normalReadCounters.stream().map(ReadContextCounter::variantVis).filter(x -> x != null).collect(Collectors.toList());
+        // can be null if doesn't meet the configured criteria
+        List<VariantVis> tumorVis = tumorReadCounters.stream()
+                .map(ReadContextCounter::variantVis).filter(x -> x != null).collect(Collectors.toList());
+
+        List<VariantVis> normalVis = normalReadCounters.stream()
+                .map(ReadContextCounter::variantVis).filter(x -> x != null).collect(Collectors.toList());
 
         if(tumorVis.isEmpty() && normalVis.isEmpty())
-        {
             return;
-        }
 
         ReadContextCounter firstCounter = !tumorReadCounters.isEmpty() ? tumorReadCounters.get(0) : normalReadCounters.get(0);
         VariantVis firstVis = !tumorVis.isEmpty() ? tumorVis.get(0) : normalVis.get(0);
@@ -247,7 +258,7 @@ public class VariantVis
                         readTable,
                         getJavascript()).withStyle(BASE_FONT_STYLE.toString())).render();
 
-        String filePath = Paths.get(firstVis.mConfig.VisOutputDir, filename).toString();
+        String filePath = Paths.get(firstVis.mConfig.OutputDir, filename).toString();
 
         SG_LOGGER.debug("writing variant vis file: {}", filePath);
 
@@ -376,6 +387,10 @@ public class VariantVis
     private String getFilename()
     {
         String filename = mVariantKey;
+
+        if(!filename.startsWith(CHR_PREFIX))
+            filename = CHR_PREFIX + filename;
+
         SortedSet<String> indexedBasesKeySet = VARIANT_INDEXED_BASES_MAP.get(mVariantKey);
         if(indexedBasesKeySet.size() == 1)
             return filename + ".html";
@@ -521,8 +536,9 @@ public class VariantVis
             }
 
             Collections.sort(records);
-            DomContent typeColContent =
-                    rawHtml(format("%s<br>(%d/%d)", matchType.name(), records.size(), mReadCountByType.getOrDefault(matchType, 0)));
+            DomContent typeColContent = rawHtml(
+                    format("%s<br>(%d/%d)", matchType.name(), records.size(), mReadCountByType.getOrDefault(matchType, 0)));
+
             for(int i = 0; i < records.size(); ++i)
             {
                 ReadEvidenceRecord record = records.get(i);
@@ -700,6 +716,16 @@ public class VariantVis
             List<ReadEvidenceRecord> records = entry.getValue();
 
             int maxReads = SageVisConstants.MAX_READS_PER_TYPE.get(matchType);
+
+            if(mConfig.MaxSupportReads < 0)
+            {
+                maxReads = MAX_READ_UPPER_LIMIT;
+            }
+            else if(mConfig.MaxSupportReads > 0)
+            {
+                maxReads = min(mConfig.MaxSupportReads, MAX_READ_UPPER_LIMIT);
+            }
+
             List<ReadEvidenceRecord> newRecords = Lists.newArrayList();
             while(!records.isEmpty() && newRecords.size() < maxReads)
             {
