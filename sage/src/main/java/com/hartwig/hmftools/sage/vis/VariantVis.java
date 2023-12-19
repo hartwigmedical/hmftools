@@ -79,7 +79,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.IndexedBases;
@@ -330,8 +329,8 @@ public class VariantVis
 
             int depth = counter.depth();
             int altSupport = counter.altSupport();
-            int avgAltMapQuality = altSupport > 0 ? (int) Math.round(counter.altMapQuality() / (double) altSupport) : 0;
-            double avgAltNmCount = altSupport > 0 ? round(counter.altNmCount() / (double) altSupport, 1) : 0;
+            int avgAltMapQuality = altSupport > 0 ? (int) Math.round(counter.altMapQualityTotal() / (double) altSupport) : 0;
+            double avgAltNmCount = altSupport > 0 ? round(counter.altNmCountTotal() / (double) altSupport, 1) : 0;
 
             List<TdTag> columnElems = Lists.newArrayList(
                     td(sampleId),

@@ -47,29 +47,21 @@ public class QualityCalculator
 
     public static class QualityScores
     {
+        public final double RawBaseQuality;
+        public final double RecalibratedBaseQuality;
         public final int ModifiedMapQuality;
         public final double ModifiedBaseQuality;
         public final double ModifiedQuality;
 
-        private double mRawBaseQuality;
-
-        public QualityScores(int modifiedMapQuality, double modifiedBaseQuality, double modifiedQuality)
+        public QualityScores(
+                double rawBaseQuality, double recalibratedBaseQuality, int modifiedMapQuality,
+                double modifiedBaseQuality, double modifiedQuality)
         {
+            RawBaseQuality = rawBaseQuality;
+            RecalibratedBaseQuality = recalibratedBaseQuality;
             ModifiedMapQuality = modifiedMapQuality;
             ModifiedBaseQuality = modifiedBaseQuality;
             ModifiedQuality = modifiedQuality;
-
-            mRawBaseQuality = 0.0;
-        }
-
-        public double rawBaseQuality()
-        {
-            return mRawBaseQuality;
-        }
-
-        public void setRawBaseQuality(double rawBaseQuality)
-        {
-            mRawBaseQuality = rawBaseQuality;
         }
     }
 
@@ -77,7 +69,7 @@ public class QualityCalculator
             final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, double numberOfEvents, double rawBaseQuality)
     {
         double baseQuality = readContextCounter.isIndel() ?
-                rawBaseQuality : baseQuality(readContextCounter, readBaseIndex, record, readContextCounter.variant().ref().length());
+                rawBaseQuality : recalibratedBaseQuality(readContextCounter, readBaseIndex, record, readContextCounter.variant().ref().length());
 
         int mapQuality = record.getMappingQuality();
         boolean isImproperPair = isImproperPair(record);
@@ -95,16 +87,7 @@ public class QualityCalculator
 
         double modifiedQuality = max(0, min(modifiedMapQuality, modifiedBaseQuality));
 
-        /*
-        if(readContextCounter.logEvidence() && !SG_LOGGER.isTraceEnabled())
-        {
-            SG_LOGGER.trace(format("variant(%s) read(%s) distFromEdge(%d) events(%.1f) qual(map=%d rawBase=%.1f base=%.1f) modified(map=%d base=%.1f)",
-                    readContextCounter.varString(), record.getReadName(), distanceFromReadEdge, numberOfEvents,
-                    mapQuality, rawBaseQual, baseQuality, modifiedMapQuality, modifiedBaseQuality));
-        }
-        */
-
-        return new QualityScores(max(0, modifiedMapQuality), max(0.0, modifiedBaseQuality), modifiedQuality);
+        return new QualityScores(rawBaseQuality, baseQuality, max(0, modifiedMapQuality), max(0.0, modifiedBaseQuality), modifiedQuality);
     }
 
     public static boolean isImproperPair(final SAMRecord record) { return record.getReadPairedFlag() && !record.getProperPairFlag(); }
@@ -129,13 +112,16 @@ public class QualityCalculator
         return baseQualTotal / varLength;
     }
 
-    private double baseQuality(final ReadContextCounter readContextCounter, int startReadIndex, final SAMRecord record, int length)
+    private double recalibratedBaseQuality(
+            final ReadContextCounter readContextCounter, int startReadIndex, final SAMRecord record, int length)
     {
         if(readContextCounter.isSnv())
         {
             // simplified version of the MNV case below
             byte rawQuality = record.getBaseQualities()[startReadIndex];
-            return recalibrateQuality(readContextCounter, readContextCounter.position(), 0, rawQuality);
+
+            // double adjustOld = lookupRecalibrateQuality(readContextCounter, readContextCounter.position(), 0, rawQuality);
+            return lookupRecalibrateQuality(readContextCounter.trinucleotideContext(), (byte)readContextCounter.alt().charAt(0), rawQuality);
         }
 
         // MNV case
@@ -149,14 +135,14 @@ public class QualityCalculator
             int readIndex = startReadIndex + i;
             byte rawQuality = record.getBaseQualities()[readIndex];
 
-            double recalibratedQual = recalibrateQuality(readContextCounter, refPosition, i, rawQuality);
+            double recalibratedQual = lookupRecalibrateQuality(readContextCounter, refPosition, i, rawQuality);
             quality = min(quality, recalibratedQual);
         }
 
         return quality;
     }
 
-    private double recalibrateQuality(final ReadContextCounter readContextCounter, int refPosition, int refAltPos, byte rawQuality)
+    private double lookupRecalibrateQuality(final ReadContextCounter readContextCounter, int refPosition, int refAltPos, byte rawQuality)
     {
         if(rawQuality == 0)
             return 0; // never adjust a zero qual up
@@ -170,6 +156,22 @@ public class QualityCalculator
                 (byte) readContextCounter.ref().charAt(refAltPos),
                 (byte) readContextCounter.alt().charAt(refAltPos),
                 trinucleotideContext, rawQuality);
+    }
+
+    public byte[] getTrinucleotideContext(int refPosition)
+    {
+        return mRefBases.trinucleotideContext(refPosition);
+    }
+
+    private double lookupRecalibrateQuality(final byte[] trinucleotideContext, byte altBase, byte rawQuality)
+    {
+        if(rawQuality == 0)
+            return 0; // never adjust a zero qual up
+
+        if(mQualityRecalibrationMap == null)
+            return rawQuality;
+
+        return mQualityRecalibrationMap.getQualityAdjustment(trinucleotideContext[1], altBase, trinucleotideContext, rawQuality);
     }
 
     private int readDistanceFromEdge(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)

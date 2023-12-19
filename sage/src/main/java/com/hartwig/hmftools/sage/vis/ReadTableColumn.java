@@ -88,7 +88,7 @@ public class ReadTableColumn
     });
     public static final ReadTableColumn RAW_BASE_QUAL_COL = intValueColumn("rawBQ", (final ReadEvidenceRecord record) ->
     {
-        return record.Qualities == null ? null : (int) Math.round(record.Qualities.rawBaseQuality());
+        return record.Qualities == null ? null : (int) Math.round(record.Qualities.RawBaseQuality);
     });
     public static final ReadTableColumn ORIENTATION_COL = new ReadTableColumn("Orientation", (final ReadEvidenceRecord record) ->
     {

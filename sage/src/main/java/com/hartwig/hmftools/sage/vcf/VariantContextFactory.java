@@ -105,11 +105,11 @@ public final class VariantContextFactory
         int depth = counter.depth();
         int altSupport = counter.altSupport();
 
-        int avgMapQuality = depth > 0 ? (int)Math.round(counter.totalMapQuality() / (double)depth) : 0;
-        int avgAltMapQuality = altSupport > 0 ? (int)Math.round(counter.altMapQuality() / (double)altSupport) : 0;
+        int avgMapQuality = depth > 0 ? (int)Math.round(counter.mapQualityTotal() / (double)depth) : 0;
+        int avgAltMapQuality = altSupport > 0 ? (int)Math.round(counter.altMapQualityTotal() / (double)altSupport) : 0;
 
-        double avgNmCount = depth > 0 ? round(counter.totalNmCount() / (double)depth, 1) : 0;
-        double avgAltNmCount = altSupport > 0 ? round(counter.altNmCount() / (double)altSupport, 1) : 0;
+        double avgNmCount = depth > 0 ? round(counter.nmCountTotal() / (double)depth, 1) : 0;
+        double avgAltNmCount = altSupport > 0 ? round(counter.altNmCountTotal() / (double)altSupport, 1) : 0;
 
         builder.DP(depth)
                 .AD(new int[] { counter.refSupport(), altSupport })
@@ -120,7 +120,7 @@ public final class VariantContextFactory
                 .attribute(AVG_MAP_QUALITY, new int[] { avgMapQuality, avgAltMapQuality })
                 .attribute(AVG_NM_COUNT, new double[] { avgNmCount, avgAltNmCount })
                 .attribute(RAW_ALLELIC_DEPTH, new int[] { counter.rawRefSupport(), counter.rawAltSupport() })
-                .attribute(RAW_ALLELIC_BASE_QUALITY, new int[] { counter.rawRefBaseQuality(), counter.rawAltBaseQuality() })
+                .attribute(RAW_ALLELIC_BASE_QUALITY, new int[] { counter.rawRefBaseQualityTotal(), counter.rawAltBaseQualityTotal() })
                 .attribute(RAW_DEPTH, counter.rawDepth())
                 .attribute(
                         FRAG_STRAND_BIAS, format("%.3f,%.3f", counter.fragmentStrandBiasAlt().bias(), counter.fragmentStrandBiasRef().bias()))
