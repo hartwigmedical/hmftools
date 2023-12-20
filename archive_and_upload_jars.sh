@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -x
 
 [[ $# -ne 2 ]] && echo "Provide working directory and version string" && exit 1
 
