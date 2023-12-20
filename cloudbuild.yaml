@@ -4,10 +4,9 @@ steps:
     entrypoint: 'python3'
     args: ['hmftools-build.py', '$TAG_NAME']
   - id: 'Copy archive of JARs to bucket for pipeline5 imager'
-    name: 'eu.gcr.io/hmf-build/jdk-mvn-python'
-    entrypoint: '/bin/bash'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: '/workspace/archive_and_upload_jars.sh'
     args:
-      - '/workspace/archive_and_upload_jars.sh' 
       - '/workspace'
       - '$TAG_NAME'
 logsBucket: 'gs://hmf-build-logs'
