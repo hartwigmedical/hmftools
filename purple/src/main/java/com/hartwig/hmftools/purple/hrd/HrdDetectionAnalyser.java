@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_D
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -36,6 +35,8 @@ import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ImmutableChordData;
+import com.hartwig.hmftools.common.purple.HrdData;
+import com.hartwig.hmftools.common.purple.HrdStatus;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurityContext;
@@ -240,9 +241,7 @@ public class HrdDetectionAnalyser
             sj.add(String.valueOf(hrdData.LohSegments));
             sj.add(String.valueOf(hrdData.SegmentBreaks));
             sj.add(String.valueOf(hrdData.SegmentImbalances));
-
-            HrdStatus hrdStatus = determineHrdStatus(hrdData);
-            sj.add(hrdStatus.toString());
+            sj.add(hrdData.Status.toString());
 
             mWriter.write(sj.toString());
             mWriter.newLine();

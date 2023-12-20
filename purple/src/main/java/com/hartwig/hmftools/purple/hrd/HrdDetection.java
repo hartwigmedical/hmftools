@@ -13,11 +13,10 @@ import static com.hartwig.hmftools.common.purple.SegmentSupport.TELOMERE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.copynumber.LohCalcs.LOH_SHORT_INSERT_LENGTH;
-import static com.hartwig.hmftools.purple.hrd.HrdStatus.HRD_DEFICIENT_HIGH_CONFIDENCE;
-import static com.hartwig.hmftools.purple.hrd.HrdStatus.HRD_DEFICIENT_LOW_CONFIDENCE;
-import static com.hartwig.hmftools.purple.hrd.HrdStatus.HRD_PROFICIENT_HIGH_CONFIDENCE;
-import static com.hartwig.hmftools.purple.hrd.HrdStatus.HRD_PROFICIENT_LOW_CONFIDENCE;
+import static com.hartwig.hmftools.common.purple.HrdStatus.HRD_DEFICIENT_HIGH_CONFIDENCE;
+import static com.hartwig.hmftools.common.purple.HrdStatus.HRD_DEFICIENT_LOW_CONFIDENCE;
+import static com.hartwig.hmftools.common.purple.HrdStatus.HRD_PROFICIENT_HIGH_CONFIDENCE;
+import static com.hartwig.hmftools.common.purple.HrdStatus.HRD_PROFICIENT_LOW_CONFIDENCE;
 
 import java.util.List;
 import java.util.Map;
@@ -27,6 +26,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
+import com.hartwig.hmftools.common.purple.HrdData;
+import com.hartwig.hmftools.common.purple.HrdStatus;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -64,7 +65,7 @@ public class HrdDetection
         mLohMinLength = lohMinLength;
     }
 
-    public static HrdStatus determineHrdStatus(final HrdData hrdData)
+    public static HrdStatus determineHrdStatus(final int lohSegments, final int segmentImbalances, final int segmentBreaks)
     {
         /*
             If 2 of 3 measures exceed their cutoffs, it is HRD DEFICIENT (LOW CONFIDENCE)
@@ -76,13 +77,13 @@ public class HrdDetection
 
         int negativeCount = 0;
 
-        if(hrdData.LohSegments > HRD_STATUS_LOH_CUTOFF)
+        if(lohSegments > HRD_STATUS_LOH_CUTOFF)
             ++negativeCount;
 
-        if(hrdData.SegmentImbalances > HRD_STATUS_IMBALANCE_CUTOFF)
+        if(segmentImbalances > HRD_STATUS_IMBALANCE_CUTOFF)
             ++negativeCount;
 
-        if(hrdData.SegmentBreaks > HRD_STATUS_SEGMENT_BREAKS_CUTOFF)
+        if(segmentBreaks > HRD_STATUS_SEGMENT_BREAKS_CUTOFF)
             ++negativeCount;
 
         if(negativeCount == 3)
@@ -98,7 +99,7 @@ public class HrdDetection
     public HrdData calculateHrdData(final List<PurpleCopyNumber> copyNumbers)
     {
         if(copyNumbers.isEmpty())
-            return new HrdData(0, 0, 0);
+            return new HrdData(0, 0, 0, HrdStatus.UNKNOWN);
 
         String exampleChr = copyNumbers.get(0).chromosome();
         RefGenomeVersion refGenomeVersion = exampleChr.startsWith(CHR_PREFIX) ? V38 : V37;
@@ -147,7 +148,9 @@ public class HrdDetection
             totalSegmentBreaks += calcSegmentBreaks(chrStr, chrCopyNumbers);
         }
 
-        return new HrdData(totalLohSegments, totalUnbalancedSegments, totalSegmentBreaks);
+        HrdStatus hrdStatus = determineHrdStatus(totalLohSegments, totalUnbalancedSegments, totalSegmentBreaks);
+
+        return new HrdData(totalLohSegments, totalUnbalancedSegments, totalSegmentBreaks, hrdStatus);
     }
 
     public int calcLohSegments(final String chromosome, final List<PurpleCopyNumber> copyNumbers)
@@ -471,7 +474,7 @@ public class HrdDetection
             }
         }
 
-        PPL_LOGGER.debug("chr({}) segmentBreaks({}})", chromosome, segmentBreaks);
+        PPL_LOGGER.trace("chr({}) segmentBreaks({})", chromosome, segmentBreaks);
 
         if(PPL_LOGGER.isTraceEnabled())
         {
