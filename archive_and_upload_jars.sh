@@ -1,10 +1,10 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 [[ $# -ne 2 ]] && echo "Provide working directory and version string" && exit 1
 
-REMOTE="gs://pipeline5-jars/${1}.tar"
+REMOTE="gs://pipeline5-jars/${2}.tar"
 gsutil stat ${REMOTE} 2>&1 >/dev/null
 [[ $? -eq 0 ]] && echo "ERROR: ${REMOTE} already exists" && exit 1
 
