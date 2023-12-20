@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.purple.SegmentSupport.BND;
 import static com.hartwig.hmftools.common.purple.SegmentSupport.CENTROMERE;
 import static com.hartwig.hmftools.common.purple.SegmentSupport.DEL;
 import static com.hartwig.hmftools.common.purple.SegmentSupport.TELOMERE;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -14,20 +15,17 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
-import com.hartwig.hmftools.purple.tools.HrdDetection;
+import com.hartwig.hmftools.purple.hrd.HrdDetection;
 
 import org.junit.Test;
 
 public class HrdDetectionTest
 {
-    private static final String CHR_1 = "1";
-    private static final String CHR_2 = "2";
-
     @Test
     public void testLohSegments()
     {
         int minLohLength = 20000;
-        HrdDetection hrdDetection = new HrdDetection(10000, 10000, minLohLength, 5);
+        HrdDetection hrdDetection = new HrdDetection(10000, minLohLength);
 
         final List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
 
@@ -83,12 +81,12 @@ public class HrdDetectionTest
         copyNumbers.clear();
 
         // each side of the centromere
-        copyNumbers.add(makeCopyNumber(CHR_2, TELOMERE, BND, 1, 10000, 4, 0.5));
-        copyNumbers.add(makeCopyNumber(CHR_2, BND, CENTROMERE, 10001, 100000, 1, 1));
-        copyNumbers.add(makeCopyNumber(CHR_2, CENTROMERE, BND, 100001, 200000, 1, 1));
-        copyNumbers.add(makeCopyNumber(CHR_2, BND, TELOMERE, 200001, 500000, 4, 0.5));
+        copyNumbers.add(makeCopyNumber(CHR_1, TELOMERE, BND, 1, 10000, 4, 0.5));
+        copyNumbers.add(makeCopyNumber(CHR_1, BND, CENTROMERE, 10001, 100000, 1, 1));
+        copyNumbers.add(makeCopyNumber(CHR_1, CENTROMERE, BND, 100001, 200000, 1, 1));
+        copyNumbers.add(makeCopyNumber(CHR_1, BND, TELOMERE, 200001, 500000, 4, 0.5));
 
-        assertEquals(2, hrdDetection.calcLohSegments(CHR_2, copyNumbers));
+        assertEquals(2, hrdDetection.calcLohSegments(CHR_1, copyNumbers));
     }
 
     @Test
@@ -98,27 +96,29 @@ public class HrdDetectionTest
 
         int imbalanceLength = 20000;
 
+        HrdDetection hrdDetection = new HrdDetection(imbalanceLength, 10000);
+
         // imbalance from the telomere
         copyNumbers.add(makeCopyNumber(CHR_1, TELOMERE, BND, 1, 30000, 3, 0.67));
-
         copyNumbers.add(makeCopyNumber(CHR_1, BND, CENTROMERE, 30001, 100000, 2, 0.5));
-        copyNumbers.add(makeCopyNumber(CHR_1, CENTROMERE, BND, 100001, 110000, 2, 0.5));
 
         // another out to the telomere
+        copyNumbers.add(makeCopyNumber(CHR_1, CENTROMERE, BND, 100001, 110000, 2, 0.5));
         copyNumbers.add(makeCopyNumber(CHR_1, BND, TELOMERE, 110001, 200000, 1.75, 0.8));
 
-        // same again but too short
-        copyNumbers.add(makeCopyNumber(CHR_2, TELOMERE, BND, 1, 10000, 3, 0.67));
+        assertEquals(2, hrdDetection.calcSegmentImbalances(CHR_1, copyNumbers));
 
-        copyNumbers.add(makeCopyNumber(CHR_2, BND, CENTROMERE, 10001, 100000, 2, 0.5));
-        copyNumbers.add(makeCopyNumber(CHR_2, CENTROMERE, BND, 100001, 190000, 2, 0.5));
+        copyNumbers.clear();
+
+        // same again but too short
+        copyNumbers.add(makeCopyNumber(CHR_1, TELOMERE, BND, 1, 10000, 3, 0.67));
+        copyNumbers.add(makeCopyNumber(CHR_1, BND, CENTROMERE, 10001, 100000, 2, 0.5));
 
         // another out to the telomere
-        copyNumbers.add(makeCopyNumber(CHR_2, BND, TELOMERE, 190001, 200000, 1.75, 0.8));
+        copyNumbers.add(makeCopyNumber(CHR_1, CENTROMERE, BND, 100001, 190000, 2, 0.5));
+        copyNumbers.add(makeCopyNumber(CHR_1, BND, TELOMERE, 190001, 200000, 1.75, 0.8));
 
-        HrdDetection hrdDetection = new HrdDetection(10000, imbalanceLength, 10000, 5);
-
-        assertEquals(2, hrdDetection.calcSegmentImbalances(copyNumbers));
+        assertEquals(0, hrdDetection.calcSegmentImbalances(CHR_1, copyNumbers));
 
         copyNumbers.clear();
 
@@ -128,20 +128,21 @@ public class HrdDetectionTest
         copyNumbers.add(makeCopyNumber(CHR_1, BND, CENTROMERE, 95001, 100000, 1, 1));
         copyNumbers.add(makeCopyNumber(CHR_1, CENTROMERE, TELOMERE, 100001, 200000, 1, 1));
 
-        assertEquals(0, hrdDetection.calcSegmentImbalances(copyNumbers));
+        assertEquals(0, hrdDetection.calcSegmentImbalances(CHR_1, copyNumbers));
 
         // check ignores short TIs
         copyNumbers.clear();
 
         copyNumbers.add(makeCopyNumber(CHR_1, TELOMERE, CENTROMERE, 1, 100000, 2, 0.5));
+
         copyNumbers.add(makeCopyNumber(CHR_1, CENTROMERE, BND, 100001, 110000, 2, 0.5));
         copyNumbers.add(makeCopyNumber(CHR_1, BND, BND, 110001, 120000, 1, 1));
         copyNumbers.add(makeCopyNumber(CHR_1, BND, BND, 120001, 130000, 2, 0.5)); // stops
         copyNumbers.add(makeCopyNumber(CHR_1, BND, BND, 130001, 190000, 1, 1)); // starts again
-        copyNumbers.add(makeCopyNumber(CHR_1, BND, BND, 190001, 190500, 2, 0.5)); // short TI doesn't interupt
+        copyNumbers.add(makeCopyNumber(CHR_1, BND, BND, 190001, 190050, 2, 0.5)); // short TI doesn't interupt
         copyNumbers.add(makeCopyNumber(CHR_1, BND, TELOMERE, 190501, 200000, 1, 1)); // starts again
 
-        assertEquals(1, hrdDetection.calcSegmentImbalances(copyNumbers));
+        assertEquals(1, hrdDetection.calcSegmentImbalances(CHR_1, copyNumbers));
     }
 
         private static PurpleCopyNumber makeCopyNumber(

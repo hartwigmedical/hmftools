@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.tools;
+package com.hartwig.hmftools.purple.hrd;
 
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_DE
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.THREADS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
@@ -21,10 +22,12 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.hrd.HrdDetection.determineHrdStatus;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -180,7 +183,7 @@ public class HrdDetectionAnalyser
                     sampleId, purityContext.bestFit().ploidy(), copyNumbers.size(), chordData.hrStatus(), chordData.hrdValue()));
 
             HrdDetection hrdDetection = new HrdDetection();
-            final HrdData hrdData = hrdDetection.calculateHrdData(copyNumbers, purityContext.bestFit().ploidy());
+            final HrdData hrdData = hrdDetection.calculateHrdData(copyNumbers);
 
             writeSampleData(sampleId, chordData, hrdData);
         }
@@ -199,11 +202,14 @@ public class HrdDetectionAnalyser
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            if(mSampleIds.size() > 1)
-                writer.write("SampleId\t");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            writer.write("HRDStatus\tHRD\tBRCA1\tBRCA2");
-            writer.write("\tLohSegments\tSegmentBreaks\tSegmentImbalances\tScore");
+            if(mSampleIds.size() > 1)
+                sj.add("SampleId");
+
+            sj.add("HRDStatus").add("HRD").add("BRCA1").add("BRCA2");
+            sj.add("LohSegments").add("SegmentBreaks").add("SegmentImbalances").add("HrdStatus");
+            writer.write(sj.toString());
             writer.newLine();
 
             return writer;
@@ -219,17 +225,26 @@ public class HrdDetectionAnalyser
     {
         try
         {
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
             if(mSampleIds.size() > 1)
             {
-                mWriter.write(format("%s\t", sampleId));
+                sj.add(sampleId);
             }
 
-            mWriter.write(format("%s\t%.3f\t%.3f\t%.3f",
-                    chordData.hrStatus(), chordData.hrdValue(), chordData.BRCA1Value(), chordData.BRCA2Value()));
+            sj.add(chordData.hrStatus().toString());
+            sj.add(format("%.3f", chordData.hrdValue()));
+            sj.add(format("%.3f", chordData.BRCA1Value()));
+            sj.add(format("%.3f", chordData.BRCA2Value()));
 
-            mWriter.write(format("\t%d\t%.1f\t%d\t%.1f",
-                    hrdData.LohSegments, hrdData.SegmentBreaks, hrdData.SegmentImbalances, hrdData.score()));
+            sj.add(String.valueOf(hrdData.LohSegments));
+            sj.add(String.valueOf(hrdData.SegmentBreaks));
+            sj.add(String.valueOf(hrdData.SegmentImbalances));
 
+            HrdStatus hrdStatus = determineHrdStatus(hrdData);
+            sj.add(hrdStatus.toString());
+
+            mWriter.write(sj.toString());
             mWriter.newLine();
         }
         catch(IOException e)
@@ -249,13 +264,7 @@ public class HrdDetectionAnalyser
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         HrdDetectionAnalyser hrdDetectionAnalyser = new HrdDetectionAnalyser(configBuilder);
         hrdDetectionAnalyser.run();
