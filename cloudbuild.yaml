@@ -3,6 +3,12 @@ steps:
     name: 'eu.gcr.io/hmf-build/jdk-mvn-python'
     entrypoint: 'python3'
     args: ['hmftools-build.py', '$TAG_NAME']
+  - id: 'Dump list of JARs in target'
+    entrypoint: 'find'
+    args: 
+      - '/workspace'
+      - '-name'
+      - "'*.jar'"
   - id: 'Bundle JARs for pipeline5 image'
     name: 'eu.gcr.io/hmf-build/jdk-mvn-python'
     entrypoint: 'tar'
