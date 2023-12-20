@@ -8,8 +8,8 @@ steps:
     entrypoint: 'find'
     args: 
       - '/workspace'
-      - '-name'
-      - "'*.jar'"
+      - '-type'
+      - "f"
   - id: 'Bundle JARs for pipeline5 image'
     name: 'eu.gcr.io/hmf-build/jdk-mvn-python'
     entrypoint: 'tar'
