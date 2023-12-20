@@ -14,11 +14,13 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_CHR_PARTITION_SIZE;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_READ_LENGTH;
@@ -124,7 +126,16 @@ public class SvConfig
         SampleId = configBuilder.getValue(SAMPLE);
         BamFile = configBuilder.getValue(BAM_FILE);
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
-        OutputDir = parseOutputDir(configBuilder);
+
+        if(configBuilder.hasValue(OUTPUT_DIR))
+        {
+            OutputDir = parseOutputDir(configBuilder);
+        }
+        else
+        {
+            OutputDir = pathFromFile(BamFile);
+        }
+
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
         if(SampleId == null || BamFile == null || OutputDir == null || RefGenomeFile == null)
@@ -293,7 +304,7 @@ public class SvConfig
         addValidationStringencyOption(configBuilder);
         ReadFilterConfig.addConfig(configBuilder);
         addThreadOptions(configBuilder);
-        addOutputOptions(configBuilder, true);
+        addOutputOptions(configBuilder, false);
         ConfigUtils.addLoggingOptions(configBuilder);
     }
 }
