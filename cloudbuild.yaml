@@ -11,8 +11,8 @@ steps:
       - "--exclude='*hmf-common*'"
       - "--exclude='*-shaded.jar'"
       - "-cvf"
-      - "/workspace/target/$TAG_NAME.tar"
-      - "$(find . -name '*.jar')"
+      - "/workspace/$TAG_NAME.tar"
+      - "$(find /workspace -name '*.jar')"
   - id: 'Copy pipeline5 JAR archive to bucket'
     name: 'gcr.io/cloud-builders/gsutil'
     args:
