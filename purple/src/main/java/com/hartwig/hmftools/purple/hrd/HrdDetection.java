@@ -107,25 +107,6 @@ public class HrdDetection
         // build a chr-segment map
         Map<String,List<PurpleCopyNumber>> chrCopyNumberMap = buildChromosomeMap(copyNumbers);
 
-        // filter copy numbers to required types
-        for(List<PurpleCopyNumber> chrCopyNumbers : chrCopyNumberMap.values())
-        {
-            int index = 0;
-            while(index < chrCopyNumbers.size())
-            {
-                PurpleCopyNumber copyNumber = chrCopyNumbers.get(index);
-
-                if(copyNumber.method() != CopyNumberMethod.BAF_WEIGHTED || HumanChromosome.fromString(copyNumber.chromosome()).isAllosome())
-                {
-                    chrCopyNumbers.remove(index);
-                }
-                else
-                {
-                    ++index;
-                }
-            }
-        }
-
         int totalLohSegments = 0;
         int totalUnbalancedSegments = 0;
         int totalSegmentBreaks = 0;
@@ -136,7 +117,10 @@ public class HrdDetection
                 continue;
 
             String chrStr = refGenomeVersion.versionedChromosome(chromosome.toString());
-            List<PurpleCopyNumber> chrCopyNumbers = chrCopyNumberMap.get(chrStr);
+
+            // filter copy numbers to required types
+            List<PurpleCopyNumber> chrCopyNumbers = chrCopyNumberMap.get(chrStr).stream()
+                    .filter(x -> x.method() == CopyNumberMethod.BAF_WEIGHTED).collect(Collectors.toList());
 
             if(chrCopyNumbers == null || chrStr.isEmpty())
                 continue;
@@ -163,8 +147,6 @@ public class HrdDetection
     public int calcSegmentImbalances(final String chromosome, final List<PurpleCopyNumber> copyNumbers)
     {
         int imbalances = 0;
-
-        // min CN segment length 100 - skip or remove?
 
         List<PurpleCopyNumber> localCopyNumbers = copyNumbers.stream()
                 .filter(x -> x.end() - x.start() + 1 > SEGMENT_IMBALANCE_MIN_SEGMENT_LENGTH).collect(Collectors.toList());
@@ -239,107 +221,6 @@ public class HrdDetection
             }
         }
 
-        /*
-        int telomereStartImbalanceStart = 0;
-        int postCentromenereImbalanceStart = 0;
-        boolean isPostCentromere = false;
-
-        for(PurpleCopyNumber copyNumber : localCopyNumbers)
-        {
-            boolean hasImbalance = hasImbalance(copyNumber);
-
-            // consider the starting position
-            if(copyNumber.segmentStartSupport() == TELOMERE)
-            {
-                isPostCentromere = false;
-                postCentromenereImbalanceStart = 0;
-
-                if(hasImbalance)
-                {
-                    telomereStartImbalanceStart = 1;
-                }
-            }
-            else if(copyNumber.segmentStartSupport() == CENTROMERE)
-            {
-                // cannot start at the centromere and if not already
-                isPostCentromere = true;
-            }
-            else if(isPostCentromere && hasImbalance && postCentromenereImbalanceStart == 0)
-            {
-                postCentromenereImbalanceStart = copyNumber.start();
-            }
-
-            // consider the end position
-            if(copyNumber.segmentEndSupport() == CENTROMERE)
-            {
-                if(telomereStartImbalanceStart > 0 && !hasImbalance)
-                {
-                    // check the previous segment(s)
-                    int segmentLength = copyNumber.start() - postCentromenereImbalanceStart;
-
-                    if(segmentLength >= mSegmentImbalanceLength && !hasImbalance)
-                    {
-                        PPL_LOGGER.trace("imbalance from telomere segment({}:{}-{}) length({})",
-                                copyNumber.chromosome(), postCentromenereImbalanceStart, copyNumber.end(), segmentLength);
-
-                        ++imbalances;
-                    }
-                }
-
-                // cannot extend to the centromere
-                telomereStartImbalanceStart = 0;
-            }
-            else if(copyNumber.segmentEndSupport() == TELOMERE)
-            {
-                if(postCentromenereImbalanceStart > 0 && hasImbalance)
-                {
-                    int segmentLength = copyNumber.end() - postCentromenereImbalanceStart;
-
-                    if(segmentLength >= mSegmentImbalanceLength)
-                    {
-                        PPL_LOGGER.trace("imbalance to telomere segment({}:{}-{}) length({})",
-                                copyNumber.chromosome(), postCentromenereImbalanceStart, copyNumber.end(), segmentLength);
-
-                        ++imbalances;
-                    }
-                }
-            }
-            else
-            {
-                if(telomereStartImbalanceStart > 0)
-                {
-                    int segmentLength = copyNumber.end() - postCentromenereImbalanceStart;
-
-                    if(segmentLength >= mSegmentImbalanceLength && !hasImbalance)
-                    {
-                        PPL_LOGGER.trace("imbalance from telomere segment({}:{}-{}) length({})",
-                                copyNumber.chromosome(), postCentromenereImbalanceStart, copyNumber.end(), segmentLength);
-
-                        ++imbalances;
-                        telomereStartImbalanceStart = 0;
-                        continue;
-                    }
-
-                    if(hasImbalance)
-                        continue;
-
-                    if(copyNumber.length() <= LOH_SHORT_INSERT_LENGTH)
-                        continue;
-
-                    // too short so cancel this possible segment
-                    telomereStartImbalanceStart = 0;
-                }
-                else if(postCentromenereImbalanceStart > 0 && !hasImbalance)
-                {
-                    if(copyNumber.length() <= LOH_SHORT_INSERT_LENGTH)
-                        continue;
-
-                    postCentromenereImbalanceStart = 0;
-                }
-            }
-        }
-        */
-
         return imbalances;
     }
 
@@ -403,8 +284,6 @@ public class HrdDetection
             // merge and average these segments
             mergeSegments(segment, nextSegment);
             segments.remove(index + 1);
-
-            // stay with current
         }
 
         // now iteratively merge regions less than 3MB if the surrounding regions have no net change
@@ -549,5 +428,4 @@ public class HrdDetection
                 Region.toString(), Segments[SE_START], Segments[SE_END], CopyNumber, length());
         }
     }
-
 }
