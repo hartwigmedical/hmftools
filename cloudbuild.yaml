@@ -4,6 +4,7 @@ steps:
     entrypoint: 'python3'
     args: ['hmftools-build.py', '$TAG_NAME']
   - id: 'Dump list of JARs in target'
+    name: 'eu.gcr.io/hmf-build/jdk-mvn-python'
     entrypoint: 'find'
     args: 
       - '/workspace'
