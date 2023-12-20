@@ -71,7 +71,8 @@ public class SageConstants
     public static final int MAX_READ_EDGE_DISTANCE = 40;
     public static final double MAX_READ_EDGE_DISTANCE_PROB = 0.001;
 
-    public static final int SYNC_FRAG_MAX_MISMATCHES = 10;
+    // variant deduplication
+    public static final double INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT = 0.1;
 
     public static final double STRAND_BIAS_CHECK_THRESHOLD = 0.1;
     public static final double STRAND_BIAS_REF_MIN_DEPTH = 5;

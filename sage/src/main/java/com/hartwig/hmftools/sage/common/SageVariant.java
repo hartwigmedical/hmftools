@@ -111,8 +111,7 @@ public class SageVariant
         {
             if(mTumorReadCounters.get(0).localPhaseSets().get(i) == lps)
             {
-                final int[] counts = mTumorReadCounters.get(0).lpsCounts().get(i);
-                return counts[0] + counts[1];
+                return mTumorReadCounters.get(0).lpsCounts().get(i);
             }
         }
 
@@ -136,7 +135,7 @@ public class SageVariant
     }
 
     @Nullable
-    public List<int[]> localPhaseSetCounts()
+    public List<Integer> localPhaseSetCounts()
     {
         if(mTumorReadCounters.isEmpty())
             return null;

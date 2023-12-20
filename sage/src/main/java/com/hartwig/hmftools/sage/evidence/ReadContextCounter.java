@@ -127,7 +127,7 @@ public class ReadContextCounter//  extends SimpleVariant
     private final ReadEdgeDistance mReadEdgeDistance;
 
     private List<Integer> mLocalPhaseSets;
-    private List<int[]> mLpsCounts;
+    private List<Integer> mLpsCounts;
     private int[] mUmiTypeCounts;
     private FragmentLengthData mFragmentLengthData;
     private FragmentCoords mFragmentCoords;
@@ -272,7 +272,7 @@ public class ReadContextCounter//  extends SimpleVariant
     public int maxCandidateDeleteLength() { return mMaxCandidateDeleteLength; }
 
     public List<Integer> localPhaseSets() { return mLocalPhaseSets; }
-    public List<int[]> lpsCounts() { return mLpsCounts; }
+    public List<Integer> lpsCounts() { return mLpsCounts; }
 
     public int[] umiTypeCounts() { return mUmiTypeCounts; }
     public FragmentLengthData fragmentLengths() { return mFragmentLengthData; }
@@ -860,15 +860,16 @@ public class ReadContextCounter//  extends SimpleVariant
         int index = 0;
         while(index < mLpsCounts.size())
         {
-            final int[] existingCounts = mLpsCounts.get(index);
-            if(readCount + allocCount > existingCounts[0] + existingCounts[0])
+            int existingCount = mLpsCounts.get(index);
+            if(readCount + allocCount > existingCount)
                 break;
 
             ++index;
         }
 
         mLocalPhaseSets.add(index, lps);
-        mLpsCounts.add(index, new int[] { readCount, (int)allocCount } );
+        int lpsTotalCount = readCount + (int)allocCount;
+        mLpsCounts.add(index, lpsTotalCount);
     }
 
     private void countAltSupportMetrics(final SAMRecord record, final FragmentData fragmentData)

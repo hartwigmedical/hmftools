@@ -218,6 +218,43 @@ public class IndelDedupTest
     }
 
     @Test
+    public void testIndelsLocalPhaseSetConditions()
+    {
+        // an indel is not recovered when the other variant is largely unphased with it
+        String combinedReadBases = CHR_1_REF_BASES.substring(0, 21)
+                + CHR_1_REF_BASES.substring(30, 32) + "A" // SNV 1
+                + CHR_1_REF_BASES.substring(33, 70);
+
+        SageVariant del1 = createSageVariant(
+                CHR_1, 20, 20, combinedReadBases,
+                CHR_1_REF_BASES.substring(20, 30), CHR_1_REF_BASES.substring(20, 21), 1);
+
+        // variant part of the solution
+        SageVariant var1 = createSageVariant(
+                CHR_1, 32, 32, combinedReadBases,
+                CHR_1_REF_BASES.substring(32, 33), "A", 1);
+
+        // initially filtered but recoverable
+        del1.filters().add(SoftFilter.MIN_TUMOR_QUAL.filterName());
+
+        mIndelDeduper.dedupVariants(Lists.newArrayList(del1, var1));
+
+        assertTrue(del1.isPassing());
+        assertTrue(var1.isPassing());
+
+        // test again but this time with the SNV mostly unphased with the INDEL
+        del1.filters().clear();
+        del1.filters().add(SoftFilter.MIN_TUMOR_QUAL.filterName());
+
+        var1.tumorReadCounters().get(0).addLocalPhaseSet(2, 100, 0);
+
+        mIndelDeduper.dedupVariants(Lists.newArrayList(del1, var1));
+
+        assertFalse(del1.isPassing());
+        assertTrue(var1.isPassing());
+    }
+
+    @Test
     public void testRepeatedInserts()
     {
         // 4 inserts all with the same read context

@@ -71,9 +71,9 @@ public final class VariantContextFactory
             // write in order - PAVE will use the first only, but all are loaded to the DB
             builder.attribute(LOCAL_PHASE_SET, variant.localPhaseSets());
 
-            List<int[]> readCountsRaw = variant.localPhaseSetCounts();
+            List<Integer> readCountsRaw = variant.localPhaseSetCounts();
             List<Integer> readCountTotals = Lists.newArrayListWithExpectedSize(readCountsRaw.size());
-            readCountsRaw.forEach(x -> readCountTotals.add(x[0] + x[1]));
+            readCountsRaw.forEach(x -> readCountTotals.add(x));
             builder.attribute(LOCAL_PHASE_SET_READ_COUNT, readCountTotals);
         }
 
