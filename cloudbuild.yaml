@@ -3,7 +3,22 @@ steps:
     name: 'eu.gcr.io/hmf-build/jdk-mvn-python'
     entrypoint: 'python3'
     args: ['hmftools-build.py', '$TAG_NAME']
-
+  - id: 'Bundle JARs for pipeline5 image'
+    name: 'eu.gcr.io/hmf-build/jdk-mvn-python'
+    entrypoint: 'tar'
+    args: 
+      - "--exclude='*-dependencies.jar'"
+      - "--exclude='*hmf-common*'"
+      - "--exclude='*-shaded.jar'"
+      - "-cvf"
+      - "target/$TAG_NAME.tar"
+      - "$(find . -name '*.jar')"
+  - id: 'Copy pipeline5 JAR archive to bucket'
+    name: 'gcr.io/cloud-builders/gsutil'
+    args:
+      - 'cp'
+      - 'target/$TAG_NAME.tar'
+      - 'gs://pipeline5-jars'
 logsBucket: 'gs://hmf-build-logs'
 timeout: 1800s
 images:
