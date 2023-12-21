@@ -205,20 +205,36 @@ public class HgvsCodingTest
         // bases at pos 44-46 are duplicated, these are intronic bases 6-4
         assertEquals("c.15+4_15+6dupGGG", impact.codingContext().Hgvs);
 
-        pos = 37;
+        // single-base dup in prior intron
+        pos = 35;
         ref = refBases.substring(pos, pos + 1);
-        alt = refBases.substring(pos, pos + 3);
+        alt = refBases.substring(pos, pos + 1) + refBases.substring(pos + 1, pos + 2); // duplicating the next base
         var = new VariantData(CHR_1, pos, ref, alt);
 
         altBases = alt.substring(1);
         var.setVariantDetails(NO_LOCAL_PHASE_SET, altBases, altBases, 1);
 
         impact = classifier.classifyVariant(var, negTrans);
-        // assertEquals(VariantEffect.INTRONIC, impact.topEffect());
-        assertEquals(16, impact.codingContext().CodingBase);
-        assertEquals(-4, impact.codingContext().NearestExonDistance);
 
-        assertEquals("c.16-6_16-5dupCA", impact.codingContext().Hgvs);
+        assertEquals(16, impact.codingContext().CodingBase);
+        assertEquals(-2 , impact.codingContext().NearestExonDistance); // nearest exon ends at 34, using upstream pos of 37
+
+        assertEquals("c.16-2dupA", impact.codingContext().Hgvs);
+
+        pos = 36;
+        ref = refBases.substring(pos, pos + 1);
+        alt = ref + refBases.substring(pos + 1, pos + 2) + refBases.substring(pos + 1, pos + 2);
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        altBases = alt.substring(1);
+        var.setVariantDetails(NO_LOCAL_PHASE_SET, altBases, altBases, 1);
+
+        impact = classifier.classifyVariant(var, negTrans);
+
+        assertEquals(16, impact.codingContext().CodingBase);
+        assertEquals(-3, impact.codingContext().NearestExonDistance);
+
+        assertEquals("c.16-4_16-3dupAA", impact.codingContext().Hgvs);
 
     }
 }
