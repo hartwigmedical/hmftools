@@ -298,7 +298,7 @@ public final class HgvsCoding
 
         // intronic bases with a +ve nearest exon need to be similarly shifted +1 to the start of the duplication
         int nearestExon = codingContext.NearestExonDistance;
-        int intronBaseAdjustment = codingContext.Strand == POS_STRAND ? 1 : (nearestExon < 0 ? -1 : 0);
+        int intronBaseAdjustment = codingContext.Strand == POS_STRAND ? 1 : 0;
 
         String insertedBases = variant.Alt.substring(1);
         int insertLength = insertedBases.length();
