@@ -52,6 +52,7 @@ import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -95,7 +96,7 @@ public class ReadContextCounter//  extends SimpleVariant
     private final boolean mIsIndel;
     private final boolean mAllowWildcardMatchInCore;
     private final int mMaxCoreMismatches;
-    private final byte[] mTrinucleotideContext;
+    private final BqrQualCache mBqrQualCache;
 
     // counts of various
     private final ReadSupportCounts mQualities;
@@ -156,7 +157,7 @@ public class ReadContextCounter//  extends SimpleVariant
         mIsMnv = variant.isMNV();
         mIsSnv = variant.isSNV();
         mIsIndel = variant.isIndel();
-        mTrinucleotideContext = mIsSnv ? qualityCalculator.getTrinucleotideContext(variant.position()) : null;
+        mBqrQualCache = !mIsIndel ? new BqrQualCache(variant.position(), variant.alt()) : null;
 
         mAllowWildcardMatchInCore = mVariant.isSNV() && mReadContext.microhomology().isEmpty();
 
@@ -205,7 +206,7 @@ public class ReadContextCounter//  extends SimpleVariant
     public int indelLength() { return mVariant.isIndel() ? max(mVariant.alt().length(), mVariant.ref().length()) : 0; }
     public boolean isSnv() { return mIsSnv; }
     public boolean isIndel() { return mIsIndel; }
-    public final byte[] trinucleotideContext() { return mTrinucleotideContext; }
+    public final BqrQualCache bqrQualCache() { return mBqrQualCache; }
     public String chromosome() { return mVariant.chromosome(); }
     public int position() { return mVariant.position(); }
     public String ref() { return mVariant.ref(); }

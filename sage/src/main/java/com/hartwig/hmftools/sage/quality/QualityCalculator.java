@@ -119,9 +119,7 @@ public class QualityCalculator
         {
             // simplified version of the MNV case below
             byte rawQuality = record.getBaseQualities()[startReadIndex];
-
-            // double adjustOld = lookupRecalibrateQuality(readContextCounter, readContextCounter.position(), 0, rawQuality);
-            return lookupRecalibrateQuality(readContextCounter.trinucleotideContext(), (byte)readContextCounter.alt().charAt(0), rawQuality);
+            return readContextCounter.bqrQualCache().getQual(rawQuality, 0, this);
         }
 
         // MNV case
@@ -131,11 +129,10 @@ public class QualityCalculator
         double quality = Integer.MAX_VALUE;
         for(int i = 0; i < maxLength; i++)
         {
-            int refPosition = readContextCounter.position() + i;
             int readIndex = startReadIndex + i;
             byte rawQuality = record.getBaseQualities()[readIndex];
 
-            double recalibratedQual = lookupRecalibrateQuality(readContextCounter, refPosition, i, rawQuality);
+            double recalibratedQual = readContextCounter.bqrQualCache().getQual(rawQuality, i, this);
             quality = min(quality, recalibratedQual);
         }
 
@@ -163,7 +160,7 @@ public class QualityCalculator
         return mRefBases.containsPosition(refPosition) ? mRefBases.trinucleotideContext(refPosition) : null;
     }
 
-    private double lookupRecalibrateQuality(final byte[] trinucleotideContext, byte altBase, byte rawQuality)
+    public double lookupRecalibrateQuality(final byte[] trinucleotideContext, byte altBase, byte rawQuality)
     {
         if(rawQuality == 0)
             return 0; // never adjust a zero qual up
