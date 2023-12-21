@@ -255,7 +255,7 @@ public class HrdDetectionAnalyser
 
             sj.add(String.valueOf(purityContext.bestFit().purity()));
             sj.add(String.valueOf(purityContext.bestFit().ploidy()));
-            
+
             sj.add(String.valueOf(hrdData.LohSegments));
             sj.add(String.valueOf(hrdData.SegmentBreaks));
             sj.add(String.valueOf(hrdData.SegmentImbalances));
