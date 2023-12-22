@@ -51,7 +51,7 @@ public class CrestApplication
             String sampleId = configBuilder.getValue(SAMPLE);
             String rnaSample = configBuilder.getValue(RNA_SAMPLE);
             String rnaAnnotatedGermlineVcf = PurpleCommon.purpleGermlineVcfFile(purpleDir, sampleId);
-            double supportedReadsRatio = computeSupportedReadsRatio(rnaAnnotatedGermlineVcf, rnaSample);
+            computeRnaSupportedSnpsRatio(rnaAnnotatedGermlineVcf, rnaSample);
         }
         catch(Exception e)
         {
@@ -74,7 +74,7 @@ public class CrestApplication
         LOGGER.info("Cest version: {}", version.version());
     }
 
-    public static double computeSupportedReadsRatio(String germlineVcf, String rnaSample) throws IOException
+    public static double computeRnaSupportedSnpsRatio(String germlineVcf, String rnaSample) throws IOException
     {
         int supported = 0;
         var total = 0;
