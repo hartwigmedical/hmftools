@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.HIGH_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
-import static com.hartwig.hmftools.wisp.purity.ResultsWriter.DROPOUT_FILE_ID;
+import static com.hartwig.hmftools.wisp.purity.ResultsWriter.CN_PLOT_CALCS_FILE_ID;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityData.NO_RESULT;
 
 import java.io.BufferedWriter;
@@ -94,7 +94,7 @@ public class LowCountModel extends ClonalityModel
             simulatedVafCalcs.add(simVafCalcs);
 
             writeSimulatedDropoutData(
-                    mResultsWriter.getDropoutWriter(), mConfig, mSample, sampleId, filteredVariants.size(), simVafCalcs,
+                    mResultsWriter.getCnPlotCalcWriter(), mConfig, mSample, sampleId, filteredVariants.size(), simVafCalcs,
                     observedFrag1, observedFrag2Plus);
         }
 
@@ -204,7 +204,7 @@ public class LowCountModel extends ClonalityModel
     {
         try
         {
-            String fileName = config.formFilename(DROPOUT_FILE_ID);
+            String fileName = config.formFilename(CN_PLOT_CALCS_FILE_ID);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 

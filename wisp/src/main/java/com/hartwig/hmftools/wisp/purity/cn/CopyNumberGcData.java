@@ -99,7 +99,8 @@ public class CopyNumberGcData
 
     public String toString()
     {
-        String coreData = format("loc(%s:%d-%d) cn(%.2f) ratios(%d)", Chromosome, SegmentStart, SegmentEnd, CopyNumber, mTumorGcRatios.size());
+        String coreData = format("loc(%s:%d-%d) valid(%s) cn(%.2f) ratios(%d)",
+                Chromosome, SegmentStart, SegmentEnd, IsValid, CopyNumber, mTumorGcRatios.size());
 
         if(!mComputed)
             return coreData;

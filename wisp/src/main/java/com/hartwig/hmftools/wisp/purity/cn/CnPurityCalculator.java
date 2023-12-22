@@ -37,7 +37,7 @@ public final class CnPurityCalculator
         double[][] adjustedCopyNumber = new double[segmentCount][1];
         double[] adjustedGcRatioMedians = new double[segmentCount];
 
-        // weight the data by the number of GC ratio points in each Cn segment
+        // weight the data by the number of GC ratio points in each CN segment
         int segmentIndex = 0;
         for(CopyNumberGcData cnSegment : copyNumberSegments)
         {

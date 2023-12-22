@@ -166,9 +166,11 @@ public class PurityConfig
                 Samples.size(), Samples.stream().mapToInt(x -> x.CtDnaSamples.size()).sum());
     }
 
-    public String formFilename(final String fileType)
+    public String formFilename(final String fileType) { return formFilename(fileType, false); }
+
+    public String formFilename(final String fileType, boolean isPlotData)
     {
-        String fileName = OutputDir;
+        String fileName = isPlotData ? PlotDir : OutputDir;
 
         if(multiplePatients())
         {

@@ -275,7 +275,7 @@ public class SomaticVariants
                 }
             }
 
-            if(mConfig.writeType(WriteType.SOMATIC_ALL) || useForTotals)
+            if(mConfig.writeType(WriteType.SOMATIC_DATA))
             {
                 writeVariant(mSomaticWriter, mConfig, mSample, sampleId, variant, sampleFragData, tumorFragData, filterReasons);
             }
