@@ -15,6 +15,7 @@
         <module>cobalt</module>
         <module>compar</module>
         <module>cuppa</module>
+        <module>sv-assembly</module>
         <module>fastq-tools</module>
         <module>gene-utils</module>
         <module>gripss</module>
@@ -64,6 +65,7 @@
         <cobalt.version>1.16</cobalt.version>
         <compar.version>1.2</compar.version>
         <cuppa.version>2.0</cuppa.version>
+        <esvee.version>1.0</esvee.version>
         <fastq-tools.version>1.0</fastq-tools.version>
         <gene-utils.version>1.1</gene-utils.version>
         <gripss.version>2.4</gripss.version>

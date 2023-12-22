@@ -1,0 +1,55 @@
+package com.hartwig.hmftools.svassembly.processor;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.svassembly.models.SupportedAssembly;
+
+public enum SecondaryPhasing
+{
+    ;
+
+    public static <T extends SupportedAssembly> List<Set<T>> run(final List<Set<T>> primaryPhaseGroups)
+    {
+        // PERF: The O-notation on this sucks.
+        final List<Set<T>> secondaryPhaseGroups = new ArrayList<>();
+        for(final Set<T> primaryPhaseGroup : primaryPhaseGroups)
+        {
+            if (primaryPhaseGroup.size() == 1)
+            {
+                secondaryPhaseGroups.add(primaryPhaseGroup);
+                continue;
+            }
+
+            final Map<String, Set<T>> phasingByFragment = new HashMap<>();
+
+            for(final T assembly : primaryPhaseGroup)
+                for(final String fragment : assembly.getSupportFragments())
+                    phasingByFragment.computeIfAbsent(fragment, __ -> new HashSet<>()).add(assembly);
+            final Set<Set<T>> groups = phasingByFragment.values().stream()
+                    .filter(g -> g.size() > 1)
+                    .collect(Collectors.toSet());
+            final Set<Set<T>> toRemove = new HashSet<>();
+            for(final Set<T> group : groups)
+            {
+                for(final Set<T> other : groups)
+                {
+                    if(group == other)
+                        continue;
+                    if(other.containsAll(group))
+                        toRemove.add(group);
+                }
+            }
+
+            groups.stream()
+                    .filter(g -> !toRemove.contains(g))
+                    .forEach(secondaryPhaseGroups::add);
+        }
+        return secondaryPhaseGroups;
+    }
+}

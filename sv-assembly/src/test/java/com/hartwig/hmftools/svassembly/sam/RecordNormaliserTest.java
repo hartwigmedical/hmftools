@@ -1,0 +1,54 @@
+package com.hartwig.hmftools.svassembly.sam;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Arrays;
+
+import com.hartwig.hmftools.common.samtools.CigarUtils;
+import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.svassembly.TestUtils;
+import com.hartwig.hmftools.svassembly.models.Record;
+
+import org.junit.Test;
+
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceRecord;
+
+public class RecordNormaliserTest
+{
+    private Record record(final String cigarString)
+    {
+        final SAMFileHeader header = new SAMFileHeader();
+        header.addSequence(new SAMSequenceRecord("1", 100_000));
+        final SAMRecord record = new SAMRecord(header);
+
+        final Cigar cigar = CigarUtils.cigarFromStr(cigarString);
+        final int length = cigar.getReadLength();
+        final String bases = "A".repeat(length);
+        final byte[] quals = new byte[bases.length()];
+        Arrays.fill(quals, (byte) 37);
+
+        record.setReadString(bases);
+        record.setBaseQualities(quals);
+        record.setReferenceName("1");
+        record.setAlignmentStart(1000);
+        record.setCigar(cigar);
+
+        return new Record(record);
+    }
+
+    @Test
+    public void handlesMalformedCigars()
+    {
+        final RecordNormaliser normaliser = new RecordNormaliser(new MockRefGenome(), TestUtils.config());
+
+        final Record record = record("15M10I100S");
+        final Record result = normaliser.normalise(record);
+
+        assertThat(record).isNotSameAs(result);
+        assertThat(result).isNotNull();
+        assertThat(result.getCigar().toString()).isEqualTo("15M110S");
+    }
+}

@@ -1,0 +1,226 @@
+body {
+    background-color: #808080;
+}
+
+.force-horizontal-scroll {
+    overflow-x: scroll;
+    max-width: 100vw;
+}
+.force-horizontal-scroll::-webkit-scrollbar {
+    -webkit-appearance: none;
+    background-color: rgba(0,0,0,.1);
+    height: 8pt;
+    /* -webkit-appearance: slider-horizontal; */
+}
+.force-horizontal-scroll::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background-color: rgba(0,0,0,.2);
+    -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+.force-horizontal-scroll::-webkit-scrollbar-corner {
+    background-color: gray;
+}
+
+.summary th {
+    text-align: right;
+}
+.read-summary .table-wrapper {
+        overflow: scroll;
+        max-height: 80vh;
+    }
+
+.read-summary table {
+    border-spacing: 0;
+    border: 1px solid black;
+    border-top: 0;
+    border-collapse: collapse;
+    font-family: monospace;
+    text-align: center;
+    width: 100%;
+}
+
+.read-summary {
+    & .table-wrapper {
+        overflow: scroll;
+        max-height: 80vh;
+    }
+
+    & table {
+        border-spacing: 0;
+        border: 1px solid black;
+        border-top: 0;
+        border-collapse: collapse;
+        font-family: monospace;
+        text-align: center;
+        width: 100%;
+    }
+
+    & thead tr.legend {
+        border: 0;
+    }
+    & thead tr.legend.chromosome th {
+        top: 0px;
+    }
+    & thead tr.legend.major th {
+        top: 16px;
+    }
+    & thead tr.legend.minor th, & thead tr.legend.minor td {
+        top: 32px;
+    }
+    & thead tr.legend th, & thead tr.legend td {
+        background-color: grey;
+        position: -webkit-sticky;
+        position: sticky;
+        z-index: 1;
+        border: 0;
+        min-width: 10px;
+    }
+    & thead tr div {
+        border-top: 1px solid black;
+        border-left: 1px solid black;
+        width: 100%;
+        box-sizing: border-box;
+        display: inline-block;
+        background-color: grey;
+        padding: 0;
+    }
+    & thead {
+        border-bottom: 1px solid black;
+    }
+    & thead .legend th.pinned {
+        z-index: 5;
+        background-color: grey;
+    }
+    & thead th.pinned.blank {
+        color: grey;
+    }
+
+    & table tr th.norightborder div {
+        border-right: none;
+    }
+    & table tr th.noleftborder div {
+        border-left: none;
+    }
+
+    & thead tr.sequence td, & thead tr.sequence th {
+        position: -webkit-sticky;
+        position: sticky;
+        z-index: 2;
+    }
+    & thead tr.sequence th.pinned {
+        z-index: 3;
+    }
+    & thead td {
+        margin: 0;
+        padding: 0;
+    }
+
+    & thead tr.sequence#Reference td, & thead tr.sequence#Reference th {
+        top: 48px;
+    }
+    & thead tr.sequence#Assembly td, & thead tr.sequence#Assembly th {
+        top: 64px;
+    }
+
+    & tbody tr {
+        border-bottom: 1px solid black;
+    }
+
+    & tbody th.label {
+        text-wrap: nowrap;
+        text-align: right;
+        padding-left: 10px;
+    }
+    & .pinned > div {
+        border-right: 2px solid black;
+        padding-right: 4px;
+        display: inline-block;
+    }
+    & .pinned {
+        position: -webkit-sticky;
+        position: sticky;
+        left: 0px;
+        background-color: gray;
+        z-index: 1;
+        text-align: right;
+    }
+
+    & tr.fromRef > th {
+        background-color: green;
+    }
+    & tr.lost > th {
+        background-color: blue;
+    }
+    & tr.lost.fromRef > th {
+        background-color: purple;
+    }
+
+    & tbody td {
+        margin: 0;
+        padding: 0 0.5px;
+        border-left: 1px solid black;
+    }
+    & th {
+        margin: 0;
+        padding: 0;
+        border-left: 1px solid black;
+    }
+    & td.B {
+        border: 0;
+    }
+
+    & td.junction div {
+        background-color: orange;
+    }
+    & tbody td.A, & td.A div {
+        background-color: #00FF00;
+    }
+    & tbody td.T, & td.T div {
+        background-color: #FF0000;
+    }
+    & tbody td.C, & td.C div {
+        background-color: #0000FF;
+    }
+    & tbody td.G, & td.G div {
+        background-color: #FFFF00;
+    }
+    & tbody td.N, & td.N div {
+        background-color: #FF00FF;
+    }
+    & tbody td.X, & td.X div {
+        background-color: #000000;
+    }
+    & tbody td.B, & td.B div {
+        color: grey;
+    }
+
+    & td.lowq {
+        filter: brightness(50%);
+    }
+    & td.mediumq {
+        filter: brightness(75%);
+    }
+    & td.N.lowq, td.N.mediumq {
+        filter: brightness(100%);
+    }
+}
+
+.smart-table {
+    border-collapse: collapse;
+
+    & td, & th {
+        border: 1px solid black;
+        padding: 0 4px;
+    }
+    & th {
+        cursor: pointer;
+    }
+
+    & tbody tr:nth-child(even) {
+        background-color: #888888;
+    }
+}
+
+.summaryInfo {
+    display: flex
+}
