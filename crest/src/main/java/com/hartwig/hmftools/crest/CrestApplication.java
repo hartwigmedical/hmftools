@@ -32,7 +32,7 @@ public class CrestApplication
 
     private static final Logger LOGGER = LogManager.getLogger(CrestApplication.class);
 
-    public static void main(String[] args) throws IOException
+    public static void main(String[] args)
     {
         logVersion();
 
