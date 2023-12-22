@@ -71,7 +71,7 @@ public class CrestApplication
     public static void logVersion()
     {
         final VersionInfo version = new VersionInfo("crest.version");
-        LOGGER.info("Cest version: {}", version.version());
+        LOGGER.info("Crest version: {}", version.version());
     }
 
     public static double computeRnaSupportedSnpsRatio(String germlineVcf, String rnaSample) throws IOException
