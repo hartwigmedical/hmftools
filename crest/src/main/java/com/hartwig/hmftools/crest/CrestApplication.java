@@ -15,7 +15,7 @@ import htsjdk.variant.vcf.VCFCodec;
 
 // Proof of concept - check if wts sample is from same patient
 // as wgs sample.
-public class WtsSampleVerifier
+public class CrestApplication
 {
 
     public static void main(String[] args) throws IOException
