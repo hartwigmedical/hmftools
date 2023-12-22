@@ -24,6 +24,8 @@ import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
+// TODO arg for thresholds
+// TODO output to file
 public class CrestApplication
 {
     private static final String RNA_SAMPLE = "rna";
@@ -48,8 +50,8 @@ public class CrestApplication
             String purpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
             String sampleId = configBuilder.getValue(SAMPLE);
             String rnaSample = configBuilder.getValue(RNA_SAMPLE);
-            final String rnaAnnotatedGermlineVcf = PurpleCommon.purpleGermlineVcfFile(purpleDir, sampleId);
-            check(rnaAnnotatedGermlineVcf, rnaSample);
+            String rnaAnnotatedGermlineVcf = PurpleCommon.purpleGermlineVcfFile(purpleDir, sampleId);
+            double supportedReadsRatio = computeSupportedReadsRatio(rnaAnnotatedGermlineVcf, rnaSample);
         }
         catch(Exception e)
         {
@@ -64,7 +66,6 @@ public class CrestApplication
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
         configBuilder.addConfigItem(RNA_SAMPLE, "RNA sample ID");
         configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
-        //        ConfigUtils.addLoggingOptions(configBuilder);
     }
 
     public static void logVersion()
@@ -73,7 +74,7 @@ public class CrestApplication
         LOGGER.info("Cest version: {}", version.version());
     }
 
-    public static double check(String germlineVcf, String rnaSample) throws IOException
+    public static double computeSupportedReadsRatio(String germlineVcf, String rnaSample) throws IOException
     {
         int supported = 0;
         var total = 0;
@@ -98,8 +99,8 @@ public class CrestApplication
                 }
             }
         }
-        double fraction = total > 0 ? supported * 1D / total : 0D;
-        LOGGER.info("Supported: " + supported + " Total: " + total + " Fraction: " + fraction);
-        return fraction;
+        double ratio = total > 0 ? supported * 1D / total : 0D;
+        LOGGER.info("Supported: " + supported + " Total: " + total + " Fraction: " + ratio);
+        return ratio;
     }
 }
