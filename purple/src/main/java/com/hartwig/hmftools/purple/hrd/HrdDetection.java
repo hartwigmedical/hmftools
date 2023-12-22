@@ -48,8 +48,8 @@ public class HrdDetection
     private static final int DEFAULT_SEGMENT_BREAK_LENGTH = 3_000_000;
 
     private static final int HRD_STATUS_LOH_CUTOFF = 8;
-    private static final int HRD_STATUS_IMBALANCE_CUTOFF = 7;
-    private static final int HRD_STATUS_SEGMENT_BREAKS_CUTOFF = 35;
+    private static final int HRD_STATUS_IMBALANCE_CUTOFF = 7; // To change to 2
+    private static final int HRD_STATUS_SEGMENT_BREAKS_CUTOFF = 35; // To change to 29
 
     private static final double MAX_COPY_NUM_DIFF = 0.5;
     private static final double MAX_COPY_NUM_DIFF_PERC = 0.2;
