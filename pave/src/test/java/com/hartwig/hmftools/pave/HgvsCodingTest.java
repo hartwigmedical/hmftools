@@ -235,6 +235,5 @@ public class HgvsCodingTest
         assertEquals(-3, impact.codingContext().NearestExonDistance);
 
         assertEquals("c.16-4_16-3dupAA", impact.codingContext().Hgvs);
-
     }
 }
