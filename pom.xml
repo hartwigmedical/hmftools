@@ -14,6 +14,7 @@
         <module>cider</module>
         <module>cobalt</module>
         <module>compar</module>
+        <module>crest</module>
         <module>cuppa</module>
         <module>fastq-tools</module>
         <module>gene-utils</module>
@@ -63,6 +64,7 @@
         <cider.version>1.0.2</cider.version>
         <cobalt.version>1.16</cobalt.version>
         <compar.version>1.2</compar.version>
+        <crest.version>0.1</crest.version>
         <cuppa.version>2.0</cuppa.version>
         <fastq-tools.version>1.0</fastq-tools.version>
         <gene-utils.version>1.1</gene-utils.version>

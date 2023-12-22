@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb;
+package com.hartwig.hmftools.crest;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
