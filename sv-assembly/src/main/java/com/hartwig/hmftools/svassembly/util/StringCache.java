@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import org.jetbrains.annotations.Contract;
-
 public enum StringCache
 {
     ;
@@ -41,7 +39,7 @@ public enum StringCache
         return String.valueOf(i);
     }
 
-    @Contract("null -> null; !null -> !null")
+    // @Contract("null -> null; !null -> !null")
     public static String tryDedupe(final String s)
     {
         if (s == null)

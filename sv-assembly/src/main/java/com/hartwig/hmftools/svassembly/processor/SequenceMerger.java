@@ -5,7 +5,6 @@ import java.util.List;
 import com.hartwig.hmftools.svassembly.models.Sequence;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.Contract;
 
 public class SequenceMerger
 {
@@ -168,7 +167,7 @@ public class SequenceMerger
             return Index < Nodes.size() && Offset < Nodes.get(Index).length();
         }
 
-        @Contract(pure = true)
+        // @Contract(pure = true)
         public NodePosition advanceOffset(final int amount)
         {
             if (Offset + amount >= Nodes.get(Index).length())
@@ -177,7 +176,7 @@ public class SequenceMerger
                 return new NodePosition(Nodes, Index, Offset + amount);
         }
 
-        @Contract(pure = true)
+        // @Contract(pure = true)
         public NodePosition advanceNode()
         {
             return new NodePosition(Nodes, Index + 1, 0);
