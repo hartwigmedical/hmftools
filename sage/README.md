@@ -175,6 +175,21 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.append.SageAppendAppl
     -out /path/to/COLO829v003.sage.rna.vcf.gz
 ```
 
+
+# Variant Visualisations
+Sage can produce HTML visualisations for specific variants of interest, showing the type of support from each overlapping read.
+
+To enable this output, set one or more of the following arguments:
+
+Argument | Description 
+---|---
+vis_variants | List of variants for which to generate output, format 'chromosome:position:ref:alt' and separated by ';'
+vis_pass_only | Generate output for all passing variants
+vis_max_support_reads | Max reads per type to display, default is 40
+vis_output_dir | Output directory for HTML files, defaults to 'vis' if not specified
+
+
+
 # Key concepts in SAGE
 
 ## BAM conventions
