@@ -86,7 +86,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.svassembly.SVAssemblyApplication
+                            <mainClass>com.hartwig.hmftools.esvee.EsveeApplication
                             </mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
