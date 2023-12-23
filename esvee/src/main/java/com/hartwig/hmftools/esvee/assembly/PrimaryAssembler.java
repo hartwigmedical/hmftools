@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.common.sv.Direction;
+import com.hartwig.hmftools.esvee.Direction;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.Junction;
 import com.hartwig.hmftools.esvee.JunctionProcessingException;

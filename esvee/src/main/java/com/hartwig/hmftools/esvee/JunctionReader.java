@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.esvee;
 
 import com.google.errorprone.annotations.MustBeClosed;
-import com.hartwig.hmftools.common.sv.Direction;
 import com.hartwig.hmftools.esvee.util.StringUtils;
 
 import java.io.File;

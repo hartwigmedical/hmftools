@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.sv;
+package com.hartwig.hmftools.esvee;
 
 public enum Direction
 {

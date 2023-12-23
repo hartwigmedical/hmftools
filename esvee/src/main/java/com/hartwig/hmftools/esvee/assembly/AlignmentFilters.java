@@ -3,7 +3,7 @@ package com.hartwig.hmftools.esvee.assembly;
 import java.util.Arrays;
 import java.util.Objects;
 
-import com.hartwig.hmftools.common.sv.Direction;
+import com.hartwig.hmftools.esvee.Direction;
 import com.hartwig.hmftools.esvee.Junction;
 import com.hartwig.hmftools.esvee.models.Record;
 

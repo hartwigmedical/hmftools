@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterables;
-import com.hartwig.hmftools.common.sv.Direction;
+import com.hartwig.hmftools.esvee.Direction;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.SVAConfig;
 import com.hartwig.hmftools.esvee.models.DiagramSet;

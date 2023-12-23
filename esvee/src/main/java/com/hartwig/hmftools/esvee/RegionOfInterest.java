@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.hartwig.hmftools.common.sv.Direction;
 import com.hartwig.hmftools.esvee.util.RangeUtils;
 
 public class RegionOfInterest

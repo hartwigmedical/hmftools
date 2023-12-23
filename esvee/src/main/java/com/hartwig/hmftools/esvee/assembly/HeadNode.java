@@ -15,7 +15,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.sv.Direction;
+import com.hartwig.hmftools.esvee.Direction;
 import com.hartwig.hmftools.esvee.SVAConfig;
 import com.hartwig.hmftools.esvee.models.Alignment;
 import com.hartwig.hmftools.esvee.models.Record;

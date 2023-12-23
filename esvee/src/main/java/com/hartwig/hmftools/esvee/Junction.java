@@ -2,8 +2,6 @@ package com.hartwig.hmftools.esvee;
 
 import org.immutables.value.Value;
 
-import com.hartwig.hmftools.common.sv.Direction;
-
 @Value.Immutable
 public abstract class Junction {
     public abstract String chromosome();
