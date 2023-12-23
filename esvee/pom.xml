@@ -8,7 +8,7 @@
         <version>local-SNAPSHOT</version>
     </parent>
 
-    <artifactId>sv-assembly</artifactId>
+    <artifactId>esvee</artifactId>
     <packaging>jar</packaging>
     <version>${sv-assembly.version}</version>
     <name>HMF Tools - Esvee</name>
@@ -31,13 +31,6 @@
             <artifactId>value</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!--
-        <dependency>
-            <groupId>org.jetbrains</groupId>
-            <artifactId>annotations</artifactId>
-        </dependency>
-        -->
-
         <dependency>
             <groupId>org.broadinstitute</groupId>
             <artifactId>gatk-bwamem-jni</artifactId>
