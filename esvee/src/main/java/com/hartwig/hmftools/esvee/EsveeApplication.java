@@ -25,7 +25,10 @@ public class EsveeApplication
 
         SV_LOGGER.info("starting Esvee");
 
-        Processor processor = new Processor(mContext);
+        Processor processor = new Processor(mConfig, mContext);
+
+        if(!processor.loadJunctionFiles())
+            System.exit(1);
 
         processor.run();
 

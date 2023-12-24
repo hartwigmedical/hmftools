@@ -2,7 +2,7 @@ package com.hartwig.hmftools.esvee.processor;
 
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.Junction;
+import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.RegionOfInterest;
 import com.hartwig.hmftools.esvee.assembly.PrimaryAssemblerCounters;
 import com.hartwig.hmftools.esvee.models.PrimaryAssembly;
@@ -10,7 +10,7 @@ import com.hartwig.hmftools.esvee.models.Record;
 
 public class PrimaryAssemblyResult
 {
-    public final com.hartwig.hmftools.esvee.Junction Junction;
+    public final com.hartwig.hmftools.esvee.common.Junction Junction;
     public final PrimaryAssemblerCounters Counters;
     public final List<Record> RecordsOfInterest;
     public final List<PrimaryAssembly> Assemblies;

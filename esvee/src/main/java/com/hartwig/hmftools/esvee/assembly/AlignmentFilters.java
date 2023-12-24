@@ -1,22 +1,22 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
+
 import java.util.Arrays;
 import java.util.Objects;
 
 import com.hartwig.hmftools.esvee.Direction;
-import com.hartwig.hmftools.esvee.Junction;
+import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.models.Record;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
-public enum AlignmentFilters
+public final class AlignmentFilters
 {
-    ;
-
     public static boolean alignmentCrossesJunction(final Record record, final Junction junction)
     {
-        return record.getUnclippedStart() <= junction.position() && junction.position() <= record.getUnclippedEnd();
+        return record.getUnclippedStart() <= junction.Position && junction.Position <= record.getUnclippedEnd();
     }
 
     public static boolean isRecordAverageQualityAbove(final Record record, final int averageBaseQThreshold)
@@ -42,9 +42,9 @@ public enum AlignmentFilters
     {
         final int startIndex;
         final int endIndex;
-        if(junction.orientation() == Direction.FORWARDS)
+        if(junction.Orientation == POS_STRAND)
         {
-            startIndex = junction.position() - record.getUnclippedStart();
+            startIndex = junction.Position - record.getUnclippedStart();
             endIndex = record.getLength();
         }
         else

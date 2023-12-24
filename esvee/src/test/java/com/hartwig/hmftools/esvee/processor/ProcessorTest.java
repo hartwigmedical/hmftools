@@ -1,22 +1,13 @@
 package com.hartwig.hmftools.esvee.processor;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.esvee.Junction;
+import com.hartwig.hmftools.esvee.common.Junction;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Ignore;
-import org.junit.Test;
 
 @Ignore
 public class ProcessorTest

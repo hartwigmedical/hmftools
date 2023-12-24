@@ -8,22 +8,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.Context;
-import com.hartwig.hmftools.esvee.Junction;
+import com.hartwig.hmftools.esvee.SvConfig;
+import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.RegionOfInterest;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.WriteType;
@@ -41,13 +41,11 @@ import com.hartwig.hmftools.esvee.models.SupportedAssembly;
 import com.hartwig.hmftools.esvee.output.VCFWriter;
 import com.hartwig.hmftools.esvee.output.html.SummaryPageGenerator;
 import com.hartwig.hmftools.esvee.output.html.VariantCallPageGenerator;
-import com.hartwig.hmftools.esvee.util.CSVReader;
 import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
 import com.hartwig.hmftools.esvee.util.ParallelMapper;
 import com.hartwig.hmftools.esvee.util.RangeUtils;
 import com.hartwig.hmftools.esvee.util.StringUtils;
 import com.hartwig.hmftools.esvee.util.Timeout;
-import com.hartwig.hmftools.esvee.ImmutableJunction;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -63,30 +61,57 @@ import htsjdk.samtools.util.SequenceUtil;
 
 public class Processor
 {
+    private final SvConfig mConfig;
     private final Context mContext;
     private final HomologySlider mHomologySlider;
 
+    private final Map<String,List<Junction>> mChrJunctionsMap;
+
     public final OverallCounters Counters = new OverallCounters();
 
-    public Processor(final Context context)
+    public Processor(final SvConfig config, final Context context)
     {
+        mConfig = config;
         mContext = context;
         mHomologySlider = new HomologySlider(mContext.ReferenceGenome);
+        mChrJunctionsMap = Maps.newHashMap();
+    }
+
+    public boolean loadJunctionFiles()
+    {
+        for(String junctionFile : mConfig.JunctionFiles)
+        {
+            Map<String,List<Junction>> newJunctionsMap = Junction.loadJunctions(junctionFile);
+
+            if(newJunctionsMap == null)
+                return false;
+
+            Junction.mergeJunctions(mChrJunctionsMap, newJunctionsMap);
+        }
+
+        return true;
     }
 
     public List<VariantCall> run()
     {
         try
         {
-            // FIXME: handle multiple
-            String junctionFile = mContext.Config.JunctionFiles.get(0);
-            final List<ImmutableJunction> junctions = new CSVReader<>(ImmutableJunction.class, junctionFile).readToEnd();
-            return run(junctions);
+            // for now merge all junctions into a single list - alternatives would be combined by proximty or chromosome
+            List<Junction> allJunctions = Lists.newArrayList();
+            mChrJunctionsMap.values().forEach(x -> allJunctions.addAll(x));
+
+            List<VariantCall> variantCalls = run(allJunctions);
+
+            return variantCalls;
         }
-        catch(final IOException exception)
+        catch(final Exception e)
         {
-            throw new RuntimeException(exception);
+            SV_LOGGER.error("process run error: {}", e.toString());
+            e.printStackTrace();
+            System.exit(1);
         }
+
+        return null;
     }
 
     public List<VariantCall> run(final List<? extends Junction> junctions)

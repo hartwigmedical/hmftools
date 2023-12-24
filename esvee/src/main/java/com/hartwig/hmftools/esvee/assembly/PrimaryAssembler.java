@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 
 import com.hartwig.hmftools.esvee.Direction;
 import com.hartwig.hmftools.esvee.Context;
-import com.hartwig.hmftools.esvee.Junction;
+import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.JunctionProcessingException;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
