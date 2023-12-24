@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.esvee;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import com.hartwig.hmftools.esvee.config.HMFConfig;
 import com.hartwig.hmftools.esvee.models.Record;
 
 import htsjdk.samtools.SAMFileHeader;
@@ -11,6 +7,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class TestUtils
 {
+    /*
     public static SVAConfig config()
     {
         return config(Map.of());
@@ -31,6 +28,7 @@ public class TestUtils
 
         return null; // HMFConfig.load(combinedConfig, SVAConfig.class, ImmutableSVAConfig.builder());
     }
+    */
 
     public static Record createSAMRecord(final String sequence)
     {

@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.esvee.config.HMFConfig;
 import com.hartwig.hmftools.esvee.processor.Processor;
 import com.hartwig.hmftools.esvee.processor.VariantCall;
 

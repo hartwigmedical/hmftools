@@ -11,14 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.Junction;
-import com.hartwig.hmftools.esvee.JunctionReader;
-import com.hartwig.hmftools.esvee.config.HMFConfig;
-import com.hartwig.hmftools.esvee.util.CSVReader;
-import com.hartwig.hmftools.esvee.util.CSVWriter;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Ignore;
