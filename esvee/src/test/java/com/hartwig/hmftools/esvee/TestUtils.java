@@ -29,7 +29,7 @@ public class TestUtils
         combinedConfig.putAll(baseConfig);
         combinedConfig.putAll(overrideConfig);
 
-        return HMFConfig.load(combinedConfig, SVAConfig.class, ImmutableSVAConfig.builder());
+        return null; // HMFConfig.load(combinedConfig, SVAConfig.class, ImmutableSVAConfig.builder());
     }
 
     public static Record createSAMRecord(final String sequence)

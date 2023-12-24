@@ -8,7 +8,7 @@ import java.util.Set;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.ReadRescue;
-import com.hartwig.hmftools.esvee.SVAConfig;
+import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.models.IRecord;
 import com.hartwig.hmftools.esvee.models.MutableRecord;
 
@@ -32,13 +32,13 @@ public class RecordNormaliser
     private final int mSmallIndelMaxEdgeDistance;
     private final int mSmallIndelMinSizeToSoftClip;
 
-    public RecordNormaliser(final RefGenomeInterface referenceGenome, final SVAConfig config)
+    public RecordNormaliser(final RefGenomeInterface referenceGenome)
     {
         mReadRescue = new ReadRescue(referenceGenome);
-        mPolyGTrimmer = new PolyGTrimmer(config.normaliserPolyGLength());
+        mPolyGTrimmer = new PolyGTrimmer(SvConstants.NORMALISERPOLYGLENGTH);
 
-        mSmallIndelMaxEdgeDistance = config.normaliserIndelMaxEdgeDistance();
-        mSmallIndelMinSizeToSoftClip = config.normaliserIndelMinSizeToSoftClip();
+        mSmallIndelMaxEdgeDistance = SvConstants.NORMALISERINDELMAXEDGEDISTANCE;
+        mSmallIndelMinSizeToSoftClip = SvConstants.NORMALISERINDELMINSIZETOSOFTCLIP;
     }
 
     @VisibleForTesting

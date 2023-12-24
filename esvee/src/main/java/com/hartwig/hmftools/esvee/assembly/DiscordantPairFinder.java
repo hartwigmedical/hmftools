@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.esvee.RegionOfInterest;
-import com.hartwig.hmftools.esvee.SVAConfig;
+import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.models.Record;
 import com.hartwig.hmftools.esvee.sam.SAMSource;
 import com.hartwig.hmftools.esvee.util.SizedIterable;
@@ -20,25 +20,23 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public class DiscordantPairFinder
 {
-    private final SVAConfig mConfig;
     private final SAMSource mSource;
 
     private final int mSearchDistance;
     private final int mMinQuality;
     private final int mMinFragmentLength;
 
-    public DiscordantPairFinder(final SVAConfig config, final SAMSource source)
+    public DiscordantPairFinder(final SAMSource source)
     {
-        mConfig = config;
         mSource = source;
-        mSearchDistance = mConfig.discordantPairSearchDistance();
-        mMinQuality = mConfig.discordantPairMinMapQ();
-        mMinFragmentLength = mConfig.discordantPairFragmentLength();
+        mSearchDistance = SvConstants.DISCORDANTPAIRSEARCHDISTANCE;
+        mMinQuality = SvConstants.DISCORDANTPAIRMINMAPQ;
+        mMinFragmentLength = SvConstants.DISCORDANTPAIRFRAGMENTLENGTH;
     }
 
     public List<Record> findDiscordantReads(final SizedIterable<Record> existingRecords)
     {
-        if (!mConfig.tryExtendingUsingDiscordantReads())
+        if(!SvConstants.TRYEXTENDINGUSINGDISCORDANTREADS)
             return List.of();
 
         final Set<String> excludeFragments = existingRecords.stream()

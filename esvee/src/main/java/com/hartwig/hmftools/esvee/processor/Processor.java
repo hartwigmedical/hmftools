@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.processor;
 
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,6 +25,8 @@ import java.util.stream.Stream;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.Junction;
 import com.hartwig.hmftools.esvee.RegionOfInterest;
+import com.hartwig.hmftools.esvee.SvConstants;
+import com.hartwig.hmftools.esvee.WriteType;
 import com.hartwig.hmftools.esvee.assembly.AssemblyExtender;
 import com.hartwig.hmftools.esvee.assembly.JunctionMetrics;
 import com.hartwig.hmftools.esvee.assembly.PrimaryAssembler;
@@ -35,11 +39,9 @@ import com.hartwig.hmftools.esvee.models.Record;
 import com.hartwig.hmftools.esvee.models.Sequence;
 import com.hartwig.hmftools.esvee.models.SupportedAssembly;
 import com.hartwig.hmftools.esvee.output.VCFWriter;
-import com.hartwig.hmftools.esvee.output.VariantLine;
 import com.hartwig.hmftools.esvee.output.html.SummaryPageGenerator;
 import com.hartwig.hmftools.esvee.output.html.VariantCallPageGenerator;
 import com.hartwig.hmftools.esvee.util.CSVReader;
-import com.hartwig.hmftools.esvee.util.CSVWriter;
 import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
 import com.hartwig.hmftools.esvee.util.ParallelMapper;
 import com.hartwig.hmftools.esvee.util.RangeUtils;
@@ -48,8 +50,6 @@ import com.hartwig.hmftools.esvee.util.Timeout;
 import com.hartwig.hmftools.esvee.ImmutableJunction;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.BAMStreamWriter;
@@ -63,8 +63,6 @@ import htsjdk.samtools.util.SequenceUtil;
 
 public class Processor
 {
-    private static final Logger LOGGER = LogManager.getLogger(Processor.class);
-
     private final Context mContext;
     private final HomologySlider mHomologySlider;
 
@@ -80,8 +78,9 @@ public class Processor
     {
         try
         {
-            final List<ImmutableJunction> junctions =
-                    new CSVReader<>(ImmutableJunction.class, mContext.Config.junctionFile().getAbsolutePath()).readToEnd();
+            // FIXME: handle multiple
+            String junctionFile = mContext.Config.JunctionFiles.get(0);
+            final List<ImmutableJunction> junctions = new CSVReader<>(ImmutableJunction.class, junctionFile).readToEnd();
             return run(junctions);
         }
         catch(final IOException exception)
@@ -94,26 +93,31 @@ public class Processor
     {
         final long startTimeNanos = System.nanoTime();
         Counters.JunctionsProcessed.add(junctions.size());
-        LOGGER.info("Starting primary assembly on {} junctions", junctions.size());
+        SV_LOGGER.info("starting primary assembly on {} junctions", junctions.size());
 
         // Primary Junction Assembly
         final List<PrimaryAssemblyResult> primaryAssemblyResults = ParallelMapper.mapWithProgress(
                 "Primary Assembly", Counters.PrimaryAssemblyTime, mContext.Executor, junctions,
                 junction -> PrimaryAssembler.process(mContext, junction, Counters.PrimaryAssemblerCounters));
+
         final int primaryAssemblyCount = primaryAssemblyResults.stream().mapToInt(r -> r.Assemblies.size()).sum();
-        LOGGER.info("Created {} primary assemblies in {}", primaryAssemblyCount, Counters.PrimaryAssemblyTime.formatValue());
-        if(!mContext.Config.debug())
+
+        SV_LOGGER.info("created {} primary assemblies in {}", primaryAssemblyCount, Counters.PrimaryAssemblyTime.formatValue());
+        if(!mContext.Config.OtherDebug)
             junctions.clear();
 
         // Inter-junction deduplication
         final List<PrimaryAssembly> primaryAssemblies = Counters.InterJunctionDeduplicationTime.time(
                 () -> consolidateNearbyAssemblies(flatten(primaryAssemblyResults)));
-        LOGGER.info("Reduced to {} assemblies in {}", primaryAssemblies.size(), Counters.InterJunctionDeduplicationTime.formatValue());
-        if(!mContext.Config.debug())
+
+        SV_LOGGER.info("reduced to {} assemblies in {}", primaryAssemblies.size(), Counters.InterJunctionDeduplicationTime.formatValue());
+
+        if(!mContext.Config.OtherDebug)
             primaryAssemblyResults.clear();
 
-        if(mContext.Config.dropGermline())
-            primaryAssemblies.removeIf(assembly -> assembly.getSupportRecords().stream().anyMatch(Record::isGermline));
+        // CHECK
+        // if(mContext.Config.dropGermline())
+        //    primaryAssemblies.removeIf(assembly -> assembly.getSupportRecords().stream().anyMatch(Record::isGermline));
 
         // Assembly Extension
         final List<ExtendedAssembly> extendedAssemblies = ParallelMapper.mapWithProgress(
@@ -121,27 +125,27 @@ public class Processor
                         assembly -> AssemblyExtender.process(mContext, assembly, Counters.AssemblyExtenderCounters)).stream()
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
-        if(!mContext.Config.debug())
+        if(!mContext.Config.OtherDebug)
             primaryAssemblies.clear();
-        LOGGER.info("Created {} extended assemblies in {}", extendedAssemblies.size(), Counters.ExtensionTime.formatValue());
+        SV_LOGGER.info("Created {} extended assemblies in {}", extendedAssemblies.size(), Counters.ExtensionTime.formatValue());
 
         // Primary phasing
         final List<Set<ExtendedAssembly>> primaryPhaseSets = Counters.PrimaryPhasingTime.time(
                 () -> PrimaryPhasing.run(extendedAssemblies));
-        LOGGER.info("Created {} primary phase sets in {}", primaryPhaseSets.size(), Counters.PrimaryPhasingTime.formatValue());
-        if(!mContext.Config.debug())
+        SV_LOGGER.info("Created {} primary phase sets in {}", primaryPhaseSets.size(), Counters.PrimaryPhasingTime.formatValue());
+        if(!mContext.Config.OtherDebug)
             extendedAssemblies.clear();
 
         // Phased assembly merging
         final List<Set<ExtendedAssembly>> mergedPhaseSets = ParallelMapper.mapWithProgress(
                 "Phased Merging", Counters.PhasedAssemblyMergingTime,
                 mContext.Executor, primaryPhaseSets, this::primaryPhasedMerging);
-        LOGGER.info("Merged primary phase sets in {}", Counters.PhasedAssemblyMergingTime.formatValue());
+        SV_LOGGER.info("Merged primary phase sets in {}", Counters.PhasedAssemblyMergingTime.formatValue());
 
         // Secondary phasing
         final List<Set<ExtendedAssembly>> secondaryPhaseSets = Counters.SecondaryPhasingTime.time(
                 () -> SecondaryPhasing.run(mergedPhaseSets));
-        LOGGER.info("Created {} secondary phase sets in {}", secondaryPhaseSets.size(), Counters.SecondaryPhasingTime.formatValue());
+        SV_LOGGER.info("Created {} secondary phase sets in {}", secondaryPhaseSets.size(), Counters.SecondaryPhasingTime.formatValue());
 
         // Secondary merging
         final List<GappedAssembly> mergedSecondaries = new ArrayList<>();
@@ -165,78 +169,80 @@ public class Processor
                 }
             }
         });
-        LOGGER.info("Merged secondaries in {}", Counters.MergeSecondaryTime.formatValue());
+        SV_LOGGER.info("Merged secondaries in {}", Counters.MergeSecondaryTime.formatValue());
 
         // Alignment
         final List<AlignedAssembly> aligned = ParallelMapper.mapWithProgress("Alignment", Counters.AlignmentTime,
                 mContext.Executor, mergedSecondaries, mContext.Aligner::align);
-        LOGGER.info("Created {} alignments in {}", aligned.size(), Counters.AlignmentTime.formatValue());
+        SV_LOGGER.info("Created {} alignments in {}", aligned.size(), Counters.AlignmentTime.formatValue());
 
         // Left sliding (we will find mid-points after calling + de-duping)
         final List<AlignedAssembly> homologised = ParallelMapper.mapWithProgress("Homology Sliding", Counters.HomologyTime,
                 mContext.Executor, aligned, mHomologySlider::slideHomology);
-        LOGGER.info("Processed homology in {}", Counters.HomologyTime.formatValue());
+        SV_LOGGER.info("Processed homology in {}", Counters.HomologyTime.formatValue());
 
         // Support scanning
         final SupportScanner supportScanner = new SupportScanner(mContext, Counters.ExtraScannedSupport);
         ParallelMapper.mapWithProgress("Support Scan", Counters.SupportScanTime,
                 mContext.Executor, homologised, supportScanner::tryRescanSupport);
-        LOGGER.info("Rescanned support, adding {} new reads in {}", Counters.ExtraScannedSupport.formatValue(),
+        SV_LOGGER.info("Rescanned support, adding {} new reads in {}", Counters.ExtraScannedSupport.formatValue(),
                 Counters.SupportScanTime.formatValue());
 
         // Calling
-        final List<VariantCall> variants = Counters.VariantCallingTime.time(() -> new VariantCaller(mContext.Config, mContext.Executor)
+        final List<VariantCall> variants = Counters.VariantCallingTime.time(() -> new VariantCaller(mContext.Executor)
                 .callVariants(homologised));
-        LOGGER.info("Called {} variants in {}", variants.size(), Counters.VariantCallingTime.formatValue());
+        SV_LOGGER.info("Called {} variants in {}", variants.size(), Counters.VariantCallingTime.formatValue());
 
         // Variant Deduplication
         final VariantDeduplication deduplicator = new VariantDeduplication(mContext, Counters.VariantDeduplicationCounters);
         final List<VariantCall> deduplicated = deduplicator.deduplicate(variants);
 
-        LOGGER.info("{} variants remaining after deduplication", deduplicated.size());
+        SV_LOGGER.info("{} variants remaining after deduplication", deduplicated.size());
         deduplicated.removeIf(variant -> variant.supportingFragments().isEmpty());
-        LOGGER.info("{} variants remaining after removing unsubstantiated", deduplicated.size());
+        SV_LOGGER.info("{} variants remaining after removing unsubstantiated", deduplicated.size());
 
         final long lowQualityVariants = deduplicated.stream()
-                .filter(variant -> variant.quality() < mContext.Config.vcfLowQualityThreshold())
+                .filter(variant -> variant.quality() < SvConstants.VCFLOWQUALITYTHRESHOLD)
                 .count();
-        LOGGER.info("{} low-quality variants found", lowQualityVariants);
+        SV_LOGGER.info("{} low-quality variants found", lowQualityVariants);
 
         final long lowSupportVariants = deduplicated.stream()
-                .filter(variant -> variant.quality() >= mContext.Config.vcfLowQualityThreshold())
-                .filter(variant -> variant.supportingFragments().size() < mContext.Config.minReadsToSupportAssembly())
+                .filter(variant -> variant.quality() >= SvConstants.VCFLOWQUALITYTHRESHOLD)
+                .filter(variant -> variant.supportingFragments().size() < SvConstants.MINREADSTOSUPPORTASSEMBLY)
                 .count();
-        LOGGER.info("{} low-support variants found (excl low-quality)", lowSupportVariants);
+        SV_LOGGER.info("{} low-support variants found (excl low-quality)", lowSupportVariants);
 
+        /* CHECK
         if(mContext.Config.dropGermline())
         {
             deduplicated.removeIf(VariantCall::isGermline);
-            LOGGER.info("{} variants remaining after dropping those with germline support", deduplicated.size());
+            SV_LOGGER.info("{} variants remaining after dropping those with germline support", deduplicated.size());
         }
+        */
 
         if(!mContext.Problems.isEmpty())
         {
-            LOGGER.warn("Encountered {} problems", mContext.Problems.size());
+            SV_LOGGER.warn("Encountered {} problems", mContext.Problems.size());
             if(mContext.Problems.size() < 50)
             {
                 for(final Problem problem : mContext.Problems)
-                    LOGGER.warn("{}", problem);
+                    SV_LOGGER.warn("{}", problem);
             }
         }
         else
-            LOGGER.info("No problems encountered");
+            SV_LOGGER.info("No problems encountered");
         final long endTimeNanos = System.nanoTime();
-        LOGGER.info("Completed processing in {}", StringUtils.formatNanos(endTimeNanos - startTimeNanos));
+        SV_LOGGER.info("Completed processing in {}", StringUtils.formatNanos(endTimeNanos - startTimeNanos));
 
-        if(mContext.Config.createHTMLSummaries())
+        if(mContext.Config.writeHtmlFiles())
             writeHTMLSummaries(deduplicated);
 
         writeVCF(deduplicated);
 
-        if(mContext.Config.outputCSVFile() != null)
+        if(mContext.Config.WriteTypes.contains(WriteType.BREAKEND_TSV))
             writeCSV(deduplicated);
 
-        if(mContext.Config.outputBAMFile() != null)
+        if(mContext.Config.WriteTypes.contains(WriteType.ASSEMBLY_BAM))
             writeBAM(deduplicated);
 
         return deduplicated;
@@ -247,34 +253,35 @@ public class Processor
         int summariesWritten = 0;
         for(final VariantCall call : variants)
         {
-            if(summariesWritten++ > mContext.Config.maxHTMLSummaries())
+            if(summariesWritten++ > SvConstants.MAX_HTML_SUMMARIES)
             {
-                LOGGER.warn("Not writing further HTML summaries -- limit reached. Increase -max_html_summaries to see more.");
+                SV_LOGGER.warn("Not writing further HTML summaries -- limit reached. Increase -max_html_summaries to see more.");
                 break;
             }
 
             try
             {
-                VariantCallPageGenerator.generatePage(mContext.Config.htmlSummariesFolder(), mContext.ReferenceGenome, mContext.SupportChecker, call);
+                VariantCallPageGenerator.generatePage(mContext.Config.HtmlOutputDir, mContext.ReferenceGenome, mContext.SupportChecker, call);
             }
             catch(final Exception ex)
             {
-                LOGGER.error("Failed to generate HTML for {}", call, ex);
+                SV_LOGGER.error("Failed to generate HTML for {}", call, ex);
             }
         }
 
         try
         {
-            SummaryPageGenerator.generatePage(mContext.Config.htmlSummariesFolder(), Counters, variants);
+            SummaryPageGenerator.generatePage(mContext.Config.HtmlOutputDir, Counters, variants);
         }
         catch(final Exception ex)
         {
-            LOGGER.error("Failure while generating summary HTML", ex);
+            SV_LOGGER.error("Failure while generating summary HTML", ex);
         }
     }
 
     private void writeCSV(final List<VariantCall> variants)
     {
+        /*
         variants.sort(Comparator.<VariantCall, String>comparing(v -> Objects.requireNonNullElse(v.LeftChromosome, v.RightChromosome))
                 .thenComparingInt(v -> v.LeftPosition == 0 ? v.RightPosition : v.LeftPosition));
 
@@ -287,13 +294,14 @@ public class Processor
                         variant.associatedAssemblies().stream().map(asm -> asm.Assembly).collect(Collectors.toList()),
                         variant.Classification,
                         List.of(), csvFilters(variant))));
+        */
     }
 
     private String csvFilters(final VariantCall variant)
     {
-        final boolean isLowOverhang = variant.overhang() < mContext.Config.vcfLowOverhangThreshold();
-        final boolean isLowQuality = variant.quality() < mContext.Config.vcfLowQualityThreshold();
-        final boolean isLowSupport = variant.supportingFragments().size() < mContext.Config.minReadsToSupportAssembly();
+        final boolean isLowOverhang = variant.overhang() < SvConstants.VCFLOWOVERHANGTHRESHOLD;
+        final boolean isLowQuality = variant.quality() < SvConstants.VCFLOWQUALITYTHRESHOLD;
+        final boolean isLowSupport = variant.supportingFragments().size() < SvConstants.MINREADSTOSUPPORTASSEMBLY;
         final boolean isLikelyFalse = isLowSupport || (isLowOverhang && variant.discordantSupport() == 0) || isLowQuality;
         final List<String> filters = new ArrayList<>();
         if(variant.isGermline())
@@ -327,7 +335,7 @@ public class Processor
             }
             catch(final Exception ex)
             {
-                LOGGER.error("Failure while appending to call VCF: {}", call, ex);
+                SV_LOGGER.error("Failure while appending to call VCF: {}", call, ex);
             }
         }
         writer.close();
@@ -386,8 +394,9 @@ public class Processor
                 .sorted(NaturalSortComparator.of(SAMSequenceRecord::getSequenceName))
                 .map(seq -> new SAMSequenceRecord(seq.getSequenceName(), seq.getSequenceLength()))
                 .forEach(header::addSequence);
-        final String outputFilename = mContext.Config.outputBAMFile();
-        assert outputFilename != null;
+        
+        String outputFilename = mContext.Config.outputFilename(WriteType.ASSEMBLY_BAM);
+        
         try
         {
             final var writer = new BAMStreamWriter(new FileOutputStream(outputFilename),
@@ -438,7 +447,7 @@ public class Processor
         }
         catch(final Exception ex)
         {
-            LOGGER.warn("Failure while writing output BAM", ex);
+            SV_LOGGER.warn("Failure while writing output BAM", ex);
         }
     }
 
@@ -615,7 +624,8 @@ public class Processor
 
     private Set<ExtendedAssembly> primaryPhasedMerging(final Set<ExtendedAssembly> primaryPhaseSet)
     {
-        final Timeout timeout = new Timeout(mContext.Config, TimeUnit.SECONDS.toNanos(5));
+        long timeoutNs = SvConstants.EXTENSION_TIMEOUT * 1_000_000;
+        final Timeout timeout = new Timeout(SvConstants.TIMEOUTS_ENABLED, timeoutNs); // FIXME: NANOS_IN_MILLISECOND
         try
         {
             final Set<ExtendedAssembly> result = new HashSet<>(primaryPhaseSet);
@@ -669,8 +679,8 @@ public class Processor
         }
         catch(final Throwable throwable)
         {
-            LOGGER.warn("Failure during phased assembly merging with group of size {}", primaryPhaseSet.size(), throwable);
-            LOGGER.warn("{}", RegionOfInterest.tryMerge(
+            SV_LOGGER.warn("Failure during phased assembly merging with group of size {}", primaryPhaseSet.size(), throwable);
+            SV_LOGGER.warn("{}", RegionOfInterest.tryMerge(
                     primaryPhaseSet.stream()
                             .flatMap(assembly -> assembly.getSupport().stream())
                             .map(Map.Entry::getKey)
@@ -804,7 +814,7 @@ public class Processor
             if(current == null)
                 continue;
 
-            final int maxDedupeDistance = mContext.Config.maxDistanceToDedupeAssemblies();
+            final int maxDedupeDistance = SvConstants.MAXDISTANCETODEDUPEASSEMBLIES;
             final int maxToCheck = Math.min(results.size() - i - 1, maxDedupeDistance * 2);
             for(int j = 0; j < maxToCheck; j++)
             {
@@ -878,7 +888,7 @@ public class Processor
     {
         // FIXME: Correctly order these
         if(assemblies.size() > 1)
-            LOGGER.warn("Found more than 1 assembly ({}) while creating gapped ({})", assemblies.size(),
+            SV_LOGGER.warn("Found more than 1 assembly ({}) while creating gapped ({})", assemblies.size(),
                     assemblies.stream().map(assembly -> assembly.Name).collect(Collectors.toList()));
 
         final Map<ExtendedAssembly, Map<ExtendedAssembly, Long>> leftWise = new IdentityHashMap<>();
@@ -903,7 +913,7 @@ public class Processor
         for(final ExtendedAssembly assembly : assemblies)
             for(final Record support : assembly.getSupportRecords())
                 if(!gappedAssembly.tryAddSupport(mContext.SupportChecker, support))
-                    LOGGER.info("Failed to add support for assembly {}: {}", gappedAssembly.Name, support.getName());
+                    SV_LOGGER.info("Failed to add support for assembly {}: {}", gappedAssembly.Name, support.getName());
 
         return gappedAssembly;
     }

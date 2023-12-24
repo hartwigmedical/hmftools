@@ -46,6 +46,7 @@ public class SVAssemblyIntegrationTest
         return -1;
     }
 
+    /*
     public Set<VariantCall> process(final List<Pair<String, Integer>> locations, final boolean debug)
     {
         final Map<String, Object> options = new HashMap<>(Map.of(
@@ -81,6 +82,7 @@ public class SVAssemblyIntegrationTest
 
         return new HashSet<>(processor.run(junctions));
     }
+    */
 
     /* CHASHA FIXME
     @Test

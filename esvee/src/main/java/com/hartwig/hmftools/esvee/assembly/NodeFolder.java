@@ -12,7 +12,7 @@ import java.util.function.BiConsumer;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
-import com.hartwig.hmftools.esvee.SVAConfig;
+import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.util.Timeout;
 
 import org.jetbrains.annotations.Nullable;
@@ -20,18 +20,16 @@ import org.jetbrains.annotations.Nullable;
 @NotThreadSafe
 public class NodeFolder
 {
-    private final SVAConfig mConfig;
     private final Timeout mTimeout;
     private int mOperations;
 
-    public NodeFolder(final SVAConfig config)
+    public NodeFolder()
     {
-        this(config, new Timeout(false, 0));
+        this(new Timeout(false, 0));
     }
 
-    public NodeFolder(final SVAConfig config, final Timeout timeout)
+    public NodeFolder(final Timeout timeout)
     {
-        mConfig = config;
         mTimeout = timeout;
     }
 
@@ -76,10 +74,10 @@ public class NodeFolder
             right = temp;
         }
 
-        if (left.MaxQuality > mConfig.lowBaseQualThreshold())
+        if (left.MaxQuality > SvConstants.LOW_BASE_QUAL_THRESHOLD)
             return;
 
-        if (left.Quality < right.Quality && (left.Support.size() == 1 || left.Quality < mConfig.lowBaseQualCumulativeThreshold()))
+        if (left.Quality < right.Quality && (left.Support.size() == 1 || left.Quality < SvConstants.LOW_BASE_QUAL_CUMULATIVE_THRESHOLD))
             node.removeSuccessor(left.Base);
     }
 
@@ -204,7 +202,7 @@ public class NodeFolder
         final boolean isLowQuality = isLowQualityBase(left, true) || isLowQualityBase(right, false);
         final boolean mismatches = left.Base != right.Base && !isLowQuality;
         final int mismatchCount = mismatchCountSoFar + (mismatches ? 1 : 0);
-        if (mismatchCount > mConfig.maxMismatchesForFolding())
+        if (mismatchCount > SvConstants.MAXMISMATCHESFORFOLDING)
             return false;
 
         // left & right can be overlayed iff every possible path from right has a candidate path through left that does not disagree
@@ -239,8 +237,8 @@ public class NodeFolder
 
     private boolean isLowQualityBase(final Node node, final boolean checkDepth)
     {
-        return node.MaxQuality <= mConfig.lowBaseQualThreshold()
-                || (checkDepth && node.supportDepth() > 1 && node.Quality <= mConfig.lowBaseQualCumulativeThreshold());
+        return node.MaxQuality <= SvConstants.LOW_BASE_QUAL_THRESHOLD
+            || (checkDepth && node.supportDepth() > 1 && node.Quality <= SvConstants.LOW_BASE_QUAL_CUMULATIVE_THRESHOLD);
     }
 
     @SuppressWarnings("ConstantValue")
@@ -261,10 +259,10 @@ public class NodeFolder
 
     Node fold(final Node destination, final Node eliminated)
     {
-        final HeadNode leftHead = new HeadNode(mConfig);
+        final HeadNode leftHead = new HeadNode();
         destination.successors().forEach(leftHead::setNext);
 
-        final HeadNode rightHead = new HeadNode(mConfig);
+        final HeadNode rightHead = new HeadNode();
         eliminated.successors().forEach(rightHead::setNext);
 
         final HeadNode merged = HeadNode.combine(leftHead, rightHead);

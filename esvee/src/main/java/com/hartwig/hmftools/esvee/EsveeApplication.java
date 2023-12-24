@@ -1,52 +1,46 @@
 package com.hartwig.hmftools.esvee;
 
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.common.utils.version.VersionInfo;
-import com.hartwig.hmftools.esvee.config.HMFConfig;
-import com.hartwig.hmftools.esvee.processor.Processor;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.SvConstants.APP_NAME;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
-import org.jetbrains.annotations.Nullable;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.processor.Processor;
 
 public class EsveeApplication
 {
-    private static final Logger LOGGER = LogManager.getLogger(EsveeApplication.class);
+    private final SvConfig mConfig;
+    private final Context mContext;
+
+    public EsveeApplication(final ConfigBuilder configBuilder)
+    {
+        mConfig = new SvConfig(configBuilder);
+
+        mContext = Context.create(mConfig);
+    }
+
+    public void run()
+    {
+        long startTimeMs = System.currentTimeMillis();
+
+        SV_LOGGER.info("starting Esvee");
+
+        Processor processor = new Processor(mContext);
+
+        processor.run();
+
+        SV_LOGGER.info("Esvee complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
 
     public static void main(final String[] args)
     {
-        final ConfigBuilder configBuilder = new ConfigBuilder();
-        ConfigUtils.addLoggingOptions(configBuilder);
-        SVAConfig.addConfig(configBuilder);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
+        SvConfig.registerConfig(configBuilder);
 
-        ConfigUtils.setLogLevel(configBuilder);
-        Configurator.setLevel(LOGGER.getName(), Level.INFO);
-        logVersion();
+        configBuilder.checkAndParseCommandLine(args);
 
-        @Nullable
-        final SVAConfig config = HMFConfig.load(configBuilder, SVAConfig.class, ImmutableSVAConfig.builder());
-        if(config == null)
-            System.exit(1);
-
-        LOGGER.info("Starting SVAssembly");
-
-        final Context context = Context.create(config);
-
-        new Processor(context).run();
-    }
-
-    public static void logVersion()
-    {
-        final VersionInfo version = new VersionInfo("sv-assembly.version");
-        LOGGER.info("SvAssembly version: {}", version.version());
+        EsveeApplication esvee = new EsveeApplication(configBuilder);
+        esvee.run();
     }
 }

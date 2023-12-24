@@ -10,9 +10,11 @@ public class SupportCheckerTest
 {
     private static SupportChecker checker()
     {
-        return new SupportChecker(TestUtils.config(
-                Map.of("max_mismatched_count_for_strong_support", "1",
-                        "max_mismatched_count_for_weak_support", "2")));
+        return new SupportChecker();
+
+        // TestUtils.config(
+        //                Map.of("max_mismatched_count_for_strong_support", "1",
+        //                        "max_mismatched_count_for_weak_support", "2"))
     }
 
     private static Sequence sequence(final String bases)

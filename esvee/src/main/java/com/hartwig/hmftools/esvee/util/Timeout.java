@@ -6,18 +6,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.JunctionProcessingException;
-import com.hartwig.hmftools.esvee.SVAConfig;
 
 public class Timeout
 {
     private final boolean mEnabled;
     private final long mDeadlineTimeNanos;
     private final Map<Object, Object> mContext = new LinkedHashMap<>();
-
-    public Timeout(final SVAConfig config, final long timeoutNanos)
-    {
-        this(config.timeoutsEnabled(), timeoutNanos);
-    }
 
     public Timeout(final boolean enabled, final long timeoutNanos)
     {

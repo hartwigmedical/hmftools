@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.Context;
+import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.models.AssemblyClassification;
 import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
 import com.hartwig.hmftools.esvee.processor.VariantCall;
@@ -45,7 +46,7 @@ public class VCFWriter implements AutoCloseable
 
         final SAMSequenceDictionary sequenceDictionary = context.ReferenceGenome.refGenomeFile().getSequenceDictionary();
         mWriter = new VariantContextWriterBuilder()
-                .setOutputFile(context.Config.outputFile())
+                .setOutputFile(context.Config.VcfFile)
                 .modifyOption(Options.INDEX_ON_THE_FLY, false)
                 .modifyOption(Options.USE_ASYNC_IO, false)
                 .setReferenceDictionary(sequenceDictionary)
@@ -138,9 +139,9 @@ public class VCFWriter implements AutoCloseable
                 .collect(Collectors.toList());
 
         final Set<String> filters = new HashSet<>();
-        final boolean isLowOverhang = overhang < mContext.Config.vcfLowOverhangThreshold();
-        final boolean isLowQuality = call.quality() < mContext.Config.vcfLowQualityThreshold();
-        final boolean isLowSupport = call.supportingFragments().size() < mContext.Config.minReadsToSupportAssembly();
+        final boolean isLowOverhang = overhang < SvConstants.VCFLOWOVERHANGTHRESHOLD;
+        final boolean isLowQuality = call.quality() < SvConstants.VCFLOWQUALITYTHRESHOLD;
+        final boolean isLowSupport = call.supportingFragments().size() < SvConstants.MINREADSTOSUPPORTASSEMBLY;
         final boolean isLikelyFalse = isLowSupport || (isLowOverhang && call.discordantSupport() == 0) || isLowQuality;
         if (call.isGermline())
             filters.add("GERMLINE");

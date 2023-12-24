@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.SVAConfig;
+import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.models.Sequence;
 import com.hartwig.hmftools.esvee.processor.SequenceDecomposer;
 
@@ -22,13 +22,13 @@ public class SupportChecker
     public final SupportCheckerConfig WeakSupport;
     public final SupportCheckerConfig AssemblySupport;
 
-    public SupportChecker(final SVAConfig config)
+    public SupportChecker()
     {
-        mLowBaseQualThreshold = config.lowBaseQualThreshold();
+        mLowBaseQualThreshold = SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
-        StrongSupport = new SupportCheckerConfig(config.maxMismatchedCountForStrongSupport(), false);
-        WeakSupport = new SupportCheckerConfig(config.maxMismatchedCountForWeakSupport(), false);
-        AssemblySupport = new SupportCheckerConfig(config.maxMismatchedCountForDedupingAssemblies(), true);
+        StrongSupport = new SupportCheckerConfig(SvConstants.MAXMISMATCHEDCOUNTFORSTRONGSUPPORT, false);
+        WeakSupport = new SupportCheckerConfig(SvConstants.MAXMISMATCHEDCOUNTFORWEAKSUPPORT, false);
+        AssemblySupport = new SupportCheckerConfig(SvConstants.MAXMISMATCHEDCOUNTFORDEDUPINGASSEMBLIES, true);
     }
 
     public class SupportCheckerConfig

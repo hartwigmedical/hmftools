@@ -15,7 +15,8 @@ import com.hartwig.hmftools.esvee.Direction;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.Junction;
 import com.hartwig.hmftools.esvee.JunctionProcessingException;
-import com.hartwig.hmftools.esvee.SVAConfig;
+import com.hartwig.hmftools.esvee.SvConfig;
+import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.models.DiagramSet;
 import com.hartwig.hmftools.esvee.models.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.models.Record;
@@ -37,7 +38,7 @@ public class PrimaryAssembler
 {
     private static final Logger LOGGER = LogManager.getLogger(PrimaryAssembler.class);
 
-    private final SVAConfig mConfig;
+    private final SvConfig mConfig;
     private final SAMSource mSAMSource;
     private final SupportChecker mSupportChecker;
     private final NodeFolder mNodeFolder;
@@ -54,7 +55,8 @@ public class PrimaryAssembler
     {
         try
         {
-            final boolean createDiagrams = context.Config.createHTMLSummaries() && context.Config.createDiagrams();
+            boolean createDiagrams = context.Config.writeHtmlFiles() && context.Config.PlotDiagrams;
+
             final PrimaryAssembler assembler = new PrimaryAssembler(context.Config, context.SAMSource,
                     context.SupportChecker, junction.chromosome(), junction.position(), junction.orientation(),
                     createDiagrams);
@@ -76,14 +78,14 @@ public class PrimaryAssembler
         }
     }
 
-    public PrimaryAssembler(final SVAConfig config, final SAMSource source,
+    public PrimaryAssembler(final SvConfig config, final SAMSource source,
             final SupportChecker supportChecker, final String junctionChromosome, final int junctionPosition,
             final Direction orientation, final boolean createDiagrams)
     {
         mConfig = config;
         mSAMSource = source;
         mSupportChecker = supportChecker;
-        mNodeFolder = new NodeFolder(mConfig);
+        mNodeFolder = new NodeFolder();
         mJunctionChromosome = junctionChromosome;
         mJunctionPosition = junctionPosition;
         mJunctionOrientation = orientation;
@@ -110,7 +112,7 @@ public class PrimaryAssembler
 
         final List<Record> rawAlignments = nearbyAlignments.stream()
                 .filter(Counter.asPredicate(alignment -> AlignmentFilters.alignmentCrossesJunction(alignment, junction), mCounters.ReadsCrossingJunction))
-                .filter(Counter.asPredicate(alignment -> AlignmentFilters.isRecordAverageQualityAbove(alignment, mConfig.averageQualityThreshold()), mCounters.ReadsPassingRawQualityThreshold))
+                .filter(Counter.asPredicate(alignment -> AlignmentFilters.isRecordAverageQualityAbove(alignment, SvConstants.AVG_BASE_QUAL_THRESHOLD), mCounters.ReadsPassingRawQualityThreshold))
                 .map(alignment -> realignForJunction(alignment, junction))
                 .collect(Collectors.toList());
 
@@ -119,23 +121,24 @@ public class PrimaryAssembler
                 .collect(Collectors.toList());
 
         final List<Record> filteredAlignments = withLowQAlignments.stream()
-                .filter(Counter.asPredicate(alignment -> AlignmentFilters.isRecordAverageQualityPastJunctionAbove(alignment, junction, mConfig.averageQualityThreshold()), mCounters.ReadsPassingJunctionQualityThreshold))
-                .filter(Counter.asPredicate(alignment -> AlignmentFilters.hasAcceptableMapQ(alignment, mConfig.minMapQToStartJunction()), mCounters.HasAcceptableMapQ))
+                .filter(Counter.asPredicate(alignment -> AlignmentFilters.isRecordAverageQualityPastJunctionAbove(alignment, junction, SvConstants.AVG_BASE_QUAL_THRESHOLD), mCounters.ReadsPassingJunctionQualityThreshold))
+                .filter(Counter.asPredicate(alignment -> AlignmentFilters.hasAcceptableMapQ(alignment, SvConstants.MINMAPQTOSTARTJUNCTION), mCounters.HasAcceptableMapQ))
                 .filter(Counter.asPredicate(AlignmentFilters::isNotBadlyMapped, mCounters.WellMapped))
                 .collect(Collectors.toList());
 
         if(filteredAlignments.isEmpty())
             return List.of(); // There are no reads of acceptable quality supporting this junction
 
-        final Timeout timeout = new Timeout(mConfig, TimeUnit.MILLISECONDS.toNanos(mConfig.primaryAssemblyTimeoutMillis()));
+        final Timeout timeout = new Timeout(SvConstants.TIMEOUTS_ENABLED, TimeUnit.MILLISECONDS.toNanos(SvConstants.PRIMARY_TIMEOUT));
         timeout.addContext(junction);
         final List<PrimaryAssembly> initialAssemblies =
                 mCounters.JunctionConstructionTimeNanos.time(() -> createInitialAssemblies(filteredAlignments, timeout));
         mCounters.InitialAssemblies.add(initialAssemblies.size());
         timeout.checkTimeout();
-        final List<PrimaryAssembly> extendedInitial = mConfig.extendPrimaries()
+        final List<PrimaryAssembly> extendedInitial = SvConstants.EXTEND_PRIMARIES
                  ? mCounters.JunctionExtensionTimeNanos.time(() -> extendInitial(withLowQAlignments, initialAssemblies, timeout))
                 : initialAssemblies;
+
         timeout.checkTimeout();
 
         final List<PrimaryAssembly> dedupedInitial = AssemblyFiltering.trimAndDeduplicate(mSupportChecker, extendedInitial, timeout);
@@ -177,7 +180,7 @@ public class PrimaryAssembler
     {
         timeout.checkTimeout();
 
-        HeadNode graph = HeadNode.create(mConfig, assembly, direction);
+        HeadNode graph = HeadNode.create(assembly, direction);
         final Set<Record> support = assembly.getSupportRecords().stream()
                 .collect(Collectors.toSet());
         for (final Record alignment : alignments)
@@ -187,7 +190,7 @@ public class PrimaryAssembler
             if (!mSupportChecker.WeakSupport.supports(assembly, alignment))
                 continue; // PERF: This should be supports-at
 
-            graph = HeadNode.combine(graph, HeadNode.create(mConfig, alignment, assembly.AnchorPosition, direction));
+            graph = HeadNode.combine(graph, HeadNode.create(alignment, assembly.AnchorPosition, direction));
         }
 
         final var diagrams = simplifyGraph("Initial Extension", graph, true);
@@ -307,7 +310,7 @@ public class PrimaryAssembler
         timeout.addContext("Alignment Count", alignments.size());
         final HeadNode combinedForwards = alignments.stream()
                 .filter(alignment -> alignment.getChromosome().equals(mJunctionChromosome))
-                .map(alignment -> HeadNode.create(mConfig, alignment, mJunctionPosition, mJunctionOrientation))
+                .map(alignment -> HeadNode.create(alignment, mJunctionPosition, mJunctionOrientation))
                 .filter(Objects::nonNull)
                 .reduce(HeadNode::combine)
                 .orElseThrow();
@@ -384,7 +387,7 @@ public class PrimaryAssembler
     {
         final Map<Record, HeadNode> reverseSequences = new HashMap<>();
         for(final Record record : alignments)
-            reverseSequences.put(record, HeadNode.create(mConfig, record, mJunctionPosition, mJunctionOrientation.opposite()));
+            reverseSequences.put(record, HeadNode.create(record, mJunctionPosition, mJunctionOrientation.opposite()));
 
         final List<PrimaryAssembly> anchored = initialAssemblies.stream()
                 .flatMap(candidateAssembly -> createAnchor(reverseSequences, candidateAssembly, timeout).stream())
@@ -447,7 +450,7 @@ public class PrimaryAssembler
                     assembly.tryAddSupport(mSupportChecker, record);
             }
 
-            if (assembly.getSupportFragments().size() > mConfig.minReadsToSupportAssembly())
+            if (assembly.getSupportFragments().size() > SvConstants.MINREADSTOSUPPORTASSEMBLY)
                 anchoredAssemblies.add(assembly);
         }
 

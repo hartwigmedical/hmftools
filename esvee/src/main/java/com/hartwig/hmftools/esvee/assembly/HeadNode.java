@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.Direction;
-import com.hartwig.hmftools.esvee.SVAConfig;
+import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.models.Alignment;
 import com.hartwig.hmftools.esvee.models.Record;
 import com.hartwig.hmftools.esvee.models.SupportedAssembly;
@@ -27,14 +27,11 @@ import org.jetbrains.annotations.Nullable;
 
 public class HeadNode extends Node
 {
-    private final SVAConfig mConfig;
     private int mJunctions;
 
-    public HeadNode(final SVAConfig config)
+    public HeadNode()
     {
         super('S');
-
-        mConfig = config;
     }
 
     /** Approximate junction count, inaccurate after folding or mutating */
@@ -81,8 +78,8 @@ public class HeadNode extends Node
 
     private boolean isLowQualityBase(final Node node, final boolean checkDepth)
     {
-        return node.MaxQuality <= mConfig.lowBaseQualThreshold()
-                || (checkDepth && node.supportDepth() > 1 && node.Quality <= mConfig.lowBaseQualCumulativeThreshold());
+        return node.MaxQuality <= SvConstants.LOW_BASE_QUAL_THRESHOLD
+            || (checkDepth && node.supportDepth() > 1 && node.Quality <= SvConstants.LOW_BASE_QUAL_CUMULATIVE_THRESHOLD);
     }
 
     static List<Node.Support> mergeSupport(final List<Node.Support> left, final List<Node.Support> right)
@@ -173,8 +170,8 @@ public class HeadNode extends Node
                     if(!leftSuccessors.containsAll(rightSuccessors))
                     {
                         if(rightSuccessors.isEmpty()
-                                && right.Quality < mConfig.lowBaseQualCumulativeThreshold()
-                                && left.Quality > mConfig.lowBaseQualCumulativeThreshold())
+                                && right.Quality < SvConstants.LOW_BASE_QUAL_CUMULATIVE_THRESHOLD
+                                && left.Quality > SvConstants.LOW_BASE_QUAL_CUMULATIVE_THRESHOLD)
                             node.removeSuccessor(right.Base);
                         continue; // Not merged
                     }
@@ -184,7 +181,7 @@ public class HeadNode extends Node
                         continue;
                     }
 
-                    if(left.MaxQuality < mConfig.lowBaseQualThreshold() && right.MaxQuality < mConfig.lowBaseQualThreshold())
+                    if(left.MaxQuality < SvConstants.LOW_BASE_QUAL_THRESHOLD && right.MaxQuality < SvConstants.LOW_BASE_QUAL_THRESHOLD)
                     {
                         if(left.Base < right.Base)
                         {
@@ -192,7 +189,7 @@ public class HeadNode extends Node
                             left.MaxQuality = left.Quality = 0;
                         }
                     }
-                    else if(right.MaxQuality < mConfig.lowBaseQualThreshold())
+                    else if(right.MaxQuality < SvConstants.LOW_BASE_QUAL_THRESHOLD)
                         node.removeSuccessor(right.Base);
                     else if(right.supportDepth() == 1 && left.supportDepth() > 2)
                         node.removeSuccessor(right.Base);
@@ -551,7 +548,7 @@ public class HeadNode extends Node
 
     private int rescoreOverlay(final Deque<Node> path, final int rawScore)
     {
-        final int repeatLength = mConfig.assemblyExtensionMaxRepeatScore() + 1;
+        final int repeatLength = SvConstants.ASSEMBLYEXTENSIONMAXREPEATSCORE + 1;
         final int errors = path.size() - rawScore;
         int score = 0;
         final Deque<Node> recentPath = new ArrayDeque<>();
@@ -571,7 +568,7 @@ public class HeadNode extends Node
     @Override
     public HeadNode deepCopy()
     {
-        final HeadNode clone = new HeadNode(mConfig);
+        final HeadNode clone = new HeadNode();
 
         final Queue<Pair<Node, Node>> worklist = new ArrayDeque<>();
         for (final Node successor : successors())
@@ -611,9 +608,9 @@ public class HeadNode extends Node
         return startPosition - record.getUnclippedStart();
     }
 
-    public static HeadNode createIndexed(final SVAConfig config, final Record alignment, final int startIndex, final Direction orientation)
+    public static HeadNode createIndexed(final Record alignment, final int startIndex, final Direction orientation)
     {
-        final HeadNode root = new HeadNode(config);
+        final HeadNode root = new HeadNode();
         Node current = root;
         final int startOffset = orientation == Direction.FORWARDS
                 ? startIndex
@@ -640,21 +637,21 @@ public class HeadNode extends Node
     }
 
     @Nullable
-    public static HeadNode create(final SVAConfig config, final Record record, final int startPosition, final boolean isForwards)
+    public static HeadNode create(final Record record, final int startPosition, final boolean isForwards)
     {
-        return create(config, record, startPosition, isForwards ? Direction.FORWARDS : Direction.REVERSE);
+        return create(record, startPosition, isForwards ? Direction.FORWARDS : Direction.REVERSE);
     }
 
     @Nullable
-    public static HeadNode create(final SVAConfig config, final Record record, final int startPosition, final Direction orientation)
+    public static HeadNode create(final Record record, final int startPosition, final Direction orientation)
     {
         final int startIndex = getReadStartIndex(record, startPosition);
         if (startIndex < 0 || startIndex >= record.getLength())
             return null;
-        return createIndexed(config, record, startIndex, orientation);
+        return createIndexed(record, startIndex, orientation);
     }
 
-    public static HeadNode create(final SVAConfig config, final SupportedAssembly assembly, final Direction orientation)
+    public static HeadNode create(final SupportedAssembly assembly, final Direction orientation)
     {
         // For each base in the assembly, determine what supports it at that base
         final List<List<Node.Support>> nodeSupport = new ArrayList<>(assembly.Assembly.length());
@@ -679,7 +676,7 @@ public class HeadNode extends Node
             if(list.size() > 1)
                 list.sort(Comparator.naturalOrder());
 
-        final HeadNode root = new HeadNode(config);
+        final HeadNode root = new HeadNode();
         Node current = root;
         for(int i = 0; i < assembly.Assembly.length(); i++)
         {
@@ -724,7 +721,7 @@ public class HeadNode extends Node
         else if (left == null)
             return right;
 
-        final HeadNode result = new HeadNode(left.mConfig);
+        final HeadNode result = new HeadNode();
 
         final Queue<MergePair> mergePairs = new ArrayDeque<>();
         mergePairs.add(new MergePair(left.nextA, right.nextA, result));

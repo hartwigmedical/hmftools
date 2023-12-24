@@ -21,7 +21,7 @@ public class AnchorCigarFactoryTest
             else
                 sequencePosition += alignment.Length;
 
-        final AnchorCigarFactory factory = new AnchorCigarFactory(TestUtils.config());
+        final AnchorCigarFactory factory = new AnchorCigarFactory();
         return factory.anchorCigar(alignments, alignments.get(leftIndex), alignments.get(rightIndex));
     }
 

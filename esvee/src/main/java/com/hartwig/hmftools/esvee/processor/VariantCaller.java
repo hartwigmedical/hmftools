@@ -11,7 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.esvee.SVAConfig;
+import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
 import com.hartwig.hmftools.esvee.models.Alignment;
 import com.hartwig.hmftools.esvee.models.AssemblyClassification;
@@ -28,15 +28,13 @@ import htsjdk.samtools.util.SequenceUtil;
 
 public class VariantCaller
 {
-    private final SVAConfig mConfig;
     private final ExecutorService mExecutor;
     private final AnchorCigarFactory mAnchorFactory;
 
-    public VariantCaller(final SVAConfig config, final ExecutorService executor)
+    public VariantCaller(final ExecutorService executor)
     {
-        mConfig = config;
         mExecutor = executor;
-        mAnchorFactory = new AnchorCigarFactory(mConfig);
+        mAnchorFactory = new AnchorCigarFactory();
     }
 
     public List<VariantCall> callVariants(final List<AlignedAssembly> assemblies)
@@ -111,7 +109,7 @@ public class VariantCaller
         }
         if(previous == null)
         {
-            if(next.isMapped() && current.isUnmapped() && current.Length > mConfig.callerMinSizeToCall())
+            if(next.isMapped() && current.isUnmapped() && current.Length > SvConstants.CALLERMINSIZETOCALL)
                 return buildSingleEndedRight(assembly, current, next);
         }
         if(next == null)
@@ -121,7 +119,7 @@ public class VariantCaller
             if((result = tryCallDeleteOrDuplication(assembly, previous, current)) != null)
                 return result;
 
-            if(previous.isMapped() && current.isUnmapped() && current.Length > mConfig.callerMinSizeToCall())
+            if(previous.isMapped() && current.isUnmapped() && current.Length > SvConstants.CALLERMINSIZETOCALL)
                 return buildSingleEndedLeft(assembly, previous, current);
         }
 
@@ -225,7 +223,7 @@ public class VariantCaller
         final int previousEnd = previous.ReferenceStartPosition + previous.Length - 1;
         final int skippedBases = next.ReferenceStartPosition - previousEnd - 1;
         final int insertSize = current == null ? 0 : current.Length;
-        if(insertSize + Math.abs(skippedBases) < mConfig.callerMinSizeToCall())
+        if(insertSize + Math.abs(skippedBases) < SvConstants.CALLERMINSIZETOCALL)
             return null; // Not interested
 
         // We can either call it as an insert, a duplication, or a delete.
@@ -476,7 +474,7 @@ public class VariantCaller
         support.removeIf(r -> splitReadFragments.contains(r.getName()));
 
         final Set<String> discordantFragments = support.stream()
-                .filter(record -> record.isDiscordant(mConfig.discordantPairFragmentLength())
+                .filter(record -> record.isDiscordant(SvConstants.DISCORDANTPAIRFRAGMENTLENGTH)
                         || record.isUnmapped() || record.isMateUnmapped())
                 .map(Record::getName)
                 .collect(Collectors.toSet());

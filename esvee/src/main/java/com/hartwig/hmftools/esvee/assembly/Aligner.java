@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,15 +14,14 @@ import javax.annotation.concurrent.ThreadSafe;
 
 import com.hartwig.hmftools.common.samtools.CigarUtils;
 import com.hartwig.hmftools.esvee.Direction;
-import com.hartwig.hmftools.esvee.SVAConfig;
+import com.hartwig.hmftools.esvee.SvConfig;
+import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
 import com.hartwig.hmftools.esvee.models.Alignment;
 import com.hartwig.hmftools.esvee.models.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.models.GappedAssembly;
 import com.hartwig.hmftools.esvee.models.Sequence;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
@@ -33,13 +34,11 @@ import htsjdk.samtools.SAMFlag;
 @ThreadSafe
 public class Aligner implements AutoCloseable
 {
-    private static final Logger LOGGER = LogManager.getLogger(Aligner.class);
-
-    private final SVAConfig mConfig;
+    private final SvConfig mConfig; // may be kept to set config instead of config
     private final BwaMemIndex mIndex;
     private final ThreadLocal<BwaMemAligner> mAligners;
 
-    public Aligner(final SVAConfig config, final File index)
+    public Aligner(final SvConfig config, final File index)
     {
         mConfig = config;
         mIndex = new BwaMemIndex(index.getAbsolutePath());
@@ -200,7 +199,7 @@ public class Aligner implements AutoCloseable
         final int nearbyMidPoint = ((maybeNearby.getRefStart() + 1) + (maybeNearby.getRefEnd() + 1)) / 2;
         final int distance = Math.abs(neighbourMidPoint - nearbyMidPoint);
 
-        return distance > mConfig.alignerMaxDistanceToConsiderNearby() ? Integer.MAX_VALUE : distance;
+        return distance > SvConstants.ALIGNERMAXDISTANCETOCONSIDERNEARBY ? Integer.MAX_VALUE : distance;
     }
 
     private List<Alignment> bestAlignmentExtension(final Sequence unmappedBases,
@@ -208,7 +207,7 @@ public class Aligner implements AutoCloseable
     {
         final List<BwaMemAlignment> mappedAlignments = mAligners.get().alignSeqs(List.of(unmappedBases.getBases())).get(0).stream()
                 .filter(alignment -> alignment.getSeqStart() != -1)
-                .filter(alignment -> alignment.getAlignerScore() > mConfig.alignerMinScore())
+                .filter(alignment -> alignment.getAlignerScore() > SvConstants.ALIGNERMINSCORE)
                 .collect(Collectors.toList());
 
         if(mappedAlignments.isEmpty())
@@ -220,8 +219,8 @@ public class Aligner implements AutoCloseable
 
         final List<BwaMemAlignment> candidateAlignments = mappedAlignments.stream()
                 .filter(alignment -> direction == Direction.REVERSE
-                        ? alignment.getSeqEnd() >= bestSequenceBoundary - mConfig.alignerExtensionInsertTolerance()
-                        : alignment.getSeqStart() <= bestSequenceBoundary + mConfig.alignerExtensionInsertTolerance())
+                        ? alignment.getSeqEnd() >= bestSequenceBoundary - SvConstants.ALIGNEREXTENSIONINSERTTOLERANCE
+                        : alignment.getSeqStart() <= bestSequenceBoundary + SvConstants.ALIGNEREXTENSIONINSERTTOLERANCE)
                 .collect(Collectors.toList());
 
         // We select the best candidate as follows:
@@ -243,7 +242,7 @@ public class Aligner implements AutoCloseable
 
         final Alignment unmappedLeft = existing.get(0);
         final Alignment mappedLeft = existing.get(1);
-        if(unmappedLeft.Length < mConfig.alignerMinBases())
+        if(unmappedLeft.Length < SvConstants.ALIGNERMINBASES)
             return existing;
 
         final Sequence unmapped = sequence.subsequence(unmappedLeft.SequenceStartPosition - 1, unmappedLeft.Length);
@@ -312,7 +311,9 @@ public class Aligner implements AutoCloseable
 
         final List<Alignment> replacements = toAlignments(bestCandidate, alignment.SequenceStartPosition - 1);
         final List<Alignment> recursiveReplacements = new ArrayList<>();
-        LOGGER.trace("Remapping {} as {}", alignment, replacements);
+
+        SV_LOGGER.trace("remapping {} as {}", alignment, replacements);
+
         for(final Alignment replacement : replacements)
         {
             if(replacement.isUnmapped() && replacement.Length >= 30)
@@ -330,7 +331,8 @@ public class Aligner implements AutoCloseable
         {
             if(alignment.isMapped() && alignment.Quality < 10)
             {
-                LOGGER.trace("Unmapping {}", alignment);
+                SV_LOGGER.trace("unmapping {}", alignment);
+
                 alignments.add(Alignment.unmapped(alignment.SequenceStartPosition, alignment.Length));
             }
             else

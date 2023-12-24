@@ -3,7 +3,6 @@ package com.hartwig.hmftools.esvee;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
@@ -19,28 +18,25 @@ import com.hartwig.hmftools.esvee.sam.NormalisingSource;
 import com.hartwig.hmftools.esvee.sam.RecordNormaliser;
 import com.hartwig.hmftools.esvee.sam.SAMSource;
 
-import org.jetbrains.annotations.Nullable;
-
 public class Context implements AutoCloseable
 {
     public final ExecutorService Executor;
     public final com.hartwig.hmftools.esvee.assembly.Aligner Aligner;
-    @Nullable
-    public final com.hartwig.hmftools.esvee.assembly.Aligner AlternateAligner;
+
     public final SAMSource SAMSource;
     public final RefGenomeSource ReferenceGenome;
     public final SupportChecker SupportChecker;
 
-    public final SVAConfig Config;
+    public final SvConfig Config;
 
     public final List<Problem> Problems = new ArrayList<>();
 
-    public Context(final ExecutorService executor, final com.hartwig.hmftools.esvee.assembly.Aligner aligner, @Nullable final com.hartwig.hmftools.esvee.assembly.Aligner alternateAligner, final SAMSource samSource,
-            final RefGenomeSource referenceGenome, final SupportChecker supportChecker, final SVAConfig config)
+    public Context(
+            final ExecutorService executor, final Aligner aligner, final SAMSource samSource,
+            final RefGenomeSource referenceGenome, final SupportChecker supportChecker, final SvConfig config)
     {
         Executor = executor;
         Aligner = aligner;
-        AlternateAligner = alternateAligner;
         SAMSource = samSource;
         ReferenceGenome = referenceGenome;
         SupportChecker = supportChecker;
@@ -51,8 +47,6 @@ public class Context implements AutoCloseable
     public void close()
     {
         Aligner.close();
-        if(AlternateAligner != null)
-            AlternateAligner.close();
         SAMSource.close();
     }
 
@@ -67,45 +61,45 @@ public class Context implements AutoCloseable
             return ".so";
     }
 
-    public static Context create(final SVAConfig config)
+    public static Context create(final SvConfig config)
     {
         final var props = System.getProperties();
         final String candidateBWAPath = "libbwa." + props.getProperty("os.arch") + osExtension();
         if (System.getProperty("LIBBWA_PATH") == null && new File(candidateBWAPath).exists())
             System.setProperty("LIBBWA_PATH", new File(candidateBWAPath).getAbsolutePath());
 
-        final com.hartwig.hmftools.esvee.assembly.Aligner aligner = new Aligner(config, config.referenceGenomeIndex());
-        final com.hartwig.hmftools.esvee.assembly.Aligner alternateAligner = config.altReferenceGenomeIndex() == null
-                ? null
-                : new Aligner(config, Objects.requireNonNull(config.altReferenceGenomeIndex()));
+        Aligner aligner = new Aligner(config, new File(config.RefGenomeImageFile));
 
-        final RefGenomeSource refGenomeSource = RefGenomeSource.loadRefGenome(config.referenceGenomeFile().getAbsolutePath());
-        final SupportChecker supportChecker = new SupportChecker(config);
+        final RefGenomeSource refGenomeSource = RefGenomeSource.loadRefGenome(config.RefGenomeFile);
+        final SupportChecker supportChecker = new SupportChecker();
 
-        final RecordNormaliser normaliser = new RecordNormaliser(refGenomeSource, config);
+        final RecordNormaliser normaliser = new RecordNormaliser(refGenomeSource);
 
         final List<SAMSource> inputFiles = new ArrayList<>();
-        inputFiles.add(openFile(config.referenceGenomeFile(), normaliser, config.bamFile(), "tumor"));
-        if(config.germlineBAMFile() != null)
-            inputFiles.add(openFile(config.referenceGenomeFile(), normaliser, config.germlineBAMFile(), "germline"));
+        inputFiles.add(openFile(config.RefGenomeFile, normaliser, config.primaryBam(), "tumor"));
+
+        if(config.referenceBam() != null)
+            inputFiles.add(openFile(config.RefGenomeFile, normaliser, config.referenceBam(), "germline"));
 
         final SAMSource innerSAMSource = inputFiles.size() == 1 ? inputFiles.get(0) : new CompositeSAMSource(inputFiles);
         final SAMSource samSource = new CachingSAMSource(innerSAMSource);
 
-        final ExecutorService executor = config.threads() == -1
+        final ExecutorService executor = config.Threads == -1
                 ? ForkJoinPool.commonPool()
-                : Executors.newFixedThreadPool(Math.max(1, config.threads()), runnable ->
+                : Executors.newFixedThreadPool(Math.max(1, config.Threads), runnable ->
                 {
                     final Thread thread = new Thread(runnable);
                     thread.setDaemon(true);
                     return thread;
                 });
-        return new Context(executor, aligner, alternateAligner, samSource, refGenomeSource, supportChecker, config);
+        return new Context(executor, aligner, samSource, refGenomeSource, supportChecker, config);
     }
 
-    private static SAMSource openFile(final File referenceGenome, final RecordNormaliser normaliser, final File bamFile, final String tag)
+    private static SAMSource openFile(final String referenceGenome, final RecordNormaliser normaliser, final String bamFile, final String tag)
     {
-        final DirectSAMSource directSource = new DirectSAMSource(bamFile, referenceGenome, tag);
+        final DirectSAMSource directSource = new DirectSAMSource(
+                new File(bamFile), new File(referenceGenome), tag);
+
         return new NormalisingSource(directSource, normaliser);
     }
 }

@@ -10,7 +10,7 @@
 
     <artifactId>esvee</artifactId>
     <packaging>jar</packaging>
-    <version>${sv-assembly.version}</version>
+    <version>${esvee.version}</version>
     <name>HMF Tools - Esvee</name>
 
     <dependencies>

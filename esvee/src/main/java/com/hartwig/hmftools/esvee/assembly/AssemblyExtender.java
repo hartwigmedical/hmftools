@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,7 +21,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.esvee.Direction;
 import com.hartwig.hmftools.esvee.Context;
-import com.hartwig.hmftools.esvee.SVAConfig;
+import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.models.DiagramSet;
 import com.hartwig.hmftools.esvee.models.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.models.PrimaryAssembly;
@@ -31,15 +33,10 @@ import com.hartwig.hmftools.esvee.util.Timeout;
 import com.hartwig.hmftools.esvee.processor.Problem;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 public class AssemblyExtender
 {
-    private static final Logger LOGGER = LogManager.getLogger(AssemblyExtender.class);
-
-    private final SVAConfig mConfig;
     private final SAMSource mSAMSource;
     private final SupportChecker mSupportChecker;
     private final NodeFolder mNodeFolder;
@@ -51,12 +48,13 @@ public class AssemblyExtender
     private int mNextAssemblyNumber = 1;
 
     @Nullable
-    public static List<ExtendedAssembly> process(final Context context, final PrimaryAssembly assembly,
-            final AssemblyExtenderCounters counters)
+    public static List<ExtendedAssembly> process(
+            final Context context, final PrimaryAssembly assembly, final AssemblyExtenderCounters counters)
     {
-        final boolean createDiagrams = context.Config.createHTMLSummaries() && context.Config.createDiagrams();
-        final AssemblyExtender assembler = new AssemblyExtender(context.Config, context.SAMSource, context.SupportChecker,
-                assembly, createDiagrams);
+        final boolean createDiagrams = context.Config.writeHtmlFiles() && context.Config.PlotDiagrams;
+
+        final AssemblyExtender assembler = new AssemblyExtender(
+                context.SAMSource, context.SupportChecker, assembly, createDiagrams);
 
         try
         {
@@ -73,7 +71,9 @@ public class AssemblyExtender
         {
             final Problem problem = new Problem("Failure during extension", throwable, assembly);
             context.Problems.add(problem);
-            LOGGER.warn("{}", problem);
+
+            SV_LOGGER.warn("{}", problem);
+
             return null;
         }
         finally
@@ -82,14 +82,13 @@ public class AssemblyExtender
         }
     }
 
-    private AssemblyExtender(final SVAConfig config, final SAMSource source,
-            final SupportChecker supportChecker, final PrimaryAssembly primary, final boolean createDiagrams)
+    private AssemblyExtender(
+            final SAMSource source, final SupportChecker supportChecker, final PrimaryAssembly primary, final boolean createDiagrams)
     {
-        mConfig = config;
         mSAMSource = source;
         mSupportChecker = supportChecker;
-        mTimeout = new Timeout(mConfig, TimeUnit.MILLISECONDS.toNanos(mConfig.extensionTimeoutMillis()));
-        mNodeFolder = new NodeFolder(mConfig, mTimeout);
+        mTimeout = new Timeout(SvConstants.TIMEOUTS_ENABLED, TimeUnit.MILLISECONDS.toNanos(SvConstants.EXTENSION_TIMEOUT));
+        mNodeFolder = new NodeFolder(mTimeout);
         mPrimary = primary;
         mCreateDiagrams = createDiagrams;
     }
@@ -121,8 +120,9 @@ public class AssemblyExtender
 
     private List<ExtendedAssembly> doExtend(final PrimaryAssembly assembly)
     {
-        final List<Record> discordantReads = mCounters.DiscordantSearchTimeNanos.time(() -> new DiscordantPairFinder(mConfig, mSAMSource)
+        final List<Record> discordantReads = mCounters.DiscordantSearchTimeNanos.time(() -> new DiscordantPairFinder(mSAMSource)
                 .findDiscordantReads(assembly.getSupportRecords()));
+
         mCounters.DiscordantReadsFound.add(discordantReads.size());
 
         final List<ExtendedAssembly> leftExtended = mCounters.ExtendLeftTimeNanos.time(() ->
@@ -175,7 +175,7 @@ public class AssemblyExtender
 
     private HeadNode alignmentAsGraph(final Record alignment, final Direction orientation)
     {
-        final HeadNode root = new HeadNode(mConfig);
+        final HeadNode root = new HeadNode();
         Node current = root;
         for(int i = 0; i < alignment.getLength(); i++)
         {
@@ -202,7 +202,7 @@ public class AssemblyExtender
 
         final List<Record> mates = pairedMates.stream()
                 .filter(pair -> !assembly.containsSupport(pair.getRight()))
-                .filter(pair -> AlignmentFilters.isRecordAverageQualityAbove(pair.getRight(), mConfig.averageQualityThreshold()))
+                .filter(pair -> AlignmentFilters.isRecordAverageQualityAbove(pair.getRight(), SvConstants.AVG_BASE_QUAL_THRESHOLD))
                 .map(pair -> pair.getLeft().isPositiveStrand() == pair.getRight().isPositiveStrand()
                         ? pair.getRight().flipStrand()
                         : pair.getRight())
@@ -247,7 +247,7 @@ public class AssemblyExtender
 
         final List<Record> mates = pairedMates.stream()
                 .filter(pair -> !assembly.containsSupport(pair.getRight()))
-                .filter(pair -> AlignmentFilters.isRecordAverageQualityAbove(pair.getRight(), mConfig.averageQualityThreshold()))
+                .filter(pair -> AlignmentFilters.isRecordAverageQualityAbove(pair.getRight(), SvConstants.AVG_BASE_QUAL_THRESHOLD))
                 .sorted(Comparator.comparingInt(pair -> assembly.getSupportIndex(pair.getLeft())))
                 .map(pair -> pair.getLeft().isPositiveStrand() == pair.getRight().isPositiveStrand()
                         ? pair.getRight().flipStrand()
@@ -301,7 +301,7 @@ public class AssemblyExtender
             return List.of(newAssembly);
         }
 
-        final HeadNode existing = HeadNode.create(mConfig, assembly, assemblyDirection);
+        final HeadNode existing = HeadNode.create(assembly, assemblyDirection);
 
         final List<Record> potentialNewSupport = new ArrayList<>();
         extendAssembly(existing, potentialNewSupport, mateAlignments, alignmentMinDepth, alignmentDirection, mateAttachCounter);
@@ -343,7 +343,7 @@ public class AssemblyExtender
             final Integer depth = alignmentMinDepth.get(record);
             final HeadNode toAttach = alignmentAsGraph(record, alignmentDirection);
 
-            if(existing.attach(toAttach, mConfig.assemblyExtensionMinMatchedBases(), mConfig.assemblyExtensionMaxMismatches(),
+            if(existing.attach(toAttach, SvConstants.ASSEMBLYEXTENSIONMINMATCHEDBASES, SvConstants.ASSEMBLYEXTENSIONMAXMISMATCHES,
                     Objects.requireNonNullElse(depth, 0), Integer.MAX_VALUE))
             {
                 potentialNewSupport.add(record);

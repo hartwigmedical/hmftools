@@ -11,12 +11,12 @@ public class HeadNodeTest
 {
     private static HeadNode create(final String sequence, final int position, final boolean isForwards)
     {
-        return HeadNode.create(TestUtils.config(), TestUtils.createSAMRecord(sequence), position, isForwards);
+        return HeadNode.create(TestUtils.createSAMRecord(sequence), position, isForwards);
     }
 
     private static HeadNode create(final Record record, final int position, final boolean isForwards)
     {
-        return Objects.requireNonNull(HeadNode.create(TestUtils.config(), record, position, isForwards));
+        return Objects.requireNonNull(HeadNode.create(record, position, isForwards));
     }
 
     /* CHASHA FIXME

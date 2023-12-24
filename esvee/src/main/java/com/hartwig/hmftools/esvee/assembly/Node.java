@@ -184,7 +184,7 @@ public class Node
 
     public Node deepCopy()
     {
-        final HeadNode headNode = new HeadNode(null);
+        final HeadNode headNode = new HeadNode();
         headNode.setNext(this);
 
         final HeadNode copy = headNode.deepCopy();

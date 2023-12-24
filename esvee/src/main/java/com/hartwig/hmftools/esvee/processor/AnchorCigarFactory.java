@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.function.ToIntFunction;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.esvee.SVAConfig;
+import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
 import com.hartwig.hmftools.esvee.models.Alignment;
 
@@ -17,14 +17,11 @@ import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
-/** Builds the anchor cigar for a variant */
+// Builds the anchor cigar for a variant
 public class AnchorCigarFactory
 {
-    private final SVAConfig mConfig;
-
-    public AnchorCigarFactory(final SVAConfig config)
+    public AnchorCigarFactory()
     {
-        mConfig = config;
     }
 
     public Pair<Pair<Cigar, Integer>, Pair<Cigar, Integer>> anchorCigar(final AlignedAssembly assembly,
@@ -78,7 +75,7 @@ public class AnchorCigarFactory
 
             if(current.isUnmapped())
             {
-                if(current.Length >= mConfig.callerMinSizeToCall())
+                if(current.Length >= SvConstants.CALLERMINSIZETOCALL)
                     break;
                 elements.add(new CigarElement(current.Length, CigarOperator.I));
                 continue;
@@ -89,7 +86,7 @@ public class AnchorCigarFactory
             final int skip = (startComputer.applyAsInt(current) - referenceIndex) * step - 1;
             if(skip < 0)
                 break; // Duplication
-            else if(skip >= mConfig.callerMinSizeToCall())
+            else if(skip >= SvConstants.CALLERMINSIZETOCALL)
                 break; // Structural variant
             else if(skip > 0)
                 elements.add(new CigarElement(skip, CigarOperator.D));

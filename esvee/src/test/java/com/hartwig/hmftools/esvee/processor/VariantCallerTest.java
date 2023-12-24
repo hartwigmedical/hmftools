@@ -6,15 +6,12 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.hartwig.hmftools.esvee.SVAConfig;
-import com.hartwig.hmftools.esvee.config.HMFConfig;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
 import com.hartwig.hmftools.esvee.models.Alignment;
 import com.hartwig.hmftools.esvee.models.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.models.GappedAssembly;
 import com.hartwig.hmftools.esvee.models.Record;
 import com.hartwig.hmftools.esvee.models.SupportedAssembly;
-import com.hartwig.hmftools.esvee.ImmutableSVAConfig;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMReadGroupRecord;
@@ -81,6 +78,7 @@ public class VariantCallerTest
 
     private static VariantCaller caller()
     {
+        /*
         // TODO: Test utils
         final SVAConfig config = HMFConfig.load(Map.of(
                         "bam_file", "dummy",
@@ -90,6 +88,9 @@ public class VariantCallerTest
                         "junction_file", "dummy"),
                 SVAConfig.class, ImmutableSVAConfig.builder());
         return new VariantCaller(config, Executors.newSingleThreadExecutor());
+       */
+
+        return null;
     }
 
     /* CHASHA FIXME
