@@ -118,21 +118,23 @@ public class Processor
         SV_LOGGER.info("starting primary assembly on {} junctions", junctions.size());
 
         // Primary Junction Assembly
-        final List<PrimaryAssemblyResult> primaryAssemblyResults = ParallelMapper.mapWithProgress(
-                "Primary Assembly", Counters.PrimaryAssemblyTime, mContext.Executor, junctions,
+        List<PrimaryAssemblyResult> primaryAssemblyResults = ParallelMapper.mapWithProgress(
+                mContext.Executor, junctions,
                 junction -> PrimaryAssembler.process(mContext, junction, Counters.PrimaryAssemblerCounters));
 
         final int primaryAssemblyCount = primaryAssemblyResults.stream().mapToInt(r -> r.Assemblies.size()).sum();
 
-        SV_LOGGER.info("created {} primary assemblies in {}", primaryAssemblyCount, Counters.PrimaryAssemblyTime.formatValue());
+        SV_LOGGER.info("created {} primary assemblies", primaryAssemblyCount);
+
         if(!mContext.Config.OtherDebug)
+        {
             junctions.clear();
+        }
 
         // Inter-junction deduplication
-        final List<PrimaryAssembly> primaryAssemblies = Counters.InterJunctionDeduplicationTime.time(
-                () -> consolidateNearbyAssemblies(flatten(primaryAssemblyResults)));
+        List<PrimaryAssembly> primaryAssemblies = consolidateNearbyAssemblies(flatten(primaryAssemblyResults));
 
-        SV_LOGGER.info("reduced to {} assemblies in {}", primaryAssemblies.size(), Counters.InterJunctionDeduplicationTime.formatValue());
+        SV_LOGGER.info("reduced to {} assemblies", primaryAssemblies.size());
 
         if(!mContext.Config.OtherDebug)
             primaryAssemblyResults.clear();
@@ -142,78 +144,83 @@ public class Processor
         //    primaryAssemblies.removeIf(assembly -> assembly.getSupportRecords().stream().anyMatch(Record::isGermline));
 
         // Assembly Extension
-        final List<ExtendedAssembly> extendedAssemblies = ParallelMapper.mapWithProgress(
-                        "Assembly Extension", Counters.ExtensionTime, mContext.Executor, primaryAssemblies,
+        List<ExtendedAssembly> extendedAssemblies = ParallelMapper.mapWithProgress(
+                        mContext.Executor, primaryAssemblies,
                         assembly -> AssemblyExtender.process(mContext, assembly, Counters.AssemblyExtenderCounters)).stream()
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
+
         if(!mContext.Config.OtherDebug)
+        {
             primaryAssemblies.clear();
-        SV_LOGGER.info("Created {} extended assemblies in {}", extendedAssemblies.size(), Counters.ExtensionTime.formatValue());
+        }
+
+        SV_LOGGER.info("created {} extended assemblies", extendedAssemblies.size());
 
         // Primary phasing
-        final List<Set<ExtendedAssembly>> primaryPhaseSets = Counters.PrimaryPhasingTime.time(
-                () -> PrimaryPhasing.run(extendedAssemblies));
-        SV_LOGGER.info("Created {} primary phase sets in {}", primaryPhaseSets.size(), Counters.PrimaryPhasingTime.formatValue());
+        final List<Set<ExtendedAssembly>> primaryPhaseSets = PrimaryPhasing.run(extendedAssemblies);
+
+        SV_LOGGER.info("created {} primary phase sets", primaryPhaseSets.size());
+
         if(!mContext.Config.OtherDebug)
             extendedAssemblies.clear();
 
         // Phased assembly merging
         final List<Set<ExtendedAssembly>> mergedPhaseSets = ParallelMapper.mapWithProgress(
-                "Phased Merging", Counters.PhasedAssemblyMergingTime,
                 mContext.Executor, primaryPhaseSets, this::primaryPhasedMerging);
-        SV_LOGGER.info("Merged primary phase sets in {}", Counters.PhasedAssemblyMergingTime.formatValue());
+
+        SV_LOGGER.info("merged primary phase sets");
 
         // Secondary phasing
-        final List<Set<ExtendedAssembly>> secondaryPhaseSets = Counters.SecondaryPhasingTime.time(
-                () -> SecondaryPhasing.run(mergedPhaseSets));
-        SV_LOGGER.info("Created {} secondary phase sets in {}", secondaryPhaseSets.size(), Counters.SecondaryPhasingTime.formatValue());
+        final List<Set<ExtendedAssembly>> secondaryPhaseSets = SecondaryPhasing.run(mergedPhaseSets);
+        SV_LOGGER.info("created {} secondary phase sets", secondaryPhaseSets.size());
 
         // Secondary merging
         final List<GappedAssembly> mergedSecondaries = new ArrayList<>();
-        Counters.MergeSecondaryTime.time(() ->
-        {
-            // FIXME: Gapped assemblies
-            //for(int i = 0; i < secondaryPhaseSets.size(); i++)
-            //    mergedSecondaries.add(createGapped(secondaryPhaseSets.get(i), i));
-            for(int i = 0; i < secondaryPhaseSets.size(); i++)
-            {
-                final Set<ExtendedAssembly> phaseSet = secondaryPhaseSets.get(i);
-                int j = 0;
-                for(final ExtendedAssembly assembly : phaseSet)
-                {
-                    final GappedAssembly newAssembly = new GappedAssembly(String.format("Assembly%s-%s", i, j++), List.of(assembly));
-                    newAssembly.addErrata(assembly.getAllErrata());
-                    for(final Map.Entry<Record, Integer> entry : assembly.getSupport())
-                        newAssembly.addEvidenceAt(entry.getKey(), entry.getValue());
 
-                    mergedSecondaries.add(newAssembly);
-                }
+        // FIXME: Gapped assemblies
+        //for(int i = 0; i < secondaryPhaseSets.size(); i++)
+        //    mergedSecondaries.add(createGapped(secondaryPhaseSets.get(i), i));
+        for(int i = 0; i < secondaryPhaseSets.size(); i++)
+        {
+            final Set<ExtendedAssembly> phaseSet = secondaryPhaseSets.get(i);
+            int j = 0;
+            for(final ExtendedAssembly assembly : phaseSet)
+            {
+                final GappedAssembly newAssembly = new GappedAssembly(String.format("Assembly%s-%s", i, j++), List.of(assembly));
+                newAssembly.addErrata(assembly.getAllErrata());
+                for(final Map.Entry<Record, Integer> entry : assembly.getSupport())
+                    newAssembly.addEvidenceAt(entry.getKey(), entry.getValue());
+
+                mergedSecondaries.add(newAssembly);
             }
-        });
-        SV_LOGGER.info("Merged secondaries in {}", Counters.MergeSecondaryTime.formatValue());
+        }
+
+        SV_LOGGER.info("merged secondaries in {}");
 
         // Alignment
-        final List<AlignedAssembly> aligned = ParallelMapper.mapWithProgress("Alignment", Counters.AlignmentTime,
+        final List<AlignedAssembly> aligned = ParallelMapper.mapWithProgress(
                 mContext.Executor, mergedSecondaries, mContext.Aligner::align);
-        SV_LOGGER.info("Created {} alignments in {}", aligned.size(), Counters.AlignmentTime.formatValue());
+
+        SV_LOGGER.info("created {} alignments", aligned.size());
 
         // Left sliding (we will find mid-points after calling + de-duping)
-        final List<AlignedAssembly> homologised = ParallelMapper.mapWithProgress("Homology Sliding", Counters.HomologyTime,
+        final List<AlignedAssembly> homologised = ParallelMapper.mapWithProgress(
                 mContext.Executor, aligned, mHomologySlider::slideHomology);
-        SV_LOGGER.info("Processed homology in {}", Counters.HomologyTime.formatValue());
+
+        SV_LOGGER.info("processed homology");
 
         // Support scanning
         final SupportScanner supportScanner = new SupportScanner(mContext, Counters.ExtraScannedSupport);
-        ParallelMapper.mapWithProgress("Support Scan", Counters.SupportScanTime,
+
+        ParallelMapper.mapWithProgress(
                 mContext.Executor, homologised, supportScanner::tryRescanSupport);
-        SV_LOGGER.info("Rescanned support, adding {} new reads in {}", Counters.ExtraScannedSupport.formatValue(),
-                Counters.SupportScanTime.formatValue());
+
+        SV_LOGGER.info("rescanned support, adding {} new reads", Counters.ExtraScannedSupport.formatValue());
 
         // Calling
-        final List<VariantCall> variants = Counters.VariantCallingTime.time(() -> new VariantCaller(mContext.Executor)
-                .callVariants(homologised));
-        SV_LOGGER.info("Called {} variants in {}", variants.size(), Counters.VariantCallingTime.formatValue());
+        final List<VariantCall> variants = new VariantCaller(mContext.Executor).callVariants(homologised);
+        SV_LOGGER.info("called {} variants in {}", variants.size());
 
         // Variant Deduplication
         final VariantDeduplication deduplicator = new VariantDeduplication(mContext, Counters.VariantDeduplicationCounters);
@@ -244,17 +251,14 @@ public class Processor
 
         if(!mContext.Problems.isEmpty())
         {
-            SV_LOGGER.warn("Encountered {} problems", mContext.Problems.size());
+            SV_LOGGER.warn("encountered {} problems", mContext.Problems.size());
+            
             if(mContext.Problems.size() < 50)
             {
                 for(final Problem problem : mContext.Problems)
                     SV_LOGGER.warn("{}", problem);
             }
         }
-        else
-            SV_LOGGER.info("No problems encountered");
-        final long endTimeNanos = System.nanoTime();
-        SV_LOGGER.info("Completed processing in {}", CommonUtils.formatNanos(endTimeNanos - startTimeNanos));
 
         if(mContext.Config.writeHtmlFiles())
             writeHTMLSummaries(deduplicated);

@@ -19,7 +19,6 @@ import com.hartwig.hmftools.esvee.models.AssemblyClassificationType;
 import com.hartwig.hmftools.esvee.models.Record;
 import com.hartwig.hmftools.esvee.models.SupportedAssembly;
 import com.hartwig.hmftools.esvee.util.ParallelMapper;
-import com.hartwig.hmftools.esvee.util.ProgressTracker;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -39,27 +38,23 @@ public class VariantCaller
 
     public List<VariantCall> callVariants(final List<AlignedAssembly> assemblies)
     {
-        try(final ProgressTracker progressTracker = new ProgressTracker("Call Variants", assemblies.size(), 10))
-        {
-            return ParallelMapper.flatMap(mExecutor, assemblies, assembly -> callVariants(progressTracker, assembly));
-        }
+        return ParallelMapper.flatMap(mExecutor, assemblies, assembly -> callVariants(assembly));
     }
 
-    public List<VariantCall> callVariants(final ProgressTracker progressTracker, final AlignedAssembly assembly)
+    public List<VariantCall> callVariants(final AlignedAssembly assembly)
     {
         final List<VariantCall> calls = new ArrayList<>();
 
         Alignment next = null;
         Alignment current = null;
         Alignment previous;
-        for(final Alignment alignment : assembly.getAlignmentBlocks())
+        for(Alignment alignment : assembly.getAlignmentBlocks())
         {
             previous = current;
             current = next;
             next = alignment;
             if(current != null && current.Chromosome.equals("-") && !calls.isEmpty())
             {
-                progressTracker.increment();
                 return calls;
             }
 
@@ -73,12 +68,12 @@ public class VariantCaller
             if(call != null)
                 calls.add(call);
         }
+
         @Nullable
         final var last = createCandidate(assembly, current, next, null);
         if(last != null)
             calls.add(last);
 
-        progressTracker.increment();
         return calls;
     }
 
@@ -378,7 +373,7 @@ public class VariantCaller
     private int calculateLeftOverhang(final SupportedAssembly assembly, final int leftOffset, final Support support)
     {
         int maxOverhang = 0;
-        for(final Record record : support.SplitReads)
+        for(Record record : support.SplitReads)
         {
             final int supportStartOffset = assembly.getSupportIndex(record) + 1;
             final int supportEndOffset = assembly.getSupportIndex(record) + record.getLength();
@@ -393,7 +388,7 @@ public class VariantCaller
     private int calculateRightOverhang(final SupportedAssembly assembly, final int rightOffset, final Support support)
     {
         int maxOverhang = 0;
-        for(final Record record : support.SplitReads)
+        for(Record record : support.SplitReads)
         {
             final int supportStartOffset = assembly.getSupportIndex(record) + 1;
             final int supportEndOffset = assembly.getSupportIndex(record) + record.getLength();
@@ -417,7 +412,7 @@ public class VariantCaller
             @Nullable final Alignment insert)
     {
         final Set<Record> splitReads = new HashSet<>();
-        for(final Map.Entry<Record, Integer> entry : assembly.getSupport())
+        for(Map.Entry<Record, Integer> entry : assembly.getSupport())
         {
             final Record record = entry.getKey();
             final int supportLeft = entry.getValue();
@@ -510,7 +505,7 @@ public class VariantCaller
             return Set.of();
 
         final Set<Record> support = new HashSet<>();
-        for(final Map.Entry<Record, Integer> entry : assembly.getSupport())
+        for(Map.Entry<Record, Integer> entry : assembly.getSupport())
         {
             final Record record = entry.getKey();
             final int supportLeft = entry.getValue();
@@ -531,7 +526,7 @@ public class VariantCaller
             return Set.of();
 
         final Set<Record> support = new HashSet<>();
-        for(final Alignment alignment : assembly.getAlignmentBlocks())
+        for(Alignment alignment : assembly.getAlignmentBlocks())
         {
             support.addAll(supportingReads(assembly, alignment));
             if(alignment == stopAt)
@@ -573,7 +568,7 @@ public class VariantCaller
             bySample.get(record.sampleName()).getRight().add(record);
 
         final List<VariantCall.SampleSupport> sampleSupport = new ArrayList<>();
-        for(final Map.Entry<String, Pair<Set<Record>, Set<Record>>> entry : bySample.entrySet())
+        for(Map.Entry<String, Pair<Set<Record>, Set<Record>>> entry : bySample.entrySet())
         {
             final String sampleName = entry.getKey();
             final Set<Record> splitReads = entry.getValue().getLeft();

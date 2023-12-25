@@ -27,84 +27,52 @@ public final class ParallelMapper
 
     public static <ARG, RESULT> List<RESULT> map(final ExecutorService executor, final List<ARG> items, final Function<ARG, RESULT> mapper)
     {
-        return map(executor, items, mapper, null, null);
+        return mapWithCounter(executor, items, mapper, null);
     }
 
-
-    public static <ARG, RESULT> List<RESULT> map(
+    public static <ARG, RESULT> List<RESULT> mapWithCounter(
             final ExecutorService executor, final List<ARG> items, final Function<ARG, RESULT> mapper,
-            @Nullable final Counter overallTimer, @Nullable final Counter itemTimer)
+            @Nullable final Counter itemTimer)
     {
         final Function<ARG, RESULT> wrappedMapper = Counter.wrap(itemTimer, mapper);
-        return Counter.time(overallTimer, () ->
-        {
-            final List<CompletableFuture<RESULT>> futures = new ArrayList<>();
-            for(final ARG ignored : items)
-                futures.add(new CompletableFuture<>());
 
-            final AtomicInteger index = new AtomicInteger();
-            for (int i = 0; i < Runtime.getRuntime().availableProcessors(); i++)
+        final List<CompletableFuture<RESULT>> futures = new ArrayList<>();
+        for(final ARG ignored : items)
+            futures.add(new CompletableFuture<>());
+
+        final AtomicInteger index = new AtomicInteger();
+        for (int i = 0; i < Runtime.getRuntime().availableProcessors(); i++)
+        {
+            executor.submit(() ->
             {
-                executor.submit(() ->
+                while(true)
                 {
-                    while(true)
+                    final int toProcess = index.getAndIncrement();
+                    if(toProcess >= items.size())
+                        return;
+                    final ARG item = items.get(toProcess);
+                    final CompletableFuture<RESULT> future = futures.get(toProcess);
+                    try
                     {
-                        final int toProcess = index.getAndIncrement();
-                        if(toProcess >= items.size())
-                            return;
-                        final ARG item = items.get(toProcess);
-                        final CompletableFuture<RESULT> future = futures.get(toProcess);
-                        try
-                        {
-                            future.complete(wrappedMapper.apply(item));
-                        }
-                        catch(final Throwable throwable)
-                        {
-                            future.completeExceptionally(throwable);
-                        }
+                        future.complete(wrappedMapper.apply(item));
                     }
-                });
-            }
-
-            return futures.stream()
-                    .map(ThrowingFunction.rethrow(Future::get))
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-        });
-    }
-
-    @SuppressWarnings("unused")
-    public static <ARG, RESULT> List<RESULT> mapWithProgress(final ExecutorService executor, final List<ARG> items,
-            final Function<ARG, RESULT> mapper)
-    {
-        return mapWithProgress(null, null, executor, items, mapper);
-    }
-
-    public static <ARG, RESULT> List<RESULT> mapWithProgress(@Nullable final String progressDescription,
-            @Nullable final Counter overallTimer, final ExecutorService executor,
-            final List<ARG> items, final Function<ARG, RESULT> mapper)
-    {
-        return mapWithProgress(progressDescription, overallTimer, null, executor, items, mapper);
-    }
-
-    public static <ARG, RESULT> List<RESULT> mapWithProgress(@Nullable final String progressDescription,
-            @Nullable final Counter overallTimer, @Nullable final Counter itemTimer,
-            final ExecutorService executor,
-            final List<ARG> items, final Function<ARG, RESULT> mapper)
-    {
-        try(final ProgressTracker progressTracker = new ProgressTracker(progressDescription, items.size(), 30))
-        {
-            return map(executor, items, item ->
-            {
-                try
-                {
-                    return mapper.apply(item);
+                    catch(final Throwable throwable)
+                    {
+                        future.completeExceptionally(throwable);
+                    }
                 }
-                finally
-                {
-                    progressTracker.increment();
-                }
-            }, overallTimer, itemTimer);
+            });
         }
+
+        return futures.stream()
+                .map(ThrowingFunction.rethrow(Future::get))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    public static <ARG, RESULT> List<RESULT> mapWithProgress(
+            final ExecutorService executor, final List<ARG> items, final Function<ARG, RESULT> mapper)
+    {
+            return map(executor, items, item -> mapper.apply(item));
     }
 }

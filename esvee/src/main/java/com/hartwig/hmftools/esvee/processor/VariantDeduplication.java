@@ -31,17 +31,14 @@ public class VariantDeduplication
 
     public List<VariantCall> deduplicate(final List<VariantCall> variants)
     {
-        return mCounters.OverallTimeNanos.time(() ->
-        {
-            final List<VariantCall> matchedGroups = mCounters.MatchedGroupWallTimeNanos.time(() -> deduplicateMatchedGroups(variants));
-            final List<VariantCall> cleaned = mCounters.AssemblyDedupeWallTimeNanos.time(() -> removeIdenticalAssemblies(matchedGroups));
-            final List<VariantCall> withSGLsMerged = mCounters.SinglesDedupeWallTimeNanos.time(() -> mergeSGLsWithNearbyDoubles(cleaned));
-            final List<VariantCall> deduped = mCounters.NearbyDedupeWallTimeNanos.time(() -> deduplicateNearbyVariants(withSGLsMerged));
+        final List<VariantCall> matchedGroups = deduplicateMatchedGroups(variants);
+        final List<VariantCall> cleaned = removeIdenticalAssemblies(matchedGroups);
+        final List<VariantCall> withSGLsMerged = mergeSGLsWithNearbyDoubles(cleaned);
+        final List<VariantCall> deduped = deduplicateNearbyVariants(withSGLsMerged);
 
-            mCounters.VariantsRemoved.add(variants.size() - deduped.size());
+        mCounters.VariantsRemoved.add(variants.size() - deduped.size());
 
-            return deduped;
-        });
+        return deduped;
     }
 
     /** Finds variants that have identical descriptors, and de-duplicates them */
@@ -66,8 +63,8 @@ public class VariantDeduplication
         }
 
         final List<List<VariantCall>> groups = new ArrayList<>(callsByPairLocation.values());
-        return ParallelMapper.map(mContext.Executor, groups, this::deduplicateMatchedGroup,
-                null, mCounters.MatchedGroupItemTimeNanos);
+
+        return ParallelMapper.mapWithCounter(mContext.Executor, groups, this::deduplicateMatchedGroup, null);
     }
 
     private VariantCall deduplicateMatchedGroup(final List<VariantCall> variants)
@@ -122,8 +119,7 @@ public class VariantDeduplication
     /** For each assembly,  */
     private List<VariantCall> removeIdenticalAssemblies(final List<VariantCall> variants)
     {
-        return ParallelMapper.map(mContext.Executor, variants, this::removeIdenticalAssemblies,
-                null, mCounters.AssemblyDedupeItemTimeNanos);
+        return ParallelMapper.mapWithCounter(mContext.Executor, variants, this::removeIdenticalAssemblies,null);
     }
 
     private VariantCall removeIdenticalAssemblies(final VariantCall variant)

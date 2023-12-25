@@ -91,7 +91,7 @@ public final class SummaryPageGenerator
 
         builder.appendEndTag("</div>");
 
-        appendPieCharts(counters, builder);
+        // appendPieCharts(counters, builder);
 
         builder.appendStartTag("<div class=\"junctionList\">");
         builder.appendStartTag("<table class=\"smart-table\">");
@@ -141,6 +141,9 @@ public final class SummaryPageGenerator
                     .collect(Collectors.joining(" | "));
             builder.append("<td>").append(assemblyLengths).append("</td>");
 
+            final long processTimeNanos = 0;
+
+            /*
             final long processTimeNanos = call.associatedAssemblies().stream()
                     .mapToLong(assembly ->
                     {
@@ -153,6 +156,8 @@ public final class SummaryPageGenerator
 
                         return primaryCounters.ProcessTimeNanos.getValue() + extension.ProcessTimeNanos.getValue();
                     }).sum();
+            */
+
             builder.append("<td>").append(CommonUtils.formatNanos(processTimeNanos)).append("</td>");
 
             builder.append("<td><code>").append(truncate(call.LeftDescriptor, 80)).append("</code></td>");
@@ -176,11 +181,13 @@ public final class SummaryPageGenerator
         }
     }
 
+    /*
     private static void appendPieCharts(final OverallCounters overall, final HTMLBuilder builder)
     {
         builder.appendStartTag("<div class=\"performanceSummary\">");
 
         final PieChart mainPieChart = new PieChart("Overall");
+
         append(mainPieChart, overall.PrimaryAssemblyTime);
         append(mainPieChart, overall.InterJunctionDeduplicationTime);
         append(mainPieChart, overall.ExtensionTime);
@@ -193,6 +200,7 @@ public final class SummaryPageGenerator
         append(mainPieChart, overall.VariantCallingTime);
         append(mainPieChart, overall.VariantDeduplicationCounters.OverallTimeNanos);
         append(mainPieChart, overall.SupportScanTime);
+
         mainPieChart.appendAsSVG(builder, "width: 400px;");
 
         final PieChart ioPieChart = new PieChart("IO Breakdown");
@@ -236,6 +244,7 @@ public final class SummaryPageGenerator
 
         builder.appendEndTag("</div>");
     }
+    */
 
     private static void append(final PieChart chart, final Counter counter)
     {

@@ -96,7 +96,7 @@ public class AssemblyExtender
 
     public List<ExtendedAssembly> extend(final PrimaryAssembly assembly)
     {
-        return mCounters.ProcessTimeNanos.time(() -> doExtend(assembly));
+        return doExtend(assembly);
     }
 
     private List<ExtendedAssembly> limitBasedOnSupport(final List<ExtendedAssembly> assemblies, final int limit)
@@ -116,8 +116,7 @@ public class AssemblyExtender
 
     private List<ExtendedAssembly> doExtend(final PrimaryAssembly assembly)
     {
-        final List<Record> discordantReads = mCounters.DiscordantSearchTimeNanos.time(() -> new DiscordantPairFinder(mSAMSource)
-                .findDiscordantReads(assembly.getSupportRecords()));
+        final List<Record> discordantReads = new DiscordantPairFinder(mSAMSource).findDiscordantReads(assembly.getSupportRecords());
 
         mCounters.DiscordantReadsFound.add(discordantReads.size());
 
@@ -128,8 +127,7 @@ public class AssemblyExtender
                 .flatMap(l -> extendRight(l, discordantReads).stream())
                 .collect(Collectors.toList());
 
-        return mCounters.CleanupTimeNanos.time(() -> limitBasedOnSupport(
-                AssemblyFiltering.trimAndDeduplicate(mSupportChecker, rightExtended), 4));
+        return limitBasedOnSupport(AssemblyFiltering.trimAndDeduplicate(mSupportChecker, rightExtended), 4);
     }
 
     private String nextAssemblyName()
@@ -139,8 +137,7 @@ public class AssemblyExtender
 
     private List<Pair<Record, Record>> findMates(final Collection<Record> records)
     {
-        return mCounters.SubsequentReadTimeNanos.time(() -> mSAMSource.streamMates(records)
-                .collect(Collectors.toList()));
+        return mSAMSource.streamMates(records).collect(Collectors.toList());
     }
 
     @Nullable
@@ -150,19 +147,19 @@ public class AssemblyExtender
         if(mCreateDiagrams)
         {
             diagrams = new DiagramSet(diagramSetName);
-            mCounters.DiagramGenerationTimeNanos.time(() -> diagrams.add("Attachment", node.toDiagram()));
-            mCounters.GraphSimplificationTimeNanos.time(() -> mNodeFolder.prepruneNodes(node));
-            mCounters.DiagramGenerationTimeNanos.time(() -> diagrams.add("Pre-folding Prune", node.toDiagram()));
-            mCounters.GraphSimplificationTimeNanos.time(() -> mNodeFolder.foldPaths(node));
-            mCounters.DiagramGenerationTimeNanos.time(() -> diagrams.add("Folding", node.toDiagram()));
-            mCounters.GraphSimplificationTimeNanos.time(node::pruneNodes);
-            mCounters.DiagramGenerationTimeNanos.time(() -> diagrams.add("Pruning", node.toDiagram()));
+            diagrams.add("Attachment", node.toDiagram());
+            mNodeFolder.prepruneNodes(node);
+            diagrams.add("Pre-folding Prune", node.toDiagram());
+            mNodeFolder.foldPaths(node);
+            diagrams.add("Folding", node.toDiagram());
+            node.pruneNodes();
+            diagrams.add("Pruning", node.toDiagram());
         }
         else
         {
             diagrams = null;
-            mCounters.GraphSimplificationTimeNanos.time(() -> mNodeFolder.foldPaths(node));
-            mCounters.GraphSimplificationTimeNanos.time(node::pruneNodes);
+            mNodeFolder.foldPaths(node);
+            node.pruneNodes();
         }
 
         return diagrams;

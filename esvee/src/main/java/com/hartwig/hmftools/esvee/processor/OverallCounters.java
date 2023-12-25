@@ -7,7 +7,9 @@ import com.hartwig.hmftools.esvee.util.Counter;
 
 public class OverallCounters extends Counters<OverallCounters>
 {
-    public final Counter JunctionsProcessed = new Counter("Junctions Processed", false);
+    public final Counter JunctionsProcessed = new Counter("Junctions Processed");
+
+    /*
     public final Counter PrimaryAssemblyTime = new Counter("Primary Assembly Time", true);
     public final Counter InterJunctionDeduplicationTime = new Counter("Deduplication Time", true);
     public final Counter ExtensionTime = new Counter("Extension Time", true);
@@ -19,8 +21,9 @@ public class OverallCounters extends Counters<OverallCounters>
     public final Counter HomologyTime = new Counter("Homology Time", true);
     public final Counter VariantCallingTime = new Counter("Variant Calling Time", true);
     public final Counter SupportScanTime = new Counter("Rescan Support Time", true);
+    */
 
-    public final Counter ExtraScannedSupport = new Counter("Extra Support", false);
+    public final Counter ExtraScannedSupport = new Counter("Extra Support");
 
     public final com.hartwig.hmftools.esvee.assembly.PrimaryAssemblerCounters PrimaryAssemblerCounters = new PrimaryAssemblerCounters();
     public final com.hartwig.hmftools.esvee.assembly.AssemblyExtenderCounters AssemblyExtenderCounters = new AssemblyExtenderCounters();

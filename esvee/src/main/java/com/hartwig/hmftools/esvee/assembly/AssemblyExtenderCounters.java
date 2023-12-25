@@ -6,6 +6,7 @@ public class AssemblyExtenderCounters extends Counters<AssemblyExtenderCounters>
 {
     private static final String CATEGORY = AssemblyExtenderCounters.class.getSimpleName();
 
+    /*
     public final Counter ProcessTimeNanos = new Counter(CATEGORY, "Extension Time", true);
     public final Counter SubsequentReadTimeNanos = new Counter(CATEGORY, "Subsequent Read Time", true);
     public final Counter DiscordantSearchTimeNanos = new Counter(CATEGORY, "Discordant Search Time", true);
@@ -14,6 +15,7 @@ public class AssemblyExtenderCounters extends Counters<AssemblyExtenderCounters>
     public final Counter ExtendLeftTimeNanos = new Counter(CATEGORY, "Left Extension Time", true);
     public final Counter ExtendRightTimeNanos = new Counter(CATEGORY, "Right Extension Time", true);
     public final Counter CleanupTimeNanos = new Counter(CATEGORY, "Cleanup Time", true);
+    */
 
     public final Counter LeftMates = new Counter(CATEGORY, "Left Mates");
     public final Counter LeftMatesAssembled = new Counter(CATEGORY, "Left Mates Assembled");

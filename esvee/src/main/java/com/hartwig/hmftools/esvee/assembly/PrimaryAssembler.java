@@ -354,15 +354,20 @@ public class PrimaryAssembler
         final DiagramSet diagrams = new DiagramSet(diagramSetName);
 
         if(mCreateDiagrams)
-            mCounters.DiagramGenerationTimeNanos.time(() -> diagrams.add("Attachment", node.toDiagram()));
+            diagrams.add("Attachment", node.toDiagram());
 
-        mCounters.GraphSimplificationTimeNanos.time(() -> mNodeFolder.foldPaths(node));
-        if(mCreateDiagrams)
-            mCounters.DiagramGenerationTimeNanos.time(() -> diagrams.add("Folding", node.toDiagram()));
+        mNodeFolder.foldPaths(node);
 
-        mCounters.GraphSimplificationTimeNanos.time(aggressive ? node::pruneNodesAggressive : node::pruneNodes);
         if(mCreateDiagrams)
-            mCounters.DiagramGenerationTimeNanos.time(() -> diagrams.add("Pruning", node.toDiagram()));
+            diagrams.add("Folding", node.toDiagram());
+
+        if(aggressive)
+            node.pruneNodesAggressive();
+        else
+            node.pruneNodes();
+
+        if(mCreateDiagrams)
+            diagrams.add("Pruning", node.toDiagram());
 
         return diagrams;
     }
