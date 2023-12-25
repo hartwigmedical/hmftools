@@ -9,16 +9,13 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.models.SupportedAssembly;
 import com.hartwig.hmftools.esvee.models.TrimmableAssembly;
-import com.hartwig.hmftools.esvee.util.Timeout;
 
 import org.jetbrains.annotations.Nullable;
 
-public enum AssemblyFiltering
+public final class AssemblyFiltering
 {
-    ;
-
-    public static <T extends SupportedAssembly & TrimmableAssembly<T>> List<T> trimAndDeduplicate(final SupportChecker supportChecker,
-            final List<T> assemblies, final Timeout timeout)
+    public static <T extends SupportedAssembly & TrimmableAssembly<T>> List<T> trimAndDeduplicate(
+            final SupportChecker supportChecker, final List<T> assemblies)
     {
         final List<T> trimmed = new ArrayList<>();
         assemblies.forEach(assembly -> trimmed.add(trimAssembly(assembly)));
@@ -33,28 +30,28 @@ public enum AssemblyFiltering
         }
 
         for (int i = 0; i < trimmed.size(); i++)
-            for (int j = 0; j < trimmed.size(); j++)
+        {
+            for(int j = 0; j < trimmed.size(); j++)
             {
-                if (j % 4 == 0)
-                    timeout.checkTimeout();
-                if (i == j)
+                if(i == j)
                     continue;
 
                 @Nullable
                 final T left = trimmed.get(i);
                 @Nullable
                 final T right = trimmed.get(j);
-                if (left == null || right == null)
+                if(left == null || right == null)
                     continue;
 
                 @Nullable
                 final T deduped = resolveNearDuplicate(supportChecker, left, right);
-                if (deduped == null)
+                if(deduped == null)
                     continue;
 
                 trimmed.set(i, deduped);
                 trimmed.set(j, null);
             }
+        }
 
         return trimmed.stream()
                 .filter(Objects::nonNull)

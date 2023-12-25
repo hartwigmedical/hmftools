@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterables;
@@ -29,7 +28,6 @@ import com.hartwig.hmftools.esvee.models.Record;
 import com.hartwig.hmftools.esvee.models.SupportedAssembly;
 import com.hartwig.hmftools.esvee.sam.SAMSource;
 import com.hartwig.hmftools.esvee.util.Counter;
-import com.hartwig.hmftools.esvee.util.Timeout;
 import com.hartwig.hmftools.esvee.processor.Problem;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -43,7 +41,6 @@ public class AssemblyExtender
     private final PrimaryAssembly mPrimary;
     private final AssemblyExtenderCounters mCounters = new AssemblyExtenderCounters();
     private final boolean mCreateDiagrams;
-    private final Timeout mTimeout;
 
     private int mNextAssemblyNumber = 1;
 
@@ -59,7 +56,7 @@ public class AssemblyExtender
         try
         {
             final List<ExtendedAssembly> results = assembler.extend(assembly);
-            for(final ExtendedAssembly extended : results)
+            for(ExtendedAssembly extended : results)
             {
                 extended.addErrata(assembly.getAllErrata());
                 extended.addErrata(assembly);
@@ -87,8 +84,7 @@ public class AssemblyExtender
     {
         mSAMSource = source;
         mSupportChecker = supportChecker;
-        mTimeout = new Timeout(SvConstants.TIMEOUTS_ENABLED, TimeUnit.MILLISECONDS.toNanos(SvConstants.EXTENSION_TIMEOUT));
-        mNodeFolder = new NodeFolder(mTimeout);
+        mNodeFolder = new NodeFolder();
         mPrimary = primary;
         mCreateDiagrams = createDiagrams;
     }
@@ -125,16 +121,15 @@ public class AssemblyExtender
 
         mCounters.DiscordantReadsFound.add(discordantReads.size());
 
-        final List<ExtendedAssembly> leftExtended = mCounters.ExtendLeftTimeNanos.time(() ->
-                limitBasedOnSupport(AssemblyFiltering.trimAndDeduplicate(mSupportChecker,
-                        extendLeft(assembly, discordantReads), mTimeout), 8));
+        final List<ExtendedAssembly> leftExtended = limitBasedOnSupport(
+                AssemblyFiltering.trimAndDeduplicate(mSupportChecker, extendLeft(assembly, discordantReads)), 8);
 
-        final List<ExtendedAssembly> rightExtended = mCounters.ExtendRightTimeNanos.time(() -> leftExtended.stream()
+        final List<ExtendedAssembly> rightExtended = leftExtended.stream()
                 .flatMap(l -> extendRight(l, discordantReads).stream())
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList());
 
         return mCounters.CleanupTimeNanos.time(() -> limitBasedOnSupport(
-                AssemblyFiltering.trimAndDeduplicate(mSupportChecker, rightExtended, mTimeout), 4));
+                AssemblyFiltering.trimAndDeduplicate(mSupportChecker, rightExtended), 4));
     }
 
     private String nextAssemblyName()
@@ -212,12 +207,12 @@ public class AssemblyExtender
 
         discordantReads.sort(Comparator.comparingInt(Record::getUnclippedEnd).reversed());
         final List<Record> applicableDiscordantReads = new ArrayList<>();
-        for(final Record record : discordantReads)
+        for(Record record : discordantReads)
             if(!record.isMateOnTheLeft())
                 applicableDiscordantReads.add(record);
 
         final Map<Record, Integer> checkStartIndices = new LinkedHashMap<>();
-        for(final Record record : Iterables.concat(mates, applicableDiscordantReads))
+        for(Record record : Iterables.concat(mates, applicableDiscordantReads))
         {
             // Get the support index of this record or its mate
             @Nullable
@@ -257,12 +252,12 @@ public class AssemblyExtender
 
         discordantReads.sort(Comparator.comparingInt(Record::getUnclippedStart));
         final List<Record> applicableDiscordantReads = new ArrayList<>();
-        for(final Record record : discordantReads)
+        for(Record record : discordantReads)
             if(record.isMateOnTheLeft())
                 applicableDiscordantReads.add(record);
 
         final Map<Record, Integer> checkStartIndices = new LinkedHashMap<>();
-        for(final Record record : Iterables.concat(mates, applicableDiscordantReads))
+        for(Record record : Iterables.concat(mates, applicableDiscordantReads))
         {
             // Get the support index of this record or its mate
             @Nullable
@@ -329,16 +324,12 @@ public class AssemblyExtender
                 }).collect(Collectors.toList());
     }
 
-    private void extendAssembly(final HeadNode existing,
-            final List<Record> potentialNewSupport,
-            final List<Record> alignments,
-            final Map<Record, Integer> alignmentMinDepth,
-            final Direction alignmentDirection,
-            final Counter attachCounter)
+    private void extendAssembly(
+            final HeadNode existing, final List<Record> potentialNewSupport, final List<Record> alignments,
+            final Map<Record, Integer> alignmentMinDepth, final Direction alignmentDirection, final Counter attachCounter)
     {
         for (final Record record : alignments)
         {
-            mTimeout.checkTimeout();
             @Nullable
             final Integer depth = alignmentMinDepth.get(record);
             final HeadNode toAttach = alignmentAsGraph(record, alignmentDirection);
@@ -358,7 +349,7 @@ public class AssemblyExtender
         final Map<Record, Set<Integer>> candidateLocations = new HashMap<>();
         final Deque<Pair<Node, Integer>> worklist = new ArrayDeque<>();
         final Set<Pair<Node, Integer>> seen = new HashSet<>();
-        for(final Node successor : head.successors())
+        for(Node successor : head.successors())
             worklist.add(Pair.of(successor, 0));
 
         while(!worklist.isEmpty())
@@ -370,11 +361,11 @@ public class AssemblyExtender
             final Node node = pair.getLeft();
             final int depth = pair.getRight();
 
-            for(final Node.Support support : node.Support)
+            for(Node.Support support : node.Support)
                 if(support.ReadIndex <= 2)
                     candidateLocations.computeIfAbsent(support.Record, r -> new LinkedHashSet<>()).add(depth - support.ReadIndex);
 
-            for(final Node successor : node.successors())
+            for(Node successor : node.successors())
                 worklist.add(Pair.of(successor, depth + 1));
         }
 
@@ -394,19 +385,21 @@ public class AssemblyExtender
         else
             addSupportWithOffset(assembly, original, firstIndex);
 
-        for(final Record record : potentialSupport)
+        for(Record record : potentialSupport)
         {
             if(assembly.containsSupport(record))
                 continue;
 
-            mTimeout.checkTimeout();
             @Nullable
             final Set<Integer> candidates = supportStartIndices.get(record);
+
             if(candidates == null)
+            {
                 assembly.tryAddSupport(mSupportChecker, record);
+            }
             else
             {
-                for(final int rawIndex : candidates)
+                for(int rawIndex : candidates)
                 {
                     final int checkIndex = isForwards
                             ? rawIndex
@@ -423,7 +416,6 @@ public class AssemblyExtender
 
     private void addSupportWithOffset(final ExtendedAssembly assembly, final SupportedAssembly original, final int offset)
     {
-        mTimeout.checkTimeout();
         original.getSupport().forEach(entry ->
         {
             if(mSupportChecker.WeakSupport.supportsAt(assembly, entry.getKey(), entry.getValue() + offset))
@@ -438,7 +430,6 @@ public class AssemblyExtender
 
     private void addSupportNoOffset(final ExtendedAssembly assembly, final SupportedAssembly original)
     {
-        mTimeout.checkTimeout();
         original.getSupport().forEach(entry -> assembly.tryAddSupport(mSupportChecker, entry.getKey()));
     }
 }

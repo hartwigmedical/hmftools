@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,7 +23,6 @@ import com.hartwig.hmftools.esvee.models.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.models.Record;
 import com.hartwig.hmftools.esvee.sam.SAMSource;
 import com.hartwig.hmftools.esvee.util.Counter;
-import com.hartwig.hmftools.esvee.util.Timeout;
 import com.hartwig.hmftools.esvee.processor.PrimaryAssemblyResult;
 import com.hartwig.hmftools.esvee.processor.Problem;
 
@@ -101,13 +99,12 @@ public class PrimaryAssembler
         SV_LOGGER.trace("Processing {} junction @ {}:{}", junction.orientation().name().toLowerCase(),
                 junction.chromosome(), junction.position());
 
-        return mCounters.ProcessTimeNanos.time(() -> doProcessJunction(junction));
+        return doProcessJunction(junction);
     }
 
     private List<PrimaryAssembly> doProcessJunction(final Junction junction)
     {
-        final List<Record> nearbyAlignments =
-                mCounters.InitialReadTimeNanos.time(() -> mSAMSource.findReadsNear(junction.chromosome(), junction.position()));
+        final List<Record> nearbyAlignments = mSAMSource.findReadsNear(junction.chromosome(), junction.position());
 
         final List<Record> rawAlignments = nearbyAlignments.stream()
                 .filter(Counter.asPredicate(alignment -> AlignmentFilters.alignmentCrossesJunction(alignment, junction), mCounters.ReadsCrossingJunction))
@@ -128,34 +125,33 @@ public class PrimaryAssembler
         if(filteredAlignments.isEmpty())
             return List.of(); // There are no reads of acceptable quality supporting this junction
 
-        final Timeout timeout = new Timeout(SvConstants.TIMEOUTS_ENABLED, TimeUnit.MILLISECONDS.toNanos(SvConstants.PRIMARY_TIMEOUT));
-        timeout.addContext(junction);
-        final List<PrimaryAssembly> initialAssemblies =
-                mCounters.JunctionConstructionTimeNanos.time(() -> createInitialAssemblies(filteredAlignments, timeout));
+        final List<PrimaryAssembly> initialAssemblies = createInitialAssemblies(filteredAlignments);
+
         mCounters.InitialAssemblies.add(initialAssemblies.size());
-        timeout.checkTimeout();
+
         final List<PrimaryAssembly> extendedInitial = SvConstants.EXTEND_PRIMARIES
-                 ? mCounters.JunctionExtensionTimeNanos.time(() -> extendInitial(withLowQAlignments, initialAssemblies, timeout))
-                : initialAssemblies;
+                 ? extendInitial(withLowQAlignments, initialAssemblies) : initialAssemblies;
 
-        timeout.checkTimeout();
-
-        final List<PrimaryAssembly> dedupedInitial = AssemblyFiltering.trimAndDeduplicate(mSupportChecker, extendedInitial, timeout);
+        final List<PrimaryAssembly> dedupedInitial = AssemblyFiltering.trimAndDeduplicate(mSupportChecker, extendedInitial);
         mCounters.DedupedInitialAssemblies.add(dedupedInitial.size());
-        final List<PrimaryAssembly> anchored = mCounters.AnchorConstructionTimeNanos.time(
-                () -> createAnchors(rawAlignments, dedupedInitial, timeout));
+        
+        final List<PrimaryAssembly> anchored = createAnchors(rawAlignments, dedupedInitial);
 
-        for(final PrimaryAssembly assembly : anchored)
-            for (final Record alignment : withLowQAlignments)
-                if (!assembly.containsSupport(alignment))
+        for(PrimaryAssembly assembly : anchored)
+        {
+            for(Record alignment : withLowQAlignments)
+            {
+                if(!assembly.containsSupport(alignment))
                 {
                     @Nullable
                     final Integer supportIndex = mSupportChecker.WeakSupport.bestSupportIndex(assembly, alignment, 50);
-                    if (supportIndex != null)
+                    if(supportIndex != null)
                         assembly.addEvidenceAt(alignment, supportIndex);
                 }
+            }
+        }
 
-        final List<PrimaryAssembly> assemblies = AssemblyFiltering.trimAndDeduplicate(mSupportChecker, anchored, timeout);
+        final List<PrimaryAssembly> assemblies = AssemblyFiltering.trimAndDeduplicate(mSupportChecker, anchored);
         mCounters.DedupedAnchoredAssemblies.add(assemblies.size());
 
         final JunctionMetrics junctionMetrics = new JunctionMetrics(mJunctionChromosome, mJunctionPosition, mJunctionOrientation, mCounters);
@@ -163,26 +159,22 @@ public class PrimaryAssembler
         return assemblies;
     }
 
-    private List<PrimaryAssembly> extendInitial(final List<Record> alignments, final List<PrimaryAssembly> assemblies,
-            final Timeout timeout)
+    private List<PrimaryAssembly> extendInitial(final List<Record> alignments, final List<PrimaryAssembly> assemblies)
     {
         return assemblies.stream()
-                .map(assembly -> extendInitial(alignments, assembly, mJunctionOrientation, timeout))
+                .map(assembly -> extendInitial(alignments, assembly, mJunctionOrientation))
                 .collect(Collectors.toList());
     }
 
     /** There may be alignments that can extend the assembly but that are too noisy to be used during initial construction.
      * Examples of these types of alignments may be, for example, ones with larger soft-clips that have resulted in unacceptably low MapQ.
      * Extension in this manner is not supposed to create new candidates, so we will always choose the "best" result after pruning. */
-    private PrimaryAssembly extendInitial(final List<Record> alignments, final PrimaryAssembly assembly,
-            final Direction direction, final Timeout timeout)
+    private PrimaryAssembly extendInitial(final List<Record> alignments, final PrimaryAssembly assembly, final Direction direction)
     {
-        timeout.checkTimeout();
-
         HeadNode graph = HeadNode.create(assembly, direction);
         final Set<Record> support = assembly.getSupportRecords().stream()
                 .collect(Collectors.toSet());
-        for (final Record alignment : alignments)
+        for(Record alignment : alignments)
         {
             if (support.contains(alignment))
                 continue;
@@ -204,7 +196,6 @@ public class PrimaryAssembler
                     if (direction == Direction.REVERSE)
                         assemblyBases = new StringBuilder(assemblyBases).reverse().toString();
 
-                    timeout.checkTimeout();
                     final int anchorPositionInAssembly = direction == Direction.FORWARDS
                             ? 1
                             : assemblyBases.length() - 1;
@@ -212,10 +203,8 @@ public class PrimaryAssembler
                                     assembly.AnchorPosition, anchorPositionInAssembly);
                     newAssembly.Diagrams.addAll(assembly.Diagrams);
                     newAssembly.Diagrams.add(diagrams);
-                    for (final Record record : alignments)
+                    for(Record record : alignments)
                     {
-                        timeout.checkTimeout();
-
                         // To support the assembly we need to either be fully contained in the assembly, or to support
                         // it with our back half if we're a forwards junction / front half if we're a backwards junction.
                         final int minSupportIndex = mJunctionOrientation == Direction.FORWARDS
@@ -304,22 +293,20 @@ public class PrimaryAssembler
         return alignment;
     }
 
-    private List<PrimaryAssembly> createInitialAssemblies(final List<Record> alignments, final Timeout timeout)
+    private List<PrimaryAssembly> createInitialAssemblies(final List<Record> alignments)
     {
-        timeout.addContext("Alignment Count", alignments.size());
         final HeadNode combinedForwards = alignments.stream()
                 .filter(alignment -> alignment.getChromosome().equals(mJunctionChromosome))
                 .map(alignment -> HeadNode.create(alignment, mJunctionPosition, mJunctionOrientation))
                 .filter(Objects::nonNull)
                 .reduce(HeadNode::combine)
                 .orElseThrow();
-        timeout.addContext("Junction Count", combinedForwards.junctionCount());
 
         @Nullable
         final DiagramSet diagrams = simplifyGraph("Initial Construction", combinedForwards, false);
 
         final List<String> flattened = combinedForwards.flatten();
-        timeout.addContext("Flattened Count", flattened.size());
+
         mCounters.FlattenedInitial.add(flattened.size());
         final List<PrimaryAssembly> candidateAssemblies = flattened.stream()
                 .filter(assemblyString -> assemblyString.length() >= 10)
@@ -337,11 +324,9 @@ public class PrimaryAssembler
                 .peek(assembly -> assembly.addDiagrams(diagrams))
                 .collect(Collectors.toList());
 
-        timeout.addContext("Candidate Count", candidateAssemblies.size());
-        for(final PrimaryAssembly assembly : candidateAssemblies)
+        for(PrimaryAssembly assembly : candidateAssemblies)
         {
-            timeout.checkTimeout();
-            for(final Record record : alignments)
+            for(Record record : alignments)
             {
                 // To support the assembly we need to either be fully contained in the assembly, or to support
                 // it with our back half if we're a forwards junction / front half if we're a backwards junction.
@@ -382,23 +367,24 @@ public class PrimaryAssembler
         return diagrams;
     }
 
-    private List<PrimaryAssembly> createAnchors(final List<Record> alignments, final List<PrimaryAssembly> initialAssemblies, final Timeout timeout)
+    private List<PrimaryAssembly> createAnchors(final List<Record> alignments, final List<PrimaryAssembly> initialAssemblies)
     {
         final Map<Record, HeadNode> reverseSequences = new HashMap<>();
-        for(final Record record : alignments)
+        for(Record record : alignments)
             reverseSequences.put(record, HeadNode.create(record, mJunctionPosition, mJunctionOrientation.opposite()));
 
         final List<PrimaryAssembly> anchored = initialAssemblies.stream()
-                .flatMap(candidateAssembly -> createAnchor(reverseSequences, candidateAssembly, timeout).stream())
+                .flatMap(candidateAssembly -> createAnchor(reverseSequences, candidateAssembly).stream())
                 .collect(Collectors.toList());
+
         mCounters.AnchoredAssemblies.add(anchored.size());
         return anchored;
     }
 
-    private List<PrimaryAssembly> createAnchor(final Map<Record, HeadNode> reverseSequences, final PrimaryAssembly initialAssembly, final Timeout timeout)
+    private List<PrimaryAssembly> createAnchor(final Map<Record, HeadNode> reverseSequences, final PrimaryAssembly initialAssembly)
     {
         HeadNode anchor = null;
-        for(final Record support : initialAssembly.getSupportRecords())
+        for(Record support : initialAssembly.getSupportRecords())
         {
             final HeadNode sequence = reverseSequences.get(support);
             if(anchor == null)
@@ -416,7 +402,7 @@ public class PrimaryAssembler
         final List<String> flattened = anchor.flatten();
         mCounters.FlattenedAnchors.add(flattened.size());
         final List<PrimaryAssembly> anchoredAssemblies = new ArrayList<>();
-        for(final String flattenedAssembly : flattened)
+        for(String flattenedAssembly : flattened)
         {
             final boolean isForwards = mJunctionOrientation == Direction.FORWARDS;
             final String anchoredAssembly = isForwards
@@ -432,9 +418,8 @@ public class PrimaryAssembler
             assembly.Diagrams.addAll(initialAssembly.Diagrams);
             assembly.addDiagrams(diagrams);
 
-            for(final var entry : initialAssembly.getSupport())
+            for(var entry : initialAssembly.getSupport())
             {
-                timeout.checkTimeout();
                 final Record record = entry.getKey();
                 final int supportIndex = entry.getValue();
                 final int newSupportIndex;

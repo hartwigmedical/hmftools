@@ -13,25 +13,13 @@ import java.util.function.BiConsumer;
 import javax.annotation.concurrent.NotThreadSafe;
 
 import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.util.Timeout;
 
 import org.jetbrains.annotations.Nullable;
 
 @NotThreadSafe
 public class NodeFolder
 {
-    private final Timeout mTimeout;
-    private int mOperations;
-
-    public NodeFolder()
-    {
-        this(new Timeout(false, 0));
-    }
-
-    public NodeFolder(final Timeout timeout)
-    {
-        mTimeout = timeout;
-    }
+    public NodeFolder() { }
 
     public void prepruneNodes(final HeadNode head)
     {
@@ -42,7 +30,7 @@ public class NodeFolder
         while(!toProcess.isEmpty())
         {
             final Node node = toProcess.poll();
-            if (!processed.add(node))
+            if(!processed.add(node))
                 continue;
 
             final var successors = node.successors();
@@ -59,25 +47,25 @@ public class NodeFolder
     private void tryPrepruneNode(final Node node)
     {
         final var successors = node.successors();
-        if (successors.size() != 2)
+        if(successors.size() != 2)
             return;
 
         Node left = successors.get(0);
         Node right = successors.get(1);
-        if (!left.successors().equals(right.successors()))
+        if(!left.successors().equals(right.successors()))
             return;
 
-        if (left.MaxQuality > right.MaxQuality) // Ensure left has the lowest MaxQuality
+        if(left.MaxQuality > right.MaxQuality) // Ensure left has the lowest MaxQuality
         {
             final Node temp = left;
             left = right;
             right = temp;
         }
 
-        if (left.MaxQuality > SvConstants.LOW_BASE_QUAL_THRESHOLD)
+        if(left.MaxQuality > SvConstants.LOW_BASE_QUAL_THRESHOLD)
             return;
 
-        if (left.Quality < right.Quality && (left.Support.size() == 1 || left.Quality < SvConstants.LOW_BASE_QUAL_CUMULATIVE_THRESHOLD))
+        if(left.Quality < right.Quality && (left.Support.size() == 1 || left.Quality < SvConstants.LOW_BASE_QUAL_CUMULATIVE_THRESHOLD))
             node.removeSuccessor(left.Base);
     }
 
@@ -94,7 +82,7 @@ public class NodeFolder
         {
             Node node = toProcess.poll();
             node = rewriteMap.getOrDefault(node, node);
-            if (!processed.add(node))
+            if(!processed.add(node))
                 continue;
 
             final var successors = node.successors();
@@ -124,10 +112,10 @@ public class NodeFolder
                 if(i == j || left.Quality < right.Quality)
                     continue; // Instead of looking at (left, right), consider (right, left).
                 //noinspection SlowListContainsAll
-                if (left.successors().containsAll(right.successors()))
+                if(left.successors().containsAll(right.successors()))
                     continue; // Already folded
 
-                if (tryFoldSuccessor(node, left, right, rewriteMap))
+                if(tryFoldSuccessor(node, left, right, rewriteMap))
                 {
                     madeChanges = true;
                     i = 0;
@@ -142,17 +130,16 @@ public class NodeFolder
 
     private boolean tryFoldSuccessor(final Node parent, final Node left, final Node right, final Map<Node, Node> rewriteMap)
     {
-        mOperations = 0;
-        if (!canOverlay(left, right, 0))
+        if(!canOverlay(left, right, 0))
             return false;
 
         // We will fold right's successors into left
         final List<Node> newSuccessors = new ArrayList<>();
         final BiConsumer<Node, Node> merger = (l, r) ->
         {
-            if (l == r)
+            if(l == r)
             {
-                if (l != null)
+                if(l != null)
                     newSuccessors.add(l);
                 return;
             }
@@ -160,7 +147,7 @@ public class NodeFolder
             final Node merged = merge(l, r);
             rewriteMap.put(l, merged);
             rewriteMap.put(r, merged);
-            if (merged != null)
+            if(merged != null)
                 newSuccessors.add(merged);
         };
 
@@ -172,12 +159,12 @@ public class NodeFolder
 
         newSuccessors.forEach(left::setNext);
         for(final Node newSuccessor : newSuccessors)
-            if (right.getNext(newSuccessor.Base) != null)
+            if(right.getNext(newSuccessor.Base) != null)
                 right.setNext(newSuccessor);
 
         for(final Node sibling : parent.successors())
         {
-            if (sibling == left || sibling == right)
+            if(sibling == left || sibling == right)
                 continue;
 
             final List<Node> oldCousins = sibling.successors();
@@ -191,18 +178,15 @@ public class NodeFolder
 
     private boolean canOverlay(final Node left, final Node right, final int mismatchCountSoFar)
     {
-        if ((mOperations++ & 0x00FFF) == 0)
-            mTimeout.checkTimeout();
-
-        if (left == null || right == null)
+        if(left == null || right == null)
             return false;
-        if (left == right)
+        if(left == right)
             return true;
 
         final boolean isLowQuality = isLowQualityBase(left, true) || isLowQualityBase(right, false);
         final boolean mismatches = left.Base != right.Base && !isLowQuality;
         final int mismatchCount = mismatchCountSoFar + (mismatches ? 1 : 0);
-        if (mismatchCount > SvConstants.MAXMISMATCHESFORFOLDING)
+        if(mismatchCount > SvConstants.MAXMISMATCHESFORFOLDING)
             return false;
 
         // left & right can be overlayed iff every possible path from right has a candidate path through left that does not disagree
@@ -211,24 +195,24 @@ public class NodeFolder
             // Try the matching base first -- most likely to work
             @Nullable
             final Node candidateLeft = left.getNext(rightSuccessor.Base);
-            if (canOverlay(candidateLeft, rightSuccessor, mismatchCount))
+            if(canOverlay(candidateLeft, rightSuccessor, mismatchCount))
                 continue;
 
-            if (left.successors().isEmpty())
+            if(left.successors().isEmpty())
                 continue; // No bases means no disagreement
 
             boolean couldOverlay = false;
             for (final Node leftSuccessor : left.successors())
             {
-                if (leftSuccessor.Base == rightSuccessor.Base)
+                if(leftSuccessor.Base == rightSuccessor.Base)
                     continue; // Already checked
-                if (canOverlay(leftSuccessor, rightSuccessor, mismatchCount))
+                if(canOverlay(leftSuccessor, rightSuccessor, mismatchCount))
                 {
                     couldOverlay = true;
                     break;
                 }
             }
-            if (!couldOverlay)
+            if(!couldOverlay)
                 return false;
         }
 
@@ -245,7 +229,7 @@ public class NodeFolder
     @Nullable
     private Node merge(@Nullable final Node left, @Nullable final Node right)
     {
-        if (left == right)
+        if(left == right)
             return left;
         else if(left == null && right != null)
             return right;
@@ -268,7 +252,7 @@ public class NodeFolder
         final HeadNode merged = HeadNode.combine(leftHead, rightHead);
 
         final Node replacement = new Node(destination.Base);
-        if (destination.Base == eliminated.Base)
+        if(destination.Base == eliminated.Base)
         {
             replacement.Support = HeadNode.mergeSupport(destination.Support, eliminated.Support);
             replacement.recomputeQuality();

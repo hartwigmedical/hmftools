@@ -56,10 +56,10 @@ public class Aligner implements AutoCloseable
     {
         final List<Alignment> alignments = new ArrayList<>();
         int currentOffset = 0;
-        for(final ExtendedAssembly source : assembly.Sources)
+        for(ExtendedAssembly source : assembly.Sources)
         {
             final List<Alignment> sourceAlignments = align(source);
-            for(final Alignment alignment : sourceAlignments)
+            for(Alignment alignment : sourceAlignments)
             {
                 final int adjustedStartPosition = alignment.SequenceStartPosition + currentOffset;
 
@@ -162,7 +162,7 @@ public class Aligner implements AutoCloseable
         }
         else
         {
-            for(final CigarElement element : cigar.getCigarElements())
+            for(CigarElement element : cigar.getCigarElements())
             {
                 switch(element.getOperator())
                 {
@@ -277,7 +277,7 @@ public class Aligner implements AutoCloseable
 
         final List<Alignment> newAlignmentBlocks = new ArrayList<>();
         existing.stream().limit(existing.size() - 1).forEach(newAlignmentBlocks::add);
-        for(final Alignment extension : extensionBlocks)
+        for(Alignment extension : extensionBlocks)
             newAlignmentBlocks.add(new Alignment(extension.Chromosome, extension.ReferenceStartPosition,
                     extension.SequenceStartPosition - 1 + unmappedRight.SequenceStartPosition, extension.Length,
                     extension.Inverted, extension.Quality));

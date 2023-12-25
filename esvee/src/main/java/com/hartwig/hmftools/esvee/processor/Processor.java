@@ -43,7 +43,6 @@ import com.hartwig.hmftools.esvee.output.html.VariantCallPageGenerator;
 import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
 import com.hartwig.hmftools.esvee.util.ParallelMapper;
 import com.hartwig.hmftools.esvee.util.CommonUtils;
-import com.hartwig.hmftools.esvee.util.Timeout;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -648,7 +647,7 @@ public class Processor
     private Set<ExtendedAssembly> primaryPhasedMerging(final Set<ExtendedAssembly> primaryPhaseSet)
     {
         long timeoutNs = SvConstants.EXTENSION_TIMEOUT * 1_000_000;
-        final Timeout timeout = new Timeout(SvConstants.TIMEOUTS_ENABLED, timeoutNs); // FIXME: NANOS_IN_MILLISECOND
+
         try
         {
             final Set<ExtendedAssembly> result = new HashSet<>(primaryPhaseSet);
@@ -662,8 +661,6 @@ public class Processor
                 for(final ExtendedAssembly left : result)
                     for(final ExtendedAssembly right : result)
                     {
-                        timeout.checkTimeout();
-
                         if(left == right)
                             continue;
                         if(!checked.add(Pair.of(left, right)))

@@ -15,7 +15,7 @@ public class AnchorCigarFactoryTest
             final List<Alignment> alignments, final int leftIndex, final int rightIndex)
     {
         int sequencePosition = 1;
-        for(final Alignment alignment : alignments)
+        for(Alignment alignment : alignments)
             if(sequencePosition != alignment.SequenceStartPosition)
                 throw new IllegalStateException("Invalid Alignment list");
             else
