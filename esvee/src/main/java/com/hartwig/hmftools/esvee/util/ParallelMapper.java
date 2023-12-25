@@ -15,12 +15,10 @@ import org.jetbrains.annotations.Nullable;
 
 /** Why not Stream::parallel? Tasks that end up taking wildly differing time to process can leave quite a few idle threads
  * when using Stream::parallel. */
-public enum ParallelMapper
+public final class ParallelMapper
 {
-    ;
-
-    public static <ARG, RESULT> List<RESULT> flatMap(final ExecutorService executor, final List<ARG> items,
-            final Function<ARG, List<RESULT>> mapper)
+    public static <ARG, RESULT> List<RESULT> flatMap(
+            final ExecutorService executor, final List<ARG> items, final Function<ARG, List<RESULT>> mapper)
     {
         return map(executor, items, mapper).stream()
                 .flatMap(Collection::stream)
@@ -33,7 +31,8 @@ public enum ParallelMapper
     }
 
 
-    public static <ARG, RESULT> List<RESULT> map(final ExecutorService executor, final List<ARG> items, final Function<ARG, RESULT> mapper,
+    public static <ARG, RESULT> List<RESULT> map(
+            final ExecutorService executor, final List<ARG> items, final Function<ARG, RESULT> mapper,
             @Nullable final Counter overallTimer, @Nullable final Counter itemTimer)
     {
         final Function<ARG, RESULT> wrappedMapper = Counter.wrap(itemTimer, mapper);

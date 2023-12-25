@@ -6,7 +6,8 @@ import com.hartwig.hmftools.esvee.util.Counter;
 public class PolyGTrimmer
 {
     private final Counter mRecordsTrimmed = new Counter("PolyG Trimmed");
-    /** This many G/Cs, or more. */
+
+    // This many G/Cs, or more
     private final int mPolyGCountThreshold;
 
     public PolyGTrimmer(final int polyGCountThreshold)

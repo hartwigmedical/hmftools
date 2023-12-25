@@ -13,8 +13,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class ProgressTracker implements AutoCloseable
 {
-    private static final Logger LOGGER = LogManager.getLogger(ProgressTracker.class);
-
     private final ScheduledExecutorService mReporter;
 
     @Nullable

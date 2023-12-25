@@ -12,20 +12,9 @@ import com.google.common.collect.Streams;
 import com.hartwig.hmftools.esvee.util.Counter;
 import com.hartwig.hmftools.esvee.util.ThrowingFunction;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public abstract class Counters<T extends Counters<T>>
 {
-    private static final Logger LOGGER = LogManager.getLogger(Counters.class);
     private static final Map<Class<?>, Function<Object, List<Counter>>> COUNTER_ACCESSORS = new ConcurrentHashMap<>();
-
-    @SuppressWarnings("unused")
-    public void log()
-    {
-        if (LOGGER.isTraceEnabled())
-            all().forEach(counter -> LOGGER.trace("{}", counter));
-    }
 
     public List<Counter> all()
     {

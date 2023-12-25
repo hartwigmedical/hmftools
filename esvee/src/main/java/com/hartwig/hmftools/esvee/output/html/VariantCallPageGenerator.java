@@ -5,28 +5,24 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
-
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
-import com.hartwig.hmftools.esvee.util.MapUtils;
 import com.hartwig.hmftools.esvee.assembly.JunctionMetrics;
 import com.hartwig.hmftools.esvee.assembly.SupportChecker;
 import com.hartwig.hmftools.esvee.processor.VariantCall;
 
 import org.apache.commons.compress.utils.IOUtils;
 
-public enum VariantCallPageGenerator
+public final class VariantCallPageGenerator
 {
-    ;
-
-    public static void generatePage(final String folder, final RefGenomeInterface reference,
-            final SupportChecker supportChecker, final VariantCall call)
+    public static void generatePage(
+            final String folder, final RefGenomeInterface reference, final SupportChecker supportChecker, final VariantCall call)
     {
-        //noinspection ResultOfMethodCallIgnored
         new File(folder).mkdirs();
 
         final String title = call.isSingleSided()
@@ -72,7 +68,8 @@ public enum VariantCallPageGenerator
 
         builder.appendStartTag("<div>");
         builder.append("<center><h2>Details</h2></center>\n");
-        builder.appendSimpleAttributeTable(MapUtils.mapOf(
+
+        Map<String,Object> attributes = mapOf(
                 "Left", Objects.requireNonNullElse(call.LeftChromosome, "?") + ":" + call.LeftPosition,
                 "Right", Objects.requireNonNullElse(call.RightChromosome, "?") + ":" + call.RightPosition,
                 "Left Variant", call.LeftDescriptor,
@@ -84,8 +81,9 @@ public enum VariantCallPageGenerator
                 "Classification", call.Classification,
                 "Overhang", call.overhang(),
                 "Split Reads", call.splitReadSupport(),
-                "Discordant Pairs", call.discordantSupport()
-        ), 2);
+                "Discordant Pairs", call.discordantSupport());
+
+        builder.appendSimpleAttributeTable(attributes, 2);
         builder.appendEndTag("</div>");
 
         builder.appendEndTag("</div>"); // Flex div
@@ -119,6 +117,14 @@ public enum VariantCallPageGenerator
         builder.appendStartTag("</div>");
     }
 
+    private static Map<String,Object> mapOf(final Object... params)
+    {
+        final Map<String, Object> result = new LinkedHashMap<>();
+        for(int i = 0; i < params.length; i += 2)
+            result.put(params[i].toString(), params[i + 1]);
+        return result;
+    }
+
     private static void appendResource(final HTMLBuilder page, final String resourceName)
     {
         try
@@ -137,7 +143,7 @@ public enum VariantCallPageGenerator
         return "document.querySelectorAll('.read-summary tr.sequence').forEach(tr => {tr.style.display = 'table-row'; tr.style.filter = '';});";
     }
 
-    private static String javascriptHideAllExcept(@Nullable final String assemblyName, final Collection<String> fragmentNames) {
+    private static String javascriptHideAllExcept(final String assemblyName, final Collection<String> fragmentNames) {
         final String set = "[" + fragmentNames.stream().map(name -> "'" + name + "'").collect(Collectors.joining(",")) + "]";
         final String highlightAssembly = "if (tr.getAttribute('name').includes('Assembly')) {"
                 + " if (tr.getAttribute('name') == '" + assemblyName + "') {"

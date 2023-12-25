@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.output;
 
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -13,9 +15,6 @@ import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.models.AssemblyClassification;
 import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
 import com.hartwig.hmftools.esvee.processor.VariantCall;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.variant.variantcontext.Genotype;
@@ -34,8 +33,6 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class VCFWriter implements AutoCloseable
 {
-    private static final Logger LOGGER = LogManager.getLogger(VCFWriter.class);
-
     private final Context mContext;
     private final VariantContextWriter mWriter;
     private final List<VariantContext> mVariants = new ArrayList<>();
@@ -101,7 +98,7 @@ public class VCFWriter implements AutoCloseable
         {
             if(call.LeftDescriptor == null)
             {
-                LOGGER.error("Expected descriptor for {}", call);
+                SV_LOGGER.error("Expected descriptor for {}", call);
                 return;
             }
             final VariantContextBuilder left = variant(call, 0, true);

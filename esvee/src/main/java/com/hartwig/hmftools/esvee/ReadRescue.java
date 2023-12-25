@@ -1,11 +1,12 @@
 package com.hartwig.hmftools.esvee;
 
+import static com.hartwig.hmftools.esvee.util.CommonUtils.reverseBytes;
+
 import java.util.Arrays;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.models.IRecord;
 import com.hartwig.hmftools.esvee.models.MutableRecord;
-import com.hartwig.hmftools.esvee.util.ArrayUtils;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -95,12 +96,12 @@ public class ReadRescue
             return null;
 
         final byte[] referenceBases = mRef.getBases(record.getChromosome(), referenceStartPosition, referenceEndPosition);
-        final byte[] reversedReferenceBases = ArrayUtils.reverse(referenceBases);
+        final byte[] reversedReferenceBases = reverseBytes(referenceBases);
 
-        final byte[] reversedBases = ArrayUtils.reverse(record.getBases());
-        final byte[] reversedQuals = ArrayUtils.reverse(record.getBaseQuality());
+        final byte[] reversedBases = reverseBytes(record.getBases());
+        final byte[] reversedQuals = reverseBytes(record.getBaseQuality());
         final int reversedAttemptIndex = record.getLength() - attemptIndex;
-        return ArrayUtils.reverse(tryRescueRead(reversedBases, reversedQuals, reversedAttemptIndex, reversedReferenceBases, repeatBase));
+        return reverseBytes(tryRescueRead(reversedBases, reversedQuals, reversedAttemptIndex, reversedReferenceBases, repeatBase));
     }
 
     private static int referencePositionFromRecordIndex(final IRecord record, final int desiredReadPosition)

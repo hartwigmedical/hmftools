@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.esvee.assembly.JunctionMetrics;
 import com.hartwig.hmftools.esvee.assembly.PrimaryAssemblerCounters;
 import com.hartwig.hmftools.esvee.util.Counter;
-import com.hartwig.hmftools.esvee.util.StringUtils;
+import com.hartwig.hmftools.esvee.util.CommonUtils;
 import com.hartwig.hmftools.esvee.assembly.AssemblyExtenderCounters;
 import com.hartwig.hmftools.esvee.processor.OverallCounters;
 import com.hartwig.hmftools.esvee.processor.VariantCall;
@@ -24,10 +24,8 @@ import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
-public enum SummaryPageGenerator
+public final class SummaryPageGenerator
 {
-    ;
-
     private static void appendResource(final StringBuilder page, final String resourceName)
     {
         try
@@ -155,7 +153,7 @@ public enum SummaryPageGenerator
 
                         return primaryCounters.ProcessTimeNanos.getValue() + extension.ProcessTimeNanos.getValue();
                     }).sum();
-            builder.append("<td>").append(StringUtils.formatNanos(processTimeNanos)).append("</td>");
+            builder.append("<td>").append(CommonUtils.formatNanos(processTimeNanos)).append("</td>");
 
             builder.append("<td><code>").append(truncate(call.LeftDescriptor, 80)).append("</code></td>");
             builder.append("<td><code>").append(truncate(call.RightDescriptor, 80)).append("</code></td>");
@@ -206,7 +204,7 @@ public enum SummaryPageGenerator
                 - overall.PrimaryAssemblerCounters.InitialReadTimeNanos.getValue()
                 - overall.AssemblyExtenderCounters.SubsequentReadTimeNanos.getValue()
                 - overall.AssemblyExtenderCounters.DiscordantSearchTimeNanos.getValue();
-        ioPieChart.add("Processing Time", processingTimeNanos, StringUtils.formatNanos(processingTimeNanos));
+        ioPieChart.add("Processing Time", processingTimeNanos, CommonUtils.formatNanos(processingTimeNanos));
         append(ioPieChart, overall.AlignmentTime);
         ioPieChart.appendAsSVG(builder, "width: 400px;");
 

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.esvee.processor;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -43,8 +42,7 @@ import com.hartwig.hmftools.esvee.output.html.SummaryPageGenerator;
 import com.hartwig.hmftools.esvee.output.html.VariantCallPageGenerator;
 import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
 import com.hartwig.hmftools.esvee.util.ParallelMapper;
-import com.hartwig.hmftools.esvee.util.RangeUtils;
-import com.hartwig.hmftools.esvee.util.StringUtils;
+import com.hartwig.hmftools.esvee.util.CommonUtils;
 import com.hartwig.hmftools.esvee.util.Timeout;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -257,7 +255,7 @@ public class Processor
         else
             SV_LOGGER.info("No problems encountered");
         final long endTimeNanos = System.nanoTime();
-        SV_LOGGER.info("Completed processing in {}", StringUtils.formatNanos(endTimeNanos - startTimeNanos));
+        SV_LOGGER.info("Completed processing in {}", CommonUtils.formatNanos(endTimeNanos - startTimeNanos));
 
         if(mContext.Config.writeHtmlFiles())
             writeHTMLSummaries(deduplicated);
@@ -851,9 +849,13 @@ public class Processor
 
                 final int currentStart = current.AnchorPosition - current.AnchorPositionInAssembly;
                 final int nextStart = next.AnchorPosition - next.AnchorPositionInAssembly;
-                if(!RangeUtils.overlaps(currentStart - maxDedupeDistance, currentStart + current.Assembly.length() + maxDedupeDistance,
+
+                if(!CommonUtils.overlaps(
+                        currentStart - maxDedupeDistance, currentStart + current.Assembly.length() + maxDedupeDistance,
                         nextStart - maxDedupeDistance, nextStart + next.Assembly.length() + maxDedupeDistance))
+                {
                     break;
+                }
 
                 try
                 {

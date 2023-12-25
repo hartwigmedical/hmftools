@@ -7,7 +7,7 @@ import java.util.function.Supplier;
 
 import org.jetbrains.annotations.Nullable;
 
-public class Counter implements CSVWriter.CSVValue
+public class Counter
 {
     public final String Category;
     public final String Name;
@@ -113,7 +113,10 @@ public class Counter implements CSVWriter.CSVValue
         return Name + ": " + getValue();
     }
 
-    @Override
+    /*
+    previous implemented interface CSVWriter.CSVValue asValueForCSV
+     */
+
     public Object asValueForCSV()
     {
         return getValue();
@@ -122,7 +125,7 @@ public class Counter implements CSVWriter.CSVValue
     public String formatValue()
     {
         if (IsTime)
-            return StringUtils.formatNanos(getValue());
+            return CommonUtils.formatNanos(getValue());
         else
             return String.valueOf(getValue());
     }

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -26,8 +28,6 @@ import com.hartwig.hmftools.esvee.util.Timeout;
 import com.hartwig.hmftools.esvee.processor.PrimaryAssemblyResult;
 import com.hartwig.hmftools.esvee.processor.Problem;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
@@ -36,8 +36,6 @@ import htsjdk.samtools.CigarOperator;
 
 public class PrimaryAssembler
 {
-    private static final Logger LOGGER = LogManager.getLogger(PrimaryAssembler.class);
-
     private final SvConfig mConfig;
     private final SAMSource mSAMSource;
     private final SupportChecker mSupportChecker;
@@ -70,10 +68,11 @@ public class PrimaryAssembler
         {
             final Problem problem = new Problem("Failure during primary assembly", throwable, junction);
             context.Problems.add(problem);
-            if (throwable instanceof JunctionProcessingException)
-                LOGGER.warn("{}", problem);
+            
+            if(throwable instanceof JunctionProcessingException)
+                SV_LOGGER.warn("{}", problem);
             else
-                LOGGER.error("{}", problem, throwable);
+                SV_LOGGER.error("{}", problem, throwable);
             return null;
         }
     }
@@ -99,7 +98,7 @@ public class PrimaryAssembler
 
     public List<PrimaryAssembly> processJunction(final Junction junction)
     {
-        LOGGER.trace("Processing {} junction @ {}:{}", junction.orientation().name().toLowerCase(),
+        SV_LOGGER.trace("Processing {} junction @ {}:{}", junction.orientation().name().toLowerCase(),
                 junction.chromosome(), junction.position());
 
         return mCounters.ProcessTimeNanos.time(() -> doProcessJunction(junction));
@@ -197,7 +196,7 @@ public class PrimaryAssembler
         final List<String> flattened = graph.flatten();
         if (flattened.size() * alignments.size() > 100_000)
             //throw new JunctionProcessingException("Too many flattened assemblies or alignments!");
-            LOGGER.info("{} got {} extensions & {} alignments for a product of {}",
+            SV_LOGGER.info("{} got {} extensions & {} alignments for a product of {}",
                     assembly.getName(), flattened.size(), alignments.size(), flattened.size() * alignments.size());
         return Stream.concat(Stream.of(assembly), flattened.stream()
                 .map(assemblyBases ->

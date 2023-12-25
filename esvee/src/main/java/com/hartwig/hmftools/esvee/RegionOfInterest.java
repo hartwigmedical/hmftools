@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.hartwig.hmftools.esvee.util.RangeUtils;
+import com.hartwig.hmftools.esvee.util.CommonUtils;
 
 public class RegionOfInterest
 {
@@ -48,7 +48,7 @@ public class RegionOfInterest
     public boolean touches(final RegionOfInterest other)
     {
         return Chromosome.equals(other.Chromosome) && Inverted == other.Inverted
-                && RangeUtils.touches(Start, End, other.Start, other.End);
+                && CommonUtils.touches(Start, End, other.Start, other.End);
     }
 
     public int distanceTo(final String chromosome, final int position)
