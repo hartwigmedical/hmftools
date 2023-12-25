@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.output.html;
+package com.hartwig.hmftools.esvee.html;
 
 public class SequenceViewTest
 {

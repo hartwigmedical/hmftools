@@ -31,13 +31,13 @@ import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class VCFWriter implements AutoCloseable
+public class VcfWriter implements AutoCloseable
 {
     private final Context mContext;
     private final VariantContextWriter mWriter;
     private final List<VariantContext> mVariants = new ArrayList<>();
 
-    public VCFWriter(final Context context, final List<String> sampleNames)
+    public VcfWriter(final Context context, final List<String> sampleNames)
     {
         mContext = context;
 

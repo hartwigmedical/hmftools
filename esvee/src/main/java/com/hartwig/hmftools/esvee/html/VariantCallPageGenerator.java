@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.output.html;
+package com.hartwig.hmftools.esvee.html;
 
 import java.io.File;
 import java.io.IOException;

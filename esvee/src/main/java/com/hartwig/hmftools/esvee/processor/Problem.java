@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.esvee.processor;
 
-import com.hartwig.hmftools.esvee.JunctionProcessingException;
-
 public class Problem
 {
     public final String Message;
@@ -19,7 +17,6 @@ public class Problem
     public String toString()
     {
         return String.format("%s%s: %s", Message,
-                Context == null ? "" : " while processing " + Context,
-                Error instanceof JunctionProcessingException ? Error.getClass() : Error);
+                Context == null ? "" : " while processing " + Context, Error);
     }
 }

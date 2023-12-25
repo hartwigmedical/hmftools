@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.output.html;
+package com.hartwig.hmftools.esvee.html;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,11 +12,8 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
-import com.hartwig.hmftools.esvee.assembly.JunctionMetrics;
-import com.hartwig.hmftools.esvee.assembly.PrimaryAssemblerCounters;
 import com.hartwig.hmftools.esvee.util.Counter;
 import com.hartwig.hmftools.esvee.util.CommonUtils;
-import com.hartwig.hmftools.esvee.assembly.AssemblyExtenderCounters;
 import com.hartwig.hmftools.esvee.processor.OverallCounters;
 import com.hartwig.hmftools.esvee.processor.VariantCall;
 

@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.APP_NAME;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.processor.Processor;
 
 public class EsveeApplication
@@ -25,12 +26,16 @@ public class EsveeApplication
 
         SV_LOGGER.info("starting Esvee");
 
-        Processor processor = new Processor(mConfig, mContext);
+        ResultsWriter resultsWriter = new ResultsWriter(mConfig);
+
+        Processor processor = new Processor(mConfig, mContext, resultsWriter);
 
         if(!processor.loadJunctionFiles())
             System.exit(1);
 
         processor.run();
+
+        resultsWriter.close();
 
         SV_LOGGER.info("Esvee complete, mins({})", runTimeMinsStr(startTimeMs));
     }

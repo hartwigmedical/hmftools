@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.hartwig.hmftools.esvee.output.html.HTMLBuilder;
+import com.hartwig.hmftools.esvee.html.HTMLBuilder;
 
 import org.apache.commons.lang3.tuple.Pair;
 

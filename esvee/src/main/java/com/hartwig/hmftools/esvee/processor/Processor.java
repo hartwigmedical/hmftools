@@ -2,21 +2,15 @@ package com.hartwig.hmftools.esvee.processor;
 
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 
-import java.io.FileOutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -27,19 +21,18 @@ import com.hartwig.hmftools.esvee.RegionOfInterest;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.WriteType;
 import com.hartwig.hmftools.esvee.assembly.AssemblyExtender;
-import com.hartwig.hmftools.esvee.assembly.JunctionMetrics;
 import com.hartwig.hmftools.esvee.assembly.PrimaryAssembler;
+import com.hartwig.hmftools.esvee.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
-import com.hartwig.hmftools.esvee.models.Alignment;
 import com.hartwig.hmftools.esvee.models.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.models.GappedAssembly;
 import com.hartwig.hmftools.esvee.models.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.models.Record;
 import com.hartwig.hmftools.esvee.models.Sequence;
 import com.hartwig.hmftools.esvee.models.SupportedAssembly;
-import com.hartwig.hmftools.esvee.output.VCFWriter;
-import com.hartwig.hmftools.esvee.output.html.SummaryPageGenerator;
-import com.hartwig.hmftools.esvee.output.html.VariantCallPageGenerator;
+import com.hartwig.hmftools.esvee.output.VcfWriter;
+import com.hartwig.hmftools.esvee.html.SummaryPageGenerator;
+import com.hartwig.hmftools.esvee.html.VariantCallPageGenerator;
 import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
 import com.hartwig.hmftools.esvee.util.ParallelMapper;
 import com.hartwig.hmftools.esvee.util.CommonUtils;
@@ -47,29 +40,22 @@ import com.hartwig.hmftools.esvee.util.CommonUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
-import htsjdk.samtools.BAMStreamWriter;
-import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.util.SequenceUtil;
-
 public class Processor
 {
     private final SvConfig mConfig;
     private final Context mContext;
+    private final ResultsWriter mResultsWriter;
     private final HomologySlider mHomologySlider;
 
     private final Map<String,List<Junction>> mChrJunctionsMap;
 
     public final OverallCounters Counters = new OverallCounters();
 
-    public Processor(final SvConfig config, final Context context)
+    public Processor(final SvConfig config, final Context context, final ResultsWriter resultsWriter)
     {
         mConfig = config;
         mContext = context;
+        mResultsWriter = resultsWriter;
         mHomologySlider = new HomologySlider(mContext.ReferenceGenome);
         mChrJunctionsMap = Maps.newHashMap();
     }
@@ -196,7 +182,7 @@ public class Processor
             }
         }
 
-        SV_LOGGER.info("merged secondaries in {}");
+        SV_LOGGER.info("merged secondaries");
 
         // Alignment
         final List<AlignedAssembly> aligned = ParallelMapper.mapWithProgress(
@@ -220,7 +206,7 @@ public class Processor
 
         // Calling
         final List<VariantCall> variants = new VariantCaller(mContext.Executor).callVariants(homologised);
-        SV_LOGGER.info("called {} variants in {}", variants.size());
+        SV_LOGGER.info("called {} variants", variants.size());
 
         // Variant Deduplication
         final VariantDeduplication deduplicator = new VariantDeduplication(mContext, Counters.VariantDeduplicationCounters);
@@ -252,7 +238,7 @@ public class Processor
         if(!mContext.Problems.isEmpty())
         {
             SV_LOGGER.warn("encountered {} problems", mContext.Problems.size());
-            
+
             if(mContext.Problems.size() < 50)
             {
                 for(final Problem problem : mContext.Problems)
@@ -266,10 +252,11 @@ public class Processor
         writeVCF(deduplicated);
 
         if(mContext.Config.WriteTypes.contains(WriteType.BREAKEND_TSV))
-            writeCSV(deduplicated);
+        {
+            deduplicated.forEach(x -> mResultsWriter.writeVariant(x));
+        }
 
-        if(mContext.Config.WriteTypes.contains(WriteType.ASSEMBLY_BAM))
-            writeBAM(deduplicated);
+        mResultsWriter.writeVariantAssemblyBamRecords(deduplicated);
 
         return deduplicated;
     }
@@ -305,46 +292,6 @@ public class Processor
         }
     }
 
-    private void writeCSV(final List<VariantCall> variants)
-    {
-        /*
-        variants.sort(Comparator.<VariantCall, String>comparing(v -> Objects.requireNonNullElse(v.LeftChromosome, v.RightChromosome))
-                .thenComparingInt(v -> v.LeftPosition == 0 ? v.RightPosition : v.LeftPosition));
-
-        CSVWriter.writeCSV(mContext.Config.outputCSVFile(), VariantLine.class, variants.stream()
-                .map(variant -> new VariantLine(variant.LeftChromosome, variant.LeftPosition,
-                        variant.RightChromosome, variant.RightPosition,
-                        variant.LeftDescriptor, variant.RightDescriptor,
-                        variant.LeftMappingQuality,
-                        variant.germlineSupport(), variant.somaticSupport(),
-                        variant.associatedAssemblies().stream().map(asm -> asm.Assembly).collect(Collectors.toList()),
-                        variant.Classification,
-                        List.of(), csvFilters(variant))));
-        */
-    }
-
-    private String csvFilters(final VariantCall variant)
-    {
-        final boolean isLowOverhang = variant.overhang() < SvConstants.VCFLOWOVERHANGTHRESHOLD;
-        final boolean isLowQuality = variant.quality() < SvConstants.VCFLOWQUALITYTHRESHOLD;
-        final boolean isLowSupport = variant.supportingFragments().size() < SvConstants.MINREADSTOSUPPORTASSEMBLY;
-        final boolean isLikelyFalse = isLowSupport || (isLowOverhang && variant.discordantSupport() == 0) || isLowQuality;
-        final List<String> filters = new ArrayList<>();
-        if(variant.isGermline())
-            filters.add("GERMLINE");
-        if(variant.associatedAssemblies().size() > 1)
-            filters.add("MULTIPLE_ASSEMBLIES");
-        if(isLowOverhang)
-            filters.add("LOW_OVERHANG");
-        if(isLowQuality)
-            filters.add("LOW_QUALITY");
-        if(isLowSupport)
-            filters.add("LOW_SUPPORT");
-        if(isLikelyFalse)
-            filters.add("LIKELY_FALSE");
-        return String.join(";", filters);
-    }
-
     private void writeVCF(final List<VariantCall> variants)
     {
         final List<String> sampleNames = variants.stream()
@@ -352,7 +299,8 @@ public class Processor
                 .distinct()
                 .sorted()
                 .collect(Collectors.toList());
-        final VCFWriter writer = new VCFWriter(mContext, sampleNames);
+
+        final VcfWriter writer = new VcfWriter(mContext, sampleNames);
         for(final VariantCall call : variants)
         {
             try
@@ -367,291 +315,11 @@ public class Processor
         writer.close();
     }
 
-    private void writeBAM(final List<VariantCall> variants)
-    {
-        final Map<String, List<VariantBAMRecord>> recordsByAssemblyName = new HashMap<>();
-        for(final VariantCall call : variants)
-        {
-            final Set<String> supportFragments = call.sampleSupport().stream()
-                    .flatMap(s -> Stream.concat(s.splitReads().stream(), s.discordantReads().stream()))
-                    .map(Record::getName)
-                    .collect(Collectors.toSet());
-            for(final VariantCall.VariantAssembly variantAssembly : call.variantAssemblies())
-            {
-                final AlignedAssembly assembly = variantAssembly.Assembly;
-                final List<VariantBAMRecord> assemblyRecords = recordsByAssemblyName.computeIfAbsent(assembly.Name, __ ->
-                {
-                    final List<VariantBAMRecord> records = new ArrayList<>();
-                    final Set<String> junctions = assembly.getAllErrata(JunctionMetrics.class).stream()
-                            .map(junction -> junction.JunctionChromosome + ":" + junction.JunctionPosition
-                                    + junction.JunctionDirection.toShortString())
-                            .collect(Collectors.toCollection(() -> new TreeSet<>(NaturalSortComparator.INSTANCE)));
-                    final Set<String> fragments = new HashSet<>();
 
-                    final List<VariantAssemblyAlignment> alignments = constructAlignments(assembly.getAlignmentBlocks());
-                    for(final VariantAssemblyAlignment alignment : alignments)
-                    {
-                        records.add(new VariantBAMRecord(assembly.Name,
-                                assembly.getBasesString().replace('X', 'N'), assembly.getBaseQuality(),
-                                alignment.Offset, alignment.Chromosome, alignment.Position, alignment.Inverted,
-                                alignment.MapQ,
-                                alignment.Cigar,
-                                new HashSet<>(), junctions, fragments,
-                                alignments));
-                    }
-                    return records;
-                });
-                final Set<String> support = new HashSet<>();
-                support.addAll(supportFragments);
-                support.retainAll(assembly.getSupportFragments());
-                assemblyRecords.forEach(r -> r.SourceFragments.addAll(support));
-                assemblyRecords.forEach(r -> r.Variants.add(call.compactName()));
-            }
-        }
 
-        final List<VariantBAMRecord> records = recordsByAssemblyName.values().stream()
-                .flatMap(Collection::stream)
-                .sorted(NaturalSortComparator.<VariantBAMRecord>of(r -> r.Chromosome).thenComparingInt(r -> r.Position))
-                .collect(Collectors.toList());
-
-        final SAMFileHeader header = new SAMFileHeader();
-        header.setSortOrder(SAMFileHeader.SortOrder.coordinate);
-        mContext.ReferenceGenome.refGenomeFile().getSequenceDictionary().getSequences().stream()
-                .sorted(NaturalSortComparator.of(SAMSequenceRecord::getSequenceName))
-                .map(seq -> new SAMSequenceRecord(seq.getSequenceName(), seq.getSequenceLength()))
-                .forEach(header::addSequence);
-        
-        String outputFilename = mContext.Config.outputFilename(WriteType.ASSEMBLY_BAM);
-        
-        try
-        {
-            final var writer = new BAMStreamWriter(new FileOutputStream(outputFilename),
-                    new FileOutputStream(outputFilename + ".bai"),
-                    null, 0,
-                    header);
-
-            writer.writeHeader(header);
-            for (final VariantBAMRecord record : records)
-            {
-                final var samRecord = new SAMRecord(header);
-                samRecord.setReadName(record.Name);
-                samRecord.setReadBases(record.Assembly.getBytes());
-                samRecord.setBaseQualities(record.Quality);
-                samRecord.setReferenceName(record.Chromosome);
-                samRecord.setAlignmentStart(record.Position);
-                samRecord.setReadNegativeStrandFlag(record.Inverted);
-                samRecord.setMappingQuality(record.MapQ);
-                samRecord.setCigarString(record.Cigar);
-                samRecord.setAttribute("XV", String.join(",", record.Variants));
-                samRecord.setAttribute("XJ", String.join(",", record.Junctions));
-                samRecord.setAttribute("XF", String.join(",", record.SourceFragments));
-                @Nullable
-                final VariantAssemblyAlignment mate = record.getMate();
-                if (mate != null)
-                {
-                    samRecord.setReadPairedFlag(true);
-                    samRecord.setFirstOfPairFlag(record.Offset < mate.Offset);
-                    samRecord.setSecondOfPairFlag(record.Offset > mate.Offset);
-                    samRecord.setMateReferenceName(mate.Chromosome);
-                    samRecord.setMateAlignmentStart(mate.Position);
-                    samRecord.setMateNegativeStrandFlag(mate.Inverted);
-                    samRecord.setAttribute("MC", mate.Cigar);
-                }
-                if (!record.Supplementaries.isEmpty())
-                {
-                    final String supplementals = record.Supplementaries.stream()
-                            .map(sup -> String.join(",", sup.Chromosome, String.valueOf(sup.Position),
-                                    sup.Inverted ? "-" : "+", sup.Cigar, String.valueOf(sup.MapQ), "0") + ";")
-                            .collect(Collectors.joining());
-                    samRecord.setAttribute("SA", supplementals);
-                }
-
-                writer.writeAlignment(samRecord);
-            }
-
-            writer.finish(true);
-        }
-        catch(final Exception ex)
-        {
-            SV_LOGGER.warn("Failure while writing output BAM", ex);
-        }
-    }
-
-    private List<VariantAssemblyAlignment> constructAlignments(final List<Alignment> alignments)
-    {
-        final Set<Alignment> used = Collections.newSetFromMap(new IdentityHashMap<>());
-
-        final List<VariantAssemblyAlignment> variantAlignments = new ArrayList<>();
-        for(int i = 0; i < alignments.size(); i++)
-        {
-            final Alignment alignment = alignments.get(i);
-            if(alignment.isUnmapped() || used.contains(alignment))
-                continue;
-            variantAlignments.add(constructAlignment(alignments, i, used));
-        }
-
-        return variantAlignments;
-    }
-
-    private VariantAssemblyAlignment constructAlignment(final List<Alignment> alignments, final int startIndex, final Set<Alignment> used)
-    {
-        final List<CigarElement> elements = new ArrayList<>();
-
-        final Alignment start = alignments.get(startIndex);
-        if(start.SequenceStartPosition != 1)
-            elements.add(new CigarElement(start.SequenceStartPosition - 1, CigarOperator.S));
-        int index = startIndex;
-        for(; index < alignments.size(); index++)
-        {
-            final Alignment current = alignments.get(index);
-            used.add(current);
-            elements.add(new CigarElement(current.Length, CigarOperator.M));
-
-            if(index + 1 < alignments.size())
-            {
-                final Alignment next = alignments.get(index + 1);
-                if(next.isMapped())
-                {
-                    if(next.Inverted != current.Inverted || !next.Chromosome.equals(current.Chromosome))
-                        break;
-
-                    // Might be a delete
-                    final int impliedDelete = !current.Inverted
-                            ? next.ReferenceStartPosition - (current.ReferenceStartPosition + current.Length)
-                            : current.ReferenceStartPosition - (next.ReferenceStartPosition + next.Length);
-                    if(impliedDelete > 0 && impliedDelete <= 100)
-                    {
-                        elements.add(new CigarElement(impliedDelete, CigarOperator.D));
-                        continue;
-                    }
-                }
-            }
-            if(index + 2 < alignments.size())
-            {
-                // Does a future alignment come back to within 100 bases of us?
-                int insertSize = alignments.get(index + 1).Length;
-                boolean addedInsert = false;
-                for(int checkIndex = index + 2; checkIndex < alignments.size(); checkIndex++)
-                {
-                    final Alignment next = alignments.get(checkIndex);
-                    if(next.isUnmapped() || next.Inverted != current.Inverted || !next.Chromosome.equals(current.Chromosome))
-                        continue;
-
-                    final int impliedDelete = !current.Inverted
-                            ? next.ReferenceStartPosition - (current.ReferenceStartPosition + current.Length)
-                            : current.ReferenceStartPosition - (next.ReferenceStartPosition + next.Length);
-                    if(impliedDelete >= 0 && impliedDelete < 20)
-                    {
-                        elements.add(new CigarElement(insertSize, CigarOperator.I));
-                        if(impliedDelete > 0)
-                            elements.add(new CigarElement(impliedDelete, CigarOperator.D));
-                        index = checkIndex - 1;
-                        addedInsert = true;
-                        break;
-                    }
-
-                    insertSize += next.Length;
-                }
-                if (addedInsert)
-                    continue;
-            }
-            break;
-        }
-
-        int softClipSize = 0;
-        for(index++; index < alignments.size(); index++)
-            softClipSize += alignments.get(index).Length;
-        if(softClipSize != 0)
-            elements.add(new CigarElement(softClipSize, CigarOperator.S));
-        if (start.Inverted)
-            Collections.reverse(elements);
-
-        return new VariantAssemblyAlignment(startIndex, start.Chromosome, start.ReferenceStartPosition,
-                start.Inverted, start.Quality, new Cigar(elements).toString());
-    }
-
-    private static class VariantAssemblyAlignment
-    {
-        public final int Offset;
-        public final String Chromosome;
-        public final int Position;
-        public final boolean Inverted;
-        public final int MapQ;
-        public final String Cigar;
-
-        private VariantAssemblyAlignment(final int offset, final String chromosome, final int position,
-                final boolean inverted, final int mapQ, final String cigar)
-        {
-            Offset = offset;
-            Chromosome = chromosome;
-            Position = position;
-            Inverted = inverted;
-            MapQ = mapQ;
-            Cigar = cigar;
-        }
-    }
-
-    private static class VariantBAMRecord
-    {
-        public final String Name;
-        public final String Assembly;
-        public final byte[] Quality;
-        public final int Offset;
-        public final String Chromosome;
-        public final int Position;
-        public final boolean Inverted;
-        public final int MapQ;
-        public final String Cigar;
-        public final Set<String> Variants;
-        public final Set<String> Junctions;
-        public final Set<String> SourceFragments;
-        public final List<VariantAssemblyAlignment> Supplementaries;
-
-        private VariantBAMRecord(final String name, final String assembly, final byte[] quality, final int offset, final String chromosome,
-                final int position, final boolean inverted, final int mapQ, final String cigar, final Set<String> variants,
-                final Set<String> junctions, final Set<String> sourceFragments, final List<VariantAssemblyAlignment> supplementaries)
-        {
-            Name = name;
-            if (inverted)
-            {
-                Assembly = SequenceUtil.reverseComplement(assembly);
-                final byte[] reversedQuals = Arrays.copyOf(quality, quality.length);
-                SequenceUtil.reverseQualities(quality);
-                Quality = reversedQuals;
-            }
-            else
-            {
-                Assembly = assembly;
-                Quality = quality;
-            }
-            Offset = offset;
-            Chromosome = chromosome;
-            Position = position;
-            Inverted = inverted;
-            MapQ = mapQ;
-            Cigar = cigar;
-            Variants = variants;
-            Junctions = junctions;
-            SourceFragments = sourceFragments;
-            Supplementaries = supplementaries.stream()
-                    .filter(s -> s.Offset != Offset)
-                    .collect(Collectors.toList());
-        }
-
-        @Nullable
-        public VariantAssemblyAlignment getMate()
-        {
-            if(Supplementaries.size() != 1)
-                return null;
-
-            return Supplementaries.get(0);
-        }
-    }
 
     private Set<ExtendedAssembly> primaryPhasedMerging(final Set<ExtendedAssembly> primaryPhaseSet)
     {
-        long timeoutNs = SvConstants.EXTENSION_TIMEOUT * 1_000_000;
-
         try
         {
             final Set<ExtendedAssembly> result = new HashSet<>(primaryPhaseSet);

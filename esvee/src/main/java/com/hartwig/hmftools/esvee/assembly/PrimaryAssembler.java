@@ -15,7 +15,6 @@ import java.util.stream.Stream;
 import com.hartwig.hmftools.esvee.Direction;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.JunctionProcessingException;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.models.DiagramSet;
@@ -64,13 +63,10 @@ public class PrimaryAssembler
         }
         catch(final Throwable throwable)
         {
-            final Problem problem = new Problem("Failure during primary assembly", throwable, junction);
+            final Problem problem = new Problem("failure during primary assembly", throwable, junction);
             context.Problems.add(problem);
             
-            if(throwable instanceof JunctionProcessingException)
-                SV_LOGGER.warn("{}", problem);
-            else
-                SV_LOGGER.error("{}", problem, throwable);
+            SV_LOGGER.error("{}", problem, throwable);
             return null;
         }
     }
