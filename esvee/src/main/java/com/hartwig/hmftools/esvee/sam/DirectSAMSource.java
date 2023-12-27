@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
-import com.hartwig.hmftools.esvee.ReadRescue;
 import com.hartwig.hmftools.esvee.models.Record;
 import com.hartwig.hmftools.esvee.util.ThrowingConsumer;
 import com.hartwig.hmftools.esvee.util.ThrowingFunction;

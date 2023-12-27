@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import java.util.Arrays;
 import java.util.Objects;
 
-import com.hartwig.hmftools.esvee.Direction;
+import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.models.Record;
 

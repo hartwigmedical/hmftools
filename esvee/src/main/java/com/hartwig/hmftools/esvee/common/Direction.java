@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee;
+package com.hartwig.hmftools.esvee.common;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;

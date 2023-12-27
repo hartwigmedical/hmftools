@@ -7,7 +7,6 @@ import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.esvee.ReadRescue;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.models.IRecord;
 import com.hartwig.hmftools.esvee.models.MutableRecord;

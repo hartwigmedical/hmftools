@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee;
+package com.hartwig.hmftools.esvee.common;
 
 import java.util.ArrayList;
 import java.util.Comparator;

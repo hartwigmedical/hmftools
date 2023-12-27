@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.esvee.RegionOfInterest;
+import com.hartwig.hmftools.esvee.common.RegionOfInterest;
 import com.hartwig.hmftools.esvee.models.Record;
 import com.hartwig.hmftools.esvee.util.MultiMapCollector;
 

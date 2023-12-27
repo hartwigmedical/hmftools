@@ -18,7 +18,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterables;
-import com.hartwig.hmftools.esvee.Direction;
+import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.models.DiagramSet;

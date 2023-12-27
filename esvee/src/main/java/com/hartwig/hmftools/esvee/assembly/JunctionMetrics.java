@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import com.hartwig.hmftools.esvee.Direction;
+import com.hartwig.hmftools.esvee.common.Direction;
 
 public class JunctionMetrics
 {

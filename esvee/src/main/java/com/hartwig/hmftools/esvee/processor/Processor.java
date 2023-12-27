@@ -17,7 +17,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.RegionOfInterest;
+import com.hartwig.hmftools.esvee.common.RegionOfInterest;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.WriteType;
 import com.hartwig.hmftools.esvee.assembly.AssemblyExtender;

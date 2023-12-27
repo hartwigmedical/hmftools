@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.esvee.Direction;
+import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.SvConfig;

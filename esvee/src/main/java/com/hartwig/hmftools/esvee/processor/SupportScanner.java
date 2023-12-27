@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.Context;
-import com.hartwig.hmftools.esvee.RegionOfInterest;
+import com.hartwig.hmftools.esvee.common.RegionOfInterest;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
 import com.hartwig.hmftools.esvee.models.Alignment;
 import com.hartwig.hmftools.esvee.models.Record;

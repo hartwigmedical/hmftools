@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import javax.annotation.concurrent.ThreadSafe;
 
 import com.hartwig.hmftools.common.samtools.CigarUtils;
-import com.hartwig.hmftools.esvee.Direction;
+import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;

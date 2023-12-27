@@ -13,14 +13,15 @@ import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.esvee.Direction;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
-public class Junction
+public class Junction implements Comparable<Junction>
 {
     public final String Chromosome;
     public final int Position;
@@ -60,6 +61,28 @@ public class Junction
     public boolean isLocalMatch(final Junction other)
     {
         return Position == other.Position && Orientation == other.Orientation;
+    }
+
+    @Override
+    public int compareTo(final Junction other)
+    {
+        if(!Chromosome.equals(other.Chromosome))
+        {
+            int firstChrRank = HumanChromosome.chromosomeRank(Chromosome);
+            int secondChrRank = HumanChromosome.chromosomeRank(other.Chromosome);
+
+            return firstChrRank < secondChrRank ? -1 : 1;
+        }
+
+        if(Position == other.Position)
+        {
+            if(Orientation == other.Orientation)
+                return 0;
+
+            return Orientation == POS_STRAND ? -1 : 1;
+        }
+
+        return Position < other.Position ? -1 : 1;
     }
 
     public static Map<String,List<Junction>> loadJunctions(final String filename)
@@ -137,6 +160,8 @@ public class Junction
                         existingJunctions.add(newJunction);
                 }
             }
+
+            Collections.sort(existingJunctions);
         }
     }
 }

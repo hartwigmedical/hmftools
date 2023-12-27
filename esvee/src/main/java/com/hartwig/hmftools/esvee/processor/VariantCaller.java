@@ -588,11 +588,17 @@ public class VariantCaller
                 .forEach(sampleName -> bySample.put(sampleName, Pair.of(new HashSet<>(), new HashSet<>())));
 
         for(final Record record : support.SplitReads)
+        {
             bySample.get(record.sampleName()).getLeft().add(record);
-        for(final Record record : support.DiscordantSupport)
-            bySample.get(record.sampleName()).getRight().add(record);
+        }
 
-        final List<SampleSupport> sampleSupport = new ArrayList<>();
+        for(final Record record : support.DiscordantSupport)
+        {
+            bySample.get(record.sampleName()).getRight().add(record);
+        }
+
+        List<SampleSupport> sampleSupport = new ArrayList<>();
+
         for(Map.Entry<String, Pair<Set<Record>, Set<Record>>> entry : bySample.entrySet())
         {
             final String sampleName = entry.getKey();

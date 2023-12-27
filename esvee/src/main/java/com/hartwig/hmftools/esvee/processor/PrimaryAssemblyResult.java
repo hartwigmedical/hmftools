@@ -3,7 +3,7 @@ package com.hartwig.hmftools.esvee.processor;
 import java.util.List;
 
 import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.RegionOfInterest;
+import com.hartwig.hmftools.esvee.common.RegionOfInterest;
 import com.hartwig.hmftools.esvee.assembly.PrimaryAssemblerCounters;
 import com.hartwig.hmftools.esvee.models.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.models.Record;
