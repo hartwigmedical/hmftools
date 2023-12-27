@@ -6,16 +6,16 @@ import static com.hartwig.hmftools.common.purple.GermlineStatus.AMPLIFICATION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.UNKNOWN;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPAIR_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SGL_FRAGMENT_COUNT;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMENT_COUNT;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -251,11 +251,11 @@ public class GermlineSvCache
         if(genotype.hasExtendedAttribute(ALLELE_FRACTION))
             return getGenotypeAttributeAsDouble(genotype, ALLELE_FRACTION, 0);
 
-        int totalReadCoverage = getGenotypeAttributeAsInt(genotype, REF_READ_COVERAGE, 0)
-                + getGenotypeAttributeAsInt(genotype, REF_READPAIR_COVERAGE, 0);
+        int totalReadCoverage = getGenotypeAttributeAsInt(genotype, REF_DEPTH, 0)
+                + getGenotypeAttributeAsInt(genotype, REF_DEPTH_PAIR, 0);
 
-        int variantFrags = getGenotypeAttributeAsInt(genotype, SV_FRAGMENT_COUNT, 0) +
-                getGenotypeAttributeAsInt(genotype, SGL_FRAGMENT_COUNT, 0);
+        int variantFrags = getGenotypeAttributeAsInt(genotype, SV_FRAG_COUNT, 0) +
+                getGenotypeAttributeAsInt(genotype, SGL_FRAG_COUNT, 0);
 
         double total = variantFrags + totalReadCoverage;
         return variantFrags / total;

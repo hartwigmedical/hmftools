@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.chromosomeRank;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.CIRPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REALIGN;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formPairedAltString;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formSingleAltString;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIRPOS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IHOMPOS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REALIGN;
 
 import java.util.List;
 
@@ -70,7 +70,7 @@ public class BreakendRealigner
 
         VariantContext newContext = new VariantContextBuilder(breakend.Context)
                 .alleles(alleles)
-                .attribute(VT_CIRPOS, Lists.newArrayList(realignedOther.ConfidenceInterval.Start, realignedOther.ConfidenceInterval.End))
+                .attribute(CIRPOS, Lists.newArrayList(realignedOther.ConfidenceInterval.Start, realignedOther.ConfidenceInterval.End))
                 .make();
 
         return Breakend.realigned(breakend, newContext, breakend.Position);
@@ -133,14 +133,14 @@ public class BreakendRealigner
                 .start(newStart)
                 .stop(newStart)
                 .alleles(alleles)
-                .attribute(VT_REALIGN, true)
-                .attribute(VT_CIPOS, Lists.newArrayList(newCipos.Start, newCipos.End));
+                .attribute(REALIGN, true)
+                .attribute(CIPOS, Lists.newArrayList(newCipos.Start, newCipos.End));
 
         if(breakend.InexactHomology.length() > 0)
         {
             int ciposShift = newCipos.Start - breakend.ConfidenceInterval.Start;
 
-            builder.attribute(VT_IHOMPOS, Lists.newArrayList(
+            builder.attribute(IHOMPOS, Lists.newArrayList(
                     breakend.InexactHomology.Start + ciposShift, breakend.InexactHomology.End + ciposShift));
         }
 
@@ -166,8 +166,8 @@ public class BreakendRealigner
                 .start(newStart)
                 .stop(newStart)
                 .alleles(alleles)
-                .attribute(VT_REALIGN, true)
-                .attribute(VT_CIPOS, Lists.newArrayList(newCipos.Start, newCipos.End))
+                .attribute(REALIGN, true)
+                .attribute(CIPOS, Lists.newArrayList(newCipos.Start, newCipos.End))
                 .make();
 
         return Breakend.realigned(breakend, newContext, newStart);

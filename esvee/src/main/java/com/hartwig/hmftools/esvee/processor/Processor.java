@@ -244,7 +244,9 @@ public class Processor
             if(mContext.Problems.size() < 50)
             {
                 for(final Problem problem : mContext.Problems)
+                {
                     SV_LOGGER.warn("{}", problem);
+                }
             }
         }
 

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.sv;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

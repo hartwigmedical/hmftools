@@ -43,9 +43,10 @@ public class VcfWriter implements AutoCloseable
         mContext = context;
 
         final SAMSequenceDictionary sequenceDictionary = context.ReferenceGenome.refGenomeFile().getSequenceDictionary();
+
         mWriter = new VariantContextWriterBuilder()
                 .setOutputFile(context.Config.VcfFile)
-                .modifyOption(Options.INDEX_ON_THE_FLY, false)
+                .modifyOption(Options.INDEX_ON_THE_FLY, true)
                 .modifyOption(Options.USE_ASYNC_IO, false)
                 .setReferenceDictionary(sequenceDictionary)
                 .build();
@@ -151,8 +152,6 @@ public class VcfWriter implements AutoCloseable
             filters.add("LOW_QUALITY");
         if(isLowSupport)
             filters.add("LOW_SUPPORT");
-        if(isLikelyFalse)
-            filters.add("LIKELY_FALSE");
 
         final VariantContextBuilder builder = new VariantContextBuilder()
                 .id(callID + (index != 0 ? "_" + index : ""))

@@ -74,7 +74,7 @@ public class AlignedAssembly extends SupportedAssembly implements AlignedSequenc
             flipped.addEvidenceAt(support.getKey().flipStrand(),
                     getLength() - support.getValue() - support.getKey().getLength());
         }
-        
+
         flipped.recalculateBaseQuality();
         return flipped;
     }

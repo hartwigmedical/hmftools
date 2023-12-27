@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.gripss;
 
+import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IHOMPOS;
 import static com.hartwig.hmftools.gripss.pon.PonCombiner.mergeSglRegions;
 import static com.hartwig.hmftools.gripss.pon.PonCombiner.mergeSvRegions;
 
@@ -71,7 +71,7 @@ public class PonTest
         assertTrue(mPonCache.getPonCount(var1) > 0);
 
         Map<String,Object> commonAttributes = Maps.newHashMap();
-        commonAttributes.put(VT_IHOMPOS, new int[] {-10, 10});
+        commonAttributes.put(IHOMPOS, new int[] {-10, 10});
 
         // match within inexact homology
         var1 = mGripss.createDel(CHR_1, 4088, 5022, commonAttributes, commonAttributes);
@@ -99,8 +99,8 @@ public class PonTest
         var1 = mGripss.createDel(CHR_1, 108, 305, null, null);
         assertFalse(mPonCache.getPonCount(var1) > 0);
 
-        commonAttributes.put(VT_CIPOS, new int[] {-15, 15});
-        commonAttributes.put(VT_IHOMPOS, new int[] {-20, 20});
+        commonAttributes.put(CIPOS, new int[] {-15, 15});
+        commonAttributes.put(IHOMPOS, new int[] {-20, 20});
 
         var1 = mGripss.createDel(CHR_1, 110, 205, commonAttributes, commonAttributes);
         assertTrue(mPonCache.getPonCount(var1) > 0);
@@ -141,7 +141,7 @@ public class PonTest
         assertFalse(mPonCache.getPonCount(var) > 0);
 
         Map<String,Object> commonAttributes = Maps.newHashMap();
-        commonAttributes.put(VT_IHOMPOS, new int[] {-10, 0});
+        commonAttributes.put(IHOMPOS, new int[] {-10, 0});
 
         // match within inexact homology
         var = GripssTestUtils.createSgl(

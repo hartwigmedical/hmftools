@@ -14,7 +14,8 @@ public class SampleSupport
     private final int mSplitReadFragmentCount;
     private final int mDiscordantPairFragmentCount;
 
-    public SampleSupport(final String sampleName, final boolean isGermline,
+    public SampleSupport(
+            final String sampleName, final boolean isGermline,
             final int quality, final Set<Record> splitReads, final Set<Record> discordantReads)
     {
         mSampleName = sampleName;
@@ -32,10 +33,7 @@ public class SampleSupport
         return mSampleName;
     }
 
-    public boolean isGermline()
-    {
-        return mIsGermline;
-    }
+    public boolean isGermline() { return mIsGermline; }
 
     public int quality()
     {
@@ -46,24 +44,19 @@ public class SampleSupport
     {
         return mSplitReads;
     }
-
     public Set<Record> discordantReads()
     {
         return mDiscordantReads;
-    }
-
-    public int totalSupportFragmentCount()
-    {
-        return mSplitReadFragmentCount + mDiscordantPairFragmentCount;
     }
 
     public int splitReadFragmentCount()
     {
         return mSplitReadFragmentCount;
     }
+    public int discordantPairFragmentCount() { return mDiscordantPairFragmentCount; }
 
-    public int discordantPairFragmentCount()
+    public int totalSupportFragmentCount()
     {
-        return mDiscordantPairFragmentCount;
+        return mSplitReadFragmentCount + mDiscordantPairFragmentCount;
     }
 }

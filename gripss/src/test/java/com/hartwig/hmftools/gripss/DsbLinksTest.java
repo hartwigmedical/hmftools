@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.gripss;
 
+import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.buildLinkAttributes;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
 import static com.hartwig.hmftools.gripss.links.DsbLinkFinder.findBreaks;
 
 import static junit.framework.TestCase.assertNotNull;
@@ -108,7 +108,7 @@ public class DsbLinksTest
         SvData var2 = mGripss.createInv(CHR_1, 220, 5000, NEG_ORIENT, null, null);
 
         Map<String,Object> attributes = Maps.newHashMap();
-        attributes.put(VT_CIPOS, new int[] {-400, 0});
+        attributes.put(CIPOS, new int[] {-400, 0});
         SvData var3 = mGripss.createInv(CHR_1, 420, 10000, NEG_ORIENT, attributes, null);
 
         LinkStore assemblyLinks = AssemblyLinks.buildAssembledLinks(Lists.newArrayList(var1, var2, var3));
