@@ -34,7 +34,7 @@ public enum FlowchartSVGGenerator
 
         int depth = 0;
         Collection<Node> toProcess = startNodes;
-        while (!toProcess.isEmpty())
+        while(!toProcess.isEmpty())
         {
             final Collection<Node> next = Collections.newSetFromMap(new IdentityHashMap<>());
             for(final Node node : toProcess)
@@ -45,7 +45,7 @@ public enum FlowchartSVGGenerator
             depth++;
             toProcess = next;
 
-            if (depth > 10000)
+            if(depth > 10000)
                 throw new IllegalStateException("Graph contains a cycle or is too large");
         }
 
@@ -59,7 +59,7 @@ public enum FlowchartSVGGenerator
 
         final List<Node> startNodes = new ArrayList<>();
         for(final Node node : nodes)
-            if (!destinationNodes.contains(node))
+            if(!destinationNodes.contains(node))
                 startNodes.add(node);
         return startNodes;
     }
@@ -89,10 +89,10 @@ public enum FlowchartSVGGenerator
 
         final Map<Node, Pair<Integer, Integer>> nodePositions = new IdentityHashMap<>();
         int minHeight = 0;
-        while (!toProcess.isEmpty())
+        while(!toProcess.isEmpty())
         {
             final Node node = toProcess.pollLast();
-            if (!rendered.add(node))
+            if(!rendered.add(node))
                 continue;
 
             final int currentMinHeight = minHeight;
@@ -136,7 +136,7 @@ public enum FlowchartSVGGenerator
         for(final Map.Entry<Node, List<Node>> entry : linksBySource.entrySet())
         {
             final Node source = entry.getKey();
-            for (final Node destination : entry.getValue())
+            for(final Node destination : entry.getValue())
             {
                 final Pair<Integer, Integer> startPosition = nodePositions.get(source);
                 final Pair<Integer, Integer> endPosition = nodePositions.get(destination);
@@ -148,13 +148,13 @@ public enum FlowchartSVGGenerator
                 final int endY = endPosition.getRight();
 
                 edgesBuilder.appendStartTag("<g class=\"edge\">");
-                if (startY == endY)
+                if(startY == endY)
                     edgesBuilder.append("<line x1=\"%s\" y1=\"%s\" x2=\"%s\" y2=\"%s\"/>", startX, startY, endX, endY);
                 else
                 {
                     final double partialX;
                     final boolean isGoingDown = endY > startY;
-                    if (isGoingDown)
+                    if(isGoingDown)
                         partialX = ((double) endX - startX) / 4.0 + startX;
                     else
                         partialX = ((double) endX - startX) * 3.0 / 4.0 + startX;

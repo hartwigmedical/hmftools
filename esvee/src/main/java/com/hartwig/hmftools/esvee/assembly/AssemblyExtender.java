@@ -325,7 +325,7 @@ public class AssemblyExtender
             final HeadNode existing, final List<Record> potentialNewSupport, final List<Record> alignments,
             final Map<Record, Integer> alignmentMinDepth, final Direction alignmentDirection, final Counter attachCounter)
     {
-        for (final Record record : alignments)
+        for(final Record record : alignments)
         {
             @Nullable
             final Integer depth = alignmentMinDepth.get(record);

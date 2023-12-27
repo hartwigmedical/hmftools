@@ -20,7 +20,7 @@ public enum SecondaryPhasing
         final List<Set<T>> secondaryPhaseGroups = new ArrayList<>();
         for(final Set<T> primaryPhaseGroup : primaryPhaseGroups)
         {
-            if (primaryPhaseGroup.size() == 1)
+            if(primaryPhaseGroup.size() == 1)
             {
                 secondaryPhaseGroups.add(primaryPhaseGroup);
                 continue;

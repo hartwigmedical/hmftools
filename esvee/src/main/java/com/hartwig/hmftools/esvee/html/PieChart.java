@@ -54,9 +54,9 @@ public class PieChart
 
     public void add(final String item, final long amount, final String amountLabel)
     {
-        if (amount < 0)
+        if(amount < 0)
             throw new IllegalArgumentException("A pie slice cannot represent a negative amount");
-        else if (amount == 0)
+        else if(amount == 0)
             return;
 
         mSlices.add(new Slice(item, amount, amountLabel));
@@ -111,7 +111,7 @@ public class PieChart
         final var labelBuilder = new HTMLBuilder();
         final var legendBuilder = new HTMLBuilder();
         legendBuilder.appendStartTag("<table class=\"legend\">");
-        if (total > 0)
+        if(total > 0)
         {
             double fractionSoFar = 0;
             for(int i = 0; i < mSlices.size(); i++)
@@ -181,10 +181,10 @@ public class PieChart
         pathBuilder.append("<path d=\"M 0 0 L %s %s A %s %s %s %s %s %s %s Z\" fill=\"%s\"/>\n", startX, startY, mPieScale, mPieScale, xRotation,
                 isLargeArc ? 1 : 0, sweepFlag ? 1 : 0, endX, endY, fill);
 
-        if (label == null)
+        if(label == null)
             return;
 
-        if (endRadians - startRadians < mMinSliceWidthToLabel)
+        if(endRadians - startRadians < mMinSliceWidthToLabel)
             return;
 
         final double midRadians = (endRadians - startRadians) / 2 + startRadians;

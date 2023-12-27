@@ -16,7 +16,7 @@ public class AlignedAssembly extends SupportedAssembly implements AlignedSequenc
     {
         this(source.Assembly, source, alignment);
 
-        for (final Map.Entry<Record, Integer> support : source.getSupport())
+        for(final Map.Entry<Record, Integer> support : source.getSupport())
             addEvidenceAt(support.getKey(), support.getValue());
         recalculateBaseQuality();
     }
@@ -45,13 +45,14 @@ public class AlignedAssembly extends SupportedAssembly implements AlignedSequenc
     {
         final String assembly = SequenceUtil.reverseComplement(Assembly);
         final List<Alignment> flippedAlignments = new ArrayList<>();
-        for (final Alignment alignment : mAlignment)
+        
+        for(final Alignment alignment : mAlignment)
         {
             final int startIndex = alignment.SequenceStartPosition - 1;
             final int newEndIndexExcl = assembly.length() - startIndex;
             final int newStartIndex = newEndIndexExcl - alignment.Length;
 
-            if (alignment.isUnmapped())
+            if(alignment.isUnmapped())
             {
                 flippedAlignments.add(new Alignment(alignment.Chromosome, 0,
                         newStartIndex + 1,
@@ -64,12 +65,16 @@ public class AlignedAssembly extends SupportedAssembly implements AlignedSequenc
                         alignment.Length, !alignment.Inverted, alignment.Quality));
             }
         }
+
         Collections.reverse(flippedAlignments);
         final AlignedAssembly flipped = new AlignedAssembly(assembly, Source.flipStrand(), flippedAlignments);
 
-        for (final Map.Entry<Record, Integer> support : getSupport())
+        for(final Map.Entry<Record, Integer> support : getSupport())
+        {
             flipped.addEvidenceAt(support.getKey().flipStrand(),
                     getLength() - support.getValue() - support.getKey().getLength());
+        }
+        
         flipped.recalculateBaseQuality();
         return flipped;
     }

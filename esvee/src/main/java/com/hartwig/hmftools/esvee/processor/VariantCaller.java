@@ -572,9 +572,9 @@ public class VariantCaller
                 .sorted()
                 .forEach(sampleName -> bySample.put(sampleName, Pair.of(new HashSet<>(), new HashSet<>())));
 
-        for (final Record record : support.SplitReads)
+        for(final Record record : support.SplitReads)
             bySample.get(record.sampleName()).getLeft().add(record);
-        for (final Record record : support.DiscordantSupport)
+        for(final Record record : support.DiscordantSupport)
             bySample.get(record.sampleName()).getRight().add(record);
 
         final List<SampleSupport> sampleSupport = new ArrayList<>();

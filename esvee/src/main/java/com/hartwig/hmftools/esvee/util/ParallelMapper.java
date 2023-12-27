@@ -41,7 +41,7 @@ public final class ParallelMapper
             futures.add(new CompletableFuture<>());
 
         final AtomicInteger index = new AtomicInteger();
-        for (int i = 0; i < Runtime.getRuntime().availableProcessors(); i++)
+        for(int i = 0; i < Runtime.getRuntime().availableProcessors(); i++)
         {
             executor.submit(() ->
             {

@@ -28,7 +28,7 @@ public class Node
         @Override
         public boolean equals(final Object obj)
         {
-            if (!(obj instanceof Node.Support))
+            if(!(obj instanceof Node.Support))
                 return false;
 
             final Node.Support other = (Node.Support) obj;
@@ -44,11 +44,11 @@ public class Node
         @Override
         public int compareTo(final Node.Support other)
         {
-            if (Record == other.Record)
+            if(Record == other.Record)
                 return 0;
 
             int compare = Integer.compare(Record.getAlignmentStart(), other.Record.getAlignmentStart());
-            if (compare != 0)
+            if(compare != 0)
                 return compare;
 
             compare = Boolean.compare(Record.isFirstOfPair(), other.Record.isFirstOfPair());
@@ -84,7 +84,7 @@ public class Node
 
     public List<Node> successors()
     {
-        if (cachedSuccessors != null) return cachedSuccessors;
+        if(cachedSuccessors != null) return cachedSuccessors;
 
         final List<Node> nodes = new ArrayList<>(4);
         if(nextA != null)
@@ -176,7 +176,7 @@ public class Node
 
     public int supportDepth()
     {
-        if (cachedSupportDepth != -1)
+        if(cachedSupportDepth != -1)
             return cachedSupportDepth;
 
         return cachedSupportDepth = Support.size();
@@ -209,7 +209,7 @@ public class Node
             final Node node = nodes.poll();
 
             final String base = StringCache.of(node.Base);
-            if (!diagram.addNode(node, StringCache.of(node.Quality), base))
+            if(!diagram.addNode(node, StringCache.of(node.Quality), base))
                 continue;
 
             for(final Node successor : node.successors())

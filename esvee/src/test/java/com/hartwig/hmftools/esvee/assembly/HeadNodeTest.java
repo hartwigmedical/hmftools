@@ -187,7 +187,7 @@ public class HeadNodeTest
 
         final Record incomingRecord = createSAMRecord("AAAAACCCGGGAATTCCGGATCGAA");
         final byte[] baseQualities = incomingRecord.getBaseQuality();
-        for (int i = 2; i < 5; i++)
+        for(int i = 2; i < 5; i++)
             baseQualities[i] = 11;
 
         final HeadNode incoming = create(incomingRecord, 1, true);

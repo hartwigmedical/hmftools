@@ -89,7 +89,7 @@ public final class AlignmentFilters
 
     private static boolean isBadlyMapped(final Record record)
     {
-        if (!record.isDiscordant(1000))
+        if(!record.isDiscordant(1000))
             return false;
 
         final int mappedSize = record.getCigar().getCigarElements().stream()
@@ -104,23 +104,23 @@ public final class AlignmentFilters
 
         final int mismatchedBases = nm - indels;
         final int matchedBases = mappedSize - mismatchedBases;
-        if (matchedBases < 30)
+        if(matchedBases < 30)
             return true;
-        if (indels > 0 && mismatchedBases >= 3)
+        if(indels > 0 && mismatchedBases >= 3)
             return true;
 
         final float[] stats = mappedBaseStats(record);
         int countAbove70 = 0;
         int countAbove35 = 0;
-        for (final float frequency : stats)
+        for(final float frequency : stats)
         {
             if(frequency > 0.7f)
                 countAbove70++;
-            if (frequency > 0.35f)
+            if(frequency > 0.35f)
                 countAbove35++;
         }
         //noinspection RedundantIfStatement
-        if (countAbove70 >= 1 || countAbove35 >= 2)
+        if(countAbove70 >= 1 || countAbove35 >= 2)
             return true;
 
         return false;
@@ -133,14 +133,14 @@ public final class AlignmentFilters
         int readPosition = 1;
         for(final CigarElement element : alignment.getCigar().getCigarElements())
         {
-            if (element.getOperator() != CigarOperator.M)
+            if(element.getOperator() != CigarOperator.M)
             {
-                if (element.getOperator().consumesReadBases())
+                if(element.getOperator().consumesReadBases())
                     readPosition += element.getLength();
                 continue;
             }
 
-            for (int i = 0; i < element.getLength(); i++)
+            for(int i = 0; i < element.getLength(); i++)
             {
                 final byte base = alignment.getBases()[readPosition + i - 1];
                 baseCount[baseToIndex(base)]++;
@@ -149,7 +149,7 @@ public final class AlignmentFilters
 
         final float totalBases = Arrays.stream(baseCount).sum();
         final float[] baseFrequency = new float[baseCount.length];
-        for (int i = 0; i < baseCount.length; i++)
+        for(int i = 0; i < baseCount.length; i++)
             baseFrequency[i] = baseCount[i] / totalBases;
 
         return baseFrequency;

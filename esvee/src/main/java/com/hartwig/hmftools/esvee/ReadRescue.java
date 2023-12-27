@@ -22,33 +22,33 @@ public class ReadRescue
 
     public <T extends MutableRecord> T rescueRead(final T read)
     {
-        if (read.isUnmapped() || read.isDiscordant(1000) || read.getMappingQuality() < 60)
+        if(read.isUnmapped() || read.isDiscordant(1000) || read.getMappingQuality() < 60)
             return read; // We attempt repair based on the reference genome. If we're not well mapped, this is a terrible idea.
 
         final Direction direction = read.isPositiveStrand() ? Direction.FORWARDS : Direction.REVERSE;
 
         byte repeatBase = 'X';
         int repeatCount = 0;
-        for (int i = 0; i < read.getBases().length; i++)
+        for(int i = 0; i < read.getBases().length; i++)
         {
             final int index = direction == Direction.FORWARDS ? i : read.getBases().length - i - 1;
             final byte base = read.getBases()[index];
-            if (base == repeatBase)
+            if(base == repeatBase)
             {
                 repeatCount++;
                 continue;
             }
 
-            if (repeatCount >= 10)
+            if(repeatCount >= 10)
             {
                 final int averageQuality = direction == Direction.FORWARDS
                         ? read.getAvgBaseQuality(i + 1, read.getBases().length - i + 1)
                         : read.getAvgBaseQuality(1, index + 1);
-                if (averageQuality > 25)
+                if(averageQuality > 25)
                     continue;
 
                 final T repaired = tryRescueRead(read, repeatBase, index, direction);
-                if (repaired != read)
+                if(repaired != read)
                     return repaired;
             }
             repeatCount = 0;
@@ -63,7 +63,7 @@ public class ReadRescue
         @Nullable final byte[] newQuals = direction == Direction.FORWARDS
                 ? tryRescueReadForwards(record, repeatBase, attemptIndex)
                 : tryRescueReadBackwards(record, repeatBase, attemptIndex);
-        if (newQuals == null)
+        if(newQuals == null)
             return record;
 
         //noinspection unchecked
@@ -78,7 +78,7 @@ public class ReadRescue
         final int referencePosition = referencePositionFromRecordIndex(record, attemptIndex + 1);
         final int referenceStartPosition = referencePosition - 5;
         final int referenceEndPosition = referencePosition + 50 + record.getLength();
-        if (referenceStartPosition <= 1 || referenceEndPosition >= mRef.getChromosomeLength(record.getChromosome()))
+        if(referenceStartPosition <= 1 || referenceEndPosition >= mRef.getChromosomeLength(record.getChromosome()))
             return null;
 
         final byte[] referenceBases = mRef.getBases(record.getChromosome(), referenceStartPosition, referenceEndPosition);
@@ -92,7 +92,7 @@ public class ReadRescue
         final int referencePosition = referencePositionFromRecordIndex(record, attemptIndex + 1);
         final int referenceStartPosition = referencePosition - 50 - record.getLength();
         final int referenceEndPosition = referencePosition + 5;
-        if (referenceStartPosition <= 1 || referenceEndPosition >= mRef.getChromosomeLength(record.getChromosome()))
+        if(referenceStartPosition <= 1 || referenceEndPosition >= mRef.getChromosomeLength(record.getChromosome()))
             return null;
 
         final byte[] referenceBases = mRef.getBases(record.getChromosome(), referenceStartPosition, referenceEndPosition);
@@ -157,9 +157,9 @@ public class ReadRescue
                 if(recordBase == referenceBase)
                 {
                     agreeCount++;
-                    if (recordQuals[baseIndex] >= 25)
+                    if(recordQuals[baseIndex] >= 25)
                     {
-                        if (recordBase != repeatBase)
+                        if(recordBase != repeatBase)
                             strongAgreeNonRepeatCount++;
                         if(recordBase != 'C')
                             strongAgreeNonCCount++;
@@ -188,7 +188,7 @@ public class ReadRescue
 
         // Boost quals in this record.
         final byte[] newQuals = Arrays.copyOf(recordQuals, recordQuals.length);
-        for (int baseIndex = bestAgreeBaseIndex; baseIndex < recordBases.length; baseIndex++)
+        for(int baseIndex = bestAgreeBaseIndex; baseIndex < recordBases.length; baseIndex++)
             if(recordBases[baseIndex] == referenceBases[baseIndex - attemptIndex + bestAgreeReferenceSkip])
                 newQuals[baseIndex] = (byte) Math.max(newQuals[baseIndex], 37);
 

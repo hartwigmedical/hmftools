@@ -101,7 +101,7 @@ public final class VariantCallPageGenerator
                 .append("<th>Source</th>")
                 .append("<th>Assembly</th></tr>\n");
         int index = 0;
-        for (final VariantAssembly assembly : call.variantAssemblies())
+        for(final VariantAssembly assembly : call.variantAssemblies())
             builder.append("<tr><td>").append(++index).append("</td>")
                     .append("<td>").append(assembly.Assembly.Assembly.length()).append("</td>")
                     .append("<td>").append("%s", assembly.Assembly.getSupportFragments().size()).append("</td>")
@@ -146,14 +146,14 @@ public final class VariantCallPageGenerator
 
     private static String javascriptHideAllExcept(final String assemblyName, final Collection<String> fragmentNames) {
         final String set = "[" + fragmentNames.stream().map(name -> "'" + name + "'").collect(Collectors.joining(",")) + "]";
-        final String highlightAssembly = "if (tr.getAttribute('name').includes('Assembly')) {"
-                + " if (tr.getAttribute('name') == '" + assemblyName + "') {"
+        final String highlightAssembly = "if(tr.getAttribute('name').includes('Assembly')) {"
+                + " if(tr.getAttribute('name') == '" + assemblyName + "') {"
                 + " tr.style.filter = ''"
                 + " } else {"
                 + " tr.style.filter = 'brightness(25%)'"
                 + " } }";
         return "document.querySelectorAll('.read-summary tr.sequence').forEach(tr => {"
-                + " if (!" + set + ".includes(tr.getAttribute('name'))"
+                + " if(!" + set + ".includes(tr.getAttribute('name'))"
                 + " && !tr.getAttribute('name').includes('Assembly')"
                 + " && !tr.getAttribute('name').includes('Reference')) { "
                 + "tr.style.display = 'none'; "

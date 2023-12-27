@@ -84,24 +84,24 @@ public class HeadNode extends Node
 
     static List<Node.Support> mergeSupport(final List<Node.Support> left, final List<Node.Support> right)
     {
-        if (left.size() == 1 && right.size() == 1 && left.get(0).compareTo(right.get(0)) == 0)
+        if(left.size() == 1 && right.size() == 1 && left.get(0).compareTo(right.get(0)) == 0)
             return left;
 
         final List<Node.Support> merged = new ArrayList<>(left.size() + right.size());
         int leftIndex = 0;
         int rightIndex = 0;
-        while (leftIndex < left.size() && rightIndex < right.size())
+        while(leftIndex < left.size() && rightIndex < right.size())
         {
             final Support nextLeft = left.get(leftIndex);
             final Support nextRight = right.get(rightIndex);
 
             final int comparison = nextLeft.compareTo(nextRight);
-            if (comparison < 0)
+            if(comparison < 0)
             {
                 merged.add(nextLeft);
                 leftIndex++;
             }
-            else if (comparison > 0)
+            else if(comparison > 0)
             {
                 merged.add(nextRight);
                 rightIndex++;
@@ -113,9 +113,9 @@ public class HeadNode extends Node
                 rightIndex++;
             }
         }
-        while (leftIndex < left.size())
+        while(leftIndex < left.size())
             merged.add(left.get(leftIndex++));
-        while (rightIndex < right.size())
+        while(rightIndex < right.size())
             merged.add(right.get(rightIndex++));
 
         return merged;
@@ -140,7 +140,7 @@ public class HeadNode extends Node
         while(!toProcess.isEmpty())
         {
             final Node node = toProcess.poll();
-            if (!visited.add(node))
+            if(!visited.add(node))
                 continue;
 
             final var successors = node.successors();
@@ -175,7 +175,7 @@ public class HeadNode extends Node
                             node.removeSuccessor(right.Base);
                         continue; // Not merged
                     }
-                    if (heavyHanded && right.Quality < left.Quality)
+                    if(heavyHanded && right.Quality < left.Quality)
                     {
                         node.removeSuccessor(right.Base);
                         continue;
@@ -195,7 +195,7 @@ public class HeadNode extends Node
                         node.removeSuccessor(right.Base);
                     else if(right.supportDepth() == 2 && left.supportDepth() > 20)
                         node.removeSuccessor(right.Base);
-                    else if (right.Quality == 0 && left.Quality != 0)
+                    else if(right.Quality == 0 && left.Quality != 0)
                         node.removeSuccessor(right.Base);
                 }
             toProcess.addAll(node.successors());
@@ -228,14 +228,14 @@ public class HeadNode extends Node
         toProcess.add(new FlattenEntry(this, new StringBuilder(), 0));
         while(!toProcess.isEmpty())
         {
-            if (toProcess.size() > 1_000)
+            if(toProcess.size() > 1_000)
             {
                 // Keep only the 900 entries with the "best" average quality
                 final List<FlattenEntry> entries = new ArrayList<>(toProcess);
                 entries.sort(Comparator.comparingDouble(FlattenEntry::averageQuality).reversed());
 
                 toProcess.clear();
-                for (int i = 0; i < 900; i++)
+                for(int i = 0; i < 900; i++)
                     toProcess.add(entries.get(i));
                 assert !toProcess.isEmpty();
             }
@@ -313,20 +313,20 @@ public class HeadNode extends Node
 
         Node current = source;
         int bestOverlap = 0;
-        while (!heads.isEmpty())
+        while(!heads.isEmpty())
         {
-            if (current.successors().isEmpty())
+            if(current.successors().isEmpty())
                 break;
             current = current.successors().get(0);
 
             final Map<Node, OverlayHead> newHeads = new IdentityHashMap<>(4);
             for(final OverlayHead head : heads.values())
             {
-                if (head == ambiguous)
+                if(head == ambiguous)
                     continue;
 
                 final List<Node> successors = head.Node.successors();
-                if (successors.isEmpty())
+                if(successors.isEmpty())
                 {
                     if(head.Overlap >= bestOverlap)
                         frozenHeads.put(head.Node, head);
@@ -343,26 +343,26 @@ public class HeadNode extends Node
                     bestOverlap = Math.max(overlap, bestOverlap);
 
                     final int errors = head.Errors + (isMismatch ? 1 : 0);
-                    if (errors > maxErrors)
+                    if(errors > maxErrors)
                         continue;
 
                     final int currentQuality = current.MaxQuality;
                     newHeads.compute(successor, (n, existing) -> {
-                        if (existing == null)
+                        if(existing == null)
                             return head.extend(n, isMatch, isMismatch, mutateHead);
-                        else if (existing == ambiguous)
+                        else if(existing == ambiguous)
                             return ambiguous;
                         else
                         {
-                            if (existing.Overlap > overlap || (existing.Overlap == overlap && existing.Errors < errors))
+                            if(existing.Overlap > overlap || (existing.Overlap == overlap && existing.Errors < errors))
                                 return existing;
-                            else if (existing.Overlap == overlap && existing.Errors == errors)
+                            else if(existing.Overlap == overlap && existing.Errors == errors)
                             {
                                 final Node otherCurrent = existing.Path.peekLast();
                                 assert otherCurrent != null;
-                                if (otherCurrent.MaxQuality == currentQuality)
+                                if(otherCurrent.MaxQuality == currentQuality)
                                     return ambiguous;
-                                else if (otherCurrent.MaxQuality > currentQuality)
+                                else if(otherCurrent.MaxQuality > currentQuality)
                                     return existing;
                                 else
                                     return head.extend(n, isMatch, isMismatch, mutateHead);
@@ -378,23 +378,23 @@ public class HeadNode extends Node
         }
         heads.putAll(frozenHeads);
 
-        if (heads.isEmpty())
+        if(heads.isEmpty())
             return null;
 
         final int bestScore = heads.values().stream()
                 .mapToInt(head -> head.Overlap)
                 .max().orElse(-1);
-        if (bestScore < minimumOverlap)
+        if(bestScore < minimumOverlap)
             return null; // Does not meet minimum
 
         final List<OverlayHead> bestHeads = heads.values().stream()
                 .filter(head -> head.Overlap == bestScore)
                 .collect(Collectors.toList());
-        if (bestHeads.size() != 1)
+        if(bestHeads.size() != 1)
             return null; // Ambiguous
         final OverlayHead bestHead = bestHeads.get(0);
         final int neutralBases = bestHead.Path.size() - bestHead.Overlap;
-        if (neutralBases >= bestHead.Overlap)
+        if(neutralBases >= bestHead.Overlap)
             return null; // Too many neutral bases
 
         return Pair.of(bestHead.Path, bestHead.Overlap);
@@ -406,16 +406,16 @@ public class HeadNode extends Node
         while(!destinationOverlay.isEmpty())
         {
             final Node destination = destinationOverlay.poll();
-            if (nextSource == null)
+            if(nextSource == null)
                 throw new IllegalStateException("More to overlay, but no more source data?");
 
-            if (nextSource.Base != destination.Base)
+            if(nextSource.Base != destination.Base)
             {
                 final Node node = new Node(nextSource.Base);
                 node.MaxQuality = nextSource.MaxQuality;
                 node.Quality = nextSource.Quality;
                 node.Support = nextSource.Support;
-                if (nextSource.successors().isEmpty())
+                if(nextSource.successors().isEmpty())
                 {
                     previous.setNext(node);
                     destination.successors().forEach(node::setNext);
@@ -449,7 +449,7 @@ public class HeadNode extends Node
                 final Node destinationSuccessor = destination.successors().stream()
                         .filter(successor -> successor.Base == nextBase)
                         .findFirst().orElse(null);
-                if (destinationSuccessor != null)
+                if(destinationSuccessor != null)
                 {
                     if(node.MaxQuality > 12 || destinationSuccessor.MaxQuality < 35)
                     {
@@ -472,7 +472,7 @@ public class HeadNode extends Node
             }
 
             final List<Node> nextSuccessors = nextSource.successors();
-            if (!nextSuccessors.isEmpty())
+            if(!nextSuccessors.isEmpty())
                 nextSource = nextSuccessors.get(0);
             else
                 nextSource = null;
@@ -480,7 +480,7 @@ public class HeadNode extends Node
             previous = destination;
         }
 
-        if (nextSource != null)
+        if(nextSource != null)
             previous.setNext(nextSource);
     }
 
@@ -571,10 +571,10 @@ public class HeadNode extends Node
         final HeadNode clone = new HeadNode();
 
         final Queue<Pair<Node, Node>> worklist = new ArrayDeque<>();
-        for (final Node successor : successors())
+        for(final Node successor : successors())
             worklist.add(Pair.of(clone, successor));
 
-        while (!worklist.isEmpty())
+        while(!worklist.isEmpty())
         {
             final Pair<Node, Node> pair = worklist.poll();
             final Node previousNode = pair.getLeft();
@@ -585,7 +585,7 @@ public class HeadNode extends Node
             newNode.MaxQuality = toClone.MaxQuality;
             newNode.Support = new ArrayList<>(toClone.Support);
             previousNode.setNext(newNode);
-            for (final Node successor : toClone.successors())
+            for(final Node successor : toClone.successors())
                 worklist.add(Pair.of(newNode, successor));
         }
 
@@ -595,14 +595,14 @@ public class HeadNode extends Node
     private static int getReadStartIndex(final Record record, final int startPosition)
     {
         final int startIndex = record.getReadPositionAtReferencePosition(startPosition) - 1;
-        if (startIndex >= 0)
+        if(startIndex >= 0)
             return startIndex;
 
         Alignment lastBlock = null;
         for(final Alignment block : record.getAlignmentBlocks())
-            if (block.isMapped() && block.ReferenceStartPosition < startPosition)
+            if(block.isMapped() && block.ReferenceStartPosition < startPosition)
                 lastBlock = block;
-        if (lastBlock != null)
+        if(lastBlock != null)
             return (startPosition - lastBlock.ReferenceStartPosition) + lastBlock.SequenceStartPosition - 1;
 
         return startPosition - record.getUnclippedStart();
@@ -618,7 +618,7 @@ public class HeadNode extends Node
         for(int i = startOffset; i < alignment.getLength(); i++)
         {
             final int index;
-            if (orientation == Direction.FORWARDS)
+            if(orientation == Direction.FORWARDS)
                 index = i;
             else
                 index = alignment.getLength() - 1 - i;
@@ -646,7 +646,7 @@ public class HeadNode extends Node
     public static HeadNode create(final Record record, final int startPosition, final Direction orientation)
     {
         final int startIndex = getReadStartIndex(record, startPosition);
-        if (startIndex < 0 || startIndex >= record.getLength())
+        if(startIndex < 0 || startIndex >= record.getLength())
             return null;
         return createIndexed(record, startIndex, orientation);
     }
@@ -716,9 +716,9 @@ public class HeadNode extends Node
     /** May mutate left. Directly overlays the two nodes from position 0. */
     public static HeadNode combine(@Nullable final HeadNode left, @Nullable final HeadNode right, final boolean sortSupport)
     {
-        if (left == right || right == null)
+        if(left == right || right == null)
             return left;
-        else if (left == null)
+        else if(left == null)
             return right;
 
         final HeadNode result = new HeadNode();
@@ -738,7 +738,7 @@ public class HeadNode extends Node
                 node = new Node(pair.Left.Base);
                 if(pair.Left != pair.Right)
                 {
-                    if (sortSupport)
+                    if(sortSupport)
                     {
                         node.Support = mergeSupport(pair.Left.Support, pair.Right.Support);
                         node.recomputeQuality();
@@ -746,7 +746,7 @@ public class HeadNode extends Node
                     else
                     {
                         node.Support = pair.Left.Support instanceof ArrayList ? pair.Left.Support : new ArrayList<>(pair.Left.Support);
-                        if (node.Support.size() < 10_000)
+                        if(node.Support.size() < 10_000)
                         {
                             node.Support.addAll(pair.Right.Support);
                             if(node.Support.size() > 50_000)
@@ -802,7 +802,7 @@ public class HeadNode extends Node
                 continue;
 
             toProcess.addAll(node.successors());
-            if (node instanceof HeadNode)
+            if(node instanceof HeadNode)
                 continue;
 
             node.Support = new ArrayList<>(new LinkedHashSet<>(node.Support));

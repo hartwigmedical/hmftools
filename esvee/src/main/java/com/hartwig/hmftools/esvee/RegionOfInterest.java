@@ -53,10 +53,10 @@ public class RegionOfInterest
 
     public int distanceTo(final String chromosome, final int position)
     {
-        if (!chromosome.equals(Chromosome))
+        if(!chromosome.equals(Chromosome))
             return Integer.MAX_VALUE;
 
-        if (Start <= position || position <= End)
+        if(Start <= position || position <= End)
             return 0;
 
         return Math.min(Math.abs(Start - position), Math.abs(End - position));

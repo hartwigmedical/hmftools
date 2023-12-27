@@ -85,7 +85,7 @@ public class Junction
 
             int junctionCount = 0;
 
-            while ((line = fileReader.readLine()) != null)
+            while((line = fileReader.readLine()) != null)
             {
                 final String[] values = line.split(TSV_DELIM, -1);
 

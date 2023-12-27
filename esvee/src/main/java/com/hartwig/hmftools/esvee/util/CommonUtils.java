@@ -15,11 +15,11 @@ public final class CommonUtils
 
     public static byte[] reverseBytes(final byte[] bytes)
     {
-        if (bytes == null)
+        if(bytes == null)
             return null;
 
         final byte[] reversed = new byte[bytes.length];
-        for (int i = 0; i < bytes.length; i++)
+        for(int i = 0; i < bytes.length; i++)
         {
             reversed[reversed.length - i - 1] = bytes[i];
         }
@@ -35,7 +35,7 @@ public final class CommonUtils
         int unitIndex = 0;
         double time = nanoseconds;
 
-        while (unitIndex < divisors.length && time > 5 * divisors[unitIndex])
+        while(unitIndex < divisors.length && time > 5 * divisors[unitIndex])
             time /= divisors[unitIndex++];
 
         return String.format("%.2f %s", time, unitNames[unitIndex]);

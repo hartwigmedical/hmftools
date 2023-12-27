@@ -23,7 +23,7 @@ public abstract class Counters<T extends Counters<T>>
 
     public Counters<T> add(final Counters<T> other)
     {
-        if (other.getClass() != getClass())
+        if(other.getClass() != getClass())
             throw new IllegalArgumentException("Cannot add non-equal counter types "
                     + getClass().getSimpleName() + " and " + other.getClass().getSimpleName());
 

@@ -53,9 +53,9 @@ public class Context implements AutoCloseable
     private static String osExtension()
     {
         final String osName = System.getProperty("os.name");
-        if (osName.contains("Mac"))
+        if(osName.contains("Mac"))
             return ".dylib";
-        else if (osName.contains("Win"))
+        else if(osName.contains("Win"))
             return ".dll";
         else
             return ".so";
@@ -65,7 +65,7 @@ public class Context implements AutoCloseable
     {
         final var props = System.getProperties();
         final String candidateBWAPath = "libbwa." + props.getProperty("os.arch") + osExtension();
-        if (System.getProperty("LIBBWA_PATH") == null && new File(candidateBWAPath).exists())
+        if(System.getProperty("LIBBWA_PATH") == null && new File(candidateBWAPath).exists())
             System.setProperty("LIBBWA_PATH", new File(candidateBWAPath).getAbsolutePath());
 
         Aligner aligner = new Aligner(config, new File(config.RefGenomeImageFile));

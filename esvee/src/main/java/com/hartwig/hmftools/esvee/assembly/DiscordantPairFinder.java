@@ -58,11 +58,11 @@ public class DiscordantPairFinder
 
     private List<Record> filterFewMateRegions(final List<Record> records)
     {
-        if (records.size() < 20)
+        if(records.size() < 20)
             return records;
 
         final List<Pair<RegionOfInterest, List<Record>>> regionsWithDepth = tryMergeMateRegions(records);
-        while (regionsWithDepth.size() > 8)
+        while(regionsWithDepth.size() > 8)
         {
             final int worstDepth = regionsWithDepth.stream()
                     .mapToInt(pair -> pair.getRight().size())
@@ -77,7 +77,7 @@ public class DiscordantPairFinder
 
     private List<Record> filterHighDepthRegions(final List<Record> records)
     {
-        if (records.size() < 1_000)
+        if(records.size() < 1_000)
             return records;
 
         final List<Pair<RegionOfInterest, List<Record>>> regionsWithDepth = tryMergeMateRegions(records);
@@ -92,7 +92,7 @@ public class DiscordantPairFinder
         final Map<String, List<Record>> byChromosome = new HashMap<>();
         for(final Record record : records)
         {
-            if (!record.isMateMapped())
+            if(!record.isMateMapped())
                 continue;
 
             byChromosome.computeIfAbsent(record.getMateChromosome(), ignored -> new ArrayList<>())
@@ -135,7 +135,7 @@ public class DiscordantPairFinder
 
     private Stream<RegionOfInterest> interestingRegions(final Record record)
     {
-        if (record.getMappingQuality() < mMinQuality)
+        if(record.getMappingQuality() < mMinQuality)
             return Stream.of();
 
         final RegionOfInterest primary = new RegionOfInterest(record.getChromosome(),

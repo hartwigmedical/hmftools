@@ -58,7 +58,7 @@ public enum SequenceDecomposer
         @Override
         public boolean equals(final Object obj)
         {
-            if (!(obj instanceof BasesNode))
+            if(!(obj instanceof BasesNode))
                 return false;
 
             final BasesNode other = (BasesNode) obj;
@@ -105,18 +105,18 @@ public enum SequenceDecomposer
         @Override
         public byte qual(final int i)
         {
-            if (i >= Qual.length)
+            if(i >= Qual.length)
                 return 0;
             return Qual[i];
         }
 
         public int quality()
         {
-            if (mQualityScore != -1)
+            if(mQualityScore != -1)
                 return mQualityScore;
 
             int sum = 0;
-            for (final byte b : Qual)
+            for(final byte b : Qual)
                 sum += b;
             final int averageQual = sum / Qual.length;
 
@@ -133,7 +133,7 @@ public enum SequenceDecomposer
         @Override
         public boolean equals(final Object obj)
         {
-            if (!(obj instanceof RepeatNode))
+            if(!(obj instanceof RepeatNode))
                 return false;
 
             final RepeatNode other = (RepeatNode) obj;
@@ -243,8 +243,8 @@ public enum SequenceDecomposer
         private List<Node> nonNullNonEmpty(final Node... nodes)
         {
             final List<Node> replacements = new ArrayList<>();
-            for (@Nullable final Node node : nodes)
-                if (node != null && node.length() > 0)
+            for(@Nullable final Node node : nodes)
+                if(node != null && node.length() > 0)
                     replacements.add(node);
             return replacements;
         }
@@ -271,7 +271,7 @@ public enum SequenceDecomposer
 
         public void append(final byte[] bases, final byte[] quals, final int fromIndex, final int length)
         {
-            for (int i = 0; i < length; i++)
+            for(int i = 0; i < length; i++)
                 append(bases[fromIndex + i], quals[fromIndex + i]);
         }
 
@@ -316,11 +316,11 @@ public enum SequenceDecomposer
     private static List<Node> annotateDepth(final List<Node> nodes, final SupportedAssembly assembly)
     {
         int endIndex = 0;
-        for (int i = 0; i < nodes.size(); i++)
+        for(int i = 0; i < nodes.size(); i++)
         {
             final Node node = nodes.get(i);
             endIndex += node.length();
-            if (!(node instanceof RepeatNode))
+            if(!(node instanceof RepeatNode))
                 continue;
 
             final RepeatNode repeat = (RepeatNode) node;
@@ -332,7 +332,7 @@ public enum SequenceDecomposer
                 final int supportStartIndex = entry.getValue();
                 final int supportEndIndex = supportStartIndex + entry.getKey().getLength();
 
-                if (supportStartIndex <= startIndex && supportEndIndex >= endIndex)
+                if(supportStartIndex <= startIndex && supportEndIndex >= endIndex)
                     supportDepth++;
             }
 
@@ -381,7 +381,7 @@ public enum SequenceDecomposer
                 final byte[] repeatBases = builder.extract(runLength - 1, multiBaseRepeatLength);
 
                 builder.undo(runLength);
-                if (builder.length() > 0)
+                if(builder.length() > 0)
                     nodes.add(builder.buildAndReset());
 
                 final int putBackBases = runLength % multiBaseRepeatLength;
@@ -398,13 +398,13 @@ public enum SequenceDecomposer
                 runLength = 1;
                 // We may be in a single base repeat right now -- that's the only length possible given maxLen=6, minRepeats=4.
                 // Increase runLength as appropriate
-                for (int j = 1; j < MAX_MICROSATELLITE_LENGTH; j++)
-                    if (builder.previous(j) == builder.previous(j - 1))
+                for(int j = 1; j < MAX_MICROSATELLITE_LENGTH; j++)
+                    if(builder.previous(j) == builder.previous(j - 1))
                         runLength++;
                     else
                         break;
                 inMultiBaseRepeat = runLength >= MIN_REPETITIONS_TO_CALL_REPEAT;
-                if (inMultiBaseRepeat)
+                if(inMultiBaseRepeat)
                     multiBaseRepeatLength = 1;
                 continue;
             }
@@ -412,9 +412,9 @@ public enum SequenceDecomposer
             builder.append(base, qual);
 
             // Should we start a multi-base repeat?
-            for (int repeatLength = 1; repeatLength <= MAX_MICROSATELLITE_LENGTH; repeatLength++)
+            for(int repeatLength = 1; repeatLength <= MAX_MICROSATELLITE_LENGTH; repeatLength++)
             {
-                if (builder.length() < repeatLength * MIN_REPETITIONS_TO_CALL_REPEAT)
+                if(builder.length() < repeatLength * MIN_REPETITIONS_TO_CALL_REPEAT)
                     break;
 
                 if(tryStartMultiBaseRepeat(builder, repeatLength, MIN_REPETITIONS_TO_CALL_REPEAT))
@@ -428,7 +428,7 @@ public enum SequenceDecomposer
 
         if(builder.length() > 0)
         {
-            if (inMultiBaseRepeat)
+            if(inMultiBaseRepeat)
             {
                 // What is our repeat?
                 final int repeats = runLength / multiBaseRepeatLength; // Round down, TATA = 2, TATAT = 2 (with a left-over T)
@@ -436,7 +436,7 @@ public enum SequenceDecomposer
 
                 // Wind back the repeat, and add in any bases that came before the repeat.
                 builder.undo(runLength);
-                if (builder.length() > 0)
+                if(builder.length() > 0)
                     nodes.add(builder.buildAndReset());
 
                 final int putBackBases = runLength % multiBaseRepeatLength;
@@ -446,7 +446,7 @@ public enum SequenceDecomposer
 
                 // Copy the incomplete repetitions
                 builder.append(bases, baseQuality, bases.length - putBackBases, putBackBases);
-                if (builder.length() > 0)
+                if(builder.length() > 0)
                     nodes.add(builder.buildAndReset());
             }
             else
@@ -459,43 +459,43 @@ public enum SequenceDecomposer
     private static List<Node> fixLongSatellites(final List<Node> nodes, final byte[] baseQual)
     {
         //noinspection ConstantValue
-        if (MIN_REPETITIONS_TO_CALL_REPEAT >= MAX_MICROSATELLITE_LENGTH)
+        if(MIN_REPETITIONS_TO_CALL_REPEAT >= MAX_MICROSATELLITE_LENGTH)
             return nodes;
 
         // If MIN_REPETITIONS_TO_CALL_REPEAT < MAX_MICROSATELLITE_LENGTH, it's possible for us to mis-call repeats like
         // AAAAATAAAAATAAAAATAAAAAT as Ax5, T, Ax5, T, ..., when it should instead be AAAAATx4.
         // Rather than making the decomposition process more complex, we just look to identify when this has occurred and "correct" it.
 
-        if (nodes.size() < MIN_REPETITIONS_TO_CALL_REPEAT * 2)
+        if(nodes.size() < MIN_REPETITIONS_TO_CALL_REPEAT * 2)
             return nodes;
 
         // We look for one less, then attempt to slide the repeat around in case the edge is "hiding" in a neighbouring BasesNode
         final int desiredReps = MIN_REPETITIONS_TO_CALL_REPEAT;
         int repeatStartIndex = -1;
-        for (int i = desiredReps * 2 - 1; i < nodes.size(); i++)
+        for(int i = desiredReps * 2 - 1; i < nodes.size(); i++)
         {
             boolean matches = true;
-            for (int reps = 1; reps < desiredReps; reps++)
+            for(int reps = 1; reps < desiredReps; reps++)
             {
-                if (!nodes.get(i).equals(nodes.get(i - (reps * 2)))
+                if(!nodes.get(i).equals(nodes.get(i - (reps * 2)))
                         || !nodes.get(i - 1).equals(nodes.get(i - 1 - (reps * 2))))
                 {
                     matches = false;
                     break;
                 }
             }
-            if (matches)
+            if(matches)
             {
                 repeatStartIndex = i - desiredReps * 2 + 1;
                 break;
             }
         }
-        if (repeatStartIndex == -1)
+        if(repeatStartIndex == -1)
             return nodes;
 
         final List<Node> newNodes = new ArrayList<>();
         int currentIndex = 0;
-        for (int i = 0; i < repeatStartIndex; i++)
+        for(int i = 0; i < repeatStartIndex; i++)
         {
             newNodes.add(nodes.get(i));
             currentIndex += nodes.get(i).length();
@@ -503,18 +503,18 @@ public enum SequenceDecomposer
 
         final String repeatSequence = getBases(nodes.get(repeatStartIndex)) + getBases(nodes.get(repeatStartIndex + 1));
         int repeatCount = 1;
-        for (int i = repeatStartIndex + 3; i < nodes.size(); i += 2)
+        for(int i = repeatStartIndex + 3; i < nodes.size(); i += 2)
         {
             final Node first = nodes.get(i - 1);
             final Node second = nodes.get(i);
-            if (!first.equals(nodes.get(i - 3)) || !second.equals(nodes.get(i - 2)))
+            if(!first.equals(nodes.get(i - 3)) || !second.equals(nodes.get(i - 2)))
                 break;
             repeatCount++;
         }
 
         final byte[] repeatQual = Arrays.copyOfRange(baseQual, currentIndex, currentIndex + (repeatCount * repeatSequence.length()));
         newNodes.add(new RepeatNode(repeatSequence.getBytes(), repeatQual, repeatCount, 1));
-        for (int i = repeatStartIndex + (repeatCount * 2); i < nodes.size(); i++)
+        for(int i = repeatStartIndex + (repeatCount * 2); i < nodes.size(); i++)
             newNodes.add(nodes.get(i));
 
         return fixLongSatellites(newNodes, baseQual);
@@ -531,8 +531,8 @@ public enum SequenceDecomposer
     private static boolean tryStartMultiBaseRepeat(final BasesNodeBuilder builder, final int length, final int minRepetitions)
     {
         for(int j = 0; j < minRepetitions; j++)
-            for (int i = 0; i < length; i++)
-                if (builder.previous(i) != builder.previous(j * length + i))
+            for(int i = 0; i < length; i++)
+                if(builder.previous(i) != builder.previous(j * length + i))
                     return false;
         return true;
     }

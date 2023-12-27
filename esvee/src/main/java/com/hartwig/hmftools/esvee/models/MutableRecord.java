@@ -32,7 +32,7 @@ public interface MutableRecord extends IRecord
         final MutableRecord clone = copy();
         clone.setBases(Arrays.copyOfRange(getBases(), count, getLength()),
                 Arrays.copyOfRange(getBaseQuality(), count, getLength()));
-        if (!clone.isUnmapped())
+        if(!clone.isUnmapped())
         {
             clone.setCigar(CigarUtils.trimLeft(clone.getCigar(), count));
             final int alignmentMove = Math.max(0, count - leftSoftClipLength(getCigar()));
@@ -47,7 +47,7 @@ public interface MutableRecord extends IRecord
         final MutableRecord clone = copy();
         clone.setBases(Arrays.copyOfRange(getBases(), 0, getLength() - count),
                 Arrays.copyOfRange(getBaseQuality(), 0, getLength() - count));
-        if (!clone.isUnmapped())
+        if(!clone.isUnmapped())
             clone.setCigar(CigarUtils.trimRight(clone.getCigar(), count));
 
         return clone;

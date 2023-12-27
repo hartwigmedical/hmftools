@@ -267,7 +267,7 @@ public class SupportChecker
             final int rightSize = rightNode.length() - RightOffset;
             final int leftRepCount = leftSize / leftNode.Bases.length;
             final int rightRepCount = rightSize / rightNode.Bases.length;
-            if (first && leftRepCount != rightRepCount)
+            if(first && leftRepCount != rightRepCount)
                 return false;
 
             final int delta = Math.abs(leftRepCount - rightRepCount);
@@ -350,7 +350,7 @@ public class SupportChecker
             final List<SequenceDecomposer.Node> leftNodes = new ArrayList<>(LeftNodes);
             leftNodes.addAll(LeftIndex, nodes);
             leftNodes.remove(LeftIndex + nodes.size());
-            if (removeTwo)
+            if(removeTwo)
                 leftNodes.remove(LeftIndex + nodes.size());
 
             final SupportState newState = new SupportState(leftNodes, RightNodes, this);
@@ -363,7 +363,7 @@ public class SupportChecker
             final List<SequenceDecomposer.Node> rightNodes = new ArrayList<>(RightNodes);
             rightNodes.addAll(RightIndex, nodes);
             rightNodes.remove(RightIndex + nodes.size());
-            if (removeTwo)
+            if(removeTwo)
                 rightNodes.remove(RightIndex + nodes.size());
 
             final SupportState newState = new SupportState(LeftNodes, rightNodes, this);

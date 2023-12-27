@@ -44,7 +44,7 @@ public class DirectSAMSource implements SAMSource
                     .referenceSequence(referenceSequence)
                     .open(bamFile);
             reader.getFileHeader().setAttribute("filename", mBamFileName);
-            if (tag != null)
+            if(tag != null)
                 reader.getFileHeader().setAttribute("userTag", tag);
 
             mAllReaders.add(reader);

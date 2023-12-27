@@ -21,7 +21,7 @@ public class ExtendedAssembly extends SupportedAssembly implements TrimmableAsse
 
     public void addDiagrams(@Nullable final DiagramSet diagrams)
     {
-        if (diagrams != null)
+        if(diagrams != null)
             Diagrams.add(diagrams);
     }
 
@@ -39,7 +39,7 @@ public class ExtendedAssembly extends SupportedAssembly implements TrimmableAsse
     public ExtendedAssembly trim(final int removeLeft, final int removeRight)
     {
         final int newLength = getLength() - removeLeft - removeRight;
-        if (newLength <= 0)
+        if(newLength <= 0)
             return null;
 
         final String newBases = Assembly.substring(removeLeft, removeLeft + newLength);
@@ -49,7 +49,7 @@ public class ExtendedAssembly extends SupportedAssembly implements TrimmableAsse
         for(final Map.Entry<Record, Integer> entry : getSupport())
         {
             final int newOffset = entry.getValue() - removeLeft;
-            if (newOffset >= newLength)
+            if(newOffset >= newLength)
                 continue;
 
             newAssembly.addEvidenceAt(entry.getKey(), newOffset);
@@ -63,7 +63,7 @@ public class ExtendedAssembly extends SupportedAssembly implements TrimmableAsse
         final String assembly = SequenceUtil.reverseComplement(Assembly);
         final ExtendedAssembly flipped = new ExtendedAssembly(Name, assembly, Source);
 
-        for (final Map.Entry<Record, Integer> support : getSupport())
+        for(final Map.Entry<Record, Integer> support : getSupport())
             flipped.addEvidenceAt(support.getKey().flipStrand(),
                     getLength() - support.getValue() - support.getKey().getLength());
         flipped.recalculateBaseQuality();

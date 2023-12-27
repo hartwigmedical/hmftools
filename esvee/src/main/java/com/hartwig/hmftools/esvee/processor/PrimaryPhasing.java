@@ -44,8 +44,8 @@ public enum PrimaryPhasing
                     if(current == other)
                         continue;
                     current.addAll(other);
-                    for (final T otherAssembly : other)
-                        for (final String otherFragment : otherAssembly.getSupportFragments())
+                    for(final T otherAssembly : other)
+                        for(final String otherFragment : otherAssembly.getSupportFragments())
                             primaryPhasingByFragment.put(otherFragment, phasing);
                     primaryPhasing.remove(fragmentPhase);
                 }

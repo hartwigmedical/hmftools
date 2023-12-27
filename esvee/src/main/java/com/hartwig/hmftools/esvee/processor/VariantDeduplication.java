@@ -50,7 +50,7 @@ public class VariantDeduplication
         final Map<String, List<VariantCall>> callsByPairLocation = new HashMap<>();
         for(final VariantCall call : variants)
         {
-            if (call.isSingleSided())
+            if(call.isSingleSided())
             {
                 final String key = Objects.requireNonNullElse(call.LeftDescriptor, call.RightDescriptor);
                 callsByPairLocation.computeIfAbsent(key, k -> new ArrayList<>()).add(call);
@@ -134,7 +134,7 @@ public class VariantDeduplication
                 .collect(Collectors.toMap(assembly -> Pair.of(assembly.Assembly.Assembly, assembly.LeftPosition),
                         assembly -> assembly, (left, right) ->
                         {
-                            if (left.Assembly.getSupportFragments().equals(right.Assembly.getSupportFragments()))
+                            if(left.Assembly.getSupportFragments().equals(right.Assembly.getSupportFragments()))
                                 return left;
 
                             // Ensure that both are equally supported
@@ -161,9 +161,9 @@ public class VariantDeduplication
     {
         // Index double-ended variants
         final Map<String, TreeMap<Integer, List<VariantCall>>> indexedVariants = new HashMap<>();
-        for (final VariantCall call : variants)
+        for(final VariantCall call : variants)
         {
-            if (call.isSingleSided())
+            if(call.isSingleSided())
                 continue;
 
             indexedVariants.computeIfAbsent(call.LeftChromosome, __ -> new TreeMap<>())
@@ -173,9 +173,9 @@ public class VariantDeduplication
                     .computeIfAbsent(call.RightPosition, __ -> new ArrayList<>())
                     .add(call);
         }
-        for (final VariantCall call : variants)
+        for(final VariantCall call : variants)
         {
-            if (!call.isSingleSided())
+            if(!call.isSingleSided())
                 continue;
 
 

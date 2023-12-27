@@ -36,13 +36,13 @@ public class HomologySlider
         // For each part of the alignment, keep expanding the LHS if possible
         final List<Alignment> alignments = new ArrayList<>();
         alignments.add(source.get(0));
-        for (int i = 1; i < source.size(); i++)
+        for(int i = 1; i < source.size(); i++)
         {
             final Alignment left = alignments.get(alignments.size() - 1);
             final Alignment right = source.get(i);
-            if (left.Inverted || right.Inverted)
+            if(left.Inverted || right.Inverted)
                 return source; // FIXME: Not handled yet
-            if (left.isUnmapped() || right.isUnmapped())
+            if(left.isUnmapped() || right.isUnmapped())
             {
                 alignments.add(right);
                 continue;
@@ -61,7 +61,7 @@ public class HomologySlider
                 else
                     break;
 
-            if (homology > 0)
+            if(homology > 0)
             {
                 // Expand left to cover right
                 final Alignment oldLeft = alignments.get(alignments.size() - 1);
@@ -69,7 +69,7 @@ public class HomologySlider
                         oldLeft.SequenceStartPosition, oldLeft.Length + homology, oldLeft.Inverted, oldLeft.Quality);
                 alignments.set(alignments.size() - 1, newLeft);
                 final int newLength = right.Length - homology;
-                if (newLength > 0)
+                if(newLength > 0)
                 {
                     final Alignment newRight = new Alignment(right.Chromosome, right.ReferenceStartPosition + homology,
                             right.SequenceStartPosition + homology, newLength, right.Inverted, right.Quality);

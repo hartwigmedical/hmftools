@@ -29,7 +29,7 @@ public final class AssemblyFiltering
                 trimmed.set(i, null);
         }
 
-        for (int i = 0; i < trimmed.size(); i++)
+        for(int i = 0; i < trimmed.size(); i++)
         {
             for(int j = 0; j < trimmed.size(); j++)
             {

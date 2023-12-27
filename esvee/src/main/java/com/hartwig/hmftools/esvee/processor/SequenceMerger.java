@@ -57,12 +57,12 @@ public class SequenceMerger
             final int length)
     {
         int copiedBases = 0;
-        while (copiedBases < length && leftPosition.hasData() && rightPosition.hasData())
+        while(copiedBases < length && leftPosition.hasData() && rightPosition.hasData())
         {
             final SequenceDecomposer.Node l = leftPosition.node();
             final SequenceDecomposer.Node r = rightPosition.node();
 
-            if (l instanceof SequenceDecomposer.RepeatNode && r instanceof SequenceDecomposer.RepeatNode)
+            if(l instanceof SequenceDecomposer.RepeatNode && r instanceof SequenceDecomposer.RepeatNode)
             {
                 final SequenceDecomposer.RepeatNode rl = (SequenceDecomposer.RepeatNode) l;
                 final SequenceDecomposer.RepeatNode rr = (SequenceDecomposer.RepeatNode) r;
@@ -95,7 +95,7 @@ public class SequenceMerger
 
                 for(int i = 0; i < consumeBases; i++)
                 {
-                    if (l.qual(i) > r.qual(i))
+                    if(l.qual(i) > r.qual(i))
                     {
                         mOutputBases[mOutputPosition + i] = l.base(leftPosition.Offset + i);
                         mOutputQual[mOutputPosition + i] = l.qual(leftPosition.Offset + i);
@@ -120,7 +120,7 @@ public class SequenceMerger
     private NodePosition copyBases(NodePosition position, final int length)
     {
         int copiedBases = 0;
-        while (copiedBases < length && position.hasData())
+        while(copiedBases < length && position.hasData())
         {
             final SequenceDecomposer.Node node = position.node();
             final int nodeBases = node.length() - position.Offset;
@@ -170,7 +170,7 @@ public class SequenceMerger
         // @Contract(pure = true)
         public NodePosition advanceOffset(final int amount)
         {
-            if (Offset + amount >= Nodes.get(Index).length())
+            if(Offset + amount >= Nodes.get(Index).length())
                 return new NodePosition(Nodes, Index + 1, Offset + amount - Nodes.get(Index).length());
             else
                 return new NodePosition(Nodes, Index, Offset + amount);

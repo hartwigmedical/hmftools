@@ -13,17 +13,17 @@ public enum AlignmentPostProcessor
     {
         int mapped = 0;
         int mappedInverted = 0;
-        for (final Alignment alignment : assembly.getAlignmentBlocks())
+        for(final Alignment alignment : assembly.getAlignmentBlocks())
         {
-            if (!alignment.isMapped())
+            if(!alignment.isMapped())
                 continue;
             mapped++;
-            if (alignment.Inverted)
+            if(alignment.Inverted)
                 mappedInverted++;
         }
 
         final int mappedNonInverted = mapped - mappedInverted;
-        if (mappedInverted > mappedNonInverted)
+        if(mappedInverted > mappedNonInverted)
             return assembly.flipStrand();
         return assembly;
     }

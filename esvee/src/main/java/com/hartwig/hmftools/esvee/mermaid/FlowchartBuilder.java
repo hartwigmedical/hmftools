@@ -35,7 +35,7 @@ public class FlowchartBuilder
         final boolean[] existing = new boolean[1];
         nodes.compute(identity, (id, old) ->
         {
-            if (old == null)
+            if(old == null)
                 return new Node(nextId++, label, style);
             else
             {

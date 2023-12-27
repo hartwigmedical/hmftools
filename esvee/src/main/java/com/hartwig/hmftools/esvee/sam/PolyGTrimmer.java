@@ -17,10 +17,10 @@ public class PolyGTrimmer
 
     public MutableRecord trimPolyG(final MutableRecord record)
     {
-        if (record.isUnmapped() || !record.isPairedRead() || record.getLength() < mPolyGCountThreshold + 1)
+        if(record.isUnmapped() || !record.isPairedRead() || record.getLength() < mPolyGCountThreshold + 1)
             return record;
 
-        if (record.isPositiveStrand())
+        if(record.isPositiveStrand())
         {
             int trailingGCount = 0;
             for(int i = record.getLength() - 1; i >= 0; i--)
@@ -28,7 +28,7 @@ public class PolyGTrimmer
                     trailingGCount++;
                 else
                     break;
-            if (trailingGCount >= mPolyGCountThreshold)
+            if(trailingGCount >= mPolyGCountThreshold)
             {
                 mRecordsTrimmed.add(1);
                 return record.trimRight(trailingGCount);
@@ -42,7 +42,7 @@ public class PolyGTrimmer
                     leadingCCount++;
                 else
                     break;
-            if (leadingCCount >= mPolyGCountThreshold)
+            if(leadingCCount >= mPolyGCountThreshold)
             {
                 mRecordsTrimmed.add(1);
                 return record.trimLeft(leadingCCount);

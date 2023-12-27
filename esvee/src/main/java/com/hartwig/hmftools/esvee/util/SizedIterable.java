@@ -51,7 +51,7 @@ public class SizedIterable<T> implements Iterable<T>
 
     public int size()
     {
-        if (mSize == -1)
+        if(mSize == -1)
             mSize = (int) stream().count();
         return mSize;
     }
@@ -71,7 +71,7 @@ public class SizedIterable<T> implements Iterable<T>
     public List<T> toList()
     {
         final List<T> list = new ArrayList<>(mSize);
-        for (final T item : this)
+        for(final T item : this)
             list.add(item);
         return list;
     }

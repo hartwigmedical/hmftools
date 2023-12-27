@@ -141,17 +141,17 @@ public class VcfWriter implements AutoCloseable
         final boolean isLowQuality = call.quality() < SvConstants.VCFLOWQUALITYTHRESHOLD;
         final boolean isLowSupport = call.supportingFragments().size() < SvConstants.MINREADSTOSUPPORTASSEMBLY;
         final boolean isLikelyFalse = isLowSupport || (isLowOverhang && call.discordantSupport() == 0) || isLowQuality;
-        if (call.isGermline())
+        if(call.isGermline())
             filters.add("GERMLINE");
-        if (call.associatedAssemblies().size() > 1)
+        if(call.associatedAssemblies().size() > 1)
             filters.add("MULTIPLE_ASSEMBLIES");
-        if (isLowOverhang)
+        if(isLowOverhang)
             filters.add("LOW_OVERHANG");
-        if (isLowQuality)
+        if(isLowQuality)
             filters.add("LOW_QUALITY");
-        if (isLowSupport)
+        if(isLowSupport)
             filters.add("LOW_SUPPORT");
-        if (isLikelyFalse)
+        if(isLikelyFalse)
             filters.add("LIKELY_FALSE");
 
         final VariantContextBuilder builder = new VariantContextBuilder()
@@ -185,17 +185,17 @@ public class VcfWriter implements AutoCloseable
         final List<Integer> anchorLeftCigarLengths = new ArrayList<>();
         final List<Integer> anchorRightCigarLengths = new ArrayList<>();
 
-        for (final VariantAssembly assembly : call.variantAssemblies())
+        for(final VariantAssembly assembly : call.variantAssemblies())
         {
             assemblyNames.add(assembly.Assembly.Name);
             assemblyLeftIndices.add(assembly.LeftPosition);
             assemblyRightIndices.add(assembly.RightPosition);
-            if (assembly.LeftAnchorCigar != null)
+            if(assembly.LeftAnchorCigar != null)
             {
                 anchorLeftCigars.add(assembly.LeftAnchorCigar.toString());
                 anchorLeftCigarLengths.add(assembly.LeftCigarLength);
             }
-            if (assembly.RightAnchorCigar != null)
+            if(assembly.RightAnchorCigar != null)
             {
                 anchorRightCigars.add(assembly.RightAnchorCigar.toString());
                 anchorRightCigarLengths.add(assembly.RightCigarLength);

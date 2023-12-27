@@ -62,14 +62,14 @@ public class PrimaryAssembly extends SupportedAssembly implements TrimmableAssem
     public PrimaryAssembly trim(final int removeLeft, final int removeRight)
     {
         final int newLength = getLength() - removeLeft - removeRight;
-        if (newLength <= 0)
+        if(newLength <= 0)
             return null;
 
         final String newBases = Assembly.substring(removeLeft, removeLeft + newLength);
 
         int newAnchorPositionInAssembly = AnchorPositionInAssembly + removeLeft;
         int newAnchorPosition = AnchorPosition;
-        if (newAnchorPositionInAssembly >= newBases.length())
+        if(newAnchorPositionInAssembly >= newBases.length())
         {
             // Move anchor left
             final int leftMove = newBases.length() - newAnchorPositionInAssembly + 1;
@@ -83,7 +83,7 @@ public class PrimaryAssembly extends SupportedAssembly implements TrimmableAssem
         for(final Map.Entry<Record, Integer> entry : getSupport())
         {
             final int newOffset = entry.getValue() - removeLeft;
-            if (newOffset >= newLength)
+            if(newOffset >= newLength)
                 continue;
 
             newAssembly.addEvidenceAt(entry.getKey(), newOffset);

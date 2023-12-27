@@ -343,14 +343,14 @@ public class Processor
                         final int minOverlap = Math.min(30, Math.min(left.getLength(), right.getLength()));
                         @Nullable
                         Integer index = mContext.SupportChecker.AssemblySupport.supportIndex(left, right, minOverlap);
-                        if (index != null)
+                        if(index != null)
                             index = mContext.SupportChecker.AssemblySupport.bestSupportIndex(left, right, minOverlap);
                         final ExtendedAssembly mergedAssembly;
                         if(index == null)
                         {
                             final ExtendedAssembly flippedRight = right.flipStrand();
                             index = mContext.SupportChecker.AssemblySupport.supportIndex(left, flippedRight, minOverlap);
-                            if (index != null)
+                            if(index != null)
                                 index = mContext.SupportChecker.AssemblySupport.bestSupportIndex(left, right, minOverlap);
                             if(index == null)
                                 continue;
@@ -455,7 +455,7 @@ public class Processor
             final Set<String> rightOnly = new HashSet<>(right.getSupportFragments());
             rightOnly.removeAll(left.getSupportFragments());
 
-            if (leftOnly.size() < 2 && rightOnly.size() < 2)
+            if(leftOnly.size() < 2 && rightOnly.size() < 2)
             {
                 final boolean returnRight;
                 if(leftOnly.size() == rightOnly.size())
@@ -479,12 +479,12 @@ public class Processor
                     return left;
                 }
             }
-            if (leftOnly.size() < 2)
+            if(leftOnly.size() < 2)
             {
                 right.addErrata(left.getAllErrata());
                 return right;
             }
-            else if (rightOnly.size() < 2)
+            else if(rightOnly.size() < 2)
             {
                 left.addErrata(right.getAllErrata());
                 return left;
@@ -591,10 +591,10 @@ public class Processor
 
         final Map<ExtendedAssembly, Map<ExtendedAssembly, Long>> leftWise = new IdentityHashMap<>();
         final Map<ExtendedAssembly, Map<ExtendedAssembly, Long>> rightWise = new IdentityHashMap<>();
-        for (final ExtendedAssembly first : assemblies)
-            for (final ExtendedAssembly second : assemblies)
+        for(final ExtendedAssembly first : assemblies)
+            for(final ExtendedAssembly second : assemblies)
             {
-                if (first == second)
+                if(first == second)
                     continue;
 
 

@@ -27,9 +27,9 @@ public enum StringCache
     }
 
     public static String of(final int i) {
-        if (i < INTEGERS.length)
+        if(i < INTEGERS.length)
         {
-            if (INTEGERS[i] == null) {
+            if(INTEGERS[i] == null) {
                 INTEGERS[i] = String.valueOf(i);
             }
 
@@ -42,17 +42,17 @@ public enum StringCache
     // @Contract("null -> null; !null -> !null")
     public static String tryDedupe(final String s)
     {
-        if (s == null)
+        if(s == null)
             return null;
 
         Map<String, String> dedupeMap = mStrings.get();
-        if (dedupeMap == null)
+        if(dedupeMap == null)
         {
             dedupeMap = new HashMap<>();
             mStrings = new SoftReference<>(dedupeMap);
         }
 
-        if (dedupeMap.size() > 10_000)
+        if(dedupeMap.size() > 10_000)
             dedupeMap.clear();
 
         return Objects.requireNonNullElse(dedupeMap.putIfAbsent(s, s), s);

@@ -139,13 +139,13 @@ public class HTMLBuilder
             rowContents.add(String.format("<th>%s</th><td>%s</td>", pair.getKey(), pair.getValue()));
 
         final int rowCount = (int) Math.ceil((double) rowContents.size() / columns);
-        for (int i = 0; i < rowCount; i++)
+        for(int i = 0; i < rowCount; i++)
         {
             final StringBuilder row = new StringBuilder();
-            for (int j = 0; j < columns; j++)
+            for(int j = 0; j < columns; j++)
             {
                 final int index = i + (j * rowCount);
-                if (index < rowContents.size())
+                if(index < rowContents.size())
                     row.append(rowContents.get(index));
             }
 

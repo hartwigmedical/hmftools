@@ -202,7 +202,7 @@ public class NodeFolder
                 continue; // No bases means no disagreement
 
             boolean couldOverlay = false;
-            for (final Node leftSuccessor : left.successors())
+            for(final Node leftSuccessor : left.successors())
             {
                 if(leftSuccessor.Base == rightSuccessor.Base)
                     continue; // Already checked

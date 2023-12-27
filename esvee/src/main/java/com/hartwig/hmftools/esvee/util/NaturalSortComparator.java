@@ -16,7 +16,7 @@ public enum NaturalSortComparator implements Comparator<String>
     public int compare(final String left, final String right)
     {
         int leftIndex = 0, rightIndex = 0;
-        while (true)
+        while(true)
         {
             if(leftIndex == left.length() && rightIndex == right.length())
                 return 0;

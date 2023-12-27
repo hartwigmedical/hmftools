@@ -47,7 +47,7 @@ public class CachingSAMSource implements SAMSource
     @Override
     public synchronized Stream<Record> unmappedReads()
     {
-        if (mUnmappedReads == null)
+        if(mUnmappedReads == null)
         {
             try (final Stream<Record> stream = mInner.unmappedReads())
             {

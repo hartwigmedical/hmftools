@@ -39,7 +39,7 @@ public final class SummaryPageGenerator
 
     private static String truncate(@Nullable final String s, final int maxLength)
     {
-        if (s == null)
+        if(s == null)
             return "";
 
         return s.length() < maxLength

@@ -72,10 +72,10 @@ public class Record implements MutableRecord
     private String fallbackReadGroup(final String fallbackReason)
     {
         final List<SAMReadGroupRecord> readGroups = mRecord.getHeader().getReadGroups();
-        if (readGroups.isEmpty())
+        if(readGroups.isEmpty())
             throw new IllegalStateException("Cannot determine Sample Name for " + getName() + ". No read groups in file");
         final String firstRGSample = readGroups.get(0).getSample();
-        if (readGroups.stream().allMatch(rg -> rg.getSample().equals(firstRGSample)))
+        if(readGroups.stream().allMatch(rg -> rg.getSample().equals(firstRGSample)))
             return firstRGSample; // All read-groups in this file are from the same sample.
 
         throw new IllegalStateException("Cannot determine fallback Sample Name for file for " + getName() + " after " + fallbackReason);
