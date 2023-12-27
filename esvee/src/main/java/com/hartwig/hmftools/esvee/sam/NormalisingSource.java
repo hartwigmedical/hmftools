@@ -17,14 +17,6 @@ public class NormalisingSource implements SAMSource
     }
 
     @Override
-    public Stream<Record> unmappedReads()
-    {
-        return mInner.unmappedReads()
-                .map(mNormaliser::normalise)
-                .filter(Objects::nonNull);
-    }
-
-    @Override
     public Stream<Record> streamReadsContaining(final String chromosome, final int startPosition, final int endPosition)
     {
         return mInner.streamReadsContaining(chromosome, startPosition, endPosition)

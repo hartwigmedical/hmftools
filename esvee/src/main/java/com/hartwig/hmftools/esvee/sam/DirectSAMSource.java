@@ -53,19 +53,6 @@ public class DirectSAMSource implements SAMSource
     }
 
     @Override
-    public Stream<Record> unmappedReads()
-    {
-        //noinspection resource
-        try (final Stream<SAMRecord> stream = mReader.get().queryUnmapped().stream()
-                .filter(alignment -> !alignment.getDuplicateReadFlag()))
-        {
-            return stream
-                    .map(Record::new)
-                    .collect(Collectors.toList()).stream();
-        }
-    }
-
-    @Override
     public Stream<Record> streamReadsContaining(final String chromosome, final int startPosition, final int endPosition)
     {
         final int sequenceIndex = mReader.get().getFileHeader().getSequenceIndex(chromosome);

@@ -15,9 +15,6 @@ public class CachingSAMSource implements SAMSource
 {
     private final SAMSource mInner;
 
-    @Nullable
-    private List<Record> mUnmappedReads;
-
     private final ReadCache mCache;
 
     public CachingSAMSource(final SAMSource inner)
@@ -45,20 +42,6 @@ public class CachingSAMSource implements SAMSource
     }
 
     @Override
-    public synchronized Stream<Record> unmappedReads()
-    {
-        if(mUnmappedReads == null)
-        {
-            try (final Stream<Record> stream = mInner.unmappedReads())
-            {
-                mUnmappedReads = stream.collect(Collectors.toList());
-            }
-        }
-
-        return mUnmappedReads.stream();
-    }
-
-    @Override
     public Stream<Record> streamReadsContaining(final String chromosome, final int startPosition, final int endPosition)
     {
         try
@@ -83,7 +66,7 @@ public class CachingSAMSource implements SAMSource
         final int hits = mCache.CacheHits.get();
         final int misses = mCache.CacheMisses.get();
 
-        SV_LOGGER.info("Closing cache. Cache Hits: {}, Cache Misses: {}, Hit Rate: {}%",
+        SV_LOGGER.info("closing cache: cache hits({}) misses({}) hitRate({}%)",
                 hits, misses, String.format("%.2f", (100.0f * hits) / (hits + misses)));
 
         mInner.close();

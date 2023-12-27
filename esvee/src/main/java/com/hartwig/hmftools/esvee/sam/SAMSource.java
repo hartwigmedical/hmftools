@@ -14,8 +14,6 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public interface SAMSource extends AutoCloseable
 {
-    Stream<Record> unmappedReads();
-
     Stream<Record> streamReadsContaining(final String chromosome, final int startPosition, final int endPosition);
 
     default List<Record> findReadsContaining(final RegionOfInterest region)

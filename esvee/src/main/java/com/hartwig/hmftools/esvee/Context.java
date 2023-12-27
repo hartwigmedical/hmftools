@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.esvee.assembly.Aligner;
 import com.hartwig.hmftools.esvee.assembly.SupportChecker;
@@ -75,13 +76,17 @@ public class Context implements AutoCloseable
 
         final RecordNormaliser normaliser = new RecordNormaliser(refGenomeSource);
 
-        final List<SAMSource> inputFiles = new ArrayList<>();
-        inputFiles.add(openFile(config.RefGenomeFile, normaliser, config.primaryBam(), "tumor"));
+        List<SAMSource> inputBams = Lists.newArrayList();
 
-        if(config.referenceBam() != null)
-            inputFiles.add(openFile(config.RefGenomeFile, normaliser, config.referenceBam(), "germline"));
+        for(int i = 0; i < config.SampleNames.size(); ++i)
+        {
+            String sampleId = config.SampleNames.get(i);
+            String bamFile = config.BamFiles.get(i);
 
-        final SAMSource innerSAMSource = inputFiles.size() == 1 ? inputFiles.get(0) : new CompositeSAMSource(inputFiles);
+            inputBams.add(openFile(config.RefGenomeFile, normaliser, bamFile, sampleId));
+        }
+
+        final SAMSource innerSAMSource = inputBams.size() == 1 ? inputBams.get(0) : new CompositeSAMSource(inputBams);
         final SAMSource samSource = new CachingSAMSource(innerSAMSource);
 
         final ExecutorService executor = config.Threads == -1
@@ -92,13 +97,13 @@ public class Context implements AutoCloseable
                     thread.setDaemon(true);
                     return thread;
                 });
+
         return new Context(executor, aligner, samSource, refGenomeSource, supportChecker, config);
     }
 
     private static SAMSource openFile(final String referenceGenome, final RecordNormaliser normaliser, final String bamFile, final String tag)
     {
-        final DirectSAMSource directSource = new DirectSAMSource(
-                new File(bamFile), new File(referenceGenome), tag);
+        final DirectSAMSource directSource = new DirectSAMSource(new File(bamFile), new File(referenceGenome), tag);
 
         return new NormalisingSource(directSource, normaliser);
     }

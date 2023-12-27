@@ -15,12 +15,6 @@ public class CompositeSAMSource implements SAMSource
     }
 
     @Override
-    public Stream<Record> unmappedReads()
-    {
-        return mSources.stream().flatMap(SAMSource::unmappedReads);
-    }
-
-    @Override
     public Stream<Record> streamReadsContaining(final String chromosome, final int startPosition, final int endPosition)
     {
         return mSources.stream().flatMap(source -> source.streamReadsContaining(chromosome, startPosition, endPosition));

@@ -23,6 +23,7 @@ public class RecordNormaliser
             CigarOperator.EQ, CigarOperator.M,
             CigarOperator.X, CigarOperator.M,
             CigarOperator.N, CigarOperator.D);
+
     private static final Set<CigarOperator> BANNED_OPERATORS = Set.of(CigarOperator.P, CigarOperator.H);
 
     private final ReadRescue mReadRescue;

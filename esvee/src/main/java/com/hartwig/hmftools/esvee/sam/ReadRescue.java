@@ -137,8 +137,8 @@ public class ReadRescue
     }
 
     @Nullable
-    private byte[] tryRescueRead(final byte[] recordBases, final byte[] recordQuals, final int attemptIndex,
-            final byte[] referenceBases, final byte repeatBase)
+    private byte[] tryRescueRead(
+            final byte[] recordBases, final byte[] recordQuals, final int attemptIndex, final byte[] referenceBases, final byte repeatBase)
     {
         // Try to line up recordBases with referenceBases by skipping reference bases
         int bestAgreeCount = 0;
