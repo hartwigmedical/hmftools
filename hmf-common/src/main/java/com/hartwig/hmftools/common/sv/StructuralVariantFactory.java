@@ -23,7 +23,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TAF;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_ALIGNMENTS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEALN;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_CLASS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_ORIENTATION;
@@ -319,7 +319,7 @@ public class StructuralVariantFactory
                         .collect(Collectors.joining(",")))
                 .imprecise(imprecise(context))
                 .qualityScore(qualityScore)
-                .insertSequenceAlignments(context.getAttributeAsStringList(UNTEMPLATED_SEQUENCE_ALIGNMENTS, "")
+                .insertSequenceAlignments(context.getAttributeAsStringList(BEALN, "")
                         .stream()
                         .filter(s -> !Strings.isNullOrEmpty(s))
                         .collect(Collectors.joining(",")));

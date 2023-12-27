@@ -1,5 +1,13 @@
 package com.hartwig.hmftools.esvee.processor;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.esvee.SvConstants.MAX_DUP_LENGTH;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -18,7 +26,6 @@ import com.hartwig.hmftools.esvee.common.VariantCall;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
 import com.hartwig.hmftools.esvee.models.Alignment;
 import com.hartwig.hmftools.esvee.models.AssemblyClassification;
-import com.hartwig.hmftools.esvee.models.AssemblyClassificationType;
 import com.hartwig.hmftools.esvee.models.Record;
 import com.hartwig.hmftools.esvee.models.SupportedAssembly;
 import com.hartwig.hmftools.esvee.util.ParallelMapper;
@@ -187,8 +194,8 @@ public class VariantCaller
 
         final Support support = calculateSupport(assembly, left, right, insert);
         final AssemblyClassification classification = left.Chromosome.equals(right.Chromosome)
-                ? new AssemblyClassification(AssemblyClassificationType.INVERSION, 0)
-                : new AssemblyClassification(AssemblyClassificationType.TRANSLOCATION, 0);
+                ? new AssemblyClassification(INV, 0)
+                : new AssemblyClassification(BND, 0);
         return build(left.Chromosome, leftEndPosition, right.Chromosome, rightStartPosition,
                 leftDescriptor, rightDescriptor, assembly, left, right, insert, support, left.Quality, right.Quality,
                 classification);
@@ -258,9 +265,11 @@ public class VariantCaller
         final String rightDescriptor = leftAsDestination + insertSequence + rightAnchor;
 
         final Support support = calculateSupport(assembly, left, right, insert);
-        return build(left.Chromosome, leftEndPosition, right.Chromosome, rightStartPosition,
+
+        return build(
+                left.Chromosome, leftEndPosition, right.Chromosome, rightStartPosition,
                 leftDescriptor, rightDescriptor, assembly, left, right, insert, support, left.Quality, right.Quality,
-                new AssemblyClassification(AssemblyClassificationType.INSERT, insertSize));
+                new AssemblyClassification(INS, insertSize));
     }
 
     private VariantCall buildDelete(final AlignedAssembly assembly,
@@ -282,9 +291,11 @@ public class VariantCaller
         final String rightDescriptor = leftAsDestination + insertSequence + rightAnchor;
 
         final Support support = calculateSupport(assembly, left, right, insert);
-        return build(left.Chromosome, leftEndPosition, right.Chromosome, rightStartPosition,
+
+        return build(
+                left.Chromosome, leftEndPosition, right.Chromosome, rightStartPosition,
                 leftDescriptor, rightDescriptor, assembly, left, right, insert, support, left.Quality, right.Quality,
-                new AssemblyClassification(AssemblyClassificationType.DELETION, rightStartPosition - leftEndPosition - 1));
+                new AssemblyClassification(DEL, rightStartPosition - leftEndPosition - 1));
     }
 
     private VariantCall buildDuplication(final AlignedAssembly assembly,
@@ -310,10 +321,11 @@ public class VariantCaller
         final int previousEndPosition = left.ReferenceStartPosition + left.Length;
         final int duplicationSize = previousEndPosition - rightStartPosition;
         final AssemblyClassification classification;
-        if(duplicationSize < 6) // Can't call a duplication this short
-            classification = new AssemblyClassification(AssemblyClassificationType.INSERT, duplicationSize);
+
+        if(duplicationSize < MAX_DUP_LENGTH) // Can't call a duplication this short
+            classification = new AssemblyClassification(INS, duplicationSize);
         else
-            classification = new AssemblyClassification(AssemblyClassificationType.DUPLICATION, duplicationSize);
+            classification = new AssemblyClassification(DUP, duplicationSize);
 
         return build(left.Chromosome, leftEndPosition, right.Chromosome, rightStartPosition,
                 leftDescriptor, rightDescriptor, assembly, left, right, insert, support, left.Quality, right.Quality, classification);
@@ -331,9 +343,10 @@ public class VariantCaller
 
         final Support support = calculateSupport(assembly, left, null, insert);
 
-        return build(left.Chromosome, endPosition(left, left.ReferenceStartPosition), null, 0,
+        return build(
+                left.Chromosome, endPosition(left, left.ReferenceStartPosition), null, 0,
                 leftDescriptor, null, assembly, left, null, insert, support, left.Quality, 0,
-                new AssemblyClassification(AssemblyClassificationType.UNKNOWN, 0));
+                new AssemblyClassification(SGL, 0));
     }
 
     private VariantCall buildSingleEndedRight(final AlignedAssembly assembly, final Alignment insert, final Alignment right)
@@ -343,10 +356,12 @@ public class VariantCaller
         final String rightDescriptor = "." + insertSequence + rightAnchor;
 
         final Support support = calculateSupport(assembly, null, right, insert);
-        return build(null, 0,
+
+        return build(
+                null, 0,
                 right.Chromosome, startPosition(right, right.ReferenceStartPosition),
                 null,  rightDescriptor, assembly, null, right, insert, support,
-                0, right.Quality, new AssemblyClassification(AssemblyClassificationType.UNKNOWN, 0));
+                0, right.Quality, new AssemblyClassification(SGL, 0));
     }
 
     private VariantCall build(

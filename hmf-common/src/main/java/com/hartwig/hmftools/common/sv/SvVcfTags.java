@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.common.sv;
 
+import htsjdk.variant.vcf.VCFHeaderLineCount;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+
 public class SvVcfTags
 {
     // Esvee and Gridss
     public static final String CIPOS = "CIPOS";
-    public static final String CIPOS_DESC = "Confidence interval around POS for imprecise variants";
+    public static final String CIPOS_DESC = "Confidence interval around position for imprecise variants";
 
     public static final String CIRPOS = "CIRPOS";
     public static final String CIRPOS_DESC = "CIRPOS";
@@ -12,31 +15,70 @@ public class SvVcfTags
     public static final String SVTYPE = "SVTYPE";
     public static final String SVTYPE_DESC = "Type of structural variant";
 
+    public static final String EVENT = "EVENT";
+    public static final String EVENT_DESC = "Linking SV event ID";
+
     public static final String MATE_ID = "MATEID";
+    public static final String MATE_ID_DESC = "Mate breakend ID";
 
     public static final String BEID = "BEID";
-    public static final String BEID_DESC = "BEID";
+    public static final String BEID_DESC = "Identifiers of assemblies supporting the variant";
 
     public static final String BEIDL = "BEIDL";
-    public static final String BEIDL_DESC = "BEIDL";
+    public static final String BEIDL_DESC = "Local alignment offset of corresponding BEID assembly";
+
+    public static final String BEIDH = "BEIDL";
+    public static final String BEIDH_DESC = "Remote alignment offset of corresponding BEID assembly";
+
+    public static final String BEALN = "BEALN";
+    public static final String BEALN_DESC = "Potential alignment locations of breakend sequence in the format chr:start|strand|cigar|mapq";
 
     public static final String HOMSEQ = "HOMSEQ";
-    public static final String HOMSEQ_DESC = "HOMSEQ";
+    public static final String HOMSEQ_DESC = "Sequence of base pair identical micro-homology at event breakpoints";
+
+    public static final String IHOMPOS = "IHOMPOS";
+    public static final String IHOMPOS_DESC = "Position of inexact homology";
 
     public static final String QUAL = "QUAL";
+    public static final String QUAL_DESC = "Quality score of breakend evidence";
 
-    public static final String SR = "SR";
-    public static final String SR_DESC = "SR";
-    // public static final String VT_EVENT = "EVENT";
+    public static final String SPLIT_READS = "SR";
+    public static final String SPLIT_READS_DESC = "Count of split reads supporting breakpoint";
+
+    public static final String DISCORDANT_READS = "DP";
+    public static final String DISCORDANT_READS_DESC = "Count of discordant reads supporting breakpoint";
 
     public static final String STRAND_BIAS = "SB";
     public static final String STRAND_BIAS_DESC = "SB";
+
+    public static final String SV_FRAG_COUNT = "VF";
+    public static final String SV_FRAG_COUNT_DESC = "Count of fragments supporting the variant breakpoint";
+
+    public static final String ANCHOR_SUPPORT_CIGAR = "SC";
+    public static final String ANCHOR_SUPPORT_CIGAR_DESC = "CIGAR of local anchor, one per assembly";
+
+    public static final String ANCHOR_SUPPORT_CIGAR_LENGTH = "SC_LEN";
+    public static final String ANCHOR_SUPPORT_CIGAR_LENGTH_DESC = "Length of local anchor CIGAR, one per assembly";
+
+
+    // Esvee only
+    public static final String MAPQ = "MAPQ";
+    public static final String MAPQ_DESC = "The anchor's mapping quality";
+
+    public static final String OVERHANG = "OVERHANG";
+    public static final String OVERHANG_DESC = "The minimum of the left & right overhang for this assembly";
+
+    public static final String ASSEMBLY = "ASSEMBLY";
+    public static final String ASSEMBLY_DESC = "The minimum of the left & right overhang for this assembly";
+
 
     // need to check
     public static final String IMPRECISE = "IMPRECISE";
     public static final String IMPRECISE_DESC = "Imprecise structural variation";
 
-    public static final String RP = "RP";
+    public static final String READ_PAIRS = "RP";
+    public static final String READ_PAIRS_DESC = "Count of read pairs supporting breakpoint";
+
     public static final String INDEL_COUNT = "IC";
 
     public static final String PAR_ID = "PARID";
@@ -46,27 +88,15 @@ public class SvVcfTags
     public static final String INS_SEQ = "SVINSSEQ";
     public static final String INS_SEQ_DESC = "SVINSSEQ";
 
-    public static final String IHOMPOS = "IHOMPOS";
-    public static final String IHOMPOS_DESC = "IHOMPOS";
-
-    public static final String ALLELE_FRACTION = "AF";
-    public static final String ALLELE_FRACTION_DESC = "Allele fraction";
-
-    public static final String SV_FRAG_COUNT = "VF";
-    public static final String SV_FRAG_COUNT_DESC = "VF";
-
     public static final String SGL_FRAG_COUNT = "BVF";
     public static final String SGL_FRAG_COUNT_DESC = "BVF";
 
-    public static final String EVENT = "EVENT";
 
-    public static final String UNTEMPLATED_SEQUENCE_ALIGNMENTS = "BEALN";
     public static final String UNTEMPLATED_SEQUENCE_REPEAT_CLASS = "INSRMRC";
     public static final String UNTEMPLATED_SEQUENCE_REPEAT_TYPE = "INSRMRT";
     public static final String UNTEMPLATED_SEQUENCE_REPEAT_ORIENTATION = "INSRMRO";
     public static final String UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE = "INSRMP";
 
-    public static final String ANCHOR_SUPPORT_CIGAR = "SC";
 
     // Gridss only
     public static final String GRIDSS_BQ = "BQ";
@@ -83,24 +113,6 @@ public class SvVcfTags
     public static final String GRIDSS_CAS = "CAS";
     public static final String GRIDSS_RAS = "RAS";
     public static final String GRIDSS_BSC = "BSC";
-
-    // public static final String VT_VF = SV_FRAGMENT_COUNT;
-    // public static final String VT_BVF = SGL_FRAGMENT_COUNT;
-    // public static final String VT_REF = REF_READ_COVERAGE;
-    // public static final String VT_REFPAIR = REF_READPAIR_COVERAGE;
-
-    // other links and info
-    // public static final String VT_IHOMPOS = IHOMPOS;
-    // public static final String VT_PAR_ID = PAR_ID;
-
-    // public static final String VT_CIPOS = CIPOS;
-    // public static final String VT_IMPRECISE = IMPRECISE;
-
-    // public static final String VT_LOCAL_LINKED_BY = LOCAL_LINKED_BY;
-    // public static final String VT_REMOTE_LINKED_BY = REMOTE_LINKED_BY;
-    // public static final String VT_PON_COUNT = PON_COUNT;
-    // public static final String VT_TAF = TAF;
-    // public static final String VT_HOTSPOT = HOTSPOT;
 
 
     // Esvee only
@@ -122,6 +134,9 @@ public class SvVcfTags
 
     public static final String REF_DEPTH_PAIR_DESC =
             "Count of reference read pairs spanning this breakend supporting the reference allele";
+
+    public static final String ALLELE_FRACTION = "AF";
+    public static final String ALLELE_FRACTION_DESC = "Allele fraction";
 
 
     // set by Gripss

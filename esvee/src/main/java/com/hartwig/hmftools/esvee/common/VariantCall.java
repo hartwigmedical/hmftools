@@ -6,10 +6,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
 import com.hartwig.hmftools.esvee.models.AssemblyClassification;
-import com.hartwig.hmftools.esvee.models.AssemblyClassificationType;
 import com.hartwig.hmftools.esvee.models.Record;
 import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
 
@@ -114,7 +114,7 @@ public class VariantCall
         RightMappingQuality = rightMappingQuality;
 
         if(LeftChromosome == null || RightChromosome == null)
-            Classification = new AssemblyClassification(AssemblyClassificationType.UNKNOWN, 0);
+            Classification = new AssemblyClassification(StructuralVariantType.SGL, 0);
         else
             Classification = classification;
 

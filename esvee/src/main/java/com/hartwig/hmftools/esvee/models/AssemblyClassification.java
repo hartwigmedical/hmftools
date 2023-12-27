@@ -1,13 +1,19 @@
 package com.hartwig.hmftools.esvee.models;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
+
 public class AssemblyClassification
 {
-    public final AssemblyClassificationType Type;
+    public final StructuralVariantType Type;
 
     /** The length of this event, if applicable. 0 otherwise */
     public final int Length;
 
-    public AssemblyClassification(final AssemblyClassificationType type, final int length)
+    public AssemblyClassification(final StructuralVariantType type, final int length)
     {
         Type = type;
         Length = length;
@@ -16,9 +22,9 @@ public class AssemblyClassification
     @Override
     public String toString()
     {
-        final boolean showLength = Type != AssemblyClassificationType.TRANSLOCATION
-                && Type != AssemblyClassificationType.INVERSION
-                && Type != AssemblyClassificationType.UNKNOWN;
-        return Type.name() + (showLength ? " " + Length : "");
+        if(Type != SGL && Type != BND && Type != INV)
+            return Type.toString();
+        else
+            return Type.name() + " " + Length;
     }
 }

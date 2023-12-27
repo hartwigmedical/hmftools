@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.INDEL_COUNT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.RP;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.READ_PAIRS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_READS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
@@ -235,7 +235,7 @@ public class SoftFiltersTest
         Map<String,Object> tumorOverrides = Maps.newHashMap();
 
         // short split read tumor
-        tumorOverrides.put(SR, 0);
+        tumorOverrides.put(SPLIT_READS, 0);
         tumorOverrides.put(INDEL_COUNT, 0);
         tumorOverrides.put(GRIDSS_ASSR, 0);
 
@@ -246,7 +246,7 @@ public class SoftFiltersTest
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
         // short split read normal
-        refOverrides.put(SR, 1);
+        refOverrides.put(SPLIT_READS, 1);
         refOverrides.put(INDEL_COUNT, 1);
 
         sv = createShortDel(commonOverrides, refOverrides, tumorOverrides);
@@ -256,10 +256,10 @@ public class SoftFiltersTest
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
         // discordant support
-        refOverrides.put(RP, 0);
+        refOverrides.put(READ_PAIRS, 0);
         refOverrides.put(GRIDSS_ASRP, 0);
         refOverrides.put(GRIDSS_ASSR, 0);
-        tumorOverrides.put(RP, 0);
+        tumorOverrides.put(READ_PAIRS, 0);
         tumorOverrides.put(GRIDSS_ASRP, 0);
         tumorOverrides.put(GRIDSS_ASSR, 0);
 

@@ -1,18 +1,59 @@
 package com.hartwig.hmftools.esvee.output;
 
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ANCHOR_SUPPORT_CIGAR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ANCHOR_SUPPORT_CIGAR_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ANCHOR_SUPPORT_CIGAR_LENGTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ANCHOR_SUPPORT_CIGAR_LENGTH_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASSEMBLY;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASSEMBLY_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEALN;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEALN_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEID;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEIDH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEIDH_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEIDL;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEIDL_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEID_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.DISCORDANT_READS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.DISCORDANT_READS_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.EVENT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.EVENT_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.LOCAL_LINKED_BY;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.LOCAL_LINKED_BY_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.MAPQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.MAPQ_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.OVERHANG;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.OVERHANG_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REMOTE_LINKED_BY;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REMOTE_LINKED_BY_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_READS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_READS_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT_DESC;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.filters.SoftFilters.applyFilters;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.models.AssemblyClassification;
+import com.hartwig.hmftools.esvee.filters.FilterType;
 import com.hartwig.hmftools.esvee.common.VariantAssembly;
 import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
 import com.hartwig.hmftools.esvee.common.VariantCall;
@@ -28,6 +69,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
@@ -51,38 +93,49 @@ public class VcfWriter implements AutoCloseable
                 .setReferenceDictionary(sequenceDictionary)
                 .build();
 
-        final VCFHeader header = new VCFHeader(new LinkedHashSet<>(List.of(
-                new VCFFilterHeaderLine("GERMLINE", "This variant has support in the reference sample"),
-                new VCFFilterHeaderLine("MULTIPLE_ASSEMBLIES", "Whether this variant is supported by multiple assemblies"),
-                new VCFFilterHeaderLine("LOW_OVERHANG", "If split-reads do not cover this variant sufficiently"),
-                new VCFFilterHeaderLine("LOW_QUALITY", "If this variant has a poor quality metric"),
-                new VCFFilterHeaderLine("LOW_SUPPORT", "If this variant has low support"),
-                new VCFFilterHeaderLine("LIKELY_FALSE", "If this variant is most likely a false-positive"),
-                new VCFInfoHeaderLine("EVENT", 1, VCFHeaderLineType.String, ""),
-                new VCFInfoHeaderLine("MATEID", 1, VCFHeaderLineType.String, ""),
-                new VCFInfoHeaderLine("CLASSIFICATION", 1, VCFHeaderLineType.String, ""),
-                new VCFInfoHeaderLine("SVTYPE", 1, VCFHeaderLineType.String, "Variant Type"),
-                new VCFInfoHeaderLine("GERMLINE_SUPPORT_CNT", 1, VCFHeaderLineType.Integer, "Amount of support in samples identified as germline"),
-                new VCFInfoHeaderLine("SOMATIC_SUPPORT_CNT", 1, VCFHeaderLineType.Integer, "Amount of support in samples not identified as germline"),
-                new VCFInfoHeaderLine("BEID", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Assembly Names"),
-                new VCFInfoHeaderLine("BEID_LEN", 1, VCFHeaderLineType.Integer, "The number of assemblies associated with this variant"),
-                new VCFInfoHeaderLine("BEIDL", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, "Local offset in assemblies (one per assembly)"),
-                new VCFInfoHeaderLine("BEIDH", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, "Remote offset in assemblies (one per assembly)"),
-                new VCFInfoHeaderLine("SC", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "CIGAR of local anchor (one per assembly)"),
-                new VCFInfoHeaderLine("SC_LEN", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, "Length of local anchor CIGAR (one per assembly)"),
-                new VCFInfoHeaderLine("LOCAL_LINKED_BY",  VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "ID of previous phased variant (one per assembly)"),
-                new VCFInfoHeaderLine("REMOTE_LINKED_BY", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "ID of next phased variant (one per assembly)"),
-                new VCFInfoHeaderLine("CIPOS", 2, VCFHeaderLineType.Integer, "If homology is present, the uncertainty window"),
-                new VCFInfoHeaderLine("HOMSEQ", 1, VCFHeaderLineType.String, "If homology is present, the bases contained in the uncertainty window"),
-                new VCFInfoHeaderLine("MAPQ", 1, VCFHeaderLineType.Integer, "The anchor's mapping quality"),
-                new VCFInfoHeaderLine("BEALN", 1, VCFHeaderLineType.String, "For singles, the potential alignments of the insert sequence"),
-                new VCFInfoHeaderLine("OVERHANG", 1, VCFHeaderLineType.Integer, "The minimum of the left & right overhang for this assembly"),
-                new VCFInfoHeaderLine("ASSEMBLY", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "The minimum of the left & right overhang for this assembly"),
-                new VCFFormatHeaderLine("DP", 1, VCFHeaderLineType.Integer, "The number of discordant fragments supporting this variant"),
-                new VCFFormatHeaderLine("QUAL", 1, VCFHeaderLineType.Integer, ""),
-                new VCFFormatHeaderLine("SR", 1, VCFHeaderLineType.Integer, "The number of split-read fragments supporting this variant"),
-                new VCFFormatHeaderLine("VF", 1, VCFHeaderLineType.Integer, "The sum of SR and DP")
-        )), new LinkedHashSet<>(sampleNames));
+        writeHeader(sampleNames);
+    }
+
+    private void writeHeader(final List<String> sampleNames)
+    {
+        // no longer written:
+        // new VCFFilterHeaderLine("GERMLINE", "This variant has support in the reference sample"),
+        // new VCFFilterHeaderLine("LIKELY_FALSE", "If this variant is most likely a false-positive"),
+        // new VCFInfoHeaderLine("CLASSIFICATION", 1, VCFHeaderLineType.String, ""),
+        // new VCFInfoHeaderLine("GERMLINE_SUPPORT_CNT", 1, VCFHeaderLineType.Integer, "Amount of support in samples identified as germline"),
+        // new VCFInfoHeaderLine("SOMATIC_SUPPORT_CNT", 1, VCFHeaderLineType.Integer, "Amount of support in samples not identified as germline"),
+        // new VCFInfoHeaderLine("BEID_LEN", 1, VCFHeaderLineType.Integer, "The number of assemblies associated with this variant"),
+
+        Set<VCFHeaderLine> metaData = Sets.newHashSet();
+
+        metaData.add(new VCFInfoHeaderLine(EVENT, 1, VCFHeaderLineType.String, EVENT_DESC));
+        metaData.add(new VCFInfoHeaderLine(MATE_ID, 1, VCFHeaderLineType.String, MATE_ID_DESC));
+        metaData.add(new VCFInfoHeaderLine(SVTYPE, 1, VCFHeaderLineType.String, SVTYPE_DESC));
+        metaData.add(new VCFInfoHeaderLine(BEID, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, BEID_DESC));
+        metaData.add(new VCFInfoHeaderLine(BEIDL, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, BEIDL_DESC));
+        metaData.add(new VCFInfoHeaderLine(BEIDH, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, BEIDH_DESC));
+        metaData.add(new VCFInfoHeaderLine(ANCHOR_SUPPORT_CIGAR, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, ANCHOR_SUPPORT_CIGAR_DESC));
+        metaData.add(new VCFInfoHeaderLine(ANCHOR_SUPPORT_CIGAR_LENGTH, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ANCHOR_SUPPORT_CIGAR_LENGTH_DESC));
+        metaData.add(new VCFInfoHeaderLine(LOCAL_LINKED_BY,  VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, LOCAL_LINKED_BY_DESC));
+        metaData.add(new VCFInfoHeaderLine(REMOTE_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, REMOTE_LINKED_BY_DESC));
+        metaData.add(new VCFInfoHeaderLine(CIPOS, 2, VCFHeaderLineType.Integer, CIPOS_DESC));
+        metaData.add(new VCFInfoHeaderLine(HOMSEQ, 1, VCFHeaderLineType.String, HOMSEQ_DESC));
+        metaData.add(new VCFInfoHeaderLine(MAPQ, 1, VCFHeaderLineType.Integer, MAPQ_DESC));
+        metaData.add(new VCFInfoHeaderLine(BEALN, 1, VCFHeaderLineType.String, BEALN_DESC));
+        metaData.add(new VCFInfoHeaderLine(OVERHANG, 1, VCFHeaderLineType.Integer, OVERHANG_DESC));
+        metaData.add(new VCFInfoHeaderLine(ASSEMBLY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, ASSEMBLY_DESC));
+
+        for(FilterType filter : FilterType.values())
+        {
+            metaData.add(new VCFFilterHeaderLine(filter.filterName(), filter.vcfDescription()));
+        }
+
+        metaData.add(new VCFFormatHeaderLine(DISCORDANT_READS, 1, VCFHeaderLineType.Integer, DISCORDANT_READS_DESC));
+        metaData.add(new VCFFormatHeaderLine(QUAL, 1, VCFHeaderLineType.Integer, QUAL_DESC));
+        metaData.add(new VCFFormatHeaderLine(SPLIT_READS, 1, VCFHeaderLineType.Integer, SPLIT_READS_DESC));
+        metaData.add(new VCFFormatHeaderLine(SV_FRAG_COUNT, 1, VCFHeaderLineType.Integer, SV_FRAG_COUNT_DESC));
+
+        final VCFHeader header = new VCFHeader(metaData, sampleNames);
 
         mWriter.writeHeader(header);
     }
@@ -116,42 +169,28 @@ public class VcfWriter implements AutoCloseable
         mWriter.close();
     }
 
-    private VariantContextBuilder variant(final VariantCall call, final int index, final boolean left)
+    private VariantContextBuilder variant(final VariantCall variantCall, final int index, final boolean left)
     {
-        final String callID = call.compactName();
-        final String chromosome = left ? call.LeftChromosome : call.RightChromosome;
-        final int position = left ? call.LeftPosition : call.RightPosition;
-        final String ref = left ? call.leftRef(mContext) : call.rightRef(mContext);
-        final String descriptor = left ? call.LeftDescriptor : call.RightDescriptor;
+        final String callID = variantCall.compactName();
+        final String chromosome = left ? variantCall.LeftChromosome : variantCall.RightChromosome;
+        final int position = left ? variantCall.LeftPosition : variantCall.RightPosition;
+        final String ref = left ? variantCall.leftRef(mContext) : variantCall.rightRef(mContext);
+        final String descriptor = left ? variantCall.LeftDescriptor : variantCall.RightDescriptor;
         assert descriptor != null;
-        final int mapQ = left ? call.LeftMappingQuality : call.RightMappingQuality;
-        final int overhang = call.overhang();
+        final int mapQ = left ? variantCall.LeftMappingQuality : variantCall.RightMappingQuality;
+        final int overhang = variantCall.overhang();
 
-        final List<Genotype> genotypes = call.sampleSupport().stream()
+        final List<Genotype> genotypes = variantCall.sampleSupport().stream()
                 .map(support -> new GenotypeBuilder(support.sampleName())
                         .DP(support.discordantPairFragmentCount())
-                        .attribute("QUAL", support.quality())
-                        .attribute("SR", support.splitReadFragmentCount())
-                        .attribute("VF", support.totalSupportFragmentCount())
+                        .attribute(QUAL, support.quality())
+                        .attribute(SPLIT_READS, support.splitReadFragmentCount())
+                        .attribute(SV_FRAG_COUNT, support.totalSupportFragmentCount())
                         .make())
                 .sorted(Comparator.comparing(Genotype::getSampleName))
                 .collect(Collectors.toList());
 
-        final Set<String> filters = new HashSet<>();
-        final boolean isLowOverhang = overhang < SvConstants.VCFLOWOVERHANGTHRESHOLD;
-        final boolean isLowQuality = call.quality() < SvConstants.VCFLOWQUALITYTHRESHOLD;
-        final boolean isLowSupport = call.supportingFragments().size() < SvConstants.MINREADSTOSUPPORTASSEMBLY;
-        final boolean isLikelyFalse = isLowSupport || (isLowOverhang && call.discordantSupport() == 0) || isLowQuality;
-        if(call.isGermline())
-            filters.add("GERMLINE");
-        if(call.associatedAssemblies().size() > 1)
-            filters.add("MULTIPLE_ASSEMBLIES");
-        if(isLowOverhang)
-            filters.add("LOW_OVERHANG");
-        if(isLowQuality)
-            filters.add("LOW_QUALITY");
-        if(isLowSupport)
-            filters.add("LOW_SUPPORT");
+        Set<String> filters = applyFilters(variantCall);
 
         final VariantContextBuilder builder = new VariantContextBuilder()
                 .id(callID + (index != 0 ? "_" + index : ""))
@@ -163,16 +202,16 @@ public class VcfWriter implements AutoCloseable
                 .genotypes(genotypes);
 
         if(index != 0)
-            builder.attribute("MATEID", callID + "_" + (index == 1 ? 2 : 1));
+            builder.attribute(MATE_ID, callID + "_" + (index == 1 ? 2 : 1));
 
         builder
-                .attribute("EVENT", callID)
-                .attribute("CLASSIFICATION", call.Classification.toString())
-                .attribute("SVTYPE", svType(call.Classification))
-                .attribute("GERMLINE_SUPPORT_CNT", call.germlineSupport())
-                .attribute("SOMATIC_SUPPORT_CNT", call.somaticSupport())
-                .attribute("MAPQ", mapQ)
-                .attribute("OVERHANG", overhang)
+                .attribute(EVENT, callID)
+                // .attribute("CLASSIFICATION", call.Classification.toString())
+                .attribute(SVTYPE, variantCall.Classification.Type.toString())
+                // .attribute("GERMLINE_SUPPORT_CNT", variantCall.germlineSupport())
+                // .attribute("SOMATIC_SUPPORT_CNT", variantCall.somaticSupport())
+                .attribute(MAPQ, mapQ)
+                .attribute(OVERHANG, overhang)
         ;
 
         final List<String> assemblyNames = new ArrayList<>();
@@ -184,7 +223,7 @@ public class VcfWriter implements AutoCloseable
         final List<Integer> anchorLeftCigarLengths = new ArrayList<>();
         final List<Integer> anchorRightCigarLengths = new ArrayList<>();
 
-        for(final VariantAssembly assembly : call.variantAssemblies())
+        for(final VariantAssembly assembly : variantCall.variantAssemblies())
         {
             assemblyNames.add(assembly.Assembly.Name);
             assemblyLeftIndices.add(assembly.LeftPosition);
@@ -202,20 +241,18 @@ public class VcfWriter implements AutoCloseable
             assemblies.add(assembly.Assembly.Assembly);
         }
 
-        builder.attribute("BEID", assemblyNames);
-        builder.attribute("BEID_LEN", assemblyNames.size());
-        builder.attribute("BEIDL", left ? assemblyLeftIndices : assemblyRightIndices);
-        builder.attribute("BEIDH", left ? assemblyRightIndices : assemblyLeftIndices);
-        builder.attribute("SC", left ? anchorLeftCigars : anchorRightCigars);
-        builder.attribute("SC_LEN", left ? anchorLeftCigarLengths : anchorRightCigarLengths);
+        builder.attribute(BEID, assemblyNames);
+        builder.attribute(BEIDL, left ? assemblyLeftIndices : assemblyRightIndices);
+        builder.attribute(BEIDH, left ? assemblyRightIndices : assemblyLeftIndices);
+        builder.attribute(ANCHOR_SUPPORT_CIGAR, left ? anchorLeftCigars : anchorRightCigars);
+        builder.attribute(ANCHOR_SUPPORT_CIGAR_LENGTH, left ? anchorLeftCigarLengths : anchorRightCigarLengths);
 
-        // FIXME-CHASHA:
-        builder.attribute("ASSEMBLY", assemblies);
-        // builder.attribute("ASSEMBLY", assemblies);
+        builder.attribute(ASSEMBLY, assemblies);
 
         return builder;
     }
 
+    /*
     private String svType(final AssemblyClassification classification)
     {
         switch(classification.Type)
@@ -235,4 +272,5 @@ public class VcfWriter implements AutoCloseable
         }
         throw new IllegalStateException("Invalid AssemblyClassification: " + classification);
     }
+    */
 }

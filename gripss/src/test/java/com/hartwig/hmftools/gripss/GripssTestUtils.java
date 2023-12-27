@@ -24,9 +24,9 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.PAR_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.RP;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.READ_PAIRS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_READS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -230,7 +230,7 @@ public class GripssTestUtils
         tumorAttributes.put(SV_FRAG_COUNT, 50);
         tumorAttributes.put(SGL_FRAG_COUNT, 50);
         tumorAttributes.put(GRIDSS_BSC, 100);
-        tumorAttributes.put(SR, 1);
+        tumorAttributes.put(SPLIT_READS, 1);
 
         if(refOverrides != null)
             refAttributes.putAll(refOverrides);
@@ -289,9 +289,9 @@ public class GripssTestUtils
         attributes.put(GRIDSS_BUMQ, 0);
 
         // read counts
-        attributes.put(SR, 1);
+        attributes.put(SPLIT_READS, 1);
         attributes.put(SV_FRAG_COUNT, 100);
-        attributes.put(RP, 1);
+        attributes.put(READ_PAIRS, 1);
         attributes.put(GRIDSS_ASRP, 1);
         attributes.put(GRIDSS_ASSR, 1);
         attributes.put(GRIDSS_BUM, 0);
@@ -329,9 +329,9 @@ public class GripssTestUtils
         attributes.put(GRIDSS_BUMQ, 0);
 
         // read counts
-        attributes.put(SR, 0);
+        attributes.put(SPLIT_READS, 0);
         attributes.put(SV_FRAG_COUNT, 1);
-        attributes.put(RP, 1);
+        attributes.put(READ_PAIRS, 1);
         attributes.put(GRIDSS_ASRP, 1);
         attributes.put(GRIDSS_ASSR, 1);
         attributes.put(GRIDSS_BUM, 0);

@@ -17,8 +17,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INDEL_COUNT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.RP;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.READ_PAIRS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_READS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -326,7 +326,7 @@ public class SoftFilters
 
     private static int getSplitReadCount(final Breakend breakend, final Genotype genotype)
     {
-        int splitReads = getGenotypeAttributeAsInt(genotype, SR, 0);
+        int splitReads = getGenotypeAttributeAsInt(genotype, SPLIT_READS, 0);
         int assemblySplitReads = getGenotypeAttributeAsInt(genotype, GRIDSS_ASSR, 0);
         int indelCount = getGenotypeAttributeAsInt(genotype, INDEL_COUNT, 0);
         return splitReads + assemblySplitReads + indelCount;
@@ -351,9 +351,9 @@ public class SoftFilters
         if(sv.type() != INV || sv.length() > HOM_INV_LENGTH)
             return false;
 
-        return getGenotypeAttributeAsInt(breakend.RefGenotype, RP, 0) == 0
+        return getGenotypeAttributeAsInt(breakend.RefGenotype, READ_PAIRS, 0) == 0
                 && getGenotypeAttributeAsInt(breakend.RefGenotype, GRIDSS_ASRP, 0) == 0
-                && getGenotypeAttributeAsInt(breakend.TumorGenotype, RP, 0) == 0
+                && getGenotypeAttributeAsInt(breakend.TumorGenotype, READ_PAIRS, 0) == 0
                 && getGenotypeAttributeAsInt(breakend.TumorGenotype, GRIDSS_ASRP, 0) == 0;
     }
 
