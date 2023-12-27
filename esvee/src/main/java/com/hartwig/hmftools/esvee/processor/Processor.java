@@ -319,9 +319,6 @@ public class Processor
         writer.close();
     }
 
-
-
-
     private Set<ExtendedAssembly> primaryPhasedMerging(final Set<ExtendedAssembly> primaryPhaseSet)
     {
         try

@@ -68,7 +68,7 @@ public class ReadRescue
             return record;
 
         //noinspection unchecked
-        final T clone = (T) record.copy();
+        final T clone = (T) record.copyRecord();
         clone.setBases(record.getBases(), newQuals);
         return clone;
     }

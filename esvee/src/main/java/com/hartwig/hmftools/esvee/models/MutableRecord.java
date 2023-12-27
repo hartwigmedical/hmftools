@@ -25,11 +25,11 @@ public interface MutableRecord extends IRecord
 
     void setPositiveStrand(final boolean isPositiveStrand);
 
-    MutableRecord copy();
+    MutableRecord copyRecord();
 
     default MutableRecord trimLeft(final int count)
     {
-        final MutableRecord clone = copy();
+        final MutableRecord clone = copyRecord();
         clone.setBases(Arrays.copyOfRange(getBases(), count, getLength()),
                 Arrays.copyOfRange(getBaseQuality(), count, getLength()));
         if(!clone.isUnmapped())
@@ -44,7 +44,7 @@ public interface MutableRecord extends IRecord
 
     default MutableRecord trimRight(final int count)
     {
-        final MutableRecord clone = copy();
+        final MutableRecord clone = copyRecord();
         clone.setBases(Arrays.copyOfRange(getBases(), 0, getLength() - count),
                 Arrays.copyOfRange(getBaseQuality(), 0, getLength() - count));
         if(!clone.isUnmapped())
@@ -53,14 +53,14 @@ public interface MutableRecord extends IRecord
         return clone;
     }
 
-    default MutableRecord flipStrand()
+    default MutableRecord flipRecord()
     {
         final byte[] readBases = getBases().clone();
         SequenceUtil.reverseComplement(readBases);
         final byte[] newQuals = getBaseQuality().clone();
         SequenceUtil.reverseQualities(newQuals);
 
-        final MutableRecord flipped = copy();
+        final MutableRecord flipped = copyRecord();
         flipped.setBases(readBases, newQuals);
         flipped.setPositiveStrand(!isPositiveStrand());
 

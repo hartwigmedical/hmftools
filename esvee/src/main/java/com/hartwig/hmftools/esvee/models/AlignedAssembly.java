@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.esvee.html.DiagramSet;
+
 import htsjdk.samtools.util.SequenceUtil;
 
 public class AlignedAssembly extends SupportedAssembly implements AlignedSequence
@@ -17,7 +19,10 @@ public class AlignedAssembly extends SupportedAssembly implements AlignedSequenc
         this(source.Assembly, source, alignment);
 
         for(final Map.Entry<Record, Integer> support : source.getSupport())
+        {
             addEvidenceAt(support.getKey(), support.getValue());
+        }
+
         recalculateBaseQuality();
     }
 
@@ -60,7 +65,8 @@ public class AlignedAssembly extends SupportedAssembly implements AlignedSequenc
             }
             else
             {
-                flippedAlignments.add(new Alignment(alignment.Chromosome, alignment.ReferenceStartPosition,
+                flippedAlignments.add(new Alignment(
+                        alignment.Chromosome, alignment.ReferenceStartPosition,
                         newStartIndex + 1,
                         alignment.Length, !alignment.Inverted, alignment.Quality));
             }
@@ -71,7 +77,7 @@ public class AlignedAssembly extends SupportedAssembly implements AlignedSequenc
 
         for(final Map.Entry<Record, Integer> support : getSupport())
         {
-            flipped.addEvidenceAt(support.getKey().flipStrand(),
+            flipped.addEvidenceAt(support.getKey().flipRecord(),
                     getLength() - support.getValue() - support.getKey().getLength());
         }
 

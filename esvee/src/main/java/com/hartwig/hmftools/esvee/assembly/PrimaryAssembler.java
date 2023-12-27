@@ -17,7 +17,7 @@ import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.models.DiagramSet;
+import com.hartwig.hmftools.esvee.html.DiagramSet;
 import com.hartwig.hmftools.esvee.models.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.models.Record;
 import com.hartwig.hmftools.esvee.sam.SAMSource;
@@ -256,7 +256,7 @@ public class PrimaryAssembler
                 for(int j = i; j < alignment.getCigar().numCigarElements(); j++)
                     newElements.add(alignment.getCigar().getCigarElement(j));
 
-                final Record newAlignment = alignment.copy();
+                final Record newAlignment = alignment.copyRecord();
                 newAlignment.setAlignmentStart(referencePosition);
                 newAlignment.setCigar(new Cigar(newElements));
                 return newAlignment;
@@ -275,7 +275,7 @@ public class PrimaryAssembler
                     newElements.add(alignment.getCigar().getCigarElement(j));
                 newElements.add(new CigarElement(softClippedLength, CigarOperator.S));
 
-                final Record newAlignment = alignment.copy();
+                final Record newAlignment = alignment.copyRecord();
                 newAlignment.setCigar(new Cigar(newElements));
                 return newAlignment;
             }

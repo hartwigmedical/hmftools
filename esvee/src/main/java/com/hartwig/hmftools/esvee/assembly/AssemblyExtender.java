@@ -21,7 +21,7 @@ import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.models.DiagramSet;
+import com.hartwig.hmftools.esvee.html.DiagramSet;
 import com.hartwig.hmftools.esvee.models.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.models.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.models.Record;
@@ -192,14 +192,16 @@ public class AssemblyExtender
                 .filter(Record::isMateOnTheLeft)
                 .collect(Collectors.toList()));
 
+        // note that this method flips the right read if this pair is an INV
         final List<Record> mates = pairedMates.stream()
                 .filter(pair -> !assembly.containsSupport(pair.getRight()))
                 .filter(pair -> AlignmentFilters.isRecordAverageQualityAbove(pair.getRight(), SvConstants.AVG_BASE_QUAL_THRESHOLD))
                 .map(pair -> pair.getLeft().isPositiveStrand() == pair.getRight().isPositiveStrand()
-                        ? pair.getRight().flipStrand()
+                        ? pair.getRight().flipRecord()
                         : pair.getRight())
                 .sorted(Comparator.comparingInt(Record::getUnclippedEnd).reversed())
                 .collect(Collectors.toList());
+
         mCounters.LeftMates.add(mates.size());
 
         discordantReads.sort(Comparator.comparingInt(Record::getUnclippedEnd).reversed());
@@ -242,7 +244,7 @@ public class AssemblyExtender
                 .filter(pair -> AlignmentFilters.isRecordAverageQualityAbove(pair.getRight(), SvConstants.AVG_BASE_QUAL_THRESHOLD))
                 .sorted(Comparator.comparingInt(pair -> assembly.getSupportIndex(pair.getLeft())))
                 .map(pair -> pair.getLeft().isPositiveStrand() == pair.getRight().isPositiveStrand()
-                        ? pair.getRight().flipStrand()
+                        ? pair.getRight().flipRecord()
                         : pair.getRight())
                 .collect(Collectors.toList());
         mCounters.RightMates.add(mates.size());
@@ -340,7 +342,7 @@ public class AssemblyExtender
         }
     }
 
-    /** Once we've built the graph, try and work out where in the flattened output different records may appear. */
+    // Once we've built the graph, try and work out where in the flattened output different records may appear
     private Map<Record, Set<Integer>> potentialSupportIndices(final HeadNode head)
     {
         final Map<Record, Set<Integer>> candidateLocations = new HashMap<>();

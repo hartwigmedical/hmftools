@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.hartwig.hmftools.esvee.models.DiagramSet;
+import com.hartwig.hmftools.esvee.html.DiagramSet;
 import com.hartwig.hmftools.esvee.models.Sequence;
 import com.hartwig.hmftools.esvee.models.SupportedAssembly;
 import com.hartwig.hmftools.esvee.processor.SequenceDecomposer;

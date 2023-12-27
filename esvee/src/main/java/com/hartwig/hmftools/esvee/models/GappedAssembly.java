@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.assembly.SupportChecker;
+import com.hartwig.hmftools.esvee.html.DiagramSet;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -61,12 +62,15 @@ public class GappedAssembly extends SupportedAssembly
         final List<ExtendedAssembly> newSources = Sources.stream()
                 .map(ExtendedAssembly::flipStrand)
                 .collect(Collectors.toList());
+
         Collections.reverse(newSources);
 
         final GappedAssembly flipped = new GappedAssembly(Name, newSources);
         for(final Map.Entry<Record, Integer> support : getSupport())
-            flipped.addEvidenceAt(support.getKey().flipStrand(),
+        {
+            flipped.addEvidenceAt(support.getKey().flipRecord(),
                     getLength() - support.getValue() - support.getKey().getLength());
+        }
         flipped.recalculateBaseQuality();
         return flipped;
     }

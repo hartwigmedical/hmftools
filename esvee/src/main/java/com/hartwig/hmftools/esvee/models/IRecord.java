@@ -60,11 +60,6 @@ public interface IRecord extends AlignedSequence, Cloneable
 
     <T> T getAttribute(final String name);
 
-    default int getAvgBaseQuality()
-    {
-        return getAvgBaseQuality(1, getLength());
-    }
-
     default int getAvgBaseQuality(final int startPosition, final int length)
     {
         final byte[] baseQualities = getBaseQuality();
@@ -96,6 +91,6 @@ public interface IRecord extends AlignedSequence, Cloneable
         return 0;
     }
 
-    IRecord copy();
+    IRecord copyRecord();
 }
 

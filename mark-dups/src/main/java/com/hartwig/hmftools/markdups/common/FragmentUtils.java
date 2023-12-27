@@ -156,7 +156,6 @@ public class FragmentUtils
                 read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
     }
 
-
     public static boolean overlapsExcludedRegion(final ChrBaseRegion excludedRegion, final SAMRecord read)
     {
         return excludedRegion != null

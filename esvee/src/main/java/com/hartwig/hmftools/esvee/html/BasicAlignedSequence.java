@@ -1,6 +1,9 @@
-package com.hartwig.hmftools.esvee.models;
+package com.hartwig.hmftools.esvee.html;
 
 import java.util.List;
+
+import com.hartwig.hmftools.esvee.models.AlignedSequence;
+import com.hartwig.hmftools.esvee.models.Alignment;
 
 public class BasicAlignedSequence implements AlignedSequence
 {
@@ -8,11 +11,6 @@ public class BasicAlignedSequence implements AlignedSequence
     private final byte[] mBases;
     private final byte[] mQuals;
     private final List<Alignment> mAlignment;
-
-    public BasicAlignedSequence(final byte[] bases, final byte[] quals, final List<Alignment> alignment)
-    {
-        this("Unnamed", bases, quals, alignment);
-    }
 
     public BasicAlignedSequence(final String name, final byte[] bases, final byte[] quals, final List<Alignment> alignment)
     {

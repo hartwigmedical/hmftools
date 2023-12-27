@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
 import com.hartwig.hmftools.esvee.models.AlignedSequence;
 import com.hartwig.hmftools.esvee.models.Alignment;
-import com.hartwig.hmftools.esvee.models.DiagramSet;
 import com.hartwig.hmftools.esvee.models.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.models.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.models.Record;

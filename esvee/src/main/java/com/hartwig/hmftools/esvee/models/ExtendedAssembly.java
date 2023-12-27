@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.esvee.html.DiagramSet;
+
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.util.SequenceUtil;
@@ -64,8 +66,10 @@ public class ExtendedAssembly extends SupportedAssembly implements TrimmableAsse
         final ExtendedAssembly flipped = new ExtendedAssembly(Name, assembly, Source);
 
         for(final Map.Entry<Record, Integer> support : getSupport())
-            flipped.addEvidenceAt(support.getKey().flipStrand(),
+        {
+            flipped.addEvidenceAt(support.getKey().flipRecord(),
                     getLength() - support.getValue() - support.getKey().getLength());
+        }
         flipped.recalculateBaseQuality();
         return flipped;
     }

@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.esvee.sam;
 
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.models.IRecord;
@@ -19,13 +18,6 @@ import htsjdk.samtools.CigarOperator;
 
 public class RecordNormaliser
 {
-    private static final Map<CigarOperator, CigarOperator> CIGAR_REMAP = Map.of(
-            CigarOperator.EQ, CigarOperator.M,
-            CigarOperator.X, CigarOperator.M,
-            CigarOperator.N, CigarOperator.D);
-
-    private static final Set<CigarOperator> BANNED_OPERATORS = Set.of(CigarOperator.P, CigarOperator.H);
-
     private final ReadRescue mReadRescue;
     private final PolyGTrimmer mPolyGTrimmer;
 
@@ -39,27 +31,6 @@ public class RecordNormaliser
 
         mSmallIndelMaxEdgeDistance = SvConstants.NORMALISERINDELMAXEDGEDISTANCE;
         mSmallIndelMinSizeToSoftClip = SvConstants.NORMALISERINDELMINSIZETOSOFTCLIP;
-    }
-
-    @VisibleForTesting
-    static Cigar remapCigar(final Cigar cigar)
-    {
-        final List<CigarElement> elements = new ArrayList<>();
-        for(final CigarElement original : cigar.getCigarElements())
-        {
-            final CigarElement remapped = new CigarElement(original.getLength(),
-                    CIGAR_REMAP.getOrDefault(original.getOperator(), original.getOperator()));
-
-            @Nullable
-            final CigarElement lastElement = elements.isEmpty() ? null : elements.get(elements.size() - 1);
-            if(lastElement != null && lastElement.getOperator() == remapped.getOperator())
-                elements.set(elements.size() - 1,
-                        new CigarElement(lastElement.getLength() + remapped.getLength(), lastElement.getOperator()));
-            else
-                elements.add(remapped);
-        }
-
-        return new Cigar(elements);
     }
 
     @Nullable
@@ -94,7 +65,7 @@ public class RecordNormaliser
                 normalised.getCigar().getCigarElement(2));
         if(newStart != null)
         {
-            normalised = record.copy();
+            normalised = record.copyRecord();
             final List<CigarElement> oldElements = normalised.getCigar().getCigarElements();
             final List<CigarElement> newElements = new ArrayList<>();
             newElements.add(newStart);
@@ -116,7 +87,7 @@ public class RecordNormaliser
                 normalised.getCigar().getCigarElement(normalised.getCigar().numCigarElements() - 3));
         if(newEnd != null)
         {
-            normalised = record.copy();
+            normalised = record.copyRecord();
             final List<CigarElement> oldElements = normalised.getCigar().getCigarElements();
             final List<CigarElement> newElements = new ArrayList<>();
             for(int i = 0; i < oldElements.size() - 2; i++)
@@ -144,6 +115,7 @@ public class RecordNormaliser
             CigarElement replacement = null;
             if(previous.getOperator() == CigarOperator.S)
             {
+                // why would there be 2 soft-clips in a row?
                 if(current.getOperator() == CigarOperator.S || current.getOperator() == CigarOperator.I)
                     replacement = new CigarElement(previous.getLength() + current.getLength(), CigarOperator.S);
             }
@@ -169,7 +141,9 @@ public class RecordNormaliser
         if(!modified)
             return record;
 
-        final MutableRecord normalised = record.copy();
+        SV_LOGGER.debug("clear cigar and copying read({})", record.getName());
+
+        final MutableRecord normalised = record.copyRecord();
         normalised.setCigar(new Cigar(elements));
         return normalised;
     }
@@ -189,22 +163,6 @@ public class RecordNormaliser
             return record;
 
         MutableRecord normalised = record;
-
-        boolean remap = false;
-        for(final CigarElement element : normalised.getCigar().getCigarElements())
-        {
-            if(BANNED_OPERATORS.contains(element.getOperator()))
-                return null;
-
-            if(CIGAR_REMAP.containsKey(element.getOperator()))
-                remap = true;
-        }
-
-        if(remap)
-        {
-            normalised = record.copy();
-            normalised.setCigar(remapCigar(normalised.getCigar()));
-        }
 
         normalised = softclipEdgeIndels(normalised);
         normalised = cleanCigar(normalised);

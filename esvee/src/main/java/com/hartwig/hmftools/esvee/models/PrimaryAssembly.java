@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.esvee.html.DiagramSet;
+
 import org.jetbrains.annotations.Nullable;
 
 public class PrimaryAssembly extends SupportedAssembly implements TrimmableAssembly<PrimaryAssembly>

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.models;
 
+import static java.lang.String.format;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,11 +27,10 @@ public class Record implements MutableRecord
         mRecord = record;
     }
 
+    public SAMRecord bamRecord() { return mRecord; }
+
     @Override
-    public String getName()
-    {
-        return mRecord.getReadName();
-    }
+    public String getName() { return mRecord.getReadName(); }
 
     @Override
     public boolean isUnmapped()
@@ -355,7 +356,7 @@ public class Record implements MutableRecord
     }
 
     @Override
-    public Record copy()
+    public Record copyRecord()
     {
         return new Record(mRecord.deepCopy());
     }
@@ -371,8 +372,15 @@ public class Record implements MutableRecord
     }
 
     @Override
-    public Record flipStrand()
+    public Record flipRecord()
     {
-        return (Record) MutableRecord.super.flipStrand();
+        return (Record) MutableRecord.super.flipRecord();
+    }
+
+    public static String readToString(final SAMRecord read)
+    {
+        return format("id(%s) coords(%s:%d-%d) cigar(%s) mate(%s:%d) flags(%d)",
+                read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
+                read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
     }
 }

@@ -66,10 +66,12 @@ public class SupportScanner
             return;
 
         if(assembly.tryAddSupport(mContext.SupportChecker, record))
+        {
             mExtraSupportCounter.add(1);
+        }
         else
         {
-            final Record inverted = record.flipStrand();
+            final Record inverted = record.flipRecord();
             if(assembly.tryAddSupport(mContext.SupportChecker, inverted))
                 mExtraSupportCounter.add(1);
         }
