@@ -319,15 +319,6 @@ public class Record implements MutableRecord
     }
 
     @Override
-    public void setUnmapped()
-    {
-        mRecord.setReadUnmappedFlag(true);
-        mRecord.setReferenceName(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME);
-        mRecord.setAlignmentStart(0);
-        mAlignment = null;
-    }
-
-    @Override
     public void setChromosome(final String chromosome)
     {
         mRecord.setReadUnmappedFlag(false);
@@ -341,12 +332,6 @@ public class Record implements MutableRecord
         mRecord.setReadUnmappedFlag(false);
         mRecord.setAlignmentStart(position);
         mAlignment = null;
-    }
-
-    @Override
-    public void setMappingQuality(final int mapQ)
-    {
-        mRecord.setMappingQuality(mapQ);
     }
 
     @Override
@@ -364,62 +349,9 @@ public class Record implements MutableRecord
     }
 
     @Override
-    public void setMateChromosome(final String chromosome)
-    {
-        mRecord.setMateUnmappedFlag(false);
-        mRecord.setReadPairedFlag(true);
-        mRecord.setMateReferenceName(chromosome);
-    }
-
-    @Override
-    public void setMateAlignmentStart(final int position)
-    {
-        mRecord.setMateUnmappedFlag(false);
-        mRecord.setReadPairedFlag(true);
-        mRecord.setMateAlignmentStart(position);
-    }
-
-    @Override
-    public void setMateUnmapped()
-    {
-        mRecord.setMateUnmappedFlag(true);
-    }
-
-    @Override
     public void setPositiveStrand(final boolean isPositiveStrand)
     {
         mRecord.setReadNegativeStrandFlag(!isPositiveStrand);
-    }
-
-    @Override
-    public void setMatePositiveStrand(final boolean isPositiveStrand)
-    {
-        mRecord.setMateNegativeStrandFlag(!isPositiveStrand);
-    }
-
-    @Override
-    public <T> void setAttribute(final String name, final T value)
-    {
-        mRecord.setAttribute(name, value);
-    }
-
-    @Override
-    public void setIsGermline(final boolean isGermline)
-    {
-        throw new IllegalStateException("Unsupported");
-    }
-
-    @Override
-    public void setReadPairedFlag(final boolean isPaired)
-    {
-        mRecord.setReadPairedFlag(isPaired);
-    }
-
-    @Override
-    public void setIsFirstOfPair(final boolean isFirstOfPair)
-    {
-        mRecord.setFirstOfPairFlag(isFirstOfPair);
-        mRecord.setSecondOfPairFlag(!isFirstOfPair);
     }
 
     @Override

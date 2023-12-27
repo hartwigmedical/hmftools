@@ -6,23 +6,8 @@ import java.util.List;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 
-public enum CigarUtils
+public final class CigarUtils
 {
-    ;
-
-    public static int unmappedStartBases(final Cigar cigar)
-    {
-        int unmappedBases = 0;
-        for(final CigarElement element : cigar.getCigarElements())
-        {
-            if (element.getOperator().consumesReferenceBases())
-                break;
-            unmappedBases += element.getLength();
-        }
-
-        return unmappedBases;
-    }
-
     public static Cigar trimLeft(final Cigar cigar, final int count)
     {
         final List<CigarElement> elements = new ArrayList<>(cigar.getCigarElements());

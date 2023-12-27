@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.models;
 
+import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -13,36 +15,15 @@ public interface MutableRecord extends IRecord
 {
     void setBases(final byte[] bases, final byte[] quals);
 
-    void setUnmapped();
-
     void setChromosome(final String chromosome);
 
     void setAlignmentStart(final int position);
-
-    void setMappingQuality(final int mapQ);
 
     void setCigar(final Cigar cigar);
 
     void setCigar(final String cigar);
 
-    void setMateChromosome(final String chromosome);
-
-    /** 0 for no alignment */
-    void setMateAlignmentStart(final int position);
-
-    void setMateUnmapped();
-
     void setPositiveStrand(final boolean isPositiveStrand);
-
-    void setMatePositiveStrand(final boolean isPositiveStrand);
-
-    <T> void setAttribute(final String name, final T value);
-
-    void setIsGermline(final boolean isGermline);
-
-    void setReadPairedFlag(final boolean isPaired);
-
-    void setIsFirstOfPair(final boolean isFirstOfPair);
 
     MutableRecord copy();
 
@@ -54,7 +35,7 @@ public interface MutableRecord extends IRecord
         if (!clone.isUnmapped())
         {
             clone.setCigar(CigarUtils.trimLeft(clone.getCigar(), count));
-            final int alignmentMove = Math.max(0, count - CigarUtils.unmappedStartBases(getCigar()));
+            final int alignmentMove = Math.max(0, count - leftSoftClipLength(getCigar()));
             clone.setAlignmentStart(getAlignmentStart() + alignmentMove);
         }
 

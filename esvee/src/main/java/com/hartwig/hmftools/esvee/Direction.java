@@ -1,11 +1,12 @@
 package com.hartwig.hmftools.esvee;
 
+import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
+import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
+
 public enum Direction
 {
     FORWARDS(1),
-    REVERSE(-1),
-    UNKNOWN(0),
-    ;
+    REVERSE(-1);
 
     public final int Step;
 
@@ -13,45 +14,9 @@ public enum Direction
         Step = step;
     }
 
-    public Direction opposite()
-    {
-        switch(this)
-        {
-            case FORWARDS:
-                return REVERSE;
-            case REVERSE:
-                return FORWARDS;
-            default:
-                return UNKNOWN;
-        }
-    }
+    public Direction opposite() { return this == FORWARDS ? REVERSE : FORWARDS; }
 
-    public String toShortString()
-    {
-        switch(this)
-        {
-            case FORWARDS:
-                return "F";
-            case REVERSE:
-                return "R";
-            default:
-                return "?";
-        }
-    }
+    public String toShortString() { return this == FORWARDS ? "F" : "R"; }
 
-    public static Direction parse(final String input) {
-        switch(input) {
-            case "FORWARDS":
-            case "1":
-                return Direction.FORWARDS;
-            case "REVERSE":
-            case "-1":
-                return Direction.REVERSE;
-            case "UNKNOWN":
-            case "0":
-                return Direction.UNKNOWN;
-            default:
-                throw new IllegalArgumentException("Cannot parse " + input + " as direction");
-        }
-    }
+    public byte toStrand() { return this == FORWARDS ? POS_STRAND : NEG_STRAND; }
 }

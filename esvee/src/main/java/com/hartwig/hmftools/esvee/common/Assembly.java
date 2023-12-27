@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.models;
+package com.hartwig.hmftools.esvee.common;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.hartwig.hmftools.esvee.models.DiagramSet;
+import com.hartwig.hmftools.esvee.models.Sequence;
+import com.hartwig.hmftools.esvee.models.SupportedAssembly;
 import com.hartwig.hmftools.esvee.processor.SequenceDecomposer;
 
 import org.jetbrains.annotations.Nullable;
@@ -27,13 +30,6 @@ public abstract class Assembly implements Sequence
         Name = name;
         Assembly = assembly;
         AssemblyBases = assembly.getBytes();
-    }
-
-    @Nullable
-    public <T> T getErrata(final Class<T> type)
-    {
-        final List<T> list = getAllErrata(type);
-        return list.size() >= 1 ? list.get(0) : null;
     }
 
     @SuppressWarnings("unchecked")
@@ -103,9 +99,9 @@ public abstract class Assembly implements Sequence
     @Override
     public List<SequenceDecomposer.Node> decompose()
     {
-        if (mDecomposition == null)
+        if(mDecomposition == null)
         {
-            if (this instanceof SupportedAssembly)
+            if(this instanceof SupportedAssembly)
                 mDecomposition = SequenceDecomposer.decompose((SupportedAssembly) this);
             else
                 mDecomposition = SequenceDecomposer.decompose(getBases(), getBaseQuality());

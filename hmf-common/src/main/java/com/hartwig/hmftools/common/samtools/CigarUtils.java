@@ -90,15 +90,19 @@ public final class CigarUtils
         return cigar.getCigarElements().get(cigar.getCigarElements().size() - 1).getOperator() == CigarOperator.S;
     }
 
-    public static int leftSoftClipLength(final SAMRecord record)
+    public static int leftSoftClipLength(final SAMRecord record) { return leftSoftClipLength(record.getCigar()); }
+
+    public static int rightSoftClipLength(final SAMRecord record) { return rightSoftClipLength(record.getCigar()); }
+
+    public static int leftSoftClipLength(final Cigar cigar)
     {
-        CigarElement firstElement = record.getCigar().getFirstCigarElement();
+        CigarElement firstElement = cigar.getFirstCigarElement();
         return (firstElement != null && firstElement.getOperator() == CigarOperator.S) ? firstElement.getLength() : 0;
     }
 
-    public static int rightSoftClipLength(final SAMRecord record)
+    public static int rightSoftClipLength(final Cigar cigar)
     {
-        CigarElement lastElement = record.getCigar().getLastCigarElement();
+        CigarElement lastElement = cigar.getLastCigarElement();
         return (lastElement != null && lastElement.getOperator() == CigarOperator.S) ? lastElement.getLength() : 0;
     }
 

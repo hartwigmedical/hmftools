@@ -22,6 +22,8 @@ import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.WriteType;
 import com.hartwig.hmftools.esvee.assembly.AssemblyExtender;
 import com.hartwig.hmftools.esvee.assembly.PrimaryAssembler;
+import com.hartwig.hmftools.esvee.common.SampleSupport;
+import com.hartwig.hmftools.esvee.common.VariantCall;
 import com.hartwig.hmftools.esvee.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
 import com.hartwig.hmftools.esvee.models.ExtendedAssembly;
@@ -79,7 +81,7 @@ public class Processor
     {
         try
         {
-            // for now merge all junctions into a single list - alternatives would be combined by proximty or chromosome
+            // for now merge all junctions into a single list - alternatives would be combined by proximity or chromosome
             List<Junction> allJunctions = Lists.newArrayList();
             mChrJunctionsMap.values().forEach(x -> allJunctions.addAll(x));
 
@@ -97,10 +99,10 @@ public class Processor
         return null;
     }
 
-    public List<VariantCall> run(final List<? extends Junction> junctions)
+    public List<VariantCall> run(final List<Junction> junctions)
     {
-        final long startTimeNanos = System.nanoTime();
         Counters.JunctionsProcessed.add(junctions.size());
+
         SV_LOGGER.info("starting primary assembly on {} junctions", junctions.size());
 
         // Primary Junction Assembly
@@ -295,7 +297,7 @@ public class Processor
     private void writeVCF(final List<VariantCall> variants)
     {
         final List<String> sampleNames = variants.stream()
-                .flatMap(call -> call.sampleSupport().stream().map(VariantCall.SampleSupport::sampleName))
+                .flatMap(call -> call.sampleSupport().stream().map(SampleSupport::sampleName))
                 .distinct()
                 .sorted()
                 .collect(Collectors.toList());

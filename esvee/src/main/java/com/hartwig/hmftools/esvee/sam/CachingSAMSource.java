@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.sam;
 
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -7,15 +9,12 @@ import java.util.stream.Stream;
 import com.hartwig.hmftools.esvee.models.Record;
 import com.hartwig.hmftools.esvee.util.ReadCache;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 public class CachingSAMSource implements SAMSource
 {
-    private static final Logger LOGGER = LogManager.getLogger(CachingSAMSource.class);
-
     private final SAMSource mInner;
+
     @Nullable
     private List<Record> mUnmappedReads;
 
@@ -71,8 +70,10 @@ public class CachingSAMSource implements SAMSource
             final int hits = mCache.CacheHits.get();
             final int misses = mCache.CacheMisses.get();
             if((hits + misses) % 10_000 == 0)
-                LOGGER.debug("Cache Hits: {}, Cache Misses: {}, Hit Rate: {}%",
+            {
+                SV_LOGGER.debug("Cache Hits: {}, Cache Misses: {}, Hit Rate: {}%",
                         hits, misses, String.format("%.2f", (100.0f * hits) / (hits + misses)));
+            }
         }
     }
 
@@ -81,7 +82,8 @@ public class CachingSAMSource implements SAMSource
     {
         final int hits = mCache.CacheHits.get();
         final int misses = mCache.CacheMisses.get();
-        LOGGER.info("Closing cache. Cache Hits: {}, Cache Misses: {}, Hit Rate: {}%",
+
+        SV_LOGGER.info("Closing cache. Cache Hits: {}, Cache Misses: {}, Hit Rate: {}%",
                 hits, misses, String.format("%.2f", (100.0f * hits) / (hits + misses)));
 
         mInner.close();

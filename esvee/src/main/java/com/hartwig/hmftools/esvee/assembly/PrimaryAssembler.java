@@ -172,9 +172,9 @@ public class PrimaryAssembler
                 .collect(Collectors.toSet());
         for(Record alignment : alignments)
         {
-            if (support.contains(alignment))
+            if(support.contains(alignment))
                 continue;
-            if (!mSupportChecker.WeakSupport.supports(assembly, alignment))
+            if(!mSupportChecker.WeakSupport.supports(assembly, alignment))
                 continue; // PERF: This should be supports-at
 
             graph = HeadNode.combine(graph, HeadNode.create(alignment, assembly.AnchorPosition, direction));
@@ -182,14 +182,14 @@ public class PrimaryAssembler
 
         final var diagrams = simplifyGraph("Initial Extension", graph, true);
         final List<String> flattened = graph.flatten();
-        if (flattened.size() * alignments.size() > 100_000)
+        if(flattened.size() * alignments.size() > 100_000)
             //throw new JunctionProcessingException("Too many flattened assemblies or alignments!");
             SV_LOGGER.info("{} got {} extensions & {} alignments for a product of {}",
                     assembly.getName(), flattened.size(), alignments.size(), flattened.size() * alignments.size());
         return Stream.concat(Stream.of(assembly), flattened.stream()
                 .map(assemblyBases ->
                 {
-                    if (direction == Direction.REVERSE)
+                    if(direction == Direction.REVERSE)
                         assemblyBases = new StringBuilder(assemblyBases).reverse().toString();
 
                     final int anchorPositionInAssembly = direction == Direction.FORWARDS
@@ -424,18 +424,18 @@ public class PrimaryAssembler
                 final Record record = entry.getKey();
                 final int supportIndex = entry.getValue();
                 final int newSupportIndex;
-                if (isForwards)
+                if(isForwards)
                     newSupportIndex = supportIndex + (anchoredAssembly.length() - initialAssembly.Assembly.length());
                 else
                     newSupportIndex = supportIndex;
 
-                if (mSupportChecker.WeakSupport.supportsAt(assembly, record, newSupportIndex))
+                if(mSupportChecker.WeakSupport.supportsAt(assembly, record, newSupportIndex))
                     assembly.addEvidenceAt(record, newSupportIndex);
                 else
                     assembly.tryAddSupport(mSupportChecker, record);
             }
 
-            if (assembly.getSupportFragments().size() > SvConstants.MINREADSTOSUPPORTASSEMBLY)
+            if(assembly.getSupportFragments().size() > SvConstants.MINREADSTOSUPPORTASSEMBLY)
                 anchoredAssemblies.add(assembly);
         }
 

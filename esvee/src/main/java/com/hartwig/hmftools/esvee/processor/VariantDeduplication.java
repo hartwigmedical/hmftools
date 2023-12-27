@@ -13,6 +13,9 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.Context;
+import com.hartwig.hmftools.esvee.common.SampleSupport;
+import com.hartwig.hmftools.esvee.common.VariantAssembly;
+import com.hartwig.hmftools.esvee.common.VariantCall;
 import com.hartwig.hmftools.esvee.models.Record;
 import com.hartwig.hmftools.esvee.util.ParallelMapper;
 
@@ -74,15 +77,15 @@ public class VariantDeduplication
         mCounters.MatchedGroupRemoved.add(variants.size());
 
         final Set<Integer> newPhaseSets = new HashSet<>();
-        final Set<VariantCall.VariantAssembly> newAssemblies = new HashSet<>();
-        final Map<String, List<VariantCall.SampleSupport>> sampleSupport = new LinkedHashMap<>();
+        final Set<VariantAssembly> newAssemblies = new HashSet<>();
+        final Map<String, List<SampleSupport>> sampleSupport = new LinkedHashMap<>();
         int leftMapQ = 0, rightMapQ = 0;
         for(final VariantCall call : variants)
         {
             newPhaseSets.addAll(call.PhaseSets);
             newAssemblies.addAll(call.variantAssemblies());
 
-            for(final VariantCall.SampleSupport support : call.sampleSupport())
+            for(final SampleSupport support : call.sampleSupport())
             {
                 sampleSupport.computeIfAbsent(support.sampleName(), __ -> new ArrayList<>())
                         .add(support);
@@ -92,12 +95,12 @@ public class VariantDeduplication
             rightMapQ = Math.max(rightMapQ, call.RightMappingQuality);
         }
 
-        final List<VariantCall.SampleSupport> newSampleSupport = new ArrayList<>();
-        for(final List<VariantCall.SampleSupport> sampleSupportList : sampleSupport.values())
+        final List<SampleSupport> newSampleSupport = new ArrayList<>();
+        for(final List<SampleSupport> sampleSupportList : sampleSupport.values())
         {
             final String sampleName = sampleSupportList.get(0).sampleName();
             final boolean isGermline = sampleSupportList.get(0).isGermline();
-            final int quality = sampleSupportList.stream().mapToInt(VariantCall.SampleSupport::quality).max().orElseThrow();
+            final int quality = sampleSupportList.stream().mapToInt(SampleSupport::quality).max().orElseThrow();
 
             final Set<Record> splitReads = sampleSupportList.stream()
                     .flatMap(s -> s.splitReads().stream())
@@ -107,7 +110,7 @@ public class VariantDeduplication
                     .filter(record -> !splitReads.contains(record))
                     .collect(Collectors.toSet());
 
-            newSampleSupport.add(new VariantCall.SampleSupport(sampleName, isGermline, quality, splitReads, discordantReads));
+            newSampleSupport.add(new SampleSupport(sampleName, isGermline, quality, splitReads, discordantReads));
         }
 
         final VariantCall existing = variants.get(0);
@@ -127,7 +130,7 @@ public class VariantDeduplication
         if(variant.associatedAssemblies().size() == 1)
             return variant;
 
-        final Map<Pair<String, Integer>, VariantCall.VariantAssembly> assemblies = variant.variantAssemblies().stream()
+        final Map<Pair<String, Integer>, VariantAssembly> assemblies = variant.variantAssemblies().stream()
                 .collect(Collectors.toMap(assembly -> Pair.of(assembly.Assembly.Assembly, assembly.LeftPosition),
                         assembly -> assembly, (left, right) ->
                         {
@@ -141,7 +144,7 @@ public class VariantDeduplication
                             return left;
                         }, LinkedHashMap::new));
 
-        final Set<VariantCall.VariantAssembly> newAssemblies = new LinkedHashSet<>(assemblies.values());
+        final Set<VariantAssembly> newAssemblies = new LinkedHashSet<>(assemblies.values());
         final int assembliesRemoved = variant.associatedAssemblies().size() - newAssemblies.size();
         if(assembliesRemoved == 0)
             return variant;

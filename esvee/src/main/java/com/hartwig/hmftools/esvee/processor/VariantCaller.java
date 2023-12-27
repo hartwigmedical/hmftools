@@ -12,6 +12,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.esvee.SvConstants;
+import com.hartwig.hmftools.esvee.common.SampleSupport;
+import com.hartwig.hmftools.esvee.common.VariantAssembly;
+import com.hartwig.hmftools.esvee.common.VariantCall;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
 import com.hartwig.hmftools.esvee.models.Alignment;
 import com.hartwig.hmftools.esvee.models.AssemblyClassification;
@@ -64,7 +67,7 @@ public class VariantCaller
             final Alignment nextValid = next.Chromosome.equals("-") ? null : next;
 
             @Nullable
-            final var call = createCandidate(assembly, previous, current, nextValid);
+            final VariantCall call = createCandidate(assembly, previous, current, nextValid);
             if(call != null)
                 calls.add(call);
         }
@@ -150,8 +153,8 @@ public class VariantCaller
         return String.valueOf((char) (invert ? SequenceUtil.complement(base) : base));
     }
 
-    private VariantCall buildTranslocation(final AlignedAssembly assembly,
-            final Alignment left, @Nullable final Alignment insert, final Alignment right)
+    private VariantCall buildTranslocation(
+            final AlignedAssembly assembly, final Alignment left, @Nullable final Alignment insert, final Alignment right)
     {
         final int leftEndSeqPosition = left.SequenceStartPosition + left.Length - 1;
         final int rightStartSeqPosition = right.SequenceStartPosition;
@@ -206,11 +209,12 @@ public class VariantCaller
     }
 
     @Nullable
-    private VariantCall tryCallInsertDeleteOrDuplication(final AlignedAssembly assembly,
-            final Alignment previous, @Nullable final Alignment current, final Alignment next)
+    private VariantCall tryCallInsertDeleteOrDuplication(
+            final AlignedAssembly assembly, final Alignment previous, @Nullable final Alignment current, final Alignment next)
     {
         if((current != null && current.isMapped()) || previous.isUnmapped() || next.isUnmapped())
             return null;
+
         if(!next.Chromosome.equals(previous.Chromosome) || next.Inverted != previous.Inverted)
             return null;
 
@@ -319,10 +323,14 @@ public class VariantCaller
     {
         final int leftEndSeqPosition = left.SequenceStartPosition + left.Length;
         final String leftAnchor = getAnchor(assembly, leftEndSeqPosition, left.Inverted);
-        final String insertSequence = assembly.subsequence(leftEndSeqPosition - 1, assembly.getLength() - leftEndSeqPosition - 1).getBasesString();
+
+        final String insertSequence = assembly.subsequence(
+                leftEndSeqPosition - 1, assembly.getLength() - leftEndSeqPosition - 1).getBasesString();
+
         final String leftDescriptor = leftAnchor + insertSequence + ".";
 
         final Support support = calculateSupport(assembly, left, null, insert);
+
         return build(left.Chromosome, endPosition(left, left.ReferenceStartPosition), null, 0,
                 leftDescriptor, null, assembly, left, null, insert, support, left.Quality, 0,
                 new AssemblyClassification(AssemblyClassificationType.UNKNOWN, 0));
@@ -349,23 +357,25 @@ public class VariantCaller
             @Nullable final Alignment insert, final Support support,
             final int leftQuality, final int rightQuality, final AssemblyClassification classification)
     {
-        if (leftChromosome != null && rightChromosome != null)
+        if(leftChromosome != null && rightChromosome != null)
         {
-            if (leftQuality < 30 && rightQuality >= 30)
+            if(leftQuality < 30 && rightQuality >= 30)
                 return buildSingleEndedRight(assembly, Objects.requireNonNullElse(insert, left), Objects.requireNonNull(right));
-            else if (leftQuality >= 30 && rightQuality < 30)
+            else if(leftQuality >= 30 && rightQuality < 30)
                 return buildSingleEndedLeft(assembly, Objects.requireNonNull(left), Objects.requireNonNullElse(insert, right));
         }
 
-        final List<VariantCall.SampleSupport> sampleSupport = partitionSupport(support);
+        final List<SampleSupport> sampleSupport = partitionSupport(support);
         final var anchors = mAnchorFactory.anchorCigar(assembly, left, right);
         final int leftOffset = left != null ? left.SequenceStartPosition + left.Length - 1 : 0;
         final int leftOverhang = left != null ? calculateLeftOverhang(assembly, leftOffset, support) : 0;
         final int rightOffset = right != null ? right.SequenceStartPosition : 0;
         final int rightOverhang = right != null ? calculateRightOverhang(assembly, rightOffset, support) : 0;
-        final VariantCall.VariantAssembly variantAssembly = VariantCall.VariantAssembly.create(assembly,
+
+        final VariantAssembly variantAssembly = VariantAssembly.create(assembly,
                 anchors.getLeft(), leftOffset, leftOverhang,
                 anchors.getRight(), rightOffset, rightOverhang);
+
         return VariantCall.create(leftChromosome, leftPosition, rightChromosome, rightPosition, leftDescriptor, rightDescriptor,
                 Set.of(1), Set.of(variantAssembly), leftQuality, rightQuality, sampleSupport, classification);
     }
@@ -377,7 +387,7 @@ public class VariantCaller
         {
             final int supportStartOffset = assembly.getSupportIndex(record) + 1;
             final int supportEndOffset = assembly.getSupportIndex(record) + record.getLength();
-            if (supportStartOffset > leftOffset || supportEndOffset < leftOffset)
+            if(supportStartOffset > leftOffset || supportEndOffset < leftOffset)
                 continue; // Doesn't cross left
             final int overhang = leftOffset - supportStartOffset + 1;
             maxOverhang = Math.max(overhang, maxOverhang);
@@ -392,7 +402,7 @@ public class VariantCaller
         {
             final int supportStartOffset = assembly.getSupportIndex(record) + 1;
             final int supportEndOffset = assembly.getSupportIndex(record) + record.getLength();
-            if (supportEndOffset < rightOffset || supportStartOffset > rightOffset)
+            if(supportEndOffset < rightOffset || supportStartOffset > rightOffset)
                 continue; // Doesn't cross right
             final int overhang = supportEndOffset - rightOffset + 1;
             maxOverhang = Math.max(overhang, maxOverhang);
@@ -455,7 +465,7 @@ public class VariantCaller
     private Set<Record> findDiscordantPairs(final AlignedAssembly assembly, @Nullable final Alignment left, @Nullable final Alignment right,
             @Nullable final Alignment insert, final Set<Record> splitReads)
     {
-        if (left == null || right == null)
+        if(left == null || right == null)
             return new HashSet<>();
 
         final Set<Record> support = intersectionSupport(
@@ -552,7 +562,7 @@ public class VariantCaller
         return support;
     }
 
-    private List<VariantCall.SampleSupport> partitionSupport(final Support support)
+    private List<SampleSupport> partitionSupport(final Support support)
     {
         final Map<String, Pair<Set<Record>, Set<Record>>> bySample = new LinkedHashMap<>();
 
@@ -567,7 +577,7 @@ public class VariantCaller
         for (final Record record : support.DiscordantSupport)
             bySample.get(record.sampleName()).getRight().add(record);
 
-        final List<VariantCall.SampleSupport> sampleSupport = new ArrayList<>();
+        final List<SampleSupport> sampleSupport = new ArrayList<>();
         for(Map.Entry<String, Pair<Set<Record>, Set<Record>>> entry : bySample.entrySet())
         {
             final String sampleName = entry.getKey();
@@ -577,7 +587,7 @@ public class VariantCaller
             final boolean isGermline = Stream.concat(splitReads.stream(), discordantReads.stream()).anyMatch(Record::isGermline);
             final int quality = splitReads.size() + discordantReads.size();
 
-            sampleSupport.add(new VariantCall.SampleSupport(sampleName, isGermline, quality, splitReads, discordantReads));
+            sampleSupport.add(new SampleSupport(sampleName, isGermline, quality, splitReads, discordantReads));
         }
 
         return sampleSupport;

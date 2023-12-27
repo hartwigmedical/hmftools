@@ -1,8 +1,7 @@
-package com.hartwig.hmftools.esvee.processor;
+package com.hartwig.hmftools.esvee.common;
 
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -16,8 +15,6 @@ import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
-
-import htsjdk.samtools.Cigar;
 
 public class VariantCall
 {
@@ -281,167 +278,4 @@ public class VariantCall
                 + "\"Support\": " + supportingFragments().size() + "\n}";
     }
 
-    public static class SampleSupport
-    {
-        private final String mSampleName;
-        private final boolean mIsGermline;
-        private final int mQuality;
-        private final Set<Record> mSplitReads;
-        private final Set<Record> mDiscordantReads;
-        private final int mSplitReadFragmentCount;
-        private final int mDiscordantPairFragmentCount;
-
-        public SampleSupport(final String sampleName, final boolean isGermline,
-                final int quality, final Set<Record> splitReads, final Set<Record> discordantReads)
-        {
-            mSampleName = sampleName;
-            mIsGermline = isGermline;
-            mQuality = quality;
-            mSplitReads = splitReads;
-            mDiscordantReads = discordantReads;
-
-            mSplitReadFragmentCount = (int) splitReads.stream().map(Record::getName).distinct().count();
-            mDiscordantPairFragmentCount = (int) discordantReads.stream().map(Record::getName).distinct().count();
-        }
-
-        public String sampleName()
-        {
-            return mSampleName;
-        }
-
-        public boolean isGermline()
-        {
-            return mIsGermline;
-        }
-
-        public int quality()
-        {
-            return mQuality;
-        }
-
-        public Set<Record> splitReads()
-        {
-            return mSplitReads;
-        }
-
-        public Set<Record> discordantReads()
-        {
-            return mDiscordantReads;
-        }
-
-        public int totalSupportFragmentCount()
-        {
-            return mSplitReadFragmentCount + mDiscordantPairFragmentCount;
-        }
-
-        public int splitReadFragmentCount()
-        {
-            return mSplitReadFragmentCount;
-        }
-
-        public int discordantPairFragmentCount()
-        {
-            return mDiscordantPairFragmentCount;
-        }
-    }
-
-    public static class VariantAssembly
-    {
-        public final AlignedAssembly Assembly;
-        @Nullable
-        public final Cigar LeftAnchorCigar;
-        @Nullable
-        public final Cigar RightAnchorCigar;
-        public final int LeftCigarLength;
-        public final int RightCigarLength;
-        /**
-         * Position in assembly
-         */
-        public final int LeftPosition;
-        /**
-         * Position in assembly
-         */
-        public final int RightPosition;
-        public final int LeftOverhang;
-        public final int RightOverhang;
-
-        public VariantAssembly(final AlignedAssembly assembly,
-                @Nullable final Cigar leftAnchorCigar,
-                final int leftCigarLength,
-                final int leftPosition,
-                final int leftOverhang,
-                @Nullable final Cigar rightAnchorCigar,
-                final int rightCigarLength,
-                final int rightPosition,
-                final int rightOverhang)
-        {
-            Assembly = assembly;
-            LeftAnchorCigar = leftAnchorCigar;
-            LeftCigarLength = leftCigarLength;
-            LeftPosition = leftPosition;
-            LeftOverhang = leftOverhang;
-            RightAnchorCigar = rightAnchorCigar;
-            RightCigarLength = rightCigarLength;
-            RightPosition = rightPosition;
-            RightOverhang = rightOverhang;
-        }
-
-        public static VariantAssembly create(final AlignedAssembly assembly,
-                @Nullable final Pair<Cigar, Integer> leftAnchor,
-                final int leftPosition, final int leftOverhang,
-                @Nullable final Pair<Cigar, Integer> rightAnchor,
-                final int rightPosition, final int rightOverhang)
-        {
-            return new VariantAssembly(
-                    assembly,
-                    leftAnchor == null ? null : leftAnchor.getKey(),
-                    leftAnchor == null ? 0 : leftAnchor.getValue(),
-                    leftPosition, leftOverhang,
-                    rightAnchor == null ? null : rightAnchor.getKey(),
-                    rightAnchor == null ? 0 : rightAnchor.getValue(),
-                    rightPosition, rightOverhang
-            );
-        }
-
-        public VariantAssembly reverse()
-        {
-            return new VariantAssembly(Assembly,
-                    RightAnchorCigar,
-                    RightCigarLength,
-                    RightPosition,
-                    RightOverhang,
-                    LeftAnchorCigar,
-                    LeftCigarLength,
-                    LeftPosition,
-                    LeftOverhang);
-        }
-
-        @Override
-        public boolean equals(final Object o)
-        {
-            if(this == o)
-                return true;
-            else if(o == null || getClass() != o.getClass())
-                return false;
-
-            final VariantAssembly that = (VariantAssembly) o;
-            return LeftCigarLength == that.LeftCigarLength && LeftPosition == that.LeftPosition
-                    && RightCigarLength == that.RightCigarLength && RightPosition == that.RightPosition
-                    && Assembly.equals(that.Assembly)
-                    && Objects.equals(LeftAnchorCigar, that.LeftAnchorCigar) && Objects.equals(RightAnchorCigar, that.RightAnchorCigar);
-        }
-
-        @Override
-        public int hashCode()
-        {
-            int result = Assembly.hashCode();
-            result = 31 * result + (LeftAnchorCigar != null ? LeftAnchorCigar.hashCode() : 0);
-            result = 31 * result + (RightAnchorCigar != null ? RightAnchorCigar.hashCode() : 0);
-            result = 31 * result + LeftCigarLength;
-            result = 31 * result + RightCigarLength;
-            result = 31 * result + LeftPosition;
-            result = 31 * result + RightPosition;
-            return result;
-        }
-    }
 }

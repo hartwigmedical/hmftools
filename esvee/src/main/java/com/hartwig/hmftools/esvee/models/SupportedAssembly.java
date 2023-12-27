@@ -7,25 +7,27 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import com.hartwig.hmftools.esvee.common.Assembly;
 import com.hartwig.hmftools.esvee.util.SizedIterable;
 import com.hartwig.hmftools.esvee.assembly.SupportChecker;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
-public class SupportedAssembly extends Assembly
+public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembly
 {
-    private final Map<String, SupportEntry> mSupport = new HashMap<>();
+    private final Map<String,SupportEntry> mSupport;
     private int mSupportCount;
 
     private final byte[] mBaseQuality;
-    private boolean mBaseQualityStale = true;
+    private boolean mBaseQualityStale;
     private byte mAverageBaseQuality;
 
     public SupportedAssembly(final String name, final String assembly)
     {
         super(name, assembly);
-
+        mSupport = new HashMap<>();
+        mBaseQualityStale = true;
         mBaseQuality = new byte[Assembly.length()];
     }
 
@@ -50,7 +52,7 @@ public class SupportedAssembly extends Assembly
         final int[] baseQualitySupporting = new int[Assembly.length()];
         final int[] baseQualityContradicting = new int[Assembly.length()];
 
-        for (final Map.Entry<Record, Integer> entry : getSupport())
+        for(final Map.Entry<Record, Integer> entry : getSupport())
         {
             final Record record = entry.getKey();
             final int supportIndex = entry.getValue();
@@ -78,10 +80,10 @@ public class SupportedAssembly extends Assembly
 
     public boolean tryAddSupport(final SupportChecker checker, final Record record, final int suggestedIndex)
     {
-        if (containsSupport(record))
+        if(containsSupport(record))
             return true;
 
-        if (checker.WeakSupport.supportsAt(this, record, suggestedIndex))
+        if(checker.WeakSupport.supportsAt(this, record, suggestedIndex))
         {
             addEvidenceAt(record, suggestedIndex);
             return true;
@@ -95,7 +97,7 @@ public class SupportedAssembly extends Assembly
         @Nullable
         final Integer index = checker.WeakSupport.supportIndex(this, record);
 
-        if (index == null)
+        if(index == null)
             return false;
 
         addEvidenceAt(record, index);
@@ -104,7 +106,7 @@ public class SupportedAssembly extends Assembly
 
     public void addEvidenceAt(final Record record, final int supportIndex)
     {
-        if (containsSupport(record, supportIndex))
+        if(containsSupport(record, supportIndex))
             return;
 
         mBaseQualityStale = true;
@@ -112,23 +114,17 @@ public class SupportedAssembly extends Assembly
         mSupportCount++;
     }
 
-    public Set<String> getSupportFragments()
-    {
-        return mSupport.keySet();
-    }
-
-    public int supportCount()
-    {
-        return mSupportCount;
-    }
+    public Set<String> getSupportFragments() { return mSupport.keySet(); }
+    
+    public int supportCount() { return mSupportCount; }
 
     public boolean containsSupport(final Record record)
     {
         @Nullable
         SupportEntry existingEntry = mSupport.get(record.getName());
-        while (existingEntry != null)
+        while(existingEntry != null)
         {
-            if (existingEntry.Record.equals(record))
+            if(existingEntry.Record.equals(record))
                 return true;
             existingEntry = existingEntry.Next;
         }
@@ -140,9 +136,9 @@ public class SupportedAssembly extends Assembly
     {
         @Nullable
         SupportEntry existingEntry = mSupport.get(record.getName());
-        while (existingEntry != null)
+        while(existingEntry != null)
         {
-            if (existingEntry.Record.equals(record) && existingEntry.SupportIndex == index)
+            if(existingEntry.Record.equals(record) && existingEntry.SupportIndex == index)
                 return true;
             existingEntry = existingEntry.Next;
         }
@@ -236,14 +232,14 @@ public class SupportedAssembly extends Assembly
 
     public void recalculateBaseQuality()
     {
-        if (!mBaseQualityStale)
+        if(!mBaseQualityStale)
             return;
 
         final byte[] maxBaseQualitySupporting = new byte[Assembly.length()];
         final int[] baseQualitySupporting = new int[Assembly.length()];
         final int[] baseQualityContradicting = new int[Assembly.length()];
 
-        for (final Map.Entry<Record, Integer> entry : getSupport())
+        for(final Map.Entry<Record, Integer> entry : getSupport())
         {
             final Record record = entry.getKey();
             final int supportIndex = entry.getValue();
@@ -265,7 +261,9 @@ public class SupportedAssembly extends Assembly
                     baseQualitySupporting[assemblyOffset + i] += evidenceQuality;
                 }
                 else
+                {
                     baseQualityContradicting[assemblyOffset + i] += evidenceQuality;
+                }
             }
         }
 
@@ -314,7 +312,7 @@ public class SupportedAssembly extends Assembly
         public String toString()
         {
             final String core = String.valueOf(SupportIndex);
-            if (Next == null)
+            if(Next == null)
                 return core;
             else
                 return core + "&" + Next;

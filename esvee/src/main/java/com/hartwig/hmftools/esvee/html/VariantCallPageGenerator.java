@@ -14,7 +14,8 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
 import com.hartwig.hmftools.esvee.assembly.JunctionMetrics;
 import com.hartwig.hmftools.esvee.assembly.SupportChecker;
-import com.hartwig.hmftools.esvee.processor.VariantCall;
+import com.hartwig.hmftools.esvee.common.VariantAssembly;
+import com.hartwig.hmftools.esvee.common.VariantCall;
 
 import org.apache.commons.compress.utils.IOUtils;
 
@@ -100,7 +101,7 @@ public final class VariantCallPageGenerator
                 .append("<th>Source</th>")
                 .append("<th>Assembly</th></tr>\n");
         int index = 0;
-        for (final VariantCall.VariantAssembly assembly : call.variantAssemblies())
+        for (final VariantAssembly assembly : call.variantAssemblies())
             builder.append("<tr><td>").append(++index).append("</td>")
                     .append("<td>").append(assembly.Assembly.Assembly.length()).append("</td>")
                     .append("<td>").append("%s", assembly.Assembly.getSupportFragments().size()).append("</td>")

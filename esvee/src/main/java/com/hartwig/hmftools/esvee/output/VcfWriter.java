@@ -13,8 +13,9 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.models.AssemblyClassification;
+import com.hartwig.hmftools.esvee.common.VariantAssembly;
 import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
-import com.hartwig.hmftools.esvee.processor.VariantCall;
+import com.hartwig.hmftools.esvee.common.VariantCall;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.variant.variantcontext.Genotype;
@@ -184,7 +185,7 @@ public class VcfWriter implements AutoCloseable
         final List<Integer> anchorLeftCigarLengths = new ArrayList<>();
         final List<Integer> anchorRightCigarLengths = new ArrayList<>();
 
-        for (final VariantCall.VariantAssembly assembly : call.variantAssemblies())
+        for (final VariantAssembly assembly : call.variantAssemblies())
         {
             assemblyNames.add(assembly.Assembly.Name);
             assemblyLeftIndices.add(assembly.LeftPosition);

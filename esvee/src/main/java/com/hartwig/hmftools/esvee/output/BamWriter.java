@@ -24,7 +24,8 @@ import com.hartwig.hmftools.esvee.assembly.JunctionMetrics;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
 import com.hartwig.hmftools.esvee.models.Alignment;
 import com.hartwig.hmftools.esvee.models.Record;
-import com.hartwig.hmftools.esvee.processor.VariantCall;
+import com.hartwig.hmftools.esvee.common.VariantAssembly;
+import com.hartwig.hmftools.esvee.common.VariantCall;
 import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
 
 import org.jetbrains.annotations.Nullable;
@@ -103,7 +104,7 @@ public class BamWriter
                     .map(Record::getName)
                     .collect(Collectors.toSet());
 
-            for(VariantCall.VariantAssembly variantAssembly : call.variantAssemblies())
+            for(VariantAssembly variantAssembly : call.variantAssemblies())
             {
                 final AlignedAssembly assembly = variantAssembly.Assembly;
                 final List<VariantBAMRecord> assemblyRecords = recordsByAssemblyName.computeIfAbsent(assembly.Name, __ ->

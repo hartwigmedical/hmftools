@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.WriteType;
-import com.hartwig.hmftools.esvee.processor.VariantCall;
+import com.hartwig.hmftools.esvee.common.VariantCall;
 
 public class ResultsWriter
 {

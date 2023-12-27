@@ -28,11 +28,6 @@ public interface Sequence
         return (byte) (sum / getLength());
     }
 
-    default String getBaseQualityString()
-    {
-        return SAMUtils.phredToFastq(getBaseQuality());
-    }
-
     default int getLength()
     {
         return getBases().length;

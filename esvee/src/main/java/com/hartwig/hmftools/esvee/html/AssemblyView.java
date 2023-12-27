@@ -28,7 +28,7 @@ import com.hartwig.hmftools.esvee.assembly.JunctionMetrics;
 import com.hartwig.hmftools.esvee.assembly.PrimaryAssemblerCounters;
 import com.hartwig.hmftools.esvee.assembly.SupportChecker;
 import com.hartwig.hmftools.esvee.mermaid.Flowchart;
-import com.hartwig.hmftools.esvee.processor.VariantCall;
+import com.hartwig.hmftools.esvee.common.VariantCall;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
