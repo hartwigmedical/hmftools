@@ -2,7 +2,7 @@ package com.hartwig.hmftools.esvee.processor;
 
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.models.Sequence;
+import com.hartwig.hmftools.esvee.sequence.Sequence;
 
 import org.apache.commons.lang3.tuple.Pair;
 

@@ -16,11 +16,11 @@ import com.hartwig.hmftools.common.samtools.CigarUtils;
 import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.models.AlignedAssembly;
-import com.hartwig.hmftools.esvee.models.Alignment;
-import com.hartwig.hmftools.esvee.models.ExtendedAssembly;
-import com.hartwig.hmftools.esvee.models.GappedAssembly;
-import com.hartwig.hmftools.esvee.models.Sequence;
+import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
+import com.hartwig.hmftools.esvee.sequence.Alignment;
+import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;
+import com.hartwig.hmftools.esvee.sequence.GappedAssembly;
+import com.hartwig.hmftools.esvee.sequence.Sequence;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;

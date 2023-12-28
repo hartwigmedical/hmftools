@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import com.hartwig.hmftools.esvee.models.AlignedAssembly;
-import com.hartwig.hmftools.esvee.models.Alignment;
+import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
+import com.hartwig.hmftools.esvee.sequence.Alignment;
 
 public enum AlignmentPostProcessor
 {

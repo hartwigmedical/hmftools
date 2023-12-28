@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.models;
+package com.hartwig.hmftools.esvee.sequence;
 
 import static com.hartwig.hmftools.esvee.read.ReadUtils.flipRead;
 

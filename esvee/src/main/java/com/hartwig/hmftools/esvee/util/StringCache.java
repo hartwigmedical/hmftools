@@ -5,15 +5,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public enum StringCache
+public final class StringCache
 {
-    ;
     private static final String[] INTEGERS = new String[1000];
     private static SoftReference<Map<String, String>> mStrings = new SoftReference<>(new HashMap<>());
 
     // This is dumb but saves substantial memory.
-    public static String of(final char c) {
-        switch(c) {
+    public static String of(final char c)
+    {
+        switch(c)
+        {
             case 'A':
                 return "A";
             case 'T':
@@ -26,10 +27,12 @@ public enum StringCache
         return String.valueOf(c);
     }
 
-    public static String of(final int i) {
+    public static String of(final int i)
+    {
         if(i < INTEGERS.length)
         {
-            if(INTEGERS[i] == null) {
+            if(INTEGERS[i] == null)
+            {
                 INTEGERS[i] = String.valueOf(i);
             }
 
@@ -43,7 +46,9 @@ public enum StringCache
     public static String tryDedupe(final String s)
     {
         if(s == null)
+        {
             return null;
+        }
 
         Map<String, String> dedupeMap = mStrings.get();
         if(dedupeMap == null)
@@ -53,7 +58,9 @@ public enum StringCache
         }
 
         if(dedupeMap.size() > 10_000)
+        {
             dedupeMap.clear();
+        }
 
         return Objects.requireNonNullElse(dedupeMap.putIfAbsent(s, s), s);
     }

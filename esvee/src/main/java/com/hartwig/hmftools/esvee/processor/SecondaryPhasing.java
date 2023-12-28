@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.esvee.models.SupportedAssembly;
+import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 
 public enum SecondaryPhasing
 {

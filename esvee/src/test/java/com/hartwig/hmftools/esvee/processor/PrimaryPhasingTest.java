@@ -2,7 +2,7 @@ package com.hartwig.hmftools.esvee.processor;
 
 import java.util.Arrays;
 
-import com.hartwig.hmftools.esvee.models.SupportedAssembly;
+import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 
 public class PrimaryPhasingTest
 {

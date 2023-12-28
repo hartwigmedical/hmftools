@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import java.util.Arrays;
-import java.util.Map;
 
-import com.hartwig.hmftools.esvee.TestUtils;
-import com.hartwig.hmftools.esvee.models.Sequence;
+import com.hartwig.hmftools.esvee.sequence.Sequence;
 
 public class SupportCheckerTest
 {

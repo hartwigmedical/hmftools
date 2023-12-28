@@ -2,7 +2,7 @@ package com.hartwig.hmftools.esvee.common;
 
 import java.util.Objects;
 
-import com.hartwig.hmftools.esvee.models.AlignedAssembly;
+import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;

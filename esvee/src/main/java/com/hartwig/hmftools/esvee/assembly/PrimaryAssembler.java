@@ -18,7 +18,7 @@ import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.html.DiagramSet;
-import com.hartwig.hmftools.esvee.models.PrimaryAssembly;
+import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.read.SAMSource;
 import com.hartwig.hmftools.esvee.util.Counter;
@@ -27,7 +27,6 @@ import com.hartwig.hmftools.esvee.processor.Problem;
 
 import org.jetbrains.annotations.Nullable;
 
-import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 

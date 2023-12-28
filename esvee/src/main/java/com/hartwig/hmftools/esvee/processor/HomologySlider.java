@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.esvee.models.AlignedAssembly;
-import com.hartwig.hmftools.esvee.models.Alignment;
+import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
+import com.hartwig.hmftools.esvee.sequence.Alignment;
 
 /** This slides everything left for deduplication purposes, we will slide it back to the center in a later step */
 public class HomologySlider

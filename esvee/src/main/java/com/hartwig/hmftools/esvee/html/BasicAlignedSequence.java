@@ -2,8 +2,8 @@ package com.hartwig.hmftools.esvee.html;
 
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.models.AlignedSequence;
-import com.hartwig.hmftools.esvee.models.Alignment;
+import com.hartwig.hmftools.esvee.sequence.AlignedSequence;
+import com.hartwig.hmftools.esvee.sequence.Alignment;
 
 public class BasicAlignedSequence implements AlignedSequence
 {

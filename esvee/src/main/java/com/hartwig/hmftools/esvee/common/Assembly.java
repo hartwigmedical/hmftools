@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.hartwig.hmftools.esvee.html.DiagramSet;
-import com.hartwig.hmftools.esvee.models.Sequence;
-import com.hartwig.hmftools.esvee.models.SupportedAssembly;
+import com.hartwig.hmftools.esvee.sequence.Sequence;
+import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 import com.hartwig.hmftools.esvee.processor.SequenceDecomposer;
 
 import org.jetbrains.annotations.Nullable;

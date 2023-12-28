@@ -19,9 +19,8 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.models.Alignment;
 import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.models.SupportedAssembly;
+import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 import com.hartwig.hmftools.esvee.read.ReadUtils;
 
 import org.apache.commons.lang3.tuple.Pair;

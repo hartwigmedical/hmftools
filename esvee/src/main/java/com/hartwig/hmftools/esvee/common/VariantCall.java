@@ -8,8 +8,8 @@ import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.Context;
-import com.hartwig.hmftools.esvee.models.AlignedAssembly;
-import com.hartwig.hmftools.esvee.models.AssemblyClassification;
+import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
+import com.hartwig.hmftools.esvee.sequence.AssemblyClassification;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.models;
+package com.hartwig.hmftools.esvee.sequence;
 
 import java.util.ArrayList;
 import java.util.List;

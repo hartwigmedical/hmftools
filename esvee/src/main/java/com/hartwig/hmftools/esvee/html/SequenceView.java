@@ -12,10 +12,10 @@ import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.esvee.models.AlignedSequence;
-import com.hartwig.hmftools.esvee.models.Alignment;
-import com.hartwig.hmftools.esvee.models.Sequence;
-import com.hartwig.hmftools.esvee.models.SimpleSequence;
+import com.hartwig.hmftools.esvee.sequence.AlignedSequence;
+import com.hartwig.hmftools.esvee.sequence.Alignment;
+import com.hartwig.hmftools.esvee.sequence.Sequence;
+import com.hartwig.hmftools.esvee.sequence.SimpleSequence;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;

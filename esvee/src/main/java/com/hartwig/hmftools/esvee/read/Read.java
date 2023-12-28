@@ -7,9 +7,8 @@ import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.models.AlignedSequence;
-import com.hartwig.hmftools.esvee.models.Alignment;
-import com.hartwig.hmftools.esvee.models.Sequence;
+import com.hartwig.hmftools.esvee.sequence.Alignment;
+import com.hartwig.hmftools.esvee.sequence.Sequence;
 import com.hartwig.hmftools.esvee.processor.SequenceDecomposer;
 
 import htsjdk.samtools.Cigar;

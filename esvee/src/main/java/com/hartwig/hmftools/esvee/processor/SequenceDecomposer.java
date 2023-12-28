@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.models.Sequence;
-import com.hartwig.hmftools.esvee.models.SupportedAssembly;
+import com.hartwig.hmftools.esvee.sequence.Sequence;
+import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 
 import org.jetbrains.annotations.Nullable;
 

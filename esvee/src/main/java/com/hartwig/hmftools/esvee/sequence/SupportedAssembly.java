@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.models;
+package com.hartwig.hmftools.esvee.sequence;
 
 import java.util.AbstractMap;
 import java.util.HashMap;

@@ -7,8 +7,8 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.common.RegionOfInterest;
-import com.hartwig.hmftools.esvee.models.AlignedAssembly;
-import com.hartwig.hmftools.esvee.models.Alignment;
+import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
+import com.hartwig.hmftools.esvee.sequence.Alignment;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.util.Counter;
 

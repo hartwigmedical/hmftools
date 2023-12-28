@@ -7,8 +7,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.esvee.models.SupportedAssembly;
-import com.hartwig.hmftools.esvee.models.TrimmableAssembly;
+import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
+import com.hartwig.hmftools.esvee.sequence.TrimmableAssembly;
 
 import org.jetbrains.annotations.Nullable;
 
