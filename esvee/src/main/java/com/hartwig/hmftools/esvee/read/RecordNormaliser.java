@@ -7,12 +7,9 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.models.IRecord;
-import com.hartwig.hmftools.esvee.models.MutableRecord;
 
 import org.jetbrains.annotations.Nullable;
 
-import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
@@ -51,6 +48,7 @@ public class RecordNormaliser
         return new CigarElement(length, CigarOperator.S);
     }
 
+    /*
     private MutableRecord softclipEdgeIndels(final MutableRecord record)
     {
         if(record.getCigar().getCigarElements().size() < 3)
@@ -147,6 +145,7 @@ public class RecordNormaliser
         normalised.setCigar(new Cigar(elements));
         return normalised;
     }
+    */
 
     public void normalise(final Read read)
     {

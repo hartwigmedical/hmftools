@@ -8,8 +8,6 @@ import java.util.Arrays;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.common.Direction;
-import com.hartwig.hmftools.esvee.models.IRecord;
-import com.hartwig.hmftools.esvee.models.MutableRecord;
 
 import org.jetbrains.annotations.Nullable;
 

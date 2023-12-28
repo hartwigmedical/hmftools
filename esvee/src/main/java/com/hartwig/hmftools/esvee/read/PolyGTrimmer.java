@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.read;
 
-import com.hartwig.hmftools.esvee.models.MutableRecord;
 import com.hartwig.hmftools.esvee.util.Counter;
 
 public class PolyGTrimmer
@@ -15,6 +14,7 @@ public class PolyGTrimmer
         mPolyGCountThreshold = polyGCountThreshold;
     }
 
+    /*
     public MutableRecord trimPolyG(final MutableRecord record)
     {
         if(record.isUnmapped() || !record.isPairedRead() || record.getLength() < mPolyGCountThreshold + 1)
@@ -51,4 +51,5 @@ public class PolyGTrimmer
 
         return record;
     }
+    */
 }

@@ -246,28 +246,6 @@ public class Read implements Sequence
     */
 
     /*
-    public Record trimLeft(final int count)
-    {
-        return (Record) MutableRecord.super.trimLeft(count);
-    }
-
-    public Record trimRight(final int count)
-    {
-        return (Record) MutableRecord.super.trimRight(count);
-    }
-
-    public Record copyRecord()
-    {
-        return new Record(mRecord.deepCopy());
-    }
-
-    public Record flipRecord()
-    {
-        return (Record) MutableRecord.super.flipRecord();
-    }
-    */
-
-        /*
     public boolean isGermline()
     {
         return "germline".equals(mRecord.getHeader().getAttribute("userTag"));
