@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.sam;
+package com.hartwig.hmftools.esvee.read;
 
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 
@@ -148,28 +148,17 @@ public class RecordNormaliser
         return normalised;
     }
 
-    @Nullable
-    public <TRecord extends IRecord> TRecord normalise(final TRecord record)
-    {
-        //noinspection unchecked
-        return (TRecord) normalise((MutableRecord) record);
-    }
-
-    @Nullable
-    public <TRecord extends MutableRecord> TRecord normalise(final TRecord record)
+    public void normalise(final Read read)
     {
         // All normalisation atm deals with alignment, so ignore records that are unmapped.
-        if(record.isUnmapped())
-            return record;
+        if(read.isUnmapped())
+            return;
 
-        MutableRecord normalised = record;
-
+        /* CHECK what is actually required and why
         normalised = softclipEdgeIndels(normalised);
         normalised = cleanCigar(normalised);
         normalised = mPolyGTrimmer.trimPolyG(normalised);
         normalised = mReadRescue.rescueRead(normalised);
-
-        //noinspection unchecked
-        return (TRecord) normalised;
+        */
     }
 }

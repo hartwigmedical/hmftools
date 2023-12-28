@@ -79,7 +79,7 @@ public class ProcessorTest
 
         final List<Expected> expected = new CSVReader<Expected>(ImmutableExpected.class, "expected.csv").readToEnd();
         final Map<String, Set<Integer>> toProcessPositions = new HashMap<>();
-        for(final Expected e : expected)
+        for(Expected e : expected)
             toProcessPositions.computeIfAbsent(e.chromosome(), ignored -> new HashSet<>()).add(e.position());
 
         final List<Junction> junctions = JunctionReader.readJunctionFile(new File("/Users/james/code/data/run/old/tumor.sv_prep.junctions.tsv"))
@@ -89,7 +89,7 @@ public class ProcessorTest
         final List<VariantCall> results = processor.run(junctions);
 
         final Map<String, Map<Integer, List<VariantCall>>> resultsByPosition = new HashMap<>();
-        for(final VariantCall call : results)
+        for(VariantCall call : results)
         {
             if(call.LeftChromosome != null)
                 resultsByPosition.computeIfAbsent(call.LeftChromosome, ignored -> new HashMap<>())
@@ -102,7 +102,7 @@ public class ProcessorTest
         }
 
         final List<ImmutableExpected> updatedExpected = new ArrayList<>();
-        for(final Expected e : expected)
+        for(Expected e : expected)
         {
             final List<VariantCall> resultsForPosition = resultsByPosition.getOrDefault(e.chromosome(), Map.of())
                     .getOrDefault(e.position(), List.of());
@@ -191,7 +191,7 @@ public class ProcessorTest
         final Processor processor = new Processor(context);
 
         final Map<String, Set<Integer>> toProcessPositions = new HashMap<>();
-        for(final var pair : locations)
+        for(var pair : locations)
             toProcessPositions.computeIfAbsent(pair.getKey(), ignored -> new HashSet<>()).add(pair.getValue());
 
         final List<Junction> junctions = JunctionReader.readJunctionFile(config.junctionFile())
@@ -227,7 +227,7 @@ public class ProcessorTest
         final Processor processor = new Processor(context);
 
         final Map<String, Set<Integer>> toProcessPositions = new HashMap<>();
-        for(final var pair : locations)
+        for(var pair : locations)
             toProcessPositions.computeIfAbsent(pair.getKey(), ignored -> new HashSet<>()).add(pair.getValue());
 
         final List<Junction> junctions = JunctionReader.readJunctionFile(config.junctionFile())

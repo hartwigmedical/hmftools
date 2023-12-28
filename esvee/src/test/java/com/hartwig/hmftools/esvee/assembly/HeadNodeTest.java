@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.createSAMRecord;
 import java.util.Objects;
 
 import com.hartwig.hmftools.esvee.TestUtils;
-import com.hartwig.hmftools.esvee.models.Record;
+import com.hartwig.hmftools.esvee.read.Read;
 
 public class HeadNodeTest
 {
@@ -14,9 +14,9 @@ public class HeadNodeTest
         return HeadNode.create(TestUtils.createSAMRecord(sequence), position, isForwards);
     }
 
-    private static HeadNode create(final Record record, final int position, final boolean isForwards)
+    private static HeadNode create(final Read read, final int position, final boolean isForwards)
     {
-        return Objects.requireNonNull(HeadNode.create(record, position, isForwards));
+        return Objects.requireNonNull(HeadNode.create(read, position, isForwards));
     }
 
     /* CHASHA FIXME

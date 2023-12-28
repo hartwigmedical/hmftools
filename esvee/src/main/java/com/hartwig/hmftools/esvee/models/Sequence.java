@@ -23,7 +23,7 @@ public interface Sequence
     default byte getAverageBaseQuality()
     {
         int sum = 0;
-        for(final byte b : getBaseQuality())
+        for(byte b : getBaseQuality())
             sum += b;
         return (byte) (sum / getLength());
     }

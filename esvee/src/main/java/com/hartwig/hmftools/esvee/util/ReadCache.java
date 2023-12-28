@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.esvee.models.Record;
+import com.hartwig.hmftools.esvee.read.Read;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -37,7 +37,7 @@ public class ReadCache
         mLoader = loader;
     }
 
-    public Stream<Record> read(final String chromosome, final int startPosition, final int endPosition)
+    public Stream<Read> read(final String chromosome, final int startPosition, final int endPosition)
     {
         final List<LRUNode> nodes = mCachedByChromosome.computeIfAbsent(chromosome, ignored -> new ArrayList<>());
         final CachedReadKey key;
@@ -50,7 +50,7 @@ public class ReadCache
                 if(node.Key.containsCompletely(chromosome, startPosition, endPosition))
                 {
                     @Nullable
-                    final Stream<Record> reads = node.Value.get().extract(chromosome, startPosition, endPosition);
+                    final Stream<Read> reads = node.Value.get().extract(chromosome, startPosition, endPosition);
                     if(reads != null)
                     {
                         CacheHits.incrementAndGet();
@@ -77,18 +77,18 @@ public class ReadCache
         {
             final CachedReadValue value;
             @Nullable
-            final List<Record> records;
+            final List<Read> reads;
             try
             {
                 value = mLoader.load(key);
-                records = value.Records.get(); // Hold a reference to ensure extract works.
+                reads = value.Records.get(); // Hold a reference to ensure extract works.
             }
             catch(final Throwable throwable)
             {
                 future.completeExceptionally(throwable);
                 throw throwable;
             }
-            if(records == null)
+            if(reads == null)
                 continue;
 
             future.complete(value);
@@ -222,41 +222,41 @@ public class ReadCache
     public static class CachedReadValue
     {
         public final int Size;
-        public final SoftReference<List<Record>> Records;
+        public final SoftReference<List<Read>> Records;
 
-        public CachedReadValue(final List<Record> records)
+        public CachedReadValue(final List<Read> reads)
         {
-            Size = records.size();
-            Records = new SoftReference<>(records);
+            Size = reads.size();
+            Records = new SoftReference<>(reads);
         }
 
         @Nullable
-        public Stream<Record> extract(final String chromosome, final int startPosition, final int endPosition)
+        public Stream<Read> extract(final String chromosome, final int startPosition, final int endPosition)
         {
             @Nullable
-            final List<Record> records = Records.get();
-            if(records == null)
+            final List<Read> reads = Records.get();
+            if(reads == null)
                 return null;
 
-            return records.stream()
+            return reads.stream()
                     .filter(r -> overlaps(r, chromosome, startPosition, endPosition));
         }
 
-        private boolean overlaps(final Record record, final String chromosome, final int startPosition, final int endPosition)
+        private boolean overlaps(final Read read, final String chromosome, final int startPosition, final int endPosition)
         {
-            if(!record.isUnmapped())
+            if(!read.isUnmapped())
             {
-                return record.getChromosome().equals(chromosome)
-                        && record.getAlignmentStart() <= endPosition && record.getAlignmentEnd() >= startPosition;
+                return read.getChromosome().equals(chromosome)
+                        && read.getAlignmentStart() <= endPosition && read.getAlignmentEnd() >= startPosition;
             }
             else
             {
-                if(!record.isPairedRead())
+                if(!read.isPairedRead())
                     return false;
 
-                final int mateStart = record.getMateAlignmentStart();
-                final int mateEnd = mateStart + (record.getLength() * 2);
-                return Objects.requireNonNull(record.getMateChromosome()).equals(chromosome)
+                final int mateStart = read.getMateAlignmentStart();
+                final int mateEnd = mateStart + (read.getLength() * 2);
+                return Objects.requireNonNull(read.getMateChromosome()).equals(chromosome)
                         && mateStart <= endPosition && mateEnd >= startPosition;
             }
         }

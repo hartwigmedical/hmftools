@@ -158,17 +158,17 @@ public class NodeFolder
         merger.accept(left.nextX, right.nextX);
 
         newSuccessors.forEach(left::setNext);
-        for(final Node newSuccessor : newSuccessors)
+        for(Node newSuccessor : newSuccessors)
             if(right.getNext(newSuccessor.Base) != null)
                 right.setNext(newSuccessor);
 
-        for(final Node sibling : parent.successors())
+        for(Node sibling : parent.successors())
         {
             if(sibling == left || sibling == right)
                 continue;
 
             final List<Node> oldCousins = sibling.successors();
-            for(final Node oldCousin : oldCousins)
+            for(Node oldCousin : oldCousins)
                 if(rewriteMap.containsKey(oldCousin))
                     sibling.setNext(rewriteMap.get(oldCousin));
         }
@@ -190,7 +190,7 @@ public class NodeFolder
             return false;
 
         // left & right can be overlayed iff every possible path from right has a candidate path through left that does not disagree
-        for(final Node rightSuccessor : right.successors())
+        for(Node rightSuccessor : right.successors())
         {
             // Try the matching base first -- most likely to work
             @Nullable
@@ -202,7 +202,7 @@ public class NodeFolder
                 continue; // No bases means no disagreement
 
             boolean couldOverlay = false;
-            for(final Node leftSuccessor : left.successors())
+            for(Node leftSuccessor : left.successors())
             {
                 if(leftSuccessor.Base == rightSuccessor.Base)
                     continue; // Already checked

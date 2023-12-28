@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import com.hartwig.hmftools.esvee.common.Assembly;
+import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.util.SizedIterable;
 import com.hartwig.hmftools.esvee.assembly.SupportChecker;
 
@@ -52,22 +52,22 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembl
         final int[] baseQualitySupporting = new int[Assembly.length()];
         final int[] baseQualityContradicting = new int[Assembly.length()];
 
-        for(final Map.Entry<Record, Integer> entry : getSupport())
+        for(Map.Entry<Read, Integer> entry : getSupport())
         {
-            final Record record = entry.getKey();
+            final Read read = entry.getKey();
             final int supportIndex = entry.getValue();
 
             final int assemblyOffset = Math.max(supportIndex, 0);
             final int readOffset = supportIndex < 0 ? -supportIndex : 0;
 
             final int remainingAssemblyLength = Assembly.length() - assemblyOffset;
-            final int remainingReadLength = record.getLength() - readOffset;
+            final int remainingReadLength = read.getLength() - readOffset;
             final int supportLength = Math.min(remainingAssemblyLength, remainingReadLength);
             for(int i = 0; i < supportLength; i++)
             {
                 final byte assemblyBase = AssemblyBases[assemblyOffset + i];
-                final byte evidenceBase = record.getBases()[readOffset + i];
-                final byte evidenceQuality = record.getBaseQuality()[readOffset + i];
+                final byte evidenceBase = read.getBases()[readOffset + i];
+                final byte evidenceQuality = read.getBaseQuality()[readOffset + i];
                 if(assemblyBase == evidenceBase)
                     baseQualitySupporting[assemblyOffset + i] += evidenceQuality;
                 else
@@ -78,39 +78,39 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembl
         return Pair.of(baseQualitySupporting, baseQualityContradicting);
     }
 
-    public boolean tryAddSupport(final SupportChecker checker, final Record record, final int suggestedIndex)
+    public boolean tryAddSupport(final SupportChecker checker, final Read read, final int suggestedIndex)
     {
-        if(containsSupport(record))
+        if(containsSupport(read))
             return true;
 
-        if(checker.WeakSupport.supportsAt(this, record, suggestedIndex))
+        if(checker.WeakSupport.supportsAt(this, read, suggestedIndex))
         {
-            addEvidenceAt(record, suggestedIndex);
+            addEvidenceAt(read, suggestedIndex);
             return true;
         }
         else
-            return tryAddSupport(checker, record);
+            return tryAddSupport(checker, read);
     }
 
-    public boolean tryAddSupport(final SupportChecker checker, final Record record)
+    public boolean tryAddSupport(final SupportChecker checker, final Read read)
     {
         @Nullable
-        final Integer index = checker.WeakSupport.supportIndex(this, record);
+        final Integer index = checker.WeakSupport.supportIndex(this, read);
 
         if(index == null)
             return false;
 
-        addEvidenceAt(record, index);
+        addEvidenceAt(read, index);
         return true;
     }
 
-    public void addEvidenceAt(final Record record, final int supportIndex)
+    public void addEvidenceAt(final Read read, final int supportIndex)
     {
-        if(containsSupport(record, supportIndex))
+        if(containsSupport(read, supportIndex))
             return;
 
         mBaseQualityStale = true;
-        mSupport.compute(record.getName(), (k, existing) -> new SupportEntry(record, supportIndex, existing));
+        mSupport.compute(read.getName(), (k, existing) -> new SupportEntry(read, supportIndex, existing));
         mSupportCount++;
     }
 
@@ -118,13 +118,13 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembl
     
     public int supportCount() { return mSupportCount; }
 
-    public boolean containsSupport(final Record record)
+    public boolean containsSupport(final Read read)
     {
         @Nullable
-        SupportEntry existingEntry = mSupport.get(record.getName());
+        SupportEntry existingEntry = mSupport.get(read.getName());
         while(existingEntry != null)
         {
-            if(existingEntry.Record.equals(record))
+            if(existingEntry.Read.equals(read))
                 return true;
             existingEntry = existingEntry.Next;
         }
@@ -132,13 +132,13 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembl
         return false;
     }
 
-    public boolean containsSupport(final Record record, final int index)
+    public boolean containsSupport(final Read read, final int index)
     {
         @Nullable
-        SupportEntry existingEntry = mSupport.get(record.getName());
+        SupportEntry existingEntry = mSupport.get(read.getName());
         while(existingEntry != null)
         {
-            if(existingEntry.Record.equals(record) && existingEntry.SupportIndex == index)
+            if(existingEntry.Read.equals(read) && existingEntry.SupportIndex == index)
                 return true;
             existingEntry = existingEntry.Next;
         }
@@ -146,23 +146,23 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembl
         return false;
     }
 
-    public SizedIterable<Record> getSupportRecords()
+    public SizedIterable<Read> getSupportRecords()
     {
-        return SizedIterable.create(supportCount(), this::supportIterator, entry -> entry.Record);
+        return SizedIterable.create(supportCount(), this::supportIterator, entry -> entry.Read);
     }
 
-    public SizedIterable<Map.Entry<Record, Integer>> getSupport()
+    public SizedIterable<Map.Entry<Read, Integer>> getSupport()
     {
         return SizedIterable.create(supportCount(), this::supportIterator,
-                entry -> new AbstractMap.SimpleEntry<>(entry.Record, entry.SupportIndex));
+                entry -> new AbstractMap.SimpleEntry<>(entry.Read, entry.SupportIndex));
     }
 
-    public SizedIterable<Map.Entry<Record, Integer>> getSupport(final String fragmentName)
+    public SizedIterable<Map.Entry<Read, Integer>> getSupport(final String fragmentName)
     {
-        return new SizedIterable<>(-1, new Supplier<Iterator<Map.Entry<Record, Integer>>>()
+        return new SizedIterable<>(-1, new Supplier<Iterator<Map.Entry<Read, Integer>>>()
         {
             @Override
-            public Iterator<Map.Entry<Record, Integer>> get()
+            public Iterator<Map.Entry<Read, Integer>> get()
             {
                 return new Iterator<>()
                 {
@@ -176,10 +176,10 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembl
                     }
 
                     @Override
-                    public Map.Entry<Record, Integer> next()
+                    public Map.Entry<Read, Integer> next()
                     {
                         assert supportEntry != null;
-                        final Map.Entry<Record, Integer> result = Map.entry(supportEntry.Record, supportEntry.SupportIndex);
+                        final Map.Entry<Read, Integer> result = Map.entry(supportEntry.Read, supportEntry.SupportIndex);
                         supportEntry = supportEntry.Next;
                         return result;
                     }
@@ -188,16 +188,16 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembl
         });
     }
 
-    public int getSupportIndex(final Record record)
+    public int getSupportIndex(final Read read)
     {
-        SupportEntry entry = mSupport.get(record.getName());
+        SupportEntry entry = mSupport.get(read.getName());
         while(entry != null)
         {
-            if(entry.Record.equals(record))
+            if(entry.Read.equals(read))
                 return entry.SupportIndex;
             entry = entry.Next;
         }
-        throw new IllegalStateException(String.format("Record %s does not support assembly %s", record, getName()));
+        throw new IllegalStateException(String.format("Record %s does not support assembly %s", read, getName()));
     }
 
     private Iterator<SupportEntry> supportIterator()
@@ -239,22 +239,22 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembl
         final int[] baseQualitySupporting = new int[Assembly.length()];
         final int[] baseQualityContradicting = new int[Assembly.length()];
 
-        for(final Map.Entry<Record, Integer> entry : getSupport())
+        for(Map.Entry<Read, Integer> entry : getSupport())
         {
-            final Record record = entry.getKey();
+            final Read read = entry.getKey();
             final int supportIndex = entry.getValue();
 
             final int assemblyOffset = Math.max(supportIndex, 0);
             final int readOffset = supportIndex < 0 ? -supportIndex : 0;
 
             final int remainingAssemblyLength = Assembly.length() - assemblyOffset;
-            final int remainingReadLength = record.getLength() - readOffset;
+            final int remainingReadLength = read.getLength() - readOffset;
             final int supportLength = Math.min(remainingAssemblyLength, remainingReadLength);
             for(int i = 0; i < supportLength; i++)
             {
                 final byte assemblyBase = AssemblyBases[assemblyOffset + i];
-                final byte evidenceBase = record.getBases()[readOffset + i];
-                final byte evidenceQuality = record.getBaseQuality()[readOffset + i];
+                final byte evidenceBase = read.getBases()[readOffset + i];
+                final byte evidenceQuality = read.getBaseQuality()[readOffset + i];
                 if(assemblyBase == evidenceBase)
                 {
                     maxBaseQualitySupporting[assemblyOffset + i] = (byte) Math.max(maxBaseQualitySupporting[assemblyOffset + i], evidenceQuality);
@@ -296,14 +296,14 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembl
 
     private static class SupportEntry
     {
-        public final Record Record;
+        public final Read Read;
         public final int SupportIndex;
         @Nullable
         public final SupportEntry Next;
 
-        private SupportEntry(final Record record, final int supportIndex, @Nullable final SupportEntry next)
+        private SupportEntry(final Read read, final int supportIndex, @Nullable final SupportEntry next)
         {
-            Record = record;
+            Read = read;
             SupportIndex = supportIndex;
             Next = next;
         }

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -12,8 +14,8 @@ import java.util.stream.Stream;
 
 import com.hartwig.hmftools.esvee.common.RegionOfInterest;
 import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.models.Record;
-import com.hartwig.hmftools.esvee.sam.SAMSource;
+import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.read.SAMSource;
 import com.hartwig.hmftools.esvee.util.SizedIterable;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -34,34 +36,34 @@ public class DiscordantPairFinder
         mMinFragmentLength = SvConstants.DISCORDANTPAIRFRAGMENTLENGTH;
     }
 
-    public List<Record> findDiscordantReads(final SizedIterable<Record> existingRecords)
+    public List<Read> findDiscordantReads(final SizedIterable<Read> existingRecords)
     {
         if(!SvConstants.TRYEXTENDINGUSINGDISCORDANTREADS)
             return List.of();
 
         final Set<String> excludeFragments = existingRecords.stream()
-                .map(Record::getName)
+                .map(Read::getName)
                 .collect(Collectors.toSet());
 
         final Stream<RegionOfInterest> regionsUnmerged = existingRecords.stream().flatMap(this::interestingRegions);
         final List<RegionOfInterest> mappedSearchRegions = RegionOfInterest.tryMerge(regionsUnmerged::iterator);
 
-        final List<Record> discordantReads = mappedSearchRegions.stream()
+        final List<Read> discordantReads = mappedSearchRegions.stream()
                 .flatMap(region -> mSource.findReadsContaining(region.Chromosome, region.Start, region.End).stream())
                 .filter(record -> !excludeFragments.contains(record.getName()))
-                .filter(record -> record.isDiscordant(mMinFragmentLength))
+                .filter(record -> isDiscordant(record, mMinFragmentLength))
                 .collect(Collectors.toList());
 
-        final List<Record> filteredDiscordantReads = filterFewMateRegions(filterHighDepthRegions(discordantReads));
+        final List<Read> filteredDiscordantReads = filterFewMateRegions(filterHighDepthRegions(discordantReads));
         return filteredDiscordantReads.stream().distinct().collect(Collectors.toList());
     }
 
-    private List<Record> filterFewMateRegions(final List<Record> records)
+    private List<Read> filterFewMateRegions(final List<Read> reads)
     {
-        if(records.size() < 20)
-            return records;
+        if(reads.size() < 20)
+            return reads;
 
-        final List<Pair<RegionOfInterest, List<Record>>> regionsWithDepth = tryMergeMateRegions(records);
+        final List<Pair<RegionOfInterest, List<Read>>> regionsWithDepth = tryMergeMateRegions(reads);
         while(regionsWithDepth.size() > 8)
         {
             final int worstDepth = regionsWithDepth.stream()
@@ -75,54 +77,54 @@ public class DiscordantPairFinder
                 .collect(Collectors.toList());
     }
 
-    private List<Record> filterHighDepthRegions(final List<Record> records)
+    private List<Read> filterHighDepthRegions(final List<Read> reads)
     {
-        if(records.size() < 1_000)
-            return records;
+        if(reads.size() < 1_000)
+            return reads;
 
-        final List<Pair<RegionOfInterest, List<Record>>> regionsWithDepth = tryMergeMateRegions(records);
+        final List<Pair<RegionOfInterest, List<Read>>> regionsWithDepth = tryMergeMateRegions(reads);
         return regionsWithDepth.stream()
                 .filter(pair -> pair.getRight().size() < 1_000)
                 .flatMap(pair -> pair.getRight().stream())
                 .collect(Collectors.toList());
     }
 
-    private static List<Pair<RegionOfInterest, List<Record>>> tryMergeMateRegions(final List<Record> records)
+    private static List<Pair<RegionOfInterest, List<Read>>> tryMergeMateRegions(final List<Read> reads)
     {
-        final Map<String, List<Record>> byChromosome = new HashMap<>();
-        for(final Record record : records)
+        final Map<String, List<Read>> byChromosome = new HashMap<>();
+        for(Read read : reads)
         {
-            if(!record.isMateMapped())
+            if(!read.isMateMapped())
                 continue;
 
-            byChromosome.computeIfAbsent(record.getMateChromosome(), ignored -> new ArrayList<>())
-                    .add(record);
+            byChromosome.computeIfAbsent(read.getMateChromosome(), ignored -> new ArrayList<>())
+                    .add(read);
         }
 
         // Sorting ensures that only a single pass is required to combine the regions, and that we only have to check the last one
-        byChromosome.values().forEach(list -> list.sort(Comparator.comparingInt(Record::getMateAlignmentStart)));
+        byChromosome.values().forEach(list -> list.sort(Comparator.comparingInt(Read::getMateAlignmentStart)));
 
-        final Map<RegionOfInterest, List<Record>> depth = new IdentityHashMap<>();
-        for(final List<Record> recordList : byChromosome.values())
+        final Map<RegionOfInterest, List<Read>> depth = new IdentityHashMap<>();
+        for(List<Read> readList : byChromosome.values())
         {
             final List<RegionOfInterest> consolidated = new ArrayList<>();
-            for(final Record record : recordList)
+            for(Read read : readList)
             {
-                final RegionOfInterest region = new RegionOfInterest(record.getMateChromosome(),
-                        record.getMateAlignmentStart(), record.getMateAlignmentStart() + record.getLength());
+                final RegionOfInterest region = new RegionOfInterest(read.getMateChromosome(),
+                        read.getMateAlignmentStart(), read.getMateAlignmentStart() + read.getLength());
 
                 boolean found = false;
-                for(final RegionOfInterest existingRegion : consolidated)
+                for(RegionOfInterest existingRegion : consolidated)
                     if(existingRegion.tryExtend(region))
                     {
-                        depth.computeIfAbsent(existingRegion, __ -> new ArrayList<>()).add(record);
+                        depth.computeIfAbsent(existingRegion, __ -> new ArrayList<>()).add(read);
                         found = true;
                         break;
                     }
 
                 if(!found)
                 {
-                    depth.computeIfAbsent(region, __ -> new ArrayList<>()).add(record);
+                    depth.computeIfAbsent(region, __ -> new ArrayList<>()).add(read);
                     consolidated.add(region);
                 }
             }
@@ -133,19 +135,19 @@ public class DiscordantPairFinder
                 .collect(Collectors.toList());
     }
 
-    private Stream<RegionOfInterest> interestingRegions(final Record record)
+    private Stream<RegionOfInterest> interestingRegions(final Read read)
     {
-        if(record.getMappingQuality() < mMinQuality)
+        if(read.getMappingQuality() < mMinQuality)
             return Stream.of();
 
-        final RegionOfInterest primary = new RegionOfInterest(record.getChromosome(),
-                record.getUnclippedStart() - mSearchDistance, record.getUnclippedEnd() + mSearchDistance);
-        if(record.isMateMapped())
+        final RegionOfInterest primary = new RegionOfInterest(read.getChromosome(),
+                read.getUnclippedStart() - mSearchDistance, read.getUnclippedEnd() + mSearchDistance);
+        if(read.isMateMapped())
         {
             final RegionOfInterest secondary = new RegionOfInterest(
-                    record.getMateChromosome(),
-                    record.getMateAlignmentStart() - mSearchDistance,
-                    record.getMateAlignmentStart() + record.getLength() + mSearchDistance);
+                    read.getMateChromosome(),
+                    read.getMateAlignmentStart() - mSearchDistance,
+                    read.getMateAlignmentStart() + read.getLength() + mSearchDistance);
             return Stream.of(primary, secondary);
         }
         return Stream.of(primary);

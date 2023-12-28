@@ -9,11 +9,10 @@ public class Alignment
     public final boolean Inverted;
     public final int Quality;
 
-    public Alignment(final String chromosome, final int referenceStartPosition,
-            final int sequenceStartPosition, final int length, final boolean inverted,
-            final int quality)
+    public Alignment(
+            final String chromosome, final int referenceStartPosition, final int sequenceStartPosition, final int length,
+            final boolean inverted, final int quality)
     {
-        assert sequenceStartPosition > 0;
         Chromosome = chromosome;
         ReferenceStartPosition = referenceStartPosition;
         SequenceStartPosition = sequenceStartPosition;
@@ -68,8 +67,7 @@ public class Alignment
     @Override
     public String toString()
     {
-        return String.format("%s:%d (%d bp%s) @ %d", Chromosome, ReferenceStartPosition, Length, Inverted
-                ? ", inverted"
-                : "", SequenceStartPosition);
+        return String.format("%s:%d (%d bp%s) @ %d",
+                Chromosome, ReferenceStartPosition, Length, Inverted ? ", inverted" : "", SequenceStartPosition);
     }
 }

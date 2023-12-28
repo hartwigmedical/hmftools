@@ -23,7 +23,7 @@ import com.hartwig.hmftools.esvee.WriteType;
 import com.hartwig.hmftools.esvee.assembly.JunctionMetrics;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
 import com.hartwig.hmftools.esvee.models.Alignment;
-import com.hartwig.hmftools.esvee.models.Record;
+import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.common.VariantAssembly;
 import com.hartwig.hmftools.esvee.common.VariantCall;
 import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
@@ -101,7 +101,7 @@ public class BamWriter
         {
             Set<String> supportFragments = call.sampleSupport().stream()
                     .flatMap(s -> Stream.concat(s.splitReads().stream(), s.discordantReads().stream()))
-                    .map(Record::getName)
+                    .map(Read::getName)
                     .collect(Collectors.toSet());
 
             for(VariantAssembly variantAssembly : call.variantAssemblies())
@@ -146,7 +146,7 @@ public class BamWriter
 
         try
         {
-            for(final VariantBAMRecord record : records)
+            for(VariantBAMRecord record : records)
             {
                 final var samRecord = new SAMRecord(mHeader);
                 samRecord.setReadName(record.Name);

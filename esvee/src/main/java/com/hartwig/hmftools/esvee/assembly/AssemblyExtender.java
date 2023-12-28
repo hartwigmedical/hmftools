@@ -24,9 +24,10 @@ import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.html.DiagramSet;
 import com.hartwig.hmftools.esvee.models.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.models.PrimaryAssembly;
-import com.hartwig.hmftools.esvee.models.Record;
+import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.models.SupportedAssembly;
-import com.hartwig.hmftools.esvee.sam.SAMSource;
+import com.hartwig.hmftools.esvee.read.ReadUtils;
+import com.hartwig.hmftools.esvee.read.SAMSource;
 import com.hartwig.hmftools.esvee.util.Counter;
 import com.hartwig.hmftools.esvee.processor.Problem;
 
@@ -116,7 +117,7 @@ public class AssemblyExtender
 
     private List<ExtendedAssembly> doExtend(final PrimaryAssembly assembly)
     {
-        final List<Record> discordantReads = new DiscordantPairFinder(mSAMSource).findDiscordantReads(assembly.getSupportRecords());
+        final List<Read> discordantReads = new DiscordantPairFinder(mSAMSource).findDiscordantReads(assembly.getSupportRecords());
 
         mCounters.DiscordantReadsFound.add(discordantReads.size());
 
@@ -135,9 +136,9 @@ public class AssemblyExtender
         return String.format("%sE%s", mPrimary.Name, mNextAssemblyNumber++);
     }
 
-    private List<Pair<Record, Record>> findMates(final Collection<Record> records)
+    private List<Pair<Read, Read>> findMates(final Collection<Read> reads)
     {
-        return mSAMSource.streamMates(records).collect(Collectors.toList());
+        return mSAMSource.streamMates(reads).collect(Collectors.toList());
     }
 
     @Nullable
@@ -165,7 +166,7 @@ public class AssemblyExtender
         return diagrams;
     }
 
-    private HeadNode alignmentAsGraph(final Record alignment, final Direction orientation)
+    private HeadNode alignmentAsGraph(final Read alignment, final Direction orientation)
     {
         final HeadNode root = new HeadNode();
         Node current = root;
@@ -186,43 +187,45 @@ public class AssemblyExtender
         return root;
     }
 
-    private List<ExtendedAssembly> extendLeft(final SupportedAssembly assembly, final List<Record> discordantReads)
+    private List<ExtendedAssembly> extendLeft(final SupportedAssembly assembly, final List<Read> discordantReads)
     {
-        final List<Pair<Record, Record>> pairedMates = findMates(assembly.getSupportRecords().stream()
-                .filter(Record::isMateOnTheLeft)
+        final List<Pair<Read, Read>> pairedMates = findMates(assembly.getSupportRecords().stream()
+                .filter(x -> x.negativeStrand())
                 .collect(Collectors.toList()));
 
         // note that this method flips the right read if this pair is an INV
-        final List<Record> mates = pairedMates.stream()
+        final List<Read> mates = pairedMates.stream()
                 .filter(pair -> !assembly.containsSupport(pair.getRight()))
                 .filter(pair -> AlignmentFilters.isRecordAverageQualityAbove(pair.getRight(), SvConstants.AVG_BASE_QUAL_THRESHOLD))
-                .map(pair -> pair.getLeft().isPositiveStrand() == pair.getRight().isPositiveStrand()
-                        ? pair.getRight().flipRecord()
+                .map(pair -> pair.getLeft().positiveStrand() == pair.getRight().positiveStrand()
+                        ? ReadUtils.flipRead(pair.getRight())
                         : pair.getRight())
-                .sorted(Comparator.comparingInt(Record::getUnclippedEnd).reversed())
+                .sorted(Comparator.comparingInt(Read::getUnclippedEnd).reversed())
                 .collect(Collectors.toList());
 
         mCounters.LeftMates.add(mates.size());
 
-        discordantReads.sort(Comparator.comparingInt(Record::getUnclippedEnd).reversed());
-        final List<Record> applicableDiscordantReads = new ArrayList<>();
-        for(Record record : discordantReads)
-            if(!record.isMateOnTheLeft())
-                applicableDiscordantReads.add(record);
+        discordantReads.sort(Comparator.comparingInt(Read::getUnclippedEnd).reversed());
+        final List<Read> applicableDiscordantReads = new ArrayList<>();
+        for(Read read : discordantReads)
+        {
+            if(!read.negativeStrand())
+                applicableDiscordantReads.add(read);
+        }
 
-        final Map<Record, Integer> checkStartIndices = new LinkedHashMap<>();
-        for(Record record : Iterables.concat(mates, applicableDiscordantReads))
+        final Map<Read, Integer> checkStartIndices = new LinkedHashMap<>();
+        for(Read read : Iterables.concat(mates, applicableDiscordantReads))
         {
             // Get the support index of this record or its mate
             @Nullable
-            final Integer existingSupportIndex = assembly.getSupport(record.getName()).stream()
+            final Integer existingSupportIndex = assembly.getSupport(read.getName()).stream()
                     .map(entry -> entry.getValue() + entry.getKey().getLength())
                     .min(Comparator.naturalOrder())
                     .orElse(null);
             final int minDepth = existingSupportIndex == null
-                    ? assembly.getLength() - record.getLength()
-                    : Math.max(assembly.getLength() - record.getLength(), assembly.getLength() - existingSupportIndex);
-            checkStartIndices.put(record, minDepth);
+                    ? assembly.getLength() - read.getLength()
+                    : Math.max(assembly.getLength() - read.getLength(), assembly.getLength() - existingSupportIndex);
+            checkStartIndices.put(read, minDepth);
         }
 
         final Direction assemblyReadDirection = Direction.REVERSE;
@@ -233,41 +236,41 @@ public class AssemblyExtender
         return extended;
     }
 
-    private List<ExtendedAssembly> extendRight(final SupportedAssembly assembly, final List<Record> discordantReads)
+    private List<ExtendedAssembly> extendRight(final SupportedAssembly assembly, final List<Read> discordantReads)
     {
-        final List<Pair<Record, Record>> pairedMates = findMates(assembly.getSupportRecords().stream()
-                .filter(record -> !record.isMateOnTheLeft())
+        final List<Pair<Read, Read>> pairedMates = findMates(assembly.getSupportRecords().stream()
+                .filter(record -> !record.negativeStrand())
                 .collect(Collectors.toList()));
 
-        final List<Record> mates = pairedMates.stream()
+        // CHECK: reason for flipping?
+        final List<Read> mates = pairedMates.stream()
                 .filter(pair -> !assembly.containsSupport(pair.getRight()))
                 .filter(pair -> AlignmentFilters.isRecordAverageQualityAbove(pair.getRight(), SvConstants.AVG_BASE_QUAL_THRESHOLD))
                 .sorted(Comparator.comparingInt(pair -> assembly.getSupportIndex(pair.getLeft())))
-                .map(pair -> pair.getLeft().isPositiveStrand() == pair.getRight().isPositiveStrand()
-                        ? pair.getRight().flipRecord()
-                        : pair.getRight())
+                .map(pair -> pair.getLeft().positiveStrand() == pair.getRight().positiveStrand()
+                        ? ReadUtils.flipRead(pair.getRight()) : pair.getRight())
                 .collect(Collectors.toList());
         mCounters.RightMates.add(mates.size());
 
-        discordantReads.sort(Comparator.comparingInt(Record::getUnclippedStart));
-        final List<Record> applicableDiscordantReads = new ArrayList<>();
-        for(Record record : discordantReads)
-            if(record.isMateOnTheLeft())
-                applicableDiscordantReads.add(record);
+        discordantReads.sort(Comparator.comparingInt(Read::getUnclippedStart));
+        final List<Read> applicableDiscordantReads = new ArrayList<>();
+        for(Read read : discordantReads)
+            if(read.negativeStrand()) // CHECK: was isMateOnTheLeft()
+                applicableDiscordantReads.add(read);
 
-        final Map<Record, Integer> checkStartIndices = new LinkedHashMap<>();
-        for(Record record : Iterables.concat(mates, applicableDiscordantReads))
+        final Map<Read, Integer> checkStartIndices = new LinkedHashMap<>();
+        for(Read read : Iterables.concat(mates, applicableDiscordantReads))
         {
             // Get the support index of this record or its mate
             @Nullable
-            final Integer existingSupportIndex = assembly.getSupport(record.getName()).stream()
+            final Integer existingSupportIndex = assembly.getSupport(read.getName()).stream()
                     .map(Map.Entry::getValue)
                     .max(Comparator.naturalOrder())
                     .orElse(null);
             final int minDepth = existingSupportIndex == null
-                    ? assembly.getLength() - record.getLength()
-                    : Math.max(assembly.getLength() - record.getLength(), existingSupportIndex);
-            checkStartIndices.put(record, minDepth);
+                    ? assembly.getLength() - read.getLength()
+                    : Math.max(assembly.getLength() - read.getLength(), existingSupportIndex);
+            checkStartIndices.put(read, minDepth);
         }
 
         final Direction assemblyReadDirection = Direction.FORWARDS;
@@ -279,9 +282,9 @@ public class AssemblyExtender
     }
 
     private List<ExtendedAssembly> extendAssembly(final SupportedAssembly assembly, final Direction assemblyDirection,
-            final List<Record> mateAlignments,
-            final List<Record> discordantAlignments,
-            final Map<Record, Integer> alignmentMinDepth,
+            final List<Read> mateAlignments,
+            final List<Read> discordantAlignments,
+            final Map<Read, Integer> alignmentMinDepth,
             final Direction alignmentDirection,
             final Counter mateAttachCounter,
             final Counter discordantAttachCounter)
@@ -297,11 +300,11 @@ public class AssemblyExtender
 
         final HeadNode existing = HeadNode.create(assembly, assemblyDirection);
 
-        final List<Record> potentialNewSupport = new ArrayList<>();
+        final List<Read> potentialNewSupport = new ArrayList<>();
         extendAssembly(existing, potentialNewSupport, mateAlignments, alignmentMinDepth, alignmentDirection, mateAttachCounter);
         extendAssembly(existing, potentialNewSupport, discordantAlignments, alignmentMinDepth, alignmentDirection, discordantAttachCounter);
 
-        final Map<Record, Set<Integer>> supportStartIndices = potentialSupportIndices(existing);
+        final Map<Read, Set<Integer>> supportStartIndices = potentialSupportIndices(existing);
 
         final String diagramSetName = "Extension " + assemblyDirection.name().toLowerCase();
         @Nullable
@@ -324,28 +327,28 @@ public class AssemblyExtender
     }
 
     private void extendAssembly(
-            final HeadNode existing, final List<Record> potentialNewSupport, final List<Record> alignments,
-            final Map<Record, Integer> alignmentMinDepth, final Direction alignmentDirection, final Counter attachCounter)
+            final HeadNode existing, final List<Read> potentialNewSupport, final List<Read> alignments,
+            final Map<Read, Integer> alignmentMinDepth, final Direction alignmentDirection, final Counter attachCounter)
     {
-        for(final Record record : alignments)
+        for(Read read : alignments)
         {
             @Nullable
-            final Integer depth = alignmentMinDepth.get(record);
-            final HeadNode toAttach = alignmentAsGraph(record, alignmentDirection);
+            final Integer depth = alignmentMinDepth.get(read);
+            final HeadNode toAttach = alignmentAsGraph(read, alignmentDirection);
 
             if(existing.attach(toAttach, SvConstants.ASSEMBLYEXTENSIONMINMATCHEDBASES, SvConstants.ASSEMBLYEXTENSIONMAXMISMATCHES,
                     Objects.requireNonNullElse(depth, 0), Integer.MAX_VALUE))
             {
-                potentialNewSupport.add(record);
+                potentialNewSupport.add(read);
                 attachCounter.add(1);
             }
         }
     }
 
     // Once we've built the graph, try and work out where in the flattened output different records may appear
-    private Map<Record, Set<Integer>> potentialSupportIndices(final HeadNode head)
+    private Map<Read, Set<Integer>> potentialSupportIndices(final HeadNode head)
     {
-        final Map<Record, Set<Integer>> candidateLocations = new HashMap<>();
+        final Map<Read, Set<Integer>> candidateLocations = new HashMap<>();
         final Deque<Pair<Node, Integer>> worklist = new ArrayDeque<>();
         final Set<Pair<Node, Integer>> seen = new HashSet<>();
         for(Node successor : head.successors())
@@ -362,7 +365,7 @@ public class AssemblyExtender
 
             for(Node.Support support : node.Support)
                 if(support.ReadIndex <= 2)
-                    candidateLocations.computeIfAbsent(support.Record, r -> new LinkedHashSet<>()).add(depth - support.ReadIndex);
+                    candidateLocations.computeIfAbsent(support.Read, r -> new LinkedHashSet<>()).add(depth - support.ReadIndex);
 
             for(Node successor : node.successors())
                 worklist.add(Pair.of(successor, depth + 1));
@@ -371,8 +374,8 @@ public class AssemblyExtender
         return candidateLocations;
     }
 
-    private void reAddSupport(final ExtendedAssembly assembly, final SupportedAssembly original, final List<Record> potentialSupport,
-            final Map<Record, Set<Integer>> supportStartIndices, final boolean isForwards)
+    private void reAddSupport(final ExtendedAssembly assembly, final SupportedAssembly original, final List<Read> potentialSupport,
+            final Map<Read, Set<Integer>> supportStartIndices, final boolean isForwards)
     {
         if(potentialSupport.size() > 1_000)
             return;
@@ -384,17 +387,17 @@ public class AssemblyExtender
         else
             addSupportWithOffset(assembly, original, firstIndex);
 
-        for(Record record : potentialSupport)
+        for(Read read : potentialSupport)
         {
-            if(assembly.containsSupport(record))
+            if(assembly.containsSupport(read))
                 continue;
 
             @Nullable
-            final Set<Integer> candidates = supportStartIndices.get(record);
+            final Set<Integer> candidates = supportStartIndices.get(read);
 
             if(candidates == null)
             {
-                assembly.tryAddSupport(mSupportChecker, record);
+                assembly.tryAddSupport(mSupportChecker, read);
             }
             else
             {
@@ -402,10 +405,10 @@ public class AssemblyExtender
                 {
                     final int checkIndex = isForwards
                             ? rawIndex
-                            : assembly.getLength() - rawIndex - record.getLength();
-                    if(mSupportChecker.WeakSupport.supportsAt(assembly, record, checkIndex))
+                            : assembly.getLength() - rawIndex - read.getLength();
+                    if(mSupportChecker.WeakSupport.supportsAt(assembly, read, checkIndex))
                     {
-                        assembly.addEvidenceAt(record, checkIndex);
+                        assembly.addEvidenceAt(read, checkIndex);
                         break;
                     }
                 }

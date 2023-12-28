@@ -10,6 +10,8 @@ public final class SvConstants
     public static final String DEFAULT_HTML_SUMMARY_DIR = "html";
     public static final int MAX_HTML_SUMMARIES = 10000;
 
+    public static final String BAM_HEADER_SAMPLE_ID_TAG = "sampleId";
+
     public static final int MAX_DUP_LENGTH = 6; // then classified as an INS
 
     // When a base is considered in the context of a single read, at what quality level do we start to see this base as low-quality"

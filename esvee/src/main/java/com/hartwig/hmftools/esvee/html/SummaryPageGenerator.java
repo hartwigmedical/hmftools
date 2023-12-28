@@ -50,7 +50,7 @@ public final class SummaryPageGenerator
     public static void generatePage(final String folder, final OverallCounters counters, final List<VariantCall> results)
     {
         final List<Pair<GenomePosition, VariantCall>> sortedResults = new ArrayList<>();
-        for(final VariantCall call : results)
+        for(VariantCall call : results)
         {
             if(call.LeftChromosome != null)
                 sortedResults.add(Pair.of(GenomePositions.create(call.LeftChromosome, call.LeftPosition), call));
@@ -108,7 +108,7 @@ public final class SummaryPageGenerator
                 .append("</tr>\n");
         builder.appendEndTag("</thead>");
         builder.appendStartTag("<tbody>");
-        for(final Pair<GenomePosition, VariantCall> pair : sortedResults)
+        for(Pair<GenomePosition, VariantCall> pair : sortedResults)
         {
             final VariantCall call = pair.getValue();
 

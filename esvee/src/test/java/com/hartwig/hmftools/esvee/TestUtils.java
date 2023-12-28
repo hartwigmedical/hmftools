@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee;
 
-import com.hartwig.hmftools.esvee.models.Record;
+import com.hartwig.hmftools.esvee.read.Read;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
@@ -30,12 +30,12 @@ public class TestUtils
     }
     */
 
-    public static Record createSAMRecord(final String sequence)
+    public static Read createSAMRecord(final String sequence)
     {
         return createSAMRecord(sequence, 1);
     }
 
-    public static Record createSAMRecord(final String sequence, final int position)
+    public static Read createSAMRecord(final String sequence, final int position)
     {
         final SAMRecord record = new SAMRecord(new SAMFileHeader());
         record.setReferenceName("1");
@@ -46,6 +46,6 @@ public class TestUtils
         record.setBaseQualityString("F".repeat(sequence.length()));
         record.setReadPairedFlag(true);
         record.setMateUnmappedFlag(true);
-        return new Record(record);
+        return new Read(record);
     }
 }

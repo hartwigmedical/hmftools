@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.sam;
+package com.hartwig.hmftools.esvee.read;
 
 import com.hartwig.hmftools.esvee.models.MutableRecord;
 import com.hartwig.hmftools.esvee.util.Counter;

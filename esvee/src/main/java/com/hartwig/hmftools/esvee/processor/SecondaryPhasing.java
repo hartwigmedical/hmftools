@@ -18,7 +18,7 @@ public enum SecondaryPhasing
     {
         // PERF: The O-notation on this sucks.
         final List<Set<T>> secondaryPhaseGroups = new ArrayList<>();
-        for(final Set<T> primaryPhaseGroup : primaryPhaseGroups)
+        for(Set<T> primaryPhaseGroup : primaryPhaseGroups)
         {
             if(primaryPhaseGroup.size() == 1)
             {
@@ -28,16 +28,16 @@ public enum SecondaryPhasing
 
             final Map<String, Set<T>> phasingByFragment = new HashMap<>();
 
-            for(final T assembly : primaryPhaseGroup)
-                for(final String fragment : assembly.getSupportFragments())
+            for(T assembly : primaryPhaseGroup)
+                for(String fragment : assembly.getSupportFragments())
                     phasingByFragment.computeIfAbsent(fragment, __ -> new HashSet<>()).add(assembly);
             final Set<Set<T>> groups = phasingByFragment.values().stream()
                     .filter(g -> g.size() > 1)
                     .collect(Collectors.toSet());
             final Set<Set<T>> toRemove = new HashSet<>();
-            for(final Set<T> group : groups)
+            for(Set<T> group : groups)
             {
-                for(final Set<T> other : groups)
+                for(Set<T> other : groups)
                 {
                     if(group == other)
                         continue;

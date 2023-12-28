@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.models;
 
+import static com.hartwig.hmftools.esvee.read.ReadUtils.flipRead;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -8,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.assembly.SupportChecker;
 import com.hartwig.hmftools.esvee.html.DiagramSet;
+import com.hartwig.hmftools.esvee.read.Read;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -22,17 +25,17 @@ public class GappedAssembly extends SupportedAssembly
     }
 
     @Override
-    public boolean tryAddSupport(final SupportChecker checker, final Record record)
+    public boolean tryAddSupport(final SupportChecker checker, final Read read)
     {
         int currentOffset = 0;
-        for(final ExtendedAssembly assembly : Sources)
+        for(ExtendedAssembly assembly : Sources)
         {
             @Nullable
-            final Integer index = checker.WeakSupport.supportIndex(assembly, record);
+            final Integer index = checker.WeakSupport.supportIndex(assembly, read);
 
             if(index != null)
             {
-                addEvidenceAt(record, currentOffset + index);
+                addEvidenceAt(read, currentOffset + index);
                 return true;
             }
 
@@ -66,11 +69,14 @@ public class GappedAssembly extends SupportedAssembly
         Collections.reverse(newSources);
 
         final GappedAssembly flipped = new GappedAssembly(Name, newSources);
-        for(final Map.Entry<Record, Integer> support : getSupport())
+        
+        for(Map.Entry<Read,Integer> support : getSupport())
         {
-            flipped.addEvidenceAt(support.getKey().flipRecord(),
-                    getLength() - support.getValue() - support.getKey().getLength());
+            int initialReadLength = support.getKey().getLength();
+            Read flippedRead = flipRead(support.getKey());
+            flipped.addEvidenceAt(flippedRead,getLength() - support.getValue() - initialReadLength);
         }
+
         flipped.recalculateBaseQuality();
         return flipped;
     }

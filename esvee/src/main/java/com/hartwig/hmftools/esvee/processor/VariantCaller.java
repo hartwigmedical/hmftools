@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.esvee.SvConstants.MAX_DUP_LENGTH;
+import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -26,7 +27,7 @@ import com.hartwig.hmftools.esvee.common.VariantCall;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
 import com.hartwig.hmftools.esvee.models.Alignment;
 import com.hartwig.hmftools.esvee.models.AssemblyClassification;
-import com.hartwig.hmftools.esvee.models.Record;
+import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.models.SupportedAssembly;
 import com.hartwig.hmftools.esvee.util.ParallelMapper;
 
@@ -398,10 +399,10 @@ public class VariantCaller
     private int calculateLeftOverhang(final SupportedAssembly assembly, final int leftOffset, final Support support)
     {
         int maxOverhang = 0;
-        for(Record record : support.SplitReads)
+        for(Read read : support.SplitReads)
         {
-            final int supportStartOffset = assembly.getSupportIndex(record) + 1;
-            final int supportEndOffset = assembly.getSupportIndex(record) + record.getLength();
+            final int supportStartOffset = assembly.getSupportIndex(read) + 1;
+            final int supportEndOffset = assembly.getSupportIndex(read) + read.getLength();
             if(supportStartOffset > leftOffset || supportEndOffset < leftOffset)
                 continue; // Doesn't cross left
             final int overhang = leftOffset - supportStartOffset + 1;
@@ -413,10 +414,10 @@ public class VariantCaller
     private int calculateRightOverhang(final SupportedAssembly assembly, final int rightOffset, final Support support)
     {
         int maxOverhang = 0;
-        for(Record record : support.SplitReads)
+        for(Read read : support.SplitReads)
         {
-            final int supportStartOffset = assembly.getSupportIndex(record) + 1;
-            final int supportEndOffset = assembly.getSupportIndex(record) + record.getLength();
+            final int supportStartOffset = assembly.getSupportIndex(read) + 1;
+            final int supportEndOffset = assembly.getSupportIndex(read) + read.getLength();
             if(supportEndOffset < rightOffset || supportStartOffset > rightOffset)
                 continue; // Doesn't cross right
             final int overhang = supportEndOffset - rightOffset + 1;
@@ -433,28 +434,28 @@ public class VariantCaller
         return new Support(splitReads, discordantPairs);
     }
 
-    private Set<Record> findSplitReads(final AlignedAssembly assembly, @Nullable final Alignment left, @Nullable final Alignment right,
+    private Set<Read> findSplitReads(final AlignedAssembly assembly, @Nullable final Alignment left, @Nullable final Alignment right,
             @Nullable final Alignment insert)
     {
-        final Set<Record> splitReads = new HashSet<>();
-        for(Map.Entry<Record, Integer> entry : assembly.getSupport())
+        final Set<Read> splitReads = new HashSet<>();
+        for(Map.Entry<Read, Integer> entry : assembly.getSupport())
         {
-            final Record record = entry.getKey();
+            final Read read = entry.getKey();
             final int supportLeft = entry.getValue();
-            final int supportRight = supportLeft + record.getLength();
+            final int supportRight = supportLeft + read.getLength();
 
             if(left != null)
             {
                 final int leftAlignmentRight = left.SequenceStartPosition + left.Length;
                 if(supportLeft <= leftAlignmentRight && supportRight > leftAlignmentRight)
-                    splitReads.add(record);
+                    splitReads.add(read);
             }
 
             if(right != null)
             {
                 final int rightAlignmentLeft = right.SequenceStartPosition;
                 if(supportLeft < rightAlignmentLeft && supportRight >= rightAlignmentLeft)
-                    splitReads.add(record);
+                    splitReads.add(read);
             }
 
             if(insert != null)
@@ -462,13 +463,13 @@ public class VariantCaller
                 final int alignmentLeft = insert.SequenceStartPosition;
                 final int alignmentRight = insert.SequenceStartPosition + insert.Length;
                 if(supportLeft <= alignmentRight && supportRight >= alignmentLeft)
-                    splitReads.add(record);
+                    splitReads.add(read);
             }
         }
 
         // Add mates of anything split, if supporting
         final Set<String> splitReadFragments = splitReads.stream()
-                .map(Record::getName)
+                .map(Read::getName)
                 .collect(Collectors.toSet());
         assembly.getSupportRecords().stream()
                 .filter(record -> splitReadFragments.contains(record.getName()))
@@ -477,42 +478,41 @@ public class VariantCaller
         return splitReads;
     }
 
-    private Set<Record> findDiscordantPairs(final AlignedAssembly assembly, @Nullable final Alignment left, @Nullable final Alignment right,
-            @Nullable final Alignment insert, final Set<Record> splitReads)
+    private Set<Read> findDiscordantPairs(final AlignedAssembly assembly, @Nullable final Alignment left, @Nullable final Alignment right,
+            @Nullable final Alignment insert, final Set<Read> splitReads)
     {
         if(left == null || right == null)
             return new HashSet<>();
 
-        final Set<Record> support = intersectionSupport(
+        final Set<Read> support = intersectionSupport(
                 supportingReadsLeft(assembly, left),
                 supportingReadsRight(assembly, right),
                 supportingReads(assembly, insert));
 
         final Set<String> splitReadFragments = splitReads.stream()
-                .map(Record::getName)
+                .map(Read::getName)
                 .collect(Collectors.toSet());
         support.removeIf(r -> splitReadFragments.contains(r.getName()));
 
         final Set<String> discordantFragments = support.stream()
-                .filter(record -> record.isDiscordant(SvConstants.DISCORDANTPAIRFRAGMENTLENGTH)
-                        || record.isUnmapped() || record.isMateUnmapped())
-                .map(Record::getName)
+                .filter(x -> isDiscordant(x, SvConstants.DISCORDANTPAIRFRAGMENTLENGTH) || x.isUnmapped() || x.isMateUnmapped())
+                .map(Read::getName)
                 .collect(Collectors.toSet());
         support.removeIf(r -> !discordantFragments.contains(r.getName()));
 
         return support;
     }
 
-    private Set<Record> intersectionSupport(final Set<Record> leftSupport, final Set<Record> rightSupport, final Set<Record> insertSupport)
+    private Set<Read> intersectionSupport(final Set<Read> leftSupport, final Set<Read> rightSupport, final Set<Read> insertSupport)
     {
-        final Set<Record> support = new HashSet<>();
-        final var insertSupportFragments = insertSupport.stream().map(Record::getName).collect(Collectors.toSet());
+        final Set<Read> support = new HashSet<>();
+        final var insertSupportFragments = insertSupport.stream().map(Read::getName).collect(Collectors.toSet());
         support.addAll(insertSupport);
 
-        final var leftSupportFragments = leftSupport.stream().map(Record::getName).collect(Collectors.toSet());
+        final var leftSupportFragments = leftSupport.stream().map(Read::getName).collect(Collectors.toSet());
         leftSupportFragments.addAll(insertSupportFragments);
 
-        final var rightSupportFragments = rightSupport.stream().map(Record::getName).collect(Collectors.toSet());
+        final var rightSupportFragments = rightSupport.stream().map(Read::getName).collect(Collectors.toSet());
         rightSupportFragments.addAll(insertSupportFragments);
 
         final Set<String> bothSideFragments = new HashSet<>(leftSupportFragments);
@@ -524,33 +524,33 @@ public class VariantCaller
         return support;
     }
 
-    private Set<Record> supportingReads(final SupportedAssembly assembly, @Nullable final Alignment alignment)
+    private Set<Read> supportingReads(final SupportedAssembly assembly, @Nullable final Alignment alignment)
     {
         if(alignment == null)
             return Set.of();
 
-        final Set<Record> support = new HashSet<>();
-        for(Map.Entry<Record, Integer> entry : assembly.getSupport())
+        final Set<Read> support = new HashSet<>();
+        for(Map.Entry<Read, Integer> entry : assembly.getSupport())
         {
-            final Record record = entry.getKey();
+            final Read read = entry.getKey();
             final int supportLeft = entry.getValue();
-            final int supportRight = supportLeft + record.getLength();
+            final int supportRight = supportLeft + read.getLength();
 
             final int alignmentLeft = alignment.SequenceStartPosition;
             final int alignmentRight = alignment.SequenceStartPosition + alignment.Length;
             if(supportLeft <= alignmentRight && supportRight >= alignmentLeft)
-                support.add(record);
+                support.add(read);
         }
 
         return support;
     }
 
-    private Set<Record> supportingReadsLeft(final AlignedAssembly assembly, @Nullable final Alignment stopAt)
+    private Set<Read> supportingReadsLeft(final AlignedAssembly assembly, @Nullable final Alignment stopAt)
     {
         if(stopAt == null)
             return Set.of();
 
-        final Set<Record> support = new HashSet<>();
+        final Set<Read> support = new HashSet<>();
         for(Alignment alignment : assembly.getAlignmentBlocks())
         {
             support.addAll(supportingReads(assembly, alignment));
@@ -560,12 +560,12 @@ public class VariantCaller
         return support;
     }
 
-    private Set<Record> supportingReadsRight(final AlignedAssembly assembly, @Nullable final Alignment startAt)
+    private Set<Read> supportingReadsRight(final AlignedAssembly assembly, @Nullable final Alignment startAt)
     {
         if(startAt == null)
             return Set.of();
 
-        final Set<Record> support = new HashSet<>();
+        final Set<Read> support = new HashSet<>();
 
         int alignmentIndex = 0;
         for(; alignmentIndex < assembly.getAlignmentBlocks().size(); alignmentIndex++)
@@ -579,36 +579,36 @@ public class VariantCaller
 
     private List<SampleSupport> partitionSupport(final Support support)
     {
-        final Map<String, Pair<Set<Record>, Set<Record>>> bySample = new LinkedHashMap<>();
+        final Map<String, Pair<Set<Read>, Set<Read>>> bySample = new LinkedHashMap<>();
 
         Stream.concat(support.DiscordantSupport.stream(), support.SplitReads.stream())
-                .map(Record::sampleName)
+                .map(Read::sampleName)
                 .distinct()
                 .sorted()
                 .forEach(sampleName -> bySample.put(sampleName, Pair.of(new HashSet<>(), new HashSet<>())));
 
-        for(final Record record : support.SplitReads)
+        for(Read read : support.SplitReads)
         {
-            bySample.get(record.sampleName()).getLeft().add(record);
+            bySample.get(read.sampleName()).getLeft().add(read);
         }
 
-        for(final Record record : support.DiscordantSupport)
+        for(Read read : support.DiscordantSupport)
         {
-            bySample.get(record.sampleName()).getRight().add(record);
+            bySample.get(read.sampleName()).getRight().add(read);
         }
 
         List<SampleSupport> sampleSupport = new ArrayList<>();
 
-        for(Map.Entry<String, Pair<Set<Record>, Set<Record>>> entry : bySample.entrySet())
+        for(Map.Entry<String, Pair<Set<Read>, Set<Read>>> entry : bySample.entrySet())
         {
             final String sampleName = entry.getKey();
-            final Set<Record> splitReads = entry.getValue().getLeft();
-            final Set<Record> discordantReads = entry.getValue().getRight();
+            final Set<Read> splitReads = entry.getValue().getLeft();
+            final Set<Read> discordantReads = entry.getValue().getRight();
 
-            final boolean isGermline = Stream.concat(splitReads.stream(), discordantReads.stream()).anyMatch(Record::isGermline);
+            // final boolean isGermline = Stream.concat(splitReads.stream(), discordantReads.stream()).anyMatch(Read::isGermline);
             final int quality = splitReads.size() + discordantReads.size();
 
-            sampleSupport.add(new SampleSupport(sampleName, isGermline, quality, splitReads, discordantReads));
+            sampleSupport.add(new SampleSupport(sampleName, quality, splitReads, discordantReads));
         }
 
         return sampleSupport;
@@ -616,10 +616,10 @@ public class VariantCaller
 
     private static class Support
     {
-        public final Set<Record> SplitReads;
-        public final Set<Record> DiscordantSupport;
+        public final Set<Read> SplitReads;
+        public final Set<Read> DiscordantSupport;
 
-        private Support(final Set<Record> splitReads, final Set<Record> discordantSupport)
+        private Support(final Set<Read> splitReads, final Set<Read> discordantSupport)
         {
             SplitReads = splitReads;
             DiscordantSupport = discordantSupport;

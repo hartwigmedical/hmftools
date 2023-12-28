@@ -16,7 +16,7 @@ import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.common.SampleSupport;
 import com.hartwig.hmftools.esvee.common.VariantAssembly;
 import com.hartwig.hmftools.esvee.common.VariantCall;
-import com.hartwig.hmftools.esvee.models.Record;
+import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.util.ParallelMapper;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -48,7 +48,7 @@ public class VariantDeduplication
     private List<VariantCall> deduplicateMatchedGroups(final List<VariantCall> variants)
     {
         final Map<String, List<VariantCall>> callsByPairLocation = new HashMap<>();
-        for(final VariantCall call : variants)
+        for(VariantCall call : variants)
         {
             if(call.isSingleSided())
             {
@@ -80,12 +80,12 @@ public class VariantDeduplication
         final Set<VariantAssembly> newAssemblies = new HashSet<>();
         final Map<String, List<SampleSupport>> sampleSupport = new LinkedHashMap<>();
         int leftMapQ = 0, rightMapQ = 0;
-        for(final VariantCall call : variants)
+        for(VariantCall call : variants)
         {
             newPhaseSets.addAll(call.PhaseSets);
             newAssemblies.addAll(call.variantAssemblies());
 
-            for(final SampleSupport support : call.sampleSupport())
+            for(SampleSupport support : call.sampleSupport())
             {
                 sampleSupport.computeIfAbsent(support.sampleName(), __ -> new ArrayList<>())
                         .add(support);
@@ -96,21 +96,20 @@ public class VariantDeduplication
         }
 
         final List<SampleSupport> newSampleSupport = new ArrayList<>();
-        for(final List<SampleSupport> sampleSupportList : sampleSupport.values())
+        for(List<SampleSupport> sampleSupportList : sampleSupport.values())
         {
             final String sampleName = sampleSupportList.get(0).sampleName();
-            final boolean isGermline = sampleSupportList.get(0).isGermline();
             final int quality = sampleSupportList.stream().mapToInt(SampleSupport::quality).max().orElseThrow();
 
-            final Set<Record> splitReads = sampleSupportList.stream()
+            final Set<Read> splitReads = sampleSupportList.stream()
                     .flatMap(s -> s.splitReads().stream())
                     .collect(Collectors.toSet());
-            final Set<Record> discordantReads = sampleSupportList.stream()
+            final Set<Read> discordantReads = sampleSupportList.stream()
                     .flatMap(s -> s.discordantReads().stream())
                     .filter(record -> !splitReads.contains(record))
                     .collect(Collectors.toSet());
 
-            newSampleSupport.add(new SampleSupport(sampleName, isGermline, quality, splitReads, discordantReads));
+            newSampleSupport.add(new SampleSupport(sampleName, quality, splitReads, discordantReads));
         }
 
         final VariantCall existing = variants.get(0);
@@ -138,7 +137,7 @@ public class VariantDeduplication
                                 return left;
 
                             // Ensure that both are equally supported
-                            for(final Map.Entry<Record, Integer> entry : right.Assembly.getSupport())
+                            for(Map.Entry<Read, Integer> entry : right.Assembly.getSupport())
                                 left.Assembly.addEvidenceAt(entry.getKey(), entry.getValue());
 
                             return left;
@@ -161,7 +160,7 @@ public class VariantDeduplication
     {
         // Index double-ended variants
         final Map<String, TreeMap<Integer, List<VariantCall>>> indexedVariants = new HashMap<>();
-        for(final VariantCall call : variants)
+        for(VariantCall call : variants)
         {
             if(call.isSingleSided())
                 continue;
@@ -173,7 +172,7 @@ public class VariantDeduplication
                     .computeIfAbsent(call.RightPosition, __ -> new ArrayList<>())
                     .add(call);
         }
-        for(final VariantCall call : variants)
+        for(VariantCall call : variants)
         {
             if(!call.isSingleSided())
                 continue;

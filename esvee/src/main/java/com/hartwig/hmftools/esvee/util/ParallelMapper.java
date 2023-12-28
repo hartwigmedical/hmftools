@@ -37,7 +37,7 @@ public final class ParallelMapper
         final Function<ARG, RESULT> wrappedMapper = Counter.wrap(itemTimer, mapper);
 
         final List<CompletableFuture<RESULT>> futures = new ArrayList<>();
-        for(final ARG ignored : items)
+        for(ARG ignored : items)
             futures.add(new CompletableFuture<>());
 
         final AtomicInteger index = new AtomicInteger();

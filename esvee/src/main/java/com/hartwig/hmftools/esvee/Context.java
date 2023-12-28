@@ -12,12 +12,11 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.esvee.assembly.Aligner;
 import com.hartwig.hmftools.esvee.assembly.SupportChecker;
 import com.hartwig.hmftools.esvee.processor.Problem;
-import com.hartwig.hmftools.esvee.sam.CachingSAMSource;
-import com.hartwig.hmftools.esvee.sam.CompositeSAMSource;
-import com.hartwig.hmftools.esvee.sam.DirectSAMSource;
-import com.hartwig.hmftools.esvee.sam.NormalisingSource;
-import com.hartwig.hmftools.esvee.sam.RecordNormaliser;
-import com.hartwig.hmftools.esvee.sam.SAMSource;
+import com.hartwig.hmftools.esvee.read.CachingSAMSource;
+import com.hartwig.hmftools.esvee.read.CompositeSAMSource;
+import com.hartwig.hmftools.esvee.read.DirectSAMSource;
+import com.hartwig.hmftools.esvee.read.RecordNormaliser;
+import com.hartwig.hmftools.esvee.read.SAMSource;
 
 public class Context implements AutoCloseable
 {
@@ -101,10 +100,9 @@ public class Context implements AutoCloseable
         return new Context(executor, aligner, samSource, refGenomeSource, supportChecker, config);
     }
 
-    private static SAMSource openFile(final String referenceGenome, final RecordNormaliser normaliser, final String bamFile, final String tag)
+    private static SAMSource openFile(
+            final String referenceGenome, final RecordNormaliser normaliser, final String bamFile, final String sampleId)
     {
-        final DirectSAMSource directSource = new DirectSAMSource(new File(bamFile), new File(referenceGenome), tag);
-
-        return new NormalisingSource(directSource, normaliser);
+        return new DirectSAMSource(new File(bamFile), new File(referenceGenome), sampleId);
     }
 }

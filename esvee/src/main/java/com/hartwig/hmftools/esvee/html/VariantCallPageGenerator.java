@@ -101,7 +101,7 @@ public final class VariantCallPageGenerator
                 .append("<th>Source</th>")
                 .append("<th>Assembly</th></tr>\n");
         int index = 0;
-        for(final VariantAssembly assembly : call.variantAssemblies())
+        for(VariantAssembly assembly : call.variantAssemblies())
             builder.append("<tr><td>").append(++index).append("</td>")
                     .append("<td>").append(assembly.Assembly.Assembly.length()).append("</td>")
                     .append("<td>").append("%s", assembly.Assembly.getSupportFragments().size()).append("</td>")
@@ -164,14 +164,20 @@ public final class VariantCallPageGenerator
                 + "});";
     }
 
-    private static void generateAssemblySummaries(final HTMLBuilder builder, final RefGenomeInterface reference,
+    private static void generateAssemblySummaries(
+            final HTMLBuilder builder, final RefGenomeInterface reference,
             final SupportChecker supportChecker, final VariantCall call)
     {
         builder.appendStartTag("<div class=\"candidate-assemblies\">");
         builder.append("<h1>Assemblies</h1>\n");
+        
         final AssemblyView assemblyView = new AssemblyView(reference, supportChecker);
-        for(final AlignedAssembly assembly : call.associatedAssemblies())
+        
+        for(AlignedAssembly assembly : call.associatedAssemblies())
+        {
             assemblyView.generate(builder, call, assembly, false);
+        }
+        
         builder.appendEndTag("</div>");
     }
 }

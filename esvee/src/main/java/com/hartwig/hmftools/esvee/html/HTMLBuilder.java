@@ -135,7 +135,7 @@ public class HTMLBuilder
         appendStartTag("<tbody>");
 
         final List<String> rowContents = new ArrayList<>();
-        for(final Pair<String, ?> pair : pairs)
+        for(Pair<String, ?> pair : pairs)
             rowContents.add(String.format("<th>%s</th><td>%s</td>", pair.getKey(), pair.getValue()));
 
         final int rowCount = (int) Math.ceil((double) rowContents.size() / columns);

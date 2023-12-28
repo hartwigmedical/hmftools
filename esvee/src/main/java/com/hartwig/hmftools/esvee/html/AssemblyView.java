@@ -17,7 +17,7 @@ import com.hartwig.hmftools.esvee.models.AlignedSequence;
 import com.hartwig.hmftools.esvee.models.Alignment;
 import com.hartwig.hmftools.esvee.models.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.models.PrimaryAssembly;
-import com.hartwig.hmftools.esvee.models.Record;
+import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.models.Sequence;
 import com.hartwig.hmftools.esvee.models.SimpleSequence;
 import com.hartwig.hmftools.esvee.models.SupportedAssembly;
@@ -78,7 +78,7 @@ public class AssemblyView
         final SequenceView sequenceView = new SequenceView(mRefGenomeSource);
         sequenceView.addHeaderSequence(assembly);
         final Set<SupportedAssembly> supportingAssemblies = new LinkedHashSet<>();
-        for(final ExtendedAssembly source : assembly.Source.Sources)
+        for(ExtendedAssembly source : assembly.Source.Sources)
         {
             @Nullable
             SupportedAssembly innerSource = source.Source;
@@ -94,7 +94,7 @@ public class AssemblyView
         }
         supportingAssemblies.addAll(assembly.getAllErrata(PrimaryAssembly.class));
         supportingAssemblies.addAll(assembly.getAllErrata(ExtendedAssembly.class));
-        for(final SupportedAssembly support : supportingAssemblies)
+        for(SupportedAssembly support : supportingAssemblies)
         {
             @Nullable
             final Integer index = determineBestSupportIndex(assembly, support);
@@ -108,10 +108,10 @@ public class AssemblyView
         if(!basicInfoOnly)
         {
             // Sort fragments with their partner, ordered by the lowest start index.
-            final Set<Record> finalSupport = new HashSet<>();
-            final Set<Record> lostSupport = new HashSet<>();
+            final Set<Read> finalSupport = new HashSet<>();
+            final Set<Read> lostSupport = new HashSet<>();
             assembly.getSupportRecords().forEach(finalSupport::add);
-            for(final ExtendedAssembly source : assembly.Source.Sources)
+            for(ExtendedAssembly source : assembly.Source.Sources)
             {
                 source.getSupportRecords().forEach(support ->
                 {
@@ -125,18 +125,18 @@ public class AssemblyView
                 });
             }
 
-            final List<Map.Entry<Record, Integer>> rawSupport = assembly.getSupport().toList();
-            for(final Record record : lostSupport)
+            final List<Map.Entry<Read, Integer>> rawSupport = assembly.getSupport().toList();
+            for(Read read : lostSupport)
             {
-                final int supportIndex = Objects.requireNonNullElse(determineBestSupportIndex(assembly, record), 0);
-                rawSupport.add(new AbstractMap.SimpleEntry<>(record, supportIndex));
+                final int supportIndex = Objects.requireNonNullElse(determineBestSupportIndex(assembly, read), 0);
+                rawSupport.add(new AbstractMap.SimpleEntry<>(read, supportIndex));
             }
 
             final Map<String, Integer> fragmentsByStartIndex = rawSupport.stream()
                     .collect(Collectors.toMap(kvp -> kvp.getKey().getName(), Map.Entry::getValue, Math::min));
 
-            final List<Map.Entry<Record, Integer>> sortedSupport = rawSupport.stream()
-                    .sorted(Comparator.<Map.Entry<Record, Integer>, Integer>comparing(kvp -> fragmentsByStartIndex.get(kvp.getKey()
+            final List<Map.Entry<Read, Integer>> sortedSupport = rawSupport.stream()
+                    .sorted(Comparator.<Map.Entry<Read, Integer>, Integer>comparing(kvp -> fragmentsByStartIndex.get(kvp.getKey()
                                     .getName()))
                             .thenComparing(kvp -> kvp.getKey().getName())
                             .thenComparingInt(Map.Entry::getValue))
@@ -144,28 +144,29 @@ public class AssemblyView
 
             for(int i = 0; i < sortedSupport.size(); i++)
             {
-                final Map.Entry<Record, Integer> entry = sortedSupport.get(i);
-                final Record record = entry.getKey();
+                final Map.Entry<Read, Integer> entry = sortedSupport.get(i);
+                final Read read = entry.getKey();
                 final int supportIndex = entry.getValue();
 
-                final Map.Entry<Record, Integer> nextEntry = i + 1 < sortedSupport.size() ? sortedSupport.get(i + 1) : entry;
-                final int thisEnd = supportIndex + record.getLength();
+                final Map.Entry<Read, Integer> nextEntry = i + 1 < sortedSupport.size() ? sortedSupport.get(i + 1) : entry;
+                final int thisEnd = supportIndex + read.getLength();
                 final int nextBegin = nextEntry.getValue();
                 final int gapSize = nextBegin - thisEnd;
-                final boolean canCombine = record.getName().equals(nextEntry.getKey().getName()) && gapSize > 3;
+                final boolean canCombine = read.getName().equals(nextEntry.getKey().getName()) && gapSize > 3;
 
-                final boolean isReference = record.isGermline();
-                final boolean isLost = !canCombine && lostSupport.contains(record);
+                final boolean isReference = false; // TO-DO or just show by sampleId as per Sage  read.isGermline();
+                final boolean isLost = !canCombine && lostSupport.contains(read);
 
                 final Sequence sequence;
                 if(canCombine)
                 {
-                    final String newName = record.getName() + (record.isSecondOfPair() ? " 2&1" : " 1&2");
-                    sequence = combine(newName, record, nextEntry.getKey(), gapSize);
+                    final String newName = read.getName() + (read.secondInPair() ? " 2&1" : " 1&2");
+                    // FIXME: see comment below
+                    // sequence = combine(newName, read, nextEntry.getKey(), gapSize);
                     i++; // Skip next
                 }
                 else
-                    sequence = record;
+                    sequence = read;
 
                 final String cssClass;
                 if(isLost && isReference)
@@ -177,10 +178,13 @@ public class AssemblyView
                 else
                     cssClass = "default";
 
+                // FIXME: requires Read to have Alignments but consider an alternative
+                /*
                 if(isLost)
-                    sequenceView.addSequence(record, cssClass);
+                    sequenceView.addSequence(read, cssClass);
                 else
                     sequenceView.addSequence(sequence, supportIndex, cssClass);
+                 */
             }
         }
 
@@ -190,7 +194,7 @@ public class AssemblyView
         builder.appendEndTag("</div>");
         builder.appendEndTag("</div>");
 
-        for(final ExtendedAssembly source : assembly.Source.Sources)
+        for(ExtendedAssembly source : assembly.Source.Sources)
             generateAssemblyDiagrams(builder, source);
 
         builder.appendEndTag("</div>");
@@ -211,7 +215,7 @@ public class AssemblyView
         builder.appendEndTag("</thead>");
         builder.appendStartTag("<tbody>");
 
-        final List<Map.Entry<Record, Integer>> entries = assembly.getSupport().toList();
+        final List<Map.Entry<Read, Integer>> entries = assembly.getSupport().toList();
         for(int i = 0; i < rows; i++)
         {
             builder.append("<tr>");
@@ -220,10 +224,10 @@ public class AssemblyView
                 final int index = i * columns + j;
                 if(index < entries.size())
                 {
-                    final Map.Entry<Record, Integer> entry = entries.get(index);
-                    final Record record = entry.getKey();
+                    final Map.Entry<Read, Integer> entry = entries.get(index);
+                    final Read read = entry.getKey();
                     final Integer startIndex = entry.getValue();
-                    builder.append("<td>").append(record.getName()).append("</td>").append("<td>").append(startIndex).append("</td>");
+                    builder.append("<td>").append(read.getName()).append("</td>").append("<td>").append(startIndex).append("</td>");
                 }
             }
             builder.append("</tr>");
@@ -257,11 +261,11 @@ public class AssemblyView
     private static void generateAssemblyDiagrams(final HTMLBuilder builder, final List<DiagramSet> diagrams)
     {
         builder.appendStartTag("<div class=\"assemblyDiagrams\">");
-        for(final DiagramSet diagramSet : diagrams)
+        for(DiagramSet diagramSet : diagrams)
         {
             builder.appendStartTag("<div class=\"diagramSet\">");
             builder.append("<h3>").append(diagramSet.Label).append("</h3>\n");
-            for(final Pair<String, Flowchart> entry : diagramSet.Diagrams)
+            for(Pair<String, Flowchart> entry : diagramSet.Diagrams)
             {
                 builder.appendStartTag("<div class=\"diagram\">");
                 builder.append("<h4>").append(entry.getLeft()).append("</h4>\n");
@@ -285,7 +289,7 @@ public class AssemblyView
         builder.append("<tr><th>Chromosome</th><th>Position</th><th>Length</th><th>Inverted</th><th>Qual</th></tr>\n");
         builder.appendEndTag("</thead>");
         builder.appendStartTag("<tbody>");
-        for(final Alignment alignment : assembly.getAlignmentBlocks())
+        for(Alignment alignment : assembly.getAlignmentBlocks())
         {
             builder.append("<tr><td>").append(alignment.Chromosome).append("</td>");
 

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.processor;
 
+import static com.hartwig.hmftools.esvee.read.ReadUtils.flipRead;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -7,7 +9,7 @@ import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.common.RegionOfInterest;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
 import com.hartwig.hmftools.esvee.models.Alignment;
-import com.hartwig.hmftools.esvee.models.Record;
+import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.util.Counter;
 
 import org.jetbrains.annotations.Nullable;
@@ -49,31 +51,33 @@ public class SupportScanner
                 .collect(Collectors.toList());
         final List<RegionOfInterest> deduplicated = RegionOfInterest.tryMerge(alignmentRegions);
 
-        final List<Record> potentialSupport = deduplicated.stream()
+        final List<Read> potentialSupport = deduplicated.stream()
                 .flatMap(region -> mContext.SAMSource.findReadsContaining(region).stream())
                 .distinct()
                 .collect(Collectors.toList());
 
-        for(final Record record : potentialSupport)
-            tryAddSupport(assembly, record);
+        for(Read read : potentialSupport)
+            tryAddSupport(assembly, read);
 
         return assembly;
     }
 
-    private void tryAddSupport(final AlignedAssembly assembly, final Record record)
+    private void tryAddSupport(final AlignedAssembly assembly, final Read read)
     {
-        if(assembly.containsSupport(record))
+        if(assembly.containsSupport(read))
             return;
 
-        if(assembly.tryAddSupport(mContext.SupportChecker, record))
+        if(assembly.tryAddSupport(mContext.SupportChecker, read))
         {
             mExtraSupportCounter.add(1);
         }
         else
         {
-            final Record inverted = record.flipRecord();
+            final Read inverted = flipRead(read);
             if(assembly.tryAddSupport(mContext.SupportChecker, inverted))
+            {
                 mExtraSupportCounter.add(1);
+            }
         }
     }
 }

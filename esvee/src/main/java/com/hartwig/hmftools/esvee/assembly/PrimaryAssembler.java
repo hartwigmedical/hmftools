@@ -19,8 +19,8 @@ import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.html.DiagramSet;
 import com.hartwig.hmftools.esvee.models.PrimaryAssembly;
-import com.hartwig.hmftools.esvee.models.Record;
-import com.hartwig.hmftools.esvee.sam.SAMSource;
+import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.read.SAMSource;
 import com.hartwig.hmftools.esvee.util.Counter;
 import com.hartwig.hmftools.esvee.processor.PrimaryAssemblyResult;
 import com.hartwig.hmftools.esvee.processor.Problem;
@@ -100,19 +100,19 @@ public class PrimaryAssembler
 
     private List<PrimaryAssembly> doProcessJunction(final Junction junction)
     {
-        final List<Record> nearbyAlignments = mSAMSource.findReadsNear(junction.chromosome(), junction.position());
+        final List<Read> nearbyAlignments = mSAMSource.findReadsNear(junction.chromosome(), junction.position());
 
-        final List<Record> rawAlignments = nearbyAlignments.stream()
+        final List<Read> rawAlignments = nearbyAlignments.stream()
                 .filter(Counter.asPredicate(alignment -> AlignmentFilters.alignmentCrossesJunction(alignment, junction), mCounters.ReadsCrossingJunction))
                 .filter(Counter.asPredicate(alignment -> AlignmentFilters.isRecordAverageQualityAbove(alignment, SvConstants.AVG_BASE_QUAL_THRESHOLD), mCounters.ReadsPassingRawQualityThreshold))
                 .map(alignment -> realignForJunction(alignment, junction))
                 .collect(Collectors.toList());
 
-        final List<Record> withLowQAlignments = rawAlignments.stream()
+        final List<Read> withLowQAlignments = rawAlignments.stream()
                 .filter(Counter.asPredicate(alignment -> AlignmentFilters.recordSoftClipsNearJunction(alignment, junction), mCounters.ReadsSoftClippedAtJunction))
                 .collect(Collectors.toList());
 
-        final List<Record> filteredAlignments = withLowQAlignments.stream()
+        final List<Read> filteredAlignments = withLowQAlignments.stream()
                 .filter(Counter.asPredicate(alignment -> AlignmentFilters.isRecordAverageQualityPastJunctionAbove(alignment, junction, SvConstants.AVG_BASE_QUAL_THRESHOLD), mCounters.ReadsPassingJunctionQualityThreshold))
                 .filter(Counter.asPredicate(alignment -> AlignmentFilters.hasAcceptableMapQ(alignment, SvConstants.MINMAPQTOSTARTJUNCTION), mCounters.HasAcceptableMapQ))
                 .filter(Counter.asPredicate(AlignmentFilters::isNotBadlyMapped, mCounters.WellMapped))
@@ -135,7 +135,7 @@ public class PrimaryAssembler
 
         for(PrimaryAssembly assembly : anchored)
         {
-            for(Record alignment : withLowQAlignments)
+            for(Read alignment : withLowQAlignments)
             {
                 if(!assembly.containsSupport(alignment))
                 {
@@ -155,7 +155,7 @@ public class PrimaryAssembler
         return assemblies;
     }
 
-    private List<PrimaryAssembly> extendInitial(final List<Record> alignments, final List<PrimaryAssembly> assemblies)
+    private List<PrimaryAssembly> extendInitial(final List<Read> alignments, final List<PrimaryAssembly> assemblies)
     {
         return assemblies.stream()
                 .map(assembly -> extendInitial(alignments, assembly, mJunctionOrientation))
@@ -165,12 +165,12 @@ public class PrimaryAssembler
     /** There may be alignments that can extend the assembly but that are too noisy to be used during initial construction.
      * Examples of these types of alignments may be, for example, ones with larger soft-clips that have resulted in unacceptably low MapQ.
      * Extension in this manner is not supposed to create new candidates, so we will always choose the "best" result after pruning. */
-    private PrimaryAssembly extendInitial(final List<Record> alignments, final PrimaryAssembly assembly, final Direction direction)
+    private PrimaryAssembly extendInitial(final List<Read> alignments, final PrimaryAssembly assembly, final Direction direction)
     {
         HeadNode graph = HeadNode.create(assembly, direction);
-        final Set<Record> support = assembly.getSupportRecords().stream()
+        final Set<Read> support = assembly.getSupportRecords().stream()
                 .collect(Collectors.toSet());
-        for(Record alignment : alignments)
+        for(Read alignment : alignments)
         {
             if(support.contains(alignment))
                 continue;
@@ -199,21 +199,21 @@ public class PrimaryAssembler
                                     assembly.AnchorPosition, anchorPositionInAssembly);
                     newAssembly.Diagrams.addAll(assembly.Diagrams);
                     newAssembly.Diagrams.add(diagrams);
-                    for(Record record : alignments)
+                    for(Read read : alignments)
                     {
                         // To support the assembly we need to either be fully contained in the assembly, or to support
                         // it with our back half if we're a forwards junction / front half if we're a backwards junction.
                         final int minSupportIndex = mJunctionOrientation == Direction.FORWARDS
-                                ? -record.getLength()
+                                ? -read.getLength()
                                 : 0;
                         final int maxSupportIndex = mJunctionOrientation == Direction.FORWARDS
-                                ? Math.min(0, newAssembly.Assembly.length() - record.getLength())
+                                ? Math.min(0, newAssembly.Assembly.length() - read.getLength())
                                 : newAssembly.Assembly.length();
 
                         @Nullable
-                        final Integer supportIndex = mSupportChecker.StrongSupport.supportIndex(newAssembly, record, 3, minSupportIndex, maxSupportIndex);
+                        final Integer supportIndex = mSupportChecker.StrongSupport.supportIndex(newAssembly, read, 3, minSupportIndex, maxSupportIndex);
                         if(supportIndex != null)
-                            newAssembly.addEvidenceAt(record, supportIndex);
+                            newAssembly.addEvidenceAt(read, supportIndex);
                     }
                     return newAssembly;
                 }))
@@ -230,14 +230,14 @@ public class PrimaryAssembler
     /**
      * Convert indels near the junction to soft-clips
      */
-    private Record realignForJunction(final Record alignment, final Junction junction)
+    private Read realignForJunction(final Read read, final Junction junction)
     {
         boolean justHadIndel = false;
         boolean wasRightNearJunction = false;
-        int referencePosition = alignment.getAlignmentStart();
-        for(int i = 0; i < alignment.getCigar().numCigarElements(); i++)
+        int referencePosition = read.getAlignmentStart();
+        for(int i = 0; i < read.getCigar().numCigarElements(); i++)
         {
-            final CigarElement element = alignment.getCigar().getCigarElement(i);
+            final CigarElement element = read.getCigar().getCigarElement(i);
 
             final boolean isIndel = element.getOperator() == CigarOperator.D || element.getOperator() == CigarOperator.I;
             final boolean isLeftNearJunction = Math.abs(referencePosition - junction.position()) <= 2;
@@ -248,36 +248,44 @@ public class PrimaryAssembler
                 // Soft-clip everything before this cigar element (excl)
                 int softClippedLength = 0;
                 for(int j = 0; j < i; j++)
-                    if(alignment.getCigar().getCigarElement(j).getOperator().consumesReadBases())
-                        softClippedLength += alignment.getCigar().getCigarElement(j).getLength();
+                    if(read.getCigar().getCigarElement(j).getOperator().consumesReadBases())
+                        softClippedLength += read.getCigar().getCigarElement(j).getLength();
 
                 final List<CigarElement> newElements = new ArrayList<>();
                 newElements.add(new CigarElement(softClippedLength, CigarOperator.S));
-                for(int j = i; j < alignment.getCigar().numCigarElements(); j++)
-                    newElements.add(alignment.getCigar().getCigarElement(j));
+                for(int j = i; j < read.getCigar().numCigarElements(); j++)
+                    newElements.add(read.getCigar().getCigarElement(j));
 
-                final Record newAlignment = alignment.copyRecord();
+                // CHECK: decide how to handle these
+                /*
+                final Read newAlignment = read.copyRecord();
                 newAlignment.setAlignmentStart(referencePosition);
                 newAlignment.setCigar(new Cigar(newElements));
                 return newAlignment;
+                */
+                return read;
             }
 
             if(junction.orientation() == Direction.FORWARDS && wasRightNearJunction && isIndel)
             {
                 // Soft-clip everything after this cigar element (incl)
                 int softClippedLength = 0;
-                for(int j = i; j < alignment.getCigar().numCigarElements(); j++)
-                    if(alignment.getCigar().getCigarElement(j).getOperator().consumesReadBases())
-                        softClippedLength += alignment.getCigar().getCigarElement(j).getLength();
+                for(int j = i; j < read.getCigar().numCigarElements(); j++)
+                    if(read.getCigar().getCigarElement(j).getOperator().consumesReadBases())
+                        softClippedLength += read.getCigar().getCigarElement(j).getLength();
 
                 final List<CigarElement> newElements = new ArrayList<>();
                 for(int j = 0; j < i; j++)
-                    newElements.add(alignment.getCigar().getCigarElement(j));
+                    newElements.add(read.getCigar().getCigarElement(j));
                 newElements.add(new CigarElement(softClippedLength, CigarOperator.S));
 
-                final Record newAlignment = alignment.copyRecord();
+                /*
+                final Read newAlignment = read.copyRecord();
                 newAlignment.setCigar(new Cigar(newElements));
                 return newAlignment;
+                */
+
+                return read;
             }
 
             if(element.getOperator().consumesReferenceBases())
@@ -286,10 +294,10 @@ public class PrimaryAssembler
             wasRightNearJunction = isRightNearJunction;
         }
 
-        return alignment;
+        return read;
     }
 
-    private List<PrimaryAssembly> createInitialAssemblies(final List<Record> alignments)
+    private List<PrimaryAssembly> createInitialAssemblies(final List<Read> alignments)
     {
         final HeadNode combinedForwards = alignments.stream()
                 .filter(alignment -> alignment.getChromosome().equals(mJunctionChromosome))
@@ -322,21 +330,21 @@ public class PrimaryAssembler
 
         for(PrimaryAssembly assembly : candidateAssemblies)
         {
-            for(Record record : alignments)
+            for(Read read : alignments)
             {
                 // To support the assembly we need to either be fully contained in the assembly, or to support
                 // it with our back half if we're a forwards junction / front half if we're a backwards junction.
                 final int minSupportIndex = mJunctionOrientation == Direction.FORWARDS
-                        ? -record.getLength()
+                        ? -read.getLength()
                         : 0;
                 final int maxSupportIndex = mJunctionOrientation == Direction.FORWARDS
-                        ? Math.min(0, assembly.Assembly.length() - record.getLength())
+                        ? Math.min(0, assembly.Assembly.length() - read.getLength())
                         : assembly.Assembly.length();
 
                 @Nullable
-                final Integer supportIndex = mSupportChecker.WeakSupport.supportIndex(assembly, record, 3, minSupportIndex, maxSupportIndex);
+                final Integer supportIndex = mSupportChecker.WeakSupport.supportIndex(assembly, read, 3, minSupportIndex, maxSupportIndex);
                 if(supportIndex != null)
-                    assembly.addEvidenceAt(record, supportIndex);
+                    assembly.addEvidenceAt(read, supportIndex);
             }
         }
 
@@ -368,11 +376,11 @@ public class PrimaryAssembler
         return diagrams;
     }
 
-    private List<PrimaryAssembly> createAnchors(final List<Record> alignments, final List<PrimaryAssembly> initialAssemblies)
+    private List<PrimaryAssembly> createAnchors(final List<Read> alignments, final List<PrimaryAssembly> initialAssemblies)
     {
-        final Map<Record, HeadNode> reverseSequences = new HashMap<>();
-        for(Record record : alignments)
-            reverseSequences.put(record, HeadNode.create(record, mJunctionPosition, mJunctionOrientation.opposite()));
+        final Map<Read, HeadNode> reverseSequences = new HashMap<>();
+        for(Read read : alignments)
+            reverseSequences.put(read, HeadNode.create(read, mJunctionPosition, mJunctionOrientation.opposite()));
 
         final List<PrimaryAssembly> anchored = initialAssemblies.stream()
                 .flatMap(candidateAssembly -> createAnchor(reverseSequences, candidateAssembly).stream())
@@ -382,10 +390,10 @@ public class PrimaryAssembler
         return anchored;
     }
 
-    private List<PrimaryAssembly> createAnchor(final Map<Record, HeadNode> reverseSequences, final PrimaryAssembly initialAssembly)
+    private List<PrimaryAssembly> createAnchor(final Map<Read, HeadNode> reverseSequences, final PrimaryAssembly initialAssembly)
     {
         HeadNode anchor = null;
-        for(Record support : initialAssembly.getSupportRecords())
+        for(Read support : initialAssembly.getSupportRecords())
         {
             final HeadNode sequence = reverseSequences.get(support);
             if(anchor == null)
@@ -421,7 +429,7 @@ public class PrimaryAssembler
 
             for(var entry : initialAssembly.getSupport())
             {
-                final Record record = entry.getKey();
+                final Read read = entry.getKey();
                 final int supportIndex = entry.getValue();
                 final int newSupportIndex;
                 if(isForwards)
@@ -429,10 +437,10 @@ public class PrimaryAssembler
                 else
                     newSupportIndex = supportIndex;
 
-                if(mSupportChecker.WeakSupport.supportsAt(assembly, record, newSupportIndex))
-                    assembly.addEvidenceAt(record, newSupportIndex);
+                if(mSupportChecker.WeakSupport.supportsAt(assembly, read, newSupportIndex))
+                    assembly.addEvidenceAt(read, newSupportIndex);
                 else
-                    assembly.tryAddSupport(mSupportChecker, record);
+                    assembly.tryAddSupport(mSupportChecker, read);
             }
 
             if(assembly.getSupportFragments().size() > SvConstants.MINREADSTOSUPPORTASSEMBLY)

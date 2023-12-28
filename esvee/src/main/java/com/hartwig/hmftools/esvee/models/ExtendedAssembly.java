@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.esvee.models;
 
+import static com.hartwig.hmftools.esvee.read.ReadUtils.flipRead;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.esvee.html.DiagramSet;
+import com.hartwig.hmftools.esvee.read.Read;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -48,7 +51,7 @@ public class ExtendedAssembly extends SupportedAssembly implements TrimmableAsse
 
         final ExtendedAssembly newAssembly = new ExtendedAssembly(Name, newBases, Source);
         newAssembly.Diagrams.addAll(Diagrams);
-        for(final Map.Entry<Record, Integer> entry : getSupport())
+        for(Map.Entry<Read, Integer> entry : getSupport())
         {
             final int newOffset = entry.getValue() - removeLeft;
             if(newOffset >= newLength)
@@ -65,10 +68,12 @@ public class ExtendedAssembly extends SupportedAssembly implements TrimmableAsse
         final String assembly = SequenceUtil.reverseComplement(Assembly);
         final ExtendedAssembly flipped = new ExtendedAssembly(Name, assembly, Source);
 
-        for(final Map.Entry<Record, Integer> support : getSupport())
+        for(Map.Entry<Read, Integer> support : getSupport())
         {
-            flipped.addEvidenceAt(support.getKey().flipRecord(),
-                    getLength() - support.getValue() - support.getKey().getLength());
+            int initialReadLength = support.getKey().getLength();
+            Read flippedRead = flipRead(support.getKey());
+
+            flipped.addEvidenceAt(flippedRead,getLength() - support.getValue() - initialReadLength);
         }
         flipped.recalculateBaseQuality();
         return flipped;

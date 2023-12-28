@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static htsjdk.samtools.CigarOperator.M;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,12 +20,15 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.models.Alignment;
-import com.hartwig.hmftools.esvee.models.Record;
+import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.models.SupportedAssembly;
+import com.hartwig.hmftools.esvee.read.ReadUtils;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.jetbrains.annotations.Nullable;
+
+import htsjdk.samtools.CigarElement;
 
 public class HeadNode extends Node
 {
@@ -54,7 +59,7 @@ public class HeadNode extends Node
 
             final Collection<Node> successors = node.successors();
             int nodeDepth = 1;
-            for(final Node successor : successors)
+            for(Node successor : successors)
             {
                 final int nextDepth = depthLookup.getOrDefault(successor, -1);
                 nodeDepth = nextDepth == -1 ? -1 : Math.max(nextDepth + 1, nodeDepth);
@@ -255,7 +260,7 @@ public class HeadNode extends Node
             if(successorCount == 0 && sb.length() > 0)
                 results.add(sb.toString());
 
-            for(final Node successor : currentNode.successors())
+            for(Node successor : currentNode.successors())
                 if(successorCount == 1)
                     toProcess.add(new FlattenEntry(successor, sb, totalQuality));
                 else
@@ -320,7 +325,7 @@ public class HeadNode extends Node
             current = current.successors().get(0);
 
             final Map<Node, OverlayHead> newHeads = new IdentityHashMap<>(4);
-            for(final OverlayHead head : heads.values())
+            for(OverlayHead head : heads.values())
             {
                 if(head == ambiguous)
                     continue;
@@ -334,7 +339,7 @@ public class HeadNode extends Node
                 }
 
                 final boolean mutateHead = successors.size() == 1;
-                for(final Node successor : successors)
+                for(Node successor : successors)
                 {
                     final boolean isLowQuality = isLowQualityBase(successor, true) || isLowQualityBase(current, false);
                     final boolean isMatch = successor.Base == current.Base;
@@ -534,7 +539,7 @@ public class HeadNode extends Node
                 }
             }
 
-            for(final Node successor : node.successors())
+            for(Node successor : node.successors())
                 worklist.add(Triple.of(successor, node, depth + 1));
         }
         if(bestChildOverlap < minimumOverlap)
@@ -552,7 +557,7 @@ public class HeadNode extends Node
         final int errors = path.size() - rawScore;
         int score = 0;
         final Deque<Node> recentPath = new ArrayDeque<>();
-        for(final Node n : path)
+        for(Node n : path)
         {
             recentPath.addLast(n);
             if(recentPath.size() > repeatLength)
@@ -571,7 +576,7 @@ public class HeadNode extends Node
         final HeadNode clone = new HeadNode();
 
         final Queue<Pair<Node, Node>> worklist = new ArrayDeque<>();
-        for(final Node successor : successors())
+        for(Node successor : successors())
             worklist.add(Pair.of(clone, successor));
 
         while(!worklist.isEmpty())
@@ -585,30 +590,62 @@ public class HeadNode extends Node
             newNode.MaxQuality = toClone.MaxQuality;
             newNode.Support = new ArrayList<>(toClone.Support);
             previousNode.setNext(newNode);
-            for(final Node successor : toClone.successors())
+            for(Node successor : toClone.successors())
                 worklist.add(Pair.of(newNode, successor));
         }
 
         return clone;
     }
 
-    private static int getReadStartIndex(final Record record, final int startPosition)
+    private static int getReadStartIndex(final Read read, final int startPosition)
     {
-        final int startIndex = record.getReadPositionAtReferencePosition(startPosition) - 1;
+        // CHECK: assumes that the read's cigar hasn't changed
+        final int startIndex = ReadUtils.getReadPositionAtReferencePosition(read, startPosition) - 1;
         if(startIndex >= 0)
             return startIndex;
 
+        int readIndex = 0;
+        int refPosition = read.getAlignmentStart();
+
+        int lastAlignedRefPosition = -1;
+        int lastAlignedReadIndex = -1;
+
+        for(CigarElement element : read.getCigar().getCigarElements())
+        {
+            if(element.getOperator() == M && refPosition < startPosition)
+            {
+                lastAlignedRefPosition = refPosition + 1;
+                lastAlignedReadIndex = readIndex + 1;
+            }
+
+            if(element.getOperator().consumesReadBases())
+                readIndex += element.getLength();
+
+            if(element.getOperator().consumesReferenceBases())
+                refPosition += element.getLength();
+        }
+
+        if(lastAlignedRefPosition > 0)
+            return (startPosition - lastAlignedRefPosition) + lastAlignedReadIndex - 1;
+
+        return startPosition - read.getUnclippedStart();
+
+        /*
         Alignment lastBlock = null;
-        for(final Alignment block : record.getAlignmentBlocks())
+        for(Alignment block : read.getAlignmentBlocks())
+        {
             if(block.isMapped() && block.ReferenceStartPosition < startPosition)
                 lastBlock = block;
+        }
+
         if(lastBlock != null)
             return (startPosition - lastBlock.ReferenceStartPosition) + lastBlock.SequenceStartPosition - 1;
 
-        return startPosition - record.getUnclippedStart();
+        return startPosition - read.getUnclippedStart();
+        */
     }
 
-    public static HeadNode createIndexed(final Record alignment, final int startIndex, final Direction orientation)
+    public static HeadNode createIndexed(final Read alignment, final int startIndex, final Direction orientation)
     {
         final HeadNode root = new HeadNode();
         Node current = root;
@@ -637,18 +674,18 @@ public class HeadNode extends Node
     }
 
     @Nullable
-    public static HeadNode create(final Record record, final int startPosition, final boolean isForwards)
+    public static HeadNode create(final Read read, final int startPosition, final boolean isForwards)
     {
-        return create(record, startPosition, isForwards ? Direction.FORWARDS : Direction.REVERSE);
+        return create(read, startPosition, isForwards ? Direction.FORWARDS : Direction.REVERSE);
     }
 
     @Nullable
-    public static HeadNode create(final Record record, final int startPosition, final Direction orientation)
+    public static HeadNode create(final Read read, final int startPosition, final Direction orientation)
     {
-        final int startIndex = getReadStartIndex(record, startPosition);
-        if(startIndex < 0 || startIndex >= record.getLength())
+        final int startIndex = getReadStartIndex(read, startPosition);
+        if(startIndex < 0 || startIndex >= read.getLength())
             return null;
-        return createIndexed(record, startIndex, orientation);
+        return createIndexed(read, startIndex, orientation);
     }
 
     public static HeadNode create(final SupportedAssembly assembly, final Direction orientation)
@@ -657,11 +694,11 @@ public class HeadNode extends Node
         final List<List<Node.Support>> nodeSupport = new ArrayList<>(assembly.Assembly.length());
         for(int i = 0; i < assembly.Assembly.length(); i++)
             nodeSupport.add(new ArrayList<>());
-        for(final Map.Entry<Record, Integer> support : assembly.getSupport())
+        for(Map.Entry<Read, Integer> support : assembly.getSupport())
         {
-            final Record supportRecord = support.getKey();
+            final Read supportRead = support.getKey();
             int supportIndex = support.getValue();
-            int length = Math.min(assembly.Assembly.length() - supportIndex, supportRecord.getLength());
+            int length = Math.min(assembly.Assembly.length() - supportIndex, supportRead.getLength());
             if(supportIndex < 0)
             {
                 length += supportIndex;
@@ -669,10 +706,10 @@ public class HeadNode extends Node
             }
 
             for(int i = 0; i < length; i++)
-                nodeSupport.get(supportIndex + i).add(new Node.Support(supportRecord, i));
+                nodeSupport.get(supportIndex + i).add(new Node.Support(supportRead, i));
         }
 
-        for(final List<Node.Support> list : nodeSupport)
+        for(List<Node.Support> list : nodeSupport)
             if(list.size() > 1)
                 list.sort(Comparator.naturalOrder());
 

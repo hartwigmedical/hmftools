@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.esvee.models;
 
+import static com.hartwig.hmftools.esvee.read.ReadUtils.flipRead;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.esvee.html.DiagramSet;
+import com.hartwig.hmftools.esvee.read.Read;
 
 import htsjdk.samtools.util.SequenceUtil;
 
@@ -18,7 +21,7 @@ public class AlignedAssembly extends SupportedAssembly implements AlignedSequenc
     {
         this(source.Assembly, source, alignment);
 
-        for(final Map.Entry<Record, Integer> support : source.getSupport())
+        for(Map.Entry<Read, Integer> support : source.getSupport())
         {
             addEvidenceAt(support.getKey(), support.getValue());
         }
@@ -51,7 +54,7 @@ public class AlignedAssembly extends SupportedAssembly implements AlignedSequenc
         final String assembly = SequenceUtil.reverseComplement(Assembly);
         final List<Alignment> flippedAlignments = new ArrayList<>();
         
-        for(final Alignment alignment : mAlignment)
+        for(Alignment alignment : mAlignment)
         {
             final int startIndex = alignment.SequenceStartPosition - 1;
             final int newEndIndexExcl = assembly.length() - startIndex;
@@ -75,10 +78,12 @@ public class AlignedAssembly extends SupportedAssembly implements AlignedSequenc
         Collections.reverse(flippedAlignments);
         final AlignedAssembly flipped = new AlignedAssembly(assembly, Source.flipStrand(), flippedAlignments);
 
-        for(final Map.Entry<Record, Integer> support : getSupport())
+        for(Map.Entry<Read,Integer> support : getSupport())
         {
-            flipped.addEvidenceAt(support.getKey().flipRecord(),
-                    getLength() - support.getValue() - support.getKey().getLength());
+            int initialReadLength = support.getKey().getLength();
+            Read flippedRead = flipRead(support.getKey());
+            
+            flipped.addEvidenceAt(flippedRead, getLength() - support.getValue() - initialReadLength);
         }
 
         flipped.recalculateBaseQuality();

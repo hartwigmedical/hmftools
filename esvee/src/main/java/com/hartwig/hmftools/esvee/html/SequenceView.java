@@ -80,10 +80,10 @@ public class SequenceView
     private List<Alignment> computeLegend()
     {
         List<Alignment> legend = List.of();
-        for(final AlignedSequence sequence : mHeaderSequences)
+        for(AlignedSequence sequence : mHeaderSequences)
             legend = addToLegend(legend, sequence);
 
-        for(final Pair<String, AlignedSequence> pair : mSequences)
+        for(Pair<String, AlignedSequence> pair : mSequences)
             legend = addToLegend(legend, pair.getRight());
 
         return legend;
@@ -93,7 +93,7 @@ public class SequenceView
     {
         final StringBuilder reference = new StringBuilder();
 
-        for(final Alignment block : legend)
+        for(Alignment block : legend)
         {
             if(block.isUnmapped())
             {
@@ -206,7 +206,7 @@ public class SequenceView
     private int offsetInLegend(final AlignedSequence sequence, final List<Alignment> legend)
     {
         int unmappedLeft = 0;
-        for(final Alignment alignment : sequence.getAlignmentBlocks())
+        for(Alignment alignment : sequence.getAlignmentBlocks())
         {
             if(alignment.isUnmapped())
             {
@@ -215,7 +215,7 @@ public class SequenceView
             }
 
             int legendLengthSoFar = 0;
-            for(final Alignment legendAlignment : legend)
+            for(Alignment legendAlignment : legend)
             {
                 if(legendAlignment.includes(alignment.Chromosome, alignment.ReferenceStartPosition, alignment.Length))
                 {
@@ -247,14 +247,14 @@ public class SequenceView
         appendLegend(builder, legend, null, null);
         appendSequence(builder, reference, 0, true, "default");
 
-        for(final AlignedSequence sequence : mHeaderSequences)
+        for(AlignedSequence sequence : mHeaderSequences)
             appendSequence(builder, legend, realignSequenceToLegend(sequence, legend), true, "default");
         builder.appendEndTag("</thead>");
 
         builder.appendStartTag("<tbody>");
-        for(final Pair<String, AlignedSequence> pair : mSequences)
+        for(Pair<String, AlignedSequence> pair : mSequences)
             appendSequence(builder, legend, realignSequenceToLegend(pair.getRight(), legend), false, pair.getLeft());
-        for(final Triple<String, Integer, Sequence> pair : mRawSequences)
+        for(Triple<String, Integer, Sequence> pair : mRawSequences)
             appendSequence(builder, pair.getRight(), pair.getMiddle(), false, pair.getLeft());
         builder.appendEndTag("</tbody>");
 
@@ -285,7 +285,7 @@ public class SequenceView
             builder.append("<td class=\"B\" colspan=\"").append(startOffset).append("\"></td>");
         }
 
-        for(final Alignment alignment : sequence.getAlignmentBlocks())
+        for(Alignment alignment : sequence.getAlignmentBlocks())
         {
             if(-startOffset >= alignment.Length)
             {
@@ -463,7 +463,7 @@ public class SequenceView
         @Nullable
         Integer currentMajor = null;
         int majorSpan = 0;
-        for(final Alignment alignment : legend)
+        for(Alignment alignment : legend)
         {
             final int referenceLeftPosition = alignment.Inverted
                     ? alignment.ReferenceStartPosition + alignment.Length - 1

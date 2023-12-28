@@ -2,15 +2,13 @@ package com.hartwig.hmftools.esvee.processor;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
 import com.hartwig.hmftools.esvee.models.Alignment;
 import com.hartwig.hmftools.esvee.models.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.models.GappedAssembly;
-import com.hartwig.hmftools.esvee.models.Record;
+import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.models.SupportedAssembly;
 
 import htsjdk.samtools.SAMFileHeader;
@@ -64,7 +62,7 @@ public class VariantCallerTest
         return new AlignedAssembly(supported, alignments);
     }
 
-    private static Record createRecord(final String assembly, final SAMFileHeader header)
+    private static Read createRecord(final String assembly, final SAMFileHeader header)
     {
         final var record = new SAMRecord(header);
         record.setReadName("Read" + READ_COUNTER.incrementAndGet());
@@ -73,7 +71,7 @@ public class VariantCallerTest
         record.setBaseQualities(new byte[assembly.length()]);
         record.setAttribute("RG", "dummy");
 
-        return new Record(record);
+        return new Read(record);
     }
 
     private static VariantCaller caller()

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.esvee.html.DiagramSet;
+import com.hartwig.hmftools.esvee.read.Read;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -38,11 +39,11 @@ public class PrimaryAssembly extends SupportedAssembly implements TrimmableAssem
         if(original.AnchorPosition == anchorPosition && original.AnchorChromosome.equals(anchorChromosome))
         {
             final int anchorDelta = anchorPositionInAssembly - original.AnchorPositionInAssembly;
-            for(final Map.Entry<Record, Integer> entry : original.getSupport())
+            for(Map.Entry<Read, Integer> entry : original.getSupport())
             {
-                final Record record = entry.getKey();
+                final Read read = entry.getKey();
                 final int supportIndex = entry.getValue() + anchorDelta;
-                addEvidenceAt(record, supportIndex);
+                addEvidenceAt(read, supportIndex);
             }
         }
     }
@@ -82,7 +83,7 @@ public class PrimaryAssembly extends SupportedAssembly implements TrimmableAssem
         final PrimaryAssembly newAssembly = new PrimaryAssembly(Name, newBases, AnchorChromosome,
                 newAnchorPosition, newAnchorPositionInAssembly);
         newAssembly.Diagrams.addAll(Diagrams);
-        for(final Map.Entry<Record, Integer> entry : getSupport())
+        for(Map.Entry<Read, Integer> entry : getSupport())
         {
             final int newOffset = entry.getValue() - removeLeft;
             if(newOffset >= newLength)

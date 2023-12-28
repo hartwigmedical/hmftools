@@ -1,34 +1,36 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import java.util.Arrays;
 import java.util.Objects;
 
 import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.models.Record;
+import com.hartwig.hmftools.esvee.read.Read;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
 public final class AlignmentFilters
 {
-    public static boolean alignmentCrossesJunction(final Record record, final Junction junction)
+    public static boolean alignmentCrossesJunction(final Read read, final Junction junction)
     {
-        return record.getUnclippedStart() <= junction.Position && junction.Position <= record.getUnclippedEnd();
+        return read.getUnclippedStart() <= junction.Position && junction.Position <= read.getUnclippedEnd();
     }
 
-    public static boolean isRecordAverageQualityAbove(final Record record, final int averageBaseQThreshold)
+    public static boolean isRecordAverageQualityAbove(final Read read, final int averageBaseQThreshold)
     {
-        return getAvgBaseQuality(record, 1, record.getLength()) >= averageBaseQThreshold;
+        return getAvgBaseQuality(read, 1, read.getLength()) >= averageBaseQThreshold;
     }
 
-    private static int getAvgBaseQuality(final Record record, final int readPosition, final int length)
+    private static int getAvgBaseQuality(final Read read, final int readPosition, final int length)
     {
         assert (readPosition > 0);
 
-        final byte[] baseQualities = record.getBaseQuality();
+        final byte[] baseQualities = read.getBaseQuality();
         final int startIndex = readPosition - 1;
         final int endIndex = Math.min(startIndex + length, baseQualities.length);
 
@@ -38,100 +40,106 @@ public final class AlignmentFilters
         return qualitySum / length;
     }
 
-    public static boolean isRecordAverageQualityPastJunctionAbove(final Record record, final Junction junction, final int averageBaseQThreshold)
+    public static boolean isRecordAverageQualityPastJunctionAbove(final Read read, final Junction junction, final int averageBaseQThreshold)
     {
         final int startIndex;
         final int endIndex;
         if(junction.Orientation == POS_STRAND)
         {
-            startIndex = junction.Position - record.getUnclippedStart();
-            endIndex = record.getLength();
+            startIndex = junction.Position - read.getUnclippedStart();
+            endIndex = read.getLength();
         }
         else
         {
             startIndex = 0;
-            endIndex = record.getLength() - (record.getUnclippedEnd() - junction.position());
+            endIndex = read.getLength() - (read.getUnclippedEnd() - junction.position());
         }
         if(startIndex == endIndex)
             return true;
 
-        final int averageQuality = getAvgBaseQuality(record, startIndex + 1, endIndex - startIndex);
+        final int averageQuality = getAvgBaseQuality(read, startIndex + 1, endIndex - startIndex);
         return averageQuality > averageBaseQThreshold;
     }
 
     private static final int ALIGNMENT_SOFT_CLIP_JUNCTION_TOLERANCE = 2;
 
-    public static boolean recordSoftClipsNearJunction(final Record record, final Junction junction)
+    public static boolean recordSoftClipsNearJunction(final Read read, final Junction junction)
     {
         // Must start/end with a soft-clip that extends to the junction position
         final CigarElement element = junction.orientation() == Direction.FORWARDS
-                ? record.getCigar().getLastCigarElement()
-                : record.getCigar().getFirstCigarElement();
+                ? read.getCigar().getLastCigarElement()
+                : read.getCigar().getFirstCigarElement();
         if(element.getOperator() != CigarOperator.S)
             return false;
 
         final int junctionOffsetFromEnd = junction.orientation() == Direction.FORWARDS
-                ? record.getUnclippedEnd() - junction.position()
-                : junction.position() - record.getUnclippedStart();
+                ? read.getUnclippedEnd() - junction.position()
+                : junction.position() - read.getUnclippedStart();
         final int softClipLength = element.getLength();
         return softClipLength + ALIGNMENT_SOFT_CLIP_JUNCTION_TOLERANCE >= junctionOffsetFromEnd;
     }
 
-    public static boolean hasAcceptableMapQ(final Record record, final int threshold)
+    public static boolean hasAcceptableMapQ(final Read read, final int threshold)
     {
-        return record.getMappingQuality() >= threshold;
+        return read.getMappingQuality() >= threshold;
     }
 
-    public static boolean isNotBadlyMapped(final Record record)
+    public static boolean isNotBadlyMapped(final Read read)
     {
-        return !isBadlyMapped(record);
+        return !isBadlyMapped(read);
     }
 
-    private static boolean isBadlyMapped(final Record record)
+    private static boolean isBadlyMapped(final Read read)
     {
-        if(!record.isDiscordant(1000))
+        if(!isDiscordant(read))
             return false;
 
-        final int mappedSize = record.getCigar().getCigarElements().stream()
+        final int mappedSize = read.getCigar().getCigarElements().stream()
                 .filter(element -> element.getOperator() == CigarOperator.M)
                 .mapToInt(CigarElement::getLength)
                 .sum();
-        final int indels = record.getCigar().getCigarElements().stream()
+
+        int indelCount = read.getCigar().getCigarElements().stream()
                 .filter(element -> element.getOperator() == CigarOperator.D || element.getOperator() == CigarOperator.I)
                 .mapToInt(CigarElement::getLength)
                 .sum();
-        final int nm = Objects.requireNonNullElse(record.getAttribute("NM"), indels);
 
-        final int mismatchedBases = nm - indels;
+        // CHECK
+        Object nmAttribute = read.getAttribute(NUM_MUTATONS_ATTRIBUTE);
+        int nmCount = nmAttribute != null ? (int)nmAttribute : indelCount;
+
+        final int mismatchedBases = nmCount - indelCount;
         final int matchedBases = mappedSize - mismatchedBases;
+
         if(matchedBases < 30)
             return true;
-        if(indels > 0 && mismatchedBases >= 3)
+
+        if(indelCount > 0 && mismatchedBases >= 3)
             return true;
 
-        final float[] stats = mappedBaseStats(record);
+        final float[] stats = mappedBaseStats(read);
         int countAbove70 = 0;
         int countAbove35 = 0;
-        for(final float frequency : stats)
+        for(float frequency : stats)
         {
             if(frequency > 0.7f)
                 countAbove70++;
             if(frequency > 0.35f)
                 countAbove35++;
         }
-        //noinspection RedundantIfStatement
+
         if(countAbove70 >= 1 || countAbove35 >= 2)
             return true;
 
         return false;
     }
 
-    private static float[] mappedBaseStats(final Record alignment)
+    private static float[] mappedBaseStats(final Read alignment)
     {
         final int[] baseCount = new int[5];
 
         int readPosition = 1;
-        for(final CigarElement element : alignment.getCigar().getCigarElements())
+        for(CigarElement element : alignment.getCigar().getCigarElements())
         {
             if(element.getOperator() != CigarOperator.M)
             {

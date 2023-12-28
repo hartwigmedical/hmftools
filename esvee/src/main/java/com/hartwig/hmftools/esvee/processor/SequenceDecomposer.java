@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.esvee.models.Record;
+import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.models.Sequence;
 import com.hartwig.hmftools.esvee.models.SupportedAssembly;
 
@@ -116,7 +116,7 @@ public enum SequenceDecomposer
                 return mQualityScore;
 
             int sum = 0;
-            for(final byte b : Qual)
+            for(byte b : Qual)
                 sum += b;
             final int averageQual = sum / Qual.length;
 
@@ -327,7 +327,7 @@ public enum SequenceDecomposer
             final int startIndex = endIndex - node.length();
 
             int supportDepth = 0;
-            for(final Map.Entry<Record, Integer> entry : assembly.getSupport())
+            for(Map.Entry<Read, Integer> entry : assembly.getSupport())
             {
                 final int supportStartIndex = entry.getValue();
                 final int supportEndIndex = supportStartIndex + entry.getKey().getLength();

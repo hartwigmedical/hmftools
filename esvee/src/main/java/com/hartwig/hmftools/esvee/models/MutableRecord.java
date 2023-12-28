@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-import com.hartwig.hmftools.esvee.sam.CigarUtils;
+import com.hartwig.hmftools.esvee.read.CigarUtils;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.util.SequenceUtil;

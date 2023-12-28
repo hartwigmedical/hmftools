@@ -97,7 +97,7 @@ public class RegionOfInterest
 
     public static void appendRegion(final List<RegionOfInterest> existingRegions, final RegionOfInterest region)
     {
-        for(final RegionOfInterest existingRegion : existingRegions)
+        for(RegionOfInterest existingRegion : existingRegions)
             if(existingRegion.tryExtend(region))
                 return;
 
@@ -112,7 +112,7 @@ public class RegionOfInterest
     public static List<RegionOfInterest> tryMerge(final Iterable<RegionOfInterest> regions)
     {
         final Map<String, List<RegionOfInterest>> byChromosome = new LinkedHashMap<>();
-        for(final RegionOfInterest region : regions)
+        for(RegionOfInterest region : regions)
             byChromosome.computeIfAbsent(region.Chromosome, ignored -> new ArrayList<>()).add(region);
 
         // Sorting ensures that only a single pass is required to combine the regions, and that we only have to check the last one
@@ -121,7 +121,7 @@ public class RegionOfInterest
         return byChromosome.values().stream().flatMap(regionList ->
         {
             final List<RegionOfInterest> consolidated = new ArrayList<>();
-            for(final RegionOfInterest region : regionList)
+            for(RegionOfInterest region : regionList)
                 appendRegion(consolidated, region); // TODO: This checks all regions in this chromosome, in theory we only need to check the previous region.
             return consolidated.stream();
         }).collect(Collectors.toList());

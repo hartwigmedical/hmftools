@@ -71,7 +71,7 @@ public class SizedIterable<T> implements Iterable<T>
     public List<T> toList()
     {
         final List<T> list = new ArrayList<>(mSize);
-        for(final T item : this)
+        for(T item : this)
             list.add(item);
         return list;
     }

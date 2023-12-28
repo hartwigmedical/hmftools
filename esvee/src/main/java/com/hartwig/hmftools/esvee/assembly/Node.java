@@ -7,7 +7,7 @@ import java.util.Queue;
 
 import com.hartwig.hmftools.esvee.mermaid.Flowchart;
 import com.hartwig.hmftools.esvee.mermaid.FlowchartBuilder;
-import com.hartwig.hmftools.esvee.models.Record;
+import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.util.StringCache;
 
 import org.jetbrains.annotations.Nullable;
@@ -16,12 +16,12 @@ public class Node
 {
     public static class Support implements Comparable<Support>
     {
-        public final com.hartwig.hmftools.esvee.models.Record Record;
+        public final Read Read;
         public final int ReadIndex;
 
-        public Support(final Record record, final int readIndex)
+        public Support(final Read read, final int readIndex)
         {
-            Record = record;
+            Read = read;
             ReadIndex = readIndex;
         }
 
@@ -32,30 +32,30 @@ public class Node
                 return false;
 
             final Node.Support other = (Node.Support) obj;
-            return other.Record.equals(Record) && other.ReadIndex == ReadIndex;
+            return other.Read.equals(Read) && other.ReadIndex == ReadIndex;
         }
 
         @Override
         public int hashCode()
         {
-            return Record.hashCode();
+            return Read.hashCode();
         }
 
         @Override
         public int compareTo(final Node.Support other)
         {
-            if(Record == other.Record)
+            if(Read == other.Read)
                 return 0;
 
-            int compare = Integer.compare(Record.getAlignmentStart(), other.Record.getAlignmentStart());
+            int compare = Integer.compare(Read.getAlignmentStart(), other.Read.getAlignmentStart());
             if(compare != 0)
                 return compare;
 
-            compare = Boolean.compare(Record.isFirstOfPair(), other.Record.isFirstOfPair());
+            compare = Boolean.compare(Read.isFirstOfPair(), other.Read.isFirstOfPair());
             if(compare != 0)
                 return compare;
 
-            return Record.getName().compareTo(other.Record.getName());
+            return Read.getName().compareTo(other.Read.getName());
         }
     }
 
@@ -164,9 +164,9 @@ public class Node
     {
         int sum = 0;
         int max = 0;
-        for(final Node.Support support : Support)
+        for(Node.Support support : Support)
         {
-            final int baseQuality = support.Record.getBaseQuality()[support.ReadIndex];
+            final int baseQuality = support.Read.getBaseQuality()[support.ReadIndex];
             sum += baseQuality;
             max = Math.max(max, baseQuality);
         }
@@ -212,7 +212,7 @@ public class Node
             if(!diagram.addNode(node, StringCache.of(node.Quality), base))
                 continue;
 
-            for(final Node successor : node.successors())
+            for(Node successor : node.successors())
             {
                 nodes.add(successor);
                 diagram.addLink(node, successor);

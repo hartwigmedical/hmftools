@@ -23,11 +23,11 @@ public enum PrimaryPhasing
         final Map<Integer, Set<T>> primaryPhasing = new HashMap<>();
         int nextPhase = 0;
 
-        for(final T assembly : assemblies)
+        for(T assembly : assemblies)
         {
             int phasing = -1;
             final Set<Integer> additionalPhases = new HashSet<>();
-            for(final String fragment : assembly.getSupportFragments())
+            for(String fragment : assembly.getSupportFragments())
             {
                 @Nullable
                 final Integer fragmentPhase = primaryPhasingByFragment.get(fragment);
@@ -44,8 +44,8 @@ public enum PrimaryPhasing
                     if(current == other)
                         continue;
                     current.addAll(other);
-                    for(final T otherAssembly : other)
-                        for(final String otherFragment : otherAssembly.getSupportFragments())
+                    for(T otherAssembly : other)
+                        for(String otherFragment : otherAssembly.getSupportFragments())
                             primaryPhasingByFragment.put(otherFragment, phasing);
                     primaryPhasing.remove(fragmentPhase);
                 }
@@ -57,7 +57,7 @@ public enum PrimaryPhasing
                 primaryPhasing.put(phasing, Collections.newSetFromMap(new IdentityHashMap<>()));
             }
             primaryPhasing.get(phasing).add(assembly);
-            for(final String fragment : assembly.getSupportFragments())
+            for(String fragment : assembly.getSupportFragments())
                 primaryPhasingByFragment.put(fragment, phasing);
         }
 

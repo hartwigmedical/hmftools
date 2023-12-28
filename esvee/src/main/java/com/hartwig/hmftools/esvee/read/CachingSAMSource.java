@@ -1,15 +1,11 @@
-package com.hartwig.hmftools.esvee.sam;
+package com.hartwig.hmftools.esvee.read;
 
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.esvee.models.Record;
 import com.hartwig.hmftools.esvee.util.ReadCache;
-
-import org.jetbrains.annotations.Nullable;
 
 public class CachingSAMSource implements SAMSource
 {
@@ -35,14 +31,14 @@ public class CachingSAMSource implements SAMSource
             @Override
             public ReadCache.CachedReadValue load(final ReadCache.CachedReadKey key)
             {
-                final List<Record> alignments = mInner.findReadsContaining(key.Chromosome, key.StartPosition, key.EndPosition);
+                final List<Read> alignments = mInner.findReadsContaining(key.Chromosome, key.StartPosition, key.EndPosition);
                 return new ReadCache.CachedReadValue(alignments);
             }
         });
     }
 
     @Override
-    public Stream<Record> streamReadsContaining(final String chromosome, final int startPosition, final int endPosition)
+    public Stream<Read> streamReadsContaining(final String chromosome, final int startPosition, final int endPosition)
     {
         try
         {

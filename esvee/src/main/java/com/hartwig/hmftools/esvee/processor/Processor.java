@@ -29,7 +29,7 @@ import com.hartwig.hmftools.esvee.models.AlignedAssembly;
 import com.hartwig.hmftools.esvee.models.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.models.GappedAssembly;
 import com.hartwig.hmftools.esvee.models.PrimaryAssembly;
-import com.hartwig.hmftools.esvee.models.Record;
+import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.models.Sequence;
 import com.hartwig.hmftools.esvee.models.SupportedAssembly;
 import com.hartwig.hmftools.esvee.output.VcfWriter;
@@ -173,11 +173,11 @@ public class Processor
         {
             final Set<ExtendedAssembly> phaseSet = secondaryPhaseSets.get(i);
             int j = 0;
-            for(final ExtendedAssembly assembly : phaseSet)
+            for(ExtendedAssembly assembly : phaseSet)
             {
                 final GappedAssembly newAssembly = new GappedAssembly(String.format("Assembly%s-%s", i, j++), List.of(assembly));
                 newAssembly.addErrata(assembly.getAllErrata());
-                for(final Map.Entry<Record, Integer> entry : assembly.getSupport())
+                for(Map.Entry<Read, Integer> entry : assembly.getSupport())
                     newAssembly.addEvidenceAt(entry.getKey(), entry.getValue());
 
                 mergedSecondaries.add(newAssembly);
@@ -243,7 +243,7 @@ public class Processor
 
             if(mContext.Problems.size() < 50)
             {
-                for(final Problem problem : mContext.Problems)
+                for(Problem problem : mContext.Problems)
                 {
                     SV_LOGGER.warn("{}", problem);
                 }
@@ -268,7 +268,7 @@ public class Processor
     private void writeHTMLSummaries(final List<VariantCall> variants)
     {
         int summariesWritten = 0;
-        for(final VariantCall call : variants)
+        for(VariantCall call : variants)
         {
             if(summariesWritten++ > SvConstants.MAX_HTML_SUMMARIES)
             {
@@ -305,7 +305,7 @@ public class Processor
                 .collect(Collectors.toList());
 
         final VcfWriter writer = new VcfWriter(mContext, sampleNames);
-        for(final VariantCall call : variants)
+        for(VariantCall call : variants)
         {
             try
             {
@@ -331,8 +331,8 @@ public class Processor
                 merged = false;
 
                 loopHead:
-                for(final ExtendedAssembly left : result)
-                    for(final ExtendedAssembly right : result)
+                for(ExtendedAssembly left : result)
+                    for(ExtendedAssembly right : result)
                     {
                         if(left == right)
                             continue;
@@ -420,9 +420,9 @@ public class Processor
     private void reAddSupport(final SupportedAssembly merged, final SupportedAssembly old)
     {
         final int offset = merged.Assembly.indexOf(old.Assembly);
-        for(final Map.Entry<Record, Integer> entry : old.getSupport())
+        for(Map.Entry<Read, Integer> entry : old.getSupport())
         {
-            final Record potentialSupport = entry.getKey();
+            final Read potentialSupport = entry.getKey();
             if(offset != -1)
             {
                 final int oldSupportIndex = entry.getValue();
@@ -568,11 +568,11 @@ public class Processor
                 "?", 0, 0, left);
 
         final int leftDelta = supportIndex > 0 ? 0 : -supportIndex;
-        for(final Map.Entry<Record, Integer> entry : left.getSupport())
+        for(Map.Entry<Read, Integer> entry : left.getSupport())
             merged.tryAddSupport(mContext.SupportChecker, entry.getKey(), entry.getValue() + leftDelta);
 
         final int rightDelta = Math.max(supportIndex, 0);
-        for(final Map.Entry<Record, Integer> entry : right.getSupport())
+        for(Map.Entry<Read, Integer> entry : right.getSupport())
             merged.tryAddSupport(mContext.SupportChecker, entry.getKey(), entry.getValue() + rightDelta);
 
         merged.addErrata(left.getAllErrata());
@@ -590,8 +590,8 @@ public class Processor
 
         final Map<ExtendedAssembly, Map<ExtendedAssembly, Long>> leftWise = new IdentityHashMap<>();
         final Map<ExtendedAssembly, Map<ExtendedAssembly, Long>> rightWise = new IdentityHashMap<>();
-        for(final ExtendedAssembly first : assemblies)
-            for(final ExtendedAssembly second : assemblies)
+        for(ExtendedAssembly first : assemblies)
+            for(ExtendedAssembly second : assemblies)
             {
                 if(first == second)
                     continue;
@@ -607,8 +607,8 @@ public class Processor
     {
         final GappedAssembly gappedAssembly = new GappedAssembly("Assembly" + index, order(assemblies));
 
-        for(final ExtendedAssembly assembly : assemblies)
-            for(final Record support : assembly.getSupportRecords())
+        for(ExtendedAssembly assembly : assemblies)
+            for(Read support : assembly.getSupportRecords())
                 if(!gappedAssembly.tryAddSupport(mContext.SupportChecker, support))
                     SV_LOGGER.info("Failed to add support for assembly {}: {}", gappedAssembly.Name, support.getName());
 

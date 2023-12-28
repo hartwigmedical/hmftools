@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.sam;
+package com.hartwig.hmftools.esvee.read;
 
 import java.util.Collection;
 import java.util.List;
@@ -7,31 +7,30 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.esvee.common.RegionOfInterest;
-import com.hartwig.hmftools.esvee.models.Record;
 import com.hartwig.hmftools.esvee.util.MultiMapCollector;
 
 import org.apache.commons.lang3.tuple.Pair;
 
 public interface SAMSource extends AutoCloseable
 {
-    Stream<Record> streamReadsContaining(final String chromosome, final int startPosition, final int endPosition);
+    Stream<Read> streamReadsContaining(final String chromosome, final int startPosition, final int endPosition);
 
-    default List<Record> findReadsContaining(final RegionOfInterest region)
+    default List<Read> findReadsContaining(final RegionOfInterest region)
     {
         return findReadsContaining(region.Chromosome, region.Start, region.End);
     }
 
-    default List<Record> findReadsContaining(final String chromosome, final int startPosition, final int endPosition)
+    default List<Read> findReadsContaining(final String chromosome, final int startPosition, final int endPosition)
     {
         return streamReadsContaining(chromosome, startPosition, endPosition).collect(Collectors.toList());
     }
 
-    default Stream<Record> streamReadsNear(final String chromosome, final int position)
+    default Stream<Read> streamReadsNear(final String chromosome, final int position)
     {
         return streamReadsContaining(chromosome, Math.max(position - 1000, 1), position + 1000);
     }
 
-    default List<Record> findReadsNear(final String chromosome, final int position)
+    default List<Read> findReadsNear(final String chromosome, final int position)
     {
         return streamReadsNear(chromosome, position).collect(Collectors.toList());
     }
@@ -39,9 +38,9 @@ public interface SAMSource extends AutoCloseable
     /**
      * @return tuples showing the original record on the left, and the mate on the right.
      */
-    default Stream<Pair<Record, Record>> streamMates(final Collection<Record> records)
+    default Stream<Pair<Read, Read>> streamMates(final Collection<Read> reads)
     {
-        final Stream<RegionOfInterest> mateRegionsUnmerged = records.stream()
+        final Stream<RegionOfInterest> mateRegionsUnmerged = reads.stream()
                 .map(record -> record.isMateMapped()
                         ? new RegionOfInterest(record.getMateChromosome(), record.getMateAlignmentStart(),
                         record.getMateAlignmentStart() + record.getLength())
@@ -49,8 +48,8 @@ public interface SAMSource extends AutoCloseable
                                 record.getAlignmentStart() + record.getLength()));
         final List<RegionOfInterest> mappedMateRegions = RegionOfInterest.tryMerge(mateRegionsUnmerged::iterator);
 
-        final Map<String, List<Record>> recordsByName = records.stream()
-                .collect(MultiMapCollector.keyed(Record::getName));
+        final Map<String, List<Read>> recordsByName = reads.stream()
+                .collect(MultiMapCollector.keyed(Read::getName));
 
         return mappedMateRegions.stream()
                 .map(mateRegion -> streamReadsContaining(mateRegion.Chromosome, mateRegion.Start, mateRegion.End)
@@ -60,9 +59,9 @@ public interface SAMSource extends AutoCloseable
                 .reduce(Stream::concat).orElse(Stream.of());
     }
 
-    default List<Pair<Record, Record>> findMates(final Collection<Record> records)
+    default List<Pair<Read, Read>> findMates(final Collection<Read> reads)
     {
-        return streamMates(records).collect(Collectors.toList());
+        return streamMates(reads).collect(Collectors.toList());
     }
 
     @Override // No exceptions

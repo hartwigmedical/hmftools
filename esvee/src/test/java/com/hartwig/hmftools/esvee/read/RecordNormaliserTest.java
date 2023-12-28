@@ -1,9 +1,8 @@
-package com.hartwig.hmftools.esvee.sam;
+package com.hartwig.hmftools.esvee.read;
 
 import java.util.Arrays;
 
 import com.hartwig.hmftools.common.samtools.CigarUtils;
-import com.hartwig.hmftools.esvee.models.Record;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMFileHeader;
@@ -12,7 +11,7 @@ import htsjdk.samtools.SAMSequenceRecord;
 
 public class RecordNormaliserTest
 {
-    private Record record(final String cigarString)
+    private Read record(final String cigarString)
     {
         final SAMFileHeader header = new SAMFileHeader();
         header.addSequence(new SAMSequenceRecord("1", 100_000));
@@ -30,7 +29,7 @@ public class RecordNormaliserTest
         record.setAlignmentStart(1000);
         record.setCigar(cigar);
 
-        return new Record(record);
+        return new Read(record);
     }
 
     /* CHASHA FIXME

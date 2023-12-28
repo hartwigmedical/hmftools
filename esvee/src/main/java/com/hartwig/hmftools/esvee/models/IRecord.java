@@ -77,7 +77,7 @@ public interface IRecord extends AlignedSequence, Cloneable
         if(pos <= 0)
             return 0;
 
-        for(final Alignment alignmentBlock : getAlignmentBlocks())
+        for(Alignment alignmentBlock : getAlignmentBlocks())
         {
             final int end = alignmentBlock.ReferenceStartPosition + alignmentBlock.Length - 1;
             if(end >= pos)

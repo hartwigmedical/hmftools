@@ -36,7 +36,7 @@ public abstract class Counters<T extends Counters<T>>
     private static Function<Object, List<Counter>> createAccessor(final Class<?> clazz)
     {
         final List<ThrowingFunction<Object, Counter>> accessors = new ArrayList<>();
-        for(final Field field : clazz.getDeclaredFields())
+        for(Field field : clazz.getDeclaredFields())
         {
             if(!field.getType().equals(Counter.class))
                 continue;

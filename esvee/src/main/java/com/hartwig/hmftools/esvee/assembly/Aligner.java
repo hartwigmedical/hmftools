@@ -288,7 +288,7 @@ public class Aligner implements AutoCloseable
     private List<Alignment> fillGaps(final Sequence sequence, final List<Alignment> existing)
     {
         final List<Alignment> alignments = new ArrayList<>();
-        for(final Alignment alignment : existing)
+        for(Alignment alignment : existing)
             alignments.addAll(tryMap(sequence, alignment));
         return alignments;
     }
@@ -314,7 +314,7 @@ public class Aligner implements AutoCloseable
 
         SV_LOGGER.trace("remapping {} as {}", alignment, replacements);
 
-        for(final Alignment replacement : replacements)
+        for(Alignment replacement : replacements)
         {
             if(replacement.isUnmapped() && replacement.Length >= 30)
                 recursiveReplacements.addAll(tryMap(sequence, replacement));
@@ -327,7 +327,7 @@ public class Aligner implements AutoCloseable
     private List<Alignment> unmapRubbish(final List<Alignment> existing)
     {
         final List<Alignment> alignments = new ArrayList<>();
-        for(final Alignment alignment : existing)
+        for(Alignment alignment : existing)
         {
             if(alignment.isMapped() && alignment.Quality < 10)
             {
@@ -374,7 +374,7 @@ public class Aligner implements AutoCloseable
     private static boolean isMonoBase(final Sequence sequence)
     {
         final float[] frequencies = baseFrequencies(sequence);
-        for(final float frequency : frequencies)
+        for(float frequency : frequencies)
             if(frequency > 0.9)
                 return true;
         return false;
@@ -384,7 +384,7 @@ public class Aligner implements AutoCloseable
     {
         final int[] counts = baseCounts(sequence);
         int total = 0;
-        for(final int count : counts)
+        for(int count : counts)
             total += count;
 
         final float[] frequencies = new float[counts.length];
@@ -397,7 +397,7 @@ public class Aligner implements AutoCloseable
     private static int[] baseCounts(final Sequence sequence)
     {
         final int[] counts = new int[5];
-        for(final byte base : sequence.getBases())
+        for(byte base : sequence.getBases())
         {
             if(base == 'A')
                 counts[0]++;

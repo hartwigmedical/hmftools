@@ -30,7 +30,7 @@ public class Flowchart
 
         mNodeLabels = new String[nodes.size()];
         mNodeStyles = new String[nodes.size()];
-        for(final Node node : nodes)
+        for(Node node : nodes)
         {
             mNodeLabels[node.Id] = StringCache.tryDedupe(node.Label);
             mNodeStyles[node.Id] = StringCache.tryDedupe(node.Style);
@@ -74,11 +74,11 @@ public class Flowchart
 
         // Declare styles
         // https://mermaid.js.org/syntax/flowchart.html#styling-a-node
-        for(final Map.Entry<String, String> styleEntry : Styles.entrySet())
+        for(Map.Entry<String, String> styleEntry : Styles.entrySet())
             sb.append("    classDef ").append(styleEntry.getKey()).append(" ").append(styleEntry.getValue()).append("\n");
 
         final List<Node> nodes = createNodes();
-        for(final Node node : nodes)
+        for(Node node : nodes)
         {
             sb.append("    n").append(node.Id).append("((\"").append(node.Label).append("\"))");
             if(node.Style != null)
@@ -90,7 +90,7 @@ public class Flowchart
             sb.append("\n");
         }
 
-        for(final Link<Node> link : createLinks(nodes))
+        for(Link<Node> link : createLinks(nodes))
         {
             @Nullable
             final Node left = link.Left;

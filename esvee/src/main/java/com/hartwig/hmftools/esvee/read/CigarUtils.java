@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.sam;
+package com.hartwig.hmftools.esvee.read;
 
 import java.util.ArrayList;
 import java.util.List;

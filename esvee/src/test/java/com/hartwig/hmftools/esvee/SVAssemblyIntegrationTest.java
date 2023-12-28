@@ -66,7 +66,7 @@ public class SVAssemblyIntegrationTest
         final Processor processor = new Processor(context);
 
         final Map<String, Set<Integer>> toProcessPositions = new HashMap<>();
-        for(final var pair : locations)
+        for(var pair : locations)
             toProcessPositions.computeIfAbsent(pair.getKey(), ignored -> new HashSet<>()).add(pair.getValue());
 
         final List<Junction> junctions = JunctionReader.readJunctionFile(config.junctionFile())
@@ -268,7 +268,7 @@ public class SVAssemblyIntegrationTest
     {
         final Set<VariantCall> actual = new HashSet<>(actualRaw); // Make a copy to make debugging easier
         final Map<String, List<VariantCall>> variantsByLeftDescriptor = new HashMap<>();
-        for(final VariantCall call : actual)
+        for(VariantCall call : actual)
         {
             // Ensure the calls are well-formed, hard-fail at this point.
             assertTrue(call.LeftChromosome).isNotNull();
@@ -294,7 +294,7 @@ public class SVAssemblyIntegrationTest
             errors.add(String.format("Expected %s variants, but found %s", expected.size(), actual.size()));
 
         // Did we miss any variants?
-        for(final ExpectedVariant expectedCall : expected)
+        for(ExpectedVariant expectedCall : expected)
         {
             final List<VariantCall> candidates = variantsByLeftDescriptor.get(expectedCall.Left.Descriptor);
             if(candidates == null || candidates.isEmpty())
@@ -316,7 +316,7 @@ public class SVAssemblyIntegrationTest
             {
                 @Nullable
                 VariantCall found = null;
-                for(final VariantCall actualCall : candidates)
+                for(VariantCall actualCall : candidates)
                 {
                     if(Objects.equals(new VariantSide(actualCall.LeftChromosome, actualCall.LeftPosition, actualCall.LeftDescriptor), expectedCall.Left)
                             && Objects.equals(new VariantSide(actualCall.RightChromosome, actualCall.RightPosition, actualCall.RightDescriptor), expectedCall.Right))
@@ -333,7 +333,7 @@ public class SVAssemblyIntegrationTest
         }
 
         // Are there variants left-over that we didn't expect?
-        for(final VariantCall call : actual)
+        for(VariantCall call : actual)
             errors.add(String.format("Unexpected VariantCall: %s", call));
 
         assertTrue(errors)
@@ -349,7 +349,7 @@ public class SVAssemblyIntegrationTest
 
         final StringBuilder sb = new StringBuilder();
         sb.append("final Set<ExpectedVariant> expected = Set.of(\n");
-        for(final VariantCall call : calls)
+        for(VariantCall call : calls)
         {
             if(call.isSingleSided())
             {

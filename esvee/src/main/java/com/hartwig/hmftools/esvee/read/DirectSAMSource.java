@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.esvee.sam;
+package com.hartwig.hmftools.esvee.read;
+
+import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
 
 import java.io.File;
 import java.util.Collections;
@@ -9,14 +11,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
-import com.hartwig.hmftools.esvee.models.Record;
 import com.hartwig.hmftools.esvee.util.ThrowingConsumer;
 import com.hartwig.hmftools.esvee.util.ThrowingFunction;
 
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.QueryInterval;
-import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -34,37 +34,42 @@ public class DirectSAMSource implements SAMSource
         this(bamFile, referenceSequence, null);
     }
 
-    public DirectSAMSource(final File bamFile, final File referenceSequence, @Nullable final String tag)
+    public DirectSAMSource(final File bamFile, final File referenceSequence, final String sampleId)
     {
         mBamFileName = bamFile.getAbsolutePath();
+
         mReader = ThreadLocal.withInitial(() ->
         {
             final SamReader reader = SamReaderFactory.makeDefault()
                     .referenceSequence(referenceSequence)
                     .open(bamFile);
             reader.getFileHeader().setAttribute("filename", mBamFileName);
-            if(tag != null)
-                reader.getFileHeader().setAttribute("userTag", tag);
+
+            reader.getFileHeader().setAttribute(BAM_HEADER_SAMPLE_ID_TAG, sampleId);
 
             mAllReaders.add(reader);
             return reader;
         });
+
         mReadRescue = new ReadRescue(new RefGenomeSource(ThrowingFunction.rethrow((File file) -> new IndexedFastaSequenceFile(file)).apply(referenceSequence)));
     }
 
     @Override
-    public Stream<Record> streamReadsContaining(final String chromosome, final int startPosition, final int endPosition)
+    public Stream<Read> streamReadsContaining(final String chromosome, final int startPosition, final int endPosition)
     {
         final int sequenceIndex = mReader.get().getFileHeader().getSequenceIndex(chromosome);
         final QueryInterval interval = new QueryInterval(sequenceIndex, startPosition, endPosition);
-        //noinspection resource
-        try (final Stream<Record> stream = mReader.get().queryOverlapping(new QueryInterval[] { interval }).stream()
+
+        try (final Stream<Read> stream = mReader.get().queryOverlapping(new QueryInterval[] { interval }).stream()
                 .filter(alignment -> !alignment.getDuplicateReadFlag())
-                .map(Record::new)
-                .map(mReadRescue::rescueRead)
+                .map(Read::new)
+                // .map(mReadRescue::rescueRead) // CHECK: not required
                 .filter(Objects::nonNull)) {
             return stream.collect(Collectors.toList()).stream();
         }
+
+        // private final RecordNormaliser mNormaliser;
+        // then call mNormaliser::normalise() on each record
     }
 
     @Override

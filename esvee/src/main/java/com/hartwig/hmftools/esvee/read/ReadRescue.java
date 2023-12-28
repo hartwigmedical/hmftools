@@ -1,5 +1,7 @@
-package com.hartwig.hmftools.esvee.sam;
+package com.hartwig.hmftools.esvee.read;
 
+import static com.hartwig.hmftools.esvee.read.ReadUtils.getAvgBaseQuality;
+import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 import static com.hartwig.hmftools.esvee.util.CommonUtils.reverseBytes;
 
 import java.util.Arrays;
@@ -21,12 +23,12 @@ public class ReadRescue
         mRef = ref;
     }
 
-    public <T extends MutableRecord> T rescueRead(final T read)
+    public Read rescueRead(final Read read)
     {
-        if(read.isUnmapped() || read.isDiscordant(1000) || read.getMappingQuality() < 60)
+        if(read.isUnmapped() || isDiscordant(read) || read.getMappingQuality() < 60)
             return read; // We attempt repair based on the reference genome. If we're not well mapped, this is a terrible idea.
 
-        final Direction direction = read.isPositiveStrand() ? Direction.FORWARDS : Direction.REVERSE;
+        final Direction direction = read.positiveStrand() ? Direction.FORWARDS : Direction.REVERSE;
 
         byte repeatBase = 'X';
         int repeatCount = 0;
@@ -43,12 +45,12 @@ public class ReadRescue
             if(repeatCount >= 10)
             {
                 final int averageQuality = direction == Direction.FORWARDS
-                        ? read.getAvgBaseQuality(i + 1, read.getBases().length - i + 1)
-                        : read.getAvgBaseQuality(1, index + 1);
+                        ? getAvgBaseQuality(read, i + 1, read.getBases().length - i + 1)
+                        : getAvgBaseQuality(read, 1, index + 1);
                 if(averageQuality > 25)
                     continue;
 
-                final T repaired = tryRescueRead(read, repeatBase, index, direction);
+                final Read repaired = tryRescueRead(read, repeatBase, index, direction);
                 if(repaired != read)
                     return repaired;
             }
@@ -59,58 +61,61 @@ public class ReadRescue
         return read;
     }
 
-    private <T extends MutableRecord> T tryRescueRead(final T record, final byte repeatBase, final int attemptIndex, final Direction direction)
+    private Read tryRescueRead(final Read read, final byte repeatBase, final int attemptIndex, final Direction direction)
     {
         @Nullable final byte[] newQuals = direction == Direction.FORWARDS
-                ? tryRescueReadForwards(record, repeatBase, attemptIndex)
-                : tryRescueReadBackwards(record, repeatBase, attemptIndex);
+                ? tryRescueReadForwards(read, repeatBase, attemptIndex)
+                : tryRescueReadBackwards(read, repeatBase, attemptIndex);
         if(newQuals == null)
-            return record;
+            return read;
 
-        //noinspection unchecked
-        final T clone = (T) record.copyRecord();
-        clone.setBases(record.getBases(), newQuals);
+        /*
+        final T clone = (T) read.copyRecord();
+        clone.setBases(read.getBases(), newQuals);
         return clone;
+         */
+
+        return read;
     }
 
     @Nullable
-    private byte[] tryRescueReadForwards(final IRecord record, final byte repeatBase, final int attemptIndex)
+    private byte[] tryRescueReadForwards(final Read read, final byte repeatBase, final int attemptIndex)
     {
-        final int referencePosition = referencePositionFromRecordIndex(record, attemptIndex + 1);
+        final int referencePosition = referencePositionFromRecordIndex(read, attemptIndex + 1);
         final int referenceStartPosition = referencePosition - 5;
-        final int referenceEndPosition = referencePosition + 50 + record.getLength();
-        if(referenceStartPosition <= 1 || referenceEndPosition >= mRef.getChromosomeLength(record.getChromosome()))
+        final int referenceEndPosition = referencePosition + 50 + read.getLength();
+        if(referenceStartPosition <= 1 || referenceEndPosition >= mRef.getChromosomeLength(read.getChromosome()))
             return null;
 
-        final byte[] referenceBases = mRef.getBases(record.getChromosome(), referenceStartPosition, referenceEndPosition);
+        final byte[] referenceBases = mRef.getBases(read.getChromosome(), referenceStartPosition, referenceEndPosition);
 
-        return tryRescueRead(record.getBases(), record.getBaseQuality(), attemptIndex, referenceBases, repeatBase);
+        return tryRescueRead(read.getBases(), read.getBaseQuality(), attemptIndex, referenceBases, repeatBase);
     }
 
     @Nullable
-    private byte[] tryRescueReadBackwards(final IRecord record, final byte repeatBase, final int attemptIndex)
+    private byte[] tryRescueReadBackwards(final Read read, final byte repeatBase, final int attemptIndex)
     {
-        final int referencePosition = referencePositionFromRecordIndex(record, attemptIndex + 1);
-        final int referenceStartPosition = referencePosition - 50 - record.getLength();
+        final int referencePosition = referencePositionFromRecordIndex(read, attemptIndex + 1);
+        final int referenceStartPosition = referencePosition - 50 - read.getLength();
         final int referenceEndPosition = referencePosition + 5;
-        if(referenceStartPosition <= 1 || referenceEndPosition >= mRef.getChromosomeLength(record.getChromosome()))
+        if(referenceStartPosition <= 1 || referenceEndPosition >= mRef.getChromosomeLength(read.getChromosome()))
             return null;
 
-        final byte[] referenceBases = mRef.getBases(record.getChromosome(), referenceStartPosition, referenceEndPosition);
+        final byte[] referenceBases = mRef.getBases(read.getChromosome(), referenceStartPosition, referenceEndPosition);
         final byte[] reversedReferenceBases = reverseBytes(referenceBases);
 
-        final byte[] reversedBases = reverseBytes(record.getBases());
-        final byte[] reversedQuals = reverseBytes(record.getBaseQuality());
-        final int reversedAttemptIndex = record.getLength() - attemptIndex;
+        final byte[] reversedBases = reverseBytes(read.getBases());
+        final byte[] reversedQuals = reverseBytes(read.getBaseQuality());
+        final int reversedAttemptIndex = read.getLength() - attemptIndex;
         return reverseBytes(tryRescueRead(reversedBases, reversedQuals, reversedAttemptIndex, reversedReferenceBases, repeatBase));
     }
 
-    private static int referencePositionFromRecordIndex(final IRecord record, final int desiredReadPosition)
+    private static int referencePositionFromRecordIndex(final Read read, final int desiredReadPosition)
     {
         int readPosition = 1;
-        int referencePosition = record.getAlignmentStart();
+        int referencePosition = read.getAlignmentStart();
 
-        for(final CigarElement element : record.getCigar().getCigarElements())
+        for(CigarElement element : read.getCigar().getCigarElements())
         {
             final int nextRefPosition =
                     element.getOperator().consumesReferenceBases() ? referencePosition + element.getLength() : referencePosition;

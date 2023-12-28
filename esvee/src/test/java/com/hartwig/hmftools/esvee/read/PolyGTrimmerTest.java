@@ -1,8 +1,6 @@
-package com.hartwig.hmftools.esvee.sam;
+package com.hartwig.hmftools.esvee.read;
 
 import java.util.List;
-
-import com.hartwig.hmftools.esvee.models.Record;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -13,7 +11,7 @@ import htsjdk.samtools.SAMSequenceRecord;
 
 public class PolyGTrimmerTest
 {
-    private static Record record(final String bases, final boolean isPositiveStrand)
+    private static Read record(final String bases, final boolean isPositiveStrand)
     {
         final SAMFileHeader header = new SAMFileHeader();
         header.addSequence(new SAMSequenceRecord("1", 10_000));
@@ -27,7 +25,7 @@ public class PolyGTrimmerTest
         record.setAlignmentStart(100);
         record.setCigar(new Cigar(List.of(new CigarElement(bases.length(), CigarOperator.M))));
 
-        return new Record(record);
+        return new Read(record);
     }
 
     /* CHASHA FIXME

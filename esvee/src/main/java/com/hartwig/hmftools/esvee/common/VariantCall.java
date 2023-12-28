@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.models.AlignedAssembly;
 import com.hartwig.hmftools.esvee.models.AssemblyClassification;
-import com.hartwig.hmftools.esvee.models.Record;
+import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -149,10 +149,11 @@ public class VariantCall
 
     public int quality()
     {
-        final int mappingQuality = LeftChromosome != null && RightChromosome != null
+        int mappingQuality = LeftChromosome != null && RightChromosome != null
                 ? Math.min(LeftMappingQuality, RightMappingQuality)
                 : LeftChromosome == null ? RightMappingQuality : LeftMappingQuality;
-        final int supportQuality = (int) (Math.log(germlineSupport() + somaticSupport()) * 2);
+        // final int supportQuality = (int) (Math.log(germlineSupport() + somaticSupport()) * 2);
+        int supportQuality = (int) (Math.log(germlineSupport() + somaticSupport()) * 2);
         return mappingQuality + supportQuality;
     }
 
@@ -194,27 +195,41 @@ public class VariantCall
         return leftName + rightName + hash;
     }
 
-    public int germlineSupport()
+    public int supportCount()
     {
         return mSampleSupport.stream()
-                .filter(SampleSupport::isGermline)
                 .mapToInt(SampleSupport::totalSupportFragmentCount)
                 .sum();
     }
 
+    public int germlineSupport()
+    {
+        return supportCount();
+
+        /*
+        return mSampleSupport.stream()
+                .filter(SampleSupport::isGermline)
+                .mapToInt(SampleSupport::totalSupportFragmentCount)
+                .sum();
+        */
+    }
+
     public int somaticSupport()
     {
+        return supportCount();
+        /*
         return mSampleSupport.stream()
                 .filter(sampleSupport -> !sampleSupport.isGermline())
                 .mapToInt(SampleSupport::totalSupportFragmentCount)
                 .sum();
+        */
     }
 
     public Set<String> supportingFragments()
     {
         return mSampleSupport.stream()
                 .flatMap(support -> Stream.concat(support.splitReads().stream(), support.discordantReads().stream()))
-                .map(Record::getName)
+                .map(Read::getName)
                 .collect(Collectors.toSet());
     }
 

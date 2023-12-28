@@ -223,7 +223,7 @@ public class VcfWriter implements AutoCloseable
         final List<Integer> anchorLeftCigarLengths = new ArrayList<>();
         final List<Integer> anchorRightCigarLengths = new ArrayList<>();
 
-        for(final VariantAssembly assembly : variantCall.variantAssemblies())
+        for(VariantAssembly assembly : variantCall.variantAssemblies())
         {
             assemblyNames.add(assembly.Assembly.Name);
             assemblyLeftIndices.add(assembly.LeftPosition);

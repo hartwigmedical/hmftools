@@ -37,7 +37,7 @@ public enum FlowchartSVGGenerator
         while(!toProcess.isEmpty())
         {
             final Collection<Node> next = Collections.newSetFromMap(new IdentityHashMap<>());
-            for(final Node node : toProcess)
+            for(Node node : toProcess)
             {
                 maxDepth.put(node, depth);
                 next.addAll(linksBySource.getOrDefault(node, List.of()));
@@ -58,7 +58,7 @@ public enum FlowchartSVGGenerator
         linksBySource.values().forEach(destinationNodes::addAll);
 
         final List<Node> startNodes = new ArrayList<>();
-        for(final Node node : nodes)
+        for(Node node : nodes)
             if(!destinationNodes.contains(node))
                 startNodes.add(node);
         return startNodes;
@@ -67,7 +67,7 @@ public enum FlowchartSVGGenerator
     private static Map<Node, List<Node>> createLinksBySource(final List<Link<Node>> links)
     {
         final Map<Node, List<Node>> linksBySource = new IdentityHashMap<>();
-        for(final Link<Node> link : links)
+        for(Link<Node> link : links)
         {
             final Node left = link.Left;
             final Node right = link.Right;
@@ -133,10 +133,10 @@ public enum FlowchartSVGGenerator
             final Map<Node, List<Node>> linksBySource,
             final Map<Node, Pair<Integer, Integer>> nodePositions)
     {
-        for(final Map.Entry<Node, List<Node>> entry : linksBySource.entrySet())
+        for(Map.Entry<Node, List<Node>> entry : linksBySource.entrySet())
         {
             final Node source = entry.getKey();
-            for(final Node destination : entry.getValue())
+            for(Node destination : entry.getValue())
             {
                 final Pair<Integer, Integer> startPosition = nodePositions.get(source);
                 final Pair<Integer, Integer> endPosition = nodePositions.get(destination);
@@ -174,7 +174,7 @@ public enum FlowchartSVGGenerator
     private static void renderNodes(final HTMLBuilder nodesBuilder,
             final Map<Node, Pair<Integer, Integer>> nodePositions)
     {
-        for(final Node node : nodePositions.keySet())
+        for(Node node : nodePositions.keySet())
         {
             final var position = nodePositions.get(node);
             final int x = position.getLeft();
@@ -205,7 +205,7 @@ public enum FlowchartSVGGenerator
         styleBuilder.append("\tfont-family: monospace;\n");
         styleBuilder.append(String.format("\tfont-size: %spx;\n", FONT_SIZE));
         styleBuilder.append("}\n");
-        for(final Map.Entry<String, String> entry : flowchart.Styles.entrySet())
+        for(Map.Entry<String, String> entry : flowchart.Styles.entrySet())
         {
             final String name = entry.getKey();
             final String text = entry.getValue();

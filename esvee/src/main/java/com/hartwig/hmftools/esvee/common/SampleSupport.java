@@ -2,30 +2,27 @@ package com.hartwig.hmftools.esvee.common;
 
 import java.util.Set;
 
-import com.hartwig.hmftools.esvee.models.Record;
+import com.hartwig.hmftools.esvee.read.Read;
 
 public class SampleSupport
 {
     private final String mSampleName;
-    private final boolean mIsGermline;
     private final int mQuality;
-    private final Set<Record> mSplitReads;
-    private final Set<Record> mDiscordantReads;
+    private final Set<Read> mSplitReads;
+    private final Set<Read> mDiscordantReads;
     private final int mSplitReadFragmentCount;
     private final int mDiscordantPairFragmentCount;
 
     public SampleSupport(
-            final String sampleName, final boolean isGermline,
-            final int quality, final Set<Record> splitReads, final Set<Record> discordantReads)
+            final String sampleName, final int quality, final Set<Read> splitReads, final Set<Read> discordantReads)
     {
         mSampleName = sampleName;
-        mIsGermline = isGermline;
         mQuality = quality;
         mSplitReads = splitReads;
         mDiscordantReads = discordantReads;
 
-        mSplitReadFragmentCount = (int) splitReads.stream().map(Record::getName).distinct().count();
-        mDiscordantPairFragmentCount = (int) discordantReads.stream().map(Record::getName).distinct().count();
+        mSplitReadFragmentCount = (int) splitReads.stream().map(Read::getName).distinct().count();
+        mDiscordantPairFragmentCount = (int) discordantReads.stream().map(Read::getName).distinct().count();
     }
 
     public String sampleName()
@@ -33,18 +30,16 @@ public class SampleSupport
         return mSampleName;
     }
 
-    public boolean isGermline() { return mIsGermline; }
-
     public int quality()
     {
         return mQuality;
     }
 
-    public Set<Record> splitReads()
+    public Set<Read> splitReads()
     {
         return mSplitReads;
     }
-    public Set<Record> discordantReads()
+    public Set<Read> discordantReads()
     {
         return mDiscordantReads;
     }

@@ -1,9 +1,7 @@
-package com.hartwig.hmftools.esvee.sam;
+package com.hartwig.hmftools.esvee.read;
 
 import java.util.List;
 import java.util.stream.Stream;
-
-import com.hartwig.hmftools.esvee.models.Record;
 
 public class CompositeSAMSource implements SAMSource
 {
@@ -15,7 +13,7 @@ public class CompositeSAMSource implements SAMSource
     }
 
     @Override
-    public Stream<Record> streamReadsContaining(final String chromosome, final int startPosition, final int endPosition)
+    public Stream<Read> streamReadsContaining(final String chromosome, final int startPosition, final int endPosition)
     {
         return mSources.stream().flatMap(source -> source.streamReadsContaining(chromosome, startPosition, endPosition));
     }
