@@ -196,7 +196,7 @@ public class AssemblyExtender
         // note that this method flips the right read if this pair is an INV
         final List<Read> mates = pairedMates.stream()
                 .filter(pair -> !assembly.containsSupport(pair.getRight()))
-                .filter(pair -> AlignmentFilters.isRecordAverageQualityAbove(pair.getRight(), SvConstants.AVG_BASE_QUAL_THRESHOLD))
+                .filter(pair -> AlignmentFilters.isRecordAverageQualityAbove(pair.getRight().getBaseQuality(), SvConstants.AVG_BASE_QUAL_THRESHOLD))
                 .map(pair -> pair.getLeft().positiveStrand() == pair.getRight().positiveStrand()
                         ? ReadUtils.flipRead(pair.getRight())
                         : pair.getRight())
@@ -243,9 +243,10 @@ public class AssemblyExtender
                 .collect(Collectors.toList()));
 
         // CHECK: reason for flipping?
+        // CHECK: why checking avg base qual again when already checked for all reads?
         final List<Read> mates = pairedMates.stream()
                 .filter(pair -> !assembly.containsSupport(pair.getRight()))
-                .filter(pair -> AlignmentFilters.isRecordAverageQualityAbove(pair.getRight(), SvConstants.AVG_BASE_QUAL_THRESHOLD))
+                .filter(pair -> AlignmentFilters.isRecordAverageQualityAbove(pair.getRight().getBaseQuality(), SvConstants.AVG_BASE_QUAL_THRESHOLD))
                 .sorted(Comparator.comparingInt(pair -> assembly.getSupportIndex(pair.getLeft())))
                 .map(pair -> pair.getLeft().positiveStrand() == pair.getRight().positiveStrand()
                         ? ReadUtils.flipRead(pair.getRight()) : pair.getRight())

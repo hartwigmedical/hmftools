@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
@@ -32,12 +33,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import htsjdk.samtools.ValidationStringency;
 
 public class SvConfig
 {
@@ -46,9 +50,12 @@ public class SvConfig
     public final List<String> JunctionFiles;
 
     public final RefGenomeVersion RefGenVersion;
+    public final RefGenomeCoordinates RefGenomeCoords;
     public final String RefGenomeFile;
     public final RefGenomeInterface RefGenome;
     public final String RefGenomeImageFile;
+
+    public final ValidationStringency BamStringency;
 
     public final String VcfFile;
     public final List<WriteType> WriteTypes;
@@ -129,6 +136,10 @@ public class SvConfig
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
         RefGenome = loadRefGenome(RefGenomeFile);
         RefGenomeImageFile = configBuilder.getValue(REF_GENOME_IMAGE);
+
+        BamStringency = ValidationStringency.STRICT;
+
+        RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
         VcfFile = configBuilder.getValue(OUTPUT_VCF);
 

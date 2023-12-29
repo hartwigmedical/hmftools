@@ -12,17 +12,12 @@ public class PrimaryAssemblyResult
 {
     public final com.hartwig.hmftools.esvee.common.Junction Junction;
     public final PrimaryAssemblerCounters Counters;
-    public final List<Read> RecordsOfInterest;
     public final List<PrimaryAssembly> Assemblies;
-    public final List<RegionOfInterest> InterestingRegions;
 
-    public PrimaryAssemblyResult(final Junction junction, final PrimaryAssemblerCounters counters, final List<Read> reads,
-            final List<PrimaryAssembly> assemblies, final List<RegionOfInterest> interestingRegions)
+    public PrimaryAssemblyResult(final Junction junction, final PrimaryAssemblerCounters counters, final List<PrimaryAssembly> assemblies)
     {
         Junction = junction;
         Counters = counters;
-        RecordsOfInterest = reads;
         Assemblies = assemblies;
-        InterestingRegions = interestingRegions;
     }
 }

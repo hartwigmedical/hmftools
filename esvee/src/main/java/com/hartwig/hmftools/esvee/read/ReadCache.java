@@ -1,10 +1,14 @@
-package com.hartwig.hmftools.esvee.util;
+package com.hartwig.hmftools.esvee.read;
+
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -12,12 +16,16 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.util.ThrowingSupplier;
 
 import org.jetbrains.annotations.Nullable;
 
 public class ReadCache
 {
-    private final Map<String, List<LRUNode>> mCachedByChromosome = new ConcurrentHashMap<>();
+    private final Map<String,List<LRUNode>> mCachedByChromosome;
+
+    public static final int MAX_CACHE_SIZE = 3_000_000;
+    public static final int CACHE_QUERY_BUFFER = 2000;
 
     @Nullable
     private LRUNode mHead;
@@ -28,16 +36,38 @@ public class ReadCache
     private final int mMaxCachedAlignments;
     private final CacheLoader mLoader;
 
-    public AtomicInteger CacheHits = new AtomicInteger();
-    public AtomicInteger CacheMisses = new AtomicInteger();
+    private final AtomicInteger mCacheHits;
+    private final AtomicInteger mCacheMisses;
+
+    public interface CacheLoader
+    {
+        CachedReadKey determineCacheRange(final String requestedChromosome, final int positionStart, final int positionEnd);
+
+        CachedReadValue load(final CachedReadKey key);
+    }
 
     public ReadCache(final int maxCachedAlignments, final CacheLoader loader)
     {
         mMaxCachedAlignments = maxCachedAlignments;
         mLoader = loader;
+        mCachedByChromosome = new ConcurrentHashMap<>();
+
+        mCacheHits = new AtomicInteger();
+        mCacheMisses = new AtomicInteger();
     }
 
-    public Stream<Read> read(final String chromosome, final int startPosition, final int endPosition)
+    public int totalHits() { return mCacheHits.get() + mCacheMisses.get(); }
+
+    public void logStats()
+    {
+        final int hits = mCacheHits.get();
+        final int misses = mCacheMisses.get();
+
+        SV_LOGGER.info("closing cache: cache hits({}) misses({}) hitRate({}%)",
+                hits, misses, String.format("%.2f", (100.0f * hits) / (hits + misses)));
+    }
+
+    public Stream<Read> read(final String chromosome, final int positionStart, final int positionEnd)
     {
         final List<LRUNode> nodes = mCachedByChromosome.computeIfAbsent(chromosome, ignored -> new ArrayList<>());
         final CachedReadKey key;
@@ -47,13 +77,13 @@ public class ReadCache
             for(int i = 0; i < nodes.size(); i++)
             {
                 final LRUNode node = nodes.get(i);
-                if(node.Key.containsCompletely(chromosome, startPosition, endPosition))
+                if(node.Key.containsCompletely(chromosome, positionStart, positionEnd))
                 {
                     @Nullable
-                    final Stream<Read> reads = node.Value.get().extract(chromosome, startPosition, endPosition);
+                    final Stream<Read> reads = node.Value.get().extract(chromosome, positionStart, positionEnd);
                     if(reads != null)
                     {
-                        CacheHits.incrementAndGet();
+                        mCacheHits.incrementAndGet();
                         touch(node);
                         return reads;
                     }
@@ -64,14 +94,14 @@ public class ReadCache
             }
 
             // No node caches what we need. We'll need to load
-            key = mLoader.determineCacheRange(chromosome, startPosition, endPosition);
+            key = mLoader.determineCacheRange(chromosome, positionStart, positionEnd);
             future = new CompletableFuture<>();
             final var newNode = new LRUNode(key, ThrowingSupplier.rethrow(future::get));
             nodes.add(newNode);
             touch(newNode);
         }
 
-        CacheMisses.incrementAndGet();
+        mCacheMisses.incrementAndGet();
 
         while(true)
         {
@@ -95,7 +125,7 @@ public class ReadCache
             mCachedAlignmentCount += value.Size;
             while(mCachedAlignmentCount > mMaxCachedAlignments)
                 evictOldest();
-            return value.extract(chromosome, startPosition, endPosition);
+            return value.extract(chromosome, positionStart, positionEnd);
         }
     }
 
@@ -124,9 +154,7 @@ public class ReadCache
         }
     }
 
-    /**
-     * Assumes caller holding a lock, does not update mCachedReads
-     */
+    // assumes caller holding a lock, does not update mCachedReads
     private void remove(final LRUNode node)
     {
         final var prev = node.Previous;
@@ -154,18 +182,23 @@ public class ReadCache
         remove(toRemove);
 
         final List<LRUNode> list = mCachedByChromosome.get(node.Key.Chromosome);
+
         if(listIndex == -1)
         {
             for(int i = 0; i < list.size(); i++)
+            {
                 if(list.get(i) == node)
                 {
                     list.set(i, list.get(list.size() - 1));
                     list.remove(list.size() - 1);
                     break;
                 }
+            }
         }
         else if(list.size() == 1)
+        {
             list.clear();
+        }
         else
         {
             list.set(listIndex, list.get(list.size() - 1));
@@ -176,14 +209,6 @@ public class ReadCache
 
         mCachedAlignmentCount -= value.Size;
         return value.Records.get() != null;
-    }
-
-    public interface CacheLoader
-    {
-        CachedReadKey determineCacheRange(final String requestedChromosome, final int requestedStartPosition,
-                final int requestedEndPosition);
-
-        CachedReadValue load(final CachedReadKey key);
     }
 
     private static class LRUNode
@@ -204,18 +229,19 @@ public class ReadCache
     public static class CachedReadKey
     {
         public final String Chromosome;
-        public final int StartPosition, EndPosition;
+        public final int PositionStart;
+        public final int PositionEnd;
 
-        public CachedReadKey(final String chromosome, final int startPosition, final int endPosition)
+        public CachedReadKey(final String chromosome, final int positionStart, final int positionEnd)
         {
             Chromosome = chromosome;
-            StartPosition = startPosition;
-            EndPosition = endPosition;
+            PositionStart = positionStart;
+            PositionEnd = positionEnd;
         }
 
         public boolean containsCompletely(final String chromosome, final int startPosition, final int endPosition)
         {
-            return Chromosome.equals(chromosome) && StartPosition <= startPosition && EndPosition >= endPosition;
+            return positionsWithin(startPosition, endPosition, PositionStart, PositionEnd);
         }
     }
 
@@ -230,24 +256,35 @@ public class ReadCache
             Records = new SoftReference<>(reads);
         }
 
-        @Nullable
-        public Stream<Read> extract(final String chromosome, final int startPosition, final int endPosition)
+        public Stream<Read> extract(final String chromosome, final int positionStart, final int positionEnd)
         {
-            @Nullable
             final List<Read> reads = Records.get();
             if(reads == null)
                 return null;
 
-            return reads.stream()
-                    .filter(r -> overlaps(r, chromosome, startPosition, endPosition));
+            return reads.stream().filter(x -> overlaps(x, chromosome, positionStart, positionEnd));
         }
 
-        private boolean overlaps(final Read read, final String chromosome, final int startPosition, final int endPosition)
+        private boolean overlaps(final Read read, final String chromosome, final int positionStart, final int positionEnd)
         {
+            // filter should match a normal slice which the existing logic did not
+            if(read.isUnmapped())
+            {
+                // CHECK: use the mate's position or actually are these the same anyway?
+                int matePosStart = read.getMateAlignmentStart();
+                int matePosEnd = matePosStart + read.getLength() * 2; // CHECK: consider using actual mate end using cigar
+                return positionsOverlap(matePosStart, matePosEnd, positionStart, positionEnd);
+            }
+            else
+            {
+                return positionsOverlap(read.getAlignmentStart(), read.getAlignmentEnd(), positionStart, positionEnd);
+            }
+
+            /*
             if(!read.isUnmapped())
             {
                 return read.getChromosome().equals(chromosome)
-                        && read.getAlignmentStart() <= endPosition && read.getAlignmentEnd() >= startPosition;
+                        && read.getAlignmentStart() <= positionEnd && read.getAlignmentEnd() >= positionStart;
             }
             else
             {
@@ -257,8 +294,9 @@ public class ReadCache
                 final int mateStart = read.getMateAlignmentStart();
                 final int mateEnd = mateStart + (read.getLength() * 2);
                 return Objects.requireNonNull(read.getMateChromosome()).equals(chromosome)
-                        && mateStart <= endPosition && mateEnd >= startPosition;
+                        && mateStart <= positionEnd && mateEnd >= positionStart;
             }
+            */
         }
     }
 }

@@ -1,21 +1,20 @@
 package com.hartwig.hmftools.esvee.common;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.util.CommonUtils;
 
-public class RegionOfInterest
+public class RegionOfInterest extends ChrBaseRegion
 {
-    public final String Chromosome;
-    public int Start;
-    public int End;
-
     public final Direction Orientation;
     public final boolean Inverted;
 
@@ -26,12 +25,9 @@ public class RegionOfInterest
 
     public RegionOfInterest(final String chromosome, final int start, final int end, final Direction orientation, final boolean inverted)
     {
-        assert start <= end : "Start must not be after end for RegionOfInterest";
-        Chromosome = chromosome;
+        super(chromosome, start, end);
         Orientation = orientation;
         Inverted = inverted;
-        Start = start;
-        End = end;
     }
 
     public boolean tryExtend(final RegionOfInterest other)
@@ -39,8 +35,8 @@ public class RegionOfInterest
         if(!touches(other))
             return false;
 
-        Start = Math.min(Start, other.Start);
-        End = Math.max(End, other.End);
+        setStart(min(start(), other.start()));
+        setEnd(max(end(), other.end()));
         return true;
     }
 
@@ -48,7 +44,7 @@ public class RegionOfInterest
     public boolean touches(final RegionOfInterest other)
     {
         return Chromosome.equals(other.Chromosome) && Inverted == other.Inverted
-                && CommonUtils.touches(Start, End, other.Start, other.End);
+                && CommonUtils.touches(start(), end(), other.start(), other.end());
     }
 
     public int distanceTo(final String chromosome, final int position)
@@ -56,10 +52,10 @@ public class RegionOfInterest
         if(!chromosome.equals(Chromosome))
             return Integer.MAX_VALUE;
 
-        if(Start <= position || position <= End)
+        if(start() <= position || position <= end())
             return 0;
 
-        return Math.min(Math.abs(Start - position), Math.abs(End - position));
+        return min(Math.abs(start() - position), Math.abs(end() - position));
     }
 
     @Override
@@ -72,8 +68,8 @@ public class RegionOfInterest
 
         final RegionOfInterest region = (RegionOfInterest) o;
         return Chromosome.equals(region.Chromosome)
-                && Start == region.Start
-                && End == region.End
+                && start() == region.start()
+                && end() == region.end()
                 && Orientation == region.Orientation
                 && Inverted == region.Inverted;
     }
@@ -82,8 +78,8 @@ public class RegionOfInterest
     public int hashCode()
     {
         int result = Chromosome.hashCode();
-        result = 31 * result + Start;
-        result = 31 * result + End;
+        result = 31 * result + start();
+        result = 31 * result + end();
         result = 31 * result + Orientation.hashCode();
         result = 31 * result + (Inverted ? 1 : 0);
         return result;
@@ -92,7 +88,7 @@ public class RegionOfInterest
     @Override
     public String toString()
     {
-        return String.format("ROI {%s:%d-%d, %s, %s}", Chromosome, Start, End, Orientation, Inverted);
+        return String.format("ROI {%s:%d-%d, %s, %s}", Chromosome, start(), end(), Orientation, Inverted);
     }
 
     public static void appendRegion(final List<RegionOfInterest> existingRegions, final RegionOfInterest region)
@@ -104,11 +100,6 @@ public class RegionOfInterest
         existingRegions.add(region);
     }
 
-    public static List<RegionOfInterest> tryMerge(final List<? extends Iterable<RegionOfInterest>> regions)
-    {
-        return tryMerge(regions.stream().flatMap(r -> StreamSupport.stream(r.spliterator(), false))::iterator);
-    }
-
     public static List<RegionOfInterest> tryMerge(final Iterable<RegionOfInterest> regions)
     {
         final Map<String, List<RegionOfInterest>> byChromosome = new LinkedHashMap<>();
@@ -116,7 +107,7 @@ public class RegionOfInterest
             byChromosome.computeIfAbsent(region.Chromosome, ignored -> new ArrayList<>()).add(region);
 
         // Sorting ensures that only a single pass is required to combine the regions, and that we only have to check the last one
-        byChromosome.values().forEach(list -> list.sort(Comparator.comparingInt(r -> r.Start)));
+        byChromosome.values().forEach(list -> list.sort(Comparator.comparingInt(r -> r.start())));
 
         return byChromosome.values().stream().flatMap(regionList ->
         {

@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_A
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.common.Junction;
@@ -21,9 +20,16 @@ public final class AlignmentFilters
         return read.getUnclippedStart() <= junction.Position && junction.Position <= read.getUnclippedEnd();
     }
 
-    public static boolean isRecordAverageQualityAbove(final Read read, final int averageBaseQThreshold)
+    public static boolean isRecordAverageQualityAbove(final byte[] baseQualities, final int averageBaseQThreshold)
     {
-        return getAvgBaseQuality(read, 1, read.getLength()) >= averageBaseQThreshold;
+        int qualitySum = 0;
+        for(int i = 0; i < baseQualities.length; i++)
+        {
+            qualitySum += baseQualities[i];
+        }
+
+        double avgBaseQual = qualitySum / (double)baseQualities.length;
+        return avgBaseQual >= averageBaseQThreshold;
     }
 
     private static int getAvgBaseQuality(final Read read, final int readPosition, final int length)
@@ -66,13 +72,13 @@ public final class AlignmentFilters
     public static boolean recordSoftClipsNearJunction(final Read read, final Junction junction)
     {
         // Must start/end with a soft-clip that extends to the junction position
-        final CigarElement element = junction.orientation() == Direction.FORWARDS
+        final CigarElement element = junction.direction() == Direction.FORWARDS
                 ? read.getCigar().getLastCigarElement()
                 : read.getCigar().getFirstCigarElement();
         if(element.getOperator() != CigarOperator.S)
             return false;
 
-        final int junctionOffsetFromEnd = junction.orientation() == Direction.FORWARDS
+        final int junctionOffsetFromEnd = junction.direction() == Direction.FORWARDS
                 ? read.getUnclippedEnd() - junction.position()
                 : junction.position() - read.getUnclippedStart();
         final int softClipLength = element.getLength();

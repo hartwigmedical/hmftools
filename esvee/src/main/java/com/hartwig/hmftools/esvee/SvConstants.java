@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.esvee;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
+
 public final class SvConstants
 {
     public static final String APP_NAME = "Esvee";
@@ -11,6 +15,8 @@ public final class SvConstants
     public static final int MAX_HTML_SUMMARIES = 10000;
 
     public static final String BAM_HEADER_SAMPLE_ID_TAG = "sampleId";
+
+    public static final int BAM_READ_JUNCTION_BUFFER = 1000;
 
     public static final int MAX_DUP_LENGTH = 6; // then classified as an INS
 

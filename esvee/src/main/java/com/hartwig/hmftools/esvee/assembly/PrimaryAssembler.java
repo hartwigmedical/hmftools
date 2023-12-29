@@ -33,32 +33,41 @@ import htsjdk.samtools.CigarOperator;
 public class PrimaryAssembler
 {
     private final SvConfig mConfig;
+
+    private final Junction mJunction;
+    
     private final SAMSource mSAMSource;
     private final SupportChecker mSupportChecker;
     private final NodeFolder mNodeFolder;
-    private final String mJunctionChromosome;
-    private final int mJunctionPosition;
-    private final Direction mJunctionOrientation;
-    private final PrimaryAssemblerCounters mCounters = new PrimaryAssemblerCounters();
+    private final PrimaryAssemblerCounters mCounters;
     private final boolean mCreateDiagrams;
 
     private int mNextAssemblyNumber = 1;
+
+    public PrimaryAssembler(final SvConfig config, final Junction junction)
+    {
+        mConfig = config;
+        mSupportChecker = new SupportChecker();
+        mNodeFolder = new NodeFolder();
+        mCounters = new PrimaryAssemblerCounters();
+        mJunction = junction;
+        mCreateDiagrams = config.writeHtmlFiles() && config.PlotDiagrams;
+
+        mSAMSource = null;
+    }
 
     @Nullable
     public static PrimaryAssemblyResult process(final Context context, final Junction junction, final PrimaryAssemblerCounters counters)
     {
         try
         {
-            boolean createDiagrams = context.Config.writeHtmlFiles() && context.Config.PlotDiagrams;
-
             final PrimaryAssembler assembler = new PrimaryAssembler(context.Config, context.SAMSource,
-                    context.SupportChecker, junction.chromosome(), junction.position(), junction.orientation(),
-                    createDiagrams);
+                    context.SupportChecker, junction);
 
-            final List<PrimaryAssembly> candidateAssemblies = assembler.processJunction(junction);
+            final List<PrimaryAssembly> candidateAssemblies = assembler.processJunctionOld();
             counters.add(assembler.getCounters());
 
-            return new PrimaryAssemblyResult(junction, counters, List.of(), candidateAssemblies, List.of());
+            return new PrimaryAssemblyResult(junction, counters, candidateAssemblies);
         }
         catch(final Throwable throwable)
         {
@@ -70,18 +79,17 @@ public class PrimaryAssembler
         }
     }
 
-    public PrimaryAssembler(final SvConfig config, final SAMSource source,
-            final SupportChecker supportChecker, final String junctionChromosome, final int junctionPosition,
-            final Direction orientation, final boolean createDiagrams)
+    @Deprecated
+    public PrimaryAssembler(
+            final SvConfig config, final SAMSource source, final SupportChecker supportChecker, final Junction junction)
     {
         mConfig = config;
         mSAMSource = source;
         mSupportChecker = supportChecker;
         mNodeFolder = new NodeFolder();
-        mJunctionChromosome = junctionChromosome;
-        mJunctionPosition = junctionPosition;
-        mJunctionOrientation = orientation;
-        mCreateDiagrams = createDiagrams;
+        mCounters = new PrimaryAssemblerCounters();
+        mJunction = junction;
+        mCreateDiagrams = config.writeHtmlFiles() && config.PlotDiagrams;;
     }
 
     public PrimaryAssemblerCounters getCounters()
@@ -89,30 +97,31 @@ public class PrimaryAssembler
         return mCounters;
     }
 
-    public List<PrimaryAssembly> processJunction(final Junction junction)
+    @Deprecated
+    public List<PrimaryAssembly> processJunctionOld()
     {
-        SV_LOGGER.trace("Processing {} junction @ {}:{}", junction.orientation().name().toLowerCase(),
-                junction.chromosome(), junction.position());
+        List<Read> nearbyAlignments = mSAMSource.findReadsNear(mJunction.chromosome(), mJunction.position());
 
-        return doProcessJunction(junction);
-    }
-
-    private List<PrimaryAssembly> doProcessJunction(final Junction junction)
-    {
-        final List<Read> nearbyAlignments = mSAMSource.findReadsNear(junction.chromosome(), junction.position());
-
-        final List<Read> rawAlignments = nearbyAlignments.stream()
-                .filter(Counter.asPredicate(alignment -> AlignmentFilters.alignmentCrossesJunction(alignment, junction), mCounters.ReadsCrossingJunction))
-                .filter(Counter.asPredicate(alignment -> AlignmentFilters.isRecordAverageQualityAbove(alignment, SvConstants.AVG_BASE_QUAL_THRESHOLD), mCounters.ReadsPassingRawQualityThreshold))
-                .map(alignment -> realignForJunction(alignment, junction))
+        List<Read> aboveQualReads = nearbyAlignments.stream()
+                .filter(Counter.asPredicate(alignment -> AlignmentFilters.alignmentCrossesJunction(alignment, mJunction), mCounters.ReadsCrossingJunction))
+                .filter(Counter.asPredicate(alignment -> AlignmentFilters.isRecordAverageQualityAbove(alignment.getBaseQuality(), SvConstants.AVG_BASE_QUAL_THRESHOLD), mCounters.ReadsPassingRawQualityThreshold))
                 .collect(Collectors.toList());
 
-        final List<Read> withLowQAlignments = rawAlignments.stream()
-                .filter(Counter.asPredicate(alignment -> AlignmentFilters.recordSoftClipsNearJunction(alignment, junction), mCounters.ReadsSoftClippedAtJunction))
+        return processJunction(aboveQualReads);
+    }
+
+    public List<PrimaryAssembly> processJunction(final List<Read> rawReads)
+    {
+        final List<Read> realignedReads = rawReads.stream()
+                .map(alignment -> realignForJunction(alignment, mJunction))
+                .collect(Collectors.toList());
+
+        final List<Read> withLowQAlignments = realignedReads.stream()
+                .filter(Counter.asPredicate(alignment -> AlignmentFilters.recordSoftClipsNearJunction(alignment, mJunction), mCounters.ReadsSoftClippedAtJunction))
                 .collect(Collectors.toList());
 
         final List<Read> filteredAlignments = withLowQAlignments.stream()
-                .filter(Counter.asPredicate(alignment -> AlignmentFilters.isRecordAverageQualityPastJunctionAbove(alignment, junction, SvConstants.AVG_BASE_QUAL_THRESHOLD), mCounters.ReadsPassingJunctionQualityThreshold))
+                .filter(Counter.asPredicate(alignment -> AlignmentFilters.isRecordAverageQualityPastJunctionAbove(alignment, mJunction, SvConstants.AVG_BASE_QUAL_THRESHOLD), mCounters.ReadsPassingJunctionQualityThreshold))
                 .filter(Counter.asPredicate(alignment -> AlignmentFilters.hasAcceptableMapQ(alignment, SvConstants.MINMAPQTOSTARTJUNCTION), mCounters.HasAcceptableMapQ))
                 .filter(Counter.asPredicate(AlignmentFilters::isNotBadlyMapped, mCounters.WellMapped))
                 .collect(Collectors.toList());
@@ -130,7 +139,7 @@ public class PrimaryAssembler
         final List<PrimaryAssembly> dedupedInitial = AssemblyFiltering.trimAndDeduplicate(mSupportChecker, extendedInitial);
         mCounters.DedupedInitialAssemblies.add(dedupedInitial.size());
         
-        final List<PrimaryAssembly> anchored = createAnchors(rawAlignments, dedupedInitial);
+        final List<PrimaryAssembly> anchored = createAnchors(realignedReads, dedupedInitial);
 
         for(PrimaryAssembly assembly : anchored)
         {
@@ -149,7 +158,7 @@ public class PrimaryAssembler
         final List<PrimaryAssembly> assemblies = AssemblyFiltering.trimAndDeduplicate(mSupportChecker, anchored);
         mCounters.DedupedAnchoredAssemblies.add(assemblies.size());
 
-        final JunctionMetrics junctionMetrics = new JunctionMetrics(mJunctionChromosome, mJunctionPosition, mJunctionOrientation, mCounters);
+        final JunctionMetrics junctionMetrics = new JunctionMetrics(mJunction.Chromosome, mJunction.Position, mJunction.direction(), mCounters);
         assemblies.forEach(assembly -> assembly.addErrata(junctionMetrics));
         return assemblies;
     }
@@ -157,7 +166,7 @@ public class PrimaryAssembler
     private List<PrimaryAssembly> extendInitial(final List<Read> alignments, final List<PrimaryAssembly> assemblies)
     {
         return assemblies.stream()
-                .map(assembly -> extendInitial(alignments, assembly, mJunctionOrientation))
+                .map(assembly -> extendInitial(alignments, assembly, mJunction.direction()))
                 .collect(Collectors.toList());
     }
 
@@ -202,10 +211,10 @@ public class PrimaryAssembler
                     {
                         // To support the assembly we need to either be fully contained in the assembly, or to support
                         // it with our back half if we're a forwards junction / front half if we're a backwards junction.
-                        final int minSupportIndex = mJunctionOrientation == Direction.FORWARDS
+                        final int minSupportIndex = mJunction.direction() == Direction.FORWARDS
                                 ? -read.getLength()
                                 : 0;
-                        final int maxSupportIndex = mJunctionOrientation == Direction.FORWARDS
+                        final int maxSupportIndex = mJunction.direction() == Direction.FORWARDS
                                 ? Math.min(0, newAssembly.Assembly.length() - read.getLength())
                                 : newAssembly.Assembly.length();
 
@@ -222,13 +231,11 @@ public class PrimaryAssembler
 
     private String nextAssemblyName()
     {
-        return String.format("%s:%s%s:%s", mJunctionChromosome, mJunctionPosition,
-                mJunctionOrientation == Direction.FORWARDS ? "F" : "R", mNextAssemblyNumber++);
+        return String.format("%s:%s%s:%s", mJunction.Chromosome, mJunction.Position,
+                mJunction.direction() == Direction.FORWARDS ? "F" : "R", mNextAssemblyNumber++);
     }
 
-    /**
-     * Convert indels near the junction to soft-clips
-     */
+    // convert indels near the junction to soft-clips
     private Read realignForJunction(final Read read, final Junction junction)
     {
         boolean justHadIndel = false;
@@ -242,7 +249,7 @@ public class PrimaryAssembler
             final boolean isLeftNearJunction = Math.abs(referencePosition - junction.position()) <= 2;
             final boolean isRightNearJunction = Math.abs(referencePosition + element.getLength() - junction.position()) <= 2;
 
-            if(junction.orientation() == Direction.REVERSE && isLeftNearJunction && justHadIndel)
+            if(junction.direction() == Direction.REVERSE && isLeftNearJunction && justHadIndel)
             {
                 // Soft-clip everything before this cigar element (excl)
                 int softClippedLength = 0;
@@ -265,7 +272,7 @@ public class PrimaryAssembler
                 return read;
             }
 
-            if(junction.orientation() == Direction.FORWARDS && wasRightNearJunction && isIndel)
+            if(junction.direction() == Direction.FORWARDS && wasRightNearJunction && isIndel)
             {
                 // Soft-clip everything after this cigar element (incl)
                 int softClippedLength = 0;
@@ -299,8 +306,8 @@ public class PrimaryAssembler
     private List<PrimaryAssembly> createInitialAssemblies(final List<Read> alignments)
     {
         final HeadNode combinedForwards = alignments.stream()
-                .filter(alignment -> alignment.getChromosome().equals(mJunctionChromosome))
-                .map(alignment -> HeadNode.create(alignment, mJunctionPosition, mJunctionOrientation))
+                .filter(alignment -> alignment.getChromosome().equals(mJunction.Chromosome))
+                .map(alignment -> HeadNode.create(alignment, mJunction.Position, mJunction.direction()))
                 .filter(Objects::nonNull)
                 .reduce(HeadNode::combine)
                 .orElseThrow();
@@ -315,14 +322,14 @@ public class PrimaryAssembler
                 .filter(assemblyString -> assemblyString.length() >= 10)
                 .map(assemblyString ->
                 {
-                    final String orientedAssembly = mJunctionOrientation == Direction.FORWARDS
+                    final String orientedAssembly = mJunction.direction() == Direction.FORWARDS
                             ? assemblyString
                             : new StringBuilder(assemblyString).reverse().toString();
-                    final int anchorPositionInAssembly = mJunctionOrientation == Direction.FORWARDS
+                    final int anchorPositionInAssembly = mJunction.direction() == Direction.FORWARDS
                             ? 0
                             : orientedAssembly.length() - 1;
 
-                    return new PrimaryAssembly(nextAssemblyName(), orientedAssembly, mJunctionChromosome, mJunctionPosition, anchorPositionInAssembly);
+                    return new PrimaryAssembly(nextAssemblyName(), orientedAssembly, mJunction.Chromosome, mJunction.Position, anchorPositionInAssembly);
                 })
                 .peek(assembly -> assembly.addDiagrams(diagrams))
                 .collect(Collectors.toList());
@@ -333,10 +340,10 @@ public class PrimaryAssembler
             {
                 // To support the assembly we need to either be fully contained in the assembly, or to support
                 // it with our back half if we're a forwards junction / front half if we're a backwards junction.
-                final int minSupportIndex = mJunctionOrientation == Direction.FORWARDS
+                final int minSupportIndex = mJunction.direction() == Direction.FORWARDS
                         ? -read.getLength()
                         : 0;
-                final int maxSupportIndex = mJunctionOrientation == Direction.FORWARDS
+                final int maxSupportIndex = mJunction.direction() == Direction.FORWARDS
                         ? Math.min(0, assembly.Assembly.length() - read.getLength())
                         : assembly.Assembly.length();
 
@@ -379,7 +386,7 @@ public class PrimaryAssembler
     {
         final Map<Read, HeadNode> reverseSequences = new HashMap<>();
         for(Read read : alignments)
-            reverseSequences.put(read, HeadNode.create(read, mJunctionPosition, mJunctionOrientation.opposite()));
+            reverseSequences.put(read, HeadNode.create(read, mJunction.Position, mJunction.direction().opposite()));
 
         final List<PrimaryAssembly> anchored = initialAssemblies.stream()
                 .flatMap(candidateAssembly -> createAnchor(reverseSequences, candidateAssembly).stream())
@@ -412,7 +419,7 @@ public class PrimaryAssembler
         final List<PrimaryAssembly> anchoredAssemblies = new ArrayList<>();
         for(String flattenedAssembly : flattened)
         {
-            final boolean isForwards = mJunctionOrientation == Direction.FORWARDS;
+            final boolean isForwards = mJunction.direction() == Direction.FORWARDS;
             final String anchoredAssembly = isForwards
                     ? new StringBuilder(flattenedAssembly.substring(1)).reverse() + initialAssembly.Assembly
                     : initialAssembly.Assembly + flattenedAssembly.substring(1);
@@ -422,7 +429,7 @@ public class PrimaryAssembler
 
             // Don't use candidate to construct, as we want to re-evaluate evidence
             final PrimaryAssembly assembly = new PrimaryAssembly(nextAssemblyName(), anchoredAssembly,
-                    mJunctionChromosome, mJunctionPosition, anchorPositionInAssembly);
+                    mJunction.Chromosome, mJunction.Position, anchorPositionInAssembly);
             assembly.Diagrams.addAll(initialAssembly.Diagrams);
             assembly.addDiagrams(diagrams);
 

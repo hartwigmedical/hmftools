@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.svprep;
 
-import static java.lang.Math.round;
-
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 
 import org.apache.logging.log4j.LogManager;

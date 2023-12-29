@@ -51,7 +51,7 @@ public class Junction implements Comparable<Junction>
     // convenience and poossible temporary
     public String chromosome() { return Chromosome; }
     public int position() { return Position; }
-    public Direction orientation() { return Orientation == POS_STRAND ? Direction.FORWARDS : Direction.REVERSE; }
+    public Direction direction() { return Orientation == POS_STRAND ? Direction.FORWARDS : Direction.REVERSE; }
 
     public String toString()
     {

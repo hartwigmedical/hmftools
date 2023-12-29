@@ -5,8 +5,6 @@ import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import java.util.List;
 import java.util.stream.Stream;
 
-import com.hartwig.hmftools.esvee.util.ReadCache;
-
 public class CachingSAMSource implements SAMSource
 {
     private final SAMSource mInner;
@@ -20,10 +18,10 @@ public class CachingSAMSource implements SAMSource
         mCache = new ReadCache(3_000_000, new ReadCache.CacheLoader()
         {
             @Override
-            public ReadCache.CachedReadKey determineCacheRange(final String chromosome, final int startPosition, final int endPosition)
+            public ReadCache.CachedReadKey determineCacheRange(final String chromosome, final int positionStart, final int positionEnd)
             {
-                final int adjustedStart = Math.max(1, startPosition - 2_000);
-                final int adjustedEnd = endPosition + 2_000;
+                final int adjustedStart = Math.max(1, positionStart - 2_000);
+                final int adjustedEnd = positionEnd + 2_000;
 
                 return new ReadCache.CachedReadKey(chromosome, adjustedStart, adjustedEnd);
             }
@@ -31,7 +29,7 @@ public class CachingSAMSource implements SAMSource
             @Override
             public ReadCache.CachedReadValue load(final ReadCache.CachedReadKey key)
             {
-                final List<Read> alignments = mInner.findReadsContaining(key.Chromosome, key.StartPosition, key.EndPosition);
+                final List<Read> alignments = mInner.findReadsContaining(key.Chromosome, key.PositionStart, key.PositionEnd);
                 return new ReadCache.CachedReadValue(alignments);
             }
         });
@@ -46,12 +44,9 @@ public class CachingSAMSource implements SAMSource
         }
         finally
         {
-            final int hits = mCache.CacheHits.get();
-            final int misses = mCache.CacheMisses.get();
-            if((hits + misses) % 10_000 == 0)
+            if(mCache.totalHits() % 10_000 == 0)
             {
-                SV_LOGGER.debug("Cache Hits: {}, Cache Misses: {}, Hit Rate: {}%",
-                        hits, misses, String.format("%.2f", (100.0f * hits) / (hits + misses)));
+                mCache.logStats();
             }
         }
     }
@@ -59,12 +54,7 @@ public class CachingSAMSource implements SAMSource
     @Override
     public void close()
     {
-        final int hits = mCache.CacheHits.get();
-        final int misses = mCache.CacheMisses.get();
-
-        SV_LOGGER.info("closing cache: cache hits({}) misses({}) hitRate({}%)",
-                hits, misses, String.format("%.2f", (100.0f * hits) / (hits + misses)));
-
+        mCache.logStats();
         mInner.close();
     }
 }

@@ -49,7 +49,7 @@ public class DiscordantPairFinder
         final List<RegionOfInterest> mappedSearchRegions = RegionOfInterest.tryMerge(regionsUnmerged::iterator);
 
         final List<Read> discordantReads = mappedSearchRegions.stream()
-                .flatMap(region -> mSource.findReadsContaining(region.Chromosome, region.Start, region.End).stream())
+                .flatMap(region -> mSource.findReadsContaining(region.Chromosome, region.start(), region.end()).stream())
                 .filter(record -> !excludeFragments.contains(record.getName()))
                 .filter(record -> isDiscordant(record, mMinFragmentLength))
                 .collect(Collectors.toList());

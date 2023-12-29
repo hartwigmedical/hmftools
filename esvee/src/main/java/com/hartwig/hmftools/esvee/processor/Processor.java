@@ -1,22 +1,34 @@
 package com.hartwig.hmftools.esvee.processor;
 
+import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
+import static com.hartwig.hmftools.esvee.common.JunctionGroup.buildJunctionGroups;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.SvConfig;
+import com.hartwig.hmftools.esvee.assembly.AssemblyThread;
 import com.hartwig.hmftools.esvee.common.Junction;
+import com.hartwig.hmftools.esvee.common.JunctionGroup;
 import com.hartwig.hmftools.esvee.common.RegionOfInterest;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.WriteType;
@@ -81,11 +93,17 @@ public class Processor
     {
         try
         {
-            // for now merge all junctions into a single list - alternatives would be combined by proximity or chromosome
+            List<JunctionGroup> junctionGroups = Lists.newArrayList();
+
+            for(List<Junction> junctions : mChrJunctionsMap.values())
+            {
+                junctionGroups.addAll(buildJunctionGroups(junctions, BAM_READ_JUNCTION_BUFFER));
+            }
+
             List<Junction> allJunctions = Lists.newArrayList();
             mChrJunctionsMap.values().forEach(x -> allJunctions.addAll(x));
 
-            List<VariantCall> variantCalls = run(allJunctions);
+            List<VariantCall> variantCalls = run(allJunctions, junctionGroups);
 
             return variantCalls;
         }
@@ -99,13 +117,48 @@ public class Processor
         return null;
     }
 
-    public List<VariantCall> run(final List<Junction> junctions)
+    public List<VariantCall> run(final List<Junction> junctions, final List<JunctionGroup> junctionGroups)
     {
         Counters.JunctionsProcessed.add(junctions.size());
 
-        SV_LOGGER.info("starting primary assembly on {} junctions", junctions.size());
+        Collections.sort(junctionGroups);
+        Queue<JunctionGroup> junctionGroupQueue = new ConcurrentLinkedQueue<>();
+        junctionGroupQueue.addAll(junctionGroups);
+
+        List<AssemblyThread> assemblyTasks = Lists.newArrayList();
+        List<Thread> workers = new ArrayList<>();
+
+        int junctionGroupCount = junctionGroups.size();
+
+        for(int i = 0; i < min(junctionGroupCount, mConfig.Threads); ++i)
+        {
+            AssemblyThread partitionThread = new AssemblyThread(mConfig, junctionGroupQueue);
+            assemblyTasks.add(partitionThread);
+            workers.add(partitionThread);
+        }
+
+        SV_LOGGER.debug("splitting {} junction groups across {} threads", junctionGroupCount, assemblyTasks.size());
+
+        for(Thread worker : workers)
+        {
+            try
+            {
+                worker.join();
+            }
+            catch(InterruptedException e)
+            {
+                SV_LOGGER.error("task execution error: {}", e.toString());
+                e.printStackTrace();
+            }
+        }
 
         // Primary Junction Assembly
+        List<PrimaryAssemblyResult> primaryAssemblyResults = Lists.newArrayList();
+        assemblyTasks.forEach(x -> primaryAssemblyResults.addAll(x.primaryAssemblyResults()));
+
+        SV_LOGGER.info("created {} primary assemblies", primaryAssemblyResults.size());
+
+        /*
         List<PrimaryAssemblyResult> primaryAssemblyResults = ParallelMapper.mapWithProgress(
                 mContext.Executor, junctions,
                 junction -> PrimaryAssembler.process(mContext, junction, Counters.PrimaryAssemblerCounters));
@@ -113,6 +166,7 @@ public class Processor
         final int primaryAssemblyCount = primaryAssemblyResults.stream().mapToInt(r -> r.Assemblies.size()).sum();
 
         SV_LOGGER.info("created {} primary assemblies", primaryAssemblyCount);
+        */
 
         if(!mContext.Config.OtherDebug)
         {
