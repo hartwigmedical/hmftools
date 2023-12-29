@@ -51,6 +51,6 @@ public class SiteEvidence implements GenomePosition
 
         return new SiteEvidence(
                 context.getContig(), context.getStart(), refAllele.getBaseString(), altAllele.getBaseString(),
-                normal.getDP(), normal.getAD()[1], normal.getAD()[0]);
+                normal.getDP(), normal.getAD()[0], normal.getAD()[1]);
     }
 }
