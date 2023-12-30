@@ -13,10 +13,8 @@ import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 
 import org.jetbrains.annotations.Nullable;
 
-public enum PrimaryPhasing
+public final class PrimaryPhasing
 {
-    ;
-
     public static <T extends SupportedAssembly> List<Set<T>> run(final List<T> assemblies)
     {
         final Map<String, Integer> primaryPhasingByFragment = new HashMap<>();

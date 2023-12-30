@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
+import static com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler.mergePrimaryAssemblies;
 import static com.hartwig.hmftools.esvee.common.JunctionGroup.buildJunctionGroups;
 
 import java.util.ArrayList;
@@ -15,11 +16,11 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.assembly.AssemblyMerger;
@@ -45,9 +46,7 @@ import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 import com.hartwig.hmftools.esvee.output.VcfWriter;
 import com.hartwig.hmftools.esvee.html.SummaryPageGenerator;
 import com.hartwig.hmftools.esvee.html.VariantCallPageGenerator;
-import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
 import com.hartwig.hmftools.esvee.util.ParallelMapper;
-import com.hartwig.hmftools.esvee.util.CommonUtils;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -62,7 +61,9 @@ public class Processor
 
     private final Map<String,List<Junction>> mChrJunctionsMap;
 
-    public final OverallCounters Counters = new OverallCounters();
+    private final List<PerformanceCounter> mPerfCounters;
+
+    private final OverallCounters mCounters;
 
     public Processor(final SvConfig config, final Context context, final ResultsWriter resultsWriter)
     {
@@ -72,6 +73,8 @@ public class Processor
         mHomologySlider = new HomologySlider(mContext.ReferenceGenome);
         mSupportChecker = new SupportChecker();
         mChrJunctionsMap = Maps.newHashMap();
+        mCounters = new OverallCounters();
+        mPerfCounters = Lists.newArrayList();
     }
 
     public boolean loadJunctionFiles()
@@ -122,7 +125,7 @@ public class Processor
         List<JunctionGroup> junctionGroups = Lists.newArrayList();
         junctionGroupMap.values().forEach(x -> junctionGroups.addAll(x));
 
-        Counters.JunctionsProcessed.add(junctions.size());
+        mCounters.JunctionsProcessed.add(junctions.size());
 
         Collections.sort(junctionGroups);
 
@@ -137,17 +140,17 @@ public class Processor
             bamReaders.add(bamReader);
         }
 
+        // Primary Junction Assembly
         List<JunctionGroupAssembler> primaryAssemblyTasks = JunctionGroupAssembler.createThreadTasks(
                 junctionGroups, bamReaders, mConfig, taskCount, threadTasks);
 
         if(!runThreadTasks(threadTasks))
             System.exit(1);
 
+        mPerfCounters.add(ThreadTask.mergePerfCounters(primaryAssemblyTasks.stream().collect(Collectors.toList())));
         threadTasks.clear();
 
-        // Primary Junction Assembly
-        List<PrimaryAssembly> primaryAssemblies = Lists.newArrayList();
-        primaryAssemblyTasks.forEach(x -> primaryAssemblies.addAll(x.primaryAssemblies()));
+        List<PrimaryAssembly> primaryAssemblies = mergePrimaryAssemblies(primaryAssemblyTasks);
 
         SV_LOGGER.info("created {} primary assemblies", primaryAssemblies.size());
 
@@ -181,14 +184,6 @@ public class Processor
 
         if(!runThreadTasks(threadTasks))
             System.exit(1);
-
-        /*
-        List<ExtendedAssembly> extendedAssemblies = ParallelMapper.mapWithProgress(
-                        mContext.Executor, mergedPrimaryAssemblies,
-                        assembly -> AssemblyExtender.process(mContext, assembly, Counters.AssemblyExtenderCounters)).stream()
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-        */
 
         List<ExtendedAssembly> extendedAssemblies = Lists.newArrayList();
         assemblyExtenderTasks.forEach(x -> extendedAssemblies.addAll(x.extendedAssemblies()));
@@ -273,7 +268,7 @@ public class Processor
         SV_LOGGER.info("called {} variants", variants.size());
 
         // variant deduplication
-        final VariantDeduplication deduplicator = new VariantDeduplication(mContext, Counters.VariantDeduplicationCounters);
+        final VariantDeduplication deduplicator = new VariantDeduplication(mContext, mCounters.VariantDeduplicationCounters);
         final List<VariantCall> deduplicated = deduplicator.deduplicate(variants);
 
         SV_LOGGER.info("{} variants remaining after deduplication", deduplicated.size());
@@ -324,6 +319,8 @@ public class Processor
 
         mResultsWriter.writeVariantAssemblyBamRecords(deduplicated);
 
+        mPerfCounters.forEach(x -> x.logStats());
+
         return deduplicated;
     }
 
@@ -350,7 +347,7 @@ public class Processor
 
         try
         {
-            SummaryPageGenerator.generatePage(mConfig.HtmlOutputDir, Counters, variants);
+            SummaryPageGenerator.generatePage(mConfig.HtmlOutputDir, mCounters, variants);
         }
         catch(final Exception ex)
         {

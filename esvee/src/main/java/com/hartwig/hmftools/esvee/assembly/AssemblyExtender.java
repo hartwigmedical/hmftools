@@ -26,14 +26,14 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.common.Direction;
-import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
 import com.hartwig.hmftools.esvee.html.DiagramSet;
-import com.hartwig.hmftools.esvee.read.BamReader;
+import com.hartwig.hmftools.esvee.processor.ThreadTask;
 import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
@@ -43,7 +43,7 @@ import com.hartwig.hmftools.esvee.util.Counter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
-public class AssemblyExtender extends Thread
+public class AssemblyExtender extends ThreadTask
 {
     private final Map<String,List<JunctionGroup>> mJunctionGroupMap;
     private final Queue<PrimaryAssembly> mPrimaryAssemblyQueue;
@@ -56,10 +56,6 @@ public class AssemblyExtender extends Thread
     private final NodeFolder mNodeFolder;
     private final AssemblyExtenderCounters mCounters;
     private final boolean mCreateDiagrams;
-
-    // private final PrimaryAssembly mPrimary;
-    // private final JunctionGroup mJunctionGroup;
-
 
     private int mNextAssemblyNumber;
 
@@ -89,6 +85,7 @@ public class AssemblyExtender extends Thread
     public AssemblyExtender(
             final SvConfig config, final Map<String,List<JunctionGroup>> junctionGroupMap, final Queue<PrimaryAssembly> primaryAssemblyQueue)
     {
+        super("AssemblyExtender");
         mJunctionGroupMap = junctionGroupMap;
         mPrimaryAssemblyQueue = primaryAssemblyQueue;
         mPrimaryAssemblyCount = primaryAssemblyQueue.size();
@@ -115,7 +112,9 @@ public class AssemblyExtender extends Thread
 
                 PrimaryAssembly primaryAssembly = mPrimaryAssemblyQueue.remove();
 
+                mPerfCounter.start();
                 processPrimaryAssembly(primaryAssembly);
+                mPerfCounter.stop();
 
                 if(processedCount > 0 && (processedCount % 100) == 0)
                 {
@@ -134,54 +133,8 @@ public class AssemblyExtender extends Thread
             }
         }
     }
-    /*
-    public static List<ExtendedAssembly> process(
-            final Context context, final PrimaryAssembly assembly, final AssemblyExtenderCounters counters)
-    {
-        final boolean createDiagrams = context.Config.writeHtmlFiles() && context.Config.PlotDiagrams;
-
-        final AssemblyExtender assembler = new AssemblyExtender(assembly, null, createDiagrams);
-
-        try
-        {
-            final List<ExtendedAssembly> results = assembler.extend(assembly);
-            for(ExtendedAssembly extended : results)
-            {
-                extended.addErrata(assembly.getAllErrata());
-                extended.addErrata(assembly);
-                extended.addErrata(assembler.getCounters());
-            }
-            return results;
-        }
-        catch(final Throwable throwable)
-        {
-            final Problem problem = new Problem("Failure during extension", throwable, assembly);
-            context.Problems.add(problem);
-
-            SV_LOGGER.warn("{}", problem);
-
-            return null;
-        }
-        finally
-        {
-            counters.add(assembler.getCounters());
-        }
-    }
-
-    public AssemblyExtenderCounters getCounters() { return mCounters; }
-    */
 
     public List<ExtendedAssembly> extendedAssemblies() { return mExtendedAssemblies; }
-
-    private JunctionGroup findJunctionGroup(final Junction junction)
-    {
-        List<JunctionGroup> junctionGroups = mJunctionGroupMap.get(junction.Chromosome);
-
-        if(junctionGroups == null)
-            return null;
-
-        return junctionGroups.stream().filter(x -> x.junctions().contains(junction)).findFirst().orElse(null);
-    }
 
     public void processPrimaryAssembly(final PrimaryAssembly assembly)
     {
@@ -204,6 +157,16 @@ public class AssemblyExtender extends Thread
                 mSupportChecker, rightExtended), ASSEMBLY_EXTENSION_MIN_SUPPORT_FINAL);
 
         mExtendedAssemblies.addAll(extendedAssemblies);
+    }
+
+    private JunctionGroup findJunctionGroup(final Junction junction)
+    {
+        List<JunctionGroup> junctionGroups = mJunctionGroupMap.get(junction.Chromosome);
+
+        if(junctionGroups == null)
+            return null;
+
+        return junctionGroups.stream().filter(x -> x.junctions().contains(junction)).findFirst().orElse(null);
     }
 
     private List<ExtendedAssembly> limitBasedOnSupport(final List<ExtendedAssembly> assemblies, final int limit)

@@ -15,18 +15,19 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
-import com.hartwig.hmftools.esvee.processor.PrimaryAssemblyResult;
+import com.hartwig.hmftools.esvee.processor.ThreadTask;
 import com.hartwig.hmftools.esvee.read.BamReader;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 
 import htsjdk.samtools.SAMRecord;
 
-public class JunctionGroupAssembler extends Thread
+public class JunctionGroupAssembler extends ThreadTask
 {
     private final SvConfig mConfig;
 
@@ -38,11 +39,11 @@ public class JunctionGroupAssembler extends Thread
 
     private final Map<String,Read> mReadGroupMap;
 
-    private final List<PrimaryAssemblyResult> mPrimaryAssemblyResults;
     private final List<PrimaryAssembly> mPrimaryAssemblies;
 
     public JunctionGroupAssembler(final SvConfig config, final BamReader bamReader, final Queue<JunctionGroup> junctionGroups)
     {
+        super("PrimaryAssembly");
         mConfig = config;
         mBamReader = bamReader;
         mJunctionGroups = junctionGroups;
@@ -50,20 +51,12 @@ public class JunctionGroupAssembler extends Thread
 
         mReadGroupMap = Maps.newHashMap();
         mCurrentJunctionGroup = null;
-        mPrimaryAssemblyResults = Lists.newArrayList();
         mPrimaryAssemblies = Lists.newArrayList();
 
         start();
     }
 
-    // public List<PrimaryAssemblyResult> oldResults() { return mPrimaryAssemblyResults; }
     public List<PrimaryAssembly> primaryAssemblies() { return mPrimaryAssemblies; }
-
-    public void clear()
-    {
-        mPrimaryAssemblyResults.clear();
-        mReadGroupMap.clear();
-    }
 
     public static List<JunctionGroupAssembler> createThreadTasks(
             final List<JunctionGroup> junctionGroups, final List<BamReader> bamReaders, final SvConfig config,
@@ -102,7 +95,9 @@ public class JunctionGroupAssembler extends Thread
 
                 JunctionGroup junctionGroup = mJunctionGroups.remove();
 
+                mPerfCounter.start();
                 processJunctionGroup(junctionGroup);
+                mPerfCounter.stop();
 
                 if(processedCount > 0 && (processedCount % 100) == 0)
                 {
@@ -192,5 +187,12 @@ public class JunctionGroupAssembler extends Thread
                 mReadGroupMap.put(read.getName(), read);
             }
         }
+    }
+
+    public static List<PrimaryAssembly> mergePrimaryAssemblies(final List<JunctionGroupAssembler> assemblers)
+    {
+        List<PrimaryAssembly> primaryAssemblies = Lists.newArrayList();
+        assemblers.forEach(x -> primaryAssemblies.addAll(x.primaryAssemblies()));
+        return primaryAssemblies;
     }
 }
