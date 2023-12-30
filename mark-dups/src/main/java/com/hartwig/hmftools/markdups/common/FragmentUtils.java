@@ -4,7 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.samtools.CigarUtils.getUnclippedPosition;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getFivePrimeUnclippedPosition;
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.formCoordinate;
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.formKey;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
@@ -53,8 +53,8 @@ public class FragmentUtils
         boolean readForwardStrand = orientation(firstRead) == POS_ORIENT;
 
         int readCoordinate = firstRead.getCigar() != null ?
-                SamRecordUtils.getUnclippedPosition(firstRead) :
-                getUnclippedPosition(firstRead.getAlignmentStart(), firstRead.getCigarString(), readForwardStrand);
+                getFivePrimeUnclippedPosition(firstRead) :
+                getFivePrimeUnclippedPosition(firstRead.getAlignmentStart(), firstRead.getCigarString(), readForwardStrand);
 
         int readStrandPosition = readForwardStrand ? readCoordinate : -readCoordinate;
         String readCoordStr = formCoordinate(firstRead.getReferenceName(), readCoordinate, readForwardStrand);
@@ -82,13 +82,13 @@ public class FragmentUtils
         {
             mateRead.getReferenceName();
             mateCoordinate = mateRead.getCigar() != null ?
-                    SamRecordUtils.getUnclippedPosition(mateRead) :
-                    getUnclippedPosition(mateRead.getAlignmentStart(), mateRead.getCigarString(), mateForwardStrand);
+                    getFivePrimeUnclippedPosition(mateRead) :
+                    getFivePrimeUnclippedPosition(mateRead.getAlignmentStart(), mateRead.getCigarString(), mateForwardStrand);
         }
         else
         {
             String mateCigar = firstRead.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
-            mateCoordinate = getUnclippedPosition(firstRead.getMateAlignmentStart(), mateCigar, mateForwardStrand);
+            mateCoordinate = getFivePrimeUnclippedPosition(firstRead.getMateAlignmentStart(), mateCigar, mateForwardStrand);
         }
 
         int mateStrandPosition = mateForwardStrand ? mateCoordinate : -mateCoordinate;

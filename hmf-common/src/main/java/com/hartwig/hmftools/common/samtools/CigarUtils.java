@@ -126,13 +126,10 @@ public final class CigarUtils
         return record.getReadString().substring(record.getReadString().length() - rightClip);
     }
 
-    public static int getUnclippedPosition(final int readStart, @NotNull final String cigarStr, final boolean forwardStrand)
+    public static int getReadBoundaryPosition(
+            final int readStart, @NotNull final String cigarStr, final boolean getReadStart, boolean includeSoftClipped)
     {
-        return getEndPosition(readStart, cigarStr, forwardStrand, true);
-    }
-
-    public static int getEndPosition(final int readStart, @NotNull final String cigarStr, final boolean forwardStrand, boolean includeSoftClipped)
-    {
+        // gets either the read start position or read end position, either with or without soft-clipped bases
         int currentPosition = readStart;
         int elementLength = 0;
 
@@ -143,7 +140,7 @@ public final class CigarUtils
 
             if(isAddItem)
             {
-                if(forwardStrand)
+                if(getReadStart)
                 {
                     // back out the left clip if present
                     return c == 'S' ? readStart - elementLength : readStart;
@@ -179,14 +176,5 @@ public final class CigarUtils
 
         // always pointing to the start of the next element, so need to move back a base
         return currentPosition - 1;
-    }
-
-    public static int getMateAlignmentEnd(final SAMRecord read)
-    {
-        String mateCigarStr = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
-        if(mateCigarStr == null || mateCigarStr.equals(NO_CIGAR))
-            return NO_POSITION;
-
-        return getEndPosition(read.getMateAlignmentStart(), mateCigarStr, false, false);
     }
 }

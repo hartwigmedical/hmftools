@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.samtools;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.CigarUtils.getReadBoundaryPosition;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -14,6 +15,7 @@ import com.google.common.collect.Lists;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -95,8 +97,28 @@ public final class SamRecordUtils
             return UmiReadType.NONE;
     }
 
-    public static int getUnclippedPosition(final SAMRecord read)
+    public static int getMateAlignmentEnd(final SAMRecord read)
     {
+        String mateCigarStr = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
+        if(mateCigarStr == null || mateCigarStr.equals(NO_CIGAR))
+            return NO_POSITION;
+
+        return getMateAlignmentEnd(read.getMateAlignmentStart(), mateCigarStr);
+    }
+
+    public static int getMateAlignmentEnd(final int readStart, @NotNull final String cigarStr)
+    {
+        return getReadBoundaryPosition(readStart, cigarStr, false, false);
+    }
+
+    public static int getFivePrimeUnclippedPosition(final int readStart, @NotNull final String cigarStr, final boolean forwardStrand)
+    {
+        return getReadBoundaryPosition(readStart, cigarStr, forwardStrand, true);
+    }
+
+    public static int getFivePrimeUnclippedPosition(final SAMRecord read)
+    {
+        // returns the 5' position of the read, factoring in any soft-clipped bases
         int position;
 
         if(orientation(read) == POS_ORIENT)

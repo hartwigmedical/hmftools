@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sage.vis;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.samtools.CigarUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.sage.vis.ColorUtil.DARK_GREEN;
 import static com.hartwig.hmftools.sage.vis.ColorUtil.PURPLE;
