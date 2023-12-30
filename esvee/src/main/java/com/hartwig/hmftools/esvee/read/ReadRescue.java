@@ -23,7 +23,7 @@ public class ReadRescue
 
     public Read rescueRead(final Read read)
     {
-        if(read.isUnmapped() || isDiscordant(read) || read.getMappingQuality() < 60)
+        if(read.isUnmapped() || isDiscordant(read) || read.mappingQuality() < 60)
             return read; // We attempt repair based on the reference genome. If we're not well mapped, this is a terrible idea.
 
         final Direction direction = read.positiveStrand() ? Direction.FORWARDS : Direction.REVERSE;

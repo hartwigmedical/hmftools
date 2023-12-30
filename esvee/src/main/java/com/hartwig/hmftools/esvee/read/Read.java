@@ -2,6 +2,9 @@ package com.hartwig.hmftools.esvee.read;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
 
 import java.util.ArrayList;
@@ -18,6 +21,7 @@ import htsjdk.samtools.SAMRecord;
 public class Read implements Sequence
 {
     private final SAMRecord mRecord;
+    private Read mMateRead;
 
     private List<Alignment> mAlignment;
 
@@ -28,9 +32,14 @@ public class Read implements Sequence
         mRecord = record;
         mAlignment = null;
         mDecomposition = null;
+        mMateRead = null;
     }
 
     public SAMRecord bamRecord() { return mRecord; }
+
+    public void setMateRead(final Read mate) { mMateRead = mate; }
+    public boolean hasMateSet() { return mMateRead != null; }
+    public Read mateRead() { return mMateRead; }
 
     @Override
     public String getName() { return mRecord.getReadName(); }
@@ -74,25 +83,31 @@ public class Read implements Sequence
 
     public boolean positiveStrand() { return !mRecord.getReadNegativeStrandFlag(); }
     public boolean negativeStrand() { return mRecord.getReadNegativeStrandFlag(); }
+    public byte orientation() { return mRecord.getReadNegativeStrandFlag() ? NEG_ORIENT : POS_ORIENT; }
     public boolean firstInPair() { return mRecord.getFirstOfPairFlag(); }
     public boolean secondInPair() { return mRecord.getReadPairedFlag() && mRecord.getSecondOfPairFlag(); }
 
-    public int getMappingQuality() { return mRecord.getMappingQuality(); }
+    public int mappingQuality() { return mRecord.getMappingQuality(); }
 
-    public String getMateChromosome() { return isMateMapped() ? mRecord.getMateReferenceName() : null; }
-    public int getMateAlignmentStart() { return mRecord.getMateAlignmentStart(); }
+    public String mateChromosome() { return isMateMapped() ? mRecord.getMateReferenceName() : null; }
+    public int mateAlignmentStart() { return mRecord.getMateAlignmentStart(); }
+
+    public int mateAlignmentEnd()
+    {
+        if(isMateUnmapped())
+            return getAlignmentEnd();
+
+        if(mMateRead != null)
+            return mMateRead.getAlignmentEnd();
+
+        return getMateAlignmentEnd(mRecord);
+    }
 
     public boolean isMateMapped() { return mRecord.getReadPairedFlag() && !mRecord.getMateUnmappedFlag(); }
     public boolean isMateUnmapped() { return mRecord.getReadPairedFlag() && mRecord.getMateUnmappedFlag(); }
 
     public boolean matePositiveStrand() { return !mRecord.getMateNegativeStrandFlag(); }
     public boolean mateNegativeStrand() { return mRecord.getMateNegativeStrandFlag(); }
-
-    @Deprecated
-    public boolean isMateOnTheLeft()
-    {
-        return negativeStrand();
-    }
 
     public Object getAttribute(final String name) { return mRecord.getAttribute(name); }
 
@@ -157,6 +172,8 @@ public class Read implements Sequence
     }
 
     /*
+
+    // public boolean isMateOnTheLeft() { return negativeStrand(); }
 
     public int impliedFragmentLength()
     {

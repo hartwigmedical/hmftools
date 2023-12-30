@@ -6,23 +6,28 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.Context;
+import com.hartwig.hmftools.esvee.assembly.SupportChecker;
 import com.hartwig.hmftools.esvee.common.RegionOfInterest;
+import com.hartwig.hmftools.esvee.read.BamReader;
 import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
 import com.hartwig.hmftools.esvee.sequence.Alignment;
 import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 import com.hartwig.hmftools.esvee.util.Counter;
 
 import org.jetbrains.annotations.Nullable;
 
 public class SupportScanner
 {
-    private final Context mContext;
+    private final BamReader mBamReader;
     private final Counter mExtraSupportCounter;
+    private final SupportChecker mSupportChecker;
 
-    public SupportScanner(final Context context, final Counter counter)
+    public SupportScanner(final BamReader bamReader, final Counter counter)
     {
-        mContext = context;
+        mBamReader = bamReader;
         mExtraSupportCounter = counter;
+        mSupportChecker = new SupportChecker();
     }
 
     @Nullable
@@ -34,7 +39,7 @@ public class SupportScanner
         }
         catch(final Throwable throwable)
         {
-            mContext.Problems.add(new Problem("Failed while re-scanning support", throwable, assembly));
+            // mContext.Problems.add(new Problem("Failed while re-scanning support", throwable, assembly));
             return null;
         }
     }
@@ -51,6 +56,9 @@ public class SupportScanner
                 .collect(Collectors.toList());
         final List<RegionOfInterest> deduplicated = RegionOfInterest.tryMerge(alignmentRegions);
 
+        /* FIXME:
+        mBamReader.sliceBam();
+
         final List<Read> potentialSupport = deduplicated.stream()
                 .flatMap(region -> mContext.SAMSource.findReadsContaining(region).stream())
                 .distinct()
@@ -58,6 +66,7 @@ public class SupportScanner
 
         for(Read read : potentialSupport)
             tryAddSupport(assembly, read);
+        */
 
         return assembly;
     }
@@ -67,14 +76,14 @@ public class SupportScanner
         if(assembly.containsSupport(read))
             return;
 
-        if(assembly.tryAddSupport(mContext.SupportChecker, read))
+        if(assembly.tryAddSupport(mSupportChecker, read))
         {
             mExtraSupportCounter.add(1);
         }
         else
         {
             final Read inverted = flipRead(read);
-            if(assembly.tryAddSupport(mContext.SupportChecker, inverted))
+            if(assembly.tryAddSupport(mSupportChecker, inverted))
             {
                 mExtraSupportCounter.add(1);
             }

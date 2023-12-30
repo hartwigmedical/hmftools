@@ -552,7 +552,7 @@ public class HeadNode extends Node
 
     private int rescoreOverlay(final Deque<Node> path, final int rawScore)
     {
-        final int repeatLength = SvConstants.ASSEMBLYEXTENSIONMAXREPEATSCORE + 1;
+        final int repeatLength = SvConstants.ASSEMBLY_EXTENSION_MAX_REPEAT_SCORE + 1;
         final int errors = path.size() - rawScore;
         int score = 0;
         final Deque<Node> recentPath = new ArrayDeque<>();

@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.esvee;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
-
 public final class SvConstants
 {
     public static final String APP_NAME = "Esvee";
@@ -29,34 +25,40 @@ public final class SvConstants
     // The average base qual below which we consider the entire read (or section of a read) to be low quality
     public static int AVG_BASE_QUAL_THRESHOLD = 30; // averageQualityThreshold
 
-    public static final int MAXMISMATCHEDCOUNTFORSTRONGSUPPORT = 1;
+    public static final int MAX_MISMATCH_STRONG_SUPPORT = 1;
 
-    public static final int MAXMISMATCHEDCOUNTFORWEAKSUPPORT = 4;
+    public static final int MAX_MISMATCH_WEAK_SUPPORT = 4;
 
-    public static final int MAXMISMATCHEDCOUNTFORDEDUPINGASSEMBLIES = 5;
+    public static final int MAX_MISMATCH_DEDUPING_ASSEMBLIES = 5;
 
-    public static final int MAXDISTANCETODEDUPEASSEMBLIES = 50;
+    public static final int MAX_DISTANCE_EDUPE_ASSEMBLIES = 50;
 
-    public static final boolean TRYEXTENDINGUSINGDISCORDANTREADS = true;
+    public static final boolean TRY_EXTENDING_USING_DISCORDANT_READS = true;
 
-    public static final int DISCORDANTPAIRFRAGMENTLENGTH = 1000;
+    public static final int DISCORDANT_FRAGMENT_LENGTH = 1000;
 
-    public static final int DISCORDANTPAIRSEARCHDISTANCE = 400;
+    public static final int DISCORDANT_PAIR_SEARCH_DISTANCE = 400;
 
-    public static final int DISCORDANTPAIRMINMAPQ = 31;
+    public static final int DISCORDANT_PAIR_MIN_MAPQ = 31;
 
-    public static final int ASSEMBLYEXTENSIONMINMATCHEDBASES = 20;
+    public static final int ASSEMBLY_EXTENSION_MIN_MATCH_BASES = 20;
 
-    public static final int ASSEMBLYEXTENSIONMAXREPEATSCORE = 4;
+    public static final int ASSEMBLY_EXTENSION_MAX_REPEAT_SCORE = 4;
 
-    public static final int ASSEMBLYEXTENSIONMAXMISMATCHES = 1;
+    public static final int ASSEMBLY_EXTENSION_MAX_MISMATCH = 1;
 
-    public static final int MAXMISMATCHESFORFOLDING = 1;
+
+    public static final int ASSEMBLY_EXTENSION_MIN_SUPPORT = 8;
+    public static final int ASSEMBLY_EXTENSION_MIN_SUPPORT_FINAL = 4;
+
+
+
+    public static final int MAX_MISMATCH_FOLDING = 1;
 
     // If a variant or assembly has less than this many fragments support it, it is dropped
-    public static final int MINREADSTOSUPPORTASSEMBLY = 2;
+    public static final int MIN_READS_SUPPORT_ASSEMBLY = 2;
 
-    public static final int MINMAPQTOSTARTJUNCTION = 20;
+    public static final int MIN_MAPQ_START_JUNCTION = 20;
 
     // When trimming polgG/C, how many Gs/Cs must appear on the edge of a read to be trimmed
     public static final int NORMALISERPOLYGLENGTH = 4;

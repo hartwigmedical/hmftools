@@ -13,17 +13,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.esvee.common.Direction;
-import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.html.DiagramSet;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.read.SAMSource;
 import com.hartwig.hmftools.esvee.util.Counter;
-import com.hartwig.hmftools.esvee.processor.PrimaryAssemblyResult;
-import com.hartwig.hmftools.esvee.processor.Problem;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -36,7 +32,6 @@ public class PrimaryAssembler
 
     private final Junction mJunction;
     
-    private final SAMSource mSAMSource;
     private final SupportChecker mSupportChecker;
     private final NodeFolder mNodeFolder;
     private final PrimaryAssemblerCounters mCounters;
@@ -52,62 +47,11 @@ public class PrimaryAssembler
         mCounters = new PrimaryAssemblerCounters();
         mJunction = junction;
         mCreateDiagrams = config.writeHtmlFiles() && config.PlotDiagrams;
-
-        mSAMSource = null;
-    }
-
-    @Nullable
-    public static PrimaryAssemblyResult process(final Context context, final Junction junction, final PrimaryAssemblerCounters counters)
-    {
-        try
-        {
-            final PrimaryAssembler assembler = new PrimaryAssembler(context.Config, context.SAMSource,
-                    context.SupportChecker, junction);
-
-            final List<PrimaryAssembly> candidateAssemblies = assembler.processJunctionOld();
-            counters.add(assembler.getCounters());
-
-            return new PrimaryAssemblyResult(junction, counters, candidateAssemblies);
-        }
-        catch(final Throwable throwable)
-        {
-            final Problem problem = new Problem("failure during primary assembly", throwable, junction);
-            context.Problems.add(problem);
-            
-            SV_LOGGER.error("{}", problem, throwable);
-            return null;
-        }
-    }
-
-    @Deprecated
-    public PrimaryAssembler(
-            final SvConfig config, final SAMSource source, final SupportChecker supportChecker, final Junction junction)
-    {
-        mConfig = config;
-        mSAMSource = source;
-        mSupportChecker = supportChecker;
-        mNodeFolder = new NodeFolder();
-        mCounters = new PrimaryAssemblerCounters();
-        mJunction = junction;
-        mCreateDiagrams = config.writeHtmlFiles() && config.PlotDiagrams;;
     }
 
     public PrimaryAssemblerCounters getCounters()
     {
         return mCounters;
-    }
-
-    @Deprecated
-    public List<PrimaryAssembly> processJunctionOld()
-    {
-        List<Read> nearbyAlignments = mSAMSource.findReadsNear(mJunction.chromosome(), mJunction.position());
-
-        List<Read> aboveQualReads = nearbyAlignments.stream()
-                .filter(Counter.asPredicate(alignment -> AlignmentFilters.alignmentCrossesJunction(alignment, mJunction), mCounters.ReadsCrossingJunction))
-                .filter(Counter.asPredicate(alignment -> AlignmentFilters.isRecordAverageQualityAbove(alignment.getBaseQuality(), SvConstants.AVG_BASE_QUAL_THRESHOLD), mCounters.ReadsPassingRawQualityThreshold))
-                .collect(Collectors.toList());
-
-        return processJunction(aboveQualReads);
     }
 
     public List<PrimaryAssembly> processJunction(final List<Read> rawReads)
@@ -122,7 +66,7 @@ public class PrimaryAssembler
 
         final List<Read> filteredAlignments = withLowQAlignments.stream()
                 .filter(Counter.asPredicate(alignment -> AlignmentFilters.isRecordAverageQualityPastJunctionAbove(alignment, mJunction, SvConstants.AVG_BASE_QUAL_THRESHOLD), mCounters.ReadsPassingJunctionQualityThreshold))
-                .filter(Counter.asPredicate(alignment -> AlignmentFilters.hasAcceptableMapQ(alignment, SvConstants.MINMAPQTOSTARTJUNCTION), mCounters.HasAcceptableMapQ))
+                .filter(Counter.asPredicate(alignment -> AlignmentFilters.hasAcceptableMapQ(alignment, SvConstants.MIN_MAPQ_START_JUNCTION), mCounters.HasAcceptableMapQ))
                 .filter(Counter.asPredicate(AlignmentFilters::isNotBadlyMapped, mCounters.WellMapped))
                 .collect(Collectors.toList());
 
@@ -449,7 +393,7 @@ public class PrimaryAssembler
                     assembly.tryAddSupport(mSupportChecker, read);
             }
 
-            if(assembly.getSupportFragments().size() > SvConstants.MINREADSTOSUPPORTASSEMBLY)
+            if(assembly.getSupportFragments().size() > SvConstants.MIN_READS_SUPPORT_ASSEMBLY)
                 anchoredAssemblies.add(assembly);
         }
 

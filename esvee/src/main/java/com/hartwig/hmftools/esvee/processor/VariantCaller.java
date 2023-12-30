@@ -495,7 +495,7 @@ public class VariantCaller
         support.removeIf(r -> splitReadFragments.contains(r.getName()));
 
         final Set<String> discordantFragments = support.stream()
-                .filter(x -> isDiscordant(x, SvConstants.DISCORDANTPAIRFRAGMENTLENGTH) || x.isUnmapped() || x.isMateUnmapped())
+                .filter(x -> isDiscordant(x, SvConstants.DISCORDANT_FRAGMENT_LENGTH) || x.isUnmapped() || x.isMateUnmapped())
                 .map(Read::getName)
                 .collect(Collectors.toSet());
         support.removeIf(r -> !discordantFragments.contains(r.getName()));

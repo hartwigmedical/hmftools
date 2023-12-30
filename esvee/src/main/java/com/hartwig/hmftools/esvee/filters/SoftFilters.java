@@ -21,7 +21,7 @@ public final class SoftFilters
         if(variantCall.quality() < SvConstants.VCFLOWQUALITYTHRESHOLD)
             filters.add(FilterType.MIN_QUALITY.filterName());
 
-        if(variantCall.supportingFragments().size() < SvConstants.MINREADSTOSUPPORTASSEMBLY)
+        if(variantCall.supportingFragments().size() < SvConstants.MIN_READS_SUPPORT_ASSEMBLY)
             filters.add(FilterType.MIN_SUPPORT.filterName());
 
         // final boolean isLikelyFalse = isLowSupport || (isLowOverhang && call.discordantSupport() == 0) || isLowQuality;

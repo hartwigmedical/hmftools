@@ -186,7 +186,7 @@ public class NodeFolder
         final boolean isLowQuality = isLowQualityBase(left, true) || isLowQualityBase(right, false);
         final boolean mismatches = left.Base != right.Base && !isLowQuality;
         final int mismatchCount = mismatchCountSoFar + (mismatches ? 1 : 0);
-        if(mismatchCount > SvConstants.MAXMISMATCHESFORFOLDING)
+        if(mismatchCount > SvConstants.MAX_MISMATCH_FOLDING)
             return false;
 
         // left & right can be overlayed iff every possible path from right has a candidate path through left that does not disagree

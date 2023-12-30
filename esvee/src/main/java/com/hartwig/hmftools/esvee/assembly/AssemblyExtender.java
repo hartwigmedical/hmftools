@@ -1,10 +1,15 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_MIN_SUPPORT;
+import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_MIN_SUPPORT_FINAL;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
@@ -21,38 +26,38 @@ import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.SvConstants;
+import com.hartwig.hmftools.esvee.common.JunctionGroup;
 import com.hartwig.hmftools.esvee.html.DiagramSet;
 import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 import com.hartwig.hmftools.esvee.read.ReadUtils;
-import com.hartwig.hmftools.esvee.read.SAMSource;
 import com.hartwig.hmftools.esvee.util.Counter;
 import com.hartwig.hmftools.esvee.processor.Problem;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
 public class AssemblyExtender
 {
-    private final SAMSource mSAMSource;
     private final SupportChecker mSupportChecker;
     private final NodeFolder mNodeFolder;
     private final PrimaryAssembly mPrimary;
-    private final AssemblyExtenderCounters mCounters = new AssemblyExtenderCounters();
+    private final JunctionGroup mJunctionGroup;
+    private final AssemblyExtenderCounters mCounters;
     private final boolean mCreateDiagrams;
 
     private int mNextAssemblyNumber = 1;
 
-    @Nullable
+    @Deprecated
     public static List<ExtendedAssembly> process(
             final Context context, final PrimaryAssembly assembly, final AssemblyExtenderCounters counters)
     {
         final boolean createDiagrams = context.Config.writeHtmlFiles() && context.Config.PlotDiagrams;
 
-        final AssemblyExtender assembler = new AssemblyExtender(
-                context.SAMSource, context.SupportChecker, assembly, createDiagrams);
+        final AssemblyExtender assembler = new AssemblyExtender(assembly, null, createDiagrams);
 
         try
         {
@@ -80,14 +85,14 @@ public class AssemblyExtender
         }
     }
 
-    private AssemblyExtender(
-            final SAMSource source, final SupportChecker supportChecker, final PrimaryAssembly primary, final boolean createDiagrams)
+    private AssemblyExtender(final PrimaryAssembly primary, final JunctionGroup junctionGroup, final boolean createDiagrams)
     {
-        mSAMSource = source;
-        mSupportChecker = supportChecker;
-        mNodeFolder = new NodeFolder();
+        mJunctionGroup = junctionGroup;
         mPrimary = primary;
         mCreateDiagrams = createDiagrams;
+        mSupportChecker = new SupportChecker();
+        mCounters = new AssemblyExtenderCounters();
+        mNodeFolder = new NodeFolder();
     }
 
     public AssemblyExtenderCounters getCounters()
@@ -97,7 +102,23 @@ public class AssemblyExtender
 
     public List<ExtendedAssembly> extend(final PrimaryAssembly assembly)
     {
-        return doExtend(assembly);
+        List<Read> discordantReads = new DiscordantPairFinder().findDiscordantReads(
+                assembly.getSupportReads(), mJunctionGroup.candidateReads());
+
+        mCounters.DiscordantReadsFound.add(discordantReads.size());
+
+        List<ExtendedAssembly> leftExtended = extendLeft(assembly, discordantReads);
+
+        leftExtended = limitBasedOnSupport(AssemblyFiltering.trimAndDeduplicate(
+                mSupportChecker, leftExtended), ASSEMBLY_EXTENSION_MIN_SUPPORT);
+
+        List<ExtendedAssembly> rightExtended = leftExtended.stream()
+                .flatMap(x -> extendRight(x, discordantReads).stream()).collect(Collectors.toList());
+
+        List<ExtendedAssembly> extendedAssemblies = limitBasedOnSupport(AssemblyFiltering.trimAndDeduplicate(
+                mSupportChecker, rightExtended), ASSEMBLY_EXTENSION_MIN_SUPPORT_FINAL);
+
+        return extendedAssemblies;
     }
 
     private List<ExtendedAssembly> limitBasedOnSupport(final List<ExtendedAssembly> assemblies, final int limit)
@@ -115,81 +136,75 @@ public class AssemblyExtender
         return assemblies;
     }
 
-    private List<ExtendedAssembly> doExtend(final PrimaryAssembly assembly)
-    {
-        final List<Read> discordantReads = new DiscordantPairFinder(mSAMSource).findDiscordantReads(assembly.getSupportRecords());
-
-        mCounters.DiscordantReadsFound.add(discordantReads.size());
-
-        final List<ExtendedAssembly> leftExtended = limitBasedOnSupport(
-                AssemblyFiltering.trimAndDeduplicate(mSupportChecker, extendLeft(assembly, discordantReads)), 8);
-
-        final List<ExtendedAssembly> rightExtended = leftExtended.stream()
-                .flatMap(l -> extendRight(l, discordantReads).stream())
-                .collect(Collectors.toList());
-
-        return limitBasedOnSupport(AssemblyFiltering.trimAndDeduplicate(mSupportChecker, rightExtended), 4);
-    }
-
     private String nextAssemblyName()
     {
         return String.format("%sE%s", mPrimary.Name, mNextAssemblyNumber++);
     }
 
+    /*
     private List<Pair<Read, Read>> findMates(final Collection<Read> reads)
     {
         return mSAMSource.streamMates(reads).collect(Collectors.toList());
-    }
 
-    @Nullable
-    private DiagramSet simplifyGraph(final String diagramSetName, final HeadNode node)
+        as per the SAMSource interface:
+        final Stream<RegionOfInterest> mateRegionsUnmerged = records.stream()
+                .map(record -> record.isMateMapped()
+                        ? new RegionOfInterest(record.getMateChromosome(), record.getMateAlignmentStart(),
+                        record.getMateAlignmentStart() + record.getLength())
+                        : new RegionOfInterest(record.getChromosome(), record.getAlignmentStart(),
+                                record.getAlignmentStart() + record.getLength()));
+        final List<RegionOfInterest> mappedMateRegions = RegionOfInterest.tryMerge(mateRegionsUnmerged::iterator);
+
+        final Map<String, List<Record>> recordsByName = records.stream()
+                .collect(MultiMapCollector.keyed(Record::getName));
+
+        return mappedMateRegions.stream()
+                .map(mateRegion -> streamReadsContaining(mateRegion.Chromosome, mateRegion.Start, mateRegion.End)
+                        .flatMap(record -> recordsByName.getOrDefault(record.getName(), List.of()).stream()
+                                .filter(match -> match.isFirstOfPair() != record.isFirstOfPair())
+                                .map(match -> Pair.of(match, record))))
+                .reduce(Stream::concat).orElse(Stream.of());
+    }
+    */
+
+    private List<Read> findMateReads(final SupportedAssembly assembly, byte requiredOrientation)
     {
-        final DiagramSet diagrams;
-        if(mCreateDiagrams)
+        List<Read> mateReads = Lists.newArrayList();
+
+        for(Read read : assembly.getSupportRecords())
         {
-            diagrams = new DiagramSet(diagramSetName);
-            diagrams.add("Attachment", node.toDiagram());
-            mNodeFolder.prepruneNodes(node);
-            diagrams.add("Pre-folding Prune", node.toDiagram());
-            mNodeFolder.foldPaths(node);
-            diagrams.add("Folding", node.toDiagram());
-            node.pruneNodes();
-            diagrams.add("Pruning", node.toDiagram());
+            if(!read.hasMateSet())
+                continue;
+
+            if(read.orientation() != requiredOrientation)
+                continue;
+
+            Read mateRead = read.mateRead();
+
+            if(assembly.containsSupport(mateRead)) // a little inefficient?
+                continue;
+
+            // CHECK: flip read if pair is an INV
+
+            mateReads.add(mateRead);
         }
+
+        if(requiredOrientation == NEG_ORIENT)
+            Collections.sort(mateReads, Comparator.comparingInt(Read::getUnclippedEnd).reversed());
         else
-        {
-            diagrams = null;
-            mNodeFolder.foldPaths(node);
-            node.pruneNodes();
-        }
+            Collections.sort(mateReads, Comparator.comparingInt(Read::getUnclippedStart));
 
-        return diagrams;
-    }
+        // CHECK: was .sorted(Comparator.comparingInt(pair -> assembly.getSupportIndex(pair.getLeft())))
 
-    private HeadNode alignmentAsGraph(final Read alignment, final Direction orientation)
-    {
-        final HeadNode root = new HeadNode();
-        Node current = root;
-        for(int i = 0; i < alignment.getLength(); i++)
-        {
-            final int index = orientation == Direction.FORWARDS ? i : alignment.getLength() - 1 - i;
-            final byte base = alignment.getBases()[index];
-            final int quality = alignment.getBaseQuality()[index];
-
-            final Node newNode = new Node((char) base);
-            newNode.MaxQuality = newNode.Quality = quality;
-            newNode.Support = new ArrayList<>();
-            newNode.Support.add(new Node.Support(alignment, i));
-            current.setNext(newNode);
-            current = newNode;
-        }
-
-        return root;
+        return mateReads;
     }
 
     private List<ExtendedAssembly> extendLeft(final SupportedAssembly assembly, final List<Read> discordantReads)
     {
-        final List<Pair<Read, Read>> pairedMates = findMates(assembly.getSupportRecords().stream()
+        List<Read> mateReads = findMateReads(assembly, NEG_ORIENT);
+
+        /*
+        List<Pair<Read, Read>> pairedMates = findMates(assembly.getSupportRecords().stream()
                 .filter(x -> x.negativeStrand())
                 .collect(Collectors.toList()));
 
@@ -202,42 +217,44 @@ public class AssemblyExtender
                         : pair.getRight())
                 .sorted(Comparator.comparingInt(Read::getUnclippedEnd).reversed())
                 .collect(Collectors.toList());
+        */
 
-        mCounters.LeftMates.add(mates.size());
+        mCounters.LeftMates.add(mateReads.size());
 
         discordantReads.sort(Comparator.comparingInt(Read::getUnclippedEnd).reversed());
-        final List<Read> applicableDiscordantReads = new ArrayList<>();
-        for(Read read : discordantReads)
-        {
-            if(!read.negativeStrand())
-                applicableDiscordantReads.add(read);
-        }
+
+        List<Read> applicableDiscordantReads = discordantReads.stream().filter(x -> !x.negativeStrand()).collect(Collectors.toList());
 
         final Map<Read, Integer> checkStartIndices = new LinkedHashMap<>();
-        for(Read read : Iterables.concat(mates, applicableDiscordantReads))
+        for(Read read : Iterables.concat(mateReads, applicableDiscordantReads))
         {
             // Get the support index of this record or its mate
-            @Nullable
-            final Integer existingSupportIndex = assembly.getSupport(read.getName()).stream()
+            Integer existingSupportIndex = assembly.getSupport(read.getName()).stream()
                     .map(entry -> entry.getValue() + entry.getKey().getLength())
                     .min(Comparator.naturalOrder())
                     .orElse(null);
-            final int minDepth = existingSupportIndex == null
+
+            int minDepth = existingSupportIndex == null
                     ? assembly.getLength() - read.getLength()
                     : Math.max(assembly.getLength() - read.getLength(), assembly.getLength() - existingSupportIndex);
             checkStartIndices.put(read, minDepth);
         }
 
-        final Direction assemblyReadDirection = Direction.REVERSE;
-        final Direction mateReadDirection = Direction.REVERSE;
-        final List<ExtendedAssembly> extended = extendAssembly(assembly, assemblyReadDirection, mates, discordantReads,
+        Direction assemblyReadDirection = Direction.REVERSE;
+
+        Direction mateReadDirection = Direction.REVERSE;
+
+        List<ExtendedAssembly> extended = extendAssembly(assembly, assemblyReadDirection, mateReads, discordantReads,
                 checkStartIndices, mateReadDirection, mCounters.LeftMatesAssembled, mCounters.LeftDiscordantReadsAssembled);
+
         mCounters.ExtendLeftAssemblies.add(extended.size());
+
         return extended;
     }
 
     private List<ExtendedAssembly> extendRight(final SupportedAssembly assembly, final List<Read> discordantReads)
     {
+        /*
         final List<Pair<Read, Read>> pairedMates = findMates(assembly.getSupportRecords().stream()
                 .filter(record -> !record.negativeStrand())
                 .collect(Collectors.toList()));
@@ -251,34 +268,41 @@ public class AssemblyExtender
                 .map(pair -> pair.getLeft().positiveStrand() == pair.getRight().positiveStrand()
                         ? ReadUtils.flipRead(pair.getRight()) : pair.getRight())
                 .collect(Collectors.toList());
-        mCounters.RightMates.add(mates.size());
+        */
+
+        List<Read> mateReads = findMateReads(assembly, POS_ORIENT);
+
+        mCounters.RightMates.add(mateReads.size());
 
         discordantReads.sort(Comparator.comparingInt(Read::getUnclippedStart));
-        final List<Read> applicableDiscordantReads = new ArrayList<>();
-        for(Read read : discordantReads)
-            if(read.negativeStrand()) // CHECK: was isMateOnTheLeft()
-                applicableDiscordantReads.add(read);
+
+        List<Read> applicableDiscordantReads = discordantReads.stream().filter(x -> x.negativeStrand()).collect(Collectors.toList());
 
         final Map<Read, Integer> checkStartIndices = new LinkedHashMap<>();
-        for(Read read : Iterables.concat(mates, applicableDiscordantReads))
+        for(Read read : Iterables.concat(mateReads, applicableDiscordantReads))
         {
             // Get the support index of this record or its mate
-            @Nullable
-            final Integer existingSupportIndex = assembly.getSupport(read.getName()).stream()
+            Integer existingSupportIndex = assembly.getSupport(read.getName()).stream()
                     .map(Map.Entry::getValue)
                     .max(Comparator.naturalOrder())
                     .orElse(null);
-            final int minDepth = existingSupportIndex == null
+
+            int minDepth = existingSupportIndex == null
                     ? assembly.getLength() - read.getLength()
                     : Math.max(assembly.getLength() - read.getLength(), existingSupportIndex);
+
             checkStartIndices.put(read, minDepth);
         }
 
-        final Direction assemblyReadDirection = Direction.FORWARDS;
-        final Direction mateReadDirection = Direction.FORWARDS;
-        final List<ExtendedAssembly> extended = extendAssembly(assembly, assemblyReadDirection, mates, applicableDiscordantReads,
+        Direction assemblyReadDirection = Direction.FORWARDS;
+
+        Direction mateReadDirection = Direction.FORWARDS;
+
+        List<ExtendedAssembly> extended = extendAssembly(assembly, assemblyReadDirection, mateReads, applicableDiscordantReads,
                 checkStartIndices, mateReadDirection, mCounters.RightMatesAssembled, mCounters.RightDiscordantReadsAssembled);
+
         mCounters.ExtendRightAssemblies.add(extended.size());
+
         return extended;
     }
 
@@ -337,7 +361,7 @@ public class AssemblyExtender
             final Integer depth = alignmentMinDepth.get(read);
             final HeadNode toAttach = alignmentAsGraph(read, alignmentDirection);
 
-            if(existing.attach(toAttach, SvConstants.ASSEMBLYEXTENSIONMINMATCHEDBASES, SvConstants.ASSEMBLYEXTENSIONMAXMISMATCHES,
+            if(existing.attach(toAttach, SvConstants.ASSEMBLY_EXTENSION_MIN_MATCH_BASES, SvConstants.ASSEMBLY_EXTENSION_MAX_MISMATCH,
                     Objects.requireNonNullElse(depth, 0), Integer.MAX_VALUE))
             {
                 potentialNewSupport.add(read);
@@ -434,5 +458,51 @@ public class AssemblyExtender
     private void addSupportNoOffset(final ExtendedAssembly assembly, final SupportedAssembly original)
     {
         original.getSupport().forEach(entry -> assembly.tryAddSupport(mSupportChecker, entry.getKey()));
+    }
+
+    @Nullable
+    private DiagramSet simplifyGraph(final String diagramSetName, final HeadNode node)
+    {
+        final DiagramSet diagrams;
+        if(mCreateDiagrams)
+        {
+            diagrams = new DiagramSet(diagramSetName);
+            diagrams.add("Attachment", node.toDiagram());
+            mNodeFolder.prepruneNodes(node);
+            diagrams.add("Pre-folding Prune", node.toDiagram());
+            mNodeFolder.foldPaths(node);
+            diagrams.add("Folding", node.toDiagram());
+            node.pruneNodes();
+            diagrams.add("Pruning", node.toDiagram());
+        }
+        else
+        {
+            diagrams = null;
+            mNodeFolder.foldPaths(node);
+            node.pruneNodes();
+        }
+
+        return diagrams;
+    }
+
+    private HeadNode alignmentAsGraph(final Read alignment, final Direction orientation)
+    {
+        final HeadNode root = new HeadNode();
+        Node current = root;
+        for(int i = 0; i < alignment.getLength(); i++)
+        {
+            final int index = orientation == Direction.FORWARDS ? i : alignment.getLength() - 1 - i;
+            final byte base = alignment.getBases()[index];
+            final int quality = alignment.getBaseQuality()[index];
+
+            final Node newNode = new Node((char) base);
+            newNode.MaxQuality = newNode.Quality = quality;
+            newNode.Support = new ArrayList<>();
+            newNode.Support.add(new Node.Support(alignment, i));
+            current.setNext(newNode);
+            current = newNode;
+        }
+
+        return root;
     }
 }

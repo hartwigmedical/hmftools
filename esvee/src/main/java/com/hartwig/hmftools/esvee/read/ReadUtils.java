@@ -8,7 +8,7 @@ public final class ReadUtils
 {
     public static boolean isDiscordant(final Read read)
     {
-        return isDiscordant(read, SvConstants.DISCORDANTPAIRFRAGMENTLENGTH);
+        return isDiscordant(read, SvConstants.DISCORDANT_FRAGMENT_LENGTH);
     }
 
     public static boolean isDiscordant(final Read read, final int discordantPairFragmentLength)
@@ -16,7 +16,7 @@ public final class ReadUtils
         if(!read.isMateMapped())
             return false;
 
-        if(!read.getChromosome().equals(read.getMateChromosome()))
+        if(!read.getChromosome().equals(read.mateChromosome()))
             return true;
 
         if(read.positiveStrand() == read.matePositiveStrand())

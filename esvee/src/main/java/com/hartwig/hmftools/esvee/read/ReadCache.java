@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.read;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
@@ -14,9 +13,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-
-import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.util.ThrowingSupplier;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -271,7 +267,7 @@ public class ReadCache
             if(read.isUnmapped())
             {
                 // CHECK: use the mate's position or actually are these the same anyway?
-                int matePosStart = read.getMateAlignmentStart();
+                int matePosStart = read.mateAlignmentStart();
                 int matePosEnd = matePosStart + read.getLength() * 2; // CHECK: consider using actual mate end using cigar
                 return positionsOverlap(matePosStart, matePosEnd, positionStart, positionEnd);
             }
@@ -297,6 +293,29 @@ public class ReadCache
                         && mateStart <= positionEnd && mateEnd >= positionStart;
             }
             */
+        }
+    }
+
+    private interface ThrowingSupplier<RET> extends Supplier<RET>
+    {
+        static <RET> Supplier<RET> rethrow(final ThrowingSupplier<RET> supplier)
+        {
+            return supplier;
+        }
+
+        RET getThrowing() throws Exception;
+
+        @Override
+        default RET get()
+        {
+            try
+            {
+                return getThrowing();
+            }
+            catch(final Exception e)
+            {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

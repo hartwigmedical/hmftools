@@ -3,42 +3,52 @@ package com.hartwig.hmftools.esvee.assembly;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.esvee.common.RegionOfInterest;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.read.SAMSource;
-import com.hartwig.hmftools.esvee.util.SizedIterable;
 
 import org.apache.commons.lang3.tuple.Pair;
 
 public class DiscordantPairFinder
 {
-    private final SAMSource mSource;
-
     private final int mSearchDistance;
     private final int mMinQuality;
     private final int mMinFragmentLength;
 
-    public DiscordantPairFinder(final SAMSource source)
+    public DiscordantPairFinder()
     {
-        mSource = source;
-        mSearchDistance = SvConstants.DISCORDANTPAIRSEARCHDISTANCE;
-        mMinQuality = SvConstants.DISCORDANTPAIRMINMAPQ;
-        mMinFragmentLength = SvConstants.DISCORDANTPAIRFRAGMENTLENGTH;
+        mSearchDistance = SvConstants.DISCORDANT_PAIR_SEARCH_DISTANCE;
+        mMinQuality = SvConstants.DISCORDANT_PAIR_MIN_MAPQ;
+        mMinFragmentLength = SvConstants.DISCORDANT_FRAGMENT_LENGTH;
     }
 
+    public List<Read> findDiscordantReads(final List<Read> existingSupportingReads, final List<Read> allReads)
+    {
+        if(!SvConstants.TRY_EXTENDING_USING_DISCORDANT_READS)
+            return Collections.emptyList();
+
+        List<Read> discordantReads = allReads.stream()
+                .filter(x -> !existingSupportingReads.contains(x))
+                .filter(x -> isDiscordant(x))
+                .collect(Collectors.toList());
+
+        List<Read> filteredDiscordantReads = filterFewMateRegions(filterHighDepthRegions(discordantReads));
+        return filteredDiscordantReads.stream().distinct().collect(Collectors.toList());
+    }
+
+    /*
     public List<Read> findDiscordantReads(final SizedIterable<Read> existingRecords)
     {
-        if(!SvConstants.TRYEXTENDINGUSINGDISCORDANTREADS)
+        if(!SvConstants.TRY_EXTENDING_USING_DISCORDANT_READS)
             return List.of();
 
         final Set<String> excludeFragments = existingRecords.stream()
@@ -57,6 +67,7 @@ public class DiscordantPairFinder
         final List<Read> filteredDiscordantReads = filterFewMateRegions(filterHighDepthRegions(discordantReads));
         return filteredDiscordantReads.stream().distinct().collect(Collectors.toList());
     }
+    */
 
     private List<Read> filterFewMateRegions(final List<Read> reads)
     {
@@ -97,12 +108,12 @@ public class DiscordantPairFinder
             if(!read.isMateMapped())
                 continue;
 
-            byChromosome.computeIfAbsent(read.getMateChromosome(), ignored -> new ArrayList<>())
+            byChromosome.computeIfAbsent(read.mateChromosome(), ignored -> new ArrayList<>())
                     .add(read);
         }
 
         // Sorting ensures that only a single pass is required to combine the regions, and that we only have to check the last one
-        byChromosome.values().forEach(list -> list.sort(Comparator.comparingInt(Read::getMateAlignmentStart)));
+        byChromosome.values().forEach(list -> list.sort(Comparator.comparingInt(Read::mateAlignmentStart)));
 
         final Map<RegionOfInterest, List<Read>> depth = new IdentityHashMap<>();
         for(List<Read> readList : byChromosome.values())
@@ -110,8 +121,8 @@ public class DiscordantPairFinder
             final List<RegionOfInterest> consolidated = new ArrayList<>();
             for(Read read : readList)
             {
-                final RegionOfInterest region = new RegionOfInterest(read.getMateChromosome(),
-                        read.getMateAlignmentStart(), read.getMateAlignmentStart() + read.getLength());
+                final RegionOfInterest region = new RegionOfInterest(read.mateChromosome(),
+                        read.mateAlignmentStart(), read.mateAlignmentStart() + read.getLength());
 
                 boolean found = false;
                 for(RegionOfInterest existingRegion : consolidated)
@@ -137,7 +148,7 @@ public class DiscordantPairFinder
 
     private Stream<RegionOfInterest> interestingRegions(final Read read)
     {
-        if(read.getMappingQuality() < mMinQuality)
+        if(read.mappingQuality() < mMinQuality)
             return Stream.of();
 
         final RegionOfInterest primary = new RegionOfInterest(read.getChromosome(),
@@ -145,9 +156,9 @@ public class DiscordantPairFinder
         if(read.isMateMapped())
         {
             final RegionOfInterest secondary = new RegionOfInterest(
-                    read.getMateChromosome(),
-                    read.getMateAlignmentStart() - mSearchDistance,
-                    read.getMateAlignmentStart() + read.getLength() + mSearchDistance);
+                    read.mateChromosome(),
+                    read.mateAlignmentStart() - mSearchDistance,
+                    read.mateAlignmentStart() + read.getLength() + mSearchDistance);
             return Stream.of(primary, secondary);
         }
         return Stream.of(primary);

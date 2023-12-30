@@ -87,7 +87,7 @@ public final class AlignmentFilters
 
     public static boolean hasAcceptableMapQ(final Read read, final int threshold)
     {
-        return read.getMappingQuality() >= threshold;
+        return read.mappingQuality() >= threshold;
     }
 
     public static boolean isNotBadlyMapped(final Read read)

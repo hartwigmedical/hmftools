@@ -2,7 +2,6 @@ package com.hartwig.hmftools.esvee.processor;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.common.JunctionGroup.buildJunctionGroups;
@@ -22,18 +21,16 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.assembly.AssemblyThread;
+import com.hartwig.hmftools.esvee.assembly.SupportChecker;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
 import com.hartwig.hmftools.esvee.common.RegionOfInterest;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.WriteType;
 import com.hartwig.hmftools.esvee.assembly.AssemblyExtender;
-import com.hartwig.hmftools.esvee.assembly.PrimaryAssembler;
 import com.hartwig.hmftools.esvee.common.SampleSupport;
 import com.hartwig.hmftools.esvee.common.VariantCall;
 import com.hartwig.hmftools.esvee.output.ResultsWriter;
@@ -60,6 +57,7 @@ public class Processor
     private final Context mContext;
     private final ResultsWriter mResultsWriter;
     private final HomologySlider mHomologySlider;
+    private final SupportChecker mSupportChecker;
 
     private final Map<String,List<Junction>> mChrJunctionsMap;
 
@@ -71,6 +69,7 @@ public class Processor
         mContext = context;
         mResultsWriter = resultsWriter;
         mHomologySlider = new HomologySlider(mContext.ReferenceGenome);
+        mSupportChecker = new SupportChecker();
         mChrJunctionsMap = Maps.newHashMap();
     }
 
@@ -132,9 +131,9 @@ public class Processor
 
         for(int i = 0; i < min(junctionGroupCount, mConfig.Threads); ++i)
         {
-            AssemblyThread partitionThread = new AssemblyThread(mConfig, junctionGroupQueue);
-            assemblyTasks.add(partitionThread);
-            workers.add(partitionThread);
+            AssemblyThread assemblyThread = new AssemblyThread(mConfig, junctionGroupQueue);
+            assemblyTasks.add(assemblyThread);
+            workers.add(assemblyThread);
         }
 
         SV_LOGGER.debug("splitting {} junction groups across {} threads", junctionGroupCount, assemblyTasks.size());
@@ -158,41 +157,34 @@ public class Processor
 
         SV_LOGGER.info("created {} primary assemblies", primaryAssemblyResults.size());
 
-        /*
-        List<PrimaryAssemblyResult> primaryAssemblyResults = ParallelMapper.mapWithProgress(
-                mContext.Executor, junctions,
-                junction -> PrimaryAssembler.process(mContext, junction, Counters.PrimaryAssemblerCounters));
-
-        final int primaryAssemblyCount = primaryAssemblyResults.stream().mapToInt(r -> r.Assemblies.size()).sum();
-
-        SV_LOGGER.info("created {} primary assemblies", primaryAssemblyCount);
-        */
-
-        if(!mContext.Config.OtherDebug)
+        if(!mConfig.OtherDebug)
         {
             junctions.clear();
         }
 
         // Inter-junction deduplication
+        // FIXME: surely can just be within junction groups or at least same chromosome?
         List<PrimaryAssembly> primaryAssemblies = consolidateNearbyAssemblies(flatten(primaryAssemblyResults));
 
         SV_LOGGER.info("reduced to {} assemblies", primaryAssemblies.size());
 
-        if(!mContext.Config.OtherDebug)
+        if(!mConfig.OtherDebug)
             primaryAssemblyResults.clear();
 
         // CHECK
-        // if(mContext.Config.dropGermline())
+        // if(mConfig.dropGermline())
         //    primaryAssemblies.removeIf(assembly -> assembly.getSupportRecords().stream().anyMatch(Record::isGermline));
 
-        // Assembly Extension
+        // assembly extension
         List<ExtendedAssembly> extendedAssemblies = ParallelMapper.mapWithProgress(
                         mContext.Executor, primaryAssemblies,
                         assembly -> AssemblyExtender.process(mContext, assembly, Counters.AssemblyExtenderCounters)).stream()
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
 
-        if(!mContext.Config.OtherDebug)
+        //         final AssemblyExtender assembler = new AssemblyExtender(assembly, createDiagrams);
+
+        if(!mConfig.OtherDebug)
         {
             primaryAssemblies.clear();
         }
@@ -204,7 +196,7 @@ public class Processor
 
         SV_LOGGER.info("created {} primary phase sets", primaryPhaseSets.size());
 
-        if(!mContext.Config.OtherDebug)
+        if(!mConfig.OtherDebug)
             extendedAssemblies.clear();
 
         // Phased assembly merging
@@ -240,7 +232,7 @@ public class Processor
 
         SV_LOGGER.info("merged secondaries");
 
-        // Alignment
+        // alignment
         final List<AlignedAssembly> aligned = ParallelMapper.mapWithProgress(
                 mContext.Executor, mergedSecondaries, mContext.Aligner::align);
 
@@ -253,18 +245,22 @@ public class Processor
         SV_LOGGER.info("processed homology");
 
         // Support scanning
-        final SupportScanner supportScanner = new SupportScanner(mContext, Counters.ExtraScannedSupport);
+        // FIXME: consider not rescanning any aligned assembly that matches exactly or closely to the original
+        /*
+        SupportScanner supportScanner = new SupportScanner(mContext, Counters.ExtraScannedSupport);
 
         ParallelMapper.mapWithProgress(
                 mContext.Executor, homologised, supportScanner::tryRescanSupport);
 
         SV_LOGGER.info("rescanned support, adding {} new reads", Counters.ExtraScannedSupport.formatValue());
+        */
+
 
         // Calling
         final List<VariantCall> variants = new VariantCaller(mContext.Executor).callVariants(homologised);
         SV_LOGGER.info("called {} variants", variants.size());
 
-        // Variant Deduplication
+        // variant deduplication
         final VariantDeduplication deduplicator = new VariantDeduplication(mContext, Counters.VariantDeduplicationCounters);
         final List<VariantCall> deduplicated = deduplicator.deduplicate(variants);
 
@@ -279,12 +275,12 @@ public class Processor
 
         final long lowSupportVariants = deduplicated.stream()
                 .filter(variant -> variant.quality() >= SvConstants.VCFLOWQUALITYTHRESHOLD)
-                .filter(variant -> variant.supportingFragments().size() < SvConstants.MINREADSTOSUPPORTASSEMBLY)
+                .filter(variant -> variant.supportingFragments().size() < SvConstants.MIN_READS_SUPPORT_ASSEMBLY)
                 .count();
         SV_LOGGER.info("{} low-support variants found (excl low-quality)", lowSupportVariants);
 
         /* CHECK
-        if(mContext.Config.dropGermline())
+        if(mConfig.dropGermline())
         {
             deduplicated.removeIf(VariantCall::isGermline);
             SV_LOGGER.info("{} variants remaining after dropping those with germline support", deduplicated.size());
@@ -304,12 +300,12 @@ public class Processor
             }
         }
 
-        if(mContext.Config.writeHtmlFiles())
+        if(mConfig.writeHtmlFiles())
             writeHTMLSummaries(deduplicated);
 
         writeVCF(deduplicated);
 
-        if(mContext.Config.WriteTypes.contains(WriteType.BREAKEND_TSV))
+        if(mConfig.WriteTypes.contains(WriteType.BREAKEND_TSV))
         {
             deduplicated.forEach(x -> mResultsWriter.writeVariant(x));
         }
@@ -332,7 +328,7 @@ public class Processor
 
             try
             {
-                VariantCallPageGenerator.generatePage(mContext.Config.HtmlOutputDir, mContext.ReferenceGenome, mContext.SupportChecker, call);
+                VariantCallPageGenerator.generatePage(mConfig.HtmlOutputDir, mContext.ReferenceGenome, mSupportChecker, call);
             }
             catch(final Exception ex)
             {
@@ -342,7 +338,7 @@ public class Processor
 
         try
         {
-            SummaryPageGenerator.generatePage(mContext.Config.HtmlOutputDir, Counters, variants);
+            SummaryPageGenerator.generatePage(mConfig.HtmlOutputDir, Counters, variants);
         }
         catch(final Exception ex)
         {
@@ -395,16 +391,16 @@ public class Processor
 
                         final int minOverlap = Math.min(30, Math.min(left.getLength(), right.getLength()));
                         @Nullable
-                        Integer index = mContext.SupportChecker.AssemblySupport.supportIndex(left, right, minOverlap);
+                        Integer index = mSupportChecker.AssemblySupport.supportIndex(left, right, minOverlap);
                         if(index != null)
-                            index = mContext.SupportChecker.AssemblySupport.bestSupportIndex(left, right, minOverlap);
+                            index = mSupportChecker.AssemblySupport.bestSupportIndex(left, right, minOverlap);
                         final ExtendedAssembly mergedAssembly;
                         if(index == null)
                         {
                             final ExtendedAssembly flippedRight = right.flipStrand();
-                            index = mContext.SupportChecker.AssemblySupport.supportIndex(left, flippedRight, minOverlap);
+                            index = mSupportChecker.AssemblySupport.supportIndex(left, flippedRight, minOverlap);
                             if(index != null)
-                                index = mContext.SupportChecker.AssemblySupport.bestSupportIndex(left, right, minOverlap);
+                                index = mSupportChecker.AssemblySupport.bestSupportIndex(left, right, minOverlap);
                             if(index == null)
                                 continue;
 
@@ -448,8 +444,8 @@ public class Processor
         final ExtendedAssembly merged = new ExtendedAssembly(left.Name, mergedSequence.getBasesString(), left.Source);
         left.Diagrams.forEach(merged::addDiagrams);
 
-        left.getSupportRecords().forEach(support -> merged.tryAddSupport(mContext.SupportChecker, support));
-        right.getSupportRecords().forEach(support -> merged.tryAddSupport(mContext.SupportChecker, support));
+        left.getSupportRecords().forEach(support -> merged.tryAddSupport(mSupportChecker, support));
+        right.getSupportRecords().forEach(support -> merged.tryAddSupport(mSupportChecker, support));
 
         merged.addErrata(left.getAllErrata());
         merged.addErrata(right.getAllErrata());
@@ -480,13 +476,13 @@ public class Processor
             if(offset != -1)
             {
                 final int oldSupportIndex = entry.getValue();
-                if(mContext.SupportChecker.AssemblySupport.supportsAt(merged, potentialSupport, oldSupportIndex + offset))
+                if(mSupportChecker.AssemblySupport.supportsAt(merged, potentialSupport, oldSupportIndex + offset))
                 {
                     merged.addEvidenceAt(potentialSupport, oldSupportIndex + offset);
                     continue;
                 }
             }
-            merged.tryAddSupport(mContext.SupportChecker, potentialSupport);
+            merged.tryAddSupport(mSupportChecker, potentialSupport);
         }
     }
 
@@ -547,7 +543,8 @@ public class Processor
         });
     }
 
-    public List<PrimaryAssembly> consolidateNearbyAssemblies(final List<PrimaryAssembly> results,
+    public List<PrimaryAssembly> consolidateNearbyAssemblies(
+            final List<PrimaryAssembly> results,
             final BiFunction<PrimaryAssembly, PrimaryAssembly, PrimaryAssembly> merger)
     {
         results.sort(NaturalSortComparator.<PrimaryAssembly>of(r -> r.AnchorChromosome)
@@ -561,7 +558,7 @@ public class Processor
             if(current == null)
                 continue;
 
-            final int maxDedupeDistance = SvConstants.MAXDISTANCETODEDUPEASSEMBLIES;
+            final int maxDedupeDistance = SvConstants.MAX_DISTANCE_EDUPE_ASSEMBLIES;
             final int maxToCheck = Math.min(results.size() - i - 1, maxDedupeDistance * 2);
             for(int j = 0; j < maxToCheck; j++)
             {
@@ -607,7 +604,7 @@ public class Processor
     public PrimaryAssembly tryMerge(final PrimaryAssembly left, final PrimaryAssembly right)
     {
         @Nullable
-        final Integer mergeIndex = mContext.SupportChecker.AssemblySupport.supportIndex(left, right, 100);
+        final Integer mergeIndex = mSupportChecker.AssemblySupport.supportIndex(left, right, 100);
         if(mergeIndex == null)
             return null;
 
@@ -623,11 +620,11 @@ public class Processor
 
         final int leftDelta = supportIndex > 0 ? 0 : -supportIndex;
         for(Map.Entry<Read, Integer> entry : left.getSupport())
-            merged.tryAddSupport(mContext.SupportChecker, entry.getKey(), entry.getValue() + leftDelta);
+            merged.tryAddSupport(mSupportChecker, entry.getKey(), entry.getValue() + leftDelta);
 
         final int rightDelta = Math.max(supportIndex, 0);
         for(Map.Entry<Read, Integer> entry : right.getSupport())
-            merged.tryAddSupport(mContext.SupportChecker, entry.getKey(), entry.getValue() + rightDelta);
+            merged.tryAddSupport(mSupportChecker, entry.getKey(), entry.getValue() + rightDelta);
 
         merged.addErrata(left.getAllErrata());
         merged.addErrata(right.getAllErrata());
@@ -663,7 +660,7 @@ public class Processor
 
         for(ExtendedAssembly assembly : assemblies)
             for(Read support : assembly.getSupportRecords())
-                if(!gappedAssembly.tryAddSupport(mContext.SupportChecker, support))
+                if(!gappedAssembly.tryAddSupport(mSupportChecker, support))
                     SV_LOGGER.info("Failed to add support for assembly {}: {}", gappedAssembly.Name, support.getName());
 
         return gappedAssembly;

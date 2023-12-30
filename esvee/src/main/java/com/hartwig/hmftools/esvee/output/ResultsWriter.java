@@ -130,7 +130,7 @@ public class ResultsWriter
     {
         boolean isLowOverhang = variant.overhang() < SvConstants.VCFLOWOVERHANGTHRESHOLD;
         boolean isLowQuality = variant.quality() < SvConstants.VCFLOWQUALITYTHRESHOLD;
-        boolean isLowSupport = variant.supportingFragments().size() < SvConstants.MINREADSTOSUPPORTASSEMBLY;
+        boolean isLowSupport = variant.supportingFragments().size() < SvConstants.MIN_READS_SUPPORT_ASSEMBLY;
         boolean isLikelyFalse = isLowSupport || (isLowOverhang && variant.discordantSupport() == 0) || isLowQuality;
 
         List<String> filters = new ArrayList<>();

@@ -3,9 +3,11 @@ package com.hartwig.hmftools.esvee.sequence;
 import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.util.SizedIterable;
@@ -120,6 +122,8 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembl
 
     public boolean containsSupport(final Read read)
     {
+        // CHECK: can just store by read reference instead of ID?
+
         @Nullable
         SupportEntry existingEntry = mSupport.get(read.getName());
         while(existingEntry != null)
@@ -144,6 +148,11 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembl
         }
 
         return false;
+    }
+
+    public List<Read> getSupportReads()
+    {
+        return mSupport.values().stream().map(x -> x.Read).collect(Collectors.toList());
     }
 
     public SizedIterable<Read> getSupportRecords()

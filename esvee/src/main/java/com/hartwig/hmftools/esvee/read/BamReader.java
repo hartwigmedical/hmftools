@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.esvee.read.ReadCache.CACHE_QUERY_BUFFER;
 import static com.hartwig.hmftools.esvee.read.ReadCache.MAX_CACHE_SIZE;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -22,7 +23,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class BamReader
+public class BamReader implements AutoCloseable
 {
     private final SvConfig mConfig;
 
@@ -150,6 +151,19 @@ public class BamReader
         bamSlicer.setKeepUnmapped();
         bamSlicer.setKeepHardClippedSecondaries();
         return bamSlicer;
+    }
+
+    @Override
+    public void close()
+    {
+        try
+        {
+            for(SamReader reader : mSamReaders)
+            {
+                reader.close();
+            }
+        }
+        catch(IOException e) {}
     }
 
 }

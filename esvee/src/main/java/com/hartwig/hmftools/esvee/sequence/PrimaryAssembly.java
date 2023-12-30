@@ -15,12 +15,12 @@ public class PrimaryAssembly extends SupportedAssembly implements TrimmableAssem
 
     public final String AnchorChromosome;
     public final int AnchorPosition;
-    /**
-     * If we started at this index and moved forward, we'd see the anchor
-     */
+
+    // if we started at this index and moved forward, we'd see the anchor
     public final int AnchorPositionInAssembly;
 
-    public PrimaryAssembly(final String name, final String assembly, final String anchorChromosome, final int anchorPosition,
+    public PrimaryAssembly(
+            final String name, final String assembly, final String anchorChromosome, final int anchorPosition,
             final int anchorPositionInAssembly)
     {
         super(name, assembly);

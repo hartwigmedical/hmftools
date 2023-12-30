@@ -37,6 +37,7 @@ public class AssemblyThread extends Thread
 
     public List<PrimaryAssemblyResult> primaryAssemblyResults() { return mPrimaryAssemblyResults; }
 
+    @Override
     public void run()
     {
         while(true)

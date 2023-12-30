@@ -21,16 +21,19 @@ import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMTag;
 
 public final class SamRecordUtils
 {
-    public static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
-    public static final String MATE_CIGAR_ATTRIBUTE = "MC";
-    public static final String NUM_MUTATONS_ATTRIBUTE = "NM";
+    public static final String SUPPLEMENTARY_ATTRIBUTE = SAMTag.SA.name();
+    public static final String MATE_CIGAR_ATTRIBUTE = SAMTag.MC.name();
+    public static final String NUM_MUTATONS_ATTRIBUTE = SAMTag.NM.name();
+    public static final String SECONDARY_ATTRIBUTE = SAMTag.HI.name();
+
+    // in-house attributes
     public static final String CONSENSUS_READ_ATTRIBUTE = "CR";
     public static final String UMI_TYPE_ATTRIBUTE = "UT";
     public static final String UMI_ATTRIBUTE = "UI";
-    public static final String SECONDARY_ATTRIBUTE = "HI";
     public static final String CONSENSUS_INFO_DELIM = ";";
 
     public static final String UNMAP_ATTRIBUTE = "UM"; // a read has been unmapped (ie by MarkDups)
@@ -41,7 +44,6 @@ public final class SamRecordUtils
     public static final int NO_POSITION = 0;
 
     private static final int PHRED_OFFSET = 33;
-
 
     public static final Logger SAM_LOGGER = LogManager.getLogger(SamRecordUtils.class);
 
