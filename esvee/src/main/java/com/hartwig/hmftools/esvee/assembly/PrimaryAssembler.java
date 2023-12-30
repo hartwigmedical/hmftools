@@ -102,8 +102,9 @@ public class PrimaryAssembler
         final List<PrimaryAssembly> assemblies = AssemblyFiltering.trimAndDeduplicate(mSupportChecker, anchored);
         mCounters.DedupedAnchoredAssemblies.add(assemblies.size());
 
-        final JunctionMetrics junctionMetrics = new JunctionMetrics(mJunction.Chromosome, mJunction.Position, mJunction.direction(), mCounters);
-        assemblies.forEach(assembly -> assembly.addErrata(junctionMetrics));
+        // final JunctionMetrics junctionMetrics = new JunctionMetrics(mJunction.Chromosome, mJunction.Position, mJunction.direction(), mCounters);
+        // assemblies.forEach(assembly -> assembly.addErrata(junctionMetrics));
+
         return assemblies;
     }
 
@@ -144,11 +145,11 @@ public class PrimaryAssembler
                     if(direction == Direction.REVERSE)
                         assemblyBases = new StringBuilder(assemblyBases).reverse().toString();
 
-                    final int anchorPositionInAssembly = direction == Direction.FORWARDS
-                            ? 1
-                            : assemblyBases.length() - 1;
-                    final PrimaryAssembly newAssembly = new PrimaryAssembly(nextAssemblyName(), assemblyBases, assembly.AnchorChromosome,
-                                    assembly.AnchorPosition, anchorPositionInAssembly);
+                    final int anchorPositionInAssembly = direction == Direction.FORWARDS ? 1 : assemblyBases.length() - 1;
+
+                    final PrimaryAssembly newAssembly = new PrimaryAssembly(
+                            nextAssemblyName(), assemblyBases, mJunction, assembly.AnchorChromosome, assembly.AnchorPosition, anchorPositionInAssembly);
+
                     newAssembly.Diagrams.addAll(assembly.Diagrams);
                     newAssembly.Diagrams.add(diagrams);
                     for(Read read : alignments)
@@ -273,7 +274,8 @@ public class PrimaryAssembler
                             ? 0
                             : orientedAssembly.length() - 1;
 
-                    return new PrimaryAssembly(nextAssemblyName(), orientedAssembly, mJunction.Chromosome, mJunction.Position, anchorPositionInAssembly);
+                    return new PrimaryAssembly(
+                            nextAssemblyName(), orientedAssembly, mJunction, mJunction.Chromosome, mJunction.Position, anchorPositionInAssembly);
                 })
                 .peek(assembly -> assembly.addDiagrams(diagrams))
                 .collect(Collectors.toList());
@@ -372,8 +374,9 @@ public class PrimaryAssembler
             final int anchorPositionInAssembly = initialAssembly.AnchorPositionInAssembly + offsetSize;
 
             // Don't use candidate to construct, as we want to re-evaluate evidence
-            final PrimaryAssembly assembly = new PrimaryAssembly(nextAssemblyName(), anchoredAssembly,
-                    mJunction.Chromosome, mJunction.Position, anchorPositionInAssembly);
+            PrimaryAssembly assembly = new PrimaryAssembly(
+                    nextAssemblyName(), anchoredAssembly,  mJunction, mJunction.Chromosome, mJunction.Position, anchorPositionInAssembly);
+
             assembly.Diagrams.addAll(initialAssembly.Diagrams);
             assembly.addDiagrams(diagrams);
 

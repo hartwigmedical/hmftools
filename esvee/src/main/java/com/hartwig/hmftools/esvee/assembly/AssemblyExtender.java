@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_MIN_SUPP
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
@@ -18,40 +17,124 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.SvConstants;
+import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
 import com.hartwig.hmftools.esvee.html.DiagramSet;
+import com.hartwig.hmftools.esvee.read.BamReader;
 import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
-import com.hartwig.hmftools.esvee.read.ReadUtils;
 import com.hartwig.hmftools.esvee.util.Counter;
-import com.hartwig.hmftools.esvee.processor.Problem;
 
-import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
-public class AssemblyExtender
+public class AssemblyExtender extends Thread
 {
+    private final Map<String,List<JunctionGroup>> mJunctionGroupMap;
+    private final Queue<PrimaryAssembly> mPrimaryAssemblyQueue;
+    private final int mPrimaryAssemblyCount;
+    private final SvConfig mConfig;
+
+    private final List<ExtendedAssembly> mExtendedAssemblies;
+
     private final SupportChecker mSupportChecker;
     private final NodeFolder mNodeFolder;
-    private final PrimaryAssembly mPrimary;
-    private final JunctionGroup mJunctionGroup;
     private final AssemblyExtenderCounters mCounters;
     private final boolean mCreateDiagrams;
 
-    private int mNextAssemblyNumber = 1;
+    // private final PrimaryAssembly mPrimary;
+    // private final JunctionGroup mJunctionGroup;
 
-    @Deprecated
+
+    private int mNextAssemblyNumber;
+
+    public static List<AssemblyExtender> createThreadTasks(
+            final Map<String,List<JunctionGroup>> junctionGroupMap, final List<PrimaryAssembly> primaryAssemblies,
+            final SvConfig config, final int taskCount, final List<Thread> threadTasks)
+    {
+        List<AssemblyExtender> assemblyExtenderTasks = com.google.common.collect.Lists.newArrayList();
+
+        Queue<PrimaryAssembly> primaryAssemblyQueue = new ConcurrentLinkedQueue<>();
+        primaryAssemblyQueue.addAll(primaryAssemblies);
+
+        int primaryAssemblyCount = primaryAssemblies.size();
+
+        for(int i = 0; i < taskCount; ++i)
+        {
+            AssemblyExtender assemblyExtender = new AssemblyExtender(config, junctionGroupMap, primaryAssemblyQueue);
+            assemblyExtenderTasks.add(assemblyExtender);
+            threadTasks.add(assemblyExtender);
+        }
+
+        SV_LOGGER.debug("splitting {} primary assemblies across {} threads", primaryAssemblyCount, taskCount);
+
+        return assemblyExtenderTasks;
+    }
+
+    public AssemblyExtender(
+            final SvConfig config, final Map<String,List<JunctionGroup>> junctionGroupMap, final Queue<PrimaryAssembly> primaryAssemblyQueue)
+    {
+        mJunctionGroupMap = junctionGroupMap;
+        mPrimaryAssemblyQueue = primaryAssemblyQueue;
+        mPrimaryAssemblyCount = primaryAssemblyQueue.size();
+        mConfig = config;
+        mCreateDiagrams = config.writeHtmlFiles() && config.PlotDiagrams;
+        mSupportChecker = new SupportChecker();
+        mCounters = new AssemblyExtenderCounters();
+        mNodeFolder = new NodeFolder();
+        mExtendedAssemblies = Lists.newArrayList();
+        mNextAssemblyNumber = 1;
+
+        start();
+    }
+
+    @Override
+    public void run()
+    {
+        while(true)
+        {
+            try
+            {
+                int remainingCount = mPrimaryAssemblyQueue.size();
+                int processedCount = mPrimaryAssemblyCount - remainingCount;
+
+                PrimaryAssembly primaryAssembly = mPrimaryAssemblyQueue.remove();
+
+                processPrimaryAssembly(primaryAssembly);
+
+                if(processedCount > 0 && (processedCount % 100) == 0)
+                {
+                    SV_LOGGER.info("processed {} junction groups, remaining({})", processedCount, remainingCount);
+                }
+            }
+            catch(NoSuchElementException e)
+            {
+                SV_LOGGER.trace("all tasks complete");
+                break;
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+                System.exit(1);
+            }
+        }
+    }
+    /*
     public static List<ExtendedAssembly> process(
             final Context context, final PrimaryAssembly assembly, final AssemblyExtenderCounters counters)
     {
@@ -85,25 +168,27 @@ public class AssemblyExtender
         }
     }
 
-    private AssemblyExtender(final PrimaryAssembly primary, final JunctionGroup junctionGroup, final boolean createDiagrams)
+    public AssemblyExtenderCounters getCounters() { return mCounters; }
+    */
+
+    public List<ExtendedAssembly> extendedAssemblies() { return mExtendedAssemblies; }
+
+    private JunctionGroup findJunctionGroup(final Junction junction)
     {
-        mJunctionGroup = junctionGroup;
-        mPrimary = primary;
-        mCreateDiagrams = createDiagrams;
-        mSupportChecker = new SupportChecker();
-        mCounters = new AssemblyExtenderCounters();
-        mNodeFolder = new NodeFolder();
+        List<JunctionGroup> junctionGroups = mJunctionGroupMap.get(junction.Chromosome);
+
+        if(junctionGroups == null)
+            return null;
+
+        return junctionGroups.stream().filter(x -> x.junctions().contains(junction)).findFirst().orElse(null);
     }
 
-    public AssemblyExtenderCounters getCounters()
+    public void processPrimaryAssembly(final PrimaryAssembly assembly)
     {
-        return mCounters;
-    }
+        JunctionGroup junctionGroup = findJunctionGroup(assembly.OriginalJunction);
 
-    public List<ExtendedAssembly> extend(final PrimaryAssembly assembly)
-    {
         List<Read> discordantReads = new DiscordantPairFinder().findDiscordantReads(
-                assembly.getSupportReads(), mJunctionGroup.candidateReads());
+                assembly.getSupportReads(), junctionGroup.candidateReads());
 
         mCounters.DiscordantReadsFound.add(discordantReads.size());
 
@@ -118,7 +203,7 @@ public class AssemblyExtender
         List<ExtendedAssembly> extendedAssemblies = limitBasedOnSupport(AssemblyFiltering.trimAndDeduplicate(
                 mSupportChecker, rightExtended), ASSEMBLY_EXTENSION_MIN_SUPPORT_FINAL);
 
-        return extendedAssemblies;
+        mExtendedAssemblies.addAll(extendedAssemblies);
     }
 
     private List<ExtendedAssembly> limitBasedOnSupport(final List<ExtendedAssembly> assemblies, final int limit)
@@ -136,9 +221,9 @@ public class AssemblyExtender
         return assemblies;
     }
 
-    private String nextAssemblyName()
+    private String nextAssemblyName(final String assemblyName)
     {
-        return String.format("%sE%s", mPrimary.Name, mNextAssemblyNumber++);
+        return String.format("%sE%s", assemblyName, mNextAssemblyNumber++);
     }
 
     /*
@@ -298,7 +383,8 @@ public class AssemblyExtender
 
         Direction mateReadDirection = Direction.FORWARDS;
 
-        List<ExtendedAssembly> extended = extendAssembly(assembly, assemblyReadDirection, mateReads, applicableDiscordantReads,
+        List<ExtendedAssembly> extended = extendAssembly(
+                assembly, assemblyReadDirection, mateReads, applicableDiscordantReads,
                 checkStartIndices, mateReadDirection, mCounters.RightMatesAssembled, mCounters.RightDiscordantReadsAssembled);
 
         mCounters.ExtendRightAssemblies.add(extended.size());
@@ -306,7 +392,8 @@ public class AssemblyExtender
         return extended;
     }
 
-    private List<ExtendedAssembly> extendAssembly(final SupportedAssembly assembly, final Direction assemblyDirection,
+    private List<ExtendedAssembly> extendAssembly(
+            final SupportedAssembly assembly, final Direction assemblyDirection,
             final List<Read> mateAlignments,
             final List<Read> discordantAlignments,
             final Map<Read, Integer> alignmentMinDepth,
@@ -341,7 +428,8 @@ public class AssemblyExtender
                     final String directionCorrected = assemblyDirection == Direction.FORWARDS
                             ? newAssembly
                             : new StringBuilder(newAssembly).reverse().toString();
-                    final ExtendedAssembly newCandidate = new ExtendedAssembly(nextAssemblyName(), directionCorrected, assembly);
+
+                    final ExtendedAssembly newCandidate = new ExtendedAssembly(nextAssemblyName(assembly.Name), directionCorrected, assembly);
                     newCandidate.addDiagrams(diagrams);
 
                     reAddSupport(newCandidate, assembly, potentialNewSupport, supportStartIndices,

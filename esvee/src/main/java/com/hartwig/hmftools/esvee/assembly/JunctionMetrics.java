@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import com.hartwig.hmftools.esvee.common.Direction;
 
+@Deprecated
 public class JunctionMetrics
 {
     public final String JunctionChromosome;

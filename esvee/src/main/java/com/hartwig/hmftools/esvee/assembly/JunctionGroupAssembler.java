@@ -1,11 +1,16 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
 
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -21,54 +26,123 @@ import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 
 import htsjdk.samtools.SAMRecord;
 
-public class JunctionGroupAssembler
+public class JunctionGroupAssembler extends Thread
 {
     private final SvConfig mConfig;
-    private final JunctionGroup mJunctionGroup;
+
+    private final Queue<JunctionGroup> mJunctionGroups;
+    private final int mJunctionCount;
+
+    private JunctionGroup mCurrentJunctionGroup;
     private final BamReader mBamReader;
 
     private final Map<String,Read> mReadGroupMap;
 
     private final List<PrimaryAssemblyResult> mPrimaryAssemblyResults;
+    private final List<PrimaryAssembly> mPrimaryAssemblies;
 
-    public JunctionGroupAssembler(final SvConfig config, final BamReader bamReader, final JunctionGroup junctionGroup)
+    public JunctionGroupAssembler(final SvConfig config, final BamReader bamReader, final Queue<JunctionGroup> junctionGroups)
     {
         mConfig = config;
-        mJunctionGroup = junctionGroup;
         mBamReader = bamReader;
+        mJunctionGroups = junctionGroups;
+        mJunctionCount = junctionGroups.size();
 
         mReadGroupMap = Maps.newHashMap();
+        mCurrentJunctionGroup = null;
         mPrimaryAssemblyResults = Lists.newArrayList();
+        mPrimaryAssemblies = Lists.newArrayList();
+
+        start();
     }
 
-    public List<PrimaryAssemblyResult> primaryAssemblyResults() { return mPrimaryAssemblyResults; }
+    // public List<PrimaryAssemblyResult> oldResults() { return mPrimaryAssemblyResults; }
+    public List<PrimaryAssembly> primaryAssemblies() { return mPrimaryAssemblies; }
 
     public void clear()
     {
-        mJunctionGroup.clearCandidateReads();
         mPrimaryAssemblyResults.clear();
         mReadGroupMap.clear();
     }
 
+    public static List<JunctionGroupAssembler> createThreadTasks(
+            final List<JunctionGroup> junctionGroups, final List<BamReader> bamReaders, final SvConfig config,
+            final int taskCount, final List<Thread> threadTasks)
+    {
+        List<JunctionGroupAssembler> primaryAssemblyTasks = Lists.newArrayList();
+
+        Queue<JunctionGroup> junctionGroupQueue = new ConcurrentLinkedQueue<>();
+        junctionGroupQueue.addAll(junctionGroups);
+
+        int junctionGroupCount = junctionGroups.size();
+
+        for(int i = 0; i < taskCount; ++i)
+        {
+            BamReader bamReader = bamReaders.get(i);
+
+            JunctionGroupAssembler junctionGroupAssembler = new JunctionGroupAssembler(config, bamReader, junctionGroupQueue);
+            primaryAssemblyTasks.add(junctionGroupAssembler);
+            threadTasks.add(junctionGroupAssembler);
+        }
+
+        SV_LOGGER.debug("splitting {} junction groups across {} threads", junctionGroupCount, taskCount);
+
+        return primaryAssemblyTasks;
+    }
+
+    @Override
     public void run()
     {
-        int sliceStart = mJunctionGroup.minPosition() - BAM_READ_JUNCTION_BUFFER;
-        int sliceEnd = mJunctionGroup.maxPosition() + BAM_READ_JUNCTION_BUFFER;
+        while(true)
+        {
+            try
+            {
+                int remainingCount = mJunctionGroups.size();
+                int processedCount = mJunctionCount - remainingCount;
+
+                JunctionGroup junctionGroup = mJunctionGroups.remove();
+
+                processJunctionGroup(junctionGroup);
+
+                if(processedCount > 0 && (processedCount % 100) == 0)
+                {
+                    SV_LOGGER.info("processed {} junction groups, remaining({})", processedCount, remainingCount);
+                }
+            }
+            catch(NoSuchElementException e)
+            {
+                SV_LOGGER.trace("all tasks complete");
+                break;
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+                System.exit(1);
+            }
+        }
+    }
+
+    private void processJunctionGroup(final JunctionGroup junctionGroup)
+    {
+        mCurrentJunctionGroup = junctionGroup;
+
+        int sliceStart = mCurrentJunctionGroup.minPosition() - BAM_READ_JUNCTION_BUFFER;
+        int sliceEnd = mCurrentJunctionGroup.maxPosition() + BAM_READ_JUNCTION_BUFFER;
 
         SV_LOGGER.trace("junctionGroup({}:{}-{} count={}) slice",
-                mJunctionGroup.chromosome(), sliceStart, sliceEnd, mJunctionGroup.count());
+                mCurrentJunctionGroup.chromosome(), sliceStart, sliceEnd, mCurrentJunctionGroup.count());
 
-        mBamReader.sliceBam(mJunctionGroup.chromosome(), sliceStart, sliceEnd, this::processRecord);
+        mBamReader.sliceBam(mCurrentJunctionGroup.chromosome(), sliceStart, sliceEnd, this::processRecord);
 
         SV_LOGGER.debug("junctionGroup({}:{}-{} count={}) slice complete, readCount({})",
-                mJunctionGroup.chromosome(), sliceStart, sliceEnd, mJunctionGroup.count(), mJunctionGroup.candidateReadCount());
+                mCurrentJunctionGroup.chromosome(), sliceStart, sliceEnd, mCurrentJunctionGroup.count(), mCurrentJunctionGroup.candidateReadCount());
 
         // now pass applicable reads to each primary assembler
-        for(Junction junction : mJunctionGroup.junctions())
+        for(Junction junction : mCurrentJunctionGroup.junctions())
         {
             PrimaryAssembler primaryAssembler = new PrimaryAssembler(mConfig, junction);
 
-            List<Read> junctionCandidateReads = mJunctionGroup.candidateReads().stream()
+            List<Read> junctionCandidateReads = mCurrentJunctionGroup.candidateReads().stream()
                     .filter(x -> AlignmentFilters.alignmentCrossesJunction(x, junction))
                     .collect(Collectors.toList());
 
@@ -76,9 +150,13 @@ public class JunctionGroupAssembler
                 continue;
 
             List<PrimaryAssembly> candidateAssemblies = primaryAssembler.processJunction(junctionCandidateReads);
+            mPrimaryAssemblies.addAll(candidateAssemblies);
 
-            mPrimaryAssemblyResults.add(new PrimaryAssemblyResult(junction, primaryAssembler.getCounters(), candidateAssemblies));
+            // mPrimaryAssemblyResults.add(new PrimaryAssemblyResult(junction, primaryAssembler.getCounters(), candidateAssemblies));
         }
+
+        mCurrentJunctionGroup = null;
+        mReadGroupMap.clear();
     }
 
     private static final int MATE_READ_BUFFER = 200;
@@ -95,11 +173,11 @@ public class JunctionGroupAssembler
 
         Read read = new Read(record);
 
-        mJunctionGroup.addCandidateRead(read);
+        mCurrentJunctionGroup.addCandidateRead(read);
 
         // link first and second in pair if within the same group
         if(read.isMateMapped() && read.mateChromosome().equals(read.getChromosome())
-        && positionWithin(read.mateAlignmentStart(), mJunctionGroup.minPosition() - MATE_READ_BUFFER, mJunctionGroup.maxPosition()))
+        && positionWithin(read.mateAlignmentStart(), mCurrentJunctionGroup.minPosition() - MATE_READ_BUFFER, mCurrentJunctionGroup.maxPosition()))
         {
             Read mateRead = mReadGroupMap.get(read.getName());
 

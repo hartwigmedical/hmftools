@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.html.DiagramSet;
 import com.hartwig.hmftools.esvee.read.Read;
 
@@ -11,28 +12,32 @@ import org.jetbrains.annotations.Nullable;
 
 public class PrimaryAssembly extends SupportedAssembly implements TrimmableAssembly<PrimaryAssembly>
 {
-    public final List<DiagramSet> Diagrams = new ArrayList<>();
-
+    public final Junction OriginalJunction;
     public final String AnchorChromosome;
     public final int AnchorPosition;
 
     // if we started at this index and moved forward, we'd see the anchor
     public final int AnchorPositionInAssembly;
 
+    public final List<DiagramSet> Diagrams;
+
     public PrimaryAssembly(
-            final String name, final String assembly, final String anchorChromosome, final int anchorPosition,
-            final int anchorPositionInAssembly)
+            final String name, final String assembly, final Junction originalJunction,
+            final String anchorChromosome, final int anchorPosition, final int anchorPositionInAssembly)
     {
         super(name, assembly);
+        OriginalJunction = originalJunction;
         AnchorChromosome = anchorChromosome;
         AnchorPosition = anchorPosition;
         AnchorPositionInAssembly = anchorPositionInAssembly;
+        Diagrams = new ArrayList<>();
     }
 
-    public PrimaryAssembly(final String name, final String assembly, final String anchorChromosome, final int anchorPosition,
-            final int anchorPositionInAssembly, final PrimaryAssembly original)
+    public PrimaryAssembly(
+            final String name, final String assembly, final Junction originalJunction, final String anchorChromosome,
+            final int anchorPosition, final int anchorPositionInAssembly, final PrimaryAssembly original)
     {
-        this(name, assembly, anchorChromosome, anchorPosition, anchorPositionInAssembly);
+        this(name, assembly, originalJunction, anchorChromosome, anchorPosition, anchorPositionInAssembly);
 
         Diagrams.addAll(original.Diagrams);
 
@@ -80,8 +85,9 @@ public class PrimaryAssembly extends SupportedAssembly implements TrimmableAssem
             newAnchorPosition -= leftMove;
         }
 
-        final PrimaryAssembly newAssembly = new PrimaryAssembly(Name, newBases, AnchorChromosome,
-                newAnchorPosition, newAnchorPositionInAssembly);
+        final PrimaryAssembly newAssembly = new PrimaryAssembly(
+                Name, newBases, OriginalJunction, AnchorChromosome, newAnchorPosition, newAnchorPositionInAssembly);
+
         newAssembly.Diagrams.addAll(Diagrams);
         for(Map.Entry<Read, Integer> entry : getSupport())
         {

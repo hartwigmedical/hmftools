@@ -14,9 +14,7 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -24,7 +22,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.assembly.AssemblyThread;
+import com.hartwig.hmftools.esvee.assembly.AssemblyMerger;
+import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
 import com.hartwig.hmftools.esvee.assembly.SupportChecker;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
@@ -35,6 +34,7 @@ import com.hartwig.hmftools.esvee.assembly.AssemblyExtender;
 import com.hartwig.hmftools.esvee.common.SampleSupport;
 import com.hartwig.hmftools.esvee.common.VariantCall;
 import com.hartwig.hmftools.esvee.output.ResultsWriter;
+import com.hartwig.hmftools.esvee.read.BamReader;
 import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
 import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.sequence.GappedAssembly;
@@ -93,17 +93,17 @@ public class Processor
     {
         try
         {
-            List<JunctionGroup> junctionGroups = Lists.newArrayList();
+            Map<String,List<JunctionGroup>> junctionGroupMap = Maps.newHashMap();
 
-            for(List<Junction> junctions : mChrJunctionsMap.values())
+            for(Map.Entry<String,List<Junction>> entry : mChrJunctionsMap.entrySet())
             {
-                junctionGroups.addAll(buildJunctionGroups(junctions, BAM_READ_JUNCTION_BUFFER));
+                junctionGroupMap.put(entry.getKey(), buildJunctionGroups(entry.getValue(), BAM_READ_JUNCTION_BUFFER));
             }
 
             List<Junction> allJunctions = Lists.newArrayList();
             mChrJunctionsMap.values().forEach(x -> allJunctions.addAll(x));
 
-            List<VariantCall> variantCalls = run(allJunctions, junctionGroups);
+            List<VariantCall> variantCalls = run(allJunctions, junctionGroupMap);
 
             return variantCalls;
         }
@@ -117,37 +117,44 @@ public class Processor
         return null;
     }
 
-    public List<VariantCall> run(final List<Junction> junctions, final List<JunctionGroup> junctionGroups)
+    public List<VariantCall> run(final List<Junction> junctions, final Map<String,List<JunctionGroup>> junctionGroupMap)
     {
+        List<JunctionGroup> junctionGroups = Lists.newArrayList();
+        junctionGroupMap.values().forEach(x -> junctionGroups.addAll(x));
+
         Counters.JunctionsProcessed.add(junctions.size());
 
         Collections.sort(junctionGroups);
-        Queue<JunctionGroup> junctionGroupQueue = new ConcurrentLinkedQueue<>();
-        junctionGroupQueue.addAll(junctionGroups);
 
-        List<AssemblyThread> assemblyTasks = Lists.newArrayList();
-        List<Thread> workers = new ArrayList<>();
+        List<BamReader> bamReaders = Lists.newArrayList();
+        List<Thread> threadTasks = new ArrayList<>();
 
-        int junctionGroupCount = junctionGroups.size();
+        int taskCount = min(junctionGroups.size(), mConfig.Threads);
 
-        for(int i = 0; i < min(junctionGroupCount, mConfig.Threads); ++i)
+        for(int i = 0; i < taskCount; ++i)
         {
-            AssemblyThread assemblyThread = new AssemblyThread(mConfig, junctionGroupQueue);
-            assemblyTasks.add(assemblyThread);
-            workers.add(assemblyThread);
+            BamReader bamReader = new BamReader(mConfig);
+            bamReaders.add(bamReader);
         }
 
-        SV_LOGGER.debug("splitting {} junction groups across {} threads", junctionGroupCount, assemblyTasks.size());
+        List<JunctionGroupAssembler> primaryAssemblyTasks = JunctionGroupAssembler.createThreadTasks(
+                junctionGroups, bamReaders, mConfig, taskCount, threadTasks);
 
-        if(!runThreadTasks(workers))
+        if(!runThreadTasks(threadTasks))
             System.exit(1);
 
+        threadTasks.clear();
+
         // Primary Junction Assembly
-        List<PrimaryAssemblyResult> primaryAssemblyResults = Lists.newArrayList();
-        assemblyTasks.forEach(x -> primaryAssemblyResults.addAll(x.primaryAssemblyResults()));
+        List<PrimaryAssembly> primaryAssemblies = Lists.newArrayList();
+        primaryAssemblyTasks.forEach(x -> primaryAssemblies.addAll(x.primaryAssemblies()));
 
-        SV_LOGGER.info("created {} primary assemblies", primaryAssemblyResults.size());
+        SV_LOGGER.info("created {} primary assemblies", primaryAssemblies.size());
 
+        int totalCachedReads = junctionGroups.stream().mapToInt(x -> x.candidateReadCount()).sum();
+        SV_LOGGER.debug("cached read count({}) from {} junction groups", totalCachedReads, junctionGroups.size());
+
+        // FIXME: is this necessary? should clear when no longer required, and now factor in junction groups
         if(!mConfig.OtherDebug)
         {
             junctions.clear();
@@ -155,30 +162,44 @@ public class Processor
 
         // Inter-junction deduplication
         // FIXME: surely can just be within junction groups or at least same chromosome?
-        List<PrimaryAssembly> primaryAssemblies = consolidateNearbyAssemblies(flatten(primaryAssemblyResults));
+        AssemblyMerger assemblyMerger = new AssemblyMerger(); // only instantiated because of SupportChecker
 
-        SV_LOGGER.info("reduced to {} assemblies", primaryAssemblies.size());
+        List<PrimaryAssembly> mergedPrimaryAssemblies = assemblyMerger.consolidatePrimaryAssemblies(primaryAssemblies);
+
+        SV_LOGGER.info("reduced to {} assemblies", mergedPrimaryAssemblies.size());
 
         if(!mConfig.OtherDebug)
-            primaryAssemblyResults.clear();
+            primaryAssemblies.clear();
 
         // CHECK
         // if(mConfig.dropGermline())
         //    primaryAssemblies.removeIf(assembly -> assembly.getSupportRecords().stream().anyMatch(Record::isGermline));
 
         // assembly extension
+        List<AssemblyExtender> assemblyExtenderTasks = AssemblyExtender.createThreadTasks(
+                junctionGroupMap, mergedPrimaryAssemblies, mConfig, taskCount, threadTasks);
+
+        if(!runThreadTasks(threadTasks))
+            System.exit(1);
+
+        /*
         List<ExtendedAssembly> extendedAssemblies = ParallelMapper.mapWithProgress(
-                        mContext.Executor, primaryAssemblies,
+                        mContext.Executor, mergedPrimaryAssemblies,
                         assembly -> AssemblyExtender.process(mContext, assembly, Counters.AssemblyExtenderCounters)).stream()
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
+        */
 
-        //         final AssemblyExtender assembler = new AssemblyExtender(assembly, createDiagrams);
+        List<ExtendedAssembly> extendedAssemblies = Lists.newArrayList();
+        assemblyExtenderTasks.forEach(x -> extendedAssemblies.addAll(x.extendedAssemblies()));
 
         if(!mConfig.OtherDebug)
         {
             primaryAssemblies.clear();
         }
+
+        // FIXME: now clear all cached reads not assigned as support
+        junctionGroups.forEach(x -> x.clearCandidateReads());
 
         SV_LOGGER.info("created {} extended assemblies", extendedAssemblies.size());
 
@@ -192,7 +213,7 @@ public class Processor
 
         // Phased assembly merging
         final List<Set<ExtendedAssembly>> mergedPhaseSets = ParallelMapper.mapWithProgress(
-                mContext.Executor, primaryPhaseSets, this::primaryPhasedMerging);
+                mContext.Executor, primaryPhaseSets, this::primaryPhasedMerging); // FIXME: switch to use AssemblyMerger
 
         SV_LOGGER.info("merged primary phase sets");
 
@@ -444,20 +465,6 @@ public class Processor
         return merged;
     }
 
-    private AlignedAssembly merge(final AlignedAssembly left, final AlignedAssembly right, final int supportIndex)
-    {
-        final Sequence mergedSequence = SequenceMerger.merge(left, right, supportIndex);
-
-        final ExtendedAssembly merged = new ExtendedAssembly(left.Name, mergedSequence.getBasesString(), left.Source);
-        left.Source.Sources.get(0).Diagrams.forEach(merged::addDiagrams);
-
-        final GappedAssembly gapped = new GappedAssembly(merged.Name, List.of(merged));
-        reAddSupport(gapped, left);
-        reAddSupport(gapped, right);
-
-        return mHomologySlider.slideHomology(mContext.Aligner.align(gapped));
-    }
-
     private void reAddSupport(final SupportedAssembly merged, final SupportedAssembly old)
     {
         final int offset = merged.Assembly.indexOf(old.Assembly);
@@ -475,152 +482,6 @@ public class Processor
             }
             merged.tryAddSupport(mSupportChecker, potentialSupport);
         }
-    }
-
-    public List<PrimaryAssembly> flatten(final List<PrimaryAssemblyResult> results)
-    {
-        return results.stream()
-                .flatMap(r -> r.Assemblies.stream())
-                .collect(Collectors.toList());
-    }
-
-    public List<PrimaryAssembly> consolidateNearbyAssemblies(final List<PrimaryAssembly> results)
-    {
-        final List<PrimaryAssembly> firstPass = consolidateNearbyAssemblies(results, this::tryMerge);
-        return consolidateNearbyAssemblies(firstPass, (left, right) ->
-        {
-            final Set<String> leftOnly = new HashSet<>(left.getSupportFragments());
-            leftOnly.removeAll(right.getSupportFragments());
-
-            final Set<String> rightOnly = new HashSet<>(right.getSupportFragments());
-            rightOnly.removeAll(left.getSupportFragments());
-
-            if(leftOnly.size() < 2 && rightOnly.size() < 2)
-            {
-                final boolean returnRight;
-                if(leftOnly.size() == rightOnly.size())
-                {
-                    if(left.getAverageBaseQuality() == right.getAverageBaseQuality())
-                        returnRight = left.getLength() < right.getLength();
-                    else
-                        returnRight = left.getAverageBaseQuality() < right.getAverageBaseQuality();
-                }
-                else
-                    returnRight = leftOnly.size() < rightOnly.size();
-
-                if(returnRight)
-                {
-                    right.addErrata(left.getAllErrata());
-                    return right;
-                }
-                else
-                {
-                    left.addErrata(right.getAllErrata());
-                    return left;
-                }
-            }
-            if(leftOnly.size() < 2)
-            {
-                right.addErrata(left.getAllErrata());
-                return right;
-            }
-            else if(rightOnly.size() < 2)
-            {
-                left.addErrata(right.getAllErrata());
-                return left;
-            }
-            else
-                return null;
-        });
-    }
-
-    public List<PrimaryAssembly> consolidateNearbyAssemblies(
-            final List<PrimaryAssembly> results,
-            final BiFunction<PrimaryAssembly, PrimaryAssembly, PrimaryAssembly> merger)
-    {
-        results.sort(NaturalSortComparator.<PrimaryAssembly>of(r -> r.AnchorChromosome)
-                .thenComparing(r -> r.AnchorPosition));
-
-        final List<PrimaryAssembly> assemblies = new ArrayList<>();
-        for(int i = 0; i < results.size(); i++)
-        {
-            @Nullable
-            PrimaryAssembly current = results.get(i);
-            if(current == null)
-                continue;
-
-            final int maxDedupeDistance = SvConstants.MAX_DISTANCE_EDUPE_ASSEMBLIES;
-            final int maxToCheck = Math.min(results.size() - i - 1, maxDedupeDistance * 2);
-            for(int j = 0; j < maxToCheck; j++)
-            {
-                final PrimaryAssembly next = results.get(i + j + 1);
-                if(next == null)
-                    continue;
-                if(!current.AnchorChromosome.equals(next.AnchorChromosome))
-                    break;
-
-                final int currentStart = current.AnchorPosition - current.AnchorPositionInAssembly;
-                final int nextStart = next.AnchorPosition - next.AnchorPositionInAssembly;
-
-                if(!CommonUtils.overlaps(
-                        currentStart - maxDedupeDistance, currentStart + current.Assembly.length() + maxDedupeDistance,
-                        nextStart - maxDedupeDistance, nextStart + next.Assembly.length() + maxDedupeDistance))
-                {
-                    break;
-                }
-
-                try
-                {
-                    @Nullable
-                    final PrimaryAssembly merged = merger.apply(current, next);
-                    if(merged != null)
-                    {
-                        current = merged;
-                        results.set(i + j + 1, null); // Null out next
-                    }
-                }
-                catch(final Throwable throwable)
-                {
-                    mContext.Problems.add(new Problem(String.format("Problem merging %s and %s", current.Name, next.Name),
-                            throwable, current));
-                }
-            }
-
-            assemblies.add(current);
-        }
-        return assemblies;
-    }
-
-    @Nullable
-    public PrimaryAssembly tryMerge(final PrimaryAssembly left, final PrimaryAssembly right)
-    {
-        @Nullable
-        final Integer mergeIndex = mSupportChecker.AssemblySupport.supportIndex(left, right, 100);
-        if(mergeIndex == null)
-            return null;
-
-        return merge(left, right, mergeIndex);
-    }
-
-    private PrimaryAssembly merge(final PrimaryAssembly left, final PrimaryAssembly right, final int supportIndex)
-    {
-        final Sequence mergedSequence = SequenceMerger.merge(left, right, supportIndex);
-
-        final var merged = new PrimaryAssembly(left.Name, mergedSequence.getBasesString(),
-                "?", 0, 0, left);
-
-        final int leftDelta = supportIndex > 0 ? 0 : -supportIndex;
-        for(Map.Entry<Read, Integer> entry : left.getSupport())
-            merged.tryAddSupport(mSupportChecker, entry.getKey(), entry.getValue() + leftDelta);
-
-        final int rightDelta = Math.max(supportIndex, 0);
-        for(Map.Entry<Read, Integer> entry : right.getSupport())
-            merged.tryAddSupport(mSupportChecker, entry.getKey(), entry.getValue() + rightDelta);
-
-        merged.addErrata(left.getAllErrata());
-        merged.addErrata(right.getAllErrata());
-
-        return merged;
     }
 
     private List<ExtendedAssembly> order(final Collection<ExtendedAssembly> assemblies)
