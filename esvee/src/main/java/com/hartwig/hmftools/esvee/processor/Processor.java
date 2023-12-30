@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.processor;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.common.JunctionGroup.buildJunctionGroups;
@@ -138,18 +139,8 @@ public class Processor
 
         SV_LOGGER.debug("splitting {} junction groups across {} threads", junctionGroupCount, assemblyTasks.size());
 
-        for(Thread worker : workers)
-        {
-            try
-            {
-                worker.join();
-            }
-            catch(InterruptedException e)
-            {
-                SV_LOGGER.error("task execution error: {}", e.toString());
-                e.printStackTrace();
-            }
-        }
+        if(!runThreadTasks(workers))
+            System.exit(1);
 
         // Primary Junction Assembly
         List<PrimaryAssemblyResult> primaryAssemblyResults = Lists.newArrayList();

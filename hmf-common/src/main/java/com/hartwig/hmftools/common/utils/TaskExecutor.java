@@ -132,4 +132,21 @@ public class TaskExecutor
         return true;
     }
 
+    public static boolean runThreadTasks(final List<Thread> workers)
+    {
+        for(Thread worker : workers)
+        {
+            try
+            {
+                worker.join();
+            }
+            catch(InterruptedException e)
+            {
+                LOGGER.error("thread execution error: {}", e.toString());
+                e.printStackTrace();
+            }
+        }
+
+        return true;
+    }
 }
