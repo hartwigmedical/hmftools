@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.sequence.ReadSupport;
 import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 import com.hartwig.hmftools.esvee.read.ReadUtils;
 
@@ -693,10 +694,12 @@ public class HeadNode extends Node
         final List<List<Node.Support>> nodeSupport = new ArrayList<>(assembly.Assembly.length());
         for(int i = 0; i < assembly.Assembly.length(); i++)
             nodeSupport.add(new ArrayList<>());
-        for(Map.Entry<Read, Integer> support : assembly.getSupport())
+
+        for(ReadSupport readSupport : assembly.readSupport())
         {
-            final Read supportRead = support.getKey();
-            int supportIndex = support.getValue();
+            Read supportRead = readSupport.Read;
+            int supportIndex = readSupport.Index;
+
             int length = Math.min(assembly.Assembly.length() - supportIndex, supportRead.getLength());
             if(supportIndex < 0)
             {

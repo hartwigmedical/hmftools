@@ -21,9 +21,9 @@ public class AlignedAssembly extends SupportedAssembly implements AlignedSequenc
     {
         this(source.Assembly, source, alignment);
 
-        for(Map.Entry<Read, Integer> support : source.getSupport())
+        for(ReadSupport support : source.readSupport())
         {
-            addEvidenceAt(support.getKey(), support.getValue());
+            addEvidenceAt(support.Read, support.Index);
         }
 
         recalculateBaseQuality();
@@ -78,12 +78,12 @@ public class AlignedAssembly extends SupportedAssembly implements AlignedSequenc
         Collections.reverse(flippedAlignments);
         final AlignedAssembly flipped = new AlignedAssembly(assembly, Source.flipStrand(), flippedAlignments);
 
-        for(Map.Entry<Read,Integer> support : getSupport())
+        for(ReadSupport support : readSupport())
         {
-            int initialReadLength = support.getKey().getLength();
-            Read flippedRead = flipRead(support.getKey());
+            int initialReadLength = support.Read.getLength();
+            Read flippedRead = flipRead(support.Read);
             
-            flipped.addEvidenceAt(flippedRead, getLength() - support.getValue() - initialReadLength);
+            flipped.addEvidenceAt(flippedRead, getLength() - support.Index - initialReadLength);
         }
 
         flipped.recalculateBaseQuality();

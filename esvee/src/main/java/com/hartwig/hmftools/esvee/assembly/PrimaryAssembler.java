@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -19,6 +18,7 @@ import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.html.DiagramSet;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.sequence.ReadSupport;
 import com.hartwig.hmftools.esvee.util.Counter;
 
 import org.jetbrains.annotations.Nullable;
@@ -118,27 +118,34 @@ public class PrimaryAssembler
     /** There may be alignments that can extend the assembly but that are too noisy to be used during initial construction.
      * Examples of these types of alignments may be, for example, ones with larger soft-clips that have resulted in unacceptably low MapQ.
      * Extension in this manner is not supposed to create new candidates, so we will always choose the "best" result after pruning. */
-    private PrimaryAssembly extendInitial(final List<Read> alignments, final PrimaryAssembly assembly, final Direction direction)
+    private PrimaryAssembly extendInitial(final List<Read> reads, final PrimaryAssembly assembly, final Direction direction)
     {
         HeadNode graph = HeadNode.create(assembly, direction);
-        final Set<Read> support = assembly.getSupportRecords().stream()
-                .collect(Collectors.toSet());
-        for(Read alignment : alignments)
+
+        List<Read> supportReads = assembly.supportingReads();
+
+        for(Read read : reads)
         {
-            if(support.contains(alignment))
+            if(supportReads.contains(read))
                 continue;
-            if(!mSupportChecker.WeakSupport.supports(assembly, alignment))
+
+            if(!mSupportChecker.WeakSupport.supports(assembly, read))
                 continue; // PERF: This should be supports-at
 
-            graph = HeadNode.combine(graph, HeadNode.create(alignment, assembly.AnchorPosition, direction));
+            graph = HeadNode.combine(graph, HeadNode.create(read, assembly.AnchorPosition, direction));
         }
 
-        final var diagrams = simplifyGraph("Initial Extension", graph, true);
+        final DiagramSet diagrams = simplifyGraph("Initial Extension", graph, true);
+
         final List<String> flattened = graph.flatten();
-        if(flattened.size() * alignments.size() > 100_000)
+
+        if(flattened.size() * reads.size() > 100_000)
+        {
             //throw new JunctionProcessingException("Too many flattened assemblies or alignments!");
             SV_LOGGER.info("{} got {} extensions & {} alignments for a product of {}",
-                    assembly.getName(), flattened.size(), alignments.size(), flattened.size() * alignments.size());
+                    assembly.getName(), flattened.size(), reads.size(), flattened.size() * reads.size());
+        }
+
         return Stream.concat(Stream.of(assembly), flattened.stream()
                 .map(assemblyBases ->
                 {
@@ -152,7 +159,7 @@ public class PrimaryAssembler
 
                     newAssembly.Diagrams.addAll(assembly.Diagrams);
                     newAssembly.Diagrams.add(diagrams);
-                    for(Read read : alignments)
+                    for(Read read : reads)
                     {
                         // To support the assembly we need to either be fully contained in the assembly, or to support
                         // it with our back half if we're a forwards junction / front half if we're a backwards junction.
@@ -170,7 +177,7 @@ public class PrimaryAssembler
                     }
                     return newAssembly;
                 }))
-                .max(Comparator.comparingInt(newAssembly -> newAssembly.getSupportFragments().size()))
+                .max(Comparator.comparingInt(newAssembly -> newAssembly.getSupportReadNames().size()))
                 .orElseThrow();
     }
 
@@ -301,7 +308,7 @@ public class PrimaryAssembler
         }
 
         return candidateAssemblies.stream()
-                .filter(assembly -> assembly.supportCount() != 0)
+                .filter(assembly -> assembly.readSupportCount() != 0)
                 .collect(Collectors.toList());
     }
 
@@ -345,14 +352,17 @@ public class PrimaryAssembler
     private List<PrimaryAssembly> createAnchor(final Map<Read, HeadNode> reverseSequences, final PrimaryAssembly initialAssembly)
     {
         HeadNode anchor = null;
-        for(Read support : initialAssembly.getSupportRecords())
+
+        for(Read support : initialAssembly.supportingReads())
         {
-            final HeadNode sequence = reverseSequences.get(support);
+            HeadNode sequence = reverseSequences.get(support);
+
             if(anchor == null)
                 anchor = sequence.deepCopy();
             else
                 anchor = HeadNode.combine(anchor, sequence, false);
         }
+
         assert anchor != null;
         anchor.sortSupport();
         anchor = anchor.deepCopy();
@@ -363,6 +373,7 @@ public class PrimaryAssembler
         final List<String> flattened = anchor.flatten();
         mCounters.FlattenedAnchors.add(flattened.size());
         final List<PrimaryAssembly> anchoredAssemblies = new ArrayList<>();
+
         for(String flattenedAssembly : flattened)
         {
             final boolean isForwards = mJunction.direction() == Direction.FORWARDS;
@@ -380,23 +391,25 @@ public class PrimaryAssembler
             assembly.Diagrams.addAll(initialAssembly.Diagrams);
             assembly.addDiagrams(diagrams);
 
-            for(var entry : initialAssembly.getSupport())
+            for(List<ReadSupport> readSupports : initialAssembly.readSupportMap().values())
             {
-                final Read read = entry.getKey();
-                final int supportIndex = entry.getValue();
-                final int newSupportIndex;
-                if(isForwards)
-                    newSupportIndex = supportIndex + (anchoredAssembly.length() - initialAssembly.Assembly.length());
-                else
-                    newSupportIndex = supportIndex;
+                for(ReadSupport readSupport : readSupports)
+                {
+                    Read read = readSupport.Read;
+                    int newSupportIndex;
+                    if(isForwards)
+                        newSupportIndex = readSupport.Index + (anchoredAssembly.length() - initialAssembly.Assembly.length());
+                    else
+                        newSupportIndex = readSupport.Index;
 
-                if(mSupportChecker.WeakSupport.supportsAt(assembly, read, newSupportIndex))
-                    assembly.addEvidenceAt(read, newSupportIndex);
-                else
-                    assembly.tryAddSupport(mSupportChecker, read);
+                    if(mSupportChecker.WeakSupport.supportsAt(assembly, read, newSupportIndex))
+                        assembly.addEvidenceAt(read, newSupportIndex);
+                    else
+                        assembly.tryAddSupport(mSupportChecker, read);
+                }
             }
 
-            if(assembly.getSupportFragments().size() > SvConstants.MIN_READS_SUPPORT_ASSEMBLY)
+            if(assembly.getSupportReadNames().size() > SvConstants.MIN_READS_SUPPORT_ASSEMBLY)
                 anchoredAssemblies.add(assembly);
         }
 

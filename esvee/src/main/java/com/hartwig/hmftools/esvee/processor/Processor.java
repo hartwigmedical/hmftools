@@ -41,6 +41,7 @@ import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.sequence.GappedAssembly;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.sequence.ReadSupport;
 import com.hartwig.hmftools.esvee.sequence.Sequence;
 import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 import com.hartwig.hmftools.esvee.output.VcfWriter;
@@ -230,8 +231,8 @@ public class Processor
             {
                 final GappedAssembly newAssembly = new GappedAssembly(String.format("Assembly%s-%s", i, j++), List.of(assembly));
                 newAssembly.addErrata(assembly.getAllErrata());
-                for(Map.Entry<Read, Integer> entry : assembly.getSupport())
-                    newAssembly.addEvidenceAt(entry.getKey(), entry.getValue());
+
+                assembly.readSupport().forEach(x -> newAssembly.addEvidenceAt(x.Read, x.Index));
 
                 mergedSecondaries.add(newAssembly);
             }
@@ -432,6 +433,8 @@ public class Processor
         catch(final Throwable throwable)
         {
             SV_LOGGER.warn("Failure during phased assembly merging with group of size {}", primaryPhaseSet.size(), throwable);
+
+            /* FIXME:
             SV_LOGGER.warn("{}", RegionOfInterest.tryMerge(
                     primaryPhaseSet.stream()
                             .flatMap(assembly -> assembly.getSupport().stream())
@@ -440,6 +443,7 @@ public class Processor
                             .map(record -> new RegionOfInterest(record.getChromosome(), record.getAlignmentStart(), record.getAlignmentEnd()))
                             .collect(Collectors.toList())
             ));
+            */
             return null;
         }
     }
@@ -453,8 +457,8 @@ public class Processor
         final ExtendedAssembly merged = new ExtendedAssembly(left.Name, mergedSequence.getBasesString(), left.Source);
         left.Diagrams.forEach(merged::addDiagrams);
 
-        left.getSupportRecords().forEach(support -> merged.tryAddSupport(mSupportChecker, support));
-        right.getSupportRecords().forEach(support -> merged.tryAddSupport(mSupportChecker, support));
+        left.supportingReads().forEach(x -> merged.tryAddSupport(mSupportChecker, x));
+        right.supportingReads().forEach(x -> merged.tryAddSupport(mSupportChecker, x));
 
         merged.addErrata(left.getAllErrata());
         merged.addErrata(right.getAllErrata());
@@ -465,12 +469,15 @@ public class Processor
     private void reAddSupport(final SupportedAssembly merged, final SupportedAssembly old)
     {
         final int offset = merged.Assembly.indexOf(old.Assembly);
-        for(Map.Entry<Read, Integer> entry : old.getSupport())
+
+        for(ReadSupport support : old.readSupport())
         {
-            final Read potentialSupport = entry.getKey();
+            Read potentialSupport = support.Read;
+
             if(offset != -1)
             {
-                final int oldSupportIndex = entry.getValue();
+                final int oldSupportIndex = support.Index;
+
                 if(mSupportChecker.AssemblySupport.supportsAt(merged, potentialSupport, oldSupportIndex + offset))
                 {
                     merged.addEvidenceAt(potentialSupport, oldSupportIndex + offset);
@@ -508,9 +515,15 @@ public class Processor
         final GappedAssembly gappedAssembly = new GappedAssembly("Assembly" + index, order(assemblies));
 
         for(ExtendedAssembly assembly : assemblies)
-            for(Read support : assembly.getSupportRecords())
+        {
+            for(Read support : assembly.supportingReads())
+            {
                 if(!gappedAssembly.tryAddSupport(mSupportChecker, support))
+                {
                     SV_LOGGER.info("Failed to add support for assembly {}: {}", gappedAssembly.Name, support.getName());
+                }
+            }
+        }
 
         return gappedAssembly;
     }

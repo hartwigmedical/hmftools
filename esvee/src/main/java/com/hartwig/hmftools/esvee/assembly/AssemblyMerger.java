@@ -23,6 +23,7 @@ import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
 import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.sequence.GappedAssembly;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
+import com.hartwig.hmftools.esvee.sequence.ReadSupport;
 import com.hartwig.hmftools.esvee.sequence.Sequence;
 import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 import com.hartwig.hmftools.esvee.util.CommonUtils;
@@ -47,11 +48,11 @@ public class AssemblyMerger
         final List<PrimaryAssembly> firstPass = consolidateNearbyAssemblies(primaryAssemblies, this::tryMergePrimaryAssemblies);
         return consolidateNearbyAssemblies(firstPass, (left, right) ->
         {
-            final Set<String> leftOnly = new HashSet<>(left.getSupportFragments());
-            leftOnly.removeAll(right.getSupportFragments());
+            final Set<String> leftOnly = new HashSet<>(left.getSupportReadNames());
+            leftOnly.removeAll(right.getSupportReadNames());
 
-            final Set<String> rightOnly = new HashSet<>(right.getSupportFragments());
-            rightOnly.removeAll(left.getSupportFragments());
+            final Set<String> rightOnly = new HashSet<>(right.getSupportReadNames());
+            rightOnly.removeAll(left.getSupportReadNames());
 
             if(leftOnly.size() < 2 && rightOnly.size() < 2)
             {
@@ -167,12 +168,18 @@ public class AssemblyMerger
                 "?", 0, 0, left);
 
         final int leftDelta = supportIndex > 0 ? 0 : -supportIndex;
-        for(Map.Entry<Read, Integer> entry : left.getSupport())
-            merged.tryAddSupport(mSupportChecker, entry.getKey(), entry.getValue() + leftDelta);
+
+        for(ReadSupport readSupport : left.readSupport())
+        {
+            merged.tryAddSupport(mSupportChecker, readSupport.Read, readSupport.Index + leftDelta);
+        }
 
         final int rightDelta = Math.max(supportIndex, 0);
-        for(Map.Entry<Read, Integer> entry : right.getSupport())
-            merged.tryAddSupport(mSupportChecker, entry.getKey(), entry.getValue() + rightDelta);
+
+        for(ReadSupport readSupport : right.readSupport())
+        {
+            merged.tryAddSupport(mSupportChecker, readSupport.Read, readSupport.Index + rightDelta);
+        }
 
         merged.addErrata(left.getAllErrata());
         merged.addErrata(right.getAllErrata());
@@ -234,6 +241,8 @@ public class AssemblyMerger
         catch(final Throwable throwable)
         {
             SV_LOGGER.warn("Failure during phased assembly merging with group of size {}", primaryPhaseSet.size(), throwable);
+
+            /* FIXME:
             SV_LOGGER.warn("{}", RegionOfInterest.tryMerge(
                     primaryPhaseSet.stream()
                             .flatMap(assembly -> assembly.getSupport().stream())
@@ -242,6 +251,8 @@ public class AssemblyMerger
                             .map(record -> new RegionOfInterest(record.getChromosome(), record.getAlignmentStart(), record.getAlignmentEnd()))
                             .collect(Collectors.toList())
             ));
+
+             */
             return null;
         }
     }
@@ -255,8 +266,8 @@ public class AssemblyMerger
         final ExtendedAssembly merged = new ExtendedAssembly(left.Name, mergedSequence.getBasesString(), left.Source);
         left.Diagrams.forEach(merged::addDiagrams);
 
-        left.getSupportRecords().forEach(support -> merged.tryAddSupport(mSupportChecker, support));
-        right.getSupportRecords().forEach(support -> merged.tryAddSupport(mSupportChecker, support));
+        left.readSupport().forEach(x -> merged.tryAddSupport(mSupportChecker, x.Read));
+        right.readSupport().forEach(x -> merged.tryAddSupport(mSupportChecker, x.Read));
 
         merged.addErrata(left.getAllErrata());
         merged.addErrata(right.getAllErrata());
@@ -283,12 +294,14 @@ public class AssemblyMerger
     private void reAddSupport(final SupportedAssembly merged, final SupportedAssembly old)
     {
         final int offset = merged.Assembly.indexOf(old.Assembly);
-        for(Map.Entry<Read, Integer> entry : old.getSupport())
+
+        for(ReadSupport readSupport : old.readSupport())
         {
-            final Read potentialSupport = entry.getKey();
+            Read potentialSupport = readSupport.Read;
+
             if(offset != -1)
             {
-                final int oldSupportIndex = entry.getValue();
+                int oldSupportIndex = readSupport.Index;
                 if(mSupportChecker.AssemblySupport.supportsAt(merged, potentialSupport, oldSupportIndex + offset))
                 {
                     merged.addEvidenceAt(potentialSupport, oldSupportIndex + offset);

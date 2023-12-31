@@ -44,12 +44,8 @@ public class PrimaryAssembly extends SupportedAssembly implements TrimmableAssem
         if(original.AnchorPosition == anchorPosition && original.AnchorChromosome.equals(anchorChromosome))
         {
             final int anchorDelta = anchorPositionInAssembly - original.AnchorPositionInAssembly;
-            for(Map.Entry<Read, Integer> entry : original.getSupport())
-            {
-                final Read read = entry.getKey();
-                final int supportIndex = entry.getValue() + anchorDelta;
-                addEvidenceAt(read, supportIndex);
-            }
+
+            original.readSupport().forEach(x -> addEvidenceAt(x.Read, x.Index + anchorDelta));
         }
     }
 
@@ -89,13 +85,14 @@ public class PrimaryAssembly extends SupportedAssembly implements TrimmableAssem
                 Name, newBases, OriginalJunction, AnchorChromosome, newAnchorPosition, newAnchorPositionInAssembly);
 
         newAssembly.Diagrams.addAll(Diagrams);
-        for(Map.Entry<Read, Integer> entry : getSupport())
+
+        for(ReadSupport support : readSupport())
         {
-            final int newOffset = entry.getValue() - removeLeft;
+            final int newOffset = support.Index - removeLeft;
             if(newOffset >= newLength)
                 continue;
 
-            newAssembly.addEvidenceAt(entry.getKey(), newOffset);
+            newAssembly.addEvidenceAt(support.Read, newOffset);
         }
 
         return newAssembly;

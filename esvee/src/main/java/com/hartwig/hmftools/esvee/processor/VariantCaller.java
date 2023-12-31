@@ -28,6 +28,7 @@ import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
 import com.hartwig.hmftools.esvee.sequence.Alignment;
 import com.hartwig.hmftools.esvee.sequence.AssemblyClassification;
 import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.sequence.ReadSupport;
 import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 import com.hartwig.hmftools.esvee.util.ParallelMapper;
 
@@ -438,10 +439,11 @@ public class VariantCaller
             @Nullable final Alignment insert)
     {
         final Set<Read> splitReads = new HashSet<>();
-        for(Map.Entry<Read, Integer> entry : assembly.getSupport())
+
+        for(ReadSupport support : assembly.readSupport())
         {
-            final Read read = entry.getKey();
-            final int supportLeft = entry.getValue();
+            Read read = support.Read;
+            int supportLeft = support.Index;
             final int supportRight = supportLeft + read.getLength();
 
             if(left != null)
@@ -471,7 +473,8 @@ public class VariantCaller
         final Set<String> splitReadFragments = splitReads.stream()
                 .map(Read::getName)
                 .collect(Collectors.toSet());
-        assembly.getSupportRecords().stream()
+
+        assembly.supportingReads().stream()
                 .filter(record -> splitReadFragments.contains(record.getName()))
                 .forEach(splitReads::add);
 
@@ -530,11 +533,12 @@ public class VariantCaller
             return Set.of();
 
         final Set<Read> support = new HashSet<>();
-        for(Map.Entry<Read, Integer> entry : assembly.getSupport())
+
+        for(ReadSupport readSupport : assembly.readSupport())
         {
-            final Read read = entry.getKey();
-            final int supportLeft = entry.getValue();
-            final int supportRight = supportLeft + read.getLength();
+            Read read = readSupport.Read;
+            int supportLeft = readSupport.Index;
+            int supportRight = supportLeft + read.getLength();
 
             final int alignmentLeft = alignment.SequenceStartPosition;
             final int alignmentRight = alignment.SequenceStartPosition + alignment.Length;

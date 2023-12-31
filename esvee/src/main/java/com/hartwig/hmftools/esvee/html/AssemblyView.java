@@ -1,16 +1,17 @@
 package com.hartwig.hmftools.esvee.html;
 
-import java.util.AbstractMap;
+import static java.lang.Math.ceil;
+import static java.lang.Math.min;
+
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
 import com.hartwig.hmftools.esvee.sequence.AlignedSequence;
@@ -18,12 +19,12 @@ import com.hartwig.hmftools.esvee.sequence.Alignment;
 import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.sequence.ReadSupport;
 import com.hartwig.hmftools.esvee.sequence.Sequence;
 import com.hartwig.hmftools.esvee.sequence.SimpleSequence;
 import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 import com.hartwig.hmftools.esvee.util.Counter;
 import com.hartwig.hmftools.esvee.assembly.AssemblyExtenderCounters;
-import com.hartwig.hmftools.esvee.assembly.JunctionMetrics;
 import com.hartwig.hmftools.esvee.assembly.PrimaryAssemblerCounters;
 import com.hartwig.hmftools.esvee.assembly.SupportChecker;
 import com.hartwig.hmftools.esvee.mermaid.Flowchart;
@@ -51,9 +52,14 @@ public class AssemblyView
 
         builder.append("<h3>Counters</h3>\n");
         builder.appendStartTag("<div class=\"assembly-counters\">");
-        final PrimaryAssemblerCounters primaryCounters = assembly.getAllErrata(JunctionMetrics.class).stream()
+
+        /* CHECK:
+        PrimaryAssemblerCounters primaryCounters = assembly.getAllErrata(JunctionMetrics.class).stream()
                 .map(metrics -> metrics.Counters)
                 .reduce(new PrimaryAssemblerCounters(), (l, r) -> (PrimaryAssemblerCounters) l.add(r));
+         */
+
+        PrimaryAssemblerCounters primaryCounters = new PrimaryAssemblerCounters();
 
         final AssemblyExtenderCounters extension = assembly.getAllErrata(AssemblyExtenderCounters.class).stream()
                 .reduce(new AssemblyExtenderCounters(), (l, r) -> (AssemblyExtenderCounters) l.add(r));
@@ -71,7 +77,7 @@ public class AssemblyView
         builder.appendEndTag("</div>");
 
         builder.append("<h3>Assembly & Support</h3>\n");
-        builder.append("<p>Supporting Fragments: ").append(assembly.getSupportFragments().size()).append("</p>\n");
+        builder.append("<p>Supporting Fragments: ").append(assembly.getSupportReadNames().size()).append("</p>\n");
 
         generateSupportTable(builder, assembly);
 
@@ -110,28 +116,32 @@ public class AssemblyView
             // Sort fragments with their partner, ordered by the lowest start index.
             final Set<Read> finalSupport = new HashSet<>();
             final Set<Read> lostSupport = new HashSet<>();
-            assembly.getSupportRecords().forEach(finalSupport::add);
+
+            assembly.supportingReads().forEach(finalSupport::add);
             for(ExtendedAssembly source : assembly.Source.Sources)
             {
-                source.getSupportRecords().forEach(support ->
+                source.supportingReads().forEach(support ->
                 {
                     if(!finalSupport.contains(support))
                         lostSupport.add(support);
                 });
-                source.Source.getSupportRecords().forEach(support ->
+                source.Source.supportingReads().forEach(support ->
                 {
                     if(!finalSupport.contains(support))
                         lostSupport.add(support);
                 });
             }
 
-            final List<Map.Entry<Read, Integer>> rawSupport = assembly.getSupport().toList();
+            List<ReadSupport> rawSupport = assembly.readSupport();
+
+            // FIXME:
             for(Read read : lostSupport)
             {
-                final int supportIndex = Objects.requireNonNullElse(determineBestSupportIndex(assembly, read), 0);
-                rawSupport.add(new AbstractMap.SimpleEntry<>(read, supportIndex));
+                int supportIndex = Objects.requireNonNullElse(determineBestSupportIndex(assembly, read), 0);
+                // rawSupport.add(new AbstractMap.SimpleEntry<>(read, supportIndex));
             }
 
+            /*
             final Map<String, Integer> fragmentsByStartIndex = rawSupport.stream()
                     .collect(Collectors.toMap(kvp -> kvp.getKey().getName(), Map.Entry::getValue, Math::min));
 
@@ -141,6 +151,9 @@ public class AssemblyView
                             .thenComparing(kvp -> kvp.getKey().getName())
                             .thenComparingInt(Map.Entry::getValue))
                     .collect(Collectors.toList());
+            */
+
+            List<Map.Entry<Read,Integer>> sortedSupport = Lists.newArrayList();
 
             for(int i = 0; i < sortedSupport.size(); i++)
             {
@@ -203,8 +216,9 @@ public class AssemblyView
 
     private static void generateSupportTable(final HTMLBuilder builder, final AlignedAssembly assembly)
     {
-        final int columns = Math.max(1, Math.min(4, assembly.getSupport().size() / 10));
-        final int rows = (int) Math.ceil(assembly.getSupport().size() / (double) columns);
+        int supportReadCount = assembly.readSupportCount();
+        int columns = Math.max(1, min(4, supportReadCount / 10));
+        int rows = (int)ceil(supportReadCount / (double) columns);
 
         builder.appendStartTag("<div class=\"table-wrapper force-horizontal-scroll\">");
         builder.appendStartTag("<table>");
@@ -215,19 +229,21 @@ public class AssemblyView
         builder.appendEndTag("</thead>");
         builder.appendStartTag("<tbody>");
 
-        final List<Map.Entry<Read, Integer>> entries = assembly.getSupport().toList();
+        // final List<Map.Entry<Read, Integer>> entries = assembly.getSupport().toList();
+        List<ReadSupport> readSupportList = assembly.readSupport();
+
         for(int i = 0; i < rows; i++)
         {
             builder.append("<tr>");
             for(int j = 0; j < columns; j++)
             {
                 final int index = i * columns + j;
-                if(index < entries.size())
+                if(index < readSupportList.size())
                 {
-                    final Map.Entry<Read, Integer> entry = entries.get(index);
-                    final Read read = entry.getKey();
-                    final Integer startIndex = entry.getValue();
-                    builder.append("<td>").append(read.getName()).append("</td>").append("<td>").append(startIndex).append("</td>");
+                    ReadSupport readSupport = readSupportList.get(index);
+                    builder.append("<td>").append(readSupport.Read.getName())
+                            .append("</td>").append("<td>")
+                            .append(readSupport.Index).append("</td>");
                 }
             }
             builder.append("</tr>");

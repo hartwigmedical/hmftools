@@ -69,12 +69,12 @@ public class GappedAssembly extends SupportedAssembly
         Collections.reverse(newSources);
 
         final GappedAssembly flipped = new GappedAssembly(Name, newSources);
-        
-        for(Map.Entry<Read,Integer> support : getSupport())
+
+        for(ReadSupport support : readSupport())
         {
-            int initialReadLength = support.getKey().getLength();
-            Read flippedRead = flipRead(support.getKey());
-            flipped.addEvidenceAt(flippedRead,getLength() - support.getValue() - initialReadLength);
+            int initialReadLength = support.Read.getLength();
+            Read flippedRead = flipRead(support.Read);
+            flipped.addEvidenceAt(flippedRead,getLength() - support.Index - initialReadLength);
         }
 
         flipped.recalculateBaseQuality();

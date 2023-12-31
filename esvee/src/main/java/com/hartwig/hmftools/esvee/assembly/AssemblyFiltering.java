@@ -25,7 +25,7 @@ public final class AssemblyFiltering
         {
             @Nullable
             final T assembly = trimmed.get(i);
-            if(assembly != null && (!assemblyText.add(assembly.Assembly) || assembly.getSupportFragments().size() < 2))
+            if(assembly != null && (!assemblyText.add(assembly.Assembly) || assembly.getSupportReadNames().size() < 2))
                 trimmed.set(i, null);
         }
 
@@ -63,7 +63,7 @@ public final class AssemblyFiltering
     {
         if(assembly == null)
             return null;
-        else if(assembly.supportCount() == 0)
+        else if(assembly.readSupportCount() == 0)
             return assembly;
 
         final var pair = assembly.computeBaseSupportAndContradiction();
@@ -108,9 +108,9 @@ public final class AssemblyFiltering
 
         // TODO: Extend one assembly using the other
 
-        if(left.getSupportFragments().size() > right.getSupportFragments().size())
+        if(left.getSupportReadNames().size() > right.getSupportReadNames().size())
             return left;
-        else if(left.getSupportFragments().size() < right.getSupportFragments().size())
+        else if(left.getSupportReadNames().size() < right.getSupportReadNames().size())
             return right;
 
         if(left.Assembly.length() > right.Assembly.length())

@@ -17,6 +17,7 @@ import com.hartwig.hmftools.esvee.common.SampleSupport;
 import com.hartwig.hmftools.esvee.common.VariantAssembly;
 import com.hartwig.hmftools.esvee.common.VariantCall;
 import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.sequence.ReadSupport;
 import com.hartwig.hmftools.esvee.util.ParallelMapper;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -133,12 +134,17 @@ public class VariantDeduplication
                 .collect(Collectors.toMap(assembly -> Pair.of(assembly.Assembly.Assembly, assembly.LeftPosition),
                         assembly -> assembly, (left, right) ->
                         {
-                            if(left.Assembly.getSupportFragments().equals(right.Assembly.getSupportFragments()))
+                            if(left.Assembly.getSupportReadNames().equals(right.Assembly.getSupportReadNames()))
                                 return left;
 
                             // Ensure that both are equally supported
-                            for(Map.Entry<Read, Integer> entry : right.Assembly.getSupport())
-                                left.Assembly.addEvidenceAt(entry.getKey(), entry.getValue());
+                            for(List<ReadSupport> readSupports : right.Assembly.readSupportMap().values())
+                            {
+                                for(ReadSupport readSupport : readSupports)
+                                {
+                                    left.Assembly.addEvidenceAt(readSupport.Read, readSupport.Index);
+                                }
+                            }
 
                             return left;
                         }, LinkedHashMap::new));

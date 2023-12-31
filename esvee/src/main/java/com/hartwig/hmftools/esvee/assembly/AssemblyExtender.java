@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.SvConstants;
@@ -37,6 +36,7 @@ import com.hartwig.hmftools.esvee.processor.ThreadTask;
 import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.sequence.ReadSupport;
 import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 import com.hartwig.hmftools.esvee.util.Counter;
 
@@ -140,8 +140,7 @@ public class AssemblyExtender extends ThreadTask
     {
         JunctionGroup junctionGroup = findJunctionGroup(assembly.OriginalJunction);
 
-        List<Read> discordantReads = new DiscordantPairFinder().findDiscordantReads(
-                assembly.getSupportReads(), junctionGroup.candidateReads());
+        List<Read> discordantReads = new DiscordantPairFinder().findDiscordantReads(assembly.supportingReads(), junctionGroup.candidateReads());
 
         mCounters.DiscordantReadsFound.add(discordantReads.size());
 
@@ -175,11 +174,11 @@ public class AssemblyExtender extends ThreadTask
         while(assemblies.size() > limit)
         {
             final int minSupport = assemblies.stream()
-                    .mapToInt(candidate -> candidate.getSupportFragments().size())
+                    .mapToInt(candidate -> candidate.getSupportReadNames().size())
                     .min()
                     .orElseThrow();
 
-            assemblies.removeIf(candidate -> candidate.getSupportFragments().size() <= minSupport);
+            assemblies.removeIf(candidate -> candidate.getSupportReadNames().size() <= minSupport);
         }
         return assemblies;
     }
@@ -219,7 +218,7 @@ public class AssemblyExtender extends ThreadTask
     {
         List<Read> mateReads = Lists.newArrayList();
 
-        for(Read read : assembly.getSupportRecords())
+        for(Read read : assembly.supportingReads())
         {
             if(!read.hasMateSet())
                 continue;
@@ -277,10 +276,29 @@ public class AssemblyExtender extends ThreadTask
         for(Read read : Iterables.concat(mateReads, applicableDiscordantReads))
         {
             // Get the support index of this record or its mate
+            List<ReadSupport> readSupports = assembly.getReadSupport(read.getName());
+
+            Integer existingSupportIndex = null;
+
+            // CHECK: take the lowest index including read length - why?
+            if(readSupports != null)
+            {
+                for(ReadSupport readSupport : readSupports)
+                {
+                    int combinedLength = readSupport.Index + readSupport.Read.getLength();
+
+                    if(existingSupportIndex == null || combinedLength < existingSupportIndex)
+                        existingSupportIndex = combinedLength;
+                }
+
+            }
+
+            /*
             Integer existingSupportIndex = assembly.getSupport(read.getName()).stream()
                     .map(entry -> entry.getValue() + entry.getKey().getLength())
                     .min(Comparator.naturalOrder())
                     .orElse(null);
+            */
 
             int minDepth = existingSupportIndex == null
                     ? assembly.getLength() - read.getLength()
@@ -327,13 +345,26 @@ public class AssemblyExtender extends ThreadTask
         List<Read> applicableDiscordantReads = discordantReads.stream().filter(x -> x.negativeStrand()).collect(Collectors.toList());
 
         final Map<Read, Integer> checkStartIndices = new LinkedHashMap<>();
+
         for(Read read : Iterables.concat(mateReads, applicableDiscordantReads))
         {
             // Get the support index of this record or its mate
+            Integer existingSupportIndex = null;
+
+            List<ReadSupport> readSupports = assembly.getReadSupport(read.getName());
+
+            if(readSupports != null)
+            {
+                // CHECK: shouldn't be null?
+                existingSupportIndex = readSupports.stream().mapToInt(x -> x.Index).max().orElse(-1);
+            }
+
+            /*
             Integer existingSupportIndex = assembly.getSupport(read.getName()).stream()
                     .map(Map.Entry::getValue)
                     .max(Comparator.naturalOrder())
                     .orElse(null);
+             */
 
             int minDepth = existingSupportIndex == null
                     ? assembly.getLength() - read.getLength()
@@ -368,8 +399,10 @@ public class AssemblyExtender extends ThreadTask
         {
             if(assembly instanceof ExtendedAssembly)
                 return List.of((ExtendedAssembly) assembly);
-            final ExtendedAssembly newAssembly = new ExtendedAssembly(assembly.Name, assembly.Assembly, assembly);
-            assembly.getSupport().forEach(entry -> newAssembly.addEvidenceAt(entry.getKey(), entry.getValue()));
+
+            ExtendedAssembly newAssembly = new ExtendedAssembly(assembly.Name, assembly.Assembly, assembly);
+
+            assembly.readSupport().forEach(x -> newAssembly.addEvidenceAt(x.Read, x.Index));
             return List.of(newAssembly);
         }
 
@@ -450,7 +483,8 @@ public class AssemblyExtender extends ThreadTask
         return candidateLocations;
     }
 
-    private void reAddSupport(final ExtendedAssembly assembly, final SupportedAssembly original, final List<Read> potentialSupport,
+    private void reAddSupport(
+            final ExtendedAssembly assembly, final SupportedAssembly original, final List<Read> potentialSupport,
             final Map<Read, Set<Integer>> supportStartIndices, final boolean isForwards)
     {
         if(potentialSupport.size() > 1_000)
@@ -494,21 +528,23 @@ public class AssemblyExtender extends ThreadTask
 
     private void addSupportWithOffset(final ExtendedAssembly assembly, final SupportedAssembly original, final int offset)
     {
-        original.getSupport().forEach(entry ->
+        original.readSupport().forEach(x ->
         {
-            if(mSupportChecker.WeakSupport.supportsAt(assembly, entry.getKey(), entry.getValue() + offset))
-                assembly.addEvidenceAt(entry.getKey(), entry.getValue() + offset);
+            if(mSupportChecker.WeakSupport.supportsAt(assembly, x.Read, x.Index + offset))
+            {
+                assembly.addEvidenceAt(x.Read, x.Index + offset);
+            }
             else
             {
-                mSupportChecker.supportsAtIndex(original, entry.getKey(), 20, 2, entry.getValue());
-                mSupportChecker.supportsAtIndex(original, entry.getKey(), 20, 2, -32);
+                mSupportChecker.supportsAtIndex(original, x.Read, 20, 2, x.Index);
+                mSupportChecker.supportsAtIndex(original, x.Read, 20, 2, -32);
             }
         });
     }
 
     private void addSupportNoOffset(final ExtendedAssembly assembly, final SupportedAssembly original)
     {
-        original.getSupport().forEach(entry -> assembly.tryAddSupport(mSupportChecker, entry.getKey()));
+        original.readSupport().forEach(x -> assembly.tryAddSupport(mSupportChecker, x.Read));
     }
 
     @Nullable

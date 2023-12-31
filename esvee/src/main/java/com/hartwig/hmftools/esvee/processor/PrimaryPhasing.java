@@ -25,7 +25,7 @@ public final class PrimaryPhasing
         {
             int phasing = -1;
             final Set<Integer> additionalPhases = new HashSet<>();
-            for(String fragment : assembly.getSupportFragments())
+            for(String fragment : assembly.getSupportReadNames())
             {
                 @Nullable
                 final Integer fragmentPhase = primaryPhasingByFragment.get(fragment);
@@ -43,7 +43,7 @@ public final class PrimaryPhasing
                         continue;
                     current.addAll(other);
                     for(T otherAssembly : other)
-                        for(String otherFragment : otherAssembly.getSupportFragments())
+                        for(String otherFragment : otherAssembly.getSupportReadNames())
                             primaryPhasingByFragment.put(otherFragment, phasing);
                     primaryPhasing.remove(fragmentPhase);
                 }
@@ -55,7 +55,7 @@ public final class PrimaryPhasing
                 primaryPhasing.put(phasing, Collections.newSetFromMap(new IdentityHashMap<>()));
             }
             primaryPhasing.get(phasing).add(assembly);
-            for(String fragment : assembly.getSupportFragments())
+            for(String fragment : assembly.getSupportReadNames())
                 primaryPhasingByFragment.put(fragment, phasing);
         }
 

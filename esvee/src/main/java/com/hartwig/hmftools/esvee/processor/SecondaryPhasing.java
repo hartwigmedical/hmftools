@@ -29,7 +29,7 @@ public enum SecondaryPhasing
             final Map<String, Set<T>> phasingByFragment = new HashMap<>();
 
             for(T assembly : primaryPhaseGroup)
-                for(String fragment : assembly.getSupportFragments())
+                for(String fragment : assembly.getSupportReadNames())
                     phasingByFragment.computeIfAbsent(fragment, __ -> new HashSet<>()).add(assembly);
             final Set<Set<T>> groups = phasingByFragment.values().stream()
                     .filter(g -> g.size() > 1)

@@ -51,13 +51,14 @@ public class ExtendedAssembly extends SupportedAssembly implements TrimmableAsse
 
         final ExtendedAssembly newAssembly = new ExtendedAssembly(Name, newBases, Source);
         newAssembly.Diagrams.addAll(Diagrams);
-        for(Map.Entry<Read, Integer> entry : getSupport())
+
+        for(ReadSupport support : readSupport())
         {
-            final int newOffset = entry.getValue() - removeLeft;
+            final int newOffset = support.Index - removeLeft;
             if(newOffset >= newLength)
                 continue;
 
-            newAssembly.addEvidenceAt(entry.getKey(), newOffset);
+            newAssembly.addEvidenceAt(support.Read, newOffset);
         }
 
         return newAssembly;
@@ -68,12 +69,12 @@ public class ExtendedAssembly extends SupportedAssembly implements TrimmableAsse
         final String assembly = SequenceUtil.reverseComplement(Assembly);
         final ExtendedAssembly flipped = new ExtendedAssembly(Name, assembly, Source);
 
-        for(Map.Entry<Read, Integer> support : getSupport())
+        for(ReadSupport support : readSupport())
         {
-            int initialReadLength = support.getKey().getLength();
-            Read flippedRead = flipRead(support.getKey());
+            int initialReadLength = support.Read.getLength();
+            Read flippedRead = flipRead(support.Read);
 
-            flipped.addEvidenceAt(flippedRead,getLength() - support.getValue() - initialReadLength);
+            flipped.addEvidenceAt(flippedRead,getLength() - support.Index - initialReadLength);
         }
         flipped.recalculateBaseQuality();
         return flipped;

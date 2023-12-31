@@ -6,15 +6,14 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.sequence.ReadSupport;
 import com.hartwig.hmftools.esvee.sequence.Sequence;
 import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 
 import org.jetbrains.annotations.Nullable;
 
-public enum SequenceDecomposer
+public final class SequenceDecomposer
 {
-    ;
-
     public static final int MIN_REPETITIONS_TO_CALL_REPEAT = 5;
     public static final int MAX_MICROSATELLITE_LENGTH = 6;
 
@@ -327,10 +326,11 @@ public enum SequenceDecomposer
             final int startIndex = endIndex - node.length();
 
             int supportDepth = 0;
-            for(Map.Entry<Read, Integer> entry : assembly.getSupport())
+
+            for(ReadSupport support : assembly.readSupport())
             {
-                final int supportStartIndex = entry.getValue();
-                final int supportEndIndex = supportStartIndex + entry.getKey().getLength();
+                int supportStartIndex = support.Index;
+                int supportEndIndex = supportStartIndex + support.Read.getLength();
 
                 if(supportStartIndex <= startIndex && supportEndIndex >= endIndex)
                     supportDepth++;

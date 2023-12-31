@@ -13,14 +13,13 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.WriteType;
-import com.hartwig.hmftools.esvee.assembly.JunctionMetrics;
 import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
 import com.hartwig.hmftools.esvee.sequence.Alignment;
 import com.hartwig.hmftools.esvee.read.Read;
@@ -110,10 +109,16 @@ public class BamWriter
                 final List<VariantBAMRecord> assemblyRecords = recordsByAssemblyName.computeIfAbsent(assembly.Name, __ ->
                 {
                     final List<VariantBAMRecord> records = new ArrayList<>();
+
+                    /*
                     final Set<String> junctions = assembly.getAllErrata(JunctionMetrics.class).stream()
                             .map(junction -> junction.JunctionChromosome + ":" + junction.JunctionPosition
                                     + junction.JunctionDirection.toShortString())
                             .collect(Collectors.toCollection(() -> new TreeSet<>(NaturalSortComparator.INSTANCE)));
+                    */
+
+                    Set<String> junctions = Sets.newHashSet();
+
                     final Set<String> fragments = new HashSet<>();
 
                     final List<VariantAssemblyAlignment> alignments = constructAlignments(assembly.getAlignmentBlocks());
@@ -133,7 +138,7 @@ public class BamWriter
 
                 final Set<String> support = new HashSet<>();
                 support.addAll(supportFragments);
-                support.retainAll(assembly.getSupportFragments());
+                support.retainAll(assembly.getSupportReadNames());
                 assemblyRecords.forEach(r -> r.SourceFragments.addAll(support));
                 assemblyRecords.forEach(r -> r.Variants.add(call.compactName()));
             }

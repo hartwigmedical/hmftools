@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
-import com.hartwig.hmftools.esvee.assembly.JunctionMetrics;
 import com.hartwig.hmftools.esvee.assembly.SupportChecker;
 import com.hartwig.hmftools.esvee.common.VariantAssembly;
 import com.hartwig.hmftools.esvee.common.VariantCall;
@@ -104,13 +103,15 @@ public final class VariantCallPageGenerator
         for(VariantAssembly assembly : call.variantAssemblies())
             builder.append("<tr><td>").append(++index).append("</td>")
                     .append("<td>").append(assembly.Assembly.Assembly.length()).append("</td>")
-                    .append("<td>").append("%s", assembly.Assembly.getSupportFragments().size()).append("</td>")
+                    .append("<td>").append("%s", assembly.Assembly.getSupportReadNames().size()).append("</td>")
                     .append("<td>").append(assembly.LeftPosition).append("/").append(assembly.RightPosition).append("</td>")
                     .append("<td>").append(assembly.LeftAnchorCigar).append("/").append(assembly.RightAnchorCigar).append("</td>")
                     .append("<td>").append(assembly.LeftOverhang).append("/").append(assembly.RightOverhang).append("</td>")
+            /* CHECK:
                     .append("<td>").append(assembly.Assembly.getAllErrata(JunctionMetrics.class).stream()
                             .map(metrics -> String.format("%s:%s (%s)", metrics.JunctionChromosome, metrics.JunctionPosition, metrics.JunctionDirection))
                             .collect(Collectors.joining(", "))).append("</td>")
+             */
                     .append("<td>").append(assembly.Assembly.Assembly).append("</td>")
                     .append("</tr>\n");
         builder.appendEndTag("</table>");
