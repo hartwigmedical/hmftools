@@ -49,8 +49,11 @@ public class JunctionGroup implements Comparable<JunctionGroup>
     public void clearCandidateReads() { mCandidateReads.clear(); }
     public int candidateReadCount() { return mCandidateReads.size(); }
 
-    public String toString() { return format("%s:%d-%d range(%d) count(%d) reads(%d)",
-            chromosome(), mMinPosition, mMaxPosition, range(), mJunctions.size(), mCandidateReads.size()); }
+    public String toString()
+    {
+        return format("%s:%d-%d range(%d) count(%d) reads(%d)",
+            chromosome(), mMinPosition, mMaxPosition, range(), mJunctions.size(), mCandidateReads.size());
+    }
 
     @Override
     public int compareTo(@NotNull final JunctionGroup other)

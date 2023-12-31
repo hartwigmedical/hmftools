@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.esvee.common.JunctionGroup.buildJunctionGroup
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +27,6 @@ import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
 import com.hartwig.hmftools.esvee.assembly.SupportChecker;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
-import com.hartwig.hmftools.esvee.common.RegionOfInterest;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.WriteType;
 import com.hartwig.hmftools.esvee.assembly.AssemblyExtender;
@@ -41,16 +39,10 @@ import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.sequence.GappedAssembly;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.sequence.ReadSupport;
-import com.hartwig.hmftools.esvee.sequence.Sequence;
-import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 import com.hartwig.hmftools.esvee.output.VcfWriter;
 import com.hartwig.hmftools.esvee.html.SummaryPageGenerator;
 import com.hartwig.hmftools.esvee.html.VariantCallPageGenerator;
 import com.hartwig.hmftools.esvee.util.ParallelMapper;
-
-import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.Nullable;
 
 public class Processor
 {
@@ -189,6 +181,9 @@ public class Processor
         List<ExtendedAssembly> extendedAssemblies = Lists.newArrayList();
         assemblyExtenderTasks.forEach(x -> extendedAssemblies.addAll(x.extendedAssemblies()));
 
+        mPerfCounters.add(ThreadTask.mergePerfCounters(assemblyExtenderTasks.stream().collect(Collectors.toList())));
+        threadTasks.clear();
+
         if(!mConfig.OtherDebug)
         {
             primaryAssemblies.clear();
@@ -209,7 +204,7 @@ public class Processor
 
         // Phased assembly merging
         final List<Set<ExtendedAssembly>> mergedPhaseSets = ParallelMapper.mapWithProgress(
-                mContext.Executor, primaryPhaseSets, this::primaryPhasedMerging); // FIXME: switch to use AssemblyMerger
+                mContext.Executor, primaryPhaseSets, assemblyMerger::primaryPhasedMerging);
 
         SV_LOGGER.info("merged primary phase sets");
 
@@ -379,116 +374,26 @@ public class Processor
         writer.close();
     }
 
-    private Set<ExtendedAssembly> primaryPhasedMerging(final Set<ExtendedAssembly> primaryPhaseSet)
+    // CHECK: these aren't called, what is their purpose?
+    public GappedAssembly createGapped(final Collection<ExtendedAssembly> assemblies, final int index)
     {
-        try
+        final GappedAssembly gappedAssembly = new GappedAssembly("Assembly" + index, orderExtendedAssemblies(assemblies));
+
+        for(ExtendedAssembly assembly : assemblies)
         {
-            final Set<ExtendedAssembly> result = new HashSet<>(primaryPhaseSet);
-            final Set<Pair<ExtendedAssembly, ExtendedAssembly>> checked = new HashSet<>();
-            boolean merged = true;
-            while(merged)
+            for(Read support : assembly.supportingReads())
             {
-                merged = false;
-
-                loopHead:
-                for(ExtendedAssembly left : result)
-                    for(ExtendedAssembly right : result)
-                    {
-                        if(left == right)
-                            continue;
-                        if(!checked.add(Pair.of(left, right)))
-                            continue;
-
-                        final int minOverlap = Math.min(30, Math.min(left.getLength(), right.getLength()));
-                        @Nullable
-                        Integer index = mSupportChecker.AssemblySupport.supportIndex(left, right, minOverlap);
-                        if(index != null)
-                            index = mSupportChecker.AssemblySupport.bestSupportIndex(left, right, minOverlap);
-                        final ExtendedAssembly mergedAssembly;
-                        if(index == null)
-                        {
-                            final ExtendedAssembly flippedRight = right.flipStrand();
-                            index = mSupportChecker.AssemblySupport.supportIndex(left, flippedRight, minOverlap);
-                            if(index != null)
-                                index = mSupportChecker.AssemblySupport.bestSupportIndex(left, right, minOverlap);
-                            if(index == null)
-                                continue;
-
-                            mergedAssembly = merge(left, flippedRight, index);
-                        }
-                        else
-                            mergedAssembly = merge(left, right, index);
-
-                        result.remove(left);
-                        result.remove(right);
-                        result.add(mergedAssembly);
-
-                        merged = true;
-                        break loopHead;
-                    }
-            }
-
-            return result;
-        }
-        catch(final Throwable throwable)
-        {
-            SV_LOGGER.warn("Failure during phased assembly merging with group of size {}", primaryPhaseSet.size(), throwable);
-
-            /* FIXME:
-            SV_LOGGER.warn("{}", RegionOfInterest.tryMerge(
-                    primaryPhaseSet.stream()
-                            .flatMap(assembly -> assembly.getSupport().stream())
-                            .map(Map.Entry::getKey)
-                            .filter(record -> !record.isUnmapped())
-                            .map(record -> new RegionOfInterest(record.getChromosome(), record.getAlignmentStart(), record.getAlignmentEnd()))
-                            .collect(Collectors.toList())
-            ));
-            */
-            return null;
-        }
-    }
-
-    private ExtendedAssembly merge(final ExtendedAssembly left, final ExtendedAssembly right, final int supportIndex)
-    {
-        left.markDecompositionStale();
-        right.markDecompositionStale();
-        final Sequence mergedSequence = SequenceMerger.merge(left, right, supportIndex);
-
-        final ExtendedAssembly merged = new ExtendedAssembly(left.Name, mergedSequence.getBasesString(), left.Source);
-        left.Diagrams.forEach(merged::addDiagrams);
-
-        left.supportingReads().forEach(x -> merged.tryAddSupport(mSupportChecker, x));
-        right.supportingReads().forEach(x -> merged.tryAddSupport(mSupportChecker, x));
-
-        merged.addErrata(left.getAllErrata());
-        merged.addErrata(right.getAllErrata());
-
-        return merged;
-    }
-
-    private void reAddSupport(final SupportedAssembly merged, final SupportedAssembly old)
-    {
-        final int offset = merged.Assembly.indexOf(old.Assembly);
-
-        for(ReadSupport support : old.readSupport())
-        {
-            Read potentialSupport = support.Read;
-
-            if(offset != -1)
-            {
-                final int oldSupportIndex = support.Index;
-
-                if(mSupportChecker.AssemblySupport.supportsAt(merged, potentialSupport, oldSupportIndex + offset))
+                if(!gappedAssembly.tryAddSupport(mSupportChecker, support))
                 {
-                    merged.addEvidenceAt(potentialSupport, oldSupportIndex + offset);
-                    continue;
+                    SV_LOGGER.info("Failed to add support for assembly {}: {}", gappedAssembly.Name, support.getName());
                 }
             }
-            merged.tryAddSupport(mSupportChecker, potentialSupport);
         }
+
+        return gappedAssembly;
     }
 
-    private List<ExtendedAssembly> order(final Collection<ExtendedAssembly> assemblies)
+    private List<ExtendedAssembly> orderExtendedAssemblies(final Collection<ExtendedAssembly> assemblies)
     {
         // FIXME: Correctly order these
         if(assemblies.size() > 1)
@@ -510,21 +415,4 @@ public class Processor
         return new ArrayList<>(assemblies);
     }
 
-    public GappedAssembly createGapped(final Collection<ExtendedAssembly> assemblies, final int index)
-    {
-        final GappedAssembly gappedAssembly = new GappedAssembly("Assembly" + index, order(assemblies));
-
-        for(ExtendedAssembly assembly : assemblies)
-        {
-            for(Read support : assembly.supportingReads())
-            {
-                if(!gappedAssembly.tryAddSupport(mSupportChecker, support))
-                {
-                    SV_LOGGER.info("Failed to add support for assembly {}: {}", gappedAssembly.Name, support.getName());
-                }
-            }
-        }
-
-        return gappedAssembly;
-    }
 }

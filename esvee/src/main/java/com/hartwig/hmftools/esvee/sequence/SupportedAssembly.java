@@ -15,8 +15,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembly
 {
-    // private final Map<String,SupportEntry> mSupport;
-    private final Map<String,List<ReadSupport>> mReadSupportMap;
+    private final Map<String, List<ReadSupport>> mReadSupportMap;
     private final List<Read> mReads;
     private final List<ReadSupport> mReadSupportList;
 
@@ -27,7 +26,6 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembl
     public SupportedAssembly(final String name, final String assembly)
     {
         super(name, assembly);
-        // mSupport = new HashMap<>();
         mReadSupportMap = new HashMap<>();
         mReads = Lists.newArrayList();
         mReadSupportList = Lists.newArrayList();
@@ -105,14 +103,21 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembl
 
     public List<Read> supportingReads() { return mReads; }
     public List<ReadSupport> readSupport() { return mReadSupportList; }
-    public Map<String,List<ReadSupport>> readSupportMap() { return mReadSupportMap; }
-    public Set<String> getSupportReadNames() { return mReadSupportMap.keySet(); }
+    public Map<String, List<ReadSupport>> readSupportMap() { return mReadSupportMap; }
 
-    // CHECK: only uses as a true/false at the moment
+    public Set<String> getSupportReadNames()
+    {
+        return mReadSupportMap.keySet();
+    }
+
     public int readSupportCount() { return mReads.size(); }
+
     public int fragmentSupportCount() { return mReadSupportMap.size(); }
 
-    public boolean containsSupport(final Read read) { return mReads.contains(read); }
+    public boolean containsSupport(final Read read)
+    {
+        return mReads.contains(read);
+    }
 
     public boolean containsSupport(final Read read, final int index)
     {
@@ -120,67 +125,10 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembl
         return support != null && support.stream().anyMatch(x -> x.Read == read && x.Index == index);
     }
 
-    /*
-    public List<Read> getSupportReads()
+    public List<ReadSupport> getReadSupport(final String readId)
     {
-        List<Read> allReads = Lists.newArrayListWithExpectedSize(mSupportCount);
-        mReadSupportMap.values().forEach(x -> x.stream().forEach(y -> allReads.add(y.Read)));
-        return allReads;
+        return mReadSupportMap.get(readId);
     }
-
-    public List<ReadSupport> getReadSupportList()
-    {
-        List<ReadSupport> allReadSupport = Lists.newArrayListWithExpectedSize(mSupportCount);
-        mReadSupportMap.values().forEach(x -> allReadSupport.addAll(x));
-        return allReadSupport;
-    }
-    */
-
-    public List<ReadSupport> getReadSupport(final String readId) { return mReadSupportMap.get(readId); }
-
-    /*
-    public SizedIterable<Read> getSupportRecords()
-    {
-        return SizedIterable.create(readSupportCount(), this::supportIterator, entry -> entry.Read);
-    }
-
-    public SizedIterable<Map.Entry<Read, Integer>> getSupport()
-    {
-        return SizedIterable.create(readSupportCount(), this::supportIterator,
-                entry -> new AbstractMap.SimpleEntry<>(entry.Read, entry.SupportIndex));
-    }
-
-    public SizedIterable<Map.Entry<Read, Integer>> getSupport(final String fragmentName)
-    {
-        return new SizedIterable<>(-1, new Supplier<Iterator<Map.Entry<Read, Integer>>>()
-        {
-            @Override
-            public Iterator<Map.Entry<Read, Integer>> get()
-            {
-                return new Iterator<>()
-                {
-                    @Nullable
-                    SupportEntry supportEntry = mSupport.get(fragmentName);
-
-                    @Override
-                    public boolean hasNext()
-                    {
-                        return supportEntry != null;
-                    }
-
-                    @Override
-                    public Map.Entry<Read, Integer> next()
-                    {
-                        assert supportEntry != null;
-                        final Map.Entry<Read, Integer> result = Map.entry(supportEntry.Read, supportEntry.SupportIndex);
-                        supportEntry = supportEntry.Next;
-                        return result;
-                    }
-                };
-            }
-        });
-    }
-    */
 
     public int getSupportIndex(final Read read)
     {
@@ -198,34 +146,31 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembl
         // throw new IllegalStateException(String.format("Record %s does not support assembly %s", read, getName()));
     }
 
-    public Pair<int[],int[]> computeBaseSupportAndContradiction()
+    public Pair<int[], int[]> computeBaseSupportAndContradiction()
     {
         final int[] baseQualitySupporting = new int[Assembly.length()];
         final int[] baseQualityContradicting = new int[Assembly.length()];
 
-        for(List<ReadSupport> readSupports : mReadSupportMap.values())
+        for(ReadSupport readSupport : mReadSupportList)
         {
-            for(ReadSupport readSupport : readSupports)
+            Read read = readSupport.Read;
+
+            int assemblyOffset = max(readSupport.Index, 0);
+            int readOffset = readSupport.Index < 0 ? -readSupport.Index : 0;
+
+            int remainingAssemblyLength = Assembly.length() - assemblyOffset;
+            int remainingReadLength = read.getLength() - readOffset;
+            int supportLength = Math.min(remainingAssemblyLength, remainingReadLength);
+
+            for(int i = 0; i < supportLength; i++)
             {
-                Read read = readSupport.Read;
-
-                int assemblyOffset = max(readSupport.Index, 0);
-                int readOffset = readSupport.Index < 0 ? -readSupport.Index : 0;
-
-                int remainingAssemblyLength = Assembly.length() - assemblyOffset;
-                int remainingReadLength = read.getLength() - readOffset;
-                int supportLength = Math.min(remainingAssemblyLength, remainingReadLength);
-
-                for(int i = 0; i < supportLength; i++)
-                {
-                    byte assemblyBase = AssemblyBases[assemblyOffset + i];
-                    byte evidenceBase = read.getBases()[readOffset + i];
-                    byte evidenceQuality = read.getBaseQuality()[readOffset + i];
-                    if(assemblyBase == evidenceBase)
-                        baseQualitySupporting[assemblyOffset + i] += evidenceQuality;
-                    else
-                        baseQualityContradicting[assemblyOffset + i] += evidenceQuality;
-                }
+                byte assemblyBase = AssemblyBases[assemblyOffset + i];
+                byte evidenceBase = read.getBases()[readOffset + i];
+                byte evidenceQuality = read.getBaseQuality()[readOffset + i];
+                if(assemblyBase == evidenceBase)
+                    baseQualitySupporting[assemblyOffset + i] += evidenceQuality;
+                else
+                    baseQualityContradicting[assemblyOffset + i] += evidenceQuality;
             }
         }
 
@@ -241,33 +186,30 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembl
         final int[] baseQualitySupporting = new int[Assembly.length()];
         final int[] baseQualityContradicting = new int[Assembly.length()];
 
-        for(List<ReadSupport> readSupports : mReadSupportMap.values())
+        for(ReadSupport readSupport : mReadSupportList)
         {
-            for(ReadSupport readSupport : readSupports)
+            Read read = readSupport.Read;
+
+            final int assemblyOffset = max(readSupport.Index, 0);
+            final int readOffset = readSupport.Index < 0 ? -readSupport.Index : 0;
+
+            final int remainingAssemblyLength = Assembly.length() - assemblyOffset;
+            final int remainingReadLength = read.getLength() - readOffset;
+            final int supportLength = Math.min(remainingAssemblyLength, remainingReadLength);
+            for(int i = 0; i < supportLength; i++)
             {
-                Read read = readSupport.Read;
-
-                final int assemblyOffset = max(readSupport.Index, 0);
-                final int readOffset = readSupport.Index < 0 ? -readSupport.Index : 0;
-
-                final int remainingAssemblyLength = Assembly.length() - assemblyOffset;
-                final int remainingReadLength = read.getLength() - readOffset;
-                final int supportLength = Math.min(remainingAssemblyLength, remainingReadLength);
-                for(int i = 0; i < supportLength; i++)
+                final byte assemblyBase = AssemblyBases[assemblyOffset + i];
+                final byte evidenceBase = read.getBases()[readOffset + i];
+                final byte evidenceQuality = read.getBaseQuality()[readOffset + i];
+                if(assemblyBase == evidenceBase)
                 {
-                    final byte assemblyBase = AssemblyBases[assemblyOffset + i];
-                    final byte evidenceBase = read.getBases()[readOffset + i];
-                    final byte evidenceQuality = read.getBaseQuality()[readOffset + i];
-                    if(assemblyBase == evidenceBase)
-                    {
-                        maxBaseQualitySupporting[assemblyOffset + i] =
-                                (byte) max(maxBaseQualitySupporting[assemblyOffset + i], evidenceQuality);
-                        baseQualitySupporting[assemblyOffset + i] += evidenceQuality;
-                    }
-                    else
-                    {
-                        baseQualityContradicting[assemblyOffset + i] += evidenceQuality;
-                    }
+                    maxBaseQualitySupporting[assemblyOffset + i] =
+                            (byte) max(maxBaseQualitySupporting[assemblyOffset + i], evidenceQuality);
+                    baseQualitySupporting[assemblyOffset + i] += evidenceQuality;
+                }
+                else
+                {
+                    baseQualityContradicting[assemblyOffset + i] += evidenceQuality;
                 }
             }
         }
@@ -294,62 +236,9 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembl
     }
 
     @Override
-    public String toString() { return String.format("%s (%s support)", Name, readSupportCount()); }
-
-        /*
-    private Iterator<SupportEntry> supportIterator()
+    public String toString()
     {
-        return new Iterator<>()
-        {
-            final Iterator<SupportEntry> entryIterator = mSupport.values().iterator();
-            @Nullable
-            SupportEntry current = null;
-
-            @Override
-            public boolean hasNext()
-            {
-                if(current != null)
-                    return true;
-
-                return entryIterator.hasNext();
-            }
-
-            @Override
-            public SupportEntry next()
-            {
-                if(current == null)
-                    current = entryIterator.next();
-
-                final SupportEntry toReturn = current;
-                current = current.Next;
-                return toReturn;
-            }
-        };
+        return String.format("%s (%s support)", Name, readSupportCount());
     }
-
-    private static class SupportEntry
-    {
-        public final Read Read;
-        public final int SupportIndex;
-        @Nullable
-        public final SupportEntry Next;
-
-        private SupportEntry(final Read read, final int supportIndex, @Nullable final SupportEntry next)
-        {
-            Read = read;
-            SupportIndex = supportIndex;
-            Next = next;
-        }
-
-        @Override
-        public String toString()
-        {
-            final String core = String.valueOf(SupportIndex);
-            if(Next == null)
-                return core;
-            else
-                return core + "&" + Next;
-        }
-    }
-    */
 }
+

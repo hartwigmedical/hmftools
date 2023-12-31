@@ -391,22 +391,19 @@ public class PrimaryAssembler
             assembly.Diagrams.addAll(initialAssembly.Diagrams);
             assembly.addDiagrams(diagrams);
 
-            for(List<ReadSupport> readSupports : initialAssembly.readSupportMap().values())
+            for(ReadSupport readSupport : initialAssembly.readSupport())
             {
-                for(ReadSupport readSupport : readSupports)
-                {
-                    Read read = readSupport.Read;
-                    int newSupportIndex;
-                    if(isForwards)
-                        newSupportIndex = readSupport.Index + (anchoredAssembly.length() - initialAssembly.Assembly.length());
-                    else
-                        newSupportIndex = readSupport.Index;
+                Read read = readSupport.Read;
+                int newSupportIndex;
+                if(isForwards)
+                    newSupportIndex = readSupport.Index + (anchoredAssembly.length() - initialAssembly.Assembly.length());
+                else
+                    newSupportIndex = readSupport.Index;
 
-                    if(mSupportChecker.WeakSupport.supportsAt(assembly, read, newSupportIndex))
-                        assembly.addEvidenceAt(read, newSupportIndex);
-                    else
-                        assembly.tryAddSupport(mSupportChecker, read);
-                }
+                if(mSupportChecker.WeakSupport.supportsAt(assembly, read, newSupportIndex))
+                    assembly.addEvidenceAt(read, newSupportIndex);
+                else
+                    assembly.tryAddSupport(mSupportChecker, read);
             }
 
             if(assembly.getSupportReadNames().size() > SvConstants.MIN_READS_SUPPORT_ASSEMBLY)

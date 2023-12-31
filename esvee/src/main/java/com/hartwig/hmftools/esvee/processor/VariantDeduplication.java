@@ -138,12 +138,9 @@ public class VariantDeduplication
                                 return left;
 
                             // Ensure that both are equally supported
-                            for(List<ReadSupport> readSupports : right.Assembly.readSupportMap().values())
+                            for(ReadSupport readSupport : right.Assembly.readSupport())
                             {
-                                for(ReadSupport readSupport : readSupports)
-                                {
-                                    left.Assembly.addEvidenceAt(readSupport.Read, readSupport.Index);
-                                }
+                                left.Assembly.addEvidenceAt(readSupport.Read, readSupport.Index);
                             }
 
                             return left;

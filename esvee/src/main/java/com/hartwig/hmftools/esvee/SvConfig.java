@@ -65,6 +65,7 @@ public class SvConfig
     public final boolean PlotDiagrams;
 
     public final boolean PerfDebug;
+    public final double PerfLogTime;
     public final boolean OtherDebug;
 
     public final int Threads;
@@ -81,6 +82,7 @@ public class SvConfig
     public static final String HTML_SUMMARY_DIR = "html_dir";
     public static final String PLOT_DIAGRAMS = "plot_diagrams";
     public static final String OTHER_DEBUG = "other_debug";
+    public static final String PERF_LOG_TIME = "perf_log_time";
 
     public static final Logger SV_LOGGER = LogManager.getLogger(SvConfig.class);
 
@@ -164,6 +166,7 @@ public class SvConfig
         PlotDiagrams = configBuilder.hasFlag(PLOT_DIAGRAMS);
 
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
+        PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
         OtherDebug = configBuilder.hasFlag(OTHER_DEBUG);
 
         Threads = parseThreads(configBuilder);
@@ -222,6 +225,7 @@ public class SvConfig
         configBuilder.addConfigItem(WRITE_TYPES, false, "Write types from list: " + writeTypes);
 
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
+        configBuilder.addDecimal(PERF_LOG_TIME, "Log performance data for routine exceeding specified time (0 = disabled)", 0);
         configBuilder.addFlag(OTHER_DEBUG, "Various other debugging");
 
         addOutputOptions(configBuilder);

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.sequence;
 
+import static java.lang.String.format;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -96,5 +98,10 @@ public class PrimaryAssembly extends SupportedAssembly implements TrimmableAssem
         }
 
         return newAssembly;
+    }
+
+    public String toString()
+    {
+        return format("%s junc(%s) support(%d)", Name, OriginalJunction, readSupportCount());
     }
 }

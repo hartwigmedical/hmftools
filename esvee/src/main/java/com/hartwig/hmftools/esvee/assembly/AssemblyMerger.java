@@ -187,7 +187,7 @@ public class AssemblyMerger
         return merged;
     }
 
-    private Set<ExtendedAssembly> primaryPhasedMerging(final Set<ExtendedAssembly> primaryPhaseSet)
+    public Set<ExtendedAssembly> primaryPhasedMerging(final Set<ExtendedAssembly> primaryPhaseSet)
     {
         try
         {

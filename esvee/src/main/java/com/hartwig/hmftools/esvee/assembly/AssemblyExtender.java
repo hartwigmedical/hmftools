@@ -63,10 +63,15 @@ public class AssemblyExtender extends ThreadTask
             final Map<String,List<JunctionGroup>> junctionGroupMap, final List<PrimaryAssembly> primaryAssemblies,
             final SvConfig config, final int taskCount, final List<Thread> threadTasks)
     {
-        List<AssemblyExtender> assemblyExtenderTasks = com.google.common.collect.Lists.newArrayList();
+        List<AssemblyExtender> assemblyExtenderTasks = Lists.newArrayList();
 
         Queue<PrimaryAssembly> primaryAssemblyQueue = new ConcurrentLinkedQueue<>();
-        primaryAssemblyQueue.addAll(primaryAssemblies);
+
+        // sort by reads with the most support first, assuming they may also have the most complexity
+        List<PrimaryAssembly> primaryAssembliesSorted = Lists.newArrayList(primaryAssemblies);
+        Collections.sort(primaryAssembliesSorted, Comparator.comparingInt(PrimaryAssembly::readSupportCount).reversed());
+
+        primaryAssemblyQueue.addAll(primaryAssembliesSorted);
 
         int primaryAssemblyCount = primaryAssemblies.size();
 
@@ -114,11 +119,12 @@ public class AssemblyExtender extends ThreadTask
 
                 mPerfCounter.start();
                 processPrimaryAssembly(primaryAssembly);
-                mPerfCounter.stop();
+
+                stopCheckLog(primaryAssembly.toString(), mConfig.PerfLogTime);
 
                 if(processedCount > 0 && (processedCount % 100) == 0)
                 {
-                    SV_LOGGER.info("processed {} junction groups, remaining({})", processedCount, remainingCount);
+                    SV_LOGGER.info("processed {} primary assemblies, remaining({})", processedCount, remainingCount);
                 }
             }
             catch(NoSuchElementException e)

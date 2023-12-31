@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.common.Junction;
@@ -97,7 +96,8 @@ public class JunctionGroupAssembler extends ThreadTask
 
                 mPerfCounter.start();
                 processJunctionGroup(junctionGroup);
-                mPerfCounter.stop();
+
+                stopCheckLog(junctionGroup.toString(), mConfig.PerfLogTime);
 
                 if(processedCount > 0 && (processedCount % 100) == 0)
                 {
