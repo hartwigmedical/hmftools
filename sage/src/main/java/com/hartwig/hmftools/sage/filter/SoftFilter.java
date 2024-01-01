@@ -73,6 +73,5 @@ public enum SoftFilter
 
         return !softFilters.isEmpty();
     }
-
 }
 
