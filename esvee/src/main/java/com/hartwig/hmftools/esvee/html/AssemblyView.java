@@ -61,11 +61,12 @@ public class AssemblyView
 
         PrimaryAssemblerCounters primaryCounters = new PrimaryAssemblerCounters();
 
-        final AssemblyExtenderCounters extension = assembly.getAllErrata(AssemblyExtenderCounters.class).stream()
-                .reduce(new AssemblyExtenderCounters(), (l, r) -> (AssemblyExtenderCounters) l.add(r));
+        //final AssemblyExtenderCounters extension = assembly.getAllErrata(AssemblyExtenderCounters.class).stream()
+        //        .reduce(new AssemblyExtenderCounters(), (l, r) -> (AssemblyExtenderCounters) l.add(r));
+
         final List<Counter> counters = new ArrayList<>();
-        counters.addAll(primaryCounters.all());
-        counters.addAll(extension.all());
+        // counters.addAll(primaryCounters.all());
+        // counters.addAll(extension.all());
 
         builder.appendCountersTable(counters, 3);
 

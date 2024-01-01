@@ -2,7 +2,7 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import com.hartwig.hmftools.esvee.util.Counter;
 
-public class AssemblyExtenderCounters extends Counters<AssemblyExtenderCounters>
+public class AssemblyExtenderCounters
 {
     private static final String CATEGORY = AssemblyExtenderCounters.class.getSimpleName();
 
@@ -17,6 +17,7 @@ public class AssemblyExtenderCounters extends Counters<AssemblyExtenderCounters>
     public final Counter CleanupTimeNanos = new Counter(CATEGORY, "Cleanup Time", true);
     */
 
+    /*
     public final Counter LeftMates = new Counter(CATEGORY, "Left Mates");
     public final Counter LeftMatesAssembled = new Counter(CATEGORY, "Left Mates Assembled");
     public final Counter RightMates = new Counter(CATEGORY, "Right Mates");
@@ -28,4 +29,5 @@ public class AssemblyExtenderCounters extends Counters<AssemblyExtenderCounters>
     public final Counter DiscordantReadsFound = new Counter(CATEGORY, "Discordant Reads");
     public final Counter LeftDiscordantReadsAssembled = new Counter(CATEGORY, "Left DR Assembled");
     public final Counter RightDiscordantReadsAssembled = new Counter(CATEGORY, "Right DR Assembled");
+    */
 }

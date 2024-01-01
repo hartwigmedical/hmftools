@@ -76,14 +76,15 @@ public final class SummaryPageGenerator
 
         builder.appendStartTag("<div class=\"summaryInfo\">");
 
+        // FIME: missing counters
         builder.appendStartTag("<div class=\"summaryBox\">");
-        builder.appendCountersTable(counters.all(), 1);
+        // builder.appendCountersTable(counters.all(), 1);
         builder.appendEndTag("</div>");
         builder.appendStartTag("<div class=\"summaryBox\">");
-        builder.appendCountersTable(counters.PrimaryAssemblerCounters.all(), 1);
+        // builder.appendCountersTable(counters.PrimaryAssemblerCounters.all(), 1);
         builder.appendEndTag("</div>");
         builder.appendStartTag("<div class=\"summaryBox\">");
-        builder.appendCountersTable(counters.AssemblyExtenderCounters.all(), 1);
+        // builder.appendCountersTable(counters.AssemblyExtenderCounters.all(), 1);
         builder.appendEndTag("</div>");
 
         builder.appendEndTag("</div>");

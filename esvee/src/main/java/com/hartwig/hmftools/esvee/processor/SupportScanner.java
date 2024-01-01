@@ -43,8 +43,6 @@ public class SupportScanner extends ThreadTask
         Queue<AlignedAssembly> alignedAssemblyQueue = new ConcurrentLinkedQueue<>();
         alignedAssemblyQueue.addAll(alignedAssemblies);
 
-        int primaryPhaseSetCount = alignedAssemblies.size();
-
         for(int i = 0; i < taskCount; ++i)
         {
             BamReader bamReader = bamReaders.get(i);
@@ -54,7 +52,7 @@ public class SupportScanner extends ThreadTask
             threadTasks.add(supportScanner);
         }
 
-        SV_LOGGER.debug("splitting {} aligned assemblies for rescanning sets across {} threads", primaryPhaseSetCount, taskCount);
+        SV_LOGGER.debug("splitting {} aligned assemblies for rescanning sets across {} threads", alignedAssemblies.size(), taskCount);
 
         return supportScanners;
     }
@@ -95,7 +93,7 @@ public class SupportScanner extends ThreadTask
 
                 if(processedCount > 0 && (processedCount % TASK_LOG_COUNT) == 0)
                 {
-                    SV_LOGGER.info("processed {} primary phase sets, remaining({})", processedCount, remainingCount);
+                    SV_LOGGER.info("processed support for {} aligned assemblies, remaining({})", processedCount, remainingCount);
                 }
             }
             catch(NoSuchElementException e)

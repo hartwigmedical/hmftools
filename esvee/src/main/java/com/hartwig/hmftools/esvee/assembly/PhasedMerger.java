@@ -56,8 +56,6 @@ public class PhasedMerger extends ThreadTask
         mAssemblyMerger = new AssemblyMerger();
 
         mPhasedResults = Lists.newArrayList();
-
-        start();
     }
 
     @Override

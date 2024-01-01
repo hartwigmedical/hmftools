@@ -61,13 +61,13 @@ public class PrimaryAssembler
                 .collect(Collectors.toList());
 
         final List<Read> withLowQAlignments = realignedReads.stream()
-                .filter(Counter.asPredicate(alignment -> AlignmentFilters.recordSoftClipsNearJunction(alignment, mJunction), mCounters.ReadsSoftClippedAtJunction))
+                .filter(alignment -> AlignmentFilters.recordSoftClipsNearJunction(alignment, mJunction)) // mCounters.ReadsSoftClippedAtJunction
                 .collect(Collectors.toList());
 
         final List<Read> filteredAlignments = withLowQAlignments.stream()
-                .filter(Counter.asPredicate(alignment -> AlignmentFilters.isRecordAverageQualityPastJunctionAbove(alignment, mJunction, SvConstants.AVG_BASE_QUAL_THRESHOLD), mCounters.ReadsPassingJunctionQualityThreshold))
-                .filter(Counter.asPredicate(alignment -> AlignmentFilters.hasAcceptableMapQ(alignment, SvConstants.MIN_MAPQ_START_JUNCTION), mCounters.HasAcceptableMapQ))
-                .filter(Counter.asPredicate(AlignmentFilters::isNotBadlyMapped, mCounters.WellMapped))
+                .filter(alignment -> AlignmentFilters.isRecordAverageQualityPastJunctionAbove(alignment, mJunction, SvConstants.AVG_BASE_QUAL_THRESHOLD)) // mCounters.ReadsPassingJunctionQualityThreshold
+                .filter(alignment -> AlignmentFilters.hasAcceptableMapQ(alignment, SvConstants.MIN_MAPQ_START_JUNCTION)) // mCounters.HasAcceptableMapQ
+                .filter(AlignmentFilters::isNotBadlyMapped) // mCounters.WellMapped
                 .collect(Collectors.toList());
 
         if(filteredAlignments.isEmpty())
@@ -75,13 +75,13 @@ public class PrimaryAssembler
 
         final List<PrimaryAssembly> initialAssemblies = createInitialAssemblies(filteredAlignments);
 
-        mCounters.InitialAssemblies.add(initialAssemblies.size());
+        // mCounters.InitialAssemblies.add(initialAssemblies.size());
 
         final List<PrimaryAssembly> extendedInitial = SvConstants.EXTEND_PRIMARIES
                  ? extendInitial(withLowQAlignments, initialAssemblies) : initialAssemblies;
 
         final List<PrimaryAssembly> dedupedInitial = AssemblyFiltering.trimAndDeduplicate(mSupportChecker, extendedInitial);
-        mCounters.DedupedInitialAssemblies.add(dedupedInitial.size());
+        // mCounters.DedupedInitialAssemblies.add(dedupedInitial.size());
         
         final List<PrimaryAssembly> anchored = createAnchors(realignedReads, dedupedInitial);
 
@@ -100,7 +100,7 @@ public class PrimaryAssembler
         }
 
         final List<PrimaryAssembly> assemblies = AssemblyFiltering.trimAndDeduplicate(mSupportChecker, anchored);
-        mCounters.DedupedAnchoredAssemblies.add(assemblies.size());
+        // mCounters.DedupedAnchoredAssemblies.add(assemblies.size());
 
         // final JunctionMetrics junctionMetrics = new JunctionMetrics(mJunction.Chromosome, mJunction.Position, mJunction.direction(), mCounters);
         // assemblies.forEach(assembly -> assembly.addErrata(junctionMetrics));
@@ -269,7 +269,8 @@ public class PrimaryAssembler
 
         final List<String> flattened = combinedForwards.flatten();
 
-        mCounters.FlattenedInitial.add(flattened.size());
+        // mCounters.FlattenedInitial.add(flattened.size());
+
         final List<PrimaryAssembly> candidateAssemblies = flattened.stream()
                 .filter(assemblyString -> assemblyString.length() >= 10)
                 .map(assemblyString ->
@@ -345,7 +346,7 @@ public class PrimaryAssembler
                 .flatMap(candidateAssembly -> createAnchor(reverseSequences, candidateAssembly).stream())
                 .collect(Collectors.toList());
 
-        mCounters.AnchoredAssemblies.add(anchored.size());
+        // mCounters.AnchoredAssemblies.add(anchored.size());
         return anchored;
     }
 
@@ -371,7 +372,7 @@ public class PrimaryAssembler
         final DiagramSet diagrams = simplifyGraph("Anchor Construction", anchor, false);
 
         final List<String> flattened = anchor.flatten();
-        mCounters.FlattenedAnchors.add(flattened.size());
+        // mCounters.FlattenedAnchors.add(flattened.size());
         final List<PrimaryAssembly> anchoredAssemblies = new ArrayList<>();
 
         for(String flattenedAssembly : flattened)

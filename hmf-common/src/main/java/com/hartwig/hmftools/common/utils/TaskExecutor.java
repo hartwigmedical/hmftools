@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.utils;
 
 import static java.lang.String.format;
+import static java.lang.Thread.State.NEW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -134,6 +135,8 @@ public class TaskExecutor
 
     public static boolean runThreadTasks(final List<Thread> workers)
     {
+        workers.stream().filter(x -> x.getState() == NEW).forEach(x -> x.start());
+
         for(Thread worker : workers)
         {
             try

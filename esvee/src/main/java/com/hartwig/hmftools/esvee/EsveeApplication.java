@@ -3,21 +3,20 @@ package com.hartwig.hmftools.esvee;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.APP_NAME;
+import static com.hartwig.hmftools.esvee.util.CommonUtils.osExtension;
+
+import java.io.File;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.output.ResultsWriter;
-import com.hartwig.hmftools.esvee.processor.Processor;
 
 public class EsveeApplication
 {
     private final SvConfig mConfig;
-    private final Context mContext;
 
     public EsveeApplication(final ConfigBuilder configBuilder)
     {
         mConfig = new SvConfig(configBuilder);
-
-        mContext = Context.create(mConfig);
     }
 
     public void run()
@@ -26,18 +25,26 @@ public class EsveeApplication
 
         SV_LOGGER.info("starting Esvee");
 
-        ResultsWriter resultsWriter = new ResultsWriter(mConfig);
+        JunctionProcessor junctionProcessor = new JunctionProcessor(mConfig);
 
-        Processor processor = new Processor(mConfig, mContext, resultsWriter);
-
-        if(!processor.loadJunctionFiles())
+        if(!junctionProcessor.loadJunctionFiles())
             System.exit(1);
 
-        processor.run();
+        loadAlignerLibrary();
 
-        resultsWriter.close();
+        junctionProcessor.run();
 
         SV_LOGGER.info("Esvee complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    private void loadAlignerLibrary()
+    {
+
+        final var props = System.getProperties();
+        final String candidateBWAPath = "libbwa." + props.getProperty("os.arch") + osExtension();
+
+        if(System.getProperty("LIBBWA_PATH") == null && new File(candidateBWAPath).exists())
+            System.setProperty("LIBBWA_PATH", new File(candidateBWAPath).getAbsolutePath());
     }
 
     public static void main(final String[] args)

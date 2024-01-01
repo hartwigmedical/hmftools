@@ -2,7 +2,7 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import com.hartwig.hmftools.esvee.util.Counter;
 
-public class PrimaryAssemblerCounters extends Counters<PrimaryAssemblerCounters>
+public class PrimaryAssemblerCounters
 {
     private static final String CATEGORY = PrimaryAssemblerCounters.class.getSimpleName();
 
@@ -16,6 +16,7 @@ public class PrimaryAssemblerCounters extends Counters<PrimaryAssemblerCounters>
     public final Counter AnchorConstructionTimeNanos = new Counter(CATEGORY, "Junction Anchoring", true);
     */
 
+    /*
     public final Counter ReadsCrossingJunction = new Counter(CATEGORY, "# Reads crossing junction");
     public final Counter ReadsPassingRawQualityThreshold = new Counter(CATEGORY, "# Reads >baseq threshold");
     public final Counter ReadsPassingJunctionQualityThreshold = new Counter(CATEGORY, "# Reads >baseq threshold at junction");
@@ -29,4 +30,5 @@ public class PrimaryAssemblerCounters extends Counters<PrimaryAssemblerCounters>
     public final Counter FlattenedAnchors = new Counter(CATEGORY, "Flattened Anchors");
     public final Counter AnchoredAssemblies = new Counter(CATEGORY, "Anchored Assemblies");
     public final Counter DedupedAnchoredAssemblies = new Counter(CATEGORY, "Deduped Anchored Assemblies");
+    */
 }

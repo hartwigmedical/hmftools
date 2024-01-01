@@ -1,11 +1,8 @@
 package com.hartwig.hmftools.esvee.processor;
 
-import com.hartwig.hmftools.esvee.assembly.AssemblyExtenderCounters;
-import com.hartwig.hmftools.esvee.assembly.Counters;
-import com.hartwig.hmftools.esvee.assembly.PrimaryAssemblerCounters;
 import com.hartwig.hmftools.esvee.util.Counter;
 
-public class OverallCounters extends Counters<OverallCounters>
+public class OverallCounters
 {
     public final Counter JunctionsProcessed = new Counter("Junctions Processed");
 
@@ -23,9 +20,11 @@ public class OverallCounters extends Counters<OverallCounters>
     public final Counter SupportScanTime = new Counter("Rescan Support Time", true);
     */
 
+    /*
     public final Counter ExtraScannedSupport = new Counter("Extra Support");
 
     public final com.hartwig.hmftools.esvee.assembly.PrimaryAssemblerCounters PrimaryAssemblerCounters = new PrimaryAssemblerCounters();
     public final com.hartwig.hmftools.esvee.assembly.AssemblyExtenderCounters AssemblyExtenderCounters = new AssemblyExtenderCounters();
     public final VariantDeduplicationCounters VariantDeduplicationCounters = new VariantDeduplicationCounters();
+    */
 }

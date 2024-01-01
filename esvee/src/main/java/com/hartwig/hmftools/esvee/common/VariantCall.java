@@ -6,8 +6,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
 import com.hartwig.hmftools.esvee.sequence.AssemblyClassification;
 import com.hartwig.hmftools.esvee.read.Read;
@@ -133,18 +133,21 @@ public class VariantCall
         return LeftChromosome == null || RightChromosome == null;
     }
 
-    public String leftRef(final Context context)
+    public String leftRef(final RefGenomeInterface refGenome)
     {
+        // CHECK: use of N for SGLs?
         if(LeftChromosome == null)
             return "N";
-        return context.ReferenceGenome.getBaseString(LeftChromosome, LeftPosition, LeftPosition);
+
+        return refGenome.getBaseString(LeftChromosome, LeftPosition, LeftPosition);
     }
 
-    public String rightRef(final Context context)
+    public String rightRef(final RefGenomeInterface refGenome)
     {
         if(RightChromosome == null)
             return "N";
-        return context.ReferenceGenome.getBaseString(RightChromosome, RightPosition, RightPosition);
+
+        return refGenome.getBaseString(RightChromosome, RightPosition, RightPosition);
     }
 
     public int quality()
@@ -156,6 +159,8 @@ public class VariantCall
         int supportQuality = (int) (Math.log(germlineSupport() + somaticSupport()) * 2);
         return mappingQuality + supportQuality;
     }
+
+
 
     @SuppressWarnings("DataFlowIssue")
     public String name()

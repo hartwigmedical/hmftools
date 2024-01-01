@@ -102,8 +102,6 @@ public class AssemblyExtender extends ThreadTask
         mNodeFolder = new NodeFolder();
         mExtendedAssemblies = Lists.newArrayList();
         mNextAssemblyNumber = 1;
-
-        start();
     }
 
     @Override
@@ -149,7 +147,7 @@ public class AssemblyExtender extends ThreadTask
 
         List<Read> discordantReads = new DiscordantPairFinder().findDiscordantReads(assembly.supportingReads(), junctionGroup.candidateReads());
 
-        mCounters.DiscordantReadsFound.add(discordantReads.size());
+        // mCounters.DiscordantReadsFound.add(discordantReads.size());
 
         List<ExtendedAssembly> leftExtended = extendLeft(assembly, discordantReads);
 
@@ -273,7 +271,7 @@ public class AssemblyExtender extends ThreadTask
                 .collect(Collectors.toList());
         */
 
-        mCounters.LeftMates.add(mateReads.size());
+        // mCounters.LeftMates.add(mateReads.size());
 
         discordantReads.sort(Comparator.comparingInt(Read::getUnclippedEnd).reversed());
 
@@ -317,10 +315,11 @@ public class AssemblyExtender extends ThreadTask
 
         Direction mateReadDirection = Direction.REVERSE;
 
-        List<ExtendedAssembly> extended = extendAssembly(assembly, assemblyReadDirection, mateReads, discordantReads,
-                checkStartIndices, mateReadDirection, mCounters.LeftMatesAssembled, mCounters.LeftDiscordantReadsAssembled);
+        List<ExtendedAssembly> extended = extendAssembly(
+                assembly, assemblyReadDirection, mateReads, discordantReads,
+                checkStartIndices, mateReadDirection); // , mCounters.LeftMatesAssembled, mCounters.LeftDiscordantReadsAssembled
 
-        mCounters.ExtendLeftAssemblies.add(extended.size());
+        // mCounters.ExtendLeftAssemblies.add(extended.size());
 
         return extended;
     }
@@ -345,7 +344,7 @@ public class AssemblyExtender extends ThreadTask
 
         List<Read> mateReads = findMateReads(assembly, POS_ORIENT);
 
-        mCounters.RightMates.add(mateReads.size());
+        // mCounters.RightMates.add(mateReads.size());
 
         discordantReads.sort(Comparator.comparingInt(Read::getUnclippedStart));
 
@@ -385,10 +384,9 @@ public class AssemblyExtender extends ThreadTask
         Direction mateReadDirection = Direction.FORWARDS;
 
         List<ExtendedAssembly> extended = extendAssembly(
-                assembly, assemblyReadDirection, mateReads, applicableDiscordantReads,
-                checkStartIndices, mateReadDirection, mCounters.RightMatesAssembled, mCounters.RightDiscordantReadsAssembled);
+                assembly, assemblyReadDirection, mateReads, applicableDiscordantReads, checkStartIndices, mateReadDirection);
 
-        mCounters.ExtendRightAssemblies.add(extended.size());
+        // mCounters.ExtendRightAssemblies.add(extended.size());
 
         return extended;
     }
@@ -398,9 +396,7 @@ public class AssemblyExtender extends ThreadTask
             final List<Read> mateAlignments,
             final List<Read> discordantAlignments,
             final Map<Read, Integer> alignmentMinDepth,
-            final Direction alignmentDirection,
-            final Counter mateAttachCounter,
-            final Counter discordantAttachCounter)
+            final Direction alignmentDirection)
     {
         if(mateAlignments.isEmpty() && discordantAlignments.isEmpty())
         {
@@ -416,8 +412,8 @@ public class AssemblyExtender extends ThreadTask
         final HeadNode existing = HeadNode.create(assembly, assemblyDirection);
 
         final List<Read> potentialNewSupport = new ArrayList<>();
-        extendAssembly(existing, potentialNewSupport, mateAlignments, alignmentMinDepth, alignmentDirection, mateAttachCounter);
-        extendAssembly(existing, potentialNewSupport, discordantAlignments, alignmentMinDepth, alignmentDirection, discordantAttachCounter);
+        extendAssembly(existing, potentialNewSupport, mateAlignments, alignmentMinDepth, alignmentDirection); // mateAttachCounter
+        extendAssembly(existing, potentialNewSupport, discordantAlignments, alignmentMinDepth, alignmentDirection); // discordantAttachCounter
 
         final Map<Read, Set<Integer>> supportStartIndices = potentialSupportIndices(existing);
 
@@ -444,7 +440,7 @@ public class AssemblyExtender extends ThreadTask
 
     private void extendAssembly(
             final HeadNode existing, final List<Read> potentialNewSupport, final List<Read> alignments,
-            final Map<Read, Integer> alignmentMinDepth, final Direction alignmentDirection, final Counter attachCounter)
+            final Map<Read, Integer> alignmentMinDepth, final Direction alignmentDirection)
     {
         for(Read read : alignments)
         {
@@ -456,7 +452,7 @@ public class AssemblyExtender extends ThreadTask
                     Objects.requireNonNullElse(depth, 0), Integer.MAX_VALUE))
             {
                 potentialNewSupport.add(read);
-                attachCounter.add(1);
+                // attachCounter.add(1);
             }
         }
     }

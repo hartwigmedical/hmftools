@@ -45,13 +45,14 @@ import static com.hartwig.hmftools.esvee.filters.SoftFilters.applyFilters;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.esvee.Context;
+import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.filters.FilterType;
 import com.hartwig.hmftools.esvee.common.VariantAssembly;
@@ -76,24 +77,34 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class VcfWriter implements AutoCloseable
 {
-    private final Context mContext;
+    private final SvConfig mConfig;
     private final VariantContextWriter mWriter;
     private final List<VariantContext> mVariants = new ArrayList<>();
 
-    public VcfWriter(final Context context, final List<String> sampleNames)
+    public VcfWriter(final SvConfig config)
     {
-        mContext = context;
+        mConfig = config;
 
-        final SAMSequenceDictionary sequenceDictionary = context.ReferenceGenome.refGenomeFile().getSequenceDictionary();
+        if(config.VcfFile != null && !config.VcfFile.isEmpty() && config.RefGenome instanceof RefGenomeSource)
+        {
+            final RefGenomeSource refGenomeSource = (RefGenomeSource) config.RefGenome;
 
-        mWriter = new VariantContextWriterBuilder()
-                .setOutputFile(context.Config.VcfFile)
-                .modifyOption(Options.INDEX_ON_THE_FLY, true)
-                .modifyOption(Options.USE_ASYNC_IO, false)
-                .setReferenceDictionary(sequenceDictionary)
-                .build();
+            final SAMSequenceDictionary sequenceDictionary = refGenomeSource.refGenomeFile().getSequenceDictionary();
 
-        writeHeader(sampleNames);
+            mWriter = new VariantContextWriterBuilder()
+                    .setOutputFile(config.VcfFile)
+                    .modifyOption(Options.INDEX_ON_THE_FLY, true)
+                    .modifyOption(Options.USE_ASYNC_IO, false)
+                    .setReferenceDictionary(sequenceDictionary)
+                    .build();
+
+            writeHeader(mConfig.SampleNames);
+        }
+        else
+        {
+            mWriter = null;
+        }
+
     }
 
     private void writeHeader(final List<String> sampleNames)
@@ -164,6 +175,9 @@ public class VcfWriter implements AutoCloseable
     @Override
     public void close()
     {
+        if(mWriter == null)
+            return;
+
         mVariants.sort(NaturalSortComparator.of(VariantContext::getContig).thenComparingInt(VariantContext::getStart));
         mVariants.forEach(mWriter::add);
         mWriter.close();
@@ -174,7 +188,7 @@ public class VcfWriter implements AutoCloseable
         final String callID = variantCall.compactName();
         final String chromosome = left ? variantCall.LeftChromosome : variantCall.RightChromosome;
         final int position = left ? variantCall.LeftPosition : variantCall.RightPosition;
-        final String ref = left ? variantCall.leftRef(mContext) : variantCall.rightRef(mContext);
+        final String ref = left ? variantCall.leftRef(mConfig.RefGenome) : variantCall.rightRef(mConfig.RefGenome);
         final String descriptor = left ? variantCall.LeftDescriptor : variantCall.RightDescriptor;
         assert descriptor != null;
         final int mapQ = left ? variantCall.LeftMappingQuality : variantCall.RightMappingQuality;

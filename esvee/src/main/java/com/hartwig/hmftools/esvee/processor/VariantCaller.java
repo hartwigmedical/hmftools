@@ -6,7 +6,9 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.MAX_DUP_LENGTH;
+import static com.hartwig.hmftools.esvee.SvConstants.TASK_LOG_COUNT;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import java.util.ArrayList;
@@ -14,48 +16,120 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.common.SampleSupport;
+import com.hartwig.hmftools.esvee.common.ThreadTask;
 import com.hartwig.hmftools.esvee.common.VariantAssembly;
 import com.hartwig.hmftools.esvee.common.VariantCall;
+import com.hartwig.hmftools.esvee.read.BamReader;
 import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
 import com.hartwig.hmftools.esvee.sequence.Alignment;
 import com.hartwig.hmftools.esvee.sequence.AssemblyClassification;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.sequence.ReadSupport;
 import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
-import com.hartwig.hmftools.esvee.util.ParallelMapper;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.util.SequenceUtil;
 
-public class VariantCaller
+public class VariantCaller extends ThreadTask
 {
-    private final ExecutorService mExecutor;
+    private final Queue<AlignedAssembly> mAlignedAssemblyQueue;
+    private final int mAlignedAssemblyCount;
+    private final SvConfig mConfig;
     private final AnchorCigarFactory mAnchorFactory;
 
-    public VariantCaller(final ExecutorService executor)
+    private final List<VariantCall> mVariants;
+
+    public static List<VariantCaller> createThreadTasks(
+            final List<AlignedAssembly> alignedAssemblies, final SvConfig config, final int taskCount, final List<Thread> threadTasks)
     {
-        mExecutor = executor;
+        List<VariantCaller> variantCallers = Lists.newArrayList();
+
+        Queue<AlignedAssembly> alignedAssemblyQueue = new ConcurrentLinkedQueue<>();
+        alignedAssemblyQueue.addAll(alignedAssemblies);
+
+        for(int i = 0; i < taskCount; ++i)
+        {
+            VariantCaller variantCaller = new VariantCaller(config, alignedAssemblyQueue);
+            variantCallers.add(variantCaller);
+            threadTasks.add(variantCaller);
+        }
+
+        SV_LOGGER.debug("splitting {} aligned assemblies for variant calling across {} threads", alignedAssemblies.size(), taskCount);
+
+        return variantCallers;
+    }
+
+    public VariantCaller(final SvConfig config, final Queue<AlignedAssembly> alignedAssemblyQueue)
+    {
+        super("VariantCaller");
+        mAlignedAssemblyQueue = alignedAssemblyQueue;
+        mAlignedAssemblyCount = alignedAssemblyQueue.size();
+        mConfig = config;
         mAnchorFactory = new AnchorCigarFactory();
+        mVariants = Lists.newArrayList();
     }
 
-    public List<VariantCall> callVariants(final List<AlignedAssembly> assemblies)
+    @Override
+    public void run()
     {
-        return ParallelMapper.flatMap(mExecutor, assemblies, assembly -> callVariants(assembly));
+        while(true)
+        {
+            try
+            {
+                int remainingCount = mAlignedAssemblyQueue.size();
+                int processedCount = mAlignedAssemblyCount - remainingCount;
+
+                AlignedAssembly alignedAssembly = mAlignedAssemblyQueue.remove();
+
+                mPerfCounter.start();
+
+                callVariants(alignedAssembly);
+
+                stopCheckLog(alignedAssembly.toString(), mConfig.PerfLogTime);
+
+                if(processedCount > 0 && (processedCount % TASK_LOG_COUNT) == 0)
+                {
+                    SV_LOGGER.info("called variants on {} aligned assemblies, remaining({})", processedCount, remainingCount);
+                }
+            }
+            catch(NoSuchElementException e)
+            {
+                SV_LOGGER.trace("all tasks complete");
+                break;
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+                System.exit(1);
+            }
+        }
     }
 
-    public List<VariantCall> callVariants(final AlignedAssembly assembly)
+    public static List<VariantCall> mergeVariantCalls(final List<VariantCaller> variantCallers)
     {
-        final List<VariantCall> calls = new ArrayList<>();
+        List<VariantCall> initialVariants = Lists.newArrayList();
+        variantCallers.forEach(x -> initialVariants.addAll(x.mVariants));
+        return initialVariants;
+    }
+
+    public void callVariants(final AlignedAssembly assembly)
+    {
+        List<VariantCall> calls = Lists.newArrayList();
 
         Alignment next = null;
         Alignment current = null;
@@ -65,9 +139,11 @@ public class VariantCaller
             previous = current;
             current = next;
             next = alignment;
+
+            // FIXME: what is this charaacter constant?
             if(current != null && current.Chromosome.equals("-") && !calls.isEmpty())
             {
-                return calls;
+                return;
             }
 
             if(current == null || current.Chromosome.equals("-"))
@@ -86,7 +162,7 @@ public class VariantCaller
         if(last != null)
             calls.add(last);
 
-        return calls;
+        mVariants.addAll(calls);
     }
 
     @Nullable

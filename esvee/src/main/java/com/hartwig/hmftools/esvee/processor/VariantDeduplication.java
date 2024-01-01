@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.processor;
 
+import static java.lang.String.format;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -7,79 +9,84 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.esvee.Context;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.common.SampleSupport;
 import com.hartwig.hmftools.esvee.common.VariantAssembly;
 import com.hartwig.hmftools.esvee.common.VariantCall;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.sequence.ReadSupport;
-import com.hartwig.hmftools.esvee.util.ParallelMapper;
 
 import org.apache.commons.lang3.tuple.Pair;
 
 public class VariantDeduplication
 {
-    private final Context mContext;
     private final VariantDeduplicationCounters mCounters;
 
-    public VariantDeduplication(final Context context, final VariantDeduplicationCounters counters)
+    public VariantDeduplication()
     {
-        mContext = context;
-        mCounters = counters;
+        mCounters = new VariantDeduplicationCounters(); // previously took a global set
     }
 
     public List<VariantCall> deduplicate(final List<VariantCall> variants)
     {
-        final List<VariantCall> matchedGroups = deduplicateMatchedGroups(variants);
-        final List<VariantCall> cleaned = removeIdenticalAssemblies(matchedGroups);
-        final List<VariantCall> withSGLsMerged = mergeSGLsWithNearbyDoubles(cleaned);
-        final List<VariantCall> deduped = deduplicateNearbyVariants(withSGLsMerged);
+        List<VariantCall> matchedGroups = deduplicateMatchedGroups(variants);
+        List<VariantCall> cleaned = removeIdenticalAssemblies(matchedGroups);
+        List<VariantCall> withSGLsMerged = mergeSGLsWithNearbyDoubles(cleaned);
+        List<VariantCall> deduped = deduplicateNearbyVariants(withSGLsMerged);
 
         mCounters.VariantsRemoved.add(variants.size() - deduped.size());
 
         return deduped;
     }
 
-    /** Finds variants that have identical descriptors, and de-duplicates them */
     private List<VariantCall> deduplicateMatchedGroups(final List<VariantCall> variants)
     {
-        final Map<String, List<VariantCall>> callsByPairLocation = new HashMap<>();
-        for(VariantCall call : variants)
+        // finds variants that have identical descriptors, and de-duplicate them
+        Map<String,List<VariantCall>> variantsByPairLocation = Maps.newHashMap();
+
+        for(VariantCall variant : variants)
         {
-            if(call.isSingleSided())
-            {
-                final String key = Objects.requireNonNullElse(call.LeftDescriptor, call.RightDescriptor);
-                callsByPairLocation.computeIfAbsent(key, k -> new ArrayList<>()).add(call);
-                continue;
-            }
-
-            final var key = String.format("%s:%s-%s:%s (%s/%s)",
-                    call.LeftChromosome, call.LeftPosition,
-                    call.RightChromosome, call.RightPosition,
-                    call.LeftDescriptor, call.RightDescriptor);
-
-            callsByPairLocation.computeIfAbsent(key, k -> new ArrayList<>()).add(call);
+            String variantKey = formVariantKey(variant);
+            variantsByPairLocation.computeIfAbsent(variantKey, k -> new ArrayList<>()).add(variant);
         }
 
-        final List<List<VariantCall>> groups = new ArrayList<>(callsByPairLocation.values());
+        List<List<VariantCall>> groups = new ArrayList<>(variantsByPairLocation.values());
 
-        return ParallelMapper.mapWithCounter(mContext.Executor, groups, this::deduplicateMatchedGroup, null);
+        // FIXME: was multi-threaded - is it beneficial to be?
+        // return ParallelMapper.mapWithCounter(mContext.Executor, groups, this::deduplicateMatchedGroup, null);
+
+        List<VariantCall> dedupedVariants = groups.stream().map(x -> deduplicateMatchedGroup(x)).collect(Collectors.toList());
+        return dedupedVariants;
     }
 
-    private VariantCall deduplicateMatchedGroup(final List<VariantCall> variants)
+    private static String formVariantKey(final VariantCall variant)
+    {
+        if(variant.isSingleSided())
+        {
+            return variant.LeftDescriptor != null ? variant.LeftDescriptor : variant.RightDescriptor;
+        }
+        else
+        {
+            return format("%s:%s-%s:%s (%s/%s)",
+                    variant.LeftChromosome, variant.LeftPosition, variant.RightChromosome, variant.RightPosition,
+                    variant.LeftDescriptor, variant.RightDescriptor);
+        }
+    }
+
+    private VariantCall deduplicateMatchedGroup(List<VariantCall> variants)
     {
         if(variants.size() == 1)
             return variants.get(0);
+
         mCounters.MatchedGroupRemoved.add(variants.size());
 
-        final Set<Integer> newPhaseSets = new HashSet<>();
-        final Set<VariantAssembly> newAssemblies = new HashSet<>();
-        final Map<String, List<SampleSupport>> sampleSupport = new LinkedHashMap<>();
+        Set<Integer> newPhaseSets = new HashSet<>();
+        Set<VariantAssembly> newAssemblies = new HashSet<>();
+        Map<String, List<SampleSupport>> sampleSupport = new LinkedHashMap<>();
         int leftMapQ = 0, rightMapQ = 0;
         for(VariantCall call : variants)
         {
@@ -96,16 +103,16 @@ public class VariantDeduplication
             rightMapQ = Math.max(rightMapQ, call.RightMappingQuality);
         }
 
-        final List<SampleSupport> newSampleSupport = new ArrayList<>();
+        List<SampleSupport> newSampleSupport = new ArrayList<>();
         for(List<SampleSupport> sampleSupportList : sampleSupport.values())
         {
-            final String sampleName = sampleSupportList.get(0).sampleName();
-            final int quality = sampleSupportList.stream().mapToInt(SampleSupport::quality).max().orElseThrow();
+            String sampleName = sampleSupportList.get(0).sampleName();
+            int quality = sampleSupportList.stream().mapToInt(SampleSupport::quality).max().orElseThrow();
 
-            final Set<Read> splitReads = sampleSupportList.stream()
+            Set<Read> splitReads = sampleSupportList.stream()
                     .flatMap(s -> s.splitReads().stream())
                     .collect(Collectors.toSet());
-            final Set<Read> discordantReads = sampleSupportList.stream()
+            Set<Read> discordantReads = sampleSupportList.stream()
                     .flatMap(s -> s.discordantReads().stream())
                     .filter(record -> !splitReads.contains(record))
                     .collect(Collectors.toSet());
@@ -113,16 +120,19 @@ public class VariantDeduplication
             newSampleSupport.add(new SampleSupport(sampleName, quality, splitReads, discordantReads));
         }
 
-        final VariantCall existing = variants.get(0);
+        VariantCall existing = variants.get(0);
         return VariantCall.create(existing.LeftChromosome, existing.LeftPosition, existing.RightChromosome, existing.RightPosition,
                 existing.LeftDescriptor, existing.RightDescriptor, newPhaseSets, newAssemblies,
                 leftMapQ, rightMapQ, newSampleSupport, existing.Classification);
     }
 
-    /** For each assembly,  */
     private List<VariantCall> removeIdenticalAssemblies(final List<VariantCall> variants)
     {
-        return ParallelMapper.mapWithCounter(mContext.Executor, variants, this::removeIdenticalAssemblies,null);
+        // FIXME: was multi-threaded - how beneficial
+        // return ParallelMapper.mapWithCounter(mContext.Executor, variants, this::removeIdenticalAssemblies,null);
+
+        List<VariantCall> adjustedVariants = variants.stream().map(x -> removeIdenticalAssemblies(x)).collect(Collectors.toList());
+        return adjustedVariants;
     }
 
     private VariantCall removeIdenticalAssemblies(final VariantCall variant)
@@ -130,7 +140,7 @@ public class VariantDeduplication
         if(variant.associatedAssemblies().size() == 1)
             return variant;
 
-        final Map<Pair<String, Integer>, VariantAssembly> assemblies = variant.variantAssemblies().stream()
+        Map<Pair<String, Integer>, VariantAssembly> assemblies = variant.variantAssemblies().stream()
                 .collect(Collectors.toMap(assembly -> Pair.of(assembly.Assembly.Assembly, assembly.LeftPosition),
                         assembly -> assembly, (left, right) ->
                         {
@@ -146,12 +156,14 @@ public class VariantDeduplication
                             return left;
                         }, LinkedHashMap::new));
 
-        final Set<VariantAssembly> newAssemblies = new LinkedHashSet<>(assemblies.values());
-        final int assembliesRemoved = variant.associatedAssemblies().size() - newAssemblies.size();
+        Set<VariantAssembly> newAssemblies = new LinkedHashSet<>(assemblies.values());
+        int assembliesRemoved = variant.associatedAssemblies().size() - newAssemblies.size();
+
         if(assembliesRemoved == 0)
             return variant;
 
         mCounters.AssembliesRemoved.add(assembliesRemoved);
+
         return VariantCall.create(variant.LeftChromosome, variant.LeftPosition,
                 variant.RightChromosome, variant.RightPosition,
                 variant.LeftDescriptor, variant.RightDescriptor, variant.PhaseSets,
@@ -162,7 +174,7 @@ public class VariantDeduplication
     private List<VariantCall> mergeSGLsWithNearbyDoubles(final List<VariantCall> variants)
     {
         // Index double-ended variants
-        final Map<String, TreeMap<Integer, List<VariantCall>>> indexedVariants = new HashMap<>();
+        Map<String, TreeMap<Integer, List<VariantCall>>> indexedVariants = new HashMap<>();
         for(VariantCall call : variants)
         {
             if(call.isSingleSided())

@@ -52,8 +52,6 @@ public class JunctionGroupAssembler extends ThreadTask
         mReadGroupMap = Maps.newHashMap();
         mCurrentJunctionGroup = null;
         mPrimaryAssemblies = Lists.newArrayList();
-
-        start();
     }
 
     public List<PrimaryAssembly> primaryAssemblies() { return mPrimaryAssemblies; }
