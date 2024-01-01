@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.processor;
+package com.hartwig.hmftools.esvee.assembly;
 
 public class SequenceMergerTest
 {

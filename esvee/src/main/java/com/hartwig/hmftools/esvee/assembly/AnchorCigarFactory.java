@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.processor;
+package com.hartwig.hmftools.esvee.assembly;
 
 import java.util.ArrayList;
 import java.util.Collections;

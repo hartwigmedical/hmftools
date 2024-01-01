@@ -3,7 +3,7 @@ package com.hartwig.hmftools.esvee.sequence;
 import java.util.Arrays;
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.processor.SequenceDecomposer;
+import com.hartwig.hmftools.esvee.assembly.SequenceDecomposer;
 
 public interface Sequence
 {

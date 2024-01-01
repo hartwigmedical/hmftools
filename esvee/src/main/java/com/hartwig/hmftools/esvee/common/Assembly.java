@@ -9,7 +9,7 @@ import java.util.Objects;
 import com.hartwig.hmftools.esvee.html.DiagramSet;
 import com.hartwig.hmftools.esvee.sequence.Sequence;
 import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
-import com.hartwig.hmftools.esvee.processor.SequenceDecomposer;
+import com.hartwig.hmftools.esvee.assembly.SequenceDecomposer;
 
 import org.jetbrains.annotations.Nullable;
 

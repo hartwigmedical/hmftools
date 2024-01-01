@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.esvee.util.Counter;
 import com.hartwig.hmftools.esvee.util.CommonUtils;
-import com.hartwig.hmftools.esvee.processor.OverallCounters;
+import com.hartwig.hmftools.esvee.assembly.OverallCounters;
 import com.hartwig.hmftools.esvee.common.VariantCall;
 
 import org.apache.commons.compress.utils.IOUtils;

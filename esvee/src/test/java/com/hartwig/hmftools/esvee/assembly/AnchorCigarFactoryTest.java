@@ -1,7 +1,8 @@
-package com.hartwig.hmftools.esvee.processor;
+package com.hartwig.hmftools.esvee.assembly;
 
 import java.util.List;
 
+import com.hartwig.hmftools.esvee.assembly.AnchorCigarFactory;
 import com.hartwig.hmftools.esvee.sequence.Alignment;
 
 import org.apache.commons.lang3.tuple.Pair;

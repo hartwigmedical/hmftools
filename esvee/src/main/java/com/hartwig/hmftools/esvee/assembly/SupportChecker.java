@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.sequence.Sequence;
-import com.hartwig.hmftools.esvee.processor.SequenceDecomposer;
 
 import org.jetbrains.annotations.Nullable;
 

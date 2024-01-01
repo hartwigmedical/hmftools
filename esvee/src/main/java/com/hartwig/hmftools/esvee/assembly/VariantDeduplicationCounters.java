@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.processor;
+package com.hartwig.hmftools.esvee.assembly;
 
 import com.hartwig.hmftools.esvee.util.Counter;
 

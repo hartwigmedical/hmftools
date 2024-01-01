@@ -14,15 +14,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
-import javax.annotation.concurrent.ThreadSafe;
-
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.CigarUtils;
 import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.common.ThreadTask;
-import com.hartwig.hmftools.esvee.processor.HomologySlider;
 import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
 import com.hartwig.hmftools.esvee.sequence.Alignment;
 import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;

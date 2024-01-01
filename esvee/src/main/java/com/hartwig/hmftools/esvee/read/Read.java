@@ -12,7 +12,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.esvee.sequence.Alignment;
 import com.hartwig.hmftools.esvee.sequence.Sequence;
-import com.hartwig.hmftools.esvee.processor.SequenceDecomposer;
+import com.hartwig.hmftools.esvee.assembly.SequenceDecomposer;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;

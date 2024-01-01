@@ -8,10 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.processor.Problem;
-import com.hartwig.hmftools.esvee.processor.SequenceMerger;
 import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.sequence.ReadSupport;
@@ -25,12 +22,10 @@ import org.jetbrains.annotations.Nullable;
 public class AssemblyMerger
 {
     private final SupportChecker mSupportChecker;
-    private final List<Problem> mProblems;
 
     public AssemblyMerger()
     {
         mSupportChecker = new SupportChecker();
-        mProblems = Lists.newArrayList();
     }
 
     public List<PrimaryAssembly> consolidatePrimaryAssemblies(final List<PrimaryAssembly> primaryAssemblies) // was consolidateNearbyAssemblies
@@ -129,8 +124,7 @@ public class AssemblyMerger
                 }
                 catch(final Throwable throwable)
                 {
-                    mProblems.add(new Problem(String.format("Problem merging %s and %s", current.Name, next.Name),
-                            throwable, current));
+                    SV_LOGGER.error("error consolidating near-by assemblies: {} and {}", current.Name, next.Name);
                 }
             }
 
