@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.esvee.assembly.Aligner.mergeAlignedAssemblies
 import static com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler.mergePrimaryAssemblies;
 import static com.hartwig.hmftools.esvee.assembly.PhasedMerger.createThreadTasks;
 import static com.hartwig.hmftools.esvee.assembly.PhasedMerger.mergePhasedResults;
+import static com.hartwig.hmftools.esvee.common.Junction.validateJunctionMap;
 import static com.hartwig.hmftools.esvee.common.JunctionGroup.buildJunctionGroups;
 import static com.hartwig.hmftools.esvee.assembly.VariantCaller.mergeVariantCalls;
 
@@ -102,6 +103,9 @@ public class JunctionProcessor
 
             Junction.mergeJunctions(mChrJunctionsMap, newJunctionsMap);
         }
+
+        // if(mConfig.PerfDebug && !validateJunctionMap(mChrJunctionsMap))
+        //    System.exit(1);
 
         if(mConfig.JunctionFiles.size() > 1)
         {
@@ -376,209 +380,6 @@ public class JunctionProcessor
         mResultsWriter.writeVariantAssemblyBamRecords(mVariantCalls);
 
     }
-
-    /*
-    public List<VariantCall> run(final List<Junction> junctions, final Map<String,List<JunctionGroup>> junctionGroupMap)
-    {
-        List<JunctionGroup> junctionGroups = Lists.newArrayList();
-        junctionGroupMap.values().forEach(x -> junctionGroups.addAll(x));
-
-        mCounters.JunctionsProcessed.add(junctions.size());
-
-        Collections.sort(junctionGroups);
-
-        List<BamReader> bamReaders = Lists.newArrayList();
-        List<Thread> threadTasks = new ArrayList<>();
-
-        int taskCount = min(junctionGroups.size(), mConfig.Threads);
-
-        for(int i = 0; i < taskCount; ++i)
-        {
-            BamReader bamReader = new BamReader(mConfig);
-            bamReaders.add(bamReader);
-        }
-
-        // Primary Junction Assembly
-        List<JunctionGroupAssembler> primaryAssemblyTasks = JunctionGroupAssembler.createThreadTasks(
-                junctionGroups, bamReaders, mConfig, taskCount, threadTasks);
-
-        if(!runThreadTasks(threadTasks))
-            System.exit(1);
-
-        List<PrimaryAssembly> primaryAssemblies = mergePrimaryAssemblies(primaryAssemblyTasks);
-
-        mPerfCounters.add(ThreadTask.mergePerfCounters(primaryAssemblyTasks.stream().collect(Collectors.toList())));
-        primaryAssemblyTasks.clear();
-        threadTasks.clear();
-
-        SV_LOGGER.info("created {} primary assemblies", primaryAssemblies.size());
-
-        int totalCachedReads = junctionGroups.stream().mapToInt(x -> x.candidateReadCount()).sum();
-        SV_LOGGER.debug("cached read count({}) from {} junction groups", totalCachedReads, junctionGroups.size());
-
-        // Inter-junction deduplication
-        // FIXME: surely can just be within junction groups or at least same chromosome?
-        AssemblyMerger assemblyMerger = new AssemblyMerger(); // only instantiated because of SupportChecker
-
-        List<PrimaryAssembly> mergedPrimaryAssemblies = assemblyMerger.consolidatePrimaryAssemblies(primaryAssemblies);
-
-        SV_LOGGER.info("reduced to {} assemblies", mergedPrimaryAssemblies.size());
-
-        if(!mConfig.OtherDebug)
-            primaryAssemblies.clear();
-
-        // CHECK
-        // if(mConfig.dropGermline())
-        //    primaryAssemblies.removeIf(assembly -> assembly.getSupportRecords().stream().anyMatch(Record::isGermline));
-
-        // assembly extension
-        List<AssemblyExtender> assemblyExtenderTasks = AssemblyExtender.createThreadTasks(
-                junctionGroupMap, mergedPrimaryAssemblies, mConfig, taskCount, threadTasks);
-
-        if(!runThreadTasks(threadTasks))
-            System.exit(1);
-
-        List<ExtendedAssembly> extendedAssemblies = Lists.newArrayList();
-        assemblyExtenderTasks.forEach(x -> extendedAssemblies.addAll(x.extendedAssemblies()));
-
-        mPerfCounters.add(ThreadTask.mergePerfCounters(assemblyExtenderTasks.stream().collect(Collectors.toList())));
-        assemblyExtenderTasks.clear();
-        threadTasks.clear();
-
-        if(!mConfig.OtherDebug)
-        {
-            primaryAssemblies.clear();
-        }
-
-        // FIXME: now clear all cached reads not assigned as support
-        junctionGroups.forEach(x -> x.clearCandidateReads());
-
-        SV_LOGGER.info("created {} extended assemblies", extendedAssemblies.size());
-
-        // Primary phasing
-        List<Set<ExtendedAssembly>> primaryPhaseSets = PrimaryPhasing.run(extendedAssemblies);
-
-        SV_LOGGER.info("created {} primary phase sets", primaryPhaseSets.size());
-
-        if(!mConfig.OtherDebug)
-            extendedAssemblies.clear();
-
-        // Phased assembly merging
-        List<PhasedMerger> phasedMergerTasks = createThreadTasks(primaryPhaseSets, mConfig, taskCount, threadTasks);
-
-        if(!runThreadTasks(threadTasks))
-            System.exit(1);
-
-        List<Set<ExtendedAssembly>> mergedPhaseSets = mergePhasedResults(phasedMergerTasks);
-
-        mPerfCounters.add(ThreadTask.mergePerfCounters(phasedMergerTasks.stream().collect(Collectors.toList())));
-        phasedMergerTasks.clear();
-        threadTasks.clear();
-
-        SV_LOGGER.info("merged to {} primary phase sets", mergedPhaseSets.size());
-
-        // secondary phasing, not multi-threaded but could it be?
-        List<Set<ExtendedAssembly>> secondaryPhaseSets = SecondaryPhasing.run(mergedPhaseSets);
-        SV_LOGGER.info("created {} secondary phase sets", secondaryPhaseSets.size());
-
-        // Secondary merging
-        List<GappedAssembly> mergedSecondaries = Lists.newArrayList();
-
-        // FIXME: Gapped assemblies
-        //for(int i = 0; i < secondaryPhaseSets.size(); i++)
-        //    mergedSecondaries.add(createGapped(secondaryPhaseSets.get(i), i));
-        for(int i = 0; i < secondaryPhaseSets.size(); i++)
-        {
-            Set<ExtendedAssembly> phaseSet = secondaryPhaseSets.get(i);
-            int j = 0;
-            for(ExtendedAssembly assembly : phaseSet)
-            {
-                GappedAssembly newAssembly = new GappedAssembly(String.format("Assembly%s-%s", i, j++), List.of(assembly));
-                newAssembly.addErrata(assembly.getAllErrata());
-
-                assembly.readSupport().forEach(x -> newAssembly.addEvidenceAt(x.Read, x.Index));
-
-                mergedSecondaries.add(newAssembly);
-            }
-        }
-
-        SV_LOGGER.info("merged to {} secondaries", mergedSecondaries.size());
-
-        // alignment and now includes adjustment for homology
-        List<Aligner> alignerTasks = Aligner.createThreadTasks(mergedSecondaries, mConfig, taskCount, threadTasks);
-
-        if(!runThreadTasks(threadTasks))
-            System.exit(1);
-
-        List<AlignedAssembly> alignedAssemblies = mergeAlignedAssemblies(alignerTasks);
-
-        mPerfCounters.add(ThreadTask.mergePerfCounters(alignerTasks.stream().collect(Collectors.toList())));
-        alignerTasks.clear();
-        threadTasks.clear();
-
-        SV_LOGGER.info("created {} alignments", alignedAssemblies.size());
-
-        // FIXME: consider not rescanning any aligned assembly that matches exactly or closely to the original
-        List<SupportScanner> supportScannerTasks = SupportScanner.createThreadTasks(
-                alignedAssemblies, bamReaders, mConfig, taskCount, threadTasks);
-
-        if(!runThreadTasks(threadTasks))
-            System.exit(1);
-
-        mPerfCounters.add(ThreadTask.mergePerfCounters(alignerTasks.stream().collect(Collectors.toList())));
-        int rescannedAddedReadCount = supportScannerTasks.stream().mapToInt(x -> x.addedReadCount()).sum();
-        alignerTasks.clear();
-        threadTasks.clear();
-
-        SV_LOGGER.info("rescanned support, adding {} new reads", rescannedAddedReadCount);
-
-        // variant calling
-        List<VariantCall> variants = new VariantCaller(mContext.Executor).callVariants(alignedAssemblies);
-        SV_LOGGER.info("called {} variants", variants.size());
-
-        // variant deduplication
-        VariantDeduplication deduplicator = new VariantDeduplication(mContext, mCounters.VariantDeduplicationCounters);
-        List<VariantCall> deduplicated = deduplicator.deduplicate(variants);
-
-        SV_LOGGER.info("{} variants remaining after deduplication", deduplicated.size());
-        deduplicated.removeIf(variant -> variant.supportingFragments().isEmpty());
-        SV_LOGGER.info("{} variants remaining after removing unsubstantiated", deduplicated.size());
-
-        long lowQualityVariants = deduplicated.stream()
-                .filter(variant -> variant.quality() < SvConstants.VCFLOWQUALITYTHRESHOLD)
-                .count();
-        SV_LOGGER.info("{} low-quality variants found", lowQualityVariants);
-
-        long lowSupportVariants = deduplicated.stream()
-                .filter(variant -> variant.quality() >= SvConstants.VCFLOWQUALITYTHRESHOLD)
-                .filter(variant -> variant.supportingFragments().size() < SvConstants.MIN_READS_SUPPORT_ASSEMBLY)
-                .count();
-        SV_LOGGER.info("{} low-support variants found (excl low-quality)", lowSupportVariants);
-
-        // CHECK
-        if(mConfig.dropGermline())
-        {
-            deduplicated.removeIf(VariantCall::isGermline);
-            SV_LOGGER.info("{} variants remaining after dropping those with germline support", deduplicated.size());
-        }
-
-        if(mConfig.writeHtmlFiles())
-            writeHTMLSummaries(deduplicated);
-
-        writeVCF(deduplicated);
-
-        if(mConfig.WriteTypes.contains(WriteType.BREAKEND_TSV))
-        {
-            deduplicated.forEach(x -> mResultsWriter.writeVariant(x));
-        }
-
-        mResultsWriter.writeVariantAssemblyBamRecords(deduplicated);
-
-        mPerfCounters.forEach(x -> x.logStats());
-
-        return deduplicated;
-    }
-    */
 
     private void writeHTMLSummaries(final List<VariantCall> variants)
     {

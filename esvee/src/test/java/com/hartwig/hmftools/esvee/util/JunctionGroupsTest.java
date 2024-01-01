@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.util;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.common.Junction.validateJunctionMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -39,8 +40,8 @@ public class JunctionGroupsTest
 
         newJunctions.add(new Junction(CHR_1, 95, POS_ORIENT));
         newJunctions.add(new Junction(CHR_1, 115, POS_ORIENT));
-        newJunctions.add(new Junction(CHR_1, 120, NEG_ORIENT)); // dup
         newJunctions.add(new Junction(CHR_1, 120, POS_ORIENT)); // dup
+        newJunctions.add(new Junction(CHR_1, 120, NEG_ORIENT)); // dup
         newJunctions.add(new Junction(CHR_1, 130, POS_ORIENT));
         newJunctions.add(new Junction(CHR_1, 135, NEG_ORIENT));
         newJunctions.add(new Junction(CHR_1, 140, NEG_ORIENT)); // dup
@@ -49,10 +50,6 @@ public class JunctionGroupsTest
         Junction.mergeJunctions(existingMap, newMap);
 
         assertEquals(11, existingJunctions.size());
-
-        for(int i = 0; i < existingJunctions.size() - 1; ++i)
-        {
-            assertTrue(existingJunctions.get(i).Position <= existingJunctions.get(i + 1).Position);
-        }
+        assertTrue(validateJunctionMap(existingMap));
     }
 }

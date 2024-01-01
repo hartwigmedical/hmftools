@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ORIENTATION;
@@ -62,6 +63,14 @@ public class Junction implements Comparable<Junction>
     {
         return Position == other.Position && Orientation == other.Orientation;
     }
+
+    public boolean lower(final Junction other)
+    {
+        return Position < other.Position
+                || (Position == other.Position && Orientation == POS_STRAND && other.Orientation == NEG_STRAND);
+    }
+
+    public boolean higher(final Junction other) { return !lower(other); }
 
     @Override
     public int compareTo(final Junction other)
@@ -129,6 +138,8 @@ public class Junction implements Comparable<Junction>
 
             SV_LOGGER.info("loaded {} junctions from file: {}", junctionCount, filename);
 
+            chrJunctionsMap.values().forEach(x -> Collections.sort(x));
+
             return chrJunctionsMap;
         }
         catch(IOException exception)
@@ -186,32 +197,17 @@ public class Junction implements Comparable<Junction>
                     {
                         // a match so move both, and without inserting a new entry
                         moveNew = true;
-
-                        // preempt a match with the next but out of order in orientation
-                        if(newIndex < newJunctions.size() - 1 && existingIndex > 0
-                        && existingJunctions.get(existingIndex - 1).isLocalMatch(newJunctions.get(newIndex + 1)))
-                        {
-                            --existingIndex;
-                            existingJunction = existingJunctions.get(existingIndex);
-                        }
-                        else
-                        {
-                            moveExisting = true;
-                        }
+                        moveExisting = true;
                     }
-                    else if(newJunction.Position > existingJunction.Position)
+                    else if(newJunction.higher(existingJunction))
                     {
                         moveExisting = true;
                     }
-                    else if(newJunction.Position < existingJunction.Position)
+                    else if(newJunction.lower(existingJunction))
                     {
                         existingJunctions.add(existingIndex, newJunction);
                         ++existingIndex;
                         moveNew = true;
-                    }
-                    else if(existingJunction.Orientation != newJunction.Orientation)
-                    {
-                        moveExisting = true;
                     }
                     else
                     {
@@ -242,5 +238,42 @@ public class Junction implements Comparable<Junction>
                 }
             }
         }
+    }
+
+    public static boolean validateJunctionMap(final Map<String,List<Junction>> map)
+    {
+        // checks order and for duplicates
+        for(List<Junction> junctions : map.values())
+        {
+            for(int i = 0; i < junctions.size() - 1; ++i)
+            {
+                Junction junction = junctions.get(i);
+                Junction nextJunction = junctions.get(i + 1);
+
+                if(junction.isLocalMatch(nextJunction))
+                {
+                    SV_LOGGER.error("junction({}:{}) duplicate", i, junction);
+                    return false;
+                }
+
+                if(junction.Position > nextJunction.Position)
+                {
+                    SV_LOGGER.error("junction({}:{}) after next({})", i, junction, nextJunction);
+                    return false;
+                }
+
+                // duplicates
+                for(int j = i + 1; j < junctions.size(); ++j)
+                {
+                    if(junction.isLocalMatch(junctions.get(j)))
+                    {
+                        SV_LOGGER.error("junction({}:{}) duplicate with later index({})", i, junction, j);
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 }
