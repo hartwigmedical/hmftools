@@ -3,29 +3,19 @@ package com.hartwig.hmftools.esvee.assembly;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.common.RegionOfInterest;
-import com.hartwig.hmftools.esvee.processor.HomologySlider;
 import com.hartwig.hmftools.esvee.processor.Problem;
 import com.hartwig.hmftools.esvee.processor.SequenceMerger;
-import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
 import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;
-import com.hartwig.hmftools.esvee.sequence.GappedAssembly;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.sequence.ReadSupport;
 import com.hartwig.hmftools.esvee.sequence.Sequence;
-import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 import com.hartwig.hmftools.esvee.util.CommonUtils;
 import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
 
@@ -189,6 +179,7 @@ public class AssemblyMerger
 
     public Set<ExtendedAssembly> primaryPhasedMerging(final Set<ExtendedAssembly> primaryPhaseSet)
     {
+        // CHECK: use of break goto
         try
         {
             final Set<ExtendedAssembly> result = new HashSet<>(primaryPhaseSet);
@@ -274,66 +265,4 @@ public class AssemblyMerger
 
         return merged;
     }
-
-    public AlignedAssembly mergeAlignedAssembly(
-            final AlignedAssembly left, final AlignedAssembly right, final int supportIndex,
-            final HomologySlider homologySlider, final Aligner aligner)
-    {
-        final Sequence mergedSequence = SequenceMerger.merge(left, right, supportIndex);
-
-        final ExtendedAssembly merged = new ExtendedAssembly(left.Name, mergedSequence.getBasesString(), left.Source);
-        left.Source.Sources.get(0).Diagrams.forEach(merged::addDiagrams);
-
-        final GappedAssembly gapped = new GappedAssembly(merged.Name, List.of(merged));
-        reAddSupport(gapped, left);
-        reAddSupport(gapped, right);
-
-        return homologySlider.slideHomology(aligner.align(gapped));
-    }
-
-    private void reAddSupport(final SupportedAssembly merged, final SupportedAssembly old)
-    {
-        final int offset = merged.Assembly.indexOf(old.Assembly);
-
-        for(ReadSupport readSupport : old.readSupport())
-        {
-            Read potentialSupport = readSupport.Read;
-
-            if(offset != -1)
-            {
-                int oldSupportIndex = readSupport.Index;
-                if(mSupportChecker.AssemblySupport.supportsAt(merged, potentialSupport, oldSupportIndex + offset))
-                {
-                    merged.addEvidenceAt(potentialSupport, oldSupportIndex + offset);
-                    continue;
-                }
-            }
-            merged.tryAddSupport(mSupportChecker, potentialSupport);
-        }
-    }
-
-    private List<ExtendedAssembly> orderExtendedAssemnblies(final Collection<ExtendedAssembly> assemblies)
-    {
-        // FIXME: Correctly order these
-        if(assemblies.size() > 1)
-            SV_LOGGER.warn("Found more than 1 assembly ({}) while creating gapped ({})", assemblies.size(),
-                    assemblies.stream().map(assembly -> assembly.Name).collect(Collectors.toList()));
-
-        final Map<ExtendedAssembly, Map<ExtendedAssembly, Long>> leftWise = new IdentityHashMap<>();
-        final Map<ExtendedAssembly, Map<ExtendedAssembly, Long>> rightWise = new IdentityHashMap<>();
-        for(ExtendedAssembly first : assemblies)
-            for(ExtendedAssembly second : assemblies)
-            {
-                if(first == second)
-                    continue;
-
-
-
-            }
-
-        return new ArrayList<>(assemblies);
-    }
-
-
-
 }

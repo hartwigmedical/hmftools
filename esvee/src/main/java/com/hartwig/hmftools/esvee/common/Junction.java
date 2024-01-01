@@ -127,41 +127,120 @@ public class Junction implements Comparable<Junction>
                 ++junctionCount;
             }
 
-            SV_LOGGER.info("loaded {} existing junctions from file: {}", junctionCount, filename);
+            SV_LOGGER.info("loaded {} junctions from file: {}", junctionCount, filename);
 
             return chrJunctionsMap;
         }
         catch(IOException exception)
         {
-            SV_LOGGER.error("failed to read existing junctions file({})", filename, exception.toString());
+            SV_LOGGER.error("failed to read junctions file({})", filename, exception.toString());
             return null;
         }
     }
 
     public static void mergeJunctions(final Map<String,List<Junction>> existingMap, final Map<String,List<Junction>> newMap)
     {
+        if(existingMap.isEmpty())
+        {
+            existingMap.putAll(newMap);
+            return;
+        }
+
         for(Map.Entry<String,List<Junction>> entry : newMap.entrySet())
         {
-            String newChromosome = entry.getKey();
             List<Junction> newJunctions = entry.getValue();
+
+            if(newJunctions.isEmpty())
+                continue;
+
+            String newChromosome = entry.getKey();
 
             List<Junction> existingJunctions = existingMap.get(newChromosome);
 
-            if(existingJunctions == null)
+            if(existingJunctions == null || existingJunctions.isEmpty())
             {
-                existingJunctions = Lists.newArrayList(newJunctions);
-                existingMap.put(newChromosome, existingJunctions);
-            }
-            else
-            {
-                for(Junction newJunction : newJunctions)
-                {
-                    if(existingJunctions.stream().noneMatch(x -> x.isLocalMatch(newJunction)))
-                        existingJunctions.add(newJunction);
-                }
+                existingMap.put(newChromosome, Lists.newArrayList(newJunctions));
+                continue;
             }
 
-            Collections.sort(existingJunctions);
+            // walk through together
+            int existingIndex = 0;
+            int newIndex = 0;
+
+            Junction existingJunction = existingJunctions.get(existingIndex);
+            Junction newJunction = newJunctions.get(newIndex);
+
+            while(true)
+            {
+                boolean moveNew = false;
+                boolean moveExisting = false;
+
+                if(existingJunction == null)
+                {
+                    existingJunctions.add(newJunction);
+                    moveNew = true;
+                }
+                else
+                {
+                    if(existingJunction.isLocalMatch(newJunction))
+                    {
+                        // a match so move both, and without inserting a new entry
+                        moveNew = true;
+
+                        // preempt a match with the next but out of order in orientation
+                        if(newIndex < newJunctions.size() - 1 && existingIndex > 0
+                        && existingJunctions.get(existingIndex - 1).isLocalMatch(newJunctions.get(newIndex + 1)))
+                        {
+                            --existingIndex;
+                            existingJunction = existingJunctions.get(existingIndex);
+                        }
+                        else
+                        {
+                            moveExisting = true;
+                        }
+                    }
+                    else if(newJunction.Position > existingJunction.Position)
+                    {
+                        moveExisting = true;
+                    }
+                    else if(newJunction.Position < existingJunction.Position)
+                    {
+                        existingJunctions.add(existingIndex, newJunction);
+                        ++existingIndex;
+                        moveNew = true;
+                    }
+                    else if(existingJunction.Orientation != newJunction.Orientation)
+                    {
+                        moveExisting = true;
+                    }
+                    else
+                    {
+                        SV_LOGGER.error("junction merge failed: existing({}:{}) vs new({}:{})",
+                                existingIndex, existingJunction, newIndex, newJunction);
+                        return;
+                    }
+                }
+
+                if(moveNew)
+                {
+                    ++newIndex;
+
+                    if(newIndex >= newJunctions.size())
+                        break;
+
+                    newJunction = newJunctions.get(newIndex);
+                }
+
+                if(moveExisting)
+                {
+                    ++existingIndex;
+
+                    if(existingIndex >= existingJunctions.size())
+                        existingJunction = null;
+                    else
+                        existingJunction = existingJunctions.get(existingIndex);
+                }
+            }
         }
     }
 }

@@ -93,6 +93,9 @@ public final class SvConstants
 
     public static final boolean EXTEND_PRIMARIES = false;
 
+    // performance and logging related
+    public static final int TASK_LOG_COUNT = 100;
+
     // Whether individual operations are timed to prevent slow processing
     public static final boolean TIMEOUTS_ENABLED = false;
     public static final int PRIMARY_TIMEOUT = 5000;

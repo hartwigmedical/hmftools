@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.processor;
+package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.String.format;
 
@@ -23,7 +23,7 @@ public class ThreadTask extends Thread
     {
         mPerfCounter.stop();
 
-        if(mPerfCounter.getLastTime() > threshold)
+        if(threshold > 0 && mPerfCounter.getLastTime() > threshold)
         {
             SV_LOGGER.info("task({}) exceeds perf log time({})", eventDetails, format("%.3f", mPerfCounter.getLastTime()));
         }

@@ -1,21 +1,28 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.SvConstants.TASK_LOG_COUNT;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import javax.annotation.concurrent.ThreadSafe;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.CigarUtils;
 import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
+import com.hartwig.hmftools.esvee.common.ThreadTask;
+import com.hartwig.hmftools.esvee.processor.HomologySlider;
 import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
 import com.hartwig.hmftools.esvee.sequence.Alignment;
 import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;
@@ -31,16 +38,52 @@ import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMFlag;
 
-@ThreadSafe
-public class Aligner implements AutoCloseable
+// @ThreadSafe
+public class Aligner extends ThreadTask implements AutoCloseable
 {
-    private final SvConfig mConfig; // may be kept to set config instead of config
+    private final Queue<GappedAssembly> mSecondaryAssemblyQueue;
+    private final int mSecondaryAssemblyCount;
+
+    private final SvConfig mConfig;
     private final BwaMemIndex mIndex;
+
+    // CHECK: what benefit if any is there is using a ThreadLocal here?
     private final ThreadLocal<BwaMemAligner> mAligners;
 
-    public Aligner(final SvConfig config, final File index)
+    private final HomologySlider mHomologySlider;
+
+    private final List<AlignedAssembly> mAlignedAssemblies;
+
+    public static List<Aligner> createThreadTasks(
+            final List<GappedAssembly> secondaryAssemblies, final SvConfig config, final int taskCount, final List<Thread> threadTasks)
     {
+        List<Aligner> alignerTasks = Lists.newArrayList();
+
+        Queue<GappedAssembly> secondaryAssemblyQueue = new ConcurrentLinkedQueue<>();
+        secondaryAssemblyQueue.addAll(secondaryAssemblies);
+
+        int secondaryAssemblyCount = secondaryAssemblyQueue.size();
+
+        for(int i = 0; i < taskCount; ++i)
+        {
+            Aligner aligner = new Aligner(config, secondaryAssemblyQueue, new File(config.RefGenomeImageFile));
+            alignerTasks.add(aligner);
+            threadTasks.add(aligner);
+        }
+
+        SV_LOGGER.debug("splitting {} secondary assemblies across {} threads", secondaryAssemblyCount, taskCount);
+
+        return alignerTasks;
+    }
+
+    public Aligner(final SvConfig config, final Queue<GappedAssembly> secondaryAssemblyQueue, final File index)
+    {
+        super("Aligner");
+
         mConfig = config;
+        mSecondaryAssemblyQueue = secondaryAssemblyQueue;
+        mSecondaryAssemblyCount = secondaryAssemblyQueue.size();
+
         mIndex = new BwaMemIndex(index.getAbsolutePath());
         mAligners = ThreadLocal.withInitial(() ->
         {
@@ -50,6 +93,61 @@ public class Aligner implements AutoCloseable
             aligner.setChunkSizeOption(10000000);
             return aligner;
         });
+
+        mHomologySlider = new HomologySlider(mConfig.RefGenome);
+        mAlignedAssemblies = Lists.newArrayList();
+    }
+
+    @Override
+    public void run()
+    {
+        while(true)
+        {
+            try
+            {
+                int remainingCount = mSecondaryAssemblyQueue.size();
+                int processedCount = mSecondaryAssemblyCount - remainingCount;
+
+                GappedAssembly secondaryAssembly = mSecondaryAssemblyQueue.remove();
+
+                mPerfCounter.start();
+                alignAssembly(secondaryAssembly);
+
+                stopCheckLog(secondaryAssembly.toString(), mConfig.PerfLogTime);
+
+                if(processedCount > 0 && (processedCount % TASK_LOG_COUNT) == 0)
+                {
+                    SV_LOGGER.info("aligned {} second assemblies, remaining({})", processedCount, remainingCount);
+                }
+            }
+            catch(NoSuchElementException e)
+            {
+                SV_LOGGER.trace("all tasks complete");
+                break;
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+                System.exit(1);
+            }
+        }
+    }
+
+    public static List<AlignedAssembly> mergeAlignedAssemblies(final List<Aligner> alignerTasks)
+    {
+        List<AlignedAssembly> combined = Lists.newArrayList();
+        alignerTasks.forEach(x -> combined.addAll(x.mAlignedAssemblies));
+        return combined;
+    }
+
+    public void alignAssembly(final GappedAssembly assembly)
+    {
+        AlignedAssembly alignedAssembly = align(assembly);
+
+        // Left sliding (we will find mid-points after calling + de-duping)
+        AlignedAssembly adjustedAssembly = mHomologySlider.slideHomology(alignedAssembly);
+
+        mAlignedAssemblies.add(adjustedAssembly);
     }
 
     public AlignedAssembly align(final GappedAssembly assembly)

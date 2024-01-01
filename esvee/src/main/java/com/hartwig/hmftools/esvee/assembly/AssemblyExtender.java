@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_MIN_SUPPORT;
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_MIN_SUPPORT_FINAL;
+import static com.hartwig.hmftools.esvee.SvConstants.TASK_LOG_COUNT;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
 import com.hartwig.hmftools.esvee.html.DiagramSet;
-import com.hartwig.hmftools.esvee.processor.ThreadTask;
+import com.hartwig.hmftools.esvee.common.ThreadTask;
 import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
@@ -122,7 +123,7 @@ public class AssemblyExtender extends ThreadTask
 
                 stopCheckLog(primaryAssembly.toString(), mConfig.PerfLogTime);
 
-                if(processedCount > 0 && (processedCount % 100) == 0)
+                if(processedCount > 0 && (processedCount % TASK_LOG_COUNT) == 0)
                 {
                     SV_LOGGER.info("processed {} primary assemblies, remaining({})", processedCount, remainingCount);
                 }

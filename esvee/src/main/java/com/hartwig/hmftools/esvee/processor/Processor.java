@@ -5,7 +5,10 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
+import static com.hartwig.hmftools.esvee.assembly.Aligner.mergeAlignedAssemblies;
 import static com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler.mergePrimaryAssemblies;
+import static com.hartwig.hmftools.esvee.assembly.PhasedMerger.createThreadTasks;
+import static com.hartwig.hmftools.esvee.assembly.PhasedMerger.mergePhasedResults;
 import static com.hartwig.hmftools.esvee.common.JunctionGroup.buildJunctionGroups;
 
 import java.util.ArrayList;
@@ -22,8 +25,10 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.Context;
 import com.hartwig.hmftools.esvee.SvConfig;
+import com.hartwig.hmftools.esvee.assembly.Aligner;
 import com.hartwig.hmftools.esvee.assembly.AssemblyMerger;
 import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
+import com.hartwig.hmftools.esvee.assembly.PhasedMerger;
 import com.hartwig.hmftools.esvee.assembly.SupportChecker;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
@@ -31,6 +36,7 @@ import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.WriteType;
 import com.hartwig.hmftools.esvee.assembly.AssemblyExtender;
 import com.hartwig.hmftools.esvee.common.SampleSupport;
+import com.hartwig.hmftools.esvee.common.ThreadTask;
 import com.hartwig.hmftools.esvee.common.VariantCall;
 import com.hartwig.hmftools.esvee.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.read.BamReader;
@@ -42,14 +48,15 @@ import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.output.VcfWriter;
 import com.hartwig.hmftools.esvee.html.SummaryPageGenerator;
 import com.hartwig.hmftools.esvee.html.VariantCallPageGenerator;
-import com.hartwig.hmftools.esvee.util.ParallelMapper;
+import com.hartwig.hmftools.esvee.sequence.ReadSupport;
+import com.hartwig.hmftools.esvee.sequence.Sequence;
+import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 
 public class Processor
 {
     private final SvConfig mConfig;
     private final Context mContext;
     private final ResultsWriter mResultsWriter;
-    private final HomologySlider mHomologySlider;
     private final SupportChecker mSupportChecker;
 
     private final Map<String,List<Junction>> mChrJunctionsMap;
@@ -63,7 +70,6 @@ public class Processor
         mConfig = config;
         mContext = context;
         mResultsWriter = resultsWriter;
-        mHomologySlider = new HomologySlider(mContext.ReferenceGenome);
         mSupportChecker = new SupportChecker();
         mChrJunctionsMap = Maps.newHashMap();
         mCounters = new OverallCounters();
@@ -80,6 +86,11 @@ public class Processor
                 return false;
 
             Junction.mergeJunctions(mChrJunctionsMap, newJunctionsMap);
+        }
+
+        if(mConfig.JunctionFiles.size() > 1)
+        {
+            SV_LOGGER.debug("merged into {} junctions", mChrJunctionsMap.values().stream().mapToInt(x -> x.size()).sum());
         }
 
         return true;
@@ -103,7 +114,7 @@ public class Processor
 
             return variantCalls;
         }
-        catch(final Exception e)
+        catch(Exception e)
         {
             SV_LOGGER.error("process run error: {}", e.toString());
             e.printStackTrace();
@@ -140,10 +151,11 @@ public class Processor
         if(!runThreadTasks(threadTasks))
             System.exit(1);
 
-        mPerfCounters.add(ThreadTask.mergePerfCounters(primaryAssemblyTasks.stream().collect(Collectors.toList())));
-        threadTasks.clear();
-
         List<PrimaryAssembly> primaryAssemblies = mergePrimaryAssemblies(primaryAssemblyTasks);
+
+        mPerfCounters.add(ThreadTask.mergePerfCounters(primaryAssemblyTasks.stream().collect(Collectors.toList())));
+        primaryAssemblyTasks.clear();
+        threadTasks.clear();
 
         SV_LOGGER.info("created {} primary assemblies", primaryAssemblies.size());
 
@@ -182,6 +194,7 @@ public class Processor
         assemblyExtenderTasks.forEach(x -> extendedAssemblies.addAll(x.extendedAssemblies()));
 
         mPerfCounters.add(ThreadTask.mergePerfCounters(assemblyExtenderTasks.stream().collect(Collectors.toList())));
+        assemblyExtenderTasks.clear();
         threadTasks.clear();
 
         if(!mConfig.OtherDebug)
@@ -195,7 +208,7 @@ public class Processor
         SV_LOGGER.info("created {} extended assemblies", extendedAssemblies.size());
 
         // Primary phasing
-        final List<Set<ExtendedAssembly>> primaryPhaseSets = PrimaryPhasing.run(extendedAssemblies);
+        List<Set<ExtendedAssembly>> primaryPhaseSets = PrimaryPhasing.run(extendedAssemblies);
 
         SV_LOGGER.info("created {} primary phase sets", primaryPhaseSets.size());
 
@@ -203,28 +216,39 @@ public class Processor
             extendedAssemblies.clear();
 
         // Phased assembly merging
-        final List<Set<ExtendedAssembly>> mergedPhaseSets = ParallelMapper.mapWithProgress(
-                mContext.Executor, primaryPhaseSets, assemblyMerger::primaryPhasedMerging);
+        List<PhasedMerger> phasedMergerTasks = createThreadTasks(primaryPhaseSets, mConfig, taskCount, threadTasks);
 
-        SV_LOGGER.info("merged primary phase sets");
+        if(!runThreadTasks(threadTasks))
+            System.exit(1);
 
-        // Secondary phasing
-        final List<Set<ExtendedAssembly>> secondaryPhaseSets = SecondaryPhasing.run(mergedPhaseSets);
+        List<Set<ExtendedAssembly>> mergedPhaseSets = mergePhasedResults(phasedMergerTasks);
+
+        mPerfCounters.add(ThreadTask.mergePerfCounters(phasedMergerTasks.stream().collect(Collectors.toList())));
+        phasedMergerTasks.clear();
+        threadTasks.clear();
+
+        //List<Set<ExtendedAssembly>> mergedPhaseSets = ParallelMapper.mapWithProgress(
+        //        mContext.Executor, primaryPhaseSets, assemblyMerger::primaryPhasedMerging);
+
+        SV_LOGGER.info("merged to {} primary phase sets", mergedPhaseSets.size());
+
+        // secondary phasing, not multi-threaded but could it be?
+        List<Set<ExtendedAssembly>> secondaryPhaseSets = SecondaryPhasing.run(mergedPhaseSets);
         SV_LOGGER.info("created {} secondary phase sets", secondaryPhaseSets.size());
 
         // Secondary merging
-        final List<GappedAssembly> mergedSecondaries = new ArrayList<>();
+        List<GappedAssembly> mergedSecondaries = Lists.newArrayList();
 
         // FIXME: Gapped assemblies
         //for(int i = 0; i < secondaryPhaseSets.size(); i++)
         //    mergedSecondaries.add(createGapped(secondaryPhaseSets.get(i), i));
         for(int i = 0; i < secondaryPhaseSets.size(); i++)
         {
-            final Set<ExtendedAssembly> phaseSet = secondaryPhaseSets.get(i);
+            Set<ExtendedAssembly> phaseSet = secondaryPhaseSets.get(i);
             int j = 0;
             for(ExtendedAssembly assembly : phaseSet)
             {
-                final GappedAssembly newAssembly = new GappedAssembly(String.format("Assembly%s-%s", i, j++), List.of(assembly));
+                GappedAssembly newAssembly = new GappedAssembly(String.format("Assembly%s-%s", i, j++), List.of(assembly));
                 newAssembly.addErrata(assembly.getAllErrata());
 
                 assembly.readSupport().forEach(x -> newAssembly.addEvidenceAt(x.Read, x.Index));
@@ -233,50 +257,68 @@ public class Processor
             }
         }
 
-        SV_LOGGER.info("merged secondaries");
+        SV_LOGGER.info("merged to {} secondaries", mergedSecondaries.size());
 
         // alignment
-        final List<AlignedAssembly> aligned = ParallelMapper.mapWithProgress(
-                mContext.Executor, mergedSecondaries, mContext.Aligner::align);
+        // List<AlignedAssembly> aligned = ParallelMapper.mapWithProgress(mContext.Executor, mergedSecondaries, mContext.Aligner::align);
 
-        SV_LOGGER.info("created {} alignments", aligned.size());
+        // now also handles homology sliding
+        // ParallelMapper.mapWithProgress(mContext.Executor, homologised, supportScanner::rescanAssemblySupport);
+
+        List<Aligner> alignerTasks = Aligner.createThreadTasks(mergedSecondaries, mConfig, taskCount, threadTasks);
+
+        if(!runThreadTasks(threadTasks))
+            System.exit(1);
+
+        List<AlignedAssembly> alignedAssemblies = mergeAlignedAssemblies(alignerTasks);
+
+        mPerfCounters.add(ThreadTask.mergePerfCounters(alignerTasks.stream().collect(Collectors.toList())));
+        alignerTasks.clear();
+        threadTasks.clear();
+
+        SV_LOGGER.info("created {} alignments", alignedAssemblies.size());
 
         // Left sliding (we will find mid-points after calling + de-duping)
-        final List<AlignedAssembly> homologised = ParallelMapper.mapWithProgress(
-                mContext.Executor, aligned, mHomologySlider::slideHomology);
-
-        SV_LOGGER.info("processed homology");
+        //List<AlignedAssembly> homologised = ParallelMapper.mapWithProgress( mContext.Executor, aligned, mHomologySlider::slideHomology);
+        // SV_LOGGER.info("processed homology");
 
         // Support scanning
         // FIXME: consider not rescanning any aligned assembly that matches exactly or closely to the original
-        /*
-        SupportScanner supportScanner = new SupportScanner(mContext, Counters.ExtraScannedSupport);
+        List<SupportScanner> supportScannerTasks = SupportScanner.createThreadTasks(
+                alignedAssemblies, bamReaders, mConfig, taskCount, threadTasks);
 
-        ParallelMapper.mapWithProgress(
-                mContext.Executor, homologised, supportScanner::tryRescanSupport);
+        if(!runThreadTasks(threadTasks))
+            System.exit(1);
 
-        SV_LOGGER.info("rescanned support, adding {} new reads", Counters.ExtraScannedSupport.formatValue());
-        */
+        // existing alignment assemblies are maintained, just with any additional support
+        // List<AlignedAssembly> rescannedAssemblies = SupportScanner.mergeRescannedAssemblies(supportScannerTasks);
+
+        mPerfCounters.add(ThreadTask.mergePerfCounters(alignerTasks.stream().collect(Collectors.toList())));
+        int rescannedAddedReadCount = supportScannerTasks.stream().mapToInt(x -> x.addedReadCount()).sum();
+        alignerTasks.clear();
+        threadTasks.clear();
+
+        SV_LOGGER.info("rescanned support, adding {} new reads", rescannedAddedReadCount);
 
 
         // Calling
-        final List<VariantCall> variants = new VariantCaller(mContext.Executor).callVariants(homologised);
+        List<VariantCall> variants = new VariantCaller(mContext.Executor).callVariants(alignedAssemblies);
         SV_LOGGER.info("called {} variants", variants.size());
 
         // variant deduplication
-        final VariantDeduplication deduplicator = new VariantDeduplication(mContext, mCounters.VariantDeduplicationCounters);
-        final List<VariantCall> deduplicated = deduplicator.deduplicate(variants);
+        VariantDeduplication deduplicator = new VariantDeduplication(mContext, mCounters.VariantDeduplicationCounters);
+        List<VariantCall> deduplicated = deduplicator.deduplicate(variants);
 
         SV_LOGGER.info("{} variants remaining after deduplication", deduplicated.size());
         deduplicated.removeIf(variant -> variant.supportingFragments().isEmpty());
         SV_LOGGER.info("{} variants remaining after removing unsubstantiated", deduplicated.size());
 
-        final long lowQualityVariants = deduplicated.stream()
+        long lowQualityVariants = deduplicated.stream()
                 .filter(variant -> variant.quality() < SvConstants.VCFLOWQUALITYTHRESHOLD)
                 .count();
         SV_LOGGER.info("{} low-quality variants found", lowQualityVariants);
 
-        final long lowSupportVariants = deduplicated.stream()
+        long lowSupportVariants = deduplicated.stream()
                 .filter(variant -> variant.quality() >= SvConstants.VCFLOWQUALITYTHRESHOLD)
                 .filter(variant -> variant.supportingFragments().size() < SvConstants.MIN_READS_SUPPORT_ASSEMBLY)
                 .count();
@@ -335,7 +377,7 @@ public class Processor
             {
                 VariantCallPageGenerator.generatePage(mConfig.HtmlOutputDir, mContext.ReferenceGenome, mSupportChecker, call);
             }
-            catch(final Exception ex)
+            catch(Exception ex)
             {
                 SV_LOGGER.error("Failed to generate HTML for {}", call, ex);
             }
@@ -345,7 +387,7 @@ public class Processor
         {
             SummaryPageGenerator.generatePage(mConfig.HtmlOutputDir, mCounters, variants);
         }
-        catch(final Exception ex)
+        catch(Exception ex)
         {
             SV_LOGGER.error("Failure while generating summary HTML", ex);
         }
@@ -353,20 +395,20 @@ public class Processor
 
     private void writeVCF(final List<VariantCall> variants)
     {
-        final List<String> sampleNames = variants.stream()
+        List<String> sampleNames = variants.stream()
                 .flatMap(call -> call.sampleSupport().stream().map(SampleSupport::sampleName))
                 .distinct()
                 .sorted()
                 .collect(Collectors.toList());
 
-        final VcfWriter writer = new VcfWriter(mContext, sampleNames);
+        VcfWriter writer = new VcfWriter(mContext, sampleNames);
         for(VariantCall call : variants)
         {
             try
             {
                 writer.append(call);
             }
-            catch(final Exception ex)
+            catch(Exception ex)
             {
                 SV_LOGGER.error("Failure while appending to call VCF: {}", call, ex);
             }
@@ -374,10 +416,10 @@ public class Processor
         writer.close();
     }
 
-    // CHECK: these aren't called, what is their purpose?
+    // CHECK: these aren't called in original SvAssembly code, what is their purpose?
     public GappedAssembly createGapped(final Collection<ExtendedAssembly> assemblies, final int index)
     {
-        final GappedAssembly gappedAssembly = new GappedAssembly("Assembly" + index, orderExtendedAssemblies(assemblies));
+        GappedAssembly gappedAssembly = new GappedAssembly("Assembly" + index, orderExtendedAssemblies(assemblies));
 
         for(ExtendedAssembly assembly : assemblies)
         {
@@ -400,19 +442,53 @@ public class Processor
             SV_LOGGER.warn("Found more than 1 assembly ({}) while creating gapped ({})", assemblies.size(),
                     assemblies.stream().map(assembly -> assembly.Name).collect(Collectors.toList()));
 
-        final Map<ExtendedAssembly, Map<ExtendedAssembly, Long>> leftWise = new IdentityHashMap<>();
-        final Map<ExtendedAssembly, Map<ExtendedAssembly, Long>> rightWise = new IdentityHashMap<>();
+        Map<ExtendedAssembly, Map<ExtendedAssembly, Long>> leftWise = new IdentityHashMap<>();
+        Map<ExtendedAssembly, Map<ExtendedAssembly, Long>> rightWise = new IdentityHashMap<>();
         for(ExtendedAssembly first : assemblies)
             for(ExtendedAssembly second : assemblies)
             {
                 if(first == second)
                     continue;
 
-
-
             }
 
         return new ArrayList<>(assemblies);
     }
 
+    public AlignedAssembly mergeAlignedAssembly(
+            final AlignedAssembly left, final AlignedAssembly right, final int supportIndex,
+            final HomologySlider homologySlider, final Aligner aligner)
+    {
+        final Sequence mergedSequence = SequenceMerger.merge(left, right, supportIndex);
+
+        final ExtendedAssembly merged = new ExtendedAssembly(left.Name, mergedSequence.getBasesString(), left.Source);
+        left.Source.Sources.get(0).Diagrams.forEach(merged::addDiagrams);
+
+        final GappedAssembly gapped = new GappedAssembly(merged.Name, List.of(merged));
+        reAddSupport(gapped, left);
+        reAddSupport(gapped, right);
+
+        return homologySlider.slideHomology(aligner.align(gapped));
+    }
+
+    private void reAddSupport(final SupportedAssembly merged, final SupportedAssembly old)
+    {
+        final int offset = merged.Assembly.indexOf(old.Assembly);
+
+        for(ReadSupport readSupport : old.readSupport())
+        {
+            Read potentialSupport = readSupport.Read;
+
+            if(offset != -1)
+            {
+                int oldSupportIndex = readSupport.Index;
+                if(mSupportChecker.AssemblySupport.supportsAt(merged, potentialSupport, oldSupportIndex + offset))
+                {
+                    merged.addEvidenceAt(potentialSupport, oldSupportIndex + offset);
+                    continue;
+                }
+            }
+            merged.tryAddSupport(mSupportChecker, potentialSupport);
+        }
+    }
 }

@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
+import static com.hartwig.hmftools.esvee.SvConstants.TASK_LOG_COUNT;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,7 @@ import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
-import com.hartwig.hmftools.esvee.processor.ThreadTask;
+import com.hartwig.hmftools.esvee.common.ThreadTask;
 import com.hartwig.hmftools.esvee.read.BamReader;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
@@ -99,7 +100,7 @@ public class JunctionGroupAssembler extends ThreadTask
 
                 stopCheckLog(junctionGroup.toString(), mConfig.PerfLogTime);
 
-                if(processedCount > 0 && (processedCount % 100) == 0)
+                if(processedCount > 0 && (processedCount % TASK_LOG_COUNT) == 0)
                 {
                     SV_LOGGER.info("processed {} junction groups, remaining({})", processedCount, remainingCount);
                 }

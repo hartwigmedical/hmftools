@@ -9,7 +9,6 @@ import java.util.concurrent.ForkJoinPool;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.esvee.assembly.Aligner;
-import com.hartwig.hmftools.esvee.assembly.SupportChecker;
 import com.hartwig.hmftools.esvee.processor.Problem;
 
 public class Context implements AutoCloseable
@@ -57,8 +56,6 @@ public class Context implements AutoCloseable
         if(System.getProperty("LIBBWA_PATH") == null && new File(candidateBWAPath).exists())
             System.setProperty("LIBBWA_PATH", new File(candidateBWAPath).getAbsolutePath());
 
-        Aligner aligner = new Aligner(config, new File(config.RefGenomeImageFile));
-
         final RefGenomeSource refGenomeSource = RefGenomeSource.loadRefGenome(config.RefGenomeFile);
 
         final ExecutorService executor = config.Threads == -1
@@ -70,6 +67,6 @@ public class Context implements AutoCloseable
                     return thread;
                 });
 
-        return new Context(executor, aligner, refGenomeSource, config);
+        return new Context(executor, null, refGenomeSource, config);
     }
 }
