@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.gripss;
 
+import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.IMPRECISE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.buildLinkAttributes;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSgl;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSv;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IMPRECISE;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
@@ -39,23 +39,23 @@ public class TransitiveLinksTest
     public void testSortByQual()
     {
         Map<String, Object> tumorOverrides = Maps.newHashMap();
-        tumorOverrides.put(VT_QUAL, 1);
+        tumorOverrides.put(QUAL, 1);
 
         Map<String, Object> attributeOverrides = Maps.newHashMap();
-        attributeOverrides.put(VT_CIPOS, new int[] {-10,10});
-        attributeOverrides.put(VT_IMPRECISE, "true");
+        attributeOverrides.put(CIPOS, new int[] {-10,10});
+        attributeOverrides.put(IMPRECISE, "true");
 
         SvData var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 2000, POS_ORIENT, NEG_ORIENT, "",
                 mGripss.GenotypeIds, attributeOverrides, null, tumorOverrides);
 
-        tumorOverrides.put(VT_QUAL, 100);
+        tumorOverrides.put(QUAL, 100);
 
         SvData var2 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1001, 2001, POS_ORIENT, NEG_ORIENT, "",
                 mGripss.GenotypeIds, null, null, tumorOverrides);
 
-        tumorOverrides.put(VT_QUAL, 1000);
+        tumorOverrides.put(QUAL, 1000);
 
         SvData var3 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1002, 2002, POS_ORIENT, NEG_ORIENT, "",
@@ -75,7 +75,7 @@ public class TransitiveLinksTest
     {
         // an INS and DUP are linked as transitive candidates
         Map<String, Object> attributeOverrides = Maps.newHashMap();
-        attributeOverrides.put(VT_CIPOS, new int[] { -1, 1 });
+        attributeOverrides.put(CIPOS, new int[] { -1, 1 });
 
         SvData dup = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1002, 1024, NEG_ORIENT, POS_ORIENT, "",
@@ -98,7 +98,7 @@ public class TransitiveLinksTest
     public void testTransitiveLinksShouldNotBreakAssemblies()
     {
         Map<String, Object> attributeOverrides = Maps.newHashMap();
-        attributeOverrides.put(VT_IMPRECISE, "true");
+        attributeOverrides.put(IMPRECISE, "true");
 
         SvData var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 2000, POS_ORIENT, NEG_ORIENT, "",
@@ -137,7 +137,7 @@ public class TransitiveLinksTest
     public void testMinTransitiveLinkDistance()
     {
         Map<String, Object> attributeOverrides = Maps.newHashMap();
-        attributeOverrides.put(VT_IMPRECISE, "true");
+        attributeOverrides.put(IMPRECISE, "true");
 
         SvData var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 2000, POS_ORIENT, NEG_ORIENT, "",
@@ -161,8 +161,8 @@ public class TransitiveLinksTest
     public void testAllowALittleBuffer()
     {
         Map<String, Object> attributeOverrides = Maps.newHashMap();
-        attributeOverrides.put(VT_IMPRECISE, "true");
-        attributeOverrides.put(VT_CIPOS, new int[] {-270,270});
+        attributeOverrides.put(IMPRECISE, "true");
+        attributeOverrides.put(CIPOS, new int[] {-270,270});
 
         SvData var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 565345, 580840, NEG_ORIENT, POS_ORIENT, "",
@@ -187,10 +187,10 @@ public class TransitiveLinksTest
     public void testBreathFirstSearch()
     {
         Map<String, Object> attributeOverrides = Maps.newHashMap();
-        attributeOverrides.put(VT_IMPRECISE, "true");
+        attributeOverrides.put(IMPRECISE, "true");
 
         Map<String, Object> tumorOverrides = Maps.newHashMap();
-        tumorOverrides.put(VT_QUAL, 1);
+        tumorOverrides.put(QUAL, 1);
 
         SvData var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 2000, NEG_ORIENT, POS_ORIENT, "",
@@ -224,10 +224,10 @@ public class TransitiveLinksTest
     public void testHightestQualFirst()
     {
         Map<String, Object> attributeOverrides = Maps.newHashMap();
-        attributeOverrides.put(VT_IMPRECISE, "true");
+        attributeOverrides.put(IMPRECISE, "true");
 
         Map<String, Object> tumorOverrides = Maps.newHashMap();
-        tumorOverrides.put(VT_QUAL, 1);
+        tumorOverrides.put(QUAL, 1);
 
         SvData var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 2000, NEG_ORIENT, POS_ORIENT, "",
@@ -254,7 +254,7 @@ public class TransitiveLinksTest
     public void testOneTransitiveLinkOnly()
     {
         Map<String, Object> attributeOverrides = Maps.newHashMap();
-        attributeOverrides.put(VT_IMPRECISE, "true");
+        attributeOverrides.put(IMPRECISE, "true");
 
         SvData var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 1000, 5000, POS_ORIENT, NEG_ORIENT, "",

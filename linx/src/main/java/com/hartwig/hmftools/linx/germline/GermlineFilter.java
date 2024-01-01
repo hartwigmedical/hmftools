@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx.germline;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER_PON;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_FILTER_PON;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;

@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.wisp;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.wisp.TestUtils.MOCK_REF_GENOME;
 import static com.hartwig.hmftools.wisp.TestUtils.REF_BASES_CHR_1;
 import static com.hartwig.hmftools.wisp.TestUtils.REF_BASES_CHR_2;
