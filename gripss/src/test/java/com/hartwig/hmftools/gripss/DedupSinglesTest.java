@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.gripss;
 
+import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BAQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.IMPRECISE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -7,10 +11,6 @@ import static com.hartwig.hmftools.gripss.GripssTestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSgl;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSv;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.loadSvDataCache;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IMPRECISE;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
 
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
@@ -42,7 +42,7 @@ public class DedupSinglesTest
         mFilterCache = mGripss.FilterCache;
         mDuplicateFinder = new DuplicateFinder(mDataCache, mFilterCache);
 
-        DEFAULT_ATTRIBUTES.put(VT_CIPOS, new int[] {-10,10});
+        DEFAULT_ATTRIBUTES.put(CIPOS, new int[] {-10,10});
     }
 
     @Test
@@ -67,7 +67,7 @@ public class DedupSinglesTest
         SvData var1 = mGripss.createDel(CHR_1, 101, 1000, DEFAULT_ATTRIBUTES,  DEFAULT_ATTRIBUTES);
 
         Map<String, Object> tumorAttributes = Maps.newHashMap();
-        tumorAttributes.put(VT_BAQ, DEFAULT_QUAL + 10);
+        tumorAttributes.put(GRIDSS_BAQ, DEFAULT_QUAL + 10);
 
         SvData var2 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 100, POS_ORIENT, "",
@@ -86,7 +86,7 @@ public class DedupSinglesTest
         SvData var1 = mGripss.createDel(CHR_1, 101, 1000, DEFAULT_ATTRIBUTES,  DEFAULT_ATTRIBUTES);
 
         Map<String, Object> tumorAttributes = Maps.newHashMap();
-        tumorAttributes.put(VT_BAQ, DEFAULT_QUAL + 10);
+        tumorAttributes.put(GRIDSS_BAQ, DEFAULT_QUAL + 10);
 
         SvData var2 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 100, POS_ORIENT, "",
@@ -182,7 +182,7 @@ public class DedupSinglesTest
     public void testChooseHighestQuality()
     {
         Map<String, Object> tumorAttributes = Maps.newHashMap();
-        tumorAttributes.put(VT_BAQ, 10);
+        tumorAttributes.put(GRIDSS_BAQ, 10);
 
         SvData sgl1 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 100, POS_ORIENT, "",
@@ -224,7 +224,7 @@ public class DedupSinglesTest
                 mGripss.GenotypeIds, DEFAULT_ATTRIBUTES, null, null);
 
         Map<String, Object> commonAttributes = Maps.newHashMap();
-        commonAttributes.put(VT_IMPRECISE, "true");
+        commonAttributes.put(IMPRECISE, "true");
 
         SvData sgl2 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 101, NEG_ORIENT, "",
@@ -240,11 +240,11 @@ public class DedupSinglesTest
     public void testCanStillMatchAgainstImprecise()
     {
         Map<String, Object> tumorAttributes = Maps.newHashMap();
-        tumorAttributes.put(VT_QUAL, 6000);
+        tumorAttributes.put(QUAL, 6000);
 
         Map<String, Object> commonAttributes = Maps.newHashMap();
-        commonAttributes.put(VT_CIPOS, new int[] {-10, 10});
-        commonAttributes.put(VT_IMPRECISE, "true");
+        commonAttributes.put(CIPOS, new int[] {-10, 10});
+        commonAttributes.put(IMPRECISE, "true");
 
         SvData var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 100, 2000, POS_ORIENT, NEG_ORIENT, "",

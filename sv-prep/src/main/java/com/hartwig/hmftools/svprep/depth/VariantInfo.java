@@ -3,14 +3,12 @@ package com.hartwig.hmftools.svprep.depth;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SGL_FRAGMENT_COUNT;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMENT_COUNT;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.isSingleBreakend;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.parseSingleOrientation;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.parseSvOrientation;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 
 import java.util.List;
 
@@ -57,8 +55,8 @@ public class VariantInfo
 
     private static int genotypeFragments(final VariantContext variant, int genotypeIndex)
     {
-        Object sglFrags = variant.getGenotype(genotypeIndex).getExtendedAttribute(SV_FRAGMENT_COUNT);
-        Object svFrags = variant.getGenotype(genotypeIndex).getExtendedAttribute(SGL_FRAGMENT_COUNT);
+        Object sglFrags = variant.getGenotype(genotypeIndex).getExtendedAttribute(SV_FRAG_COUNT);
+        Object svFrags = variant.getGenotype(genotypeIndex).getExtendedAttribute(SGL_FRAG_COUNT);
         return max(sglFrags != null ? Integer.parseInt(sglFrags.toString()) : 0, svFrags != null ? Integer.parseInt(svFrags.toString()) : 0);
     }
 

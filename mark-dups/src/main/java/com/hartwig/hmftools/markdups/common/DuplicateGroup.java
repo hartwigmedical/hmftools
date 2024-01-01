@@ -6,7 +6,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.addConsensusReadAttribute;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getUnclippedPosition;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getFivePrimeUnclippedPosition;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
 import static com.hartwig.hmftools.common.samtools.UmiReadType.DUAL;
 import static com.hartwig.hmftools.common.samtools.UmiReadType.SINGLE;
@@ -185,7 +185,7 @@ public class DuplicateGroup
             if(orientation(read) != Orientation)
                 return false;
 
-            return getUnclippedPosition(read) == UnclippedPosition;
+            return getFivePrimeUnclippedPosition(read) == UnclippedPosition;
         }
 
         public boolean supplementaryMatches(final SAMRecord read, final SupplementaryReadData suppData)
@@ -238,7 +238,7 @@ public class DuplicateGroup
 
             mPrimaryReadTypeIndex[index] = new ReadTypeId(
                     read.getReferenceName(),
-                    read.getReadUnmappedFlag() ? 0 : getUnclippedPosition(read), read.getAlignmentStart(),
+                    read.getReadUnmappedFlag() ? 0 : getFivePrimeUnclippedPosition(read), read.getAlignmentStart(),
                     read.getReadUnmappedFlag() ? 0 : orientation(read),
                     hasValidSupp, read.getFirstOfPairFlag(), read.getReadUnmappedFlag());
 
@@ -374,7 +374,7 @@ public class DuplicateGroup
         for(int i = 0; i < readGroup.size(); ++i)
         {
             SAMRecord read = readGroup.get(i);
-            String chrPosStr = format("%s_%d", read.getReferenceName(), getUnclippedPosition(read));
+            String chrPosStr = format("%s_%d", read.getReferenceName(), getFivePrimeUnclippedPosition(read));
             readChrPositions[i] = chrPosStr;
             Integer count = posCounts.get(chrPosStr);
             posCounts.put(chrPosStr, count != null ? count + 1 : 1);

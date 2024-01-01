@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.gripss;
 
+import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.LINE_INSERT_SEQ_A;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.LINE_INSERT_SEQ_T;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSv;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_TUMOR_AF;
 
 import static junit.framework.TestCase.assertTrue;
@@ -101,7 +101,7 @@ public class RescueTest
     {
         // rescue low qual SVs in a deletion bridge
         Map<String,Object> tumorAttributes = Maps.newHashMap();
-        tumorAttributes.put(VT_QUAL, 200);
+        tumorAttributes.put(QUAL, 200);
 
         SvData var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 100, 20000, POS_ORIENT, NEG_ORIENT, LINE_INSERT_SEQ_A,
