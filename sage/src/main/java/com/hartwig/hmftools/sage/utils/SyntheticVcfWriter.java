@@ -46,8 +46,8 @@ import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.read.ReadContextFactory;
@@ -241,7 +241,7 @@ public class SyntheticVcfWriter
         return writer;
     }
 
-    private ReadContext buildReadContext(final VariantData variant)
+    private ReadContext_ buildReadContext(final VariantData variant)
     {
         ReadContextFactory readContextFactory = new ReadContextFactory(DEFAULT_READ_CONTEXT_FLANK_SIZE);
 
@@ -261,7 +261,7 @@ public class SyntheticVcfWriter
 
         int readIndex = readFlankLength;
 
-        ReadContext readContext;
+        ReadContext_ readContext;
 
         if(variant.isDelete())
             readContext = readContextFactory.createDelContext(variant.Ref, variant.Position, readIndex, readBases.getBytes(), indexedBases);
@@ -300,7 +300,7 @@ public class SyntheticVcfWriter
 
         SimpleVariant variantHotspot = new SimpleVariant(variant.Chromosome, variant.Position, variant.Ref, variant.Alt);
 
-        ReadContext readContext = buildReadContext(variant);
+        ReadContext_ readContext = buildReadContext(variant);
 
         if(readContext == null)
             return;

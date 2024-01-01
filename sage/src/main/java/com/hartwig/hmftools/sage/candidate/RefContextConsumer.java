@@ -26,10 +26,10 @@ import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextFactory;
 import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.select.ReadPanelStatus;
@@ -274,7 +274,7 @@ public class RefContextConsumer
 
         int baseQuality = baseQuality(readIndex, record, alt.length());
 
-        ReadContext readContext = findReadContext ?
+        ReadContext_ readContext = findReadContext ?
                 mReadContextFactory.createInsertContext(alt, refPosition, readIndex, record.getReadBases(), refBases) : null;
 
         return new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
@@ -307,7 +307,7 @@ public class RefContextConsumer
         {
             final int baseQuality = baseQuality(readIndex, record, 2);
 
-            final ReadContext readContext = findReadContext ?
+            final ReadContext_ readContext = findReadContext ?
                     mReadContextFactory.createDelContext(ref, refPosition, readIndex, record.getReadBases(), refBases) : null;
 
             return new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
@@ -356,7 +356,7 @@ public class RefContextConsumer
 
                 int baseQuality = record.getBaseQualities()[readBaseIndex];
                 final String alt = String.valueOf((char) readByte);
-                final ReadContext readContext = isWithinReadContext ?
+                final ReadContext_ readContext = isWithinReadContext ?
                         mReadContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases) : null;
 
                 result.add(new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext));
@@ -379,7 +379,7 @@ public class RefContextConsumer
                     // ie CA > TA is not a valid subset of CAC > TAT
                     if(mnvRef.charAt(mnvLength - 1) != mnvAlt.charAt(mnvLength - 1))
                     {
-                        ReadContext mnvReadContext = isWithinReadContext ? mReadContextFactory.createMNVContext(refPosition,
+                        ReadContext_ mnvReadContext = isWithinReadContext ? mReadContextFactory.createMNVContext(refPosition,
                                 readBaseIndex,
                                 mnvLength,
                                 record.getReadBases(),
@@ -450,7 +450,7 @@ public class RefContextConsumer
 
         int baseQuality = baseQuality(readIndex, record, altRead.Alt.length());
 
-        ReadContext readContext = mReadContextFactory.createInsertContext(altRead.Alt, refPosition, readIndex, record.getReadBases(), refBases);
+        ReadContext_ readContext = mReadContextFactory.createInsertContext(altRead.Alt, refPosition, readIndex, record.getReadBases(), refBases);
 
         /*
         SG_LOGGER.trace("soft-clipped insert({}:{} {}>{}) indexes({}-{}-{}) read({}) softClip(len={} index={} on {})",

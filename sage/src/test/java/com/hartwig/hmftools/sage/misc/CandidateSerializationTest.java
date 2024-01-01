@@ -7,9 +7,9 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.IndexedBasesTest;
-import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
@@ -57,7 +57,7 @@ public class CandidateSerializationTest
         final IndexedBases refBases = IndexedBasesTest.createIndexedBases(expositionPosition, expectedIndex, "AA", "TA", "ATG", "CG", "TT");
         final IndexedBases readBases = IndexedBasesTest.createIndexedBases(expositionPosition, expectedIndex, "AA", "TA", "ACG", "CG", "TT");
 
-        final ReadContext readContext = new ReadContext(
+        final ReadContext_ readContext = new ReadContext_(
                 expositionPosition, expectedRepeat, expectedRepeatCount, expectedMH, readBases, false);
 
         final SimpleVariant variant = new SimpleVariant(CHR_1, expositionPosition, "T", "C");

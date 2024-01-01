@@ -13,11 +13,11 @@ import static org.junit.Assert.assertEquals;
 import static htsjdk.samtools.SAMUtils.phredToFastq;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
-import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
 import org.apache.logging.log4j.util.Strings;
@@ -41,7 +41,7 @@ public class ReadContextCounterTest
     {
         SimpleVariant variant = new SimpleVariant(CHR_1, 554, "G", "GT");
 
-        final ReadContext readContext = createReadContext(554, 1, 0, 5, "TGTTTC", Strings.EMPTY);
+        final ReadContext_ readContext = createReadContext(554, 1, 0, 5, "TGTTTC", Strings.EMPTY);
 
         final ReadContextCounter victim = new ReadContextCounter(1, variant, readContext, TIER, MAX_COVERAGE, 0,
                         TEST_CONFIG, QUALITY_CALCULATOR, null);
@@ -57,7 +57,7 @@ public class ReadContextCounterTest
     public void testDeleteInLeftSoftClip()
     {
         SimpleVariant variant = new SimpleVariant(CHR_1, 554, "GT", "G");
-        final ReadContext readContext = createReadContext(554, 1, 0, 4, "TGTTC", Strings.EMPTY);
+        final ReadContext_ readContext = createReadContext(554, 1, 0, 4, "TGTTC", Strings.EMPTY);
         final ReadContextCounter victim = new ReadContextCounter(
                 1, variant, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
@@ -72,7 +72,7 @@ public class ReadContextCounterTest
     public void testSnvInLeftSoftClip()
     {
         SimpleVariant variant = new SimpleVariant(CHR_1, 554, "G", "A");
-        final ReadContext readContext = createReadContext(554, 1, 0, 2, "CAT", Strings.EMPTY);
+        final ReadContext_ readContext = createReadContext(554, 1, 0, 2, "CAT", Strings.EMPTY);
         final ReadContextCounter victim = new ReadContextCounter(
                 1, variant, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
@@ -87,7 +87,7 @@ public class ReadContextCounterTest
     public void testRefInLeftSoftClipDoesNotContributeToDepth()
     {
         SimpleVariant variant = new SimpleVariant(CHR_1, 554, "G", "GT");
-        final ReadContext readContext = createReadContext(554, 1, 0, 2,"CAT", Strings.EMPTY);
+        final ReadContext_ readContext = createReadContext(554, 1, 0, 2,"CAT", Strings.EMPTY);
         final ReadContextCounter victim = new ReadContextCounter(
                 1, variant, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
@@ -115,7 +115,7 @@ public class ReadContextCounterTest
     public void testMnvInLeftSoftClip()
     {
         SimpleVariant variant = new SimpleVariant(CHR_1, 552, "TCG", "ATC");
-        final ReadContext readContext = createReadContext(552, 2, 0, 6, "GAAAAAT", Strings.EMPTY);
+        final ReadContext_ readContext = createReadContext(552, 2, 0, 6, "GAAAAAT", Strings.EMPTY);
         final ReadContextCounter victim = new ReadContextCounter(
                 1, variant, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
@@ -130,7 +130,7 @@ public class ReadContextCounterTest
     public void testInsertInRightSoftClip()
     {
         SimpleVariant variant = new SimpleVariant(CHR_1, 554, "G", "GT");
-        final ReadContext readContext = createReadContext(554, 1, 0, 5, "TGTTTC", Strings.EMPTY);
+        final ReadContext_ readContext = createReadContext(554, 1, 0, 5, "TGTTTC", Strings.EMPTY);
         final ReadContextCounter victim = new ReadContextCounter(
                 1, variant, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
@@ -146,7 +146,7 @@ public class ReadContextCounterTest
     {
         SimpleVariant variant = new SimpleVariant(CHR_1, 554, "GT", "G");
         // final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("GT").alt("G").position(554).build();
-        final ReadContext readContext = createReadContext(554, 1, 0, 4, "TGTTC", Strings.EMPTY);
+        final ReadContext_ readContext = createReadContext(554, 1, 0, 4, "TGTTC", Strings.EMPTY);
         final ReadContextCounter victim = new ReadContextCounter(
                 1, variant, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
@@ -162,7 +162,7 @@ public class ReadContextCounterTest
     {
         SimpleVariant variant = new SimpleVariant(CHR_1, 552, "TCG", "ATC");
 
-        final ReadContext readContext = createReadContext(552, 2, 0, 6, "GAAAAAT", Strings.EMPTY);
+        final ReadContext_ readContext = createReadContext(552, 2, 0, 6, "GAAAAAT", Strings.EMPTY);
 
         final ReadContextCounter victim = new ReadContextCounter(
                 1, variant, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);

@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
@@ -76,7 +77,7 @@ public class TestUtils
     {
         SimpleVariant variant = new SimpleVariant(chromosome, position, ref, alt);
 
-        ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
+        ReadContext_ readContext = new ReadContext_(position, "", 0, "", indexBases, false);
 
         ReadContextCounter readCounter = new ReadContextCounter(
                 0, variant, readContext, VariantTier.LOW_CONFIDENCE, 100, 1,
@@ -138,7 +139,7 @@ public class TestUtils
         return new SimpleVariant(chromosome, position, ref, alt);
     }
 
-    public static ReadContext createReadContext(
+    public static ReadContext_ createReadContext(
             int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, String readBases, String microhomology)
     {
         int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
@@ -147,7 +148,7 @@ public class TestUtils
 
         IndexedBases readBasesIndexed = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, 0, readBases.getBytes());
 
-        return new ReadContext(refPosition, "", 0, microhomology, readBasesIndexed, incompleteCore);
+        return new ReadContext_(refPosition, "", 0, microhomology, readBasesIndexed, incompleteCore);
     }
 
     public static SAMRecord createSamRecord(

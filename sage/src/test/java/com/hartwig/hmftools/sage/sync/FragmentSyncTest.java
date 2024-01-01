@@ -13,8 +13,8 @@ import static com.hartwig.hmftools.sage.sync.CombinedSyncData.formFragmentRead;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
@@ -194,7 +194,7 @@ public class FragmentSyncTest
         SimpleVariant variant = new SimpleVariant(CHR_1, position, refBase, altBase);
 
         String readBases = REF_BASES.substring(8, position) + altBase + REF_BASES.substring(position + 1, 33);
-        final ReadContext readContext = createReadContext(position, 12, 10, 14, readBases, Strings.EMPTY);
+        final ReadContext_ readContext = createReadContext(position, 12, 10, 14, readBases, Strings.EMPTY);
 
         final IndexedBases REF_INDEXED_BASES = new IndexedBases(1, 0, REF_BASES.getBytes());
         final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG.Quality, RECALIBRATION, REF_INDEXED_BASES);

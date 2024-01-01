@@ -81,8 +81,8 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
@@ -116,7 +116,7 @@ public class VariantVis
     private final SimpleVariant mVariant;
     private final VariantTier mVariantTier;
     private final EnumMap<ReadContextCounter.MatchType, List<ReadEvidenceRecord>> mReadEvidenceRecordsByType;
-    private final ReadContext mReadContext;
+    private final ReadContext_ mReadContext;
     private final BaseRegion mViewRegion;
     private final Map<Integer, List<SvgRender.BoxBorder>> mContextBorders;
     private final BaseSeqViewModel mRefViewModel;
@@ -128,7 +128,7 @@ public class VariantVis
     private int mReadCount;
 
     public VariantVis(
-            final SageConfig config, final String sample, final SimpleVariant variant, final ReadContext readContext,
+            final SageConfig config, final String sample, final SimpleVariant variant, final ReadContext_ readContext,
             final VariantTier variantTier)
     {
         mConfig = config.Visualiser;

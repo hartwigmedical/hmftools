@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.candidate;
 
-import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
@@ -11,10 +11,10 @@ public class Candidate
 
     private int mMinNumberOfEvents;
     private int mReadContextSupport;
-    private ReadContext mReadContext;
+    private ReadContext_ mReadContext;
 
     public Candidate(
-            final VariantTier tier, final SimpleVariant variant, final ReadContext readContext, int minNumberOfEvents, int readContextSupport)
+            final VariantTier tier, final SimpleVariant variant, final ReadContext_ readContext, int minNumberOfEvents, int readContextSupport)
     {
         mTier = tier;
         mVariant = variant;
@@ -46,7 +46,7 @@ public class Candidate
 
     public SimpleVariant variant() { return mVariant; }
 
-    public ReadContext readContext() { return mReadContext; }
+    public ReadContext_ readContext() { return mReadContext; }
 
     public int minNumberOfEvents() { return mMinNumberOfEvents; }
 

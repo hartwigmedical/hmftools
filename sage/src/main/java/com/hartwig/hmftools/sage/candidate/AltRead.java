@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.candidate;
 
-import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -15,11 +15,11 @@ public class AltRead
     private final RefContext mRefContext;
 
     @Nullable
-    private ReadContext mReadContext;
+    private ReadContext_ mReadContext;
 
     public AltRead(
             final RefContext refContext, final String ref, final String alt, final int baseQuality, final int numberOfEvents,
-            final boolean sufficientMapQuality, final ReadContext readContext)
+            final boolean sufficientMapQuality, final ReadContext_ readContext)
     {
         mRefContext = refContext;
         Ref = ref;

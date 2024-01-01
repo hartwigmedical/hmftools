@@ -16,8 +16,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
@@ -74,7 +74,7 @@ public final class CandidateSerialization
         final String repeat = context.getAttributeAsString(READ_CONTEXT_REPEAT_SEQUENCE, Strings.EMPTY);
         final String mh = context.getAttributeAsString(READ_CONTEXT_MICRO_HOMOLOGY, Strings.EMPTY);
 
-        final ReadContext readContext = new ReadContext(context.getStart(), repeat, repeatCount, mh, readBases, false);
+        final ReadContext_ readContext = new ReadContext_(context.getStart(), repeat, repeatCount, mh, readBases, false);
 
         int maxDepth = 0;
         for(Genotype genotype : context.getGenotypes().immutable())
@@ -89,7 +89,7 @@ public final class CandidateSerialization
     public static VariantContextBuilder toContext(final Candidate candidate)
     {
         final List<Allele> alleles = createAlleles(candidate.variant());
-        final ReadContext readContext = candidate.readContext();
+        final ReadContext_ readContext = candidate.readContext();
 
         final VariantContextBuilder builder = new VariantContextBuilder().chr(candidate.chromosome())
                 .source("SAGE")

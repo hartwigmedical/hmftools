@@ -22,8 +22,8 @@ import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
@@ -443,7 +443,7 @@ public class PhasingGroupsTest
         SimpleVariant variant = createSimpleVariant(position);
 
         IndexedBases indexBases = new IndexedBases(position, 10, "ACGTACGTACGT".getBytes());
-        ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
+        ReadContext_ readContext = new ReadContext_(position, "", 0, "", indexBases, false);
 
         return new ReadContextCounter(
                 id, variant, readContext, VariantTier.LOW_CONFIDENCE,

@@ -22,8 +22,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
@@ -193,7 +193,7 @@ public class SoftFilterTest
         String readBases = REF_BASES.substring(
                 variantPosition - 2, variantPosition) + altBase + REF_BASES.substring(variantPosition + 1, variantPosition + 3);
 
-        final ReadContext readContext = createReadContext(variantPosition, 2, 0, 4, readBases, Strings.EMPTY);
+        final ReadContext_ readContext = createReadContext(variantPosition, 2, 0, 4, readBases, Strings.EMPTY);
 
         return new ReadContextCounter(
                 1, variant, readContext, VariantTier.PANEL, 100, 0,

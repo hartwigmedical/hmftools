@@ -12,8 +12,8 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.variant.MicrohomologyContext;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContext;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
+import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.ReadContext;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +31,7 @@ public class ReadContextFactory
         mFlankSize = flankSize;
     }
 
-    public ReadContext createDelContext(
+    public ReadContext_ createDelContext(
             final String ref, int refPosition, int readIndex, final byte[] readBases, final IndexedBases refBases)
     {
         int refIndex = refBases.index(refPosition);
@@ -62,14 +62,14 @@ public class ReadContextFactory
             endIndex = max(endIndex, repeat.endIndex() + 1);
         }
 
-        return ReadContext.fromReadRecord(
+        return ReadContext_.fromReadRecord(
                 microhomologyContext.toString(),
                 readRepeatContext.map(RepeatContext::count).orElse(0),
                 readRepeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
                 refPosition, readIndex, startIndex, endIndex, mFlankSize, readBases);
     }
 
-    public ReadContext createInsertContext(
+    public ReadContext_ createInsertContext(
             final String alt, int refPosition, int readIndex, final byte[] readBases, final IndexedBases refBases)
     {
         int refIndex = refBases.index(refPosition);
@@ -103,19 +103,19 @@ public class ReadContextFactory
         // ensure that MH hasn't reduced the right core index too much
         endIndex = max(endIndex, readIndex + alt.length() - 1 + MIN_CORE_DISTANCE);
 
-        return ReadContext.fromReadRecord(
+        return ReadContext_.fromReadRecord(
                 microhomologyContext.toString(),
                 readRepeatContext.map(RepeatContext::count).orElse(0),
                 readRepeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
                 refPosition, readIndex, startIndex, endIndex, mFlankSize, readBases);
     }
 
-    public ReadContext createSNVContext(int refPosition, int readIndex, final SAMRecord record, final IndexedBases refBases)
+    public ReadContext_ createSNVContext(int refPosition, int readIndex, final SAMRecord record, final IndexedBases refBases)
     {
         return createMNVContext(refPosition, readIndex, 1, record.getReadBases(), refBases);
     }
 
-    public ReadContext createMNVContext(int refPosition, int readIndex, int length, final byte[] readBases, final IndexedBases refBases)
+    public ReadContext_ createMNVContext(int refPosition, int readIndex, int length, final byte[] readBases, final IndexedBases refBases)
     {
         int refIndex = refBases.index(refPosition);
         int startIndex = readIndex - MIN_CORE_DISTANCE;
@@ -149,7 +149,7 @@ public class ReadContextFactory
             endIndex = max(endIndex, repeat.endIndex() + 1);
         }
 
-        return ReadContext.fromReadRecord(
+        return ReadContext_.fromReadRecord(
                 Strings.EMPTY,
                 readRepeatContext.map(RepeatContext::count).orElse(0),
                 readRepeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),

@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 import org.jetbrains.annotations.Nullable;
@@ -161,7 +162,7 @@ public class SageVariant
     public Set<String> filters() { return mFilters; }
     public String filtersStr() { return mFilters.stream().collect(Collectors.joining(",")); }
 
-    public ReadContext readContext() { return mTumorReadCounters.get(0).readContext(); }
+    public ReadContext_ readContext() { return mTumorReadCounters.get(0).readContext(); }
 
     public List<ReadContextCounter> normalReadCounters() { return mNormalReadCounters; }
     public List<ReadContextCounter> tumorReadCounters() { return mTumorReadCounters; }

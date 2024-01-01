@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 
 import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
-import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 
 public class Realignment
 {
@@ -16,7 +16,7 @@ public class Realignment
     private static final Repeat NO_REPEAT = new Repeat(0, 0);
 
     public static RealignedContext realignedAroundIndex(
-            final ReadContext readContext, final int otherBaseIndex, final byte[] otherBases, int maxSize)
+            final ReadContext_ readContext, final int otherBaseIndex, final byte[] otherBases, int maxSize)
     {
         int baseStartIndex = readContext.readBasesLeftFlankIndex();
         int baseEndIndex = readContext.readBasesRightFlankIndex();

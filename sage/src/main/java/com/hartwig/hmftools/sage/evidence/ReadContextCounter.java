@@ -61,7 +61,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.UmiReadType;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
@@ -82,7 +82,7 @@ public class ReadContextCounter//  extends SimpleVariant
     private final int mId;
     private final VariantTier mTier;
     private final SimpleVariant mVariant;
-    private final ReadContext mReadContext;
+    private final ReadContext_ mReadContext;
     private final SageConfig mConfig;
     private final QualityCalculator mQualityCalculator;
     private final String mSample;
@@ -134,7 +134,7 @@ public class ReadContextCounter//  extends SimpleVariant
     private FragmentCoords mFragmentCoords;
 
     public ReadContextCounter(
-            final int id, final SimpleVariant variant, final ReadContext readContext, final VariantTier tier,
+            final int id, final SimpleVariant variant, final ReadContext_ readContext, final VariantTier tier,
             final int maxCoverage, final int minNumberOfEvents, final SageConfig config, final QualityCalculator qualityCalculator,
             final String sampleId)
     {
@@ -201,7 +201,7 @@ public class ReadContextCounter//  extends SimpleVariant
 
     public int id() { return mId; }
     public SimpleVariant variant() { return mVariant; }
-    public ReadContext readContext() { return mReadContext; }
+    public ReadContext_ readContext() { return mReadContext; }
     public VariantTier tier() { return mTier; }
     public int indelLength() { return mVariant.isIndel() ? max(mVariant.alt().length(), mVariant.ref().length()) : 0; }
     public boolean isSnv() { return mIsSnv; }

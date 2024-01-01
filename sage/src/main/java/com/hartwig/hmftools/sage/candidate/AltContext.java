@@ -14,7 +14,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 
 import org.jetbrains.annotations.NotNull;
@@ -63,7 +63,7 @@ public class AltContext implements VariantHotspot
         mRawBaseQualityAlt += baseQuality;
     }
 
-    public void addReadContext(int numberOfEvents, final ReadContext newReadContext)
+    public void addReadContext(int numberOfEvents, final ReadContext_ newReadContext)
     {
         int partialMatch = 0;
         int coreMatch = 0;
@@ -168,7 +168,7 @@ public class AltContext implements VariantHotspot
         mReadContextCandidates.clear();
     }
 
-    public ReadContext readContext() { return mCandidate.readContext(); }
+    public ReadContext_ readContext() { return mCandidate.readContext(); }
 
     @Override
     public String ref() { return Ref; }
@@ -220,13 +220,13 @@ public class AltContext implements VariantHotspot
 
     protected class ReadContextCandidate implements Comparable<ReadContextCandidate>
     {
-        private final ReadContext mReadContext;
+        private final ReadContext_ mReadContext;
         public int FullMatch;
         public int PartialMatch;
         public int CoreMatch;
         public int mMinNumberOfEvents;
 
-        ReadContextCandidate(int numberOfEvents, final ReadContext readContext)
+        ReadContextCandidate(int numberOfEvents, final ReadContext_ readContext)
         {
             mReadContext = readContext;
             mMinNumberOfEvents = numberOfEvents;
@@ -247,7 +247,7 @@ public class AltContext implements VariantHotspot
             return mReadContext.maxFlankLength();
         }
 
-        public ReadContext readContext() { return mReadContext; }
+        public ReadContext_ readContext() { return mReadContext; }
 
         public int fullMatch() { return FullMatch; }
 

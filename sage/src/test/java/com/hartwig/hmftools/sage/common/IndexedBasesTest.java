@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.evidence.ReadIndexBases;
 
 import org.apache.logging.log4j.util.Strings;
@@ -225,13 +226,13 @@ public class IndexedBasesTest
     @Test
     public void testStrings()
     {
-        ReadContext victim = createReadContext(1000, 4, 3, 5, 2, "AACATGAGG", Strings.EMPTY);
+        ReadContext_ victim = createReadContext(1000, 4, 3, 5, 2, "AACATGAGG", Strings.EMPTY);
         assertEquals("ATG", victim.coreString());
         assertEquals("AC", victim.leftFlankString());
         assertEquals("AG", victim.rightFlankString());
     }
 
-    public static ReadContext createReadContext(
+    public static ReadContext_ createReadContext(
             int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, int flankSize, String readBases, String microhomology)
     {
         int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
@@ -241,7 +242,7 @@ public class IndexedBasesTest
         IndexedBases readBasesIndexed = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, readBases.getBytes());
         // int[] baseQualities = makeDefaultBaseQualitities(readBases.length());
 
-        return new ReadContext(refPosition, "", 0, microhomology, readBasesIndexed, incompleteCore);
+        return new ReadContext_(refPosition, "", 0, microhomology, readBasesIndexed, incompleteCore);
     }
 
     @Test
