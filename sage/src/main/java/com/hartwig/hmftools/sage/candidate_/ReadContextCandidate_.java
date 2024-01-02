@@ -4,6 +4,9 @@ import static java.lang.Math.min;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Wraps a ReadContext with counters.
+ */
 public class ReadContextCandidate_ implements Comparable<ReadContextCandidate_>
 {
     public final ReadContext_ ReadContext;

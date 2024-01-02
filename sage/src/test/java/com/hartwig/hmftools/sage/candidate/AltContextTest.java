@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.sage.candidate_.AltContext_;
 import com.hartwig.hmftools.sage.candidate_.ReadContextCandidate_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.candidate_.RefContext_;
@@ -28,7 +29,7 @@ public class AltContextTest
     public void testIncompleteReadContext()
     {
         final RefContext_ refContext = new RefContext_(CHROM, POS);
-        final AltContext altContext = new AltContext(refContext, "C", "T");
+        final AltContext_ altContext = new AltContext_(refContext, "C", "T");
         final String core1 = "GATAC";
         final String core2 = "GATAA";
 
@@ -49,7 +50,7 @@ public class AltContextTest
     public void testFullMatch()
     {
         final RefContext_ refContext = new RefContext_(CHROM, POS);
-        final AltContext altContext = new AltContext(refContext, "C", "T");
+        final AltContext_ altContext = new AltContext_(refContext, "C", "T");
         final String core1 = "GATAC";
 
         final List<ReadContext_> readContexts = Lists.newArrayList();
@@ -70,7 +71,7 @@ public class AltContextTest
     public void testCoreMatchAfterFullMatch()
     {
         final RefContext_ refContext = new RefContext_(CHROM, POS);
-        final AltContext altContext = new AltContext(refContext, "C", "T");
+        final AltContext_ altContext = new AltContext_(refContext, "C", "T");
 
         final String core1 = "GATAC";
         final String core2 = "GATAA";
@@ -100,7 +101,7 @@ public class AltContextTest
     public void testPartialMatchAfterFullMatch()
     {
         final RefContext_ refContext = new RefContext_(CHROM, POS);
-        final AltContext altContext = new AltContext(refContext, "C", "T");
+        final AltContext_ altContext = new AltContext_(refContext, "C", "T");
 
         final String core1 = "GATAC";
         final String core2 = "GATAA";
@@ -132,7 +133,7 @@ public class AltContextTest
         String core = "CAT";
 
         final RefContext_ refContext = new RefContext_(CHROM, POS);
-        final AltContext altContext = new AltContext(refContext, "C", "T");
+        final AltContext_ altContext = new AltContext_(refContext, "C", "T");
 
         altContext.addReadContext(3, simpleReadContext("AAA", core, "CCC"));
         assertEquals("AAACATCCC", new String(altContext.interimReadContexts().get(0).ReadContext.readBases()));

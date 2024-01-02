@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.candidate.Candidates;
-import com.hartwig.hmftools.sage.candidate.AltContext;
+import com.hartwig.hmftools.sage.candidate_.AltContext_;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.common.SamSlicerInterface;
 import com.hartwig.hmftools.sage.coverage.Coverage;
@@ -56,7 +56,7 @@ public class CandidateStage
 
             SamSlicerInterface samSlicer = mSamSlicerFactory.getSamSlicer(sample, sliceRegions, true);
 
-            List<AltContext> altContexts = mCandidateEvidence.readBam(sample, samSlicer, refSequence, region);
+            List<AltContext_> altContexts = mCandidateEvidence.readBam(sample, samSlicer, refSequence, region);
 
             if(mConfig.TumorIds.size() == 1)
                 initialCandidates.addSingleSample(altContexts);

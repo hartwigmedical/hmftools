@@ -6,7 +6,6 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.sage.candidate.AltContext;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -18,7 +17,7 @@ public class RefContext_ implements GenomePosition
     public final String Chromosome;
     public final int Position;
 
-    private Map<String, AltContext> mAlts;
+    private Map<String, AltContext_> mAlts;
 
     public RefContext_(final String chromosome, int position)
     {
@@ -27,16 +26,16 @@ public class RefContext_ implements GenomePosition
         mAlts = null;
     }
 
-    private AltContext getOrCreateAltContext(final String ref, final String alt)
+    private AltContext_ getOrCreateAltContext(final String ref, final String alt)
     {
         if (mAlts == null)
             mAlts = Maps.newHashMap();
 
         String key = ref + "|" + alt;
-        AltContext altContext = mAlts.get(key);
+        AltContext_ altContext = mAlts.get(key);
         if (altContext == null)
         {
-            altContext = new AltContext(this, ref, alt);
+            altContext = new AltContext_(this, ref, alt);
             mAlts.put(key, altContext);
         }
 
@@ -48,7 +47,7 @@ public class RefContext_ implements GenomePosition
      */
     public void processAltRead(final String ref, final String alt, int baseQuality, int numberOfEvents, @Nullable final ReadContext_ readContext)
     {
-        final AltContext altContext = getOrCreateAltContext(ref, alt);
+        final AltContext_ altContext = getOrCreateAltContext(ref, alt);
         altContext.incrementAltRead(baseQuality);
 
         if(readContext != null && !readContext.hasIncompleteCore())
@@ -69,7 +68,7 @@ public class RefContext_ implements GenomePosition
         return Position;
     }
 
-    public Collection<AltContext> altContexts()
+    public Collection<AltContext_> altContexts()
     {
         return mAlts != null ? mAlts.values() : null;
     }

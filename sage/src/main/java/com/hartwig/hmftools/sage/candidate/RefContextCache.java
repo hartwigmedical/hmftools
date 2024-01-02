@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.candidate_.AltContext_;
 import com.hartwig.hmftools.sage.candidate_.RefContext_;
 import com.hartwig.hmftools.sage.common.EvictingArray;
 import com.hartwig.hmftools.sage.SageConfig;
@@ -25,7 +26,7 @@ public class RefContextCache
     private final SageConfig mConfig;
     private final EvictingArray mEvictingArray;
     private final PanelSelector mPanelSelector;
-    private final List<AltContext> mSavedCandidates;
+    private final List<AltContext_> mSavedCandidates;
     private final HotspotSelector mHotspotSelector;
 
     public RefContextCache(final SageConfig config, final List<VariantHotspot> hotspots, final List<BaseRegion> panel)
@@ -56,7 +57,7 @@ public class RefContextCache
         return mEvictingArray.getOrCreateRefContext(position, aLong -> new RefContext_(chromosome, position));
     }
 
-    public List<AltContext> altContexts()
+    public List<AltContext_> altContexts()
     {
         mEvictingArray.evictAll();
         Collections.sort(mSavedCandidates);
@@ -65,12 +66,12 @@ public class RefContextCache
 
     private void processAltContexts(final RefContext_ refContext)
     {
-        Collection<AltContext> altContexts = refContext.altContexts();
+        Collection<AltContext_> altContexts = refContext.altContexts();
 
         if(altContexts == null)
             return;
 
-        for(AltContext altContext : altContexts)
+        for(AltContext_ altContext : altContexts)
         {
             if(!hasValidDnaBases(altContext))
                 continue;
@@ -88,7 +89,7 @@ public class RefContextCache
         }
     }
 
-    private boolean hasValidDnaBases(final AltContext altContext)
+    private boolean hasValidDnaBases(final AltContext_ altContext)
     {
         for(int i = 0; i < altContext.ref().length(); i++)
         {
@@ -99,7 +100,7 @@ public class RefContextCache
         return true;
     }
 
-    public boolean passesTumorHardLimits(final AltContext altContext)
+    public boolean passesTumorHardLimits(final AltContext_ altContext)
     {
         if(mHotspotSelector.isHotspot(altContext))
             return true;

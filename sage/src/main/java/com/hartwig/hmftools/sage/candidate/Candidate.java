@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.candidate;
 
+import com.hartwig.hmftools.sage.candidate_.AltContext_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
@@ -23,7 +24,7 @@ public class Candidate
         mReadContextSupport = readContextSupport;
     }
 
-    public static Candidate fromAltContext(final VariantTier tier, final AltContext altContext)
+    public static Candidate fromAltContext(final VariantTier tier, final AltContext_ altContext)
     {
         SimpleVariant variant = new SimpleVariant(altContext.chromosome(), altContext.position(), altContext.Ref, altContext.Alt);
 
@@ -31,7 +32,7 @@ public class Candidate
                 tier, variant, altContext.readContext(), altContext.minNumberOfEvents(), altContext.readContextSupport());
     }
 
-    public void update(final AltContext altContext)
+    public void update(final AltContext_ altContext)
     {
         int altContextSupport = altContext.readContextSupport();
         if(altContextSupport > mReadContextSupport)
