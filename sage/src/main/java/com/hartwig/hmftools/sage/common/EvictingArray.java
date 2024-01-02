@@ -11,16 +11,16 @@ import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
-import com.hartwig.hmftools.sage.candidate.RefContext;
+import com.hartwig.hmftools.sage.candidate_.RefContext_;
 
 public class EvictingArray
 {
     // a ring buffer to store alts and ref/alt depth
     // capacity is designed to cover a set of reads covering at least a few multiples of the maximum read length
-    private final RefContext[] mElements;
+    private final RefContext_[] mElements;
     private final int[] mDepth;
     private final int[] mDepthLimit;
-    private final Consumer<RefContext> mEvictionHandler;
+    private final Consumer<RefContext_> mEvictionHandler;
     private int mMinPosition;
     private int mMinPositionIndex;
 
@@ -28,11 +28,11 @@ public class EvictingArray
 
     public static final int MIN_CAPACITY = 256;
 
-    public EvictingArray(int capacity, Consumer<RefContext> evictionHandler)
+    public EvictingArray(int capacity, Consumer<RefContext_> evictionHandler)
     {
         mEvictionHandler = evictionHandler;
         mCapacity = capacity;
-        mElements = new RefContext[mCapacity];
+        mElements = new RefContext_[mCapacity];
         mDepth = new int[mCapacity];
         mDepthLimit = new int[mCapacity];
         mMinPosition = 0;
@@ -91,7 +91,7 @@ public class EvictingArray
         ++mDepth[index];
     }
 
-    public RefContext getOrCreateRefContext(int position, final Function<Integer,RefContext> supplier)
+    public RefContext_ getOrCreateRefContext(int position, final Function<Integer,RefContext_> supplier)
     {
         if(!isValidPosition(position, "getOrCreateRefContext"))
             return null;
@@ -101,7 +101,7 @@ public class EvictingArray
         int distanceFromMinPosition = position - mMinPosition;
         int index = calcIndex(distanceFromMinPosition);
 
-        RefContext element = mElements[index];
+        RefContext_ element = mElements[index];
         if(element == null)
         {
             element = supplier.apply(position);
@@ -165,7 +165,7 @@ public class EvictingArray
         // only iterate at most once through the array
         for(int i = 0; i < min(flushCount, mCapacity); i++)
         {
-            RefContext element = mElements[mMinPositionIndex];
+            RefContext_ element = mElements[mMinPositionIndex];
 
             // clear and process each element and depth
             if(element != null)

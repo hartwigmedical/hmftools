@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
+import com.hartwig.hmftools.sage.candidate_.RefContext_;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +24,7 @@ public class AltContext implements VariantHotspot
 {
     public final String Ref;
     public final String Alt;
-    public final RefContext RefContext;
+    public final RefContext_ RefContext;
     
     private final List<ReadContextCandidate> mReadContextCandidates;
 
@@ -32,7 +33,7 @@ public class AltContext implements VariantHotspot
     private ReadContextCandidate mCandidate;
     private AltContext mSecondCandidate; // relevant if has a different read context and sufficient support
 
-    public AltContext(final RefContext refContext, final String ref, final String alt)
+    public AltContext(final RefContext_ refContext, final String ref, final String alt)
     {
         RefContext = refContext;
         Ref = ref;
@@ -44,7 +45,7 @@ public class AltContext implements VariantHotspot
     }
 
     public AltContext(
-            final RefContext refContext, final String ref, final String alt, final ReadContextCandidate candidate,
+            final RefContext_ refContext, final String ref, final String alt, final ReadContextCandidate candidate,
             int rawSupportAlt, int rawBaseQualAlt)
     {
         RefContext = refContext;

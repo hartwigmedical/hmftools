@@ -28,6 +28,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate_.ReadContextFactory_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
+import com.hartwig.hmftools.sage.candidate_.RefContext_;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.IndexedBases;
@@ -270,7 +271,7 @@ public class RefContextConsumer
         final String alt = new String(record.getReadBases(), readIndex, element.getLength() + 1);
         boolean findReadContext = withinReadContext(readIndex, record);
 
-        RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
+        RefContext_ refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
 
         int baseQuality = baseQuality(readIndex, record, alt.length());
 
@@ -302,7 +303,7 @@ public class RefContextConsumer
         final String alt = new String(record.getReadBases(), readIndex, 1);
         boolean findReadContext = withinReadContext(readIndex, record);
 
-        final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
+        final RefContext_ refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
         if(refContext != null)
         {
             final int baseQuality = baseQuality(readIndex, record, 2);
@@ -350,7 +351,7 @@ public class RefContextConsumer
 
             if(readByte != refByte)
             {
-                final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
+                final RefContext_ refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
                 if(refContext == null)
                     continue;
 
@@ -446,7 +447,7 @@ public class RefContextConsumer
         if(reachedDepthLimit(refPosition, panelStatus))
             return null;
 
-        RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
+        RefContext_ refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
 
         int baseQuality = baseQuality(readIndex, record, altRead.Alt.length());
 

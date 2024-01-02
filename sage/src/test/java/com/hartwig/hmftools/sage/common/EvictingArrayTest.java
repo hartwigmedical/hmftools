@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.sage.candidate.RefContext;
+import com.hartwig.hmftools.sage.candidate_.RefContext_;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -120,21 +120,21 @@ public class EvictingArrayTest
         assertEquals(1099, mHandler.items().get(99).position());
     }
 
-    static class EvictionHandler implements Consumer<RefContext>
+    static class EvictionHandler implements Consumer<RefContext_>
     {
         private final List<GenomePosition> mItems = Lists.newArrayList();
 
         public List<GenomePosition> items() { return mItems; }
 
         @Override
-        public void accept(final RefContext position)
+        public void accept(final RefContext_ position)
         {
             mItems.add(position);
         }
     }
 
-    private static RefContext create(int pos)
+    private static RefContext_ create(int pos)
     {
-        return new RefContext("1", pos);
+        return new RefContext_("1", pos);
     }
 }

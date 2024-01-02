@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.candidate_.RefContext_;
 import com.hartwig.hmftools.sage.common.EvictingArray;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.select.HotspotSelector;
@@ -35,7 +36,7 @@ public class RefContextCache
 
         mHotspotSelector = new HotspotSelector(hotspots);
 
-        final Consumer<RefContext> evictionHandler = (refContext) -> processAltContexts(refContext);
+        final Consumer<RefContext_> evictionHandler = (refContext) -> processAltContexts(refContext);
 
         int minCapacity = config.getReadLength() == DEFAULT_READ_LENGTH ?
                 MIN_CAPACITY : max(MIN_CAPACITY, config.getReadLength() * 2);
@@ -50,9 +51,9 @@ public class RefContextCache
 
     public Boolean exceedsDepthLimit(int position) { return mEvictingArray.exceedsDepthLimit(position); }
 
-    public RefContext getOrCreateRefContext(final String chromosome, int position)
+    public RefContext_ getOrCreateRefContext(final String chromosome, int position)
     {
-        return mEvictingArray.getOrCreateRefContext(position, aLong -> new RefContext(chromosome, position));
+        return mEvictingArray.getOrCreateRefContext(position, aLong -> new RefContext_(chromosome, position));
     }
 
     public List<AltContext> altContexts()
@@ -62,7 +63,7 @@ public class RefContextCache
         return mSavedCandidates;
     }
 
-    private void processAltContexts(final RefContext refContext)
+    private void processAltContexts(final RefContext_ refContext)
     {
         Collection<AltContext> altContexts = refContext.altContexts();
 
