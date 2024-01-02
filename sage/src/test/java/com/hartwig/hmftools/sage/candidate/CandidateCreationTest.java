@@ -14,6 +14,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.sage.candidate_.AltRead_;
 import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
@@ -41,7 +42,7 @@ public class CandidateCreationTest
         String readBases = refBaseStr.substring(20, scStartRefIndex) + scBases;
         int scReadIndex = 31;
 
-        AltRead altRead = RefContextConsumer.processSoftClip(
+        AltRead_ altRead = RefContextConsumer.processSoftClip(
                 120, 150, readBases, scBases.length(), scReadIndex, refBases, false);
 
         assertNotNull(altRead);

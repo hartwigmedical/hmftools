@@ -26,6 +26,7 @@ import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.candidate_.AltRead_;
 import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.candidate_.ReadContextFactory_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
@@ -99,7 +100,7 @@ public class RefContextConsumer
         boolean readExceedsScAdjustedQuality = scAdjustedMapQual > 0;
         boolean ignoreScAdapter = scEvents > 0 && ignoreSoftClipAdapter(record);
 
-        final List<AltRead> altReads = Lists.newArrayList();
+        final List<AltRead_> altReads = Lists.newArrayList();
         final IndexedBases_ refBases = mRefGenome.alignment();
 
         final CigarHandler handler = new CigarHandler()
@@ -131,7 +132,7 @@ public class RefContextConsumer
                 if(record.isSecondaryOrSupplementary())
                     return;
 
-                AltRead altRead = processInsert(
+                AltRead_ altRead = processInsert(
                         element, record, readIndex, refPosition, panelStatus, refBases, numberOfEvents, readExceedsQuality,
                         readExceedsScAdjustedQuality);
 
@@ -145,7 +146,7 @@ public class RefContextConsumer
                 if(record.isSecondaryOrSupplementary())
                     return;
 
-                AltRead altRead = processDel(
+                AltRead_ altRead = processDel(
                         element, record, readIndex, refPosition, panelStatus, refBases, numberOfEvents, readExceedsQuality,
                         readExceedsScAdjustedQuality);
 
@@ -159,7 +160,7 @@ public class RefContextConsumer
                 if(ignoreScAdapter)
                     return;
 
-                AltRead altRead = processSoftClip(
+                AltRead_ altRead = processSoftClip(
                         record, element.getLength(), 0, panelStatus, refBases, readExceedsQuality, numberOfEvents, true);
 
                 if(altRead != null)
@@ -172,7 +173,7 @@ public class RefContextConsumer
                 if(ignoreScAdapter)
                     return;
 
-                AltRead altRead = processSoftClip(
+                AltRead_ altRead = processSoftClip(
                         record, element.getLength(), readIndex, panelStatus, refBases, readExceedsQuality, numberOfEvents, false);
 
                 if(altRead != null)
@@ -184,7 +185,7 @@ public class RefContextConsumer
 
         checkCoreExtension(altReads);
 
-        for(AltRead altRead : altReads)
+        for(AltRead_ altRead : altReads)
         {
             altRead.updateRefContext();
 
@@ -249,7 +250,7 @@ public class RefContextConsumer
 
     private boolean isHotspotPosition(int position) { return mHotspotPositions.contains(position); }
 
-    private AltRead processInsert(
+    private AltRead_ processInsert(
             final CigarElement element, final SAMRecord record, int readIndex, int refPosition, final ReadPanelStatus panelStatus,
             final IndexedBases_ refBases, int numberOfEvents, boolean readExceedsQuality, boolean readExceedsScAdjustedQuality)
     {
@@ -278,10 +279,10 @@ public class RefContextConsumer
         ReadContext_ readContext = findReadContext ?
                 mReadContextFactory.createInsertContext(alt, refPosition, readIndex, record.getReadBases(), refBases) : null;
 
-        return new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
+        return new AltRead_(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
     }
 
-    private AltRead processDel(
+    private AltRead_ processDel(
             final CigarElement element, final SAMRecord record, int readIndex, int refPosition, final ReadPanelStatus panelStatus,
             final IndexedBases_ refBases, int numberOfEvents, boolean readExceedsQuality, boolean readExceedsScAdjustedQuality)
     {
@@ -311,17 +312,17 @@ public class RefContextConsumer
             final ReadContext_ readContext = findReadContext ?
                     mReadContextFactory.createDelContext(ref, refPosition, readIndex, record.getReadBases(), refBases) : null;
 
-            return new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
+            return new AltRead_(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
         }
 
         return null;
     }
 
-    private List<AltRead> processAlignment(
+    private List<AltRead_> processAlignment(
             final SAMRecord record, int readBasesStartIndex, int refPositionStart, int alignmentLength,
             final ReadPanelStatus panelStatus, final IndexedBases_ refBases, int numberOfEvents, boolean readExceedsQuality)
     {
-        List<AltRead> result = Lists.newArrayList();
+        List<AltRead_> result = Lists.newArrayList();
         boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
 
         int refIndex = refBases.index(refPositionStart);
@@ -360,7 +361,7 @@ public class RefContextConsumer
                 final ReadContext_ readContext = isWithinReadContext ?
                         mReadContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases) : null;
 
-                result.add(new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext));
+                result.add(new AltRead_(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext));
 
                 int mnvMaxLength = mnvLength(readBaseIndex, refBaseIndex, record.getReadBases(), refBases.Bases);
 
@@ -386,7 +387,7 @@ public class RefContextConsumer
                                 record.getReadBases(),
                                 refBases) : null;
 
-                        result.add(new AltRead(refContext,
+                        result.add(new AltRead_(refContext,
                                 mnvRef,
                                 mnvAlt,
                                 baseQuality,
@@ -406,7 +407,7 @@ public class RefContextConsumer
         return result;
     }
 
-    private AltRead processSoftClip(
+    private AltRead_ processSoftClip(
             final SAMRecord record, int scLength, int scReadIndex, final ReadPanelStatus panelStatus, final IndexedBases_ refBases,
             boolean readExceedsQuality, int numberOfEvents, boolean onLeft)
     {
@@ -416,7 +417,7 @@ public class RefContextConsumer
         if(scLength < SC_INSERT_MIN_SC_LENGTH + 1)
             return null;
 
-        AltRead altRead = processSoftClip(
+        AltRead_ altRead = processSoftClip(
                 record.getAlignmentStart(), record.getAlignmentEnd(), record.getReadString(), scLength, scReadIndex, refBases, onLeft);
 
         if(altRead == null)
@@ -462,11 +463,11 @@ public class RefContextConsumer
 
         boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
 
-        AltRead altReadFull = new AltRead(refContext, altRead.Ref, altRead.Alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
+        AltRead_ altReadFull = new AltRead_(refContext, altRead.Ref, altRead.Alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
         return altReadFull;
     }
 
-    public static AltRead processSoftClip(
+    public static AltRead_ processSoftClip(
             int readStart, int readEnd, final String readBases, int scLength, int scReadIndex, final IndexedBases_ refBases, boolean onLeft)
     {
         // look for an insert of X bases starting at the soft-clip followed by at least 10 bases of matching ref bases in the soft-clipping
@@ -500,7 +501,7 @@ public class RefContextConsumer
                 String ref = readBases.substring(scIndexMatchEnd, scIndexMatchEnd + 1);
                 String alt = readBases.substring(scIndexMatchEnd, scIndexMatchEnd + altLength + 1);
 
-                return new AltRead(null, ref, alt, 0, 0, false, null);
+                return new AltRead_(null, ref, alt, 0, 0, false, null);
             }
             catch(Exception e)
             {
@@ -531,7 +532,7 @@ public class RefContextConsumer
                 String ref = readBases.substring(scReadIndex - 1, scReadIndex);
                 String alt = readBases.substring(scReadIndex - 1, scReadIndex + scMatchIndex);
 
-                return new AltRead(null, ref, alt, 0, 0, false, null);
+                return new AltRead_(null, ref, alt, 0, 0, false, null);
             }
             catch(Exception e)
             {
@@ -569,7 +570,7 @@ public class RefContextConsumer
         return quality;
     }
 
-    private void checkCoreExtension(final List<AltRead> altReads)
+    private void checkCoreExtension(final List<AltRead_> altReads)
     {
         if(altReads.size() < 2)
             return;
@@ -577,12 +578,12 @@ public class RefContextConsumer
         // if an SNV core overlaps an indel core, then extend the cores of both
         for(int i = 0; i < altReads.size(); i++)
         {
-            final AltRead snv = altReads.get(i);
+            final AltRead_ snv = altReads.get(i);
             if(!snv.isIndel() && snv.containsReadContext())
             {
                 for(int j = altReads.size() - 1; j > i; j--)
                 {
-                    final AltRead nextIndel = altReads.get(j);
+                    final AltRead_ nextIndel = altReads.get(j);
                     if(nextIndel != null && nextIndel.isIndel() && nextIndel.containsReadContext())
                     {
                         if(nextIndel.leftCoreIndex() - nextIndel.length() <= snv.rightCoreIndex())
@@ -597,13 +598,13 @@ public class RefContextConsumer
 
         for(int i = altReads.size() - 1; i >= 0; i--)
         {
-            final AltRead snv = altReads.get(i);
+            final AltRead_ snv = altReads.get(i);
 
             if(!snv.isIndel() && snv.containsReadContext())
             {
                 for(int j = 0; j < i; j++)
                 {
-                    final AltRead previousIndel = altReads.get(j);
+                    final AltRead_ previousIndel = altReads.get(j);
                     if(previousIndel != null && previousIndel.isIndel() && previousIndel.containsReadContext())
                     {
                         if(previousIndel.rightCoreIndex() + previousIndel.length() >= snv.leftCoreIndex())
