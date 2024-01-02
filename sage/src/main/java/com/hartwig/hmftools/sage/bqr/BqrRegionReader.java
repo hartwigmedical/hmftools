@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.samtools.CigarTraversal;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.common.RefSequence;
 
 import htsjdk.samtools.CigarElement;
@@ -38,7 +38,7 @@ public class BqrRegionReader implements CigarHandler
     private final BaseQualityResults mResults;
 
     private ChrBaseRegion mRegion;
-    private IndexedBases mIndexedBases;
+    private IndexedBases_ mIndexedBases;
 
     private final Set<BqrKeyCounter> mQualityCounts; // summarised counts with position removed
     private final Map<BqrKey,Integer> mKeyCountsMap;

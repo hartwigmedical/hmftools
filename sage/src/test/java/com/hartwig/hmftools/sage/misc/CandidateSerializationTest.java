@@ -7,8 +7,8 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
-import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.IndexedBasesTest;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
@@ -41,7 +41,7 @@ public class CandidateSerializationTest
     public static Candidate decode(String line)
     {
         VariantContext context = CODEC.decode(line);
-        IndexedBases cheatRefBases = CandidateSerialization.readBases(context);
+        IndexedBases_ cheatRefBases = CandidateSerialization.readBases(context);
         return CandidateSerialization.toCandidate(context, cheatRefBases, cheatRefBases);
     }
 
@@ -54,8 +54,8 @@ public class CandidateSerializationTest
         final String expectedMH = "ATGA";
         final int expectedIndex = 1;
         final int expositionPosition = 1000;
-        final IndexedBases refBases = IndexedBasesTest.createIndexedBases(expositionPosition, expectedIndex, "AA", "TA", "ATG", "CG", "TT");
-        final IndexedBases readBases = IndexedBasesTest.createIndexedBases(expositionPosition, expectedIndex, "AA", "TA", "ACG", "CG", "TT");
+        final IndexedBases_ refBases = IndexedBasesTest.createIndexedBases(expositionPosition, expectedIndex, "AA", "TA", "ATG", "CG", "TT");
+        final IndexedBases_ readBases = IndexedBasesTest.createIndexedBases(expositionPosition, expectedIndex, "AA", "TA", "ACG", "CG", "TT");
 
         final ReadContext_ readContext = new ReadContext_(
                 expositionPosition, expectedRepeat, expectedRepeatCount, expectedMH, readBases, false);
@@ -65,7 +65,7 @@ public class CandidateSerializationTest
         final Candidate candidate = new Candidate(expectedTier, variant, readContext, 2,0);
 
         final VariantContext serialized = toContext(candidate);
-        final IndexedBases deserializedReadBases = CandidateSerialization.readBases(serialized);
+        final IndexedBases_ deserializedReadBases = CandidateSerialization.readBases(serialized);
         final Candidate deserialized = CandidateSerialization.toCandidate(serialized, deserializedReadBases, refBases);
 
         assertEqual(candidate, deserialized);

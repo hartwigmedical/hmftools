@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
-import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 import htsjdk.samtools.SAMRecord;
@@ -17,12 +17,12 @@ public class QualityCalculator
 {
     private final QualityConfig mConfig;
     private final BqrRecordMap mQualityRecalibrationMap;
-    private final IndexedBases mRefBases;
+    private final IndexedBases_ mRefBases;
 
     private static final int MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY = 10;
 
     public QualityCalculator(
-            final QualityConfig config, final BqrRecordMap qualityRecalibrationMap, final IndexedBases refBases)
+            final QualityConfig config, final BqrRecordMap qualityRecalibrationMap, final IndexedBases_ refBases)
     {
         mConfig = config;
         mQualityRecalibrationMap = qualityRecalibrationMap;

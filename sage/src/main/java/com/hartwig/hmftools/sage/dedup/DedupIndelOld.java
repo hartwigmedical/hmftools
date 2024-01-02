@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER_OLD;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.common.SageVariant;
 
 public final class DedupIndelOld
@@ -133,7 +133,7 @@ public final class DedupIndelOld
 
     private static CoreFlanksRefBases extractCoreFlanksLessAlt(final SageVariant variant)
     {
-        final IndexedBases indexedBases = variant.readContext().indexedBases();
+        final IndexedBases_ indexedBases = variant.readContext().indexedBases();
 
         try
         {

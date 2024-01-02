@@ -81,8 +81,8 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
-import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
@@ -139,7 +139,7 @@ public class VariantVis
         mReadContext = readContext;
         mVariantKey = mVariant.chromosome() + "_" + mVariant.position() + "_" + mVariant.ref() + "_" + mVariant.alt();
 
-        IndexedBases indexedBases = mReadContext.indexedBases();
+        IndexedBases_ indexedBases = mReadContext.indexedBases();
         int indelSize = mVariant.ref().length() - mVariant.alt().length();
         int coreStart = indexedBases.corePositionStart();
         int coreEnd = indexedBases.corePositionEnd() + indelSize;
@@ -455,7 +455,7 @@ public class VariantVis
         if(!filters.isEmpty())
             filterStr = "FILTER = " + filters.stream().collect(Collectors.joining(","));
 
-        IndexedBases indexedBases = mReadContext.indexedBases();
+        IndexedBases_ indexedBases = mReadContext.indexedBases();
         List<DomContent> contextElems = Lists.newArrayList();
         contextElems.add(span("CONTEXT = "));
         contextElems.add(span(indexedBases.leftFlankString()));

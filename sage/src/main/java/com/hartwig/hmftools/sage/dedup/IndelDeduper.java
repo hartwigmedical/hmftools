@@ -23,7 +23,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
@@ -183,7 +183,7 @@ public class IndelDeduper
         if(refBases == null || refBases.isEmpty())
             return;
 
-        IndexedBases indelReadContextBases = indel.ReadCounter.readContext().indexedBases();
+        IndexedBases_ indelReadContextBases = indel.ReadCounter.readContext().indexedBases();
         String indelCoreFlankBases = indelReadContextBases.fullString();
 
         mGroupIterations = 0;
@@ -480,7 +480,7 @@ public class IndelDeduper
             }
 
             // flank positions are estimate since they aren't aware of other variants in their core and flanks
-            final IndexedBases indexedBases = ReadCounter.readContext().indexedBases();
+            final IndexedBases_ indexedBases = ReadCounter.readContext().indexedBases();
 
             // note that flank positions are estimates of position since they aren't aware of other INDELs in their context
             int leftFlankFromIndex = indexedBases.Index - indexedBases.LeftFlankIndex;

@@ -26,12 +26,12 @@ import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.candidate_.ReadContextFactory_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.candidate_.RefContext_;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.select.ReadPanelStatus;
 
@@ -100,7 +100,7 @@ public class RefContextConsumer
         boolean ignoreScAdapter = scEvents > 0 && ignoreSoftClipAdapter(record);
 
         final List<AltRead> altReads = Lists.newArrayList();
-        final IndexedBases refBases = mRefGenome.alignment();
+        final IndexedBases_ refBases = mRefGenome.alignment();
 
         final CigarHandler handler = new CigarHandler()
         {
@@ -251,7 +251,7 @@ public class RefContextConsumer
 
     private AltRead processInsert(
             final CigarElement element, final SAMRecord record, int readIndex, int refPosition, final ReadPanelStatus panelStatus,
-            final IndexedBases refBases, int numberOfEvents, boolean readExceedsQuality, boolean readExceedsScAdjustedQuality)
+            final IndexedBases_ refBases, int numberOfEvents, boolean readExceedsQuality, boolean readExceedsScAdjustedQuality)
     {
         if(!mBounds.containsPosition(refPosition))
             return null;
@@ -283,7 +283,7 @@ public class RefContextConsumer
 
     private AltRead processDel(
             final CigarElement element, final SAMRecord record, int readIndex, int refPosition, final ReadPanelStatus panelStatus,
-            final IndexedBases refBases, int numberOfEvents, boolean readExceedsQuality, boolean readExceedsScAdjustedQuality)
+            final IndexedBases_ refBases, int numberOfEvents, boolean readExceedsQuality, boolean readExceedsScAdjustedQuality)
     {
         if(!mBounds.containsPosition(refPosition))
             return null;
@@ -319,7 +319,7 @@ public class RefContextConsumer
 
     private List<AltRead> processAlignment(
             final SAMRecord record, int readBasesStartIndex, int refPositionStart, int alignmentLength,
-            final ReadPanelStatus panelStatus, final IndexedBases refBases, int numberOfEvents, boolean readExceedsQuality)
+            final ReadPanelStatus panelStatus, final IndexedBases_ refBases, int numberOfEvents, boolean readExceedsQuality)
     {
         List<AltRead> result = Lists.newArrayList();
         boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
@@ -407,7 +407,7 @@ public class RefContextConsumer
     }
 
     private AltRead processSoftClip(
-            final SAMRecord record, int scLength, int scReadIndex, final ReadPanelStatus panelStatus, final IndexedBases refBases,
+            final SAMRecord record, int scLength, int scReadIndex, final ReadPanelStatus panelStatus, final IndexedBases_ refBases,
             boolean readExceedsQuality, int numberOfEvents, boolean onLeft)
     {
         if(!readExceedsQuality)
@@ -467,7 +467,7 @@ public class RefContextConsumer
     }
 
     public static AltRead processSoftClip(
-            int readStart, int readEnd, final String readBases, int scLength, int scReadIndex, final IndexedBases refBases, boolean onLeft)
+            int readStart, int readEnd, final String readBases, int scLength, int scReadIndex, final IndexedBases_ refBases, boolean onLeft)
     {
         // look for an insert of X bases starting at the soft-clip followed by at least 10 bases of matching ref bases in the soft-clipping
         if(onLeft)

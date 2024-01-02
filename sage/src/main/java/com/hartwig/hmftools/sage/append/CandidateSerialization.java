@@ -16,8 +16,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
-import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
@@ -34,11 +34,11 @@ public final class CandidateSerialization
 {
     public static Candidate toCandidate(final VariantContext context, final RefSequence refGenome)
     {
-        final IndexedBases readBases = readBases(context);
+        final IndexedBases_ readBases = readBases(context);
         return toCandidate(context, readBases, refGenome.alignment());
     }
 
-    public static IndexedBases readBases(final VariantContext context)
+    public static IndexedBases_ readBases(final VariantContext context)
     {
         final int position = context.getStart();
 
@@ -55,7 +55,7 @@ public final class CandidateSerialization
         System.arraycopy(core.getBytes(), 0, bases, leftCoreIndex, core.length());
         System.arraycopy(rightFlank.getBytes(), 0, bases, rightFlankIndex, rightFlank.length());
 
-        return new IndexedBases(position,
+        return new IndexedBases_(position,
                 readContextIndex + leftFlank.length(),
                 leftFlank.length(),
                 rightCoreIndex,
@@ -63,7 +63,7 @@ public final class CandidateSerialization
                 bases);
     }
 
-    public static Candidate toCandidate(final VariantContext context, final IndexedBases readBases, final IndexedBases refBases)
+    public static Candidate toCandidate(final VariantContext context, final IndexedBases_ readBases, final IndexedBases_ refBases)
     {
         SimpleVariant variant = new SimpleVariant(
                 context.getContig(), context.getStart(),

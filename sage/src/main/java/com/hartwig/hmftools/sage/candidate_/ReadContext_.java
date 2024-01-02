@@ -4,7 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.sage.common.IndexedBases;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -20,11 +19,11 @@ public class ReadContext_
     public final int RepeatCount;
     public final String Microhomology;
 
-    private IndexedBases mReadBases;
+    private IndexedBases_ mReadBases;
     private boolean mIncompleteCore;
 
     public ReadContext_(
-            int position, final String repeat, int repeatCount, final String microhomology, final IndexedBases readBases,
+            int position, final String repeat, int repeatCount, final String microhomology, final IndexedBases_ readBases,
             final boolean incompleteCore)
     {
         Position = position;
@@ -48,7 +47,7 @@ public class ReadContext_
         int clippedRightCentreIndex = min(rightCentreIndex, readBases.length - 1);
         boolean incompleteCore = leftCentreIndex != clippedLeftCentreIndex || rightCentreIndex != clippedRightCentreIndex;
 
-        IndexedBases indexedBases = new IndexedBases(
+        IndexedBases_ indexedBases = new IndexedBases_(
                 refPosition, readIndex, clippedLeftCentreIndex, clippedRightCentreIndex, flankSize, readBases);
 
         return new ReadContext_(refPosition, repeat, repeatCount, microhomology, indexedBases, incompleteCore);
@@ -63,7 +62,7 @@ public class ReadContext_
         int clippedLeftCentreIndex = max(0, leftCentreIndex);
         int clippedRightCentreIndex = min(rightCentreIndex, readBases().length - 1);
 
-        mReadBases = new IndexedBases(mReadBases.Position, mReadBases.Index, clippedLeftCentreIndex, clippedRightCentreIndex, mReadBases.FlankSize, readBases());
+        mReadBases = new IndexedBases_(mReadBases.Position, mReadBases.Index, clippedLeftCentreIndex, clippedRightCentreIndex, mReadBases.FlankSize, readBases());
         mIncompleteCore = leftCentreIndex != clippedLeftCentreIndex || rightCentreIndex != clippedRightCentreIndex;
     }
 
@@ -103,7 +102,7 @@ public class ReadContext_
 
     public String microhomology() { return Microhomology; }
 
-    public IndexedBases indexedBases() { return mReadBases; }
+    public IndexedBases_ indexedBases() { return mReadBases; }
     public byte[] readBases() { return mReadBases.Bases; }
 
     public int maxFlankLength() { return mReadBases.maxFlankLength(); }

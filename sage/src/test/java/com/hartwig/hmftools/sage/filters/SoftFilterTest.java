@@ -22,8 +22,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
-import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
@@ -40,7 +40,7 @@ import htsjdk.samtools.SAMRecord;
 public class SoftFilterTest
 {
     private static final String REF_BASES = "X" + generateRandomBases(100);
-    private static final IndexedBases REF_INDEXED_BASES = new IndexedBases(1, 0, REF_BASES.getBytes());
+    private static final IndexedBases_ REF_INDEXED_BASES = new IndexedBases_(1, 0, REF_BASES.getBytes());
     private static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG.Quality, RECALIBRATION, REF_INDEXED_BASES);
 
     private static final String TEST_READ_ID = "READ_01";

@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.evidence.ReadIndexBases;
 
@@ -18,14 +19,14 @@ import org.junit.Test;
 
 public class IndexedBasesTest
 {
-    private final IndexedBases mIndexedBases = new IndexedBases(
+    private final IndexedBases_ mIndexedBases = new IndexedBases_(
             1000, 5, 4, 6, 3, "GATCTCCTCA".getBytes());
 
     @Test
     public void testMaxFlankLength()
     {
-        IndexedBases constrainedOnLeft = new IndexedBases(1000, 5, 2, 6, 3, "GATCTCCTCA".getBytes());
-        IndexedBases constrainedOnRight = new IndexedBases(1000, 5, 4, 6, 3, "GATCTCCTCA".getBytes());
+        IndexedBases_ constrainedOnLeft = new IndexedBases_(1000, 5, 2, 6, 3, "GATCTCCTCA".getBytes());
+        IndexedBases_ constrainedOnRight = new IndexedBases_(1000, 5, 4, 6, 3, "GATCTCCTCA".getBytes());
 
         assertEquals(2, constrainedOnLeft.maxFlankLength());
         assertEquals(3, constrainedOnRight.maxFlankLength());
@@ -91,7 +92,7 @@ public class IndexedBasesTest
 
         // a longer insert sequence allows for more mismatches
         String readBases = "GGGGGTTACCCCCCCCCACCCCCCCCCACCCCCCCCCACCCCCCCCCTTGGGGG";
-        IndexedBases indexedBases = new IndexedBases(
+        IndexedBases_ indexedBases = new IndexedBases_(
                 1000, 7, 5, 48, 5, readBases.getBytes());
 
         baseQuals = new byte[readBases.length()];
@@ -116,42 +117,42 @@ public class IndexedBasesTest
     @Test
     public void testPartialMatchMustHaveAtLeastOneFullSide()
     {
-        IndexedBases indexedBases = new IndexedBases(1000, 2, 2, 2, 2, "GGTAA".getBytes());
+        IndexedBases_ indexedBases = new IndexedBases_(1000, 2, 2, 2, 2, "GGTAA".getBytes());
 
-        IndexedBases testBases = new IndexedBases(1000, 2, 2, 2, 2, "GGTAA".getBytes());
+        IndexedBases_ testBases = new IndexedBases_(1000, 2, 2, 2, 2, "GGTAA".getBytes());
         assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases));
 
-        testBases = new IndexedBases(1000, 2, 2, 2, 2, "GGTA".getBytes());
+        testBases = new IndexedBases_(1000, 2, 2, 2, 2, "GGTA".getBytes());
         assertEquals(ReadContextMatch.PARTIAL, indexedBases.matchAtPosition(testBases));
 
-        testBases = new IndexedBases(1000, 2, 2, 2, 2, "GGT".getBytes());
+        testBases = new IndexedBases_(1000, 2, 2, 2, 2, "GGT".getBytes());
         assertEquals(ReadContextMatch.PARTIAL, indexedBases.matchAtPosition(testBases));
 
-        testBases = new IndexedBases(1000, 1, 2, 2, 2, "GT".getBytes());
+        testBases = new IndexedBases_(1000, 1, 2, 2, 2, "GT".getBytes());
         assertEquals(CORE, indexedBases.matchAtPosition(testBases));
 
-        testBases = new IndexedBases(1000, 1, 2, 2, 2, "GTAA".getBytes());
+        testBases = new IndexedBases_(1000, 1, 2, 2, 2, "GTAA".getBytes());
         assertEquals(ReadContextMatch.PARTIAL, indexedBases.matchAtPosition(testBases));
 
-        testBases = new IndexedBases(1000, 0, 2, 2, 2, "TAA".getBytes());
+        testBases = new IndexedBases_(1000, 0, 2, 2, 2, "TAA".getBytes());
         assertEquals(ReadContextMatch.PARTIAL, indexedBases.matchAtPosition(testBases));
 
-        testBases = new IndexedBases(1000, 0, 2, 2, 2, "TA".getBytes());
+        testBases = new IndexedBases_(1000, 0, 2, 2, 2, "TA".getBytes());
         assertEquals(CORE, indexedBases.matchAtPosition(testBases));
 
-        testBases = new IndexedBases(1000, 0, 2, 2, 2, "T".getBytes());
+        testBases = new IndexedBases_(1000, 0, 2, 2, 2, "T".getBytes());
         assertEquals(CORE, indexedBases.matchAtPosition(testBases));
     }
 
     @Test
     public void testNegativeReadIndex()
     {
-        IndexedBases indexedBases = new IndexedBases(1000, 2, 2, 2, 2, "GGTAA".getBytes());
+        IndexedBases_ indexedBases = new IndexedBases_(1000, 2, 2, 2, 2, "GGTAA".getBytes());
 
-        IndexedBases testBases = new IndexedBases(1000, 2, 2, 2, 2, "GGTAA".getBytes());
+        IndexedBases_ testBases = new IndexedBases_(1000, 2, 2, 2, 2, "GGTAA".getBytes());
         assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases));
 
-        testBases = new IndexedBases(1000, -1, 2, 2, 2, "GGTAA".getBytes());
+        testBases = new IndexedBases_(1000, -1, 2, 2, 2, "GGTAA".getBytes());
         assertEquals(NONE, indexedBases.matchAtPosition(testBases));
     }
 
@@ -172,7 +173,7 @@ public class IndexedBasesTest
         int readIndex = leftCoreIndex + 2;
         int rightCoreIndex = readIndex + 2;
 
-        IndexedBases indexedBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, refBases.getBytes());
+        IndexedBases_ indexedBases = new IndexedBases_(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, refBases.getBytes());
 
         byte[] readQuals = new byte[refBases.length()];
         byte highQual = MATCHING_BASE_QUALITY + 1;
@@ -239,7 +240,7 @@ public class IndexedBasesTest
         int adjRightCentreIndex = Math.min(rightCentreIndex, readBases.length() - 1);
         boolean incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
 
-        IndexedBases readBasesIndexed = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, readBases.getBytes());
+        IndexedBases_ readBasesIndexed = new IndexedBases_(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, readBases.getBytes());
         // int[] baseQualities = makeDefaultBaseQualitities(readBases.length());
 
         return new ReadContext_(refPosition, "", 0, microhomology, readBasesIndexed, incompleteCore);
@@ -248,21 +249,21 @@ public class IndexedBasesTest
     @Test
     public void testCreate()
     {
-        IndexedBases victimWithExtra = createIndexedBases(1000, 1, "AA", "TA", "ATG", "CG", "TT");
+        IndexedBases_ victimWithExtra = createIndexedBases(1000, 1, "AA", "TA", "ATG", "CG", "TT");
         assertEquals(1, victimWithExtra.indexInCore());
         assertEquals(5, victimWithExtra.Index);
         assertEquals("TA", victimWithExtra.leftFlankString());
         assertEquals("ATG", victimWithExtra.coreString());
         assertEquals("CG", victimWithExtra.rightFlankString());
 
-        IndexedBases victimWithoutExtra = createIndexedBases(1000, 1, Strings.EMPTY, "TA", "ATG", "CG", Strings.EMPTY);
+        IndexedBases_ victimWithoutExtra = createIndexedBases(1000, 1, Strings.EMPTY, "TA", "ATG", "CG", Strings.EMPTY);
         assertEquals(1, victimWithoutExtra.indexInCore());
         assertEquals("TA", victimWithoutExtra.leftFlankString());
         assertEquals("ATG", victimWithoutExtra.coreString());
         assertEquals("CG", victimWithoutExtra.rightFlankString());
     }
 
-    public static IndexedBases createIndexedBases(
+    public static IndexedBases_ createIndexedBases(
             int position, int indexInCore, String leftExtra, String leftFlank, String core, String rightFlank, String rightExtra)
     {
         assertTrue(indexInCore <= core.length());
@@ -280,7 +281,7 @@ public class IndexedBasesTest
 
         int leftCoreIndex = leftExtra.length() + leftFlank.length();
         int rightCoreIndex = leftCoreIndex + core.length() - 1;
-        return new IndexedBases(position,
+        return new IndexedBases_(position,
                 leftExtra.length() + leftFlank.length() + indexInCore,
                 leftCoreIndex,
                 rightCoreIndex,

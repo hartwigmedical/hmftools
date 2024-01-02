@@ -2,8 +2,8 @@ package com.hartwig.hmftools.sage.common;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.common.IndexedBases;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -21,7 +21,7 @@ public class RefSequenceTest
     {
         RefSequence rnaRefSequence = new RefSequence(REF_SEQ);
         SAMRecord samRecord = buildSamRecord(990, "20M", "GGGGGAAAAATTTTTCCCCC", "XXXXXXXXXXXXXXXXXXXX");
-        IndexedBases indexedBases = rnaRefSequence.alignment();
+        IndexedBases_ indexedBases = rnaRefSequence.alignment();
         assertEquals(1000, indexedBases.Position);
     }
 

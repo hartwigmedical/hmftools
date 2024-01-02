@@ -12,7 +12,6 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.variant.MicrohomologyContext;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContext;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory_;
-import com.hartwig.hmftools.sage.common.IndexedBases;
 
 import org.apache.logging.log4j.util.Strings;
 
@@ -38,7 +37,7 @@ public class ReadContextFactory_
      * <p>
      * No homology for an MVN.
      */
-    public ReadContext_ createMNVContext(int refPosition, int readIndex, int length, final byte[] readBases, final IndexedBases refBases)
+    public ReadContext_ createMNVContext(int refPosition, int readIndex, int length, final byte[] readBases, final IndexedBases_ refBases)
     {
         // Index of refBases with position mapped to refPosition.
         int refIndex = refBases.index(refPosition);
@@ -89,7 +88,7 @@ public class ReadContextFactory_
                 refPosition, readIndex, startIndex, endIndex, mFlankSize, readBases);
     }
 
-    public ReadContext_ createSNVContext(int refPosition, int readIndex, final SAMRecord record, final IndexedBases refBases)
+    public ReadContext_ createSNVContext(int refPosition, int readIndex, final SAMRecord record, final IndexedBases_ refBases)
     {
         return createMNVContext(refPosition, readIndex, 1, record.getReadBases(), refBases);
     }
@@ -103,7 +102,7 @@ public class ReadContextFactory_
      * deleted base, and also any repeats in the read that start at or before first base at or after the DEL.
      */
     public ReadContext_ createDelContext(
-            final String ref, int refPosition, int readIndex, final byte[] readBases, final IndexedBases refBases)
+            final String ref, int refPosition, int readIndex, final byte[] readBases, final IndexedBases_ refBases)
     {
         // Index of refBases with position mapped to refPosition.
         int refIndex = refBases.index(refPosition);
@@ -158,7 +157,7 @@ public class ReadContextFactory_
      * Finally exapnds endIndex to contain the full insert + MIN_CORE_DISTANCE.
      */
     public ReadContext_ createInsertContext(
-            final String alt, int refPosition, int readIndex, final byte[] readBases, final IndexedBases refBases)
+            final String alt, int refPosition, int readIndex, final byte[] readBases, final IndexedBases_ refBases)
     {
         // Index of refBases with position mapped to refPosition.
         int refIndex = refBases.index(refPosition);

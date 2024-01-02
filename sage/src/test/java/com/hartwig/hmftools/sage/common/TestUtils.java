@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
@@ -30,7 +31,7 @@ public class TestUtils
 
     public static final BqrRecordMap RECALIBRATION = new BqrRecordMap(Collections.emptyList());
 
-    private static final IndexedBases REF_BASES = new IndexedBases(550, 0, "TGTTTCTGTTTC".getBytes());
+    private static final IndexedBases_ REF_BASES = new IndexedBases_(550, 0, "TGTTTCTGTTTC".getBytes());
     public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG.Quality, RECALIBRATION, REF_BASES);
 
     public static SageConfig createSageConfig()
@@ -59,7 +60,7 @@ public class TestUtils
         int index = leftCoreIndex + MIN_CORE_DISTANCE;
         int rightCoreIndex = index + alt.length() - 1 + MIN_CORE_DISTANCE;
 
-        IndexedBases indexBases = new IndexedBases(
+        IndexedBases_ indexBases = new IndexedBases_(
                 position, index, leftCoreIndex, rightCoreIndex, DEFAULT_READ_CONTEXT_FLANK_SIZE, readBases.getBytes());
 
         return createVariant(CHR_1, position, ref, alt, indexBases);
@@ -73,7 +74,7 @@ public class TestUtils
         return new SageVariant(candidate, Collections.emptyList(), Lists.newArrayList(readContextCounter));
     }
 
-    public static SageVariant createVariant(final String chromosome, int position, final String ref, final String alt, final IndexedBases indexBases)
+    public static SageVariant createVariant(final String chromosome, int position, final String ref, final String alt, final IndexedBases_ indexBases)
     {
         SimpleVariant variant = new SimpleVariant(chromosome, position, ref, alt);
 
@@ -146,7 +147,7 @@ public class TestUtils
         int adjRightCentreIndex = Math.min(rightCentreIndex, readBases.length() - 1);
         boolean incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
 
-        IndexedBases readBasesIndexed = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, 0, readBases.getBytes());
+        IndexedBases_ readBasesIndexed = new IndexedBases_(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, 0, readBases.getBytes());
 
         return new ReadContext_(refPosition, "", 0, microhomology, readBasesIndexed, incompleteCore);
     }

@@ -26,7 +26,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
@@ -84,7 +84,7 @@ public class IndelDedupTest
         int leftCoreIndex = index - MIN_CORE_DISTANCE;
         int rightCoreIndex = index + alt.length() - 1 + MIN_CORE_DISTANCE;
 
-        IndexedBases indexBases = new IndexedBases(
+        IndexedBases_ indexBases = new IndexedBases_(
                 16, index, leftCoreIndex, rightCoreIndex, DEFAULT_READ_CONTEXT_FLANK_SIZE, varReadBases.getBytes());
 
         SageVariant variant = createVariant(chromosome, position, ref, alt, indexBases);
@@ -353,10 +353,10 @@ public class IndelDedupTest
         int rightCoreIndex1 = index + alt1.length() - 1 + MIN_CORE_DISTANCE;
         int rightCoreIndex2 = index + alt2.length() - 1 + MIN_CORE_DISTANCE;
 
-        IndexedBases indexBases1 = new IndexedBases(
+        IndexedBases_ indexBases1 = new IndexedBases_(
                 12, index, leftCoreIndex, rightCoreIndex1, DEFAULT_READ_CONTEXT_FLANK_SIZE, readBases1.getBytes());
 
-        IndexedBases indexBases2 = new IndexedBases(
+        IndexedBases_ indexBases2 = new IndexedBases_(
                 16, index, leftCoreIndex, rightCoreIndex2, DEFAULT_READ_CONTEXT_FLANK_SIZE, readBases2.getBytes());
 
         SageVariant var1 = createVariant(CHR_1, 12, "A", alt1, indexBases1);

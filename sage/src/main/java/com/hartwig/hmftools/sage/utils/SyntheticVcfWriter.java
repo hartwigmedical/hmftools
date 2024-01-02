@@ -46,9 +46,9 @@ import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.candidate_.ReadContextFactory_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
-import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
@@ -254,7 +254,7 @@ public class SyntheticVcfWriter
         String refLocationBases = refBasesBefore + refBasesAfter;
 
         // int refPositionIndex = readFlankLength;
-        IndexedBases indexedBases = new IndexedBases(refLocationStart, 0, refLocationBases.getBytes());
+        IndexedBases_ indexedBases = new IndexedBases_(refLocationStart, 0, refLocationBases.getBytes());
 
         // form synthetic read bases
         String readBases = refBasesBefore + variant.Alt + refBasesAfter.substring(variant.Ref.length());

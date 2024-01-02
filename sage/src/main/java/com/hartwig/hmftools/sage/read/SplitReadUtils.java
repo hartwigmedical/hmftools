@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
-import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.evidence.ReadIndexBases;
 
 import org.jetbrains.annotations.NotNull;
@@ -64,7 +64,7 @@ public final class SplitReadUtils
             // Create skipped reference substitute
             for(int j = 0; j < MAX_SKIPPED_REFERENCE_REGIONS; j++)
             {
-                dest[destPos++] = IndexedBases.MATCH_WILDCARD;
+                dest[destPos++] = IndexedBases_.MATCH_WILDCARD;
             }
         }
 

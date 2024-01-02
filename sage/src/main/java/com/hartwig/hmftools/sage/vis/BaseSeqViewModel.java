@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sage.vis;
 
 import java.util.List;
 
-import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.Nullable;
@@ -61,7 +61,7 @@ public class BaseSeqViewModel
         return new BaseSeqViewModel(bases, posStart, null, null);
     }
 
-    public static BaseSeqViewModel fromVariant(final IndexedBases indexedBases, final String ref, final String alt)
+    public static BaseSeqViewModel fromVariant(final IndexedBases_ indexedBases, final String ref, final String alt)
     {
         String rawBases = indexedBases.leftFlankString() + indexedBases.coreString() + indexedBases.rightFlankString();
         int posStart = indexedBases.Position + indexedBases.LeftFlankIndex - indexedBases.Index;

@@ -6,6 +6,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 
 import org.jetbrains.annotations.NotNull;
@@ -86,7 +87,7 @@ public class ReadContextTest
         int adjRightCentreIndex = Math.min(rightCentreIndex, coreFlankLength - 1);
         boolean incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
 
-        IndexedBases readBasesIndexed = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, readBases.getBytes());
+        IndexedBases_ readBasesIndexed = new IndexedBases_(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, readBases.getBytes());
 
         return new ReadContext_(refPosition, "", 0, "", readBasesIndexed, incompleteCore);
     }
