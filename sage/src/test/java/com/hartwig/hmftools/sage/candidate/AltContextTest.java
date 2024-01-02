@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.sage.candidate_.ReadContextCandidate_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.candidate_.RefContext_;
 import com.hartwig.hmftools.sage.common.ReadContextTest;
@@ -134,27 +135,27 @@ public class AltContextTest
         final AltContext altContext = new AltContext(refContext, "C", "T");
 
         altContext.addReadContext(3, simpleReadContext("AAA", core, "CCC"));
-        assertEquals("AAACATCCC", new String(altContext.interimReadContexts().get(0).readContext().readBases()));
+        assertEquals("AAACATCCC", new String(altContext.interimReadContexts().get(0).ReadContext.readBases()));
 
         // Adding same size shouldn't change it
         altContext.addReadContext(2, simpleReadContext("TTA", core, "CGG"));
-        assertEquals("AAACATCCC", new String(altContext.interimReadContexts().get(0).readContext().readBases()));
+        assertEquals("AAACATCCC", new String(altContext.interimReadContexts().get(0).ReadContext.readBases()));
 
         // Adding one to left won't change it
         altContext.addReadContext(3, simpleReadContext("TAAA", core, "CCC"));
-        assertEquals("AAACATCCC", new String(altContext.interimReadContexts().get(0).readContext().readBases()));
+        assertEquals("AAACATCCC", new String(altContext.interimReadContexts().get(0).ReadContext.readBases()));
 
         // Adding one to right won't change it
         altContext.addReadContext(3, simpleReadContext("AAA", core, "CCCG"));
-        assertEquals("AAACATCCC", new String(altContext.interimReadContexts().get(0).readContext().readBases()));
+        assertEquals("AAACATCCC", new String(altContext.interimReadContexts().get(0).ReadContext.readBases()));
 
         // Adding one to both WILL change it
         altContext.addReadContext(3, simpleReadContext("TAAA", core, "CCCG"));
-        AltContext.ReadContextCandidate finalCandidate = altContext.interimReadContexts().get(0);
+        ReadContextCandidate_ finalCandidate = altContext.interimReadContexts().get(0);
 
-        assertEquals("TAAACATCCCG", new String(finalCandidate.readContext().readBases()));
-        assertEquals(2, finalCandidate.minNumberOfEvents());
-        assertEquals(4, finalCandidate.fullMatch());
+        assertEquals("TAAACATCCCG", new String(finalCandidate.ReadContext.readBases()));
+        assertEquals(2, finalCandidate.MinNumberOfEvents);
+        assertEquals(4, finalCandidate.FullMatch);
     }
 
     @NotNull
