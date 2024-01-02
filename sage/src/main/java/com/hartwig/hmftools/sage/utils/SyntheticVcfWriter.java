@@ -46,11 +46,11 @@ import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.ReadContextFactory_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
-import com.hartwig.hmftools.sage.read.ReadContextFactory;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.jetbrains.annotations.NotNull;
@@ -243,7 +243,7 @@ public class SyntheticVcfWriter
 
     private ReadContext_ buildReadContext(final VariantData variant)
     {
-        ReadContextFactory readContextFactory = new ReadContextFactory(DEFAULT_READ_CONTEXT_FLANK_SIZE);
+        ReadContextFactory_ readContextFactory = new ReadContextFactory_(DEFAULT_READ_CONTEXT_FLANK_SIZE);
 
         int readFlankLength = 25;
         int refLocationStart = variant.Position - readFlankLength;

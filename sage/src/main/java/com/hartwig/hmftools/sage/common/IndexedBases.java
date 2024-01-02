@@ -75,6 +75,9 @@ public class IndexedBases
         return Index - LeftCoreIndex;
     }
 
+    /**
+     * Remaps Index to a new position.
+     */
     public int index(int position)
     {
         return position - Position + Index;

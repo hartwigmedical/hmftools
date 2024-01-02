@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import com.hartwig.hmftools.sage.candidate_.ReadContextFactory_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 
@@ -16,12 +17,12 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContextFactoryTest
 {
-    private ReadContextFactory victim;
+    private ReadContextFactory_ victim;
 
     @Before
     public void setup()
     {
-        victim = new ReadContextFactory(25);
+        victim = new ReadContextFactory_(25);
     }
 
     @Test
@@ -96,7 +97,7 @@ public class ReadContextFactoryTest
         assertEquals("GCGATCAAT", victim.coreString());
     }
 
-    private static final ReadContextFactory READ_CONTEXT_FACTORY = new ReadContextFactory(DEFAULT_READ_CONTEXT_FLANK_SIZE);
+    private static final ReadContextFactory_ READ_CONTEXT_FACTORY = new ReadContextFactory_(DEFAULT_READ_CONTEXT_FLANK_SIZE);
 
     @Test
     public void testSimpleDelete1()

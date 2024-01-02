@@ -26,11 +26,11 @@ import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.candidate_.ReadContextFactory_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.read.ReadContextFactory;
 import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.select.ReadPanelStatus;
 
@@ -43,7 +43,7 @@ public class RefContextConsumer
     private final ChrBaseRegion mBounds;
     private final RefSequence mRefGenome;
     private final RefContextCache mRefContextCache;
-    private final ReadContextFactory mReadContextFactory;
+    private final ReadContextFactory_ mReadContextFactory;
     private final Set<Integer> mHotspotPositions;
 
     private int mReadCount;
@@ -55,7 +55,7 @@ public class RefContextConsumer
         mBounds = bounds;
         mRefGenome = refGenome;
         mRefContextCache = refContextCache;
-        mReadContextFactory = new ReadContextFactory(config.ReadContextFlankSize);
+        mReadContextFactory = new ReadContextFactory_(config.ReadContextFlankSize);
         mConfig = config;
 
         mHotspotPositions = Sets.newHashSet();
