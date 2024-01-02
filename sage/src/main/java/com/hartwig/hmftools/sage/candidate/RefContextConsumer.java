@@ -30,6 +30,7 @@ import com.hartwig.hmftools.sage.candidate_.AltRead_;
 import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.candidate_.ReadContextFactory_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
+import com.hartwig.hmftools.sage.candidate_.RefContextCache_;
 import com.hartwig.hmftools.sage.candidate_.RefContext_;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.SageConfig;
@@ -44,14 +45,14 @@ public class RefContextConsumer
     private final SageConfig mConfig;
     private final ChrBaseRegion mBounds;
     private final RefSequence mRefGenome;
-    private final RefContextCache mRefContextCache;
+    private final RefContextCache_ mRefContextCache;
     private final ReadContextFactory_ mReadContextFactory;
     private final Set<Integer> mHotspotPositions;
 
     private int mReadCount;
 
     public RefContextConsumer(
-            final SageConfig config, final ChrBaseRegion bounds, final RefSequence refGenome, final RefContextCache refContextCache,
+            final SageConfig config, final ChrBaseRegion bounds, final RefSequence refGenome, final RefContextCache_ refContextCache,
             final List<VariantHotspot> regionHotspots)
     {
         mBounds = bounds;
