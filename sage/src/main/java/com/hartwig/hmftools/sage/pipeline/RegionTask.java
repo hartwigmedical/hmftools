@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
-import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.Candidate_;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
@@ -94,7 +94,7 @@ public class RegionTask
         final RefSequence refSequence = new RefSequence(mRegion, mRefGenome);
 
         mPerfCounters.get(PC_CANDIDATES).start();
-        List<Candidate> initialCandidates = mCandidateState.findCandidates(mRegion, refSequence);
+        List<Candidate_> initialCandidates = mCandidateState.findCandidates(mRegion, refSequence);
         mPerfCounters.get(PC_CANDIDATES).stop();
 
         if(mConfig.Common.PerfWarnTime > 0 && mPerfCounters.get(PC_CANDIDATES).getLastTime() > mConfig.Common.PerfWarnTime)
@@ -117,7 +117,7 @@ public class RegionTask
         ReadContextCounters tumorEvidence = mEvidenceStage.findEvidence(
                 mRegion, "tumor", mConfig.TumorIds, initialCandidates, true);
 
-        List<Candidate> finalCandidates = tumorEvidence.filterCandidates();
+        List<Candidate_> finalCandidates = tumorEvidence.filterCandidates();
 
         ReadContextCounters normalEvidence = mEvidenceStage.findEvidence
                 (mRegion, "normal", mConfig.Common.ReferenceIds, finalCandidates, false);
@@ -147,7 +147,7 @@ public class RegionTask
 
             for(int candidateIndex = 0; candidateIndex < finalCandidates.size(); ++candidateIndex)
             {
-                Candidate candidate = finalCandidates.get(candidateIndex);
+                Candidate_ candidate = finalCandidates.get(candidateIndex);
 
                 final List<ReadContextCounter> normalReadCounters = !mConfig.Common.ReferenceIds.isEmpty() ?
                         normalEvidence.getReadCounters(candidateIndex) : Lists.newArrayList();

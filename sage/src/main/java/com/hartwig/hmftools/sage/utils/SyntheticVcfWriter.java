@@ -45,7 +45,7 @@ import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.append.CandidateSerialization;
-import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.Candidate_;
 import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.candidate_.ReadContextFactory_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
@@ -305,7 +305,7 @@ public class SyntheticVcfWriter
         if(readContext == null)
             return;
 
-        Candidate candidate = new Candidate(VariantTier.PANEL, variantHotspot, readContext, 0, 0);
+        Candidate_ candidate = new Candidate_(VariantTier.PANEL, variantHotspot, readContext, 0, 0);
 
         VariantContextBuilder builder = CandidateSerialization.toContext(candidate)
                 .log10PError(0)

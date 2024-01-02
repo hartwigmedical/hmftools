@@ -4,20 +4,20 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.Candidate_;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.filter.VariantFilters;
 
 public class ReadContextCounters
 {
-    private final List<Candidate> mCandidates;
+    private final List<Candidate_> mCandidates;
     private final VariantFilters mVariantFilters;
 
     // multiple read counters exist to support multiple samples - these are 1:1 with the candidates above
     private final List<List<ReadContextCounter>> mSampleCandidateReadCounters;
     private final List<Integer> mFilteredCandidateIndex; // index of the filtered candidates into the original/full list
 
-    public ReadContextCounters(final SageConfig config, final List<Candidate> candidates)
+    public ReadContextCounters(final SageConfig config, final List<Candidate_> candidates)
     {
         mCandidates = candidates;
         mSampleCandidateReadCounters = Lists.newArrayList();
@@ -72,9 +72,9 @@ public class ReadContextCounters
         }
     }
 
-    public List<Candidate> filterCandidates()
+    public List<Candidate_> filterCandidates()
     {
-        final List<Candidate> validCandidates = Lists.newArrayList();
+        final List<Candidate_> validCandidates = Lists.newArrayList();
 
         for(int i = 0; i < mCandidates.size(); ++i)
         {

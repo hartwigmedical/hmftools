@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.Candidate_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class SageVariant
 {
-    private final Candidate mCandidate;
+    private final Candidate_ mCandidate;
     private final Set<String> mFilters;
     private final List<ReadContextCounter> mNormalReadCounters;
     private final List<ReadContextCounter> mTumorReadCounters;
@@ -22,7 +22,7 @@ public class SageVariant
     private boolean mDedupIndelDiff; // temp during switch to new method
 
     public SageVariant(
-            final Candidate candidate,  final List<ReadContextCounter> normalCounters, final List<ReadContextCounter> tumorReadCounters)
+            final Candidate_ candidate,  final List<ReadContextCounter> normalCounters, final List<ReadContextCounter> tumorReadCounters)
     {
         mCandidate = candidate;
         mNormalReadCounters = normalCounters;
@@ -31,7 +31,7 @@ public class SageVariant
         mDedupIndelDiff = false;
     }
 
-    public Candidate candidate()
+    public Candidate_ candidate()
     {
         return mCandidate;
     }

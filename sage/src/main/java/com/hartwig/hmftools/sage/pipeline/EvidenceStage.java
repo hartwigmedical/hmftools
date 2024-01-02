@@ -7,8 +7,8 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.candidate_.Candidate_;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.evidence.EvidenceStats;
 import com.hartwig.hmftools.sage.evidence.ReadContextEvidence;
@@ -38,7 +38,7 @@ public class EvidenceStage
     }
 
     public ReadContextCounters findEvidence(
-            final ChrBaseRegion region, final String sampleType, final List<String> samples, final List<Candidate> candidates, boolean checkPhasing)
+            final ChrBaseRegion region, final String sampleType, final List<String> samples, final List<Candidate_> candidates, boolean checkPhasing)
     {
         // search BAMs for evidence of each candidate variant
         if(samples.isEmpty())

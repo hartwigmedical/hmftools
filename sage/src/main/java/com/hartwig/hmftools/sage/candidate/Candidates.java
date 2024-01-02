@@ -11,6 +11,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate_.AltContext_;
+import com.hartwig.hmftools.sage.candidate_.Candidate_;
 import com.hartwig.hmftools.sage.common.SimpleVariantComparator;
 import com.hartwig.hmftools.sage.select.TierSelector;
 
@@ -19,8 +20,8 @@ public class Candidates
     private final List<VariantHotspot> mHotspots;
     private final List<BaseRegion> mPanel;
     private final List<BaseRegion> mHighConfidence;
-    private Map<VariantHotspot,List<Candidate>> mCandidateMap;
-    private final List<Candidate> mCandidateList;
+    private Map<VariantHotspot,List<Candidate_>> mCandidateMap;
+    private final List<Candidate_> mCandidateList;
 
     public Candidates(final List<VariantHotspot> hotspots, final List<BaseRegion> panel, final List<BaseRegion> highConfidence)
     {
@@ -42,7 +43,7 @@ public class Candidates
 
         for(final AltContext_ altContext : altContexts)
         {
-            List<Candidate> candidates = mCandidateMap.get(altContext);
+            List<Candidate_> candidates = mCandidateMap.get(altContext);
 
             if(candidates == null)
             {
@@ -50,9 +51,9 @@ public class Candidates
                 mCandidateMap.put(altContext, candidates);
             }
 
-            Candidate newCandidate = Candidate.fromAltContext(tierSelector.tier(altContext), altContext);
+            Candidate_ newCandidate = Candidate_.fromAltContext(tierSelector.tier(altContext), altContext);
 
-            Candidate matchingCandidate = candidates.stream()
+            Candidate_ matchingCandidate = candidates.stream()
                     .filter(x -> variantComparator.compare(x.variant(), newCandidate.variant()) == 0)
                     .filter(x -> x.readContext().coreString().equals(newCandidate.readContext().coreString()))
                     .findFirst().orElse(null);
@@ -76,13 +77,13 @@ public class Candidates
 
         for(final AltContext_ altContext : altContexts)
         {
-            Candidate candidate = Candidate.fromAltContext(tierSelector.tier(altContext), altContext);
+            Candidate_ candidate = Candidate_.fromAltContext(tierSelector.tier(altContext), altContext);
 
             int index = 0;
 
             while(index < mCandidateList.size())
             {
-                Candidate existingCandidate = mCandidateList.get(index);
+                Candidate_ existingCandidate = mCandidateList.get(index);
                 if(variantComparator.compare(existingCandidate.variant(), candidate.variant()) > 0)
                     break;
 
@@ -93,7 +94,7 @@ public class Candidates
         }
     }
 
-    public List<Candidate> candidates(final Set<Integer> restrictedPositions)
+    public List<Candidate_> candidates(final Set<Integer> restrictedPositions)
     {
         if(mCandidateMap != null)
         {
@@ -104,7 +105,7 @@ public class Candidates
 
         if(!restrictedPositions.isEmpty())
         {
-            List<Candidate> restrictedList = mCandidateList.stream()
+            List<Candidate_> restrictedList = mCandidateList.stream()
                     .filter(x -> restrictedPositions.contains(x.position())).collect(Collectors.toList());
 
             mCandidateList.clear();

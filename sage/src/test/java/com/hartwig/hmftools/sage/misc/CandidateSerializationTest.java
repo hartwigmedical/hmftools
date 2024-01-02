@@ -6,7 +6,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.sage.append.CandidateSerialization;
-import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.Candidate_;
 import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.IndexedBasesTest;
@@ -38,7 +38,7 @@ public class CandidateSerializationTest
     }
 
     @NotNull
-    public static Candidate decode(String line)
+    public static Candidate_ decode(String line)
     {
         VariantContext context = CODEC.decode(line);
         IndexedBases_ cheatRefBases = CandidateSerialization.readBases(context);
@@ -62,18 +62,18 @@ public class CandidateSerializationTest
 
         final SimpleVariant variant = new SimpleVariant(CHR_1, expositionPosition, "T", "C");
 
-        final Candidate candidate = new Candidate(expectedTier, variant, readContext, 2,0);
+        final Candidate_ candidate = new Candidate_(expectedTier, variant, readContext, 2,0);
 
         final VariantContext serialized = toContext(candidate);
         final IndexedBases_ deserializedReadBases = CandidateSerialization.readBases(serialized);
-        final Candidate deserialized = CandidateSerialization.toCandidate(serialized, deserializedReadBases, refBases);
+        final Candidate_ deserialized = CandidateSerialization.toCandidate(serialized, deserializedReadBases, refBases);
 
         assertEqual(candidate, deserialized);
         assertEquals(5, candidate.readContext().readBasesPositionIndex());
         assertEquals(3, deserialized.readContext().readBasesPositionIndex());
     }
 
-    private static void assertEqual(Candidate expected, Candidate victim)
+    private static void assertEqual(Candidate_ expected, Candidate_ victim)
     {
         assertEquals(expected.tier(), victim.tier());
         assertEquals(expected.position(), victim.position());
@@ -87,7 +87,7 @@ public class CandidateSerializationTest
         assertEquals(expected.readContext().rightFlankString(), victim.readContext().rightFlankString());
     }
 
-    private static VariantContext toContext(Candidate candidate)
+    private static VariantContext toContext(Candidate_ candidate)
     {
         VariantContextBuilder builder = CandidateSerialization.toContext(candidate);
 

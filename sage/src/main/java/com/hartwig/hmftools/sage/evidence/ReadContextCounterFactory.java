@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.candidate_.Candidate_;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 
@@ -22,13 +22,13 @@ public class ReadContextCounterFactory
     }
 
     public List<ReadContextCounter> create(
-            final List<Candidate> candidates, final SageConfig config, final QualityCalculator qualityCalculator, final String sampleId)
+            final List<Candidate_> candidates, final SageConfig config, final QualityCalculator qualityCalculator, final String sampleId)
     {
         List<ReadContextCounter> readCounters = Lists.newArrayListWithExpectedSize(candidates.size());
 
         int readId = 0;
 
-        for(Candidate candidate : candidates)
+        for(Candidate_ candidate : candidates)
         {
             readCounters.add(new ReadContextCounter(
                     readId++,
@@ -40,7 +40,7 @@ public class ReadContextCounterFactory
         return readCounters;
     }
 
-    private int maxCoverage(final Candidate candidate)
+    private int maxCoverage(final Candidate_ candidate)
     {
         return HIGH_COVERAGE.contains(candidate.tier()) ? mConfig.MaxReadDepthPanel : mConfig.MaxReadDepth;
     }

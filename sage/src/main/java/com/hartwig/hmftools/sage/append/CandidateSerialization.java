@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_RIGHT_FLANK;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.Candidate_;
 import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.RefSequence;
@@ -32,7 +32,7 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public final class CandidateSerialization
 {
-    public static Candidate toCandidate(final VariantContext context, final RefSequence refGenome)
+    public static Candidate_ toCandidate(final VariantContext context, final RefSequence refGenome)
     {
         final IndexedBases_ readBases = readBases(context);
         return toCandidate(context, readBases, refGenome.alignment());
@@ -63,7 +63,7 @@ public final class CandidateSerialization
                 bases);
     }
 
-    public static Candidate toCandidate(final VariantContext context, final IndexedBases_ readBases, final IndexedBases_ refBases)
+    public static Candidate_ toCandidate(final VariantContext context, final IndexedBases_ readBases, final IndexedBases_ refBases)
     {
         SimpleVariant variant = new SimpleVariant(
                 context.getContig(), context.getStart(),
@@ -83,10 +83,10 @@ public final class CandidateSerialization
             maxDepth = Math.max(maxDepth, getGenotypeAttributeAsInt(genotype, RAW_DEPTH, 0));
         }
 
-        return new Candidate(tier, variant, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0);
+        return new Candidate_(tier, variant, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0);
     }
 
-    public static VariantContextBuilder toContext(final Candidate candidate)
+    public static VariantContextBuilder toContext(final Candidate_ candidate)
     {
         final List<Allele> alleles = createAlleles(candidate.variant());
         final ReadContext_ readContext = candidate.readContext();

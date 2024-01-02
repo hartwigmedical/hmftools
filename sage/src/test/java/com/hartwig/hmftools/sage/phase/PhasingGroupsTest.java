@@ -21,7 +21,7 @@ import java.util.Set;
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.Candidate_;
 import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.SageVariant;
@@ -426,7 +426,7 @@ public class PhasingGroupsTest
 
         List<ReadContextCounter> tumorCounters = Lists.newArrayList(createReadCounter(position));
 
-        Candidate candidate = new Candidate(
+        Candidate_ candidate = new Candidate_(
                 VariantTier.HIGH_CONFIDENCE, variant, tumorCounters.get(0).readContext(), 1, 1);
 
         List<ReadContextCounter> normalCounters = Lists.newArrayList();

@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.Candidate_;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthData;
@@ -75,7 +75,7 @@ public class RegionAppendTask implements Callable
 
         RefSequence refSequence = new RefSequence(mRegion, mRefGenomeFile);
 
-        List<Candidate> candidates = mOriginalVariants.stream()
+        List<Candidate_> candidates = mOriginalVariants.stream()
                 .map(x -> CandidateSerialization.toCandidate(x, refSequence)).collect(Collectors.toList());
 
         ReadContextCounters readContextCounters = mEvidenceStage.findEvidence
@@ -87,7 +87,7 @@ public class RegionAppendTask implements Callable
         {
             for(int i = 0; i < mOriginalVariants.size(); ++i)
             {
-                Candidate variant = candidates.get(i);
+                Candidate_ variant = candidates.get(i);
 
                 String variantInfo = format("%s:%d %s>%s",
                         variant.chromosome(), variant.position(), variant.variant().ref(), variant.variant().alt());

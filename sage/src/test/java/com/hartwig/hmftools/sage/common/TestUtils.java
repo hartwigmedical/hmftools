@@ -13,7 +13,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate_.Candidate_;
 import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
@@ -68,7 +68,7 @@ public class TestUtils
 
     public static SageVariant createVariant(final ReadContextCounter readContextCounter)
     {
-        Candidate candidate = new Candidate(
+        Candidate_ candidate = new Candidate_(
                 VariantTier.HIGH_CONFIDENCE, readContextCounter.variant(), readContextCounter.readContext(), 1, 1);
 
         return new SageVariant(candidate, Collections.emptyList(), Lists.newArrayList(readContextCounter));
@@ -86,7 +86,7 @@ public class TestUtils
 
         List<ReadContextCounter> tumorCounters = Lists.newArrayList(readCounter);
 
-        Candidate candidate = new Candidate(
+        Candidate_ candidate = new Candidate_(
                 VariantTier.HIGH_CONFIDENCE, variant, tumorCounters.get(0).readContext(), 1, 1);
 
         List<ReadContextCounter> normalCounters = Lists.newArrayList();

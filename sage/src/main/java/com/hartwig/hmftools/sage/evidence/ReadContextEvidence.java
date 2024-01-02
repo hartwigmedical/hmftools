@@ -21,8 +21,8 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.candidate_.Candidate_;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.common.SamSlicerInterface;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
@@ -73,7 +73,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
     private static final int SLICE_SOFT_CLIP_BUFFER = 30;
 
     public List<ReadContextCounter> collectEvidence(
-            final List<Candidate> candidates, final String sample, final SamSlicerFactory samSlicerFactory, final VariantPhaser variantPhaser)
+            final List<Candidate_> candidates, final String sample, final SamSlicerFactory samSlicerFactory, final VariantPhaser variantPhaser)
     {
         if(candidates.isEmpty())
             return Collections.emptyList();
@@ -110,7 +110,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
         mSelectedReadCounters = Lists.newArrayListWithCapacity(mReadCounters.size());
 
-        List<Candidate> deleteCandidates = candidates.stream().filter(x -> x.variant().isDelete()).collect(Collectors.toList());
+        List<Candidate_> deleteCandidates = candidates.stream().filter(x -> x.variant().isDelete()).collect(Collectors.toList());
 
         for(ReadContextCounter readContextCounter : mReadCounters)
         {
@@ -140,11 +140,11 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         return mReadCounters;
     }
 
-    private List<ChrBaseRegion> buildCandidateRegions(final List<Candidate> candidates)
+    private List<ChrBaseRegion> buildCandidateRegions(final List<Candidate_> candidates)
     {
         // make up to X regions based on distance between them
-        final Candidate firstCandidate = candidates.get(0);
-        final Candidate lastCandidate = candidates.get(candidates.size() - 1);
+        final Candidate_ firstCandidate = candidates.get(0);
+        final Candidate_ lastCandidate = candidates.get(candidates.size() - 1);
 
         List<ChrBaseRegion> sliceRegions = Lists.newArrayList();
 
@@ -187,7 +187,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
         for(int i = 1; i < candidates.size(); ++i)
         {
-            Candidate candidate = candidates.get(i);
+            Candidate_ candidate = candidates.get(i);
             int gap = candidate.position() - currentRegion.end();
 
             if(gap <= max(minGap, nthGap))
