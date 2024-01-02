@@ -11,7 +11,7 @@
     <artifactId>purple</artifactId>
     <packaging>jar</packaging>
     <version>${purple.version}</version>
-    <name>HMF Tools - PURPLE</name>
+    <name>HMF Tools - Purple</name>
 
     <dependencies>
         <dependency>

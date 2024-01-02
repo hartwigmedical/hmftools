@@ -11,7 +11,7 @@
     <artifactId>amber</artifactId>
     <packaging>jar</packaging>
     <version>${amber.version}</version>
-    <name>HMF Tools - AMBER</name>
+    <name>HMF Tools - Amber</name>
 
     <dependencies>
         <dependency>
