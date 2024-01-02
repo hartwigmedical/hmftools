@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_BAM_FILE_ID;
 import static com.hartwig.hmftools.esvee.SvConstants.DEFAULT_HTML_SUMMARY_DIR;
+import static com.hartwig.hmftools.esvee.SvConstants.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.SvConstants.SV_PREP_JUNCTIONS_FILE_ID;
 import static com.hartwig.hmftools.esvee.WriteType.BREAKEND_TSV;
 import static com.hartwig.hmftools.esvee.WriteType.HTML_SUMMARY;
@@ -137,7 +138,9 @@ public class SvConfig
 
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
         RefGenome = loadRefGenome(RefGenomeFile);
-        RefGenomeImageFile = configBuilder.getValue(REF_GENOME_IMAGE);
+
+        RefGenomeImageFile = configBuilder.hasValue(REF_GENOME_IMAGE) ?
+                configBuilder.getValue(REF_GENOME_IMAGE) : RefGenomeFile + REF_GENOME_IMAGE_EXTENSION;
 
         BamStringency = ValidationStringency.STRICT;
 

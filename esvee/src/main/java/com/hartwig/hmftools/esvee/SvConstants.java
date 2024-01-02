@@ -8,6 +8,7 @@ public final class SvConstants
     public static final String ASSEMBLY_BAM_FILE_ID = ".assembly.bam";
     public static final String SV_PREP_JUNCTIONS_FILE_ID = ".sv_prep.junctions.tsv";
     public static final String DEFAULT_HTML_SUMMARY_DIR = "html";
+    public static final String REF_GENOME_IMAGE_EXTENSION = ".img";
     public static final int MAX_HTML_SUMMARIES = 10000;
 
     public static final String BAM_HEADER_SAMPLE_ID_TAG = "sampleId";
