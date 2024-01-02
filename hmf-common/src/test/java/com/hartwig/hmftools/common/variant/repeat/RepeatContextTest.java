@@ -20,21 +20,21 @@ public class RepeatContextTest
     public void testNonSymmetric()
     {
         final String sequence = "AAAAAAAAACA" + "BBBB";
-        assertRepeats("A", 9, RepeatContextFactory.repeats(0, sequence));
-        assertRepeats("A", 9, RepeatContextFactory.repeats(8, sequence));
-        assertEquals(Optional.empty(), RepeatContextFactory.repeats(9, sequence));
-        assertEquals(Optional.empty(), RepeatContextFactory.repeats(10, sequence));
-        assertRepeats("B", 4, RepeatContextFactory.repeats(11, sequence));
-        assertRepeats("B", 4, RepeatContextFactory.repeats(12, sequence));
-        assertRepeats("B", 4, RepeatContextFactory.repeats(13, sequence));
-        assertRepeats("B", 4, RepeatContextFactory.repeats(14, sequence));
+        assertRepeats("A", 9, RepeatContextFactory_.repeats(0, sequence));
+        assertRepeats("A", 9, RepeatContextFactory_.repeats(8, sequence));
+        assertEquals(Optional.empty(), RepeatContextFactory_.repeats(9, sequence));
+        assertEquals(Optional.empty(), RepeatContextFactory_.repeats(10, sequence));
+        assertRepeats("B", 4, RepeatContextFactory_.repeats(11, sequence));
+        assertRepeats("B", 4, RepeatContextFactory_.repeats(12, sequence));
+        assertRepeats("B", 4, RepeatContextFactory_.repeats(13, sequence));
+        assertRepeats("B", 4, RepeatContextFactory_.repeats(14, sequence));
     }
 
     private static void assertRepeats(final String expectedSequence, final int expectedCount, @NotNull final String victim)
     {
         for(int i = 0; i < victim.length(); i++)
         {
-            assertRepeats(expectedSequence, expectedCount, RepeatContextFactory.repeats(i, victim));
+            assertRepeats(expectedSequence, expectedCount, RepeatContextFactory_.repeats(i, victim));
         }
     }
 

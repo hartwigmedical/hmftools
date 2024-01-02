@@ -3,6 +3,11 @@ package com.hartwig.hmftools.common.variant.repeat;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Represents a repeat context.
+ * <p>
+ * Note that endIndex may not end after a full repeat.
+ */
 public class RepeatContext
 {
     private final byte[] bases;

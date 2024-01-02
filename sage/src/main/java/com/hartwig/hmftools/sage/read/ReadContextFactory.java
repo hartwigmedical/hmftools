@@ -11,12 +11,11 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.variant.MicrohomologyContext;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContext;
-import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
+import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory_;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -44,7 +43,7 @@ public class ReadContextFactory
         int endIndex = max(
                 microhomologyContextWithRepeats.position() + MIN_CORE_DISTANCE, microhomologyContextWithRepeats.position() + length);
 
-        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1, refBases.Bases);
+        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory_.repeats(refIndex + 1, refBases.Bases);
         if(refRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = refRepeatContext.get();
@@ -54,7 +53,7 @@ public class ReadContextFactory
             endIndex = max(endIndex, repeatEndIndexInReadSpace + 1);
         }
 
-        final Optional<RepeatContext> readRepeatContext = RepeatContextFactory.repeats(readIndex + 1, readBases);
+        final Optional<RepeatContext> readRepeatContext = RepeatContextFactory_.repeats(readIndex + 1, readBases);
         if(readRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = readRepeatContext.get();
@@ -82,7 +81,7 @@ public class ReadContextFactory
         int endIndex = max(
                 microhomologyContextWithRepeats.position() + MIN_CORE_DISTANCE, microhomologyContextWithRepeats.position() + length);
 
-        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1, refBases.Bases);
+        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory_.repeats(refIndex + 1, refBases.Bases);
         if(refRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = refRepeatContext.get();
@@ -92,7 +91,7 @@ public class ReadContextFactory
             endIndex = max(endIndex, repeatEndIndexInReadSpace + 1);
         }
 
-        final Optional<RepeatContext> readRepeatContext = RepeatContextFactory.repeats(readIndex + 1, readBases);
+        final Optional<RepeatContext> readRepeatContext = RepeatContextFactory_.repeats(readIndex + 1, readBases);
         if(readRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = readRepeatContext.get();
@@ -121,7 +120,7 @@ public class ReadContextFactory
         int startIndex = readIndex - MIN_CORE_DISTANCE;
         int endIndex = readIndex + length - 1 + MIN_CORE_DISTANCE;
 
-        final Optional<RepeatContext> refPriorRepeatContext = RepeatContextFactory.repeats(refIndex - 1, refBases.Bases);
+        final Optional<RepeatContext> refPriorRepeatContext = RepeatContextFactory_.repeats(refIndex - 1, refBases.Bases);
         if(refPriorRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = refPriorRepeatContext.get();
@@ -131,7 +130,7 @@ public class ReadContextFactory
             endIndex = max(endIndex, repeatEndIndexInReadSpace + 1);
         }
 
-        final Optional<RepeatContext> refPostRepeatContext = RepeatContextFactory.repeats(refIndex + length, refBases.Bases);
+        final Optional<RepeatContext> refPostRepeatContext = RepeatContextFactory_.repeats(refIndex + length, refBases.Bases);
         if(refPostRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = refPostRepeatContext.get();
@@ -141,7 +140,7 @@ public class ReadContextFactory
             endIndex = max(endIndex, repeatEndIndexInReadSpace + 1);
         }
 
-        final Optional<RepeatContext> readRepeatContext = RepeatContextFactory.repeats(readIndex, readBases);
+        final Optional<RepeatContext> readRepeatContext = RepeatContextFactory_.repeats(readIndex, readBases);
         if(readRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = readRepeatContext.get();

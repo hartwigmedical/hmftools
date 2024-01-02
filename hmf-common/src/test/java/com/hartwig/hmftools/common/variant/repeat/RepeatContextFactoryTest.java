@@ -74,35 +74,35 @@ public class RepeatContextFactoryTest
     public void testMatchRepeatInBytes()
     {
         final String sequence = "AAGATCATC";
-        assertFalse(RepeatContextFactory.match(3, 3, 0, sequence.getBytes()));
-        assertFalse(RepeatContextFactory.match(3, 3, 1, sequence.getBytes()));
-        assertFalse(RepeatContextFactory.match(3, 3, 2, sequence.getBytes()));
-        assertTrue(RepeatContextFactory.match(3, 3, 3, sequence.getBytes()));
-        assertFalse(RepeatContextFactory.match(3, 3, 4, sequence.getBytes()));
-        assertFalse(RepeatContextFactory.match(3, 3, 5, sequence.getBytes()));
-        assertTrue(RepeatContextFactory.match(3, 3, 6, sequence.getBytes()));
-        assertFalse(RepeatContextFactory.match(3, 3, 7, sequence.getBytes()));
+        assertFalse(RepeatContextFactory_.match(3, 3, 0, sequence.getBytes()));
+        assertFalse(RepeatContextFactory_.match(3, 3, 1, sequence.getBytes()));
+        assertFalse(RepeatContextFactory_.match(3, 3, 2, sequence.getBytes()));
+        assertTrue(RepeatContextFactory_.match(3, 3, 3, sequence.getBytes()));
+        assertFalse(RepeatContextFactory_.match(3, 3, 4, sequence.getBytes()));
+        assertFalse(RepeatContextFactory_.match(3, 3, 5, sequence.getBytes()));
+        assertTrue(RepeatContextFactory_.match(3, 3, 6, sequence.getBytes()));
+        assertFalse(RepeatContextFactory_.match(3, 3, 7, sequence.getBytes()));
     }
 
     @Test
     public void testForwardRepeats()
     {
         final String sequence = "AAGATCATC";
-        assertEquals(1, RepeatContextFactory.forwardRepeats(6, 3, sequence.getBytes()));
-        assertEquals(2, RepeatContextFactory.forwardRepeats(3, 3, sequence.getBytes()));
+        assertEquals(1, RepeatContextFactory_.forwardRepeats(6, 3, sequence.getBytes()));
+        assertEquals(2, RepeatContextFactory_.forwardRepeats(3, 3, sequence.getBytes()));
     }
 
     @Test
     public void testBackwardRepeats()
     {
         final String sequence = "AAGATCATCATC";
-        assertEquals(1, RepeatContextFactory.backwardRepeats(6, 3, sequence.getBytes()));
-        assertEquals(2, RepeatContextFactory.backwardRepeats(9, 3, sequence.getBytes()));
+        assertEquals(1, RepeatContextFactory_.backwardRepeats(6, 3, sequence.getBytes()));
+        assertEquals(2, RepeatContextFactory_.backwardRepeats(9, 3, sequence.getBytes()));
     }
 
     private static void assertRepeatContext(int expectedCount, @NotNull String expectedBases, int index, @NotNull String sequence)
     {
-        Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory.repeats(index, sequence);
+        Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory_.repeats(index, sequence);
         RepeatContext repeatContextGATC = optRepeatContextGATC.get();
         assertEquals(expectedCount, repeatContextGATC.count());
         assertEquals(expectedBases, repeatContextGATC.sequence());
@@ -111,7 +111,7 @@ public class RepeatContextFactoryTest
     private static void assertRepeatContext(int start, int end, int count, @NotNull String expectedBases, int index,
             @NotNull String sequence)
     {
-        Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory.repeats(index, sequence);
+        Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory_.repeats(index, sequence);
         RepeatContext repeatContextGATC = optRepeatContextGATC.get();
         assertEquals(count, repeatContextGATC.count());
         assertEquals(start, repeatContextGATC.startIndex());
@@ -121,7 +121,7 @@ public class RepeatContextFactoryTest
 
     private static void assertNone(int index, @NotNull String sequence)
     {
-        Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory.repeats(index, sequence);
+        Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory_.repeats(index, sequence);
         assertFalse(optRepeatContextGATC.isPresent());
     }
 }

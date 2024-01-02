@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 
-import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
+import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 
 public class Realignment
@@ -118,7 +118,7 @@ public class Realignment
     {
         for(int i = 1; i <= MAX_REPEAT_SIZE; i++)
         {
-            int repeats = RepeatContextFactory.backwardRepeats(index - i, i, bases) + 1;
+            int repeats = RepeatContextFactory_.backwardRepeats(index - i, i, bases) + 1;
 
             if(repeats >= MIN_REPEAT_COUNT)
                 return new Repeat(i, repeats);

@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 import com.hartwig.hmftools.common.variant.Microhomology;
 import com.hartwig.hmftools.common.variant.SageVcfTags;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContext;
-import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
+import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory_;
 
 import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -141,14 +141,14 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment
     {
         if(variant.isIndel())
         {
-            return RepeatContextFactory.repeats(relativePosition + 1, sequence);
+            return RepeatContextFactory_.repeats(relativePosition + 1, sequence);
         }
         else if(variant.isSNP() || variant.isMNP())
         {
             int altLength = variant.getAlternateAllele(0).getBaseString().length();
 
-            Optional<RepeatContext> priorRepeat = RepeatContextFactory.repeats(relativePosition - 1, sequence);
-            Optional<RepeatContext> postRepeat = RepeatContextFactory.repeats(relativePosition + altLength, sequence);
+            Optional<RepeatContext> priorRepeat = RepeatContextFactory_.repeats(relativePosition - 1, sequence);
+            Optional<RepeatContext> postRepeat = RepeatContextFactory_.repeats(relativePosition + altLength, sequence);
             return max(priorRepeat, postRepeat);
         }
         else
