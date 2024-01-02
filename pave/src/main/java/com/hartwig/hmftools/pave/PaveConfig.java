@@ -47,6 +47,7 @@ public class PaveConfig
     public final boolean ReadPassOnly;
     public final boolean WritePassOnly;
     public final boolean SetReportable;
+    public final boolean ForcePathogenicPass;
     public final List<ChrBaseRegion> SpecificRegions;
     public final int Threads;
 
@@ -64,6 +65,7 @@ public class PaveConfig
     private static final String WRITE_DIFFS = "write_diffs";
     private static final String WRITE_TRANSCRIPT_DATA = "write_transcript_data";
     private static final String SET_REPORTABLE = "set_reportable";
+    private static final String FORCE_PATHOGENIC_PASS = "force_pathogenic_pass";
 
     public static final Logger PV_LOGGER = LogManager.getLogger(PaveConfig.class);
 
@@ -82,6 +84,7 @@ public class PaveConfig
         ReadPassOnly = configBuilder.hasFlag(READ_PASS_ONLY);
         WritePassOnly = configBuilder.hasFlag(WRITE_PASS_ONLY);
         SetReportable = configBuilder.hasFlag(SET_REPORTABLE);
+        ForcePathogenicPass = configBuilder.hasFlag(FORCE_PATHOGENIC_PASS);
         Threads = parseThreads(configBuilder);
 
         SpecificRegions = Lists.newArrayList();
@@ -135,6 +138,7 @@ public class PaveConfig
         configBuilder.addFlag(READ_PASS_ONLY, "Filter incoming variants to PASS only");
         configBuilder.addFlag(WRITE_PASS_ONLY, "Only annotate passing variants");
         configBuilder.addFlag(SET_REPORTABLE, "Set reportable and hotspot flags");
+        configBuilder.addFlag(FORCE_PATHOGENIC_PASS, "Disable PON-filtering for variants pathogenic or likely_pathogenic in ClinVar. Does nothing when no ClinVar VCF is provided.");
 
         GnomadAnnotation.addConfig(configBuilder);
         Mappability.addConfig(configBuilder);

@@ -14,6 +14,8 @@ import java.util.concurrent.Callable;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
+import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
+import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
@@ -190,9 +192,6 @@ public class ChromosomeTask implements Callable
 
     private void annotateAndFilter(final VariantData variant)
     {
-        if(mGnomadCache != null)
-            mReferenceData.Gnomad.annotateVariant(variant, mGnomadCache);
-
         if(mMappability != null)
             mMappability.annotateVariant(variant);
 
@@ -201,10 +200,16 @@ public class ChromosomeTask implements Callable
 
         mReferenceData.BlacklistedVariants.annotateVariant(variant);
 
-        if(mStandardPon != null)
-            mReferenceData.StandardPon.annotateVariant(variant, mStandardPon);
+        PathogenicSummary summary = PathogenicSummaryFactory.fromContext(variant.context());
+        boolean canBePonFiltered = !(mConfig.ForcePathogenicPass && summary.Status.isPathogenic());
 
-        if(mArtefactsPon != null && mArtefactsPon.getPonData(variant) != null)
+        if(mGnomadCache != null)
+            mReferenceData.Gnomad.annotateVariant(variant, mGnomadCache, canBePonFiltered);
+
+        if(mStandardPon != null)
+            mReferenceData.StandardPon.annotateVariant(variant, mStandardPon, canBePonFiltered);
+
+        if(mArtefactsPon != null && canBePonFiltered && mArtefactsPon.getPonData(variant) != null)
             variant.addFilter(PON_ARTEFACT_FILTER);
     }
 }

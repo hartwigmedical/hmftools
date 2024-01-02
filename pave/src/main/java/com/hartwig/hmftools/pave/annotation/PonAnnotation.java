@@ -132,13 +132,16 @@ public class PonAnnotation extends AnnotationData implements Callable
         return (long)0;
     }
 
-    public void annotateVariant(final VariantData variant, final PonChrCache chrCache)
+    public void annotateVariant(final VariantData variant, final PonChrCache chrCache, final boolean canBePonFiltered)
     {
         PonVariantData ponData = chrCache.getPonData(variant);
         if(ponData == null)
             return;
 
         variant.setPonFrequency(ponData.Samples, ponData.MaxSampleReads);
+
+        if(!canBePonFiltered)
+            return;
 
         VariantTier tier = variant.tier();
 
