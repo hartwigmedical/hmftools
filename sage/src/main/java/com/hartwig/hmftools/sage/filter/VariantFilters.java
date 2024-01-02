@@ -9,11 +9,12 @@ import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_RAW_ALT_BASE_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.JITTER_INDEL_MAX_REPEATS;
 import static com.hartwig.hmftools.sage.SageConstants.JITTER_INDEL_VAF_THRESHOLD;
+import static com.hartwig.hmftools.sage.SageConstants.JITTER_INDEL_VAF_THRESHOLD_LIMIT;
 import static com.hartwig.hmftools.sage.SageConstants.JITTER_NON_INDEL_MAX_REPEATS;
 import static com.hartwig.hmftools.sage.SageConstants.JITTER_NON_INDEL_VAF_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
-import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PROB;
 import static com.hartwig.hmftools.sage.SageConstants.NORMAL_RAW_ALT_BQ_MAX;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD;
@@ -38,6 +39,7 @@ public class VariantFilters
 {
     private final FilterConfig mConfig;
     private final boolean mHighDepthMode;
+    private final int mReadEdgeDistanceThreshold;
 
     private final int[] mFilterCounts;
 
@@ -52,6 +54,7 @@ public class VariantFilters
     {
         mConfig = config.Filter;
         mHighDepthMode = config.Quality.HighBaseMode;
+        mReadEdgeDistanceThreshold = (int)(config.getReadLength() * MAX_READ_EDGE_DISTANCE_PERC);
         mFilterCounts = new int[HARD_FC_TUMOR_VAF+1];
     }
 
@@ -179,7 +182,8 @@ public class VariantFilters
             boolean checkRefBias = tier == VariantTier.PANEL;
 
             if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasRef(), checkRefBias)
-            || mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBiasAlt(), primaryTumor.readStrandBiasRef(), checkRefBias))
+            || mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBiasAlt(), primaryTumor.readStrandBiasRef(), checkRefBias)
+            || (primaryTumor.isIndel() && mStrandBiasCalcs.allOneSide(primaryTumor.readStrandBiasAlt())))
             {
                 filters.add(SoftFilter.STRAND_BIAS.filterName());
             }
@@ -269,8 +273,8 @@ public class VariantFilters
             String indelBases = primaryTumor.variant().isInsert() ?
                     primaryTumor.alt().substring(1) : primaryTumor.ref().substring(1);
 
-            double vafLimit = (maxRepeats - JITTER_INDEL_MAX_REPEATS) * JITTER_INDEL_VAF_THRESHOLD;
-            return indelBases.equals(primaryTumor.readContext().Microhomology) && primaryTumor.vaf() < vafLimit;
+            double vafLimit = min((maxRepeats - JITTER_INDEL_MAX_REPEATS) * JITTER_INDEL_VAF_THRESHOLD, JITTER_INDEL_VAF_THRESHOLD_LIMIT);
+            return primaryTumor.vaf() < vafLimit; // microhomology no longer checked
         }
         else
         {
@@ -285,10 +289,11 @@ public class VariantFilters
             return false;
 
         int altMed = primaryTumor.readEdgeDistance().maxAltDistanceFromUnclippedEdge();
-        int maxMed = primaryTumor.readEdgeDistance().maxDistanceFromUnclippedEdge();
 
-        if(altMed >= MAX_READ_EDGE_DISTANCE)
+        if(altMed >= mReadEdgeDistanceThreshold)
             return false;
+
+        int maxMed = primaryTumor.readEdgeDistance().maxDistanceFromUnclippedEdge();
 
         // note max MED for all reads * 2 covers scenarios were no reads have the variant centred
         double medProb = pow(2 * altMed / (2.0 * maxMed), primaryTumor.altSupport());

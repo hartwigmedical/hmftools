@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.common.TestUtils.addLocalPhaseSet;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
@@ -49,7 +50,7 @@ public class IndelDedupTest
     public IndelDedupTest()
     {
         mRefGenome = new MockRefGenome();
-        mIndelDeduper = new IndelDeduper(mRefGenome);
+        mIndelDeduper = new IndelDeduper(mRefGenome, DEFAULT_READ_LENGTH);
 
         mRefGenome.RefGenomeMap.put(CHR_1, CHR_1_REF_BASES);
     }
