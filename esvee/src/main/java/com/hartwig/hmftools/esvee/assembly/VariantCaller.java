@@ -190,7 +190,7 @@ public class VariantCaller extends ThreadTask
         }
         if(previous == null)
         {
-            if(next.isMapped() && current.isUnmapped() && current.Length > SvConstants.CALLERMINSIZETOCALL)
+            if(next.isMapped() && current.isUnmapped() && current.Length > SvConstants.VARIANT_MIN_LENGTH)
                 return buildSingleEndedRight(assembly, current, next);
         }
         if(next == null)
@@ -200,7 +200,7 @@ public class VariantCaller extends ThreadTask
             if((result = tryCallDeleteOrDuplication(assembly, previous, current)) != null)
                 return result;
 
-            if(previous.isMapped() && current.isUnmapped() && current.Length > SvConstants.CALLERMINSIZETOCALL)
+            if(previous.isMapped() && current.isUnmapped() && current.Length > SvConstants.VARIANT_MIN_LENGTH)
                 return buildSingleEndedLeft(assembly, previous, current);
         }
 
@@ -305,7 +305,7 @@ public class VariantCaller extends ThreadTask
         final int previousEnd = previous.ReferenceStartPosition + previous.Length - 1;
         final int skippedBases = next.ReferenceStartPosition - previousEnd - 1;
         final int insertSize = current == null ? 0 : current.Length;
-        if(insertSize + Math.abs(skippedBases) < SvConstants.CALLERMINSIZETOCALL)
+        if(insertSize + Math.abs(skippedBases) < SvConstants.VARIANT_MIN_LENGTH)
             return null; // Not interested
 
         // We can either call it as an insert, a duplication, or a delete.

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_WEAK_SUPPORT_MIN_BASES;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -19,7 +20,6 @@ import com.hartwig.hmftools.esvee.html.DiagramSet;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.sequence.ReadSupport;
-import com.hartwig.hmftools.esvee.util.Counter;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -66,7 +66,7 @@ public class PrimaryAssembler
 
         final List<Read> filteredAlignments = withLowQAlignments.stream()
                 .filter(alignment -> AlignmentFilters.isRecordAverageQualityPastJunctionAbove(alignment, mJunction, SvConstants.AVG_BASE_QUAL_THRESHOLD)) // mCounters.ReadsPassingJunctionQualityThreshold
-                .filter(alignment -> AlignmentFilters.hasAcceptableMapQ(alignment, SvConstants.MIN_MAPQ_START_JUNCTION)) // mCounters.HasAcceptableMapQ
+                .filter(alignment -> AlignmentFilters.hasAcceptableMapQ(alignment, SvConstants.READ_FILTER_MIN_JUNCTION_MAPQ)) // mCounters.HasAcceptableMapQ
                 .filter(AlignmentFilters::isNotBadlyMapped) // mCounters.WellMapped
                 .collect(Collectors.toList());
 
@@ -302,7 +302,9 @@ public class PrimaryAssembler
                         : assembly.Assembly.length();
 
                 @Nullable
-                final Integer supportIndex = mSupportChecker.WeakSupport.supportIndex(assembly, read, 3, minSupportIndex, maxSupportIndex);
+                final Integer supportIndex = mSupportChecker.WeakSupport.supportIndex(
+                        assembly, read, PRIMARY_ASSEMBLY_WEAK_SUPPORT_MIN_BASES, minSupportIndex, maxSupportIndex);
+
                 if(supportIndex != null)
                     assembly.addEvidenceAt(read, supportIndex);
             }

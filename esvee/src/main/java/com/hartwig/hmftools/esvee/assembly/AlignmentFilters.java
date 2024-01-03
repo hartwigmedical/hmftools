@@ -2,6 +2,8 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.esvee.SvConstants.READ_FILTER_MIN_ALIGNED_BASES;
+import static com.hartwig.hmftools.esvee.SvConstants.READ_SOFT_CLIP_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import java.util.Arrays;
@@ -67,8 +69,6 @@ public final class AlignmentFilters
         return averageQuality > averageBaseQThreshold;
     }
 
-    private static final int ALIGNMENT_SOFT_CLIP_JUNCTION_TOLERANCE = 2;
-
     public static boolean recordSoftClipsNearJunction(final Read read, final Junction junction)
     {
         // Must start/end with a soft-clip that extends to the junction position
@@ -82,7 +82,7 @@ public final class AlignmentFilters
                 ? read.getUnclippedEnd() - junction.position()
                 : junction.position() - read.getUnclippedStart();
         final int softClipLength = element.getLength();
-        return softClipLength + ALIGNMENT_SOFT_CLIP_JUNCTION_TOLERANCE >= junctionOffsetFromEnd;
+        return softClipLength + READ_SOFT_CLIP_JUNCTION_BUFFER >= junctionOffsetFromEnd;
     }
 
     public static boolean hasAcceptableMapQ(final Read read, final int threshold)
@@ -117,7 +117,7 @@ public final class AlignmentFilters
         final int mismatchedBases = nmCount - indelCount;
         final int matchedBases = mappedSize - mismatchedBases;
 
-        if(matchedBases < 30)
+        if(matchedBases < READ_FILTER_MIN_ALIGNED_BASES)
             return true;
 
         if(indelCount > 0 && mismatchedBases >= 3)
