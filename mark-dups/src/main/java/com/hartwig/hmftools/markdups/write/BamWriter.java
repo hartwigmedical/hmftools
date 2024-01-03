@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.markdups.write;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
@@ -9,6 +11,7 @@ import static com.hartwig.hmftools.markdups.common.FragmentStatus.PRIMARY;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
@@ -129,5 +132,10 @@ public abstract class BamWriter
         read.setDuplicateReadFlag(fragmentStatus == DUPLICATE); // overwrite any existing status
 
         writeRecord(read);
+    }
+
+    public String toString()
+    {
+        return format("file(%s)", FileWriterUtils.filenamePart(mFilename));
     }
 }
