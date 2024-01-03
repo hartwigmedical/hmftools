@@ -108,7 +108,7 @@ public class VariantVis
             .sorted(Comparator.comparingInt(x -> x.SortKey))
             .collect(Collectors.toList());
 
-    private static Map<String, SortedSet<String>> VARIANT_INDEXED_BASES_MAP = Maps.newHashMap();
+    private static Map<String, SortedSet<String>> VARIANT_INDEXED_BASES_MAP = Maps.newConcurrentMap();
 
     private final VisConfig mConfig;
 
