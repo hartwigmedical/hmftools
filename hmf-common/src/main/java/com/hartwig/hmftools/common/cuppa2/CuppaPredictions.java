@@ -22,9 +22,9 @@ public class CuppaPredictions
     {
         PredictionEntries = predictionEntries;
 
-        CancerTypes = PredictionEntries.stream().map(o -> o.getCancerType()).distinct().collect(Collectors.toList());
-        ClfNames = PredictionEntries.stream().map(o -> o.getClfName()).distinct().collect(Collectors.toList());
-        DataTypes = PredictionEntries.stream().map(o -> o.getDataType()).distinct().collect(Collectors.toList());
+        CancerTypes = PredictionEntries.stream().map(o -> o.CancerType).distinct().collect(Collectors.toList());
+        ClfNames = PredictionEntries.stream().map(o -> o.ClfName).distinct().collect(Collectors.toList());
+        DataTypes = PredictionEntries.stream().map(o -> o.DataType).distinct().collect(Collectors.toList());
 
         MainCombinedClfName = hasRnaPredictions() ? Categories.ClfName.COMBINED : Categories.ClfName.DNA_COMBINED;
     }
@@ -185,7 +185,7 @@ public class CuppaPredictions
     public CuppaPredictions subsetByDataType(Categories.DataType dataType)
     {
         List<CuppaPredictionEntry> entries = PredictionEntries.stream()
-                .filter(o -> o.getDataType() == dataType)
+                .filter(o -> o.DataType == dataType)
                 .collect(Collectors.toList());
 
         return new CuppaPredictions(entries);
@@ -194,7 +194,7 @@ public class CuppaPredictions
     public CuppaPredictions subsetByClfName(Categories.ClfName clfName)
     {
         List<CuppaPredictionEntry> entries = PredictionEntries.stream()
-                .filter(o -> o.getClfName() == clfName)
+                .filter(o -> o.ClfName == clfName)
                 .collect(Collectors.toList());
 
         return new CuppaPredictions(entries);
@@ -203,7 +203,7 @@ public class CuppaPredictions
     public CuppaPredictions subsetByCancerType(String cancerType)
     {
         List<CuppaPredictionEntry> entries = PredictionEntries.stream()
-                .filter(o -> o.getCancerType().equals(cancerType))
+                .filter(o -> o.CancerType.equals(cancerType))
                 .collect(Collectors.toList());
 
         return new CuppaPredictions(entries);
@@ -212,7 +212,7 @@ public class CuppaPredictions
     public CuppaPredictions getTopPredictions(int n)
     {
         List<CuppaPredictionEntry> entries = PredictionEntries.stream()
-                .filter(o -> o.getRank() <= n)
+                .filter(o -> o.Rank <= n)
                 .collect(Collectors.toList());
 
         return new CuppaPredictions(entries);
