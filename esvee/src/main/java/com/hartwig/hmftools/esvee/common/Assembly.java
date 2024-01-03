@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.hartwig.hmftools.esvee.html.DiagramSet;
 import com.hartwig.hmftools.esvee.sequence.Sequence;
 import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 import com.hartwig.hmftools.esvee.assembly.SequenceDecomposer;
@@ -89,11 +88,6 @@ public abstract class Assembly implements Sequence
     public int getLength()
     {
         return Assembly.length();
-    }
-
-    public List<DiagramSet> getDiagrams()
-    {
-        return List.of();
     }
 
     @Override

@@ -17,14 +17,6 @@
         <dependency>
             <groupId>com.hartwig</groupId>
             <artifactId>hmf-common</artifactId>
-            <!--
-            <exclusions>
-                <exclusion>
-                    <groupId>org.checkerframework</groupId>
-                    <artifactId>checker-qual</artifactId>
-                </exclusion>
-            </exclusions>
-            -->
         </dependency>
         <dependency>
             <groupId>org.immutables</groupId>

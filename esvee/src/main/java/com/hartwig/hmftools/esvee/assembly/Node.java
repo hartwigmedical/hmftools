@@ -1,14 +1,9 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 
-import com.hartwig.hmftools.esvee.mermaid.Flowchart;
-import com.hartwig.hmftools.esvee.mermaid.FlowchartBuilder;
 import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.util.StringCache;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -189,36 +184,5 @@ public class Node
 
         final HeadNode copy = headNode.deepCopy();
         return copy.successors().get(0);
-    }
-
-    public Flowchart toDiagram()
-    {
-        final FlowchartBuilder diagram = new FlowchartBuilder();
-        diagram.addStyle("A", "fill:#00F000,color:#000000");
-        diagram.addStyle("T", "fill:#F00000,color:#000000");
-        diagram.addStyle("C", "fill:#003BFF,color:#000000");
-        diagram.addStyle("G", "fill:#E0E000,color:#000000");
-        diagram.addStyle("N", "fill:#FF00FF,color:#000000");
-        diagram.addStyle("X", "fill:#FFFFFF,color:#000000");
-        diagram.addStyle("S", "fill:#FFFFFF,color:#000000");
-
-        final Queue<Node> nodes = new ArrayDeque<>();
-        nodes.add(this);
-        while(!nodes.isEmpty())
-        {
-            final Node node = nodes.poll();
-
-            final String base = StringCache.of(node.Base);
-            if(!diagram.addNode(node, StringCache.of(node.Quality), base))
-                continue;
-
-            for(Node successor : node.successors())
-            {
-                nodes.add(successor);
-                diagram.addLink(node, successor);
-            }
-        }
-
-        return diagram.build();
     }
 }

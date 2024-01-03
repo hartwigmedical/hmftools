@@ -5,9 +5,7 @@ import static com.hartwig.hmftools.esvee.read.ReadUtils.flipRead;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
-import com.hartwig.hmftools.esvee.html.DiagramSet;
 import com.hartwig.hmftools.esvee.read.Read;
 
 import htsjdk.samtools.util.SequenceUtil;
@@ -41,12 +39,6 @@ public class AlignedAssembly extends SupportedAssembly implements AlignedSequenc
     public List<Alignment> getAlignmentBlocks()
     {
         return mAlignment;
-    }
-
-    @Override
-    public List<DiagramSet> getDiagrams()
-    {
-        return Source.getDiagrams();
     }
 
     public AlignedAssembly flipStrand()
