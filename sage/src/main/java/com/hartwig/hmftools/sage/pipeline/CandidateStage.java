@@ -10,9 +10,9 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageCallConfig;
-import com.hartwig.hmftools.sage.candidate.Candidates;
 import com.hartwig.hmftools.sage.candidate_.AltContext_;
 import com.hartwig.hmftools.sage.candidate_.Candidate_;
+import com.hartwig.hmftools.sage.candidate_.Candidates_;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.common.SamSlicerInterface;
 import com.hartwig.hmftools.sage.coverage.Coverage;
@@ -46,7 +46,7 @@ public class CandidateStage
 
     public List<Candidate_> findCandidates(final ChrBaseRegion region, final RefSequence refSequence)
     {
-        final Candidates initialCandidates = new Candidates(mHotspots, mPanelRegions, mHighConfidenceRegions);
+        final Candidates_ initialCandidates = new Candidates_(mHotspots, mPanelRegions, mHighConfidenceRegions);
 
         final List<ChrBaseRegion> sliceRegions = !mConfig.PanelOnly ? Lists.newArrayList(region) : getPanelRegions(region, mPanelRegions);
 
