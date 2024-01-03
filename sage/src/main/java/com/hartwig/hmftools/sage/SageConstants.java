@@ -70,6 +70,7 @@ public class SageConstants
 
     public static final double MAX_READ_EDGE_DISTANCE_PERC = 0.25;
     public static final double MAX_READ_EDGE_DISTANCE_PROB = 0.001;
+    public static final int MAX_MAP_QUAL_ALT_VS_REF = 15;
 
     // variant deduplication
     public static final double INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT = 0.1;
@@ -79,8 +80,8 @@ public class SageConstants
     public static final double STRAND_BIAS_REF_MIN_BIAS = 0.2;
 
     public static final int JITTER_INDEL_MAX_REPEATS = 3;
-    public static final double JITTER_INDEL_VAF_THRESHOLD = 0.03;
-    public static final double JITTER_INDEL_VAF_THRESHOLD_LIMIT = 0.1;
+    public static final double JITTER_INDEL_VAF_THRESHOLD = 0.015;
+    public static final double JITTER_INDEL_VAF_THRESHOLD_LIMIT = 0.15;
 
     public static final int JITTER_NON_INDEL_MAX_REPEATS = 5;
     public static final double JITTER_NON_INDEL_VAF_THRESHOLD = 0.01;

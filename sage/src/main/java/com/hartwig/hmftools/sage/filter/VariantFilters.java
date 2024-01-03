@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.sage.SageConstants.JITTER_NON_INDEL_MAX_REPEA
 import static com.hartwig.hmftools.sage.SageConstants.JITTER_NON_INDEL_VAF_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PROB;
 import static com.hartwig.hmftools.sage.SageConstants.NORMAL_RAW_ALT_BQ_MAX;
@@ -172,6 +173,11 @@ public class VariantFilters
             filters.add(SoftFilter.MAX_EDGE_DISTANCE.filterName());
         }
 
+        if(exceedsAltVsRefMapQual(primaryTumor))
+        {
+            filters.add(SoftFilter.MAP_QUAL_REF_ALT_DIFFERENCE.filterName());
+        }
+
         if(tier != VariantTier.HOTSPOT)
         {
             if(primaryTumor.belowMinFragmentCoords())
@@ -270,11 +276,21 @@ public class VariantFilters
         if(primaryTumor.isIndel())
         {
             // INDELs if inserted/deleted bases == RC_MH and VAF < (MAX_REP - 3) * 0.0125
+            // min(0.15, 0.015 * (RC_REPC - 3) * num_inserted_or_deleted_bases) if RC_REPS == inserted/deleted bases
+            // min(0.15, 0.015 * (RC_REPC - 3)) otherwise
             String indelBases = primaryTumor.variant().isInsert() ?
                     primaryTumor.alt().substring(1) : primaryTumor.ref().substring(1);
 
-            double vafLimit = min((maxRepeats - JITTER_INDEL_MAX_REPEATS) * JITTER_INDEL_VAF_THRESHOLD, JITTER_INDEL_VAF_THRESHOLD_LIMIT);
-            return primaryTumor.vaf() < vafLimit; // microhomology no longer checked
+            double vafLimit = (maxRepeats - JITTER_INDEL_MAX_REPEATS) * JITTER_INDEL_VAF_THRESHOLD;
+
+            if(indelBases.equals(primaryTumor.readContext().Microhomology))
+            {
+                vafLimit *= indelBases.length();
+            }
+
+            vafLimit = min(vafLimit, JITTER_INDEL_VAF_THRESHOLD_LIMIT);
+
+            return primaryTumor.vaf() < vafLimit;
         }
         else
         {
@@ -299,6 +315,20 @@ public class VariantFilters
         double medProb = pow(2 * altMed / (2.0 * maxMed), primaryTumor.altSupport());
 
         return medProb < MAX_READ_EDGE_DISTANCE_PROB;
+    }
+
+    private boolean exceedsAltVsRefMapQual(final ReadContextCounter primaryTumor)
+    {
+        double depth = primaryTumor.depth();
+        double altSupport = primaryTumor.altSupport();
+
+        if(depth == 0 || altSupport == 0)
+            return false;
+
+        double avgMapQuality = primaryTumor.mapQualityTotal() / depth;
+        double avgAltMapQuality = primaryTumor.altMapQualityTotal() / altSupport;
+
+        return avgMapQuality - avgAltMapQuality > MAX_MAP_QUAL_ALT_VS_REF;
     }
 
     // normal and paired tumor-normal tests
