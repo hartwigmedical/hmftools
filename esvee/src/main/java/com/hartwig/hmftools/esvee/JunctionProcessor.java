@@ -291,7 +291,6 @@ public class JunctionProcessor
             for(ExtendedAssembly assembly : phaseSet)
             {
                 GappedAssembly newAssembly = new GappedAssembly(String.format("Assembly%s-%s", i, j++), List.of(assembly));
-                newAssembly.addErrata(assembly.getAllErrata());
 
                 assembly.readSupport().forEach(x -> newAssembly.addEvidenceAt(x.Read, x.Index));
 

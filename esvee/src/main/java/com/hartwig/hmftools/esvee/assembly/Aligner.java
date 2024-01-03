@@ -169,7 +169,6 @@ public class Aligner extends ThreadTask implements AutoCloseable
         alignments.remove(alignments.size() - 1);
 
         final AlignedAssembly aligned = AlignmentPostProcessor.flipIfRequired(new AlignedAssembly(assembly, alignments));
-        aligned.addErrata(assembly.getAllErrata());
         return aligned;
     }
 

@@ -53,24 +53,16 @@ public class AssemblyMerger
                     returnRight = leftOnly.size() < rightOnly.size();
 
                 if(returnRight)
-                {
-                    right.addErrata(left.getAllErrata());
                     return right;
-                }
                 else
-                {
-                    left.addErrata(right.getAllErrata());
                     return left;
-                }
             }
             if(leftOnly.size() < 2)
             {
-                right.addErrata(left.getAllErrata());
                 return right;
             }
             else if(rightOnly.size() < 2)
             {
-                left.addErrata(right.getAllErrata());
                 return left;
             }
             else
@@ -165,9 +157,6 @@ public class AssemblyMerger
             merged.tryAddSupport(mSupportChecker, readSupport.Read, readSupport.Index + rightDelta);
         }
 
-        merged.addErrata(left.getAllErrata());
-        merged.addErrata(right.getAllErrata());
-
         return merged;
     }
 
@@ -252,9 +241,6 @@ public class AssemblyMerger
 
         left.readSupport().forEach(x -> merged.tryAddSupport(mSupportChecker, x.Read));
         right.readSupport().forEach(x -> merged.tryAddSupport(mSupportChecker, x.Read));
-
-        merged.addErrata(left.getAllErrata());
-        merged.addErrata(right.getAllErrata());
 
         return merged;
     }

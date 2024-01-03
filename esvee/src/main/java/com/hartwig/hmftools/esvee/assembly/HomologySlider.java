@@ -86,7 +86,6 @@ public class HomologySlider
     public AlignedAssembly slideHomology(final AlignedAssembly assembly)
     {
         final AlignedAssembly aligned = new AlignedAssembly(assembly.Source, slideHomology(assembly.getAlignmentBlocks()));
-        aligned.addErrata(assembly.getAllErrata());
         return aligned;
     }
 }

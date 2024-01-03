@@ -1,10 +1,6 @@
 package com.hartwig.hmftools.esvee.common;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 import com.hartwig.hmftools.esvee.sequence.Sequence;
 import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
@@ -19,8 +15,6 @@ public abstract class Assembly implements Sequence
     public final String Assembly;
     public final byte[] AssemblyBases;
 
-    protected final Map<Class<?>, List<Object>> mErrata = new HashMap<>();
-
     @Nullable
     private List<SequenceDecomposer.Node> mDecomposition = null;
 
@@ -29,38 +23,6 @@ public abstract class Assembly implements Sequence
         Name = name;
         Assembly = assembly;
         AssemblyBases = assembly.getBytes();
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> List<T> getAllErrata(final Class<T> type)
-    {
-        return Objects.requireNonNullElse((List<T>) mErrata.get(type), List.of());
-    }
-
-    public Map<Class<?>, List<Object>> getAllErrata()
-    {
-        return mErrata;
-    }
-
-    public void addErrata(final Object object)
-    {
-        mErrata.computeIfAbsent(object.getClass(), __ -> new ArrayList<>()).add(object);
-    }
-
-    public void addErrata(final List<Object> objects)
-    {
-        if(objects.isEmpty())
-            return;
-
-        mErrata.computeIfAbsent(objects.get(0).getClass(), __ -> new ArrayList<>()).addAll(objects);
-    }
-
-    public void addErrata(final Map<Class<?>, List<Object>> objects)
-    {
-        if(objects.isEmpty())
-            return;
-
-        objects.values().forEach(this::addErrata);
     }
 
     @Override
