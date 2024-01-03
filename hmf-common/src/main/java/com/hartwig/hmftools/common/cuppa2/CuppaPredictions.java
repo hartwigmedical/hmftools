@@ -136,7 +136,7 @@ public class CuppaPredictions
 
     public void printPredictions()
     {
-        printPredictions(10);
+        printPredictions(PredictionEntries.size());
     }
 
     public CuppaPredictionEntry get(int index)
