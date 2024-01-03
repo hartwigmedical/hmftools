@@ -103,6 +103,8 @@ public class SageConstants
     public static final int DEFAULT_HIGH_DEPTH_MAP_QUAL_FIXED_PENALTY = -15;
     public static final double DEFAULT_HIGH_DEPTH_MAP_QUAL_RATIO_FACTOR = 2.5;
 
+    public static final int VIS_VARIANT_BUFFER = 200;
+
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(
             "hotspot", 55, 0.01,
             0, 0, 0, 0,
