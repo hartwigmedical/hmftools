@@ -17,7 +17,11 @@ public final class TestCuppaFactory
     {
         // Some downstream algo's expect at least one prediction, so that is considered "minimal"
         List<CuppaPrediction> predictions = Lists.newArrayList();
-        predictions.add(ImmutableCuppaPrediction.builder().cancerType("cancer").likelihood(1D).build());
+        predictions.add(ImmutableCuppaPrediction.builder()
+                .cuppaMajorVersion("v0")
+                .cancerType("cancer")
+                .likelihood(1D)
+                .build());
 
         return ImmutableCuppaData.builder()
                 .predictions(predictions)

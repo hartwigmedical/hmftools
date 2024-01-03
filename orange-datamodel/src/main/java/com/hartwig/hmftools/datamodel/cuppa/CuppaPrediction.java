@@ -11,22 +11,25 @@ import org.jetbrains.annotations.Nullable;
 public interface CuppaPrediction
 {
     @NotNull
+    String cuppaMajorVersion();
+
+    @NotNull
     String cancerType();
 
     double likelihood();
 
     @Nullable
-    Double snvPairwiseClassifier();
+    Double snv96Classifier();
 
     @Nullable
     Double genomicPositionClassifier();
 
     @Nullable
-    Double featureClassifier();
+    Double eventClassifier();
 
     @Nullable
-    Double altSjCohortClassifier();
+    Double altSjClassifier();
 
     @Nullable
-    Double expressionPairwiseClassifier();
+    Double geneExpressionClassifier();
 }

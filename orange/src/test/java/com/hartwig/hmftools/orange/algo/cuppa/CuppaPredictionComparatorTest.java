@@ -31,6 +31,10 @@ public class CuppaPredictionComparatorTest
     @NotNull
     private static CuppaPrediction create(@NotNull String cancerType, double likelihood)
     {
-        return ImmutableCuppaPrediction.builder().cancerType(cancerType).likelihood(likelihood).build();
+        return ImmutableCuppaPrediction.builder()
+                .cuppaMajorVersion("v0")
+                .cancerType(cancerType)
+                .likelihood(likelihood)
+                .build();
     }
 }
