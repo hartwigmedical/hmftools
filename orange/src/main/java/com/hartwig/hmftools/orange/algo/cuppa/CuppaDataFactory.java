@@ -2,7 +2,9 @@ package com.hartwig.hmftools.orange.algo.cuppa;
 
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -15,6 +17,8 @@ import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.cuppa.DataTypes;
 import com.hartwig.hmftools.common.cuppa.ResultType;
 import com.hartwig.hmftools.common.cuppa.SvDataType;
+import com.hartwig.hmftools.common.cuppa2.Categories;
+import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaData;
@@ -26,15 +30,74 @@ import org.jetbrains.annotations.Nullable;
 public final class CuppaDataFactory
 {
     @NotNull
-    public static CuppaData create(@NotNull List<CuppaDataFile> entries)
-    {
+    public static CuppaData create(
+            /* TODO: `cuppaPredictionsV2` is nullable so that the CUPPA v1 tests still work. Annotate with @NotNull once CUPPA v1 is fully
+                deprecated and `cuppaPredictionsV1` is removed*/
+            @Nullable CuppaPredictions cuppaPredictionsV2,
+            @Nullable List<CuppaDataFile> cuppaPredictionsV1
+    ){
+
+        List<CuppaPrediction> probabilities = new ArrayList<>();
+
+        if(cuppaPredictionsV2 == null & cuppaPredictionsV1 == null)
+        {
+            LOGGER.error("Either `cuppaPredictionsV2` or `cuppaPredictionsV1` must be provided");
+        }
+
+        if(cuppaPredictionsV2 != null)
+        {
+            probabilities.addAll(extractProbabilitiesCuppaV2(cuppaPredictionsV2));
+        }
+
+        if(cuppaPredictionsV1 != null)
+        {
+            probabilities.addAll(extractProbabilitiesCuppaV1(cuppaPredictionsV1));
+        }
+
         return ImmutableCuppaData.builder()
-                .predictions(extractPredictions(entries))
+                .predictions(probabilities)
                 .build();
     }
 
     @NotNull
-    private static List<CuppaPrediction> extractPredictions(@NotNull List<CuppaDataFile> files)
+    private static List<CuppaPrediction> extractProbabilitiesCuppaV2(@NotNull CuppaPredictions cuppaPredictions)
+    {
+        CuppaPredictions probabilitiesAllClassifiers = cuppaPredictions
+                .subsetByDataType(Categories.DataType.PROB)
+                .sortByRank();
+
+        List<CuppaPrediction> cuppaPredictionsOrangeFormat = new ArrayList<>();
+        for(String cancerType : probabilitiesAllClassifiers.CancerTypes)
+        {
+            CuppaPredictions probabilitiesOneCancerType = probabilitiesAllClassifiers.subsetByCancerType(cancerType);
+
+            Map<Categories.ClfName, Double> probabilitiesByClassifier = new HashMap<>();
+            for(int i = 0; i < probabilitiesOneCancerType.size(); i++)
+            {
+                probabilitiesByClassifier.put(
+                        probabilitiesOneCancerType.get(i).ClfName,
+                        probabilitiesOneCancerType.get(i).DataValue
+                );
+            }
+
+            CuppaPrediction prediction = ImmutableCuppaPrediction.builder()
+                    .cuppaMajorVersion("v2")
+                    .cancerType(cancerType)
+                    .likelihood(probabilitiesByClassifier.get(probabilitiesAllClassifiers.MainCombinedClfName))
+                    .genomicPositionClassifier(probabilitiesByClassifier.get(Categories.ClfName.GEN_POS))
+                    .snv96Classifier(probabilitiesByClassifier.get(Categories.ClfName.SNV96))
+                    .eventClassifier(probabilitiesByClassifier.get(Categories.ClfName.EVENT))
+                    .geneExpressionClassifier(probabilitiesByClassifier.get(Categories.ClfName.GENE_EXP))
+                    .altSjClassifier(probabilitiesByClassifier.get(Categories.ClfName.ALT_SJ))
+                    .build();
+
+            cuppaPredictionsOrangeFormat.add(prediction);
+        }
+        return cuppaPredictionsOrangeFormat;
+    }
+
+    @NotNull
+    private static List<CuppaPrediction> extractProbabilitiesCuppaV1(@NotNull List<CuppaDataFile> files)
     {
         String bestCombinedType = determineBestCombinedDataType(files);
         if(bestCombinedType == null)
@@ -58,13 +121,14 @@ public final class CuppaDataFactory
         {
             String cancerType = cancerPrediction.getKey();
             return ImmutableCuppaPrediction.builder()
+                    .cuppaMajorVersion("v1")
                     .cancerType(cancerType)
                     .likelihood(cancerPrediction.getValue())
-                    .snvPairwiseClassifier(predictionsByClassifier.get(ClassifierType.SNV_96_PAIRWISE).get(cancerType))
+                    .snv96Classifier(predictionsByClassifier.get(ClassifierType.SNV_96_PAIRWISE).get(cancerType))
                     .genomicPositionClassifier(predictionsByClassifier.get(ClassifierType.GENOMIC_POSITION_COHORT).get(cancerType))
-                    .featureClassifier(predictionsByClassifier.get(ClassifierType.FEATURE).get(cancerType))
-                    .altSjCohortClassifier(predictionsByClassifier.get(ClassifierType.ALT_SJ_COHORT).get(cancerType))
-                    .expressionPairwiseClassifier(predictionsByClassifier.get(ClassifierType.EXPRESSION_PAIRWISE).get(cancerType))
+                    .eventClassifier(predictionsByClassifier.get(ClassifierType.FEATURE).get(cancerType))
+                    .altSjClassifier(predictionsByClassifier.get(ClassifierType.ALT_SJ_COHORT).get(cancerType))
+                    .geneExpressionClassifier(predictionsByClassifier.get(ClassifierType.EXPRESSION_PAIRWISE).get(cancerType))
                     .build();
         }).sorted(new CuppaPredictionComparator()).collect(Collectors.toList());
     }
