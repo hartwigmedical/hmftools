@@ -31,12 +31,6 @@ public class ResultsWriter
     private final BufferedWriter mSomaticPeakWriter;
     private final BufferedWriter mCnPlotCalcWriter;
 
-    public static final String SUMMARY_FILE_ID = "summary";
-    public static final String SOMATICS_FILE_ID = "somatic_variants";
-    public static final String CN_SEGMENT_FILE_ID = "cn_segments";
-    public static final String SOMATIC_PEAK_FILE_ID = "somatic_peak";
-    public static final String CN_PLOT_CALCS_FILE_ID = "cn_plot_calcs";
-
     public ResultsWriter(final PurityConfig config)
     {
         mConfig = config;
@@ -81,7 +75,7 @@ public class ResultsWriter
     {
         try
         {
-            String fileName = mConfig.formFilename(SUMMARY_FILE_ID);
+            String fileName = mConfig.formFilename(FileType.SUMMARY);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 

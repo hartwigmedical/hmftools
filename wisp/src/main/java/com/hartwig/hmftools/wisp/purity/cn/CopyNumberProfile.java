@@ -2,7 +2,6 @@ package com.hartwig.hmftools.wisp.purity.cn;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
@@ -10,8 +9,8 @@ import static com.hartwig.hmftools.common.utils.Integers.median;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
-import static com.hartwig.hmftools.wisp.purity.ResultsWriter.CN_PLOT_CALCS_FILE_ID;
-import static com.hartwig.hmftools.wisp.purity.ResultsWriter.CN_SEGMENT_FILE_ID;
+import static com.hartwig.hmftools.wisp.purity.FileType.CN_PLOT_CALCS;
+import static com.hartwig.hmftools.wisp.purity.FileType.CN_SEGMENT;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
 
@@ -238,7 +237,7 @@ public class CopyNumberProfile
     {
         try
         {
-            String fileName = config.formFilename(CN_SEGMENT_FILE_ID);
+            String fileName = config.formFilename(CN_SEGMENT);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
@@ -293,7 +292,7 @@ public class CopyNumberProfile
     {
         try
         {
-            String fileName = config.formFilename(CN_PLOT_CALCS_FILE_ID, true);
+            String fileName = config.formFilename(CN_PLOT_CALCS);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
@@ -351,8 +350,8 @@ public class CopyNumberProfile
     {
         try
         {
-            String plotCalcFile = config.formFilename(CN_PLOT_CALCS_FILE_ID);
-            String cnSegmentsFile = config.formFilename(CN_SEGMENT_FILE_ID);
+            String plotCalcFile = config.formFilename(CN_PLOT_CALCS);
+            String cnSegmentsFile = config.formFilename(CN_SEGMENT);
 
             if(!Files.exists(Paths.get(plotCalcFile)) || !Files.exists(Paths.get(cnSegmentsFile)))
             {

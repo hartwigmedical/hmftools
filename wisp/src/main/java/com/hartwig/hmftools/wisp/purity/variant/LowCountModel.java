@@ -4,15 +4,11 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.stats.PoissonCalcs.calcPoissonNoiseValue;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.HIGH_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
-import static com.hartwig.hmftools.wisp.purity.ResultsWriter.CN_PLOT_CALCS_FILE_ID;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityData.NO_RESULT;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -93,9 +89,11 @@ public class LowCountModel extends ClonalityModel
             SimulatedVafCalcs simVafCalcs = new SimulatedVafCalcs(dropoutRate, simulatedVaf, probTotalFrag1, probTotalFrag2Plus);
             simulatedVafCalcs.add(simVafCalcs);
 
+            /*
             writeSimulatedDropoutData(
                     mResultsWriter.getCnPlotCalcWriter(), mConfig, mSample, sampleId, filteredVariants.size(), simVafCalcs,
                     observedFrag1, observedFrag2Plus);
+            */
         }
 
         // now find the closest ratio to the observed ratio
@@ -200,11 +198,12 @@ public class LowCountModel extends ClonalityModel
         public String toString() { return format("simVaf(%.4f) doRate(%.2f) ratio(%.3f)", SimulatedVaf, DropoutRate, fragmentRatio()); }
     }
 
+    /*
     public static BufferedWriter initialiseWriter(final PurityConfig config)
     {
         try
         {
-            String fileName = config.formFilename(CN_PLOT_CALCS_FILE_ID);
+            String fileName = config.formFilename(CN_PLOT_CALCS);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
@@ -247,4 +246,5 @@ public class LowCountModel extends ClonalityModel
             CT_LOGGER.error("failed to write dropout calc file: {}", e.toString());
         }
     }
+    */
 }
