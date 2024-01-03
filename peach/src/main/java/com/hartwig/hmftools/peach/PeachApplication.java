@@ -41,13 +41,7 @@ public class PeachApplication
             PCH_LOGGER.info("running PEACH");
 
             PCH_LOGGER.info("creating output directory");
-            // Output directory cannot be null in valid config
-            assert config.outputDir != null;
-            File outputDirectory = new File(config.outputDir);
-            if (!outputDirectory.exists() && !outputDirectory.mkdirs())
-            {
-                throw new RuntimeException(String.format("could not create output directory: %s", config.outputDir));
-            }
+            createOutputDirectory();
 
             PCH_LOGGER.info("read haplotypes TSV");
             HaplotypePanel haplotypePanel = PanelLoader.loadHaplotypePanel(config.haplotypesTsv);
@@ -69,6 +63,17 @@ public class PeachApplication
         }
 
         PCH_LOGGER.info("finished running PEACH");
+    }
+
+    private void createOutputDirectory()
+    {
+        // Output directory cannot be null in valid config
+        assert config.outputDir != null;
+        File outputDirectory = new File(config.outputDir);
+        if (!outputDirectory.exists() && !outputDirectory.mkdirs())
+        {
+            throw new RuntimeException(String.format("could not create output directory: %s", config.outputDir));
+        }
     }
 
     private void writeOutputFiles(Map<String, Integer> eventIdToCount, Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis)

@@ -7,15 +7,28 @@ import org.jetbrains.annotations.NotNull;
 public class DefaultHaplotype implements Haplotype
 {
     @NotNull
-    public final String name;
+    private final String name;
+    private final boolean isWildType;
     @NotNull
     public final ImmutableList<HaplotypeEvent> eventsToIgnore;
-    public final boolean isWildType;
 
-    public DefaultHaplotype(@NotNull String name, @NotNull ImmutableList<HaplotypeEvent> eventsToIgnore, boolean isWildType)
+    public DefaultHaplotype(@NotNull String name, boolean isWildType, @NotNull ImmutableList<HaplotypeEvent> eventsToIgnore)
     {
         this.name = name;
-        this.eventsToIgnore = eventsToIgnore;
         this.isWildType = isWildType;
+        this.eventsToIgnore = eventsToIgnore;
+    }
+
+    @NotNull
+    @Override
+    public String getName()
+    {
+        return name;
+    }
+
+    @Override
+    public boolean isWildType()
+    {
+        return isWildType;
     }
 }

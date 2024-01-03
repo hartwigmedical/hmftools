@@ -59,11 +59,11 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
         String ref = splitEventId[3];
         String alt = splitEventId[4];
         VariantHaplotypeEvent event = new VariantHaplotypeEvent(chromosome, position, ref, alt);
+        
         if (!event.id().equals(eventId))
         {
             String error_msg = String.format(
-                    "VariantHaplotypeEvent derived from ID ID '%s' has different ID '%s'",
-                    eventId, event.id()
+                    "VariantHaplotypeEvent derived from event ID '%s' has different ID '%s'",  eventId, event.id()
             );
             throw new java.lang.IllegalArgumentException(error_msg);
         }
@@ -79,7 +79,7 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
         if(alts.size() > 1)
         {
             String error_msg = String.format(
-                    "Cannot handle variant with multiple alts: %s:%s%s>?",
+                    "Cannot handle variant with multiple alts: '%s:%s%s>...'",
                     chromosome, position, ref
             );
             throw new IllegalArgumentException(error_msg);
@@ -97,7 +97,7 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
     {
         return new StringJoiner(HaplotypeEvent.EVENT_ID_DELIMITER)
                 .add(EVENT_TYPE_STRING)
-                .add(String.format("chr%1$s", chromosome))
+                .add(String.format("chr%s", chromosome))
                 .add(Integer.toString(position))
                 .add(ref)
                 .add(alt)

@@ -69,14 +69,14 @@ public class PanelLoader
             ImmutableList<HaplotypeEvent> haplotypeEvents = getHaplotypeEvents(haplotypeEventsString);
             if (isDefault)
             {
-                DefaultHaplotype haplotype = new DefaultHaplotype(values[haplotypeIndex], haplotypeEvents, isWildType);
+                DefaultHaplotype haplotype = new DefaultHaplotype(values[haplotypeIndex], isWildType, haplotypeEvents);
                 if (!geneToDefaultHaplotypes.containsKey(gene))
                     geneToDefaultHaplotypes.put(gene, Lists.newArrayList());
                 geneToDefaultHaplotypes.get(gene).add(haplotype);
             }
             else
             {
-                NonDefaultHaplotype haplotype = new NonDefaultHaplotype(values[haplotypeIndex], haplotypeEvents, isWildType);
+                NonDefaultHaplotype haplotype = new NonDefaultHaplotype(values[haplotypeIndex], isWildType, haplotypeEvents);
                 if (!geneToNonDefaultHaplotypes.containsKey(gene))
                     geneToNonDefaultHaplotypes.put(gene, Lists.newArrayList());
                 geneToNonDefaultHaplotypes.get(gene).add(haplotype);
@@ -110,7 +110,7 @@ public class PanelLoader
             List<NonDefaultHaplotype> nonDefaultHaplotypes = geneToNonDefaultHaplotypes.getOrDefault(
                     gene, new ArrayList<>()
             );
-            if (nonDefaultHaplotypes.stream().anyMatch(h -> h.name.equals(defaultHaplotype.name)))
+            if (nonDefaultHaplotypes.stream().anyMatch(h -> h.getName().equals(defaultHaplotype.getName())))
             {
                 throw new RuntimeException(String.format("Cannot have non-default haplotype with same name as default haplotype for gene: %s", gene));
             }
@@ -131,12 +131,12 @@ public class PanelLoader
     )
     {
         List<String> wildTypeHaplotypeNames = nonDefaultHaplotypes.stream()
-                .filter(h -> h.isWildType)
-                .map(h -> h.name)
+                .filter(NonDefaultHaplotype::isWildType)
+                .map(NonDefaultHaplotype::getName)
                 .collect(Collectors.toList());
-        if (defaultHaplotype.isWildType)
+        if (defaultHaplotype.isWildType())
         {
-            wildTypeHaplotypeNames.add(defaultHaplotype.name);
+            wildTypeHaplotypeNames.add(defaultHaplotype.getName());
         }
 
         if (wildTypeHaplotypeNames.size() != 1)
@@ -146,8 +146,8 @@ public class PanelLoader
 
         String wildTypeHaplotypeName = wildTypeHaplotypeNames.get(0);
 
-        boolean haplotypeStatusesClash = !defaultHaplotype.isWildType
-                && nonDefaultHaplotypes.stream().anyMatch(h -> h.name.equals(wildTypeHaplotypeName) && !h.isWildType);
+        boolean haplotypeStatusesClash = !defaultHaplotype.isWildType()
+                && nonDefaultHaplotypes.stream().anyMatch(h -> h.getName().equals(wildTypeHaplotypeName) && !h.isWildType());
         if (haplotypeStatusesClash)
         {
             throw new RuntimeException(String.format("Wild type status inconsistent for haplotype %s for gene %s", wildTypeHaplotypeName, gene));
