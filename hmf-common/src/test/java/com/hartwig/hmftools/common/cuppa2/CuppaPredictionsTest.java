@@ -26,7 +26,7 @@ public class CuppaPredictionsTest
                 .PredictionEntries;
 
         List<Categories.ClfName> clfNames = predictionEntries.stream()
-                .map(CuppaPredictionEntry::getClfName)
+                .map(o -> o.ClfName)
                 .distinct()
                 .collect(Collectors.toList());
 
@@ -43,7 +43,7 @@ public class CuppaPredictionsTest
                 .PredictionEntries;
 
         List<String> cancerTypes = predictionEntries.stream()
-                .map(CuppaPredictionEntry::getCancerType)
+                .map(o -> o.CancerType)
                 .distinct().collect(Collectors.toList());
 
         assert cancerTypes.size() == 1;
