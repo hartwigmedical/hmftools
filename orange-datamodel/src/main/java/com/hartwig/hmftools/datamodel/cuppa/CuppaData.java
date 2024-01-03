@@ -16,13 +16,4 @@ public interface CuppaData
 {
     @NotNull
     List<CuppaPrediction> predictions();
-
-    int simpleDups32To200B();
-
-    int maxComplexSize();
-
-    int telomericSGLs();
-
-    @SerializedName("LINECount")
-    int lineCount();
 }

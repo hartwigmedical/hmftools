@@ -21,10 +21,6 @@ public final class TestCuppaFactory
 
         return ImmutableCuppaData.builder()
                 .predictions(predictions)
-                .simpleDups32To200B(0)
-                .maxComplexSize(0)
-                .telomericSGLs(0)
-                .lineCount(0)
                 .build();
     }
 }

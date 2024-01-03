@@ -58,11 +58,6 @@ public class CuppaDataFactoryTest
                 assertCuppaPredictionField(expected, actual, function);
             }
         }
-
-        assertEquals(3, cuppaData.simpleDups32To200B());
-        assertEquals(8, cuppaData.maxComplexSize());
-        assertEquals(0, cuppaData.telomericSGLs());
-        assertEquals(3, cuppaData.lineCount());
     }
 
     @Test

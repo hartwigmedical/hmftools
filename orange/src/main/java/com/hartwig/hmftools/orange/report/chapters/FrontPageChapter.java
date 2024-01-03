@@ -242,9 +242,6 @@ public class FrontPageChapter implements ReportChapter
             addCellEntry(summary, cells, "UGT1A1 status:", geneStatus("UGT1A1"));
 
             addCellEntry(summary, cells, "Number of SVs:", svTmbString());
-            addCellEntry(summary, cells, "Max complex cluster size:", maxComplexSizeString());
-            addCellEntry(summary, cells, "Telomeric SGLs:", telomericSGLString());
-            addCellEntry(summary, cells, "Number of LINE insertions:", lineCountString());
         }
 
         Image circosImage = Images.build(plotPathResolver.resolve(report.plots().purpleFinalCircosPlot()));
@@ -623,42 +620,6 @@ public class FrontPageChapter implements ReportChapter
         }
 
         return svTmb + addon;
-    }
-
-    @NotNull
-    private String maxComplexSizeString()
-    {
-        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
-        {
-            return ReportResources.NOT_AVAILABLE;
-        }
-
-        CuppaData cuppa = report.cuppa();
-        return cuppa != null ? Integer.toString(cuppa.maxComplexSize()) : ReportResources.NOT_AVAILABLE;
-    }
-
-    @NotNull
-    private String telomericSGLString()
-    {
-        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
-        {
-            return ReportResources.NOT_AVAILABLE;
-        }
-
-        CuppaData cuppa = report.cuppa();
-        return cuppa != null ? Integer.toString(cuppa.telomericSGLs()) : ReportResources.NOT_AVAILABLE;
-    }
-
-    @NotNull
-    private String lineCountString()
-    {
-        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
-        {
-            return ReportResources.NOT_AVAILABLE;
-        }
-
-        CuppaData cuppa = report.cuppa();
-        return cuppa != null ? Integer.toString(cuppa.lineCount()) : ReportResources.NOT_AVAILABLE;
     }
 
     @NotNull
