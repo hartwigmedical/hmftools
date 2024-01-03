@@ -62,7 +62,7 @@ public class IndelDeduper
 
             VariantData adjustedVariant = new VariantData(variant);
 
-            if(variant.isIndel())
+            if(variant.isIndel() && adjustedVariant.unfiltered())
                 indels.add(adjustedVariant);
 
             candidates.add(adjustedVariant);
@@ -164,10 +164,7 @@ public class IndelDeduper
         {
             VariantData variant = dedupGroup.get(index);
 
-            hasPassingVariant |= variant.Variant.isPassing();
-
-            // treat old indel dedup as PASS for this test
-            hasPassingVariant |= variant.Variant.filters().size() == 1 && variant.Variant.filters().contains(DEDUP_INDEL_FILTER_OLD);
+            hasPassingVariant |= variant.unfiltered();
 
             if(variant.Variant.isDelete() && positionsOverlap(indelPosition, indelPosition, variant.position(), variant.positionEnd()))
             {
@@ -516,7 +513,13 @@ public class IndelDeduper
                 return position() + Variant.ref().length() - 1;
         }
 
-        private int indelScore()
+        public boolean unfiltered() // diff name so a to be clear whether takes old DEDUP into consideration
+        {
+            // ignores variants filtered only by the old indel dedup routine
+            return Variant.isPassing() || (Variant.filters().size() == 1 && Variant.filters().contains(DEDUP_INDEL_FILTER_OLD));
+        }
+
+        public int indelScore()
         {
             return (Variant.isIndel() ? (ReadCounter.indelLength() - 1) * INDEL_LENGTH_FACTOR : 0)
                         + ReadCounter.readEdgeDistance().maxAltDistanceFromAlignedEdge()

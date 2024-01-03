@@ -237,9 +237,6 @@ public class IndelDedupTest
                 CHR_1, 32, 32, combinedReadBases,
                 CHR_1_REF_BASES.substring(32, 33), "A", 1);
 
-        // initially filtered but recoverable
-        del.filters().add(SoftFilter.MIN_TUMOR_QUAL.filterName());
-
         mIndelDeduper.dedupVariants(Lists.newArrayList(del, var1));
 
         assertTrue(del.isPassing());
@@ -263,8 +260,8 @@ public class IndelDedupTest
                 CHR_1, 32, 32, combinedReadBases,
                 CHR_1_REF_BASES.substring(32, 33), "A", 1);
 
-        // initially filtered but recoverable
-        del.filters().add(SoftFilter.MIN_TUMOR_QUAL.filterName());
+        // initially filtered but recoverable - no longer allow non-passing INDELs to be recovered
+        // del.filters().add(SoftFilter.MIN_TUMOR_QUAL.filterName());
 
         mIndelDeduper.dedupVariants(Lists.newArrayList(del, var1));
 
