@@ -223,7 +223,8 @@ public class VariantVis
         ReadContextCounter firstCounter = !tumorReadCounters.isEmpty() ? tumorReadCounters.get(0) : normalReadCounters.get(0);
         VariantVis firstVis = !tumorVis.isEmpty() ? tumorVis.get(0) : normalVis.get(0);
 
-        String filename = firstVis.getFilename();
+        String sampleId = tumorIds.isEmpty() ? normalIds.get(0) : tumorIds.get(0);
+        String filename = firstVis.getFilename(sampleId);
 
         int tumorTotalReadCount = tumorVis.stream().mapToInt(x -> x.mReadCount).sum();
         int normalTotalReadCount = normalVis.stream().mapToInt(x -> x.mReadCount).sum();
@@ -383,12 +384,14 @@ public class VariantVis
         });
     }
 
-    private String getFilename()
+    private String getFilename(final String sampleId)
     {
         String filename = mVariantKey;
 
         if(!filename.startsWith(CHR_PREFIX))
             filename = CHR_PREFIX + filename;
+
+        filename = sampleId + ".sage." + filename;
 
         SortedSet<String> indexedBasesKeySet = VARIANT_INDEXED_BASES_MAP.get(mVariantKey);
         if(indexedBasesKeySet.size() == 1)
