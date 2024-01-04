@@ -57,7 +57,7 @@ public class FileLiftover
 
         boolean sortOutput = configBuilder.hasFlag(SORT_OUTPUT);
 
-        GenomeLiftoverCache liftoverCache = new GenomeLiftoverCache(true, destVersion == V38);
+        GenomeLiftoverCache liftoverCache = new GenomeLiftoverCache(true);
 
         GU_LOGGER.info("lifting over file({}) to ref genome version({})", inputFile, destVersion);
 

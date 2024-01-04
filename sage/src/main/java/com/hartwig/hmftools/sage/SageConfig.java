@@ -5,12 +5,12 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.sage.SageCommon.SAMPLE_DELIM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_SLICE_SIZE;
+import static com.hartwig.hmftools.sage.SageConstants.VIS_VARIANT_BUFFER;
 
 import java.io.File;
 import java.util.Arrays;
@@ -33,12 +34,15 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.sage.bqr.BqrConfig;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.quality.QualityConfig;
-import com.hartwig.hmftools.sage.bqr.BqrConfig;
+import com.hartwig.hmftools.sage.vis.VisConfig;
 
 import org.apache.logging.log4j.util.Strings;
 
@@ -66,6 +70,8 @@ public class SageConfig
     public final int ReadContextFlankSize;
     public final int MaxPartitionSlices;
     public final ValidationStringency BamStringency;
+
+    public final VisConfig Visualiser;
 
     public final String Version;
     public final int Threads;
@@ -109,7 +115,7 @@ public class SageConfig
     {
         mIsValid = true;
         Version = version;
-        
+
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         ReferenceIds = Lists.newArrayList();
@@ -131,11 +137,6 @@ public class SageConfig
 
         IncludeMT = configBuilder.hasFlag(INCLUDE_MT);
 
-        SpecificChrRegions = SpecificRegions.from(configBuilder);
-
-        if(SpecificChrRegions == null)
-            mIsValid = false;
-
         OutputFile = SampleDataDir + configBuilder.getValue(OUTPUT_VCF);
 
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
@@ -156,15 +157,30 @@ public class SageConfig
         Quality = new QualityConfig(configBuilder);
         QualityRecalibration = new BqrConfig(configBuilder);
 
-        if(Quality.MapQualityRatioFactor > 0)
-            MinMapQuality = 0; // force to zero so all reads are considered
-        else
-            MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
+        MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
 
         TrackUMIs = configBuilder.hasFlag(TRACK_UMIS);
         WriteFragmentLengths = configBuilder.hasFlag(WRITE_FRAG_LENGTHS);
 
+        SpecificChrRegions = SpecificRegions.from(configBuilder);
+
+        if(SpecificChrRegions == null)
+            mIsValid = false;
+
+        Visualiser = new VisConfig(configBuilder, outputDir());
+
+        if(Visualiser.Enabled && !Visualiser.SpecificVariants.isEmpty() && SpecificChrRegions.Regions.isEmpty())
+        {
+            for(SimpleVariant visVariant : Visualiser.SpecificVariants)
+            {
+                SpecificChrRegions.addRegion(new ChrBaseRegion(
+                        visVariant.Chromosome, visVariant.Position - VIS_VARIANT_BUFFER,
+                        visVariant.Position + VIS_VARIANT_BUFFER));
+            }
+        }
+
         SpecificPositions = Sets.newHashSet();
+
         if(configBuilder.hasValue(SPECIFIC_POSITIONS))
         {
             final String positionList = configBuilder.getValue(SPECIFIC_POSITIONS, Strings.EMPTY);
@@ -234,6 +250,17 @@ public class SageConfig
         }
 
         final File outputDir = new File(OutputFile).getParentFile();
+        if(!makeOutputDir(outputDir))
+            return false;
+
+        if(Visualiser.Enabled && !makeOutputDir(new File(Visualiser.OutputDir)))
+            return false;
+
+        return true;
+    }
+
+    public boolean makeOutputDir(final File outputDir)
+    {
         if(outputDir != null && !outputDir.exists() && !outputDir.mkdirs())
         {
             SG_LOGGER.error("unable to write directory({})", outputDir.toString());
@@ -290,6 +317,8 @@ public class SageConfig
         QualityConfig.registerConfig(configBuilder);
         BqrConfig.registerConfig(configBuilder);
 
+        VisConfig.registerConfig(configBuilder);
+
         addSpecificChromosomesRegionsConfig(configBuilder);
         configBuilder.addFlag(LOG_EVIDENCE_READS, "Write evidence read data");
 
@@ -314,7 +343,7 @@ public class SageConfig
         QualityRecalibration = new BqrConfig();
         SpecificChrRegions = new SpecificRegions();
         IncludeMT = false;
-        RegionSliceSize = 500_000;
+        RegionSliceSize = DEFAULT_SLICE_SIZE;
         MinMapQuality = DEFAULT_MIN_MAP_QUALITY;
         MaxReadDepth = DEFAULT_MAX_READ_DEPTH;
         MaxReadDepthPanel = DEFAULT_MAX_READ_DEPTH_PANEL;
@@ -331,6 +360,7 @@ public class SageConfig
         BamStringency = ValidationStringency.DEFAULT_STRINGENCY;
         TrackUMIs = false;
         WriteFragmentLengths = false;
+        Visualiser = new VisConfig();
         SyncFragments = true;
         SpecificPositions = Sets.newHashSet();
         LogEvidenceReads = false;

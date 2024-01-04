@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.stats.PoissonCalcs.calcPoissonNoiseValue;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_QUAL_NOISE_CUTOFF;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MIN_QUAL_PER_AD;
 
@@ -12,10 +13,6 @@ import org.apache.commons.math3.distribution.PoissonDistribution;
 
 public final class SomaticPurityCalcs
 {
-    public static final double LOW_PROBABILITY = 0.05;
-    public static final double HIGH_PROBABILITY = 1 - LOW_PROBABILITY;
-    private static final double OBSERVED_ZERO_LOW_MEAN = 3.0;
-
     public static double estimatedPurity(final double tumorPurity, final double tumorVaf, final double sampleVaf, final double noiseRate)
     {
         return max(sampleVaf - noiseRate, 0) / tumorVaf * tumorPurity;
@@ -40,20 +37,12 @@ public final class SomaticPurityCalcs
         return probability;
     }
 
-    public static double expectedNoiseOld(final int sampleDepthTotal, final double qualPerAlleleFrag, final double noiseReadsPerMillion)
-    {
-        double lowQualNoiseFactor = qualPerAlleleFrag < LOW_QUAL_NOISE_CUTOFF ?
-                (LOW_QUAL_NOISE_CUTOFF - qualPerAlleleFrag) / (LOW_QUAL_NOISE_CUTOFF - MIN_QUAL_PER_AD) : 0;
-
-        return sampleDepthTotal / 1000000.0 * noiseReadsPerMillion + lowQualNoiseFactor;
-    }
-
+    /*
     protected static double estimatedPurityOld(double sampleVaf, double tumorPloidy, double tumorVaf)
     {
         return max(min(2 * sampleVaf / (tumorPloidy * tumorVaf + sampleVaf * (2 - tumorPloidy)), 1), 0);
     }
 
-    /*
     public static PurityCalcData calc(double tumorPloidy, double tumorVaf, int totalCount, int alleleCount, double noise)
     {
         // TFctDNA = [wVAFctDNA-ε]/ wVAFtissue / Puritytissue
@@ -93,6 +82,14 @@ public final class SomaticPurityCalcs
             return requiredProb == LOW_PROBABILITY ? OBSERVED_ZERO_LOW_MEAN : 0;
 
         return PoissonCalcs.calcPoissonNoiseValue(alleleCount, requiredProb);
+    }
+
+    public static double expectedNoiseOld(final int sampleDepthTotal, final double qualPerAlleleFrag, final double noiseReadsPerMillion)
+    {
+        double lowQualNoiseFactor = qualPerAlleleFrag < LOW_QUAL_NOISE_CUTOFF ?
+                (LOW_QUAL_NOISE_CUTOFF - qualPerAlleleFrag) / (LOW_QUAL_NOISE_CUTOFF - MIN_QUAL_PER_AD) : 0;
+
+        return sampleDepthTotal / 1000000.0 * noiseReadsPerMillion + lowQualNoiseFactor;
     }
     */
 }

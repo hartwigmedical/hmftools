@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 import org.apache.logging.log4j.util.Strings;
 

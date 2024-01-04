@@ -9,11 +9,11 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.pave.CodingContext;
+import com.hartwig.hmftools.pave.impact.CodingContext;
 import com.hartwig.hmftools.pave.GeneDataCache;
-import com.hartwig.hmftools.pave.ProteinContext;
+import com.hartwig.hmftools.pave.impact.ProteinContext;
 import com.hartwig.hmftools.pave.VariantData;
-import com.hartwig.hmftools.pave.VariantTransImpact;
+import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 public class ComparisonWriter
 {

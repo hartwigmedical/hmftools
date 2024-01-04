@@ -21,10 +21,12 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporti
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGenePanel;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
@@ -99,7 +101,9 @@ public class PurpleInterpreter
                     additionalSuspectGermlineVariants.size());
         }
 
-        List<PurpleGainLoss> allSomaticGainsLosses = extractAllGainsLosses(purple.purityContext().qc().status(),
+        List<PurpleGainLoss> allSomaticGainsLosses = extractAllGainsLosses(
+                purple.purityContext().qc().status(),
+                purple.purityContext().gender(),
                 purple.purityContext().bestFit().ploidy(),
                 purple.purityContext().targeted(),
                 purple.allSomaticGeneCopyNumbers());
@@ -294,7 +298,8 @@ public class PurpleInterpreter
     }
 
     @NotNull
-    private static List<PurpleGainLoss> extractAllGainsLosses(@NotNull Set<PurpleQCStatus> qcStatus, double ploidy, boolean isTargetRegions,
+    private static List<PurpleGainLoss> extractAllGainsLosses(
+            @NotNull Set<PurpleQCStatus> qcStatus, @NotNull Gender gender, double ploidy, boolean isTargetRegions,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers)
     {
         List<DriverGene> allGenes = Lists.newArrayList();
@@ -319,11 +324,13 @@ public class PurpleInterpreter
         }
 
         DriverGenePanel allGenesPanel = ImmutableDriverGenePanel.builder().driverGenes(allGenes).build();
-        AmplificationDrivers ampDrivers = new AmplificationDrivers(qcStatus, allGenesPanel);
         DeletionDrivers delDrivers = new DeletionDrivers(qcStatus, allGenesPanel);
 
         List<DriverCatalog> allGainLosses = Lists.newArrayList();
-        allGainLosses.addAll(ampDrivers.amplifications(ploidy, allGeneCopyNumbers, isTargetRegions));
+
+        allGainLosses.addAll(AmplificationDrivers.findAmplifications(
+                qcStatus, gender, allGenesPanel, ploidy, allGeneCopyNumbers, isTargetRegions));
+
         allGainLosses.addAll(delDrivers.deletions(allGeneCopyNumbers, isTargetRegions));
 
         return somaticGainsLossesFromDrivers(allGainLosses);

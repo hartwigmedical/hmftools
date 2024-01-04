@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.region;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 
@@ -42,6 +45,24 @@ public class SpecificRegions
     }
 
     public boolean hasFilters() { return !Regions.isEmpty() || !Chromosomes.isEmpty(); }
+
+    public void addRegion(final ChrBaseRegion newRegion)
+    {
+        for(ChrBaseRegion existingRegion : Regions)
+        {
+            if(!Chromosomes.contains(newRegion.Chromosome))
+                Chromosomes.add(newRegion.Chromosome);
+
+            if(existingRegion.overlaps(newRegion))
+            {
+                existingRegion.setStart(min(existingRegion.start(), newRegion.start()));
+                existingRegion.setEnd(max(existingRegion.end(), newRegion.end()));
+                return;
+            }
+        }
+
+        Regions.add(newRegion);
+    }
 
     public boolean includeChromosome(final String chromosome) { return Chromosomes.isEmpty() || Chromosomes.contains(chromosome); }
     public boolean excludeChromosome(final String chromosome) { return !includeChromosome(chromosome); }

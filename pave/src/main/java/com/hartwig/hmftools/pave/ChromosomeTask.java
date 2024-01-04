@@ -2,8 +2,8 @@ package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
-import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
-import static com.hartwig.hmftools.pave.PaveUtils.findVariantImpacts;
+import static com.hartwig.hmftools.pave.impact.PaveUtils.createRightAlignedVariant;
+import static com.hartwig.hmftools.pave.impact.PaveUtils.findVariantImpacts;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.pave.VcfWriter.buildVariant;
 import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_ARTEFACT_FILTER;
@@ -22,6 +22,9 @@ import com.hartwig.hmftools.pave.annotation.GnomadChrCache;
 import com.hartwig.hmftools.pave.annotation.MappabilityChrCache;
 import com.hartwig.hmftools.pave.annotation.PonChrCache;
 import com.hartwig.hmftools.pave.annotation.ReferenceData;
+import com.hartwig.hmftools.pave.impact.ImpactClassifier;
+import com.hartwig.hmftools.pave.impact.VariantImpactBuilder;
+import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 import htsjdk.variant.variantcontext.VariantContext;
 

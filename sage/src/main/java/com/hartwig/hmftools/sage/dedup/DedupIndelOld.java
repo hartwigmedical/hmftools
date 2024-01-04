@@ -156,4 +156,15 @@ public final class DedupIndelOld
         }
     }
 
+    static final class CoreFlanksRefBases
+    {
+        public final String Core;
+        public final String CorePlusFlanks;
+
+        public CoreFlanksRefBases(final String core, final String corePlusFlanks)
+        {
+            Core = core;
+            CorePlusFlanks = corePlusFlanks;
+        }
+    }
 }

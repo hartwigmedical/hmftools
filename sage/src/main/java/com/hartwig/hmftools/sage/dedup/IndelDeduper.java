@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.sage.dedup;
 
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE;
+import static com.hartwig.hmftools.sage.SageConstants.INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.sage.dedup.DedupIndelOld.dedupIndelsOld;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER_OLD;
@@ -21,9 +23,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
 
@@ -31,11 +33,13 @@ public class IndelDeduper
 {
     private final RefGenomeInterface mRefGenome;
     private int mGroupIterations;
+    private final int mReadEdgeDistanceThreshold;
     private boolean mRunOldDedup;
 
-    public IndelDeduper(final RefGenomeInterface refGenome)
+    public IndelDeduper(final RefGenomeInterface refGenome, int readLength)
     {
         mRefGenome = refGenome;
+        mReadEdgeDistanceThreshold = (int)(readLength * MAX_READ_EDGE_DISTANCE_PERC);
         mGroupIterations = 0;
         mRunOldDedup = false;
     }
@@ -58,7 +62,7 @@ public class IndelDeduper
 
             VariantData adjustedVariant = new VariantData(variant);
 
-            if(variant.isIndel())
+            if(variant.isIndel() && adjustedVariant.unfiltered())
                 indels.add(adjustedVariant);
 
             candidates.add(adjustedVariant);
@@ -144,10 +148,11 @@ public class IndelDeduper
     {
         SG_LOGGER.trace("indel({}) with {} other variants", indel, dedupGroup.size());
 
-        List<VariantData> dedupedVariants = Lists.newArrayListWithCapacity(dedupGroup.size());
+        // skip if a non-INDEL scores higher than the top indel
+        if(dedupGroup.stream().filter(x -> !x.Variant.isIndel()).anyMatch(x -> x.indelScore() > indel.IndelScore))
+            return;
 
-        int indelPosStart = indel.position();
-        int indelPosEnd = indel.positionEnd();
+        int indelPosition = indel.position();
 
         List<VariantData> overlappedIndels = Lists.newArrayList();
 
@@ -159,12 +164,9 @@ public class IndelDeduper
         {
             VariantData variant = dedupGroup.get(index);
 
-            hasPassingVariant |= variant.Variant.isPassing();
+            hasPassingVariant |= variant.unfiltered();
 
-            // treat old indel dedup as PASS for this test
-            hasPassingVariant |= variant.Variant.filters().size() == 1 && variant.Variant.filters().contains(DEDUP_INDEL_FILTER_OLD);
-
-            if(variant.Variant.isDelete() && positionsOverlap(indelPosStart, indelPosEnd, variant.position(), variant.positionEnd()))
+            if(variant.Variant.isDelete() && positionsOverlap(indelPosition, indelPosition, variant.position(), variant.positionEnd()))
             {
                 dedupGroup.remove(index);
                 overlappedIndels.add(variant);
@@ -189,6 +191,8 @@ public class IndelDeduper
 
         mGroupIterations = 0;
 
+        List<VariantData> dedupedVariants = Lists.newArrayListWithCapacity(dedupGroup.size());
+
         if(!checkDedupCombinations(indel, dedupGroup, dedupedVariants, indelCoreFlankBases, refBases, indel.FlankPosStart, indel.FlankPosEnd))
         {
             overlappedIndels.forEach(x -> markAsDedup(x.Variant));
@@ -200,6 +204,8 @@ public class IndelDeduper
         dedupedVariants.addAll(overlappedIndels);
         dedupGroup.add(indel); // so it can be rescued if required
 
+        List<VariantData> nonDedupedVariants = dedupGroup.stream().filter(x -> !dedupedVariants.contains(x)).collect(Collectors.toList());
+
         for(VariantData variant : dedupGroup)
         {
             if(dedupedVariants.contains(variant))
@@ -210,7 +216,7 @@ public class IndelDeduper
 
                 markAsDedup(variant.Variant);
             }
-            else if(recoverFilteredVariant(variant.Variant))
+            else if(recoverFilteredVariant(variant.Variant, nonDedupedVariants))
             {
                 if(mRunOldDedup && variant.Variant.filters().contains(DEDUP_INDEL_FILTER_OLD))
                     variant.Variant.markDedupIndelDiff();
@@ -220,10 +226,44 @@ public class IndelDeduper
         }
     }
 
-    private static boolean recoverFilteredVariant(final SageVariant variant)
+    private static boolean recoverFilteredVariant(final SageVariant variant, final List<VariantData> nonDedupedVariants)
     {
         if(variant.isPassing())
             return false;
+
+        if(variant.isIndel() && variant.localPhaseSets().size() == 1 && nonDedupedVariants.size() > 1)
+        {
+            // check LPS conditions for other variants required to recover this variant
+            double maxMatchedLpsReadCountPercent = 0;
+            int variantLps = variant.localPhaseSets().get(0);
+
+            for(VariantData otherVariant : nonDedupedVariants)
+            {
+                if(otherVariant.Variant == variant)
+                    continue;
+
+                int otherVarLpsReadCountTotal = 0;
+                int otherVarMatchedLpsReadCount = 0;
+
+                for(int i = 0; i < otherVariant.Variant.localPhaseSets().size(); ++i)
+                {
+                    int lpsReadCount = otherVariant.Variant.localPhaseSetCounts().get(i);
+                    otherVarLpsReadCountTotal += lpsReadCount;
+
+                    if(otherVariant.Variant.localPhaseSets().get(i) == variantLps)
+                    {
+                        otherVarMatchedLpsReadCount = lpsReadCount;
+                    }
+                }
+
+                double matchedLpsReadCountPercent = otherVarMatchedLpsReadCount / (double)otherVarLpsReadCountTotal;
+
+                maxMatchedLpsReadCountPercent = max(maxMatchedLpsReadCountPercent, matchedLpsReadCountPercent);
+            }
+
+            if(maxMatchedLpsReadCountPercent < INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT)
+                return false;
+        }
 
         return variant.filters().stream().noneMatch(x -> SoftFilter.GERMLINE_FILTERS.contains(x));
     }
@@ -237,7 +277,7 @@ public class IndelDeduper
         variant.filters().add(DEDUP_INDEL_FILTER);
     }
 
-    private static boolean isDedupCandidate(final VariantData indel, final VariantData variant, boolean requireCoreEndInclusion)
+    private boolean isDedupCandidate(final VariantData indel, final VariantData variant, boolean requireCoreEndInclusion)
     {
         if(requireCoreEndInclusion)
         {
@@ -250,7 +290,7 @@ public class IndelDeduper
                 return true;
         }
 
-        if(variant.ReadCounter.readEdgeDistance().maxAltDistanceFromAlignedEdge() < MAX_READ_EDGE_DISTANCE)
+        if(variant.ReadCounter.readEdgeDistance().maxAltDistanceFromAlignedEdge() < mReadEdgeDistanceThreshold)
             return true;
 
         return false;
@@ -317,7 +357,7 @@ public class IndelDeduper
     {
         ++mGroupIterations;
 
-        List<VariantHotspot> testVariants = Lists.newArrayList(indel.Variant.variant());
+        List<SimpleVariant> testVariants = Lists.newArrayList(indel.Variant.variant());
         selectedVariants.forEach(x -> testVariants.add(x.Variant.variant()));
 
         String netAltBases = buildAltBasesString(refBases, refPosStart, refPosEnd, testVariants);
@@ -336,14 +376,14 @@ public class IndelDeduper
 
     @VisibleForTesting
     public static String buildAltBasesString(
-            final String refBases, final int refPosStart, final int refPosEnd, final List<VariantHotspot> variants)
+            final String refBases, final int refPosStart, final int refPosEnd, final List<SimpleVariant> variants)
     {
         Collections.sort(variants, new VariantReversePositionSorter());
 
         String altBases = refBases;
 
         // add variants into the ref bases from right to left so the earlier positions remain unafffected by the added alts
-        for(VariantHotspot variant : variants)
+        for(SimpleVariant variant : variants)
         {
             if(!positionWithin(variant.position(), refPosStart, refPosEnd))
                 continue;
@@ -375,14 +415,14 @@ public class IndelDeduper
         }
     }
 
-    public static class VariantReversePositionSorter implements Comparator<VariantHotspot>
+    public static class VariantReversePositionSorter implements Comparator<SimpleVariant>
     {
-        public int compare(final VariantHotspot first, final VariantHotspot second)
+        public int compare(final SimpleVariant first, final SimpleVariant second)
         {
-            if(first.position() == second.position())
+            if(first.Position == second.Position)
                 return 0;
 
-            return first.position() > second.position() ? -1 : 1;
+            return first.Position > second.Position ? -1 : 1;
         }
     }
 
@@ -431,16 +471,7 @@ public class IndelDeduper
             Variant = variant;
             ReadCounter = variant.tumorReadCounters().get(0);
 
-            if(Variant.isIndel())
-            {
-                IndelScore = ReadCounter.indelLength() * INDEL_LENGTH_FACTOR
-                        + ReadCounter.readEdgeDistance().maxAltDistanceFromAlignedEdge()
-                        - MIN_EVENTS_FACTOR * ReadCounter.minNumberOfEvents();
-            }
-            else
-            {
-                IndelScore = 0;
-            }
+            IndelScore = Variant.isIndel() ? indelScore() : 0;
 
             // flank positions are estimate since they aren't aware of other variants in their core and flanks
             final IndexedBases indexedBases = ReadCounter.readContext().indexedBases();
@@ -480,6 +511,19 @@ public class IndelDeduper
                 return position() + 1;
             else // deletes and MNVs
                 return position() + Variant.ref().length() - 1;
+        }
+
+        public boolean unfiltered() // diff name so a to be clear whether takes old DEDUP into consideration
+        {
+            // ignores variants filtered only by the old indel dedup routine
+            return Variant.isPassing() || (Variant.filters().size() == 1 && Variant.filters().contains(DEDUP_INDEL_FILTER_OLD));
+        }
+
+        public int indelScore()
+        {
+            return (Variant.isIndel() ? (ReadCounter.indelLength() - 1) * INDEL_LENGTH_FACTOR : 0)
+                        + ReadCounter.readEdgeDistance().maxAltDistanceFromAlignedEdge()
+                        - MIN_EVENTS_FACTOR * ReadCounter.minNumberOfEvents();
         }
 
         @Override

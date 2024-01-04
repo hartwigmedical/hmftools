@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DES
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
@@ -68,10 +70,12 @@ public class PrepConfig
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        LinxDir = configBuilder.getValue(LINX_DIR_CFG, "");
-        PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG, "");
-        VirusDir = configBuilder.getValue(VIRUS_DIR_CFG, "");
-        IsofoxDir = configBuilder.getValue(ISOFOX_DIR_CFG, "");
+        String sampleDataDir = configBuilder.getValue(SAMPLE_DATA_DIR_CFG, "");
+
+        LinxDir = configBuilder.getValue(LINX_DIR_CFG, sampleDataDir);
+        PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG, sampleDataDir);
+        VirusDir = configBuilder.getValue(VIRUS_DIR_CFG, sampleDataDir);
+        IsofoxDir = configBuilder.getValue(ISOFOX_DIR_CFG, sampleDataDir);
         AltSpliceJunctionSites = configBuilder.getValue(REF_ALT_SJ_SITES);
 
         OutputDir = parseOutputDir(configBuilder);
@@ -111,14 +115,8 @@ public class PrepConfig
         configBuilder.addPath(REF_ALT_SJ_SITES, false, "RNA required alternative splice junction sites");
         configBuilder.addFlag(WRITE_FILE_BY_CATEGORY, "Cohort mode - write files by category");
 
+        configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
         addPipelineDirectories(configBuilder);
-
-        /*
-        configBuilder.addConfigItem(REF_SNV_SAMPLE_POS_FREQ_FILE, false, "Ref SNV position frequency matrix data file");
-        configBuilder.addConfigItem(REF_SNV_COUNTS_FILE, false, "Ref SNV trinucleotide matrix data file");
-        configBuilder.addPath(REF_GENE_EXP_DATA_FILE, false, "Ref sample RNA gene expression cohort data file");
-        configBuilder.addPath(REF_ALT_SJ_DATA_FILE, false, "Ref sample RNA alternate splice junction cohort data file");
-        */
 
         addLoggingOptions(configBuilder);
         addOutputOptions(configBuilder);

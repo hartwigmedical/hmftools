@@ -31,10 +31,10 @@ public class VariantTypesTest
 
         RegionTaskTester tester = new RegionTaskTester();
 
-        RegionTask task = tester.createRegionTask(region);
-
         String refBases = TEST_REF_BASES;
         tester.RefGenome.RefGenomeMap.put(CHR_1, refBases + generateRandomBases(1500)); // need to cover the ref sequence buffer
+
+        RegionTask task = tester.createRegionTask(region);
 
         String readBases = refBases.substring(1, 21) + "A" + refBases.substring(22, 52);
 

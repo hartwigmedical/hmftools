@@ -5,7 +5,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
@@ -112,8 +111,7 @@ public class SageVariant
         {
             if(mTumorReadCounters.get(0).localPhaseSets().get(i) == lps)
             {
-                final int[] counts = mTumorReadCounters.get(0).lpsCounts().get(i);
-                return counts[0] + counts[1];
+                return mTumorReadCounters.get(0).lpsCounts().get(i);
             }
         }
 
@@ -137,7 +135,7 @@ public class SageVariant
     }
 
     @Nullable
-    public List<int[]> localPhaseSetCounts()
+    public List<Integer> localPhaseSetCounts()
     {
         if(mTumorReadCounters.isEmpty())
             return null;
@@ -156,7 +154,7 @@ public class SageVariant
     public boolean isTumorEmpty() { return mTumorReadCounters.isEmpty(); }
     public boolean isNormalEmpty() { return mNormalReadCounters.isEmpty(); }
 
-    public VariantHotspot variant() { return mCandidate.variant(); }
+    public SimpleVariant variant() { return mCandidate.variant(); }
 
     public VariantTier tier() { return mCandidate.tier(); }
 

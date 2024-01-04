@@ -4,8 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPAIR_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
@@ -71,7 +71,7 @@ public class VcfDepthComparer
             System.exit(1);
         }
 
-        List<String> oldVcfTags = Lists.newArrayList(REF_READ_COVERAGE, REF_READPAIR_COVERAGE);
+        List<String> oldVcfTags = Lists.newArrayList(REF_DEPTH, REF_DEPTH_PAIR);
         List<String> newVcfTags = oldVcfTags.stream().map(x -> format("%s_%s", mNewVcfTagPrefix, x)).collect(Collectors.toList());
 
         for(VariantContext variant : reader.iterator())

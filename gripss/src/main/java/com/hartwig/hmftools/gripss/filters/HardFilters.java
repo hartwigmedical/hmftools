@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.gripss.filters;
 
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BAQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.parseRefAlt;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BQ;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.sglFragmentCount;
 
 import com.hartwig.hmftools.gripss.common.VariantAltInsertCoords;
@@ -56,12 +56,12 @@ public class HardFilters
 
             boolean isLineInsertion = isMobileLineElement(altInsertCoords.Orientation, altInsertCoords.InsertSequence);
 
-            final String qualTag = isLineInsertion ? VT_BQ : VT_BAQ;
+            final String qualTag = isLineInsertion ? GRIDSS_BQ : GRIDSS_BAQ;
             qual = getGenotypeAttributeAsDouble(tumorGenotype, qualTag, 0);
         }
         else
         {
-            qual = getGenotypeAttributeAsDouble(tumorGenotype, VT_QUAL, 0);
+            qual = getGenotypeAttributeAsDouble(tumorGenotype, QUAL, 0);
         }
 
         return qual < mFilterConstants.MinTumorQual;
@@ -85,8 +85,8 @@ public class HardFilters
         }
         else
         {
-            refFrags = getGenotypeAttributeAsInt(refGenotype, VT_VF, 0);
-            tumorFrags = getGenotypeAttributeAsInt(tumorGenotype, VT_VF, 0);
+            refFrags = getGenotypeAttributeAsInt(refGenotype, SV_FRAG_COUNT, 0);
+            tumorFrags = getGenotypeAttributeAsInt(tumorGenotype, SV_FRAG_COUNT, 0);
         }
 
         if(refFrags > mFilterConstants.HardMaxNormalRelativeSupport * tumorFrags)

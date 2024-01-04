@@ -6,6 +6,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.APP_NAME;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.addConfig;
@@ -89,18 +90,8 @@ public class MarkDuplicates
 
         MD_LOGGER.debug("splitting {} partitions across {} threads", partitionCount, partitionTasks.size());
 
-        for(Thread worker : workers)
-        {
-            try
-            {
-                worker.join();
-            }
-            catch(InterruptedException e)
-            {
-                MD_LOGGER.error("task execution error: {}", e.toString());
-                e.printStackTrace();
-            }
-        }
+        if(!runThreadTasks(workers))
+            System.exit(1);
 
         MD_LOGGER.info("all partition tasks complete");
 
@@ -193,6 +184,9 @@ public class MarkDuplicates
 
     private long writeUnmappedReads(final FileWriterCache fileWriterCache)
     {
+        if(mConfig.SpecificChrRegions.hasFilters() || !mConfig.WriteBam)
+            return 0;
+
         BamWriter bamWriter = fileWriterCache.getFullyUnmappedReadsBamWriter();
 
         BamReader bamReader = new BamReader(mConfig);

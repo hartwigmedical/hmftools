@@ -32,10 +32,10 @@ public class PurpleConstants
     public static final double GERMLINE_AMP_RATIO = 1.3;
     public static final double GERMLINE_DEL_RATIO = 0.7;
     public static final int GERMLINE_DEL_MIN_LENGTH = 5_000_000;
-    public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_1 = 30_000_000;
+    public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_1 = 50_000_000;
     public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_9 = 135_000_000;
     public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_17 = 75_000_000;
-    public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_19 = 10_000_000;
+    public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_19 = 20_000_000;
 
     // purity calcs
     public static final double MIN_PURITY_DEFAULT = 0.08;
@@ -43,8 +43,28 @@ public class PurpleConstants
     public static final double PURITY_INCREMENT_DEFAULT = 0.01;
     public static final double MIN_PLOIDY_DEFAULT = 1.0;
     public static final double MAX_PLOIDY_DEFAULT = 8;
+
     public static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 30;
     public static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT = 150;
+    public static final int TARGETED_MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 3;
+
+    public static final double PLOIDY_PENALTY_FACTOR_DEFAULT = 0.4;
+
+    public static final double PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT = 0.05;
+    public static final double TARGETED_PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT = 0.1;
+
+    public static final double PLOIDY_PENALTY_MIN_STANDARD_DEVIATION_DEFAULT = 1.5;
+
+    public static final double PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT = 1;
+    public static final double TARGETED_PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT = 3;
+
+    public static final double PLOIDY_PENALTY_SUB_MIN_ADDITIONAL_DEFAULT = 1.5;
+
+    public static final double PLOIDY_PENALTY_MIN_DEFAULT = 0.1;
+    public static final double TARGETED_PLOIDY_PENALTY_MIN_DEFAULT = 0.2;
+
+    public static final double TARGETED_DEVIATION_PENALTY_GC_MIN_ADJUST_DEFAULT = 0.25;
+    public static final double TARGETED_GC_RATIO_EXPONENT_DEFAULT = 3;
 
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;

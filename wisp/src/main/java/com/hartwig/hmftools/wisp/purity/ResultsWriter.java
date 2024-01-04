@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.wisp.purity;
 
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
@@ -7,8 +8,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.WriteType.CN_DATA;
-import static com.hartwig.hmftools.wisp.purity.WriteType.SOMATICS;
-import static com.hartwig.hmftools.wisp.purity.WriteType.SOMATIC_ALL;
+import static com.hartwig.hmftools.wisp.purity.WriteType.SOMATIC_DATA;
+import static com.hartwig.hmftools.wisp.purity.cn.CopyNumberProfile.initialiseCnPlotCalcWriter;
 import static com.hartwig.hmftools.wisp.purity.cn.CopyNumberProfile.initialiseCnRatioWriter;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticVariants.initialiseVariantWriter;
 import static com.hartwig.hmftools.wisp.purity.variant.VafPeakModel.initialiseSomaticPeakWriter;
@@ -18,7 +19,6 @@ import java.io.IOException;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.wisp.common.SampleData;
 import com.hartwig.hmftools.wisp.purity.cn.CnPurityResult;
 import com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult;
 
@@ -29,29 +29,23 @@ public class ResultsWriter
     private final BufferedWriter mVariantWriter;
     private final BufferedWriter mCnRatioWriter;
     private final BufferedWriter mSomaticPeakWriter;
-    private final BufferedWriter mDropoutCalcWriter;
-
-    public static final String SUMMARY_FILE_ID = "summary";
-    public static final String SOMATICS_FILE_ID = "somatic_variants";
-    public static final String CN_SEGMENT_FILE_ID = "cn_segments";
-    public static final String DROPOUT_FILE_ID = "dropout";
-    public static final String SOMATIC_PEAK_FILE_ID = "somatic_peak";
+    private final BufferedWriter mCnPlotCalcWriter;
 
     public ResultsWriter(final PurityConfig config)
     {
         mConfig = config;
 
         mSampleSummaryWriter = initialiseWriter();
-        mVariantWriter = config.writeType(SOMATICS) || config.writeType(SOMATIC_ALL) ? initialiseVariantWriter(mConfig) : null;
-        mCnRatioWriter = config.writeType(CN_DATA) ? initialiseCnRatioWriter(mConfig) : null;
+        mVariantWriter = config.writeType(SOMATIC_DATA) ? initialiseVariantWriter(mConfig) : null;
+        mCnRatioWriter = config.writeType(CN_DATA) || WriteType.plotCopyNumber(config.WriteTypes) ? initialiseCnRatioWriter(mConfig) : null;
         mSomaticPeakWriter = WriteType.plotSomatics(config.WriteTypes) ? initialiseSomaticPeakWriter(mConfig) : null  ;
-        mDropoutCalcWriter = null; // config.WriteSomatics ? LowCountModel.initialiseWriter(mConfig) : null;
+        mCnPlotCalcWriter = WriteType.plotCopyNumber(config.WriteTypes) ? initialiseCnPlotCalcWriter(mConfig) : null;
     }
 
     public BufferedWriter getSomaticWriter() { return mVariantWriter; }
     public BufferedWriter getCnRatioWriter() { return mCnRatioWriter; }
     public BufferedWriter getSomaticPeakWriter() { return mSomaticPeakWriter; }
-    public BufferedWriter getDropoutWriter() { return mDropoutCalcWriter; }
+    public BufferedWriter getCnPlotCalcWriter() { return mCnPlotCalcWriter; }
 
     public static void addCommonHeaderFields(final StringJoiner sj, final PurityConfig config)
     {
@@ -81,7 +75,7 @@ public class ResultsWriter
     {
         try
         {
-            String fileName = mConfig.formFilename(SUMMARY_FILE_ID);
+            String fileName = mConfig.formFilename(FileType.SUMMARY);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
@@ -133,7 +127,7 @@ public class ResultsWriter
         closeBufferedWriter(mVariantWriter);
         closeBufferedWriter(mSampleSummaryWriter);
         closeBufferedWriter(mCnRatioWriter);
-        closeBufferedWriter(mDropoutCalcWriter);
+        closeBufferedWriter(mCnPlotCalcWriter);
         closeBufferedWriter(mSomaticPeakWriter);
     }
 
@@ -152,9 +146,9 @@ public class ResultsWriter
     public static String formatPurityValue(double purity)
     {
         if(purity >= 0.01)
-            return format("%.4f", purity);
+            return format("%.4f", min(purity, 1.0));
         else
-            return format("%.6f", purity);
+            return format("%.6f", min(purity, 1.0));
     }
 
     public static String formatProbabilityValue(double probability)

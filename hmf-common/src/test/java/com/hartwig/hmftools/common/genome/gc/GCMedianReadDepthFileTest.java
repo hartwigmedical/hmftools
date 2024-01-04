@@ -6,44 +6,42 @@ import java.io.IOException;
 
 import com.google.common.io.Resources;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class GCMedianReadDepthFileTest
 {
-    @SuppressWarnings("UnstableApiUsage")
-    private static final String GC_MEDIAN_PATH = Resources.getResource("gc/EXAMPLE.purple.gc.median").getPath();
+    private static final double DELTA = 1e-2;
 
     @Test
-    public void canLoadWithoutExtendingRegion() throws IOException
+    public void testCanLoad() throws IOException
     {
-        final GCMedianReadDepth readCount = GCMedianReadDepthFile.read(false, GC_MEDIAN_PATH);
-        testMinMax(readCount, -1, -1);
+        @SuppressWarnings("UnstableApiUsage")
+        final String GC_MEDIAN_PATH = Resources.getResource("gc/EXAMPLE.cobalt.gc.median").getPath();
+
+        final GCMedianReadDepth readDepth = GCMedianReadDepthFile.read(GC_MEDIAN_PATH);
+        validateReadDepth(readDepth);
     }
 
     @Test
-    public void canLoadAndExtendRegion() throws IOException
+    public void testCanLoadOldVersion() throws IOException
     {
-        final GCMedianReadDepth readCount = GCMedianReadDepthFile.read(true, GC_MEDIAN_PATH);
-        testMinMax(readCount, 1144, 880);
+        @SuppressWarnings("UnstableApiUsage")
+        final String GC_MEDIAN_PATH = Resources.getResource("gc/EXAMPLE.cobalt.gc.median.oldVersion").getPath();
+
+        final GCMedianReadDepth readDepth = GCMedianReadDepthFile.read(GC_MEDIAN_PATH);
+        validateReadDepth(readDepth);
     }
 
-    private static void testMinMax(@NotNull final GCMedianReadDepth victim, int expectedMin, int expectedMax)
+    private void validateReadDepth(final GCMedianReadDepth readDepth)
     {
-        for(int i = 0; i < 20; i++)
-        {
-            assertEquals(expectedMin, victim.medianReadDepth(new ImmutableGCBucket(i)), 1e-10);
-        }
+        assertEquals(145.11, readDepth.meanReadDepth(), DELTA);
+        assertEquals(141.79, readDepth.medianReadDepth(), DELTA);
 
-        assertEquals(1144, victim.medianReadDepth(new ImmutableGCBucket(20)), 1e-10);
-        assertEquals(994, victim.medianReadDepth(new ImmutableGCBucket(30)), 1e-10);
-        assertEquals(-1, victim.medianReadDepth(new ImmutableGCBucket(40)), 1e-10);
-        assertEquals(894, victim.medianReadDepth(new ImmutableGCBucket(50)), 1e-10);
-        assertEquals(880, victim.medianReadDepth(new ImmutableGCBucket(60)), 1e-10);
-
-        for(int i = 61; i <= 100; i++)
-        {
-            assertEquals(expectedMax, victim.medianReadDepth(new ImmutableGCBucket(i)), 1e-10);
-        }
+        assertEquals(150.09, readDepth.medianReadDepth(new ImmutableGCBucket(30)), DELTA);
+        assertEquals(165.5, readDepth.medianReadDepth(new ImmutableGCBucket(22)), DELTA);
+        assertEquals(150.09, readDepth.medianReadDepth(new ImmutableGCBucket(30)), DELTA);
+        assertEquals(-1, readDepth.medianReadDepth(new ImmutableGCBucket(40)), DELTA);
+        assertEquals(134.99, readDepth.medianReadDepth(new ImmutableGCBucket(50)), DELTA);
+        assertEquals(132.88, readDepth.medianReadDepth(new ImmutableGCBucket(60)), DELTA);
     }
 }

@@ -15,11 +15,13 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABIL
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.DEFAULT_PROBE_LENGTH;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.generateMutationSequence;
+import static com.hartwig.hmftools.wisp.purity.FileType.SOMATICS;
+import static com.hartwig.hmftools.wisp.purity.FileType.SOMATIC_PEAK;
+import static com.hartwig.hmftools.wisp.purity.FileType.SUMMARY;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.CHIP_MIN_ALLELE_FRAGS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.CHIP_MIN_SAMPLE_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_SUBCLONAL_LIKELIHOOD;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SUBCLONAL_VCN_THRESHOLD;
-import static com.hartwig.hmftools.wisp.purity.ResultsWriter.SOMATICS_FILE_ID;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.CHIP;
@@ -55,7 +57,7 @@ import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
 import com.hartwig.hmftools.wisp.purity.WriteType;
 import com.hartwig.hmftools.wisp.purity.ResultsWriter;
-import com.hartwig.hmftools.wisp.common.SampleData;
+import com.hartwig.hmftools.wisp.purity.SampleData;
 import com.hartwig.hmftools.wisp.purity.PurityConstants;
 
 import htsjdk.variant.variantcontext.Genotype;
@@ -180,14 +182,16 @@ public class SomaticVariants
         return true;
     }
 
+    private static final double NO_GC_RATIO = -1;
+
     private void processVariant(final List<String> targetSampleIds, final VariantContext variantContext)
     {
         VariantContextDecorator variant = new VariantContextDecorator(variantContext);
 
         double subclonalLikelihood = variant.context().getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0);
-        double sequenceGcRatio = -1;
+        double sequenceGcRatio = NO_GC_RATIO;
 
-        if(mConfig.RefGenome != null)
+        if(mConfig.RefGenome != null && mSample.ApplyGcRatio)
         {
             String variantRefContext = generateMutationSequence(
                     mConfig.RefGenome, DEFAULT_PROBE_LENGTH, variant.chromosome(), variant.position(), variant.ref(), variant.alt());
@@ -244,14 +248,9 @@ public class SomaticVariants
 
     public SomaticPurityResult processSample(final String sampleId, final PurityContext purityContext)
     {
-        // only include variants which satisfy the min avg qual check in the ctDNA sample
-
         List<SomaticVariant> filteredVariants = Lists.newArrayList();
 
         int sampleTotalAD = 0;
-
-        // UmiTypeCounts umiTypeCounts = new UmiTypeCounts();
-        // SomaticVariantCounts sampleCountsDual = new SomaticVariantCounts();
 
         for(SomaticVariant variant : mVariants)
         {
@@ -267,6 +266,7 @@ public class SomaticVariants
 
             if(filterReasons.isEmpty())
             {
+                // only include variants which satisfy the min avg qual check in the ctDNA sample
                 if(sampleFragData.isLowQual())
                 {
                     filterReasons.add(LOW_QUAL_PER_AD);
@@ -277,7 +277,7 @@ public class SomaticVariants
                 }
             }
 
-            if(mConfig.writeType(WriteType.SOMATIC_ALL) || useForTotals)
+            if(mConfig.writeType(WriteType.SOMATIC_DATA))
             {
                 writeVariant(mSomaticWriter, mConfig, mSample, sampleId, variant, sampleFragData, tumorFragData, filterReasons);
             }
@@ -288,12 +288,6 @@ public class SomaticVariants
             filteredVariants.add(variant);
 
             sampleTotalAD += sampleFragData.AlleleCount;
-
-            /*
-            umiTypeCounts.add(sampleFragData.UmiCounts);
-            sampleCountsDual.addFragmentCount(sampleFragData.UmiCounts.dualCount());
-            sampleCountsDual.addAlleleFragmentCount(sampleFragData.UmiCounts.AlleleDual, 0);
-            */
         }
 
         if(filteredVariants.isEmpty())
@@ -314,7 +308,7 @@ public class SomaticVariants
             variant.addFilterReason(CHIP);
         }
 
-        return mEstimator.calculatePurity(sampleId, purityContext, filteredVariants, mVariants.size());
+        return mEstimator.calculatePurity(sampleId, purityContext, filteredVariants, mVariants.size(), chipVariants.size());
     }
 
     private List<FilterReason> checkFilters(final VariantContextDecorator variant, double subclonalLikelihood, double sequenceGcRatio)
@@ -340,7 +334,7 @@ public class SomaticVariants
             filters.add(SUBCLONAL);
 
         // check GC content
-        if(mConfig.GcRatioMin > 0 && sequenceGcRatio >= 0 && sequenceGcRatio < mConfig.GcRatioMin)
+        if(sequenceGcRatio != NO_GC_RATIO && mConfig.GcRatioMin > 0 && sequenceGcRatio < mConfig.GcRatioMin)
             filters.add(GC_RATIO);
 
         return filters;
@@ -357,7 +351,7 @@ public class SomaticVariants
     {
         try
         {
-            String fileName = config.formFilename(SOMATICS_FILE_ID);
+            String fileName = config.formFilename(SOMATICS);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
@@ -436,9 +430,8 @@ public class SomaticVariants
     {
         try
         {
-            String summaryFile = config.formFilename(ResultsWriter.SUMMARY_FILE_ID);
-            String somaticPeaksFile = config.formFilename(ResultsWriter.SOMATIC_PEAK_FILE_ID);
-            //String somaticsFile = config.formFilename(SOMATICS_FILE_ID);
+            String summaryFile = config.formFilename(SUMMARY);
+            String somaticPeaksFile = config.formFilename(SOMATIC_PEAK);
 
             if(!Files.exists(Paths.get(summaryFile)) || !Files.exists(Paths.get(somaticPeaksFile)))
             {

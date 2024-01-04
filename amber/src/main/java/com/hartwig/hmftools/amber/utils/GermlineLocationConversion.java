@@ -61,7 +61,7 @@ public class GermlineLocationConversion
         mOutputFile = configBuilder.getValue(OUTPUT_GERMLINE_HET_FILE);
         mSnpCheckFile = configBuilder.getValue(SNP_CHECKS_FILE);
         mDestRefGenVersion = RefGenomeVersion.from(configBuilder.getValue(DESTINATION_REF_GEN_VERSION));
-        mGenomeLiftoverCache = new GenomeLiftoverCache(true, mDestRefGenVersion == V38);
+        mGenomeLiftoverCache = new GenomeLiftoverCache(true);
         mMappability = new Mappability(configBuilder);
 
         String refGenomeFile = configBuilder.getValue(REF_GENOME);

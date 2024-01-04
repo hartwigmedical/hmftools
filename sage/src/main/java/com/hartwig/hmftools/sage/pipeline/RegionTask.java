@@ -13,25 +13,26 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageCallConfig;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
+import com.hartwig.hmftools.sage.coverage.Coverage;
+import com.hartwig.hmftools.sage.dedup.VariantDeduper;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthData;
 import com.hartwig.hmftools.sage.evidence.FragmentLengths;
-import com.hartwig.hmftools.sage.filter.VariantFilters;
-import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
-import com.hartwig.hmftools.sage.phase.VariantPhaser;
+import com.hartwig.hmftools.sage.filter.VariantFilters;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
-import com.hartwig.hmftools.sage.dedup.VariantDeduper;
-import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.phase.VariantPhaser;
+import com.hartwig.hmftools.sage.vis.VariantVis;
 
 public class RegionTask
 {
@@ -73,7 +74,7 @@ public class RegionTask
         mCandidateState = new CandidateStage(config, hotspots, panelRegions, highConfidenceRegions, coverage, samSlicerFactory);
         mEvidenceStage = new EvidenceStage(config.Common, refGenome, qualityRecalibrationMap, phaseSetCounter, samSlicerFactory);
 
-        mVariantDeduper = new VariantDeduper(transcripts, mRefGenome, mConfig.OldIndelDedup);
+        mVariantDeduper = new VariantDeduper(transcripts, mRefGenome, mConfig.OldIndelDedup, mConfig.Common.getReadLength());
 
         mSageVariants = Lists.newArrayList();
         mPassingPhaseSets = Sets.newHashSet();
@@ -193,6 +194,12 @@ public class RegionTask
         VariantPhaser.removeUninformativeLps(finalVariants, mPassingPhaseSets);
 
         mResults.addFinalVariants(mTaskId, finalVariants);
+
+        if(mConfig.Common.Visualiser.Enabled)
+        {
+            mSageVariants.forEach(variant -> VariantVis.writeToHtmlFile(
+                    variant, mConfig.TumorIds, mConfig.Common.ReferenceIds, mConfig.Common.Visualiser));
+        }
 
         mResults.addTotalReads(mCandidateState.totalReadsProcessed());
 

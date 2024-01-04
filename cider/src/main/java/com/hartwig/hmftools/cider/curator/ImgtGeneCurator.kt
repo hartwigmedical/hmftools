@@ -148,7 +148,7 @@ class ImgtGeneCurator
     companion object
     {
         private val sLogger = LogManager.getLogger(ImgtGeneCurator::class.java)
-        val genomicLiftOverHmf = GenomeLiftoverCache(true, false)
+        val genomicLiftOverHmf = GenomeLiftoverCache(true)
 
         @JvmStatic
         fun main(args: Array<String>)

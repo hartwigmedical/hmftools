@@ -55,15 +55,15 @@ public class ReadDepthAccumulatorTest
         assertNotNull(readDepths);
         assertEquals(2, readDepths.size());
         ReadDepth readDepth = readDepths.get(0);
-        assertEquals(1, readDepth.startPosition);
-        assertEquals(0.5, readDepth.readDepth, EPSILON);
+        assertEquals(1, readDepth.StartPosition);
+        assertEquals(0.5, readDepth.ReadDepth, EPSILON);
         // gc percent should be 0.8 as first 400 bases were GC, and next 100 bases were AT
-        assertEquals(0.8, readDepth.readGcContent, EPSILON);
+        assertEquals(0.8, readDepth.ReadGcContent, EPSILON);
         readDepth = readDepths.get(1);
-        assertEquals(1001, readDepth.startPosition);
-        assertEquals(0.5, readDepth.readDepth, EPSILON);
+        assertEquals(1001, readDepth.StartPosition);
+        assertEquals(0.5, readDepth.ReadDepth, EPSILON);
         // gc percent should be 0.4 as first 300 bases were AT, and next 200 bases were GC
-        assertEquals(0.4, readDepth.readGcContent, EPSILON);
+        assertEquals(0.4, readDepth.ReadGcContent, EPSILON);
 
         // add one more read that only covers the first window
 
@@ -81,17 +81,17 @@ public class ReadDepthAccumulatorTest
         assertNotNull(readDepths);
         assertEquals(2, readDepths.size());
         readDepth = readDepths.get(0);
-        assertEquals(1, readDepth.startPosition);
-        assertEquals(1.5, readDepth.readDepth, EPSILON);
+        assertEquals(1, readDepth.StartPosition);
+        assertEquals(1.5, readDepth.ReadDepth, EPSILON);
 
         // first read has 0.8 gc with 500 bases covered, second read has 0.5 gc with 1000 bases
         // together it becomes 0.6
-        assertEquals(0.6, readDepth.readGcContent, EPSILON);
+        assertEquals(0.6, readDepth.ReadGcContent, EPSILON);
 
         // second read should have no change
         readDepth = readDepths.get(1);
-        assertEquals(1001, readDepth.startPosition);
-        assertEquals(0.5, readDepth.readDepth, EPSILON);
-        assertEquals(0.4, readDepth.readGcContent, EPSILON);
+        assertEquals(1001, readDepth.StartPosition);
+        assertEquals(0.5, readDepth.ReadDepth, EPSILON);
+        assertEquals(0.4, readDepth.ReadGcContent, EPSILON);
     }
 }

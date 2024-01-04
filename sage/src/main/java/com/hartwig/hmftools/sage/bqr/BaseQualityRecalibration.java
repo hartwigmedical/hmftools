@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.bed.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.sage.SageCommon.generateBqrFilename;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.ArrayList;
@@ -123,26 +124,15 @@ public class BaseQualityRecalibration
 
         SG_LOGGER.debug("samples({}) building base-qual recalibration map from {} regions", sampleId, regionCount);
 
-        List<BqrThread> workers = new ArrayList<>();
+        List<Thread> workers = new ArrayList<>();
 
         for(int i = 0; i < min(mRegions.size(), mConfig.Threads); ++i)
         {
             workers.add(new BqrThread(mConfig, mRefGenome, bamFile, mRegions, mResults));
         }
 
-        for(Thread worker : workers)
-        {
-            try
-            {
-                worker.join();
-            }
-            catch(InterruptedException e)
-            {
-                SG_LOGGER.error("task execution error: {}", e.toString());
-                e.printStackTrace();
-                System.exit(1);
-            }
-        }
+        if(!runThreadTasks(workers))
+            System.exit(1);
 
         // merge results for this sample across all regions
         final Map<BqrKey,Integer> allQualityCounts = mResults.getCombinedQualityCounts();
@@ -180,14 +170,17 @@ public class BaseQualityRecalibration
         for(Map.Entry<BqrKey,Integer> entry : allQualityCounts.entrySet())
         {
             BqrKey key = entry.getKey();
+
+            if(key.Quality == 0)
+                continue;
+
             BqrKey refKey = new BqrKey(key.Ref, key.Ref, key.TrinucleotideContext, key.Quality);
 
             int refCount = refCountMap.getOrDefault(refKey, 0);
+
             if(refCount > 0)
             {
-                double recalibratedQual = key.Alt == key.Ref
-                        ? key.Quality : recalibratedQual(refCount, entry.getValue());
-
+                double recalibratedQual = key.Alt == key.Ref ? key.Quality : recalibratedQual(refCount, entry.getValue());
                 result.add(new BqrRecord(key, entry.getValue(), recalibratedQual));
             }
         }
@@ -263,6 +256,7 @@ public class BaseQualityRecalibration
         {
             final String tsvFile = generateBqrFilename(mConfig.outputDir(), sampleId);
             SG_LOGGER.debug("writing base quality recalibration file: {}", tsvFile);
+
 
             BqrFile.write(tsvFile, records.stream().collect(Collectors.toList()));
 

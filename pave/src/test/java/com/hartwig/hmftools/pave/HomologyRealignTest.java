@@ -21,8 +21,8 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_AC
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createMockGenome;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.getAminoAcidCodon;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.getAminoAcidsCodons;
-import static com.hartwig.hmftools.pave.PaveUtils.findVariantImpacts;
-import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
+import static com.hartwig.hmftools.pave.impact.PaveUtils.findVariantImpacts;
+import static com.hartwig.hmftools.pave.impact.PaveUtils.createRightAlignedVariant;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 
 import static junit.framework.TestCase.assertEquals;
@@ -33,6 +33,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.pave.impact.ImpactClassifier;
+import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 import org.junit.Test;
 

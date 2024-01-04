@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.dedup;
 
-import static com.hartwig.hmftools.sage.dedup.DedupIndelOld.dedupIndelsOld;
 import static com.hartwig.hmftools.sage.dedup.DedupMatching.dedupMatchingVariants;
 import static com.hartwig.hmftools.sage.dedup.DedupSnvMnv.dedupMnvOverlaps;
 import static com.hartwig.hmftools.sage.dedup.DedupSnvMnv.dedupMnvSnvs;
@@ -9,18 +8,19 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 
 public class VariantDeduper
 {
     private final DedupMixedGermlineSomatic mDedupMixedGermlineSomatic;
     private final IndelDeduper mIndelDeduper;
 
-    public VariantDeduper(final List<TranscriptData> transcripts, final RefGenomeInterface refGenome, boolean runOldDedup)
+    public VariantDeduper(
+            final List<TranscriptData> transcripts, final RefGenomeInterface refGenome, boolean runOldDedup, int readLength)
     {
         mDedupMixedGermlineSomatic = new DedupMixedGermlineSomatic(transcripts);
-        mIndelDeduper = new IndelDeduper(refGenome);
+        mIndelDeduper = new IndelDeduper(refGenome, readLength);
 
         if(runOldDedup)
             mIndelDeduper.setRunOldDedup();
@@ -44,7 +44,7 @@ public class VariantDeduper
         return longerContainsShorter(shorter.variant(), longer.variant());
     }
 
-    public static boolean longerContainsShorter(final VariantHotspot shorter, final VariantHotspot longer)
+    public static boolean longerContainsShorter(final SimpleVariant shorter, final SimpleVariant longer)
     {
         int longerStart = longer.position();
         int longerEnd = longer.end();

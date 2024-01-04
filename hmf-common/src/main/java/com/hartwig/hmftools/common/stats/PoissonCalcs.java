@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.stats;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
@@ -12,6 +13,7 @@ public final class PoissonCalcs
     private static final Logger LOGGER = LogManager.getLogger(PoissonCalcs.class);
 
     private static final int DEFAULT_MAX_ITERATIONS = 20;
+    private static final double MIN_PROB_DIFF_PERC = 0.05;
 
     public static double calcPoissonNoiseValue(int observedCount, double requiredProb)
     {
@@ -40,17 +42,11 @@ public final class PoissonCalcs
             testValueUpper = observedCount;
             testValueLower = currentValue * 0.5;
         }
-        else if(observedCount == 0)
-        {
-            currentValue = 1;
-            testValueUpper = currentValue * 2;
-            testValueLower = observedCount;
-        }
         else
         {
-            currentValue = observedCount * 2;
-            testValueUpper = currentValue * 3;
+            testValueUpper = findUpperStartValue(observedCount, requiredProb, maxIterations);
             testValueLower = observedCount;
+            currentValue = (testValueUpper + testValueLower) * 0.5;
         }
 
         PoissonDistribution poisson = new PoissonDistribution(currentValue);
@@ -62,7 +58,7 @@ public final class PoissonCalcs
         {
             probDiff = abs(requiredProb - currentProb) / requiredProb;
 
-            if(probDiff < 0.005)
+            if(probDiff <= MIN_PROB_DIFF_PERC)
                 return currentValue;
 
             // if prob is too low, need to lower the test value
@@ -91,4 +87,22 @@ public final class PoissonCalcs
         return currentValue;
     }
 
+    private static double findUpperStartValue(int observedCount, double requiredProb, int maxIterations)
+    {
+        double currentValue = max(1, observedCount * 2);
+
+        for(int i = 0; i < maxIterations; ++i)
+        {
+            PoissonDistribution poisson = new PoissonDistribution(currentValue);
+
+            double currentProb = poisson.cumulativeProbability(observedCount);
+
+            if(currentProb < requiredProb)
+                break;
+
+            currentValue *= 2;
+        }
+
+        return currentValue;
+    }
 }

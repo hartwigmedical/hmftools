@@ -29,7 +29,6 @@ import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.wisp.common.SampleData;
 import com.hartwig.hmftools.wisp.purity.cn.CnPurityResult;
 import com.hartwig.hmftools.wisp.purity.cn.CopyNumberProfile;
 import com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult;
@@ -81,6 +80,8 @@ public class PurityEstimator
                 ++taskIndex;
             }
 
+            CT_LOGGER.debug("splitting {} patients across {} threads", mConfig.Samples.size(), purityCalcTasks.size());
+
             final List<Callable> callableList = purityCalcTasks.stream().collect(Collectors.toList());
             if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             {
@@ -92,6 +93,13 @@ public class PurityEstimator
             PurityTask sampleTask = new PurityTask();
             sampleTask.Samples.addAll(mConfig.Samples);
             sampleTask.call();
+
+            if(requirePlots)
+            {
+                PlotTask plotTask = new PlotTask();
+                plotTask.Samples.addAll(mConfig.Samples);
+                plotTasks.add(plotTask);
+            }
         }
 
         mResultsWriter.close();

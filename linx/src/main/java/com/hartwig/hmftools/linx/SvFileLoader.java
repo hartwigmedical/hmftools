@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_COUNT;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_CHANGE;
@@ -12,17 +12,12 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_JUNCTION_
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.valueNotNull;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
-import com.hartwig.hmftools.common.utils.collection.Multimaps;
-import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;

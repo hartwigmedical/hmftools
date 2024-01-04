@@ -29,7 +29,7 @@ public class CuppaPredictionsFactory
     @NotNull
     public static ImmutableProbabilityEntry getTopPrediction(CuppaPredictions cuppaPredictions)
     {
-        Categories.ClfName mainCombinedClfName = cuppaPredictions.getMainCombinedClfName();
+        Categories.ClfName mainCombinedClfName = cuppaPredictions.MainCombinedClfName;
 
         CuppaPredictionEntry predictionEntry = cuppaPredictions
                 .subsetByDataType(Categories.DataType.PROB)

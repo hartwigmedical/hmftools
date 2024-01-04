@@ -15,6 +15,7 @@
         <module>cobalt</module>
         <module>compar</module>
         <module>cuppa</module>
+        <module>esvee</module>
         <module>fastq-tools</module>
         <module>gene-utils</module>
         <module>gripss</module>
@@ -62,9 +63,10 @@
         <amber.version>4.0</amber.version>
         <bam-tools.version>1.2</bam-tools.version>
         <cider.version>1.0.2</cider.version>
-        <cobalt.version>1.16.0</cobalt.version>
-        <compar.version>1.1.1</compar.version>
-        <cuppa.version>1.9</cuppa.version>
+        <cobalt.version>1.16</cobalt.version>
+        <compar.version>1.2</compar.version>
+        <cuppa.version>2.0</cuppa.version>
+        <esvee.version>1.0</esvee.version>
         <fastq-tools.version>1.0</fastq-tools.version>
         <gene-utils.version>1.1</gene-utils.version>
         <gripss.version>2.4</gripss.version>
@@ -86,9 +88,9 @@
         <sigs.version>1.3</sigs.version>
         <sv-prep.version>1.2.3</sv-prep.version>
         <sv-tools.version>1.0</sv-tools.version>
-        <teal.version>1.2.0</teal.version>
+        <teal.version>1.2.1</teal.version>
         <virus-interpreter.version>1.4</virus-interpreter.version>
-        <wisp.version>1.0</wisp.version>
+        <wisp.version>1.1</wisp.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
         <immutables.version>2.9.3</immutables.version>

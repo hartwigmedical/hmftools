@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -75,8 +76,6 @@ public class BamMetrics
             Collections.sort(allRegions);
         }
 
-        BT_LOGGER.info("splitting {} regions across {} threads", allRegions.size(), mConfig.Threads);
-
         Queue<PartitionTask> partitions = new ConcurrentLinkedQueue<>();
 
         int taskId = 0;
@@ -87,24 +86,24 @@ public class BamMetrics
 
         CombinedStats combinedStats = new CombinedStats(mConfig.MaxCoverage);
 
-        List<Thread> workers = new ArrayList<>();
-
-        for(int i = 0; i < min(allRegions.size(), mConfig.Threads); ++i)
+        if(allRegions.size() == 1 || mConfig.Threads <= 1)
         {
-            workers.add(new PartitionThread(mConfig, partitions, combinedStats));
+            PartitionThread partitionThread = new PartitionThread(mConfig, partitions, combinedStats);
+            partitionThread.run();
         }
-
-        for(Thread worker : workers)
+        else
         {
-            try
+            BT_LOGGER.info("splitting {} regions across {} threads", allRegions.size(), mConfig.Threads);
+
+            List<Thread> workers = new ArrayList<>();
+
+            for(int i = 0; i < min(allRegions.size(), mConfig.Threads); ++i)
             {
-                worker.join();
+                workers.add(new PartitionThread(mConfig, partitions, combinedStats));
             }
-            catch(InterruptedException e)
-            {
-                BT_LOGGER.error("task execution error: {}", e.toString());
-                e.printStackTrace();
-            }
+
+            if(!runThreadTasks(workers))
+                System.exit(1);
         }
 
         BT_LOGGER.info("all regions complete");

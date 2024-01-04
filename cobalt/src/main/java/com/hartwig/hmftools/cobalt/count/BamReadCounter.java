@@ -22,7 +22,6 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.AlignmentBlock;
@@ -37,8 +36,8 @@ public class BamReadCounter
 {
     private final int mMinMappingQuality;
 
-    Table mReferenceDepths = null;
-    Table mTumorDepths = null;
+    private Table mReferenceDepths = null;
+    private Table mTumorDepths = null;
 
     private final ExecutorService mExecutorService;
     private final SamReaderFactory mReaderFactory;
@@ -56,7 +55,7 @@ public class BamReadCounter
     public BamReadCounter(
             final int windowSize, final int minMappingQuality,
             final ExecutorService executorService, final SamReaderFactory readerFactory,
-            ChromosomePositionCodec chromosomePosCodec)
+            final ChromosomePositionCodec chromosomePosCodec)
     {
         mMinMappingQuality = minMappingQuality;
         mExecutorService = executorService;
@@ -70,9 +69,9 @@ public class BamReadCounter
             @Nullable final String referenceBam, @Nullable final String tumorBam)
             throws ExecutionException, InterruptedException, IOException
     {
-        if (referenceBam == null && tumorBam == null)
+        if(referenceBam == null && tumorBam == null)
         {
-            CB_LOGGER.error("No bam file supplied");
+            CB_LOGGER.error("no bam file supplied");
             return;
         }
 
@@ -81,15 +80,15 @@ public class BamReadCounter
         List<Future<?>> tasks = new ArrayList<>();
         List<SamReader> samReaders = Collections.synchronizedList(new ArrayList<>());
 
-        if (tumorBam != null)
+        if(tumorBam != null)
         {
-            CB_LOGGER.info("Calculating read depths from {}", tumorBam);
+            CB_LOGGER.info("calculating read depths from {}", tumorBam);
             tasks.addAll(createFutures(tumorBam, mTumorReadDepthAccumulator, samReaders));
         }
 
-        if (referenceBam != null)
+        if(referenceBam != null)
         {
-            CB_LOGGER.info("Calculating read depths from {}", referenceBam);
+            CB_LOGGER.info("calculating read depths from {}", referenceBam);
             tasks.addAll(createFutures(referenceBam, mRefReadDepthAccumulator, samReaders));
         }
 
@@ -104,7 +103,7 @@ public class BamReadCounter
             mTumorDepths = generateDepths(mTumorReadDepthAccumulator);
         }
 
-        if (referenceBam != null)
+        if(referenceBam != null)
         {
             mReferenceDepths = generateDepths(mRefReadDepthAccumulator);
         }
@@ -115,7 +114,7 @@ public class BamReadCounter
             samReader.close();
         }
 
-        CB_LOGGER.info("Read Depth Complete");
+        CB_LOGGER.info("read Depth Complete");
     }
 
     private List<Future<?>> createFutures(final String bamFilePath, final ReadDepthAccumulator readDepthCounter, List<SamReader> samReaderList)
@@ -148,11 +147,13 @@ public class BamReadCounter
 
     private void sliceRegionTask(ThreadLocal<SamReader> samReaderSupplier, ChrBaseRegion region, ReadDepthAccumulator readDepthAccumulator)
     {
-        CB_LOGGER.printf(Level.INFO, "Accumulating read depth, region(%s:%,d-%,d)",
-                region.chromosome(), region.start(), region.end());
+        CB_LOGGER.debug("region({}) accumulating read depth", region);
+
         final SamReader reader = samReaderSupplier.get();
         BamSlicer bamSlicer = new BamSlicer(mMinMappingQuality, false, false, false);
         bamSlicer.slice(reader, region, samRecord -> processRead(samRecord, region, readDepthAccumulator));
+
+        CB_LOGGER.debug("region({}) complete", region);
     }
 
     private void processRead(final SAMRecord record, ChrBaseRegion region, ReadDepthAccumulator readDepthAccumulator)
@@ -166,7 +167,8 @@ public class BamReadCounter
         }
     }
 
-    static void accumulateAlignmentBlock(final ChrBaseRegion region, final ReadDepthAccumulator readDepthAccumulator,
+    static void accumulateAlignmentBlock(
+            final ChrBaseRegion region, final ReadDepthAccumulator readDepthAccumulator,
             final int alignmentBlockReadStart, final int alignmentBlockReferenceStart, final int alignmentBlockLength,
             byte[] readBases)
     {
@@ -202,9 +204,9 @@ public class BamReadCounter
             {
                 Row row = readDepthTable.appendRow();
                 row.setString(CobaltColumns.CHROMOSOME, chromosome.contig);
-                row.setInt(CobaltColumns.POSITION, readDepth.startPosition);
-                row.setDouble(CobaltColumns.READ_DEPTH, readDepth.readDepth);
-                row.setDouble(CobaltColumns.READ_GC_CONTENT, readDepth.readGcContent);
+                row.setInt(CobaltColumns.POSITION, readDepth.StartPosition);
+                row.setDouble(CobaltColumns.READ_DEPTH, readDepth.ReadDepth);
+                row.setDouble(CobaltColumns.READ_GC_CONTENT, readDepth.ReadGcContent);
             }
         }
 

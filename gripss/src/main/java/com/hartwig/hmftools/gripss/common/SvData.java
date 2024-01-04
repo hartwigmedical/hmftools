@@ -5,11 +5,11 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.EVENT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.SHORT_CALLING_SIZE;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_EVENT;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOMSEQ;
 
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
@@ -36,7 +36,7 @@ public class SvData
 
     public SvData(final StructuralVariant sv, final GenotypeIds genotypeIds)
     {
-        mId = sv.startContext().getAttributeAsString(VT_EVENT, sv.id());
+        mId = sv.startContext().getAttributeAsString(EVENT, sv.id());
 
         mReferenceOrdinal = genotypeIds.ReferenceOrdinal;
 
@@ -131,8 +131,8 @@ public class SvData
         return 0;
     }
 
-    public String startHomology() { return contextStart().getAttributeAsString(VT_HOMSEQ, ""); }
-    public String endHomology() { return contextEnd() != null ? contextEnd().getAttributeAsString(VT_HOMSEQ, "") : ""; }
+    public String startHomology() { return contextStart().getAttributeAsString(HOMSEQ, ""); }
+    public String endHomology() { return contextEnd() != null ? contextEnd().getAttributeAsString(HOMSEQ, "") : ""; }
 
     public String toString()
     {

@@ -21,12 +21,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.filter.VariantFilters;
@@ -188,11 +187,7 @@ public class SoftFilterTest
         String refBase = REF_BASES.substring(variantPosition, variantPosition + 1);
         String altBase = getNextBase(refBase);
 
-        final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder()
-                .chromosome(CHR_1)
-                .ref(refBase)
-                .alt(altBase)
-                .position(variantPosition).build();
+        SimpleVariant variant = new SimpleVariant(CHR_1, variantPosition, refBase, altBase);
 
         // use minimum core with +/-2
         String readBases = REF_BASES.substring(
@@ -201,7 +196,7 @@ public class SoftFilterTest
         final ReadContext readContext = createReadContext(variantPosition, 2, 0, 4, readBases, Strings.EMPTY);
 
         return new ReadContextCounter(
-                1, hotspot, readContext, VariantTier.PANEL, 100, 0,
+                1, variant, readContext, VariantTier.PANEL, 100, 0,
                 HIGH_QUAL_CONFIG, QUALITY_CALCULATOR, null);
     }
 }

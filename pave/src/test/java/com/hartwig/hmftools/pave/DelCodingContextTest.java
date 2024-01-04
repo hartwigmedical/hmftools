@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_D
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createMockGenome;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createNegTranscript;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createPosTranscript;
-import static com.hartwig.hmftools.pave.ImpactTestUtils.generateAlt;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -23,6 +22,8 @@ import static junit.framework.TestCase.assertTrue;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.pave.impact.ImpactClassifier;
+import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 import org.junit.Test;
 

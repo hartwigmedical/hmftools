@@ -19,13 +19,14 @@ public class BqrConfig
     public final int MinMapQuality;
 
     private static final String DISABLE_BQR = "disable_bqr";
+    private static final String LOAD_BQR_FILES = "load_bqr";
+    private static final String WRITE_BQR_DATA = "write_bqr_data";
+    private static final String WRITE_BQR_PLOT = "write_bqr_plot";
+
     private static final String BQR_SAMPLE_SIZE = "bqr_sample_size";
     private static final String BQR_MAX_ALT_PERC = "bqr_max_alt_perc";
     private static final String BQR_MAX_ALT_COUNT = "bqr_max_alt_count";
     private static final String BQR_MIN_MAP_QUAL = "bqr_min_map_qual";
-    private static final String WRITE_BQR_DATA = "write_bqr_data";
-    private static final String WRITE_BQR_PLOT = "write_bqr_plot";
-    private static final String LOAD_BQR_FILES = "load_bqr_files";
 
     public BqrConfig(final ConfigBuilder configBuilder)
     {

@@ -1,0 +1,41 @@
+class	clf_name	n_total	n_predicted	n_correct	recall	precision
+.All	combined	21	0	19	0.9047619047619048	
+.All	dna_combined	40	0	36	0.9	
+.All	rna_combined	21	0	5	0.23809523809523808	
+.All	gen_pos	40	0	27	0.675	
+.All	snv96	40	0	33	0.825	
+.All	event	40	0	21	0.525	
+.All	gene_exp	21	0	6	0.2857142857142857	
+.All	alt_sj	21	0	6	0.2857142857142857	
+Gynecologic: Ovary/Fallopian tube	combined	10	10	10	1.0	1.0
+Gynecologic: Ovary/Fallopian tube	dna_combined	12	12	12	1.0	1.0
+Gynecologic: Ovary/Fallopian tube	rna_combined	10	0	0	0.0	
+Gynecologic: Ovary/Fallopian tube	gen_pos	12	10	8	0.6666666666666666	0.8
+Gynecologic: Ovary/Fallopian tube	snv96	12	14	11	0.9166666666666666	0.7857142857142857
+Gynecologic: Ovary/Fallopian tube	event	12	6	3	0.25	0.5
+Gynecologic: Ovary/Fallopian tube	gene_exp	10	9	3	0.3	0.3333333333333333
+Gynecologic: Ovary/Fallopian tube	alt_sj	10	9	3	0.3	0.3333333333333333
+Myeloid: Acute myeloid leukemia	combined	0	0	0		
+Myeloid: Acute myeloid leukemia	dna_combined	10	12	10	1.0	0.8333333333333334
+Myeloid: Acute myeloid leukemia	rna_combined	0	0	0		
+Myeloid: Acute myeloid leukemia	gen_pos	10	9	7	0.7	0.7777777777777778
+Myeloid: Acute myeloid leukemia	snv96	10	11	9	0.9	0.8181818181818182
+Myeloid: Acute myeloid leukemia	event	10	15	10	1.0	0.6666666666666666
+Myeloid: Acute myeloid leukemia	gene_exp	0	0	0		
+Myeloid: Acute myeloid leukemia	alt_sj	0	0	0		
+Prostate	combined	6	8	6	1.0	0.75
+Prostate	dna_combined	10	12	10	1.0	0.8333333333333334
+Prostate	rna_combined	6	0	0	0.0	
+Prostate	gen_pos	10	7	7	0.7	1.0
+Prostate	snv96	10	10	9	0.9	0.9
+Prostate	event	10	13	6	0.6	0.46153846153846156
+Prostate	gene_exp	6	12	3	0.5	0.25
+Prostate	alt_sj	6	12	3	0.5	0.25
+Skin: Other	combined	5	3	3	0.6	1.0
+Skin: Other	dna_combined	8	4	4	0.5	1.0
+Skin: Other	rna_combined	5	21	5	1.0	0.23809523809523808
+Skin: Other	gen_pos	8	14	5	0.625	0.35714285714285715
+Skin: Other	snv96	8	5	4	0.5	0.8
+Skin: Other	event	8	6	2	0.25	0.3333333333333333
+Skin: Other	gene_exp	5	0	0	0.0	
+Skin: Other	alt_sj	5	0	0	0.0	

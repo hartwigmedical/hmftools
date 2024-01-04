@@ -3,7 +3,7 @@ package com.hartwig.hmftools.sage.evidence;
 import static java.lang.String.format;
 
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -43,7 +43,7 @@ public class RawContext
         RefSupport = supportsRef;
     }
 
-    public static RawContext create(final VariantHotspot variant, final SAMRecord record)
+    public static RawContext create(final SimpleVariant variant, final SAMRecord record)
     {
         RawContextCigarHandler handler = new RawContextCigarHandler(variant);
         CigarTraversal.traverseCigar(record, handler);

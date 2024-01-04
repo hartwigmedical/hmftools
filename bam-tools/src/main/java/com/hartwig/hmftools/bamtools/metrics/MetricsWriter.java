@@ -175,6 +175,9 @@ public final class MetricsWriter
 
     private static void writeTargetRegionStats(final List<TargetRegionStats> targetRegionStats, final MetricsConfig config)
     {
+        if(config.TargetRegions.isEmpty())
+            return;
+
         try
         {
             // write summary metrics

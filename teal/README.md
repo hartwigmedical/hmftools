@@ -301,6 +301,8 @@ details the estimated  telomeric length and content and finally a file which pre
 * TEAL could aslo count relatve amount T-Type, C-Type, G-Type and J-Type content per sample (relevant for ALT pathway identification)
 
 # Version History and Download Links
+- [1.2.1](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.2.1)
+  - Fix backward compatability issue with cobalt v1.16
 - [1.2.0](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.2.0)
   - Update to match cobalt v1.16+.
   - Use mean read depth and gc50 read depth instead of read count per 1000 bases window.

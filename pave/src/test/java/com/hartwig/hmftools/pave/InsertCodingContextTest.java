@@ -9,9 +9,8 @@ import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
-import static com.hartwig.hmftools.pave.HgvsProtein.HGVS_SPLICE_UNKNOWN;
+import static com.hartwig.hmftools.pave.impact.HgvsProtein.HGVS_SPLICE_UNKNOWN;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createMockGenome;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createNegTranscript;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createPosTranscript;
@@ -22,6 +21,8 @@ import static junit.framework.TestCase.assertTrue;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.pave.impact.ImpactClassifier;
+import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 import org.junit.Test;
 

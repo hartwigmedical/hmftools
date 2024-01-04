@@ -31,7 +31,7 @@ public class GcNormalizedRatioMapper implements RatioMapper
     @Override
     public Table mapRatios(final Table inputRatios)
     {
-        CB_LOGGER.info("Applying ratio gc normalization");
+        CB_LOGGER.info("applying ratio GC normalization");
 
         // add a gc bucket column if not already have one
         if (!inputRatios.containsColumn(CobaltColumns.GC_BUCKET))

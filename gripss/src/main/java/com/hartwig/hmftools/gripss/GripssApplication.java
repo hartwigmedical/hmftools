@@ -3,7 +3,7 @@ package com.hartwig.hmftools.gripss;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations.REPEAT_MASK_FILE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.UNTEMPLATED_SEQUENCE_ALIGNMENTS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEALN;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
@@ -288,7 +288,7 @@ public class GripssApplication
                     if(breakend.sv().insertSequence().isEmpty())
                         continue;
 
-                    final String alignments = breakend.Context.getAttributeAsString(UNTEMPLATED_SEQUENCE_ALIGNMENTS, "");
+                    final String alignments = breakend.Context.getAttributeAsString(BEALN, "");
                     if(alignments.isEmpty())
                         continue;
 

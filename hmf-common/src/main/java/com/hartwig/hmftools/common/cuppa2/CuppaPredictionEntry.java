@@ -108,4 +108,54 @@ public class CuppaPredictionEntry
 
         return stringBuilder.toString();
     }
+
+    public String getSampleId()
+    {
+        return SampleId;
+    }
+
+    public Categories.DataType getDataType()
+    {
+        return DataType;
+    }
+
+    public Categories.ClfGroup getClfGroup()
+    {
+        return ClfGroup;
+    }
+
+    public Categories.ClfName getClfName()
+    {
+        return ClfName;
+    }
+
+    public String getFeatName()
+    {
+        return FeatName;
+    }
+
+    public double getFeatValue()
+    {
+        return FeatValue;
+    }
+
+    public String getCancerType()
+    {
+        return CancerType;
+    }
+
+    public double getDataValue()
+    {
+        return DataValue;
+    }
+
+    public int getRank()
+    {
+        return Rank;
+    }
+
+    public int getRankGroup()
+    {
+        return RankGroup;
+    }
 }

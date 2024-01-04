@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.sage.ReferenceData.loadRefGenome;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
@@ -120,19 +121,8 @@ public class ChromosomePipeline implements AutoCloseable
                     mPanelRegions, mHotspots, mTranscripts, mHighConfidenceRegions, mPartitions, mRegionResults, mFragmentLengths));
         }
 
-        for(Thread worker : workers)
-        {
-            try
-            {
-                worker.join();
-            }
-            catch(InterruptedException e)
-            {
-                SG_LOGGER.error("task execution error: {}", e.toString());
-                e.printStackTrace();
-                System.exit(1);
-            }
-        }
+        if(!runThreadTasks(workers))
+            System.exit(1);
 
         SG_LOGGER.debug("chromosome({}) {} regions complete, processed {} reads, writing {} variants",
                 mChromosome, regionCount, mRegionResults.totalReads(), mRegionResults.totalVariants());

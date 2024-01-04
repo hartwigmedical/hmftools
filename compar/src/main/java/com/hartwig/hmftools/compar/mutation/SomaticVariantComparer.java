@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.compar.common.Category.SOMATIC_VARIANT;
@@ -8,6 +10,7 @@ import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
 import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
+import static com.hartwig.hmftools.compar.common.FileSources.liftoverSourceGenomeVersion;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_NEW;
@@ -27,6 +30,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -150,7 +154,7 @@ public class SomaticVariantComparer implements ItemComparer
                 MatchFilterStatus matchFilterStatus = null;
 
                 // shift index2 back to index at or before first potentially matching variant
-                while(index2 > 0 && (index2 >= newVariants.size() || newVariants.get(index2).comparisonPosition() >= refVariant.comparisonPosition()))
+                while(index2 > 0 && (index2 >= newVariants.size() || newVariants.get(index2).Position >= refVariant.comparisonPosition()))
                 {
                     --index2;
                 }
@@ -166,7 +170,7 @@ public class SomaticVariantComparer implements ItemComparer
                         newVariants.remove(index2);
                         break;
                     }
-                    else if(newVariant.comparisonPosition() > refVariant.comparisonPosition())
+                    else if(newVariant.Position > refVariant.comparisonPosition())
                     {
                         break;
                     }
@@ -181,6 +185,7 @@ public class SomaticVariantComparer implements ItemComparer
                     if(unfilteredVariant != null)
                     {
                         matchFilterStatus = MatchFilterStatus.NEW_FILTERED;
+                        unfilteredVariant.setComparisonCoordinates(refVariant.Chromosome, refVariant.Position);
                         matchedVariant = unfilteredVariant;
                     }
                 }
@@ -215,6 +220,7 @@ public class SomaticVariantComparer implements ItemComparer
 
                 if(unfilteredVariant != null)
                 {
+                    unfilteredVariant.setComparisonCoordinates(newVariant.Chromosome, newVariant.Position);
                     mismatches.add(unfilteredVariant.findDiffs(newVariant, mConfig.Thresholds, MatchFilterStatus.REF_FILTERED, usesNonPurpleVcfs));
                 }
                 else
@@ -246,7 +252,7 @@ public class SomaticVariantComparer implements ItemComparer
                 continue;
 
             return new SomaticVariantData(
-                    testVariant.Chromosome, testVariant.Position, ref, alt, VariantType.type(context),
+                    context.getContig(), context.getStart(), ref, alt, VariantType.type(context),
                     "", false, Hotspot.fromVariant(context), VariantTier.fromContext(context),
                     false, "", "", "", "",
                     "", context.hasAttribute(LOCAL_PHASE_SET), (int)context.getPhredScaledQual(),
@@ -350,6 +356,9 @@ public class SomaticVariantComparer implements ItemComparer
             return null;
         }
 
+        RefGenomeVersion sourceVersion = liftoverSourceGenomeVersion(fileSources.Source);
+        RefGenomeVersion destVersion = sourceVersion.is37() ? V38 : V37;
+
         for(VariantContext variantContext : vcfFileReader.iterator())
         {
             if(variantContext.isFiltered())
@@ -362,12 +371,12 @@ public class SomaticVariantComparer implements ItemComparer
 
             variants.add(variant);
 
-            if(fileSources.RequiresLiftover && mConfig.LiftoverCache.hasMappings())
+            if(mConfig.RequiresLiftover && mConfig.LiftoverCache.hasMappings())
             {
-                int newPosition = mConfig.LiftoverCache.convertPosition(variant.Chromosome, variant.Position);
+                int newPosition = mConfig.LiftoverCache.convertPosition(variant.Chromosome, variant.Position, destVersion);
 
                 if(newPosition != UNMAPPED_POSITION)
-                    variant.setComparisonCoordinates(RefGenomeFunctions.enforceChrPrefix(variant.Chromosome), newPosition);
+                    variant.setComparisonCoordinates(destVersion.versionedChromosome(variant.Chromosome), newPosition);
             }
         }
 

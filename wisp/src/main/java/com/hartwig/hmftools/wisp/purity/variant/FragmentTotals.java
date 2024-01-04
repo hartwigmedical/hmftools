@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
+import static java.lang.Math.pow;
+
 public class FragmentTotals
 {
     private int mVariantCount;
     private int mTumorAdTotal;
     private int mSampleAdTotal;
     private double mSampleAllelelQualTotal;
+    private double mTumorCopyNumberTotal;
 
     private int mTumorDepthTotal;
     private int mSampleDepthTotal;
@@ -17,6 +20,7 @@ public class FragmentTotals
     private double mSampleAdjustedDepthTotal;
 
     private double mSampleWeightedDepthTotal;
+    private double mSampleTumorAdjustedDepthTotal;
 
     private double mTumorAdjustedAdTotal;
     private double mTumorAdjustedDepthTotal;
@@ -29,6 +33,7 @@ public class FragmentTotals
         mTumorAdTotal = 0;
         mSampleAdTotal = 0;
         mSampleAllelelQualTotal = 0;
+        mTumorCopyNumberTotal = 0;
         mTumorDepthTotal = 0;
         mSampleDepthTotal = 0;
         mSampleOneFragmentCount = 0;
@@ -36,6 +41,7 @@ public class FragmentTotals
         mSampleAdjustedAdTotal = 0;
         mSampleAdjustedDepthTotal = 0;
         mSampleWeightedDepthTotal = 0;
+        mSampleTumorAdjustedDepthTotal = 0;
         mTumorAdjustedAdTotal = 0;
         mTumorAdjustedDepthTotal = 0;
         mTumorVafOverride = null;
@@ -57,6 +63,8 @@ public class FragmentTotals
         else if(sampleAlleleFrags == 1)
             ++mSampleOneFragmentCount;
 
+        mTumorCopyNumberTotal += copyNumber;
+
         // wVAF = Σ(i=1->n)[ADi /CNi] * Σ(i=1->n)[DPi /CNi]
 
         mTumorAdjustedAdTotal += tumorAlleleFrags / copyNumber;
@@ -64,9 +72,11 @@ public class FragmentTotals
 
         double tumorDpPerCn = tumorDepth / copyNumber;
         mTumorAdjustedDepthTotal += tumorDpPerCn;
-        mSampleAdjustedDepthTotal += sampleDepth / copyNumber;
 
-        mSampleWeightedDepthTotal += tumorDpPerCn * sampleDepth;
+        mSampleAdjustedDepthTotal += sampleDepth / copyNumber;
+        mSampleTumorAdjustedDepthTotal += sampleDepth * tumorDpPerCn;
+
+        mSampleWeightedDepthTotal += tumorDpPerCn * pow(sampleDepth, 2);
     }
 
     public int variantCount() { return mVariantCount; }
@@ -97,10 +107,21 @@ public class FragmentTotals
 
     public double adjSampleVaf() { return mSampleAdjustedDepthTotal > 0 ? mSampleAdjustedAdTotal / mSampleAdjustedDepthTotal : 0; }
 
+    public double adjSampleVaf(double sampleAdAdjustment)
+    {
+        if(mSampleAdjustedDepthTotal == 0)
+            return 0;
+
+        double avgCopyNumber = mTumorCopyNumberTotal / mVariantCount;
+        double adjSampleAdTotal = mSampleAdjustedAdTotal + sampleAdAdjustment / avgCopyNumber;
+
+        return adjSampleAdTotal / mSampleAdjustedDepthTotal;
+    }
+
     public double weightedSampleDepth()
     {
-        // wAD = Σ(i=1->n)[DPi_cfDNA * DPi_tissue/CNn] / Σ(i=1->n)[DPi_Tissue / CNi]
-        return mTumorAdjustedDepthTotal > 0 ? mSampleWeightedDepthTotal / mTumorAdjustedDepthTotal : 0;
+        // wAD = Σ(i=1->n)[(DPi_cfDNA)^2*DPi _tissue/CNn] / Σ(i=1->n)[DPi_cfDNA *DPi_Tissue/CNi]
+        return mSampleTumorAdjustedDepthTotal > 0 ? mSampleWeightedDepthTotal / mSampleTumorAdjustedDepthTotal : 0;
     }
 
     public double qualPerAlleleFragment()

@@ -59,6 +59,7 @@ public class SageConstants
     public static final int HOTSPOT_MIN_RAW_ALT_BASE_QUAL = 150;
 
     public static final double VAF_PROBABILITY_THRESHOLD = 10e-14;
+    public static final double VAF_PROBABILITY_THRESHOLD_HOTSPOT = 10e-9;
 
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 25;
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT = 18;
@@ -67,17 +68,20 @@ public class SageConstants
     public static final double DEFAULT_MQ_RATIO_FACTOR = 0; // ie disabled,  but for germline should be set to 2.5
     public static final double MQ_RATIO_SMOOTHING = 3;
 
-    public static final int MAX_READ_EDGE_DISTANCE = 40;
+    public static final double MAX_READ_EDGE_DISTANCE_PERC = 0.25;
     public static final double MAX_READ_EDGE_DISTANCE_PROB = 0.001;
+    public static final int MAX_MAP_QUAL_ALT_VS_REF = 15;
 
-    public static final int SYNC_FRAG_MAX_MISMATCHES = 10;
+    // variant deduplication
+    public static final double INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT = 0.1;
 
-    public static final double STRAND_BIAS_CHECK_THRESHOLD = 0.1;
+    public static final double STRAND_BIAS_CHECK_THRESHOLD = 0.15;
     public static final double STRAND_BIAS_REF_MIN_DEPTH = 5;
-    public static final double STRAND_BIAS_REF_MIN_BIAS = 0.25;
+    public static final double STRAND_BIAS_REF_MIN_BIAS = 0.2;
 
     public static final int JITTER_INDEL_MAX_REPEATS = 3;
-    public static final double JITTER_INDEL_VAF_THRESHOLD = 0.0125;
+    public static final double JITTER_INDEL_VAF_THRESHOLD = 0.015;
+    public static final double JITTER_INDEL_VAF_THRESHOLD_LIMIT = 0.15;
 
     public static final int JITTER_NON_INDEL_MAX_REPEATS = 5;
     public static final double JITTER_NON_INDEL_VAF_THRESHOLD = 0.01;
@@ -93,15 +97,21 @@ public class SageConstants
     public static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 15;
     public static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
     public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;
+
+    // defaults when in high-depth mode
     public static final int DEFAULT_HIGH_DEPTH_BASE_QUAL = 30;
+    public static final int DEFAULT_HIGH_DEPTH_MAP_QUAL_FIXED_PENALTY = -15;
+    public static final double DEFAULT_HIGH_DEPTH_MAP_QUAL_RATIO_FACTOR = 2.5;
+
+    public static final int VIS_VARIANT_BUFFER = 200;
 
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(
-            "hotspot", 55, 0.005,
+            "hotspot", 55, 0.01,
             0, 0, 0, 0,
             0.1, 0.5);
 
     public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(
-            "panel", 100, 0.02,
+            "panel", 150, 0.02,
             0, 0, 0, 0,
             0.04, 0.04);
 

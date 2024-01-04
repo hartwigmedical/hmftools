@@ -44,45 +44,98 @@ if('SampleId' %in% colnames(sampleSummary))
 
 clonalMethod=sampleSummary$ClonalMethod
 
+format_purity<-function(purity)
+{
+    if(purity >= 0.01)
+    {
+        return (sprintf('%.4f', purity))
+    } else {
+        return (sprintf('%.6f', purity))
+    }
+}
+
 if(nrow(sampleSummary) == 1 & nrow(variantVafRatios) > 0 & clonalMethod!='NONE')
 {
     # no further filters to apppy
 
     # filtering and plotting threshold
-    vafBucket=0.1
-    vafRatioMax=8
-    minVariantCount=5
+    vafBucket = 0.1
+    vafRatioMax = 20
+    minVariantCount = 5
 
-    adjSampleVaf=sampleSummary$AdjSampleVaf
-    rawSomaticPurity=sampleSummary$RawSomaticPurity
-    peakPurity=sampleSummary$SNVPurity
-    weightedAvgDepth=sampleSummary$WeightedAvgDepth
-    tumorPurity=sampleSummary$TumorPurity
+    adjSampleVaf = sampleSummary$AdjSampleVaf
+    rawSomaticPurity = sampleSummary$RawSomaticPurity
+    peakPurity = sampleSummary$SNVPurity
+    peakPurityLow = sampleSummary$SNVPurityLow
+    peakPurityHigh = sampleSummary$SNVPurityHigh
+    weightedAvgDepth = sampleSummary$WeightedAvgDepth
+    densityBandwidth = sampleSummary$PeakBandwidth
+    densityBandwidthLow = sampleSummary$PeakBandwidthLow
+    densityBandwidthHigh = sampleSummary$PeakBandwidthHigh
 
-    ratioSummary = variantVafRatios %>%
-      summarise(MeanRatio=mean(VafRatio),MedianRatio=median(VafRatio)) %>%
-      mutate(MeanVsMedian=round(pmax(MeanRatio/MedianRatio,1),2))
-
-    densityBandwidth=0.15*sqrt(ratioSummary$MeanVsMedian)
+    # colours used in plot
+    colourKdeLine = 'orange2' # black
+    colourFreqDist = 'grey'
+    colourRawPurity = 'red'
+    colourPeakPurity = 'orange2'
+    colourLowPurity = 'grey'
+    colourHighPurity = 'grey'
+    titleSize=8
+    labelSize=6
 
     rawVafRatio = 1
 
-    plotTitle=sprintf('%s - %s: purity=%.2f, %s bandwidth(%.2f)',patientId,sampleId,tumorPurity,clonalMethod,densityBandwidth)
+    if(peakPurity > rawSomaticPurity)
+    {
+        purityStr = sprintf('TF estimate(%s raw=%s)', format_purity(peakPurity), format_purity(rawSomaticPurity))
+    } else {
+        purityStr = sprintf('TF estimate(%s)', format_purity(rawSomaticPurity))
+    }
+
+    plotTitle=sprintf('%s - %s: %s, %s bandwidth(%.2f)',patientId,sampleId,purityStr,clonalMethod,densityBandwidth)
 
     somaticPlot = ggplot() +
       geom_bar(data=variantVafRatios %>% group_by(VafRatioBucket=vafBucket*round(VafRatio/vafBucket)) %>% count,
-      stat="identity",position='identity',aes(y=n,x=VafRatioBucket),fill='grey') +
-      geom_density(data=variantVafRatios,,mapping = aes(x=VafRatio,y=after_stat(scaled)*20),color='black') +
-      geom_vline(xintercept=rawVafRatio,color='red') +
-      geom_hline(yintercept=minVariantCount,color='blue') +
+      stat="identity",position='identity',aes(y=n,x=VafRatioBucket),fill=colourFreqDist) +
+      geom_vline(xintercept=rawVafRatio,color=colourRawPurity) +
       labs(x='Variant VAF Ratio',y='# Variants',title=plotTitle) +
-      theme(plot.title=element_text(size=8),
-            axis.title=element_text(size=6),axis.text=element_text(size=6))
+      theme(plot.title=element_text(size=titleSize),
+            axis.title=element_text(size=labelSize),axis.text=element_text(size=labelSize))
+
+    if(clonalMethod == 'VAF_PEAK' | clonalMethod == 'NO_PEAK')
+    {
+        somaticPlot = somaticPlot +
+            geom_density(data=variantVafRatios,bw=densityBandwidth,mapping = aes(x=VafRatio,y=after_stat(scaled)*20),color=colourKdeLine)
+
+        if(densityBandwidthLow != densityBandwidth)
+        {
+            somaticPlot = somaticPlot +
+                geom_density(data=variantVafRatios,bw=densityBandwidthLow,mapping = aes(x=VafRatio,y=after_stat(scaled)*20),color=colourLowPurity)
+        }
+
+        if(densityBandwidthHigh != densityBandwidth)
+        {
+            somaticPlot = somaticPlot +
+                geom_density(data=variantVafRatios,bw=densityBandwidthHigh,mapping = aes(x=VafRatio,y=after_stat(scaled)*20),color=colourHighPurity)
+        }
+    }
 
     if(clonalMethod!='NO_PEAK' & peakPurity > rawSomaticPurity)
     {
         peakVafRatio = peakPurity/rawSomaticPurity
-        somaticPlot = somaticPlot + geom_vline(xintercept=peakVafRatio  ,color='green')
+        somaticPlot = somaticPlot + geom_vline(xintercept=peakVafRatio,color=colourPeakPurity)
+
+        if(peakPurityLow > 0 & peakPurityLow < peakPurity)
+        {
+            peakVafRatioLow = peakPurityLow/rawSomaticPurity
+            somaticPlot = somaticPlot + geom_vline(xintercept=peakVafRatioLow,color=colourLowPurity)
+        }
+
+        if(peakPurityHigh > 0 & peakPurityHigh > peakPurity)
+        {
+            peakVafRatioHigh = peakPurityHigh/rawSomaticPurity
+            somaticPlot = somaticPlot + geom_vline(xintercept=peakVafRatioHigh,color=colourHighPurity)
+        }
     }
 
     ggsave(filename = paste0(outputDir, "/", sampleId, ".somatic_vaf.png"), somaticPlot, units="cm",height=10,width=15,scale=1)

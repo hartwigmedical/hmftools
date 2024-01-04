@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.common.samtools;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
+
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.N;
 
@@ -86,15 +90,19 @@ public final class CigarUtils
         return cigar.getCigarElements().get(cigar.getCigarElements().size() - 1).getOperator() == CigarOperator.S;
     }
 
-    public static int leftSoftClipLength(final SAMRecord record)
+    public static int leftSoftClipLength(final SAMRecord record) { return leftSoftClipLength(record.getCigar()); }
+
+    public static int rightSoftClipLength(final SAMRecord record) { return rightSoftClipLength(record.getCigar()); }
+
+    public static int leftSoftClipLength(final Cigar cigar)
     {
-        CigarElement firstElement = record.getCigar().getFirstCigarElement();
+        CigarElement firstElement = cigar.getFirstCigarElement();
         return (firstElement != null && firstElement.getOperator() == CigarOperator.S) ? firstElement.getLength() : 0;
     }
 
-    public static int rightSoftClipLength(final SAMRecord record)
+    public static int rightSoftClipLength(final Cigar cigar)
     {
-        CigarElement lastElement = record.getCigar().getLastCigarElement();
+        CigarElement lastElement = cigar.getLastCigarElement();
         return (lastElement != null && lastElement.getOperator() == CigarOperator.S) ? lastElement.getLength() : 0;
     }
 
@@ -118,13 +126,10 @@ public final class CigarUtils
         return record.getReadString().substring(record.getReadString().length() - rightClip);
     }
 
-    public static int getUnclippedPosition(final int readStart, @NotNull final String cigarStr, final boolean forwardStrand)
+    public static int getReadBoundaryPosition(
+            final int readStart, @NotNull final String cigarStr, final boolean getReadStart, boolean includeSoftClipped)
     {
-        return getEndPosition(readStart, cigarStr, forwardStrand, true);
-    }
-
-    public static int getEndPosition(final int readStart, @NotNull final String cigarStr, final boolean forwardStrand, boolean includeSoftClipped)
-    {
+        // gets either the read start position or read end position, either with or without soft-clipped bases
         int currentPosition = readStart;
         int elementLength = 0;
 
@@ -135,7 +140,7 @@ public final class CigarUtils
 
             if(isAddItem)
             {
-                if(forwardStrand)
+                if(getReadStart)
                 {
                     // back out the left clip if present
                     return c == 'S' ? readStart - elementLength : readStart;
@@ -172,5 +177,4 @@ public final class CigarUtils
         // always pointing to the start of the next element, so need to move back a base
         return currentPosition - 1;
     }
-
 }

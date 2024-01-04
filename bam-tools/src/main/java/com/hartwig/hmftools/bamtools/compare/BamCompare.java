@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,18 +76,8 @@ public class BamCompare
             workers.add(partitionThread);
         }
 
-        for(Thread worker : workers)
-        {
-            try
-            {
-                worker.join();
-            }
-            catch(InterruptedException e)
-            {
-                BT_LOGGER.error("task execution error: {}", e.toString());
-                e.printStackTrace();
-            }
-        }
+        if(!runThreadTasks(workers))
+            System.exit(1);
 
         Statistics combinedStats = new Statistics();
         partitionTasks.forEach(x -> combinedStats.merge(x.stats()));

@@ -72,19 +72,19 @@ Wildcards '*' can be used in place of sampleIds, in which case Compar will repla
 
 Example 1
 ```
-file_source_ref="sample_dir=/path_to_sample_data/run_01/"
-file_source_new="sample_dir=/path_to_sample_data/run_02/"
+purple_ref="sample_dir=/path_to_sample_data/run_01/"
+purple_new="sample_dir=/path_to_sample_data/run_02/"
 ```
 
 will load reference run 01 data from /path_to_sample_data/run_01/ and new run 02 data from /path_to_sample_data/run_02/
 
 Example 2
 ```
-file_source_ref="sample_dir=/path_to_ref_sample_data/run_01/;linx_dir=/path_to_ref_sample_data/*/linx/"
-file_source_new="sample_dir=/path_to_new_sample_data/run_01/;linx_dir=/path_to_new_linx_data/*/linx/"
+"purple_ref=/path_to_purple_data/run_01/*/purple/"
+"purple_new=/path_to_purple_data/run_02/*/purple/"
 ```
 
-will load run 01 data Linx data from /path_to_sample_data/SAMPLE_ID/linx/ and all other data from /path_to_sample_data/run_01/ 
+will load run 01 data Purple data from /path_to_sample_data/run_01/SAMPLE_ID/purple/ 
 
 
 ### Database Sourced Data
@@ -255,4 +255,5 @@ alleles | Exact - checks all 6 alleles match
 somaticVariants | Exact - number of annotated somatic variants match
 
 ## Version History and Download Links
+- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.1)
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/compar-v1.0)

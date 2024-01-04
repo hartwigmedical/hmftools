@@ -32,27 +32,38 @@ public class StrandBiasCalcs
         mMaxStrandBiasValue = mStrandBiasValues[mStrandBiasValues.length - 1];
     }
 
-    public boolean isDepthBelowProbability(final StrandBiasData strandBiasDataAlt, final StrandBiasData strandBiasDataRef, boolean checkRef)
+    public boolean allOneSide(final StrandBiasData strandBiasDataAlt)
     {
-        if(checkRef)
-        {
-            // ignore if the ref is uneven
-            if(strandBiasDataRef.forward() < STRAND_BIAS_REF_MIN_DEPTH || strandBiasDataRef.reverse() < STRAND_BIAS_REF_MIN_DEPTH)
-                return false;
+        if(strandBiasDataAlt.depth() < STRAND_BIAS_REF_MIN_DEPTH)
+            return false;
 
-            double refBias = strandBiasDataRef.bias();
+        return strandBiasDataAlt.forward() == 0 || strandBiasDataAlt.reverse() == 0;
+    }
 
-            if(refBias < STRAND_BIAS_REF_MIN_BIAS || refBias > (1 - STRAND_BIAS_REF_MIN_BIAS))
-                return false;
-        }
-
+    public boolean isDepthBelowProbability(
+            final StrandBiasData strandBiasDataAlt, final StrandBiasData strandBiasDataRef, boolean checkRef)
+    {
         double strandBias = strandBiasDataAlt.bias();
-        int depth = strandBiasDataAlt.depth();
 
         double minStrandBias = min(strandBias, 1 - strandBias);
         if(minStrandBias > STRAND_BIAS_CHECK_THRESHOLD)
             return false;
 
+        if(checkRef)
+        {
+            // to use the ref there must be min depth observed
+            if(strandBiasDataRef.forward() < STRAND_BIAS_REF_MIN_DEPTH || strandBiasDataRef.reverse() < STRAND_BIAS_REF_MIN_DEPTH)
+                return false;
+
+            double refBias = strandBiasDataRef.bias();
+
+            double minRefBias = min(refBias, 1 - refBias);
+
+            if(minRefBias < STRAND_BIAS_REF_MIN_BIAS && (refBias < 0.5) == (strandBias < 0.5))
+                return false;
+        }
+
+        int depth = strandBiasDataAlt.depth();
         double requiredStrandBias = depth < mStrandBiasValues.length ? mStrandBiasValues[depth] : mMaxStrandBiasValue;
 
         if(requiredStrandBias == INVALID_STRAND_BIAS)

@@ -1,23 +1,15 @@
 package com.hartwig.hmftools.sage.dedup;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
-import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
-import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.common.TestUtils.addLocalPhaseSet;
 import static com.hartwig.hmftools.sage.common.TestUtils.clearFilters;
-import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.createVariant;
-import static com.hartwig.hmftools.sage.common.TestUtils.createVariantHotspot;
+import static com.hartwig.hmftools.sage.common.TestUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.common.TestUtils.setTumorQuality;
-import static com.hartwig.hmftools.sage.dedup.DedupIndelOld.dedupIndelsOld;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_GERMLINE_DEPTH;
 import static com.hartwig.hmftools.sage.dedup.VariantDeduper.longerContainsShorter;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER_OLD;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -30,35 +22,28 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.GeneTestUtils;
-import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
-import com.hartwig.hmftools.sage.pipeline.RegionTask;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 
 import org.junit.Test;
-
-import htsjdk.samtools.SAMRecord;
 
 public class VariantDedupTest
 {
     @Test
     public void testLongerContainsShorter()
     {
-        final VariantHotspot mnv = createVariantHotspot(100, "CAC", "TGT");
+        final SimpleVariant mnv = createSimpleVariant(100, "CAC", "TGT");
 
-        assertTrue(longerContainsShorter(createVariantHotspot(100, "C", "T"), mnv));
-        assertFalse(longerContainsShorter(createVariantHotspot(100, "C", "C"), mnv));
+        assertTrue(longerContainsShorter(createSimpleVariant(100, "C", "T"), mnv));
+        assertFalse(longerContainsShorter(createSimpleVariant(100, "C", "C"), mnv));
 
-        assertTrue(longerContainsShorter(createVariantHotspot(101, "A", "G"), mnv));
-        assertTrue(longerContainsShorter(createVariantHotspot(102, "C", "T"), mnv));
+        assertTrue(longerContainsShorter(createSimpleVariant(101, "A", "G"), mnv));
+        assertTrue(longerContainsShorter(createSimpleVariant(102, "C", "T"), mnv));
 
-        assertTrue(longerContainsShorter(createVariantHotspot(100, "CA", "TG"), mnv));
-        assertTrue(longerContainsShorter(createVariantHotspot(101, "AC", "GT"), mnv));
+        assertTrue(longerContainsShorter(createSimpleVariant(100, "CA", "TG"), mnv));
+        assertTrue(longerContainsShorter(createSimpleVariant(101, "AC", "GT"), mnv));
 
-        assertTrue(longerContainsShorter(createVariantHotspot(100, "CAC", "TGT"), mnv));
+        assertTrue(longerContainsShorter(createSimpleVariant(100, "CAC", "TGT"), mnv));
     }
 
     @Test

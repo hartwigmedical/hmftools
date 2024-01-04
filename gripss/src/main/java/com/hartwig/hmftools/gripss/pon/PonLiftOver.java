@@ -53,7 +53,7 @@ public class PonLiftOver
         mSourceVersion = mDestinationVersion.is37() ? V38 : V37;
         mMaxLengthDiff = configBuilder.getInteger(MAX_LENGTH_DIFF);
 
-        mLiftoverCache = new GenomeLiftoverCache(true, mDestinationVersion == V38);
+        mLiftoverCache = new GenomeLiftoverCache(true);
 
         mConverted = 0;
         mFailedLiftover = 0;
@@ -103,12 +103,12 @@ public class PonLiftOver
 
                 for(PonSvRegion region : regions)
                 {
-                    int posStartStart = mLiftoverCache.convertPosition(chrSourceStart, region.RegionStart.start());
-                    int posStartEnd = mLiftoverCache.convertPosition(chrSourceStart, region.RegionStart.end());
+                    int posStartStart = mLiftoverCache.convertPosition(chrSourceStart, region.RegionStart.start(), mDestinationVersion);
+                    int posStartEnd = mLiftoverCache.convertPosition(chrSourceStart, region.RegionStart.end(), mDestinationVersion);
 
                     String chrDestEnd = mDestinationVersion.versionedChromosome(region.RegionEnd.Chromosome);
-                    int posEndStart =  mLiftoverCache.convertPosition(region.RegionEnd.Chromosome, region.RegionEnd.start());
-                    int posEndEnd =  mLiftoverCache.convertPosition(region.RegionEnd.Chromosome, region.RegionEnd.end());
+                    int posEndStart =  mLiftoverCache.convertPosition(region.RegionEnd.Chromosome, region.RegionEnd.start(), mDestinationVersion);
+                    int posEndEnd =  mLiftoverCache.convertPosition(region.RegionEnd.Chromosome, region.RegionEnd.end(), mDestinationVersion);
 
                     if(posStartStart == UNMAPPED_POSITION || posStartEnd == UNMAPPED_POSITION
                     || posEndStart == UNMAPPED_POSITION || posEndEnd == UNMAPPED_POSITION)
@@ -214,8 +214,8 @@ public class PonLiftOver
 
                 for(PonSglRegion region : regions)
                 {
-                    int posStartStart = mLiftoverCache.convertPosition(chrSourceStart, region.Region.start());
-                    int posStartEnd = mLiftoverCache.convertPosition(chrSourceStart, region.Region.end());
+                    int posStartStart = mLiftoverCache.convertPosition(chrSourceStart, region.Region.start(), mDestinationVersion);
+                    int posStartEnd = mLiftoverCache.convertPosition(chrSourceStart, region.Region.end(), mDestinationVersion);
                     byte orientStart = region.Orient;
 
                     if(posStartStart == UNMAPPED_POSITION || posStartEnd == UNMAPPED_POSITION)

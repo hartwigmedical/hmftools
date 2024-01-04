@@ -3,11 +3,10 @@ package com.hartwig.hmftools.svprep.tools;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPAIR_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SGL_FRAGMENT_COUNT;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMENT_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
@@ -16,6 +15,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.svprep.SvCommon.APP_NAME;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.svprep.BlacklistLocations;
 
@@ -128,12 +127,12 @@ public class BlacklistExplorer
                 filtersStr = PASS;
             }
 
-            int refDepth = variantContext.getAttributeAsInt(REF_READ_COVERAGE, 0)
-                    + variantContext.getAttributeAsInt(REF_READPAIR_COVERAGE, 0);
+            int refDepth = variantContext.getAttributeAsInt(REF_DEPTH, 0)
+                    + variantContext.getAttributeAsInt(REF_DEPTH_PAIR, 0);
 
             Genotype tumor = variantContext.getGenotype(1);
-            int tumorFrags = getGenotypeAttributeAsInt(tumor, SV_FRAGMENT_COUNT, 0)
-                    + getGenotypeAttributeAsInt(tumor, SGL_FRAGMENT_COUNT, 0);
+            int tumorFrags = getGenotypeAttributeAsInt(tumor, SV_FRAG_COUNT, 0)
+                    + getGenotypeAttributeAsInt(tumor, SGL_FRAG_COUNT, 0);
 
             mWriter.write(format(",%.1f,%d,%d,%s",
                     variantContext.getPhredScaledQual(), tumorFrags, refDepth, filtersStr));

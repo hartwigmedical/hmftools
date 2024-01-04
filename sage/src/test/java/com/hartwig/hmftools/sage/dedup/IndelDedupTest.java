@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.common.TestUtils.addLocalPhaseSet;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
@@ -26,11 +27,10 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
 
@@ -50,7 +50,7 @@ public class IndelDedupTest
     public IndelDedupTest()
     {
         mRefGenome = new MockRefGenome();
-        mIndelDeduper = new IndelDeduper(mRefGenome);
+        mIndelDeduper = new IndelDeduper(mRefGenome, DEFAULT_READ_LENGTH);
 
         mRefGenome.RefGenomeMap.put(CHR_1, CHR_1_REF_BASES);
     }
@@ -58,24 +58,24 @@ public class IndelDedupTest
     @Test
     public void testVariantAltBuilding()
     {
-        List<VariantHotspot> variants = Lists.newArrayList();
+        List<SimpleVariant> variants = Lists.newArrayList();
 
         //                 100       110       120       130
         //                 01234567890123456789012345678901
         String refBases = "AAAAGGGGCCCCTTTTAAAACCCCGGGGTTTT";
 
-        variants.add(createVariantHotspot(102, "A", "T"));
-        variants.add(createVariantHotspot(126, "GGT", "AAA"));
-        variants.add(createVariantHotspot(115, "TAAAAC", "T"));
-        variants.add(createVariantHotspot(109, "C", "CGGGG"));
+        variants.add(createSimpleVariant(102, "A", "T"));
+        variants.add(createSimpleVariant(126, "GGT", "AAA"));
+        variants.add(createSimpleVariant(115, "TAAAAC", "T"));
+        variants.add(createSimpleVariant(109, "C", "CGGGG"));
         String altBases = buildAltBasesString(refBases, 100, 131, variants);
 
         assertEquals(altBases, "AATAGGGGCCGGGGCCTTTTCCCGGAAATTT");
     }
 
-    private static VariantHotspot createVariantHotspot(int position, final String ref, final String alt)
+    private static SimpleVariant createSimpleVariant(int position, final String ref, final String alt)
     {
-        return ImmutableVariantHotspotImpl.builder().chromosome(CHR_1).position(position).ref(ref).alt(alt).build();
+        return new SimpleVariant(CHR_1, position, ref, alt);
     }
 
     private static SageVariant createSageVariant(
@@ -216,6 +216,68 @@ public class IndelDedupTest
         assertTrue(var2.filters().contains(DEDUP_INDEL_FILTER));
         assertFalse(var4.isPassing());
         assertFalse(var5.isPassing());
+    }
+
+    @Test
+    public void testFilteredIndelRecovery()
+    {
+        // an indel is not recovered when the other variant is largely unphased with it
+        String combinedReadBases = CHR_1_REF_BASES.substring(0, 21)
+                + CHR_1_REF_BASES.substring(30, 32) + "A" // SNV 1
+                + CHR_1_REF_BASES.substring(33, 70);
+
+        String indelBases = CHR_1_REF_BASES.substring(0, 21) + CHR_1_REF_BASES.substring(30, 70);
+
+        SageVariant del = createSageVariant(
+                CHR_1, 20, 20, indelBases,
+                CHR_1_REF_BASES.substring(20, 30), CHR_1_REF_BASES.substring(20, 21), 1);
+
+        // variant not required by the INDEL
+        SageVariant var1 = createSageVariant(
+                CHR_1, 32, 32, combinedReadBases,
+                CHR_1_REF_BASES.substring(32, 33), "A", 1);
+
+        mIndelDeduper.dedupVariants(Lists.newArrayList(del, var1));
+
+        assertTrue(del.isPassing());
+        assertFalse(var1.isPassing());
+    }
+
+    @Test
+    public void testIndelsLocalPhaseSetConditions()
+    {
+        // an indel is not recovered when the other variant is largely unphased with it
+        String combinedReadBases = CHR_1_REF_BASES.substring(0, 21)
+                + CHR_1_REF_BASES.substring(30, 32) + "A" // SNV 1
+                + CHR_1_REF_BASES.substring(33, 70);
+
+        SageVariant del = createSageVariant(
+                CHR_1, 20, 20, combinedReadBases,
+                CHR_1_REF_BASES.substring(20, 30), CHR_1_REF_BASES.substring(20, 21), 1);
+
+        // variant part of the solution
+        SageVariant var1 = createSageVariant(
+                CHR_1, 32, 32, combinedReadBases,
+                CHR_1_REF_BASES.substring(32, 33), "A", 1);
+
+        // initially filtered but recoverable - no longer allow non-passing INDELs to be recovered
+        // del.filters().add(SoftFilter.MIN_TUMOR_QUAL.filterName());
+
+        mIndelDeduper.dedupVariants(Lists.newArrayList(del, var1));
+
+        assertTrue(del.isPassing());
+        assertTrue(var1.isPassing());
+
+        // test again but this time with the SNV mostly unphased with the INDEL
+        del.filters().clear();
+        del.filters().add(SoftFilter.MIN_TUMOR_QUAL.filterName());
+
+        var1.tumorReadCounters().get(0).addLocalPhaseSet(2, 100, 0);
+
+        mIndelDeduper.dedupVariants(Lists.newArrayList(del, var1));
+
+        assertFalse(del.isPassing());
+        assertTrue(var1.isPassing());
     }
 
     @Test
