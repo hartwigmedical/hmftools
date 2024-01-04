@@ -168,14 +168,14 @@ public class FrontPageChapter implements ReportChapter
     }
 
     @NotNull
-    private static String cuppaCancerType(@Nullable CuppaData cuppa)
+    private static String cuppaCancerType(@Nullable CuppaData cuppaData)
     {
-        if(cuppa == null)
+        if(cuppaData == null)
         {
             return ReportResources.NOT_AVAILABLE;
         }
 
-        CuppaPrediction best = CuppaInterpretation.best(cuppa);
+        CuppaPrediction best = cuppaData.bestPrediction();
         return best.cancerType() + " (" + formatPercentage(best.likelihood()) + ")";
     }
 
