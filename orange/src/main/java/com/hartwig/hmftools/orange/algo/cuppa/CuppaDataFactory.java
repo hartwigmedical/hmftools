@@ -31,36 +31,26 @@ public final class CuppaDataFactory
 {
     @NotNull
     public static CuppaData create(
-            /* TODO: `cuppaPredictionsV2` is nullable so that the CUPPA v1 tests still work. Annotate with @NotNull once CUPPA v1 is fully
-                deprecated and `cuppaPredictionsV1` is removed*/
-            @Nullable CuppaPredictions cuppaPredictionsV2,
+            @NotNull CuppaPredictions cuppaPredictionsV2,
             @Nullable List<CuppaDataFile> cuppaPredictionsV1
     ){
 
-        List<CuppaPrediction> probabilities = new ArrayList<>();
-
-        if(cuppaPredictionsV2 == null & cuppaPredictionsV1 == null)
-        {
-            LOGGER.error("Either `cuppaPredictionsV2` or `cuppaPredictionsV1` must be provided");
-        }
-
-        if(cuppaPredictionsV2 != null)
-        {
-            probabilities.addAll(extractProbabilitiesCuppaV2(cuppaPredictionsV2));
-        }
+        List<CuppaPrediction> predictions = extractProbabilitiesCuppaV2(cuppaPredictionsV2);
+        CuppaPrediction bestPrediction = predictions.get(0);
 
         if(cuppaPredictionsV1 != null)
         {
-            probabilities.addAll(extractProbabilitiesCuppaV1(cuppaPredictionsV1));
+            predictions.addAll(extractProbabilitiesCuppaV1(cuppaPredictionsV1));
         }
 
         return ImmutableCuppaData.builder()
-                .predictions(probabilities)
+                .predictions(predictions)
+                .bestPrediction(bestPrediction)
                 .build();
     }
 
     @NotNull
-    private static List<CuppaPrediction> extractProbabilitiesCuppaV2(@NotNull CuppaPredictions cuppaPredictions)
+    public static List<CuppaPrediction> extractProbabilitiesCuppaV2(@NotNull CuppaPredictions cuppaPredictions)
     {
         CuppaPredictions probabilitiesAllClassifiers = cuppaPredictions
                 .subsetByDataType(Categories.DataType.PROB)
@@ -97,7 +87,7 @@ public final class CuppaDataFactory
     }
 
     @NotNull
-    private static List<CuppaPrediction> extractProbabilitiesCuppaV1(@NotNull List<CuppaDataFile> files)
+    public static List<CuppaPrediction> extractProbabilitiesCuppaV1(@NotNull List<CuppaDataFile> files)
     {
         String bestCombinedType = determineBestCombinedDataType(files);
         if(bestCombinedType == null)
