@@ -15,6 +15,6 @@ public interface CuppaData
     @NotNull
     List<CuppaPrediction> predictions();
 
-    @NotNull
+    @Nullable
     CuppaPrediction bestPrediction();
 }
