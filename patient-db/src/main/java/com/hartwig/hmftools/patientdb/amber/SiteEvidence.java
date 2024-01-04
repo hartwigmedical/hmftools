@@ -2,8 +2,6 @@ package com.hartwig.hmftools.patientdb.amber;
 
 import static java.lang.String.format;
 
-import static htsjdk.variant.variantcontext.Allele.NO_CALL;
-
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
 import htsjdk.variant.variantcontext.Allele;
