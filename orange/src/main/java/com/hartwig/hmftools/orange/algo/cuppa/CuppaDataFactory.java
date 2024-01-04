@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -18,6 +19,7 @@ import com.hartwig.hmftools.common.cuppa.DataTypes;
 import com.hartwig.hmftools.common.cuppa.ResultType;
 import com.hartwig.hmftools.common.cuppa.SvDataType;
 import com.hartwig.hmftools.common.cuppa2.Categories;
+import com.hartwig.hmftools.common.cuppa2.CuppaPredictionEntry;
 import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
@@ -35,9 +37,22 @@ public final class CuppaDataFactory
             @Nullable List<CuppaDataFile> cuppaPredictionsV1
     ){
 
-        List<CuppaPrediction> predictions = extractProbabilitiesCuppaV2(cuppaPredictionsV2);
+        List<CuppaPrediction> predictions = extractSortedProbabilitiesCuppaV2(cuppaPredictionsV2);
 
-        CuppaPrediction bestPrediction = (predictions.size() != 0) ? predictions.get(0) : null;
+        CuppaPrediction bestPrediction = null;
+        Integer lineCount = null;
+        Integer maxComplexSize = null;
+        Integer simpleDups32To200B = null;
+        Integer telomericSGLs = null;
+
+        if(predictions.size() != 0)
+        {
+            bestPrediction = predictions.get(0);
+            lineCount = getFeatureValue(cuppaPredictionsV2, "sv.LINE").intValue();
+            maxComplexSize = getFeatureValue(cuppaPredictionsV2, "sv.MAX_COMPLEX_SIZE").intValue();
+            simpleDups32To200B = getFeatureValue(cuppaPredictionsV2, "sv.SIMPLE_DEL_20KB_1MB").intValue();
+            telomericSGLs = getFeatureValue(cuppaPredictionsV2, "sv.TELOMERIC_SGL").intValue();
+        }
 
         if(cuppaPredictionsV1 != null)
         {
@@ -47,6 +62,10 @@ public final class CuppaDataFactory
         return ImmutableCuppaData.builder()
                 .predictions(predictions)
                 .bestPrediction(bestPrediction)
+                .lineCount(lineCount)
+                .maxComplexSize(maxComplexSize)
+                .simpleDups32To200B(simpleDups32To200B)
+                .telomericSGLs(telomericSGLs)
                 .build();
     }
 
@@ -57,7 +76,7 @@ public final class CuppaDataFactory
     }
 
     @NotNull
-    public static List<CuppaPrediction> extractProbabilitiesCuppaV2(@NotNull CuppaPredictions cuppaPredictions)
+    public static List<CuppaPrediction> extractSortedProbabilitiesCuppaV2(@NotNull CuppaPredictions cuppaPredictions)
     {
         CuppaPredictions probabilitiesAllClassifiers = cuppaPredictions
                 .subsetByDataType(Categories.DataType.PROB)
@@ -91,6 +110,19 @@ public final class CuppaDataFactory
             cuppaPredictionsOrangeFormat.add(prediction);
         }
         return cuppaPredictionsOrangeFormat;
+    }
+
+    @NotNull
+    public static Double getFeatureValue(CuppaPredictions cuppaPredictions, String featureName)
+    {
+        // Feature values are replicated for each cancer type because the `cuppaPredictions` table is in long form.
+        // Use `.findFirst()` to get a single value
+        CuppaPredictionEntry predictionEntry = cuppaPredictions.PredictionEntries.stream()
+                .filter(o -> o.DataType == Categories.DataType.FEAT_CONTRIB & o.FeatName.equals(featureName))
+                .findFirst()
+                .get();
+
+        return predictionEntry.FeatValue;
     }
 
     @NotNull
