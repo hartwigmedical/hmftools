@@ -39,7 +39,7 @@ public class HeadNode extends Node
         super('S');
     }
 
-    /** Approximate junction count, inaccurate after folding or mutating */
+    // approximate junction count, inaccurate after folding or mutating
     public int junctionCount()
     {
         return mJunctions;
@@ -489,9 +489,9 @@ public class HeadNode extends Node
             previous.setNext(nextSource);
     }
 
-    /** Tries to locate the best place to overlay other onto this, and does so */
     public boolean attach(final HeadNode other, final int minimumOverlap, final int maxErrors, final int minDepth, final int maxDepth)
     {
+        // locate the best place to overlay other onto this, and does so
         final List<Node> otherSuccessors = other.successors();
         if(otherSuccessors.size() != 1)
             throw new IllegalArgumentException("Can only attach simple sequences");
@@ -506,8 +506,9 @@ public class HeadNode extends Node
         // Triple<Node, Parent, DepthIndex>
         final Deque<Triple<Node, Node, Integer>> worklist = new ArrayDeque<>();
         successors().forEach(successor -> worklist.add(Triple.of(successor, this, 0)));
-        final Set<Node> processed =
-                Collections.newSetFromMap(new IdentityHashMap<>()); // Required to deal with converging paths being identical
+
+        // Required to deal with converging paths being identical
+        final Set<Node> processed = Collections.newSetFromMap(new IdentityHashMap<>());
         while(!worklist.isEmpty())
         {
             final Triple<Node, Node, Integer> pair = worklist.poll();
@@ -540,7 +541,9 @@ public class HeadNode extends Node
             }
 
             for(Node successor : node.successors())
+            {
                 worklist.add(Triple.of(successor, node, depth + 1));
+            }
         }
         if(bestChildOverlap < minimumOverlap)
             return false;
@@ -817,7 +820,7 @@ public class HeadNode extends Node
             }
             else if(pair.Right != null)
             {
-                left.mJunctions++;
+                right.mJunctions++;
                 node = pair.Right;
             }
             else

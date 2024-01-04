@@ -16,6 +16,11 @@ public final class SvConstants
     // BAM reading
     public static final int BAM_READ_JUNCTION_BUFFER = 1000;
 
+    public static final byte BASE_A = 'A';
+    public static final byte BASE_C = 'C';
+    public static final byte BASE_G = 'G';
+    public static final byte BASE_T = 'T';
+    public static final byte BASE_OTHER = 'X';
 
     // variant calling
     public static final int MAX_DUP_LENGTH = 6; // then classified as an INS
@@ -25,6 +30,10 @@ public final class SvConstants
 
     public static final int READ_FILTER_MIN_JUNCTION_MAPQ = 20;
     public static final int READ_FILTER_MIN_ALIGNED_BASES = 30; // new (ie previously hard-coded)
+
+    // common
+    public static int AVG_BASE_QUAL_THRESHOLD = 30; // original name: averageQualityThreshold
+    public static int LOW_BASE_QUAL_THRESHOLD = 26; // original name: lowQualBaseThreshold
 
 
     // read support
@@ -39,13 +48,11 @@ public final class SvConstants
 
 
     // When a base is considered in the context of a single read, at what quality level do we start to see this base as low-quality"
-    public static int LOW_BASE_QUAL_THRESHOLD = 26; // lowQualBaseThreshold
 
     // When a base has more than 1 piece of supporting evidence, what is the cumulative total below which the base is low quality anyway")
     public static int LOW_BASE_QUAL_CUMULATIVE_THRESHOLD = 39; // was lowBaseQualCumulativeThreshold
 
     // The average base qual below which we consider the entire read (or section of a read) to be low quality
-    public static int AVG_BASE_QUAL_THRESHOLD = 30; // averageQualityThreshold
 
 
 

@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_WEAK_SUPPORT_MIN_BASES;
 
@@ -12,6 +15,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.hartwig.hmftools.esvee.common.AssemblySequence;
 import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.SvConfig;
@@ -160,7 +164,7 @@ public class PrimaryAssembler
                                 ? -read.getLength()
                                 : 0;
                         final int maxSupportIndex = mJunction.direction() == Direction.FORWARDS
-                                ? Math.min(0, newAssembly.Assembly.length() - read.getLength())
+                                ? min(0, newAssembly.Assembly.length() - read.getLength())
                                 : newAssembly.Assembly.length();
 
                         @Nullable
@@ -250,6 +254,29 @@ public class PrimaryAssembler
 
     private List<PrimaryAssembly> createInitialAssemblies(final List<Read> alignments)
     {
+        int minAlignedPosition = mJunction.Position;
+        int maxAlignedPosition = mJunction.Position;
+
+        for(Read read : alignments)
+        {
+            if(mJunction.direction() == Direction.FORWARDS)
+            {
+                maxAlignedPosition = max(maxAlignedPosition, read.getUnclippedEnd());
+            }
+            else
+            {
+                minAlignedPosition = min(minAlignedPosition, read.getUnclippedStart());
+            }
+        }
+
+        AssemblySequence assemblySequence = new AssemblySequence(mJunction, alignments.get(0), minAlignedPosition,  maxAlignedPosition);
+
+        for(int i = 1; i < alignments.size(); ++i)
+        {
+            assemblySequence.tryAddRead(alignments.get(i));
+        }
+
+
         final HeadNode combinedForwards = alignments.stream()
                 .filter(alignment -> alignment.getChromosome().equals(mJunction.Chromosome))
                 .map(alignment -> HeadNode.create(alignment, mJunction.Position, mJunction.direction()))
@@ -289,7 +316,7 @@ public class PrimaryAssembler
                         ? -read.getLength()
                         : 0;
                 final int maxSupportIndex = mJunction.direction() == Direction.FORWARDS
-                        ? Math.min(0, assembly.Assembly.length() - read.getLength())
+                        ? min(0, assembly.Assembly.length() - read.getLength())
                         : assembly.Assembly.length();
 
                 @Nullable

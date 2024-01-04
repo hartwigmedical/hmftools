@@ -20,6 +20,7 @@ import htsjdk.samtools.SAMSequenceRecord;
 public final class SamRecordTestUtils
 {
     public static final int DEFAULT_BASE_QUAL = 37;
+    public static final int DEFAULT_MAP_QUAL = 60;
 
     public static SAMSequenceDictionary SAM_DICTIONARY_V37;
 
@@ -80,7 +81,9 @@ public final class SamRecordTestUtils
         final byte[] qualities = new byte[readBases.length()];
 
         for(int i = 0; i < readBases.length(); ++i)
+        {
             qualities[i] = DEFAULT_BASE_QUAL;
+        }
 
         record.setBaseQualities(qualities);
         record.setReferenceName(chrStr);
