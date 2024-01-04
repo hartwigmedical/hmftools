@@ -517,6 +517,16 @@
     }
   ],
   "cuppa": {
+    "bestPrediction": {
+      "cuppaMajorVersion": "v1",
+      "cancerType": "Melanoma",
+      "likelihood": 0.996,
+      "snv96Classifier": 0.979,
+      "genomicPositionClassifier": 0.990,
+      "eventClassifier": 0.972,
+      "altSjClassifier": null,
+      "geneExpressionClassifier": null
+    },
     "predictions": [
       {
         "cuppaMajorVersion": "v1",
