@@ -36,7 +36,6 @@ public class CuppaDataFactoryTest
         assertEquals(40, predictionEntries.size());
         assertEquals(cuppaData.bestPrediction().cancerType().toString(), "Skin: Melanoma");
 
-
         Map<String, CuppaPrediction> actualPredictionsByCancerType = new HashMap<>();
         for(CuppaPrediction prediction : predictionEntries)
         {
@@ -80,6 +79,15 @@ public class CuppaDataFactoryTest
             assertEquals(expectedPrediction.geneExpressionClassifier(), actualPrediction.geneExpressionClassifier(), EPSILON);
             assertEquals(expectedPrediction.altSjClassifier(), actualPrediction.altSjClassifier(), EPSILON);
         }
+    }
+
+    @Test
+    public void canGetCorrectSvFeatureValue() throws IOException
+    {
+        CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_TSV);
+        Integer featureValue = CuppaDataFactory.getFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE").intValue();
+        Integer expectedFeatureValue = 751;
+        assertEquals(expectedFeatureValue, featureValue);
     }
 
     private static final String CUPPA_TEST_CSV = Resources.getResource("test_run/cuppa/tumor_sample.cup.data.csv").getPath();
