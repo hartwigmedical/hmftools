@@ -50,6 +50,12 @@ public final class CuppaDataFactory
     }
 
     @NotNull
+    public static CuppaData create(@NotNull CuppaPredictions cuppaPredictionsV2)
+    {
+        return create(cuppaPredictionsV2, null);
+    }
+
+    @NotNull
     public static List<CuppaPrediction> extractProbabilitiesCuppaV2(@NotNull CuppaPredictions cuppaPredictions)
     {
         CuppaPredictions probabilitiesAllClassifiers = cuppaPredictions
