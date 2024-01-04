@@ -36,7 +36,8 @@ public final class CuppaDataFactory
     ){
 
         List<CuppaPrediction> predictions = extractProbabilitiesCuppaV2(cuppaPredictionsV2);
-        CuppaPrediction bestPrediction = predictions.get(0);
+
+        CuppaPrediction bestPrediction = (predictions.size() != 0) ? predictions.get(0) : null;
 
         if(cuppaPredictionsV1 != null)
         {
