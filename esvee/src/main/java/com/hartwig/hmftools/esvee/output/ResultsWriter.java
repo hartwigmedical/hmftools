@@ -128,8 +128,8 @@ public class ResultsWriter
 
     private String buildFilters(final VariantCall variant)
     {
-        boolean isLowOverhang = variant.overhang() < SvConstants.VCFLOWOVERHANGTHRESHOLD;
-        boolean isLowQuality = variant.quality() < SvConstants.VCFLOWQUALITYTHRESHOLD;
+        boolean isLowOverhang = variant.overhang() < SvConstants.LOW_OVERHANG_THRESHOLD;
+        boolean isLowQuality = variant.quality() < SvConstants.LOW_QUALITY_THRESHOLD;
         boolean isLowSupport = variant.supportingFragments().size() < SvConstants.MIN_READS_SUPPORT_ASSEMBLY;
         boolean isLikelyFalse = isLowSupport || (isLowOverhang && variant.discordantSupport() == 0) || isLowQuality;
 

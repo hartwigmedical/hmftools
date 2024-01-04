@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_WEAK_SUPPORT_MIN_BASES;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -15,11 +16,9 @@ import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.html.DiagramSet;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.sequence.ReadSupport;
-import com.hartwig.hmftools.esvee.util.Counter;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -35,7 +34,6 @@ public class PrimaryAssembler
     private final SupportChecker mSupportChecker;
     private final NodeFolder mNodeFolder;
     private final PrimaryAssemblerCounters mCounters;
-    private final boolean mCreateDiagrams;
 
     private int mNextAssemblyNumber = 1;
 
@@ -46,7 +44,6 @@ public class PrimaryAssembler
         mNodeFolder = new NodeFolder();
         mCounters = new PrimaryAssemblerCounters();
         mJunction = junction;
-        mCreateDiagrams = config.writeHtmlFiles() && config.PlotDiagrams;
     }
 
     public PrimaryAssemblerCounters getCounters()
@@ -66,7 +63,7 @@ public class PrimaryAssembler
 
         final List<Read> filteredAlignments = withLowQAlignments.stream()
                 .filter(alignment -> AlignmentFilters.isRecordAverageQualityPastJunctionAbove(alignment, mJunction, SvConstants.AVG_BASE_QUAL_THRESHOLD)) // mCounters.ReadsPassingJunctionQualityThreshold
-                .filter(alignment -> AlignmentFilters.hasAcceptableMapQ(alignment, SvConstants.MIN_MAPQ_START_JUNCTION)) // mCounters.HasAcceptableMapQ
+                .filter(alignment -> AlignmentFilters.hasAcceptableMapQ(alignment, SvConstants.READ_FILTER_MIN_JUNCTION_MAPQ)) // mCounters.HasAcceptableMapQ
                 .filter(AlignmentFilters::isNotBadlyMapped) // mCounters.WellMapped
                 .collect(Collectors.toList());
 
@@ -135,8 +132,6 @@ public class PrimaryAssembler
             graph = HeadNode.combine(graph, HeadNode.create(read, assembly.AnchorPosition, direction));
         }
 
-        final DiagramSet diagrams = simplifyGraph("Initial Extension", graph, true);
-
         final List<String> flattened = graph.flatten();
 
         if(flattened.size() * reads.size() > 100_000)
@@ -157,8 +152,6 @@ public class PrimaryAssembler
                     final PrimaryAssembly newAssembly = new PrimaryAssembly(
                             nextAssemblyName(), assemblyBases, mJunction, assembly.AnchorChromosome, assembly.AnchorPosition, anchorPositionInAssembly);
 
-                    newAssembly.Diagrams.addAll(assembly.Diagrams);
-                    newAssembly.Diagrams.add(diagrams);
                     for(Read read : reads)
                     {
                         // To support the assembly we need to either be fully contained in the assembly, or to support
@@ -264,8 +257,7 @@ public class PrimaryAssembler
                 .reduce(HeadNode::combine)
                 .orElseThrow();
 
-        @Nullable
-        final DiagramSet diagrams = simplifyGraph("Initial Construction", combinedForwards, false);
+        simplifyGraph(combinedForwards, false);
 
         final List<String> flattened = combinedForwards.flatten();
 
@@ -285,7 +277,6 @@ public class PrimaryAssembler
                     return new PrimaryAssembly(
                             nextAssemblyName(), orientedAssembly, mJunction, mJunction.Chromosome, mJunction.Position, anchorPositionInAssembly);
                 })
-                .peek(assembly -> assembly.addDiagrams(diagrams))
                 .collect(Collectors.toList());
 
         for(PrimaryAssembly assembly : candidateAssemblies)
@@ -302,7 +293,9 @@ public class PrimaryAssembler
                         : assembly.Assembly.length();
 
                 @Nullable
-                final Integer supportIndex = mSupportChecker.WeakSupport.supportIndex(assembly, read, 3, minSupportIndex, maxSupportIndex);
+                final Integer supportIndex = mSupportChecker.WeakSupport.supportIndex(
+                        assembly, read, PRIMARY_ASSEMBLY_WEAK_SUPPORT_MIN_BASES, minSupportIndex, maxSupportIndex);
+
                 if(supportIndex != null)
                     assembly.addEvidenceAt(read, supportIndex);
             }
@@ -313,27 +306,14 @@ public class PrimaryAssembler
                 .collect(Collectors.toList());
     }
 
-    private DiagramSet simplifyGraph(final String diagramSetName, final HeadNode node, final boolean aggressive)
+    private void simplifyGraph(final HeadNode node, final boolean aggressive)
     {
-        final DiagramSet diagrams = new DiagramSet(diagramSetName);
-
-        if(mCreateDiagrams)
-            diagrams.add("Attachment", node.toDiagram());
-
         mNodeFolder.foldPaths(node);
-
-        if(mCreateDiagrams)
-            diagrams.add("Folding", node.toDiagram());
 
         if(aggressive)
             node.pruneNodesAggressive();
         else
             node.pruneNodes();
-
-        if(mCreateDiagrams)
-            diagrams.add("Pruning", node.toDiagram());
-
-        return diagrams;
     }
 
     private List<PrimaryAssembly> createAnchors(final List<Read> alignments, final List<PrimaryAssembly> initialAssemblies)
@@ -368,8 +348,8 @@ public class PrimaryAssembler
         anchor.sortSupport();
         anchor = anchor.deepCopy();
 
-        @Nullable
-        final DiagramSet diagrams = simplifyGraph("Anchor Construction", anchor, false);
+        // CHECK: this used to also create Diagrams, so not completely sure it is required
+        simplifyGraph(anchor, false);
 
         final List<String> flattened = anchor.flatten();
         // mCounters.FlattenedAnchors.add(flattened.size());
@@ -388,9 +368,6 @@ public class PrimaryAssembler
             // Don't use candidate to construct, as we want to re-evaluate evidence
             PrimaryAssembly assembly = new PrimaryAssembly(
                     nextAssemblyName(), anchoredAssembly,  mJunction, mJunction.Chromosome, mJunction.Position, anchorPositionInAssembly);
-
-            assembly.Diagrams.addAll(initialAssembly.Diagrams);
-            assembly.addDiagrams(diagrams);
 
             for(ReadSupport readSupport : initialAssembly.readSupport())
             {

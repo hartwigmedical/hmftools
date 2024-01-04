@@ -1,10 +1,5 @@
 package com.hartwig.hmftools.esvee.read;
 
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.SvConstants;
 
@@ -24,10 +19,10 @@ public class RecordNormaliser
     public RecordNormaliser(final RefGenomeInterface referenceGenome)
     {
         mReadRescue = new ReadRescue(referenceGenome);
-        mPolyGTrimmer = new PolyGTrimmer(SvConstants.NORMALISERPOLYGLENGTH);
+        mPolyGTrimmer = new PolyGTrimmer(SvConstants.NORMALISE_POLY_G_LENGTH);
 
-        mSmallIndelMaxEdgeDistance = SvConstants.NORMALISERINDELMAXEDGEDISTANCE;
-        mSmallIndelMinSizeToSoftClip = SvConstants.NORMALISERINDELMINSIZETOSOFTCLIP;
+        mSmallIndelMaxEdgeDistance = SvConstants.NORMALISE_INDEL_MAX_EDGE_DISTANCE;
+        mSmallIndelMinSizeToSoftClip = SvConstants.NORMALISE_INDEL_MIN_SIZE_SOFTCLIP;
     }
 
     @Nullable

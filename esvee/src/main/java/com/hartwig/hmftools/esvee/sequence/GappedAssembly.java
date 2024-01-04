@@ -5,11 +5,9 @@ import static com.hartwig.hmftools.esvee.read.ReadUtils.flipRead;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.assembly.SupportChecker;
-import com.hartwig.hmftools.esvee.html.DiagramSet;
 import com.hartwig.hmftools.esvee.read.Read;
 
 import org.jetbrains.annotations.Nullable;
@@ -50,14 +48,6 @@ public class GappedAssembly extends SupportedAssembly
         return sources.stream()
                 .map(s -> s.Assembly)
                 .collect(Collectors.joining("X"));
-    }
-
-    @Override
-    public List<DiagramSet> getDiagrams()
-    {
-        return Sources.stream()
-                .flatMap(assembly -> assembly.getDiagrams().stream())
-                .collect(Collectors.toList());
     }
 
     public GappedAssembly flipStrand()

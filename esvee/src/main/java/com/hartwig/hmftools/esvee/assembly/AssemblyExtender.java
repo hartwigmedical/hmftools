@@ -32,14 +32,12 @@ import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
-import com.hartwig.hmftools.esvee.html.DiagramSet;
 import com.hartwig.hmftools.esvee.common.ThreadTask;
 import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.sequence.ReadSupport;
 import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
-import com.hartwig.hmftools.esvee.util.Counter;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -56,7 +54,6 @@ public class AssemblyExtender extends ThreadTask
     private final SupportChecker mSupportChecker;
     private final NodeFolder mNodeFolder;
     private final AssemblyExtenderCounters mCounters;
-    private final boolean mCreateDiagrams;
 
     private int mNextAssemblyNumber;
 
@@ -96,7 +93,6 @@ public class AssemblyExtender extends ThreadTask
         mPrimaryAssemblyQueue = primaryAssemblyQueue;
         mPrimaryAssemblyCount = primaryAssemblyQueue.size();
         mConfig = config;
-        mCreateDiagrams = config.writeHtmlFiles() && config.PlotDiagrams;
         mSupportChecker = new SupportChecker();
         mCounters = new AssemblyExtenderCounters();
         mNodeFolder = new NodeFolder();
@@ -417,10 +413,6 @@ public class AssemblyExtender extends ThreadTask
 
         final Map<Read, Set<Integer>> supportStartIndices = potentialSupportIndices(existing);
 
-        final String diagramSetName = "Extension " + assemblyDirection.name().toLowerCase();
-        @Nullable
-        final DiagramSet diagrams = simplifyGraph(diagramSetName, existing);
-
         return existing.flatten().stream()
                 .map(newAssembly ->
                 {
@@ -429,7 +421,6 @@ public class AssemblyExtender extends ThreadTask
                             : new StringBuilder(newAssembly).reverse().toString();
 
                     final ExtendedAssembly newCandidate = new ExtendedAssembly(nextAssemblyName(assembly.Name), directionCorrected, assembly);
-                    newCandidate.addDiagrams(diagrams);
 
                     reAddSupport(newCandidate, assembly, potentialNewSupport, supportStartIndices,
                             assemblyDirection == Direction.FORWARDS);
@@ -550,29 +541,10 @@ public class AssemblyExtender extends ThreadTask
         original.readSupport().forEach(x -> assembly.tryAddSupport(mSupportChecker, x.Read));
     }
 
-    @Nullable
-    private DiagramSet simplifyGraph(final String diagramSetName, final HeadNode node)
+    private void simplifyGraph(final HeadNode node)
     {
-        final DiagramSet diagrams;
-        if(mCreateDiagrams)
-        {
-            diagrams = new DiagramSet(diagramSetName);
-            diagrams.add("Attachment", node.toDiagram());
-            mNodeFolder.prepruneNodes(node);
-            diagrams.add("Pre-folding Prune", node.toDiagram());
-            mNodeFolder.foldPaths(node);
-            diagrams.add("Folding", node.toDiagram());
-            node.pruneNodes();
-            diagrams.add("Pruning", node.toDiagram());
-        }
-        else
-        {
-            diagrams = null;
-            mNodeFolder.foldPaths(node);
-            node.pruneNodes();
-        }
-
-        return diagrams;
+        mNodeFolder.foldPaths(node);
+        node.pruneNodes();
     }
 
     private HeadNode alignmentAsGraph(final Read alignment, final Direction orientation)

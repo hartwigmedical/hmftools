@@ -12,13 +12,13 @@ public final class SoftFilters
     {
         final Set<String> filters = new HashSet<>();
 
-        if(variantCall.overhang() < SvConstants.VCFLOWOVERHANGTHRESHOLD)
+        if(variantCall.overhang() < SvConstants.LOW_OVERHANG_THRESHOLD)
             filters.add(FilterType.MIN_OVERHANG.filterName());
 
         if(variantCall.associatedAssemblies().size() > 1)
             filters.add(FilterType.MULTIPLE_ASSEMBLIES.filterName());
 
-        if(variantCall.quality() < SvConstants.VCFLOWQUALITYTHRESHOLD)
+        if(variantCall.quality() < SvConstants.LOW_QUALITY_THRESHOLD)
             filters.add(FilterType.MIN_QUALITY.filterName());
 
         if(variantCall.supportingFragments().size() < SvConstants.MIN_READS_SUPPORT_ASSEMBLY)

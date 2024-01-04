@@ -25,9 +25,9 @@ public class SupportChecker
     {
         mLowBaseQualThreshold = SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
-        StrongSupport = new SupportCheckerConfig(SvConstants.MAX_MISMATCH_STRONG_SUPPORT, false);
-        WeakSupport = new SupportCheckerConfig(SvConstants.MAX_MISMATCH_WEAK_SUPPORT, false);
-        AssemblySupport = new SupportCheckerConfig(SvConstants.MAX_MISMATCH_DEDUPING_ASSEMBLIES, true);
+        StrongSupport = new SupportCheckerConfig(SvConstants.SUPPORT_MAX_MISMATCH_STRONG, false);
+        WeakSupport = new SupportCheckerConfig(SvConstants.SUPPORT_MAX_MISMATCH_WEAK, false);
+        AssemblySupport = new SupportCheckerConfig(SvConstants.SUPPORT_MAX_MISMATCH_DEDUPING_ASSEMBLIES, true);
     }
 
     public class SupportCheckerConfig

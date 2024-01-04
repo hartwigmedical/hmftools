@@ -75,7 +75,7 @@ public class AnchorCigarFactory
 
             if(current.isUnmapped())
             {
-                if(current.Length >= SvConstants.CALLERMINSIZETOCALL)
+                if(current.Length >= SvConstants.VARIANT_MIN_LENGTH)
                     break;
                 elements.add(new CigarElement(current.Length, CigarOperator.I));
                 continue;
@@ -86,7 +86,7 @@ public class AnchorCigarFactory
             final int skip = (startComputer.applyAsInt(current) - referenceIndex) * step - 1;
             if(skip < 0)
                 break; // Duplication
-            else if(skip >= SvConstants.CALLERMINSIZETOCALL)
+            else if(skip >= SvConstants.VARIANT_MIN_LENGTH)
                 break; // Structural variant
             else if(skip > 0)
                 elements.add(new CigarElement(skip, CigarOperator.D));

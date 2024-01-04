@@ -50,8 +50,6 @@ import com.hartwig.hmftools.esvee.sequence.GappedAssembly;
 import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.output.VcfWriter;
-import com.hartwig.hmftools.esvee.html.SummaryPageGenerator;
-import com.hartwig.hmftools.esvee.html.VariantCallPageGenerator;
 import com.hartwig.hmftools.esvee.sequence.ReadSupport;
 import com.hartwig.hmftools.esvee.sequence.Sequence;
 import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
@@ -367,9 +365,6 @@ public class JunctionProcessor
 
     private void writeAllResults()
     {
-        if(mConfig.writeHtmlFiles())
-            writeHTMLSummaries(mVariantCalls);
-
         writeVCF(mVariantCalls);
 
         if(mConfig.WriteTypes.contains(WriteType.BREAKEND_TSV))
@@ -379,37 +374,6 @@ public class JunctionProcessor
 
         mResultsWriter.writeVariantAssemblyBamRecords(mVariantCalls);
 
-    }
-
-    private void writeHTMLSummaries(final List<VariantCall> variants)
-    {
-        int summariesWritten = 0;
-        for(VariantCall call : variants)
-        {
-            if(summariesWritten++ > SvConstants.MAX_HTML_SUMMARIES)
-            {
-                SV_LOGGER.warn("Not writing further HTML summaries -- limit reached. Increase -max_html_summaries to see more.");
-                break;
-            }
-
-            try
-            {
-                VariantCallPageGenerator.generatePage(mConfig.HtmlOutputDir, mConfig.RefGenome, mSupportChecker, call);
-            }
-            catch(Exception ex)
-            {
-                SV_LOGGER.error("Failed to generate HTML for {}", call, ex);
-            }
-        }
-
-        try
-        {
-            SummaryPageGenerator.generatePage(mConfig.HtmlOutputDir, mCounters, variants);
-        }
-        catch(Exception ex)
-        {
-            SV_LOGGER.error("Failure while generating summary HTML", ex);
-        }
     }
 
     private void writeVCF(final List<VariantCall> variants)
@@ -467,7 +431,6 @@ public class JunctionProcessor
         final Sequence mergedSequence = SequenceMerger.merge(left, right, supportIndex);
 
         final ExtendedAssembly merged = new ExtendedAssembly(left.Name, mergedSequence.getBasesString(), left.Source);
-        left.Source.Sources.get(0).Diagrams.forEach(merged::addDiagrams);
 
         final GappedAssembly gapped = new GappedAssembly(merged.Name, List.of(merged));
         reAddSupport(gapped, left);

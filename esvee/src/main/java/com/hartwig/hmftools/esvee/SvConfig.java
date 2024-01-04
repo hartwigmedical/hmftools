@@ -20,13 +20,10 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_BAM_FILE_ID;
-import static com.hartwig.hmftools.esvee.SvConstants.DEFAULT_HTML_SUMMARY_DIR;
 import static com.hartwig.hmftools.esvee.SvConstants.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.SvConstants.SV_PREP_JUNCTIONS_FILE_ID;
 import static com.hartwig.hmftools.esvee.WriteType.BREAKEND_TSV;
-import static com.hartwig.hmftools.esvee.WriteType.HTML_SUMMARY;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -62,8 +59,6 @@ public class SvConfig
     public final List<WriteType> WriteTypes;
 
     public final String OutputDir;
-    public final String HtmlOutputDir;
-    public final boolean PlotDiagrams;
 
     public final boolean PerfDebug;
     public final double PerfLogTime;
@@ -157,17 +152,6 @@ public class SvConfig
             OutputDir = pathFromFile(VcfFile);
         }
 
-        if(configBuilder.hasValue(HTML_SUMMARY_DIR))
-        {
-            HtmlOutputDir = configBuilder.getValue(HTML_SUMMARY_DIR);
-        }
-        else
-        {
-            HtmlOutputDir = OutputDir + DEFAULT_HTML_SUMMARY_DIR + File.separator;
-        }
-
-        PlotDiagrams = configBuilder.hasFlag(PLOT_DIAGRAMS);
-
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
         OtherDebug = configBuilder.hasFlag(OTHER_DEBUG);
@@ -183,7 +167,7 @@ public class SvConfig
 
     public String outputFilename(final WriteType writeType)
     {
-        String filename = writeType == HTML_SUMMARY ? HtmlOutputDir : OutputDir;
+        String filename = OutputDir;
 
         filename += SampleNames.get(0);
 
@@ -196,17 +180,11 @@ public class SvConfig
             case BREAKEND_TSV:
                 filename += BREAKEND_TSV;
                 break;
-
-            case HTML_SUMMARY:
-                filename += "to_be_determined";
-                break;
         }
 
         return filename;
     }
 
-
-    public boolean writeHtmlFiles() { return WriteTypes.contains(HTML_SUMMARY); }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {

@@ -15,11 +15,13 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABIL
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.DEFAULT_PROBE_LENGTH;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.generateMutationSequence;
+import static com.hartwig.hmftools.wisp.purity.FileType.SOMATICS;
+import static com.hartwig.hmftools.wisp.purity.FileType.SOMATIC_PEAK;
+import static com.hartwig.hmftools.wisp.purity.FileType.SUMMARY;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.CHIP_MIN_ALLELE_FRAGS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.CHIP_MIN_SAMPLE_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_SUBCLONAL_LIKELIHOOD;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SUBCLONAL_VCN_THRESHOLD;
-import static com.hartwig.hmftools.wisp.purity.ResultsWriter.SOMATICS_FILE_ID;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.CHIP;
@@ -349,7 +351,7 @@ public class SomaticVariants
     {
         try
         {
-            String fileName = config.formFilename(SOMATICS_FILE_ID);
+            String fileName = config.formFilename(SOMATICS);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
@@ -428,9 +430,8 @@ public class SomaticVariants
     {
         try
         {
-            String summaryFile = config.formFilename(ResultsWriter.SUMMARY_FILE_ID);
-            String somaticPeaksFile = config.formFilename(ResultsWriter.SOMATIC_PEAK_FILE_ID);
-            //String somaticsFile = config.formFilename(SOMATICS_FILE_ID);
+            String summaryFile = config.formFilename(SUMMARY);
+            String somaticPeaksFile = config.formFilename(SOMATIC_PEAK);
 
             if(!Files.exists(Paths.get(summaryFile)) || !Files.exists(Paths.get(somaticPeaksFile)))
             {

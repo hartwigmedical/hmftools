@@ -249,7 +249,6 @@ public class AssemblyMerger
         final Sequence mergedSequence = SequenceMerger.merge(left, right, supportIndex);
 
         final ExtendedAssembly merged = new ExtendedAssembly(left.Name, mergedSequence.getBasesString(), left.Source);
-        left.Diagrams.forEach(merged::addDiagrams);
 
         left.readSupport().forEach(x -> merged.tryAddSupport(mSupportChecker, x.Read));
         right.readSupport().forEach(x -> merged.tryAddSupport(mSupportChecker, x.Read));

@@ -294,7 +294,7 @@ public class Aligner extends ThreadTask implements AutoCloseable
         final int nearbyMidPoint = ((maybeNearby.getRefStart() + 1) + (maybeNearby.getRefEnd() + 1)) / 2;
         final int distance = Math.abs(neighbourMidPoint - nearbyMidPoint);
 
-        return distance > SvConstants.ALIGNERMAXDISTANCETOCONSIDERNEARBY ? Integer.MAX_VALUE : distance;
+        return distance > SvConstants.ALIGNER_NEARBY_MAX_DISTANCE ? Integer.MAX_VALUE : distance;
     }
 
     private List<Alignment> bestAlignmentExtension(final Sequence unmappedBases,
@@ -302,7 +302,7 @@ public class Aligner extends ThreadTask implements AutoCloseable
     {
         final List<BwaMemAlignment> mappedAlignments = mAligners.get().alignSeqs(List.of(unmappedBases.getBases())).get(0).stream()
                 .filter(alignment -> alignment.getSeqStart() != -1)
-                .filter(alignment -> alignment.getAlignerScore() > SvConstants.ALIGNERMINSCORE)
+                .filter(alignment -> alignment.getAlignerScore() > SvConstants.ALIGNER_MIN_SCORE)
                 .collect(Collectors.toList());
 
         if(mappedAlignments.isEmpty())
@@ -314,8 +314,8 @@ public class Aligner extends ThreadTask implements AutoCloseable
 
         final List<BwaMemAlignment> candidateAlignments = mappedAlignments.stream()
                 .filter(alignment -> direction == Direction.REVERSE
-                        ? alignment.getSeqEnd() >= bestSequenceBoundary - SvConstants.ALIGNEREXTENSIONINSERTTOLERANCE
-                        : alignment.getSeqStart() <= bestSequenceBoundary + SvConstants.ALIGNEREXTENSIONINSERTTOLERANCE)
+                        ? alignment.getSeqEnd() >= bestSequenceBoundary - SvConstants.ALIGNER_EXTENSION_INSERT_TOLERANCE
+                        : alignment.getSeqStart() <= bestSequenceBoundary + SvConstants.ALIGNER_EXTENSION_INSERT_TOLERANCE)
                 .collect(Collectors.toList());
 
         // We select the best candidate as follows:
@@ -337,7 +337,7 @@ public class Aligner extends ThreadTask implements AutoCloseable
 
         final Alignment unmappedLeft = existing.get(0);
         final Alignment mappedLeft = existing.get(1);
-        if(unmappedLeft.Length < SvConstants.ALIGNERMINBASES)
+        if(unmappedLeft.Length < SvConstants.ALIGNER_MIN_BASES)
             return existing;
 
         final Sequence unmapped = sequence.subsequence(unmappedLeft.SequenceStartPosition - 1, unmappedLeft.Length);

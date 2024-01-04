@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_SLICE_SIZE;
+import static com.hartwig.hmftools.sage.SageConstants.VIS_VARIANT_BUFFER;
 
 import java.io.File;
 import java.util.Arrays;
@@ -33,10 +34,12 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.sage.bqr.BqrConfig;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.quality.QualityConfig;
 import com.hartwig.hmftools.sage.vis.VisConfig;
@@ -134,11 +137,6 @@ public class SageConfig
 
         IncludeMT = configBuilder.hasFlag(INCLUDE_MT);
 
-        SpecificChrRegions = SpecificRegions.from(configBuilder);
-
-        if(SpecificChrRegions == null)
-            mIsValid = false;
-
         OutputFile = SampleDataDir + configBuilder.getValue(OUTPUT_VCF);
 
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
@@ -164,9 +162,25 @@ public class SageConfig
         TrackUMIs = configBuilder.hasFlag(TRACK_UMIS);
         WriteFragmentLengths = configBuilder.hasFlag(WRITE_FRAG_LENGTHS);
 
+        SpecificChrRegions = SpecificRegions.from(configBuilder);
+
+        if(SpecificChrRegions == null)
+            mIsValid = false;
+
         Visualiser = new VisConfig(configBuilder, outputDir());
 
+        if(Visualiser.Enabled && !Visualiser.SpecificVariants.isEmpty() && SpecificChrRegions.Regions.isEmpty())
+        {
+            for(SimpleVariant visVariant : Visualiser.SpecificVariants)
+            {
+                SpecificChrRegions.addRegion(new ChrBaseRegion(
+                        visVariant.Chromosome, visVariant.Position - VIS_VARIANT_BUFFER,
+                        visVariant.Position + VIS_VARIANT_BUFFER));
+            }
+        }
+
         SpecificPositions = Sets.newHashSet();
+
         if(configBuilder.hasValue(SPECIFIC_POSITIONS))
         {
             final String positionList = configBuilder.getValue(SPECIFIC_POSITIONS, Strings.EMPTY);
