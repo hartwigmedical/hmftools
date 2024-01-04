@@ -127,7 +127,7 @@ public final class CuppaDataFactory
                     .altSjClassifier(predictionsByClassifier.get(ClassifierType.ALT_SJ_COHORT).get(cancerType))
                     .geneExpressionClassifier(predictionsByClassifier.get(ClassifierType.EXPRESSION_PAIRWISE).get(cancerType))
                     .build();
-        }).sorted(new CuppaPredictionComparator()).collect(Collectors.toList());
+        }).collect(Collectors.toList());
     }
 
     @NotNull
