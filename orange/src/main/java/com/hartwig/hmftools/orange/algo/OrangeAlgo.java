@@ -20,6 +20,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
+import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidNode;
@@ -573,22 +574,25 @@ public class OrangeAlgo
             return null;
         }
 
-        String cuppaResultTsv = config.wgsRefConfig().cuppaResultCsv();
-        if(cuppaResultTsv == null)
+        CuppaPredictions cuppaPredictionsV2 = null;
+        String cuppavisDataTsv = config.wgsRefConfig().cuppaVisDataTsv();
+        if(cuppavisDataTsv != null)
         {
-            LOGGER.debug("Skipping CUPPA loading as no input has been provided");
-            return null;
+            LOGGER.info("Loading CUPPA v2 predictions from {}", new File(cuppavisDataTsv).getParent());
+            cuppaPredictionsV2 = CuppaPredictions.fromTsv(cuppavisDataTsv);
+            LOGGER.info(" Loaded {} CUPPA v1 prediction entries from {}", cuppaPredictionsV2.PredictionEntries.size(), cuppavisDataTsv);
         }
 
-        LOGGER.info("Loading CUPPA from {}", new File(cuppaResultTsv).getParent());
-        List<CuppaDataFile> cuppaEntries = CuppaDataFile.read(cuppaResultTsv);
-        LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), cuppaResultTsv);
+        List<CuppaDataFile> cuppaPredictionsV1 = null;
+        String cuppaResultTsv = config.wgsRefConfig().cuppaResultCsv();
+        if(cuppaResultTsv != null)
+        {
+            LOGGER.info("Loading CUPPA v1 predictions from {}", new File(cuppaResultTsv).getParent());
+            cuppaPredictionsV1 = CuppaDataFile.read(cuppaResultTsv);
+            LOGGER.info(" Loaded {} CUPPA v1 prediction entries from {}", cuppaPredictionsV1.size(), cuppaResultTsv);
+        }
 
-        CuppaData cuppaData = CuppaDataFactory.create(cuppaEntries);
-        CuppaPrediction best = cuppaData.predictions().get(0);
-        LOGGER.info(" Predicted cancer type '{}' with likelihood {}", best.cancerType(), best.likelihood());
-
-        return cuppaData;
+        return CuppaDataFactory.create(cuppaPredictionsV2, cuppaPredictionsV1);
     }
 
     @Nullable
@@ -697,24 +701,9 @@ public class OrangeAlgo
         String purplePurityRangePlot = plotManager.processPlotFile(purplePlotBasePath + ".purity.range.png");
         String purpleKataegisPlot = plotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
 
-        String cuppaSummaryPlot = null;
-        if(config.wgsRefConfig() != null && config.wgsRefConfig().cuppaSummaryPlot() != null)
-        {
-            cuppaSummaryPlot = plotManager.processPlotFile(config.wgsRefConfig().cuppaSummaryPlot());
-        }
-
-        String cuppaFeaturePlot = null;
-        if(config.wgsRefConfig() != null && config.wgsRefConfig().cuppaFeaturePlot() != null && new File(config.wgsRefConfig()
-                .cuppaFeaturePlot()).exists())
-        {
-            cuppaFeaturePlot = plotManager.processPlotFile(config.wgsRefConfig().cuppaFeaturePlot());
-        }
-
-        String cuppaChartPlot = null;
-        if(config.wgsRefConfig() != null && config.wgsRefConfig().cuppaChartPlot() != null)
-        {
-            cuppaChartPlot = plotManager.processPlotFile(config.wgsRefConfig().cuppaChartPlot());
-        }
+        String cuppaVisPlot = plotManager.processPlotFile(
+                (config.wgsRefConfig() != null) ? config.wgsRefConfig().cuppaVisPlot() : null
+        );
 
         return ImmutableOrangePlots.builder()
                 .sageReferenceBQRPlot(sageReferenceBQRPlot)
@@ -727,9 +716,7 @@ public class OrangeAlgo
                 .purplePurityRangePlot(purplePurityRangePlot)
                 .purpleKataegisPlot(purpleKataegisPlot)
                 .linxDriverPlots(linxDriverPlots)
-                .cuppaSummaryPlot(cuppaSummaryPlot)
-                .cuppaFeaturePlot(cuppaFeaturePlot)
-                .cuppaChartPlot(cuppaChartPlot)
+                .cuppaVisPlot(cuppaVisPlot)
                 .build();
     }
 
