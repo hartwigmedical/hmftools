@@ -34,6 +34,7 @@ import java.io.File;
 
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
+import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
 import com.hartwig.hmftools.common.sage.SageCommon;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -76,17 +77,14 @@ public interface OrangeWGSRefConfig
     @NotNull
     String chordPredictionTxt();
 
-    @NotNull
+    @Nullable
+    String cuppaVisDataTsv();
+
+    @Nullable
+    String cuppaVisPlot();
+
+    @Nullable
     String cuppaResultCsv();
-
-    @NotNull
-    String cuppaSummaryPlot();
-
-    @Nullable
-    String cuppaFeaturePlot();
-
-    @Nullable
-    String cuppaChartPlot();
 
     @NotNull
     String sigsAllocationTsv();
@@ -127,10 +125,9 @@ public interface OrangeWGSRefConfig
         builder.chordPredictionTxt(mandatoryPath(ChordDataFile.generateFilename(chordDir, tumorSampleId)));
 
         String cuppaDir = pathResolver.resolveMandatoryToolDirectory(CUPPA_DIR_CFG, CUPPA_DIR);
-        builder.cuppaResultCsv(mandatoryPath(CuppaDataFile.generateFilename(cuppaDir, tumorSampleId)));
-        builder.cuppaSummaryPlot(mandatoryPath(CuppaDataFile.generateReportSummaryPlotFilename(cuppaDir, tumorSampleId)));
-        builder.cuppaFeaturePlot(optionalPath(CuppaDataFile.generateReportFeaturesPlotFilename(cuppaDir, tumorSampleId)));
-        builder.cuppaChartPlot(mandatoryPath(CuppaDataFile.generateChartPlotFilename(cuppaDir, tumorSampleId)));
+        builder.cuppaVisDataTsv(mandatoryPath(CuppaPredictions.generateVisDataTsvFilename(cuppaDir, tumorSampleId)));
+        builder.cuppaVisPlot(mandatoryPath(CuppaPredictions.generateVisPlotFilename(cuppaDir, tumorSampleId)));
+        builder.cuppaResultCsv(optionalPath(CuppaDataFile.generateFilename(cuppaDir, tumorSampleId)));
 
         String sigsDir = pathResolver.resolveMandatoryToolDirectory(SIGS_DIR_CFG, SIGS_DIR);
         builder.sigsAllocationTsv(mandatoryPath(SignatureAllocationFile.generateFilename(sigsDir, tumorSampleId)));
