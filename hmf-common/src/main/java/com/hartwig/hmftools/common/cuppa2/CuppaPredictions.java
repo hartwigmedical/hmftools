@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 public class CuppaPredictions
 {
@@ -229,6 +230,16 @@ public class CuppaPredictions
                 .collect(Collectors.toList());
 
         return new CuppaPredictions(sortPredictionEntries);
+    }
+
+    public static String generateVisDataTsvFilename(final String basePath, final String sample)
+    {
+        return checkAddDirSeparator(basePath) + sample + ".cuppa.vis_data.tsv";
+    }
+
+    public static String generateVisPlotFilename(final String basePath, final String sample)
+    {
+        return checkAddDirSeparator(basePath) + sample + ".cuppa.vis.png";
     }
 
 }
