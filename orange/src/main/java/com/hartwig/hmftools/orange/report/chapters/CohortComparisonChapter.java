@@ -50,10 +50,9 @@ public class CohortComparisonChapter implements ReportChapter
         document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
         boolean isFail = PurpleQCInterpretation.isFail(report.purple().fit().qc());
-        if(!isFail && report.plots().cuppaSummaryPlot() != null)
+        if(!isFail && report.plots().cuppaVisPlot() != null)
         {
-            addCuppaSummaryPlot(document);
-            addCuppaFeaturePlot(document);
+            addCuppaVisPlot(document);
         }
         else
         {
@@ -61,23 +60,12 @@ public class CohortComparisonChapter implements ReportChapter
         }
     }
 
-    private void addCuppaSummaryPlot(@NotNull Document document)
+    private void addCuppaVisPlot(@NotNull Document document)
     {
-        Image cuppaSummaryImage = Images.build(plotPathResolver.resolve(report.plots().cuppaSummaryPlot()));
-        cuppaSummaryImage.setMaxWidth(740);
-        cuppaSummaryImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        document.add(cuppaSummaryImage);
-    }
-
-    private void addCuppaFeaturePlot(@NotNull Document document)
-    {
-        String featurePlotPaths = report.plots().cuppaFeaturePlot();
-        if(featurePlotPaths != null)
-        {
-            Image cuppaFeatureImage = Images.build(plotPathResolver.resolve(featurePlotPaths));
-            cuppaFeatureImage.setMaxWidth(740);
-            cuppaFeatureImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-            document.add(cuppaFeatureImage);
-        }
+        Image cuppaVisPlot = Images.build(plotPathResolver.resolve(report.plots().cuppaVisPlot()));
+        cuppaVisPlot.setMaxWidth(740);
+        cuppaVisPlot.setMaxHeight(420);
+        cuppaVisPlot.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        document.add(cuppaVisPlot);
     }
 }
