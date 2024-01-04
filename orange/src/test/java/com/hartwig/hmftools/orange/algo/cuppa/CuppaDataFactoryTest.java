@@ -31,9 +31,10 @@ public class CuppaDataFactoryTest
 
         CuppaData cuppaData = CuppaDataFactory.create(cuppaPredictions);
         List<CuppaPrediction> predictionEntries = cuppaData.predictions();
+        //predictionEntries.stream().forEach(o -> System.out.println(o.toString()));
 
         assertEquals(40, predictionEntries.size());
-        assertEquals(cuppaData.bestPrediction().cancerType().toString(), "Breast: Triple negative");
+        assertEquals(cuppaData.bestPrediction().cancerType().toString(), "Skin: Melanoma");
 
 
         Map<String, CuppaPrediction> actualPredictionsByCancerType = new HashMap<>();
@@ -44,27 +45,27 @@ public class CuppaDataFactoryTest
 
         Map<String, CuppaPrediction> expectedPredictionsByCancerType = new HashMap<>();
         expectedPredictionsByCancerType.put(
-                "Breast: Triple negative",
+                "Skin: Melanoma",
                 ImmutableCuppaPrediction.builder()
-                        .cuppaMajorVersion("v2").cancerType("Breast: Triple negative").likelihood(0.7648)
-                        .genomicPositionClassifier(0.6103).snv96Classifier(0.8326).eventClassifier(0.2607)
-                        .geneExpressionClassifier(0.5215).altSjClassifier(0.6721)
+                        .cuppaMajorVersion("v2").cancerType("Skin: Melanoma").likelihood(0.9968)
+                        .genomicPositionClassifier(0.9966).snv96Classifier(0.8176).eventClassifier(0.7976)
+                        .geneExpressionClassifier(1.0).altSjClassifier(0.9999)
                         .build()
         );
         expectedPredictionsByCancerType.put(
-                "Breast: Other",
+                "Skin: Other",
                 ImmutableCuppaPrediction.builder()
-                        .cuppaMajorVersion("v2").cancerType("Breast: Other").likelihood(0.2277)
-                        .genomicPositionClassifier(0.01891).snv96Classifier(0.01098).eventClassifier(0.09737)
-                        .geneExpressionClassifier(0.24).altSjClassifier(0.1377)
+                        .cuppaMajorVersion("v2").cancerType("Skin: Other").likelihood(1.005E-4)
+                        .genomicPositionClassifier(4.215E-4).snv96Classifier(0.1806).eventClassifier(4.02E-5)
+                        .geneExpressionClassifier(8.853E-6).altSjClassifier(1.528E-7)
                         .build()
         );
         expectedPredictionsByCancerType.put(
-                "Gynecologic: Ovary/Fallopian tube",
+                "Prostate",
                 ImmutableCuppaPrediction.builder()
-                        .cuppaMajorVersion("v2").cancerType("Gynecologic: Ovary/Fallopian tube").likelihood(9.148E-4)
-                        .genomicPositionClassifier(0.06884).snv96Classifier(0.0473).eventClassifier(0.1077)
-                        .geneExpressionClassifier(0.02409).altSjClassifier(0.02507)
+                        .cuppaMajorVersion("v2").cancerType("Prostate").likelihood(1.005E-4)
+                        .genomicPositionClassifier(9.123E-5).snv96Classifier(5.793E-12).eventClassifier(3.039E-4)
+                        .geneExpressionClassifier(7.483E-7).altSjClassifier(9.215E-7)
                         .build()
         );
 
