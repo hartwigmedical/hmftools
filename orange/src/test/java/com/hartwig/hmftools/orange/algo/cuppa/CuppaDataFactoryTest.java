@@ -28,8 +28,13 @@ public class CuppaDataFactoryTest
     public void canExtractPredictionsFromCuppaV2() throws IOException
     {
         CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_TSV);
-        List<CuppaPrediction> predictionEntries = CuppaDataFactory.extractProbabilitiesCuppaV2(cuppaPredictions);
+
+        CuppaData cuppaData = CuppaDataFactory.create(cuppaPredictions);
+        List<CuppaPrediction> predictionEntries = cuppaData.predictions();
+
         assertEquals(40, predictionEntries.size());
+        assertEquals(cuppaData.bestPrediction().cancerType().toString(), "Breast: Triple negative");
+
 
         Map<String, CuppaPrediction> actualPredictionsByCancerType = new HashMap<>();
         for(CuppaPrediction prediction : predictionEntries)
