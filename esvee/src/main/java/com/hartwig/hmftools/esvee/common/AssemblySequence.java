@@ -86,7 +86,7 @@ public class AssemblySequence
 
     private boolean tryAddRead(final Read read, boolean isInitial)
     {
-        int junctionReadIndex = getReadPositionAtReferencePosition(read, mInitialJunction.Position) - 1;
+        int junctionReadIndex = read.getReadIndexAtReferencePosition(mInitialJunction.Position, true);
 
         int readIndexStart;
         int readIndexEnd;
@@ -111,7 +111,7 @@ public class AssemblySequence
         for(int i = readIndexStart; i <= readIndexEnd; ++i, ++assemblyIndex)
         {
             byte base = read.getBases()[i];
-            byte qual = read.getBaseQuality()[i];;
+            byte qual = read.getBaseQuality()[i];
 
             if(isInitial || mBases[assemblyIndex] == 0)
             {

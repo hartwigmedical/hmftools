@@ -26,6 +26,7 @@ import com.hartwig.hmftools.esvee.sequence.ReadSupport;
 
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
@@ -185,7 +186,7 @@ public class PrimaryAssembler
     }
 
     // convert indels near the junction to soft-clips
-    private Read realignForJunction(final Read read, final Junction junction)
+    public static Read realignForJunction(final Read read, final Junction junction)
     {
         boolean justHadIndel = false;
         boolean wasRightNearJunction = false;
@@ -211,13 +212,16 @@ public class PrimaryAssembler
                 for(int j = i; j < read.getCigar().numCigarElements(); j++)
                     newElements.add(read.getCigar().getCigarElement(j));
 
-                // CHECK: decide how to handle these
                 /*
                 final Read newAlignment = read.copyRecord();
                 newAlignment.setAlignmentStart(referencePosition);
                 newAlignment.setCigar(new Cigar(newElements));
                 return newAlignment;
                 */
+
+                read.bamRecord().setAlignmentStart(referencePosition);
+                read.bamRecord().setCigar(new Cigar(newElements));
+
                 return read;
             }
 
@@ -234,6 +238,7 @@ public class PrimaryAssembler
                     newElements.add(read.getCigar().getCigarElement(j));
                 newElements.add(new CigarElement(softClippedLength, CigarOperator.S));
 
+                read.bamRecord().setCigar(new Cigar(newElements));
                 /*
                 final Read newAlignment = read.copyRecord();
                 newAlignment.setCigar(new Cigar(newElements));
@@ -254,29 +259,6 @@ public class PrimaryAssembler
 
     private List<PrimaryAssembly> createInitialAssemblies(final List<Read> alignments)
     {
-        int minAlignedPosition = mJunction.Position;
-        int maxAlignedPosition = mJunction.Position;
-
-        for(Read read : alignments)
-        {
-            if(mJunction.direction() == Direction.FORWARDS)
-            {
-                maxAlignedPosition = max(maxAlignedPosition, read.getUnclippedEnd());
-            }
-            else
-            {
-                minAlignedPosition = min(minAlignedPosition, read.getUnclippedStart());
-            }
-        }
-
-        AssemblySequence assemblySequence = new AssemblySequence(mJunction, alignments.get(0), minAlignedPosition,  maxAlignedPosition);
-
-        for(int i = 1; i < alignments.size(); ++i)
-        {
-            assemblySequence.tryAddRead(alignments.get(i));
-        }
-
-
         final HeadNode combinedForwards = alignments.stream()
                 .filter(alignment -> alignment.getChromosome().equals(mJunction.Chromosome))
                 .map(alignment -> HeadNode.create(alignment, mJunction.Position, mJunction.direction()))

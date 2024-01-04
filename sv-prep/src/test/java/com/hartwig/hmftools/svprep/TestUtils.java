@@ -3,6 +3,9 @@ package com.hartwig.hmftools.svprep;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_BASE_QUAL;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_MAP_QUAL;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -14,12 +17,6 @@ import htsjdk.samtools.SAMRecordSetBuilder;
 
 public final class TestUtils
 {
-    public static final String CHR_1 = "1";
-    public static final String CHR_2 = "2";
-
-    public static final int DEFAULT_MAP_QUAL = 60;
-    public static final int DEFAULT_BASE_QUAL = 37;
-
     public static final int PARTITION_SIZE = 10000;
     public static final ChrBaseRegion REGION_1 = new ChrBaseRegion(CHR_1, 1, PARTITION_SIZE - 1);
     public static final ChrBaseRegion REGION_2 = new ChrBaseRegion(CHR_1, REGION_1.end() + 1, REGION_1.end() + PARTITION_SIZE);

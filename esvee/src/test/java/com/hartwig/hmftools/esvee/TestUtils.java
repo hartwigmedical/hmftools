@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
@@ -11,6 +12,10 @@ import htsjdk.samtools.SAMRecord;
 
 public class TestUtils
 {
+    public static final String REF_BASES = generateRandomBases(100);
+    public static final String TEST_READ_ID = "READ_01";
+    public static final String TEST_CIGAR  = "100M";
+
     /*
     public static SVAConfig config()
     {

@@ -45,6 +45,14 @@ public final class ReadUtils
         return read.bamRecord().getReadPositionAtReferencePosition(position);
     }
 
+    public static int getReadIndexAtReferencePosition(final Read read, final int position)
+    {
+        // finds the read index given a reference position, and extrapolates outwards from alignments as required
+
+        return read.bamRecord().getReadPositionAtReferencePosition(position);
+    }
+
+
     /*
     public static int getReadPositionAtReferencePosition(final Read read, final int position)
     {
