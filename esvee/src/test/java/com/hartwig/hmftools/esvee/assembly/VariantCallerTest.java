@@ -4,13 +4,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.hartwig.hmftools.esvee.assembly.VariantCaller;
-import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
-import com.hartwig.hmftools.esvee.sequence.Alignment;
-import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;
-import com.hartwig.hmftools.esvee.sequence.GappedAssembly;
+import com.hartwig.hmftools.esvee.old.AlignedAssembly;
+import com.hartwig.hmftools.esvee.old.Alignment;
+import com.hartwig.hmftools.esvee.old.ExtendedAssembly;
+import com.hartwig.hmftools.esvee.old.GappedAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
+import com.hartwig.hmftools.esvee.old.SupportedAssembly;
+import com.hartwig.hmftools.esvee.variant.VariantCaller;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMReadGroupRecord;

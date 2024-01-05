@@ -9,16 +9,13 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import com.hartwig.hmftools.common.samtools.SamRecordUtils;
-import com.hartwig.hmftools.esvee.sequence.Alignment;
-import com.hartwig.hmftools.esvee.sequence.Sequence;
-import com.hartwig.hmftools.esvee.assembly.SequenceDecomposer;
+import com.hartwig.hmftools.esvee.old.Alignment;
+import com.hartwig.hmftools.esvee.old.Sequence;
+import com.hartwig.hmftools.esvee.old.SequenceDecomposer;
 
 import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class Read implements Sequence

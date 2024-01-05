@@ -3,12 +3,10 @@ package com.hartwig.hmftools.esvee.assembly;
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
-import static com.hartwig.hmftools.esvee.assembly.PrimaryAssembler.realignForJunction;
-import static com.hartwig.hmftools.esvee.read.Read.INVALID_INDEX;
+import static com.hartwig.hmftools.esvee.old.PrimaryAssembler.realignForJunction;
 
 import static org.junit.Assert.assertEquals;
 

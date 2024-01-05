@@ -18,12 +18,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
+import com.hartwig.hmftools.esvee.old.PrimaryAssembler;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
 import com.hartwig.hmftools.esvee.common.ThreadTask;
 import com.hartwig.hmftools.esvee.read.BamReader;
 import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
+import com.hartwig.hmftools.esvee.old.PrimaryAssembly;
+import com.hartwig.hmftools.esvee.read.ReadFilters;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -137,7 +139,7 @@ public class JunctionGroupAssembler extends ThreadTask
             PrimaryAssembler primaryAssembler = new PrimaryAssembler(mConfig, junction);
 
             List<Read> junctionCandidateReads = mCurrentJunctionGroup.candidateReads().stream()
-                    .filter(x -> AlignmentFilters.alignmentCrossesJunction(x, junction))
+                    .filter(x -> ReadFilters.alignmentCrossesJunction(x, junction))
                     .collect(Collectors.toList());
 
             if(junctionCandidateReads.isEmpty())
@@ -158,7 +160,7 @@ public class JunctionGroupAssembler extends ThreadTask
     private void processRecord(final SAMRecord record)
     {
         // CHECK: do in SvPrep if worthwhile
-        if(!AlignmentFilters.isRecordAverageQualityAbove(record.getBaseQualities(), SvConstants.AVG_BASE_QUAL_THRESHOLD))
+        if(!ReadFilters.isRecordAverageQualityAbove(record.getBaseQualities(), SvConstants.AVG_BASE_QUAL_THRESHOLD))
             return;
 
         // mReadRescue::rescueRead) // CHECK: not required

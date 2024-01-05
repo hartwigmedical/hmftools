@@ -20,11 +20,11 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.WriteType;
-import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
-import com.hartwig.hmftools.esvee.sequence.Alignment;
+import com.hartwig.hmftools.esvee.old.AlignedAssembly;
+import com.hartwig.hmftools.esvee.old.Alignment;
 import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.common.VariantAssembly;
-import com.hartwig.hmftools.esvee.common.VariantCall;
+import com.hartwig.hmftools.esvee.old.VariantAssembly;
+import com.hartwig.hmftools.esvee.variant.VariantCall;
 import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
 
 import org.jetbrains.annotations.Nullable;

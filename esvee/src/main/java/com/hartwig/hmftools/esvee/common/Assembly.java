@@ -2,9 +2,9 @@ package com.hartwig.hmftools.esvee.common;
 
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.sequence.Sequence;
-import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
-import com.hartwig.hmftools.esvee.assembly.SequenceDecomposer;
+import com.hartwig.hmftools.esvee.old.Sequence;
+import com.hartwig.hmftools.esvee.old.SupportedAssembly;
+import com.hartwig.hmftools.esvee.old.SequenceDecomposer;
 
 import org.jetbrains.annotations.Nullable;
 
