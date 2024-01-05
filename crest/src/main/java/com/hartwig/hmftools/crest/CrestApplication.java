@@ -33,43 +33,30 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class CrestApplication
 {
-
     private static final Logger LOGGER = LogManager.getLogger(CrestApplication.class);
 
     private static final String RNA_SAMPLE = "rna_sample";
-
     private static final String MIN_TOTAL_READS = "min_total_reads";
-
     private static final String MIN_RNA_READS = "min_rna_reads";
-
     private static final String ACCEPTANCE_RATIO = "acceptance_ratio";
-
     private static final String DO_NOT_WRITE_FILE = "do_not_write_file";
 
     private static final String DEFAULT_MIN_TOTAL_READS = "10";
-
     private static final String DEFAULT_MIN_RNA_READS = "1";
-
     private static final String DEFAULT_ACCEPTANCE_RATIO = "0.9";
 
     @NotNull
     private final String purpleDir;
-
     @Nullable
     private final String outputDir;
-
     @NotNull
     private final String sampleId;
-
     @NotNull
     private final String sampleToCheck;
 
     private final int minTotalReads;
-
     private final int minRnaReads;
-
     private final double acceptanceRatio;
-
     private final boolean doNotWriteFile;
 
     public CrestApplication(@NotNull final String purpleDir, @Nullable final String outputDir,
