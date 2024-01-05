@@ -1,7 +1,6 @@
-package com.hartwig.hmftools.sage.read;
+package com.hartwig.hmftools.sage.candidate_;
 
 import static java.lang.Math.max;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
@@ -14,8 +13,14 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.util.SequenceUtil;
 
-public final class NumberEvents
+/**
+ * Utility methods for calculating number of events in a read.
+ */
+public class NumberEvents_
 {
+    /**
+     * Returns NM attribute adjusted so that indels count as one regardless of their length.
+     */
     public static int calc(final SAMRecord record, final RefSequence refGenome)
     {
         int nm = rawNM(record, refGenome);
@@ -36,13 +41,9 @@ public final class NumberEvents
         return nm - additionalIndels;
     }
 
-    public static double calcSoftClipAdjustment(final SAMRecord record)
-    {
-        int softClippedBases = leftSoftClipLength(record) + rightSoftClipLength(record);
-
-        return softClippedBases > 0 ? max(1, softClippedBases / SC_READ_EVENTS_FACTOR) : 0;
-    }
-
+    /**
+     * NM attribte of a read.
+     */
     public static int rawNM(final SAMRecord record, final RefSequence refGenome)
     {
         Object nm = record.getAttribute(NUM_MUTATONS_ATTRIBUTE);
@@ -55,6 +56,19 @@ public final class NumberEvents
         return SequenceUtil.calculateSamNmTag(record, refGenome.alignment().Bases, offset);
     }
 
+    /**
+     * Return scaled a clipped number of soft clipped bases.
+     */
+    public static double calcSoftClipAdjustment(final SAMRecord record)
+    {
+        int softClippedBases = leftSoftClipLength(record) + rightSoftClipLength(record);
+
+        return softClippedBases > 0 ? max(1, softClippedBases / SC_READ_EVENTS_FACTOR) : 0;
+    }
+
+    /**
+     * Adjusts number of events for an MNV, so that the MVN only counts as a single event instead of one for each mutation in the MNV.
+     */
     public static int calcWithMnvRaw(int numberOfEvents, final String ref, final String alt)
     {
         // Number of events includes each SNV as an additional event. This unfairly penalises MNVs.

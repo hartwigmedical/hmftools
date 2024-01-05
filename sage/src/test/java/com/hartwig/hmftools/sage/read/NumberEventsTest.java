@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sage.read;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.sage.read.NumberEvents;
+import com.hartwig.hmftools.sage.candidate_.NumberEvents_;
 import com.hartwig.hmftools.sage.common.RefSequence;
 
 import org.jetbrains.annotations.NotNull;
@@ -19,13 +19,13 @@ public class NumberEventsTest
     {
         int refStart = 4000;
         SAMRecord record = buildSamRecord(refStart + 4, "7M", "GATTACA");
-        assertEquals(0, NumberEvents.rawNM(record, new RefSequence(new ReferenceSequence("1",
+        assertEquals(0, NumberEvents_.rawNM(record, new RefSequence(new ReferenceSequence("1",
                 refStart - 1, "AAAAGATTACAGGGGG".getBytes()))));
-        assertEquals(1, NumberEvents.rawNM(record, new RefSequence(new ReferenceSequence("1",
+        assertEquals(1, NumberEvents_.rawNM(record, new RefSequence(new ReferenceSequence("1",
                 refStart - 1, "AAAAGATTAAAGGGG".getBytes()))));
-        assertEquals(1, NumberEvents.rawNM(record, new RefSequence(new ReferenceSequence("1",
+        assertEquals(1, NumberEvents_.rawNM(record, new RefSequence(new ReferenceSequence("1",
                 refStart - 1, "AAAAGATTACCGGGG".getBytes()))));
-        assertEquals(2, NumberEvents.rawNM(record, new RefSequence(new ReferenceSequence("1",
+        assertEquals(2, NumberEvents_.rawNM(record, new RefSequence(new ReferenceSequence("1",
                 refStart - 1, "AAAAGATTAGGGGGG".getBytes()))));
     }
 

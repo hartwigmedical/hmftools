@@ -28,7 +28,6 @@ import com.hartwig.hmftools.common.samtools.CigarTraversal;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.select.ReadPanelStatus;
 
 import org.jetbrains.annotations.Nullable;
@@ -155,8 +154,8 @@ public class RefContextConsumer_
 
         // Compute number of events. Note that we set this to zero for supp reads. Use this to compute adjusted MapQ, and set a flag
         // whether the read exceeds the quality, i.e. it has a positive adjusted MapQ.
-        int numberOfEvents = !record.getSupplementaryAlignmentFlag() ? NumberEvents.calc(record, mRefGenome) : 0;
-        int scEvents = (int)NumberEvents.calcSoftClipAdjustment(record);
+        int numberOfEvents = !record.getSupplementaryAlignmentFlag() ? NumberEvents_.calc(record, mRefGenome) : 0;
+        int scEvents = (int)NumberEvents_.calcSoftClipAdjustment(record);
         int adjustedMapQual = calcAdjustedMapQualLessEventsPenalty(record, numberOfEvents);
         boolean readExceedsQuality = adjustedMapQual > 0;
 
@@ -447,7 +446,7 @@ public class RefContextConsumer_
                                 mnvRef,
                                 mnvAlt,
                                 baseQuality,
-                                NumberEvents.calcWithMnvRaw(numberOfEvents, mnvRef, mnvAlt),
+                                NumberEvents_.calcWithMnvRaw(numberOfEvents, mnvRef, mnvAlt),
                                 sufficientMapQuality,
                                 mnvReadContext));
                     }

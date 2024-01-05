@@ -23,13 +23,13 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.candidate_.Candidate_;
+import com.hartwig.hmftools.sage.candidate_.NumberEvents_;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.common.SamSlicerInterface;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 import com.hartwig.hmftools.sage.sync.FragmentSync;
 import com.hartwig.hmftools.sage.sync.FragmentSyncReadHandler;
@@ -295,7 +295,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         List<ReadContextCounter> posPhasedCounters = mVariantPhaser != null ? Lists.newArrayList() : null;
         List<ReadContextCounter> negPhasedCounters = mVariantPhaser != null ? Lists.newArrayList() : null;
 
-        int numberOfEvents = NumberEvents.calc(record, mRefSequence);
+        int numberOfEvents = NumberEvents_.calc(record, mRefSequence);
 
         for(ReadContextCounter readCounter : mSelectedReadCounters)
         {

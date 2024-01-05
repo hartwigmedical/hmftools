@@ -60,6 +60,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.UmiReadType;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.candidate_.NumberEvents_;
 import com.hartwig.hmftools.sage.candidate_.ReadContext_;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
@@ -67,7 +68,6 @@ import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.filter.FragmentCoords;
 import com.hartwig.hmftools.sage.filter.StrandBiasData;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
-import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.read.SplitReadUtils;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 import com.hartwig.hmftools.sage.vis.VariantVis;
@@ -380,12 +380,12 @@ public class ReadContextCounter//  extends SimpleVariant
         double adjustedNumOfEvents = numberOfEvents;
 
         if(mIsMnv)
-            adjustedNumOfEvents = NumberEvents.calcWithMnvRaw(numberOfEvents, mVariant.ref(), mVariant.alt());
+            adjustedNumOfEvents = NumberEvents_.calcWithMnvRaw(numberOfEvents, mVariant.ref(), mVariant.alt());
 
         if(max(mVariant.ref().length(), mVariant.alt().length()) <= SC_READ_EVENTS_FACTOR)
         {
             // penalise variants except long INDELs for their soft-clipped bases
-            adjustedNumOfEvents += NumberEvents.calcSoftClipAdjustment(record);
+            adjustedNumOfEvents += NumberEvents_.calcSoftClipAdjustment(record);
         }
 
         adjustedNumOfEvents = max(mMinNumberOfEvents, adjustedNumOfEvents);
