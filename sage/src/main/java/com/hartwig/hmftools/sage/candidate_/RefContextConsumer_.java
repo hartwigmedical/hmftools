@@ -38,6 +38,7 @@ import htsjdk.samtools.SAMRecord;
 
 /**
  * Processes reads and generates AltReads that are stored in a RefContextCache.
+ * This is the entry class for initial candidate generation.
  */
 public class RefContextConsumer_
 {
@@ -132,6 +133,7 @@ public class RefContextConsumer_
 
     /**
      * Processes a read generating AltReads in the RefContextCache.
+     * This is the main method for generating initial candidates.
      */
     public void processRead(final SAMRecord record)
     {
