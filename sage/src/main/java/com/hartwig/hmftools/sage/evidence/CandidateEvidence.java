@@ -8,13 +8,13 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.candidate.RefContextConsumer;
 import com.hartwig.hmftools.sage.candidate_.AltContext_;
 import com.hartwig.hmftools.sage.candidate_.RefContextCache_;
+import com.hartwig.hmftools.sage.candidate_.RefContextConsumer_;
+import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SamSlicerInterface;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.coverage.GeneCoverage;
-import com.hartwig.hmftools.sage.common.RefSequence;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -45,7 +45,7 @@ public class CandidateEvidence
     {
         final List<GeneCoverage> geneCoverage = mCoverage.coverage(sample, bounds.Chromosome);
         final RefContextCache_ refContextCache = new RefContextCache_(mConfig, mHotspots, mPanel);
-        final RefContextConsumer refContextConsumer = new RefContextConsumer(mConfig, bounds, refSequence, refContextCache, mHotspots);
+        final RefContextConsumer_ refContextConsumer = new RefContextConsumer_(mConfig, bounds, refSequence, refContextCache, mHotspots);
 
         final Consumer<SAMRecord> consumer = record ->
         {

@@ -18,7 +18,8 @@ import com.hartwig.hmftools.sage.select.TierSelector;
 import org.apache.commons.compress.utils.Lists;
 
 /**
- * TODO
+ * A collection of Candidates that we can add alt contexts to.
+ * <p>
  * mSavedCandidates - is really map from AltContext_ as SimpleVariant to Candidate_s.
  */
 public class Candidates_

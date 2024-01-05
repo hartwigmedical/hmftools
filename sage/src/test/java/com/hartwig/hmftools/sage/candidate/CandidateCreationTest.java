@@ -4,8 +4,6 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 
-import static org.junit.Assert.assertTrue;
-
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 
@@ -16,6 +14,7 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate_.AltRead_;
 import com.hartwig.hmftools.sage.candidate_.IndexedBases_;
+import com.hartwig.hmftools.sage.candidate_.RefContextConsumer_;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
@@ -42,7 +41,7 @@ public class CandidateCreationTest
         String readBases = refBaseStr.substring(20, scStartRefIndex) + scBases;
         int scReadIndex = 31;
 
-        AltRead_ altRead = RefContextConsumer.processSoftClip(
+        AltRead_ altRead = RefContextConsumer_.isSoftClipInsert(
                 120, 150, readBases, scBases.length(), scReadIndex, refBases, false);
 
         assertNotNull(altRead);
@@ -55,7 +54,7 @@ public class CandidateCreationTest
         readBases = scBases + refBaseStr.substring(20, 51);
         scReadIndex = 0;
 
-        altRead = RefContextConsumer.processSoftClip(
+        altRead = RefContextConsumer_.isSoftClipInsert(
                 120, 150, readBases, scBases.length(), scReadIndex, refBases, true);
 
         assertNotNull(altRead);

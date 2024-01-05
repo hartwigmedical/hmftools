@@ -27,7 +27,7 @@ import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_S
 import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
-import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
+import static com.hartwig.hmftools.sage.candidate_.RefContextConsumer_.ignoreSoftClipAdapter;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.evidence.ReadEdgeDistance.calcAdjustedVariantPosition;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.ALT_SUPPORT;
@@ -52,7 +52,6 @@ import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -70,8 +69,8 @@ import com.hartwig.hmftools.sage.filter.StrandBiasData;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.read.SplitReadUtils;
-import com.hartwig.hmftools.sage.vis.VariantVis;
 import com.hartwig.hmftools.sage.sync.FragmentData;
+import com.hartwig.hmftools.sage.vis.VariantVis;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;

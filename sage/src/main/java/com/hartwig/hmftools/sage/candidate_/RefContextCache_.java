@@ -5,7 +5,6 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.common.EvictingArray.MIN_CAPACITY;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -105,7 +104,7 @@ public class RefContextCache_
     public void registerDepthLimit(int position, int limit) { mEvictingArray.registerDepthLimit(position, limit);}
 
     /**
-     * Increment depth at position of the underling EvictionArray.
+     * Increment depth at position of the underling EvictionArray (note this is total depth, not just alt depth).
      */
     public void incrementDepth(int position) { mEvictingArray.registerDepth(position); }
 
