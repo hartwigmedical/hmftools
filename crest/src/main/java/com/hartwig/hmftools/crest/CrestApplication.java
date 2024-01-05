@@ -118,11 +118,6 @@ public class CrestApplication
         LOGGER.info("Crest version: {}", version.version());
     }
 
-    private static boolean sampleInFile(@NotNull final String sample, @NotNull final VCFHeader header)
-    {
-        return header.getSampleNamesInOrder().stream().anyMatch(x -> x.equals(sample));
-    }
-
     void run() throws IOException
     {
         String rnaAnnotatedGermlineVcf = PurpleCommon.purpleGermlineVcfFile(purpleDir, sampleId);
@@ -201,5 +196,10 @@ public class CrestApplication
         double ratio = total > 0 ? supported * 1D / total : 0D;
         LOGGER.info("Supported: " + supported + " Total: " + total + " Fraction: " + ratio);
         return ratio;
+    }
+
+    private static boolean sampleInFile(@NotNull final String sample, @NotNull final VCFHeader header)
+    {
+        return header.getSampleNamesInOrder().stream().anyMatch(x -> x.equals(sample));
     }
 }
