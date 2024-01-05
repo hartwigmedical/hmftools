@@ -175,6 +175,21 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.append.SageAppendAppl
     -out /path/to/COLO829v003.sage.rna.vcf.gz
 ```
 
+
+# Variant Visualisations
+Sage can produce HTML visualisations for specific variants of interest, showing the type of support from each overlapping read.
+
+To enable this output, set one or more of the following arguments:
+
+Argument | Description 
+---|---
+vis_variants | List of variants for which to generate output, format 'chromosome:position:ref:alt' and separated by ';'
+vis_pass_only | Generate output for all passing variants
+vis_max_support_reads | Max reads per type to display, default is 40
+vis_output_dir | Output directory for HTML files, defaults to 'vis' if not specified
+
+
+
 # Key concepts in SAGE
 
 ## BAM conventions
@@ -470,7 +485,7 @@ max_germline_rel_raw_base_qual|50%|4%|4% | 4% | Normal `RABQ[1]` / Tumor `RABQ[1
 strandBias|0.0005 |0.0005|0.0005 |0.0005| SBLikelihood<sup>4</sup>
 minAvgBaseQual|18|28|28|28|ABQ
 
-1. These min_tumor_qual cutoffs should be set lower for lower depth samples.  For example for 30x tumor coverage, we recommend (Hotspot=40;Panel=60;HC=100;LC=150).   For targeted data with higher depth please see recommendations [here](https://github.com/hartwigmedical/hmftools/blob/master/README_TARGETED.md).
+1. These min_tumor_qual cutoffs should be set lower for lower depth samples.  For example for 30x tumor coverage, we recommend (Hotspot=40;Panel=60;HC=100;LC=150).   For targeted data with higher depth please see recommendations [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md).
 
 2. Even if tumor qual score cutoff is not met, hotspots are also called so long as tumor vaf >= 0.08 and  allelic depth in tumor supporting the ALT >= 8 reads and tumorRawBQ1 > 150.  This allows calling of pathogenic hotspots even in known poor mappability regions, eg. HIST2H3C K28M.
 

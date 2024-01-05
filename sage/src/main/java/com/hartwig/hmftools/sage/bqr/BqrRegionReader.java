@@ -2,8 +2,9 @@ package com.hartwig.hmftools.sage.bqr;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.samtools.CigarUtils.getEndPosition;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.getReadBoundaryPosition;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_MAP_QUALITY;
 
@@ -223,7 +224,7 @@ public class BqrRegionReader implements CigarHandler
 
             if(mateCigar != null)
             {
-                mMaxReadEndPosition = getEndPosition(record.getMateAlignmentStart(), mateCigar, false, false);
+                mMaxReadEndPosition = getMateAlignmentEnd(record.getMateAlignmentStart(), mateCigar);
             }
             else
             {

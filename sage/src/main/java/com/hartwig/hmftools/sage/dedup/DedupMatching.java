@@ -60,12 +60,12 @@ public final class DedupMatching
             return;
 
         List<Integer> localPhaseSets = source.localPhaseSets();
-        List<int[]> lpsCounts = source.localPhaseSetCounts();
+        List<Integer> lpsCounts = source.localPhaseSetCounts();
         ReadContextCounter destReadCounter = dest.tumorReadCounters().get(0);
 
         for(int i = 0; i < localPhaseSets.size(); ++i)
         {
-            destReadCounter.addLocalPhaseSet(localPhaseSets.get(i), lpsCounts.get(i)[0], lpsCounts.get(i)[1]);
+            destReadCounter.addLocalPhaseSet(localPhaseSets.get(i), lpsCounts.get(i), 0);
         }
     }
 }

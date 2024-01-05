@@ -115,6 +115,9 @@ public class PhasedVariantClassifier
 
             for(VariantTransImpact transImpact : entry.getValue())
             {
+                if(!transImpact.hasCodingBases() || !transImpact.proteinContext().validRefCodon())
+                    continue;
+
                 List<VariantTransImpact> transImpacts = Lists.newArrayList(transImpact);
                 List<VariantData> variants = Lists.newArrayList(variant);
 
@@ -130,7 +133,7 @@ public class PhasedVariantClassifier
                                 .filter(x -> x.TransData.TransName.equals(transImpact.TransData.TransName))
                                 .findFirst().orElse(null);
 
-                        if(nextImpact != null)
+                        if(nextImpact != null && nextImpact.hasCodingBases() && nextImpact.proteinContext().validRefCodon())
                         {
                             transImpacts.add(nextImpact);
                             variants.add(nextVariant);
@@ -147,7 +150,7 @@ public class PhasedVariantClassifier
             int localPhaseSet, final List<VariantData> variants, final List<VariantTransImpact> transImpacts, final RefGenomeInterface refGenome)
     {
         // ignore if not 2 or more with coding impacts
-        if(transImpacts.stream().filter(x -> x.hasCodingBases()).count() < 2)
+        if(transImpacts.size() < 2)
             return;
 
         if(transImpacts.stream().anyMatch(x -> x.hasEffect(STOP_LOST) || x.hasEffect(START_LOST)))
@@ -164,7 +167,7 @@ public class PhasedVariantClassifier
             VariantTransImpact transImpact = transImpacts.get(i);
             VariantData variant = variants.get(i);
 
-            if(!transImpact.hasCodingBases() || !variant.isIndel())
+            if(!variant.isIndel())
                 continue;
 
             indelBaseTotal += variant.isInsert() ? variant.baseDiff() : -transImpact.codingContext().DeletedCodingBases;
@@ -191,7 +194,7 @@ public class PhasedVariantClassifier
             if(i > 0 && variants.get(i - 1).Position >= variant.Position)
                 return; // don't handle overlapping or out-of-order variants
 
-            if(!transImpact.hasCodingBases() || variant.isIndel())
+            if(variant.isIndel())
                 continue;
 
             VariantTransImpact prevTransImpact = i > 0 ? transImpacts.get(i - 1) : null;
@@ -200,7 +203,7 @@ public class PhasedVariantClassifier
 
             ImpactedRefCodingData transRefCodingData = getImpactedRefCodingData(refCodingImpacts, variant, transImpact);
 
-            if(prevTransImpact != null && prevTransImpact.hasCodingBases())
+            if(prevTransImpact != null)
             {
                 ImpactedRefCodingData prevRefCodingData = getImpactedRefCodingData(refCodingImpacts, variants.get(i - 1), prevTransImpact);
                 overlapsOnStart = prevRefCodingData.PosEnd >= transRefCodingData.PosStart;
@@ -212,7 +215,7 @@ public class PhasedVariantClassifier
             if(!overlapsOnStart)
             {
                 nextTransImpact = i < transImpacts.size() - 1 ? transImpacts.get(i + 1) : null;
-                if(nextTransImpact != null && nextTransImpact.hasCodingBases())
+                if(nextTransImpact != null)
                 {
                     ImpactedRefCodingData nextRefCodingData = getImpactedRefCodingData(refCodingImpacts, variants.get(i + 1), nextTransImpact);
                     overlapsOnEnd = transRefCodingData.PosEnd >= nextRefCodingData.PosStart;
@@ -266,9 +269,6 @@ public class PhasedVariantClassifier
 
             VariantTransImpact transImpact = transImpacts.get(i);
 
-            if(!transImpact.hasCodingBases())
-                continue;
-
             // a distinction is made between the recorded ref codon bases and those actually involved in / impact by the variant
             // for the purposes of checking for an overlap, the impacted bases are compared
             ImpactedRefCodingData transRefCodingData = getImpactedRefCodingData(refCodingImpacts, variant, transImpact);
@@ -281,7 +281,7 @@ public class PhasedVariantClassifier
 
             int nextImpactedRefCodonStart = 0;
 
-            if(nextTransImpact != null && nextTransImpact.hasCodingBases())
+            if(nextTransImpact != null)
             {
                 ImpactedRefCodingData nextRefCodingData = getImpactedRefCodingData(refCodingImpacts, variants.get(i + 1), nextTransImpact);
                 nextImpactedRefCodonStart = nextRefCodingData.PosStart;
@@ -451,9 +451,6 @@ public class PhasedVariantClassifier
                 continue;
 
             VariantTransImpact transImpact = transImpacts.get(i);
-
-            if(!transImpact.hasCodingBases())
-                continue;
 
             transImpact.markPhasedFrameshift();
             transImpact.setProteinContext(combinedPc);

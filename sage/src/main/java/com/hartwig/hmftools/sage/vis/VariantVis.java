@@ -9,13 +9,13 @@ import static java.util.Map.entry;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.samtools.CigarUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_INFO_DELIM;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getOrientationString;
 import static com.hartwig.hmftools.common.utils.Doubles.round;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
@@ -71,6 +71,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.StringJoiner;
 import java.util.TreeSet;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -79,7 +80,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.IndexedBases;
@@ -109,7 +109,7 @@ public class VariantVis
             .sorted(Comparator.comparingInt(x -> x.SortKey))
             .collect(Collectors.toList());
 
-    private static Map<String, SortedSet<String>> VARIANT_INDEXED_BASES_MAP = Maps.newHashMap();
+    private static Map<String, SortedSet<String>> VARIANT_INDEXED_BASES_MAP = Maps.newConcurrentMap();
 
     private final VisConfig mConfig;
 
@@ -224,7 +224,8 @@ public class VariantVis
         ReadContextCounter firstCounter = !tumorReadCounters.isEmpty() ? tumorReadCounters.get(0) : normalReadCounters.get(0);
         VariantVis firstVis = !tumorVis.isEmpty() ? tumorVis.get(0) : normalVis.get(0);
 
-        String filename = firstVis.getFilename();
+        String sampleId = tumorIds.isEmpty() ? normalIds.get(0) : tumorIds.get(0);
+        String filename = firstVis.getFilename(sampleId);
 
         int tumorTotalReadCount = tumorVis.stream().mapToInt(x -> x.mReadCount).sum();
         int normalTotalReadCount = normalVis.stream().mapToInt(x -> x.mReadCount).sum();
@@ -330,8 +331,8 @@ public class VariantVis
 
             int depth = counter.depth();
             int altSupport = counter.altSupport();
-            int avgAltMapQuality = altSupport > 0 ? (int) Math.round(counter.altMapQuality() / (double) altSupport) : 0;
-            double avgAltNmCount = altSupport > 0 ? round(counter.altNmCount() / (double) altSupport, 1) : 0;
+            int avgAltMapQuality = altSupport > 0 ? (int) Math.round(counter.altMapQualityTotal() / (double) altSupport) : 0;
+            double avgAltNmCount = altSupport > 0 ? round(counter.altNmCountTotal() / (double) altSupport, 1) : 0;
 
             List<TdTag> columnElems = Lists.newArrayList(
                     td(sampleId),
@@ -384,12 +385,14 @@ public class VariantVis
         });
     }
 
-    private String getFilename()
+    private String getFilename(final String sampleId)
     {
         String filename = mVariantKey;
 
         if(!filename.startsWith(CHR_PREFIX))
             filename = CHR_PREFIX + filename;
+
+        filename = sampleId + ".sage." + filename;
 
         SortedSet<String> indexedBasesKeySet = VARIANT_INDEXED_BASES_MAP.get(mVariantKey);
         if(indexedBasesKeySet.size() == 1)
@@ -736,7 +739,7 @@ public class VariantVis
                     continue;
                 }
 
-                int i = (int) Math.round(Math.floor(records.size() * Math.random()));
+                int i = ThreadLocalRandom.current().nextInt(records.size());
                 if(i < records.size() - 1)
                 {
                     ReadEvidenceRecord tmp = records.get(i);

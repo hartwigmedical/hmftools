@@ -11,7 +11,7 @@
     <artifactId>cobalt</artifactId>
     <packaging>jar</packaging>
     <version>${cobalt.version}</version>
-    <name>HMF Tools - COBALT</name>
+    <name>HMF Tools - Cobalt</name>
 
     <dependencies>
         <dependency>

@@ -42,10 +42,13 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.purple.HrdData;
+import com.hartwig.hmftools.common.purple.HrdDataFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.purple.fitting.PeakModelData;
 import com.hartwig.hmftools.purple.fitting.SomaticPurityFitter;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
+import com.hartwig.hmftools.purple.hrd.HrdDetection;
 import com.hartwig.hmftools.purple.plot.RChartData;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleQC;
@@ -331,6 +334,9 @@ public class PurpleApplication
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), copyNumbers);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), geneCopyNumbers);
             PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorId), somaticPeaks);
+
+            HrdData hrdData = new HrdDetection().calculateHrdData(copyNumbers);
+            HrdDataFile.write(mConfig.OutputDir, tumorId, hrdData);
         }
         else
         {

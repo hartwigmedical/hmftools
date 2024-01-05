@@ -11,6 +11,6 @@ public enum FragmentSyncType
 
     public boolean processSeparately()
     {
-        return this != NO_OVERLAP || this == INVERSION;
+        return this == NO_OVERLAP || this == INVERSION;
     }
 }

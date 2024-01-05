@@ -13,10 +13,20 @@ import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createField
 public class CuppaPredictions
 {
     public final List<CuppaPredictionEntry> PredictionEntries;
+    public final List<String> CancerTypes;
+    public final List<Categories.ClfName> ClfNames;
+    public final List<Categories.DataType> DataTypes;
+    public final Categories.ClfName MainCombinedClfName;
 
     public CuppaPredictions(final List<CuppaPredictionEntry> predictionEntries)
     {
         PredictionEntries = predictionEntries;
+
+        CancerTypes = PredictionEntries.stream().map(o -> o.CancerType).distinct().collect(Collectors.toList());
+        ClfNames = PredictionEntries.stream().map(o -> o.ClfName).distinct().collect(Collectors.toList());
+        DataTypes = PredictionEntries.stream().map(o -> o.DataType).distinct().collect(Collectors.toList());
+
+        MainCombinedClfName = hasRnaPredictions() ? Categories.ClfName.COMBINED : Categories.ClfName.DNA_COMBINED;
     }
 
     private static double parseDouble(String string)
@@ -126,7 +136,7 @@ public class CuppaPredictions
 
     public void printPredictions()
     {
-        printPredictions(10);
+        printPredictions(PredictionEntries.size());
     }
 
     public CuppaPredictionEntry get(int index)
@@ -154,7 +164,7 @@ public class CuppaPredictions
         return true;
     }
 
-    public boolean checkHasRnaPredictions()
+    private boolean hasRnaPredictions()
     {
         for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
         {
@@ -172,54 +182,40 @@ public class CuppaPredictions
         return false;
     }
 
-    public Categories.ClfName getMainCombinedClfName()
-    {
-        if(checkHasRnaPredictions())
-        {
-            return Categories.ClfName.COMBINED;
-        }
-        return Categories.ClfName.DNA_COMBINED;
-    }
-
     public CuppaPredictions subsetByDataType(Categories.DataType dataType)
     {
-        List<CuppaPredictionEntry> newPredictionEntries = new ArrayList<>();
-        for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
-        {
-            if(!cuppaPrediction.DataType.equals(dataType))
-            {
-                continue;
-            }
-            newPredictionEntries.add(cuppaPrediction);
-        }
-        return new CuppaPredictions(newPredictionEntries);
+        List<CuppaPredictionEntry> entries = PredictionEntries.stream()
+                .filter(o -> o.DataType == dataType)
+                .collect(Collectors.toList());
+
+        return new CuppaPredictions(entries);
     }
 
     public CuppaPredictions subsetByClfName(Categories.ClfName clfName)
     {
-        List<CuppaPredictionEntry> newPredictionEntries = new ArrayList<>();
-        for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
-        {
-            if(!cuppaPrediction.ClfName.equals(clfName))
-            {
-                continue;
-            }
-            newPredictionEntries.add(cuppaPrediction);
-        }
-        return new CuppaPredictions(newPredictionEntries);
+        List<CuppaPredictionEntry> entries = PredictionEntries.stream()
+                .filter(o -> o.ClfName == clfName)
+                .collect(Collectors.toList());
+
+        return new CuppaPredictions(entries);
+    }
+
+    public CuppaPredictions subsetByCancerType(String cancerType)
+    {
+        List<CuppaPredictionEntry> entries = PredictionEntries.stream()
+                .filter(o -> o.CancerType.equals(cancerType))
+                .collect(Collectors.toList());
+
+        return new CuppaPredictions(entries);
     }
 
     public CuppaPredictions getTopPredictions(int n)
     {
-        List<CuppaPredictionEntry> newPredictionEntries = new ArrayList<>();
-        for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
-        {
-            if(cuppaPrediction.Rank <= n)
-            {
-                newPredictionEntries.add(cuppaPrediction);
-            }
-        }
-        return new CuppaPredictions(newPredictionEntries);
+        List<CuppaPredictionEntry> entries = PredictionEntries.stream()
+                .filter(o -> o.Rank <= n)
+                .collect(Collectors.toList());
+
+        return new CuppaPredictions(entries);
     }
 
     public CuppaPredictions sortByRank()

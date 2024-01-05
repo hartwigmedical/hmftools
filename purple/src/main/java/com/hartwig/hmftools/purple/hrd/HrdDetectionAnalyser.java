@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.tools;
+package com.hartwig.hmftools.purple.hrd;
 
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -7,6 +7,9 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_DE
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.THREADS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
@@ -15,16 +18,17 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_D
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.hrd.HrdDetection.determineHrdStatus;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -33,6 +37,8 @@ import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ImmutableChordData;
+import com.hartwig.hmftools.common.purple.HrdData;
+import com.hartwig.hmftools.common.purple.HrdStatus;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurityContext;
@@ -62,7 +68,9 @@ public class HrdDetectionAnalyser
         mChordDir = configBuilder.getValue(CHORD_DIR_CFG);
         mThreads = configBuilder.getInteger(THREADS);
 
-        mWriter = initialiseWriter(parseOutputDir(configBuilder));
+        String outputId = configBuilder.getValue(OUTPUT_ID);
+        String outputDir = parseOutputDir(configBuilder);
+        mWriter = initialiseWriter(outputDir, outputId);
     }
 
     public void run()
@@ -176,34 +184,52 @@ public class HrdDetectionAnalyser
                 return;
             }
 
-            PPL_LOGGER.debug(format("sample(%s) ploidy(%.1f) cnRecords(%d) chord(%s %.3f)",
-                    sampleId, purityContext.bestFit().ploidy(), copyNumbers.size(), chordData.hrStatus(), chordData.hrdValue()));
+            PPL_LOGGER.debug(format("sample(%s) cnRecords(%d) chord(%s %.3f)",
+                    sampleId, copyNumbers.size(), chordData.hrStatus(), chordData.hrdValue()));
 
             HrdDetection hrdDetection = new HrdDetection();
-            final HrdData hrdData = hrdDetection.calculateHrdData(copyNumbers, purityContext.bestFit().ploidy());
+            final HrdData hrdData = hrdDetection.calculateHrdData(copyNumbers);
 
-            writeSampleData(sampleId, chordData, hrdData);
+            writeSampleData(sampleId, hrdData, purityContext, chordData);
         }
     }
 
-    private synchronized BufferedWriter initialiseWriter(final String outputDir)
+    private synchronized BufferedWriter initialiseWriter(final String outputDir, final String outputId)
     {
         try
         {
             String fileName = outputDir;
 
             if(mSampleIds.size() == 1)
+            {
                 fileName += mSampleIds.get(0) + ".purple.hrd.tsv";
+            }
             else
-                fileName += "cohort_purple_hrd_analysis.tsv";
+            {
+                fileName += "cohort_purple_hrd_analysis";
+
+                if(outputId != null)
+                    fileName += "." + outputId;
+
+                fileName += TSV_EXTENSION;
+            }
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            if(mSampleIds.size() > 1)
-                writer.write("SampleId\t");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            writer.write("HRDStatus\tHRD\tBRCA1\tBRCA2");
-            writer.write("\tLohSegments\tSegmentBreaks\tSegmentImbalances\tScore");
+            if(mSampleIds.size() > 1)
+                sj.add("SampleId");
+
+            sj.add("Purity").add("Ploidy");
+            sj.add("LohSegments").add("SegmentBreaks").add("SegmentImbalances").add("HrdStatus");
+
+            if(mChordDir != null)
+            {
+                sj.add("ChordHrdStatus").add("ChordHrd").add("ChordBRCA1").add("ChordBRCA2");
+            }
+
+            writer.write(sj.toString());
             writer.newLine();
 
             return writer;
@@ -215,21 +241,35 @@ public class HrdDetectionAnalyser
         }
     }
 
-    private synchronized void writeSampleData(final String sampleId, final ChordData chordData, final HrdData hrdData)
+    private synchronized void writeSampleData(
+            final String sampleId, final HrdData hrdData, final PurityContext purityContext, final ChordData chordData)
     {
         try
         {
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
             if(mSampleIds.size() > 1)
             {
-                mWriter.write(format("%s\t", sampleId));
+                sj.add(sampleId);
             }
 
-            mWriter.write(format("%s\t%.3f\t%.3f\t%.3f",
-                    chordData.hrStatus(), chordData.hrdValue(), chordData.BRCA1Value(), chordData.BRCA2Value()));
+            sj.add(String.valueOf(purityContext.bestFit().purity()));
+            sj.add(String.valueOf(purityContext.bestFit().ploidy()));
 
-            mWriter.write(format("\t%d\t%.1f\t%d\t%.1f",
-                    hrdData.LohSegments, hrdData.SegmentBreaks, hrdData.SegmentImbalances, hrdData.score()));
+            sj.add(String.valueOf(hrdData.LohSegments));
+            sj.add(String.valueOf(hrdData.SegmentBreaks));
+            sj.add(String.valueOf(hrdData.SegmentImbalances));
+            sj.add(hrdData.Status.toString());
 
+            if(mChordDir != null)
+            {
+                sj.add(chordData.hrStatus().toString());
+                sj.add(format("%.3f", chordData.hrdValue()));
+                sj.add(format("%.3f", chordData.BRCA1Value()));
+                sj.add(format("%.3f", chordData.BRCA2Value()));
+            }
+
+            mWriter.write(sj.toString());
             mWriter.newLine();
         }
         catch(IOException e)
@@ -245,17 +285,12 @@ public class HrdDetectionAnalyser
         configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
         configBuilder.addPath(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
         configBuilder.addPath(CHORD_DIR_CFG, false, CHORD_DIR_DESC);
+
         addLoggingOptions(configBuilder);
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         HrdDetectionAnalyser hrdDetectionAnalyser = new HrdDetectionAnalyser(configBuilder);
         hrdDetectionAnalyser.run();

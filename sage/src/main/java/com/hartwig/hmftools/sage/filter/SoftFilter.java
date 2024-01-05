@@ -19,6 +19,7 @@ public enum SoftFilter
     STRAND_BIAS("strandBias", "", true, false, "Variant exceeds strand bias limit"),
     FRAGMENT_COORDS("minFragmentCoords", "", true, false, "Insufficient fragment coordinate variation"),
     MAX_EDGE_DISTANCE("maxEdgeDistance", "", true, false, "Variant close to read edge"),
+    MAP_QUAL_REF_ALT_DIFFERENCE("mapQualRefAltDiff", "", true, false, "Alt support map qual well below ref support"),
     JITTER("jitter", "", true, false, "Jitter filter");
 
     private static final Set<String> TUMOR_FILTERS = Sets.newHashSet();
@@ -73,6 +74,5 @@ public enum SoftFilter
 
         return !softFilters.isEmpty();
     }
-
 }
 

@@ -5,7 +5,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.sage.SageConstants.SYNC_FRAG_MAX_MISMATCHES;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.BASE_MISMATCH;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.CIGAR_MISMATCH;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.COMBINED;

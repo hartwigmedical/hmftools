@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.stats.PoissonCalcs.calcPoissonNoiseVal
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.wisp.purity.FileType.SOMATIC_PEAK;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.HIGH_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_BANDWIDTH_MAX;
@@ -21,7 +22,6 @@ import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_AVG_DEPTH;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_NTH_RATIO;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_NTH_RATIO_MIN;
-import static com.hartwig.hmftools.wisp.purity.ResultsWriter.SOMATIC_PEAK_FILE_ID;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityData.NO_RESULT;
@@ -320,7 +320,7 @@ public class VafPeakModel extends ClonalityModel
     {
         try
         {
-            String fileName = config.formFilename(SOMATIC_PEAK_FILE_ID);
+            String fileName = config.formFilename(SOMATIC_PEAK);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 

@@ -106,6 +106,8 @@ public class PurityConfig
 
         PlotDir = checkAddDirSeparator(configBuilder.getValue(PLOT_DIR, OutputDir));
 
+        CT_LOGGER.debug("writing results to outputDir({}) and plots({})", OutputDir, PlotDir);
+
         ProbeVariants = new ProbeVariantCache(configBuilder.getValue(PROBE_VARIANTS_FILE));
 
         RefGenome = configBuilder.hasValue(REF_GENOME) ? loadRefGenome(configBuilder.getValue(REF_GENOME)) : null;
@@ -166,9 +168,9 @@ public class PurityConfig
                 Samples.size(), Samples.stream().mapToInt(x -> x.CtDnaSamples.size()).sum());
     }
 
-    public String formFilename(final String fileType)
+    public String formFilename(final FileType fileType)
     {
-        String fileName = OutputDir;
+        String fileName = fileType.isPlotData() ? PlotDir : OutputDir;
 
         if(multiplePatients())
         {
@@ -183,7 +185,7 @@ public class PurityConfig
             fileName += format("%s_%s.wisp.", Samples.get(0).PatientId, Samples.get(0).CtDnaSamples.get(0));
         }
 
-        fileName += fileType;
+        fileName += fileType.fileId();
 
         if(OutputId != null)
             fileName += "." + OutputId;

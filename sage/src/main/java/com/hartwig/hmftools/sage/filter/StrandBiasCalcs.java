@@ -32,10 +32,18 @@ public class StrandBiasCalcs
         mMaxStrandBiasValue = mStrandBiasValues[mStrandBiasValues.length - 1];
     }
 
-    public boolean isDepthBelowProbability(final StrandBiasData strandBiasDataAlt, final StrandBiasData strandBiasDataRef, boolean checkRef)
+    public boolean allOneSide(final StrandBiasData strandBiasDataAlt)
+    {
+        if(strandBiasDataAlt.depth() < STRAND_BIAS_REF_MIN_DEPTH)
+            return false;
+
+        return strandBiasDataAlt.forward() == 0 || strandBiasDataAlt.reverse() == 0;
+    }
+
+    public boolean isDepthBelowProbability(
+            final StrandBiasData strandBiasDataAlt, final StrandBiasData strandBiasDataRef, boolean checkRef)
     {
         double strandBias = strandBiasDataAlt.bias();
-        int depth = strandBiasDataAlt.depth();
 
         double minStrandBias = min(strandBias, 1 - strandBias);
         if(minStrandBias > STRAND_BIAS_CHECK_THRESHOLD)
@@ -55,6 +63,7 @@ public class StrandBiasCalcs
                 return false;
         }
 
+        int depth = strandBiasDataAlt.depth();
         double requiredStrandBias = depth < mStrandBiasValues.length ? mStrandBiasValues[depth] : mMaxStrandBiasValue;
 
         if(requiredStrandBias == INVALID_STRAND_BIAS)

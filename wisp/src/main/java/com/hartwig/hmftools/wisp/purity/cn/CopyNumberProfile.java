@@ -2,7 +2,6 @@ package com.hartwig.hmftools.wisp.purity.cn;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
@@ -10,7 +9,8 @@ import static com.hartwig.hmftools.common.utils.Integers.median;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
-import static com.hartwig.hmftools.wisp.purity.ResultsWriter.CN_SEGMENT_FILE_ID;
+import static com.hartwig.hmftools.wisp.purity.FileType.CN_PLOT_CALCS;
+import static com.hartwig.hmftools.wisp.purity.FileType.CN_SEGMENT;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
 
@@ -45,6 +45,7 @@ public class CopyNumberProfile
 {
     private final PurityConfig mConfig;
     private final BufferedWriter mCnDataWriter;
+    private final BufferedWriter mCnPlotCalcWriter;
 
     private final SampleData mSample;
     private final List<PurpleCopyNumber> mCopyNumbers;
@@ -55,6 +56,7 @@ public class CopyNumberProfile
     {
         mConfig = config;
         mCnDataWriter = resultsWriter.getCnRatioWriter();
+        mCnPlotCalcWriter = resultsWriter.getCnPlotCalcWriter();
         mSample = sample;
 
         mCopyNumbers = Lists.newArrayList();
@@ -103,8 +105,9 @@ public class CopyNumberProfile
 
             CnFitResult fitResult = CnPurityCalculator.calculatePurity(mCopyNumberGcRatios, samplePloidy);
 
-            double fitPurityHigh = 0;
-            double fitPurityLow = -1;
+            CnFitResult fitResultLow = null;
+            CnFitResult fitResultHigh = null;
+
             // find a range by excluding each chromosome in turn
             for(HumanChromosome chromosome : HumanChromosome.values())
             {
@@ -114,12 +117,17 @@ public class CopyNumberProfile
 
                 CnFitResult chrFitResult = CnPurityCalculator.calculatePurity(excludedChrSegments, samplePloidy);
 
-                fitPurityLow = fitPurityLow < 0 ? chrFitResult.EstimatedPurity : min(fitPurityLow, chrFitResult.EstimatedPurity);
-                fitPurityHigh = max(fitPurityHigh, chrFitResult.EstimatedPurity);
+                if(fitResultLow == null || chrFitResult.EstimatedPurity < fitResultLow.EstimatedPurity)
+                    fitResultLow = chrFitResult;
+
+                if(fitResultHigh == null || chrFitResult.EstimatedPurity > fitResultHigh.EstimatedPurity)
+                    fitResultHigh = chrFitResult;
             }
 
-            // if(!mPurityCalculator.valid())
-            //    return INVALID_RESULT;
+            writePlotCalcData(mCnPlotCalcWriter, mConfig, mSample, sampleId, fitResult, fitResultLow, fitResultHigh);
+
+            double fitPurityHigh = fitResultHigh.EstimatedPurity;
+            double fitPurityLow = fitResultLow.EstimatedPurity;
 
             CT_LOGGER.info(format("sample(%s) ploidy(%.4f) copy number segments(%d) estimated purity(%.6f)",
                     sampleId, samplePloidy, mCopyNumberGcRatios.size(), fitResult.EstimatedPurity));
@@ -156,8 +164,7 @@ public class CopyNumberProfile
             double medianGcRatioPerSegment = median(segmentGcCounts);
 
             return new CnPurityResult(
-                    true, fitResult.FitCoefficient, fitResult.FitIntercept, fitResult.Residuals, fitResult.EstimatedPurity,
-                    fitPurityLow, fitPurityHigh, anueploidyScore, clonalPercent,
+                    true, fitResult.Residuals, fitResult.EstimatedPurity, fitPurityLow, fitPurityHigh, anueploidyScore, clonalPercent,
                     mCopyNumberGcRatios.size(), mCopyNumberGcRatios.stream().mapToInt(x -> x.count()).sum(), medianGcRatioPerSegment);
         }
         catch(Exception e)
@@ -226,16 +233,11 @@ public class CopyNumberProfile
         return false;
     }
 
-    private void plotCopyNumberGcRatioFit(final String sampleId)
-    {
-        plotCopyNumberGcRatioFit(mSample.PatientId, sampleId, mConfig);
-    }
-
     public static BufferedWriter initialiseCnRatioWriter(final PurityConfig config)
     {
         try
         {
-            String fileName = config.formFilename(CN_SEGMENT_FILE_ID);
+            String fileName = config.formFilename(CN_SEGMENT);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
@@ -257,14 +259,12 @@ public class CopyNumberProfile
         }
     }
 
-    public static synchronized void writeCnSegmentData(
+    private static synchronized void writeCnSegmentData(
             final BufferedWriter writer, final PurityConfig config,
             final SampleData sampleData, final String sampleId, final CopyNumberGcData cnSegment)
     {
         if(writer == null)
             return;
-
-        // writeGcRatioData(sampleId, cnSegment); // ratios are written before they are sorted for median calcs
 
         try
         {
@@ -288,21 +288,79 @@ public class CopyNumberProfile
         }
     }
 
+    public static BufferedWriter initialiseCnPlotCalcWriter(final PurityConfig config)
+    {
+        try
+        {
+            String fileName = config.formFilename(CN_PLOT_CALCS);
+
+            BufferedWriter writer = createBufferedWriter(fileName, false);
+
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+            addCommonHeaderFields(sj, config);
+
+            sj.add("EstimatedPurity").add("FitCoefficient").add("FitIntercept");
+            sj.add("EstimatedPurityLow").add("FitCoefficientLow").add("FitInterceptLow");
+            sj.add("EstimatedPurityHigh").add("FitCoefficientHigh").add("FitInterceptHigh");
+
+            writer.write(sj.toString());
+            writer.newLine();
+            return writer;
+        }
+        catch(IOException e)
+        {
+            CT_LOGGER.error("failed to initialise copy number segment file: {}", e.toString());
+            return null;
+        }
+    }
+
+    private static synchronized void writePlotCalcData(
+            final BufferedWriter writer, final PurityConfig config, final SampleData sampleData, final String sampleId,
+            final CnFitResult fitResult, final CnFitResult fitResultLow, final CnFitResult fitResultHigh)
+    {
+        if(writer == null)
+            return;
+
+        try
+        {
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            addCommonFields(sj, config, sampleData, sampleId);
+
+            sj.add(format("%.6f", fitResult.EstimatedPurity));
+            sj.add(format("%.4f", fitResult.FitCoefficient));
+            sj.add(format("%.4f", fitResult.FitIntercept));
+            sj.add(format("%.6f", fitResultLow.EstimatedPurity));
+            sj.add(format("%.4f", fitResultLow.FitCoefficient));
+            sj.add(format("%.4f", fitResultLow.FitIntercept));
+            sj.add(format("%.6f", fitResultHigh.EstimatedPurity));
+            sj.add(format("%.4f", fitResultHigh.FitCoefficient));
+            sj.add(format("%.4f", fitResultHigh.FitIntercept));
+
+            writer.write(sj.toString());
+            writer.newLine();
+        }
+        catch(IOException e)
+        {
+            CT_LOGGER.error("failed to write copy number plot calcs file: {}", e.toString());
+        }
+    }
+
     public static boolean plotCopyNumberGcRatioFit(final String patientId, final String sampleId, final PurityConfig config)
     {
         try
         {
-            String summaryFile = config.formFilename(ResultsWriter.SUMMARY_FILE_ID);
-            String cnSegmentsFile = config.formFilename(CN_SEGMENT_FILE_ID);
+            String plotCalcFile = config.formFilename(CN_PLOT_CALCS);
+            String cnSegmentsFile = config.formFilename(CN_SEGMENT);
 
-            if(!Files.exists(Paths.get(summaryFile)) || !Files.exists(Paths.get(cnSegmentsFile)))
+            if(!Files.exists(Paths.get(plotCalcFile)) || !Files.exists(Paths.get(cnSegmentsFile)))
             {
-                CT_LOGGER.warn("plots missing required files: summary({}) segments({})", summaryFile, cnSegmentsFile);
+                CT_LOGGER.warn("plots missing required files: plotCalc({}) segments({})", plotCalcFile, cnSegmentsFile);
                 return false;
             }
 
             int runCode = RExecutor.executeFromClasspath(
-                    "plots/CopyNumberGcRatioPlot.R", patientId, sampleId, summaryFile, cnSegmentsFile, config.PlotDir);
+                    "plots/CopyNumberGcRatioPlot.R", patientId, sampleId, plotCalcFile, cnSegmentsFile, config.PlotDir);
 
             return runCode == 0;
         }

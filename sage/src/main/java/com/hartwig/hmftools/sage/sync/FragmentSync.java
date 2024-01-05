@@ -67,12 +67,6 @@ public class FragmentSync
 
                     mReadHandler.processReadRecord(fragmentRecord, false, fragmentData);
                 }
-                else if(syncOutcome.SyncType.processSeparately())
-                {
-                    // process both reads if a consensus failed
-                    mReadHandler.processReadRecord(otherRecord, false);
-                    mReadHandler.processReadRecord(record, false);
-                }
                 else if(syncOutcome.SyncType == CIGAR_MISMATCH)
                 {
                     // favour the read with the longest INDEL where they disagree
@@ -86,6 +80,11 @@ public class FragmentSync
                         mReadHandler.processReadRecord(record, false);
                     else
                         mReadHandler.processReadRecord(otherRecord, false);
+                }
+                else if(syncOutcome.SyncType.processSeparately())
+                {
+                    mReadHandler.processReadRecord(otherRecord, false);
+                    mReadHandler.processReadRecord(record, false);
                 }
                 else
                 {

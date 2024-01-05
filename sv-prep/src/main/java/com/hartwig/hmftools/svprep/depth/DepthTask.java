@@ -9,11 +9,11 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPAIR_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SGL_FRAGMENT_COUNT;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMENT_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANOS_IN_SECOND;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -161,8 +161,8 @@ public class DepthTask implements Callable
         }
 
         // all current variants have had reads assigned to each sample, so now tally up their counts
-        String refVcfTag = mConfig.getVcfTag(REF_READ_COVERAGE);
-        String refPairVcfTag = mConfig.getVcfTag(REF_READPAIR_COVERAGE);
+        String refVcfTag = mConfig.getVcfTag(REF_DEPTH);
+        String refPairVcfTag = mConfig.getVcfTag(REF_DEPTH_PAIR);
 
         for(int i = 0; i < mVariantsList.size(); ++i)
         {
@@ -184,8 +184,8 @@ public class DepthTask implements Callable
                 genotype.getExtendedAttributes().put(refPairVcfTag, sampleCounts.RefPairSupport);
 
                 int variantFrags = variantInfo.IsSgl ?
-                        getGenotypeAttributeAsInt(genotype, SGL_FRAGMENT_COUNT, 0) :
-                        getGenotypeAttributeAsInt(genotype, SV_FRAGMENT_COUNT, 0);
+                        getGenotypeAttributeAsInt(genotype, SGL_FRAG_COUNT, 0) :
+                        getGenotypeAttributeAsInt(genotype, SV_FRAG_COUNT, 0);
 
                 double total = variantFrags + sampleCounts.total();
                 double af = variantFrags / total;

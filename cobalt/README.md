@@ -117,7 +117,7 @@ In the absence of a tumor bam and tumor COBALT will  be run in germline mode.   
 
 ## Targeted Mode
 
-COBALT may be run on targeted data.   For more information on how to run hmftools in targeted mode please see [here](https://github.com/hartwigmedical/hmftools/blob/master/README_TARGETED.md)
+COBALT may be run on targeted data.   For more information on how to run hmftools in targeted mode please see [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md)
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 

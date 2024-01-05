@@ -80,6 +80,8 @@ if(nrow(sampleSummary) == 1 & nrow(variantVafRatios) > 0 & clonalMethod!='NONE')
     colourPeakPurity = 'orange2'
     colourLowPurity = 'grey'
     colourHighPurity = 'grey'
+    titleSize=8
+    labelSize=6
 
     rawVafRatio = 1
 
@@ -97,8 +99,8 @@ if(nrow(sampleSummary) == 1 & nrow(variantVafRatios) > 0 & clonalMethod!='NONE')
       stat="identity",position='identity',aes(y=n,x=VafRatioBucket),fill=colourFreqDist) +
       geom_vline(xintercept=rawVafRatio,color=colourRawPurity) +
       labs(x='Variant VAF Ratio',y='# Variants',title=plotTitle) +
-      theme(plot.title=element_text(size=8),
-            axis.title=element_text(size=6),axis.text=element_text(size=6))
+      theme(plot.title=element_text(size=titleSize),
+            axis.title=element_text(size=labelSize),axis.text=element_text(size=labelSize))
 
     if(clonalMethod == 'VAF_PEAK' | clonalMethod == 'NO_PEAK')
     {
