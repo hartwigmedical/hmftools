@@ -13,14 +13,10 @@ import org.junit.Test;
 
 public class CrestTest
 {
-
-    private static final String VCF_FILE = Resources.getResource("purple/sample.purple.germline.vcf.gz").getPath();
-
+    private static final String VCF_FILE = Resources.getResource("purple/tumor_sample.purple.germline.vcf").getPath();
     private static final String VCF_DIR = Resources.getResource("purple").getPath();
-
-    private static final String WGS_SAMPLE = "sample";
-
-    private static final String RNA_SAMPLE = "COLO829v003T_RNA";
+    private static final String WGS_SAMPLE = "tumor_sample";
+    private static final String RNA_SAMPLE = "rna_sample";
 
     private static final String OUTPUT_DIR =
             System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp" + File.separator;
