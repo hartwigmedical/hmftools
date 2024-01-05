@@ -13,7 +13,7 @@ import org.junit.Test;
 
 public class CrestTest
 {
-    private static final String VCF_FILE = Resources.getResource("purple/tumor_sample.purple.germline.vcf").getPath();
+    private static final String VCF_FILE = Resources.getResource("purple/tumor_sample.purple.germline.vcf.gz").getPath();
     private static final String VCF_DIR = Resources.getResource("purple").getPath();
     private static final String WGS_SAMPLE = "tumor_sample";
     private static final String RNA_SAMPLE = "rna_sample";
@@ -26,7 +26,7 @@ public class CrestTest
     @Test
     public void shouldFlagMismatchedSample() throws IOException
     {
-        String expectedFile = OUTPUT_DIR + File.separator + "sample.CrestCheckFailed";
+        String expectedFile = OUTPUT_DIR + File.separator + "tumor_sample.CrestCheckFailed";
         cleanCheckFile(expectedFile);
 
         CrestApplication crestApplication = new CrestApplication(VCF_DIR, OUTPUT_DIR, WGS_SAMPLE, RNA_SAMPLE,
@@ -38,7 +38,7 @@ public class CrestTest
     @Test
     public void shouldAcceptMatchedSample() throws IOException
     {
-        String expectedFile = OUTPUT_DIR + File.separator + "sample.CrestCheckSucceeded";
+        String expectedFile = OUTPUT_DIR + File.separator + "tumor_sample.CrestCheckSucceeded";
         cleanCheckFile(expectedFile);
 
         // rather than cook up another test file, just lower the threshold
