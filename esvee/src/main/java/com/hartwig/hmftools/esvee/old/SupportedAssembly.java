@@ -12,7 +12,7 @@ import com.hartwig.hmftools.esvee.read.Read;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-public class SupportedAssembly extends com.hartwig.hmftools.esvee.common.Assembly
+public class SupportedAssembly extends com.hartwig.hmftools.esvee.old.Assembly
 {
     private final Map<String, List<ReadSupport>> mReadSupportMap;
     private final List<Read> mReads;

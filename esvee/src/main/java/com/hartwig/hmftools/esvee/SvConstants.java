@@ -31,6 +31,10 @@ public final class SvConstants
     public static final int READ_FILTER_MIN_JUNCTION_MAPQ = 20;
     public static final int READ_FILTER_MIN_ALIGNED_BASES = 30; // new (ie previously hard-coded)
 
+    public static final int PRIMARY_ASSEMBLY_MIN_LENGTH = 10;
+    public static final int PRIMARY_ASSEMBLY_MIN_MISMATCH_READS = 2; // new
+    public static final int PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL = 60; // new
+
     // common
     public static int AVG_BASE_QUAL_THRESHOLD = 30; // original name: averageQualityThreshold
     public static int LOW_BASE_QUAL_THRESHOLD = 26; // original name: lowQualBaseThreshold

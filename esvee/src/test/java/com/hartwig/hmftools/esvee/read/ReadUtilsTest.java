@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.util;
+package com.hartwig.hmftools.esvee.read;
 
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES;

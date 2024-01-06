@@ -2,20 +2,28 @@ package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.String.format;
 
-import com.google.common.collect.Lists;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public class BaseMismatches
 {
-    public final BaseMismatch[] Mismatches;
+    public final int AssemblyIndex;
+    public final BaseMismatch[] Mismatches; // could consider a map or list since surely 1 value is most common, but still an overhead
 
-    public BaseMismatches(final BaseMismatch baseMismatch)
+    public BaseMismatches(final int assemblyIndex, final BaseMismatch baseMismatch)
     {
+        AssemblyIndex = assemblyIndex;
         Mismatches = new BaseMismatch[] { null, null, null, null};
         Mismatches[baseMismatch.Base.ordinal()] = baseMismatch;
     }
 
-    public void addMismatch(final byte base, final Read read, final int qual)
+    public int mismatchCount() { return (int)Arrays.stream(Mismatches).filter(x -> x != null).count(); }
+
+    public void addMismatch(final byte base, final Read read, final byte qual)
     {
         BaseType baseType = BaseType.from(base);
 
@@ -30,31 +38,8 @@ public class BaseMismatches
         }
     }
 
-    /*
-    public void addMismatch(final BaseMismatch baseMismatch)
-    {
-        if(Mismatches[baseMismatch.Base.ordinal()] == null)
-        {
-            Mismatches[baseMismatch.Base.ordinal()] = baseMismatch;
-        }
-        else
-        {
-            Mismatches[baseMismatch.Base.ordinal()].QualTotal += baseMismatch.QualTotal;
-        }
-    }
+    public String toString() { return format("asmIndex(%d) mismatches(%d)", AssemblyIndex, mismatchCount()); }
 
-    private BaseMismatch getOrCreate(final BaseMismatch baseMismatch)
-    {
-        if(Mismatches[baseMismatch.Base.ordinal()] == null)
-        {
-            Mismatches[baseMismatch.Base.ordinal()] = baseMismatch;
-        }
-        else
-        {
-
-        }
-
-        return Mismatches[baseMismatch.Base.ordinal()];
-    }
-    */
+    @VisibleForTesting
+    public List<BaseMismatch> baseMismatches() { return Arrays.stream(Mismatches).filter(x -> x != null).collect(Collectors.toList()); }
 }

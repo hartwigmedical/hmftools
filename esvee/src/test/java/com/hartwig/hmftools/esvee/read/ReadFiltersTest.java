@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.esvee;
+package com.hartwig.hmftools.esvee.read;
 
 import static com.hartwig.hmftools.esvee.TestUtils.createSAMRecord;
 
 // import static org.mockito.Mockito.mock;
 // import static org.mockito.Mockito.when;
 
-public class AlignmentFiltersTest
+public class ReadFiltersTest
 {
     /* CHASHA FIXME
     @Test

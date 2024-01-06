@@ -19,6 +19,12 @@ public class AssemblySupport
         mMismatches = mismatches;
     }
 
+    public Read read() { return mRead; }
+    public int mismatches() { return mMismatches; }
+    public int[] readIndexRange() { return mReadIndexRange; }
+    public int readRangeLength() { return mReadIndexRange[1] - mReadIndexRange[0] + 1; }
+    public int assemblyIndex() { return mAssemblyIndex; }
+
     public String toString()
     {
         return format("read(%s) assIndex(%d) readIndeRange(%d-%d) mismatch(%d)",

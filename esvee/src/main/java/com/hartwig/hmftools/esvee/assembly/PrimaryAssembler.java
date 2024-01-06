@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_READS;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL;
+import static com.hartwig.hmftools.esvee.common.AssemblyUtils.buildFromJunctionReads;
+import static com.hartwig.hmftools.esvee.common.AssemblyUtils.purgeLowSupport;
 
 import java.util.Collections;
 import java.util.List;
@@ -9,6 +12,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
+import com.hartwig.hmftools.esvee.common.AssemblyMismatchSplitter;
 import com.hartwig.hmftools.esvee.common.AssemblySequence;
 import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.common.Junction;
@@ -47,86 +51,49 @@ public class PrimaryAssembler
                 .filter(ReadFilters::isNotBadlyMapped) // mCounters.WellMapped
                 .collect(Collectors.toList());
 
-        if(filteredAlignments.isEmpty())
-            return List.of(); // There are no reads of acceptable quality supporting this junction
+        if(filteredAlignments.size() < PRIMARY_ASSEMBLY_MIN_MISMATCH_READS)
+            return List.of();
 
-        final List<PrimaryAssembly> initialAssemblies = createInitialAssemblies(filteredAlignments);
+        List<AssemblySequence> initialAssemblies = createInitialAssemblies(filteredAlignments);
+
+
 
         return Collections.emptyList();
     }
 
     private String nextAssemblyName()
     {
+        // consider naming based on initial length and support? try to make typically deterministic
         return String.format("%s:%s%s:%s", mJunction.Chromosome, mJunction.Position,
                 mJunction.direction() == Direction.FORWARDS ? "F" : "R", mNextAssemblyNumber++);
     }
 
-    private List<PrimaryAssembly> createInitialAssemblies(final List<Read> junctionReads)
+    private List<AssemblySequence> createInitialAssemblies(final List<Read> junctionReads)
     {
-        int minAlignedPosition = mJunction.Position;
-        int maxAlignedPosition = mJunction.Position;
+        AssemblySequence junctionSequence = buildFromJunctionReads(mJunction, junctionReads, true);
 
-        Read maxJunctionBaseQualRead = null;
-        int maxJunctionBaseQualTotal = 0;
+        if(junctionSequence.length() < PRIMARY_ASSEMBLY_MIN_LENGTH)
+            return Collections.emptyList();
 
-        for(Read read : junctionReads)
+        // filter
+        boolean hasValidMismatches = purgeLowSupport(
+                junctionSequence, PRIMARY_ASSEMBLY_MIN_MISMATCH_READS, PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL);
+
+        List<AssemblySequence> junctionSequences;
+
+        if(hasValidMismatches)
         {
-            if(mJunction.direction() == Direction.FORWARDS)
-            {
-                maxAlignedPosition = max(maxAlignedPosition, read.getUnclippedEnd());
-            }
-            else
-            {
-                minAlignedPosition = min(minAlignedPosition, read.getUnclippedStart());
-            }
-
-            int junctionBaseQualTotal = readQualFromJunction(read, mJunction);
-
-            if(junctionBaseQualTotal > maxJunctionBaseQualTotal)
-            {
-                maxJunctionBaseQualTotal = junctionBaseQualTotal;
-                maxJunctionBaseQualRead = read;
-            }
+            AssemblyMismatchSplitter splitter = new AssemblyMismatchSplitter(junctionSequence);
+            junctionSequences = splitter.splitOnMismatches(PRIMARY_ASSEMBLY_MIN_LENGTH);
+        }
+        else
+        {
+            junctionSequences = List.of(junctionSequence);
         }
 
-        AssemblySequence assemblySequence = new AssemblySequence(mJunction, maxJunctionBaseQualRead, minAlignedPosition,  maxAlignedPosition);
-
-        for(Read read : junctionReads)
-        {
-            if(read == maxJunctionBaseQualRead)
-                continue;
-
-            assemblySequence.tryAddRead(read);
-        }
+        // extend these sequences in the direction away from the junction
 
         return Collections.emptyList();
     }
 
-    private static int readQualFromJunction(final Read read, final Junction junction)
-    {
-        int junctionReadIndex = read.getReadIndexAtReferencePosition(junction.Position, true);
-
-        int readIndexStart;
-        int readIndexEnd;
-
-        if(junction.direction() == Direction.FORWARDS)
-        {
-            readIndexStart = junctionReadIndex;
-            readIndexEnd = read.getLength() - 1;
-        }
-        else
-        {
-            readIndexStart = 0;
-            readIndexEnd = junctionReadIndex;
-        }
-
-        int baseQualTotal = 0;
-
-        for(int i = readIndexStart; i <= readIndexEnd; ++i)
-        {
-            baseQualTotal += read.getBaseQuality()[i];
-        }
-
-        return baseQualTotal;
-    }
 }
