@@ -574,25 +574,16 @@ public class OrangeAlgo
             return null;
         }
 
-        CuppaPredictions cuppaPredictionsV2 = null;
+        CuppaPredictions cuppaPredictions = null;
         String cuppavisDataTsv = config.wgsRefConfig().cuppaVisDataTsv();
         if(cuppavisDataTsv != null)
         {
-            LOGGER.info("Loading CUPPA v2 predictions from {}", new File(cuppavisDataTsv).getParent());
-            cuppaPredictionsV2 = CuppaPredictions.fromTsv(cuppavisDataTsv);
-            LOGGER.info(" Loaded {} CUPPA v1 prediction entries from {}", cuppaPredictionsV2.PredictionEntries.size(), cuppavisDataTsv);
+            LOGGER.info("Loading CUPPA predictions from {}", new File(cuppavisDataTsv).getParent());
+            cuppaPredictions = CuppaPredictions.fromTsv(cuppavisDataTsv);
+            LOGGER.info(" Loaded {} CUPPA prediction entries from {}", cuppaPredictions.PredictionEntries.size(), cuppavisDataTsv);
         }
 
-        List<CuppaDataFile> cuppaPredictionsV1 = null;
-        String cuppaResultTsv = config.wgsRefConfig().cuppaResultCsv();
-        if(cuppaResultTsv != null)
-        {
-            LOGGER.info("Loading CUPPA v1 predictions from {}", new File(cuppaResultTsv).getParent());
-            cuppaPredictionsV1 = CuppaDataFile.read(cuppaResultTsv);
-            LOGGER.info(" Loaded {} CUPPA v1 prediction entries from {}", cuppaPredictionsV1.size(), cuppaResultTsv);
-        }
-
-        return CuppaDataFactory.create(cuppaPredictionsV2, cuppaPredictionsV1);
+        return CuppaDataFactory.create(cuppaPredictions);
     }
 
     @Nullable

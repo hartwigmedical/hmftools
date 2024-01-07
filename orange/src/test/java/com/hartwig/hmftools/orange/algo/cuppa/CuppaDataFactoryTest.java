@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
@@ -90,61 +89,10 @@ public class CuppaDataFactoryTest
         assertEquals(expectedFeatureValue, featureValue);
     }
 
-    private static final String CUPPA_TEST_CSV = Resources.getResource("test_run/cuppa/tumor_sample.cup.data.csv").getPath();
-
-    @Test
-    public void canExtractPredictionsFromCuppaV1() throws IOException
-    {
-        List<CuppaDataFile> cuppaPredictions = CuppaDataFile.read(CUPPA_TEST_CSV);
-        List<CuppaPrediction> predictionEntries = CuppaDataFactory.extractProbabilitiesCuppaV1(cuppaPredictions);
-        assertEquals(36, predictionEntries.size());
-
-        Map<String, CuppaPrediction> actualPredictionsByCancerType = new HashMap<>();
-        for(CuppaPrediction prediction : predictionEntries)
-        {
-            actualPredictionsByCancerType.put(prediction.cancerType(), prediction);
-        }
-
-        Map<String, CuppaPrediction> expectedPredictionsByCancerType = new HashMap<>();
-        expectedPredictionsByCancerType.put(
-                "Melanoma",
-                ImmutableCuppaPrediction.builder()
-                        .cuppaMajorVersion("v1").cancerType("Breast: Triple negative").likelihood(0.996)
-                        .genomicPositionClassifier(0.990).snvPairwiseClassifier(0.979).featureClassifier(0.972)
-                        .build()
-        );
-        expectedPredictionsByCancerType.put(
-                "Pancreas",
-                ImmutableCuppaPrediction.builder()
-                        .cuppaMajorVersion("v1").cancerType("Pancreas").likelihood(0.00013)
-                        .genomicPositionClassifier(6.05e-05).snvPairwiseClassifier(7.89E-29).featureClassifier(1.8e-05)
-                        .build()
-        );
-        expectedPredictionsByCancerType.put(
-                "Lung: Non-small Cell",
-                ImmutableCuppaPrediction.builder()
-                        .cuppaMajorVersion("v1").cancerType("Gynecologic: Ovary/Fallopian tube").likelihood(0.00013)
-                        .genomicPositionClassifier(2.91e-05).snvPairwiseClassifier(4.75E-28).featureClassifier(0.00518)
-                        .build()
-        );
-
-        for(String cancerType : expectedPredictionsByCancerType.keySet())
-        {
-            CuppaPrediction expectedPrediction = expectedPredictionsByCancerType.get(cancerType);
-            CuppaPrediction actualPrediction = actualPredictionsByCancerType.get(cancerType);
-
-            assertEquals(expectedPrediction.genomicPositionClassifier(), actualPrediction.genomicPositionClassifier(), EPSILON);
-            assertEquals(expectedPrediction.snvPairwiseClassifier(), actualPrediction.snvPairwiseClassifier(), EPSILON);
-            assertEquals(expectedPrediction.featureClassifier(), actualPrediction.featureClassifier(), EPSILON);
-        }
-    }
-
     @Test
     public void doNotCrashOnMissingEntries()
     {
-        CuppaPredictions cuppaPredictionsV2 = new CuppaPredictions(new ArrayList<>());
-        List<CuppaDataFile> cuppaPredictionsV1 = new ArrayList<>();
-
-        assertNotNull(CuppaDataFactory.create(cuppaPredictionsV2, cuppaPredictionsV1));
+        CuppaPredictions cuppaPredictions = new CuppaPredictions(new ArrayList<>());
+        assertNotNull(CuppaDataFactory.create(cuppaPredictions));
     }
 }
