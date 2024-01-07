@@ -101,10 +101,10 @@ public final class CuppaDataFactory
                     .cancerType(cancerType)
                     .likelihood(probabilitiesByClassifier.get(probabilitiesAllClassifiers.MainCombinedClfName))
                     .genomicPositionClassifier(probabilitiesByClassifier.get(Categories.ClfName.GEN_POS))
-                    .snv96Classifier(probabilitiesByClassifier.get(Categories.ClfName.SNV96))
-                    .eventClassifier(probabilitiesByClassifier.get(Categories.ClfName.EVENT))
-                    .geneExpressionClassifier(probabilitiesByClassifier.get(Categories.ClfName.GENE_EXP))
-                    .altSjClassifier(probabilitiesByClassifier.get(Categories.ClfName.ALT_SJ))
+                    .snvPairwiseClassifier(probabilitiesByClassifier.get(Categories.ClfName.SNV96))
+                    .featureClassifier(probabilitiesByClassifier.get(Categories.ClfName.EVENT))
+                    .expressionPairwiseClassifier(probabilitiesByClassifier.get(Categories.ClfName.GENE_EXP))
+                    .altSjCohortClassifier(probabilitiesByClassifier.get(Categories.ClfName.ALT_SJ))
                     .build();
 
             cuppaPredictionsOrangeFormat.add(prediction);
@@ -153,11 +153,11 @@ public final class CuppaDataFactory
                     .cuppaMajorVersion("v1")
                     .cancerType(cancerType)
                     .likelihood(cancerPrediction.getValue())
-                    .snv96Classifier(predictionsByClassifier.get(ClassifierType.SNV_96_PAIRWISE).get(cancerType))
+                    .snvPairwiseClassifier(predictionsByClassifier.get(ClassifierType.SNV_96_PAIRWISE).get(cancerType))
                     .genomicPositionClassifier(predictionsByClassifier.get(ClassifierType.GENOMIC_POSITION_COHORT).get(cancerType))
-                    .eventClassifier(predictionsByClassifier.get(ClassifierType.FEATURE).get(cancerType))
-                    .altSjClassifier(predictionsByClassifier.get(ClassifierType.ALT_SJ_COHORT).get(cancerType))
-                    .geneExpressionClassifier(predictionsByClassifier.get(ClassifierType.EXPRESSION_PAIRWISE).get(cancerType))
+                    .featureClassifier(predictionsByClassifier.get(ClassifierType.FEATURE).get(cancerType))
+                    .altSjCohortClassifier(predictionsByClassifier.get(ClassifierType.ALT_SJ_COHORT).get(cancerType))
+                    .expressionPairwiseClassifier(predictionsByClassifier.get(ClassifierType.EXPRESSION_PAIRWISE).get(cancerType))
                     .build();
         }).collect(Collectors.toList());
     }

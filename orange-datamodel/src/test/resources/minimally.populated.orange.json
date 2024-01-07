@@ -521,22 +521,22 @@
       "cuppaMajorVersion": "v1",
       "cancerType": "Melanoma",
       "likelihood": 0.996,
-      "snv96Classifier": 0.979,
+      "snvPairwiseClassifier": 0.979,
       "genomicPositionClassifier": 0.990,
-      "eventClassifier": 0.972,
-      "altSjClassifier": null,
-      "geneExpressionClassifier": null
+      "featureClassifier": 0.972,
+      "altSjCohortClassifier": null,
+      "expressionPairwiseClassifier": null
     },
     "predictions": [
       {
         "cuppaMajorVersion": "v1",
         "cancerType": "Melanoma",
         "likelihood": 0.996,
-        "snv96Classifier": 0.979,
+        "snvPairwiseClassifier": 0.979,
         "genomicPositionClassifier": 0.990,
-        "eventClassifier": 0.972,
-        "altSjClassifier": null,
-        "geneExpressionClassifier": null
+        "featureClassifier": 0.972,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       }
     ],
     "simpleDups32To200B": 0,

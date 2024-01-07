@@ -19,17 +19,17 @@ public interface CuppaPrediction
     double likelihood();
 
     @Nullable
-    Double snv96Classifier();
+    Double snvPairwiseClassifier();
 
     @Nullable
     Double genomicPositionClassifier();
 
     @Nullable
-    Double eventClassifier();
+    Double featureClassifier();
 
     @Nullable
-    Double altSjClassifier();
+    Double altSjCohortClassifier();
 
     @Nullable
-    Double geneExpressionClassifier();
+    Double expressionPairwiseClassifier();
 }

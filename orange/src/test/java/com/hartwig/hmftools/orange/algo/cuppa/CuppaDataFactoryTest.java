@@ -47,24 +47,24 @@ public class CuppaDataFactoryTest
                 "Skin: Melanoma",
                 ImmutableCuppaPrediction.builder()
                         .cuppaMajorVersion("v2").cancerType("Skin: Melanoma").likelihood(0.9968)
-                        .genomicPositionClassifier(0.9966).snv96Classifier(0.8176).eventClassifier(0.7976)
-                        .geneExpressionClassifier(1.0).altSjClassifier(0.9999)
+                        .genomicPositionClassifier(0.9966).snvPairwiseClassifier(0.8176).featureClassifier(0.7976)
+                        .expressionPairwiseClassifier(1.0).altSjCohortClassifier(0.9999)
                         .build()
         );
         expectedPredictionsByCancerType.put(
                 "Skin: Other",
                 ImmutableCuppaPrediction.builder()
                         .cuppaMajorVersion("v2").cancerType("Skin: Other").likelihood(1.005E-4)
-                        .genomicPositionClassifier(4.215E-4).snv96Classifier(0.1806).eventClassifier(4.02E-5)
-                        .geneExpressionClassifier(8.853E-6).altSjClassifier(1.528E-7)
+                        .genomicPositionClassifier(4.215E-4).snvPairwiseClassifier(0.1806).featureClassifier(4.02E-5)
+                        .expressionPairwiseClassifier(8.853E-6).altSjCohortClassifier(1.528E-7)
                         .build()
         );
         expectedPredictionsByCancerType.put(
                 "Prostate",
                 ImmutableCuppaPrediction.builder()
                         .cuppaMajorVersion("v2").cancerType("Prostate").likelihood(1.005E-4)
-                        .genomicPositionClassifier(9.123E-5).snv96Classifier(5.793E-12).eventClassifier(3.039E-4)
-                        .geneExpressionClassifier(7.483E-7).altSjClassifier(9.215E-7)
+                        .genomicPositionClassifier(9.123E-5).snvPairwiseClassifier(5.793E-12).featureClassifier(3.039E-4)
+                        .expressionPairwiseClassifier(7.483E-7).altSjCohortClassifier(9.215E-7)
                         .build()
         );
 
@@ -74,10 +74,10 @@ public class CuppaDataFactoryTest
             CuppaPrediction actualPrediction = actualPredictionsByCancerType.get(cancerType);
 
             assertEquals(expectedPrediction.genomicPositionClassifier(), actualPrediction.genomicPositionClassifier(), EPSILON);
-            assertEquals(expectedPrediction.snv96Classifier(), actualPrediction.snv96Classifier(), EPSILON);
-            assertEquals(expectedPrediction.eventClassifier(), actualPrediction.eventClassifier(), EPSILON);
-            assertEquals(expectedPrediction.geneExpressionClassifier(), actualPrediction.geneExpressionClassifier(), EPSILON);
-            assertEquals(expectedPrediction.altSjClassifier(), actualPrediction.altSjClassifier(), EPSILON);
+            assertEquals(expectedPrediction.snvPairwiseClassifier(), actualPrediction.snvPairwiseClassifier(), EPSILON);
+            assertEquals(expectedPrediction.featureClassifier(), actualPrediction.featureClassifier(), EPSILON);
+            assertEquals(expectedPrediction.expressionPairwiseClassifier(), actualPrediction.expressionPairwiseClassifier(), EPSILON);
+            assertEquals(expectedPrediction.altSjCohortClassifier(), actualPrediction.altSjCohortClassifier(), EPSILON);
         }
     }
 
@@ -110,21 +110,21 @@ public class CuppaDataFactoryTest
                 "Melanoma",
                 ImmutableCuppaPrediction.builder()
                         .cuppaMajorVersion("v1").cancerType("Breast: Triple negative").likelihood(0.996)
-                        .genomicPositionClassifier(0.990).snv96Classifier(0.979).eventClassifier(0.972)
+                        .genomicPositionClassifier(0.990).snvPairwiseClassifier(0.979).featureClassifier(0.972)
                         .build()
         );
         expectedPredictionsByCancerType.put(
                 "Pancreas",
                 ImmutableCuppaPrediction.builder()
                         .cuppaMajorVersion("v1").cancerType("Pancreas").likelihood(0.00013)
-                        .genomicPositionClassifier(6.05e-05).snv96Classifier(7.89E-29).eventClassifier(1.8e-05)
+                        .genomicPositionClassifier(6.05e-05).snvPairwiseClassifier(7.89E-29).featureClassifier(1.8e-05)
                         .build()
         );
         expectedPredictionsByCancerType.put(
                 "Lung: Non-small Cell",
                 ImmutableCuppaPrediction.builder()
                         .cuppaMajorVersion("v1").cancerType("Gynecologic: Ovary/Fallopian tube").likelihood(0.00013)
-                        .genomicPositionClassifier(2.91e-05).snv96Classifier(4.75E-28).eventClassifier(0.00518)
+                        .genomicPositionClassifier(2.91e-05).snvPairwiseClassifier(4.75E-28).featureClassifier(0.00518)
                         .build()
         );
 
@@ -134,8 +134,8 @@ public class CuppaDataFactoryTest
             CuppaPrediction actualPrediction = actualPredictionsByCancerType.get(cancerType);
 
             assertEquals(expectedPrediction.genomicPositionClassifier(), actualPrediction.genomicPositionClassifier(), EPSILON);
-            assertEquals(expectedPrediction.snv96Classifier(), actualPrediction.snv96Classifier(), EPSILON);
-            assertEquals(expectedPrediction.eventClassifier(), actualPrediction.eventClassifier(), EPSILON);
+            assertEquals(expectedPrediction.snvPairwiseClassifier(), actualPrediction.snvPairwiseClassifier(), EPSILON);
+            assertEquals(expectedPrediction.featureClassifier(), actualPrediction.featureClassifier(), EPSILON);
         }
     }
 
