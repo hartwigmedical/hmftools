@@ -17,7 +17,6 @@ public final class TestCuppaFactory
     {
         // Some downstream algo's expect at least one prediction, so that is considered "minimal"
         CuppaPrediction prediction = ImmutableCuppaPrediction.builder()
-                .cuppaMajorVersion("v0")
                 .cancerType("cancer")
                 .likelihood(1D)
                 .build();

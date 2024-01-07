@@ -11,9 +11,6 @@ import org.jetbrains.annotations.Nullable;
 public interface CuppaPrediction
 {
     @NotNull
-    String cuppaMajorVersion();
-
-    @NotNull
     String cancerType();
 
     double likelihood();

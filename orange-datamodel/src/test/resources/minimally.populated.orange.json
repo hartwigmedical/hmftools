@@ -518,7 +518,6 @@
   ],
   "cuppa": {
     "bestPrediction": {
-      "cuppaMajorVersion": "v1",
       "cancerType": "Melanoma",
       "likelihood": 0.996,
       "snvPairwiseClassifier": 0.979,
@@ -529,7 +528,6 @@
     },
     "predictions": [
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Melanoma",
         "likelihood": 0.996,
         "snvPairwiseClassifier": 0.979,

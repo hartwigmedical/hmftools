@@ -103,7 +103,6 @@
   "peach": [],
   "cuppa": {
     "bestPrediction": {
-      "cuppaMajorVersion": "v0",
       "cancerType": "cancer",
       "likelihood": 0
     },

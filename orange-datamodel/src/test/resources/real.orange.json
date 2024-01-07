@@ -968,7 +968,6 @@
   },
   "cuppa": {
     "bestPrediction": {
-      "cuppaMajorVersion": "v1",
       "cancerType": "Melanoma",
       "likelihood": 0.996,
       "snvPairwiseClassifier": 0.979,
@@ -979,7 +978,6 @@
     },
     "predictions": [
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Melanoma",
         "likelihood": 0.996,
         "snvPairwiseClassifier": 0.979,
@@ -989,7 +987,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Skin: Other",
         "likelihood": 2.08E-4,
         "snvPairwiseClassifier": 0.0205,
@@ -999,7 +996,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Acute myeloid leukemia",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 4.92E-57,
@@ -1009,7 +1005,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Anogenital",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.91E-31,
@@ -1019,7 +1014,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Bile duct/Gallbladder",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 9.22E-33,
@@ -1029,7 +1023,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Bone/Soft tissue: Other",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 6.32E-4,
@@ -1039,7 +1032,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Cartilaginous neoplasm",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 3.62E-56,
@@ -1049,7 +1041,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Colorectum/Appendix/SmallIntestine",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.43E-6,
@@ -1059,7 +1050,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Esophagus/Stomach",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 5.51E-26,
@@ -1069,7 +1059,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "GIST",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 3.78E-34,
@@ -1079,7 +1068,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Glioma",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 2.39E-28,
@@ -1089,7 +1077,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Head and neck: other",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.13E-32,
@@ -1099,7 +1086,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Kidney",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 3.38E-10,
@@ -1109,7 +1095,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Kidney-ChRCC",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.27E-40,
@@ -1119,7 +1104,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Leiomyosarcoma",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 2.7E-26,
@@ -1129,7 +1113,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Liposarcoma",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.01E-24,
@@ -1139,7 +1122,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Liver",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 2.05E-39,
@@ -1149,7 +1131,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Lung: NET",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.25E-37,
@@ -1159,7 +1140,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Lung: Non-small Cell",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 4.75E-28,
@@ -1169,7 +1149,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Lung: Small Cell",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 7.44E-46,
@@ -1179,7 +1158,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Lymphoid tissue",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 3.62E-37,
@@ -1189,7 +1167,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Medulloblastoma",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 3.67E-52,
@@ -1199,7 +1176,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Mesothelium",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.61E-33,
@@ -1209,7 +1185,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Myeloproliferative neoplasm",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 4.03E-53,
@@ -1219,7 +1194,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Osteosarcoma",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 9.77E-25,
@@ -1229,7 +1203,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Pancreas",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 7.89E-29,
@@ -1239,7 +1212,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Pancreas: NET",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 6.7E-28,
@@ -1249,7 +1221,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Pilocytic astrocytoma",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.6E-54,
@@ -1259,7 +1230,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Prostate",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.71E-42,
@@ -1269,7 +1239,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Salivary gland/Adenoid cystic",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.48E-4,
@@ -1279,7 +1248,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Small intestine/Colorectum: NET",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 5.3E-45,
@@ -1289,7 +1257,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Thyroid gland",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 2.48E-29,
@@ -1299,7 +1266,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Urothelial tract",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 3.3E-27,
@@ -1309,7 +1275,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Breast",
         "likelihood": 5.84E-5,
         "snvPairwiseClassifier": 8.06E-26,
@@ -1319,7 +1284,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Ovary/Fallopian tube",
         "likelihood": 0.0,
         "snvPairwiseClassifier": 0.0,
@@ -1329,7 +1293,6 @@
         "expressionPairwiseClassifier": null
       },
       {
-        "cuppaMajorVersion": "v1",
         "cancerType": "Uterus: Endometrium",
         "likelihood": 0.0,
         "snvPairwiseClassifier": 0.0,

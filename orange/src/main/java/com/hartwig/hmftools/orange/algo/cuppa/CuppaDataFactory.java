@@ -69,7 +69,6 @@ public final class CuppaDataFactory
             }
 
             CuppaPrediction prediction = ImmutableCuppaPrediction.builder()
-                    .cuppaMajorVersion("v2")
                     .cancerType(cancerType)
                     .likelihood(probabilitiesByClassifier.get(probabilitiesAllClassifiers.MainCombinedClfName))
                     .genomicPositionClassifier(probabilitiesByClassifier.get(Categories.ClfName.GEN_POS))
