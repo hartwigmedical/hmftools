@@ -76,14 +76,16 @@ public class CrestApplication
 
     public CrestApplication(@NotNull final ConfigBuilder configBuilder)
     {
-        purpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
-        outputDir = parseOutputDir(configBuilder);
-        sampleId = configBuilder.getValue(SAMPLE);
-        sampleToCheck = configBuilder.getValue(RNA_SAMPLE);
-        minTotalReads = configBuilder.getInteger(MIN_TOTAL_READS);
-        minRnaReads = configBuilder.getInteger(MIN_RNA_READS);
-        acceptanceRatio = configBuilder.getDecimal(ACCEPTANCE_RATIO);
-        doNotWriteFile = configBuilder.hasFlag(DO_NOT_WRITE_FILE);
+        this(
+                configBuilder.getValue(PURPLE_DIR_CFG),
+                parseOutputDir(configBuilder),
+                configBuilder.getValue(SAMPLE),
+                configBuilder.getValue(RNA_SAMPLE),
+                configBuilder.getInteger(MIN_TOTAL_READS),
+                configBuilder.getInteger(MIN_RNA_READS),
+                configBuilder.getDecimal(ACCEPTANCE_RATIO),
+                configBuilder.hasFlag(DO_NOT_WRITE_FILE)
+        );
     }
 
     private static void registerConfig(@NotNull final ConfigBuilder configBuilder)
@@ -178,7 +180,7 @@ public class CrestApplication
             {
                 VariantContextDecorator decorator = new VariantContextDecorator(context);
 
-                if(decorator.filter().equals("PASS") && decorator.type() == VariantType.SNP && !decorator.gene().isEmpty())
+                if(decorator.isPass() && decorator.type() == VariantType.SNP && !decorator.gene().isEmpty())
                 {
                     AllelicDepth rnaDepth = decorator.allelicDepth(sampleToCheck);
                     if(rnaDepth.totalReadCount() >= minTotalReads)
