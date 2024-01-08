@@ -9,12 +9,19 @@ import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.common.utils.VectorUtils.vectorMultiply;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.sigs.common.CommonUtils.OUTPUT_FILE_ID;
+import static com.hartwig.hmftools.sigs.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SAMPLE_COUNTS_FILE;
-import static com.hartwig.hmftools.sigs.common.CommonUtils.SAMPLE_IDS;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIGNATURES_FILE;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.formOutputFilename;
@@ -34,9 +41,7 @@ import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.Matrix;
-import com.hartwig.hmftools.sigs.common.CommonUtils;
 import com.hartwig.hmftools.sigs.loaders.PositionFreqBuilder;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.sigs.loaders.SigSnvLoader;
@@ -47,7 +52,6 @@ import org.jetbrains.annotations.NotNull;
 public class SampleFitter
 {
     private final RefGenomeVersion mRefGenomeVersion;
-    private final String mSampleIdsConfig;
     private final List<String> mSampleIdList;
     private final String mSnvCountsFile;
     private final String mSignaturesFile;
@@ -74,7 +78,6 @@ public class SampleFitter
     private static final int ALLOC_ROUND = 3;
     private static final int PERC_ROUND = 5;
 
-    private static final String UPLOAD_TO_DB = "upload_to_db";
     private static final String SOMATIC_VCF_FILE = "somatic_vcf_file";
     private static final String MIN_ALLOC = "min_alloc";
     private static final String MIN_ALLOC_PERC = "min_alloc_perc";
@@ -85,8 +88,19 @@ public class SampleFitter
     {
         mSnvCountsFile = configBuilder.getValue(SAMPLE_COUNTS_FILE);
         mSignaturesFile = configBuilder.getValue(SIGNATURES_FILE);
-        mSampleIdsConfig = configBuilder.getValue(SAMPLE_IDS);
+        mVcfFile = configBuilder.getValue(SOMATIC_VCF_FILE);
+
         mSampleIdList = Lists.newArrayList();
+
+        if(configBuilder.hasValue(SAMPLE))
+        {
+            mSampleIdList.add(configBuilder.getValue(SAMPLE));
+        }
+        else if(configBuilder.hasValue(SAMPLE_ID_FILE))
+        {
+            mSampleIdList.addAll(loadSampleIdsFile(configBuilder));
+        }
+
         mSignatureNames = Lists.newArrayList();
 
         mSampleCountsMatrix = null;
@@ -95,9 +109,8 @@ public class SampleFitter
         mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
 
         mOutputDir = parseOutputDir(configBuilder);
-        mOutputId = configBuilder.getValue(OUTPUT_FILE_ID);
+        mOutputId = configBuilder.getValue(OUTPUT_ID);
         mFitWriter = null;
-        mVcfFile = configBuilder.getValue(SOMATIC_VCF_FILE);
         mFitToTotal = true; // configBuilder.hasFlag(FIT_TO_TOTAL);
         mWritePosFreqCoords = configBuilder.hasFlag(WRITE_POS_COORDS);
 
@@ -133,37 +146,23 @@ public class SampleFitter
             return false;
         }
 
-        if(mSampleIdsConfig == null && mSnvCountsFile == null)
+        if(mSampleIdList.isEmpty())
         {
-            SIG_LOGGER.error("missing sampleIds config and sample count file");
+            SIG_LOGGER.error("no sample ID(s) configured");
+            return false;
+        }
+
+        if(mVcfFile == null && mSnvCountsFile == null)
+        {
+            SIG_LOGGER.error("no sample VCF or sample count file configured");
             return false;
         }
 
         mSignatures = loadMatrixDataFile(mSignaturesFile, mSignatureNames, false);
 
-        if(mVcfFile != null)
+        if(mSnvCountsFile != null)
         {
-            mSampleIdList.add(mSampleIdsConfig);
-        }
-        else
-        {
-            if(mSnvCountsFile != null)
-            {
-                mSampleCountsMatrix = loadSampleMatrixCounts(mSnvCountsFile, mSampleIdList);
-            }
-            else
-            {
-                // load from file or delimitered list
-                if(mSampleIdsConfig.contains(".csv"))
-                {
-                    // load from file
-                    mSampleIdList.addAll(ConfigUtils.loadSampleIdsFile(mSampleIdsConfig));
-                }
-                else
-                {
-                    mSampleIdList.add(mSampleIdsConfig);
-                }
-            }
+            mSampleCountsMatrix = loadSampleMatrixCounts(mSnvCountsFile, mSampleIdList);
         }
 
         initialiseOutputFiles();
@@ -218,7 +217,7 @@ public class SampleFitter
 
         mSnvLoader.setSampleIds(Lists.newArrayList(sampleId));
 
-        // mSnvLoader.loadData(mDbAccess, mVcfFile, false);
+        mSnvLoader.loadData(null, mVcfFile, false);
 
         if(mSampleIdList.size() == 1)
         {
@@ -308,7 +307,8 @@ public class SampleFitter
         }
         catch (final IOException e)
         {
-            SIG_LOGGER.error("error writing to outputFile({}): {}", filename, e.toString());
+            SIG_LOGGER.error("error writing to file({}): {}", filename, e.toString());
+            System.exit(1);
         }
     }
 
@@ -336,15 +336,26 @@ public class SampleFitter
         catch (final IOException e)
         {
             SIG_LOGGER.error("error writing to fit output: {}", e.toString());
+            System.exit(1);
         }
     }
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        ConfigBuilder configBuilder = new ConfigBuilder("Sigs");
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        CommonUtils.registerConfig(configBuilder);
+        configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
+        configBuilder.addPath(SAMPLE_ID_FILE, false, SAMPLE_ID_FILE_DESC);
+
+        // either a VCF for a single sample or a sample matrix file
+        configBuilder.addPath(SOMATIC_VCF_FILE, false, "Somatic variant VCF file");
+        configBuilder.addPath(SAMPLE_COUNTS_FILE, false, "Path to the main input file");
+
+        configBuilder.addPath(SIGNATURES_FILE, false, "Signature definitions");
         addRefGenomeVersion(configBuilder);
+
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
         configBuilder.addInteger(POSITION_BUCKET_SIZE, "Position bucket size", 0);
 
@@ -352,7 +363,6 @@ public class SampleFitter
                 MAX_SAMPLE_COUNT, "Max sample SNV count for position frequencies",
                 PositionFrequencies.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT);
 
-        configBuilder.addPath(SOMATIC_VCF_FILE, true, "Somatic variant VCF file");
         configBuilder.addDecimal(MIN_ALLOC_PERC, "Min signature allocation as percentage", DEFAULT_MIN_ALLOCATION_PERC);
         configBuilder.addDecimal(MIN_ALLOC, "Min signature allocation", DEFAULT_MIN_ALLOCATION);
         configBuilder.addFlag(WRITE_POS_COORDS, "Include coordinates with pos-frequency counts");

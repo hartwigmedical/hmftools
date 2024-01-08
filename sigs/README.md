@@ -24,8 +24,6 @@ Argument | Default | Description
 ---|---|---
 min_alloc| 0.01 | Allocate counts to a signature if exceeds this number of total SNV counts
 min_alloc_perc| 0.0005 | Allocate counts to a signature if exceeds this % of total SNV counts
-db_url,db_user,db_pass | - | My SQL config - for sourcing SNV data instead of from a VCF
-upload_to_db | - | If present will upload signature fit results to the HMF Patients signature table
  
 ### Position Frequency Arguments
 Sigs can generate genomic position frequencies by rounding positions to a specified position bucket size. 
@@ -46,18 +44,8 @@ java -jar sigs.jar \
    -output_dir /output_dir/ \
 ```
 
-### Example Usage
-
-Database sourced and uploading results
-```
-java -jar sigs.jar \
-   -sample COLO829T 
-   -signatures_file /reference_file/snv_cosmic_signatures.csv \
-   -db_url [db_url] -db_user [username] -db_pass [password] \
-   -upload_to_db \
-   -output_dir /output_dir/ \
-```
-
 # Version History and Download Links
-- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/sigs-v1.0)
+- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/sigs-v1.3)
+- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/sigs-v1.2)
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/sigs-v1.1)
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/sigs-v1.0)

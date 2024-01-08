@@ -44,8 +44,6 @@ public class SigSnvLoader
 
     private static final int SNV_BUCKET_COUNT = 96;
 
-    private static final Logger LOGGER = LogManager.getLogger(SigSnvLoader.class);
-
     public SigSnvLoader(final VariantFilters filters)
     {
         mFilters = filters;
@@ -82,7 +80,10 @@ public class SigSnvLoader
     {
         mSampleBucketCounts = new Matrix(SNV_BUCKET_COUNT, mSampleIds.size());
 
-        LOGGER.debug("retrieving SNV data for {} samples", mSampleIds.size());
+        if(mSampleIds.size() > 1)
+        {
+            SIG_LOGGER.debug("retrieving SNV data for {} samples", mSampleIds.size());
+        }
 
         for(int sampleIndex = 0; sampleIndex < mSampleIds.size(); ++sampleIndex)
         {
@@ -91,7 +92,7 @@ public class SigSnvLoader
             final List<SomaticVariant> variants = vcfFile != null ?
                     loadSomaticVariants(vcfFile, sampleId) : dbAccess.readSomaticVariants(sampleId, VariantType.SNP);
 
-            LOGGER.info("sample({}) processing {} variants", sampleId, variants.size());
+            SIG_LOGGER.info("sample({}) processing {} variants", sampleId, variants.size());
 
             processSampleVariants(sampleId, variants, sampleIndex);
 
@@ -174,7 +175,7 @@ public class SigSnvLoader
         }
         catch (final IOException e)
         {
-            LOGGER.error("error writing to outputFile: {}", e.toString());
+            SIG_LOGGER.error("error writing to outputFile: {}", e.toString());
         }
     }
 
@@ -209,7 +210,7 @@ public class SigSnvLoader
 
             if(bucketIndex == null)
             {
-                LOGGER.error("sample({}) invalid bucketName({}) from var({}>{}) context={})",
+                SIG_LOGGER.error("sample({}) invalid bucketName({}) from var({}>{}) context={})",
                         sampleId, bucketName, variant.ref(), variant.alt(), variant.trinucleotideContext());
 
                 return;
