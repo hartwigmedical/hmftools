@@ -43,5 +43,11 @@ public interface OrangePlots
     List<String> linxDriverPlots();
 
     @Nullable
-    String cuppaVisPlot();
+    String cuppaSummaryPlot();
+
+    @Nullable
+    String cuppaFeaturePlot();
+
+    @Nullable
+    String cuppaChartPlot();
 }

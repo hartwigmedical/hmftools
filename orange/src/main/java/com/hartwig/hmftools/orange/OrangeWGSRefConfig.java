@@ -81,7 +81,13 @@ public interface OrangeWGSRefConfig
     String cuppaVisDataTsv();
 
     @Nullable
-    String cuppaVisPlot();
+    String cuppaSummaryPlot();
+
+    @Nullable
+    String cuppaFeaturePlot();
+
+    @Nullable
+    String cuppaChartPlot();
 
     @Nullable
     String cuppaResultCsv();
@@ -126,7 +132,7 @@ public interface OrangeWGSRefConfig
 
         String cuppaDir = pathResolver.resolveMandatoryToolDirectory(CUPPA_DIR_CFG, CUPPA_DIR);
         builder.cuppaVisDataTsv(mandatoryPath(CuppaPredictions.generateVisDataTsvFilename(cuppaDir, tumorSampleId)));
-        builder.cuppaVisPlot(mandatoryPath(CuppaPredictions.generateVisPlotFilename(cuppaDir, tumorSampleId)));
+        builder.cuppaSummaryPlot(mandatoryPath(CuppaPredictions.generateVisPlotFilename(cuppaDir, tumorSampleId)));
         builder.cuppaResultCsv(optionalPath(CuppaDataFile.generateFilename(cuppaDir, tumorSampleId)));
 
         String sigsDir = pathResolver.resolveMandatoryToolDirectory(SIGS_DIR_CFG, SIGS_DIR);
