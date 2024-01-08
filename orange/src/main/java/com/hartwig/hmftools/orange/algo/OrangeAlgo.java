@@ -692,8 +692,8 @@ public class OrangeAlgo
         String purplePurityRangePlot = plotManager.processPlotFile(purplePlotBasePath + ".purity.range.png");
         String purpleKataegisPlot = plotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
 
-        String cuppaVisPlot = plotManager.processPlotFile(
-                (config.wgsRefConfig() != null) ? config.wgsRefConfig().cuppaVisPlot() : null
+        String cuppaSummaryPlot = plotManager.processPlotFile(
+                (config.wgsRefConfig() != null) ? config.wgsRefConfig().cuppaSummaryPlot() : null
         );
 
         return ImmutableOrangePlots.builder()
@@ -707,7 +707,7 @@ public class OrangeAlgo
                 .purplePurityRangePlot(purplePurityRangePlot)
                 .purpleKataegisPlot(purpleKataegisPlot)
                 .linxDriverPlots(linxDriverPlots)
-                .cuppaVisPlot(cuppaVisPlot)
+                .cuppaSummaryPlot(cuppaSummaryPlot)
                 .build();
     }
 

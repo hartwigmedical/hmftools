@@ -50,9 +50,9 @@ public class CohortComparisonChapter implements ReportChapter
         document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
         boolean isFail = PurpleQCInterpretation.isFail(report.purple().fit().qc());
-        if(!isFail && report.plots().cuppaVisPlot() != null)
+        if(!isFail && report.plots().cuppaSummaryPlot() != null)
         {
-            addCuppaVisPlot(document);
+            addCuppaSummaryPlot(document);
         }
         else
         {
@@ -60,12 +60,12 @@ public class CohortComparisonChapter implements ReportChapter
         }
     }
 
-    private void addCuppaVisPlot(@NotNull Document document)
+    private void addCuppaSummaryPlot(@NotNull Document document)
     {
-        Image cuppaVisPlot = Images.build(plotPathResolver.resolve(report.plots().cuppaVisPlot()));
-        cuppaVisPlot.setMaxWidth(740);
-        cuppaVisPlot.setMaxHeight(420);
-        cuppaVisPlot.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        document.add(cuppaVisPlot);
+        Image cuppaSummaryPlot = Images.build(plotPathResolver.resolve(report.plots().cuppaSummaryPlot()));
+        cuppaSummaryPlot.setMaxWidth(740);
+        cuppaSummaryPlot.setMaxHeight(420);
+        cuppaSummaryPlot.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        document.add(cuppaSummaryPlot);
     }
 }
