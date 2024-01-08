@@ -10,7 +10,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,12 +25,6 @@ public class RefGenomeSource implements RefGenomeInterface
     private static final Logger LOGGER = LogManager.getLogger(RefGenomeSource.class);
 
     public IndexedFastaSequenceFile refGenomeFile() { return mRefGenome; }
-
-    public static void addRefGenomeConfig(final Options options)
-    {
-        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-    }
 
     public static void addRefGenomeVersion(final ConfigBuilder configBuilder)
     {

@@ -7,8 +7,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
 
 public final class DriverGenePanelConfig
@@ -17,11 +15,6 @@ public final class DriverGenePanelConfig
     public static final String DRIVER_GENE_PANEL_OPTION_DESC = "Path to driver gene panel";
 
     private DriverGenePanelConfig() {}
-
-    public static void addGenePanelOption(final ConfigBuilder configBuilder, boolean isRequired)
-    {
-        configBuilder.addPath(DRIVER_GENE_PANEL_OPTION, isRequired, DRIVER_GENE_PANEL_OPTION_DESC);
-    }
 
     public static boolean isConfigured(final ConfigBuilder configBuilder)
     {
@@ -41,13 +34,6 @@ public final class DriverGenePanelConfig
         {
             return Lists.newArrayList();
         }
-    }
-
-    public static void addGenePanelOption(boolean isRequired, final Options options)
-    {
-        Option genePanelOption = new Option(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
-        genePanelOption.setRequired(isRequired);
-        options.addOption(genePanelOption);
     }
 
     public static boolean isConfigured(@NotNull final CommandLine cmd)

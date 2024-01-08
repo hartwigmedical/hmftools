@@ -24,7 +24,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -62,11 +61,6 @@ public class KnownFusionCache
     public static void addKnownFusionFileOption(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(KNOWN_FUSIONS_FILE, false, KNOWN_FUSIONS_FILE_DESC);
-    }
-
-    public static void addKnownFusionFileOption(final Options options)
-    {
-        options.addOption(KNOWN_FUSIONS_FILE, true, KNOWN_FUSIONS_FILE_DESC);
     }
 
     public boolean hasValidData() { return mHasValidData; }
