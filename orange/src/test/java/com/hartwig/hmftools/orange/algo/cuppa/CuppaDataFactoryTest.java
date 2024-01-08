@@ -30,7 +30,7 @@ public class CuppaDataFactoryTest
 
         CuppaData cuppaData = CuppaDataFactory.create(cuppaPredictions);
         List<CuppaPrediction> predictionEntries = cuppaData.predictions();
-        //predictionEntries.stream().forEach(o -> System.out.println(o.toString()));
+        predictionEntries.stream().forEach(o -> System.out.println(o.toString()));
 
         assertEquals(40, predictionEntries.size());
         assertEquals(cuppaData.bestPrediction().cancerType().toString(), "Skin: Melanoma");
@@ -46,7 +46,7 @@ public class CuppaDataFactoryTest
                 "Skin: Melanoma",
                 ImmutableCuppaPrediction.builder()
                         .cancerType("Skin: Melanoma").likelihood(0.9968)
-                        .genomicPositionClassifier(0.9966).snvPairwiseClassifier(0.8176).featureClassifier(0.7976)
+                        .genomicPositionClassifier(0.9966).snvPairwiseClassifier(0.8176).featureClassifier(0.9077)
                         .expressionPairwiseClassifier(1.0).altSjCohortClassifier(0.9999)
                         .build()
         );
@@ -54,16 +54,16 @@ public class CuppaDataFactoryTest
                 "Skin: Other",
                 ImmutableCuppaPrediction.builder()
                         .cancerType("Skin: Other").likelihood(1.005E-4)
-                        .genomicPositionClassifier(4.215E-4).snvPairwiseClassifier(0.1806).featureClassifier(4.02E-5)
-                        .expressionPairwiseClassifier(8.853E-6).altSjCohortClassifier(1.528E-7)
+                        .genomicPositionClassifier(4.215E-4).snvPairwiseClassifier(0.1806).featureClassifier(6.333E-5)
+                        .expressionPairwiseClassifier(8.853E-6).altSjCohortClassifier(1.505E-7)
                         .build()
         );
         expectedPredictionsByCancerType.put(
                 "Prostate",
                 ImmutableCuppaPrediction.builder()
                         .cancerType("Prostate").likelihood(1.005E-4)
-                        .genomicPositionClassifier(9.123E-5).snvPairwiseClassifier(5.793E-12).featureClassifier(3.039E-4)
-                        .expressionPairwiseClassifier(7.483E-7).altSjCohortClassifier(9.215E-7)
+                        .genomicPositionClassifier(9.123E-5).snvPairwiseClassifier(5.793E-12).featureClassifier(2.02E-4)
+                        .expressionPairwiseClassifier(7.483E-7).altSjCohortClassifier(9.09E-7)
                         .build()
         );
 
