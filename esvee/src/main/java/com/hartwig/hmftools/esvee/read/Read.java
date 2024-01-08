@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -23,6 +24,9 @@ public class Read implements Sequence
     private final SAMRecord mRecord;
     private Read mMateRead;
 
+    // cached state
+    private Integer mNumberOfEvents;
+
     private List<Alignment> mAlignment;
 
     private List<SequenceDecomposer.Node> mDecomposition;
@@ -33,6 +37,7 @@ public class Read implements Sequence
         mAlignment = null;
         mDecomposition = null;
         mMateRead = null;
+        mNumberOfEvents = 0;
     }
 
     public SAMRecord bamRecord() { return mRecord; }
@@ -131,6 +136,17 @@ public class Read implements Sequence
     }
 
     public Object getAttribute(final String name) { return mRecord.getAttribute(name); }
+
+    public int numberOfEvents()
+    {
+        if(mNumberOfEvents != null)
+            return mNumberOfEvents;
+
+        Object numOfEvents = mRecord.getAttribute(NUM_MUTATONS_ATTRIBUTE);
+
+        mNumberOfEvents = numOfEvents != null ? (int)numOfEvents : 0;
+        return mNumberOfEvents;
+    }
 
     public List<SequenceDecomposer.Node> decompose()
     {

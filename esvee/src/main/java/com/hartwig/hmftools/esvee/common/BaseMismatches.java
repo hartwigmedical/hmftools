@@ -11,12 +11,10 @@ import com.hartwig.hmftools.esvee.read.Read;
 
 public class BaseMismatches
 {
-    public final int AssemblyIndex;
     public final BaseMismatch[] Mismatches; // could consider a map or list since surely 1 value is most common, but still an overhead
 
-    public BaseMismatches(final int assemblyIndex, final BaseMismatch baseMismatch)
+    public BaseMismatches(final BaseMismatch baseMismatch)
     {
-        AssemblyIndex = assemblyIndex;
         Mismatches = new BaseMismatch[] { null, null, null, null};
         Mismatches[baseMismatch.Base.ordinal()] = baseMismatch;
     }
@@ -38,7 +36,7 @@ public class BaseMismatches
         }
     }
 
-    public String toString() { return format("asmIndex(%d) mismatches(%d)", AssemblyIndex, mismatchCount()); }
+    public String toString() { return format("mismatches(%d)", mismatchCount()); }
 
     @VisibleForTesting
     public List<BaseMismatch> baseMismatches() { return Arrays.stream(Mismatches).filter(x -> x != null).collect(Collectors.toList()); }

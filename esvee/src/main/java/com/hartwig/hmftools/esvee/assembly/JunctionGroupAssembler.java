@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
@@ -18,10 +16,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.old.PrimaryAssembler;
+import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
 import com.hartwig.hmftools.esvee.common.ThreadTask;
+import com.hartwig.hmftools.esvee.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.read.BamReader;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.old.PrimaryAssembly;
@@ -32,6 +31,7 @@ import htsjdk.samtools.SAMRecord;
 public class JunctionGroupAssembler extends ThreadTask
 {
     private final SvConfig mConfig;
+    private final ResultsWriter mResultsWriter;
 
     private final Queue<JunctionGroup> mJunctionGroups;
     private final int mJunctionCount;
@@ -42,11 +42,14 @@ public class JunctionGroupAssembler extends ThreadTask
     private final Map<String,Read> mReadGroupMap;
 
     private final List<PrimaryAssembly> mPrimaryAssemblies;
+    private final List<JunctionAssembly> mJunctionAssemblies;
 
-    public JunctionGroupAssembler(final SvConfig config, final BamReader bamReader, final Queue<JunctionGroup> junctionGroups)
+    public JunctionGroupAssembler(
+            final SvConfig config, final BamReader bamReader, final Queue<JunctionGroup> junctionGroups, final ResultsWriter resultsWriter)
     {
         super("PrimaryAssembly");
         mConfig = config;
+        mResultsWriter = resultsWriter;
         mBamReader = bamReader;
         mJunctionGroups = junctionGroups;
         mJunctionCount = junctionGroups.size();
@@ -54,13 +57,15 @@ public class JunctionGroupAssembler extends ThreadTask
         mReadGroupMap = Maps.newHashMap();
         mCurrentJunctionGroup = null;
         mPrimaryAssemblies = Lists.newArrayList();
+        mJunctionAssemblies = Lists.newArrayList();
     }
 
     public List<PrimaryAssembly> primaryAssemblies() { return mPrimaryAssemblies; }
+    public List<JunctionAssembly> junctionAssemblies() { return mJunctionAssemblies; }
 
     public static List<JunctionGroupAssembler> createThreadTasks(
             final List<JunctionGroup> junctionGroups, final List<BamReader> bamReaders, final SvConfig config,
-            final int taskCount, final List<Thread> threadTasks)
+            final ResultsWriter resultsWriter, final int taskCount, final List<Thread> threadTasks)
     {
         List<JunctionGroupAssembler> primaryAssemblyTasks = Lists.newArrayList();
 
@@ -73,7 +78,7 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             BamReader bamReader = bamReaders.get(i);
 
-            JunctionGroupAssembler junctionGroupAssembler = new JunctionGroupAssembler(config, bamReader, junctionGroupQueue);
+            JunctionGroupAssembler junctionGroupAssembler = new JunctionGroupAssembler(config, bamReader, junctionGroupQueue, resultsWriter);
             primaryAssemblyTasks.add(junctionGroupAssembler);
             threadTasks.add(junctionGroupAssembler);
         }
@@ -136,7 +141,7 @@ public class JunctionGroupAssembler extends ThreadTask
         // now pass applicable reads to each primary assembler
         for(Junction junction : mCurrentJunctionGroup.junctions())
         {
-            PrimaryAssembler primaryAssembler = new PrimaryAssembler(mConfig, junction);
+            PrimaryAssembler primaryAssembler = new PrimaryAssembler(mConfig, mResultsWriter, junction);
 
             List<Read> junctionCandidateReads = mCurrentJunctionGroup.candidateReads().stream()
                     .filter(x -> ReadFilters.alignmentCrossesJunction(x, junction))
@@ -145,10 +150,8 @@ public class JunctionGroupAssembler extends ThreadTask
             if(junctionCandidateReads.isEmpty())
                 continue;
 
-            List<PrimaryAssembly> candidateAssemblies = primaryAssembler.processJunction(junctionCandidateReads);
-            mPrimaryAssemblies.addAll(candidateAssemblies);
-
-            // mPrimaryAssemblyResults.add(new PrimaryAssemblyResult(junction, primaryAssembler.getCounters(), candidateAssemblies));
+            List<JunctionAssembly> candidateAssemblies = primaryAssembler.processJunction(junctionCandidateReads);
+            mJunctionAssemblies.addAll(candidateAssemblies);
         }
 
         mCurrentJunctionGroup = null;
@@ -188,6 +191,13 @@ public class JunctionGroupAssembler extends ThreadTask
                 mReadGroupMap.put(read.getName(), read);
             }
         }
+    }
+
+    public static List<JunctionAssembly> mergeJunctionAssemblies(final List<JunctionGroupAssembler> assemblers)
+    {
+        List<JunctionAssembly> JunctionAssemblies = Lists.newArrayList();
+        assemblers.forEach(x -> JunctionAssemblies.addAll(x.junctionAssemblies()));
+        return JunctionAssemblies;
     }
 
     public static List<PrimaryAssembly> mergePrimaryAssemblies(final List<JunctionGroupAssembler> assemblers)

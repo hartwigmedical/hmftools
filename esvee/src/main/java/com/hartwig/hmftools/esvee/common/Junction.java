@@ -21,6 +21,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.SpecificRegions;
 
 public class Junction implements Comparable<Junction>
 {
@@ -96,7 +97,7 @@ public class Junction implements Comparable<Junction>
         return Position < other.Position ? -1 : 1;
     }
 
-    public static Map<String,List<Junction>> loadJunctions(final String filename)
+    public static Map<String,List<Junction>> loadJunctions(final String filename, final SpecificRegions specificRegions)
     {
         if(filename == null || filename.isEmpty())
             return null;
@@ -126,6 +127,9 @@ public class Junction implements Comparable<Junction>
                 String chromosome = values[chrIndex];
                 int position = Integer.parseInt(values[posIndex]);
                 byte orientation = Byte.parseByte(values[orientIndex]);
+
+                if(!specificRegions.includePosition(chromosome, position))
+                    continue;
 
                 if(!currentChromosome.equals(chromosome))
                 {

@@ -9,9 +9,9 @@ import com.hartwig.hmftools.esvee.read.Read;
 
 public final class AssemblyUtils
 {
-    public static AssemblySequence buildFromJunctionReads(final Junction junction, final List<Read> reads, boolean checkMismatches)
+    public static JunctionAssembly buildFromJunctionReads(final Junction junction, final List<Read> reads, boolean checkMismatches)
     {
-        AssemblySequence junctionSequence = buildFromJunction(junction, reads);
+        JunctionAssembly junctionSequence = buildFromJunction(junction, reads);
 
         for(Read read : reads)
         {
@@ -24,7 +24,7 @@ public final class AssemblyUtils
         return junctionSequence;
     }
 
-    protected static AssemblySequence buildFromJunction(final Junction junction, final List<Read> reads)
+    protected static JunctionAssembly buildFromJunction(final Junction junction, final List<Read> reads)
     {
         int minAlignedPosition = junction.Position;
         int maxAlignedPosition = junction.Position;
@@ -34,7 +34,7 @@ public final class AssemblyUtils
 
         for(Read read : reads)
         {
-            if(junction.direction() == Direction.FORWARDS)
+            if(junction.isForward())
             {
                 maxAlignedPosition = max(maxAlignedPosition, read.getUnclippedEnd());
             }
@@ -52,7 +52,7 @@ public final class AssemblyUtils
             }
         }
 
-        return new AssemblySequence(junction, maxJunctionBaseQualRead, minAlignedPosition,  maxAlignedPosition);
+        return new JunctionAssembly(junction, maxJunctionBaseQualRead, minAlignedPosition,  maxAlignedPosition);
     }
 
     protected static int readQualFromJunction(final Read read, final Junction junction)
@@ -89,11 +89,15 @@ public final class AssemblyUtils
         return first == second || firstQual < lowQualThreshold || secondQual < lowQualThreshold;
     }
 
-    public static boolean purgeLowSupport(final AssemblySequence assemblySequence, int minReadCount, int minTotalQual)
+    public static boolean purgeLowSupport(final JunctionAssembly junctionAssembly, int minReadCount, int minTotalQual)
     {
+        // return true if there are mismatches with sufficient support
+        if(!junctionAssembly.hasMismatches())
+            return false;
+
         boolean hasSupportedMismatches = false;
 
-        for(BaseMismatches baseMismatches : assemblySequence.mismatches().baseMismatches())
+        for(BaseMismatches baseMismatches : junctionAssembly.mismatches().baseMismatches())
         {
             for(int j = 0; j < baseMismatches.Mismatches.length; ++j)
             {

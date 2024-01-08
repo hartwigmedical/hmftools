@@ -33,6 +33,7 @@ public class EsveeApplication
         loadAlignerLibrary();
 
         junctionProcessor.run();
+        junctionProcessor.close();
 
         SV_LOGGER.info("Esvee complete, mins({})", runTimeMinsStr(startTimeMs));
     }

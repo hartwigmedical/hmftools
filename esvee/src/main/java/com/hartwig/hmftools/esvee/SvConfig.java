@@ -16,13 +16,12 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_D
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
-import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_BAM_FILE_ID;
 import static com.hartwig.hmftools.esvee.SvConstants.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.SvConstants.SV_PREP_JUNCTIONS_FILE_ID;
-import static com.hartwig.hmftools.esvee.WriteType.BREAKEND_TSV;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -34,6 +33,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.LogManager;
@@ -59,6 +59,9 @@ public class SvConfig
     public final List<WriteType> WriteTypes;
 
     public final String OutputDir;
+    public final String OutputId;
+
+    public final SpecificRegions SpecificChrRegions;
 
     public final boolean PerfDebug;
     public final double PerfLogTime;
@@ -152,6 +155,10 @@ public class SvConfig
             OutputDir = pathFromFile(VcfFile);
         }
 
+        OutputId = configBuilder.getValue(OUTPUT_ID);
+
+        SpecificChrRegions = SpecificRegions.from(configBuilder);
+
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
         OtherDebug = configBuilder.hasFlag(OTHER_DEBUG);
@@ -171,20 +178,13 @@ public class SvConfig
 
         filename += SampleNames.get(0);
 
-        switch(writeType)
-        {
-            case ASSEMBLY_BAM:
-                filename += ASSEMBLY_BAM_FILE_ID;
-                break;
+        if(OutputId != null)
+            filename += "." + OutputId;
 
-            case BREAKEND_TSV:
-                filename += BREAKEND_TSV;
-                break;
-        }
+        filename += "." + writeType.fileId();
 
         return filename;
     }
-
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
@@ -208,6 +208,8 @@ public class SvConfig
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addDecimal(PERF_LOG_TIME, "Log performance data for routine exceeding specified time (0 = disabled)", 0);
         configBuilder.addFlag(OTHER_DEBUG, "Various other debugging");
+
+        SpecificRegions.addSpecificChromosomesRegionsConfig(configBuilder);
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);

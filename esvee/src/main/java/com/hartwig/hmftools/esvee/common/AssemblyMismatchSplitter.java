@@ -18,23 +18,37 @@ import com.hartwig.hmftools.esvee.read.Read;
 
 public class AssemblyMismatchSplitter
 {
-    private final AssemblySequence mSequence;
+    private final JunctionAssembly mSequence;
 
-    public AssemblyMismatchSplitter(final AssemblySequence sequence)
+    public AssemblyMismatchSplitter(final JunctionAssembly sequence)
     {
         mSequence = sequence;
     }
 
-    public List<AssemblySequence> splitOnMismatches(int minSequenceLength)
+    public List<JunctionAssembly> splitOnMismatches(int minSequenceLength)
     {
         // every remaining mismatch should have 2+ (or whatever configured) supporting reads
         // build unique collections of mismatches for each long enough read
-        Set<Read> validMismatchReads = mSequence.support().stream()
-                .filter(x -> x.mismatches() > 0)
-                .filter(x -> x.readRangeLength() > minSequenceLength) // since includes the junction base
-                .map(x -> x.read()).collect(Collectors.toSet());
+        List<Read> noMismatchReads = Lists.newArrayList();
+        List<Read> mismatchReads = Lists.newArrayList();
+        Set<Read> longMismatchReads = Sets.newHashSet();
 
-        if(validMismatchReads.isEmpty())
+        for(AssemblySupport support : mSequence.support())
+        {
+            if(support.mismatches() == 0)
+            {
+                noMismatchReads.add(support.read());
+            }
+            else
+            {
+                mismatchReads.add(support.read());
+
+                if(support.readRangeLength() >= minSequenceLength)
+                    longMismatchReads.add(support.read());
+            }
+        }
+
+        if(longMismatchReads.isEmpty())
             return Collections.emptyList();
 
         // make a support for each read with mismatches and then add if unique
@@ -56,7 +70,7 @@ public class AssemblyMismatchSplitter
 
                 for(Read read : baseMismatch.Reads)
                 {
-                    if(!validMismatchReads.contains(read))
+                    if(!longMismatchReads.contains(read))
                         continue;
 
                     SequenceMismatches readMismatches = readSequenceMismatches.get(read);
@@ -108,33 +122,38 @@ public class AssemblyMismatchSplitter
         }
 
         // add the 'initial' sequence from reads without mismatches
-        List<Read> noMismatchReads = mSequence.support().stream().filter(x -> x.mismatches() == 0).map(x -> x.read()).collect(Collectors.toList());
+        int permittedMismatches = 1; // CHECK
 
-        AssemblySequence initialSequence = buildFromJunctionReads(mSequence.initialJunction(), noMismatchReads, false);
+        Set<Read> processedReads = Sets.newHashSet();
+        JunctionAssembly initialSequence = buildFromJunctionReads(mSequence.initialJunction(), noMismatchReads, false);
+        processedReads.addAll(noMismatchReads);
 
-        List<AssemblySequence> finalSequences = Lists.newArrayListWithCapacity(1 + uniqueSequenceMismatches.size());
+        List<JunctionAssembly> finalSequences = Lists.newArrayListWithCapacity(1 + uniqueSequenceMismatches.size());
         finalSequences.add(initialSequence);
 
         // and then add each unique mismatched sequence
-
         for(SequenceMismatches sequenceMismatches : uniqueSequenceMismatches)
         {
             List<Read> candidateReads = sequenceMismatches.Reads;
+            processedReads.addAll(candidateReads);
 
-            AssemblySequence mismatchSequence = buildFromJunctionReads(mSequence.initialJunction(), candidateReads, false);
+            JunctionAssembly mismatchSequence = buildFromJunctionReads(mSequence.initialJunction(), candidateReads, false);
+            finalSequences.add(mismatchSequence);
+        }
 
-            for(AssemblySupport support : mSequence.support())
+        // test each read now against
+        for(AssemblySupport support : mSequence.support())
+        {
+            if(processedReads.contains(support.read()))
+                continue;
+
+            for(JunctionAssembly sequence : finalSequences)
             {
-                if(support.mismatches() > 0 && !candidateReads.contains(support.read()))
+                if(sequence.checkReadMatches(support.read(), permittedMismatches))
                 {
-                    if(mismatchSequence.checkReadMatches(support.read(), 0))
-                    {
-                        mismatchSequence.addRead(support.read(), false);
-                    }
+                    sequence.addRead(support.read(), false);
                 }
             }
-
-            finalSequences.add(mismatchSequence);
         }
 
         return finalSequences;

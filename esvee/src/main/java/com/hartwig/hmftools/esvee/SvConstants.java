@@ -5,7 +5,6 @@ public final class SvConstants
     public static final String APP_NAME = "Esvee";
 
     // file related
-    public static final String ASSEMBLY_BAM_FILE_ID = ".assembly.bam";
     public static final String SV_PREP_JUNCTIONS_FILE_ID = ".sv_prep.junctions.tsv";
     public static final String DEFAULT_HTML_SUMMARY_DIR = "html";
     public static final String REF_GENOME_IMAGE_EXTENSION = ".img";
