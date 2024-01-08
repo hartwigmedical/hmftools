@@ -8,8 +8,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIG_LOGGER;
 
-import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
@@ -21,18 +19,16 @@ import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.common.utils.Matrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
-import htsjdk.variant.vcf.VCFCodec;
 
 public class SigSnvLoader
 {
@@ -127,26 +123,19 @@ public class SigSnvLoader
         SomaticVariantFactory variantFactory = new SomaticVariantFactory(filter);
         final List<SomaticVariant> variantList = Lists.newArrayList();
 
-        try
+        VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
+
+        for(VariantContext variant : vcfFileReader.iterator())
         {
-            final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
+            if(variant.isFiltered())
+                continue;
 
-            for (VariantContext variant : reader.iterator())
-            {
-                if (filter.test(variant))
-                {
-                    final SomaticVariant somaticVariant = variantFactory.createVariant(sampleId, variant).orElse(null);
+            final SomaticVariant somaticVariant = variantFactory.createVariant(sampleId, variant).orElse(null);
 
-                    if(somaticVariant == null || !somaticVariant.isSnp())
-                        continue;
+            if(somaticVariant == null || !somaticVariant.isSnp())
+                continue;
 
-                    variantList.add(somaticVariant);
-                }
-            }
-        }
-        catch(IOException e)
-        {
-            SIG_LOGGER.error(" failed to read somatic VCF file({}): {}", vcfFile, e.toString());
+            variantList.add(somaticVariant);
         }
 
         return variantList;
