@@ -12,8 +12,8 @@ VIS_DATA_PATH <- args[1]
 PLOT_PATH <- args[2]
 
 if(FALSE){
-   VIS_DATA_PATH <- "~/Desktop/cuppa_vis_data.tsv"
-   PLOT_PATH <- "~/Desktop/cuppa_vis.png"
+   VIS_DATA_PATH <- "~/Desktop/tumor_sample.cuppa.vis_data.tsv"
+   PLOT_PATH <- "~/Desktop/tumor_sample.cuppa.vis.png"
 }
 
 ## Load data ================================
@@ -425,6 +425,9 @@ plot_signatures <- function(
 
    ## Make row labels --------------------------------
    snv_count <- subset(VIS_DATA,  str_ends(feat_name, "snv_count"), feat_value)[1,1]
+   if(is.na(snv_count)){
+      stop("`snv_count` was not found as a feature in `VIS_DATA`")
+   }
 
    plot_data$row_label <- with(plot_data, {
 
