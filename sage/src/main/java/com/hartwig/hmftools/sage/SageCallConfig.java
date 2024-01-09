@@ -19,6 +19,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.Nullable;
 
 public class SageCallConfig
 {
@@ -131,7 +132,13 @@ public class SageCallConfig
     @VisibleForTesting
     public SageCallConfig()
     {
-        Common = new SageConfig(false);
+        this(null);
+    }
+
+    @VisibleForTesting
+    public SageCallConfig(@Nullable final String fullVisOutputDir)
+    {
+        Common = new SageConfig(false, fullVisOutputDir);
         TumorIds = Lists.newArrayList();
         TumorBams = Lists.newArrayList();
         HighConfidenceBed = "highConf";

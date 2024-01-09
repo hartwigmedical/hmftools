@@ -53,6 +53,7 @@ import com.hartwig.hmftools.sage.quality.QualityConfig;
 import com.hartwig.hmftools.sage.vis.VisConfig;
 
 import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.ValidationStringency;
 
@@ -341,7 +342,7 @@ public class SageConfig
     }
 
     @VisibleForTesting
-    public SageConfig(boolean highDepthMode)
+    public SageConfig(boolean highDepthMode, @Nullable final String fullVisOutputDir)
     {
         SampleDataDir = "";
         ReferenceIds = Lists.newArrayList();
@@ -368,9 +369,15 @@ public class SageConfig
         BamStringency = ValidationStringency.DEFAULT_STRINGENCY;
         Sequencing = new SequencingConfig(false, SequencingType.ILLUMINA);
         WriteFragmentLengths = false;
-        Visualiser = new VisConfig();
+        Visualiser = new VisConfig(fullVisOutputDir);
         SyncFragments = true;
         SpecificPositions = Sets.newHashSet();
         LogEvidenceReads = false;
+    }
+
+    @VisibleForTesting
+    public SageConfig(boolean highDepthMode)
+    {
+        this(highDepthMode, null);
     }
 }
