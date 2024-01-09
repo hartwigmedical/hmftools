@@ -14,6 +14,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -127,6 +128,7 @@ public class SageCallConfig
         addEnsemblDir(configBuilder);
     }
 
+    @VisibleForTesting
     public SageCallConfig()
     {
         Common = new SageConfig(false);
@@ -140,8 +142,4 @@ public class SageCallConfig
         OldIndelDedup = false;
         mResourceDir = "";
     }
-
-
-
-
 }

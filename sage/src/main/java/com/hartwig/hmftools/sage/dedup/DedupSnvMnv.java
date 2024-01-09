@@ -17,7 +17,7 @@ public final class DedupSnvMnv
                 .filter(x -> x.isMnv())
                 .filter(x -> x.isPassing())
                 .filter(x -> x.hasLocalPhaseSets())
-                .collect(Collectors.toList());;
+                .collect(Collectors.toList());
 
         int index = 0;
         while(index < mnvs.size() - 1)
@@ -109,7 +109,7 @@ public final class DedupSnvMnv
                 .filter(x -> !x.isIndel())
                 .filter(x -> x.isPassing())
                 .filter(x -> x.hasLocalPhaseSets())
-                .collect(Collectors.toList());;
+                .collect(Collectors.toList());
 
         int index = 0;
         while(index < candidates.size() - 1)
