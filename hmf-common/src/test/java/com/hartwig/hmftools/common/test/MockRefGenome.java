@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
@@ -103,6 +104,19 @@ public class MockRefGenome implements RefGenomeInterface
         }
 
         return String.valueOf(str);
+    }
+
+    public static String generateRandomBases(final Random rand, int count)
+    {
+        StringBuilder basesBuilder = new StringBuilder();
+        for(int i = 0; i < count; ++i)
+        {
+            int idx = rand.nextInt(DNA_BASES.length);
+            char base = DNA_BASES[idx];
+            basesBuilder.append(base);
+        }
+
+        return basesBuilder.toString();
     }
 
     public static String getNextBase(final String base) { return String.valueOf(getNextBase(base.charAt(0))); }
