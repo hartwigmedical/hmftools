@@ -200,7 +200,7 @@ public class ChromosomeTask implements Callable
         mReferenceData.BlacklistedVariants.annotateVariant(variant);
 
         boolean forcePass = mConfig.ForcePathogenicPass && PathogenicSummaryFactory.fromContext(variant.context()).Status.isPathogenic();
-        
+
         if(mGnomadCache != null)
             mReferenceData.Gnomad.annotateVariant(variant, mGnomadCache, forcePass);
 
