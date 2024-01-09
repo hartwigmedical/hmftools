@@ -135,13 +135,13 @@ public class VariantVis
     private final VariantReadContext mReadContext;
     private final BaseRegion mViewRegion;
     private final Map<Integer, List<SvgRender.BoxBorder>> mContextBorders;
-    private final BaseSeqViewModel mRefViewModel;
     private final BaseSeqViewModel mContextViewModel;
     private final EnumMap<ReadContextMatch, Integer> mReadCountByType;
     private final String mVariantKey;
     private final String mIndexedBasesKey;
     private final RefGenomeSource mRefGenome;
     private final RefGenomeCoordinates mRefGenCoords;
+    private final BaseSeqViewModel mRefViewModel;
 
     private int mReadCount;
 
@@ -537,7 +537,8 @@ public class VariantVis
         tableRows.add(headerRow);
 
         // ref row
-        DomContent refRow = tr(td("ref").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(renderRef()));
+        DomContent refRow =
+                tr(td("ref").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(renderRef()));
         tableRows.add(refRow);
 
         // context row
@@ -598,12 +599,12 @@ public class VariantVis
 
     private DomContent renderRef()
     {
-        return renderBases(mRefViewModel, false, false);
+        return renderBases(mRefViewModel, false, null);
     }
 
     private DomContent renderContext()
     {
-        return renderBases(mContextViewModel, false, true);
+        return renderBases(mContextViewModel, false, mRefViewModel);
     }
 
     private int getReadNM(final SAMRecord read)
@@ -701,7 +702,7 @@ public class VariantVis
 
         CssBuilder baseDivStyle = CssBuilder.EMPTY.padding(CssSize.ZERO).margin(CssSize.ZERO);
 
-        DomContent svgEl = renderBases(readViewModel, true, true);
+        DomContent svgEl = renderBases(readViewModel, true, mRefViewModel);
         DomContent svgDiv = div(svgEl).withClass("read-svg").withStyle(baseDivStyle.toString());
         DomContent readInfoDiv = renderReadInfoTable(firstRead, secondRead);
 
@@ -714,10 +715,10 @@ public class VariantVis
         {
             CssBuilder divStyle = baseDivStyle.display("none");
 
-            DomContent firstSvgEl = renderBases(firstViewModel, true, true);
+            DomContent firstSvgEl = renderBases(firstViewModel, true, mRefViewModel);
             DomContent firstSvgDiv = div(firstSvgEl).withClass("read-of-fragment-sgv").withStyle(divStyle.toString());
 
-            DomContent secondSvgEl = renderBases(secondViewModel, true, true);
+            DomContent secondSvgEl = renderBases(secondViewModel, true, mRefViewModel);
             DomContent secondSvgDiv = div(secondSvgEl).withClass("read-of-fragment-sgv").withStyle(divStyle.toString());
 
             containerDiv = div(svgDiv, firstSvgDiv, secondSvgDiv, readInfoDiv).withStyle(baseDivStyle.toString());
@@ -726,10 +727,10 @@ public class VariantVis
         return containerDiv;
     }
 
-    private DomContent renderBases(final BaseSeqViewModel bases, boolean shadeQuals, boolean compareToRef)
+    private DomContent renderBases(final BaseSeqViewModel bases, boolean shadeQuals, @Nullable final BaseSeqViewModel refViewModel)
     {
         SVGGraphics2D svgCanvas =
-                renderBaseSeq(READ_HEIGHT_PX, mViewRegion, bases, shadeQuals, mContextBorders, compareToRef ? mRefViewModel : null);
+                renderBaseSeq(READ_HEIGHT_PX, mViewRegion, bases, shadeQuals, mContextBorders, refViewModel);
         return rawHtml(svgCanvas.getSVGElement());
     }
 
