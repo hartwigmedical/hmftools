@@ -83,12 +83,15 @@ public interface OrangeWGSRefConfig
     @Nullable
     String cuppaSummaryPlot();
 
+    @Deprecated
     @Nullable
     String cuppaFeaturePlot();
 
+    @Deprecated
     @Nullable
     String cuppaChartPlot();
 
+    @Deprecated
     @Nullable
     String cuppaResultCsv();
 
