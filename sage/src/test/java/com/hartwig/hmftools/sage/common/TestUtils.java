@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.common;
 
 import static java.lang.String.format;
+import static java.util.Map.entry;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
@@ -8,17 +9,32 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_MAP_QUAL;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.qual.BqrRecord;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
+import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.coverage.Coverage;
+import com.hartwig.hmftools.sage.evidence.FragmentLengths;
+import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
+import com.hartwig.hmftools.sage.pipeline.RegionResults;
+import com.hartwig.hmftools.sage.pipeline.RegionTask;
 import com.hartwig.hmftools.sage.quality.MsiJitterCalcs;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
-import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.vcf.VcfWriter;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
@@ -39,12 +55,13 @@ public class TestUtils
     public static final ReadIdGenerator READ_ID_GENERATOR = new ReadIdGenerator();
 
     public static final String REF_BASES_200 =
-        //             10        20        30        40        50        60        70        80        90
-        //   0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+            //             10        20        30        40        50        60        70        80        90
+            //   0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
             "CGCAATATTCGGGTGGGAGTGACCCGATTTTCCAGGTGCGTTCGTCACCGCTGTCTGTGACTCGGAAAAAAAACTCCCTGACCCCTTGCGCTTCCCAGGT"
-          + "GAGGCAATGCCTCGCCCTGCTTCGGCTCGCGCACAGTGCGCGCTACACACACTGGCCTGCGCCCACTGTCTGGCACTCCCTAGTGAGATGAACCCGGTAC";
+                    + "GAGGCAATGCCTCGCCCTGCTTCGGCTCGCGCACAGTGCGCGCTACACACACTGGCCTGCGCCCACTGTCTGGCACTCCCTAGTGAGATGAACCCGGTAC";
 
-    public static final RefSequence REF_SEQUENCE_200 = new RefSequence(0, REF_BASES_200.getBytes()); // note zero-based to line up with indices
+    public static final RefSequence REF_SEQUENCE_200 = new RefSequence(0, REF_BASES_200.getBytes());
+            // note zero-based to line up with indices
 
     public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(
             TEST_CONFIG, RECALIBRATION, REF_SEQUENCE_200, MOCK_REF_GENOME, MSI_JITTER_CALCS);
@@ -61,19 +78,26 @@ public class TestUtils
         variant.tumorReadCounters().get(0).readSupportQualityCounts().Full = quality;
     }
 
-    public static String buildCigarString(int alignedLength) { return format("%dM", alignedLength); }
+    public static String buildCigarString(int alignedLength)
+    {
+        return format("%dM", alignedLength);
+    }
 
     public static String buildCigarString(int alignedLength, int leftSoftClip, int rightSoftClip)
     {
         StringBuilder sb = new StringBuilder();
 
         if(leftSoftClip > 0)
+        {
             sb.append(format("%dS", leftSoftClip));
+        }
 
         sb.append(format("%dM", alignedLength));
 
         if(rightSoftClip > 0)
+        {
             sb.append(format("%dS", rightSoftClip));
+        }
 
         return sb.toString();
     }
@@ -110,7 +134,9 @@ public class TestUtils
         final byte[] qualities = new byte[readBases.length()];
 
         for(int i = 0; i < readBases.length(); ++i)
+        {
             qualities[i] = 37;
+        }
 
         record.setBaseQualities(qualities);
         record.setReferenceName(chrStr);
@@ -166,5 +192,42 @@ public class TestUtils
     public static BaseRegion region(int start, int end)
     {
         return new BaseRegion(start, end);
+    }
+
+    public static void dumpVariantVis(final String sampleId, final List<SAMRecord> reads,
+            final ChrBaseRegion region, final MockRefGenome refGenome, final String fullVisOutputDir)
+    {
+        int taskId = 0;
+
+        SamSlicerInterface samSlicer = (final Consumer<SAMRecord> consumer) -> reads.forEach(consumer);
+        SamSlicerFactory samSlicerFactory = new SamSlicerFactory();
+        samSlicerFactory.addSamSlicer(sampleId, samSlicer);
+
+        VcfWriter vcfWriter = null;
+        RegionResults results = new RegionResults(vcfWriter);
+
+        SageCallConfig config = new SageCallConfig(fullVisOutputDir);
+        config.TumorIds.add(sampleId);
+
+        List<BqrRecord> bqrRecords = Lists.newArrayList();
+        Map<String, BqrRecordMap> qualityRecalibrationMap = Map.ofEntries(
+                entry(sampleId, new BqrRecordMap(bqrRecords))
+        );
+
+        Collection<NamedBed> panel = Lists.newArrayList();
+        Coverage coverage = new Coverage(config.TumorIds, panel, config.Common);
+
+        List<SimpleVariant> hotspots = Lists.newArrayList();
+        List<BaseRegion> panelRegions = Lists.newArrayList();
+        List<BaseRegion> highConfidenceRegions = Lists.newArrayList();
+        List<TranscriptData> transcripts = null;
+        MsiJitterCalcs msiJitterCalcs = null;
+        PhaseSetCounter phaseSetCounter = null;
+        FragmentLengths fragmentLengths = null;
+
+        RegionTask regionTask = new RegionTask(taskId, region, results, config, refGenome, hotspots, panelRegions, transcripts,
+                highConfidenceRegions, qualityRecalibrationMap, msiJitterCalcs, phaseSetCounter, coverage, samSlicerFactory,
+                fragmentLengths);
+        regionTask.run();
     }
 }
