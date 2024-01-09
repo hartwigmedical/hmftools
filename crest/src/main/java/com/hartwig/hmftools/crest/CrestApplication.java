@@ -8,28 +8,13 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
-import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
-
-import java.io.FileOutputStream;
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.version.VersionInfo;
-import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.VariantContextDecorator;
-import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
-import htsjdk.variant.vcf.VCFHeader;
 
 public class CrestApplication
 {
@@ -44,49 +29,6 @@ public class CrestApplication
     private static final String DEFAULT_MIN_TOTAL_READS = "10";
     private static final String DEFAULT_MIN_RNA_READS = "1";
     private static final String DEFAULT_ACCEPTANCE_RATIO = "0.9";
-
-    @NotNull
-    private final String purpleDir;
-    @Nullable
-    private final String outputDir;
-    @NotNull
-    private final String sampleId;
-    @NotNull
-    private final String sampleToCheck;
-
-    private final int minTotalReads;
-    private final int minRnaReads;
-    private final double acceptanceRatio;
-    private final boolean doNotWriteFile;
-
-    public CrestApplication(@NotNull final String purpleDir, @Nullable final String outputDir,
-            @NotNull final String sampleId, @NotNull final String sampleToCheck,
-            final int minTotalReads, final int minRnaReads, final double acceptanceRatio,
-            final boolean doNotWriteFile)
-    {
-        this.purpleDir = purpleDir;
-        this.outputDir = outputDir;
-        this.sampleId = sampleId;
-        this.sampleToCheck = sampleToCheck;
-        this.minTotalReads = minTotalReads;
-        this.minRnaReads = minRnaReads;
-        this.acceptanceRatio = acceptanceRatio;
-        this.doNotWriteFile = doNotWriteFile;
-    }
-
-    public CrestApplication(@NotNull final ConfigBuilder configBuilder)
-    {
-        this(
-                configBuilder.getValue(PURPLE_DIR_CFG),
-                parseOutputDir(configBuilder),
-                configBuilder.getValue(SAMPLE),
-                configBuilder.getValue(RNA_SAMPLE),
-                configBuilder.getInteger(MIN_TOTAL_READS),
-                configBuilder.getInteger(MIN_RNA_READS),
-                configBuilder.getDecimal(ACCEPTANCE_RATIO),
-                configBuilder.hasFlag(DO_NOT_WRITE_FILE)
-        );
-    }
 
     private static void registerConfig(@NotNull final ConfigBuilder configBuilder)
     {
@@ -103,105 +45,21 @@ public class CrestApplication
 
     public static void main(String[] args) throws IOException
     {
-        logVersion();
 
         ConfigBuilder configBuilder = new ConfigBuilder();
         registerConfig(configBuilder);
         configBuilder.checkAndParseCommandLine(args);
 
-        CrestApplication crestApplication = new CrestApplication(configBuilder);
-        crestApplication.logParams();
-        crestApplication.run();
-    }
+        CrestAlgo crestAlgo = new CrestAlgo(configBuilder.getValue(PURPLE_DIR_CFG),
+                parseOutputDir(configBuilder),
+                configBuilder.getValue(SAMPLE),
+                configBuilder.getValue(RNA_SAMPLE),
+                configBuilder.getInteger(MIN_TOTAL_READS),
+                configBuilder.getInteger(MIN_RNA_READS),
+                configBuilder.getDecimal(ACCEPTANCE_RATIO),
+                configBuilder.hasFlag(DO_NOT_WRITE_FILE)
+        );
 
-    public static void logVersion()
-    {
-        final VersionInfo version = new VersionInfo("crest.version");
-        LOGGER.info("Crest version: {}", version.version());
-    }
-
-    void run() throws IOException
-    {
-        String rnaAnnotatedGermlineVcf = PurpleCommon.purpleGermlineVcfFile(purpleDir, sampleId);
-        LOGGER.info("Checking file: {}", rnaAnnotatedGermlineVcf);
-        double supportRatio = computeRnaSupportRatio(rnaAnnotatedGermlineVcf);
-
-        String outputFilename;
-        if(supportRatio < acceptanceRatio)
-        {
-            LOGGER.error("Check failed, ratio of supported reads is below threshold");
-            outputFilename = getOutputFilename(false);
-        }
-        else
-        {
-            LOGGER.info("Check succeeded");
-            outputFilename = getOutputFilename(true);
-        }
-
-        if(!doNotWriteFile)
-        {
-            LOGGER.info("Writing file: {}", outputFilename);
-            new FileOutputStream(outputFilename).close();
-        }
-    }
-
-    private String getOutputFilename(boolean success)
-    {
-        String extension = success ? ".CrestCheckSucceeded" : ".CrestCheckFailed";
-        return (outputDir == null ? "" : outputDir) + sampleId + extension;
-    }
-
-    public void logParams()
-    {
-        LOGGER.info("purpleDir: {}", purpleDir);
-        LOGGER.info("outputDir: {}", outputDir);
-        LOGGER.info("sampleId: {}", sampleId);
-        LOGGER.info("sampleToCheck: {}", sampleToCheck);
-        LOGGER.info("minTotalReads: {}", minTotalReads);
-        LOGGER.info("minRnaReads: {}", minRnaReads);
-        LOGGER.info("acceptanceRatio: {}", acceptanceRatio);
-        LOGGER.info("doNotWriteFile: {}", doNotWriteFile);
-    }
-
-    public double computeRnaSupportRatio(@NotNull String vcfFilename) throws IOException
-    {
-        int supported = 0;
-        var total = 0;
-
-        try(AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFilename, new VCFCodec(), false))
-        {
-            final VCFHeader header = (VCFHeader) reader.getHeader();
-            if(!sampleInFile(sampleToCheck, header))
-            {
-                throw new RuntimeException("Sample " + sampleToCheck + " not found in file " + vcfFilename);
-            }
-
-            for(VariantContext context : reader.iterator())
-            {
-                VariantContextDecorator decorator = new VariantContextDecorator(context);
-
-                if(decorator.isPass() && decorator.type() == VariantType.SNP && !decorator.gene().isEmpty())
-                {
-                    AllelicDepth rnaDepth = decorator.allelicDepth(sampleToCheck);
-                    if(rnaDepth.totalReadCount() >= minTotalReads)
-                    {
-                        total += 1;
-                        if(rnaDepth.alleleReadCount() >= minRnaReads)
-                        {
-                            supported += 1;
-                        }
-                    }
-                }
-            }
-        }
-
-        double ratio = total > 0 ? supported * 1D / total : 0D;
-        LOGGER.info("Supported: " + supported + " Total: " + total + " Fraction: " + ratio);
-        return ratio;
-    }
-
-    private static boolean sampleInFile(@NotNull final String sample, @NotNull final VCFHeader header)
-    {
-        return header.getSampleNamesInOrder().stream().anyMatch(x -> x.equals(sample));
+        crestAlgo.run();
     }
 }

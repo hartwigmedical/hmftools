@@ -29,9 +29,9 @@ public class CrestTest
         String expectedFile = OUTPUT_DIR + File.separator + "tumor_sample.CrestCheckFailed";
         cleanCheckFile(expectedFile);
 
-        CrestApplication crestApplication = new CrestApplication(VCF_DIR, OUTPUT_DIR, WGS_SAMPLE, RNA_SAMPLE,
+        CrestAlgo crestAlgo = new CrestAlgo(VCF_DIR, OUTPUT_DIR, WGS_SAMPLE, RNA_SAMPLE,
                 10, 1, 0.9, false);
-        crestApplication.run();
+        crestAlgo.run();
         validateCheckFile(expectedFile);
     }
 
@@ -42,9 +42,9 @@ public class CrestTest
         cleanCheckFile(expectedFile);
 
         // rather than cook up another test file, just lower the threshold
-        CrestApplication crestApplication = new CrestApplication(VCF_DIR, OUTPUT_DIR, WGS_SAMPLE, RNA_SAMPLE,
+        CrestAlgo crestAlgo = new CrestAlgo(VCF_DIR, OUTPUT_DIR, WGS_SAMPLE, RNA_SAMPLE,
                 10, 1, 0.3, false);
-        crestApplication.run();
+        crestAlgo.run();
 
         validateCheckFile(expectedFile);
     }
@@ -52,18 +52,17 @@ public class CrestTest
     @Test(expected = RuntimeException.class)
     public void shouldErrorIfNoRnaSample() throws IOException
     {
-        CrestApplication crestApplication = new CrestApplication(VCF_DIR, OUTPUT_DIR, WGS_SAMPLE, "WRONG_NAME",
+        CrestAlgo crestAlgo = new CrestAlgo(VCF_DIR, OUTPUT_DIR, WGS_SAMPLE, "WRONG_NAME",
                 10, 1, 0.9, true);
-        crestApplication.run();
+        crestAlgo.run();
     }
 
     @Test
     public void shouldComputeCorrectAlleleRatio() throws IOException
     {
-        CrestApplication crestApplication = new CrestApplication("purple_dir_not_needed", OUTPUT_DIR,
-                "sample_not_needed", RNA_SAMPLE,
+        CrestAlgo crestAlgo = new CrestAlgo("purple_dir_not_needed", null, WGS_SAMPLE, RNA_SAMPLE,
                 10, 1, 0.9, true);
-        double x = crestApplication.computeRnaSupportRatio(VCF_FILE);
+        double x = crestAlgo.computeRnaSupportRatio(VCF_FILE);
         assertEquals(0.47058823, x, EPSILON);
     }
 
