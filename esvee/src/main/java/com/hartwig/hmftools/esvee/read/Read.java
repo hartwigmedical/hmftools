@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.read;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarElementsFromStr;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
@@ -10,34 +11,68 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
 
+import static htsjdk.samtools.CigarOperator.S;
+
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.old.Alignment;
-import com.hartwig.hmftools.esvee.old.Sequence;
-import com.hartwig.hmftools.esvee.old.SequenceDecomposer;
-
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
-public class Read implements Sequence
+public class Read
 {
     private final SAMRecord mRecord;
     private Read mMateRead;
 
-    // cached state
+    // cached state and adjusted properties of the read
+    private String mCigarString;
+    private List<CigarElement> mCigarElements;
+
+    private int mAlignmentStart;
+    private int mAlignmentEnd;
+    private int mUnclippedStart;
+    private int mUnclippedEnd;
     private Integer mNumberOfEvents;
-
-    private List<Alignment> mAlignment;
-
-    private List<SequenceDecomposer.Node> mDecomposition;
+    private byte[] mBases;
+    private byte[] mBaseQuals;
 
     public Read(final SAMRecord record)
     {
         mRecord = record;
-        mAlignment = null;
-        mDecomposition = null;
         mMateRead = null;
+
+        mCigarString = record.getCigarString();
+        mCigarElements = cigarElementsFromStr(mCigarString);
+
+        setBoundaries();
         mNumberOfEvents = 0;
+        mBases = null;
+        mBaseQuals = null;
+    }
+
+    private void setBoundaries()
+    {
+        mAlignmentStart = mRecord.getAlignmentStart();
+        mUnclippedStart = mAlignmentStart;
+        int currentPosition = mAlignmentStart;
+
+        for(int i = 0; i < mCigarElements.size(); ++i)
+        {
+            CigarElement element = mCigarElements.get(i);
+
+            if(i == 0 && element.getOperator() == S)
+                mUnclippedStart -= element.getLength();
+
+            if(element.getOperator().consumesReferenceBases())
+                currentPosition += element.getLength();
+
+            if(i == mCigarElements.size() - 1)
+            {
+                mAlignmentEnd = currentPosition - 1;
+
+                mUnclippedEnd = element.getOperator() == S ? mAlignmentEnd + element.getLength() : mAlignmentEnd;
+            }
+        }
     }
 
     public SAMRecord bamRecord() { return mRecord; }
@@ -46,29 +81,33 @@ public class Read implements Sequence
     public boolean hasMateSet() { return mMateRead != null; }
     public Read mateRead() { return mMateRead; }
 
-    @Override
     public String getName() { return mRecord.getReadName(); }
 
-    public String getBasesString() { return mRecord.getReadString(); }
+    public String chromosome() { return mRecord.getReferenceName(); }
 
-    @Override
-    public byte[] getBases() { return mRecord.getReadBases(); }
+    public List<CigarElement> cigarElements() { return mCigarElements; }
+    public String cigarString() { return mCigarString; }
 
-    @Override
-    public byte[] getBaseQuality() { return mRecord.getBaseQualities(); }
-
-    public int getLength() { return mRecord.getReadLength(); }
-    public int insertSize() { return mRecord.getInferredInsertSize(); }
-
-    public String getChromosome() { return mRecord.getReferenceName(); }
-
+    @Deprecated
     public Cigar getCigar() { return mRecord.getCigar(); }
 
-    public int getAlignmentStart() { return mRecord.getAlignmentStart(); }
-    public int getAlignmentEnd() { return mRecord.getAlignmentEnd(); }
+    public int alignmentStart() { return mAlignmentStart; }
+    public int alignmentEnd() { return mAlignmentEnd; }
 
-    public int getUnclippedStart()  { return mRecord.getUnclippedStart(); }
-    public int getUnclippedEnd() { return mRecord.getUnclippedEnd(); }
+    public int unclippedStart()  { return mUnclippedStart; }
+    public int unclippedEnd() { return mUnclippedEnd; }
+
+    // convenience
+    public boolean isLeftClipped() { return mUnclippedStart < mAlignmentStart; }
+    public boolean isRightClipped() { return mUnclippedEnd > mAlignmentEnd; }
+    public int leftClipLength() { return mAlignmentStart - mUnclippedStart; }
+    public int rightClipLength() { return mUnclippedEnd - mAlignmentEnd; }
+
+    public byte[] getBases() { return mBases != null ? mBases : mRecord.getReadBases(); }
+    public byte[] getBaseQuality() { return mBaseQuals != null ? mBaseQuals : mRecord.getBaseQualities(); }
+    // public String getBasesString() { return mRecord.getReadString(); }
+    public int basesLength() { return mBases != null ? mBases.length : mRecord.getReadBases().length; }
+    public int insertSize() { return mRecord.getInferredInsertSize(); }
 
     // flags
     public boolean isUnmapped() { return mRecord.getReadUnmappedFlag(); }
@@ -88,11 +127,12 @@ public class Read implements Sequence
 
     public int mateAlignmentEnd()
     {
+        // if used then should be calculated and cached
         if(isMateUnmapped())
-            return getAlignmentEnd();
+            return alignmentEnd();
 
         if(mMateRead != null)
-            return mMateRead.getAlignmentEnd();
+            return mMateRead.alignmentEnd();
 
         return getMateAlignmentEnd(mRecord);
     }
@@ -113,23 +153,23 @@ public class Read implements Sequence
     public int getReadIndexAtReferencePosition(final int refPosition, boolean allowExtrapolation)
     {
         // finds the read index given a reference position, and extrapolates outwards from alignments as required
-        if(refPosition < getAlignmentStart())
+        if(refPosition < mAlignmentStart)
         {
             if(!allowExtrapolation)
                 return INVALID_INDEX;
 
-            int baseDiff = getAlignmentStart() - refPosition;
-            int softClipBases = leftSoftClipLength(getCigar());
+            int baseDiff = mAlignmentStart - refPosition;
+            int softClipBases = mAlignmentStart - mUnclippedStart;
             return baseDiff <= softClipBases ? softClipBases - baseDiff : INVALID_INDEX;
         }
-        else if(refPosition > getAlignmentEnd())
+        else if(refPosition > mAlignmentEnd)
         {
             if(!allowExtrapolation)
                 return INVALID_INDEX;
 
-            int baseDiff = refPosition - getAlignmentEnd();
-            int softClipBases = rightSoftClipLength(getCigar());
-            return baseDiff <= softClipBases ? bamRecord().getReadLength() - (softClipBases - baseDiff) - 1 : INVALID_INDEX;
+            int baseDiff = refPosition - mAlignmentEnd;
+            int softClipBases = mUnclippedEnd - mAlignmentEnd;
+            return baseDiff <= softClipBases ? basesLength() - (softClipBases - baseDiff) - 1 : INVALID_INDEX;
         }
 
         return mRecord.getReadPositionAtReferencePosition(refPosition) - 1;
@@ -148,11 +188,6 @@ public class Read implements Sequence
         return mNumberOfEvents;
     }
 
-    public List<SequenceDecomposer.Node> decompose()
-    {
-        return mDecomposition == null ? (mDecomposition = SequenceDecomposer.decompose(this)) : mDecomposition;
-    }
-
     public String toString()
     {
         return readToString(mRecord);
@@ -167,10 +202,9 @@ public class Read implements Sequence
 
     public String sampleName() { return mRecord.getHeader().getAttribute(BAM_HEADER_SAMPLE_ID_TAG); }
 
-    /*
-
     // public boolean isMateOnTheLeft() { return negativeStrand(); }
 
+    /*
     public int impliedFragmentLength()
     {
         if(isMateMapped())
@@ -191,59 +225,5 @@ public class Read implements Sequence
         }
     }
 
-    public int hashCode()
-    {
-        final int firstOfPair = !isSecondOfPair() ? 1 : 0;
-        return mRecord.getReadName().hashCode() ^ firstOfPair;
-    }
-
-    private synchronized List<Alignment> buildAlignmentBlocks()
-    {
-        if(mAlignment != null)
-            return mAlignment;
-
-        final List<Alignment> alignment = new ArrayList<>();
-        if(mRecord.getReadUnmappedFlag())
-        {
-            alignment.add(Alignment.unmapped(mRecord.getReadLength()));
-            return mAlignment = alignment;
-        }
-
-        final int mapQ = mRecord.getMappingQuality();
-        int referencePosition = mRecord.getAlignmentStart();
-        int readPosition = 1;
-
-        for(CigarElement element : mRecord.getCigar().getCigarElements())
-        {
-            switch(element.getOperator())
-            {
-                case M:
-                    alignment.add(new Alignment(mRecord.getReferenceName(), referencePosition, readPosition, element.getLength(), false, mapQ));
-                    break;
-                case I:
-                    alignment.add(new Alignment("*", 0, readPosition, element.getLength(), false, mapQ));
-                    break;
-                case S:
-                    alignment.add(new Alignment("?", 0, readPosition, element.getLength(), false, mapQ));
-                    break;
-            }
-
-            if(element.getOperator().consumesReadBases())
-                readPosition += element.getLength();
-
-            if(element.getOperator().consumesReferenceBases())
-                referencePosition += element.getLength();
-        }
-
-        return mAlignment = alignment;
-    }
-
-    public List<Alignment> getAlignmentBlocks()
-    {
-        if(mAlignment == null)
-            return buildAlignmentBlocks();
-
-        return mAlignment;
-    }
     */
 }

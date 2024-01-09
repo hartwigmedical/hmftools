@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.esvee.read;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.esvee.SvConstants.READ_FILTER_MIN_ALIGNED_BASES;
@@ -10,7 +13,6 @@ import java.util.Arrays;
 
 import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.read.Read;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -19,7 +21,7 @@ public final class ReadFilters
 {
     public static boolean alignmentCrossesJunction(final Read read, final Junction junction)
     {
-        return read.getUnclippedStart() <= junction.Position && junction.Position <= read.getUnclippedEnd();
+        return read.unclippedStart() <= junction.Position && junction.Position <= read.unclippedEnd();
     }
 
     public static boolean isRecordAverageQualityAbove(final byte[] baseQualities, final int averageBaseQThreshold)
@@ -36,31 +38,32 @@ public final class ReadFilters
 
     private static int getAvgBaseQuality(final Read read, final int readPosition, final int length)
     {
-        assert (readPosition > 0);
-
-        final byte[] baseQualities = read.getBaseQuality();
-        final int startIndex = readPosition - 1;
-        final int endIndex = Math.min(startIndex + length, baseQualities.length);
+        int startIndex = readPosition - 1;
+        int endIndex = min(startIndex + length, read.getBaseQuality().length);
 
         int qualitySum = 0;
         for(int i = startIndex; i < endIndex; i++)
-            qualitySum += baseQualities[i];
+        {
+            qualitySum += read.getBaseQuality()[i];
+        }
+
         return qualitySum / length;
     }
 
     public static boolean isRecordAverageQualityPastJunctionAbove(final Read read, final Junction junction, final int averageBaseQThreshold)
     {
-        final int startIndex;
-        final int endIndex;
+        int startIndex;
+        int endIndex;
+
         if(junction.Orientation == POS_STRAND)
         {
-            startIndex = junction.Position - read.getUnclippedStart();
-            endIndex = read.getLength();
+            startIndex = junction.Position - read.unclippedStart();
+            endIndex = read.basesLength();
         }
         else
         {
             startIndex = 0;
-            endIndex = read.getLength() - (read.getUnclippedEnd() - junction.position());
+            endIndex = read.basesLength() - (read.unclippedEnd() - junction.position());
         }
         if(startIndex == endIndex)
             return true;
@@ -71,18 +74,23 @@ public final class ReadFilters
 
     public static boolean recordSoftClipsNearJunction(final Read read, final Junction junction)
     {
-        // Must start/end with a soft-clip that extends to the junction position
-        final CigarElement element = junction.direction() == Direction.FORWARDS
-                ? read.getCigar().getLastCigarElement()
-                : read.getCigar().getFirstCigarElement();
-        if(element.getOperator() != CigarOperator.S)
-            return false;
+        // previous method was almost certainly invalid
+        if(junction.isForward())
+        {
+            if(!read.isRightClipped())
+                return false;
 
-        final int junctionOffsetFromEnd = junction.direction() == Direction.FORWARDS
-                ? read.getUnclippedEnd() - junction.position()
-                : junction.position() - read.getUnclippedStart();
-        final int softClipLength = element.getLength();
-        return softClipLength + READ_SOFT_CLIP_JUNCTION_BUFFER >= junctionOffsetFromEnd;
+            int junctionAlignmentDiff = abs(read.alignmentEnd() - junction.Position);
+            return junctionAlignmentDiff <= READ_SOFT_CLIP_JUNCTION_BUFFER && read.unclippedEnd() > junction.Position;
+        }
+        else
+        {
+            if(!read.isLeftClipped())
+                return false;
+
+            int junctionAlignmentDiff = abs(read.alignmentStart() - junction.Position);
+            return junctionAlignmentDiff <= READ_SOFT_CLIP_JUNCTION_BUFFER && read.unclippedStart() < junction.Position;
+        }
     }
 
     public static boolean hasAcceptableMapQ(final Read read, final int threshold)

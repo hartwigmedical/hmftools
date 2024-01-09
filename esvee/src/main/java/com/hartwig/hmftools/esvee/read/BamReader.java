@@ -4,8 +4,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
-import static com.hartwig.hmftools.esvee.read.ReadCache.CACHE_QUERY_BUFFER;
-import static com.hartwig.hmftools.esvee.read.ReadCache.MAX_CACHE_SIZE;
+import static com.hartwig.hmftools.esvee.old.ReadCache.CACHE_QUERY_BUFFER;
+import static com.hartwig.hmftools.esvee.old.ReadCache.MAX_CACHE_SIZE;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +18,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.esvee.SvConfig;
+import com.hartwig.hmftools.esvee.old.ReadCache;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;

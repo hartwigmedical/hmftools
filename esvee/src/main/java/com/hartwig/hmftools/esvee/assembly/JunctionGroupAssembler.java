@@ -175,7 +175,7 @@ public class JunctionGroupAssembler extends ThreadTask
         mCurrentJunctionGroup.addCandidateRead(read);
 
         // link first and second in pair if within the same group
-        if(read.isMateMapped() && read.mateChromosome().equals(read.getChromosome())
+        if(read.isMateMapped() && read.mateChromosome().equals(read.chromosome())
         && positionWithin(read.mateAlignmentStart(), mCurrentJunctionGroup.minPosition() - MATE_READ_BUFFER, mCurrentJunctionGroup.maxPosition()))
         {
             Read mateRead = mReadGroupMap.get(read.getName());

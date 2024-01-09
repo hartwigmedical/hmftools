@@ -16,7 +16,7 @@ public final class ReadUtils
         if(!read.isMateMapped())
             return false;
 
-        if(!read.getChromosome().equals(read.mateChromosome()))
+        if(!read.chromosome().equals(read.mateChromosome()))
             return true;
 
         if(read.positiveStrand() == read.matePositiveStrand())

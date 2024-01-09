@@ -28,7 +28,7 @@ public class GappedAssembly extends SupportedAssembly
         for(ExtendedAssembly assembly : Sources)
         {
             @Nullable
-            final Integer index = checker.WeakSupport.supportIndex(assembly, read);
+            final Integer index = checker.WeakSupport.supportIndex(assembly, (Sequence)read);
 
             if(index != null)
             {
@@ -61,7 +61,7 @@ public class GappedAssembly extends SupportedAssembly
 
         for(ReadSupport support : readSupport())
         {
-            int initialReadLength = support.Read.getLength();
+            int initialReadLength = support.Read.basesLength();
             Read flippedRead = flipRead(support.Read);
             flipped.addEvidenceAt(flippedRead,getLength() - support.Index - initialReadLength);
         }

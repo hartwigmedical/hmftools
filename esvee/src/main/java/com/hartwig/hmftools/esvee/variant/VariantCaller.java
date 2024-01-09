@@ -477,7 +477,7 @@ public class VariantCaller extends ThreadTask
         for(Read read : support.SplitReads)
         {
             final int supportStartOffset = assembly.getSupportIndex(read) + 1;
-            final int supportEndOffset = assembly.getSupportIndex(read) + read.getLength();
+            final int supportEndOffset = assembly.getSupportIndex(read) + read.basesLength();
             if(supportStartOffset > leftOffset || supportEndOffset < leftOffset)
                 continue; // Doesn't cross left
             final int overhang = leftOffset - supportStartOffset + 1;
@@ -492,7 +492,7 @@ public class VariantCaller extends ThreadTask
         for(Read read : support.SplitReads)
         {
             final int supportStartOffset = assembly.getSupportIndex(read) + 1;
-            final int supportEndOffset = assembly.getSupportIndex(read) + read.getLength();
+            final int supportEndOffset = assembly.getSupportIndex(read) + read.basesLength();
             if(supportEndOffset < rightOffset || supportStartOffset > rightOffset)
                 continue; // Doesn't cross right
             final int overhang = supportEndOffset - rightOffset + 1;
@@ -518,7 +518,7 @@ public class VariantCaller extends ThreadTask
         {
             Read read = support.Read;
             int supportLeft = support.Index;
-            final int supportRight = supportLeft + read.getLength();
+            final int supportRight = supportLeft + read.basesLength();
 
             if(left != null)
             {
@@ -612,7 +612,7 @@ public class VariantCaller extends ThreadTask
         {
             Read read = readSupport.Read;
             int supportLeft = readSupport.Index;
-            int supportRight = supportLeft + read.getLength();
+            int supportRight = supportLeft + read.basesLength();
 
             final int alignmentLeft = alignment.SequenceStartPosition;
             final int alignmentRight = alignment.SequenceStartPosition + alignment.Length;

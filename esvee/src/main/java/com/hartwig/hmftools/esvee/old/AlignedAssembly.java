@@ -72,7 +72,7 @@ public class AlignedAssembly extends SupportedAssembly implements AlignedSequenc
 
         for(ReadSupport support : readSupport())
         {
-            int initialReadLength = support.Read.getLength();
+            int initialReadLength = support.Read.basesLength();
             Read flippedRead = flipRead(support.Read);
             
             flipped.addEvidenceAt(flippedRead, getLength() - support.Index - initialReadLength);

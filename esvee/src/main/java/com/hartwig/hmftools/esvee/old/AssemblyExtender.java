@@ -235,9 +235,9 @@ public class AssemblyExtender extends ThreadTask
         }
 
         if(requiredOrientation == NEG_ORIENT)
-            Collections.sort(mateReads, Comparator.comparingInt(Read::getUnclippedEnd).reversed());
+            Collections.sort(mateReads, Comparator.comparingInt(Read::unclippedEnd).reversed());
         else
-            Collections.sort(mateReads, Comparator.comparingInt(Read::getUnclippedStart));
+            Collections.sort(mateReads, Comparator.comparingInt(Read::unclippedStart));
 
         // CHECK: was .sorted(Comparator.comparingInt(pair -> assembly.getSupportIndex(pair.getLeft())))
 
@@ -266,7 +266,7 @@ public class AssemblyExtender extends ThreadTask
 
         // mCounters.LeftMates.add(mateReads.size());
 
-        discordantReads.sort(Comparator.comparingInt(Read::getUnclippedEnd).reversed());
+        discordantReads.sort(Comparator.comparingInt(Read::unclippedEnd).reversed());
 
         List<Read> applicableDiscordantReads = discordantReads.stream().filter(x -> !x.negativeStrand()).collect(Collectors.toList());
 
@@ -283,7 +283,7 @@ public class AssemblyExtender extends ThreadTask
             {
                 for(ReadSupport readSupport : readSupports)
                 {
-                    int combinedLength = readSupport.Index + readSupport.Read.getLength();
+                    int combinedLength = readSupport.Index + readSupport.Read.basesLength();
 
                     if(existingSupportIndex == null || combinedLength < existingSupportIndex)
                         existingSupportIndex = combinedLength;
@@ -299,8 +299,8 @@ public class AssemblyExtender extends ThreadTask
             */
 
             int minDepth = existingSupportIndex == null
-                    ? assembly.getLength() - read.getLength()
-                    : Math.max(assembly.getLength() - read.getLength(), assembly.getLength() - existingSupportIndex);
+                    ? assembly.getLength() - read.basesLength()
+                    : Math.max(assembly.getLength() - read.basesLength(), assembly.getLength() - existingSupportIndex);
             checkStartIndices.put(read, minDepth);
         }
 
@@ -339,7 +339,7 @@ public class AssemblyExtender extends ThreadTask
 
         // mCounters.RightMates.add(mateReads.size());
 
-        discordantReads.sort(Comparator.comparingInt(Read::getUnclippedStart));
+        discordantReads.sort(Comparator.comparingInt(Read::unclippedStart));
 
         List<Read> applicableDiscordantReads = discordantReads.stream().filter(x -> x.negativeStrand()).collect(Collectors.toList());
 
@@ -366,8 +366,8 @@ public class AssemblyExtender extends ThreadTask
              */
 
             int minDepth = existingSupportIndex == null
-                    ? assembly.getLength() - read.getLength()
-                    : Math.max(assembly.getLength() - read.getLength(), existingSupportIndex);
+                    ? assembly.getLength() - read.basesLength()
+                    : Math.max(assembly.getLength() - read.basesLength(), existingSupportIndex);
 
             checkStartIndices.put(read, minDepth);
         }
@@ -506,8 +506,8 @@ public class AssemblyExtender extends ThreadTask
                 {
                     final int checkIndex = isForwards
                             ? rawIndex
-                            : assembly.getLength() - rawIndex - read.getLength();
-                    if(mSupportChecker.WeakSupport.supportsAt(assembly, read, checkIndex))
+                            : assembly.getLength() - rawIndex - read.basesLength();
+                    if(mSupportChecker.WeakSupport.supportsAt(assembly, (Sequence)read, checkIndex))
                     {
                         assembly.addEvidenceAt(read, checkIndex);
                         break;
@@ -521,14 +521,14 @@ public class AssemblyExtender extends ThreadTask
     {
         original.readSupport().forEach(x ->
         {
-            if(mSupportChecker.WeakSupport.supportsAt(assembly, x.Read, x.Index + offset))
+            if(mSupportChecker.WeakSupport.supportsAt(assembly, (Sequence)x.Read, x.Index + offset))
             {
                 assembly.addEvidenceAt(x.Read, x.Index + offset);
             }
             else
             {
-                mSupportChecker.supportsAtIndex(original, x.Read, 20, 2, x.Index);
-                mSupportChecker.supportsAtIndex(original, x.Read, 20, 2, -32);
+                mSupportChecker.supportsAtIndex(original, (Sequence)x.Read, 20, 2, x.Index);
+                mSupportChecker.supportsAtIndex(original, (Sequence)x.Read, 20, 2, -32);
             }
         });
     }
@@ -548,9 +548,9 @@ public class AssemblyExtender extends ThreadTask
     {
         final HeadNode root = new HeadNode();
         Node current = root;
-        for(int i = 0; i < alignment.getLength(); i++)
+        for(int i = 0; i < alignment.basesLength(); i++)
         {
-            final int index = orientation == Direction.FORWARDS ? i : alignment.getLength() - 1 - i;
+            final int index = orientation == Direction.FORWARDS ? i : alignment.basesLength() - 1 - i;
             final byte base = alignment.getBases()[index];
             final int quality = alignment.getBaseQuality()[index];
 
