@@ -729,8 +729,7 @@ public class VariantVis
             ReadContextCounter.MatchType matchType = entry.getKey();
             List<ReadEvidenceRecord> records = entry.getValue();
 
-            int maxReads = SageVisConstants.MAX_READS_PER_TYPE.get(matchType);
-
+            int maxReads = matchType.DefaultMaxVisRecords;
             if(mConfig.MaxSupportReads < 0)
             {
                 maxReads = MAX_READ_UPPER_LIMIT;

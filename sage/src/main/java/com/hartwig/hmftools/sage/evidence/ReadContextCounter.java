@@ -297,20 +297,22 @@ public class ReadContextCounter//  extends SimpleVariant
 
     public enum MatchType implements Comparable<MatchType>
     {
-        FULL(0),
-        PARTIAL(1),
-        CORE(2),
-        REALIGNED(3),
-        CORE_PARTIAL(4),
-        ALT(5),
-        REF(6),
-        NONE(7);
+        FULL(0, 40),
+        PARTIAL(1, 10),
+        CORE(2, 10),
+        REALIGNED(3, 20),
+        CORE_PARTIAL(4, 10),
+        ALT(5, 5),
+        REF(6, 20),
+        NONE(7, 5);
 
         public final int SortKey;
+        public final int DefaultMaxVisRecords;
 
-        MatchType(int sortKey)
+        MatchType(int sortKey, int defaultMaxVisRecords)
         {
             SortKey = sortKey;
+            DefaultMaxVisRecords = defaultMaxVisRecords;
         }
     }
 
