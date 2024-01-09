@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 
+import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.util.StringUtil.bytesToString;
 
@@ -94,6 +95,7 @@ public class Read
 
     public List<CigarElement> cigarElements() { return mCigarElements; }
     public String cigarString() { return mCigarString; }
+    private void updateCigarString() { mCigarString = cigarStringFromElements(mCigarElements); }
 
     @Deprecated
     public Cigar getCigar() { return mRecord.getCigar(); }
@@ -179,7 +181,40 @@ public class Read
             return baseDiff <= softClipBases ? basesLength() - (softClipBases - baseDiff) - 1 : INVALID_INDEX;
         }
 
-        return mRecord.getReadPositionAtReferencePosition(refPosition) - 1;
+        // cannot use standard method since CIGAR and coords may have been adjusted
+        int readIndex = 0;
+        int currentPos = mAlignmentStart;
+        for(CigarElement element : mCigarElements)
+        {
+            if(!element.getOperator().consumesReferenceBases())
+            {
+                readIndex += element.getLength();
+                continue;
+            }
+
+            if(currentPos == refPosition)
+                break;
+
+            if(!element.getOperator().consumesReadBases())
+            {
+                // for a D or N where the position is inside it, return the read index for the start of the element
+                if(refPosition >= currentPos && refPosition < currentPos + element.getLength())
+                    return readIndex - 1;
+
+                currentPos += element.getLength();
+            }
+            else
+            {
+                // pos = 100, element = 10M, covering pos 100-109, read index 4 (say after 4S), ref pos at last base of element = 109
+                if(refPosition >= currentPos && refPosition < currentPos + element.getLength())
+                    return readIndex + refPosition - currentPos;
+
+                currentPos += element.getLength();
+                readIndex += element.getLength();
+            }
+        }
+
+        return readIndex;
     }
 
     public Object getAttribute(final String name) { return mRecord.getAttribute(name); }
@@ -274,10 +309,6 @@ public class Read
         setBoundaries(newReadStart);
     }
 
-    private void updateCigarString()
-    {
-        mCigarString = cigarStringFromElements(mCigarElements);
-    }
 
     // public boolean isMateOnTheLeft() { return negativeStrand(); }
 

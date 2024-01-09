@@ -12,6 +12,8 @@ public class ReadAdjustments
 
     }
 
+
+
     public static boolean trimPolyGSequences(final Read read)
     {
         if(read.isUnmapped() || !read.isPairedRead())
