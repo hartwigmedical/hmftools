@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.svprep;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.svprep.TestUtils.BLACKLIST_LOCATIONS;
-import static com.hartwig.hmftools.svprep.TestUtils.CHR_1;
-import static com.hartwig.hmftools.svprep.TestUtils.CHR_2;
 import static com.hartwig.hmftools.svprep.TestUtils.HOTSPOT_CACHE;
 import static com.hartwig.hmftools.svprep.TestUtils.REGION_1;
 import static com.hartwig.hmftools.svprep.TestUtils.buildFlags;

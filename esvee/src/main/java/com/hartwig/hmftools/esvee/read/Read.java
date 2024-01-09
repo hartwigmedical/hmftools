@@ -2,26 +2,30 @@ package com.hartwig.hmftools.esvee.read;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.sequence.Alignment;
-import com.hartwig.hmftools.esvee.sequence.Sequence;
-import com.hartwig.hmftools.esvee.assembly.SequenceDecomposer;
+import com.hartwig.hmftools.esvee.old.Alignment;
+import com.hartwig.hmftools.esvee.old.Sequence;
+import com.hartwig.hmftools.esvee.old.SequenceDecomposer;
 
 import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class Read implements Sequence
 {
     private final SAMRecord mRecord;
     private Read mMateRead;
+
+    // cached state
+    private Integer mNumberOfEvents;
 
     private List<Alignment> mAlignment;
 
@@ -33,6 +37,7 @@ public class Read implements Sequence
         mAlignment = null;
         mDecomposition = null;
         mMateRead = null;
+        mNumberOfEvents = 0;
     }
 
     public SAMRecord bamRecord() { return mRecord; }
@@ -54,17 +59,6 @@ public class Read implements Sequence
 
     public int getLength() { return mRecord.getReadLength(); }
     public int insertSize() { return mRecord.getInferredInsertSize(); }
-
-    /*
-    @Override
-    public List<Alignment> getAlignmentBlocks()
-    {
-        if(mAlignment == null)
-            return buildAlignmentBlocks();
-
-        return mAlignment;
-    }
-    */
 
     public String getChromosome() { return mRecord.getReferenceName(); }
 
@@ -109,7 +103,50 @@ public class Read implements Sequence
     public boolean matePositiveStrand() { return !mRecord.getMateNegativeStrandFlag(); }
     public boolean mateNegativeStrand() { return mRecord.getMateNegativeStrandFlag(); }
 
+    public static final int INVALID_INDEX = -1;
+
+    public int getReadIndexAtReferencePosition(final int refPosition)
+    {
+        return getReadIndexAtReferencePosition(refPosition, false);
+    }
+
+    public int getReadIndexAtReferencePosition(final int refPosition, boolean allowExtrapolation)
+    {
+        // finds the read index given a reference position, and extrapolates outwards from alignments as required
+        if(refPosition < getAlignmentStart())
+        {
+            if(!allowExtrapolation)
+                return INVALID_INDEX;
+
+            int baseDiff = getAlignmentStart() - refPosition;
+            int softClipBases = leftSoftClipLength(getCigar());
+            return baseDiff <= softClipBases ? softClipBases - baseDiff : INVALID_INDEX;
+        }
+        else if(refPosition > getAlignmentEnd())
+        {
+            if(!allowExtrapolation)
+                return INVALID_INDEX;
+
+            int baseDiff = refPosition - getAlignmentEnd();
+            int softClipBases = rightSoftClipLength(getCigar());
+            return baseDiff <= softClipBases ? bamRecord().getReadLength() - (softClipBases - baseDiff) - 1 : INVALID_INDEX;
+        }
+
+        return mRecord.getReadPositionAtReferencePosition(refPosition) - 1;
+    }
+
     public Object getAttribute(final String name) { return mRecord.getAttribute(name); }
+
+    public int numberOfEvents()
+    {
+        if(mNumberOfEvents != null)
+            return mNumberOfEvents;
+
+        Object numOfEvents = mRecord.getAttribute(NUM_MUTATONS_ATTRIBUTE);
+
+        mNumberOfEvents = numOfEvents != null ? (int)numOfEvents : 0;
+        return mNumberOfEvents;
+    }
 
     public List<SequenceDecomposer.Node> decompose()
     {
@@ -129,6 +166,36 @@ public class Read implements Sequence
     }
 
     public String sampleName() { return mRecord.getHeader().getAttribute(BAM_HEADER_SAMPLE_ID_TAG); }
+
+    /*
+
+    // public boolean isMateOnTheLeft() { return negativeStrand(); }
+
+    public int impliedFragmentLength()
+    {
+        if(isMateMapped())
+        {
+            if(isMateOnTheLeft())
+            {
+                return getUnclippedEnd() - mRecord.getMateAlignmentStart();
+            }
+            else
+            {
+                final int mateEnd = mRecord.getMateAlignmentStart() + getLength();
+                return mateEnd - getUnclippedStart();
+            }
+        }
+        else
+        {
+            return getUnclippedEnd() - getUnclippedStart();
+        }
+    }
+
+    public int hashCode()
+    {
+        final int firstOfPair = !isSecondOfPair() ? 1 : 0;
+        return mRecord.getReadName().hashCode() ^ firstOfPair;
+    }
 
     private synchronized List<Alignment> buildAlignmentBlocks()
     {
@@ -171,125 +238,12 @@ public class Read implements Sequence
         return mAlignment = alignment;
     }
 
-    /*
-
-    // public boolean isMateOnTheLeft() { return negativeStrand(); }
-
-    public int impliedFragmentLength()
+    public List<Alignment> getAlignmentBlocks()
     {
-        if(isMateMapped())
-        {
-            if(isMateOnTheLeft())
-            {
-                return getUnclippedEnd() - mRecord.getMateAlignmentStart();
-            }
-            else
-            {
-                final int mateEnd = mRecord.getMateAlignmentStart() + getLength();
-                return mateEnd - getUnclippedStart();
-            }
-        }
-        else
-        {
-            return getUnclippedEnd() - getUnclippedStart();
-        }
-    }
+        if(mAlignment == null)
+            return buildAlignmentBlocks();
 
-    public int hashCode()
-    {
-        final int firstOfPair = !isSecondOfPair() ? 1 : 0;
-        return mRecord.getReadName().hashCode() ^ firstOfPair;
-    }
-
-    public boolean equals(final Object obj)
-    {
-        if(this == obj)
-            return true;
-        if(obj == null || obj.getClass() != Record.class)
-            return false;
-
-        final Record other = (Record) obj;
-        if(!other.mRecord.getReadName().equals(mRecord.getReadName()))
-            return false;
-
-        return isFirstOfPair() == other.isFirstOfPair();
-    }
-    */
-
-    /*
-    public void setBases(final byte[] bases, final byte[] quals)
-    {
-        mRecord.setReadBases(bases);
-        mRecord.setBaseQualities(quals);
-        mDecomposition = null;
-    }
-
-    @Override
-    public void setChromosome(final String chromosome)
-    {
-        mRecord.setReadUnmappedFlag(false);
-        mRecord.setReferenceName(chromosome);
-        mAlignment = null;
-    }
-
-    @Override
-    public void setAlignmentStart(final int position)
-    {
-        mRecord.setReadUnmappedFlag(false);
-        mRecord.setAlignmentStart(position);
-        mAlignment = null;
-    }
-
-    @Override
-    public void setCigar(final Cigar cigar)
-    {
-        mRecord.setCigar(cigar);
-        mAlignment = null;
-    }
-
-    @Override
-    public void setCigar(final String cigar)
-    {
-        mRecord.setCigarString(cigar);
-        mAlignment = null;
-    }
-
-    @Override
-    public void setPositiveStrand(final boolean isPositiveStrand)
-    {
-        mRecord.setReadNegativeStrandFlag(!isPositiveStrand);
-    }
-    */
-
-    /*
-    public boolean isGermline()
-    {
-        return "germline".equals(mRecord.getHeader().getAttribute("userTag"));
-    }
-
-    public String sampleName()
-    {
-        @Nullable
-        final String readGroupName = mRecord.getStringAttribute("RG");
-        if(readGroupName == null)
-            return fallbackReadGroup("not finding RG tag");
-        @Nullable
-        final SAMReadGroupRecord readGroup = mRecord.getHeader().getReadGroup(readGroupName);
-        if(readGroup == null)
-            return fallbackReadGroup("not finding matching read-group for tag in file");
-        return readGroup.getSample();
-    }
-
-    private String fallbackReadGroup(final String fallbackReason)
-    {
-        final List<SAMReadGroupRecord> readGroups = mRecord.getHeader().getReadGroups();
-        if(readGroups.isEmpty())
-            throw new IllegalStateException("Cannot determine Sample Name for " + getName() + ". No read groups in file");
-        final String firstRGSample = readGroups.get(0).getSample();
-        if(readGroups.stream().allMatch(rg -> rg.getSample().equals(firstRGSample)))
-            return firstRGSample; // All read-groups in this file are from the same sample.
-
-        throw new IllegalStateException("Cannot determine fallback Sample Name for file for " + getName() + " after " + fallbackReason);
+        return mAlignment;
     }
     */
 }

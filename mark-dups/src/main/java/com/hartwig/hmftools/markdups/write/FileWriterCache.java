@@ -13,7 +13,6 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
 
 import org.jetbrains.annotations.Nullable;
@@ -373,8 +372,8 @@ public class FileWriterCache
             }
 
             // default memory per thread according to samtools doco is 768MB, could configure as a function of max heap used by MarkDups
-            commandArgs.add("-m");
-            commandArgs.add("4G");
+            // commandArgs.add("-m");
+            // commandArgs.add("1G");
 
             commandArgs.add("-T");
             commandArgs.add("tmp");

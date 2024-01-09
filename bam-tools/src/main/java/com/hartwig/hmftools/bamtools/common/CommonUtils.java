@@ -32,6 +32,8 @@ public final class CommonUtils
 
     // config strings
     public static final String BAM_FILE = "bam_file";
+    public static final String BAM_FILE_DESC = "Input BAM file";
+
     public static final String PARTITION_SIZE = "partition_size";
     public static final String REGIONS_FILE = "regions_file";
     public static final String READ_LENGTH = "read_length";
@@ -41,6 +43,7 @@ public final class CommonUtils
 
     public static final Logger BT_LOGGER = LogManager.getLogger(MetricsConfig.class);
 
+    /*
     public static void addCommonCommandOptions(final ConfigBuilder configBuilder)
     {
         addOutputOptions(configBuilder);
@@ -58,6 +61,7 @@ public final class CommonUtils
 
         configBuilder.addInteger(READ_LENGTH, "Read length", DEFAULT_READ_LENGTH);
     }
+    */
 
     public static boolean loadSpecificRegionsConfig(
             final ConfigBuilder configBuilder, final List<String> specificChromosomes, final List<ChrBaseRegion> specificRegions)
@@ -91,45 +95,5 @@ public final class CommonUtils
         }
 
         return true;
-    }
-
-    public static String formFilename(
-            final String sampleId, final String bamFile, final String outputDir, final String outputId, final String fileType)
-    {
-        String filename;
-
-        if(sampleId != null && !sampleId.isEmpty())
-        {
-            filename = outputDir + sampleId;
-        }
-        else
-        {
-            filename = bamFile.substring(0, bamFile.indexOf(".bam"));
-        }
-
-        if(fileType.equals(FLAGSTAT_FILE_TYPE))
-        {
-            filename += ".flagstat";
-        }
-        else if(!fileType.equals(BAM_FILE_TYPE))
-        {
-            filename += ".bam_" + fileType;
-        }
-
-        if(outputId != null)
-        {
-            filename += "." + outputId;
-        }
-
-        if(fileType.equals(BAM_FILE_TYPE))
-        {
-            filename += ".bam";
-        }
-        else if(!fileType.equals(FLAGSTAT_FILE_TYPE))
-        {
-            filename += TSV_EXTENSION;
-        }
-
-        return filename;
     }
 }

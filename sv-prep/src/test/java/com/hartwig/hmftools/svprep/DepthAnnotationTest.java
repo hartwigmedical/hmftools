@@ -3,8 +3,8 @@ package com.hartwig.hmftools.svprep;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
-import static com.hartwig.hmftools.svprep.TestUtils.CHR_1;
-import static com.hartwig.hmftools.svprep.TestUtils.CHR_2;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.svprep.TestUtils.setReadFlag;
 
 import static org.junit.Assert.assertEquals;

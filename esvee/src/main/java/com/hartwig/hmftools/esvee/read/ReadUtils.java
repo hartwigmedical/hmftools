@@ -45,6 +45,37 @@ public final class ReadUtils
         return read.bamRecord().getReadPositionAtReferencePosition(position);
     }
 
+    public static int getReadIndexAtReferencePosition(final Read read, final int position)
+    {
+        // finds the read index given a reference position, and extrapolates outwards from alignments as required
+
+        return read.bamRecord().getReadPositionAtReferencePosition(position);
+    }
+
+    public static byte[] copyArray(final byte[] source)
+    {
+        byte[] dest = new byte[source.length];
+
+        for(int i = 0; i < source.length; ++i)
+        {
+            dest[i] = source[i];
+        }
+
+        return dest;
+    }
+
+    public static int[] copyArray(final int[] source)
+    {
+        int[] dest = new int[source.length];
+
+        for(int i = 0; i < source.length; ++i)
+        {
+            dest[i] = source[i];
+        }
+
+        return dest;
+    }
+
     /*
     public static int getReadPositionAtReferencePosition(final Read read, final int position)
     {

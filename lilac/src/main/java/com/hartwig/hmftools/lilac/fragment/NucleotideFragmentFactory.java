@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
+import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
@@ -72,7 +73,15 @@ public class NucleotideFragmentFactory
             int firstAAIndex = aminoAcidIndices.get(0);
             int nucleotideStartLoci = firstAAIndex * 3;
             String sequence = String.valueOf(codingRegionRead);
-            String aminoAcids = Codons.aminoAcidFromBases(sequence.substring(nucleotideStartLoci - samCodingStartLoci));
+            int startLoci = nucleotideStartLoci - samCodingStartLoci;
+
+            if(startLoci < 0 || startLoci >= sequence.length())
+            {
+                // likely due to a delete in this region
+                LL_LOGGER.trace("invalid startLoci({}) requested: read({}) gene({})", startLoci, record.Id, geneName);
+                return null;
+            }
+            String aminoAcids = Codons.aminoAcidFromBases(sequence.substring(startLoci));
 
             if(!aminoAcids.isEmpty())
             {
@@ -96,7 +105,7 @@ public class NucleotideFragmentFactory
                 return null;
         }
 
-        if (samCodingStartLoci < 0 || samCodingEndLoci < 0)
+        if(samCodingStartLoci < 0 || samCodingEndLoci < 0)
             return null;
 
         List<Integer> lociRange = formRange(samCodingStartLoci, samCodingEndLoci);

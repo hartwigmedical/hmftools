@@ -16,18 +16,21 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.WriteType;
-import com.hartwig.hmftools.esvee.common.VariantCall;
+import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.variant.VariantCall;
 
 public class ResultsWriter
 {
     private final SvConfig mConfig;
     private final BufferedWriter mVariantWriter;
+    private final AssemblyWriter mAssemblyWriter;
     private final BamWriter mBamWriter;
 
     public ResultsWriter(final SvConfig config)
     {
         mConfig = config;
         mVariantWriter = initialiseVariantWriter();
+        mAssemblyWriter = new AssemblyWriter(config);
         mBamWriter = new BamWriter(config);
     }
 
@@ -35,12 +38,13 @@ public class ResultsWriter
     {
         closeBufferedWriter(mVariantWriter);
 
+        mAssemblyWriter.close();
         mBamWriter.close();
     }
 
     private BufferedWriter initialiseVariantWriter()
     {
-        if(!mConfig.WriteTypes.contains(WriteType.BREAKEND_TSV))
+        if(!mConfig.WriteTypes.contains(WriteType.BREAKENDS))
             return null;
 
         if(mConfig.OutputDir == null)
@@ -48,7 +52,7 @@ public class ResultsWriter
 
         try
         {
-            BufferedWriter writer = createBufferedWriter(mConfig.outputFilename(WriteType.BREAKEND_TSV));
+            BufferedWriter writer = createBufferedWriter(mConfig.outputFilename(WriteType.BREAKENDS));
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
@@ -75,6 +79,11 @@ public class ResultsWriter
             SV_LOGGER.error("failed to initialise variant writer: {}", e.toString());
             return null;
         }
+    }
+
+    public synchronized void writeAssembly(final JunctionAssembly assembly)
+    {
+        mAssemblyWriter.writeAssembly(assembly);
     }
 
     public synchronized void writeVariantAssemblyBamRecords(final List<VariantCall> variants)

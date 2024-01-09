@@ -108,12 +108,6 @@ public class SpecificRegions
         configBuilder.addConfigItem(SPECIFIC_REGIONS, SPECIFIC_REGIONS_DESC);
     }
 
-    public static void addSpecificChromosomesRegionsConfig(final Options options)
-    {
-        options.addOption(SPECIFIC_CHROMOSOMES, true, SPECIFIC_CHROMOSOMES_DESC);
-        options.addOption(SPECIFIC_REGIONS, true, SPECIFIC_REGIONS_DESC);
-    }
-
     public static SpecificRegions from(final ConfigBuilder configBuilder)
     {
         SpecificRegions specificRegions = new SpecificRegions();

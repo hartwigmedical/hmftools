@@ -48,16 +48,6 @@ public class TaskExecutor
 
     public static int parseThreads(final ConfigBuilder configBuilder) { return configBuilder.getInteger(THREADS); }
 
-    public static void addThreadOptions(final Options options)
-    {
-        addThreadOptions(options, DEFAULT_THREAD_COUNT);
-    }
-
-    public static void addThreadOptions(final Options options, final int defaultCount)
-    {
-        options.addOption(THREADS, true, threadDescription(defaultCount));
-    }
-
     public static int parseThreads(final CommandLine cmd)
     {
         return parseThreads(cmd, DEFAULT_THREAD_COUNT);

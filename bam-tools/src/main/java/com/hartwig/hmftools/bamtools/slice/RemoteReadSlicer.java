@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.bamtools.slice;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.common.samtools.BamUtils.deriveRefGenomeVersion;
 
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -64,6 +67,7 @@ public class RemoteReadSlicer implements Callable
     {
         BT_LOGGER.debug("processing chromosome({}) with {} remote reads", mChromosome, mRemotePositions.size());
 
+        // likely unmapped now with MarkDups, so not so important
         List<ChrBaseRegion> excludedRegions = ExcludedRegions.getPolyGRegions(mConfig.RefGenVersion);
 
         for(int i = 0; i < mRemotePositions.size(); )

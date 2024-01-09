@@ -5,16 +5,17 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
-import static com.hartwig.hmftools.esvee.assembly.Aligner.mergeAlignedAssemblies;
+import static com.hartwig.hmftools.esvee.alignment.Aligner.mergeAlignedAssemblies;
+import static com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler.mergeJunctionAssemblies;
 import static com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler.mergePrimaryAssemblies;
-import static com.hartwig.hmftools.esvee.assembly.PhasedMerger.createThreadTasks;
-import static com.hartwig.hmftools.esvee.assembly.PhasedMerger.mergePhasedResults;
-import static com.hartwig.hmftools.esvee.common.Junction.validateJunctionMap;
+import static com.hartwig.hmftools.esvee.old.PhasedMerger.createThreadTasks;
+import static com.hartwig.hmftools.esvee.old.PhasedMerger.mergePhasedResults;
 import static com.hartwig.hmftools.esvee.common.JunctionGroup.buildJunctionGroups;
-import static com.hartwig.hmftools.esvee.assembly.VariantCaller.mergeVariantCalls;
+import static com.hartwig.hmftools.esvee.variant.VariantCaller.mergeVariantCalls;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,35 +25,36 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.esvee.assembly.Aligner;
-import com.hartwig.hmftools.esvee.assembly.AssemblyMerger;
+import com.hartwig.hmftools.esvee.alignment.Aligner;
+import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.old.AssemblyMerger;
 import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
-import com.hartwig.hmftools.esvee.assembly.PhasedMerger;
-import com.hartwig.hmftools.esvee.assembly.SupportChecker;
+import com.hartwig.hmftools.esvee.old.PhasedMerger;
+import com.hartwig.hmftools.esvee.old.SupportChecker;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
-import com.hartwig.hmftools.esvee.assembly.AssemblyExtender;
+import com.hartwig.hmftools.esvee.old.AssemblyExtender;
 import com.hartwig.hmftools.esvee.common.ThreadTask;
-import com.hartwig.hmftools.esvee.common.VariantCall;
+import com.hartwig.hmftools.esvee.variant.VariantCall;
 import com.hartwig.hmftools.esvee.output.ResultsWriter;
-import com.hartwig.hmftools.esvee.assembly.HomologySlider;
-import com.hartwig.hmftools.esvee.assembly.OverallCounters;
-import com.hartwig.hmftools.esvee.assembly.PrimaryPhasing;
-import com.hartwig.hmftools.esvee.assembly.SecondaryPhasing;
-import com.hartwig.hmftools.esvee.assembly.SequenceMerger;
-import com.hartwig.hmftools.esvee.assembly.SupportScanner;
-import com.hartwig.hmftools.esvee.assembly.VariantCaller;
-import com.hartwig.hmftools.esvee.assembly.VariantDeduplication;
+import com.hartwig.hmftools.esvee.variant.HomologySlider;
+import com.hartwig.hmftools.esvee.old.OverallCounters;
+import com.hartwig.hmftools.esvee.old.PrimaryPhasing;
+import com.hartwig.hmftools.esvee.old.SecondaryPhasing;
+import com.hartwig.hmftools.esvee.old.SequenceMerger;
+import com.hartwig.hmftools.esvee.old.SupportScanner;
+import com.hartwig.hmftools.esvee.variant.VariantCaller;
+import com.hartwig.hmftools.esvee.variant.VariantDeduplication;
 import com.hartwig.hmftools.esvee.read.BamReader;
-import com.hartwig.hmftools.esvee.sequence.AlignedAssembly;
-import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;
-import com.hartwig.hmftools.esvee.sequence.GappedAssembly;
-import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
+import com.hartwig.hmftools.esvee.old.AlignedAssembly;
+import com.hartwig.hmftools.esvee.old.ExtendedAssembly;
+import com.hartwig.hmftools.esvee.old.GappedAssembly;
+import com.hartwig.hmftools.esvee.old.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.output.VcfWriter;
-import com.hartwig.hmftools.esvee.sequence.ReadSupport;
-import com.hartwig.hmftools.esvee.sequence.Sequence;
-import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
+import com.hartwig.hmftools.esvee.old.ReadSupport;
+import com.hartwig.hmftools.esvee.old.Sequence;
+import com.hartwig.hmftools.esvee.old.SupportedAssembly;
 
 public class JunctionProcessor
 {
@@ -94,7 +96,7 @@ public class JunctionProcessor
     {
         for(String junctionFile : mConfig.JunctionFiles)
         {
-            Map<String,List<Junction>> newJunctionsMap = Junction.loadJunctions(junctionFile);
+            Map<String,List<Junction>> newJunctionsMap = Junction.loadJunctions(junctionFile, mConfig.SpecificChrRegions);
 
             if(newJunctionsMap == null)
                 return false;
@@ -129,6 +131,10 @@ public class JunctionProcessor
 
             loadBamFiles(taskCount);
 
+            List<JunctionAssembly> junctionAssemblies = runPrimaryAssembly();
+
+            /*
+
             List<PrimaryAssembly> primaryAssemblies = runPrimaryAssembly();
 
             if(primaryAssemblies.isEmpty())
@@ -160,6 +166,7 @@ public class JunctionProcessor
             SV_LOGGER.info("all processes complete");
 
             writeAllResults();
+            */
 
             mPerfCounters.forEach(x -> x.logStats());
         }
@@ -186,7 +193,40 @@ public class JunctionProcessor
         }
     }
 
-    private List<PrimaryAssembly> runPrimaryAssembly()
+    private List<JunctionAssembly> runPrimaryAssembly()
+    {
+        int taskCount = mBamReaders.size();
+
+        List<JunctionGroup> junctionGroups = Lists.newArrayList();
+        mJunctionGroupMap.values().forEach(x -> junctionGroups.addAll(x));
+
+        // sorted by groups with the latest range, assuming that these will have the most reads and junctions
+        Collections.sort(junctionGroups);
+
+        List<Thread> threadTasks = new ArrayList<>();
+
+        // Primary Junction Assembly
+        List<JunctionGroupAssembler> primaryAssemblyTasks = JunctionGroupAssembler.createThreadTasks(
+                junctionGroups, mBamReaders, mConfig, mResultsWriter, taskCount, threadTasks);
+
+        if(!runThreadTasks(threadTasks))
+            System.exit(1);
+
+        List<JunctionAssembly> junctionAssemblies = mergeJunctionAssemblies(primaryAssemblyTasks);
+
+        mPerfCounters.add(ThreadTask.mergePerfCounters(primaryAssemblyTasks.stream().collect(Collectors.toList())));
+
+        SV_LOGGER.info("created {} junction assemblies", junctionAssemblies.size());
+
+        int totalCachedReads = junctionGroups.stream().mapToInt(x -> x.candidateReadCount()).sum();
+        SV_LOGGER.debug("cached read count({}) from {} junction groups", totalCachedReads, junctionGroups.size());
+
+        // SV_LOGGER.info("reduced to {} assemblies", junctionAssemblies.size());
+
+        return Collections.emptyList();
+    }
+
+    private List<PrimaryAssembly> runPrimaryAssemblyOld()
     {
         int taskCount = mBamReaders.size();
 
@@ -197,7 +237,7 @@ public class JunctionProcessor
 
         // Primary Junction Assembly
         List<JunctionGroupAssembler> primaryAssemblyTasks = JunctionGroupAssembler.createThreadTasks(
-                junctionGroups, mBamReaders, mConfig, taskCount, threadTasks);
+                junctionGroups, mBamReaders, mConfig, mResultsWriter, taskCount, threadTasks);
 
         if(!runThreadTasks(threadTasks))
             System.exit(1);
@@ -291,7 +331,6 @@ public class JunctionProcessor
             for(ExtendedAssembly assembly : phaseSet)
             {
                 GappedAssembly newAssembly = new GappedAssembly(String.format("Assembly%s-%s", i, j++), List.of(assembly));
-                newAssembly.addErrata(assembly.getAllErrata());
 
                 assembly.readSupport().forEach(x -> newAssembly.addEvidenceAt(x.Read, x.Index));
 
@@ -367,7 +406,7 @@ public class JunctionProcessor
     {
         writeVCF(mVariantCalls);
 
-        if(mConfig.WriteTypes.contains(WriteType.BREAKEND_TSV))
+        if(mConfig.WriteTypes.contains(WriteType.BREAKENDS))
         {
             mVariantCalls.forEach(x -> mResultsWriter.writeVariant(x));
         }
