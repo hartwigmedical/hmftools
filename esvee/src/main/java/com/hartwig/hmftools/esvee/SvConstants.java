@@ -15,11 +15,11 @@ public final class SvConstants
     // BAM reading
     public static final int BAM_READ_JUNCTION_BUFFER = 1000;
 
-    public static final byte BASE_A = 'A';
-    public static final byte BASE_C = 'C';
-    public static final byte BASE_G = 'G';
-    public static final byte BASE_T = 'T';
-    public static final byte BASE_OTHER = 'X';
+    // read adjustments
+    public static final int POLY_G_TRIM_LENGTH = 4;
+    public static final int NORMALISE_INDEL_MIN_SIZE_SOFTCLIP = 6;
+    public static final int NORMALISE_INDEL_MAX_EDGE_DISTANCE = 16;
+
 
     // variant calling
     public static final int MAX_DUP_LENGTH = 6; // then classified as an INS
@@ -87,12 +87,6 @@ public final class SvConstants
     public static final int MIN_READS_SUPPORT_ASSEMBLY = 2;
 
 
-    // When trimming polgG/C, how many Gs/Cs must appear on the edge of a read to be trimmed
-    public static final int NORMALISE_POLY_G_LENGTH = 4;
-
-    // Indels this size or larger near the edge of a read will be converted to soft-clips
-    public static final int NORMALISE_INDEL_MIN_SIZE_SOFTCLIP = 6;
-    public static final int NORMALISE_INDEL_MAX_EDGE_DISTANCE = 16;
 
     // Not a MapQ. Ignore any alignments during extension that come from BWA with a score less than this
     public static final int ALIGNER_MIN_SCORE = 20;

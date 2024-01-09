@@ -1,11 +1,22 @@
 package com.hartwig.hmftools.esvee.read;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
 
 import com.hartwig.hmftools.esvee.SvConstants;
 
+import htsjdk.samtools.SAMRecord;
+
 public final class ReadUtils
 {
+    public static String readToString(final SAMRecord read)
+    {
+        return format("id(%s) coords(%s:%d-%d) cigar(%s) mate(%s:%d) flags(%d)",
+                read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
+                read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
+    }
+
     public static boolean isDiscordant(final Read read)
     {
         return isDiscordant(read, SvConstants.DISCORDANT_FRAGMENT_LENGTH);

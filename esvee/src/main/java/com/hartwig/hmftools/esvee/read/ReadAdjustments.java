@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.read;
 
-import static com.hartwig.hmftools.esvee.SvConstants.NORMALISE_POLY_G_LENGTH;
+import static com.hartwig.hmftools.esvee.SvConstants.POLY_G_TRIM_LENGTH;
 import static com.hartwig.hmftools.esvee.common.BaseType.G;
 import static com.hartwig.hmftools.esvee.common.BaseType.C;
 
@@ -40,7 +40,7 @@ public class ReadAdjustments
             }
         }
 
-        if(trailingGCount < NORMALISE_POLY_G_LENGTH)
+        if(trailingGCount < POLY_G_TRIM_LENGTH)
             return false;
 
         read.trimBases(trailingGCount, read.negativeStrand());

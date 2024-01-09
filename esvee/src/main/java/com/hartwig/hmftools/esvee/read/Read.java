@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarElementsFromStr;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarStringFromElements;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
@@ -14,8 +15,12 @@ import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 
 import static htsjdk.samtools.CigarOperator.S;
+import static htsjdk.samtools.util.StringUtil.bytesToString;
 
 import java.util.List;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.samtools.CigarUtils;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -46,15 +51,15 @@ public class Read
         mCigarString = record.getCigarString();
         mCigarElements = cigarElementsFromStr(mCigarString);
 
-        setBoundaries();
+        setBoundaries(mRecord.getAlignmentStart());
         mNumberOfEvents = 0;
         mBases = null;
         mBaseQuals = null;
     }
 
-    private void setBoundaries()
+    private void setBoundaries(int newReadStart)
     {
-        mAlignmentStart = mRecord.getAlignmentStart();
+        mAlignmentStart = newReadStart;
         mUnclippedStart = mAlignmentStart;
         int currentPosition = mAlignmentStart;
 
@@ -107,11 +112,11 @@ public class Read
 
     public byte[] getBases() { return mBases != null ? mBases : mRecord.getReadBases(); }
     public byte[] getBaseQuality() { return mBaseQuals != null ? mBaseQuals : mRecord.getBaseQualities(); }
-    // public String getBasesString() { return mRecord.getReadString(); }
     public int basesLength() { return mBases != null ? mBases.length : mRecord.getReadBases().length; }
     public int insertSize() { return mRecord.getInferredInsertSize(); }
 
     // flags
+    public int getFlags() { return mRecord.getFlags(); }
     public boolean isUnmapped() { return mRecord.getReadUnmappedFlag(); }
     public boolean isPairedRead() { return mRecord.getReadPairedFlag(); }
     public boolean isFirstOfPair() { return mRecord.getReadPairedFlag() && mRecord.getFirstOfPairFlag(); }
@@ -192,17 +197,15 @@ public class Read
 
     public String toString()
     {
-        return readToString(mRecord);
-    }
-
-    public static String readToString(final SAMRecord read)
-    {
         return format("id(%s) coords(%s:%d-%d) cigar(%s) mate(%s:%d) flags(%d)",
-                read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
-                read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
+                getName(), chromosome(), mAlignmentStart, mAlignmentEnd, mCigarString,
+                mateChromosome(), mateAlignmentStart(), mRecord.getFlags());
     }
 
     public String sampleName() { return mRecord.getHeader().getAttribute(BAM_HEADER_SAMPLE_ID_TAG); }
+
+    @VisibleForTesting
+    public String getBasesString() { return bytesToString(getBases()); }
 
     public void trimBases(int count, boolean fromStart)
     {
@@ -210,6 +213,8 @@ public class Read
         int newBaseLength = max(basesLength() - count, 1);
         byte[] newBases = new byte[newBaseLength];
         byte[] newBaseQuals = new byte[newBaseLength];
+
+        int newReadStart = mAlignmentStart;
 
         if(fromStart)
         {
@@ -221,15 +226,23 @@ public class Read
                 {
                     mCigarElements.remove(0);
                     remainingBases -= element.getLength();
+
+                    if(element.getOperator().consumesReferenceBases())
+                        newReadStart += element.getLength();
                 }
                 else
                 {
+                    mCigarElements.set(0, new CigarElement(element.getLength() - remainingBases, element.getOperator()));
+
+                    if(element.getOperator().consumesReferenceBases())
+                        newReadStart += remainingBases;
+
                     remainingBases = 0;
                 }
             }
 
-            copyArray(getBases(), newBases, 0, 0);
-            copyArray(getBaseQuality(), newBaseQuals, 0, 0);
+            copyArray(getBases(), newBases, count, 0);
+            copyArray(getBaseQuality(), newBaseQuals, count, 0);
         }
         else
         {
@@ -245,15 +258,25 @@ public class Read
                 }
                 else
                 {
+                    mCigarElements.set(lastIndex, new CigarElement(element.getLength() - remainingBases, element.getOperator()));
                     remainingBases = 0;
                 }
             }
 
-            copyArray(getBases(), newBases, count, 0);
-            copyArray(getBaseQuality(), newBaseQuals, count, 0);
+            copyArray(getBases(), newBases, 0, 0);
+            copyArray(getBaseQuality(), newBaseQuals, 0, 0);
         }
 
-        setBoundaries();
+        mBases = newBases;
+        mBaseQuals = newBaseQuals;
+
+        updateCigarString();
+        setBoundaries(newReadStart);
+    }
+
+    private void updateCigarString()
+    {
+        mCigarString = cigarStringFromElements(mCigarElements);
     }
 
     // public boolean isMateOnTheLeft() { return negativeStrand(); }

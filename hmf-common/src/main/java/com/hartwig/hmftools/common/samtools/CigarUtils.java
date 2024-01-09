@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.common.samtools;
 
+import static java.lang.String.format;
+
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.N;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
@@ -45,6 +48,11 @@ public final class CigarUtils
     public static Cigar cigarFromStr(final String cigarStr)
     {
         return new Cigar(cigarElementsFromStr(cigarStr));
+    }
+
+    public static String cigarStringFromElements(final List<CigarElement> elements)
+    {
+        return elements.stream().map(x -> format("%d%s", x.getLength(), x.getOperator())).collect(Collectors.joining());
     }
 
     public static int cigarBaseLength(final Cigar cigar)

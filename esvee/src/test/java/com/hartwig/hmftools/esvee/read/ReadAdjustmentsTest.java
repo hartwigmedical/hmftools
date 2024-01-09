@@ -1,85 +1,68 @@
 package com.hartwig.hmftools.esvee.read;
 
-import java.util.List;
+import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
+import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import com.hartwig.hmftools.esvee.SvConstants;
 
 import org.junit.Test;
 
-import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMSequenceRecord;
-
 public class ReadAdjustmentsTest
 {
-    private static Read record(final String bases, final boolean isPositiveStrand)
-    {
-        final SAMFileHeader header = new SAMFileHeader();
-        header.addSequence(new SAMSequenceRecord("1", 10_000));
-
-        final SAMRecord record = new SAMRecord(header);
-        record.setReadBases(bases.getBytes());
-        record.setBaseQualities(new byte[bases.length()]);
-        record.setReadPairedFlag(true);
-        record.setReadNegativeStrandFlag(!isPositiveStrand);
-        record.setReferenceName("1");
-        record.setAlignmentStart(100);
-        record.setCigar(new Cigar(List.of(new CigarElement(bases.length(), CigarOperator.M))));
-
-        return new Read(record);
-    }
-
     @Test
     public void testPolyGTrimming()
     {
+        String polyGSection = "GGGGGGGG";
+        String polyCSection = "CCCCCCCC";
+        String otherBases = "AAAACCCCGAGATTTT";
 
-        trimPolyGSequences();
+        // wrong end
+        String readBases = polyGSection + otherBases;
+        Read read = createSamRecord(TEST_READ_ID, 100, readBases, makeCigarString(readBases, 0, 0));
+        assertFalse(ReadAdjustments.trimPolyGSequences(read));
+
+        // too few Gs
+        readBases = otherBases + polyGSection.substring(0, 3);
+        read = createSamRecord(TEST_READ_ID, 100, readBases, makeCigarString(readBases, 0, 0));
+        assertFalse(ReadAdjustments.trimPolyGSequences(read));
+
+        // trimmed on the 3' end
+        readBases = otherBases + polyGSection.substring(0, SvConstants.POLY_G_TRIM_LENGTH);
+        read = createSamRecord(TEST_READ_ID, 100, readBases, makeCigarString(readBases, 0, 0));
+        assertTrue(ReadAdjustments.trimPolyGSequences(read));
+
+        assertEquals(otherBases.length(), read.basesLength());
+        assertEquals(read.alignmentStart() + otherBases.length() - 1, read.alignmentEnd());
+        assertEquals(otherBases, read.getBasesString());
+        assertEquals(makeCigarString(otherBases, 0, 0), read.cigarString());
+
+        // again with a soft-clipping at the end
+        readBases = otherBases + polyGSection.substring(0, 8);
+        read = createSamRecord(TEST_READ_ID, 100, readBases, makeCigarString(readBases, 0, 4));
+        assertTrue(ReadAdjustments.trimPolyGSequences(read));
+
+        assertEquals(otherBases.length(), read.basesLength());
+        assertEquals(read.alignmentStart() + otherBases.length() - 1, read.alignmentEnd());
+        assertEquals(otherBases, read.getBasesString());
+        assertEquals(makeCigarString(otherBases, 0, 0), read.cigarString());
+
+        // negative strand - trimmed at the start
+        readBases = polyCSection.substring(0, 6) + otherBases;
+        read = createSamRecord(TEST_READ_ID, 100, readBases, makeCigarString(readBases, 3, 0));
+        read.bamRecord().setReadNegativeStrandFlag(true);
+        assertEquals(97, read.unclippedStart());
+
+        assertTrue(ReadAdjustments.trimPolyGSequences(read));
+
+        assertEquals(103, read.alignmentStart());
+        assertEquals(103, read.unclippedStart());
+        assertEquals(103 + otherBases.length() - 1, read.alignmentEnd());
+        assertEquals(otherBases, read.getBasesString());
+        assertEquals(makeCigarString(otherBases, 0, 0), read.cigarString());
     }
-
-    /* CHASHA FIXME
-    @Test
-    public void trimsGsForward()
-    {
-        final PolyGTrimmer trimmer = new PolyGTrimmer(3);
-
-        final var input = record("CCCCCAAAAAGGGGG", true);
-        final var trimmed = trimmer.trimPolyG(input);
-
-        assertTrue(trimmed).isNotSameAs(input);
-        assertTrue(trimmed.getBasesString()).isEqualTo("CCCCCAAAAA");
-        assertTrue(trimmed.getAlignmentStart()).isEqualTo(100);
-        assertTrue(trimmed.getAlignmentEnd()).isEqualTo(109);
-        assertTrue(trimmed.isPositiveStrand()).isEqualTo(true);
-        assertTrue(trimmed.getCigar().toString()).isEqualTo("10M");
-    }
-
-    @Test
-    public void trimsCsBackward()
-    {
-        final PolyGTrimmer trimmer = new PolyGTrimmer(3);
-
-        final var input = record("CCCCCAAAAAGGGGG", false);
-        final var trimmed = trimmer.trimPolyG(input);
-
-        assertTrue(trimmed).isNotSameAs(input);
-        assertTrue(trimmed.getBasesString()).isEqualTo("AAAAAGGGGG");
-        assertTrue(trimmed.getAlignmentStart()).isEqualTo(105);
-        assertTrue(trimmed.getAlignmentEnd()).isEqualTo(114);
-        assertTrue(trimmed.isPositiveStrand()).isEqualTo(false);
-        assertTrue(trimmed.getCigar().toString()).isEqualTo("10M");
-    }
-
-    @Test
-    public void dontTrimGsBelowThreshold()
-    {
-        final PolyGTrimmer trimmer = new PolyGTrimmer(10);
-
-        final var input = record("CCCCCAAAAAGGGGG", true);
-        final var trimmed = trimmer.trimPolyG(input);
-
-        assertTrue(trimmed).isSameAs(input);
-        assertTrue(trimmed.getBasesString()).isEqualTo("CCCCCAAAAAGGGGG"); // Check we didn't change anything
-    }
-    */
 }

@@ -20,7 +20,7 @@ public class RecordNormaliser
     public RecordNormaliser(final RefGenomeInterface referenceGenome)
     {
         mReadRescue = new ReadRescue(referenceGenome);
-        mPolyGTrimmer = new PolyGTrimmer(SvConstants.NORMALISE_POLY_G_LENGTH);
+        mPolyGTrimmer = new PolyGTrimmer(SvConstants.POLY_G_TRIM_LENGTH);
 
         mSmallIndelMaxEdgeDistance = SvConstants.NORMALISE_INDEL_MAX_EDGE_DISTANCE;
         mSmallIndelMinSizeToSoftClip = SvConstants.NORMALISE_INDEL_MIN_SIZE_SOFTCLIP;
