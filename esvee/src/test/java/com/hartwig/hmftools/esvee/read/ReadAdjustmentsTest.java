@@ -2,6 +2,8 @@ package com.hartwig.hmftools.esvee.read;
 
 import java.util.List;
 
+import org.junit.Test;
+
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -9,7 +11,7 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
 
-public class PolyGTrimmerTest
+public class ReadAdjustmentsTest
 {
     private static Read record(final String bases, final boolean isPositiveStrand)
     {
@@ -26,6 +28,13 @@ public class PolyGTrimmerTest
         record.setCigar(new Cigar(List.of(new CigarElement(bases.length(), CigarOperator.M))));
 
         return new Read(record);
+    }
+
+    @Test
+    public void testPolyGTrimming()
+    {
+
+        trimPolyGSequences();
     }
 
     /* CHASHA FIXME

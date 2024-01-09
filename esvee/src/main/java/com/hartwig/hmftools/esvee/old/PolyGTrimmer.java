@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.read;
+package com.hartwig.hmftools.esvee.old;
 
 import com.hartwig.hmftools.esvee.util.Counter;
 

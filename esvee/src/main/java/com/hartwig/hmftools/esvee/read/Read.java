@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.read;
 
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarElementsFromStr;
@@ -10,6 +11,7 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignme
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
+import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 
 import static htsjdk.samtools.CigarOperator.S;
 
@@ -201,6 +203,58 @@ public class Read
     }
 
     public String sampleName() { return mRecord.getHeader().getAttribute(BAM_HEADER_SAMPLE_ID_TAG); }
+
+    public void trimBases(int count, boolean fromStart)
+    {
+        int remainingBases = count;
+        int newBaseLength = max(basesLength() - count, 1);
+        byte[] newBases = new byte[newBaseLength];
+        byte[] newBaseQuals = new byte[newBaseLength];
+
+        if(fromStart)
+        {
+            while(remainingBases > 0)
+            {
+                CigarElement element = mCigarElements.get(0);
+
+                if(element.getLength() <= remainingBases)
+                {
+                    mCigarElements.remove(0);
+                    remainingBases -= element.getLength();
+                }
+                else
+                {
+                    remainingBases = 0;
+                }
+            }
+
+            copyArray(getBases(), newBases, 0, 0);
+            copyArray(getBaseQuality(), newBaseQuals, 0, 0);
+        }
+        else
+        {
+            while(remainingBases > 0)
+            {
+                int lastIndex = mCigarElements.size() - 1;
+                CigarElement element = mCigarElements.get(lastIndex);
+
+                if(element.getLength() <= remainingBases)
+                {
+                    mCigarElements.remove(lastIndex);
+                    remainingBases -= element.getLength();
+                }
+                else
+                {
+                    remainingBases = 0;
+                }
+            }
+
+            copyArray(getBases(), newBases, count, 0);
+            copyArray(getBaseQuality(), newBaseQuals, count, 0);
+        }
+
+        setBoundaries();
+    }
 
     // public boolean isMateOnTheLeft() { return negativeStrand(); }
 

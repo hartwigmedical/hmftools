@@ -52,6 +52,15 @@ public final class ReadUtils
         return read.bamRecord().getReadPositionAtReferencePosition(position);
     }
 
+    public static void copyArray(final byte[] source, final byte[] dest, final int sourceIndexStart, final int destIndexStart)
+    {
+        int d = destIndexStart;
+        for(int s = sourceIndexStart; s < source.length && d < dest.length; ++s, ++d)
+        {
+            dest[d] = source[s];
+        }
+    }
+
     public static byte[] copyArray(final byte[] source)
     {
         byte[] dest = new byte[source.length];

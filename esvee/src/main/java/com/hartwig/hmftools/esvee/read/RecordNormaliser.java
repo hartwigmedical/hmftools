@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.read;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.SvConstants;
+import com.hartwig.hmftools.esvee.old.PolyGTrimmer;
 
 import org.jetbrains.annotations.Nullable;
 
