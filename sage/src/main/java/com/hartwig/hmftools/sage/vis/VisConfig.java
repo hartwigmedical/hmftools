@@ -6,9 +6,12 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import java.io.File;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
+
+import org.jetbrains.annotations.Nullable;
 
 public class VisConfig
 {
@@ -75,12 +78,28 @@ public class VisConfig
                 "Visualiser: Max reads by support type, default is fixed by type. Use '-1' to show all.", "0");
     }
 
+    @VisibleForTesting
     public VisConfig()
     {
-        OutputDir = null;
+        this(null);
+    }
+
+    @VisibleForTesting
+    public VisConfig(@Nullable final String fullOutputDir)
+    {
         SpecificVariants = Lists.newArrayList();
         PassOnly = false;
         MaxSupportReads = 0;
-        Enabled = false;
+
+        boolean enabled = false;
+        String visDir = null;
+        if(fullOutputDir != null)
+        {
+            enabled = true;
+            visDir = checkAddDirSeparator(fullOutputDir);
+        }
+
+        OutputDir = visDir;
+        Enabled = enabled;
     }
 }
