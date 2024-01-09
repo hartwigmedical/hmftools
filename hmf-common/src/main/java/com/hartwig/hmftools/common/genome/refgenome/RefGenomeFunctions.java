@@ -13,15 +13,6 @@ public final class RefGenomeFunctions
 
     private RefGenomeFunctions() {}
 
-    public static boolean samReaderUsesChrInContigs(final SamReader samReader)
-    {
-        return samReader.getFileHeader()
-                .getSequenceDictionary()
-                .getSequences()
-                .stream()
-                .anyMatch(x -> x.getSequenceName().contains(CHR_PREFIX));
-    }
-
     public static String stripChrPrefix(final String chromosome)
     {
         if(chromosome.startsWith(CHR_PREFIX))

@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.common.genome.refgenome;
 
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +15,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class RefGenomeSource implements RefGenomeInterface
@@ -75,6 +78,12 @@ public class RefGenomeSource implements RefGenomeInterface
     public byte[] getBases(final String chromosome, int posStart, int posEnd)
     {
         return mRefGenome.getSubsequenceAt(chromosome, posStart, posEnd).getBases();
+    }
+
+    public static RefGenomeVersion deriveRefGenomeVersion(final RefGenomeSource refGenomeSource)
+    {
+        String firstChromosome = refGenomeSource.refGenomeFile().getSequenceDictionary().getSequences().get(0).getSequenceName();
+        return firstChromosome.startsWith(CHR_PREFIX) ? V38 : V37;
     }
 
     public static RefGenomeSource loadRefGenome(final String filename)

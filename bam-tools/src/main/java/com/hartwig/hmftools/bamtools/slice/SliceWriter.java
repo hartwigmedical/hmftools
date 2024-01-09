@@ -44,7 +44,7 @@ public class SliceWriter
     {
         SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
 
-        mOutputBam = mConfig.formFilename(BAM_FILE_TYPE);
+        mOutputBam = mConfig.formFilename(WriteType.BAM);
 
         SAMFileHeader fileHeader = samReader.getFileHeader().clone();
 
@@ -74,7 +74,7 @@ public class SliceWriter
     {
         try
         {
-            String filename = mConfig.formFilename("reads");
+            String filename = mConfig.formFilename(WriteType.READS);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("ReadId,Chromosome,PosStart,PosEnd,Cigar");
