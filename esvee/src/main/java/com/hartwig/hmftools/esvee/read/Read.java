@@ -309,6 +309,27 @@ public class Read
         setBoundaries(newReadStart);
     }
 
+    public void convertEdgeIndelToSoftClip(int leftSoftClipBases, int rightSoftClipBases)
+    {
+        // convert elements and recompute read state
+        int newReadStart = mAlignmentStart;
+
+        if(leftSoftClipBases > 0)
+        {
+            newReadStart += mCigarElements.get(0).getLength(); // moves by the M alignment at the first position
+            mCigarElements.remove(0);
+            mCigarElements.set(0, new CigarElement(leftSoftClipBases, S));
+        }
+
+        if(rightSoftClipBases > 0)
+        {
+            mCigarElements.remove(mCigarElements.size() - 1);
+            mCigarElements.set(mCigarElements.size() - 1, new CigarElement(rightSoftClipBases, S));
+        }
+
+        updateCigarString();
+        setBoundaries(newReadStart);
+    }
 
     // public boolean isMateOnTheLeft() { return negativeStrand(); }
 
