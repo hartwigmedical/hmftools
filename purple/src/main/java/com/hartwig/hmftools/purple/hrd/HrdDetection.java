@@ -139,7 +139,7 @@ public class HrdDetection
 
     public int calcLohSegments(final String chromosome, final List<PurpleCopyNumber> copyNumbers)
     {
-        LohCalcData lohCalcData = LohCalcs.calcLohSegments(chromosome, copyNumbers, mLohMinLength, false);
+        LohCalcData lohCalcData = LohCalcs.calcLohSegments(chromosome, copyNumbers, mLohMinLength, false, false);
 
         return lohCalcData.Segments;
     }
