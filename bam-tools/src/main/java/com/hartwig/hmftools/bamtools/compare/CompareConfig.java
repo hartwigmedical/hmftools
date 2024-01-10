@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
@@ -17,6 +18,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
+import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class CompareConfig
@@ -63,8 +65,9 @@ public class CompareConfig
             System.exit(1);
         }
 
-        RefGenVersion = RefGenomeVersion.from(configBuilder);
+        RefGenVersion = BamUtils.deriveRefGenomeVersion(RefBamFile);
 
+        BT_LOGGER.info("refGenomeVersion({}) refBam({}) newBam({})", RefGenVersion, RefBamFile, NewBamFile);
         BT_LOGGER.info("refBam({}) newBam({})", RefBamFile, NewBamFile);
         BT_LOGGER.info("output file({})", OutputFile);
 
@@ -98,7 +101,7 @@ public class CompareConfig
         configBuilder.addFlag(IGNORE_DUP_DIFFS, "Ignore duplicate diffs");
         configBuilder.addFlag(IGNORE_ALTERATIONS, "Ignore consensus reads and internal unmappings");
 
-        addRefGenomeConfig(configBuilder, true);;
+        addRefGenomeFile(configBuilder, true);;
         addSpecificChromosomesRegionsConfig(configBuilder);
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
