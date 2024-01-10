@@ -81,15 +81,15 @@ public abstract class BamWriter
                 writeRecord(read);
                 mConsensusReadCount.incrementAndGet();
 
-                mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), 0, group.id());
+                mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), 0, group.umiId());
 
                 continue;
             }
 
             if(mConfig.UMIs.Enabled)
-                read.setAttribute(UMI_ATTRIBUTE, group.id());
+                read.setAttribute(UMI_ATTRIBUTE, group.umiId());
 
-            writeRead(read, DUPLICATE, group.coordinatesKey(), 0, group.id());
+            writeRead(read, DUPLICATE, group.coordinatesKey(), 0, group.umiId());
         }
     }
 

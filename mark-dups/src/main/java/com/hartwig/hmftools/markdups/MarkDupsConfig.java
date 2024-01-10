@@ -51,7 +51,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.markdups.common.FilterReadsType;
 import com.hartwig.hmftools.markdups.common.HighDepthRegion;
 import com.hartwig.hmftools.markdups.common.ReadUnmapper;
-import com.hartwig.hmftools.markdups.consensus.GroupIdGenerator;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
 import com.hartwig.hmftools.markdups.write.ReadOutput;
 
@@ -75,7 +74,6 @@ public class MarkDupsConfig
     // UMI group config
     public final UmiConfig UMIs;
     public final boolean FormConsensus;
-    public final GroupIdGenerator IdGenerator;
 
     public final ReadUnmapper UnmapRegions;
 
@@ -196,7 +194,6 @@ public class MarkDupsConfig
         NoMateCigar = configBuilder.hasFlag(NO_MATE_CIGAR);
         UMIs = UmiConfig.from(configBuilder);
         FormConsensus = !UMIs.Enabled && !NoMateCigar && configBuilder.hasFlag(FORM_CONSENSUS);
-        IdGenerator = new GroupIdGenerator();
 
         if(configBuilder.hasValue(UNMAP_REGIONS))
         {
@@ -329,7 +326,6 @@ public class MarkDupsConfig
         UMIs = new UmiConfig(umiEnabled, duplexUmi, String.valueOf(DEFAULT_DUPLEX_UMI_DELIM), false);
         FormConsensus = formConsensus;
         NoMateCigar = false;
-        IdGenerator = new GroupIdGenerator();
 
         SpecificChrRegions = new SpecificRegions();
         SpecificRegionsFilterType = FilterReadsType.MATE_AND_SUPP;

@@ -14,15 +14,22 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.common.Constants.CONSENSUS_PREFIX;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
+import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM;
+import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM_STR;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -35,9 +42,10 @@ import htsjdk.samtools.SAMRecord;
 
 public class DuplicateGroup
 {
-    private final String mId;
+    private final String mUmiId; // the UMI if enabled
     private final List<Fragment> mFragments;
     private List<String> mReadIds;
+    private String mGroupReadId; // forms the consensus read ID and is unique
     private int mFragmentCount;
 
     // reads from each fragment are organised into their like-types from which consensus reads can be formed
@@ -52,9 +60,10 @@ public class DuplicateGroup
 
     public DuplicateGroup(final String id, final Fragment fragment)
     {
-        mId = id;
+        mUmiId = id;
         mFragments = Lists.newArrayList(fragment);
         mReadIds = null;
+        mGroupReadId = null;
         mReadGroups = new List[MAX_READ_TYPES];
         mReadGroupComplete = new boolean[MAX_READ_TYPES];
         mPrimaryReadTypeIndex = new ReadTypeId[PRIMARY_READ_TYPES];
@@ -70,7 +79,7 @@ public class DuplicateGroup
     public String coordinatesKey() { return mCoordinatesKey; }
     public FragmentCoordinates fragmentCoordinates() { return !mFragments.isEmpty() ? mFragments.get(0).coordinates() : null; }
 
-    public String id() { return mId; }
+    public String umiId() { return mUmiId; }
 
     public void registerDualStrand() { mDualStrand = true; }
     public boolean hasDualStrand() { return mDualStrand; }
@@ -112,7 +121,7 @@ public class DuplicateGroup
         for(Fragment fragment : mFragments)
         {
             mReadIds.add(fragment.id());
-            fragment.setUmi(mId);
+            fragment.setUmi(mUmiId);
             fragment.setStatus(DUPLICATE);
 
             // add non-supps first to establish the correct primary read type info
@@ -296,6 +305,34 @@ public class DuplicateGroup
         return Arrays.stream(mReadGroups).anyMatch(x -> x != null && !x.isEmpty() && x.size() >= mFragmentCount);
     }
 
+    private String getGroupId(final List<SAMRecord> readGroup)
+    {
+        if(mGroupReadId == null)
+        {
+            mGroupReadId = formConsensusReadId(readGroup, mUmiId);
+        }
+
+        return mGroupReadId;
+    }
+
+    @VisibleForTesting
+    public static String formConsensusReadId(final List<SAMRecord> readGroup, @Nullable  final String umiId)
+    {
+        // take the first read's ID after sorting, include the CNS identifier, and append the UMI if it has one
+        List<String> readIds = readGroup.stream().map(x -> x.getReadName()).collect(Collectors.toList());
+        Collections.sort(readIds);
+        String firstReadId = readIds.get(0);
+
+        int lastDelim = firstReadId.lastIndexOf(READ_ID_DELIM);
+
+        String groupId = firstReadId.substring(0, lastDelim) + READ_ID_DELIM + CONSENSUS_PREFIX;
+
+        if(umiId != null)
+            return groupId + umiId;
+        else
+            return groupId + firstReadId.substring(lastDelim + 1);
+    }
+
     public List<SAMRecord> popCompletedReads(final ConsensusReads consensusReads, boolean processIncompletes)
     {
         // take each read group type in turn and if complete, or in a final processing step, create a consensus read
@@ -317,6 +354,8 @@ public class DuplicateGroup
 
             reads.addAll(readGroup);
 
+            String groupId = getGroupId(readGroup);
+
             try
             {
                 ConsensusReadInfo consensusReadInfo;
@@ -324,11 +363,11 @@ public class DuplicateGroup
                 if(i == ReadType.PRIMARY_SUPPLEMENTARY.ordinal() || i == ReadType.MATE_SUPPLEMENTARY.ordinal())
                 {
                     // supplementaries can go to difference places and some reads have more than one, so go with the most frequent
-                    consensusReadInfo = consensusReads.createConsensusRead(findConsistentSupplementaries(readGroup), mId);
+                    consensusReadInfo = consensusReads.createConsensusRead(findConsistentSupplementaries(readGroup), groupId);
                 }
                 else
                 {
-                    consensusReadInfo = consensusReads.createConsensusRead(readGroup, mId);
+                    consensusReadInfo = consensusReads.createConsensusRead(readGroup, groupId);
                 }
 
                 // set consensus read attributes
@@ -423,7 +462,7 @@ public class DuplicateGroup
     public String toString()
     {
         if(mFragmentCount == 0)
-            return format("id(%s) fragments(%d) coords(%s)", mId, mFragments.size(), mCoordinatesKey);
+            return format("id(%s) fragments(%d) coords(%s)", mUmiId, mFragments.size(), mCoordinatesKey);
 
         StringJoiner sj = new StringJoiner(", ");
         for(ReadType readType : ReadType.values())
@@ -440,6 +479,6 @@ public class DuplicateGroup
             sj.add(format("%s=%d %s", readType, readGroup.size(), state));
         }
 
-        return format("id(%s) fragments(%d) coords(%s) readCounts(%s)", mId, mFragmentCount, mCoordinatesKey, sj);
+        return format("id(%s) fragments(%d) coords(%s) readCounts(%s)", mUmiId, mFragmentCount, mCoordinatesKey, sj);
     }
 }

@@ -15,6 +15,8 @@ public class Constants
 
     public static final char DEFAULT_DUPLEX_UMI_DELIM = '_';
 
+    public static final String CONSENSUS_PREFIX = "CNS_";
+
     // read unmapping
     public static final int UNMAP_MAX_NON_OVERLAPPING_BASES = 10;
     public static final int UNMAP_MIN_SOFT_CLIP = 20;

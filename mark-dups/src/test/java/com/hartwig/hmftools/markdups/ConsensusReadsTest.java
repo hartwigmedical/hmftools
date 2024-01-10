@@ -9,12 +9,15 @@ import static com.hartwig.hmftools.markdups.TestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_A;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_C;
+import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_BASES;
+import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.markdups.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.markdups.TestUtils.setSecondInPair;
 import static com.hartwig.hmftools.markdups.common.Constants.CONSENSUS_MAX_DEPTH;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MISMATCH;
+import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM_STR;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -33,6 +36,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.markdups.common.DuplicateGroup;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 import com.hartwig.hmftools.markdups.consensus.ReadParseState;
@@ -70,6 +74,38 @@ public class ConsensusReadsTest
         mNextBaseMap.put('A', 'T');
         mNextBaseMap.put('T', 'G');
     }
+
+    @Test
+    public void testConsensusReadId()
+    {
+        String readIdFixed = "ABAB:8:SAMPLE:2:222:12345";
+        SAMRecord read1 = createSamRecord(
+                readIdFixed + READ_ID_DELIM_STR + "READ_03", 100, TEST_READ_BASES, TEST_READ_CIGAR, false);
+        SAMRecord read2 = createSamRecord(
+                readIdFixed + READ_ID_DELIM_STR + "READ_02", 100, TEST_READ_BASES, TEST_READ_CIGAR, false);
+        SAMRecord read3 = createSamRecord(
+                readIdFixed + READ_ID_DELIM_STR + "READ_01", 100, TEST_READ_BASES, TEST_READ_CIGAR, false);
+
+        String consensusReadId = DuplicateGroup.formConsensusReadId(List.of(read1, read2, read3), null);
+
+        assertEquals("ABAB:8:SAMPLE:2:222:12345:CNS_READ_01", consensusReadId);
+
+        String unmiId = "ACGTG_ATTGC";
+        read1 = createSamRecord(
+                readIdFixed + READ_ID_DELIM_STR + "READ_03" + READ_ID_DELIM_STR + unmiId,
+                100, TEST_READ_BASES, TEST_READ_CIGAR, false);
+        read2 = createSamRecord(
+                readIdFixed + READ_ID_DELIM_STR + "READ_02" + READ_ID_DELIM_STR + unmiId,
+                100, TEST_READ_BASES, TEST_READ_CIGAR, false);
+        read3 = createSamRecord(
+                readIdFixed + READ_ID_DELIM_STR + "READ_01" + READ_ID_DELIM_STR + unmiId,
+                100, TEST_READ_BASES, TEST_READ_CIGAR, false);
+
+        consensusReadId = DuplicateGroup.formConsensusReadId(List.of(read1, read2, read3), unmiId);
+
+        assertEquals("ABAB:8:SAMPLE:2:222:12345:READ_01:CNS_" + unmiId, consensusReadId);
+    }
+
 
     @Test
     public void testBasicConsensusReads()
