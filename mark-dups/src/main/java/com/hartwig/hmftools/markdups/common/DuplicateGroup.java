@@ -121,7 +121,10 @@ public class DuplicateGroup
         for(Fragment fragment : mFragments)
         {
             mReadIds.add(fragment.id());
-            fragment.setUmi(mUmiId);
+
+            // FIXME: at the moment this fragment ID used to both store the UMI, and to indicate at the fragment is part of a duplicate group,
+            // including for when UMIs are disabled and it's a standard duplicate group. Consider renaming or altering meaning
+            fragment.setUmi(mUmiId != null ? mUmiId : "");
             fragment.setStatus(DUPLICATE);
 
             // add non-supps first to establish the correct primary read type info
@@ -324,6 +327,11 @@ public class DuplicateGroup
         String firstReadId = readIds.get(0);
 
         int lastDelim = firstReadId.lastIndexOf(READ_ID_DELIM);
+
+        if(lastDelim <= 0)
+        {
+            return umiId != null ? firstReadId + READ_ID_DELIM + CONSENSUS_PREFIX + umiId : CONSENSUS_PREFIX + firstReadId;
+        }
 
         String groupId = firstReadId.substring(0, lastDelim) + READ_ID_DELIM + CONSENSUS_PREFIX;
 

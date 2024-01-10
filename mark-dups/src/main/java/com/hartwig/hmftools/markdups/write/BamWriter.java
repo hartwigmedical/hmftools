@@ -97,9 +97,9 @@ public abstract class BamWriter
 
     public abstract void close();
 
-    private void doWriteFragment(final Fragment fragment, boolean excludeUmis)
+    private void doWriteFragment(final Fragment fragment, boolean excludeDuplicates)
     {
-        if(excludeUmis && fragment.umi() != null) // reads in UMI groups are only written as a complete group
+        if(excludeDuplicates && fragment.umi() != null) // reads in duplicate groups are only written as a complete group
             return;
 
         if(fragment.readsWritten())

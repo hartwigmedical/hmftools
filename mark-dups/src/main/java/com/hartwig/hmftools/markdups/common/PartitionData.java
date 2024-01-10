@@ -317,7 +317,7 @@ public class PartitionData
         return NO_READ_MATCH;
     }
 
-    private void storeUmiGroup(final DuplicateGroup duplicateGroup)
+    private void storeDuplicateGroup(final DuplicateGroup duplicateGroup)
     {
         if(duplicateGroup.allReadsReceived())
             return;
@@ -352,7 +352,7 @@ public class PartitionData
                 mUpdatedDuplicateGroups.add(duplicateGroup);
 
                 // store only if incomplete
-                storeUmiGroup(duplicateGroup);
+                storeDuplicateGroup(duplicateGroup);
             }
         }
 
@@ -364,7 +364,7 @@ public class PartitionData
             if(fragment.allReadsPresent())
                 continue;
 
-            if(fragment.umi() != null) // cached with the UMI group
+            if(fragment.umi() != null) // if not null, then part of a duplicate group and status is derived from the group
                 continue;
 
             ResolvedFragmentState resolvedState = fragmentState(fragment);
