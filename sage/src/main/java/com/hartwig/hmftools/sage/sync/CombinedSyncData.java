@@ -101,7 +101,7 @@ public class CombinedSyncData
 
         combinedRecord.setFlags(first.getFlags());
 
-        combinedRecord.setMappingQuality(first.getMappingQuality());
+        combinedRecord.setMappingQuality(max(first.getMappingQuality(), second.getMappingQuality()));
 
         // no need to compute since both records have the same value and it remains unchanged
         combinedRecord.setInferredInsertSize(abs(first.getInferredInsertSize()));
