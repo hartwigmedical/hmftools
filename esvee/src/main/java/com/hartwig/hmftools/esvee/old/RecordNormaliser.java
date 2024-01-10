@@ -1,7 +1,8 @@
-package com.hartwig.hmftools.esvee.read;
+package com.hartwig.hmftools.esvee.old;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.SvConstants;
+import com.hartwig.hmftools.esvee.read.Read;
 
 import org.jetbrains.annotations.Nullable;
 

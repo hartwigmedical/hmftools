@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.read;
+package com.hartwig.hmftools.esvee.old;
 
 import static com.hartwig.hmftools.esvee.read.ReadUtils.getAvgBaseQuality;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
@@ -8,6 +8,7 @@ import java.util.Arrays;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.common.Direction;
+import com.hartwig.hmftools.esvee.read.Read;
 
 import org.jetbrains.annotations.Nullable;
 
