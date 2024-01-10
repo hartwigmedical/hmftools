@@ -90,12 +90,12 @@ public class CompareConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
+        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output comparison file");
+        configBuilder.addPath(REF_BAM_FILE, true, "Ref BAM file");
+        configBuilder.addPath(NEW_BAM_FILE,true, "New BAM file");
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
         configBuilder.addInteger(MAX_PARTITION_READS, "Maximum partition reads before exit", 0);
 
-        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output comparison file");
-        configBuilder.addRequiredConfigItem(REF_BAM_FILE, "Ref BAM file");
-        configBuilder.addRequiredConfigItem(NEW_BAM_FILE,"New BAM file");
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
         configBuilder.addFlag(EXCLUDE_REGIONS, "Ignore excluded regions");
         configBuilder.addFlag(IGNORE_DUP_DIFFS, "Ignore duplicate diffs");
