@@ -122,7 +122,7 @@ public class DiscordantPairFinder
             for(Read read : readList)
             {
                 final RegionOfInterest region = new RegionOfInterest(read.mateChromosome(),
-                        read.mateAlignmentStart(), read.mateAlignmentStart() + read.getLength());
+                        read.mateAlignmentStart(), read.mateAlignmentStart() + read.basesLength());
 
                 boolean found = false;
                 for(RegionOfInterest existingRegion : consolidated)
@@ -151,14 +151,14 @@ public class DiscordantPairFinder
         if(read.mappingQuality() < mMinQuality)
             return Stream.of();
 
-        final RegionOfInterest primary = new RegionOfInterest(read.getChromosome(),
-                read.getUnclippedStart() - mSearchDistance, read.getUnclippedEnd() + mSearchDistance);
+        final RegionOfInterest primary = new RegionOfInterest(read.chromosome(),
+                read.unclippedStart() - mSearchDistance, read.unclippedEnd() + mSearchDistance);
         if(read.isMateMapped())
         {
             final RegionOfInterest secondary = new RegionOfInterest(
                     read.mateChromosome(),
                     read.mateAlignmentStart() - mSearchDistance,
-                    read.mateAlignmentStart() + read.getLength() + mSearchDistance);
+                    read.mateAlignmentStart() + read.basesLength() + mSearchDistance);
             return Stream.of(primary, secondary);
         }
         return Stream.of(primary);

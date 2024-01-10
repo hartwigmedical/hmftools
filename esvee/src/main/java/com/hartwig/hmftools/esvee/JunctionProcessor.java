@@ -489,7 +489,7 @@ public class JunctionProcessor
             if(offset != -1)
             {
                 int oldSupportIndex = readSupport.Index;
-                if(mSupportChecker.AssemblySupport.supportsAt(merged, potentialSupport, oldSupportIndex + offset))
+                if(mSupportChecker.AssemblySupport.supportsAt(merged, (Sequence)potentialSupport, oldSupportIndex + offset))
                 {
                     merged.addEvidenceAt(potentialSupport, oldSupportIndex + offset);
                     continue;

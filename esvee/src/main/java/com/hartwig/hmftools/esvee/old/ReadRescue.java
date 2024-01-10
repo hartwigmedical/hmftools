@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.read;
+package com.hartwig.hmftools.esvee.old;
 
 import static com.hartwig.hmftools.esvee.read.ReadUtils.getAvgBaseQuality;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
@@ -8,6 +8,7 @@ import java.util.Arrays;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.common.Direction;
+import com.hartwig.hmftools.esvee.read.Read;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -81,11 +82,11 @@ public class ReadRescue
     {
         final int referencePosition = referencePositionFromRecordIndex(read, attemptIndex + 1);
         final int referenceStartPosition = referencePosition - 5;
-        final int referenceEndPosition = referencePosition + 50 + read.getLength();
-        if(referenceStartPosition <= 1 || referenceEndPosition >= mRef.getChromosomeLength(read.getChromosome()))
+        final int referenceEndPosition = referencePosition + 50 + read.basesLength();
+        if(referenceStartPosition <= 1 || referenceEndPosition >= mRef.getChromosomeLength(read.chromosome()))
             return null;
 
-        final byte[] referenceBases = mRef.getBases(read.getChromosome(), referenceStartPosition, referenceEndPosition);
+        final byte[] referenceBases = mRef.getBases(read.chromosome(), referenceStartPosition, referenceEndPosition);
 
         return tryRescueRead(read.getBases(), read.getBaseQuality(), attemptIndex, referenceBases, repeatBase);
     }
@@ -94,24 +95,24 @@ public class ReadRescue
     private byte[] tryRescueReadBackwards(final Read read, final byte repeatBase, final int attemptIndex)
     {
         final int referencePosition = referencePositionFromRecordIndex(read, attemptIndex + 1);
-        final int referenceStartPosition = referencePosition - 50 - read.getLength();
+        final int referenceStartPosition = referencePosition - 50 - read.basesLength();
         final int referenceEndPosition = referencePosition + 5;
-        if(referenceStartPosition <= 1 || referenceEndPosition >= mRef.getChromosomeLength(read.getChromosome()))
+        if(referenceStartPosition <= 1 || referenceEndPosition >= mRef.getChromosomeLength(read.chromosome()))
             return null;
 
-        final byte[] referenceBases = mRef.getBases(read.getChromosome(), referenceStartPosition, referenceEndPosition);
+        final byte[] referenceBases = mRef.getBases(read.chromosome(), referenceStartPosition, referenceEndPosition);
         final byte[] reversedReferenceBases = reverseBytes(referenceBases);
 
         final byte[] reversedBases = reverseBytes(read.getBases());
         final byte[] reversedQuals = reverseBytes(read.getBaseQuality());
-        final int reversedAttemptIndex = read.getLength() - attemptIndex;
+        final int reversedAttemptIndex = read.basesLength() - attemptIndex;
         return reverseBytes(tryRescueRead(reversedBases, reversedQuals, reversedAttemptIndex, reversedReferenceBases, repeatBase));
     }
 
     private static int referencePositionFromRecordIndex(final Read read, final int desiredReadPosition)
     {
         int readPosition = 1;
-        int referencePosition = read.getAlignmentStart();
+        int referencePosition = read.alignmentStart();
 
         for(CigarElement element : read.getCigar().getCigarElements())
         {

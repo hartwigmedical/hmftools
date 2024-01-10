@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 
@@ -15,29 +17,6 @@ public class TestUtils
     public static final String REF_BASES = generateRandomBases(100);
     public static final String TEST_READ_ID = "READ_01";
     public static final String TEST_CIGAR  = "100M";
-
-    /*
-    public static SVAConfig config()
-    {
-        return config(Map.of());
-    }
-
-    public static SVAConfig config(final Map<String, Object> overrideConfig)
-    {
-        final Map<String, Object> baseConfig = Map.of(
-                "bam_file", "dummy",
-                "ref_genome", "dummy",
-                "ref_genome_index", "dummy",
-                "junction_file", "dummy",
-                "output_file", "dummy");
-
-        final Map<String, Object> combinedConfig = new HashMap<>();
-        combinedConfig.putAll(baseConfig);
-        combinedConfig.putAll(overrideConfig);
-
-        return null; // HMFConfig.load(combinedConfig, SVAConfig.class, ImmutableSVAConfig.builder());
-    }
-    */
 
     public static Read createSAMRecord(final String sequence)
     {
@@ -64,5 +43,20 @@ public class TestUtils
                 readId, CHR_1, readStart, readBases, cigar, CHR_1, readStart + 1000,
                 false, false, null);
         return new Read(record);
+    }
+
+    public static String makeCigarString(final String readBases, int scLeft, int scRight)
+    {
+        StringBuilder sb = new StringBuilder();
+
+        if(scLeft > 0)
+            sb.append(format("%dS", scLeft));
+
+        sb.append(format("%dM", readBases.length() - scLeft - scRight));
+
+        if(scRight > 0)
+            sb.append(format("%dS", scRight));
+
+        return sb.toString();
     }
 }

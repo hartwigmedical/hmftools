@@ -5,7 +5,6 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
@@ -13,7 +12,6 @@ import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -139,12 +137,12 @@ public class JunctionAssembly
                 {
                     ReadIndexStart = 0;
                     ReadIndexEnd = JunctionReadIndex - 1; // the base at the junction will have already been set
-                    AssemblyStartIndex = read.getUnclippedStart() - mMinAlignedPosition;
+                    AssemblyStartIndex = read.unclippedStart() - mMinAlignedPosition;
                 }
                 else
                 {
                     ReadIndexStart = JunctionReadIndex + 1;
-                    ReadIndexEnd = read.getLength() - 1;
+                    ReadIndexEnd = read.basesLength() - 1;
                     AssemblyStartIndex = mInitialJunction.position() - mMinAlignedPosition + 1;
                 }
             }
@@ -153,14 +151,14 @@ public class JunctionAssembly
                 if(mInitialJunction.isForward())
                 {
                     ReadIndexStart = JunctionReadIndex;
-                    ReadIndexEnd = read.getLength() - 1;
+                    ReadIndexEnd = read.basesLength() - 1;
                     AssemblyStartIndex = 0;
                 }
                 else
                 {
                     ReadIndexStart = 0;
                     ReadIndexEnd = JunctionReadIndex;
-                    AssemblyStartIndex = read.getUnclippedStart() - mMinAlignedPosition;
+                    AssemblyStartIndex = read.unclippedStart() - mMinAlignedPosition;
                 }
             }
         }
@@ -245,11 +243,11 @@ public class JunctionAssembly
         {
             if(isForwardJunction)
             {
-                minAlignedPosition = min(minAlignedPosition, read.getUnclippedStart());
+                minAlignedPosition = min(minAlignedPosition, read.unclippedStart());
             }
             else
             {
-                maxAlignedPosition = max(maxAlignedPosition, read.getUnclippedEnd());
+                maxAlignedPosition = max(maxAlignedPosition, read.unclippedEnd());
             }
         }
 

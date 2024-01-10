@@ -606,7 +606,7 @@ public class HeadNode extends Node
             return startIndex;
 
         int readIndex = 0;
-        int refPosition = read.getAlignmentStart();
+        int refPosition = read.alignmentStart();
 
         int lastAlignedRefPosition = -1;
         int lastAlignedReadIndex = -1;
@@ -629,7 +629,7 @@ public class HeadNode extends Node
         if(lastAlignedRefPosition > 0)
             return (startPosition - lastAlignedRefPosition) + lastAlignedReadIndex - 1;
 
-        return startPosition - read.getUnclippedStart();
+        return startPosition - read.unclippedStart();
 
         /*
         Alignment lastBlock = null;
@@ -652,14 +652,14 @@ public class HeadNode extends Node
         Node current = root;
         final int startOffset = orientation == Direction.FORWARDS
                 ? startIndex
-                : alignment.getLength() - startIndex - 1;
-        for(int i = startOffset; i < alignment.getLength(); i++)
+                : alignment.basesLength() - startIndex - 1;
+        for(int i = startOffset; i < alignment.basesLength(); i++)
         {
             final int index;
             if(orientation == Direction.FORWARDS)
                 index = i;
             else
-                index = alignment.getLength() - 1 - i;
+                index = alignment.basesLength() - 1 - i;
             final byte base = alignment.getBases()[index];
             final int quality = base == 'N' ? 0 : alignment.getBaseQuality()[index];
 
@@ -684,7 +684,7 @@ public class HeadNode extends Node
     public static HeadNode create(final Read read, final int startPosition, final Direction orientation)
     {
         final int startIndex = getReadStartIndex(read, startPosition);
-        if(startIndex < 0 || startIndex >= read.getLength())
+        if(startIndex < 0 || startIndex >= read.basesLength())
             return null;
         return createIndexed(read, startIndex, orientation);
     }
@@ -701,7 +701,7 @@ public class HeadNode extends Node
             Read supportRead = readSupport.Read;
             int supportIndex = readSupport.Index;
 
-            int length = Math.min(assembly.Assembly.length() - supportIndex, supportRead.getLength());
+            int length = Math.min(assembly.Assembly.length() - supportIndex, supportRead.basesLength());
             if(supportIndex < 0)
             {
                 length += supportIndex;

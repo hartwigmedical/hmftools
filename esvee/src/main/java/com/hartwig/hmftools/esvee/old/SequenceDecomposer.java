@@ -324,7 +324,7 @@ public final class SequenceDecomposer
             for(ReadSupport support : assembly.readSupport())
             {
                 int supportStartIndex = support.Index;
-                int supportEndIndex = supportStartIndex + support.Read.getLength();
+                int supportEndIndex = supportStartIndex + support.Read.basesLength();
 
                 if(supportStartIndex <= startIndex && supportEndIndex >= endIndex)
                     supportDepth++;

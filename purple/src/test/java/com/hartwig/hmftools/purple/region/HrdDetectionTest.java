@@ -70,7 +70,7 @@ public class HrdDetectionTest
 
         assertEquals(0, hrdDetection.calcLohSegments(CHR_1, copyNumbers));
 
-        // cannot call from and to telomere
+        // telomere to telomere LOHs are converted from 2 arms to a single LOH count
         copyNumbers.clear();
 
         copyNumbers.add(makeCopyNumber(CHR_1, TELOMERE, CENTROMERE, 1, 100000, 1, 1));
@@ -86,7 +86,9 @@ public class HrdDetectionTest
         copyNumbers.add(makeCopyNumber(CHR_1, CENTROMERE, BND, 100001, 200000, 1, 1));
         copyNumbers.add(makeCopyNumber(CHR_1, BND, TELOMERE, 200001, 500000, 4, 0.5));
 
-        assertEquals(2, hrdDetection.calcLohSegments(CHR_1, copyNumbers));
+        assertEquals(1, hrdDetection.calcLohSegments(CHR_1, copyNumbers));
+
+        // TO-DO: missing unit tests for splitting LOHs across the centromere
     }
 
     @Test

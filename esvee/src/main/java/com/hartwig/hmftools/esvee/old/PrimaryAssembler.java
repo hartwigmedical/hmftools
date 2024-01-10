@@ -92,7 +92,7 @@ public class PrimaryAssembler
                 if(!assembly.containsSupport(alignment))
                 {
                     @Nullable
-                    final Integer supportIndex = mSupportChecker.WeakSupport.bestSupportIndex(assembly, alignment, 50);
+                    final Integer supportIndex = mSupportChecker.WeakSupport.bestSupportIndex(assembly, (Sequence)alignment, 50);
                     if(supportIndex != null)
                         assembly.addEvidenceAt(alignment, supportIndex);
                 }
@@ -129,7 +129,7 @@ public class PrimaryAssembler
             if(supportReads.contains(read))
                 continue;
 
-            if(!mSupportChecker.WeakSupport.supports(assembly, read))
+            if(!mSupportChecker.WeakSupport.supports(assembly, (Sequence)read))
                 continue; // PERF: This should be supports-at
 
             graph = HeadNode.combine(graph, HeadNode.create(read, assembly.AnchorPosition, direction));
@@ -160,14 +160,14 @@ public class PrimaryAssembler
                         // To support the assembly we need to either be fully contained in the assembly, or to support
                         // it with our back half if we're a forwards junction / front half if we're a backwards junction.
                         final int minSupportIndex = mJunction.direction() == Direction.FORWARDS
-                                ? -read.getLength()
+                                ? -read.basesLength()
                                 : 0;
                         final int maxSupportIndex = mJunction.direction() == Direction.FORWARDS
-                                ? min(0, newAssembly.Assembly.length() - read.getLength())
+                                ? min(0, newAssembly.Assembly.length() - read.basesLength())
                                 : newAssembly.Assembly.length();
 
                         @Nullable
-                        final Integer supportIndex = mSupportChecker.StrongSupport.supportIndex(newAssembly, read, 3, minSupportIndex, maxSupportIndex);
+                        final Integer supportIndex = mSupportChecker.StrongSupport.supportIndex(newAssembly, (Sequence)read, 3, minSupportIndex, maxSupportIndex);
                         if(supportIndex != null)
                             newAssembly.addEvidenceAt(read, supportIndex);
                     }
@@ -188,7 +188,7 @@ public class PrimaryAssembler
     {
         boolean justHadIndel = false;
         boolean wasRightNearJunction = false;
-        int referencePosition = read.getAlignmentStart();
+        int referencePosition = read.alignmentStart();
         for(int i = 0; i < read.getCigar().numCigarElements(); i++)
         {
             final CigarElement element = read.getCigar().getCigarElement(i);
@@ -258,7 +258,7 @@ public class PrimaryAssembler
     private List<PrimaryAssembly> createInitialAssemblies(final List<Read> alignments)
     {
         final HeadNode combinedForwards = alignments.stream()
-                .filter(alignment -> alignment.getChromosome().equals(mJunction.Chromosome))
+                .filter(alignment -> alignment.chromosome().equals(mJunction.Chromosome))
                 .map(alignment -> HeadNode.create(alignment, mJunction.Position, mJunction.direction()))
                 .filter(Objects::nonNull)
                 .reduce(HeadNode::combine)
@@ -293,15 +293,15 @@ public class PrimaryAssembler
                 // To support the assembly we need to either be fully contained in the assembly, or to support
                 // it with our back half if we're a forwards junction / front half if we're a backwards junction.
                 final int minSupportIndex = mJunction.direction() == Direction.FORWARDS
-                        ? -read.getLength()
+                        ? -read.basesLength()
                         : 0;
                 final int maxSupportIndex = mJunction.direction() == Direction.FORWARDS
-                        ? min(0, assembly.Assembly.length() - read.getLength())
+                        ? min(0, assembly.Assembly.length() - read.basesLength())
                         : assembly.Assembly.length();
 
                 @Nullable
                 final Integer supportIndex = mSupportChecker.WeakSupport.supportIndex(
-                        assembly, read, PRIMARY_ASSEMBLY_WEAK_SUPPORT_MIN_BASES, minSupportIndex, maxSupportIndex);
+                        assembly, (Sequence)read, PRIMARY_ASSEMBLY_WEAK_SUPPORT_MIN_BASES, minSupportIndex, maxSupportIndex);
 
                 if(supportIndex != null)
                     assembly.addEvidenceAt(read, supportIndex);
@@ -385,7 +385,7 @@ public class PrimaryAssembler
                 else
                     newSupportIndex = readSupport.Index;
 
-                if(mSupportChecker.WeakSupport.supportsAt(assembly, read, newSupportIndex))
+                if(mSupportChecker.WeakSupport.supportsAt(assembly, (Sequence)read, newSupportIndex))
                     assembly.addEvidenceAt(read, newSupportIndex);
                 else
                     assembly.tryAddSupport(mSupportChecker, read);

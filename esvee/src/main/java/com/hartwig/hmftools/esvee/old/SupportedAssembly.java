@@ -56,7 +56,7 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.old.Assembly
         if(containsSupport(read))
             return true;
 
-        if(checker.WeakSupport.supportsAt(this, read, suggestedIndex))
+        if(checker.WeakSupport.supportsAt(this, (Sequence)read, suggestedIndex))
         {
             addEvidenceAt(read, suggestedIndex);
             return true;
@@ -67,7 +67,7 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.old.Assembly
 
     public boolean tryAddSupport(final SupportChecker checker, final Read read)
     {
-        Integer index = checker.WeakSupport.supportIndex(this, read);
+        Integer index = checker.WeakSupport.supportIndex(this, (Sequence)read);
 
         if(index == null)
             return false;
@@ -158,7 +158,7 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.old.Assembly
             int readOffset = readSupport.Index < 0 ? -readSupport.Index : 0;
 
             int remainingAssemblyLength = Assembly.length() - assemblyOffset;
-            int remainingReadLength = read.getLength() - readOffset;
+            int remainingReadLength = read.basesLength() - readOffset;
             int supportLength = Math.min(remainingAssemblyLength, remainingReadLength);
 
             for(int i = 0; i < supportLength; i++)
@@ -193,7 +193,7 @@ public class SupportedAssembly extends com.hartwig.hmftools.esvee.old.Assembly
             final int readOffset = readSupport.Index < 0 ? -readSupport.Index : 0;
 
             final int remainingAssemblyLength = Assembly.length() - assemblyOffset;
-            final int remainingReadLength = read.getLength() - readOffset;
+            final int remainingReadLength = read.basesLength() - readOffset;
             final int supportLength = Math.min(remainingAssemblyLength, remainingReadLength);
             for(int i = 0; i < supportLength; i++)
             {

@@ -42,7 +42,7 @@ public class Node
             if(Read == other.Read)
                 return 0;
 
-            int compare = Integer.compare(Read.getAlignmentStart(), other.Read.getAlignmentStart());
+            int compare = Integer.compare(Read.alignmentStart(), other.Read.alignmentStart());
             if(compare != 0)
                 return compare;
 

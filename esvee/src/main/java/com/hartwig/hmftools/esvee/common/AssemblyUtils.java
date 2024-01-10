@@ -36,11 +36,11 @@ public final class AssemblyUtils
         {
             if(junction.isForward())
             {
-                maxAlignedPosition = max(maxAlignedPosition, read.getUnclippedEnd());
+                maxAlignedPosition = max(maxAlignedPosition, read.unclippedEnd());
             }
             else
             {
-                minAlignedPosition = min(minAlignedPosition, read.getUnclippedStart());
+                minAlignedPosition = min(minAlignedPosition, read.unclippedStart());
             }
 
             int junctionBaseQualTotal = readQualFromJunction(read, junction);
@@ -65,7 +65,7 @@ public final class AssemblyUtils
         if(junction.direction() == Direction.FORWARDS)
         {
             readIndexStart = junctionReadIndex;
-            readIndexEnd = read.getLength() - 1;
+            readIndexEnd = read.basesLength() - 1;
         }
         else
         {

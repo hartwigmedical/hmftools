@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.read;
+package com.hartwig.hmftools.esvee.old;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
@@ -13,6 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+
+import com.hartwig.hmftools.esvee.read.Read;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -268,12 +270,12 @@ public class ReadCache
             {
                 // CHECK: use the mate's position or actually are these the same anyway?
                 int matePosStart = read.mateAlignmentStart();
-                int matePosEnd = matePosStart + read.getLength() * 2; // CHECK: consider using actual mate end using cigar
+                int matePosEnd = matePosStart + read.basesLength() * 2; // CHECK: consider using actual mate end using cigar
                 return positionsOverlap(matePosStart, matePosEnd, positionStart, positionEnd);
             }
             else
             {
-                return positionsOverlap(read.getAlignmentStart(), read.getAlignmentEnd(), positionStart, positionEnd);
+                return positionsOverlap(read.alignmentStart(), read.alignmentEnd(), positionStart, positionEnd);
             }
 
             /*

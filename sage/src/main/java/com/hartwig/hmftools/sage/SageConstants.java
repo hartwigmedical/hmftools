@@ -111,7 +111,7 @@ public class SageConstants
             0.1, 0.5);
 
     public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(
-            "panel", 150, 0.02,
+            "panel", 100, 0.02,
             0, 0, 0, 0,
             0.04, 0.04);
 

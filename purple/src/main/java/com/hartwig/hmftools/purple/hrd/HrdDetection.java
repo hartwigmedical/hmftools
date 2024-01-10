@@ -47,9 +47,9 @@ public class HrdDetection
     private static final int DEFAULT_SEGMENT_BREAK_MIN_LENGTH = 100_000;
     private static final int DEFAULT_SEGMENT_BREAK_LENGTH = 3_000_000;
 
-    private static final int HRD_STATUS_LOH_CUTOFF = 8;
+    private static final int HRD_STATUS_LOH_CUTOFF = 7;
     private static final int HRD_STATUS_IMBALANCE_CUTOFF = 2;
-    private static final int HRD_STATUS_SEGMENT_BREAKS_CUTOFF = 29;
+    private static final int HRD_STATUS_SEGMENT_BREAKS_CUTOFF = 24;
 
     private static final double MAX_COPY_NUM_DIFF = 0.5;
     private static final double MAX_COPY_NUM_DIFF_PERC = 0.2;
@@ -139,7 +139,7 @@ public class HrdDetection
 
     public int calcLohSegments(final String chromosome, final List<PurpleCopyNumber> copyNumbers)
     {
-        LohCalcData lohCalcData = LohCalcs.calcLohSegments(chromosome, copyNumbers, mLohMinLength, false);
+        LohCalcData lohCalcData = LohCalcs.calcLohSegments(chromosome, copyNumbers, mLohMinLength, false, false);
 
         return lohCalcData.Segments;
     }
