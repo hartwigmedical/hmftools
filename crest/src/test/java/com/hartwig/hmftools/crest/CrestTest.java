@@ -9,7 +9,9 @@ import java.io.IOException;
 import com.google.common.io.Resources;
 
 import org.jetbrains.annotations.NotNull;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class CrestTest
 {
@@ -20,18 +22,18 @@ public class CrestTest
     private static final String WGS_SAMPLE = "tumor_sample";
     private static final String RNA_SAMPLE = "rna_sample";
 
-    private static final String OUTPUT_DIR =
-            System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp" + File.separator;
-
     private static final double EPSILON = 1E-8;
+
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Test
     public void shouldFlagMismatchedSample() throws IOException
     {
-        String expectedFile = OUTPUT_DIR + File.separator + "tumor_sample.CrestCheckFailed";
+        String expectedFile = tempFolder.getRoot().getPath() + File.separator + "tumor_sample.CrestCheckFailed";
         cleanCheckFile(expectedFile);
 
-        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, OUTPUT_DIR, WGS_SAMPLE, RNA_SAMPLE,
+        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, tempFolder.getRoot().getPath(), WGS_SAMPLE, RNA_SAMPLE,
                 10, 1, 0.9, false);
         crestAlgo.run();
         validateCheckFile(expectedFile);
@@ -40,11 +42,11 @@ public class CrestTest
     @Test
     public void shouldAcceptMatchedSample() throws IOException
     {
-        String expectedFile = OUTPUT_DIR + File.separator + "tumor_sample.CrestCheckSucceeded";
+        String expectedFile = tempFolder.getRoot().getPath() + File.separator + "tumor_sample.CrestCheckSucceeded";
         cleanCheckFile(expectedFile);
 
         // rather than cook up another test file, just lower the threshold
-        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, OUTPUT_DIR, WGS_SAMPLE, RNA_SAMPLE,
+        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, tempFolder.getRoot().getPath(), WGS_SAMPLE, RNA_SAMPLE,
                 10, 1, 0.3, false);
         crestAlgo.run();
 
@@ -54,7 +56,7 @@ public class CrestTest
     @Test(expected = RuntimeException.class)
     public void shouldErrorIfNoRnaSample() throws IOException
     {
-        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, OUTPUT_DIR, WGS_SAMPLE, "WRONG_NAME",
+        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, null, WGS_SAMPLE, "WRONG_NAME",
                 10, 1, 0.9, true);
         crestAlgo.run();
     }
