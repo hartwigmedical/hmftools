@@ -8,7 +8,7 @@ version = "2.0.0"
 authors = [{ name="Luan Nguyen", email="lnguyen@hartwigmedicalfoundation.nl" }]
 description = "Python machine learning component of CUPPA"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 dependencies = [
     "pandas == 2.0.3",
     "numpy == 1.24.3",
@@ -26,5 +26,4 @@ classifiers = [
 ]
 
 [tool.setuptools.packages.find]
-where = ["cuppa"]
-include = ["classifier","components", "compose", "misc", "performance", "sample_data", "test", "visualization"]
+include = ["cuppa","cuppa.*"]
