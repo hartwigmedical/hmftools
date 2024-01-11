@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import pandas as pd
 import numpy as np
 from numpy._typing import NDArray
-from typing import Iterable
+from typing import Iterable, Optional
 import logging
 logger = logging.getLogger(__name__)
 
@@ -15,7 +17,7 @@ def max_col(X: pd.DataFrame | NDArray) -> NDArray:
 
 def get_top_cols(
     array_2d: pd.DataFrame | NDArray,
-    top_n: int | None = None
+    top_n: Optional[int] = None
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
 
     ## Detect input data type

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 import pandas as pd
 from sklearn.compose import make_column_selector
 
@@ -115,7 +113,7 @@ class MetaClassifiers:
         return RollingAvgCalibration(kernel="gaussian", window_size="variable", min_true_samples=10)
 
     @classmethod
-    def DnaCombinedClassifier(cls, fusion_overrides_path: Optional[str] = None) -> Pipeline:
+    def DnaCombinedClassifier(cls, fusion_overrides_path: str | None = None) -> Pipeline:
         fusion_overrides = None
         if fusion_overrides_path is not None:
             fusion_overrides = pd.read_table(fusion_overrides_path)
@@ -184,7 +182,7 @@ class ClassifierLayers:
     @classmethod
     def MetaClassifierLayer(
         cls,
-        fusion_overrides_path: Optional[str] = None,
+        fusion_overrides_path: str | None = None,
         n_jobs: int = 1,
         verbose: bool = False
     ) -> ColumnTransformer:

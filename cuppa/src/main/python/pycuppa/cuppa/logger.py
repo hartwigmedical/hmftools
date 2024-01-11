@@ -1,6 +1,7 @@
 import logging
 import re
 import sys
+from typing import Optional
 
 ## Disable matplotlib logging
 logging.getLogger('matplotlib').disabled = True
@@ -10,7 +11,7 @@ logging.getLogger('matplotlib.backends.backend_pdf').disabled = True
 
 
 def reset_logging_basic_config(
-    filename: str | None = None,
+    filename: Optional[str] = None,
     level: int = logging.DEBUG,
     capture_warnings: bool = True
 ):
