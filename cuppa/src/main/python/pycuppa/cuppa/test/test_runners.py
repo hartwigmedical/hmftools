@@ -44,13 +44,13 @@ class TestRunnerArgParser:
 
 class TestPredictionRunner:
 
-    def test_run_using_new_input_format(self):
+    def test_run_using_new_input_format_gives_correct_results_and_writes_output(self):
 
         output_dir = os.path.join(tempfile.gettempdir(), "pycuppa_prediction_run_test")
         os.makedirs(output_dir, exist_ok=True)
 
         runner = PredictionRunner(
-            features_path=MockInputData.path_tsv_new_format_colo,
+            features_path=MockInputData.path_tsv_new_format_prostate,
             sample_id="TEST_SAMPLE",
             classifier_path=DEFAULT_CUPPA_CLASSIFIER_PATH,
             output_dir=output_dir,
@@ -59,13 +59,21 @@ class TestPredictionRunner:
 
         runner.run()
 
+        combined_prediction = runner.pred_summ.query("clf_name=='combined'")
+        assert combined_prediction["pred_prob_1"].round(4).iloc[0] == 0.9968
+        assert combined_prediction["pred_class_1"].iloc[0] == "Prostate"
+
+        rna_combined_prediction = runner.pred_summ.query("clf_name=='rna_combined'")
+        assert rna_combined_prediction["pred_prob_1"].round(4).iloc[0] == 0.9953
+        assert rna_combined_prediction["pred_class_1"].iloc[0] == "Prostate"
+
         assert os.path.exists(runner.plot_path)
         assert os.path.exists(runner.vis_data_path)
         assert os.path.exists(runner.pred_summ_path)
 
         shutil.rmtree(output_dir)
 
-    def test_run_on_mock_data_without_outputting_files(self):
+    def test_run_on_mock_data_gives_correct_results(self):
 
         runner = PredictionRunner(
             features_path="/PLACEHOLDER",
