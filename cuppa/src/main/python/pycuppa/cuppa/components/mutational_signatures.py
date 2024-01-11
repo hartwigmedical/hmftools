@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from typing import Self
 from scipy.optimize import nnls
 from sklearn.base import BaseEstimator
 from sklearn.preprocessing import QuantileTransformer
@@ -41,7 +40,7 @@ class SigCohortQuantileTransformer(BaseEstimator, LoggerMixin):
             self.logger.error("`X` must be a pandas DataFrame")
             raise TypeError
 
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "SigCohortQuantileTransformer":
         self._check_X(X)
 
         transformers = {}
@@ -83,17 +82,12 @@ class SigCohortQuantileTransformer(BaseEstimator, LoggerMixin):
         ## Main
         X_trans = {}
         for class_i, transformer in self.transformers_.items():
-            #class_i="Adrenal gland"
-            #transformer = self.transformers_[class_i]
 
             X_trans_i = transformer.transform(X)
 
             if not clip_upper:
                 q_max = transformer.quantiles_[-1]
                 X_trans_i = np.where(X>q_max, X/q_max, X_trans_i)
-
-                # q_min = transformer.quantiles_[0]
-                # X_trans_i = np.where(X<q_min, -q_min/X, X_trans_i)
 
             X_trans_i = pd.DataFrame(X_trans_i, columns=self.feature_names_in_, index=X.index)
             X_trans[class_i] = X_trans_i
@@ -120,11 +114,16 @@ class SigCohortQuantileTransformer(BaseEstimator, LoggerMixin):
         self.fit(X,y)
         return self.transform(X)
 
-    def set_output(self, transform: str = None) -> Self:
+    def set_output(self, transform: str = None) -> "SigCohortQuantileTransformer":
         return self
 
 
-def fit_to_signatures(X, profiles, rescale=True, show_residual=False):
+def fit_to_signatures(
+    X: pd.DataFrame,
+    profiles: pd.DataFrame,
+    rescale: bool = True,
+    show_residual: bool = False
+) -> pd.DataFrame:
     """
     Fit to signature profiles using non-negative linear least squares (NNLS) fitting
 
@@ -184,10 +183,6 @@ def fit_to_signatures(X, profiles, rescale=True, show_residual=False):
         index=X.index,
         columns=list(profiles.columns) + ["_residual"]
     )
-
-    # result.sum(axis=1)
-    # result.drop("_residual", axis=1).sum(axis=1)
-    # X.sum(axis=1)
 
     contribs = result.drop("_residual", axis=1)
     residual = result["_residual"]

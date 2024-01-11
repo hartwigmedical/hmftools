@@ -3,7 +3,7 @@ import pandas as pd
 from scipy.stats import trim_mean
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
-from typing import Self, Any, Literal
+from typing import Any, Literal
 from numpy.typing import NDArray
 from cuppa.logger import LoggerMixin
 import logging
@@ -160,7 +160,7 @@ class ProfileSimilarityTransformer(BaseEstimator, LoggerMixin):
 
         return X
 
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "ProfileSimilarityTransformer":
         """
 
         Parameters
@@ -235,7 +235,7 @@ class ProfileSimilarityTransformer(BaseEstimator, LoggerMixin):
         self.fit(X, y)
         return self.transform(X)
 
-    def set_output(self, transform: Any = None) -> Self:
+    def set_output(self, transform: Any = None) -> "ProfileSimilarityTransformer":
         return self
 
 class NoiseProfileAdder(BaseEstimator, TransformerMixin):
@@ -283,7 +283,7 @@ class NoiseProfileAdder(BaseEstimator, TransformerMixin):
         self.count_ceiling = count_ceiling
         self.feature_prefix = feature_prefix
 
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "NoiseProfileAdder":
 
         transformer = ProfileSimilarityTransformer(
             agg_func=self.agg_func,
@@ -298,7 +298,7 @@ class NoiseProfileAdder(BaseEstimator, TransformerMixin):
 
         return self
 
-    def transform(self, X: pd.DataFrame, y: Any = None):
+    def transform(self, X: pd.DataFrame, y: Any = None) -> pd.DataFrame:
         check_is_fitted(self, "noise_profile")
 
         X_trans = X
@@ -306,7 +306,7 @@ class NoiseProfileAdder(BaseEstimator, TransformerMixin):
 
         return X_trans
 
-    def set_output(self, transform: str = None) -> Self:
+    def set_output(self, transform: str = None) -> "NoiseProfileAdder":
         return self
 
 
@@ -349,10 +349,10 @@ class NonBestSimilarityScaler(BaseEstimator):
         """
         self.exponent = exponent
 
-    def fit(self, X: Any, y: Any = None) -> Self:
+    def fit(self, X: Any, y: Any = None) -> "NonBestSimilarityScaler":
         return self
 
-    def transform(self, X: pd.DataFrame, y: Any = None):
+    def transform(self, X: pd.DataFrame, y: Any = None) -> pd.DataFrame:
         max_values = X.max(axis=1)
         scale_factors = X.add(-max_values + 1, axis=0)
 
@@ -368,7 +368,7 @@ class NonBestSimilarityScaler(BaseEstimator):
     def fit_transform(self, X: pd.DataFrame, y: Any = None, **fit_params) -> pd.DataFrame:
         return self.transform(X)
 
-    def set_output(self, transform: Any = None) -> Self:
+    def set_output(self, transform: Any = None) -> "NonBestSimilarityScaler":
         return self
 
 

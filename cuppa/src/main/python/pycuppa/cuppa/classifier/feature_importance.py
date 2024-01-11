@@ -24,7 +24,7 @@ class FeatureImportance(pd.DataFrame, LoggerMixin):
         return FeatureImportance
 
     @staticmethod
-    def from_cuppa_classifier(cuppa_classifier: CuppaClassifier, na_fill: float = 0.0):
+    def from_cuppa_classifier(cuppa_classifier: CuppaClassifier, na_fill: float = 0.0) -> "FeatureImportance":
 
         clfs = {
             SUB_CLF_NAMES.GEN_POS: cuppa_classifier.gen_pos_clf,
@@ -55,13 +55,12 @@ class FeatureImportance(pd.DataFrame, LoggerMixin):
         self.to_csv(path, sep='\t')
 
     @staticmethod
-    def from_tsv(path: str):
-        #path = "/Users/lnguyen/Desktop/feat_imp.tsv.gz"
+    def from_tsv(path: str) -> None:
         df = pd.read_table(path, header=[0,1], index_col=0)
         return df
 
     @property
-    def clf_names(self):
+    def clf_names(self) -> pd.Index:
         return self.columns.get_level_values("clf_name").unique()
 
     def summarize(
@@ -110,7 +109,7 @@ class FeatureImportance(pd.DataFrame, LoggerMixin):
         return df
 
     @staticmethod
-    def get_feat_affixes(feat_names: pd.Series, sep = '[.]|__', strip_event_prefix: bool = True) -> (pd.Series, pd.Series):
+    def get_feat_affixes(feat_names: pd.Series, sep = '[.]|__', strip_event_prefix: bool = True) -> tuple[list, list]:
 
         if strip_event_prefix:
             ## Use second prefix for event classifier since the feature names are like this:
@@ -138,7 +137,7 @@ class FeatureImportance(pd.DataFrame, LoggerMixin):
         facet_ncol: int = 6,
         label_va: str = "bottom",
 
-    ):
+    ) -> None:
         summ = self.summarize(clf_names=clf_names)
 
         ## Plot data --------------------------------

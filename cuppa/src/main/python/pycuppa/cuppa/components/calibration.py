@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
 import plotnine as p9
-from typing import Iterable, Self, Optional
+from typing import Iterable, Optional, Callable
+
+from numpy._typing import NDArray
 from sklearn.base import BaseEstimator
 from sklearn.isotonic import IsotonicRegression
 from cuppa.components.passthrough import PassthroughRegression
@@ -76,10 +78,10 @@ class RollingAvgCalibration(BaseEstimator, LoggerMixin):
         self.bypass = bypass
 
     ## Kernel ================================
-    def _auto_calc_window_size(self, n_true_samples: int, n_true_exponent: float):
+    def _auto_calc_window_size(self, n_true_samples: int, n_true_exponent: float) -> int:
         return int(round(n_true_samples ** n_true_exponent))
 
-    def _gaussian_kernel(self, window_size=50, edge_weight=0.16):
+    def _gaussian_kernel(self, window_size=50, edge_weight=0.16) -> NDArray:
 
         def _normal_dist(x, mean, sd):
             ## Norm dist formula from
@@ -95,7 +97,7 @@ class RollingAvgCalibration(BaseEstimator, LoggerMixin):
 
         return weights
 
-    def _get_kernel_func(self, kernel, window_size: int = None, edge_weight: float = None):
+    def _get_kernel_func(self, kernel, window_size: int = None, edge_weight: float = None) -> Callable:
         if kernel == "uniform":
             func = np.mean
 
@@ -184,7 +186,7 @@ class RollingAvgCalibration(BaseEstimator, LoggerMixin):
 
         return calibrator
 
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "RollingAvgCalibration":
         """
 
         Parameters
@@ -254,7 +256,7 @@ class RollingAvgCalibration(BaseEstimator, LoggerMixin):
     def fit_transform(self, X: pd.DataFrame, y: pd.Series) -> pd.DataFrame:
         return self.fit(X, y).transform(X)
 
-    def set_output(self, transform: str = None) -> Self:
+    def set_output(self, transform: str = None) -> "RollingAvgCalibration":
         return self
 
     # Calibration curves ================================
@@ -285,7 +287,7 @@ class RollingAvgCalibration(BaseEstimator, LoggerMixin):
         height: int | float = 15,
         dpi: int = 300,
         facet_ncol: Optional[int] = None
-    ):
+    ) -> None:
 
         cal_curves = self.get_cal_curves()
 

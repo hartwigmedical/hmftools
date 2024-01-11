@@ -1,4 +1,3 @@
-import warnings
 from typing import Iterable
 
 import pandas as pd
@@ -80,7 +79,7 @@ class ColumnTransformer(_BaseComposition, LoggerMixin):
         self.prefix_sep = prefix_sep
 
     @property
-    def transformer_names(self):
+    def transformer_names(self) -> list[str]:
         return [i[0] for i in self.transformers]
 
     def __getitem__(self, transformer_name):
@@ -118,7 +117,7 @@ class ColumnTransformer(_BaseComposition, LoggerMixin):
 
         return name, fitted_transformer, columns
 
-    def _get_n_jobs_required(self, n_jobs: int):
+    def _get_n_jobs_required(self, n_jobs: int) -> int:
 
         n_transformers = len(self.transformers)
 
@@ -136,7 +135,7 @@ class ColumnTransformer(_BaseComposition, LoggerMixin):
         y: pd.Series = None,
         n_jobs: int = None,
         verbose: bool = None
-    ):
+    ) -> "ColumnTransformer":
         """
 
         Parameters
@@ -202,7 +201,7 @@ class ColumnTransformer(_BaseComposition, LoggerMixin):
         return_Xs: bool = False,
         verbose_feature_names_out: bool = None,
         verbose: bool = None
-    ) -> pd.DataFrame | dict[pd.DataFrame]:
+    ) -> pd.DataFrame | dict[str, pd.DataFrame]:
 
         """
 
@@ -263,7 +262,7 @@ class ColumnTransformer(_BaseComposition, LoggerMixin):
         self.fit(X, y)
         return self.transform(X)
 
-    def feat_contrib(self, X: pd.DataFrame, show_warnings: bool = False):
+    def feat_contrib(self, X: pd.DataFrame, show_warnings: bool = False) -> pd.DataFrame | None:
         """
         Feature contributions from transformers
 
@@ -302,11 +301,11 @@ class ColumnTransformer(_BaseComposition, LoggerMixin):
         feat_contribs = pd.concat(feat_contribs, axis=1)
         return feat_contribs
 
-    def _sk_visual_block_(self):
+    def _sk_visual_block_(self) -> _VisualBlock:
         names, transformers, name_details = zip(*self.transformers)
         return _VisualBlock("parallel", transformers, names=names, name_details=name_details)
 
-    def set_output(self, transform = None):
+    def set_output(self, transform = None) -> "ColumnTransformer":
         return self
 
 

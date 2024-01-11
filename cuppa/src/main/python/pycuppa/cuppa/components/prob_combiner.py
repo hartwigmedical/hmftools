@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from typing import Self, Literal
+from typing import Literal
 from sklearn.base import BaseEstimator
 
 from cuppa.constants import DEFAULT_FEATURE_PREFIX_SEPERATOR, META_CLF_NAMES
@@ -38,12 +38,12 @@ class ProbCombiner(BaseEstimator, LoggerMixin):
         self.prob_floor = prob_floor
         self.sep = sep
 
-    def _check_combine_mode(self):
+    def _check_combine_mode(self) -> None:
         if self.combine_mode not in ["multiply", "mean"]:
             self.logger.error("`combine_mode` must be 'multiply' or 'mean'")
             raise ValueError
 
-    def _split_X_cols_by_prefix(self, X):
+    def _split_X_cols_by_prefix(self, X) -> dict[str, pd.DataFrame]:
         affixes = X.columns.str.split(self.sep, n=1, expand=False)
         prefixes = affixes.map(lambda x: x[0])
         suffixes = affixes.map(lambda x: x[1])
@@ -59,7 +59,7 @@ class ProbCombiner(BaseEstimator, LoggerMixin):
 
         return X_split
 
-    def transform(self, X, y=None):
+    def transform(self, X, y=None) -> pd.DataFrame:
         probs_split = self._split_X_cols_by_prefix(X)
         probs_dna = probs_split[META_CLF_NAMES.DNA_COMBINED]
         probs_rna = probs_split[META_CLF_NAMES.RNA_COMBINED]
@@ -95,11 +95,11 @@ class ProbCombiner(BaseEstimator, LoggerMixin):
 
         return probs_combined
 
-    def fit(self, X: pd.DataFrame, y: pd.Series = None) -> Self:
+    def fit(self, X: pd.DataFrame, y: pd.Series = None) -> "ProbCombiner":
         return self
 
-    def fit_transform(self, X: pd.DataFrame, y: pd.Series = None) -> Self:
+    def fit_transform(self, X: pd.DataFrame, y: pd.Series = None) -> pd.DataFrame:
         return self.transform(X)
 
-    def set_output(self, transform: str = None) -> Self:
+    def set_output(self, transform: str = None) -> "ProbCombiner":
         return self

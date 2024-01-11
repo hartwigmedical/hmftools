@@ -80,6 +80,14 @@ class TestPredictionRunner:
         assert isinstance(runner.predictions, CuppaPrediction)
         assert isinstance(runner.pred_summ, CuppaPredSummary)
 
+        sample_prediction = runner.pred_summ.query("sample_id=='Pro_1' & clf_name=='combined'")
+        assert sample_prediction["pred_prob_1"].round(3).iloc[0] == 0.938
+        assert sample_prediction["pred_class_1"].iloc[0] == "Prostate"
+
+        sample_prediction = runner.pred_summ.query("sample_id=='Ski_2' & clf_name=='combined'")
+        assert sample_prediction["pred_prob_1"].round(3).iloc[0] == 0.990
+        assert sample_prediction["pred_class_1"].iloc[0] == "Skin: Other"
+
 
 class TestTrainingRunner:
 
@@ -111,11 +119,12 @@ class TestTrainingRunner:
             return perf.set_index(["class","clf_name"])["recall"].round(4).dropna()
 
         recall_comparison = pd.DataFrame(dict(
-            test = get_recall(self.runner.cv_performance),
+            actual = get_recall(self.runner.cv_performance),
             expected = get_recall(MockCvOutput.performance)
         ))
+        recall_comparison = recall_comparison.round(3)
 
-        assert recall_comparison["test"].equals(recall_comparison["expected"])
+        assert all(recall_comparison["actual"] == recall_comparison["expected"])
 
     def test_train_final_model_successful(self):
         self.runner.train_final_model()

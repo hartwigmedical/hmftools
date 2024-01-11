@@ -90,7 +90,7 @@ public class GnomadAnnotation extends AnnotationData implements Callable
     @Override
     public boolean hasValidData() { return mHasValidData; }
 
-    public void annotateVariant(final VariantData variant, final GnomadChrCache chrCache)
+    public void annotateVariant(final VariantData variant, final GnomadChrCache chrCache, final boolean forcePass)
     {
         Double gnomadFreq = chrCache.getFrequency(variant);
 
@@ -98,7 +98,7 @@ public class GnomadAnnotation extends AnnotationData implements Callable
         {
             variant.setGnomadFrequency(gnomadFreq);
 
-            if(exceedsPonThreshold(gnomadFreq))
+            if(!forcePass && exceedsPonThreshold(gnomadFreq))
                 variant.addFilter(PON_GNOMAD_FILTER);
         }
     }

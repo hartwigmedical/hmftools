@@ -15,7 +15,7 @@ class SampleMetadata(pd.DataFrame, LoggerMixin):
         return SampleMetadata
 
     @staticmethod
-    def from_data_frame(df: pd.DataFrame):
+    def from_data_frame(df: pd.DataFrame) -> "SampleMetadata":
 
         required_columns = ["CancerType", "CancerSubtype", "RnaReadLength"]
         check_required_columns(df, required_columns=required_columns)
@@ -27,13 +27,13 @@ class SampleMetadata(pd.DataFrame, LoggerMixin):
         return SampleMetadata(df)
 
     @classmethod
-    def from_csv(cls, path: str, *args, **kwargs):
+    def from_csv(cls, path: str, *args, **kwargs) -> "SampleMetadata":
         df = pd.read_csv(path, *args, **kwargs)
         df = cls.from_data_frame(df)
         return SampleMetadata(df)
 
     @staticmethod
-    def from_tsv(path: str):
+    def from_tsv(path: str) -> "SampleMetadata":
         return SampleMetadata.from_csv(path, sep='\t')
 
     def to_tsv(self, path: str, *args, **kwargs):
@@ -57,7 +57,7 @@ class TrainingSampleSelector(LoggerMixin):
         self.verbose = verbose
 
     ## Init ================================
-    def _get_incl_rna_read_lengths(self, incl_rna_read_lengths):
+    def _get_incl_rna_read_lengths(self, incl_rna_read_lengths) -> pd.Series:
         if incl_rna_read_lengths is not None:
             return pd.Series(incl_rna_read_lengths)
 
