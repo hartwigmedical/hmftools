@@ -48,7 +48,7 @@ class PerformanceStatsBuilder(LoggerMixin):
         return self.pred_summ.clf_names
 
     @property
-    def classes(self):
+    def classes(self) -> NDArray:
         return self.pred_summ.classes
 
     @cached_property
@@ -104,7 +104,7 @@ class PerformanceStatsBuilder(LoggerMixin):
         return stats
 
     @staticmethod
-    def _add_metrics(stats):
+    def _add_metrics(stats) -> None:
         ## Convert to float to allow divide by zero
         stats["recall"] = stats["n_correct"].astype(float) / stats["n_total"].astype(float)
         stats["precision"] = stats["n_correct"].astype(float) / stats["n_predicted"].astype(float)
@@ -153,7 +153,7 @@ class PerformanceStatsBuilder(LoggerMixin):
 
         return PerformanceStats.from_data_frame(stats)
 
-    def build(self, by_prob_bin: bool = False):
+    def build(self, by_prob_bin: bool = False) -> PerformanceStats:
         if not by_prob_bin:
             df = self._get_performance(self._pred_summ_parsed)
         else:
@@ -193,18 +193,18 @@ class PerformanceStats(pd.DataFrame, LoggerMixin):
         return PerformanceStats
 
     @property
-    def _is_by_prob_bin(self):
+    def _is_by_prob_bin(self) -> bool:
         return "prob_bin" in self.columns
 
     @property
-    def classes(self):
+    def classes(self) -> pd.Series:
         return self["class"].unique()
 
     @property
-    def clf_names(self):
+    def clf_names(self) -> pd.Series:
         return self["clf_name"].unique()
 
-    def to_tsv(self, path: str, verbose: bool = False):
+    def to_tsv(self, path: str, verbose: bool = False) -> None:
         if verbose:
             self.logger.info("Writing performance to: " + path)
 
@@ -221,7 +221,7 @@ class PerformanceStats(pd.DataFrame, LoggerMixin):
         df = pd.read_table(path)
         return cls.from_data_frame(df)
 
-    def to_cuppa_prediction_format(self, set_index: bool = True):
+    def to_cuppa_prediction_format(self, set_index: bool = True) -> pd.DataFrame:
 
         if self._is_by_prob_bin:
             self.logger.error("Cannot parse `cv_performance` when it is split by prob bin")

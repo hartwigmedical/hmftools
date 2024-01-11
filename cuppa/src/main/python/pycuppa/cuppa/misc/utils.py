@@ -6,7 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def max_col(X):
+def max_col(X: pd.DataFrame | NDArray) -> NDArray:
     max_col_index = np.argmax(X, axis=1)
     if not isinstance(X, pd.DataFrame):
         return max_col_index
@@ -174,5 +174,5 @@ def check_required_columns(
         raise KeyError("Missing required columns: " + ", ".join(missing_columns))
 
 
-def as_categorical(series: pd.Series):
+def as_categorical(series: pd.Series) -> pd.Categorical:
     return pd.Categorical(series, categories=series.unique())

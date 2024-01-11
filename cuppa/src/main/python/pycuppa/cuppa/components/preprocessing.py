@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from typing import Self, Any, Optional
+from typing import Any, Optional
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 from numpy.typing import NDArray
@@ -15,13 +15,13 @@ class Log1pTransformer(BaseEstimator, TransformerMixin):
         """
         pass
 
-    def fit(self, X: Any, y = None) -> Self:
+    def fit(self, X: Any, y = None) -> "Log1pTransformer":
         return self
 
     def transform(self, X: pd.DataFrame, y = None) -> pd.DataFrame | NDArray:
         return np.log1p(X)
 
-    def set_output(self, transform = None) -> Self:
+    def set_output(self, transform = None) -> "Log1pTransformer":
         return self
 
 
@@ -53,7 +53,7 @@ class NaRowFilter(BaseEstimator, LoggerMixin):
         self.use_first_col = use_first_col
         self.show_warnings = show_warnings
 
-    def fit(self, X: Any, y: None) -> Self:
+    def fit(self, X: Any, y: None) -> "NaRowFilter":
         return self
 
     @staticmethod
@@ -109,7 +109,7 @@ class NaRowFilter(BaseEstimator, LoggerMixin):
     def fit_transform(self, X, y: Optional[pd.Series] = None) -> pd.DataFrame:
         return self.transform(X, y)
 
-    def set_output(self, transform = None) -> Self:
+    def set_output(self, transform = None) -> "NaRowFilter":
         return self
 
 
@@ -128,7 +128,7 @@ class MaxScaler(BaseEstimator, TransformerMixin, LoggerMixin):
         """
         self.clip = clip
 
-    def fit(self, X: pd.DataFrame, y: pd.Series = None) -> Self:
+    def fit(self, X: pd.DataFrame, y: pd.Series = None) -> "MaxScaler":
 
         max_values = np.max(X, axis=0)
         max_values = pd.Series(max_values, index=X.columns)
@@ -155,7 +155,7 @@ class MaxScaler(BaseEstimator, TransformerMixin, LoggerMixin):
 
         return X
 
-    def set_output(self, transform = None) -> Self:
+    def set_output(self, transform = None) -> "MaxScaler":
         return self
 
 

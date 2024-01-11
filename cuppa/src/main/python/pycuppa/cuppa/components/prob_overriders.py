@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import Self, Collection, Iterable, Optional
+from typing import Collection, Iterable, Optional
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
@@ -170,15 +170,15 @@ class FusionProbOverrider(BaseEstimator, LoggerMixin):
         return X_trans
 
     ## Required sklearn estimator methods ================================
-    def fit(self, X: Optional[pd.DataFrame], y = None) -> Self:
+    def fit(self, X: Optional[pd.DataFrame], y = None) -> "FusionProbOverrider":
         self._is_fitted = True
         return self
 
-    def fit_transform(self, X: pd.DataFrame, y = None) -> Self:
+    def fit_transform(self, X: pd.DataFrame, y = None) -> pd.DataFrame:
         self._is_fitted = True
         return self.transform(X)
 
-    def set_output(self, transform: None) -> Self:
+    def set_output(self, transform: None) -> "FusionProbOverrider":
         return self
 
 
@@ -220,11 +220,11 @@ class SexProbFilter(BaseEstimator, LoggerMixin):
         self.show_warnings = show_warnings
 
     ## Checks ================================
-    def _check_sample_sexes_empty(self):
+    def _check_sample_sexes_empty(self) -> None:
         if self.sample_sexes is None and self.show_warnings:
             self.logger.debug("`sample_sexes` is None. Probs will not be overriden")
 
-    def _check_sample_sexes_is_bool_series(self):
+    def _check_sample_sexes_is_bool_series(self) -> None:
         #print(self.sample_sexes)
         if self.sample_sexes is None:
             return None
@@ -299,7 +299,7 @@ class SexProbFilter(BaseEstimator, LoggerMixin):
 
         return X_trans
 
-    def transform(self, X: pd.DataFrame, y = None):
+    def transform(self, X: pd.DataFrame, y = None) -> pd.DataFrame:
 
         sample_sexes_reindexed = self._align_sample_sexes(X)
 
@@ -319,13 +319,13 @@ class SexProbFilter(BaseEstimator, LoggerMixin):
         return X_trans
 
     ## Required sklearn estimator methods ================================
-    def fit(self, X: None, y: None) -> Self:
+    def fit(self, X: None, y: None) -> "SexProbFilter":
         return self
 
-    def fit_transform(self, X: pd.DataFrame, y = None) -> Self:
+    def fit_transform(self, X: pd.DataFrame, y = None) -> pd.DataFrame:
         return self.transform(X)
 
-    def set_output(self, transform: None) -> Self:
+    def set_output(self, transform: None) -> "SexProbFilter":
         return self
 
 

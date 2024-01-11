@@ -3,7 +3,7 @@ from __future__ import annotations
 import importlib
 import os.path
 from functools import cached_property
-from typing import Iterable, Literal, Self
+from typing import Iterable, Literal
 
 import numpy as np
 import pandas as pd
@@ -47,7 +47,7 @@ class CuppaFeaturesPaths(pd.Series, LoggerMixin):
         cls,
         directory: str,
         basenames_mode: Literal["old", "new"] = "new"
-    ):
+    ) -> "CuppaFeaturesPaths":
 
         if basenames_mode == "new":
             basenames_expected = cls.BASENAMES_NEW
@@ -117,7 +117,7 @@ class CuppaFeatures(pd.DataFrame, LoggerMixin):
     def feat_types(self) -> pd.Series:
         return pd.Series(self.col_feat_types.unique())
 
-    def get_feat_type_cols(self, sel_feat_types: str | Iterable[str]):
+    def get_feat_type_cols(self, sel_feat_types: str | Iterable[str]) -> pd.Series:
         sel_feat_types = pd.Series(sel_feat_types)
 
         invalid_feat_types = sel_feat_types[~sel_feat_types.isin(self.feat_types)]
@@ -167,7 +167,7 @@ class CuppaFeatures(pd.DataFrame, LoggerMixin):
 
     # TODO: the below method is subject to change
     @classmethod
-    def from_tsv_files(cls, paths: CuppaFeaturesPaths, verbose: bool = True) -> Self:
+    def from_tsv_files(cls, paths: CuppaFeaturesPaths, verbose: bool = True) -> "CuppaFeatures":
 
         features = {}
         for feat_type, path in paths.items():
@@ -300,7 +300,7 @@ class FeatureLoaderNew(LoggerMixin):
             .isin(self.EXCLUDED_FEATURES)\
             .values
 
-    def _mark_duplicate_features(self, feat_info: pd.DataFrame):
+    def _mark_duplicate_features(self, feat_info: pd.DataFrame) -> None:
 
         feat_info["is_duplicated"] = feat_info["key_renamed"].duplicated()
         duplicate_features = feat_info.query("is_duplicated")["feat_name"]
@@ -340,7 +340,7 @@ class FeatureLoaderNew(LoggerMixin):
             engine='c'
         )
 
-    def load(self):
+    def load(self) -> "CuppaFeatures":
         df = self.load_feature_values()
 
         ## Assign feature names
@@ -413,7 +413,7 @@ class FeatureLoaderOld(LoggerMixin):
         return matrix
 
     @cached_property
-    def sig_matrix(self):
+    def sig_matrix(self) -> pd.DataFrame:
 
         if self.verbose:
             self.logger.info("Loading features: signatures")
@@ -499,11 +499,11 @@ class FeatureLoaderOld(LoggerMixin):
 
 
     @cached_property
-    def _df_trait(self):
+    def _df_trait(self) -> pd.DataFrame:
         return pd.read_csv(self.paths["trait"], index_col="SampleId")
 
     @cached_property
-    def tmb_matrix(self):
+    def tmb_matrix(self) -> pd.DataFrame:
         matrix = pd.DataFrame({
             "snv_count": self.snv96_matrix.sum(axis=1),
             "indels_per_mb": self._df_trait["MsIndelsPerMb"]
@@ -512,7 +512,7 @@ class FeatureLoaderOld(LoggerMixin):
         return matrix
 
     @cached_property
-    def trait_matrix(self):
+    def trait_matrix(self) -> pd.DataFrame:
         matrix = pd.DataFrame({
             "is_male": (self._df_trait["Gender"] == "MALE").astype(int),
             "whole_genome_duplication": self._df_trait["WholeGenomeDuplication"].astype(int)
@@ -522,7 +522,7 @@ class FeatureLoaderOld(LoggerMixin):
 
 
     @cached_property
-    def event_matrix(self):
+    def event_matrix(self) -> pd.DataFrame:
 
         if self.verbose:
             self.logger.info("Loading features: event")
@@ -539,7 +539,7 @@ class FeatureLoaderOld(LoggerMixin):
         return pd.concat(l, axis=1)
 
     @cached_property
-    def gene_exp_matrix(self):
+    def gene_exp_matrix(self) -> pd.DataFrame:
 
         if self.verbose:
             self.logger.info("Loading features: gene_exp")
@@ -567,7 +567,7 @@ class FeatureLoaderOld(LoggerMixin):
         return matrix
 
     @cached_property
-    def alt_sj_matrix(self):
+    def alt_sj_matrix(self) -> pd.DataFrame:
 
         if self.verbose:
             self.logger.info("Loading features: alt_sj")
@@ -605,7 +605,7 @@ class FeatureLoaderOld(LoggerMixin):
 
     ## Combine ================================
     @cached_property
-    def dna_features(self):
+    def dna_features(self) -> pd.DataFrame:
         features = dict(
             gen_pos = self.gen_pos_matrix,
             snv96 = self.snv96_matrix,
@@ -624,7 +624,7 @@ class FeatureLoaderOld(LoggerMixin):
         return features
 
     @cached_property
-    def rna_features(self):
+    def rna_features(self) -> pd.DataFrame:
         features = pd.concat([
             self.gene_exp_matrix,
             self.alt_sj_matrix
@@ -634,13 +634,13 @@ class FeatureLoaderOld(LoggerMixin):
 
         return features
 
-    def load_dna_features(self):
+    def load_dna_features(self) -> CuppaFeatures:
         return CuppaFeatures(self.dna_features)
 
-    def load_rna_features(self):
+    def load_rna_features(self) -> CuppaFeatures:
         return CuppaFeatures(self.rna_features)
 
-    def load_features(self):
+    def load_features(self) -> CuppaFeatures:
 
         df = pd.concat([
             self.dna_features,
