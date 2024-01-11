@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.crest;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.FileOutputStream;
@@ -63,25 +65,29 @@ public class CrestAlgo
         String rnaAnnotatedGermlineVcf = PurpleCommon.purpleGermlineVcfFile(purpleDir, sampleId);
         LOGGER.info("Checking file: {}", rnaAnnotatedGermlineVcf);
 
-        double supportRatio = computeRnaSupportRatio(rnaAnnotatedGermlineVcf);
+        boolean success = crestCheck(rnaAnnotatedGermlineVcf);
 
-        String outputFilename;
-        if(supportRatio < acceptanceRatio)
+        if(success)
         {
-            LOGGER.error("Check failed, ratio of supported reads is below threshold");
-            outputFilename = getOutputFilename(false);
+            LOGGER.info("Check succeeded");
         }
         else
         {
-            LOGGER.info("Check succeeded");
-            outputFilename = getOutputFilename(true);
+            LOGGER.error("Check failed, ratio of supported reads is below threshold");
         }
 
         if(!doNotWriteFile)
         {
+            String outputFilename = getOutputFilename(success);
             LOGGER.info("Writing file: {}", outputFilename);
             new FileOutputStream(outputFilename).close();
         }
+    }
+
+    public boolean crestCheck(@NotNull String vcfFile) throws IOException
+    {
+        double supportRatio = computeRnaSupportRatio(vcfFile);
+        return supportRatio >= acceptanceRatio;
     }
 
     public double computeRnaSupportRatio(@NotNull String vcfFile) throws IOException
@@ -142,7 +148,7 @@ public class CrestAlgo
     private String getOutputFilename(boolean success)
     {
         String extension = success ? ".CrestCheckSucceeded" : ".CrestCheckFailed";
-        return (outputDir == null ? "" : outputDir) + sampleId + extension;
+        return (outputDir == null ? "" : checkAddDirSeparator(outputDir)) + sampleId + extension;
     }
 
     private static boolean sampleInFile(@NotNull final String sample, @NotNull final VCFHeader header)
