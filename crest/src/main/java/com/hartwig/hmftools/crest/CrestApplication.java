@@ -12,14 +12,10 @@ import java.io.IOException;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class CrestApplication
 {
-    private static final Logger LOGGER = LogManager.getLogger(CrestApplication.class);
-
     private static final String RNA_SAMPLE = "rna_sample";
     private static final String MIN_TOTAL_READS = "min_total_reads";
     private static final String MIN_RNA_READS = "min_rna_reads";
@@ -37,15 +33,14 @@ public class CrestApplication
         configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
         configBuilder.addFlag(DO_NOT_WRITE_FILE, "Do not write final success or failure file");
         configBuilder.addConfigItem(MIN_TOTAL_READS, false, "Minimum total reads for a SNP to be included", DEFAULT_MIN_TOTAL_READS);
-        configBuilder.addConfigItem(MIN_RNA_READS, false, "Minimum RNA reads for a SNP to be included", DEFAULT_MIN_RNA_READS);
-        configBuilder.addConfigItem(ACCEPTANCE_RATIO, false, "Lower bound on fraction of RNA to total reads for check to pass", DEFAULT_ACCEPTANCE_RATIO);
+        configBuilder.addConfigItem(MIN_RNA_READS, false, "Minimum allele reads for a SNP to be included", DEFAULT_MIN_RNA_READS);
+        configBuilder.addConfigItem(ACCEPTANCE_RATIO, false, "Lower bound on fraction of allele to total reads for check to pass", DEFAULT_ACCEPTANCE_RATIO);
         addOutputDir(configBuilder);
         addLoggingOptions(configBuilder);
     }
 
     public static void main(String[] args) throws IOException
     {
-
         ConfigBuilder configBuilder = new ConfigBuilder();
         registerConfig(configBuilder);
         configBuilder.checkAndParseCommandLine(args);

@@ -1,0 +1,18 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=LOW_TUMOR_VCN,Description="Germline variant has very low tumor variant copy number">
+##FILTER=<ID=PASS,Description="All filters passed">
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
+##FORMAT=<ID=AF,Number=1,Type=Float,Description="Allelic frequency calculated from read context counts as (Full + Partial + Core + Realigned + Alt) / Coverage">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth (reads with MQ=255 or with bad mates are filtered)">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##INFO=<ID=IMPACT,Number=10,Type=String,Description="Variant Impact [Gene, Transcript, CanonicalEffect, CanonicalCodingEffect, SpliceRegion, HgvsCodingImpact, HgvsProteinImpact, OtherReportableEffects, WorstCodingEffect, GenesAffected]">
+##INFO=<ID=PURPLE_VCN,Number=1,Type=Float,Description="Purity adjusted variant copy number">
+##INFO=<ID=DEVELOPER_COMMENT,Number=1,Type=String,Description="Developer Comment">
+##contig=<ID=17,length=81195210>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	tumor_sample	ref_sample	rna_sample
+17	7579472	.	G	C	500	PASS	IMPACT=TP53,,,NONE,,,,,NONE,1;PURPLE_VCN=1;DEVELOPER_COMMENT=counted_for_allele	GT:AD:AF:DP	./.:0,100:1.0:100	1/1:0,30:1.0:30	./.:48,32:0.4:80
+17	7579473	.	G	C	500	LOW_TUMOR_VCN	IMPACT=TP53,,,NONE,,,,,NONE,1;PURPLE_VCN=0;DEVELOPER_COMMENT=not_counted_filter_fail	GT:AD:AF:DP	./.:0,100:1.0:100	1/1:0,30:1.0:30	./.:48,0:0.0:80
+17	7579474	.	G	C	500	PASS	IMPACT=,,,NONE,,,,,NONE,1;PURPLE_VCN=1;DEVELOPER_COMMENT=not_counted_no_gene_impact	GT:AD:AF:DP	./.:0,100:1.0:100	1/1:0,30:1.0:30	./.:48,32:0.4:80
+17	7579475	.	G	CC	500	PASS	IMPACT=TP53,,,NONE,,,,,NONE,1;PURPLE_VCN=1;DEVELOPER_COMMENT=not_counted_not_a_snp	GT:AD:AF:DP	./.:0,100:1.0:100	1/1:0,30:1.0:30	./.:48,32:0.4:80
+17	7579476	.	G	C	500	PASS	IMPACT=TP53,,,NONE,,,,,NONE,1;PURPLE_VCN=1;DEVELOPER_COMMENT=counted_for_total_not_allele	GT:AD:AF:DP	./.:0,100:1.0:100	1/1:0,30:1.0:30	./.:48,0:0.0:80
+17	7579476	.	G	C	500	PASS	IMPACT=TP53,,,NONE,,,,,NONE,1;PURPLE_VCN=1;DEVELOPER_COMMENT=not_counted_not_enough_total_reads	GT:AD:AF:DP	./.:0,100:1.0:100	1/1:0,30:1.0:30	./.:4,1:0.2:5

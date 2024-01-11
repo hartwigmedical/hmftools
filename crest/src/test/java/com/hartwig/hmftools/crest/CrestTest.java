@@ -14,7 +14,9 @@ import org.junit.Test;
 public class CrestTest
 {
     private static final String VCF_FILE = Resources.getResource("purple/tumor_sample.purple.germline.vcf.gz").getPath();
-    private static final String VCF_DIR = Resources.getResource("purple").getPath();
+    private static final String MINIMAL_VCF_FILE = Resources.getResource("minimal.vcf").getPath();
+
+    private static final String PURPLE_DIR = Resources.getResource("purple").getPath();
     private static final String WGS_SAMPLE = "tumor_sample";
     private static final String RNA_SAMPLE = "rna_sample";
 
@@ -29,7 +31,7 @@ public class CrestTest
         String expectedFile = OUTPUT_DIR + File.separator + "tumor_sample.CrestCheckFailed";
         cleanCheckFile(expectedFile);
 
-        CrestAlgo crestAlgo = new CrestAlgo(VCF_DIR, OUTPUT_DIR, WGS_SAMPLE, RNA_SAMPLE,
+        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, OUTPUT_DIR, WGS_SAMPLE, RNA_SAMPLE,
                 10, 1, 0.9, false);
         crestAlgo.run();
         validateCheckFile(expectedFile);
@@ -42,7 +44,7 @@ public class CrestTest
         cleanCheckFile(expectedFile);
 
         // rather than cook up another test file, just lower the threshold
-        CrestAlgo crestAlgo = new CrestAlgo(VCF_DIR, OUTPUT_DIR, WGS_SAMPLE, RNA_SAMPLE,
+        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, OUTPUT_DIR, WGS_SAMPLE, RNA_SAMPLE,
                 10, 1, 0.3, false);
         crestAlgo.run();
 
@@ -52,7 +54,7 @@ public class CrestTest
     @Test(expected = RuntimeException.class)
     public void shouldErrorIfNoRnaSample() throws IOException
     {
-        CrestAlgo crestAlgo = new CrestAlgo(VCF_DIR, OUTPUT_DIR, WGS_SAMPLE, "WRONG_NAME",
+        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, OUTPUT_DIR, WGS_SAMPLE, "WRONG_NAME",
                 10, 1, 0.9, true);
         crestAlgo.run();
     }
@@ -60,10 +62,19 @@ public class CrestTest
     @Test
     public void shouldComputeCorrectAlleleRatio() throws IOException
     {
-        CrestAlgo crestAlgo = new CrestAlgo("purple_dir_not_needed", null, WGS_SAMPLE, RNA_SAMPLE,
+        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, null, WGS_SAMPLE, RNA_SAMPLE,
                 10, 1, 0.9, true);
         double x = crestAlgo.computeRnaSupportRatio(VCF_FILE);
         assertEquals(0.47058823, x, EPSILON);
+    }
+
+    @Test
+    public void shouldIgnoreInvalidRecords() throws IOException
+    {
+        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, null, WGS_SAMPLE, RNA_SAMPLE,
+                10, 1, 0.9, true);
+        double x = crestAlgo.computeRnaSupportRatio(MINIMAL_VCF_FILE);
+        assertEquals(0.5, x, EPSILON);
     }
 
     private void cleanCheckFile(@NotNull String filename)
