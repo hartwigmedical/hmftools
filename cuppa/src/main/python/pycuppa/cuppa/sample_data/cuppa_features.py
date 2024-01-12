@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import importlib
 import os.path
 from functools import cached_property
 from typing import Iterable, Literal
@@ -10,6 +9,7 @@ import pandas as pd
 
 from cuppa.components.preprocessing import NaRowFilter
 from cuppa.logger import LoggerMixin
+from cuppa.constants import RESOURCES_DIR
 
 
 class CuppaFeaturesPaths(pd.Series, LoggerMixin):
@@ -386,9 +386,7 @@ class FeatureLoaderOld(LoggerMixin):
             self.logger.error("`genome_version`")
             raise ValueError
 
-        feat_names = pd.read_csv(
-            importlib.resources.files("resources") / ("feature_names/gen_pos.hg%i.csv" % self.genome_version)
-        )
+        feat_names = pd.read_csv(RESOURCES_DIR / ("feature_names/gen_pos.hg%i.csv" % self.genome_version))
 
         matrix = pd.read_csv(self.paths["gen_pos"]).transpose()
         matrix.columns = feat_names["chrom"] + "_" + feat_names["pos"].astype(str)
@@ -407,7 +405,7 @@ class FeatureLoaderOld(LoggerMixin):
 
         matrix = pd.read_csv(self.paths["snv96"]).transpose()
 
-        feat_names = pd.read_csv(importlib.resources.files("resources") / "feature_names/snv96.csv")
+        feat_names = pd.read_csv(RESOURCES_DIR / "feature_names/snv96.csv")
         matrix.columns = feat_names["context"].values
 
         return matrix
