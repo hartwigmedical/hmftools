@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.candidate;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.sage.common.ReadContext;
 
 import org.jetbrains.annotations.Nullable;
@@ -31,6 +33,13 @@ public class AltRead
         mReadContext = readContext;
     }
 
+    @VisibleForTesting
+    @Nullable
+    public ReadContext readContext()
+    {
+        return mReadContext;
+    }
+
     public boolean containsReadContext()
     {
         return mReadContext != null;
@@ -51,13 +60,36 @@ public class AltRead
         return Math.abs(Ref.length() - Alt.length());
     }
 
+    public int indelLength()
+    {
+        return Alt.length() - Ref.length();
+    }
+
+    public int leftCoreIndex()
+    {
+        return mReadContext.readBasesLeftCentreIndex();
+    }
+
     public int rightCoreIndex()
     {
         return mReadContext.readBasesRightCentreIndex();
     }
-    public int leftCoreIndex()
+
+    public int leftCorePosition()
     {
-        return mReadContext.readBasesLeftCentreIndex();
+        return mReadContext.readBasesLeftCentrePos();
+    }
+
+    public int rightCorePosition()
+    {
+        return mReadContext.readBasesRightCentrePos();
+    }
+
+    public BaseRegion coreBaseRegion()
+    {
+        int startPos = mReadContext.indexedBases().corePositionStart();
+        int endPos = mReadContext.indexedBases().corePositionEnd() - indelLength();
+        return new BaseRegion(startPos, endPos);
     }
 
     public void extend(final AltRead other)

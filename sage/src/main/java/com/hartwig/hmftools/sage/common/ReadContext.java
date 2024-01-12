@@ -92,6 +92,12 @@ public class ReadContext
     public int readBasesLeftCentreIndex() { return mReadBases.LeftCoreIndex; }
     public int readBasesRightCentreIndex() { return mReadBases.RightCoreIndex; }
 
+    public int readBasesLeftCentrePos() { return mReadBases.corePositionStart(); }
+    public int readBasesRightCentrePos()
+    {
+        return mReadBases.corePositionEnd();
+    }
+
     public String microhomology() { return Microhomology; }
 
     public IndexedBases indexedBases() { return mReadBases; }
