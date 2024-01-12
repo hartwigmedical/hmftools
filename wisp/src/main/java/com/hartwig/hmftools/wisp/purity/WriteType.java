@@ -7,8 +7,6 @@ public enum WriteType
     CN_DATA,
     CN_PLOT,
     SOMATIC_DATA,
-    // SOMATIC_ALL,
-    // SOMATIC_PEAK,
     SOMATIC_PLOT;
 
     public static final String ALL = "ALL";

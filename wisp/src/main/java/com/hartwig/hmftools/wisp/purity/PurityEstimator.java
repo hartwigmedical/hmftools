@@ -8,10 +8,12 @@ import static com.hartwig.hmftools.wisp.purity.WriteType.plotCopyNumber;
 import static com.hartwig.hmftools.wisp.purity.WriteType.plotSomatics;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.FittedPurityScore;
@@ -31,6 +33,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.wisp.purity.cn.CnPurityResult;
 import com.hartwig.hmftools.wisp.purity.cn.CopyNumberProfile;
+import com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod;
 import com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult;
 import com.hartwig.hmftools.wisp.purity.variant.SomaticVariants;
 
@@ -164,15 +167,15 @@ public class PurityEstimator
                 copyNumberProfile = new CopyNumberProfile(mConfig, mResultsWriter, sample);
             }
 
-            for(String ctDnaSample : sample.CtDnaSamples)
+            for(String ctDnaSampleId : sample.CtDnaSamples)
             {
                 CnPurityResult cnPurityResult = copyNumberProfile != null ?
-                        copyNumberProfile.processSample(ctDnaSample, purityContext) : CnPurityResult.INVALID_RESULT;
+                        copyNumberProfile.processSample(ctDnaSampleId, purityContext) : CnPurityResult.INVALID_RESULT;
 
                 SomaticPurityResult somaticPurityResult = somaticVariants != null ?
-                        somaticVariants.processSample(ctDnaSample, purityContext) : SomaticPurityResult.INVALID_RESULT;
+                        somaticVariants.processSample(ctDnaSampleId, purityContext) : SomaticPurityResult.INVALID_RESULT;
 
-                mResultsWriter.writeSampleSummary(sample, ctDnaSample, purityContext, cnPurityResult, somaticPurityResult);
+                mResultsWriter.writeSampleSummary(sample, ctDnaSampleId, purityContext, cnPurityResult, somaticPurityResult);
             }
         }
 

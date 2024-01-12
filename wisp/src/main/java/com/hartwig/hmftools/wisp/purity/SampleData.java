@@ -26,15 +26,15 @@ public class SampleData
     public final String TumorId;
     public final List<String> CtDnaSamples;
     public final String VcfTag;
-    public final boolean ApplyGcRatio;
+    public final boolean ApplyGcRatioLimits;
 
-    public SampleData(final String patientId, final String tumorId, final List<String> ctDnaSamples, final String vcfTag, final boolean applyGcRatio)
+    public SampleData(final String patientId, final String tumorId, final List<String> ctDnaSamples, final String vcfTag, final boolean applyGcRatioLimits)
     {
         PatientId = patientId;
         TumorId = tumorId;
         CtDnaSamples = ctDnaSamples;
         VcfTag = vcfTag;
-        ApplyGcRatio = applyGcRatio;
+        ApplyGcRatioLimits = applyGcRatioLimits;
     }
 
     public boolean isBatchControl() { return VcfTag != null && VcfTag.contains(BATCH_CONTROL_TAG); }
