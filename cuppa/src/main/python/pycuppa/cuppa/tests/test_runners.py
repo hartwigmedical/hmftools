@@ -7,7 +7,7 @@ import pandas as pd
 
 from cuppa.runners import PredictionRunner, TrainingRunner, RunnerArgParser
 from cuppa.constants import DEFAULT_FUSION_OVERRIDES_PATH, DEFAULT_CUPPA_CLASSIFIER_PATH
-from cuppa.misc.mock_data import MockTrainingData, MockTrainingOutput, MockInputData, MockCvOutput
+from cuppa.tests.mock_data import MockTrainingData, MockTrainingOutput, MockInputData, MockCvOutput
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredSummary
 
 
