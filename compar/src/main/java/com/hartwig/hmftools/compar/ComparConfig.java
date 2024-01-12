@@ -125,38 +125,18 @@ public class ComparConfig
             if(categoriesStr.contains(PANEL_CATEGORIES))
                 Category.panelCategories().forEach(x -> Categories.put(x, matchLevel));
         }
-        else if(categoriesStr.contains(PURPLE_CATEGORIES) || categoriesStr.contains(LINX_CATEGORIES))
-        {
-            if(categoriesStr.contains(PURPLE_CATEGORIES))
-                purpleCategories().forEach(x -> Categories.put(x, matchLevel));
-
-            if(categoriesStr.contains(LINX_CATEGORIES))
-                linxCategories().forEach(x -> Categories.put(x, matchLevel));
-        }
         else
         {
-            final String[] catDataList = configBuilder.getValue(CATEGORIES).split(CSV_DELIM);
+            final String[] categoryStrings = configBuilder.getValue(CATEGORIES).split(CSV_DELIM);
 
-            for(String catData : catDataList)
+            for(String catStr : categoryStrings)
             {
-                Category category;
-                MatchLevel specificMatchLevel;
-
-                if(catData.contains("="))
-                {
-                    String[] catItems = catData.split("=");
-                    category = Category.valueOf(catItems[0]);
-                    specificMatchLevel = MatchLevel.valueOf(catItems[1]);
-
-                    CMP_LOGGER.info("specific category({}) and matchLevel({})", category, specificMatchLevel);
-                }
+                if(catStr.equals(PURPLE_CATEGORIES))
+                    purpleCategories().forEach(x -> Categories.put(x, matchLevel));
+                else if(catStr.equals(LINX_CATEGORIES))
+                    linxCategories().forEach(x -> Categories.put(x, matchLevel));
                 else
-                {
-                    category = Category.valueOf(catData);
-                    specificMatchLevel = matchLevel;
-                }
-
-                Categories.put(category, specificMatchLevel);
+                    Categories.put(Category.valueOf(catStr), matchLevel);
             }
         }
 
