@@ -9,8 +9,6 @@ import java.util.NoSuchElementException;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
-import org.jetbrains.annotations.NotNull;
-
 public class BaseRegion implements Cloneable, Comparable<BaseRegion>
 {
     private int mStart;

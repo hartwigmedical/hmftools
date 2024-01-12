@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.testutil;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import static htsjdk.samtools.CigarOperator.EQ;
 import static htsjdk.samtools.CigarOperator.I;
@@ -9,6 +10,7 @@ import static htsjdk.samtools.CigarOperator.X;
 import java.util.List;
 
 import com.beust.jcommander.internal.Lists;
+import com.hartwig.hmftools.common.region.BaseRegion;
 
 import org.junit.Test;
 
@@ -79,5 +81,49 @@ public class MutatedBuilderTest
         );
 
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testMutationBounds()
+    {
+        String refBases = "ATGC".repeat(2);
+
+        // no mutation
+        MutatedBasesBuilder builder = new MutatedBasesBuilder(refBases);
+        assertNull(builder.build().refPosMutationBounds());
+
+        // mutate base to ref
+        builder = new MutatedBasesBuilder(refBases);
+        builder.mutateBase(3, 'G');
+        assertNull(builder.build().refPosMutationBounds());
+
+        // mutate base back to ref
+        builder = new MutatedBasesBuilder(refBases);
+        builder.mutateBase(3, 'T');
+        builder.mutateBase(3, 'G');
+        assertNull(builder.build().refPosMutationBounds());
+
+        // snv
+        builder = new MutatedBasesBuilder(refBases);
+        builder.mutateBase(3, 'T');
+        assertEquals(new BaseRegion(3, 3), builder.build().refPosMutationBounds());
+
+        // insert
+        builder = new MutatedBasesBuilder(refBases);
+        builder.insertBases(3, "AAA");
+        assertEquals(new BaseRegion(3, 4), builder.build().refPosMutationBounds());
+
+        // del
+        builder = new MutatedBasesBuilder(refBases);
+        builder.delBases(3, 4);
+        assertEquals(new BaseRegion(3, 6), builder.build().refPosMutationBounds());
+
+        // combined
+        builder = new MutatedBasesBuilder(refBases);
+        builder.mutateBase(8, 'C');
+        builder.mutateBase(4, 'T');
+        builder.insertBases(1, "AA");
+        builder.delBases(5, 2);
+        assertEquals(new BaseRegion(1, 6), builder.build().refPosMutationBounds());
     }
 }
