@@ -26,4 +26,4 @@ classifiers = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["cuppa","cuppa.*","resources","resources.*"]
+include = ["cuppa","cuppa.*"]
