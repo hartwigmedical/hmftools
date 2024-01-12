@@ -4,7 +4,7 @@ from subprocess import CalledProcessError
 import pandas as pd
 import pytest
 
-from cuppa.misc.mock_data import MockCvOutput
+from cuppa.tests.mock_data import MockCvOutput
 from cuppa.visualization.visualization import CuppaVisDataBuilder, CuppaVisPlotter, CuppaVisData
 
 

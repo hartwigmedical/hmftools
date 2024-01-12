@@ -1,6 +1,6 @@
 from cuppa.sample_data.cuppa_features import CuppaFeatures
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
-from cuppa.misc.mock_data import MockInputData
+from cuppa.tests.mock_data import MockInputData
 from cuppa.sample_data.cuppa_features import CuppaFeaturesPaths, FeatureLoaderOld, FeatureLoaderNew
 
 

@@ -5,7 +5,7 @@ from sklearn.compose import make_column_selector
 
 from cuppa.constants import DEFAULT_FUSION_OVERRIDES_PATH
 from cuppa.classifier.classifiers import SubClassifiers, MetaClassifiers, ClassifierLayers
-from cuppa.misc.mock_data import MockTrainingData, MockProbsFromFitTransform
+from cuppa.tests.mock_data import MockTrainingData, MockProbsFromFitTransform
 
 
 def get_expected_probs(clf_names: str | list[str]) -> pd.DataFrame:

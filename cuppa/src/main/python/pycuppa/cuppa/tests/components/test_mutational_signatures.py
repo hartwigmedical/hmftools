@@ -1,4 +1,4 @@
-from cuppa.misc.mock_data import MockTrainingData
+from cuppa.tests.mock_data import MockTrainingData
 from cuppa.components.mutational_signatures import SigCohortQuantileTransformer
 from sklearn.compose import make_column_selector
 

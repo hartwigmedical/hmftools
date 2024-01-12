@@ -1,7 +1,7 @@
 import pandas as pd
 
 from cuppa.constants import DEFAULT_FUSION_OVERRIDES_PATH
-from cuppa.misc.mock_data import MockTrainingData, MockProbsFromFitTransform
+from cuppa.tests.mock_data import MockTrainingData, MockProbsFromFitTransform
 from cuppa.classifier.cuppa_classifier import CuppaClassifier, MissingFeaturesHandler
 
 

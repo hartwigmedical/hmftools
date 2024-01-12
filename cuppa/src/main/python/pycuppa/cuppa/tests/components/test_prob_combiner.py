@@ -1,6 +1,6 @@
 import pandas as pd
 
-from cuppa.misc.mock_data import MockTrainingData, MockTrainingOutput
+from cuppa.tests.mock_data import MockTrainingData, MockTrainingOutput
 from cuppa.components.prob_combiner import ProbCombiner
 
 

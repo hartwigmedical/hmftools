@@ -1,6 +1,5 @@
 import pandas as pd
-from cuppa.classifier.cuppa_classifier import CuppaClassifier
-from cuppa.misc.mock_data import MockTrainingOutput
+from cuppa.tests.mock_data import MockTrainingOutput
 from cuppa.classifier.feature_importance import FeatureImportance
 
 
