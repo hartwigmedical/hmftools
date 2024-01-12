@@ -84,8 +84,8 @@ public class CuppaDataFactoryTest
     public void canGetCorrectSvFeatureValue() throws IOException
     {
         CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_TSV);
-        Integer featureValue = CuppaDataFactory.getFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE").intValue();
-        Integer expectedFeatureValue = 751;
+        int featureValue = CuppaDataFactory.getFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE");
+        int expectedFeatureValue = 751;
         assertEquals(expectedFeatureValue, featureValue);
     }
 
