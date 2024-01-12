@@ -171,7 +171,7 @@ public class OrangeAlgo
     }
 
     @NotNull
-    public OrangeRecord run(@NotNull OrangeConfig config) throws IOException
+    public OrangeRecord run(@NotNull OrangeConfig config) throws Exception
     {
         Set<DoidNode> configuredPrimaryTumor = loadConfiguredPrimaryTumor(config);
         String platinumVersion = determinePlatinumVersion(config);
@@ -567,7 +567,7 @@ public class OrangeAlgo
     }
 
     @Nullable
-    private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws IOException
+    private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws Exception
     {
         if(config.wgsRefConfig() == null)
         {

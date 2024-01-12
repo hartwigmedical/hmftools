@@ -3,7 +3,6 @@ package com.hartwig.hmftools.orange.algo.cuppa;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +23,7 @@ public class CuppaDataFactoryTest
     private static final String CUPPA_VIS_DATA_TSV = Resources.getResource("test_run/cuppa/tumor_sample.cuppa.vis_data.tsv").getPath();
 
     @Test
-    public void canExtractPredictionsFromCuppaV2() throws IOException
+    public void canExtractPredictionsFromCuppaV2() throws Exception
     {
         CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_TSV);
 
@@ -81,16 +80,16 @@ public class CuppaDataFactoryTest
     }
 
     @Test
-    public void canGetCorrectSvFeatureValue() throws IOException
+    public void canGetCorrectSvFeatureValue() throws Exception
     {
         CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_TSV);
-        int featureValue = CuppaDataFactory.getFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE");
+        int featureValue = CuppaDataFactory.getSvFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE");
         int expectedFeatureValue = 751;
         assertEquals(expectedFeatureValue, featureValue);
     }
 
     @Test
-    public void doNotCrashOnMissingEntries()
+    public void doNotCrashOnMissingEntries() throws Exception
     {
         CuppaPredictions cuppaPredictions = new CuppaPredictions(new ArrayList<>());
         assertNotNull(CuppaDataFactory.create(cuppaPredictions));

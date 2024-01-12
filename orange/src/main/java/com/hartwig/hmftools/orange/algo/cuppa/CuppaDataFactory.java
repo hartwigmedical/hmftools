@@ -18,7 +18,8 @@ import org.jetbrains.annotations.NotNull;
 public final class CuppaDataFactory
 {
     @NotNull
-    public static CuppaData create(@NotNull CuppaPredictions cuppaPredictions){
+    public static CuppaData create(@NotNull CuppaPredictions cuppaPredictions) throws Exception
+    {
 
         List<CuppaPrediction> predictions = extractSortedProbabilities(cuppaPredictions);
 
@@ -33,10 +34,10 @@ public final class CuppaDataFactory
         if(predictions.size() != 0)
         {
             bestPrediction = predictions.get(0);
-            lineCount = getFeatureValue(cuppaPredictions, "sv.LINE");
-            maxComplexSize = getFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE");
-            simpleDups32To200B = getFeatureValue(cuppaPredictions, "sv.SIMPLE_DEL_20KB_1MB");
-            telomericSGLs = getFeatureValue(cuppaPredictions, "sv.TELOMERIC_SGL");
+            lineCount = getSvFeatureValue(cuppaPredictions, "sv.LINE");
+            maxComplexSize = getSvFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE");
+            simpleDups32To200B = getSvFeatureValue(cuppaPredictions, "sv.SIMPLE_DEL_20KB_1MB");
+            telomericSGLs = getSvFeatureValue(cuppaPredictions, "sv.TELOMERIC_SGL");
         }
 
         return ImmutableCuppaData.builder()
@@ -85,15 +86,14 @@ public final class CuppaDataFactory
         return cuppaPredictionsOrangeFormat;
     }
 
-    @NotNull
-    public static int getFeatureValue(CuppaPredictions cuppaPredictions, String featureName)
+    public static int getSvFeatureValue(CuppaPredictions cuppaPredictions, String featureName) throws Exception
     {
         // Feature values are replicated for each cancer type because the `cuppaPredictions` table is in long form.
         // Use `.findFirst()` to get a single value
         CuppaPredictionEntry predictionEntry = cuppaPredictions.PredictionEntries.stream()
                 .filter(o -> o.DataType == Categories.DataType.FEAT_CONTRIB & o.FeatName.equals(featureName))
                 .findFirst()
-                .get();
+                .orElseThrow(() -> new Exception("Input CuppaPredictions is empty"));
 
         return (int) Math.round(predictionEntry.FeatValue);
     }
