@@ -23,18 +23,20 @@ public final class CuppaDataFactory
         List<CuppaPrediction> predictions = extractSortedProbabilities(cuppaPredictions);
 
         CuppaPrediction bestPrediction = null;
-        Integer lineCount = null;
-        Integer maxComplexSize = null;
-        Integer simpleDups32To200B = null;
-        Integer telomericSGLs = null;
+
+        int NULL_INT_VALUE = -1;
+        int lineCount = NULL_INT_VALUE;
+        int maxComplexSize = NULL_INT_VALUE;
+        int simpleDups32To200B = NULL_INT_VALUE;
+        int telomericSGLs = NULL_INT_VALUE;
 
         if(predictions.size() != 0)
         {
             bestPrediction = predictions.get(0);
-            lineCount = getFeatureValue(cuppaPredictions, "sv.LINE").intValue();
-            maxComplexSize = getFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE").intValue();
-            simpleDups32To200B = getFeatureValue(cuppaPredictions, "sv.SIMPLE_DEL_20KB_1MB").intValue();
-            telomericSGLs = getFeatureValue(cuppaPredictions, "sv.TELOMERIC_SGL").intValue();
+            lineCount = getFeatureValue(cuppaPredictions, "sv.LINE");
+            maxComplexSize = getFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE");
+            simpleDups32To200B = getFeatureValue(cuppaPredictions, "sv.SIMPLE_DEL_20KB_1MB");
+            telomericSGLs = getFeatureValue(cuppaPredictions, "sv.TELOMERIC_SGL");
         }
 
         return ImmutableCuppaData.builder()
@@ -84,7 +86,7 @@ public final class CuppaDataFactory
     }
 
     @NotNull
-    public static Double getFeatureValue(CuppaPredictions cuppaPredictions, String featureName)
+    public static int getFeatureValue(CuppaPredictions cuppaPredictions, String featureName)
     {
         // Feature values are replicated for each cancer type because the `cuppaPredictions` table is in long form.
         // Use `.findFirst()` to get a single value
@@ -93,6 +95,6 @@ public final class CuppaDataFactory
                 .findFirst()
                 .get();
 
-        return predictionEntry.FeatValue;
+        return (int) Math.round(predictionEntry.FeatValue);
     }
 }
