@@ -95,11 +95,19 @@ public class MutatedBases
 
     private final String mRefBases;
     private final List<MutatedBase> mMutatedBases;
+    private final BaseRegion mMutationBounds;
 
-    public MutatedBases(final String refBases, final List<MutatedBase> mutatedBases)
+    public MutatedBases(final String refBases, final List<MutatedBase> mutatedBases, @Nullable final BaseRegion mutationBounds)
     {
         mRefBases = refBases;
         mMutatedBases = mutatedBases;
+        mMutationBounds = mutationBounds;
+    }
+
+    @VisibleForTesting
+    public MutatedBases(final String refBases, final List<MutatedBase> mutatedBases)
+    {
+        this(refBases, mutatedBases, null);
     }
 
     @Nullable
@@ -195,7 +203,7 @@ public class MutatedBases
         return reads;
     }
 
-    public int leftMutIndexFromRefPos(final int refPos)
+    public int leftMutIndexFromRefPos(int refPos)
     {
         if(mMutatedBases.isEmpty())
         {
@@ -215,7 +223,7 @@ public class MutatedBases
         return insertionPoint - 1;
     }
 
-    public int rightMutIndexFromRefPos(final int refPos)
+    public int rightMutIndexFromRefPos(int refPos)
     {
         if(mMutatedBases.isEmpty())
         {
@@ -238,6 +246,30 @@ public class MutatedBases
         }
 
         return insertionPoint;
+    }
+
+    @Nullable
+    public BaseRegion mutIndexMutationBounds()
+    {
+        if(mMutationBounds == null)
+            return null;
+
+        int startMutIndex = leftMutIndexFromRefPos(mMutationBounds.start());
+        if(startMutIndex < 0)
+            return null;
+
+        int endMutIndex = rightMutIndexFromRefPos(mMutationBounds.end());
+        if(endMutIndex < 0)
+            return null;
+
+        return new BaseRegion(startMutIndex, endMutIndex);
+    }
+
+    @VisibleForTesting
+    @Nullable
+    public BaseRegion refPosMutationBounds()
+    {
+        return mMutationBounds;
     }
 
     @VisibleForTesting
