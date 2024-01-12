@@ -149,6 +149,12 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
         return (innerStart <= innerEnd && innerStart >= outerStart && innerEnd <= outerEnd);
     }
 
+    public int leftMidPos()
+    {
+        int length = baseLength();
+        return length % 2 == 1 ? mStart + (length - 1) / 2 : mStart + length / 2 - 1;
+    }
+
     public static void checkMergeOverlaps(final List<BaseRegion> regions)
     {
         checkMergeOverlaps(regions, true);
@@ -196,4 +202,3 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
         return insertionIndex - 1;
     }
 }
-

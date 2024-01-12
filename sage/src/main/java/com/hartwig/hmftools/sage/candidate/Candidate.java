@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.candidate;
 
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
@@ -40,6 +41,13 @@ public class Candidate
             mReadContext = altContext.readContext();
             mMinNumberOfEvents = Math.min(mMinNumberOfEvents, altContext.minNumberOfEvents());
         }
+    }
+
+    public BaseRegion coreBaseRegion()
+    {
+        int startPos = mReadContext.indexedBases().corePositionStart();
+        int endPos = mReadContext.indexedBases().corePositionEnd() - mVariant.indelLength();
+        return new BaseRegion(startPos, endPos);
     }
 
     public VariantTier tier() { return mTier; }
