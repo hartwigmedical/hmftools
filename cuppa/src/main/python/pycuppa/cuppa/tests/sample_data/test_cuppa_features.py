@@ -65,6 +65,9 @@ class TestFeatureLoaderOld:
 
 class TestFeatureLoaderNew:
 
+    #from cuppa.tests.sample_data.test_cuppa_features import TestFeatureLoaderNew
+    #self = TestFeatureLoaderNew
+
     #loader = FeatureLoaderNew(MockInputData.path_tsv_new_format_colo, verbose=True)
     loader = FeatureLoaderNew(MockInputData.path_tsv_new_format_prostate, verbose=True)
     feat_info = loader.parse_feature_names()

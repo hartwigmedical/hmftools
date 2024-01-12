@@ -326,7 +326,7 @@ class FeatureLoaderNew(LoggerMixin):
         self._mark_excluded_features(feat_info)
         self._mark_duplicate_features(feat_info)
 
-        return feat_info.drop(["category_renamed", "key_renamed"], axis=1)
+        return feat_info
 
     def load_feature_values(self) -> pd.DataFrame:
         header = pd.read_table(self.path, nrows=0).columns
