@@ -1,7 +1,7 @@
 import pandas as pd
 
 from cuppa.classifier.cuppa_compare import CuppaCompare
-from cuppa.classifier.cuppa_prediction import CuppaPredSummary
+
 
 class TestCuppaCompare:
 
