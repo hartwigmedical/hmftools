@@ -20,16 +20,12 @@ public interface CuppaData
     @Nullable
     CuppaPrediction bestPrediction();
 
-    @Nullable
-    Integer simpleDups32To200B();
+    int simpleDups32To200B();
 
-    @Nullable
-    Integer maxComplexSize();
+    int maxComplexSize();
 
-    @Nullable
-    Integer telomericSGLs();
+    int telomericSGLs();
 
-    @Nullable
     @SerializedName("LINECount")
-    Integer lineCount();
+    int lineCount();
 }
