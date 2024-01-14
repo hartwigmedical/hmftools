@@ -214,38 +214,13 @@ ORDER BY sampleCount desc;
 | REFERENCE.amber.snp.vcf.gz           | Entry at each SNP location in the reference.                                             |
 | REFERENCE.amber.homozygousregion.tsv | Regions of homozygosity found in the reference.                                          |
 
-## Performance Characteristics
-Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
-Elapsed time is measured in minutes. 
-CPU time is minutes spent in user mode. 
-Peak memory is measure in gigabytes.
-
-
-| Threads | Elapsed Time | CPU Time | Peak Mem |
-|---------|--------------|----------|----------|
-| 1       | 144          | 230      | 15.04    |
-| 8       | 22           | 164      | 18.40    |
-| 16      | 12           | 164      | 21.00    |
-| 32      | 8            | 170      | 21.60    |
-| 48      | 7            | 199      | 21.43    |
-| 64      | 6            | 221      | 21.78    |
 
  
 # Version History and Download Links
+- [4.0](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v4.0rc)
 - [3.9](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.9)
-  - Added germline only mode support. 
-  - Added `tumor_only_min_depth` argument.
-  - Make `ref_genome_version` argument mandatory.
-  - Added excluded SNP regions (values are hard coded) in tumor only mode.
-  - Fixed a rounding issue in the classification of zygosity.
-  - Removed <sample id>.amber.baf.vcf.gz output.
-  - compressed baf TSV output with gzip.
 - [3.8](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.8)
-  - Added workaround for a bug in R copy_number module pcf function 
-  - Fixed `NullPointerException` in tumor only mode
-  - Change QC file UniparentalDisomy prints NONE instead of null
 - [3.7](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.7)
-  - Fixed `NullPointerException` when no `-ref_genome` argument is provided
 - [3.6](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.6)
 - [3.5](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.5)
 - [3.4](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.4)
@@ -253,6 +228,3 @@ Peak memory is measure in gigabytes.
 - [3.2](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.2)
 - [3.1](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.1)
 - [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.0)
-- [2.5](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v2.5)
-- [2.4](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v2.4)
-- [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v2.3)
