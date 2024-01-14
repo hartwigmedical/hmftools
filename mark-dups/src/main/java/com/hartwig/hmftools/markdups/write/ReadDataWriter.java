@@ -6,6 +6,8 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UNMAP_ATTRIBUTE;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
@@ -17,6 +19,7 @@ import static com.hartwig.hmftools.markdups.write.ReadOutput.NONE;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.samtools.UmiReadType;
@@ -46,15 +49,18 @@ public class ReadDataWriter
             String filename = mConfig.formFilename("reads");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("ReadId\tChromosome\tPosStart\tPosEnd\tCigar");
-            writer.write("\tInsertSize\tMateChr\tMatePosStart\tDuplicate\tCalcDuplicate\tMateCigar\tCoords");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add("ReadId").add("Chromosome").add("PosStart").add("PosEnd").add("Cigar");
+            sj.add("InsertSize").add("MateChr").add("MatePosStart").add("Duplicate").add("CalcDuplicate").add("MateCigar").add("Coords");
 
             if(mConfig.UMIs.Enabled)
-                writer.write("\tUmi\tUmiType");
+                sj.add("Umi").add("UmiType");
 
-            writer.write("\tAvgBaseQual\tMapQual\tSuppData\tFlags");
-            writer.write("\tFirstInPair\tReadReversed\tUnmapped\tMateUnmapped\tSupplementary\tSecondary");
+            sj.add("AvgBaseQual").add("MapQual").add("SuppData").add("Flags");
+            sj.add("FirstInPair").add("ReadReversed").add("MateReversed");
+            sj.add("Unmapped").add("UnmapCoords").add("MateUnmapped").add("Supplementary").add("Secondary");
 
+            writer.write(sj.toString());
             writer.newLine();
 
             return writer;
@@ -95,6 +101,7 @@ public class ReadDataWriter
 
             SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
             String mateCigar = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
+            String unmapOrigCoords = read.getReadUnmappedFlag() ? read.getStringAttribute(UNMAP_ATTRIBUTE) : null;
 
             mWriter.write(format("\t%d\t%s\t%d\t%s\t%s\t%s\t%s",
                     abs(read.getInferredInsertSize()), read.getMateReferenceName(), read.getMateAlignmentStart(),
@@ -109,8 +116,9 @@ public class ReadDataWriter
             mWriter.write(format("\t%.2f\t%d\t%s\t%d",
                     avgBaseQual, read.getMappingQuality(), suppData != null ? suppData.asCsv() : "N/A", read.getFlags()));
 
-            mWriter.write(format("\t%s\t%s\t%s\t%s\t%s\t%s",
-                    read.getFirstOfPairFlag(), read.getReadNegativeStrandFlag(), read.getReadUnmappedFlag(),
+            mWriter.write(format("\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
+                    read.getFirstOfPairFlag(), read.getReadNegativeStrandFlag(), read.getMateNegativeStrandFlag(),
+                    read.getReadUnmappedFlag(), unmapOrigCoords != null ? unmapOrigCoords : "",
                     read.getMateUnmappedFlag(), read.getSupplementaryAlignmentFlag(), read.isSecondaryAlignment()));
 
             mWriter.newLine();
