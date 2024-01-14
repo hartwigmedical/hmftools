@@ -73,9 +73,15 @@ class CuppaVisDataBuilder(LoggerMixin):
         return self.predictions.get_data_types("feat_contrib")
 
     def _subset_feat_contrib_by_feat_pattern(self, pattern: str) -> CuppaPrediction:
-        return self.feat_contrib[
+        feat_contrib = self.feat_contrib[
             self.feat_contrib.index.get_level_values("feat_name").str.contains(pattern)
         ]
+
+        if len(feat_contrib) == 0:
+            self.logger.error("No features found with pattern '%s'" % pattern)
+            raise LookupError
+
+        return feat_contrib
 
     def _get_top_drivers(
         self,
@@ -273,6 +279,10 @@ class CuppaVisPlotter(LoggerMixin):
 
         if self.verbose:
             self.logger.info("`vis_data_path` not specified. Using temporary path: " + vis_data_path)
+
+        if os.path.exists(vis_data_path):
+            self.logger.info("Removing existing temporary `vis_data_path`: " + vis_data_path)
+            os.remove(vis_data_path)
 
         return vis_data_path
 

@@ -9,8 +9,6 @@ import java.util.StringJoiner;
 
 public class CnPurityResult
 {
-    public final double FitCoefficient;
-    public final double FitIntercept;
     public final double Residuals;
     public final double EstimatedPurity;
     public final double EstimatedPurityLow;
@@ -23,17 +21,15 @@ public class CnPurityResult
     public final double ClonalPercent;
 
     public static final CnPurityResult INVALID_RESULT = new CnPurityResult(
-            false, 0, 0, 0, 0, 0, 0,
+            false, 0, 0, 0, 0,
             0, 0, 0, 0, 0);
 
     public CnPurityResult(
-            boolean valid, double fitCoefficient, double fitIntercept, double residuals,
+            boolean valid, double residuals,
             double estimatedPurity, double estimatedPurityLow, double estimatedPurityHigh, double anueploidyScore, double clonalPercent,
             int copyNumberSegments, int gcRatioSegments, double medianGcRatiosPerSegments)
     {
         Valid = valid;
-        FitCoefficient = fitCoefficient;
-        FitIntercept = fitIntercept;
         Residuals = residuals;
         EstimatedPurity = estimatedPurity;
         EstimatedPurityLow = estimatedPurityLow;
@@ -54,8 +50,6 @@ public class CnPurityResult
         sj.add("AnueploidyScore");
         sj.add("ClonalPercent");
         sj.add("CnFitResidualsPerc");
-        sj.add("CnFitCoeff");
-        sj.add("CnFitIntercept");
         return sj.toString();
     }
 
@@ -68,8 +62,6 @@ public class CnPurityResult
         sj.add(format("%.4f", AnueploidyScore));
         sj.add(format("%.3f", ClonalPercent));
         sj.add(format("%.4f", Residuals));
-        sj.add(format("%.3f", FitCoefficient));
-        sj.add(format("%.4f", FitIntercept));
 
         return sj.toString();
     }

@@ -3,8 +3,7 @@ package com.hartwig.hmftools.sage.filter;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getUnclippedPosition;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getFivePrimeUnclippedPosition;
 
 import java.util.Set;
 
@@ -37,7 +36,7 @@ public class FragmentCoords
         if(atCapacity())
             return;
 
-        int unclippedPosition = getUnclippedPosition(read);
+        int unclippedPosition = getFivePrimeUnclippedPosition(read);
 
         String readCoord = formLocalCoordinate(unclippedPosition, !read.getReadNegativeStrandFlag());
 
@@ -53,7 +52,7 @@ public class FragmentCoords
         if(mateRead != null)
         {
             mateForwardStrand = !mateRead.getReadNegativeStrandFlag();
-            mateUnclippedPosition = getUnclippedPosition(mateRead);
+            mateUnclippedPosition = getFivePrimeUnclippedPosition(mateRead);
         }
         else
         {
@@ -66,7 +65,7 @@ public class FragmentCoords
                 return;
             }
 
-            mateUnclippedPosition = CigarUtils.getUnclippedPosition(read.getMateAlignmentStart(), mateCigar, mateForwardStrand);
+            mateUnclippedPosition = getFivePrimeUnclippedPosition(read.getMateAlignmentStart(), mateCigar, mateForwardStrand);
         }
 
         boolean sameChromosome = read.getReferenceIndex() == read.getMateReferenceIndex();

@@ -18,7 +18,6 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -35,16 +34,33 @@ import org.jetbrains.annotations.Nullable;
  *              .collect(Collectors.toList());
  *  }
  *
- * It is also possible to iterate row by row
+ * It is also possible to iterate row by row:
  *
  *  try (DelimFileReader reader = new DelimFileReader(filename))
  *  {
  *      for(DelimFileReader.Row row : reader)
  *      {
  *          String id = row.get("id");
- *          int count = row.get("count");
+ *          String tag = row.getOrNull("tag");
+ *          int count = row.getInt("count");
  *          boolean isValid = row.getBoolean("isValid");
  *          Double rate = row.getDoubleOrNull("rate");
+ *      }
+ *  }
+ *
+ *  Or use enum instead of String as column identifier:
+ *
+ *  enum Column { id, tag, count, isValid, rate }
+ *
+ *  try (DelimFileReader reader = new DelimFileReader(filename))
+ *  {
+ *      for(DelimFileReader.Row row : reader)
+ *      {
+ *          String id = row.get(Column.id);
+ *          String tag = row.getOrNull(Column.tag);
+ *          int count = row.getInt(Column.count);
+ *          boolean isValid = row.getBoolean(Column.isValid);
+ *          Double rate = row.getDoubleOrNull(Column.rate);
  *      }
  *  }
  */
@@ -52,19 +68,29 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
 {
     private String mDelim = TSV_DELIM;
     private final BufferedReader mReader;
-    private Map<String, Integer> mColumnIndexMap = null;
+    private Map<String,Integer> mColumnIndexMap = null;
     private List<String> mColumnNames = null;
 
-    public DelimFileReader(@NotNull BufferedReader reader)
+    public DelimFileReader(final BufferedReader reader)
     {
         mReader = reader;
     }
 
-    public DelimFileReader(@NotNull String filename)
+    public DelimFileReader(final String filename)
+    {
+        this(filename, true);
+    }
+
+    public DelimFileReader(final String filename, boolean initialiseColumns)
     {
         try
         {
             mReader = createBufferedReader(filename);
+
+            if(initialiseColumns)
+            {
+                setColumnNames();
+            }
         }
         catch(IOException e)
         {
@@ -72,7 +98,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         }
     }
 
-    public void setDelimiter(@NotNull String delimiter)
+    public void setDelimiter(final String delimiter)
     {
         if(mColumnIndexMap != null)
         {
@@ -86,7 +112,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
      *
      * @param columnNames name of columns
      */
-    public void setColumnNames(@NotNull List<String> columnNames)
+    public void setColumnNames(final List<String> columnNames)
     {
         if(mColumnIndexMap != null)
         {
@@ -104,8 +130,15 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         mColumnNames = Collections.unmodifiableList(columnNames);
     }
 
-    @NotNull
     public List<String> getColumnNames()
+    {
+        if(mColumnIndexMap == null)
+            setColumnNames();
+
+        return mColumnNames;
+    }
+
+    private void setColumnNames()
     {
         if(mColumnIndexMap == null)
         {
@@ -119,8 +152,16 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
                 throw new UncheckedIOException(e);
             }
         }
-        return mColumnNames;
     }
+
+    public boolean hasColumn(final String column) { return mColumnIndexMap.containsKey(column); }
+    public boolean hasColumn(final Enum<?> column) { return hasColumn(column.name()); }
+
+    // return null if the column is not found
+    @Nullable
+    public Integer getColumnIndex(final String column) { return mColumnIndexMap.get(column); }
+    @Nullable
+    public Integer getColumnIndex(final Enum<?> column) { return getColumnIndex(column.name()); }
 
     @Override
     public void close()
@@ -135,7 +176,6 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         }
     }
 
-    @NotNull
     @Override
     public Iterator<Row> iterator()
     {
@@ -186,10 +226,11 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         };
     }
 
-    @NotNull
     public Stream<Row> stream()
     {
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator(), Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE), false);
+        return StreamSupport.stream(
+                Spliterators.spliteratorUnknownSize(
+                        iterator(), Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE), false);
     }
 
     public static class Row
@@ -197,18 +238,18 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         private final Map<String, Integer> mColumnIndexMap;
         private final String[] mValues;
 
-        private Row(Map<String, Integer> columnIndexMap, String[] values)
+        private Row(final Map<String, Integer> columnIndexMap, final String[] values)
         {
             mColumnIndexMap = columnIndexMap;
             mValues = values;
         }
 
-        public boolean isNull(String column)
+        public boolean isNull(final String column)
         {
             return valueIndicatesNull(parseRawValue(column));
         }
 
-        public @NotNull String get(String column)
+        public String get(final String column)
         {
             String v = parseRawValue(column);
             if(valueIndicatesNull(v))
@@ -218,7 +259,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
             return v;
         }
 
-        public @Nullable String getOrNull(String column)
+        public @Nullable String getOrNull(final String column)
         {
             String v = parseRawValue(column);
             if(valueIndicatesNull(v))
@@ -226,144 +267,233 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
             return v;
         }
 
-        public int getInt(String column)
+        public int getInt(final String column)
         {
             return Integer.parseInt(get(column));
         }
 
-        public @Nullable Integer getIntOrNull(String column)
+        public @Nullable Integer getIntOrNull(final String column)
         {
             String v = getOrNull(column);
             return v == null ? null : Integer.parseInt(v);
         }
 
         // store boolean as 1 and 0
-        public boolean getBoolean(String column)
+        public boolean getBoolean(final String column)
         {
             return getInt(column) != 0;
         }
 
-        public @Nullable Boolean getBooleanOrNull(String column)
+        public @Nullable Boolean getBooleanOrNull(final String column)
         {
             Integer v = getIntOrNull(column);
             return v == null ? null : v != 0;
         }
 
-        public char getChar(String column)
+        public char getChar(final String column)
         {
             return get(column).charAt(0);
         }
 
-        public @Nullable Character getCharOrNull(String column)
+        public @Nullable Character getCharOrNull(final String column)
         {
             String v = getOrNull(column);
             return v == null ? null : v.charAt(0);
         }
 
-        public byte getByte(String column)
+        public byte getByte(final String column)
         {
             return Byte.parseByte(get(column));
         }
 
-        public @Nullable Byte getByteOrNull(String column)
+        public @Nullable Byte getByteOrNull(final String column)
         {
             String v = getOrNull(column);
             return v == null ? null : Byte.parseByte(v);
         }
 
-        public double getDouble(String column)
+        public double getDouble(final String column)
         {
             return Double.parseDouble(get(column));
         }
 
-        public @Nullable Double getDoubleOrNull(String column)
+        public @Nullable Double getDoubleOrNull(final String column)
         {
             String v = getOrNull(column);
             return v == null ? null : Double.parseDouble(v);
         }
 
-        public long getLong(String column)
+        public long getLong(final String column)
         {
             return Long.parseLong(get(column));
         }
 
-        public @Nullable Long getLongOrNull(String column)
+        public @Nullable Long getLongOrNull(final String column)
         {
             String v = getOrNull(column);
             return v == null ? null : Long.parseLong(v);
         }
 
         // overloads that allow using enum as column
-        public boolean isNull(Enum<?> column)
+
+        public boolean isNull(final Enum<?> column)
         {
             return isNull(column.name());
         }
 
-        public @NotNull String get(Enum<?> column)
+        public String get(final Enum<?> column)
         {
             return get(column.name());
         }
-        public @Nullable String getOrNull(Enum<?> column)
+        public @Nullable String getOrNull(final Enum<?> column)
         {
             return getOrNull(column.name());
         }
 
-        public int getInt(Enum<?> column)
+        public int getInt(final Enum<?> column)
         {
             return getInt(column.name());
         }
-        public @Nullable Integer getIntOrNull(Enum<?> column)
+        public @Nullable Integer getIntOrNull(final Enum<?> column)
         {
             return getIntOrNull(column.name());
         }
 
-        public boolean getBoolean(Enum<?> column)
+        public boolean getBoolean(final Enum<?> column)
         {
             return getBoolean(column.name());
         }
-        public @Nullable Boolean getBooleanOrNull(Enum<?> column)
+        public @Nullable Boolean getBooleanOrNull(final Enum<?> column)
         {
             return getBooleanOrNull(column.name());
         }
 
-        public char getChar(Enum<?> column)
+        public char getChar(final Enum<?> column)
         {
             return getChar(column.name());
         }
-        public @Nullable Character getCharOrNull(Enum<?> column)
+        public @Nullable Character getCharOrNull(final Enum<?> column)
         {
             return getCharOrNull(column.name());
         }
 
-        public byte getByte(Enum<?> column)
+        public byte getByte(final Enum<?> column)
         {
             return getByte(column.name());
         }
-        public @Nullable Byte getByteOrNull(Enum<?> column)
+        public @Nullable Byte getByteOrNull(final Enum<?> column)
         {
             return getByteOrNull(column.name());
         }
 
-        public double getDouble(Enum<?> column)
+        public double getDouble(final Enum<?> column)
         {
             return getDouble(column.name());
         }
-        public @Nullable Double getDoubleOrNull(Enum<?> column)
+        public @Nullable Double getDoubleOrNull(final Enum<?> column)
         {
             return getDoubleOrNull(column.name());
         }
 
-        public long getLong(Enum<?> column)
+        public long getLong(final Enum<?> column)
         {
             return getLong(column.name());
         }
-        public @Nullable Long getLongOrNull(Enum<?> column)
+        public @Nullable Long getLongOrNull(final Enum<?> column)
         {
             return getLongOrNull(column.name());
         }
 
+        // overloads that get by column index, provided for speed reasons.
+        // Onus is on caller to make sure the indices are valid
+        // Or IndexOutOfBoundsException will be thrown
+        public String get(final int columnIndex)
+        {
+            String v = mValues[columnIndex];
+            if(valueIndicatesNull(v))
+            {
+                throw new NoSuchElementException();
+            }
+            return v;
+        }
+
+        public @Nullable String getOrNull(final int columnIndex)
+        {
+            String v = mValues[columnIndex];
+            if(valueIndicatesNull(v))
+                return null;
+            return v;
+        }
+
+        public int getInt(final int columnIndex)
+        {
+            return Integer.parseInt(get(columnIndex));
+        }
+
+        public @Nullable Integer getIntOrNull(final int columnIndex)
+        {
+            String v = getOrNull(columnIndex);
+            return v == null ? null : Integer.parseInt(v);
+        }
+
+        // store boolean as 1 and 0
+        public boolean getBoolean(final int columnIndex)
+        {
+            return getInt(columnIndex) != 0;
+        }
+
+        public @Nullable Boolean getBooleanOrNull(final int columnIndex)
+        {
+            Integer v = getIntOrNull(columnIndex);
+            return v == null ? null : v != 0;
+        }
+
+        public char getChar(final int columnIndex)
+        {
+            return get(columnIndex).charAt(0);
+        }
+
+        public @Nullable Character getCharOrNull(final int columnIndex)
+        {
+            String v = getOrNull(columnIndex);
+            return v == null ? null : v.charAt(0);
+        }
+
+        public byte getByte(final int columnIndex)
+        {
+            return Byte.parseByte(get(columnIndex));
+        }
+
+        public @Nullable Byte getByteOrNull(final int columnIndex)
+        {
+            String v = getOrNull(columnIndex);
+            return v == null ? null : Byte.parseByte(v);
+        }
+
+        public double getDouble(final int columnIndex)
+        {
+            return Double.parseDouble(get(columnIndex));
+        }
+
+        public @Nullable Double getDoubleOrNull(final int columnIndex)
+        {
+            String v = getOrNull(columnIndex);
+            return v == null ? null : Double.parseDouble(v);
+        }
+
+        public long getLong(final int columnIndex)
+        {
+            return Long.parseLong(get(columnIndex));
+        }
+
+        public @Nullable Long getLongOrNull(final int columnIndex)
+        {
+            String v = getOrNull(columnIndex);
+            return v == null ? null : Long.parseLong(v);
+        }
+
         // get the value that is stored in the row
-        private @NotNull String parseRawValue(String column)
+        private String parseRawValue(String column)
         {
             Integer index = mColumnIndexMap.get(column);
             if(index == null)
@@ -373,7 +503,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
             return mValues[index];
         }
 
-        private static boolean valueIndicatesNull(@NotNull String rawValue)
+        private static boolean valueIndicatesNull(String rawValue)
         {
             return rawValue.isEmpty() || rawValue.equals("null") || rawValue.equals("NULL");
         }

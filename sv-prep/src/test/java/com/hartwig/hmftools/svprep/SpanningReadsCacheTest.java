@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.svprep;
 
-import static com.hartwig.hmftools.svprep.TestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.svprep.TestUtils.PARTITION_SIZE;
 import static com.hartwig.hmftools.svprep.TestUtils.REGION_1;
 import static com.hartwig.hmftools.svprep.TestUtils.REGION_2;

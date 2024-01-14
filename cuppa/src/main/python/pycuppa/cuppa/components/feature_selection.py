@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import cached_property
 from typing import Literal
 
@@ -48,7 +50,7 @@ class Chi2FeatureSelector(BaseEstimator, LoggerMixin):
 
         self.test_results = None
 
-    def _check_mode_valid(self):
+    def _check_mode_valid(self) -> None:
         valid_modes = [
             "pvalue",
             "qvalue","fdr",
@@ -59,7 +61,7 @@ class Chi2FeatureSelector(BaseEstimator, LoggerMixin):
             self.logger.error("Valid modes are: " + ", ".join(valid_modes))
             raise ValueError
 
-    def _check_threshold_valid(self):
+    def _check_threshold_valid(self) -> None:
         if self.threshold < 0:
             self.logger.error("`threshold` must be non-negative")
             raise ValueError
@@ -68,7 +70,7 @@ class Chi2FeatureSelector(BaseEstimator, LoggerMixin):
             self.logger.error("`threshold` must be an int when `mode` is 'rank' or 'k_best'")
             raise ValueError
 
-    def fit(self, X: pd.DataFrame, y: pd.Series):
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "Chi2FeatureSelector":
 
         stat_values, pvalues = chi2(X, y)
         pvalues[np.isnan(pvalues)] = 1
@@ -110,14 +112,14 @@ class Chi2FeatureSelector(BaseEstimator, LoggerMixin):
 
         return selected_features
 
-    def transform(self, X: pd.DataFrame, y = None):
+    def transform(self, X: pd.DataFrame, y = None) -> pd.DataFrame:
         return X[self.selected_features]
 
-    def fit_transform(self, X: pd.DataFrame, y = None):
+    def fit_transform(self, X: pd.DataFrame, y = None) -> pd.DataFrame:
         self.fit(X, y)
         return self.transform(X)
 
-    def set_output(self, transform = None):
+    def set_output(self, transform = None) -> "Chi2FeatureSelector":
         return self
 
 
@@ -163,21 +165,23 @@ class MaxScaledChi2FeatureSelector(BaseEstimator, LoggerMixin):
 
         self.selected_features = None
 
-    def fit(self, X: pd.DataFrame, y: pd.Series):
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "MaxScaledChi2FeatureSelector":
         X_scaled = self.max_scaler.fit_transform(X, y)
         X_selected = self.chi2_selector.fit_transform(X_scaled, y)
 
         self.selected_features = self.chi2_selector.selected_features
         self.max_scaler.max_values = self.max_scaler.max_values[self.selected_features]
 
-    def transform(self, X: pd.DataFrame, y: pd.Series):
+        return self
+
+    def transform(self, X: pd.DataFrame, y: pd.Series) -> pd.DataFrame:
         X_selected = X[self.selected_features]
         X_scaled = self.max_scaler.transform(X_selected)
         return X_scaled
 
-    def fit_transform(self, X: pd.DataFrame, y = None):
+    def fit_transform(self, X: pd.DataFrame, y = None) -> pd.DataFrame:
         self.fit(X, y)
         return self.transform(X)
 
-    def set_output(self, transform = None):
+    def set_output(self, transform = None) -> "MaxScaledChi2FeatureSelector":
         return self

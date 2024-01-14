@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.markdups.write;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
@@ -9,6 +11,7 @@ import static com.hartwig.hmftools.markdups.common.FragmentStatus.PRIMARY;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
@@ -78,15 +81,15 @@ public abstract class BamWriter
                 writeRecord(read);
                 mConsensusReadCount.incrementAndGet();
 
-                mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), 0, group.id());
+                mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), 0, group.umiId());
 
                 continue;
             }
 
             if(mConfig.UMIs.Enabled)
-                read.setAttribute(UMI_ATTRIBUTE, group.id());
+                read.setAttribute(UMI_ATTRIBUTE, group.umiId());
 
-            writeRead(read, DUPLICATE, group.coordinatesKey(), 0, group.id());
+            writeRead(read, DUPLICATE, group.coordinatesKey(), 0, group.umiId());
         }
     }
 
@@ -94,9 +97,9 @@ public abstract class BamWriter
 
     public abstract void close();
 
-    private void doWriteFragment(final Fragment fragment, boolean excludeUmis)
+    private void doWriteFragment(final Fragment fragment, boolean excludeDuplicates)
     {
-        if(excludeUmis && fragment.umi() != null) // reads in UMI groups are only written as a complete group
+        if(excludeDuplicates && fragment.umi() != null) // reads in duplicate groups are only written as a complete group
             return;
 
         if(fragment.readsWritten())
@@ -129,5 +132,10 @@ public abstract class BamWriter
         read.setDuplicateReadFlag(fragmentStatus == DUPLICATE); // overwrite any existing status
 
         writeRecord(read);
+    }
+
+    public String toString()
+    {
+        return format("file(%s)", FileWriterUtils.filenamePart(mFilename));
     }
 }

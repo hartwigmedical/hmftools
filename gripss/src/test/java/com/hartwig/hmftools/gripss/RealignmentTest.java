@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.gripss;
 
+import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.CIRPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.IMPRECISE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
@@ -7,10 +11,6 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSgl;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSv;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIRPOS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IHOMPOS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IMPRECISE;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -41,14 +41,14 @@ public class RealignmentTest
     public void testVariantRealignment()
     {
         Map<String, Object> attributesStart = Maps.newHashMap();
-        attributesStart.put(VT_CIPOS, new int[] {-10, 50});
-        attributesStart.put(VT_CIRPOS, new int[] {-20, 40});
-        attributesStart.put(VT_IHOMPOS, new int[] {-15, 25});
+        attributesStart.put(CIPOS, new int[] {-10, 50});
+        attributesStart.put(CIRPOS, new int[] {-20, 40});
+        attributesStart.put(IHOMPOS, new int[] {-15, 25});
 
         Map<String, Object> attributesEnd = Maps.newHashMap();
-        attributesEnd.put(VT_CIRPOS, new int[] {-10, 50});
-        attributesEnd.put(VT_CIPOS, new int[] {-20, 40});
-        attributesEnd.put(VT_IHOMPOS, new int[] {-15, 5});
+        attributesEnd.put(CIRPOS, new int[] {-10, 50});
+        attributesEnd.put(CIPOS, new int[] {-20, 40});
+        attributesEnd.put(IHOMPOS, new int[] {-15, 5});
 
         SvData var = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_2, 20, 80, POS_ORIENT, NEG_ORIENT, "",
@@ -77,7 +77,7 @@ public class RealignmentTest
 
         // single realignment
         attributesStart = Maps.newHashMap();
-        attributesStart.put(VT_CIPOS, new int[] {-10, 50});
+        attributesStart.put(CIPOS, new int[] {-10, 50});
 
         SvData sgl = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 50, POS_ORIENT, "",
@@ -85,7 +85,7 @@ public class RealignmentTest
 
         assertFalse(mRealigner.realign(sgl.breakendStart(), sgl.isSgl(), sgl.imprecise()).realigned());
 
-        attributesStart.put(VT_IMPRECISE, "true");
+        attributesStart.put(IMPRECISE, "true");
 
         sgl = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 50, POS_ORIENT, "",

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 import pandas as pd
 from typing import Literal
@@ -42,7 +44,7 @@ class CuppaCompare(LoggerMixin):
     def __repr__(self) -> str:
         return pformat(vars(self))
 
-    def _check_actual_class_column_exists(self):
+    def _check_actual_class_column_exists(self) -> None:
         error_msg = "`actual_class` column is required but absent from `%s`"
 
         if not self.pred_summ_old._has_actual_class_column:
@@ -54,7 +56,7 @@ class CuppaCompare(LoggerMixin):
             raise KeyError
 
     @staticmethod
-    def from_pred_summ_files(path_old: str, path_new: str):
+    def from_pred_summ_files(path_old: str, path_new: str) -> "CuppaCompare":
         return CuppaCompare(
             pred_summ_old = CuppaPredSummary.from_tsv(path_old),
             pred_summ_new = CuppaPredSummary.from_tsv(path_new)
@@ -107,7 +109,7 @@ class CuppaCompare(LoggerMixin):
         return df1, df2
 
     @staticmethod
-    def _move_index_to_columns(df: pd.DataFrame):
+    def _move_index_to_columns(df: pd.DataFrame) -> pd.DataFrame:
         df.index.names = pd.MultiIndex.from_arrays([
             ["info"] * len(df.index.names),
             df.index.names

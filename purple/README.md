@@ -8,7 +8,7 @@ It combines B-allele frequency (BAF) from [AMBER](../amber), read depth ratios f
 
 PURPLE supports both grch 37 and 38 reference assemblies. 
 
-PURPLE may also be run on targeted data. For more info please see [here](https://github.com/hartwigmedical/hmftools/blob/master/README_TARGETED.md)
+PURPLE may also be run on targeted data. For more info please see [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md)
 
 ## Contents
 
@@ -939,6 +939,13 @@ We can determine the likelihood of a variant being subclonal at any given varian
 <p align="center">
   <img src="src/main/resources/readme/COLO829T.somatic.clonality.png" width="500" alt="Somatic clonality">
 </p>
+
+## HRD (homologous recombination deficiency) classifier
+
+In Targeted Mode from release 5.34, Purple provides a HRD+ or HRD- prediction akin to the CHORD module.
+
+This HRD classifier is still in experimental stage due to the small number of training and validation samples available. This tool will be continuously improved as more HRD+ samples are received. 
+
 
 ## Known issues / points for improvement
 

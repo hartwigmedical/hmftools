@@ -2,9 +2,9 @@ package com.hartwig.hmftools.sage.bqr;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.samtools.CigarUtils.getEndPosition;
-import static com.hartwig.hmftools.common.samtools.CigarUtils.getUnclippedPosition;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.getReadBoundaryPosition;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_MAP_QUALITY;
 
@@ -15,6 +15,7 @@ import java.util.concurrent.CompletionException;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
@@ -52,6 +53,7 @@ public class BqrRegionReader implements CigarHandler
 
     private static final CigarElement SINGLE = new CigarElement(1, CigarOperator.M);
     private static final byte N = (byte) 'N';
+    private static final byte M = (byte) 'M';
     private static final int BASE_DATA_POS_BUFFER = 100;
 
     public BqrRegionReader(
@@ -222,7 +224,7 @@ public class BqrRegionReader implements CigarHandler
 
             if(mateCigar != null)
             {
-                mMaxReadEndPosition = getEndPosition(record.getMateAlignmentStart(), mateCigar, false, false);
+                mMaxReadEndPosition = getMateAlignmentEnd(record.getMateAlignmentStart(), mateCigar);
             }
             else
             {
@@ -329,7 +331,7 @@ public class BqrRegionReader implements CigarHandler
     {
         for(byte b : trinucleotideContext)
         {
-            if(b == N)
+            if(!Nucleotides.isValidDnaBase((char)b))
                 return false;
         }
 

@@ -5,7 +5,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.sage.SageConstants.SYNC_FRAG_MAX_MISMATCHES;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.BASE_MISMATCH;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.CIGAR_MISMATCH;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.COMBINED;
@@ -102,7 +101,7 @@ public class CombinedSyncData
 
         combinedRecord.setFlags(first.getFlags());
 
-        combinedRecord.setMappingQuality(first.getMappingQuality());
+        combinedRecord.setMappingQuality(max(first.getMappingQuality(), second.getMappingQuality()));
 
         // no need to compute since both records have the same value and it remains unchanged
         combinedRecord.setInferredInsertSize(abs(first.getInferredInsertSize()));
@@ -293,12 +292,10 @@ public class CombinedSyncData
                     }
                     else
                     {
-                        ++baseMismatches;
-
-                        if(baseMismatches >= SYNC_FRAG_MAX_MISMATCHES)
-                        {
-                            return false;
-                        }
+                        // no base-mismatch logic applied anymore, instead allow qual calc model to handle differences
+                        // ++baseMismatches;
+                        // if(baseMismatches >= SYNC_FRAG_MAX_MISMATCHES)
+                        //    return false;
 
                         byte[] baseAndQual = getCombinedBaseAndQual(
                                 firstBases[firstReadIndex], firstBaseQualities[firstReadIndex],

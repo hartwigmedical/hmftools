@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.utils;
 
 import static java.lang.String.format;
+import static java.lang.Thread.State.NEW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,16 +47,6 @@ public class TaskExecutor
     }
 
     public static int parseThreads(final ConfigBuilder configBuilder) { return configBuilder.getInteger(THREADS); }
-
-    public static void addThreadOptions(final Options options)
-    {
-        addThreadOptions(options, DEFAULT_THREAD_COUNT);
-    }
-
-    public static void addThreadOptions(final Options options, final int defaultCount)
-    {
-        options.addOption(THREADS, true, threadDescription(defaultCount));
-    }
 
     public static int parseThreads(final CommandLine cmd)
     {
@@ -132,4 +123,23 @@ public class TaskExecutor
         return true;
     }
 
+    public static boolean runThreadTasks(final List<Thread> workers)
+    {
+        workers.stream().filter(x -> x.getState() == NEW).forEach(x -> x.start());
+
+        for(Thread worker : workers)
+        {
+            try
+            {
+                worker.join();
+            }
+            catch(InterruptedException e)
+            {
+                LOGGER.error("thread execution error: {}", e.toString());
+                e.printStackTrace();
+            }
+        }
+
+        return true;
+    }
 }

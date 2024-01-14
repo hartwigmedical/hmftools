@@ -212,20 +212,20 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
         return list(self.columns)
 
     @cached_property
-    def sample_ids(self):
+    def sample_ids(self) -> pd.Index:
         return self.index.get_level_values("sample_id").dropna().unique()
 
     @property
-    def is_multi_sample(self):
+    def is_multi_sample(self) -> bool:
         return len(self.sample_ids.dropna()) > 1
 
     @cached_property
-    def has_probs_only(self):
+    def has_probs_only(self) -> bool:
         index_values = self.index.get_level_values("data_type").unique()
         return len(index_values) == 1 and index_values[0] == "prob"
 
     @property
-    def has_cv_performance(self):
+    def has_cv_performance(self) -> bool:
         return "cv_performance" in self.index.get_level_values("data_type")
 
     ## Utility methods ================================
@@ -280,11 +280,11 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
         return metadata
 
     @cached_property
-    def class_metadata(self):
+    def class_metadata(self) -> pd.DataFrame:
         return self._columns_to_class_metadata(self.columns)
 
     @property
-    def supertypes(self):
+    def supertypes(self) -> pd.Series:
         return self.class_metadata["supertype"]
 
 
@@ -443,7 +443,7 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
         vis_data_path: Optional[str] = None,
         sample_id: Optional[str | int] = None,
         verbose: bool = True
-    ):
+    ) -> None:
         vis_data = self.get_vis_data(
             sample_id=sample_id,
             verbose=verbose
@@ -495,16 +495,16 @@ class CuppaPredSummaryBuilder(LoggerMixin):
         return top_classes, top_probs
 
     @property
-    def top_classes(self):
+    def top_classes(self) -> pd.DataFrame:
         return self._top_preds[0]
 
     @property
-    def top_probs(self):
+    def top_probs(self) -> pd.DataFrame:
         return self._top_preds[1]
 
     ## Top signatures ================================
     @staticmethod
-    def _collapse_columns_to_strings(df: pd.DataFrame, sep=", "):
+    def _collapse_columns_to_strings(df: pd.DataFrame, sep=", ") -> pd.Series:
 
         strings = df.iloc[:,0].copy()
         for i in range(len(df.columns)):
@@ -527,7 +527,7 @@ class CuppaPredSummaryBuilder(LoggerMixin):
         return tmb
 
     @cached_property
-    def extra_info_sigs(self):
+    def extra_info_sigs(self) -> pd.DataFrame:
 
         if self.verbose:
             self.logger.debug("Getting top signatures")
@@ -616,11 +616,11 @@ class CuppaPredSummaryBuilder(LoggerMixin):
         return top_features, top_contribs
 
     @property
-    def top_features(self):
+    def top_features(self) -> pd.DataFrame:
         return self._top_features[0]
 
     @property
-    def top_contribs(self):
+    def top_contribs(self) -> pd.DataFrame:
         return self._top_features[1]
 
     @staticmethod
@@ -637,7 +637,7 @@ class CuppaPredSummaryBuilder(LoggerMixin):
         return pd.DataFrame(arr, index=index, columns=columns)
 
     @cached_property
-    def top_feat_values(self):
+    def top_feat_values(self) -> pd.DataFrame:
         ## Extract feature values from index of predictions
         feat_values = self.predictions.index.to_frame(index=False)
 
@@ -670,7 +670,7 @@ class CuppaPredSummaryBuilder(LoggerMixin):
         return top_feat_values
 
     @cached_property
-    def extra_info_feat(self):
+    def extra_info_feat(self) -> pd.DataFrame:
 
         if self.verbose:
             self.logger.debug("Getting top feature contributions and values")
@@ -830,7 +830,7 @@ class CuppaPredSummary(pd.DataFrame, LoggerMixin):
         return self["clf_name"].unique()
 
     ## I/O ================================
-    def to_tsv(self, path: str, verbose: bool = False):
+    def to_tsv(self, path: str, verbose: bool = False) -> None:
         if verbose:
             self.logger.info("Writing prediction summary to: " + path)
 

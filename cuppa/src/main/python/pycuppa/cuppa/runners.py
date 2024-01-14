@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import argparse
 import os
 import sys
 from functools import cached_property
 from pprint import pformat
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold
@@ -40,7 +42,7 @@ class DEFAULT_RUNNER_ARGS:
     n_jobs: int = 1
 
     log_to_file: bool = False
-    log_path: str | None = None
+    log_path: Optional[str] = None
 
 
 class RunnerArgParser:
@@ -85,7 +87,7 @@ class RunnerArgParser:
             help="If provided, will prepend `sample_id` to the output filenames"
         )
 
-    def add_compress_tsv_files(self):
+    def add_compress_tsv_files(self) -> None:
         self.parser.add_argument(
             "--compress_tsv_files", dest="compress_tsv_files", action="store_true",
             help="Compress tsv files with gzip? (will add .gz to the file extension)"
@@ -158,7 +160,7 @@ class RunnerArgParser:
         )
 
     ## Logging --------------------------------
-    def add_log_to_file(self):
+    def add_log_to_file(self) -> None:
         self.parser.add_argument("--log_to_file", dest="log_to_file", action="store_true", help="Output logs to a file?")
 
     def add_log_path(self) -> None:
@@ -238,7 +240,7 @@ class TrainingRunner(LoggerMixin):
         n_jobs: int = DEFAULT_RUNNER_ARGS.n_jobs,
 
         log_to_file: bool = DEFAULT_RUNNER_ARGS.log_to_file,
-        log_path: str | None = DEFAULT_RUNNER_ARGS.log_path
+        log_path: Optional[str] = DEFAULT_RUNNER_ARGS.log_path
     ):
         ## Args --------------------------------
         ## Data
@@ -355,7 +357,7 @@ class TrainingRunner(LoggerMixin):
 
         self.X = X
 
-    def load_data(self):
+    def load_data(self) -> None:
         self.load_sample_metadata()
         self.get_training_samples()
 
@@ -476,14 +478,14 @@ class PredictionRunner(LoggerMixin):
         self,
         features_path: str,
         output_dir: str,
-        sample_id: str | None = None,
+        sample_id: Optional[str] = None,
         compress_tsv_files: bool = False,
-        classifier_path: str | None = None,
+        classifier_path: Optional[str] = None,
         using_old_features_format: bool = DEFAULT_RUNNER_ARGS.using_old_features_format,
         genome_version: int = DEFAULT_RUNNER_ARGS.genome_version,
         excl_chroms: str | list[str] = DEFAULT_RUNNER_ARGS.excl_chroms,
         log_to_file: bool = DEFAULT_RUNNER_ARGS.log_to_file,
-        log_path: str | None = DEFAULT_RUNNER_ARGS.log_path
+        log_path: Optional[str] = DEFAULT_RUNNER_ARGS.log_path
     ):
         ## Args --------------------------------
         self.features_path = features_path
@@ -531,7 +533,7 @@ class PredictionRunner(LoggerMixin):
 
         return CuppaClassifier.from_file(self.classifier_path)
 
-    def get_X(self):
+    def get_X(self) -> None:
 
         if self.using_old_features_format:
             paths = CuppaFeaturesPaths.from_dir(self.features_path, basenames_mode="old")
@@ -560,7 +562,7 @@ class PredictionRunner(LoggerMixin):
         ## TODO: add method to get actual class labels to use as input for `pred_summ`. Required for independent test samples
         #self.pred_summ = self.predictions.summarize(actual_classes=self.y, show_top_features=True, verbose=True)
 
-    def get_vis_data(self):
+    def get_vis_data(self) -> None:
         self.vis_data = self.predictions.get_vis_data()
 
     def add_filename_affixes(self, filename: str):
@@ -573,17 +575,17 @@ class PredictionRunner(LoggerMixin):
         return filename
 
     @property
-    def vis_data_path(self):
+    def vis_data_path(self) -> str:
         filename = self.add_filename_affixes("cuppa.vis_data.tsv")
         return os.path.join(self.output_dir, filename)
 
     @property
-    def plot_path(self):
+    def plot_path(self) -> str:
         filename = self.add_filename_affixes("cuppa.vis.png")
         return os.path.join(self.output_dir, filename)
 
     @property
-    def pred_summ_path(self):
+    def pred_summ_path(self) -> str:
         filename = self.add_filename_affixes("cuppa.pred_summ.tsv")
         return os.path.join(self.output_dir, filename)
 

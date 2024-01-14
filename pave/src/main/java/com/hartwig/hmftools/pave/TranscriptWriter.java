@@ -11,6 +11,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.pave.impact.CodingContext;
+import com.hartwig.hmftools.pave.impact.ProteinContext;
+import com.hartwig.hmftools.pave.impact.VariantTransImpact;
+
 public class TranscriptWriter
 {
     private final BufferedWriter mWriter;

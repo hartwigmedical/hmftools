@@ -30,6 +30,13 @@ public class DelimFileReaderWriterTest
             this.name = name;
             this.rate = rate;
         }
+
+        public void assertValuesEqual(int count, String name, double rate)
+        {
+            assertEquals(this.count, count);
+            assertEquals(this.name, name);
+            assertEquals(this.rate, rate, 1e-5);
+        }
     }
 
     @Test
@@ -41,17 +48,16 @@ public class DelimFileReaderWriterTest
         dataList.add(new Data(10, "Susan", 0.7));
         dataList.add(new Data(29, "John", 0.8));
 
-        DelimFileWriter writer = new DelimFileWriter();
-        writer.setDelimiter(",");
-
         try (BufferedWriter bufferedWriter = new BufferedWriter(stringWriter))
         {
-            writer.write(bufferedWriter, List.of("count", "name", "rate"), dataList, ((data, row) ->
+            DelimFileWriter<Data> writer = new DelimFileWriter<>(bufferedWriter, List.of("count", "name", "rate"), ((data, row) ->
                 {
                     row.set("name", data.name);
                     row.set("count", data.count);
                     row.set("rate", data.rate);
                 }));
+            writer.setDelimiter(",");
+            dataList.forEach(writer::writeRow);
         }
         catch (IOException e)
         {
@@ -64,9 +70,11 @@ public class DelimFileReaderWriterTest
     @Test
     public void testReader()
     {
-        String csvContent = "count,name,rate\n" + "10,Susan,0.7\n" + "29,John,0.8\n";
+        String csvContent = "count,name,rate\n" +
+                            "10,Susan,0.7\n" +
+                            "29,John,0.8\n";
 
-        try (DelimFileReader reader = new DelimFileReader(new BufferedReader(new StringReader(csvContent))))
+        try(DelimFileReader reader = new DelimFileReader(new BufferedReader(new StringReader(csvContent))))
         {
             reader.setDelimiter(",");
             List<Data> dataList = reader.stream()
@@ -74,7 +82,23 @@ public class DelimFileReaderWriterTest
                     .collect(Collectors.toList());
 
             assertEquals(2, dataList.size());
-            assertEquals("Susan", dataList.get(0).name);
+            dataList.get(0).assertValuesEqual(10, "Susan", 0.7);
+            dataList.get(1).assertValuesEqual(29, "John", 0.8);
+        }
+
+        // test reading without stream
+        try(DelimFileReader reader = new DelimFileReader(new BufferedReader(new StringReader(csvContent))))
+        {
+            reader.setDelimiter(",");
+            List<Data> dataList = new ArrayList<>();
+            for(DelimFileReader.Row row : reader)
+            {
+                dataList.add(new Data(row.getInt(0), row.get(1), row.getDouble(2)));
+            }
+
+            assertEquals(2, dataList.size());
+            dataList.get(0).assertValuesEqual(10, "Susan", 0.7);
+            dataList.get(1).assertValuesEqual(29, "John", 0.8);
         }
     }
 }

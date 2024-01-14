@@ -1,15 +1,11 @@
 package com.hartwig.hmftools.svprep;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.svprep.SvCommon.APP_NAME;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.jetbrains.annotations.NotNull;
 

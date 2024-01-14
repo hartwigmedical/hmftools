@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.ENHANCER;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.NON_CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UNKNOWN;
@@ -34,6 +33,11 @@ import com.hartwig.hmftools.common.fusion.FusionCommon;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.pave.impact.CodingContext;
+import com.hartwig.hmftools.pave.impact.CodingUtils;
+import com.hartwig.hmftools.pave.impact.HgvsCoding;
+import com.hartwig.hmftools.pave.impact.ImpactClassifier;
+import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 import org.junit.Test;
 

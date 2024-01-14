@@ -28,7 +28,7 @@ public class AmberSampleFactory
 
     public byte asByte(final SiteEvidence siteEvidence)
     {
-        if(!siteEvidence.isValid() || siteEvidence.ReadDepth < mMinReadDepth)
+        if(siteEvidence.ReadDepth < mMinReadDepth)
         {
             return AmberSample.DO_NOT_MATCH;
         }
@@ -38,7 +38,7 @@ public class AmberSampleFactory
             return (byte) 1;
         }
 
-        if(mHeterozygousFilter.test(siteEvidence.ReadDepth, siteEvidence.RefSupport, siteEvidence.AltSupport, siteEvidence.IndelCount))
+        if(mHeterozygousFilter.test(siteEvidence.ReadDepth, siteEvidence.RefSupport, siteEvidence.AltSupport, 0))
         {
             return (byte) 2;
         }

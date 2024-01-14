@@ -129,7 +129,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
         if(mConfig.PerfWarnTime > 0)
         {
-            SG_LOGGER.debug("region({}) evidence stats: {}", regionBounds, mStats);
+            SG_LOGGER.trace("region({}) evidence stats: {}", regionBounds, mStats);
         }
 
         if(mConfig.Quality.MapQualityRatioFactor > 0)

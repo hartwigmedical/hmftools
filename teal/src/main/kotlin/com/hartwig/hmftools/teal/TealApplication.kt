@@ -209,7 +209,7 @@ class TealApplication
                 {
                     val tumorGCMedianFilename =
                         GCMedianReadDepthFile.generateFilename(pipelineParams.cobalt!!, pipelineParams.commonParams.tumorSampleId!!)
-                    val tumorGCMedianReadDepth = GCMedianReadDepthFile.read(true, tumorGCMedianFilename)
+                    val tumorGCMedianReadDepth = GCMedianReadDepthFile.read(tumorGCMedianFilename)
                     tealParams.tumorMeanReadDepth = tumorGCMedianReadDepth.meanReadDepth()
                     tealParams.tumorGc50ReadDepth = tumorGCMedianReadDepth.medianReadDepth(ImmutableGCBucket(50))
                 }
@@ -218,7 +218,7 @@ class TealApplication
                 {
                     val referenceGCMedianFilename =
                         GCMedianReadDepthFile.generateFilename(pipelineParams.cobalt!!, pipelineParams.commonParams.referenceSampleId!!)
-                    val referenceGCMedianReadDepth = GCMedianReadDepthFile.read(true, referenceGCMedianFilename)
+                    val referenceGCMedianReadDepth = GCMedianReadDepthFile.read(referenceGCMedianFilename)
 
                     tealParams.germlineMeanReadDepth = referenceGCMedianReadDepth.meanReadDepth()
                     tealParams.germlineGc50ReadDepth = referenceGCMedianReadDepth.medianReadDepth(ImmutableGCBucket(50))

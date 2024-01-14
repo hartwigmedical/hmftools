@@ -20,11 +20,11 @@ public class RatioSegmentation
     {
         final List<Future<Object>> futures = new ArrayList<>();
 
-        if (reference != null)
+        if(reference != null)
         {
             futures.add(executorService.submit(() -> ratioSegmentation(outputDir, ratioFile, reference, "referenceGCDiploidRatio", gamma)));
         }
-        if (tumor != null)
+        if(tumor != null)
         {
             futures.add(executorService.submit(() -> ratioSegmentation(outputDir, ratioFile, tumor, "tumorGCRatio", gamma)));
         }

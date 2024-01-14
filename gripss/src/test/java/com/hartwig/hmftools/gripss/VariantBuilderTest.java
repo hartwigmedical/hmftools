@@ -6,6 +6,9 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BAQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -20,9 +23,6 @@ import static com.hartwig.hmftools.gripss.GripssTestUtils.LINE_INSERT_SEQ_T;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSglBreakend;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSvBreakends;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.defaultFilterConstants;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -178,7 +178,7 @@ public class VariantBuilderTest
         VariantContext[] contexts = createSvBreakends(
                 mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 200, POS_ORIENT, NEG_ORIENT, "A", "");
 
-        contexts[SE_START].getGenotype(1).getExtendedAttributes().put(VT_QUAL, 1);
+        contexts[SE_START].getGenotype(1).getExtendedAttributes().put(QUAL, 1);
 
         SvData sv = mBuilder.checkCreateVariant(contexts[SE_START], mGenotypeIds);
         assertNull(sv);
@@ -191,8 +191,8 @@ public class VariantBuilderTest
         mBuilder.clearState();
 
         // second leg hard-filtered
-        contexts[SE_END].getGenotype(1).getExtendedAttributes().put(VT_QUAL, 1);
-        contexts[SE_START].getGenotype(1).getExtendedAttributes().put(VT_QUAL, DEFAULT_QUAL);
+        contexts[SE_END].getGenotype(1).getExtendedAttributes().put(QUAL, 1);
+        contexts[SE_START].getGenotype(1).getExtendedAttributes().put(QUAL, DEFAULT_QUAL);
 
         sv = mBuilder.checkCreateVariant(contexts[SE_START], mGenotypeIds);
         assertNull(sv);
@@ -206,7 +206,7 @@ public class VariantBuilderTest
 
         // SGL hard-filtered
         VariantContext sglContext = createSglBreakend(mIdGenerator.nextEventId(), CHR_1, 100, POS_ORIENT, "A", "");
-        sglContext.getGenotype(1).getExtendedAttributes().put(VT_BAQ, 1);
+        sglContext.getGenotype(1).getExtendedAttributes().put(GRIDSS_BAQ, 1);
 
         SvData sgl = mBuilder.checkCreateVariant(sglContext, mGenotypeIds);
         assertNull(sgl);
@@ -226,7 +226,7 @@ public class VariantBuilderTest
         VariantContext[] contexts = createSvBreakends(
                 mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 20000, POS_ORIENT, NEG_ORIENT, "A", "");
 
-        contexts[SE_START].getGenotype(1).getExtendedAttributes().put(VT_QUAL, 1);
+        contexts[SE_START].getGenotype(1).getExtendedAttributes().put(QUAL, 1);
 
         SvData sv = mBuilder.checkCreateVariant(contexts[SE_START], mGenotypeIds);
         assertNull(sv);
@@ -242,7 +242,7 @@ public class VariantBuilderTest
         contexts = createSvBreakends(
                 mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 3000, POS_ORIENT, NEG_ORIENT, "A", "");
 
-        contexts[SE_START].getGenotype(1).getExtendedAttributes().put(VT_QUAL, 1);
+        contexts[SE_START].getGenotype(1).getExtendedAttributes().put(QUAL, 1);
 
         sv = mBuilder.checkCreateVariant(contexts[SE_START], mGenotypeIds);
         assertNull(sv);
@@ -259,7 +259,7 @@ public class VariantBuilderTest
         contexts = createSvBreakends(
                 mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 20000, POS_ORIENT, NEG_ORIENT, "A", "");
 
-        contexts[SE_END].getGenotype(1).getExtendedAttributes().put(VT_QUAL, 1);
+        contexts[SE_END].getGenotype(1).getExtendedAttributes().put(QUAL, 1);
 
         sv = mBuilder.checkCreateVariant(contexts[SE_START], mGenotypeIds);
         assertNull(sv);
@@ -275,8 +275,8 @@ public class VariantBuilderTest
         contexts = createSvBreakends(
                 mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 20000, POS_ORIENT, NEG_ORIENT, "A", "");
 
-        contexts[SE_END].getGenotype(0).getExtendedAttributes().put(VT_VF, 10);
-        contexts[SE_END].getGenotype(1).getExtendedAttributes().put(VT_VF, 1);
+        contexts[SE_END].getGenotype(0).getExtendedAttributes().put(SV_FRAG_COUNT, 10);
+        contexts[SE_END].getGenotype(1).getExtendedAttributes().put(SV_FRAG_COUNT, 1);
 
         sv = mBuilder.checkCreateVariant(contexts[SE_START], mGenotypeIds);
         assertNull(sv);
@@ -290,8 +290,8 @@ public class VariantBuilderTest
         contexts = createSvBreakends(
                 mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 20000, POS_ORIENT, NEG_ORIENT, "A", "");
 
-        contexts[SE_START].getGenotype(0).getExtendedAttributes().put(VT_VF, 10);
-        contexts[SE_START].getGenotype(1).getExtendedAttributes().put(VT_VF, 1);
+        contexts[SE_START].getGenotype(0).getExtendedAttributes().put(SV_FRAG_COUNT, 10);
+        contexts[SE_START].getGenotype(1).getExtendedAttributes().put(SV_FRAG_COUNT, 1);
 
         sv = mBuilder.checkCreateVariant(contexts[SE_START], mGenotypeIds);
         assertNull(sv);

@@ -8,9 +8,9 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createMockGenome;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.generateAlt;
-import static com.hartwig.hmftools.pave.SpliceClassifier.determineIndelSpliceImpact;
-import static com.hartwig.hmftools.pave.SpliceImpactType.BASE_SHIFT;
-import static com.hartwig.hmftools.pave.SpliceImpactType.REGION_DELETED;
+import static com.hartwig.hmftools.pave.impact.SpliceClassifier.determineIndelSpliceImpact;
+import static com.hartwig.hmftools.pave.impact.SpliceImpactType.BASE_SHIFT;
+import static com.hartwig.hmftools.pave.impact.SpliceImpactType.REGION_DELETED;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -20,6 +20,8 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.pave.impact.ImpactClassifier;
+import com.hartwig.hmftools.pave.impact.SpliceImpactType;
 
 import org.junit.Test;
 

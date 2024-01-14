@@ -42,7 +42,7 @@ public class RegionFitCalculator
                 fitScoreConfig.PloidyPenaltyMinStandardDeviationPerPloidy,
                 fitScoreConfig.PloidyPenaltyMajorAlleleSubOneMultiplier,
                 fitScoreConfig.PloidyPenaltyMajorAlleleSubOneAdditional,
-                fitScoreConfig.PloidyPenaltyBaselineDeviation);
+                fitScoreConfig.PloidyPenaltyMinDeviation);
 
         mAmbiguousBaf = ExpectedBAF.expectedBAF(averageReadDepth);
     }

@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.common.samtools;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
+import static java.lang.String.format;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.N;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,9 +20,9 @@ import htsjdk.samtools.SAMRecord;
 
 public final class CigarUtils
 {
-    public static Cigar cigarFromStr(final String cigarStr)
+    public static List<CigarElement> cigarElementsFromStr(final String cigarStr)
     {
-        Cigar cigar = new Cigar();
+        List<CigarElement> cigarElements = Lists.newArrayList();
 
         int length = 0;
         for (int i = 0; i < cigarStr.length(); ++i)
@@ -34,12 +37,22 @@ public final class CigarUtils
             else
             {
                 CigarOperator operator = CigarOperator.characterToEnum(c);
-                cigar.add(new CigarElement(length, operator));
+                cigarElements.add(new CigarElement(length, operator));
                 length = 0;
             }
         }
 
-        return cigar;
+        return cigarElements;
+    }
+
+    public static Cigar cigarFromStr(final String cigarStr)
+    {
+        return new Cigar(cigarElementsFromStr(cigarStr));
+    }
+
+    public static String cigarStringFromElements(final List<CigarElement> elements)
+    {
+        return elements.stream().map(x -> format("%d%s", x.getLength(), x.getOperator())).collect(Collectors.joining());
     }
 
     public static int cigarBaseLength(final Cigar cigar)
@@ -90,15 +103,19 @@ public final class CigarUtils
         return cigar.getCigarElements().get(cigar.getCigarElements().size() - 1).getOperator() == CigarOperator.S;
     }
 
-    public static int leftSoftClipLength(final SAMRecord record)
+    public static int leftSoftClipLength(final SAMRecord record) { return leftSoftClipLength(record.getCigar()); }
+
+    public static int rightSoftClipLength(final SAMRecord record) { return rightSoftClipLength(record.getCigar()); }
+
+    public static int leftSoftClipLength(final Cigar cigar)
     {
-        CigarElement firstElement = record.getCigar().getFirstCigarElement();
+        CigarElement firstElement = cigar.getFirstCigarElement();
         return (firstElement != null && firstElement.getOperator() == CigarOperator.S) ? firstElement.getLength() : 0;
     }
 
-    public static int rightSoftClipLength(final SAMRecord record)
+    public static int rightSoftClipLength(final Cigar cigar)
     {
-        CigarElement lastElement = record.getCigar().getLastCigarElement();
+        CigarElement lastElement = cigar.getLastCigarElement();
         return (lastElement != null && lastElement.getOperator() == CigarOperator.S) ? lastElement.getLength() : 0;
     }
 
@@ -122,13 +139,10 @@ public final class CigarUtils
         return record.getReadString().substring(record.getReadString().length() - rightClip);
     }
 
-    public static int getUnclippedPosition(final int readStart, @NotNull final String cigarStr, final boolean forwardStrand)
+    public static int getReadBoundaryPosition(
+            final int readStart, @NotNull final String cigarStr, final boolean getReadStart, boolean includeSoftClipped)
     {
-        return getEndPosition(readStart, cigarStr, forwardStrand, true);
-    }
-
-    public static int getEndPosition(final int readStart, @NotNull final String cigarStr, final boolean forwardStrand, boolean includeSoftClipped)
-    {
+        // gets either the read start position or read end position, either with or without soft-clipped bases
         int currentPosition = readStart;
         int elementLength = 0;
 
@@ -139,7 +153,7 @@ public final class CigarUtils
 
             if(isAddItem)
             {
-                if(forwardStrand)
+                if(getReadStart)
                 {
                     // back out the left clip if present
                     return c == 'S' ? readStart - elementLength : readStart;
@@ -175,14 +189,5 @@ public final class CigarUtils
 
         // always pointing to the start of the next element, so need to move back a base
         return currentPosition - 1;
-    }
-
-    public static int getMateAlignmentEnd(final SAMRecord read)
-    {
-        String mateCigarStr = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
-        if(mateCigarStr == null || mateCigarStr.equals(NO_CIGAR))
-            return NO_POSITION;
-
-        return getEndPosition(read.getMateAlignmentStart(), mateCigarStr, false, false);
     }
 }

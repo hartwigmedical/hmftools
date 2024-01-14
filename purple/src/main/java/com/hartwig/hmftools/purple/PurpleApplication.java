@@ -42,10 +42,13 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.purple.HrdData;
+import com.hartwig.hmftools.common.purple.HrdDataFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.purple.fitting.PeakModelData;
 import com.hartwig.hmftools.purple.fitting.SomaticPurityFitter;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
+import com.hartwig.hmftools.purple.hrd.HrdDetection;
 import com.hartwig.hmftools.purple.plot.RChartData;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleQC;
@@ -154,10 +157,10 @@ public class PurpleApplication
                 performFit(sampleData);
             }
         }
-        catch(Exception e)
+        catch(Throwable t)
         {
-            PPL_LOGGER.error("failed processing sample({}): {}", mConfig.TumorId, e.toString());
-            e.printStackTrace();
+            PPL_LOGGER.error("failed processing sample({}): {}", mConfig.TumorId, t.toString());
+            t.printStackTrace();
             System.exit(1);
         }
 
@@ -331,6 +334,9 @@ public class PurpleApplication
             PurpleCopyNumberFile.write(PurpleCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), copyNumbers);
             GeneCopyNumberFile.write(GeneCopyNumberFile.generateFilenameForWriting(mConfig.OutputDir, tumorId), geneCopyNumbers);
             PeakModelFile.write(PeakModelFile.generateFilename(mConfig.OutputDir, tumorId), somaticPeaks);
+
+            HrdData hrdData = new HrdDetection().calculateHrdData(copyNumbers);
+            HrdDataFile.write(mConfig.OutputDir, tumorId, hrdData);
         }
         else
         {
@@ -566,16 +572,19 @@ public class PurpleApplication
 
         if(mConfig.runTumor())
         {
-            somaticDriverCatalog.addAll(somaticStream.buildDrivers(geneCopyNumberMap));
+            List<DriverCatalog> somaticDrivers = somaticStream.buildDrivers(geneCopyNumberMap);
 
-            final AmplificationDrivers amplificationDrivers = new AmplificationDrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
+            somaticDriverCatalog.addAll(somaticDrivers);
+
+            List<DriverCatalog> ampDrivers = AmplificationDrivers.findAmplifications(
+                    purityContext.qc().status(), purityContext.qc().amberGender(), mReferenceData.DriverGenes,
+                    purityContext.bestFit().ploidy(), geneCopyNumbers, mConfig.TargetRegionsMode);
+
+            somaticDriverCatalog.addAll(ampDrivers);
+
             final DeletionDrivers delDrivers = new DeletionDrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
 
             somaticDriverCatalog.addAll(delDrivers.deletions(geneCopyNumbers, mConfig.TargetRegionsMode));
-
-            // partial AMPs are only allowed for WGS
-            somaticDriverCatalog.addAll(amplificationDrivers.amplifications(
-                    purityContext.bestFit().ploidy(), geneCopyNumbers, mConfig.TargetRegionsMode));
 
             DriverCatalogFile.write(DriverCatalogFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample, true), somaticDriverCatalog);
         }

@@ -95,7 +95,6 @@ public final class MetricsWriter
         {
             // write coverage frequency for unfiltered aligned bases
 
-            // String filename = config.formFilename("coverage");
             String filename = config.formFilename("coverage");
 
             BufferedWriter writer = createBufferedWriter(filename, false);

@@ -23,8 +23,7 @@ public final class FittedPurityRangeFile
 
     private static final String EXTENSION = ".purple.purity.range.tsv";
 
-    @NotNull
-    public static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilenameForReading(final String basePath, final String sample)
     {
         return basePath + File.separator + sample + EXTENSION;
     }
@@ -36,7 +35,6 @@ public final class FittedPurityRangeFile
     private static final String PLOIDY = "ploidy";
     private static final String SOMATIC_PENALTY = "somaticPenalty";
 
-    @NotNull
     public static List<FittedPurity> readAll(final String basePath, final String sample) throws IOException
     {
         final String filePath = generateFilenameForReading(basePath, sample);

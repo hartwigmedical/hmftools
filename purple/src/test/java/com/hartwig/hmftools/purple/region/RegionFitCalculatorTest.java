@@ -49,7 +49,7 @@ public class RegionFitCalculatorTest
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         FittingConfig.addConfig(configBuilder);
-        FittingConfig fittingConfig = new FittingConfig(configBuilder);
+        FittingConfig fittingConfig = new FittingConfig(configBuilder, false);
 
         String chromosome = "1";
         MedianRatio medianRatio = new MedianRatio(chromosome, 0.5, 1);

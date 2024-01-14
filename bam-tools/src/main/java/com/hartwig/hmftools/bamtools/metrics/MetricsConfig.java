@@ -1,18 +1,28 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE_DESC;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTITION_SIZE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.REGIONS_FILE;
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.addCommonCommandOptions;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.checkFileExists;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.from;
 import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegions;
+import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.samtools.BamUtils.deriveRefGenomeVersion;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
@@ -35,7 +45,6 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.bamtools.common.CommonUtils;
 import com.hartwig.hmftools.common.genome.bed.BedFileReader;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
@@ -116,8 +125,7 @@ public class MetricsConfig
             mIsValid = false;
         }
 
-        RefGenVersion = RefGenomeVersion.from(configBuilder);
-
+        RefGenVersion = configBuilder.hasValue(REF_GENOME_VERSION) ? from(configBuilder) : deriveRefGenomeVersion(BamFile);
         BT_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         BT_LOGGER.info("output({})", OutputDir);
 
@@ -187,7 +195,16 @@ public class MetricsConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        addCommonCommandOptions(configBuilder);
+        addRefGenomeFile(configBuilder, true);
+        addRefGenomeVersion(configBuilder);
+
+        addSpecificChromosomesRegionsConfig(configBuilder);
+        configBuilder.addPath(BAM_FILE, true, BAM_FILE_DESC);
+        configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
+
+        configBuilder.addPath(
+                REGIONS_FILE, false,
+                "TSV or BED file with regions to analyse, expected columns Chromosome,PositionStart,PositionEnd or no headers");
 
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
         configBuilder.addInteger(MAP_QUAL_THRESHOLD, "Map quality threshold", DEFAULT_MAP_QUAL_THRESHOLD);
@@ -198,6 +215,10 @@ public class MetricsConfig
         configBuilder.addFlag(WRITE_OLD_STYLE, "Write data in same format as Picard CollectWgsMetrics");
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
+
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
+        addThreadOptions(configBuilder);
     }
 
     @VisibleForTesting

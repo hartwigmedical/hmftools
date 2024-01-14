@@ -28,7 +28,7 @@ public class CobaltUtils
         Multimap<com.hartwig.hmftools.common.genome.chromosome.Chromosome, ReadRatio> output = ArrayListMultimap.create();
         for (String c : input.stringColumn(CobaltColumns.CHROMOSOME).unique())
         {
-            if (HumanChromosome.contains(c))
+            if(HumanChromosome.contains(c))
             {
                 Table inputFiltered = input.where(input.stringColumn(CobaltColumns.CHROMOSOME).isEqualTo(c));
 

@@ -28,7 +28,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class EnsemblDataCache
 {
@@ -98,11 +97,6 @@ public class EnsemblDataCache
     public static void addEnsemblDir(final ConfigBuilder configBuilder, boolean required)
     {
         configBuilder.addPath(ENSEMBL_DATA_DIR, required, ENSEMBL_DATA_DIR_CFG);
-    }
-
-    public static void addEnsemblDir(final Options options)
-    {
-        options.addOption(ENSEMBL_DATA_DIR, true, ENSEMBL_DATA_DIR_CFG);
     }
 
     public void setRestrictedGeneIdList(final List<String> geneIds)

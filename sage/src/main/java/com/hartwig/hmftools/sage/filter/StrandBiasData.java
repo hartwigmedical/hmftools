@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.extractUmiType;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import com.hartwig.hmftools.common.samtools.UmiReadType;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
@@ -53,6 +54,13 @@ public class StrandBiasData
             return;
         }
 
+        if(extractUmiType(record) == UmiReadType.DUAL)
+        {
+            ++mForwardCount;
+            ++mReverseCount;
+            return;
+        }
+
         // make the distinction between F1R2 and F2R1
         boolean firstIsForward = record.getFirstOfPairFlag() ? readIsForward : !record.getMateNegativeStrandFlag();
         boolean secondIsForward = !record.getFirstOfPairFlag() ? readIsForward : !record.getMateNegativeStrandFlag();
@@ -65,23 +73,12 @@ public class StrandBiasData
 
     private void registerRead(final SAMRecord record)
     {
-        UmiReadType umiReadType = extractUmiType(record);
-
-        if(umiReadType == UmiReadType.DUAL)
-        {
-            ++mForwardCount;
-            ++mReverseCount;
-            return;
-        }
-
         add(!record.getReadNegativeStrandFlag());
 
         /*
-        if(!record.getReadNegativeStrandFlag())
-        {
-            SG_LOGGER.debug("read({}) coords({}-{}) on forward strand",
-                    record.getReadName(), record.getAlignmentStart(), record.getAlignmentEnd());
-        }
+        SG_LOGGER.debug("read({}) coords({}-{}) on {}} strand",
+                record.getReadName(), record.getAlignmentStart(), record.getAlignmentEnd(),
+                record.getReadNegativeStrandFlag() ? "reverse" : "forward");
         */
     }
 
@@ -145,7 +142,6 @@ public class StrandBiasData
     {
         return mIsAltBias ? rawContext.AltSupport : rawContext.RefSupport;
     }
-
 
     public String toString() { return format("fwd=%d rev=%d total=%d bias=%.3f", mForwardCount, mReverseCount, depth(), bias()); }
 }

@@ -2,6 +2,8 @@ package com.hartwig.hmftools.sage.quality;
 
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HIGH_DEPTH_BASE_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HIGH_DEPTH_MAP_QUAL_FIXED_PENALTY;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HIGH_DEPTH_MAP_QUAL_RATIO_FACTOR;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_JITTER_MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_JITTER_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAP_QUAL_FIXED_PENALTY;
@@ -48,12 +50,17 @@ public class QualityConfig
         BaseQualityFixedPenalty = configBuilder.getInteger(BASE_QUAL_FIXED_PENALTY);
         DistanceFromReadEdgeFixedPenalty = configBuilder.getInteger(READ_EDGE_FIXED_PENALTY);
         DistanceFromReadEdgeFactor = configBuilder.getInteger(READ_EDGE_FACTOR);
-        FixedPenalty = configBuilder.getInteger(MAP_QUAL_FIXED_PENALTY);
         ReadEventsPenalty = configBuilder.getDecimal(MAP_QUAL_READ_EVENTS_PENALTY);
         ImproperPairPenalty = configBuilder.getInteger(MAP_QUAL_IMPROPER_PAIR_PENALTY);
-        MapQualityRatioFactor = configBuilder.getDecimal(MAP_QUAL_RATIO_FACTOR);
 
         HighBaseMode = configBuilder.hasFlag(HIGH_DEPTH_MODE);
+
+        FixedPenalty = HighBaseMode && !configBuilder.hasValue(MAP_QUAL_FIXED_PENALTY) ?
+                DEFAULT_HIGH_DEPTH_MAP_QUAL_FIXED_PENALTY : configBuilder.getInteger(MAP_QUAL_FIXED_PENALTY);
+
+        MapQualityRatioFactor = HighBaseMode && !configBuilder.hasValue(MAP_QUAL_RATIO_FACTOR) ?
+                DEFAULT_HIGH_DEPTH_MAP_QUAL_RATIO_FACTOR : configBuilder.getDecimal(MAP_QUAL_RATIO_FACTOR);
+
         HighBaseQualLimit = HighBaseMode ? configBuilder.getInteger(HIGH_DEPTH_BASE_QUAL_LIMIT) : 0;
     }
 

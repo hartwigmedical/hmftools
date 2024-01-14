@@ -187,6 +187,22 @@ public class ConfigBuilder
     public int getInteger(final String name) { return getItem(name).integer(); }
     public boolean hasFlag(final String name) { return getItem(name).bool(); }
 
+    public static double getConfigDecimal(final ConfigBuilder configBuilder, final String configName, final double defaultValue)
+    {
+        if(configBuilder.hasValue(configName))
+            return configBuilder.getDecimal(configName);
+
+        return defaultValue;
+    }
+
+    public static int getConfigInteger(final ConfigBuilder configBuilder, final String configName, final int defaultValue)
+    {
+        if(configBuilder.hasValue(configName))
+            return configBuilder.getInteger(configName);
+
+        return defaultValue;
+    }
+
     public boolean isValid()
     {
         for(ConfigItem item : mItems)
@@ -338,8 +354,6 @@ public class ConfigBuilder
     {
         List<String> output = Lists.newArrayList();
 
-        output.add("registered config items:");
-
         for(ConfigItem item : mItems)
         {
             StringBuilder sb = new StringBuilder();
@@ -360,6 +374,8 @@ public class ConfigBuilder
         }
 
         Collections.sort(output);
+
+        output.add(0, "registered config items:");
 
         if(asLog)
             output.forEach(x -> LOGGER.info(x));

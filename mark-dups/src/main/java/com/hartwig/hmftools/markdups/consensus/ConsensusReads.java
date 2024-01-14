@@ -21,6 +21,7 @@ import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -41,8 +42,6 @@ public class ConsensusReads
 
     private final ConsensusStatistics mConsensusStats;
     private boolean mValidateConsensusReads;
-
-    private static final String CONSENSUS_PREFIX = "CNS_";
 
     public ConsensusReads(final RefGenomeInterface refGenome, final ConsensusStatistics consensusStats)
     {
@@ -65,11 +64,11 @@ public class ConsensusReads
     }
     public ConsensusStatistics consensusStats() { return mConsensusStats; }
 
-    public ConsensusReadInfo createConsensusRead(final List<SAMRecord> reads, final String groupIdentifier)
+    public ConsensusReadInfo createConsensusRead(final List<SAMRecord> reads, final String groupReadId)
     {
         if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag())
         {
-            SAMRecord consensusRead = copyPrimaryRead(reads.get(0), groupIdentifier);
+            SAMRecord consensusRead = copyPrimaryRead(reads.get(0), groupReadId);
             return new ConsensusReadInfo(consensusRead, SUPPLEMENTARY);
         }
 
@@ -95,11 +94,11 @@ public class ConsensusReads
             {
                 mConsensusStats.registerOutcome(INDEL_FAIL);
 
-                logInvalidConsensusRead(readsView, null, groupIdentifier, consensusState, INDEL_FAIL.toString());
+                logInvalidConsensusRead(readsView, null, groupReadId, consensusState, INDEL_FAIL.toString());
 
                 // fall-back to selecting the read with the longest aligned bases, highest average qual
                 SAMRecord primaryRead = selectPrimaryRead(readsView);
-                SAMRecord consensusRead = copyPrimaryRead(primaryRead, groupIdentifier);
+                SAMRecord consensusRead = copyPrimaryRead(primaryRead, groupReadId);
 
                 return new ConsensusReadInfo(consensusRead, consensusState.outcome());
             }
@@ -120,14 +119,14 @@ public class ConsensusReads
         mConsensusStats.registerOutcome(consensusState.outcome());
 
         consensusState.setNumMutations();
-        SAMRecord consensusRead = createConsensusRead(consensusState, readsView, groupIdentifier);
+        SAMRecord consensusRead = createConsensusRead(consensusState, readsView, groupReadId);
 
         if(mValidateConsensusReads)
         {
             ValidationReason validReason = isValidConsensusRead(consensusRead);
             if(validReason != ValidationReason.OK)
             {
-                logInvalidConsensusRead(readsView, consensusRead, groupIdentifier, consensusState, validReason.toString());
+                logInvalidConsensusRead(readsView, consensusRead, groupReadId, consensusState, validReason.toString());
             }
         }
 
@@ -232,19 +231,12 @@ public class ConsensusReads
         return ValidationReason.OK;
     }
 
-    protected static String formReadId(final String templateReadId, final String groupIdentifier)
-    {
-        int lastDelim = templateReadId.lastIndexOf(READ_ID_DELIM);
-        return lastDelim > 0 ? templateReadId.substring(0, lastDelim) + READ_ID_DELIM + CONSENSUS_PREFIX + groupIdentifier
-                : templateReadId + READ_ID_DELIM + CONSENSUS_PREFIX + groupIdentifier;
-    }
-
-    private static SAMRecord createConsensusRead(final ConsensusState state, final List<SAMRecord> reads, final String groupIdentifier)
+    private static SAMRecord createConsensusRead(final ConsensusState state, final List<SAMRecord> reads, final String groupReadId)
     {
         SAMRecord initialRead = reads.get(0);
         SAMRecord record = new SAMRecord(initialRead.getHeader());
 
-        record.setReadName(formReadId(initialRead.getReadName(), groupIdentifier));
+        record.setReadName(groupReadId);
         record.setReadBases(state.Bases);
         record.setBaseQualities(state.BaseQualities);
         record.setMappingQuality(state.MapQuality);
@@ -293,11 +285,11 @@ public class ConsensusReads
         return record;
     }
 
-    public SAMRecord copyPrimaryRead(final SAMRecord read, final String groupIdentifier)
+    public SAMRecord copyPrimaryRead(final SAMRecord read, final String groupReadId)
     {
         SAMRecord record = new SAMRecord(read.getHeader());
 
-        record.setReadName(formReadId(read.getReadName(), groupIdentifier));
+        record.setReadName(groupReadId);
         record.setReadBases(read.getReadBases());
         record.setBaseQualities(read.getBaseQualities());
         record.setReferenceName(read.getReferenceName());

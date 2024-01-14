@@ -32,7 +32,7 @@ import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 import com.hartwig.hmftools.sage.filter.VariantFilters;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
-import com.hartwig.hmftools.sage.sagevis.VariantVis;
+import com.hartwig.hmftools.sage.vis.VariantVis;
 
 public class RegionTask
 {
@@ -74,7 +74,7 @@ public class RegionTask
         mCandidateState = new CandidateStage(config, hotspots, panelRegions, highConfidenceRegions, coverage, samSlicerFactory);
         mEvidenceStage = new EvidenceStage(config.Common, refGenome, qualityRecalibrationMap, phaseSetCounter, samSlicerFactory);
 
-        mVariantDeduper = new VariantDeduper(transcripts, mRefGenome, mConfig.OldIndelDedup);
+        mVariantDeduper = new VariantDeduper(transcripts, mRefGenome, mConfig.OldIndelDedup, mConfig.Common.getReadLength());
 
         mSageVariants = Lists.newArrayList();
         mPassingPhaseSets = Sets.newHashSet();
@@ -185,7 +185,6 @@ public class RegionTask
 
     private void finaliseResults()
     {
-        mSageVariants.forEach(variant -> VariantVis.writeToHtmlFile(variant, mConfig.TumorIds, mConfig.Common.ReferenceIds));
         mSageVariants.stream().filter(x -> x.isPassing() && x.hasLocalPhaseSets()).forEach(x -> mPassingPhaseSets.addAll(x.localPhaseSets()));
 
         List<SageVariant> finalVariants = mSageVariants.stream()
@@ -195,6 +194,12 @@ public class RegionTask
         VariantPhaser.removeUninformativeLps(finalVariants, mPassingPhaseSets);
 
         mResults.addFinalVariants(mTaskId, finalVariants);
+
+        if(mConfig.Common.Visualiser.Enabled)
+        {
+            mSageVariants.forEach(variant -> VariantVis.writeToHtmlFile(
+                    variant, mConfig.TumorIds, mConfig.Common.ReferenceIds, mConfig.Common.Visualiser));
+        }
 
         mResults.addTotalReads(mCandidateState.totalReadsProcessed());
 

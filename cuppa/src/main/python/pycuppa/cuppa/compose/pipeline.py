@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import threading
 
 import pandas as pd
@@ -5,7 +7,7 @@ import logging
 import os
 import shutil
 from functools import cached_property
-from typing import Iterable, Optional, Self
+from typing import Iterable, Optional
 
 import sklearn.pipeline
 from sklearn import clone
@@ -67,7 +69,7 @@ class Pipeline(sklearn.pipeline.Pipeline, LoggerMixin):
         logger = logger,
         verbose: bool = True,
         **fit_params
-    ):
+    ) -> "Pipeline":
         cache_exists = cache_path is not None and os.path.exists(cache_path)
 
         ## Load cache
@@ -92,7 +94,7 @@ class Pipeline(sklearn.pipeline.Pipeline, LoggerMixin):
 
         return estimator
 
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "Pipeline":
         self.steps = list(self.steps)
         self._validate_steps()
 
@@ -286,8 +288,6 @@ class Pipeline(sklearn.pipeline.Pipeline, LoggerMixin):
         ## Search for estimators with `feat_contrib()` method
         has_feat_contrib_method = False
         for name, estimator in reversed(self.steps):
-            # print(name)
-            # print(estimator)
             if hasattr(estimator, "feat_contrib"):
                 has_feat_contrib_method = True
                 break
@@ -312,10 +312,10 @@ class Pipeline(sklearn.pipeline.Pipeline, LoggerMixin):
         contribs = estimator.feat_contrib(X_trans)
         return contribs
 
-    def _get_estimators(self) -> list:
+    def _get_estimators(self) -> list[str]:
         return [estimator for name, estimator in self.steps]
 
-    def _get_all_estimators(self) -> list:
+    def _get_all_estimators(self) -> list[str]:
         estimator_list = []
 
         estimator_list += self._get_estimators()
@@ -354,7 +354,7 @@ class PipelineCrossValidator(LoggerMixin):
         self.verbose = verbose
 
     @cached_property
-    def _cv_splits(self) -> list:
+    def _cv_splits(self) -> list[int]:
         return list(self.cv.split(self.X, self.y_split))
 
     @cached_property
@@ -375,7 +375,7 @@ class PipelineCrossValidator(LoggerMixin):
 
         return X, y
 
-    def _fit_one_pipeline(self, cv_index, **fit_params):
+    def _fit_one_pipeline(self, cv_index, **fit_params) -> "Pipeline":
 
         threading.current_thread().name = "CvFold-" + str(cv_index+1)
 
@@ -484,7 +484,7 @@ class PipelineCrossValidator(LoggerMixin):
         )
 
         ## Concatenate output --------------------------------
-        def _concat_X(X_list):
+        def _concat_X(X_list) -> pd.DataFrame | CuppaPrediction:
             #X_list=X_y_trans
             # X_list[0].__class__ == CuppaPrediction
             # type(X_list[0]) is cuppa.cuppa_prediction.CuppaPrediction
@@ -519,7 +519,7 @@ class PipelineCrossValidator(LoggerMixin):
         return_y: bool = False,
         until_step: Optional[str] = None,
         keep_steps: Optional[str | list[str]] = None
-    ):
+    ) -> pd.DataFrame:
         X_trans = self.apply_on_test_sets(
             "transform",
             return_y=return_y, until_step=until_step, keep_steps=keep_steps,

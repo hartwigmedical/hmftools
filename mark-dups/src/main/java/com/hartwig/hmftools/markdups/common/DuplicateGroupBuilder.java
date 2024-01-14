@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
-import com.hartwig.hmftools.markdups.consensus.GroupIdGenerator;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
 import com.hartwig.hmftools.markdups.umi.UmiGroupBuilder;
 
@@ -23,17 +22,14 @@ import htsjdk.samtools.SAMRecord;
 
 public class DuplicateGroupBuilder
 {
-    //private static final int HIGH_DEPTH_THRESHOLD = 10000;
     private final UmiConfig mUmiConfig;
     private final Statistics mStats;
     private final boolean mFormConsensus;
-    private final GroupIdGenerator mIdGenerator;
     private final UmiGroupBuilder mUmiGroupBuilder;
 
     public DuplicateGroupBuilder(final MarkDupsConfig config)
     {
         mFormConsensus = config.FormConsensus;
-        mIdGenerator = config.IdGenerator;
         mUmiConfig = config.UMIs;
         mStats = new Statistics();
         mUmiGroupBuilder = new UmiGroupBuilder(config.UMIs, mStats.UmiStats);
@@ -283,7 +279,7 @@ public class DuplicateGroupBuilder
 
         for(List<Fragment> fragments : rawDuplicateGroups)
         {
-            DuplicateGroup duplicateGroup = new DuplicateGroup(mIdGenerator.nextId(), fragments.get(0));
+            DuplicateGroup duplicateGroup = new DuplicateGroup(null, fragments.get(0));
 
             for(int i = 1; i < fragments.size(); ++i)
             {

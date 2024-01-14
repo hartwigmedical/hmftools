@@ -52,7 +52,7 @@ public class LowCoverageRatioMapper implements RatioMapper
     @Override
     public Table mapRatios(final Table inputRatios)
     {
-        if (mConsolidateBoundaries == null)
+        if(mConsolidateBoundaries == null)
         {
             Validate.isTrue(mConsolidationCount > 1);
             mConsolidateBoundaries = consolidateIntoBuckets(inputRatios, mConsolidationCount);
@@ -101,13 +101,13 @@ public class LowCoverageRatioMapper implements RatioMapper
                 throw new RuntimeException();
             }
 
-            if (!chromosome.equals(rowChr))
+            if(!chromosome.equals(rowChr))
             {
                 // move to next chromosome
                 chromosome = rowChr;
                 bucketItr = consolidateBoundaries.get(chromosome).iterator();
 
-                if (!bucketItr.hasNext())
+                if(!bucketItr.hasNext())
                 {
                     CB_LOGGER.error("low cov bucket for chromosome {} not found", chromosome);
                     bucket = null;
@@ -120,21 +120,21 @@ public class LowCoverageRatioMapper implements RatioMapper
                 Row bucketRow = bucketTable.appendRow();
                 bucketRow.setInt(BUCKET_ID_COLUMN, bucketId);
                 bucketRow.setString(CobaltColumns.CHROMOSOME, chromosome);
-                bucketRow.setInt(CobaltColumns.POSITION, bucket.bucketPosition);
+                bucketRow.setInt(CobaltColumns.POSITION, bucket.BucketPosition);
                 bucketRow.setBoolean("isAutosome", row.getBoolean("isAutosome"));
             }
 
-            if (bucket == null)
+            if(bucket == null)
             {
                 // no bucket for whole chromosome, or we already finished last bucket
                 continue;
             }
 
-            if (row.getDouble(CobaltColumns.RATIO) >= 0)
+            if(row.getDouble(CobaltColumns.RATIO) >= 0)
             {
-                if (pos > bucket.endPosition)
+                if(pos > bucket.EndPosition)
                 {
-                    if (bucketItr.hasNext())
+                    if(bucketItr.hasNext())
                     {
                         // move to next bucket
                         bucket = bucketItr.next();
@@ -142,7 +142,7 @@ public class LowCoverageRatioMapper implements RatioMapper
                         Row bucketRow = bucketTable.appendRow();
                         bucketRow.setInt(BUCKET_ID_COLUMN, bucketId);
                         bucketRow.setString(CobaltColumns.CHROMOSOME, chromosome);
-                        bucketRow.setInt(CobaltColumns.POSITION, bucket.bucketPosition);
+                        bucketRow.setInt(CobaltColumns.POSITION, bucket.BucketPosition);
                         bucketRow.setBoolean("isAutosome", row.getBoolean("isAutosome"));
                     }
                     else
@@ -194,12 +194,11 @@ public class LowCoverageRatioMapper implements RatioMapper
     }
 
     @Nullable
-    public static Multimap<String, LowCovBucket> calcConsolidateBuckets(final Table rawRatios,
-            final double medianReadDepth)
+    public static Multimap<String, LowCovBucket> calcConsolidateBuckets(final Table rawRatios, final double medianReadDepth)
     {
         int consolidationCount = calcConsolidationCount(medianReadDepth);
 
-        if (consolidationCount == 1)
+        if(consolidationCount == 1)
         {
             CB_LOGGER.info("median read depth: {}, not using sparse consolidation", medianReadDepth);
             return null;
@@ -214,10 +213,9 @@ public class LowCoverageRatioMapper implements RatioMapper
     // given the consolidation count, which is the number of 1k window we want in each bucket, we go through the windows and
     // and find the ranges of the consolidated buckets. We do this to skip through windows with invalid ratios.
     @Nullable
-    static ArrayListMultimap<String, LowCovBucket> consolidateIntoBuckets(final Table rawRatios,
-            final int consolidationCount)
+    static ArrayListMultimap<String, LowCovBucket> consolidateIntoBuckets(final Table rawRatios, final int consolidationCount)
     {
-        if (consolidationCount == 1)
+        if(consolidationCount == 1)
             return null;
 
         ArrayListMultimap<String, LowCovBucket> boundaries = ArrayListMultimap.create();
@@ -244,13 +242,13 @@ public class LowCoverageRatioMapper implements RatioMapper
         // consolidation starts when mean read depth <= 8
         double c = 80.0 / medianReadDepth;
 
-        if (c < 10.0)
+        if(c < 10.0)
         {
             return 1;
         }
 
         // max 1000
-        if (c >= 1_000)
+        if(c >= 1_000)
         {
             return 1_000;
         }
@@ -274,7 +272,7 @@ public class LowCoverageRatioMapper implements RatioMapper
 
         List<LowCovBucket> buckets = new ArrayList<>();
 
-        if (windowPositions.isEmpty())
+        if(windowPositions.isEmpty())
         {
             return buckets;
         }
@@ -286,12 +284,12 @@ public class LowCoverageRatioMapper implements RatioMapper
         {
             int position = windowPositions.get(i);
 
-            if ((position - bucketStart) >= CobaltConstants.MAX_SPARSE_CONSOLIDATE_DISTANCE)
+            if((position - bucketStart) >= CobaltConstants.MAX_SPARSE_CONSOLIDATE_DISTANCE)
             {
                 // do not let the bucket to consolidate over 3M bases. This is done to avoid consolidating
                 // over centromere
                 // use the last bucket
-                if (i > 0)
+                if(i > 0)
                 {
                     int lastPosition = windowPositions.get(i - 1);
                     int bucketEnd = lastPosition + CobaltConstants.WINDOW_SIZE;
@@ -307,7 +305,7 @@ public class LowCoverageRatioMapper implements RatioMapper
                 windowCount = 0;
             }
 
-            if (windowCount == consolidationCount)
+            if(windowCount == consolidationCount)
             {
                 // we want to put the bucket boundary in the middle of the two windows
                 int lastPosition = windowPositions.get(i - 1);
@@ -329,7 +327,7 @@ public class LowCoverageRatioMapper implements RatioMapper
         }
 
         // add a final window
-        if (windowCount > 0)
+        if(windowCount > 0)
         {
             int bucketEnd = windowPositions.get(windowPositions.size() - 1) + CobaltConstants.WINDOW_SIZE;
 

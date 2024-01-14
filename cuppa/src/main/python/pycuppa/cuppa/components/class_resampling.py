@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator
 
+
 class RandomResampler(BaseEstimator):
     def __init__(self, up_target=None, up_ratio_thres=None, down_target=None, down_ratio_thres=None, seed=0):
         self.up_target = up_target
@@ -12,12 +13,14 @@ class RandomResampler(BaseEstimator):
 
         self.seed = seed
 
-    def _calc_resample_targets(self, y, up_target=None, up_ratio_thres=None, down_target=None, down_ratio_thres=None):
-        if False:
-            up_target = None
-            up_ratio_thres = None
-            down_target = 200
-            down_ratio_thres = 0.5
+    def _calc_resample_targets(
+        self,
+        y,
+        up_target: int | None = None,
+        up_ratio_thres: float = None,
+        down_target: int | None = None,
+        down_ratio_thres: float | None = None
+    ) -> pd.DataFrame:
 
         classes, counts = np.unique(y, return_counts=True)
         df = pd.DataFrame({
@@ -57,10 +60,7 @@ class RandomResampler(BaseEstimator):
 
         return df
 
-    def _resample_classes(self, resample_info, y, seed=0):
-        # if False:
-        #     seed=0
-        #     resample_info = _calc_resample_targets(y, up_target=100, up_ratio_thres=5, down_target=500, down_ratio_thres=0.5)
+    def _resample_classes(self, resample_info, y, seed=0) -> pd.DataFrame:
 
         if seed is not None:
             np.random.seed(seed)
@@ -71,7 +71,6 @@ class RandomResampler(BaseEstimator):
 
         ##
         row_info = pd.DataFrame({
-            # "index": range(len(y)),
             "class": y,
             "name": y.index
         })
@@ -80,9 +79,7 @@ class RandomResampler(BaseEstimator):
         ## Get row indexes
         row_info_new = []
         for class_i in np.unique(y):
-            # class_i="CNS: Pilocytic astrocytoma"
             samples = row_info[row_info["class"] == class_i]
-            # row_info_i = row_info_i.drop("class", axis=1)
 
             resample_target = resample_targets[class_i]
 
@@ -105,19 +102,11 @@ class RandomResampler(BaseEstimator):
             row_info_new.append(samples_new)
 
         row_info_new = pd.concat(row_info_new)
-        # row_info_new = row_info_new.sort_index()
 
         ## Select rows
         y_trans = y[row_info_new.index]
         y_trans.index = row_info_new["name"]
         return y_trans
-
-        # if X is not None:
-        #     X_trans = X.iloc[row_info_new.index]
-        #     X_trans.index = row_info_new["name"]
-        #     return X_trans, y_trans
-        #
-        # return y_trans
 
     def fit_resample(self, y, X=None) -> pd.Series | tuple[pd.DataFrame, pd.Series]:
         resample_info = self._calc_resample_targets(
@@ -134,11 +123,11 @@ class RandomResampler(BaseEstimator):
 
         return X_trans, y_trans
 
-    def fit(self, X=None, y=None):
+    def fit(self, X=None, y=None) -> "RandomResampler":
         return self
 
-    def transform(self, X, y=None):
+    def transform(self, X, y=None) -> pd.DataFrame:
         return X
 
-    def set_output(self, transform=None):
+    def set_output(self, transform=None) -> "RandomResampler":
         return self

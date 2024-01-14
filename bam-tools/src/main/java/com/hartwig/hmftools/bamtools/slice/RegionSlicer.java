@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.bamtools.slice;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
@@ -34,7 +32,7 @@ public class RegionSlicer
         if(!mConfig.isValid())
             System.exit(1);
 
-        BT_LOGGER.info("sample({}) starting BamSlicer", mConfig.SampleId);
+        BT_LOGGER.info("starting BamSlicer");
 
         long startTimeMs = System.currentTimeMillis();
 

@@ -1,16 +1,14 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.stats.PoissonCalcs.calcPoissonNoiseValue;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
-import static com.hartwig.hmftools.wisp.purity.ResultsWriter.DROPOUT_FILE_ID;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.HIGH_PROBABILITY;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityData.NO_RESULT;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -91,32 +89,36 @@ public class LowCountModel extends ClonalityModel
             SimulatedVafCalcs simVafCalcs = new SimulatedVafCalcs(dropoutRate, simulatedVaf, probTotalFrag1, probTotalFrag2Plus);
             simulatedVafCalcs.add(simVafCalcs);
 
+            /*
             writeSimulatedDropoutData(
-                    mResultsWriter.getDropoutWriter(), mConfig, mSample, sampleId, filteredVariants.size(), simVafCalcs,
+                    mResultsWriter.getCnPlotCalcWriter(), mConfig, mSample, sampleId, filteredVariants.size(), simVafCalcs,
                     observedFrag1, observedFrag2Plus);
+            */
         }
 
         // now find the closest ratio to the observed ratio
         double observedRatio = observedFrag2Plus / (double)observedFrag1;
-        double[] calcValues = findVafRatio(observedRatio, simulatedVafCalcs);
-        double calcVaf = calcValues[0];
-        double calcDropout = calcValues[1];
+        DropoutVaf dropoutVaf = findVafRatio(observedRatio, simulatedVafCalcs);
 
-        double lowObservedRatio = max(observedFrag2Plus - 2, 0) / (double)observedFrag1;
-        double lowCalcVaf = findVafRatio(lowObservedRatio, simulatedVafCalcs)[0];
+        // LOW_COUNT_PROBABILITY
+        double lowFragmentCount = max(calcPoissonNoiseValue(observedFrag2Plus, HIGH_PROBABILITY), 2);
+        double highFragmentCount = calcPoissonNoiseValue(observedFrag2Plus, LOW_PROBABILITY);
 
-        double highObservedRatio = (observedFrag2Plus + 2) / (double)observedFrag1;
-        double highCalcVaf = findVafRatio(highObservedRatio, simulatedVafCalcs)[0];
+        double lowObservedRatio = lowFragmentCount / observedFrag1;
+        DropoutVaf dropoutVafLow = findVafRatio(lowObservedRatio, simulatedVafCalcs);
+
+        double highObservedRatio = highFragmentCount / observedFrag1;
+        DropoutVaf dropoutVafHigh = findVafRatio(highObservedRatio, simulatedVafCalcs);
 
         CT_LOGGER.debug(format("sample(%s) low-count model: obsRatio(%.2f 1=%d 2+=%d) vaf((%.6f low=%.6f high=%.6f)",
-                sampleId, observedRatio, observedFrag1, observedFrag2Plus, calcVaf, lowCalcVaf, highCalcVaf));
+                sampleId, observedRatio, observedFrag1, observedFrag2Plus, dropoutVaf.VAF, dropoutVafLow.VAF, dropoutVafHigh.VAF));
 
         return new ClonalityData(
-                ClonalityMethod.LOW_COUNT, calcVaf, lowCalcVaf, highCalcVaf, observedFrag1 + observedFrag2Plus, calcDropout,
-                0, 0, 0);
+                ClonalityMethod.LOW_COUNT, dropoutVaf.VAF, dropoutVafLow.VAF, dropoutVafHigh.VAF,
+                observedFrag1 + observedFrag2Plus, dropoutVaf.Dropout,0, 0, 0);
     }
 
-    private static double[] findVafRatio(double observedRatio, final List<SimulatedVafCalcs> simulatedVafCalcs)
+    private DropoutVaf findVafRatio(double observedRatio, final List<SimulatedVafCalcs> simulatedVafCalcs)
     {
         SimulatedVafCalcs closestRatioUp = null;
         SimulatedVafCalcs closestRatioDown = null;
@@ -159,7 +161,19 @@ public class LowCountModel extends ClonalityModel
             calcDropout = closestRatioDown.DropoutRate;
         }
 
-        return new double[] { calcVaf, calcDropout };
+        return new DropoutVaf(calcVaf, calcDropout);
+    }
+
+    private class DropoutVaf
+    {
+        public final double VAF;
+        public final double Dropout;
+
+        public DropoutVaf(final double vaf, final double dropout)
+        {
+            VAF = vaf;
+            Dropout = dropout;
+        }
     }
 
     private class SimulatedVafCalcs
@@ -184,11 +198,12 @@ public class LowCountModel extends ClonalityModel
         public String toString() { return format("simVaf(%.4f) doRate(%.2f) ratio(%.3f)", SimulatedVaf, DropoutRate, fragmentRatio()); }
     }
 
+    /*
     public static BufferedWriter initialiseWriter(final PurityConfig config)
     {
         try
         {
-            String fileName = config.formFilename(DROPOUT_FILE_ID);
+            String fileName = config.formFilename(CN_PLOT_CALCS);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
@@ -231,4 +246,5 @@ public class LowCountModel extends ClonalityModel
             CT_LOGGER.error("failed to write dropout calc file: {}", e.toString());
         }
     }
+    */
 }

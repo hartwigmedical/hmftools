@@ -11,7 +11,7 @@
     <artifactId>cobalt</artifactId>
     <packaging>jar</packaging>
     <version>${cobalt.version}</version>
-    <name>HMF Tools - COBALT</name>
+    <name>HMF Tools - Cobalt</name>
 
     <dependencies>
         <dependency>
@@ -21,10 +21,6 @@
         <dependency>
             <groupId>com.hartwig</groupId>
             <artifactId>hmf-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.beust</groupId>
-            <artifactId>jcommander</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
