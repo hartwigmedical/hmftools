@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.markdups.ConsensusReadsTest.nextUmiReadId;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_A;
 import static com.hartwig.hmftools.markdups.TestUtils.setBaseQualities;
+import static com.hartwig.hmftools.markdups.TestUtils.createConsensusRead;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MISMATCH;
 
 import static org.junit.Assert.assertEquals;
@@ -58,7 +59,7 @@ public class IndelConsensusReadsTest
 
         String consensusBases = REF_BASES_A.substring(0, 10);
 
-        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(Lists.newArrayList(read1, read2, read3, read4, read5), UMI_ID_1);
+        ConsensusReadInfo readInfo = createConsensusRead(mConsensusReads, Lists.newArrayList(read1, read2, read3, read4, read5), UMI_ID_1);
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
         assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
         assertEquals("10M", readInfo.ConsensusRead.getCigarString());
@@ -79,7 +80,7 @@ public class IndelConsensusReadsTest
         indelBases = REF_BASES_A.substring(0, 3) + "TTT" + REF_BASES_A.substring(3, 6) + "GG" + REF_BASES_A.substring(6, 10);
         read4 = createSamRecord(nextReadId(), 12, indelBases, "1S2M3I3M2I3M1S", readsReversed);
 
-        readInfo = mConsensusReads.createConsensusRead(Lists.newArrayList(read1, read2, read3, read4), UMI_ID_1);
+        readInfo = createConsensusRead(mConsensusReads, Lists.newArrayList(read1, read2, read3, read4), UMI_ID_1);
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
         assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
         assertEquals(consensusCigar, readInfo.ConsensusRead.getCigarString());
@@ -104,7 +105,7 @@ public class IndelConsensusReadsTest
 
         String consensusBases = REF_BASES_A.substring(0, 10);
 
-        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(Lists.newArrayList(read1, read2, read3, read4, read5), UMI_ID_1);
+        ConsensusReadInfo readInfo = createConsensusRead(mConsensusReads, Lists.newArrayList(read1, read2, read3, read4, read5), UMI_ID_1);
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
         assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
         assertEquals("10M", readInfo.ConsensusRead.getCigarString());
@@ -125,7 +126,7 @@ public class IndelConsensusReadsTest
 
         consensusBases = REF_BASES_A.substring(0, 4) + "CCC";
 
-        readInfo = mConsensusReads.createConsensusRead(Lists.newArrayList(read1, read2, read3), UMI_ID_1);
+        readInfo = createConsensusRead(mConsensusReads, Lists.newArrayList(read1, read2, read3), UMI_ID_1);
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
         assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
         assertEquals(consensusCigar, readInfo.ConsensusRead.getCigarString());
@@ -145,7 +146,7 @@ public class IndelConsensusReadsTest
         // they are marked as same read cause read is reversed and the end are the same
         assertEquals(read1.getAlignmentEnd(), read2.getAlignmentEnd());
 
-        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(List.of(read1, read2), UMI_ID_1);
+        ConsensusReadInfo readInfo = createConsensusRead(mConsensusReads, List.of(read1, read2), UMI_ID_1);
 
         assertEquals("7M1D3M", readInfo.ConsensusRead.getCigarString());
         assertEquals("CTTCGATAAT", readInfo.ConsensusRead.getReadString());
@@ -153,7 +154,7 @@ public class IndelConsensusReadsTest
 
         // a second supporting read results in the extra base being dropped
         SAMRecord read3 = createSamRecord(nextReadId(), 13, "TTCGATAAAT", "2S8M", true);
-        readInfo = mConsensusReads.createConsensusRead(List.of(read1, read2, read3), UMI_ID_1);
+        readInfo = createConsensusRead(mConsensusReads, List.of(read1, read2, read3), UMI_ID_1);
 
         assertEquals("2S8M", readInfo.ConsensusRead.getCigarString());
         assertEquals("TTCGATAAAT", readInfo.ConsensusRead.getReadString());
@@ -169,7 +170,7 @@ public class IndelConsensusReadsTest
         // they are marked as same read cause read is reversed and the end are the same
         assertEquals(read1.getAlignmentEnd(), read2.getAlignmentEnd());
 
-        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(List.of(read1, read2), UMI_ID_1);
+        ConsensusReadInfo readInfo = createConsensusRead(mConsensusReads, List.of(read1, read2), UMI_ID_1);
 
         assertEquals("7M1I4M", readInfo.ConsensusRead.getCigarString());
         assertEquals("CTTCGATAAAAT", readInfo.ConsensusRead.getReadString());
@@ -178,7 +179,7 @@ public class IndelConsensusReadsTest
         // add one more read so the first C will get chopped
         SAMRecord read3 = createSamRecord(nextReadId(), 13, "TTCGATAAAT", "2S8M", true);
 
-        readInfo = mConsensusReads.createConsensusRead(List.of(read1, read2, read3), UMI_ID_1);
+        readInfo = createConsensusRead(mConsensusReads, List.of(read1, read2, read3), UMI_ID_1);
 
         assertEquals("2S8M", readInfo.ConsensusRead.getCigarString());
         assertEquals("TTCGATAAAT", readInfo.ConsensusRead.getReadString());
@@ -198,7 +199,7 @@ public class IndelConsensusReadsTest
         SAMRecord read3 = createSamRecord(nextReadId(), 40, REF_BASES.substring(40, 100), "30S30M", true);
         SAMRecord read4 = createSamRecord(nextReadId(), 39, REF_BASES.substring(40, 100), "29S31M", true);
 
-        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(List.of(read1, read2, read3, read4), UMI_ID_1);
+        ConsensusReadInfo readInfo = createConsensusRead(mConsensusReads, List.of(read1, read2, read3, read4), UMI_ID_1);
 
         assertEquals("30S30M", readInfo.ConsensusRead.getCigarString()); // was 30M2D31M when favouring non-SCs
         assertEquals(40, readInfo.ConsensusRead.getAlignmentStart());

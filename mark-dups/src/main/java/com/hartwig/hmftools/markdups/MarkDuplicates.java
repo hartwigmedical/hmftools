@@ -223,11 +223,11 @@ public class MarkDuplicates
         if(bamSampler.calcBamCharacteristics(mConfig.BamFiles.get(0), sampleRegion) && bamSampler.maxReadLength() > 0)
         {
             readLength = bamSampler.maxReadLength();
-            MD_LOGGER.info("BAM sampled max read-length({})", readLength);
+            MD_LOGGER.debug("BAM sampled max read-length({})", readLength);
         }
         else
         {
-            MD_LOGGER.warn("BAM read-length sampling failed, using default read length({})", DEFAULT_READ_LENGTH);
+            MD_LOGGER.debug("BAM read-length sampling failed, using default read length({})", DEFAULT_READ_LENGTH);
         }
 
         mConfig.setReadLength(readLength);

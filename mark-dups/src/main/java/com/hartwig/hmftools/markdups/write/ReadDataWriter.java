@@ -94,10 +94,11 @@ public class ReadDataWriter
                     read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(), read.getCigar()));
 
             SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
+            String mateCigar = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
 
             mWriter.write(format("\t%d\t%s\t%d\t%s\t%s\t%s\t%s",
                     abs(read.getInferredInsertSize()), read.getMateReferenceName(), read.getMateAlignmentStart(),
-                    read.getDuplicateReadFlag(), fragmentStatus, read.hasAttribute(MATE_CIGAR_ATTRIBUTE), fragmentCoordinates));
+                    read.getDuplicateReadFlag(), fragmentStatus, mateCigar != null ? mateCigar : "", fragmentCoordinates));
 
             if(mConfig.UMIs.Enabled)
             {

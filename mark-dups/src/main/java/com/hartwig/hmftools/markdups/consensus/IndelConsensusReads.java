@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.isDualStrandAn
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MISMATCH;
-import static com.hartwig.hmftools.markdups.consensus.ConsensusReads.selectConsensusRead;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -36,20 +35,22 @@ public class IndelConsensusReads
         mBaseBuilder = baseBuilder;
     }
 
-    public void buildIndelComponents(final List<SAMRecord> reads, final ConsensusState consensusState)
+    public void buildIndelComponents(final List<SAMRecord> reads, final ConsensusState consensusState, final SAMRecord templateRead)
     {
-        Map<String,CigarFrequency> cigarFrequencies = CigarFrequency.buildFrequencies(reads);
+        boolean hasCigarMismatch = reads.stream().anyMatch(x -> !x.getCigarString().equals(templateRead.getCigarString()));
 
-        if(cigarFrequencies.size() == 1)
+        // Map<String,CigarFrequency> cigarFrequencies = CigarFrequency.buildFrequencies(reads);
+
+        if(!hasCigarMismatch)
         {
-            SAMRecord selectedConsensusRead = reads.get(0);
-            int baseLength = selectedConsensusRead.getReadBases().length;
+            // SAMRecord selectedConsensusRead = reads.get(0);
+            int baseLength = templateRead.getReadBases().length;
             consensusState.setBaseLength(baseLength);
-            consensusState.setBoundaries(selectedConsensusRead);
+            consensusState.setBoundaries(templateRead);
 
             mBaseBuilder.buildReadBases(reads, consensusState);
             consensusState.setOutcome(INDEL_MATCH);
-            consensusState.CigarElements.addAll(selectedConsensusRead.getCigar().getCigarElements());
+            consensusState.CigarElements.addAll(templateRead.getCigar().getCigarElements());
             return;
         }
 
@@ -59,17 +60,18 @@ public class IndelConsensusReads
         boolean isDualStrand = isDualStrandAndIsFirstInPair(reads, isFirstInPair);
 
         // find the most common read by CIGAR, and where there are equal counts choose the one with the least soft-clips
-        SAMRecord selectedConsensusRead = selectConsensusRead(cigarFrequencies);
+        // SAMRecord selectedConsensusRead = selectConsensusRead(cigarFrequencies);
+        // SAMRecord selectedConsensusRead = templateRead;
 
-        int baseLength = selectedConsensusRead.getReadBases().length;
+        int baseLength = templateRead.getReadBases().length;
         consensusState.setBaseLength(baseLength);
-        consensusState.setBoundaries(selectedConsensusRead);
+        consensusState.setBoundaries(templateRead);
 
         List<ReadParseState> readStates = reads.stream().map(x -> new ReadParseState(x, consensusState.IsForward)).collect(Collectors.toList());
 
         int baseIndex = consensusState.IsForward ? 0 : baseLength - 1;
 
-        List<CigarElement> selectElements = selectedConsensusRead.getCigar().getCigarElements();
+        List<CigarElement> selectElements = templateRead.getCigar().getCigarElements();
         int cigarCount = selectElements.size();
         int cigarIndex = consensusState.IsForward ? 0 : cigarCount - 1;
 

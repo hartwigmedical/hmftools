@@ -45,7 +45,6 @@ public class DuplicateGroup
     private final String mUmiId; // the UMI if enabled
     private final List<Fragment> mFragments;
     private List<String> mReadIds;
-    private String mGroupReadId; // forms the consensus read ID and is unique
     private int mFragmentCount;
 
     // reads from each fragment are organised into their like-types from which consensus reads can be formed
@@ -53,6 +52,9 @@ public class DuplicateGroup
     private final boolean[] mReadGroupComplete;
     private final ReadTypeId[] mPrimaryReadTypeIndex; // details for primary and mate reads
     private final String mCoordinatesKey;
+
+    private SAMRecord mPrimaryTemplateRead; // read on which the primary consensus read is based
+    private String mGroupReadId;
     private boolean mDualStrand;
 
     private static final int MAX_READ_TYPES = ReadType.values().length;
@@ -63,12 +65,13 @@ public class DuplicateGroup
         mUmiId = id;
         mFragments = Lists.newArrayList(fragment);
         mReadIds = null;
-        mGroupReadId = null;
         mReadGroups = new List[MAX_READ_TYPES];
         mReadGroupComplete = new boolean[MAX_READ_TYPES];
         mPrimaryReadTypeIndex = new ReadTypeId[PRIMARY_READ_TYPES];
         mFragmentCount = 0;
         mCoordinatesKey = fragment.coordinates().keyOriented();
+        mPrimaryTemplateRead = null;
+        mGroupReadId = null;
         mDualStrand = false;
     }
 
@@ -308,39 +311,6 @@ public class DuplicateGroup
         return Arrays.stream(mReadGroups).anyMatch(x -> x != null && !x.isEmpty() && x.size() >= mFragmentCount);
     }
 
-    private String getGroupId(final List<SAMRecord> readGroup)
-    {
-        if(mGroupReadId == null)
-        {
-            mGroupReadId = formConsensusReadId(readGroup, mUmiId);
-        }
-
-        return mGroupReadId;
-    }
-
-    @VisibleForTesting
-    public static String formConsensusReadId(final List<SAMRecord> readGroup, @Nullable  final String umiId)
-    {
-        // take the first read's ID after sorting, include the CNS identifier, and append the UMI if it has one
-        List<String> readIds = readGroup.stream().map(x -> x.getReadName()).collect(Collectors.toList());
-        Collections.sort(readIds);
-        String firstReadId = readIds.get(0);
-
-        int lastDelim = firstReadId.lastIndexOf(READ_ID_DELIM);
-
-        if(lastDelim <= 0)
-        {
-            return umiId != null ? firstReadId + READ_ID_DELIM + CONSENSUS_PREFIX + umiId : CONSENSUS_PREFIX + firstReadId;
-        }
-
-        String groupId = firstReadId.substring(0, lastDelim) + READ_ID_DELIM + CONSENSUS_PREFIX;
-
-        if(umiId != null)
-            return groupId + umiId;
-        else
-            return groupId + firstReadId.substring(lastDelim + 1);
-    }
-
     public List<SAMRecord> popCompletedReads(final ConsensusReads consensusReads, boolean processIncompletes)
     {
         // take each read group type in turn and if complete, or in a final processing step, create a consensus read
@@ -362,8 +332,6 @@ public class DuplicateGroup
 
             reads.addAll(readGroup);
 
-            String groupId = getGroupId(readGroup);
-
             try
             {
                 ConsensusReadInfo consensusReadInfo;
@@ -371,11 +339,20 @@ public class DuplicateGroup
                 if(i == ReadType.PRIMARY_SUPPLEMENTARY.ordinal() || i == ReadType.MATE_SUPPLEMENTARY.ordinal())
                 {
                     // supplementaries can go to difference places and some reads have more than one, so go with the most frequent
-                    consensusReadInfo = consensusReads.createConsensusRead(findConsistentSupplementaries(readGroup), groupId);
+                    consensusReadInfo = consensusReads.createConsensusRead(
+                            findConsistentSupplementaries(readGroup), mPrimaryTemplateRead, mGroupReadId, mUmiId);
                 }
                 else
                 {
-                    consensusReadInfo = consensusReads.createConsensusRead(readGroup, groupId);
+                    consensusReadInfo = consensusReads.createConsensusRead(readGroup, mPrimaryTemplateRead, mGroupReadId, mUmiId);
+
+                    // cache to ensure subsequent consensus reads use the same properties
+                    if(mPrimaryTemplateRead == null)
+                    {
+                        mPrimaryTemplateRead = consensusReadInfo.TemplateRead;
+                        mGroupReadId = consensusReadInfo.ConsensusRead.getReadName();
+
+                    }
                 }
 
                 // set consensus read attributes
