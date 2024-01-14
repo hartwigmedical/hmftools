@@ -48,11 +48,11 @@ public class SpecificRegions
 
     public void addRegion(final ChrBaseRegion newRegion)
     {
+        if(!Chromosomes.contains(newRegion.Chromosome))
+            Chromosomes.add(newRegion.Chromosome);
+
         for(ChrBaseRegion existingRegion : Regions)
         {
-            if(!Chromosomes.contains(newRegion.Chromosome))
-                Chromosomes.add(newRegion.Chromosome);
-
             if(existingRegion.overlaps(newRegion))
             {
                 existingRegion.setStart(min(existingRegion.start(), newRegion.start()));
