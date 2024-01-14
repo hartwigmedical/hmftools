@@ -98,6 +98,7 @@ public class MarkDupsConfig
     public final ReadOutput LogReadType;
     public final boolean PerfDebug;
     public final boolean RunChecks;
+    public final boolean DropDuplicates;
     public final boolean LogFinalCache;
 
     private boolean mIsValid;
@@ -122,6 +123,7 @@ public class MarkDupsConfig
     private static final String SAMBAMBA_PATH = "sambamba";
     private static final String UNMAP_REGIONS = "unmap_regions";
     private static final String WRITE_STATS = "write_stats";
+    private static final String DROP_DUPLICATES = "drop_duplicates";
 
     // debug
     private static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
@@ -235,6 +237,7 @@ public class MarkDupsConfig
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
         RunChecks = configBuilder.hasFlag(RUN_CHECKS);
         LogFinalCache = configBuilder.hasFlag(LOG_FINAL_CACHE);
+        DropDuplicates = !configBuilder.hasFlag(DROP_DUPLICATES);
 
         if(RunChecks)
         {
@@ -290,6 +293,7 @@ public class MarkDupsConfig
         configBuilder.addFlag(FORM_CONSENSUS, "Form consensus reads from duplicate groups without UMIs");
         configBuilder.addFlag(NO_MATE_CIGAR, "Mate CIGAR not set by aligner, make no attempt to use it");
         configBuilder.addFlag(WRITE_STATS, "Write duplicate and UMI-group stats");
+        configBuilder.addFlag(DROP_DUPLICATES, "Drop duplicates from BAM");
         addValidationStringencyOption(configBuilder);
         UmiConfig.addConfig(configBuilder);
 
@@ -346,5 +350,6 @@ public class MarkDupsConfig
         RunChecks = true;
         WriteStats = false;
         LogFinalCache = true;
+        DropDuplicates = false;
     }
 }

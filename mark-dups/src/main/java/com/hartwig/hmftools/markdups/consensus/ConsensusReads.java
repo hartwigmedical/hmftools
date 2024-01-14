@@ -84,7 +84,7 @@ public class ConsensusReads
             consensusReadId = groupReadId;
         }
 
-        if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag())
+        if(reads.size() <= 1 || reads.get(0).getReadUnmappedFlag() || templateRead == null)
         {
             SAMRecord consensusRead = buildFromRead(
                     templateRead != null ? templateRead : reads.get(0),
@@ -178,22 +178,20 @@ public class ConsensusReads
             record.setCigar(templateRead.getCigar());
 
         templateRead.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
+        record.setFlags(templateRead.getFlags());
 
         if(templateRead.getMateReferenceIndex() >= 0)
         {
             record.setMateReferenceName(templateRead.getMateReferenceName());
             record.setMateAlignmentStart(templateRead.getMateAlignmentStart());
             record.setMateReferenceIndex(templateRead.getMateReferenceIndex());
-            record.setReadPairedFlag(true);
-            record.setProperPairFlag(true);
+            // mate cigar set with the attributes
         }
         else
         {
-            record.setReadPairedFlag(false);
-            record.setProperPairFlag(false);
+            record.setMateAlignmentStart(templateRead.getMateAlignmentStart());
         }
 
-        record.setFlags(templateRead.getFlags());
         record.setDuplicateReadFlag(false); // being the new primary
 
         record.setInferredInsertSize(templateRead.getInferredInsertSize());
@@ -245,7 +243,6 @@ public class ConsensusReads
             record.setAlignmentStart(primaryTemplateRead.getAlignmentStart());
             record.setCigarString(NO_CIGAR);
 
-            //record.setFlags(read.getFlags());
             record.setAttribute(MATE_CIGAR_ATTRIBUTE, primaryTemplateRead.getCigarString());
             record.setReadPairedFlag(true);
 

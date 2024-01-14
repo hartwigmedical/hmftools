@@ -129,7 +129,13 @@ public abstract class BamWriter
 
         mReadDataWriter.writeReadData(read, fragmentStatus, fragmentCoordinates, avgBaseQual, umiId);
 
-        read.setDuplicateReadFlag(fragmentStatus == DUPLICATE); // overwrite any existing status
+        if(fragmentStatus == DUPLICATE)
+        {
+            if(mConfig.DropDuplicates)
+                return;
+
+            read.setDuplicateReadFlag(true); // overwrite any existing status
+        }
 
         writeRecord(read);
     }

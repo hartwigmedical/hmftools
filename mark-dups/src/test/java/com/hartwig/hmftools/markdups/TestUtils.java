@@ -22,7 +22,6 @@ public final class TestUtils
     public static final String TEST_READ_BASES = MockRefGenome.generateRandomBases(100);
     public static final String TEST_READ_ID = "READ_01";
     public static final String TEST_READ_CIGAR = "100M";
-    public static final String TEST_READ_ID_PREFIX = "123:ABC:1:4455:";
 
     public static final String REF_BASES_A = "AAAAAAAAAA";
     public static final String REF_BASES_C = "CCCCCCCCCC";

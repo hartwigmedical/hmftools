@@ -3,8 +3,11 @@ package com.hartwig.hmftools.markdups;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_NAME;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.markdups.TestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_A;
@@ -104,7 +107,7 @@ public class ConsensusReadsTest
     @Test
     public void testBasicConsensusReads()
     {
-        final List<SAMRecord> reads = Lists.newArrayList();
+        List<SAMRecord> reads = Lists.newArrayList();
 
         int posStart = 11;
         String consensusBases = REF_BASES.substring(posStart, 21);
@@ -204,7 +207,7 @@ public class ConsensusReadsTest
     public void testMatchingIndelReads()
     {
         // indels with no CIGAR differences use the standard consensus routines
-        final List<SAMRecord> reads = Lists.newArrayList();
+        List<SAMRecord> reads = Lists.newArrayList();
 
         int posStart = 13;
 
@@ -229,7 +232,7 @@ public class ConsensusReadsTest
     @Test
     public void testMultipleSoftClipLengths()
     {
-        final List<SAMRecord> reads = Lists.newArrayList();
+        List<SAMRecord> reads = Lists.newArrayList();
 
         int posStart = 1;
 
@@ -265,7 +268,7 @@ public class ConsensusReadsTest
     public void testMateAlignmentConsensus()
     {
         // variable mate alignments from soft-clips, and  if all else equal by sorted read ID
-        final List<SAMRecord> reads = Lists.newArrayList();
+        List<SAMRecord> reads = Lists.newArrayList();
 
         int posStart = 1;
 
@@ -438,7 +441,7 @@ public class ConsensusReadsTest
     @Test
     public void testSoftClippedOverChromosomeEnd()
     {
-        final List<SAMRecord> reads = Lists.newArrayList();
+        List<SAMRecord> reads = Lists.newArrayList();
 
         int posStart = REF_BASES.length() - 5;
         String readBases1 = REF_BASES.substring(posStart, REF_BASES.length()) + "T".repeat(5);
@@ -460,7 +463,7 @@ public class ConsensusReadsTest
     @Test
     public void testSoftClippedOverChromosomeEndWithDel()
     {
-        final List<SAMRecord> reads = Lists.newArrayList();
+        List<SAMRecord> reads = Lists.newArrayList();
 
         int posStart = REF_BASES.length() - 5;
         String readBases1 = REF_BASES.substring(posStart, REF_BASES.length()) + "T".repeat(5);
@@ -482,7 +485,7 @@ public class ConsensusReadsTest
     @Test
     public void testSoftClippedOverChromosomeStart()
     {
-        final List<SAMRecord> reads = Lists.newArrayList();
+        List<SAMRecord> reads = Lists.newArrayList();
 
         String readBases1 = "T".repeat(5) + REF_BASES.substring(0, 5);
         reads.add(createSamRecord(nextReadId(), 1, readBases1, "5S5M", false));
@@ -498,7 +501,7 @@ public class ConsensusReadsTest
     @Test
     public void testSoftClippedOverChromosomeStartWithDel()
     {
-        final List<SAMRecord> reads = Lists.newArrayList();
+        List<SAMRecord> reads = Lists.newArrayList();
 
         String readBases1 = "T".repeat(5) + REF_BASES.substring(0, 5);
         reads.add(createSamRecord(nextReadId(), 1, readBases1, "5S2M1D2M", false));
@@ -607,7 +610,7 @@ public class ConsensusReadsTest
     @Test
     public void testNumMutationsAttribute()
     {
-        final List<SAMRecord> reads = Lists.newArrayList();
+        List<SAMRecord> reads = Lists.newArrayList();
 
         // no mutations
         int posStart = 11;
@@ -725,6 +728,49 @@ public class ConsensusReadsTest
 
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
         assertEquals(2, (int) readInfo.ConsensusRead.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE));
+    }
+
+    @Test
+    public void testPrimaryTemplateUseOnIncompletes()
+    {
+        String consensusBases = REF_BASES.substring(0, 50);
+
+        SAMRecord read1 = SamRecordTestUtils.createSamRecord(
+                nextReadId(), CHR_1, 1, consensusBases, "50M",
+                NO_CHROMOSOME_NAME, 1, false, false, null);
+        read1.setMateUnmappedFlag(true);
+        read1.setMateAlignmentStart(1);
+
+        SAMRecord read2 = SamRecordTestUtils.createSamRecord(
+                nextReadId(), CHR_1, 2, consensusBases, "1S49M",
+                NO_CHROMOSOME_NAME, 1, false, false, null);
+        read2.setMateUnmappedFlag(true);
+        read2.setMateAlignmentStart(2);
+
+        SAMRecord mate2 = SamRecordTestUtils.createSamRecord(
+                read2.getReadName(), NO_CHROMOSOME_NAME, 2, consensusBases, "1S49M",
+                CHR_1, 2, false, false, null);
+        mate2.setReadUnmappedFlag(true);
+        // read1.setMateAlignmentStart(2);
+
+        ConsensusReadInfo readConsensusInfo = mConsensusReads.createConsensusRead(
+                List.of(read1, read2), null, null, "");
+
+        assertEquals(readConsensusInfo.TemplateRead, read1);
+        assertEquals("50M", readConsensusInfo.ConsensusRead.getCigarString());
+        assertEquals(1, readConsensusInfo.ConsensusRead.getAlignmentStart());
+        assertEquals(1, readConsensusInfo.ConsensusRead.getMateAlignmentStart());
+        assertTrue(readConsensusInfo.ConsensusRead.getMateUnmappedFlag());
+
+        // now send through only the non template read, for the scenario where the primary's mate is unmapped
+        ConsensusReadInfo mateConsensusInfo = mConsensusReads.createConsensusRead(
+                List.of(mate2), readConsensusInfo.TemplateRead, readConsensusInfo.ConsensusRead.getReadName(), "");
+
+        assertEquals(NO_CIGAR, mateConsensusInfo.ConsensusRead.getCigarString());
+        assertEquals(1, mateConsensusInfo.ConsensusRead.getAlignmentStart());
+        assertEquals(1, mateConsensusInfo.ConsensusRead.getMateAlignmentStart());
+        assertTrue(mateConsensusInfo.ConsensusRead.getReadUnmappedFlag());
+        assertFalse(mateConsensusInfo.ConsensusRead.getMateUnmappedFlag());
     }
 
     private static SAMRecord createSamRecord(
