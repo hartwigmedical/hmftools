@@ -26,19 +26,6 @@ public class CrestApplication
     private static final String DEFAULT_MIN_RNA_READS = "1";
     private static final String DEFAULT_ACCEPTANCE_RATIO = "0.9";
 
-    private static void registerConfig(@NotNull final ConfigBuilder configBuilder)
-    {
-        configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
-        configBuilder.addConfigItem(RNA_SAMPLE, "ID of RNA sample in vcf to check, e.g. 'COLO829_RNA");
-        configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
-        configBuilder.addFlag(DO_NOT_WRITE_FILE, "Do not write final success or failure file");
-        configBuilder.addConfigItem(MIN_TOTAL_READS, false, "Minimum total reads for a SNP to be included", DEFAULT_MIN_TOTAL_READS);
-        configBuilder.addConfigItem(MIN_RNA_READS, false, "Minimum allele reads for a SNP to be included", DEFAULT_MIN_RNA_READS);
-        configBuilder.addConfigItem(ACCEPTANCE_RATIO, false, "Lower bound on fraction of allele to total reads for check to pass", DEFAULT_ACCEPTANCE_RATIO);
-        addOutputDir(configBuilder);
-        addLoggingOptions(configBuilder);
-    }
-
     public static void main(String[] args) throws IOException
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
@@ -56,5 +43,18 @@ public class CrestApplication
         );
 
         crestAlgo.run();
+    }
+
+    private static void registerConfig(@NotNull final ConfigBuilder configBuilder)
+    {
+        configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
+        configBuilder.addConfigItem(RNA_SAMPLE, "ID of RNA sample in vcf to check, e.g. 'COLO829_RNA");
+        configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
+        configBuilder.addFlag(DO_NOT_WRITE_FILE, "Do not write final success or failure file");
+        configBuilder.addConfigItem(MIN_TOTAL_READS, false, "Minimum total reads for a SNP to be included", DEFAULT_MIN_TOTAL_READS);
+        configBuilder.addConfigItem(MIN_RNA_READS, false, "Minimum allele reads for a SNP to be included", DEFAULT_MIN_RNA_READS);
+        configBuilder.addConfigItem(ACCEPTANCE_RATIO, false, "Lower bound on fraction of allele to total reads for check to pass", DEFAULT_ACCEPTANCE_RATIO);
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
     }
 }
