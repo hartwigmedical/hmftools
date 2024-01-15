@@ -22,8 +22,7 @@ public class CrestTest
     @Test
     public void shouldFlagMismatchedSample() throws IOException
     {
-        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, null, WGS_SAMPLE, RNA_SAMPLE,
-                10, 1, 0.9, true);
+        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, null, WGS_SAMPLE, RNA_SAMPLE, 10, 1, 0.9, true);
         assertFalse(crestAlgo.crestCheck(MINIMAL_VCF_FILE));
     }
 
@@ -31,33 +30,30 @@ public class CrestTest
     public void shouldAcceptMatchedSample() throws IOException
     {
         // rather than cook up another test file, just lower the threshold
-        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, null, WGS_SAMPLE, RNA_SAMPLE,
-                10, 1, 0.3, true);
+        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, null, WGS_SAMPLE, RNA_SAMPLE, 10, 1, 0.3, true);
         assertTrue(crestAlgo.crestCheck(MINIMAL_VCF_FILE));
     }
 
     @Test(expected = RuntimeException.class)
     public void shouldErrorIfNoRnaSample() throws IOException
     {
-        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, null, WGS_SAMPLE, "WRONG_NAME",
-                10, 1, 0.9, true);
+        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, null, WGS_SAMPLE, "WRONG_NAME", 10, 1, 0.9, true);
         crestAlgo.crestCheck(MINIMAL_VCF_FILE);
     }
 
     @Test
     public void shouldRunOnRealVcf() throws IOException
     {
-        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, null, WGS_SAMPLE, RNA_SAMPLE,
-                10, 1, 0.9, true);
+        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, null, WGS_SAMPLE, RNA_SAMPLE, 10, 1, 0.9, true);
         crestAlgo.run();
     }
 
     @Test
     public void shouldIgnoreInvalidRecords() throws IOException
     {
-        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, null, WGS_SAMPLE, RNA_SAMPLE,
-                10, 1, 0.9, true);
+        CrestAlgo crestAlgo = new CrestAlgo(PURPLE_DIR, null, WGS_SAMPLE, RNA_SAMPLE, 10, 1, 0.9, true);
         double x = crestAlgo.computeRnaSupportRatio(MINIMAL_VCF_FILE);
+
         assertEquals(0.5, x, EPSILON);
     }
 }
