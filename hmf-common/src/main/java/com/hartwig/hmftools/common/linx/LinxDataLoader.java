@@ -85,7 +85,7 @@ public final class LinxDataLoader
                 HomozygousDisruptionFactory.extractSomaticFromLinxDriverCatalogTsv(somaticDriverCatalogTsv);
 
         Set<Integer> fusionClusterIds = loadFusionClusters(somaticVisFusionTsv);
-        VisSvData svData = loadSvToCluster(somaticVisSvDataTsv);
+        VisSvData visSvData = loadSvToCluster(somaticVisSvDataTsv);
         Map<Integer, Integer> clusterIdToExonCount = loadClusterExonCounts(somaticVisGeneExonTsv);
 
         List<LinxSvAnnotation> allGermlineStructuralVariants = null;
@@ -125,8 +125,8 @@ public final class LinxDataLoader
                 .reportableSomaticBreakends(reportableSomaticBreakends)
                 .somaticHomozygousDisruptions(somaticHomozygousDisruptions)
                 .fusionClusterIds(fusionClusterIds)
-                .putAllSvIdToClusterId(svData.svIdToClusterId)
-                .putAllClusterIdToChainCount(svData.clusterIdToChainCount)
+                .putAllSvIdToClusterId(visSvData.svIdToClusterId)
+                .putAllClusterIdToChainCount(visSvData.clusterIdToChainCount)
                 .putAllClusterIdToExonCount(clusterIdToExonCount)
                 .allGermlineStructuralVariants(allGermlineStructuralVariants)
                 .allGermlineBreakends(allGermlineBreakends)
@@ -258,8 +258,8 @@ public final class LinxDataLoader
             }
         }
 
-        VisSvData svData = new VisSvData(svToCluster, clusterIdToChainCount);
-        return svData;
+        VisSvData visSvData = new VisSvData(svToCluster, clusterIdToChainCount);
+        return visSvData;
     }
 
     private static String generateVisGeneExonFilename(@NotNull String basePath, @NotNull String sample)
