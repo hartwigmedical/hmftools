@@ -7,10 +7,12 @@ import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedBiopsyType;
 
 import org.junit.Test;
 
-public class BiopsySiteCuratorTest {
+public class BiopsySiteCuratorTest
+{
 
     @Test
-    public void canCurateOnTestResource() {
+    public void canCurateOnTestResource()
+    {
         BiopsySiteCurator curator = CuratorTestFactory.biopsySiteCurator();
 
         CuratedBiopsyType knownCuratedType = curator.search("Breast", "HER2 Positive", "Primary", "left");

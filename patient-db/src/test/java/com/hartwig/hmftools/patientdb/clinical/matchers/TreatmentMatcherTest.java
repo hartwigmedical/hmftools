@@ -20,7 +20,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class TreatmentMatcherTest {
+public class TreatmentMatcherTest
+{
 
     private static final LocalDate JAN2015 = LocalDate.parse("2015-01-01");
     private static final LocalDate FEB2015 = LocalDate.parse("2015-02-01");
@@ -45,7 +46,8 @@ public class TreatmentMatcherTest {
 
     //    ---biopsy(mar)----no-treatment---
     @Test
-    public void oneBiopsyNoTreatmentMatches() {
+    public void oneBiopsyNoTreatmentMatches()
+    {
         List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_MAR);
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(NO_TREATMENT_GIVEN);
         List<BiopsyTreatmentData> matchedTreatments = assertedMatch(biopsies, treatments);
@@ -57,7 +59,8 @@ public class TreatmentMatcherTest {
 
     //    ---start(feb)-biopsy(mar)----end(jul)---
     @Test
-    public void treatmentStartBeforeBiopsyFails() {
+    public void treatmentStartBeforeBiopsyFails()
+    {
         List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_MAR);
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_JUL2015);
         List<BiopsyTreatmentData> matchedTreatments = assertedMatch(biopsies, treatments);
@@ -67,7 +70,8 @@ public class TreatmentMatcherTest {
 
     //    ---start/biopsy(feb)-----end(jul)---
     @Test
-    public void treatmentStartSameDateBiopsySucceeds() {
+    public void treatmentStartSameDateBiopsySucceeds()
+    {
         List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_FEB);
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_JUL2015);
         List<BiopsyTreatmentData> matchedTreatments = assertedMatch(biopsies, treatments);
@@ -79,7 +83,8 @@ public class TreatmentMatcherTest {
 
     //    ---biopsy(jan)-start(feb)-----end(jul)---
     @Test
-    public void treatmentStartAfterBiopsySucceeds() {
+    public void treatmentStartAfterBiopsySucceeds()
+    {
         List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_JAN);
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_JUL2015);
         List<BiopsyTreatmentData> matchedTreatments = assertedMatch(biopsies, treatments);
@@ -91,7 +96,8 @@ public class TreatmentMatcherTest {
 
     //    ---biopsy(jan)----start(may)----end(sep)---
     @Test
-    public void testTreatmentStart4MonthsAfterBiopsyFails() {
+    public void testTreatmentStart4MonthsAfterBiopsyFails()
+    {
         List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_JAN);
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_MAY_SEP2015);
         List<BiopsyTreatmentData> matchedTreatments = assertedMatch(biopsies, treatments);
@@ -101,7 +107,8 @@ public class TreatmentMatcherTest {
 
     //    ---biopsy(jan)-start(feb)--- end (jul) --- biopsy(sep) --- no treatment
     @Test
-    public void twoBiopsyMatchToTreatmentAndNoTreatment() {
+    public void twoBiopsyMatchToTreatmentAndNoTreatment()
+    {
         List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_SEP);
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB_JUL2015, NO_TREATMENT_GIVEN);
         List<BiopsyTreatmentData> matchedTreatments = assertedMatch(biopsies, treatments);
@@ -116,7 +123,8 @@ public class TreatmentMatcherTest {
 
     //    ---biopsy(jan)-no treatment --- start(feb)---end (jul) --- biopsy(sep)
     @Test
-    public void twoBiopsyMatchToNoTreatmentAndTreatment() {
+    public void twoBiopsyMatchToNoTreatmentAndTreatment()
+    {
         List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_SEP);
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(NO_TREATMENT_GIVEN, TREATMENT_FEB_JUL2015);
         List<BiopsyTreatmentData> matchedTreatments = assertedMatch(biopsies, treatments);
@@ -131,7 +139,8 @@ public class TreatmentMatcherTest {
 
     //    ---biopsy(jan)-biopsy(feb)-start(mar)-------end(null)
     @Test
-    public void matchesToMostRecentBiopsy() {
+    public void matchesToMostRecentBiopsy()
+    {
         List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_FEB);
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_MAR_NULL);
         List<BiopsyTreatmentData> matchedTreatments = assertedMatch(biopsies, treatments);
@@ -143,7 +152,8 @@ public class TreatmentMatcherTest {
 
     //    --- biopsy (null) - start(mar) ----
     @Test
-    public void doesntMatchBiopsyWithNullDate() {
+    public void doesntMatchBiopsyWithNullDate()
+    {
         List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_NULL);
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_MAR_NULL);
         List<BiopsyTreatmentData> matchedTreatments = assertedMatch(biopsies, treatments);
@@ -152,13 +162,15 @@ public class TreatmentMatcherTest {
     }
 
     @NotNull
-    private static DrugData drugWithStartAndEndDate(@Nullable LocalDate startDate, @Nullable LocalDate endDate) {
+    private static DrugData drugWithStartAndEndDate(@Nullable LocalDate startDate, @Nullable LocalDate endDate)
+    {
         return ImmutableDrugData.of("anything", startDate, endDate, null, Lists.newArrayList());
     }
 
     @NotNull
     private static List<BiopsyTreatmentData> assertedMatch(@NotNull List<BiopsyData> biopsies,
-            @NotNull List<BiopsyTreatmentData> treatments) {
+            @NotNull List<BiopsyTreatmentData> treatments)
+    {
         List<BiopsyTreatmentData> matchedTreatments = TreatmentMatcher.matchTreatmentsToBiopsies("patient", biopsies, treatments).values();
         assertEquals(treatments.size(), matchedTreatments.size());
         return matchedTreatments;

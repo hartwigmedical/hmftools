@@ -4,8 +4,15 @@ public class CobaltColumns
 {
     public static final String CHROMOSOME = "chromosome";
     public static final String POSITION = "position";
-    public static final String READ_COUNT = "readCount";
+    public static final String READ_DEPTH = "readDepth";
+    public static final String READ_GC_CONTENT = "readGcContent";
     public static final String RATIO = "ratio";
+
+    public static final String REFERENCE_GC_CONTENT = "referenceGcContent";
+    public static final String TUMOR_GC_CONTENT = "tumorGcContent";
+
+    public static final String REFERENCE_READ_DEPTH = "referenceReadDepth";
+    public static final String TUMOR_READ_DEPTH = "tumorReadDepth";
 
     public static final String ENCODED_CHROMOSOME_POS = "encodedChrPos";
 

@@ -24,12 +24,14 @@ import com.hartwig.hmftools.patientdb.clinical.readers.wide.WideResponseData;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class WidePatientReaderTest {
+public class WidePatientReaderTest
+{
 
     private static final String INFORMED_CONSENTS_TSV = Resources.getResource("consents/informed_consents.tsv").getPath();
 
     @Test
-    public void canInterpretPathologySampleId() {
+    public void canInterpretPathologySampleId()
+    {
         assertNull(WidePatientReader.extractYearFromPathologySampleId(Strings.EMPTY));
         assertEquals("T1", WidePatientReader.extractYearFromPathologySampleId("T1-00895 P"));
 
@@ -41,7 +43,8 @@ public class WidePatientReaderTest {
     }
 
     @Test
-    public void canDetermineResponse() {
+    public void canDetermineResponse()
+    {
         WideResponseData responseFollowRecist = baseBuilder().timePoint(1).recistDone(true).recistResponse("PD").build();
         assertEquals("(1) PD", WidePatientReader.determineResponse(responseFollowRecist));
 
@@ -64,7 +67,8 @@ public class WidePatientReaderTest {
         assertTrue(WidePatientReader.determineResponse(responseNotFilledIn).isEmpty());
     }
 
-    private static ImmutableWideResponseData.Builder baseBuilder() {
+    private static ImmutableWideResponseData.Builder baseBuilder()
+    {
         return ImmutableWideResponseData.builder()
                 .widePatientId(Strings.EMPTY)
                 .date(null)
@@ -75,7 +79,8 @@ public class WidePatientReaderTest {
     }
 
     @Test
-    public void canLoadEmptyPatient() throws IOException {
+    public void canLoadEmptyPatient() throws IOException
+    {
         WideEcrfModel wideEcrfModel = ImmutableWideEcrfModel.builder()
                 .preAvlTreatments(Lists.newArrayList())
                 .biopsies(Lists.newArrayList())
@@ -89,7 +94,8 @@ public class WidePatientReaderTest {
 
         SampleData sample = sampleBuilder(LocalDate.parse("2017-01-01")).build();
 
-        Patient patient = patientReader.read("ID", "Melanoma", Lists.newArrayList(sample), ConsentConfigFactory.read(INFORMED_CONSENTS_TSV), "WIDE");
+        Patient patient =
+                patientReader.read("ID", "Melanoma", Lists.newArrayList(sample), ConsentConfigFactory.read(INFORMED_CONSENTS_TSV), "WIDE");
 
         assertNotNull(patient);
     }

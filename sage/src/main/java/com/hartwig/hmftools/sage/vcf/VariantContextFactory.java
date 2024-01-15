@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.vcf;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.Doubles.round;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
@@ -10,18 +12,20 @@ import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_NM_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.LOCAL_PHASE_SET_READ_COUNT;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.MAX_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.MIXED_SOMATIC_GERMLINE;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.OLD_INDEL_DEDUP_FLAG;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_ALLELIC_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_ALLELIC_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_IMPROPER_PAIR;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_JITTER;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.STRAND_BIAS;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.FRAG_STRAND_BIAS;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_STRAND_BIAS;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.common.SageVariant;
@@ -67,9 +71,9 @@ public final class VariantContextFactory
             // write in order - PAVE will use the first only, but all are loaded to the DB
             builder.attribute(LOCAL_PHASE_SET, variant.localPhaseSets());
 
-            List<int[]> readCountsRaw = variant.localPhaseSetCounts();
+            List<Integer> readCountsRaw = variant.localPhaseSetCounts();
             List<Integer> readCountTotals = Lists.newArrayListWithExpectedSize(readCountsRaw.size());
-            readCountsRaw.forEach(x -> readCountTotals.add(x[0] + x[1]));
+            readCountsRaw.forEach(x -> readCountTotals.add(x));
             builder.attribute(LOCAL_PHASE_SET_READ_COUNT, readCountTotals);
         }
 
@@ -77,6 +81,13 @@ public final class VariantContextFactory
         {
             builder.attribute(MIXED_SOMATIC_GERMLINE, variant.mixedGermlineImpact());
         }
+
+        if(variant.dedupIndelDiff())
+        {
+            builder.attribute(OLD_INDEL_DEDUP_FLAG, true);
+        }
+
+        builder.attribute(MAX_READ_EDGE_DISTANCE, variant.tumorReadCounters().get(0).readEdgeDistance().maxAltDistanceFromUnclippedEdge());
 
         final VariantContext context = builder.make();
         if(context.isNotFiltered())
@@ -94,11 +105,11 @@ public final class VariantContextFactory
         int depth = counter.depth();
         int altSupport = counter.altSupport();
 
-        int avgMapQuality = depth > 0 ? (int)Math.round(counter.totalMapQuality() / (double)depth) : 0;
-        int avgAltMapQuality = altSupport > 0 ? (int)Math.round(counter.altMapQuality() / (double)altSupport) : 0;
+        int avgMapQuality = depth > 0 ? (int)Math.round(counter.mapQualityTotal() / (double)depth) : 0;
+        int avgAltMapQuality = altSupport > 0 ? (int)Math.round(counter.altMapQualityTotal() / (double)altSupport) : 0;
 
-        double avgNmCount = depth > 0 ? round(counter.totalNmCount() / (double)depth, 1) : 0;
-        double avgAltNmCount = altSupport > 0 ? round(counter.altNmCount() / (double)altSupport, 1) : 0;
+        double avgNmCount = depth > 0 ? round(counter.nmCountTotal() / (double)depth, 1) : 0;
+        double avgAltNmCount = altSupport > 0 ? round(counter.altNmCountTotal() / (double)altSupport, 1) : 0;
 
         builder.DP(depth)
                 .AD(new int[] { counter.refSupport(), altSupport })
@@ -109,9 +120,12 @@ public final class VariantContextFactory
                 .attribute(AVG_MAP_QUALITY, new int[] { avgMapQuality, avgAltMapQuality })
                 .attribute(AVG_NM_COUNT, new double[] { avgNmCount, avgAltNmCount })
                 .attribute(RAW_ALLELIC_DEPTH, new int[] { counter.rawRefSupport(), counter.rawAltSupport() })
-                .attribute(RAW_ALLELIC_BASE_QUALITY, new int[] { counter.rawRefBaseQuality(), counter.rawAltBaseQuality() })
+                .attribute(RAW_ALLELIC_BASE_QUALITY, new int[] { counter.rawRefBaseQualityTotal(), counter.rawAltBaseQualityTotal() })
                 .attribute(RAW_DEPTH, counter.rawDepth())
-                .attribute(STRAND_BIAS, counter.strandBias())
+                .attribute(
+                        FRAG_STRAND_BIAS, format("%.3f,%.3f", counter.fragmentStrandBiasAlt().bias(), counter.fragmentStrandBiasRef().bias()))
+                .attribute(
+                        READ_STRAND_BIAS, format("%.3f,%.3f", counter.readStrandBiasAlt().bias(), counter.readStrandBiasRef().bias()))
                 .attribute(AVG_BASE_QUAL, (int)counter.averageAltBaseQuality())
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
                 .alleles(NO_CALL);

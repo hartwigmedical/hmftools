@@ -20,6 +20,7 @@ import htsjdk.samtools.SAMSequenceRecord;
 public final class SamRecordTestUtils
 {
     public static final int DEFAULT_BASE_QUAL = 37;
+    public static final int DEFAULT_MAP_QUAL = 60;
 
     public static SAMSequenceDictionary SAM_DICTIONARY_V37;
 
@@ -51,6 +52,16 @@ public final class SamRecordTestUtils
         return record;
     }
 
+    public static SAMRecord createSamRecordUnpaired(
+            final String readId, final String chrStr, int readStart, final String readBases, final String cigar, boolean isReversed,
+            boolean isSupplementary, final SupplementaryReadData suppAlignment)
+    {
+        SAMRecord record = createSamRecord(
+                readId, chrStr, readStart, readBases, cigar, NO_CHROMOSOME_NAME, NO_POSITION, isReversed, isSupplementary, suppAlignment);
+        record.setReadPairedFlag(false);
+        return record;
+    }
+
     public static SAMRecord createSamRecord(
             final String readId, final String chrStr, int readStart, final String readBases, final String cigar, final String mateChr,
             int mateStart, boolean isReversed, boolean isSupplementary, final SupplementaryReadData suppAlignment)
@@ -70,7 +81,9 @@ public final class SamRecordTestUtils
         final byte[] qualities = new byte[readBases.length()];
 
         for(int i = 0; i < readBases.length(); ++i)
+        {
             qualities[i] = DEFAULT_BASE_QUAL;
+        }
 
         record.setBaseQualities(qualities);
         record.setReferenceName(chrStr);
@@ -111,5 +124,4 @@ public final class SamRecordTestUtils
 
         return record;
     }
-
 }

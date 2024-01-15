@@ -20,7 +20,8 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class FileWriterUtils
+public final class
+FileWriterUtils
 {
     public static final String OUTPUT_DIR = "output_dir";
     public static final String OUTPUT_DIR_DESC = "Output directory";
@@ -81,6 +82,12 @@ public final class FileWriterUtils
     {
         int separatorIndex = filename.lastIndexOf(File.separator);
         return separatorIndex >= 0 ? filename.substring(separatorIndex + 1) : filename;
+    }
+
+    public static String pathFromFile(final String filePath)
+    {
+        // return currently working directory if no relative or absolute path is given
+        return filePath.contains(File.separator) ? new File(filePath).getParent() + File.separator : "./";
     }
 
     // Note: if filename ends with .gz returns a Gzipped buffered writer

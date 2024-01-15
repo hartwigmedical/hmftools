@@ -2,8 +2,6 @@ package com.hartwig.hmftools.isofox.expression;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
-
 import java.util.List;
 import java.util.StringJoiner;
 

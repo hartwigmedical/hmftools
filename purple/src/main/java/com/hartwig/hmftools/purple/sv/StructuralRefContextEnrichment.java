@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.sv;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_CONTEXT_FLAG;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_CONTEXT_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_CONTEXT_FLAG;
 import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.relativePositionAndRef;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
@@ -20,8 +21,6 @@ public class StructuralRefContextEnrichment implements VariantContextEnrichment
 {
     private static final int REF_CONTEXT_DISTANCE = 10;
 
-    private static final String REF_CONTEXT_DESCRIPTION = "Reference genome surrounding break";
-
     private final IndexedFastaSequenceFile mRefGenome;
     private final Consumer<VariantContext> mConsumer;
 
@@ -34,7 +33,7 @@ public class StructuralRefContextEnrichment implements VariantContextEnrichment
     @Override
     public VCFHeader enrichHeader(final VCFHeader template)
     {
-        template.addMetaDataLine(new VCFInfoHeaderLine(REF_CONTEXT_FLAG, 1, VCFHeaderLineType.String, REF_CONTEXT_DESCRIPTION));
+        template.addMetaDataLine(new VCFInfoHeaderLine(REF_CONTEXT_FLAG, 1, VCFHeaderLineType.String, REF_CONTEXT_DESC));
 
         return template;
     }

@@ -11,8 +11,8 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_NOVEL_SJ_DISTANCE;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.fusion.ChimericUtils.findSplitReadJunction;
 import static com.hartwig.hmftools.isofox.fusion.ChimericUtils.isInversion;
@@ -359,7 +359,7 @@ public class ChimericReadTracker
 
         if(read.hasSuppAlignment())
         {
-            SupplementaryReadData suppData = SupplementaryReadData.from(read.getSuppAlignment());
+            SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read.getSuppAlignment());
 
             if(suppData != null && mConfig.Filters.skipRead(suppData.Chromosome, suppData.Position))
                 return true;

@@ -11,7 +11,7 @@
     <artifactId>compar</artifactId>
     <packaging>jar</packaging>
     <version>${compar.version}</version>
-    <name>HMF Tools - DB Comparison Tool</name>
+    <name>HMF Tools - Comparison Tool</name>
 
     <dependencies>
         <dependency>

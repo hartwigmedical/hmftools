@@ -9,10 +9,12 @@ import com.google.common.collect.Maps;
 
 import org.junit.Test;
 
-public class LimsCohortModelTest {
+public class LimsCohortModelTest
+{
 
     @Test
-    public void canQueryLimsCohortModel() {
+    public void canQueryLimsCohortModel()
+    {
         LimsCohortConfig cohortConfig = LimsCohortTestFactory.createAllDisabledCohortConfig("DRUP");
         Map<String, LimsCohortConfig> cohortMap = Maps.newHashMap();
         cohortMap.put("DRUP", cohortConfig);
@@ -22,7 +24,8 @@ public class LimsCohortModelTest {
     }
 
     @Test
-    public void nullWhenCohortConfigIsNotPresent() {
+    public void nullWhenCohortConfigIsNotPresent()
+    {
         Map<String, LimsCohortConfig> cohortMap = Maps.newHashMap();
         cohortMap.put("DRUP", LimsCohortTestFactory.createAllDisabledCohortConfig("DRUP"));
 

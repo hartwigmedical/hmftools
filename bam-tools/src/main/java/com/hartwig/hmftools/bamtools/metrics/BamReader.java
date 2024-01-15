@@ -5,7 +5,8 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.UmiReadType.DUAL_STRAND;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.extractUmiType;
+import static com.hartwig.hmftools.common.samtools.UmiReadType.DUAL;
 
 import java.util.List;
 import java.util.Map;
@@ -85,6 +86,12 @@ public class BamReader
         mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
         mPerfCounter.stop();
 
+        postSliceProcess();
+    }
+
+    @VisibleForTesting
+    protected void postSliceProcess()
+    {
         // process overlapping groups
         for(ReadGroup readGroup : mReadGroupMap.values())
         {
@@ -111,6 +118,8 @@ public class BamReader
 
             // lower the duplicate count to reflect the use of consensus reads
             --mReadCounts.Duplicates;
+
+            mFlagStats.registerConsensusRead(read);
 
             if(isDualStrand)
                 ++mReadCounts.DualStrand;
@@ -170,8 +179,7 @@ public class BamReader
         if(read.getDuplicateReadFlag())
             return false;
 
-        String umiType = read.getStringAttribute(UMI_TYPE_ATTRIBUTE);
-        return umiType != null && umiType.equals(DUAL_STRAND.toString());
+        return extractUmiType(read) == DUAL;
     }
 
     private void checkTargetRegions(final SAMRecord read, boolean isConsensus, boolean isDualStrand)
@@ -229,7 +237,7 @@ public class BamReader
         if(!read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
             return false;
 
-        SupplementaryReadData suppData = SupplementaryReadData.from(read);
+        SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
 
         if(suppData == null)
             return false;

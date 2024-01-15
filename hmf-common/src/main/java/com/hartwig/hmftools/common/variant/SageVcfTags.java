@@ -40,9 +40,8 @@ public final class SageVcfTags
 
     public static final String UMI_TYPE_COUNTS = "UMI_CNT";
     public static final String UMI_TYPE_COUNTS_DESCRIPTION =
-            "UMI type counts [RefNone,RefSingle,RefDualStrand,AltNone,AltSingle,AltDualStrand,Other]";
-    public static final int UMI_TYPE_COUNT_ORIG = 6;
-    public static final int UMI_TYPE_COUNT = 7;
+            "UMI type counts [TotalNone,TotalSingle,TotalDualStrand,AltNone,AltSingle,AltDualStrand]";
+    public static final int UMI_TYPE_COUNT = 6;
 
     public static final String LIST_SEPARATOR = ",";
 

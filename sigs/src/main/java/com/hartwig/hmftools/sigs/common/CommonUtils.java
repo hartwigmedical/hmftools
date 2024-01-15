@@ -30,6 +30,8 @@ import org.apache.logging.log4j.Logger;
 
 public final class CommonUtils
 {
+    public static final String APP_NAME = "Sigs";
+
     public static final String SAMPLE_IDS = "sample";
     public static final String SAMPLE_COUNTS_FILE = "sample_counts_file";
     public static final String SIGNATURES_FILE = "signatures_file";
@@ -45,15 +47,6 @@ public final class CommonUtils
             return null;
 
         return checkAddDirSeparator(outputDir);
-    }
-
-    public static void registerConfig(final ConfigBuilder configBuilder)
-    {
-        configBuilder.addConfigItem(SAMPLE_IDS, false, "Optional - list of sampleIds, separated by ';");
-        configBuilder.addPath(SAMPLE_COUNTS_FILE, true, "Path to the main input file");
-        configBuilder.addPath(SIGNATURES_FILE, false, "Signature definitions");
-        addOutputOptions(configBuilder);
-        addLoggingOptions(configBuilder);
     }
 
     public static void addCmdLineArgs(final Options options)

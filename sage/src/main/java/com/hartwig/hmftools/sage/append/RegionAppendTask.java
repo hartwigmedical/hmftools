@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.append;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.vcf.VariantContextFactory.createGenotype;
 
@@ -15,11 +17,13 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
+import com.hartwig.hmftools.sage.evidence.FragmentLengthData;
+import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.EvidenceStage;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.Genotype;
@@ -35,6 +39,7 @@ public class RegionAppendTask implements Callable
     private final EvidenceStage mEvidenceStage;
     private final IndexedFastaSequenceFile mRefGenomeFile;
     private final RefGenomeSource mRefGenome;
+    private final FragmentLengths mFragmentLengths;
 
     private final List<VariantContext> mOriginalVariants;
     private final List<VariantContext> mFinalVariants;
@@ -42,11 +47,13 @@ public class RegionAppendTask implements Callable
     public RegionAppendTask(
             final int taskId, final ChrBaseRegion region, final List<VariantContext> variants,
             final SageAppendConfig config, final IndexedFastaSequenceFile refGenome,
-            final Map<String,QualityRecalibrationMap> qualityRecalibrationMap)
+            final Map<String, BqrRecordMap> qualityRecalibrationMap, final FragmentLengths fragmentLengths)
     {
         mTaskId = taskId;
         mRegion = region;
         mOriginalVariants = variants;
+        mFragmentLengths = fragmentLengths;
+
         mFinalVariants = Lists.newArrayList();
 
         mConfig = config;
@@ -71,10 +78,30 @@ public class RegionAppendTask implements Callable
         List<Candidate> candidates = mOriginalVariants.stream()
                 .map(x -> CandidateSerialization.toCandidate(x, refSequence)).collect(Collectors.toList());
 
-        ReadContextCounters normalEvidence = mEvidenceStage.findEvidence
+        ReadContextCounters readContextCounters = mEvidenceStage.findEvidence
                 (mRegion, "reference", mConfig.Common.ReferenceIds, candidates, false);
 
-        createFinalVariants(normalEvidence, mConfig.Common.ReferenceIds);
+        createFinalVariants(readContextCounters, mConfig.Common.ReferenceIds);
+
+        if(mConfig.Common.WriteFragmentLengths)
+        {
+            for(int i = 0; i < mOriginalVariants.size(); ++i)
+            {
+                Candidate variant = candidates.get(i);
+
+                String variantInfo = format("%s:%d %s>%s",
+                        variant.chromosome(), variant.position(), variant.variant().ref(), variant.variant().alt());
+
+                List<ReadContextCounter> sampleCounters = readContextCounters.getReadCounters(i);
+
+                for(int s = 0; s < mConfig.Common.ReferenceIds.size(); ++s)
+                {
+                    String sampleId = mConfig.Common.ReferenceIds.get(s);
+                    FragmentLengthData fragmentLengthData = sampleCounters.get(s).fragmentLengths();
+                    mFragmentLengths.writeVariantFragmentLength(variantInfo, sampleId, fragmentLengthData);
+                }
+            }
+        }
 
         SG_LOGGER.trace("{}: region({}) complete", mTaskId, mRegion);
 
@@ -87,7 +114,7 @@ public class RegionAppendTask implements Callable
         {
             VariantContext origVariant = mOriginalVariants.get(i);
 
-            List<ReadContextCounter> sampleCounters = readContextCounters.getReadCounters(i); // getVariantReadCounters(variant);
+            List<ReadContextCounter> sampleCounters = readContextCounters.getReadCounters(i);
             mFinalVariants.add(addGenotype(origVariant, sampleCounters, sampleIds));
         }
     }

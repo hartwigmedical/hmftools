@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.GENE_UPSTREAM_DISTANCE;
-import static com.hartwig.hmftools.pave.PaveUtils.withinTransRange;
+import static com.hartwig.hmftools.pave.impact.PaveUtils.withinTransRange;
 
 import java.io.IOException;
 import java.util.List;

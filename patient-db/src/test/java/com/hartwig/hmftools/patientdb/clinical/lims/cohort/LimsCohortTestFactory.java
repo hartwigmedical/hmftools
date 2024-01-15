@@ -2,34 +2,41 @@ package com.hartwig.hmftools.patientdb.clinical.lims.cohort;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class LimsCohortTestFactory {
+public final class LimsCohortTestFactory
+{
 
-    private LimsCohortTestFactory() {
+    private LimsCohortTestFactory()
+    {
     }
 
     @NotNull
-    public static LimsCohortConfig createCPCTCohortConfig() {
+    public static LimsCohortConfig createCPCTCohortConfig()
+    {
         return createCohortConfig("CPCT", true, false, false, false, false, true, false, false, true, false, false);
     }
 
     @NotNull
-    public static LimsCohortConfig createCORECohortConfig() {
+    public static LimsCohortConfig createCORECohortConfig()
+    {
         return createCohortConfig("CORE", true, true, false, true, true, true, true, true, false, true, true);
     }
 
     @NotNull
-    public static LimsCohortConfig createWIDECohortConfig() {
+    public static LimsCohortConfig createWIDECohortConfig()
+    {
         return createCohortConfig("WIDE", true, true, true, true, true, true, false, true, true, false, true);
     }
 
     @NotNull
-    public static LimsCohortConfig createAllDisabledCohortConfig(@NotNull String cohortId) {
+    public static LimsCohortConfig createAllDisabledCohortConfig(@NotNull String cohortId)
+    {
         return allDisabledBuilder().cohortId(cohortId).build();
     }
 
     @NotNull
     public static LimsCohortConfig createConfigForHospitalModel(@NotNull String cohortId, boolean requireHospitalPersonsStudy,
-            boolean requireHospitalPersonsRequester) {
+            boolean requireHospitalPersonsRequester)
+    {
         return allDisabledBuilder().cohortId(cohortId)
                 .sampleContainsHospitalCenterId(true)
                 .requireHospitalPersonsStudy(requireHospitalPersonsStudy)
@@ -39,12 +46,14 @@ public final class LimsCohortTestFactory {
 
     @NotNull
     public static LimsCohortConfig createConfigForGermlineReporting(@NotNull String cohortId, boolean reportGermline,
-            boolean reportGermlineFlag) {
+            boolean reportGermlineFlag)
+    {
         return allDisabledBuilder().cohortId(cohortId).reportGermline(reportGermline).reportGermlineFlag(reportGermlineFlag).build();
     }
 
     @NotNull
-    public static ImmutableLimsCohortConfig.Builder allDisabledBuilder() {
+    public static ImmutableLimsCohortConfig.Builder allDisabledBuilder()
+    {
         return ImmutableLimsCohortConfig.builder()
                 .sampleContainsHospitalCenterId(false)
                 .reportGermline(false)
@@ -63,7 +72,8 @@ public final class LimsCohortTestFactory {
     private static LimsCohortConfig createCohortConfig(@NotNull String cohortId, boolean sampleContainsHospitalCenterId,
             boolean reportGermline, boolean reportGermlineFlag, boolean reportConclusion, boolean reportViral, boolean reportPeach,
             boolean requireHospitalId, boolean requireHospitalPAId, boolean requireHospitalPersonsStudy,
-            boolean requireHospitalPersonsRequester, boolean requireAdditionalInformationForSidePanel) {
+            boolean requireHospitalPersonsRequester, boolean requireAdditionalInformationForSidePanel)
+    {
         return ImmutableLimsCohortConfig.builder()
                 .cohortId(cohortId)
                 .sampleContainsHospitalCenterId(sampleContainsHospitalCenterId)

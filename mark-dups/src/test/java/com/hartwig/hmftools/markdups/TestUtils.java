@@ -30,6 +30,8 @@ public final class TestUtils
     public static final String REF_BASES = "X" + REF_BASES_RANDOM + REF_BASES_A + REF_BASES_C + REF_BASES_G + REF_BASES_T
             + REF_BASES_A + REF_BASES_C + REF_BASES_G + REF_BASES_T + REF_BASES_RANDOM;
 
+    public static final String REF_BASES_REPEAT_40 = REF_BASES.repeat(40);
+
     public static final int DEFAULT_QUAL = SamRecordTestUtils.DEFAULT_BASE_QUAL;
 
     public static MarkDupsConfig createTestConfig()

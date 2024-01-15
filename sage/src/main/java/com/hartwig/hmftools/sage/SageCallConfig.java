@@ -3,7 +3,6 @@ package com.hartwig.hmftools.sage;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.sage.SageCommon.SAMPLE_DELIM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -12,10 +11,8 @@ import static com.hartwig.hmftools.sage.SageConfig.registerCommonConfig;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.util.Strings;
@@ -31,6 +28,7 @@ public class SageCallConfig
     public final String PanelBed;
     public final String Hotspots;
     public final boolean PanelOnly;
+    public final boolean OldIndelDedup; // run first but then override
 
     private final String mResourceDir;
 
@@ -40,6 +38,7 @@ public class SageCallConfig
     private static final String PANEL_BED = "panel_bed";
     private static final String HOTSPOTS = "hotspots";
     private static final String PANEL_ONLY = "panel_only";
+    private static final String RUN_OLD_DEDUP = "old_indel_dedup_diffs";
 
     public SageCallConfig(final String version, final ConfigBuilder configBuilder)
     {
@@ -66,6 +65,7 @@ public class SageCallConfig
         Hotspots = getReferenceFile(configBuilder, HOTSPOTS);
 
         PanelOnly = configBuilder.hasFlag(PANEL_ONLY);
+        OldIndelDedup = configBuilder.hasFlag(RUN_OLD_DEDUP);
     }
 
     public boolean isValid()
@@ -119,6 +119,7 @@ public class SageCallConfig
         configBuilder.addPrefixedPath(HOTSPOTS, false, "Hotspots", RESOURCE_DIR);
         configBuilder.addPrefixedPath(COVERAGE_BED, false, "Coverage is calculated for optionally supplied bed", RESOURCE_DIR);
         configBuilder.addFlag(PANEL_ONLY, "Only examine panel for variants");
+        configBuilder.addFlag(RUN_OLD_DEDUP, "Run old INDEL dedup logic but only to annotate differences with new");
 
         registerCommonConfig(configBuilder);
         addEnsemblDir(configBuilder);
@@ -126,7 +127,7 @@ public class SageCallConfig
 
     public SageCallConfig()
     {
-        Common = new SageConfig();
+        Common = new SageConfig(false);
         TumorIds = Lists.newArrayList();
         TumorBams = Lists.newArrayList();
         HighConfidenceBed = "highConf";
@@ -134,6 +135,7 @@ public class SageCallConfig
         PanelBed = "panel";
         Hotspots = "hotspots";
         PanelOnly = false;
+        OldIndelDedup = false;
         mResourceDir = "";
     }
 

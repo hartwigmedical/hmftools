@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.sage.phase;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
+import static com.hartwig.hmftools.sage.common.TestUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
 import static com.hartwig.hmftools.sage.phase.VariantPhaser.mergeByExtension;
 import static com.hartwig.hmftools.sage.phase.VariantPhaser.mergeMatching;
@@ -19,12 +21,11 @@ import java.util.Set;
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
@@ -421,11 +422,7 @@ public class PhasingGroupsTest
 
     private SageVariant createVariant(int position)
     {
-        VariantHotspot variant = ImmutableVariantHotspotImpl.builder()
-                .chromosome("1")
-                .position(position)
-                .ref("A")
-                .alt("C").build();
+        SimpleVariant variant = createSimpleVariant(position);
 
         List<ReadContextCounter> tumorCounters = Lists.newArrayList(createReadCounter(position));
 
@@ -443,11 +440,7 @@ public class PhasingGroupsTest
 
     private ReadContextCounter createReadCounter(int id, int position)
     {
-        VariantHotspot variant = ImmutableVariantHotspotImpl.builder()
-                .chromosome("1")
-                .position(position)
-                .ref("A")
-                .alt("C").build();
+        SimpleVariant variant = createSimpleVariant(position);
 
         IndexedBases indexBases = new IndexedBases(position, 10, "ACGTACGTACGT".getBytes());
         ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);

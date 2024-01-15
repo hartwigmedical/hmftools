@@ -19,6 +19,14 @@ public class FlagQCStats
             mFailed++;
     }
 
+    public void decrement(boolean passes)
+    {
+        if(passes)
+            --mPassed;
+        else
+            --mFailed;
+    }
+
     public void merge(final FlagQCStats other)
     {
         mPassed += other.mPassed;

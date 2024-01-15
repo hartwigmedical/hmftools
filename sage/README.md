@@ -38,7 +38,7 @@ Argument | Description
 ---|---
 tumor | Comma separated names of the tumor sample
 tumor_bam | Comma separated paths to indexed tumor BAM file
-out | Name of the output VCF
+output_vcf | Name of the output VCF
 ref_genome | Path to reference genome fasta file
 ref_genome_version | One of `37` or `38`
 hotspots | Path to hotspots vcf
@@ -75,7 +75,7 @@ Argument | Default | Description
 ---|-------|---
 disable_bqr | false | Disable base quality recalibration
 write_bqr_data | NA    | Write BQR calculations - for information purposes, or to re-use if Sage is run again with 'load_bqr_files'
-load_bqr_files | NA    | Attempts to reload previously generated BQR files
+load_bqr | NA    | Reload previously generated BQR files to avoid re-running this stage, or if running on a sliced BAM
 write_bqr_plot | NA    | Generate base-quality recalibration plots (requires R)
 bqr_sample_size | 2,000,000 | Sample size of each autosome
 bqr_max_alt_count | 3     | Max support of variant before it is considered likely to be real and not a sequencing error
@@ -119,7 +119,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -panel_bed /path/to/ActionableCodingPanel.somatic.37.bed.gz \
     -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
     -ensembl_data_dir /path_to_ensembl_cache/ \
-    -out /path/to/COLO829v003.sage.vcf.gz
+    -output_vcf /path/to/COLO829v003.sage.vcf.gz
 ```
 
 Typical arguments running in paired tumor-normal mode:
@@ -135,7 +135,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -panel_bed /path/to/ActionableCodingPanel.somatic.37.bed.gz \
     -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
     -ensembl_data_dir /path_to_ensembl_cache/ \
-    -out /path/to/COLO829v003.sage.vcf.gz
+    -output_vcf /path/to/COLO829v003.sage.vcf.gz
 ```
 
 # SAGE append mode usage
@@ -147,7 +147,7 @@ Argument | Description
 reference | Comma separated names of the reference sample
 reference_bam | Comma separated paths to indexed reference BAM file
 input_vcf | Name of the existing SAGE 2.4+ VCF
-out | Name of the output VCF
+output_vcf | Name of the output VCF
 ref_genome | Path to reference genome fasta file
 
 The cardinality of `reference` must match `reference_bam` and must not already exist in the input VCF.
@@ -175,6 +175,21 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.append.SageAppendAppl
     -out /path/to/COLO829v003.sage.rna.vcf.gz
 ```
 
+
+# Variant Visualisations
+Sage can produce HTML visualisations for specific variants of interest, showing the type of support from each overlapping read.
+
+To enable this output, set one or more of the following arguments:
+
+Argument | Description 
+---|---
+vis_variants | List of variants for which to generate output, format 'chromosome:position:ref:alt' and separated by ';'
+vis_pass_only | Generate output for all passing variants
+vis_max_support_reads | Max reads per type to display, default is 40
+vis_output_dir | Output directory for HTML files, defaults to 'vis' if not specified
+
+
+
 # Key concepts in SAGE
 
 ## BAM conventions
@@ -187,9 +202,9 @@ Optional NM tag (edit distance to the reference) is used in the quality calculat
 SAGE is designed to jointly call any number of samples.  1 or more 'tumor' samples must be defined and 1 or more 
 
 - A 'tumor' sample in SAGE is defined as a sample in which SAGE will BOTH search for candidates AND collect evidence
-- A 'reference' sample is one in which SAGE will collect evidence only (for candidates identified in the tumor sampless)
+- A 'reference' sample is one in which SAGE will collect evidence only (for candidates identified in the tumor samples)
 
-SAGE requires at least one tumor sample to be set (unless running in append mode - see below).    By default the first reference sample is also treated as a 'germline' sample, which is used for calculation of the germline filters.  The number of reference samples to be used for germline filtering can be configured by setting the ref_sample_count.  2 common alternatives are:
+SAGE requires at least one tumor sample to be set (unless running in append mode - see below).    By default the first reference sample is also treated as a 'germline' sample, which is used for calculation of the germline filters.  The number of reference samples to be used for germline filtering can be configured by setting the ref_sample_count.  Two common alternatives are:
 
 - If no germline filtering is desired set ref_sample_count = 0.
 - If the patient has a bone marrow donor and reference samples for both patient and donor are avaialable, then SAGE can subtract germline calls from both by setting ref_sample_count = 2. 
@@ -305,9 +320,9 @@ A typical example of the chart is shown below. Note that each bar represents the
 
 ![Base Quality Adjustment](src/main/resources/readme/COLO829v003T.bqr.png)
 
-Base quality recalibration is enabled by default but can be disabled by supplying including the`-bqr_enabled false` argument.
+Base quality recalibration is enabled by default but can be disabled by supplying including the`-disable_bqr` argument.
 
-The base quality recalibration chart can be independently disabled by including the `-bqr_plot false` argument.
+The base quality recalibration chart is generated with the config `-write_bqr_plot` and the BQR table data with `write_bqr_data`.
  
 ## 2. Candidate Variants
 
@@ -434,7 +449,7 @@ To reduce processing the following hard filters are applied:
 Filter | Default Value | Field
 ---|---|---
 hard_min_tumor_qual |50| `QUAL`
-hard_min_tumor_vaf |0.01| `VAF`
+hard_min_tumor_vaf |0.01| `AF`
 hard_min_tumor_raw_alt_support |2| `RAD[1]`
 hard_min_tumor_raw_base_quality |0| `RABQ[1]`
 filtered_max_normal_alt_support |3| Normal `AD[1]`
@@ -470,7 +485,7 @@ max_germline_rel_raw_base_qual|50%|4%|4% | 4% | Normal `RABQ[1]` / Tumor `RABQ[1
 strandBias|0.0005 |0.0005|0.0005 |0.0005| SBLikelihood<sup>4</sup>
 minAvgBaseQual|18|28|28|28|ABQ
 
-1. These min_tumor_qual cutoffs should be set lower for lower depth samples.  For example for 30x tumor coverage, we recommend (Hotspot=40;Panel=60;HC=100;LC=150).   For targeted data with higher depth please see recommendations [here](https://github.com/hartwigmedical/hmftools/blob/master/README_TARGETED.md).
+1. These min_tumor_qual cutoffs should be set lower for lower depth samples.  For example for 30x tumor coverage, we recommend (Hotspot=40;Panel=60;HC=100;LC=150).   For targeted data with higher depth please see recommendations [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md).
 
 2. Even if tumor qual score cutoff is not met, hotspots are also called so long as tumor vaf >= 0.08 and  allelic depth in tumor supporting the ALT >= 8 reads and tumorRawBQ1 > 150.  This allows calling of pathogenic hotspots even in known poor mappability regions, eg. HIST2H3C K28M.
 
@@ -496,7 +511,7 @@ Patients who have previously undergone bone marrow transplantation may have a si
 
 SAGE tries to phase variants which have overlapping read evidence.   Phasing is considered for any  variants not filtered by the ‘hard_min_tumor_qual’, ’hard_min_tumor_raw_alt_support’ or ‘hard_min_tumor_raw_base_quality’ hard filters or by the ‘min_tumor_vaf’ soft filter.  
 
-The variants are into ‘phase regions’ (ie regions without any read overlap and can hence which can be phased independently).   If a phase region has no PASS variants, then skip phasing.  For each phase region the following operations are performed:     
+The variants are into ‘phase regions’ (ie regions without any read overlap, and hence can be phased independently).   If a phase region has no PASS variants, then skip phasing.  For each phase region the following operations are performed:     
 - **Create ‘sets’** - Sets are groups of reads that overlap identical candidate variants with the same phase support (either + for alt support or - for reference support). For example, one set would be all the reads that support +A+B where A and B are 2 candidate variants)
 - **Collapse sets** - Collapse sets which are proper subsets of other sets into their supersets, eg. ‘+A+B’ but do NOT also cover variant C may be collapsed into the superset ‘+A+B+C’.   1 set may be collapsible into multiple supersets (eg. +A+B may be collapsable into +A+B+C and +A+B-C if both have independent support.  In this case the read counts are pro-rata added to the supersets
 - **Iteratively merge overlapping sets** - merge any pairs of overlapping sets, if at least in one direction there exists only 1 option with consistent overlap.   .Repeat until no further sets can be merged

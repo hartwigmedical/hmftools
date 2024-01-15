@@ -132,13 +132,16 @@ public class PonAnnotation extends AnnotationData implements Callable
         return (long)0;
     }
 
-    public void annotateVariant(final VariantData variant, final PonChrCache chrCache)
+    public void annotateVariant(final VariantData variant, final PonChrCache chrCache, final boolean forcePass)
     {
         PonVariantData ponData = chrCache.getPonData(variant);
         if(ponData == null)
             return;
 
         variant.setPonFrequency(ponData.Samples, ponData.MaxSampleReads);
+
+        if(forcePass)
+            return;
 
         VariantTier tier = variant.tier();
 
@@ -220,8 +223,7 @@ public class PonAnnotation extends AnnotationData implements Callable
                 {
                     if(currentCache != null && !currentCache.isComplete())
                     {
-                        PV_LOGGER.debug("chr({}) loaded {} PON entries, strCache({})",
-                                currentCache.Chromosome, currentCache.entryCount(), mStringCache.size());
+                        PV_LOGGER.debug("chr({}) loaded {} PON entries", currentCache.Chromosome, currentCache.entryCount());
 
                         currentCache.setComplete();
                     }

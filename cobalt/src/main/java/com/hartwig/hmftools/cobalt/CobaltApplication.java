@@ -1,17 +1,15 @@
 package com.hartwig.hmftools.cobalt;
 
-import static java.time.format.DateTimeFormatter.ISO_ZONED_DATE_TIME;
-
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
+import static com.hartwig.hmftools.cobalt.CobaltConfig.registerConfig;
+import static com.hartwig.hmftools.cobalt.CobaltConstants.APP_NAME;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.WINDOW_SIZE;
 import static com.hartwig.hmftools.cobalt.CobaltUtils.rowToCobaltRatio;
 import static com.hartwig.hmftools.cobalt.RatioSegmentation.applyRatioSegmentation;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -19,9 +17,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParametersDelegate;
-import com.beust.jcommander.UnixStyleUsageFormatter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.cobalt.count.BamReadCounter;
 import com.hartwig.hmftools.cobalt.diploid.DiploidRegionLoader;
@@ -30,8 +25,7 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
-import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator;
-import com.hartwig.hmftools.common.utils.config.LoggingOptions;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.jetbrains.annotations.NotNull;
@@ -43,86 +37,61 @@ import tech.tablesaw.io.csv.CsvReadOptions;
 
 public class CobaltApplication
 {
-    @ParametersDelegate
-    private final CobaltConfig mConfig = new CobaltConfig();
+    private final CobaltConfig mConfig;
 
-    // add to the logging options
-    @ParametersDelegate
-    private final LoggingOptions mLoggingOptions = new LoggingOptions();
+    public CobaltApplication(final ConfigBuilder configBuilder)
+    {
+        mConfig = new CobaltConfig(configBuilder);
+
+        try{
+            mConfig.validate();
+        }
+        catch(Exception e)
+        {
+            CB_LOGGER.error("config loading failed: {}", e.toString());
+            System.exit(1);
+        }
+    }
 
     public static void main(final String... args) throws IOException, ExecutionException, InterruptedException
     {
-        // CB_LOGGER.debug("args: {}", String.join(" ", args));
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        final CobaltApplication application = new CobaltApplication();
-        JCommander commander = JCommander.newBuilder()
-                .addObject(application)
-                .build();
+        registerConfig(configBuilder);
 
-        // use unix style formatter
-        commander.setUsageFormatter(new UnixStyleUsageFormatter(commander));
-        // help message show in order parameters are declared
-        commander.setParameterDescriptionComparator(new DeclaredOrderParameterComparator(application.getClass()));
+        configBuilder.checkAndParseCommandLine(args);
 
-        try
-        {
-            commander.parse(args);
-        }
-        catch (com.beust.jcommander.ParameterException e)
-        {
-            System.out.println("Unable to parse args: " + e.getMessage());
-            commander.usage();
-            System.exit(1);
-        }
-
-        // set all thread exception handler
-        Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) ->
-        {
-            CB_LOGGER.error("[{}]: uncaught exception: {}", t, e);
-            e.printStackTrace(System.err);
-            System.exit(1);
-        });
-
-        System.exit(application.run(args));
+        CobaltApplication application = new CobaltApplication(configBuilder);
+        application.run();
     }
 
-    private int run(final String... args) throws IOException, ExecutionException, InterruptedException
+    private void run()
     {
-        Instant start = Instant.now();
-        mConfig.validate();
-        mLoggingOptions.setLogLevel();
+        long startTimeMs = System.currentTimeMillis();
 
-        VersionInfo mVersionInfo = new VersionInfo("cobalt.version");
-
-        CB_LOGGER.info("Cobalt version: {}", mVersionInfo.version());
-
-        CB_LOGGER.debug("build timestamp: {}, run args: {}",
-                mVersionInfo.buildTime().format(ISO_ZONED_DATE_TIME), String.join(" ", args));
-
-        CB_LOGGER.info("Reading GC Profile from {}", mConfig.GcProfilePath);
+        CB_LOGGER.info("reading GC Profile from {}", mConfig.GcProfilePath);
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("worker-%d").build();
-        ExecutorService executorService = Executors.newFixedThreadPool(mConfig.ThreadCount, namedThreadFactory);
+        ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
 
         try
         {
             final SamReaderFactory readerFactory = readerFactory(mConfig);
 
-            var chromosomePosCodec = new ChromosomePositionCodec();
+            ChromosomePositionCodec chromosomePosCodec = new ChromosomePositionCodec();
 
             final BamReadCounter bamReadCounter = new BamReadCounter(
-                    WINDOW_SIZE, mConfig.MinMappingQuality,
-                    executorService, readerFactory, chromosomePosCodec);
+                    WINDOW_SIZE, mConfig.MinMappingQuality, executorService, readerFactory, chromosomePosCodec);
 
-            bamReadCounter.generateCounts(mConfig.ReferenceBamPath, mConfig.TumorBamPath);
+            bamReadCounter.generateDepths(mConfig.ReferenceBamPath, mConfig.TumorBamPath);
 
-            Table referenceReadCounts = bamReadCounter.getReferenceCounts();
-            Table tumorReadCounts = bamReadCounter.getTumorCounts();
+            Table referenceReadDepths = bamReadCounter.getReferenceDepths();
+            Table tumorReadDepths = bamReadCounter.getTumorDepths();
 
             final Table gcProfiles = loadGCContent(chromosomePosCodec);
 
             final RatioSupplier ratioSupplier = new RatioSupplier(mConfig.ReferenceId, mConfig.TumorId, mConfig.OutputDir,
-                    gcProfiles, referenceReadCounts, tumorReadCounts,
+                    gcProfiles, referenceReadDepths, tumorReadDepths,
                     chromosomePosCodec);
 
             if (mConfig.TargetRegionPath != null)
@@ -135,7 +104,7 @@ public class CobaltApplication
 
             Table ratios;
 
-            switch (mConfig.mode())
+            switch(mConfig.mode())
             {
                 case TUMOR_ONLY:
                     final Table diploidRegions = new DiploidRegionLoader(mConfig.TumorOnlyDiploidBed, chromosomePosCodec).build();
@@ -148,42 +117,45 @@ public class CobaltApplication
                     ratios = ratioSupplier.tumorNormalPair();
             }
 
-            final String outputFilename = CobaltRatioFile.generateFilenameForWriting(
+            final String outputFilename = CobaltRatioFile.generateFilename(
                     mConfig.OutputDir, mConfig.TumorId != null ? mConfig.TumorId : mConfig.ReferenceId);
-            CB_LOGGER.info("Persisting cobalt ratios to {}", outputFilename);
-            mVersionInfo.write(mConfig.OutputDir);
+
+            CB_LOGGER.info("persisting cobalt ratios to {}", outputFilename);
+
+
             CobaltRatioFile.write(outputFilename, ratios.stream().map(r -> rowToCobaltRatio(r, chromosomePosCodec)).collect(Collectors.toList()));
 
-            // do a GC here to free up some memory for ratio segmentation
-            System.gc();
-
             applyRatioSegmentation(executorService, mConfig.OutputDir, outputFilename, mConfig.ReferenceId, mConfig.TumorId, mConfig.PcfGamma);
+
+            final VersionInfo version = new VersionInfo("cobalt.version");
+            version.write(mConfig.OutputDir);
+        }
+        catch(Exception e)
+        {
+            CB_LOGGER.error("error: {}", e.toString());
+            e.printStackTrace();
+            System.exit(1);
         }
         finally
         {
-            // we must do this to make sure application will exit on exception
             executorService.shutdown();
         }
 
-        Instant finish = Instant.now();
-        long seconds = Duration.between(start, finish).getSeconds();
-        CB_LOGGER.info("Cobalt run complete. Time taken: {}m {}s", seconds / 60, seconds % 60);
-
-        return 0;
+        CB_LOGGER.info("Cobalt complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    @NotNull
     private static SamReaderFactory readerFactory(@NotNull final CobaltConfig config)
     {
-        final SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(config.Stringency);
+        final SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(config.BamStringency);
+
         if(config.RefGenomePath != null && !config.RefGenomePath.isEmpty())
         {
             return readerFactory.referenceSource(new ReferenceSource(new File(config.RefGenomePath)));
         }
+
         return readerFactory;
     }
 
-    @NotNull
     public Table loadGCContent(ChromosomePositionCodec chromosomePosCodec) throws IOException
     {
         Table gcProfileTable = Table.create("gcProfiles",
@@ -194,7 +166,7 @@ public class CobaltApplication
 
         Collection<GCProfile> gcProfileList = GCProfileFactory.loadGCContent(WINDOW_SIZE, mConfig.GcProfilePath).values();
 
-        for (GCProfile gcProfile : gcProfileList)
+        for(GCProfile gcProfile : gcProfileList)
         {
             Row row = gcProfileTable.appendRow();
             long chrPosIndex = chromosomePosCodec.encodeChromosomePosition(gcProfile.chromosome(), gcProfile.start());

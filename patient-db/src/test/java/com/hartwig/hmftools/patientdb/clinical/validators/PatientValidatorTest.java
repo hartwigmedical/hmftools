@@ -31,7 +31,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class PatientValidatorTest {
+public class PatientValidatorTest
+{
 
     private static final String PATIENT_IDENTIFIER = "CPCT01020000";
 
@@ -96,14 +97,16 @@ public class PatientValidatorTest {
             biopsyTreatmentResponseBuilder().measurementDone("No").response("ND").responseDate(JAN).build();
 
     @Test
-    public void reportsMissingBaselineFields() {
+    public void reportsMissingBaselineFields()
+    {
         List<ValidationFinding> findings = PatientValidator.validateBaselineData(PATIENT_IDENTIFIER, EMPTY_BASELINE);
         assertEquals(5, findings.size());
         findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
     }
 
     @Test
-    public void canValidatePreTreatmentData() {
+    public void canValidatePreTreatmentData()
+    {
         PreTreatmentData emptyData = ImmutablePreTreatmentData.builder().formStatus(FormStatus.undefined()).build();
 
         assertEquals(2, PatientValidator.validatePreTreatmentData(PATIENT_IDENTIFIER, emptyData).size());
@@ -125,7 +128,8 @@ public class PatientValidatorTest {
     }
 
     @Test
-    public void reportsFailureToCuratePrimaryTumor() {
+    public void reportsFailureToCuratePrimaryTumor()
+    {
         List<ValidationFinding> findings =
                 PatientValidator.validatePrimaryTumorCuration(PATIENT_IDENTIFIER, BASELINE_DATA_MISSING_LOCATION_MAPPING);
         assertEquals(1, findings.size());
@@ -133,7 +137,8 @@ public class PatientValidatorTest {
     }
 
     @Test
-    public void reportsOnMatchedBiopsiesWithMissingFields() {
+    public void reportsOnMatchedBiopsiesWithMissingFields()
+    {
         List<ValidationFinding> findings = PatientValidator.validateBiopsies(PATIENT_IDENTIFIER,
                 Lists.newArrayList(BIOPSY_NULL, BIOPSY_FEB_WITH_SITE, BIOPSY_FEB_WITH_LOCATION));
         assertEquals(2, findings.size());
@@ -141,7 +146,8 @@ public class PatientValidatorTest {
     }
 
     @Test
-    public void reportsBiopsyBeforeInformedConsent() {
+    public void reportsBiopsyBeforeInformedConsent()
+    {
         List<ValidationFinding> findings = PatientValidator.validateInformedConsentDate(PATIENT_IDENTIFIER,
                 baselineBuilder().informedConsentDate(MAR).build(),
                 Lists.newArrayList(BIOPSY_FEB_WITH_SITE));
@@ -149,42 +155,48 @@ public class PatientValidatorTest {
     }
 
     @Test
-    public void reportsMissingTreatmentGiven() {
+    public void reportsMissingTreatmentGiven()
+    {
         List<ValidationFinding> findings =
                 PatientValidator.validateTreatments(PATIENT_IDENTIFIER, Lists.newArrayList(TREATMENT_GIVEN_NULL));
         assertEquals(1, findings.size());
     }
 
     @Test
-    public void reportsEmptyTreatmentGiven() {
+    public void reportsEmptyTreatmentGiven()
+    {
         List<ValidationFinding> findings =
                 PatientValidator.validateTreatments(PATIENT_IDENTIFIER, Lists.newArrayList(TREATMENT_GIVEN_NO_DATA));
         assertEquals(2, findings.size());
     }
 
     @Test
-    public void reportsTreatmentGivenNoWithData() {
+    public void reportsTreatmentGivenNoWithData()
+    {
         List<ValidationFinding> findings =
                 PatientValidator.validateTreatments(PATIENT_IDENTIFIER, Lists.newArrayList(TREATMENT_NOT_GIVEN_DATA));
         assertEquals(1, findings.size());
     }
 
     @Test
-    public void reportsTreatmentGivenGibberish() {
+    public void reportsTreatmentGivenGibberish()
+    {
         List<ValidationFinding> findings =
                 PatientValidator.validateTreatments(PATIENT_IDENTIFIER, Lists.newArrayList(TREATMENT_GIVEN_GIBBERISH));
         assertEquals(1, findings.size());
     }
 
     @Test
-    public void reportsMissingRadioTherapy() {
+    public void reportsMissingRadioTherapy()
+    {
         List<ValidationFinding> findings =
                 PatientValidator.validateTreatments(PATIENT_IDENTIFIER, Lists.newArrayList(TREATMENT_RADIO_THERAPY_NULL));
         assertEquals(1, findings.size());
     }
 
     @Test
-    public void reportsDrugFindingsForTreatment() {
+    public void reportsDrugFindingsForTreatment()
+    {
         List<ValidationFinding> findings =
                 PatientValidator.validateTreatments(PATIENT_IDENTIFIER, Lists.newArrayList(TREATMENT_WRONG_DRUG_DATA));
         assertEquals(4, findings.size());
@@ -192,42 +204,48 @@ public class PatientValidatorTest {
     }
 
     @Test
-    public void reportsMissingDrugData() {
+    public void reportsMissingDrugData()
+    {
         List<ValidationFinding> findings = PatientValidator.validateDrugData(PATIENT_IDENTIFIER, DRUG_NULL, FormStatus.undefined());
         assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
     }
 
     @Test
-    public void reportsIncorrectDrugData() {
+    public void reportsIncorrectDrugData()
+    {
         List<ValidationFinding> findings = PatientValidator.validateDrugData(PATIENT_IDENTIFIER, DRUG_WRONG, FormStatus.undefined());
         assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
     }
 
     @Test
-    public void reportsWrongTreatmentTimeline() {
+    public void reportsWrongTreatmentTimeline()
+    {
         List<ValidationFinding> findings = PatientValidator.validateTreatments(PATIENT_IDENTIFIER,
                 Lists.newArrayList(TREATMENT_JAN_MAR, TREATMENT_JAN_JAN, TREATMENT_JAN_FEB));
         assertEquals(1, findings.size());
     }
 
     @Test
-    public void reportsWrongTreatmentTimelineOngoing() {
+    public void reportsWrongTreatmentTimelineOngoing()
+    {
         List<ValidationFinding> findings =
                 PatientValidator.validateTreatments(PATIENT_IDENTIFIER, Lists.newArrayList(TREATMENT_JAN_FEB, TREATMENT_JAN_ONGOING));
         assertEquals(1, findings.size());
     }
 
     @Test
-    public void reportsTwoOngoingTreatments() {
+    public void reportsTwoOngoingTreatments()
+    {
         List<ValidationFinding> findings =
                 PatientValidator.validateTreatments(PATIENT_IDENTIFIER, Lists.newArrayList(TREATMENT_JAN_ONGOING, TREATMENT_FEB_ONGOING));
         assertEquals(3, findings.size());
     }
 
     @Test
-    public void reportsMissingCuratedTreatment() {
+    public void reportsMissingCuratedTreatment()
+    {
         String curationName = "testTreatmentCuration";
         List<ValidationFinding> findings = PatientValidator.validateTreatmentCuration(PATIENT_IDENTIFIER,
                 curationName,
@@ -243,7 +261,8 @@ public class PatientValidatorTest {
     }
 
     @Test
-    public void reportsPartiallyCuratedTreatment() {
+    public void reportsPartiallyCuratedTreatment()
+    {
         String curationName = "testTreatmentCuration";
         List<ValidationFinding> findings = PatientValidator.validateTreatmentCuration(PATIENT_IDENTIFIER,
                 curationName,
@@ -259,7 +278,8 @@ public class PatientValidatorTest {
     }
 
     @Test
-    public void doesNotReportDeathTimelineWhenNoTreatmentGiven() {
+    public void doesNotReportDeathTimelineWhenNoTreatmentGiven()
+    {
         List<ValidationFinding> findings = PatientValidator.validateDeathDate(PATIENT_IDENTIFIER,
                 baselineBuilder().deathDate(MAR).build(),
                 Lists.newArrayList(TREATMENT_JAN_FEB, TREATMENT_GIVEN_NULL));
@@ -267,7 +287,8 @@ public class PatientValidatorTest {
     }
 
     @Test
-    public void reportsDeathDateBeforeEndOfTreatment() {
+    public void reportsDeathDateBeforeEndOfTreatment()
+    {
         List<ValidationFinding> findings = PatientValidator.validateDeathDate(PATIENT_IDENTIFIER,
                 baselineBuilder().deathDate(MAR).build(),
                 Lists.newArrayList(TREATMENT_JAN_ONGOING, TREATMENT_JAN_FEB));
@@ -275,46 +296,53 @@ public class PatientValidatorTest {
     }
 
     @Test
-    public void reportsMeasurementDoneNull() {
+    public void reportsMeasurementDoneNull()
+    {
         List<ValidationFinding> findings = validateNonFirstResponse(PATIENT_IDENTIFIER, RESPONSE_NULL);
         assertEquals(1, findings.size());
     }
 
     @Test
-    public void reportsOnlyResponseFilledIn() {
+    public void reportsOnlyResponseFilledIn()
+    {
         List<ValidationFinding> findings = validateNonFirstResponse(PATIENT_IDENTIFIER, RESPONSE_ONLY);
         assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
     }
 
     @Test
-    public void reportsMeasurementDoneMissingData() {
+    public void reportsMeasurementDoneMissingData()
+    {
         List<ValidationFinding> findings = validateNonFirstResponse(PATIENT_IDENTIFIER, RESPONSE_MISSING_DATA);
         assertEquals(2, findings.size());
         findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
     }
 
     @Test
-    public void acceptMissingDataForFirstResponse() {
+    public void acceptMissingDataForFirstResponse()
+    {
         List<ValidationFinding> findings = PatientValidator.validateTreatmentResponse(PATIENT_IDENTIFIER, RESPONSE_MISSING_DATA, true);
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
     }
 
     @Test
-    public void reportsMeasurementDoneNoWithData() {
+    public void reportsMeasurementDoneNoWithData()
+    {
         List<ValidationFinding> findings = validateNonFirstResponse(PATIENT_IDENTIFIER, RESPONSE_MEASUREMENT_NO_WITH_DATA);
         assertEquals(2, findings.size());
     }
 
     @Test
-    public void ignoresMeasurementDoneNoWithValidData() {
+    public void ignoresMeasurementDoneNoWithValidData()
+    {
         List<ValidationFinding> findings = validateNonFirstResponse(PATIENT_IDENTIFIER, RESPONSE_MEASUREMENT_NO_WITH_VALID_DATA);
         assertTrue(findings.isEmpty());
     }
 
     @Test
-    public void reportsMissingResponseForTreatmentMoreThan16Weeks() {
+    public void reportsMissingResponseForTreatmentMoreThan16Weeks()
+    {
         List<ValidationFinding> findings = PatientValidator.validateTreatmentResponses(PATIENT_IDENTIFIER,
                 Lists.newArrayList(TREATMENT_JAN_ONGOING),
                 Lists.newArrayList());
@@ -322,7 +350,8 @@ public class PatientValidatorTest {
     }
 
     @Test
-    public void doesNotReportMissingResponseForTreatmentEndedImmediately() {
+    public void doesNotReportMissingResponseForTreatmentEndedImmediately()
+    {
         List<ValidationFinding> findings = PatientValidator.validateTreatmentResponses(PATIENT_IDENTIFIER,
                 Lists.newArrayList(TREATMENT_JAN_JAN),
                 Lists.newArrayList());
@@ -330,7 +359,8 @@ public class PatientValidatorTest {
     }
 
     @NotNull
-    private static DrugData create(@Nullable String name, @Nullable LocalDate startDate, @Nullable LocalDate endDate) {
+    private static DrugData create(@Nullable String name, @Nullable LocalDate startDate, @Nullable LocalDate endDate)
+    {
         List<CuratedDrug> curation =
                 name != null ? Lists.newArrayList(ImmutableCuratedDrug.of(name, "Type1", name, "")) : Lists.newArrayList();
         return drugBuilder().name(name).startDate(startDate).endDate(endDate).addAllCuratedDrugs(curation).build();
@@ -338,7 +368,8 @@ public class PatientValidatorTest {
 
     @NotNull
     private static List<ValidationFinding> validateNonFirstResponse(@NotNull String patientId,
-            @NotNull BiopsyTreatmentResponseData response) {
+            @NotNull BiopsyTreatmentResponseData response)
+    {
         return PatientValidator.validateTreatmentResponse(patientId, response, false);
     }
 }

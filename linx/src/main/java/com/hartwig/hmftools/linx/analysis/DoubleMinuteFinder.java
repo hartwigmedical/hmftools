@@ -4,7 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
-import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -28,6 +28,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -472,7 +473,7 @@ public class DoubleMinuteFinder implements CohortFileInterface
                 amplifiedGenesStr = appendStr(amplifiedGenesStr, amplifiedGenes, ITEM_DELIM_CHR);
         }
 
-        final String chromosomeStr = appendStrList(chromosomes, ITEM_DELIM_CHR);
+        final String chromosomeStr = chromosomes.stream().collect(Collectors.joining(ITEM_DELIM));
 
         StringBuilder sb = new StringBuilder();
 

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.neo.bind;
 
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.IGNORE_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
@@ -170,7 +171,7 @@ public class TrainConfig
 
                 for(String line : lines)
                 {
-                    if(line.startsWith("#"))
+                    if(line.isEmpty() || line.startsWith(IGNORE_SAMPLE_ID))
                         continue;
 
                     String[] values = line.split(CSV_DELIM, -1);

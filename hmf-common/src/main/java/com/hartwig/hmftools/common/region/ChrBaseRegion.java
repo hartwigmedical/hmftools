@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.region;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
@@ -179,6 +180,9 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
 
     public static Map<String,List<BaseRegion>> loadChrBaseRegions(final String filename)
     {
+        if(filename == null)
+            return Collections.emptyMap();
+
         boolean isBedFile = filename.endsWith(".bed") || filename.endsWith(".bed.gz");
         return loadChrBaseRegions(filename, isBedFile);
     }
@@ -284,6 +288,16 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
             return fieldIndexMap.get(FLD_CHROMOSOME);
         else if(fieldIndexMap.containsKey(FLD_CHROMOSOME.toLowerCase()))
             return fieldIndexMap.get(FLD_CHROMOSOME.toLowerCase());
+
+        return INVALID_FIELD;
+    }
+
+    public static int getPositionFieldIndex(final Map<String,Integer> fieldIndexMap)
+    {
+        if(fieldIndexMap.containsKey(FLD_POSITION))
+            return fieldIndexMap.get(FLD_POSITION);
+        else if(fieldIndexMap.containsKey(FLD_POSITION.toLowerCase()))
+            return fieldIndexMap.get(FLD_POSITION.toLowerCase());
 
         return INVALID_FIELD;
     }

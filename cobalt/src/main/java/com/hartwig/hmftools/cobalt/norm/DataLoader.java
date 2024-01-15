@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
@@ -137,7 +136,7 @@ public class DataLoader
 
                     if(cobaltRatio != null && cobaltRatio.position() == region.Position)
                     {
-                        region.addSampleRegionData(new SampleRegionData(cobaltRatio.tumorReadCount(), cobaltRatio.tumorGCRatio(), wgsGcRatio));
+                        region.addSampleRegionData(new SampleRegionData(cobaltRatio.tumorReadDepth(), cobaltRatio.tumorGCRatio(), wgsGcRatio));
                     }
                     else
                     {

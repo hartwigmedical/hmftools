@@ -2,10 +2,9 @@ package com.hartwig.hmftools.wisp.purity.variant;
 
 import java.util.List;
 
-import com.hartwig.hmftools.wisp.common.SampleData;
+import com.hartwig.hmftools.wisp.purity.SampleData;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
 import com.hartwig.hmftools.wisp.purity.ResultsWriter;
-import com.hartwig.hmftools.wisp.purity.PurityConstants;
 
 public abstract class ClonalityModel
 {
@@ -24,7 +23,7 @@ public abstract class ClonalityModel
         mVariants = variants;
     }
 
-    abstract ClonalityResult calculate(final String sampleId, final FragmentCalcResult estimatedResult);
+    abstract ClonalityData calculate(final String sampleId, final FragmentTotals fragmentTotals, final double rawEstimatedPurity);
 
     public boolean useVariant(final SomaticVariant variant, final GenotypeFragments sampleFragData)
     {

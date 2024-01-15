@@ -16,8 +16,8 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
 import com.hartwig.hmftools.sage.select.TranscriptSelector;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
@@ -146,7 +146,7 @@ public class DedupMixedGermlineSomatic
         }
     }
 
-    public static boolean keepMnv(final BaseRegion codon, final VariantHotspot somaticSnv, final VariantHotspot mixedMnv)
+    public static boolean keepMnv(final BaseRegion codon, final SimpleVariant somaticSnv, final SimpleVariant mixedMnv)
     {
         int snvCodonDifferences = codonDifferences(codon, somaticSnv);
         int mnvCodonDifferences = codonDifferences(codon, mixedMnv);
@@ -169,12 +169,12 @@ public class DedupMixedGermlineSomatic
         return variant.isSnv() && variant.isPassing() && variant.hasLocalPhaseSets();
     }
 
-    public static int codonDifferences(final BaseRegion codon, final VariantHotspot variant)
+    public static int codonDifferences(final BaseRegion codon, final SimpleVariant variant)
     {
-        if(codon.start() > variant.end() || variant.position() > codon.end())
+        if(codon.start() > variant.end() || variant.Position > codon.end())
             return 0;
 
-        int overlapStart = max(codon.start(), variant.position());
+        int overlapStart = max(codon.start(), variant.Position);
         int overlapEnd = min(codon.end(), variant.end());
 
         int difference = 0;
@@ -182,7 +182,7 @@ public class DedupMixedGermlineSomatic
         {
             int variantIndex = position - variant.position();
 
-            if(variant.ref().charAt(variantIndex) != variant.alt().charAt(variantIndex))
+            if(variant.Ref.charAt(variantIndex) != variant.Alt.charAt(variantIndex))
             {
                 difference++;
             }

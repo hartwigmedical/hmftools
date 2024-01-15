@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static java.lang.Math.round;
+
 import javax.annotation.Nullable;
 
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
@@ -61,10 +63,24 @@ public class ReadSupportCounts
     }
 
     public int altSupport() { return Full + Partial + Core + OtherAlt + Realigned; }
+    public int strongSupport() { return Full + Partial + Realigned; }
+
+    public void applyRatio(double ratio)
+    {
+        if(ratio == 1)
+            return;
+
+        Full = (int)round(Full * ratio);
+        Partial = (int)round(Partial * ratio);
+        Core = (int)round(Core * ratio);
+        Realigned = (int)round(Realigned * ratio);
+        OtherAlt = (int)round(OtherAlt * ratio);
+        Ref = (int)round(Ref * ratio);
+        Total = (int)round(Total * ratio);
+    }
 
     public int[] toArray()
     {
         return new int[] { Full, Partial, Core, Realigned, OtherAlt, Ref, Total };
     }
-
 }

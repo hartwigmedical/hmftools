@@ -3,18 +3,15 @@ package com.hartwig.hmftools.orange;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.ISOFOX_DIR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PIPELINE_SAMPLE_ROOT_DIR;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
-import static com.hartwig.hmftools.orange.OrangeConfig.getToolDirectory;
 
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.GeneExpressionFile;
 import com.hartwig.hmftools.common.rna.GeneFusionFile;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.orange.util.Config;
+import com.hartwig.hmftools.orange.util.PathResolver;
+import com.hartwig.hmftools.orange.util.PathUtil;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -61,7 +58,7 @@ public interface OrangeRnaConfig
     String isofoxAltSpliceJunctionCsv();
 
     @Nullable
-    static OrangeRnaConfig createConfig(@NotNull ConfigBuilder configBuilder)
+    static OrangeRnaConfig createConfig(@NotNull ConfigBuilder configBuilder, @NotNull PathResolver pathResolver)
     {
         boolean hasRnaSampleId = configBuilder.hasValue(RNA_SAMPLE_ID);
         boolean hasIsofoxDir = configBuilder.hasValue(ISOFOX_DIR_CFG);
@@ -91,20 +88,17 @@ public interface OrangeRnaConfig
         String rnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
         LOGGER.debug("RNA sample configured as {}", rnaSampleId);
 
-        String pipelineSampleRootDir = checkAddDirSeparator(configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR));
-        String sampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
-
-        String isofoxDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, ISOFOX_DIR_CFG, ISOFOX_DIR);
 
         String geneDistributionFile = configBuilder.getValue(ISOFOX_GENE_DISTRIBUTION_CSV);
         String altSpliceJuncCohortFile = configBuilder.getValue(ISOFOX_ALT_SJ_COHORT_CSV);
 
         String tumorSampleId = configBuilder.getValue(OrangeConfig.TUMOR_SAMPLE_ID);
 
-        String geneDataFile = Config.fileIfExists(GeneExpressionFile.generateFilename(isofoxDir, tumorSampleId));
-        String statisticsFile = Config.fileIfExists(RnaStatistics.generateFilename(isofoxDir, tumorSampleId));
-        String altSpliceJuncFile = Config.fileIfExists(AltSpliceJunctionFile.generateFilename(isofoxDir, tumorSampleId));
-        String fusionsFile = Config.fileIfExists(GeneFusionFile.generateFilename(isofoxDir, tumorSampleId));
+        String isofoxDir = pathResolver.resolveMandatoryToolDirectory(ISOFOX_DIR_CFG, ISOFOX_DIR);
+        String geneDataFile = PathUtil.mandatoryPath(GeneExpressionFile.generateFilename(isofoxDir, tumorSampleId));
+        String statisticsFile = PathUtil.mandatoryPath(RnaStatistics.generateFilename(isofoxDir, tumorSampleId));
+        String altSpliceJuncFile = PathUtil.mandatoryPath(AltSpliceJunctionFile.generateFilename(isofoxDir, tumorSampleId));
+        String fusionsFile = PathUtil.mandatoryPath(GeneFusionFile.generateFilename(isofoxDir, tumorSampleId));
 
         return ImmutableOrangeRnaConfig.builder()
                 .rnaSampleId(rnaSampleId)

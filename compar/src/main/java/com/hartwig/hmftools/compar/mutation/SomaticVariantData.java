@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.compar.mutation;
 
+import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.compar.common.MismatchType.REF_ONLY;
 import static java.lang.String.format;
@@ -121,7 +122,10 @@ public class SomaticVariantData implements ComparableItem
     @Override
     public String key()
     {
-        return format("%s:%d %s>%s %s", Chromosome, Position, Ref, Alt, Type);
+        if(mComparisonPosition != Position)
+            return format("%s:%d %s>%s %s liftover(%s:%d)", Chromosome, Position, Ref, Alt, Type, mComparisonChromosome, mComparisonPosition);
+        else
+            return format("%s:%d %s>%s %s", Chromosome, Position, Ref, Alt, Type);
     }
 
     @Override
@@ -154,7 +158,7 @@ public class SomaticVariantData implements ComparableItem
     {
         final SomaticVariantData otherVar = (SomaticVariantData) other;
 
-        if(!mComparisonChromosome.equals(otherVar.comparisonChromosome()) || mComparisonPosition != otherVar.comparisonPosition())
+        if(!mComparisonChromosome.equals(otherVar.Chromosome) || mComparisonPosition != otherVar.Position)
             return false;
 
         if(!Ref.equals(otherVar.Ref) || !Alt.equals(otherVar.Alt))
@@ -219,7 +223,7 @@ public class SomaticVariantData implements ComparableItem
 
         if(Filters.isEmpty() && otherVar.Filters.isEmpty() && !diffs.contains(FILTER_DIFF))
         {
-            // if ones side is filtered, suggests was filtered downstream of Sage , eg Pave or Purple so indicate this
+            // if ones side is filtered, suggests was filtered downstream of Sage (eg Pave or Purple) so indicate this
             if(matchFilterStatus == MatchFilterStatus.REF_FILTERED)
                 diffs.add(format("%s(%s/%s)", FILTER_DIFF, "FILTERED", PASS));
             else if(matchFilterStatus == MatchFilterStatus.NEW_FILTERED)

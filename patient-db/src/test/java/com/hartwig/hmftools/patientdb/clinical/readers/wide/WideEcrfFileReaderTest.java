@@ -14,12 +14,14 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class WideEcrfFileReaderTest {
+public class WideEcrfFileReaderTest
+{
 
     private static final String WIDE_TEST_DIR = Resources.getResource("wide").getPath();
 
     @Test
-    public void canReadWidePreAvlTreatments() throws IOException {
+    public void canReadWidePreAvlTreatments() throws IOException
+    {
         List<WidePreAvlTreatmentData> preTreatments =
                 WideEcrfFileReader.readPreAvlTreatments(WIDE_TEST_DIR + File.separator + "wide_pre_avl_treatments.csv");
 
@@ -51,7 +53,8 @@ public class WideEcrfFileReaderTest {
     }
 
     @Test
-    public void canReadWideBiopsies() throws IOException {
+    public void canReadWideBiopsies() throws IOException
+    {
         List<WideBiopsyData> biopsies = WideEcrfFileReader.readBiopsies(WIDE_TEST_DIR + File.separator + "wide_biopsies.csv");
 
         assertEquals(2, biopsies.size());
@@ -68,7 +71,8 @@ public class WideEcrfFileReaderTest {
     }
 
     @Test
-    public void canReadWideAvlTreatments() throws IOException {
+    public void canReadWideAvlTreatments() throws IOException
+    {
         List<WideAvlTreatmentData> treatments =
                 WideEcrfFileReader.readAvlTreatments(WIDE_TEST_DIR + File.separator + "wide_avl_treatments.csv");
 
@@ -94,7 +98,8 @@ public class WideEcrfFileReaderTest {
     }
 
     @Test
-    public void canReadWideAvlTreatmentsSemi() throws IOException {
+    public void canReadWideAvlTreatmentsSemi() throws IOException
+    {
         List<WideAvlTreatmentData> treatments =
                 WideEcrfFileReader.readAvlTreatments(WIDE_TEST_DIR + File.separator + "wide_avl_treatments_semi.csv");
 
@@ -120,7 +125,8 @@ public class WideEcrfFileReaderTest {
     }
 
     @Test
-    public void canReadWideResponses() throws IOException {
+    public void canReadWideResponses() throws IOException
+    {
         List<WideResponseData> responses = WideEcrfFileReader.readResponses(WIDE_TEST_DIR + File.separator + "wide_responses.csv");
 
         assertEquals(3, responses.size());
@@ -154,7 +160,8 @@ public class WideEcrfFileReaderTest {
     }
 
     @Test
-    public void canReadWideFiveDays() throws IOException {
+    public void canReadWideFiveDays() throws IOException
+    {
         List<WideFiveDays> fiveDays = WideEcrfFileReader.readFiveDays(WIDE_TEST_DIR + File.separator + "wide_five_days.csv");
 
         assertEquals(3, fiveDays.size());
@@ -163,7 +170,7 @@ public class WideEcrfFileReaderTest {
         assertTrue(fiveDays.get(0).dataIsAvailable());
         assertEquals(LocalDate.parse("2018-03-12"), fiveDays.get(0).informedConsentDate());
         assertEquals("female", fiveDays.get(0).gender());
-        assertEquals(1940, (int) fiveDays.get(0).birthYear());
+        assertEquals(1940, (int)fiveDays.get(0).birthYear());
         assertEquals(LocalDate.parse("2018-04-11"), fiveDays.get(0).biopsyDate());
         assertEquals("peritoneum", fiveDays.get(0).biopsySite());
         assertEquals("peritoneum", fiveDays.get(0).sampleTissue());
@@ -177,7 +184,7 @@ public class WideEcrfFileReaderTest {
         assertTrue(fiveDays.get(1).dataIsAvailable());
         assertEquals(LocalDate.parse("2018-03-12"), fiveDays.get(1).informedConsentDate());
         assertEquals("female", fiveDays.get(1).gender());
-        assertEquals(1940, (int) fiveDays.get(1).birthYear());
+        assertEquals(1940, (int)fiveDays.get(1).birthYear());
         assertEquals(LocalDate.parse("2018-05-12"), fiveDays.get(1).biopsyDate());
         assertEquals("lever", fiveDays.get(1).biopsySite());
         assertEquals("lever neoplasie", fiveDays.get(1).sampleTissue());

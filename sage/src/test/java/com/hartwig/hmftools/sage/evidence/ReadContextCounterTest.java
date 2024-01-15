@@ -13,10 +13,9 @@ import static org.junit.Assert.assertEquals;
 import static htsjdk.samtools.SAMUtils.phredToFastq;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.VariantTier;
@@ -34,16 +33,17 @@ public class ReadContextCounterTest
 
     private static void processRead(final ReadContextCounter rcCounter, final SAMRecord record)
     {
-        rcCounter.processRead(record, 1);
+        rcCounter.processRead(record, 1, null);
     }
 
     @Test
     public void testInsertInLeftSoftClip()
     {
-        final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("GT").position(554).build();
+        SimpleVariant variant = new SimpleVariant(CHR_1, 554, "G", "GT");
+
         final ReadContext readContext = createReadContext(554, 1, 0, 5, "TGTTTC", Strings.EMPTY);
 
-        final ReadContextCounter victim = new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0,
+        final ReadContextCounter victim = new ReadContextCounter(1, variant, readContext, TIER, MAX_COVERAGE, 0,
                         TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(555, "3S3M", "TGTTTC", "######");
@@ -56,10 +56,10 @@ public class ReadContextCounterTest
     @Test
     public void testDeleteInLeftSoftClip()
     {
-        final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("GT").alt("G").position(554).build();
+        SimpleVariant variant = new SimpleVariant(CHR_1, 554, "GT", "G");
         final ReadContext readContext = createReadContext(554, 1, 0, 4, "TGTTC", Strings.EMPTY);
         final ReadContextCounter victim = new ReadContextCounter(
-                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
+                1, variant, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(556, "2S3M", "TGTTC", "#####");
         processRead(victim, record);
@@ -71,10 +71,10 @@ public class ReadContextCounterTest
     @Test
     public void testSnvInLeftSoftClip()
     {
-        final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("A").position(554).build();
+        SimpleVariant variant = new SimpleVariant(CHR_1, 554, "G", "A");
         final ReadContext readContext = createReadContext(554, 1, 0, 2, "CAT", Strings.EMPTY);
         final ReadContextCounter victim = new ReadContextCounter(
-                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
+                1, variant, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(555, "2S1M", "CAT", "#####");
         processRead(victim, record);
@@ -86,10 +86,10 @@ public class ReadContextCounterTest
     @Test
     public void testRefInLeftSoftClipDoesNotContributeToDepth()
     {
-        final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("A").position(554).build();
+        SimpleVariant variant = new SimpleVariant(CHR_1, 554, "G", "GT");
         final ReadContext readContext = createReadContext(554, 1, 0, 2,"CAT", Strings.EMPTY);
         final ReadContextCounter victim = new ReadContextCounter(
-                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
+                1, variant, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         String quals = buildQualString(new int[] {37, 37, 37});
 
@@ -114,10 +114,10 @@ public class ReadContextCounterTest
     @Test
     public void testMnvInLeftSoftClip()
     {
-        final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("TCG").alt("ATC").position(552).build();
+        SimpleVariant variant = new SimpleVariant(CHR_1, 552, "TCG", "ATC");
         final ReadContext readContext = createReadContext(552, 2, 0, 6, "GAAAAAT", Strings.EMPTY);
         final ReadContextCounter victim = new ReadContextCounter(
-                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
+                1, variant, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(555, "5S3M", "GAAAAATC", "FFFFFFFF");
         processRead(victim, record);
@@ -129,10 +129,10 @@ public class ReadContextCounterTest
     @Test
     public void testInsertInRightSoftClip()
     {
-        final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("GT").position(554).build();
+        SimpleVariant variant = new SimpleVariant(CHR_1, 554, "G", "GT");
         final ReadContext readContext = createReadContext(554, 1, 0, 5, "TGTTTC", Strings.EMPTY);
         final ReadContextCounter victim = new ReadContextCounter(
-                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
+                1, variant, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(553, "2M4S", "TGTTTC", "######");
         processRead(victim, record);
@@ -144,10 +144,11 @@ public class ReadContextCounterTest
     @Test
     public void testDeleteInRightSoftClip()
     {
-        final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("GT").alt("G").position(554).build();
+        SimpleVariant variant = new SimpleVariant(CHR_1, 554, "GT", "G");
+        // final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("GT").alt("G").position(554).build();
         final ReadContext readContext = createReadContext(554, 1, 0, 4, "TGTTC", Strings.EMPTY);
         final ReadContextCounter victim = new ReadContextCounter(
-                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
+                1, variant, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(553, "2M3S", "TGTTC", "#####");
         processRead(victim, record);
@@ -159,12 +160,12 @@ public class ReadContextCounterTest
     @Test
     public void testMnvInRightSoftClip()
     {
-        final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("TCG").alt("ATC").position(552).build();
+        SimpleVariant variant = new SimpleVariant(CHR_1, 552, "TCG", "ATC");
 
         final ReadContext readContext = createReadContext(552, 2, 0, 6, "GAAAAAT", Strings.EMPTY);
 
         final ReadContextCounter victim = new ReadContextCounter(
-                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
+                1, variant, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(550, "2M6S", "GAAAAATC", "FFFFFFFF");
         processRead(victim, record);

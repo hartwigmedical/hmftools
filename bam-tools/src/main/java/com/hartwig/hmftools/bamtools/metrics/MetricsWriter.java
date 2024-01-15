@@ -95,7 +95,6 @@ public final class MetricsWriter
         {
             // write coverage frequency for unfiltered aligned bases
 
-            // String filename = config.formFilename("coverage");
             String filename = config.formFilename("coverage");
 
             BufferedWriter writer = createBufferedWriter(filename, false);
@@ -175,6 +174,9 @@ public final class MetricsWriter
 
     private static void writeTargetRegionStats(final List<TargetRegionStats> targetRegionStats, final MetricsConfig config)
     {
+        if(config.TargetRegions.isEmpty())
+            return;
+
         try
         {
             // write summary metrics

@@ -27,9 +27,11 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
+import com.hartwig.hmftools.sage.SageCommon;
+import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePartition;
-import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.bqr.BaseQualityRecalibration;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.jetbrains.annotations.NotNull;
@@ -48,6 +50,7 @@ public class SageAppendApplication
 {
     private final SageAppendConfig mConfig;
     private final IndexedFastaSequenceFile mRefGenome;
+    private final FragmentLengths mFragmentLengths;
 
     private static final double MIN_PRIOR_VERSION = 2.8;
 
@@ -55,6 +58,7 @@ public class SageAppendApplication
     {
         final VersionInfo version = new VersionInfo("sage.version");
         mConfig = new SageAppendConfig(version.version(), configBuilder);
+        mFragmentLengths = new FragmentLengths(mConfig.Common);
 
         if(!mConfig.Common.isValid())
         {
@@ -156,7 +160,9 @@ public class SageAppendApplication
         if(!baseQualityRecalibration.isValid())
             System.exit(1);
 
-        final Map<String,QualityRecalibrationMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
+        SageCommon.setReadLength(mConfig.Common, Collections.emptyMap(), mConfig.Common.ReferenceBams.get(0));
+
+        final Map<String, BqrRecordMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
 
         final ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig.Common, mRefGenome);
 
@@ -187,11 +193,14 @@ public class SageAppendApplication
                 if(regionVariants.isEmpty())
                     continue;
 
-                regionTasks.add(new RegionAppendTask(i, region, regionVariants, mConfig, mRefGenome, recalibrationMap));
+                regionTasks.add(new RegionAppendTask(i, region, regionVariants, mConfig, mRefGenome, recalibrationMap, mFragmentLengths));
             }
 
             final List<Callable> callableList = regionTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, mConfig.Common.Threads);
+            if(!TaskExecutor.executeTasks(callableList, mConfig.Common.Threads))
+            {
+                System.exit(1);
+            }
 
             for(RegionAppendTask regionTask : regionTasks)
             {
@@ -201,6 +210,7 @@ public class SageAppendApplication
         }
 
         outputVCF.close();
+        mFragmentLengths.close();
 
         mRefGenome.close();
 
@@ -274,6 +284,7 @@ public class SageAppendApplication
         tumorReader.close();
         return dictionary;
     }
+
 
     public static void main(String[] args)
     {

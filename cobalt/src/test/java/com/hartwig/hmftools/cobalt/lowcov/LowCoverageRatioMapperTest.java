@@ -17,18 +17,18 @@ public class LowCoverageRatioMapperTest
     @Test
     public void testCalcConsoliationCount()
     {
-        assertEquals(1, LowCoverageRatioMapper.calcConsolidationCount(100.0));
-        assertEquals(1, LowCoverageRatioMapper.calcConsolidationCount(51.0));
+        assertEquals(1, LowCoverageRatioMapper.calcConsolidationCount(16.0));
+        assertEquals(1, LowCoverageRatioMapper.calcConsolidationCount(8.1));
 
-        // starting from 50 reads we consolidate
-        assertEquals(10, LowCoverageRatioMapper.calcConsolidationCount(50.0));
-        assertEquals(30, LowCoverageRatioMapper.calcConsolidationCount(20.0));
-        assertEquals(100, LowCoverageRatioMapper.calcConsolidationCount(5.0));
-        assertEquals(300, LowCoverageRatioMapper.calcConsolidationCount(2.0));
-        assertEquals(500, LowCoverageRatioMapper.calcConsolidationCount(1.0));
-        assertEquals(1000, LowCoverageRatioMapper.calcConsolidationCount(0.5));
-        assertEquals(1000, LowCoverageRatioMapper.calcConsolidationCount(0.05));
-        assertEquals(1000, LowCoverageRatioMapper.calcConsolidationCount(0.001));
+        // starting from 8.0 reads depth we consolidate
+        assertEquals(10, LowCoverageRatioMapper.calcConsolidationCount(8.0));
+        assertEquals(30, LowCoverageRatioMapper.calcConsolidationCount(3.0));
+        assertEquals(100, LowCoverageRatioMapper.calcConsolidationCount(0.8));
+        assertEquals(300, LowCoverageRatioMapper.calcConsolidationCount(0.3));
+        assertEquals(500, LowCoverageRatioMapper.calcConsolidationCount(0.15));
+        assertEquals(1000, LowCoverageRatioMapper.calcConsolidationCount(0.08));
+        assertEquals(1000, LowCoverageRatioMapper.calcConsolidationCount(0.008));
+        assertEquals(1000, LowCoverageRatioMapper.calcConsolidationCount(0.00015));
     }
 
     @Test
@@ -52,12 +52,12 @@ public class LowCoverageRatioMapperTest
         assertEquals(3, buckets.size());
 
         // check each one
-        assertEquals(1_001, buckets.get(0).startPosition);
-        assertEquals(8_001, buckets.get(0).endPosition);
-        assertEquals(9_001, buckets.get(1).startPosition);
-        assertEquals(11_001, buckets.get(1).endPosition);
-        assertEquals(3_020_001, buckets.get(2).startPosition);
-        assertEquals(3_030_001, buckets.get(2).endPosition);
+        assertEquals(1_001, buckets.get(0).StartPosition);
+        assertEquals(8_001, buckets.get(0).EndPosition);
+        assertEquals(9_001, buckets.get(1).StartPosition);
+        assertEquals(11_001, buckets.get(1).EndPosition);
+        assertEquals(3_020_001, buckets.get(2).StartPosition);
+        assertEquals(3_030_001, buckets.get(2).EndPosition);
 
         windowPositions.add(3_034_001);
 
@@ -66,14 +66,14 @@ public class LowCoverageRatioMapperTest
         assertEquals(4, buckets.size());
 
         // check each one
-        assertEquals(1_001, buckets.get(0).startPosition);
-        assertEquals(8_001, buckets.get(0).endPosition);
-        assertEquals(9_001, buckets.get(1).startPosition);
-        assertEquals(11_001, buckets.get(1).endPosition);
-        assertEquals(3_020_001, buckets.get(2).startPosition);
-        assertEquals(3_031_001, buckets.get(2).endPosition);
-        assertEquals(3_032_001, buckets.get(3).startPosition);
-        assertEquals(3_035_001, buckets.get(3).endPosition);
+        assertEquals(1_001, buckets.get(0).StartPosition);
+        assertEquals(8_001, buckets.get(0).EndPosition);
+        assertEquals(9_001, buckets.get(1).StartPosition);
+        assertEquals(11_001, buckets.get(1).EndPosition);
+        assertEquals(3_020_001, buckets.get(2).StartPosition);
+        assertEquals(3_031_001, buckets.get(2).EndPosition);
+        assertEquals(3_032_001, buckets.get(3).StartPosition);
+        assertEquals(3_035_001, buckets.get(3).EndPosition);
 
     }
 
@@ -106,15 +106,15 @@ public class LowCoverageRatioMapperTest
         assertEquals(3, buckets.size());
 
         // check each one
-        assertEquals(1001, buckets.get(0).startPosition);
-        assertEquals(5001, buckets.get(0).bucketPosition);
-        assertEquals(9001, buckets.get(0).endPosition);
-        assertEquals(10001, buckets.get(1).startPosition);
-        assertEquals(13001, buckets.get(1).bucketPosition);
-        assertEquals(17001, buckets.get(1).endPosition);
-        assertEquals(18001, buckets.get(2).startPosition);
-        assertEquals(19001, buckets.get(2).bucketPosition);
-        assertEquals(20001, buckets.get(2).endPosition);
+        assertEquals(1001, buckets.get(0).StartPosition);
+        assertEquals(5001, buckets.get(0).BucketPosition);
+        assertEquals(9001, buckets.get(0).EndPosition);
+        assertEquals(10001, buckets.get(1).StartPosition);
+        assertEquals(13001, buckets.get(1).BucketPosition);
+        assertEquals(17001, buckets.get(1).EndPosition);
+        assertEquals(18001, buckets.get(2).StartPosition);
+        assertEquals(19001, buckets.get(2).BucketPosition);
+        assertEquals(20001, buckets.get(2).EndPosition);
 
         // put a masked out ratio at the end, should also work
         row = rawRatios.appendRow(); row.setString("chromosome", "chr1"); row.setInt("position", 20001); row.setDouble("ratio", -1.0);
@@ -124,14 +124,15 @@ public class LowCoverageRatioMapperTest
         assertEquals(3, buckets.size());
 
         // check each one
-        assertEquals(1001, buckets.get(0).startPosition);
-        assertEquals(9001, buckets.get(0).endPosition);
-        assertEquals(10001, buckets.get(1).startPosition);
-        assertEquals(17001, buckets.get(1).endPosition);
-        assertEquals(18001, buckets.get(2).startPosition);
-        assertEquals(20001, buckets.get(2).endPosition);
+        assertEquals(1001, buckets.get(0).StartPosition);
+        assertEquals(9001, buckets.get(0).EndPosition);
+        assertEquals(10001, buckets.get(1).StartPosition);
+        assertEquals(17001, buckets.get(1).EndPosition);
+        assertEquals(18001, buckets.get(2).StartPosition);
+        assertEquals(20001, buckets.get(2).EndPosition);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static void appendReadRatio(Table table, String chromosome, int position, double ratio)
     {
         Row row = table.appendRow();

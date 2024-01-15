@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.cohort;
 
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.IGNORE_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
@@ -89,7 +90,7 @@ public class SampleDataCache
 
             for(String item : items)
             {
-                if(item.startsWith("#"))
+                if(item.startsWith(IGNORE_SAMPLE_ID))
                     continue;
 
                 final String[] data = item.split(DELIMITER);

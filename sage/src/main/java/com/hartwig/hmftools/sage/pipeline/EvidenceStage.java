@@ -14,7 +14,7 @@ import com.hartwig.hmftools.sage.evidence.EvidenceStats;
 import com.hartwig.hmftools.sage.evidence.ReadContextEvidence;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 
@@ -27,7 +27,7 @@ public class EvidenceStage
     private final VariantPhaser mVariantPhaser;
 
     public EvidenceStage(
-            final SageConfig config, final RefGenomeInterface refGenome, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap,
+            final SageConfig config, final RefGenomeInterface refGenome, final Map<String, BqrRecordMap> qualityRecalibrationMap,
             final PhaseSetCounter phaseSetCounter, final SamSlicerFactory samSlicerFactory)
     {
         mConfig = config;
@@ -42,10 +42,10 @@ public class EvidenceStage
     {
         // search BAMs for evidence of each candidate variant
         if(samples.isEmpty())
-            return new ReadContextCounters(mConfig.Filter, candidates);
+            return new ReadContextCounters(mConfig, candidates);
 
         int sampleCount = samples.size();
-        final ReadContextCounters readContextCounters = new ReadContextCounters(mConfig.Filter, candidates);
+        final ReadContextCounters readContextCounters = new ReadContextCounters(mConfig, candidates);
 
         for(int i = 0; i < samples.size(); i++)
         {

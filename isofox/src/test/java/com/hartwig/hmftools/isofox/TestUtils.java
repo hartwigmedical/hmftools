@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneDa
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.generateExonStarts;
 import static com.hartwig.hmftools.common.gene.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
@@ -410,25 +411,6 @@ public class TestUtils
         }
 
         return gc;
-    }
-
-    public static String generateRandomBases(int length)
-    {
-        char[] str = new char[length];
-        String bases = "ACGT";
-
-        int baseIndex = 0;
-        for(int i = 0; i < length; ++i)
-        {
-            str[i] = bases.charAt(baseIndex);
-
-            if(baseIndex == 3)
-                baseIndex = 0;
-            else
-                ++baseIndex;
-        }
-
-        return String.valueOf(str);
     }
 
     public static FusionFinder createFusionFinder(final IsofoxConfig config, final EnsemblDataCache geneTransCache)

@@ -90,7 +90,7 @@ public class GnomadAnnotation extends AnnotationData implements Callable
     @Override
     public boolean hasValidData() { return mHasValidData; }
 
-    public void annotateVariant(final VariantData variant, final GnomadChrCache chrCache)
+    public void annotateVariant(final VariantData variant, final GnomadChrCache chrCache, final boolean forcePass)
     {
         Double gnomadFreq = chrCache.getFrequency(variant);
 
@@ -98,7 +98,7 @@ public class GnomadAnnotation extends AnnotationData implements Callable
         {
             variant.setGnomadFrequency(gnomadFreq);
 
-            if(exceedsPonThreshold(gnomadFreq))
+            if(!forcePass && exceedsPonThreshold(gnomadFreq))
                 variant.addFilter(PON_GNOMAD_FILTER);
         }
     }
@@ -206,13 +206,12 @@ public class GnomadAnnotation extends AnnotationData implements Callable
 
             if(mChromosomeFiles.isEmpty())
             {
-                PV_LOGGER.info("loaded {} Gnomad frequency records from file({}), strCache({})",
-                        itemCount, filename, mStringCache.size());
+                PV_LOGGER.info("loaded {} Gnomad frequency records from file({})", itemCount, filename);
             }
             else if(currentChrCache != null)
             {
-                PV_LOGGER.debug("chr({}) loaded {} Gnomad frequency records, strCache({})",
-                        currentChrCache.Chromosome, currentChrCache.entryCount(), mStringCache.size());
+                PV_LOGGER.debug("chr({}) loaded {} Gnomad frequency records",
+                        currentChrCache.Chromosome, currentChrCache.entryCount());
             }
         }
         catch(IOException e)

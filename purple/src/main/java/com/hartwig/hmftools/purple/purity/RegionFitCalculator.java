@@ -5,7 +5,7 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
+import static java.lang.Math.pow;
 import static java.lang.Math.signum;
 
 import static com.hartwig.hmftools.purple.config.PurpleConstants.BAF_PNT_5;
@@ -28,21 +28,21 @@ import com.hartwig.hmftools.common.utils.Doubles;
 public class RegionFitCalculator
 {
     private final double mAmbiguousBaf;
-    private final double mPloidyPenaltyFactor;
+    private final FittingConfig mFitScoreConfig;
     private final PloidyDeviation mPloidyDeviation;
     private final CobaltChromosomes mCobaltChromosomes;
 
     public RegionFitCalculator(final CobaltChromosomes cobaltChromosomes, final FittingConfig fitScoreConfig, int averageReadDepth)
     {
         mCobaltChromosomes = cobaltChromosomes;
-        mPloidyPenaltyFactor = fitScoreConfig.PloidyPenaltyFactor;
+        mFitScoreConfig = fitScoreConfig;
 
         mPloidyDeviation = new PloidyDeviation(
                 fitScoreConfig.PloidyPenaltyStandardDeviation,
                 fitScoreConfig.PloidyPenaltyMinStandardDeviationPerPloidy,
                 fitScoreConfig.PloidyPenaltyMajorAlleleSubOneMultiplier,
                 fitScoreConfig.PloidyPenaltyMajorAlleleSubOneAdditional,
-                fitScoreConfig.PloidyPenaltyBaselineDeviation);
+                fitScoreConfig.PloidyPenaltyMinDeviation);
 
         mAmbiguousBaf = ExpectedBAF.expectedBAF(averageReadDepth);
     }
@@ -81,6 +81,7 @@ public class RegionFitCalculator
         final PurityAdjuster purityAdjuster = new PurityAdjuster(purity, normFactor, mCobaltChromosomes);
 
         double observedTumorRatio = observedRegion.observedTumorRatio();
+
         double impliedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedRegion.chromosome(), observedTumorRatio);
         double observedBAF = observedRegion.observedBAF();
         double impliedBAF = impliedBaf(purityAdjuster, observedRegion.chromosome(), impliedCopyNumber, observedBAF);
@@ -93,8 +94,22 @@ public class RegionFitCalculator
         double majorAllelePloidyDeviation = mPloidyDeviation.majorAlleleDeviation(purity, normFactor, majorAllelePloidy);
         double minorAllelePloidyDeviation = mPloidyDeviation.minorAlleleDeviation(purity, normFactor, minorAllelePloidy);
 
-        double eventPenalty = calculateEventPenalty(mPloidyPenaltyFactor, majorAllelePloidy, minorAllelePloidy);
+        double eventPenalty = calculateEventPenalty(mFitScoreConfig.PloidyPenaltyFactor, majorAllelePloidy, minorAllelePloidy);
+
         double deviationPenalty = (minorAllelePloidyDeviation + majorAllelePloidyDeviation) * observedBAF;
+
+        if(mFitScoreConfig.GcRatioExponent > 0 || mFitScoreConfig.DeviationPenaltyGcMinAdjust > 0)
+        {
+            // NEW FORMULA:
+            // deviationPenalty = (minorAllelePloidyDeviation + majorAllelePloidyDeviation) * observedBAF
+            //  / max(DeviationPenaltyGcMinAdjust, observedTumorRatio^GcRatioExponent)
+
+            double adjTumorRatio = mFitScoreConfig.GcRatioExponent > 0 ? pow(observedTumorRatio, mFitScoreConfig.GcRatioExponent) : 1;
+
+            double deviationPenaltyDenom = max(mFitScoreConfig.DeviationPenaltyGcMinAdjust, adjTumorRatio);
+
+            deviationPenalty /= deviationPenaltyDenom;
+        }
 
         return new RegionFitCalcs(
                 impliedCopyNumber, impliedBAF, Doubles.replaceNaNWithZero(refNormalisedCopyNumber),

@@ -14,12 +14,14 @@ import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedPrimaryTumor;
 
 import org.junit.Test;
 
-public class PrimaryTumorCuratorTest {
+public class PrimaryTumorCuratorTest
+{
 
     private static final String DOID_FILE_JSON = Resources.getResource("doid/example_doid.json").getPath();
 
     @Test
-    public void canDetermineUnusedTerms() {
+    public void canDetermineUnusedTerms()
+    {
         PrimaryTumorCurator curator = CuratorTestFactory.primaryTumorCurator();
         assertEquals(5, curator.unusedSearchTerms().size());
 
@@ -28,7 +30,8 @@ public class PrimaryTumorCuratorTest {
     }
 
     @Test
-    public void canCurateDesmoidTumor() {
+    public void canCurateDesmoidTumor()
+    {
         // See DEV-275
         PrimaryTumorCurator curator = CuratorTestFactory.primaryTumorCurator();
         String desmoidTumor = "desmoïd tumor";
@@ -38,7 +41,8 @@ public class PrimaryTumorCuratorTest {
     }
 
     @Test
-    public void canOverrideTumorLocation() {
+    public void canOverrideTumorLocation()
+    {
         PrimaryTumorCurator curator = CuratorTestFactory.primaryTumorCurator();
         CuratedPrimaryTumor primaryTumor = curator.search("PT1", "Does not curate");
 
@@ -46,14 +50,16 @@ public class PrimaryTumorCuratorTest {
     }
 
     @Test
-    public void canResolveDoidNodes() throws IOException {
+    public void canResolveDoidNodes() throws IOException
+    {
         List<DoidNode> doidNodes = DiseaseOntology.readDoidOwlEntryFromDoidJson(DOID_FILE_JSON).nodes();
         DoidNodesResolver doidNodesResolver = new DoidNodesResolver(doidNodes);
         assertEquals(Lists.newArrayList(doidNodes.get(0)), doidNodesResolver.resolveDoidNodes(Lists.newArrayList("8718")));
     }
 
     @Test
-    public void canCurateSearchTermWithChar34() {
+    public void canCurateSearchTermWithChar34()
+    {
         String searchTerm = "Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis \"lung carcinoma\"";
         PrimaryTumorCurator curator = CuratorTestFactory.primaryTumorCurator();
         CuratedPrimaryTumor primaryTumor = curator.search("patient", searchTerm);

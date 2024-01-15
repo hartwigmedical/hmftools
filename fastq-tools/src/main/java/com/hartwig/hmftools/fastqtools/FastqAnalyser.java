@@ -21,6 +21,8 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
+import htsjdk.samtools.fastq.FastqReader;
+
 public class FastqAnalyser
 {
     private final String mFastqFile;

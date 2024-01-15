@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL;
 
+import com.hartwig.hmftools.sage.evidence.ReadIndexBases;
+
 import org.apache.logging.log4j.util.Strings;
 
 public class IndexedBases
@@ -55,7 +57,6 @@ public class IndexedBases
     {
         return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftCoreIndex, coreLength());
     }
-
     public String fullString() { return Bases.length == 0 ? Strings.EMPTY : new String(Bases, LeftFlankIndex, length()); }
 
     public String leftFlankString()
@@ -79,6 +80,12 @@ public class IndexedBases
         return position - Position + Index;
     }
 
+    public boolean containsPosition(int position)
+    {
+        int index = index(position);
+        return index >= 0 && index < Bases.length;
+    }
+
     public int length() { return RightFlankIndex - LeftFlankIndex + 1; }
     public int coreLength()
     {
@@ -91,12 +98,9 @@ public class IndexedBases
     }
 
     public int corePositionStart() { return Position - (Index - LeftCoreIndex); }
-    public int corePositionEnd() { return Position + RightCoreIndex - Index; }
+    public int corePositionEnd() { return Position + RightCoreIndex - Index; } // doesn't take into account INDEL bases
 
-    public byte base(int position)
-    {
-        return Bases[position - Position + Index];
-    }
+    public byte base(int position) { return Bases[index(position)]; }
 
     public int maxFlankLength()
     {
@@ -133,24 +137,21 @@ public class IndexedBases
 
     public ReadContextMatch matchAtPosition(final IndexedBases other)
     {
-        return getMatchType(other, other.length(),null, false, 0);
+        return getMatchType(other.Index, other.Bases, other.length(), null, false, 0);
     }
 
     public ReadContextMatch matchAtPosition(
-            final IndexedBases other, final byte[] otherBaseQuals, boolean wildcardsInCore, int maxCoreMismatches)
+            final ReadIndexBases readIndexBases, final byte[] readBaseQuals, boolean wildcardsInCore, int maxCoreMismatches)
     {
-        return getMatchType(other, length(), otherBaseQuals, wildcardsInCore, maxCoreMismatches);
+        return getMatchType(readIndexBases.Index, readIndexBases.Bases, length(), readBaseQuals, wildcardsInCore, maxCoreMismatches);
     }
 
     private ReadContextMatch getMatchType(
-            final IndexedBases other, int otherLength, final byte[] otherBaseQuals, boolean wildcardsInCore, int maxCoreMismatches)
+            final int otherReadIndex, final byte[] otherBases, int otherLength, final byte[] otherBaseQuals,
+            boolean wildcardsInCore, int maxCoreMismatches)
     {
-        int otherReadIndex = other.Index;
-
         if(otherReadIndex < 0)
             return NONE;
-
-        final byte[] otherBases = other.Bases;
 
         ReadContextMatch centreMatch = coreMatch(otherReadIndex, otherBases, otherBaseQuals, wildcardsInCore, maxCoreMismatches);
         if(centreMatch == NONE || centreMatch == CORE_PARTIAL)
@@ -323,8 +324,8 @@ public class IndexedBases
         if(Bases.length == 0)
             return "";
 
-        return String.format("%s indices(%d-%d-%d-%d-%d)",
-                fullString(), LeftFlankIndex, LeftCoreIndex, Index, RightCoreIndex, RightFlankIndex);
+        return String.format("indices(%d-%d-%d-%d-%d) corePos(%d - %d - %d) bases(%s - %s - %s)",
+                LeftFlankIndex, LeftCoreIndex, Index, RightCoreIndex, RightFlankIndex,
+                corePositionStart(), Position, corePositionEnd(), leftFlankString(), coreString(), rightFlankString());
     }
-
 }

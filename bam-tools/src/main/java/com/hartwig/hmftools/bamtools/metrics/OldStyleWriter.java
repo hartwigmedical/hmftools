@@ -4,6 +4,20 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.metrics.FlagQCStats.flagStatsPercentages;
+import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.DUPLICATE;
+import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.INTER_CHR_PAIR_MAPPED;
+import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.INTER_CHR_PAIR_MAP_QUAL_GE5;
+import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.MAPPED;
+import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.PAIRED;
+import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.PAIR_MAPPED;
+import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.PRIMARY;
+import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.PRIMARY_DUPLICATE;
+import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.PRIMARY_MAPPED;
+import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.PROPERLY_PAIRED;
+import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.SECONDARY;
+import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.SINGLETON;
+import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.SUPPLEMENTARY;
+import static com.hartwig.hmftools.bamtools.metrics.FlagStatType.TOTAL;
 import static com.hartwig.hmftools.bamtools.metrics.MetricsWriter.COVERAGE_LEVELS;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.GENOME_TERRITORY_COLUMN;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.MAD_COVERAGE_COLUMN;
@@ -32,59 +46,59 @@ public final class OldStyleWriter
 
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write(String.format("%s in total (QC-passed reads + QC-failed reads)", flagStats.getTotal().toString()));
+            writer.write(String.format("%s in total (QC-passed reads + QC-failed reads)", flagStats.statAsString(TOTAL)));
             writer.newLine();
 
-            writer.write(String.format("%s primary", flagStats.getPrimary().toString()));
+            writer.write(String.format("%s primary", flagStats.statAsString(PRIMARY)));
             writer.newLine();
 
-            writer.write(String.format("%s secondary", flagStats.getSecondary().toString()));
+            writer.write(String.format("%s secondary", flagStats.statAsString(SECONDARY)));
             writer.newLine();
 
-            writer.write(String.format("%s supplementary", flagStats.getSupp().toString()));
+            writer.write(String.format("%s supplementary", flagStats.statAsString(SUPPLEMENTARY)));
             writer.newLine();
 
-            writer.write(String.format("%s duplicates", flagStats.getDuplicate().toString()));
+            writer.write(String.format("%s duplicates", flagStats.statAsString(DUPLICATE)));
             writer.newLine();
 
-            writer.write(String.format("%s primary duplicates", flagStats.getPrimaryDuplicate().toString()));
+            writer.write(String.format("%s primary duplicates", flagStats.statAsString(PRIMARY_DUPLICATE)));
             writer.newLine();
 
             writer.write(String.format("%s mapped %s",
-                    flagStats.getMapped().toString(), flagStatsPercentages(flagStats.getMapped(), flagStats.getTotal())));
+                    flagStats.statAsString(MAPPED), flagStatsPercentages(flagStats.getStat(MAPPED), flagStats.getStat(TOTAL))));
             writer.newLine();
 
             writer.write(String.format("%s primary mapped %s",
-                    flagStats.getPrimaryMapped().toString(), flagStatsPercentages(flagStats.getPrimaryMapped(), flagStats.getPrimary())));
+                    flagStats.statAsString(PRIMARY_MAPPED), flagStatsPercentages(flagStats.getStat(PRIMARY_MAPPED), flagStats.getStat(PRIMARY))));
             writer.newLine();
 
-            writer.write(String.format("%s paired in sequencing", flagStats.getPaired().toString()));
+            writer.write(String.format("%s paired in sequencing", flagStats.statAsString(PAIRED)));
             writer.newLine();
 
-            writer.write(String.format("%s read1", flagStats.getRead1().toString()));
+            writer.write(String.format("%s read1", flagStats.statAsString(FlagStatType.READ1)));
             writer.newLine();
 
-            writer.write(String.format("%s read2", flagStats.getRead2().toString()));
+            writer.write(String.format("%s read2", flagStats.statAsString(FlagStatType.READ2)));
             writer.newLine();
 
             writer.write(String.format(
                     "%s properly paired %s",
-                    flagStats.getProperlyPaired().toString(),
-                    flagStatsPercentages(flagStats.getProperlyPaired(), flagStats.getPaired())));
+                    flagStats.statAsString(PROPERLY_PAIRED),
+                    flagStatsPercentages(flagStats.getStat(PROPERLY_PAIRED), flagStats.getStat(PAIRED))));
             writer.newLine();
 
-            writer.write(String.format("%s with itself and mate mapped", flagStats.getPairMapped().toString()));
+            writer.write(String.format("%s with itself and mate mapped", flagStats.statAsString(PAIR_MAPPED)));
             writer.newLine();
 
             writer.write(String.format("%s singletons %s",
-                    flagStats.getSingleton().toString(),
-                    flagStatsPercentages(flagStats.getSingleton(), flagStats.getPaired())));
+                    flagStats.statAsString(SINGLETON),
+                    flagStatsPercentages(flagStats.getStat(SINGLETON), flagStats.getStat(PAIRED))));
             writer.newLine();
 
-            writer.write(String.format("%s with mate mapped to a different chr", flagStats.getInterChrPairMapped().toString()));
+            writer.write(String.format("%s with mate mapped to a different chr", flagStats.statAsString(INTER_CHR_PAIR_MAPPED)));
             writer.newLine();
 
-            writer.write(String.format("%s with mate mapped to a different chr (mapQ>=5)", flagStats.getInterChrPairMapQGE5().toString()));
+            writer.write(String.format("%s with mate mapped to a different chr (mapQ>=5)", flagStats.statAsString(INTER_CHR_PAIR_MAP_QUAL_GE5)));
             writer.newLine();
 
             writer.close();

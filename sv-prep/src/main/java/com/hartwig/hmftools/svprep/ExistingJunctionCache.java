@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.svprep;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ORIENTATION;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
@@ -71,9 +74,9 @@ public class ExistingJunctionCache
             String line = fileReader.readLine();
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, TSV_DELIM);
 
-            int chrIndex = fieldsIndexMap.get("Chromosome");
-            int posIndex = fieldsIndexMap.get("Position");
-            int orientIndex = fieldsIndexMap.get("Orientation");
+            int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
+            int posIndex = fieldsIndexMap.get(FLD_POSITION);
+            int orientIndex = fieldsIndexMap.get(FLD_ORIENTATION);
 
             List<JunctionData> junctionDataList = null;
             String currentChromosome = "";

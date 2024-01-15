@@ -17,27 +17,32 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class LimsFactoryTest {
+public class LimsFactoryTest
+{
 
     private static final String LIMS_DIRECTORY = Resources.getResource("lims").getPath();
 
     @Test
-    public void canCreateEmptyLims() {
+    public void canCreateEmptyLims()
+    {
         assertNotNull(LimsFactory.empty());
     }
 
     @Test
-    public void canBuildLimsFromTestData() throws IOException {
+    public void canBuildLimsFromTestData() throws IOException
+    {
         assertNotNull(LimsFactory.fromLimsDirectory(LIMS_DIRECTORY));
     }
 
     @Test(expected = IOException.class)
-    public void exceptionWhenJsonFileDoesNotExist() throws IOException {
+    public void exceptionWhenJsonFileDoesNotExist() throws IOException
+    {
         LimsFactory.fromLimsDirectory("Does not exist");
     }
 
     @Test
-    public void readSamplesCorrectlyFromJsonFile() throws FileNotFoundException {
+    public void readSamplesCorrectlyFromJsonFile() throws FileNotFoundException
+    {
         Map<String, LimsJsonSampleData> dataPerSampleBarcode =
                 LimsFactory.readLimsJsonSamples(LIMS_DIRECTORY + File.separator + "lims.json");
 
@@ -73,7 +78,8 @@ public class LimsFactoryTest {
     }
 
     @Test
-    public void readSubmissionsCorrectlyFromJsonFile() throws FileNotFoundException {
+    public void readSubmissionsCorrectlyFromJsonFile() throws FileNotFoundException
+    {
         Map<String, LimsJsonSubmissionData> dataPerSubmission =
                 LimsFactory.readLimsJsonSubmissions(LIMS_DIRECTORY + File.separator + "lims.json");
 
@@ -85,7 +91,8 @@ public class LimsFactoryTest {
     }
 
     @Test
-    public void readCorrectlyFromPreLimsArrivalDateFile() throws IOException {
+    public void readCorrectlyFromPreLimsArrivalDateFile() throws IOException
+    {
         Map<String, LocalDate> preLimsArrivalDates =
                 LimsFactory.readPreLimsArrivalDateTsv(LIMS_DIRECTORY + File.separator + "pre_lims_arrival_dates.tsv");
 
@@ -98,7 +105,8 @@ public class LimsFactoryTest {
     }
 
     @Test
-    public void readCorrectlyFromSamplesWithoutSamplingDateFile() throws IOException {
+    public void readCorrectlyFromSamplesWithoutSamplingDateFile() throws IOException
+    {
         Set<String> samplesWithoutSamplingDate =
                 LimsFactory.readSingleColumnTsv(LIMS_DIRECTORY + File.separator + "samples_without_sampling_date.tsv");
 
@@ -108,7 +116,8 @@ public class LimsFactoryTest {
     }
 
     @Test
-    public void readCorrectlyFromShallowSeqPurityFile() throws IOException {
+    public void readCorrectlyFromShallowSeqPurityFile() throws IOException
+    {
         Map<String, LimsShallowSeqData> shallowSeqPuritySample =
                 LimsFactory.readLimsShallowSeqTsv(LIMS_DIRECTORY + File.separator + "shallow_seq_purity.tsv");
         assertEquals(3, shallowSeqPuritySample.size());

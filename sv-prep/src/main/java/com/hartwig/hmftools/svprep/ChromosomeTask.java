@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
 import java.util.ArrayList;
@@ -71,19 +72,8 @@ public class ChromosomeTask
             workers.add(new PartitionThread(mChromosome, mConfig, mPartitions, mSpanningReadCache, mExistingJunctionCache, mWriter, mCombinedStats));
         }
 
-        for(Thread worker : workers)
-        {
-            try
-            {
-                worker.join();
-            }
-            catch(InterruptedException e)
-            {
-                SV_LOGGER.error("task execution error: {}", e.toString());
-                e.printStackTrace();
-                System.exit(1);
-            }
-        }
+        if(!runThreadTasks(workers))
+            System.exit(1);
 
         SV_LOGGER.info("chromosome({}) {} regions complete, stats: {}",
                 mChromosome, regionCount, mCombinedStats.ReadStats.toString());

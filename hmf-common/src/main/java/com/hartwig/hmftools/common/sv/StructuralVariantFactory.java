@@ -1,8 +1,36 @@
 package com.hartwig.hmftools.common.sv;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ANCHOR_SUPPORT_CIGAR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.EVENT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.IMPRECISE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.INS_SEQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.LOCAL_LINKED_BY;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.PAR_ID;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERED;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_FILTER;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_METHOD;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REMOTE_LINKED_BY;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.TAF;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEALN;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_CLASS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_ORIENTATION;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_TYPE;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -32,57 +60,6 @@ import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
 public class StructuralVariantFactory
 {
-    public static final String RECOVERED = "RECOVERED";
-    public static final String RECOVERY_METHOD = "RECOVERY_METHOD";
-    public static final String RECOVERY_FILTER = "RECOVERY_FILTER";
-    public static final String PASS = "PASS";
-    public static final String INFERRED = "INFERRED";
-    public static final String CIPOS = "CIPOS";
-    public static final String SVTYPE = "SVTYPE";
-    public static final String PON_FILTER_PON = "PON";
-    public static final String IMPRECISE = "IMPRECISE";
-    public static final String MATE_ID = "MATEID";
-    public static final String PAR_ID = "PARID";
-
-    // set by Gripss
-    public static final String TAF = "TAF";
-    public static final String HOTSPOT = "HOTSPOT";
-    public static final String LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
-    public static final String REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
-    public static final String LINKED_BY_DELIM = ",";
-    public static final String PON_COUNT = "PON_COUNT";
-
-    private static final String INS_SEQ = "SVINSSEQ";
-    private static final String HOM_SEQ = "HOMSEQ";
-    private static final String SOMATIC_SCORE = "SOMATICSCORE"; // only applicable for Manta and will be removed when fully on GRIDSS
-    public static final String IHOMPOS = "IHOMPOS";
-
-    public static final String ALLELE_FRACTION = "AF";
-    public static final String ALLELE_FRACTION_DESC = "Allele fraction";
-
-    public static final String SV_FRAGMENT_COUNT = "VF";
-    public static final String SGL_FRAGMENT_COUNT = "BVF";
-
-    public static final String REF_READ_COVERAGE = "REF";
-    public static final String REF_READ_COVERAGE_DESC = "Count of reads mapping across this breakend";
-
-    public static final String REF_READPAIR_COVERAGE = "REFPAIR";
-
-    public static final String REF_READPAIR_COVERAGE_DESC =
-            "Count of reference read pairs spanning this breakend supporting the reference allele";
-
-    private static final String EVENT = "EVENT";
-
-    public static final String UNTEMPLATED_SEQUENCE_ALIGNMENTS = "BEALN";
-    public static final String UNTEMPLATED_SEQUENCE_REPEAT_CLASS = "INSRMRC";
-    public static final String UNTEMPLATED_SEQUENCE_REPEAT_TYPE = "INSRMRT";
-    public static final String UNTEMPLATED_SEQUENCE_REPEAT_ORIENTATION = "INSRMRO";
-    public static final String UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE = "INSRMP";
-
-    private static final String ANCHOR_SUPPORT_CIGAR = "SC";
-
-    // set by Purple
-    public static final String REF_CONTEXT_FLAG = "REFG";
 
     // Must match the small deldup threshold in Gripss
     private static final int SMALL_DELDUP_SIZE = 1000;
@@ -248,13 +225,13 @@ public class StructuralVariantFactory
 
         final StructuralVariantLeg startLeg = setLegCommon(first, isSmallDelDup, startOrientation)
                 .position(start)
-                .homology(first.getAttributeAsString(HOM_SEQ, ""))
+                .homology(first.getAttributeAsString(HOMSEQ, ""))
                 .alleleFrequency(unadjustedAllelicFrequency(first))
                 .build();
 
         final StructuralVariantLeg endLeg = setLegCommon(second, isSmallDelDup, endOrientation)
                 .position(end)
-                .homology(second.getAttributeAsString(HOM_SEQ, ""))
+                .homology(second.getAttributeAsString(HOMSEQ, ""))
                 .alleleFrequency(unadjustedAllelicFrequency(second))
                 .build();
 
@@ -324,13 +301,7 @@ public class StructuralVariantFactory
         ImmutableStructuralVariantImpl.Builder builder = ImmutableStructuralVariantImpl.builder();
 
         // backwards compatibility for Manta until fully over to GRIDSS
-        int somaticScore = context.getAttributeAsInt(SOMATIC_SCORE, 0);
         double qualityScore = context.getPhredScaledQual();
-
-        if(somaticScore > 0)
-        {
-            qualityScore = somaticScore;
-        }
 
         builder.id(context.getID())
                 .recovered(context.getAttributeAsBoolean(RECOVERED, false))
@@ -348,7 +319,7 @@ public class StructuralVariantFactory
                         .collect(Collectors.joining(",")))
                 .imprecise(imprecise(context))
                 .qualityScore(qualityScore)
-                .insertSequenceAlignments(context.getAttributeAsStringList(UNTEMPLATED_SEQUENCE_ALIGNMENTS, "")
+                .insertSequenceAlignments(context.getAttributeAsStringList(BEALN, "")
                         .stream()
                         .filter(s -> !Strings.isNullOrEmpty(s))
                         .collect(Collectors.joining(",")));
@@ -447,14 +418,14 @@ public class StructuralVariantFactory
         if(referenceOrdinal >= 0 && context.getGenotype(referenceOrdinal) != null)
         {
             Genotype geno = context.getGenotype(referenceOrdinal);
-            if(geno.hasExtendedAttribute(SV_FRAGMENT_COUNT) || geno.hasExtendedAttribute(
-                    SGL_FRAGMENT_COUNT))
+            if(geno.hasExtendedAttribute(SV_FRAG_COUNT) || geno.hasExtendedAttribute(
+                    SGL_FRAG_COUNT))
             {
                 Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID) | context.hasAttribute(MATE_ID)
-                        ? SV_FRAGMENT_COUNT
-                        : SGL_FRAGMENT_COUNT));
-                Integer ref = asInteger(geno.getExtendedAttribute(REF_READ_COVERAGE));
-                Integer refpair = asInteger(geno.getExtendedAttribute(REF_READPAIR_COVERAGE));
+                        ? SV_FRAG_COUNT
+                        : SGL_FRAG_COUNT));
+                Integer ref = asInteger(geno.getExtendedAttribute(REF_DEPTH));
+                Integer refpair = asInteger(geno.getExtendedAttribute(REF_DEPTH_PAIR));
                 builder.normalVariantFragmentCount(var);
                 builder.normalReferenceFragmentCount(ref + (ignoreRefpair ? 0 : refpair));
             }
@@ -463,14 +434,14 @@ public class StructuralVariantFactory
         if(context.getGenotype(tumorOrdinal) != null)
         {
             Genotype geno = context.getGenotype(tumorOrdinal);
-            if(geno.hasExtendedAttribute(SV_FRAGMENT_COUNT) || geno.hasExtendedAttribute(
-                    SGL_FRAGMENT_COUNT))
+            if(geno.hasExtendedAttribute(SV_FRAG_COUNT) || geno.hasExtendedAttribute(
+                    SGL_FRAG_COUNT))
             {
                 Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID) | context.hasAttribute(MATE_ID)
-                        ? SV_FRAGMENT_COUNT
-                        : SGL_FRAGMENT_COUNT));
-                Integer ref = asInteger(geno.getExtendedAttribute(REF_READ_COVERAGE));
-                Integer refpair = asInteger(geno.getExtendedAttribute(REF_READPAIR_COVERAGE));
+                        ? SV_FRAG_COUNT
+                        : SGL_FRAG_COUNT));
+                Integer ref = asInteger(geno.getExtendedAttribute(REF_DEPTH));
+                Integer refpair = asInteger(geno.getExtendedAttribute(REF_DEPTH_PAIR));
                 builder.tumorVariantFragmentCount(var);
                 builder.tumorReferenceFragmentCount(ref + (ignoreRefpair ? 0 : refpair));
             }

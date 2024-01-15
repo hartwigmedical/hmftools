@@ -2,6 +2,18 @@ package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.common.sv.LineElements.POLY_A_HOMOLOGY;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_ASRP;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_ASSR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BAQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.INDEL_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.READ_PAIRS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_READS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -11,18 +23,6 @@ import static com.hartwig.hmftools.gripss.GripssTestUtils.LINE_INSERT_SEQ_T;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSgl;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSv;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.defaultFilterConstants;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASRP;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASSR;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOMSEQ;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IC;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IMPRECISE;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REF;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RP;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SB;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SR;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
 import static com.hartwig.hmftools.gripss.filters.FilterType.DISCORDANT_PAIR_SUPPORT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.IMPRECISE;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MAX_HOM_LENGTH_SHORT_INV;
@@ -33,6 +33,8 @@ import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_NORMAL_COVERAGE;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_QUAL;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_TUMOR_AF;
+import static com.hartwig.hmftools.gripss.filters.FilterType.MODIFIED_AF;
+import static com.hartwig.hmftools.gripss.filters.FilterType.QUAL_PER_AD;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SGL_STRAND_BIAS;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_DEL_INS_ARTIFACT;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_SR_NORMAL;
@@ -49,6 +51,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.sv.SvVcfTags;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
@@ -118,7 +121,7 @@ public class SoftFiltersTest
     }
 
     @Test
-    public void testSoftFilters()
+    public void testPassingVariant()
     {
         SvData sv = createLongDel(null, null, null);
 
@@ -127,13 +130,19 @@ public class SoftFiltersTest
 
         assertNull(mFilterCache.getBreakendFilters(sv.breakendStart()));
         assertNull(mFilterCache.getBreakendFilters(sv.breakendEnd()));
+    }
+
+    @Test
+    public void testNormalSoftFilters()
+    {
+        SvData sv = createLongDel(null, null, null);
 
         Map<String,Object> commonOverrides = Maps.newHashMap();
         Map<String,Object> refOverrides = Maps.newHashMap();
         Map<String,Object> tumorOverrides = Maps.newHashMap();
 
         // normalCoverageFilter
-        refOverrides.put(VT_REF, 1);
+        refOverrides.put(REF_DEPTH, 1);
 
         sv = createLongDel(commonOverrides, refOverrides, tumorOverrides);
         applyFilters(sv);
@@ -142,17 +151,29 @@ public class SoftFiltersTest
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
         // normal relative support
-        refOverrides.put(VT_VF, 80);
+        refOverrides.put(SV_FRAG_COUNT, 80);
 
         sv = createLongDel(commonOverrides, refOverrides, tumorOverrides);
         applyFilters(sv);
         assertTrue(hasFilter(sv.breakendStart(), MAX_NORMAL_RELATIVE_SUPPORT));
 
-        resetOverrides(commonOverrides, refOverrides, tumorOverrides);
+
+
+    }
+
+
+    @Test
+    public void testVafSoftFilters()
+    {
+        SvData sv = createLongDel(null, null, null);
+
+        Map<String,Object> commonOverrides = Maps.newHashMap();
+        Map<String,Object> refOverrides = Maps.newHashMap();
+        Map<String,Object> tumorOverrides = Maps.newHashMap();
 
         // min allele frequency
-        tumorOverrides.put(VT_VF, 2);
-        tumorOverrides.put(VT_REF, 1000);
+        tumorOverrides.put(SV_FRAG_COUNT, 2);
+        tumorOverrides.put(REF_DEPTH, 1000);
 
         sv = createLongDel(commonOverrides, refOverrides, tumorOverrides);
         applyFilters(sv);
@@ -161,8 +182,8 @@ public class SoftFiltersTest
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
         // min qual
-        tumorOverrides.put(VT_QUAL, 1);
-        tumorOverrides.put(VT_BAQ, 1);
+        tumorOverrides.put(QUAL, 1);
+        tumorOverrides.put(GRIDSS_BAQ, 1);
 
         sv = createSingle(commonOverrides, refOverrides, tumorOverrides);
         applyFilters(sv);
@@ -174,10 +195,49 @@ public class SoftFiltersTest
 
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
+        // modified AF
+        resetOverrides(commonOverrides, refOverrides, tumorOverrides);
+
+        tumorOverrides.put(SV_FRAG_COUNT, 1);
+        tumorOverrides.put(INDEL_COUNT, 1);
+        tumorOverrides.put(REF_DEPTH, 50);
+        tumorOverrides.put(REF_DEPTH_PAIR, 50);
+
+        sv = createSv(
+                mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 10000, POS_ORIENT, NEG_ORIENT, "", mGenotypeIds,
+                commonOverrides, refOverrides, tumorOverrides);
+
+        applyFilters(sv);
+        assertTrue(hasFilter(sv.breakendStart(), MODIFIED_AF));
+
+        // qual per AD
+        resetOverrides(commonOverrides, refOverrides, tumorOverrides);
+
+        tumorOverrides.put(SV_FRAG_COUNT, 100);
+        tumorOverrides.put(INDEL_COUNT, 100); // thereby lowering qual per tumor fragment
+
+        sv = createSv(
+                mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 10000, POS_ORIENT, NEG_ORIENT, "", mGenotypeIds,
+                commonOverrides, refOverrides, tumorOverrides);
+
+        applyFilters(sv);
+        assertTrue(hasFilter(sv.breakendStart(), QUAL_PER_AD));
+
+    }
+
+    @Test
+    public void testPositionAndSequenceFilters()
+    {
+        SvData sv = createLongDel(null, null, null);
+
+        Map<String,Object> commonOverrides = Maps.newHashMap();
+        Map<String,Object> refOverrides = Maps.newHashMap();
+        Map<String,Object> tumorOverrides = Maps.newHashMap();
+
         // short split read tumor
-        tumorOverrides.put(VT_SR, 0);
-        tumorOverrides.put(VT_IC, 0);
-        tumorOverrides.put(VT_ASSR, 0);
+        tumorOverrides.put(SPLIT_READS, 0);
+        tumorOverrides.put(INDEL_COUNT, 0);
+        tumorOverrides.put(GRIDSS_ASSR, 0);
 
         sv = createShortDel(commonOverrides, refOverrides, tumorOverrides);
         applyFilters(sv);
@@ -186,8 +246,8 @@ public class SoftFiltersTest
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
         // short split read normal
-        refOverrides.put(VT_SR, 1);
-        refOverrides.put(VT_IC, 1);
+        refOverrides.put(SPLIT_READS, 1);
+        refOverrides.put(INDEL_COUNT, 1);
 
         sv = createShortDel(commonOverrides, refOverrides, tumorOverrides);
         applyFilters(sv);
@@ -196,12 +256,12 @@ public class SoftFiltersTest
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
         // discordant support
-        refOverrides.put(VT_RP, 0);
-        refOverrides.put(VT_ASRP, 0);
-        refOverrides.put(VT_ASSR, 0);
-        tumorOverrides.put(VT_RP, 0);
-        tumorOverrides.put(VT_ASRP, 0);
-        tumorOverrides.put(VT_ASSR, 0);
+        refOverrides.put(READ_PAIRS, 0);
+        refOverrides.put(GRIDSS_ASRP, 0);
+        refOverrides.put(GRIDSS_ASSR, 0);
+        tumorOverrides.put(READ_PAIRS, 0);
+        tumorOverrides.put(GRIDSS_ASRP, 0);
+        tumorOverrides.put(GRIDSS_ASSR, 0);
 
         sv = createSv(
                 mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 148, POS_ORIENT, POS_ORIENT, "", mGenotypeIds,
@@ -213,7 +273,7 @@ public class SoftFiltersTest
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
         // single strand bias
-        commonOverrides.put(VT_SB, 0.99);
+        commonOverrides.put(STRAND_BIAS, 0.99);
 
         sv = createSingle(commonOverrides, refOverrides, tumorOverrides);
 
@@ -230,7 +290,7 @@ public class SoftFiltersTest
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
         // single insert sequence min length
-        commonOverrides.put(VT_SB, 0.99);
+        commonOverrides.put(STRAND_BIAS, 0.99);
 
         sv = createSingle(commonOverrides, refOverrides, tumorOverrides);
         applyFilters(sv);
@@ -249,7 +309,7 @@ public class SoftFiltersTest
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
         // imprecise
-        commonOverrides.put(VT_IMPRECISE, "true");
+        commonOverrides.put(SvVcfTags.IMPRECISE, "true");
 
         sv = createLongDel(commonOverrides, refOverrides, tumorOverrides);
         applyFilters(sv);
@@ -270,7 +330,7 @@ public class SoftFiltersTest
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
         // MAX_POLY_A_HOM_LENGTH
-        commonOverrides.put(VT_HOMSEQ, POLY_A_HOMOLOGY);
+        commonOverrides.put(HOMSEQ, POLY_A_HOMOLOGY);
 
         sv = createLongDel(commonOverrides, refOverrides, tumorOverrides);
         applyFilters(sv);
@@ -279,7 +339,7 @@ public class SoftFiltersTest
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
         // MAX_HOM_LENGTH_SHORT_INV
-        commonOverrides.put(VT_HOMSEQ, "AGCGATAA");
+        commonOverrides.put(HOMSEQ, "AGCGATAA");
 
         sv = createSv(
                 mIdGenerator.nextEventId(), CHR_1, CHR_1, 100, 130, POS_ORIENT, POS_ORIENT, "", mGenotypeIds,
@@ -291,7 +351,7 @@ public class SoftFiltersTest
         resetOverrides(commonOverrides, refOverrides, tumorOverrides);
 
         // strandBias
-        commonOverrides.put(VT_SB, 0.99);
+        commonOverrides.put(STRAND_BIAS, 0.99);
 
         sv = createShortDel(commonOverrides, refOverrides, tumorOverrides);
         applyFilters(sv);
@@ -306,9 +366,6 @@ public class SoftFiltersTest
 
         applyFilters(sv);
         assertTrue(hasFilter(sv.breakendStart(), MIN_LENGTH));
+
     }
-
-
-
-
 }

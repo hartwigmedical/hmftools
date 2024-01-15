@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.LO
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -23,8 +22,8 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class GenomeLiftoverCache
 {
-    private final Map<String,List<CoordMapping>> mMappings;
-    private final boolean mMaps37to38;
+    private final Map<String,List<CoordMapping>> m37to38Mappings;
+    private final Map<String,List<CoordMapping>> m38to37Mappings;
 
     public static final String LIFTOVER_MAPPING_FILE = "liftover_mapping";
     public static final String LIFTOVER_MAPPING_FILE_DESC = "Liftover mapping file";
@@ -33,20 +32,23 @@ public class GenomeLiftoverCache
 
     private static final String NEG_ORIENT = "-";
 
-    public GenomeLiftoverCache() { this(false, true); }
+    public GenomeLiftoverCache() { this(false); }
 
-    public GenomeLiftoverCache(boolean loadDefaultMappings, boolean maps37to38)
+    public GenomeLiftoverCache(boolean loadDefaultMappings)
     {
-        mMappings = Maps.newHashMap();
-        mMaps37to38 = maps37to38;
+        m37to38Mappings = Maps.newHashMap();
+        m38to37Mappings = Maps.newHashMap();
 
         if(loadDefaultMappings)
             loadDefaultResource();
     }
 
-    public boolean hasMappings() { return !mMappings.isEmpty(); }
+    public boolean hasMappings() { return !m37to38Mappings.isEmpty(); }
 
-    public List<CoordMapping> getChromosomeMappings(final String chromosome) { return mMappings.get(chromosome); }
+    public List<CoordMapping> getChromosomeMappings(final String chromosome, boolean use37to38)
+    {
+        return use37to38 ? m37to38Mappings.get(chromosome) : m38to37Mappings.get(chromosome);
+    }
 
     public int convertPosition(final String chromosome, final int position) { return convertPositionTo38(chromosome, position); }
 
@@ -57,7 +59,7 @@ public class GenomeLiftoverCache
 
     public int convertPositionTo37(final String chromosome, final int position)
     {
-        List<CoordMapping> mappings = mMappings.get(stripChrPrefix(chromosome));
+        List<CoordMapping> mappings = m38to37Mappings.get(stripChrPrefix(chromosome));
 
         if(mappings == null || mappings.isEmpty())
             return position;
@@ -67,7 +69,7 @@ public class GenomeLiftoverCache
             if(mapping.DestEnd < position)
                 continue;
 
-            if(mapping.DestStart > position && !mMaps37to38) // can exit if sorted
+            if(mapping.DestStart > position) // can exit if sorted
                 return UNMAPPED_POSITION;
 
             return mapping.reversePosition(position);
@@ -78,7 +80,7 @@ public class GenomeLiftoverCache
 
     public int convertPositionTo38(final String chromosome, final int position)
     {
-        List<CoordMapping> mappings = mMappings.get(chromosome);
+        List<CoordMapping> mappings = m37to38Mappings.get(chromosome);
 
         if(mappings == null || mappings.isEmpty())
             return position;
@@ -109,7 +111,7 @@ public class GenomeLiftoverCache
             List<String> lines = Files.readAllLines(Paths.get(filename));
             if(loadFile(lines))
             {
-                LOGGER.info("loaded {} genome liftover mapping entries from file: {}", mMappings.size(), filename);
+                LOGGER.info("loaded {} genome liftover mapping entries from file: {}", m37to38Mappings.size(), filename);
                 return true;
             }
         }
@@ -128,12 +130,21 @@ public class GenomeLiftoverCache
         loadFile(lines);
     }
 
+    public static final int COL_CHR_37 = 0;
+    public static final int COL_START_37 = 1;
+    public static final int COL_END_37 = 2;
+    public static final int COL_ORIENT_37 = 3;
+
+    public static final int COL_CHR_38 = 4;
+    public static final int COL_START_38 = 5;
+    public static final int COL_END_38 = 6;
+    public static final int COL_ORIENT_38 = 7;
+
     public boolean loadFile(final List<String> lines)
     {
-        String header = lines.get(0);
-        lines.remove(0);
-
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+        // no header, expect exact columns as defined above
+        if(lines.get(0).startsWith("Chr37"))
+            lines.remove(0);
 
         List<CoordMapping> chrMappings = null;
         String currentChromosome = "";
@@ -154,29 +165,29 @@ public class GenomeLiftoverCache
             {
                 currentChromosome = chromosome;
                 chrMappings = Lists.newArrayList();
-                mMappings.put(chromosome, chrMappings);
+                m37to38Mappings.put(chromosome, chrMappings);
             }
 
             // note +1 for start positions since source file is in BED style
             // Chr37	Start37	End37	Orient37	Chr38 	Start38	End38	Orient38
-            boolean isReverse = values[fieldsIndexMap.get("Orient38")].equals(NEG_ORIENT);
+            boolean isReverse = values[COL_ORIENT_38].equals(NEG_ORIENT);
 
             chrMappings.add(new CoordMapping(
-                    values[fieldsIndexMap.get("Chr37")],
-                    Integer.parseInt(values[fieldsIndexMap.get("Start37")]) + 1,
-                    Integer.parseInt(values[fieldsIndexMap.get("End37")]),
-                    Integer.parseInt(values[fieldsIndexMap.get("Start38")]) + 1,
-                    Integer.parseInt(values[fieldsIndexMap.get("End38")]),
+                    values[COL_CHR_37],
+                    Integer.parseInt(values[COL_START_37]) + 1,
+                    Integer.parseInt(values[COL_END_37]),
+                    Integer.parseInt(values[COL_START_38]) + 1,
+                    Integer.parseInt(values[COL_END_38]),
                     isReverse));
         }
 
-        if(!mMaps37to38)
+        // add to the reverse map sorted by v38
+        for(Map.Entry<String,List<CoordMapping>> entry : m37to38Mappings.entrySet())
         {
-            // sort each chromosome's mappings by the end/destination region
-            for(List<CoordMapping> mappings : mMappings.values())
-            {
-                Collections.sort(mappings, new CoordMapping.CoordComparatorOnDestination());
-            }
+            String chromosome = entry.getKey();
+            List<CoordMapping> newMappings = Lists.newArrayList(entry.getValue());
+            Collections.sort(newMappings, new CoordMapping.CoordComparatorOnDestination());
+            m38to37Mappings.put(chromosome, newMappings);
         }
 
         return true;
@@ -185,12 +196,12 @@ public class GenomeLiftoverCache
     @VisibleForTesting
     public void addMapping(final String chromosome, int sourceStart, int sourceEnd, int destStart, int destEnd, boolean reverse)
     {
-        List<CoordMapping> chrMappings = mMappings.get(chromosome);
+        List<CoordMapping> chrMappings = m37to38Mappings.get(chromosome);
 
         if(chrMappings == null)
         {
             chrMappings = Lists.newArrayList();
-            mMappings.put(chromosome, chrMappings);
+            m37to38Mappings.put(chromosome, chrMappings);
         }
         chrMappings.add(new CoordMapping(chromosome, sourceStart, sourceEnd, destStart, destEnd, reverse));
     }

@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.cup.svs;
 
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.common.cuppa.SvDataType.LINE;
@@ -170,9 +170,9 @@ public class SvDataLoader
         svCounts[LINE.ordinal()] = lineCount;
         svCounts[SIMPLE_DEL_20KB_1MB.ordinal()] = shortDels;
         svCounts[SIMPLE_DUP_32B_200B.ordinal()] = shortDups;
-        svCounts[SIMPLE_DUP_100KB_5MB.ordinal()] = maxEventSize;
-        svCounts[MAX_COMPLEX_SIZE.ordinal()] = telomericSgls;
-        svCounts[MAX_COMPLEX_SIZE.ordinal()] = lineCount;
+        svCounts[SIMPLE_DUP_100KB_5MB.ordinal()] = longDups;
+        svCounts[MAX_COMPLEX_SIZE.ordinal()] = maxEventSize;
+        svCounts[TELOMERIC_SGL.ordinal()] = telomericSgls;
 
         return svCounts;
     }

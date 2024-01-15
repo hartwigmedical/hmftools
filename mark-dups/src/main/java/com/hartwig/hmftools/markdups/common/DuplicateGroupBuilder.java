@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.markdups.common;
 
-import static java.lang.Math.abs;
-
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.CANDIDATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
@@ -17,7 +15,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
-import com.hartwig.hmftools.markdups.consensus.GroupIdGenerator;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
 import com.hartwig.hmftools.markdups.umi.UmiGroupBuilder;
 
@@ -25,17 +22,14 @@ import htsjdk.samtools.SAMRecord;
 
 public class DuplicateGroupBuilder
 {
-    //private static final int HIGH_DEPTH_THRESHOLD = 10000;
     private final UmiConfig mUmiConfig;
     private final Statistics mStats;
     private final boolean mFormConsensus;
-    private final GroupIdGenerator mIdGenerator;
     private final UmiGroupBuilder mUmiGroupBuilder;
 
     public DuplicateGroupBuilder(final MarkDupsConfig config)
     {
         mFormConsensus = config.FormConsensus;
-        mIdGenerator = config.IdGenerator;
         mUmiConfig = config.UMIs;
         mStats = new Statistics();
         mUmiGroupBuilder = new UmiGroupBuilder(config.UMIs, mStats.UmiStats);
@@ -62,7 +56,6 @@ public class DuplicateGroupBuilder
         }
 
         int fragmentCount = fragments.size();
-        boolean applyHighDepthLogic = false; // fragmentCount > HIGH_DEPTH_THRESHOLD;
 
         Map<Fragment,List<Fragment>> possibleDuplicates = Maps.newHashMap();
         Map<Fragment,Fragment> linkedDuplicates = Maps.newHashMap();
@@ -97,9 +90,6 @@ public class DuplicateGroupBuilder
                 Fragment fragment2 = fragments.get(j);
 
                 FragmentStatus status = calcFragmentStatus(fragment1, fragment2, requireOrientationMatch);
-
-                if(applyHighDepthLogic && status == CANDIDATE && proximateFragmentSizes(fragment1, fragment2))
-                    status = DUPLICATE;
 
                 if(status == DUPLICATE)
                 {
@@ -247,18 +237,13 @@ public class DuplicateGroupBuilder
         }
     }
 
-    private static boolean proximateFragmentSizes(final Fragment first, final Fragment second)
-    {
-        return abs(abs(first.reads().get(0).getInferredInsertSize()) - abs(second.reads().get(0).getInferredInsertSize())) <= 10;
-    }
-
     public List<DuplicateGroup> processDuplicateGroups(
-            final List<List<Fragment>> rawDuplicateGroups, boolean captureStats, final List<Fragment> singleFragments, boolean inExcludedRegion)
+            final List<List<Fragment>> rawDuplicateGroups, boolean captureStats, final List<Fragment> singleFragments)
     {
         if(rawDuplicateGroups == null)
             return Collections.EMPTY_LIST;
 
-        if(mUmiConfig.Enabled && !inExcludedRegion)
+        if(mUmiConfig.Enabled)
         {
             List<DuplicateGroup> umiGroups = mUmiGroupBuilder.processUmiGroups(rawDuplicateGroups, singleFragments, captureStats);
 
@@ -281,10 +266,10 @@ public class DuplicateGroupBuilder
             }
         }
 
-        if(mFormConsensus && !inExcludedRegion)
+        if(mFormConsensus)
             return processConsensusGroups(rawDuplicateGroups);
 
-        processNonUmiGroups(rawDuplicateGroups, inExcludedRegion);
+        processNonUmiGroups(rawDuplicateGroups);
         return null;
     }
 
@@ -294,7 +279,7 @@ public class DuplicateGroupBuilder
 
         for(List<Fragment> fragments : rawDuplicateGroups)
         {
-            DuplicateGroup duplicateGroup = new DuplicateGroup(mIdGenerator.nextId(), fragments.get(0));
+            DuplicateGroup duplicateGroup = new DuplicateGroup(null, fragments.get(0));
 
             for(int i = 1; i < fragments.size(); ++i)
             {
@@ -308,17 +293,14 @@ public class DuplicateGroupBuilder
         return duplicateGroups;
     }
 
-    private void processNonUmiGroups(final List<List<Fragment>> duplicateGroups, boolean inExcludedRegion)
+    private void processNonUmiGroups(final List<List<Fragment>> duplicateGroups)
     {
         if(duplicateGroups == null)
             return;
 
         for(List<Fragment> fragments : duplicateGroups)
         {
-            if(inExcludedRegion)
-                fragments.get(0).setStatus(PRIMARY);
-            else
-                setPrimaryRead(fragments);
+            setPrimaryRead(fragments);
         }
     }
 

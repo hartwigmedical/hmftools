@@ -13,10 +13,11 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.coverage.Coverage;
+import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.RegionResults;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 
 public class RegionTaskTester
 {
@@ -28,7 +29,7 @@ public class RegionTaskTester
     public final List<BaseRegion> PanelRegions;
     public final List<TranscriptData> Transcripts;
     public final List<BaseRegion> HighConfidenceRegions;
-    public final Map<String, QualityRecalibrationMap> QualityRecalibrationMap;
+    public final Map<String, BqrRecordMap> QualityRecalibrationMap;
     public final PhaseSetCounter PhaseSetCounter;
     public final Coverage Coverage;
     public final SamSlicerFactory SamSlicerFactory;
@@ -64,6 +65,6 @@ public class RegionTaskTester
     {
         return new RegionTask(
                 0, region, Results, Config, RefGenome, Hotspots, PanelRegions, Transcripts, HighConfidenceRegions,
-                QualityRecalibrationMap, PhaseSetCounter, Coverage, SamSlicerFactory);
+                QualityRecalibrationMap, PhaseSetCounter, Coverage, SamSlicerFactory, new FragmentLengths(Config.Common));
     }
 }

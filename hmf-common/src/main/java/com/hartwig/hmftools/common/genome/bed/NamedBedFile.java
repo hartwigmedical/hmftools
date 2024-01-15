@@ -72,10 +72,7 @@ public final class NamedBedFile
                 final NamedBed namedBed = fromBedFeature(bedFeature);
                 if(namedBed.end() < namedBed.start())
                 {
-                    LOGGER.warn("Invalid genome region found in chromosome {}: start={}, end={}",
-                            namedBed.chromosome(),
-                            namedBed.start(),
-                            namedBed.end());
+                    LOGGER.warn("invalid genome region({}:{}-{}) found", namedBed.chromosome(), namedBed.start(), namedBed.end());
                 }
                 else
                 {

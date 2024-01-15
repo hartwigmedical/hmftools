@@ -1,16 +1,14 @@
 package com.hartwig.hmftools.bamtools.slice;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
 import java.io.File;
 import java.util.concurrent.Callable;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
 import htsjdk.samtools.SAMRecord;
@@ -98,7 +96,7 @@ public class RegionBamSlicer implements Callable
 
         if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
         {
-            SupplementaryReadData suppData = SupplementaryReadData.from(read);
+            SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
 
             checkAddRemotePosition(read.getReadName(), suppData.Chromosome, suppData.Position);
         }

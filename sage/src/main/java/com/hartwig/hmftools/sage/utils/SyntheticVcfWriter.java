@@ -27,7 +27,7 @@ import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_ALLELIC_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_IMPROPER_PAIR;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_JITTER;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.STRAND_BIAS;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.FRAG_STRAND_BIAS;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -37,7 +37,6 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -49,13 +48,13 @@ import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.read.ReadContextFactory;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -293,18 +292,13 @@ public class SyntheticVcfWriter
                 .attribute(RAW_ALLELIC_DEPTH, new int[] { 0, 0 })
                 .attribute(RAW_ALLELIC_BASE_QUALITY, new int[] { 0, 0 })
                 .attribute(RAW_DEPTH, 0)
-                .attribute(STRAND_BIAS, 0)
+                .attribute(FRAG_STRAND_BIAS, 0)
                 .attribute(AVG_BASE_QUAL, 0)
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, 0)
                 .alleles(NO_CALL)
                 .make();
 
-        VariantHotspot variantHotspot = ImmutableVariantHotspotImpl.builder()
-                .chromosome(variant.Chromosome)
-                .position(variant.Position)
-                .ref(variant.Ref)
-                .alt(variant.Alt)
-                .build();
+        SimpleVariant variantHotspot = new SimpleVariant(variant.Chromosome, variant.Position, variant.Ref, variant.Alt);
 
         ReadContext readContext = buildReadContext(variant);
 

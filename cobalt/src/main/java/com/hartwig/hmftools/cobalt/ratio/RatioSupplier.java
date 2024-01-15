@@ -20,7 +20,7 @@ import com.hartwig.hmftools.cobalt.targeted.TargetedRatioMapper;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
 import com.hartwig.hmftools.common.cobalt.MedianRatioFactory;
 import com.hartwig.hmftools.common.cobalt.MedianRatioFile;
-import com.hartwig.hmftools.common.genome.gc.GCMedianReadCountFile;
+import com.hartwig.hmftools.common.genome.gc.GCMedianReadDepthFile;
 
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.NotNull;
@@ -33,8 +33,8 @@ public class RatioSupplier
     @Nullable private final String mOutputDir;
 
     private final Table mGcProfiles;
-    @Nullable private final Table mReferenceCounts;
-    @Nullable private final Table mTumorCounts;
+    @Nullable private final Table mReferenceDepths;
+    @Nullable private final Table mTumorDepths;
 
     // a table with chromosome, position, relativeEnrichment
     private Table mTargetRegionEnrichment = null;
@@ -62,7 +62,7 @@ public class RatioSupplier
 
         SampleRatios(
                 final String sampleId,
-                final Table readCounts,
+                final Table readDepths,
                 final Table gcProfiles,
                 @Nullable Table targetRegionEnrichment,
                 SparseBucketPolicy sparseBucketPolicy,
@@ -72,9 +72,9 @@ public class RatioSupplier
         {
             CB_LOGGER.info("calculating sample ratios for {}", sampleId);
 
-            readRatios = readCounts.copy().setName("readRatios");
+            readRatios = readDepths.copy().setName("readRatios");
 
-            CB_LOGGER.info("merging in gc profile");
+            CB_LOGGER.info("merging in GC profile");
 
             // merge in the gc profile
             readRatios = readRatios.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS).leftOuter(gcProfiles);
@@ -83,9 +83,9 @@ public class RatioSupplier
             DoubleColumn ratioColumn = DoubleColumn.create(CobaltColumns.RATIO);
             for (Row row : readRatios)
             {
-                if (!row.isMissing(CobaltColumns.IS_MAPPABLE) && row.getBoolean(CobaltColumns.IS_MAPPABLE))
+                if(!row.isMissing(CobaltColumns.IS_MAPPABLE) && row.getBoolean(CobaltColumns.IS_MAPPABLE))
                 {
-                    ratioColumn.append((double)row.getInt(CobaltColumns.READ_COUNT));
+                    ratioColumn.append(row.getDouble(CobaltColumns.READ_DEPTH));
                 }
                 else
                 {
@@ -95,13 +95,13 @@ public class RatioSupplier
             readRatios.addColumns(ratioColumn);
 
             // on target ratios
-            if (targetRegionEnrichment != null)
+            if(targetRegionEnrichment != null)
             {
                 CB_LOGGER.info("using targeted ratio");
                 readRatios = new TargetedRatioMapper(targetRegionEnrichment, chromosomePosCodec).mapRatios(readRatios);
             }
 
-            gcNormalizedRatioMapper = new GcNormalizedRatioMapper(true);
+            gcNormalizedRatioMapper = new GcNormalizedRatioMapper();
             readRatios = gcNormalizedRatioMapper.mapRatios(readRatios);
 
             switch (sparseBucketPolicy)
@@ -116,23 +116,23 @@ public class RatioSupplier
                 {
                     // determine consolidated buckets
                     // determine the low cov consolidation window count
-                    double medianReadCount = gcNormalizedRatioMapper.getSampleMedianReadCount();
-                    this.consolidatedBuckets = LowCoverageRatioMapper.calcConsolidateBuckets(readRatios, medianReadCount);
+                    double medianReadDepth = gcNormalizedRatioMapper.getSampleMedianReadDepth();
+                    this.consolidatedBuckets = LowCoverageRatioMapper.calcConsolidateBuckets(readRatios, medianReadDepth);
                     break;
                 }
             }
 
-            if (this.consolidatedBuckets != null)
+            if(this.consolidatedBuckets != null)
             {
                 CB_LOGGER.info("using low coverage ratio");
                 readRatios = new LowCoverageRatioMapper(this.consolidatedBuckets, chromosomePosCodec).mapRatios(readRatios);
             }
 
-            if (outputDir != null)
+            if(outputDir != null)
             {
-                CB_LOGGER.info("Persisting {} gc read count to {}", sampleId, outputDir);
-                final String tumorGCMedianFilename = GCMedianReadCountFile.generateFilename(outputDir, sampleId);
-                GCMedianReadCountFile.write(tumorGCMedianFilename, gcNormalizedRatioMapper.gcMedianReadCount());
+                CB_LOGGER.info("persisting {} gc read count to {}", sampleId, outputDir);
+                final String tumorGCMedianFilename = GCMedianReadDepthFile.generateFilename(outputDir, sampleId);
+                GCMedianReadDepthFile.write(tumorGCMedianFilename, gcNormalizedRatioMapper.gcMedianReadDepth());
             }
         }
     }
@@ -143,7 +143,7 @@ public class RatioSupplier
         private final Table gcDiploidRatios;
 
         GermlineRatios(final String referenceId,
-                final Table readCounts,
+                final Table readDepths,
                 final Table gcProfiles,
                 @Nullable Table targetRegionEnrichment,
                 SparseBucketPolicy sparseBucketPolicy,
@@ -151,17 +151,17 @@ public class RatioSupplier
                 final String outputDir,
                 ChromosomePositionCodec chromosomePosCodec) throws IOException
         {
-            super(referenceId, readCounts, gcProfiles, targetRegionEnrichment, sparseBucketPolicy,
+            super(referenceId, readDepths, gcProfiles, targetRegionEnrichment, sparseBucketPolicy,
                     consolidatedBuckets, outputDir, chromosomePosCodec);
 
             // TODO: check this
             final List<MedianRatio> medianRatios = MedianRatioFactory.createFromReadRatio(toCommonChromosomeMap(getRatios()));
 
-            CB_LOGGER.info("Persisting {} gc ratio medians to {}", referenceId, outputDir);
+            CB_LOGGER.info("persisting {} gc ratio medians to {}", referenceId, outputDir);
             final String ratioMedianFilename = MedianRatioFile.generateFilename(outputDir, referenceId);
             MedianRatioFile.write(ratioMedianFilename, medianRatios);
 
-            CB_LOGGER.info("Applying ratio diploid normalization");
+            CB_LOGGER.info("applying ratio diploid normalization");
             gcDiploidRatios = calcDiploidRatioResults(getRatios(), medianRatios);
         }
     }
@@ -169,16 +169,16 @@ public class RatioSupplier
     public RatioSupplier(final String reference, final String tumor,
             @Nullable final String outputDirectory,
             final Table gcProfiles,
-            @Nullable final Table referenceCounts,
-            @Nullable final Table tumorCounts,
+            @Nullable final Table referenceDepths,
+            @Nullable final Table tumorDepths,
             ChromosomePositionCodec chromosomePosCodec)
     {
         mTumorId = tumor;
         mReferenceId = reference;
         mOutputDir = outputDirectory;
         mGcProfiles = gcProfiles;
-        mReferenceCounts = referenceCounts;
-        mTumorCounts = tumorCounts;
+        mReferenceDepths = referenceDepths;
+        mTumorDepths = tumorDepths;
         mChromosomePosCodec = chromosomePosCodec;
     }
     
@@ -190,13 +190,13 @@ public class RatioSupplier
     @NotNull
     public Table tumorOnly(final Table diploidRegions) throws IOException
     {
-        if (mTumorCounts == null)
+        if(mTumorDepths == null)
         {
-            CB_LOGGER.fatal("Tumor count should not be null");
+            CB_LOGGER.error("tumor count should not be null");
             throw new RuntimeException("tumor count is null");
         }
         SparseBucketPolicy sparseBucketPolicy = mTargetRegionEnrichment == null ? SparseBucketPolicy.CALC_CONSOLIDATED_BUCKETS : SparseBucketPolicy.DO_NOT_CONSOLIDATE;
-        Table tumorRatios = new SampleRatios(mTumorId, mTumorCounts, mGcProfiles, mTargetRegionEnrichment, sparseBucketPolicy,
+        Table tumorRatios = new SampleRatios(mTumorId, mTumorDepths, mGcProfiles, mTargetRegionEnrichment, sparseBucketPolicy,
                 null, mOutputDir, mChromosomePosCodec).getRatios();
 
         // filter tumor ratios by the diploid regions
@@ -206,34 +206,34 @@ public class RatioSupplier
                 .sortAscendingOn(CobaltColumns.ENCODED_CHROMOSOME_POS);
 
         // merge this ratios together into one cobalt ratio
-        return mergeRatios(null, mTumorCounts, null, tumorRatios, null);
+        return mergeRatios(null, mTumorDepths, null, tumorRatios, null);
     }
 
     @NotNull
     public Table germlineOnly() throws IOException
     {
-        if (mReferenceCounts == null)
+        if(mReferenceDepths == null)
         {
             CB_LOGGER.fatal("Reference count should not be null");
             throw new RuntimeException("reference count is null");
         }
         SparseBucketPolicy sparseBucketPolicy = mTargetRegionEnrichment == null ? SparseBucketPolicy.CALC_CONSOLIDATED_BUCKETS : SparseBucketPolicy.DO_NOT_CONSOLIDATE;
-        var germlineRatios = new GermlineRatios(mReferenceId, mReferenceCounts, mGcProfiles, mTargetRegionEnrichment,
+        var germlineRatios = new GermlineRatios(mReferenceId, mReferenceDepths, mGcProfiles, mTargetRegionEnrichment,
                 sparseBucketPolicy, null, mOutputDir, mChromosomePosCodec);
         return mergeRatios(
-                mReferenceCounts, null,
+                mReferenceDepths, null,
                 germlineRatios.getRatios(), null, germlineRatios.gcDiploidRatios);
     }
 
     @NotNull
     public Table tumorNormalPair() throws IOException
     {
-        if (mReferenceCounts == null)
+        if(mReferenceDepths == null)
         {
             CB_LOGGER.fatal("Reference count should not be null");
             throw new RuntimeException("reference count is null");
         }
-        if (mTumorCounts == null)
+        if(mTumorDepths == null)
         {
             CB_LOGGER.fatal("Tumor count should not be null");
             throw new RuntimeException("tumor count is null");
@@ -241,25 +241,25 @@ public class RatioSupplier
         SparseBucketPolicy tumorSparseBucketPolicy = mTargetRegionEnrichment == null ?
                 SparseBucketPolicy.CALC_CONSOLIDATED_BUCKETS : SparseBucketPolicy.DO_NOT_CONSOLIDATE;
 
-        var tumorRatios = new SampleRatios(mTumorId, mTumorCounts, mGcProfiles, mTargetRegionEnrichment,
+        var tumorRatios = new SampleRatios(mTumorId, mTumorDepths, mGcProfiles, mTargetRegionEnrichment,
                 tumorSparseBucketPolicy, null, mOutputDir, mChromosomePosCodec);
 
         SparseBucketPolicy germlineSparseBucketPolicy = tumorRatios.consolidatedBuckets == null ?
                 SparseBucketPolicy.DO_NOT_CONSOLIDATE : SparseBucketPolicy.USE_PROVIDED_BUCKETS;
 
-        var germlineRatios = new GermlineRatios(mReferenceId, mReferenceCounts, mGcProfiles, mTargetRegionEnrichment,
+        var germlineRatios = new GermlineRatios(mReferenceId, mReferenceDepths, mGcProfiles, mTargetRegionEnrichment,
                 germlineSparseBucketPolicy, tumorRatios.consolidatedBuckets, mOutputDir, mChromosomePosCodec);
 
         return mergeRatios(
-                mReferenceCounts, mTumorCounts,
+                mReferenceDepths, mTumorDepths,
                 germlineRatios.getRatios(), tumorRatios.getRatios(), germlineRatios.gcDiploidRatios);
     }
 
     // merge everything together
     @NotNull
     private static Table mergeRatios(
-            @Nullable Table referenceCounts,
-            @Nullable Table tumorCounts,
+            @Nullable Table referenceDepths,
+            @Nullable Table tumorDepths,
             @Nullable Table referenceRatios,
             @Nullable Table tumorRatios,
             @Nullable Table referenceDiploidRatios)
@@ -270,35 +270,37 @@ public class RatioSupplier
         Table result = Table.create(LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS));
 
         // now we make sure all tables are valid, by setting missing tables to empty
-        if (referenceCounts == null)
+        if(referenceDepths == null)
         {
-            referenceCounts = Table.create(
+            referenceDepths = Table.create(
                     LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS),
-                    IntColumn.create(CobaltColumns.READ_COUNT));
+                    DoubleColumn.create(CobaltColumns.READ_DEPTH),
+                    DoubleColumn.create(CobaltColumns.READ_GC_CONTENT));
         }
 
-        if (tumorCounts == null)
+        if(tumorDepths == null)
         {
-            tumorCounts = Table.create(
+            tumorDepths = Table.create(
                     LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS),
-                    IntColumn.create(CobaltColumns.READ_COUNT));
+                    DoubleColumn.create(CobaltColumns.READ_DEPTH),
+                    DoubleColumn.create(CobaltColumns.READ_GC_CONTENT));
         }
 
-        if (referenceRatios == null)
+        if(referenceRatios == null)
         {
             referenceRatios = Table.create(
                     LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS),
                     DoubleColumn.create(CobaltColumns.RATIO));
         }
 
-        if (tumorRatios == null)
+        if(tumorRatios == null)
         {
             tumorRatios = Table.create(
                     LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS),
                     DoubleColumn.create(CobaltColumns.RATIO));
         }
 
-        if (referenceDiploidRatios == null)
+        if(referenceDiploidRatios == null)
         {
             referenceDiploidRatios = Table.create(
                     LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS),
@@ -306,16 +308,18 @@ public class RatioSupplier
         }
 
         result = result.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS).fullOuter(
-                referenceCounts.retainColumns(CobaltColumns.ENCODED_CHROMOSOME_POS, CobaltColumns.READ_COUNT));
+                referenceDepths.retainColumns(CobaltColumns.ENCODED_CHROMOSOME_POS, CobaltColumns.READ_DEPTH, CobaltColumns.READ_GC_CONTENT));
 
-        // rename the readCount column
-        result.intColumn(CobaltColumns.READ_COUNT).setName("referenceReadCount");
+        // rename the readDepth column
+        result.doubleColumn(CobaltColumns.READ_DEPTH).setName(CobaltColumns.REFERENCE_READ_DEPTH);
+        result.doubleColumn(CobaltColumns.READ_GC_CONTENT).setName(CobaltColumns.REFERENCE_GC_CONTENT);
 
         result = result.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS).fullOuter(
-                tumorCounts.retainColumns(CobaltColumns.ENCODED_CHROMOSOME_POS, CobaltColumns.READ_COUNT));
+                tumorDepths.retainColumns(CobaltColumns.ENCODED_CHROMOSOME_POS, CobaltColumns.READ_DEPTH, CobaltColumns.READ_GC_CONTENT));
 
-        // rename the readCount column
-        result.intColumn(CobaltColumns.READ_COUNT).setName("tumorReadCount");
+        // rename the readDepth column
+        result.doubleColumn(CobaltColumns.READ_DEPTH).setName(CobaltColumns.TUMOR_READ_DEPTH);
+        result.doubleColumn(CobaltColumns.READ_GC_CONTENT).setName(CobaltColumns.TUMOR_GC_CONTENT);
 
         result = result.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS).fullOuter(
                 referenceRatios.retainColumns(CobaltColumns.ENCODED_CHROMOSOME_POS, CobaltColumns.RATIO));
@@ -343,11 +347,11 @@ public class RatioSupplier
         // set any missing value to -1
         for (Column<?> c: result.columns())
         {
-            if (c instanceof IntColumn)
+            if(c instanceof IntColumn)
             {
                 ((IntColumn)c).setMissingTo(CobaltConstants.INVALID_VALUE_INDICATOR);
             }
-            else if (c instanceof DoubleColumn)
+            else if(c instanceof DoubleColumn)
             {
                 ((DoubleColumn)c).setMissingTo((double)CobaltConstants.INVALID_VALUE_INDICATOR);
                 // ((DoubleColumn)c).map(d -> Double.isFinite(d) ? d : -1.0);

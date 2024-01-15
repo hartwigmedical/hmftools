@@ -12,29 +12,26 @@ class SemiColonSplitter : IParameterSplitter
     }
 }
 
-class TelbamParams
-{
-    //@Parameter(names = ["-sample_id"], required = true, description = "ID of tumor sample")
-    //lateinit var sampleId: String
-
+data class TelbamParams
+(
     @Parameter(names = ["-bam_file"], required = true, description = "Path to bam/cram file")
-    lateinit var bamFile: String
+    var bamFile: String? = null,
 
     @Parameter(names = ["-" + RefGenomeSource.REF_GENOME],
                         description = "Path to reference genome fasta file if using CRAM files")
-    var refGenomeFile: String? = null
+    var refGenomeFile: String? = null,
 
     @Parameter(names = ["-telbam_file"], required = true, description = "Path to write output telbam file")
-    lateinit var telbamFile: String
+    var telbamFile: String? = null,
 
     @Parameter(names = ["-tsv_file"], required = false, description = "Path to write output tsv file")
-    var tsvFile: String? = null
+    var tsvFile: String? = null,
 
     @Parameter(names = ["-threads"], description = "Number of bam reader threads")
-    var threadCount: Int = 1
+    var threadCount: Int = 1,
 
     @Parameter(names = ["-specific_chr"],
                 splitter = SemiColonSplitter::class,
                 description = "Optional: list of chromosomes separated by ;")
     var specificChromosomes: List<String> = emptyList()
-}
+)

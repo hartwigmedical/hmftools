@@ -1,21 +1,20 @@
 package com.hartwig.hmftools.sage.candidate;
 
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
 public class Candidate
 {
     private final VariantTier mTier;
-    private final VariantHotspot mVariant;
+    private final SimpleVariant mVariant;
 
     private int mMinNumberOfEvents;
     private int mReadContextSupport;
     private ReadContext mReadContext;
 
     public Candidate(
-            final VariantTier tier, final VariantHotspot variant, final ReadContext readContext, int minNumberOfEvents, int readContextSupport)
+            final VariantTier tier, final SimpleVariant variant, final ReadContext readContext, int minNumberOfEvents, int readContextSupport)
     {
         mTier = tier;
         mVariant = variant;
@@ -26,9 +25,10 @@ public class Candidate
 
     public static Candidate fromAltContext(final VariantTier tier, final AltContext altContext)
     {
+        SimpleVariant variant = new SimpleVariant(altContext.chromosome(), altContext.position(), altContext.Ref, altContext.Alt);
+
         return new Candidate(
-                tier, ImmutableVariantHotspotImpl.builder().from(altContext).build(), altContext.readContext(),
-                altContext.minNumberOfEvents(), altContext.readContextSupport());
+                tier, variant, altContext.readContext(), altContext.minNumberOfEvents(), altContext.readContextSupport());
     }
 
     public void update(final AltContext altContext)
@@ -43,7 +43,8 @@ public class Candidate
     }
 
     public VariantTier tier() { return mTier; }
-    public VariantHotspot variant() { return mVariant; }
+
+    public SimpleVariant variant() { return mVariant; }
 
     public ReadContext readContext() { return mReadContext; }
 
@@ -53,6 +54,5 @@ public class Candidate
 
     public int position() { return mVariant.position(); }
 
-    public String toString() { return String.format("var(%s:%d %s>%s) tier(%s)",
-            chromosome(), position(), mVariant.ref(), mVariant.alt(), mTier); }
+    public String toString() { return String.format("var(%s) tier(%s)", mVariant, mTier); }
 }

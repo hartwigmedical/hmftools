@@ -4,11 +4,11 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
-import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.LIFTOVER_MAPPING_FILE;
-import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.LIFTOVER_MAPPING_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.IGNORE_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -26,6 +26,7 @@ import static com.hartwig.hmftools.compar.common.Category.PURPLE_CATEGORIES;
 import static com.hartwig.hmftools.compar.common.Category.purpleCategories;
 import static com.hartwig.hmftools.compar.common.Category.linxCategories;
 import static com.hartwig.hmftools.compar.common.FileSources.fromConfig;
+import static com.hartwig.hmftools.compar.common.FileSources.registerConfig;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_DEFAULT_ARGS;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -46,7 +47,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
 import com.hartwig.hmftools.compar.common.FileSources;
@@ -66,6 +66,7 @@ public class ComparConfig
 
     public final Map<String,DatabaseAccess> DbConnections; // database access details keyed by source
     public final Map<String,FileSources> FileSources; // directories per type and keyed by source
+    public final boolean RequiresLiftover;
 
     public final Set<String> DriverGenes;
     public final Set<String> AlternateTranscriptDriverGenes;
@@ -98,6 +99,7 @@ public class ComparConfig
 
     public static final String REF_SOURCE = "ref";
     public static final String NEW_SOURCE = "new";
+    public static final String REQUIRES_LIFTOVER = "liftover";
 
     public ComparConfig(final ConfigBuilder configBuilder)
     {
@@ -166,6 +168,8 @@ public class ComparConfig
         SourceNames = Lists.newArrayList(REF_SOURCE, NEW_SOURCE);
         loadSampleIds(configBuilder);
 
+        RequiresLiftover = configBuilder.hasFlag(REQUIRES_LIFTOVER);
+
         DbConnections = Maps.newHashMap();
         FileSources = Maps.newHashMap();
 
@@ -215,7 +219,7 @@ public class ComparConfig
             CMP_LOGGER.info("restricting comparison to {} driver genes", DriverGenes.size());
         }
 
-        LiftoverCache = new GenomeLiftoverCache(true, true);
+        LiftoverCache = new GenomeLiftoverCache(RequiresLiftover);
     }
 
     public boolean runCopyNumberGeneComparer() { return Categories.containsKey(DRIVER) && !Categories.containsKey(GENE_COPY_NUMBER); }
@@ -285,12 +289,12 @@ public class ComparConfig
 
             for(String line : lines)
             {
+                if(line.isEmpty() || line.startsWith(IGNORE_SAMPLE_ID))
+                    continue;
+
                 String[] values = line.split(CSV_DELIM, -1);
 
                 String sampleId = values[sampleIndex];
-
-                if(sampleId.startsWith("#"))
-                    continue;
 
                 SampleIds.add(sampleId);
 
@@ -394,15 +398,15 @@ public class ComparConfig
         configBuilder.addConfigItem(formConfigSourceStr(DB_SOURCE, REF_SOURCE), false, "Database configurations for reference data");
         configBuilder.addConfigItem(formConfigSourceStr(DB_SOURCE, NEW_SOURCE), false, "Database configurations for new data");
 
-        com.hartwig.hmftools.compar.common.FileSources.registerConfig(configBuilder);
+        registerConfig(configBuilder);
 
         configBuilder.addFlag(WRITE_DETAILED_FILES, "Write per-type details files");
         configBuilder.addFlag(RESTRICT_TO_DRIVERS, "Restrict any comparison involving genes to driver gene panel");
-        configBuilder.addConfigItem(LIFTOVER_MAPPING_FILE, LIFTOVER_MAPPING_FILE_DESC);
+        configBuilder.addFlag(REQUIRES_LIFTOVER, "Lift over ref positions from v37 to v 38");
 
         addDatabaseCmdLineArgs(configBuilder, false);
         addOutputOptions(configBuilder);
-        ConfigUtils.addLoggingOptions(configBuilder);
+        addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
     }
 
@@ -427,5 +431,6 @@ public class ComparConfig
         RestrictToDrivers = false;
         mSampleIdMappings = Maps.newHashMap();
         LiftoverCache = new GenomeLiftoverCache();
+        RequiresLiftover = false;
     }
 }

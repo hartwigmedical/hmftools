@@ -6,10 +6,12 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-public class FormStatusTest {
+public class FormStatusTest
+{
 
     @Test
-    public void canMerge() {
+    public void canMerge()
+    {
         FormStatus status1 = ImmutableFormStatus.builder().state(FormStatusState.SAVED).locked(true).build();
         FormStatus status2 = ImmutableFormStatus.builder().state(FormStatusState.SUBMITTED).locked(true).build();
         FormStatus status3 = ImmutableFormStatus.builder().state(FormStatusState.VERIFIED).locked(false).build();

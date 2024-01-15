@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.region;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 
@@ -43,6 +46,24 @@ public class SpecificRegions
 
     public boolean hasFilters() { return !Regions.isEmpty() || !Chromosomes.isEmpty(); }
 
+    public void addRegion(final ChrBaseRegion newRegion)
+    {
+        if(!Chromosomes.contains(newRegion.Chromosome))
+            Chromosomes.add(newRegion.Chromosome);
+
+        for(ChrBaseRegion existingRegion : Regions)
+        {
+            if(existingRegion.overlaps(newRegion))
+            {
+                existingRegion.setStart(min(existingRegion.start(), newRegion.start()));
+                existingRegion.setEnd(max(existingRegion.end(), newRegion.end()));
+                return;
+            }
+        }
+
+        Regions.add(newRegion);
+    }
+
     public boolean includeChromosome(final String chromosome) { return Chromosomes.isEmpty() || Chromosomes.contains(chromosome); }
     public boolean excludeChromosome(final String chromosome) { return !includeChromosome(chromosome); }
 
@@ -85,12 +106,6 @@ public class SpecificRegions
     {
         configBuilder.addConfigItem(SPECIFIC_CHROMOSOMES, SPECIFIC_CHROMOSOMES_DESC);
         configBuilder.addConfigItem(SPECIFIC_REGIONS, SPECIFIC_REGIONS_DESC);
-    }
-
-    public static void addSpecificChromosomesRegionsConfig(final Options options)
-    {
-        options.addOption(SPECIFIC_CHROMOSOMES, true, SPECIFIC_CHROMOSOMES_DESC);
-        options.addOption(SPECIFIC_REGIONS, true, SPECIFIC_REGIONS_DESC);
     }
 
     public static SpecificRegions from(final ConfigBuilder configBuilder)

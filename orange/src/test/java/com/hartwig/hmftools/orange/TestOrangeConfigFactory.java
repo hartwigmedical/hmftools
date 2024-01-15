@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange;
 import java.time.LocalDate;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 
 import org.apache.logging.log4j.util.Strings;
@@ -43,8 +44,8 @@ public final class TestOrangeConfigFactory
     private static final String ISOFOX_GENE_DATA_CSV = RUN_DIRECTORY + "/isofox/tumor_sample.gene_data.csv";
     private static final String ISOFOX_FUSION_CSV = RUN_DIRECTORY + "/isofox/tumor_sample.pass_fusions.csv";
     private static final String ISOFOX_ALT_SPLICE_JUNCTION_CSV = RUN_DIRECTORY + "/isofox/tumor_sample.alt_splice_junc.csv";
-    private static final String LILAC_RESULT_CSV = RUN_DIRECTORY + "/lilac/tumor_sample.lilac.csv";
-    private static final String LILAC_QC_CSV = RUN_DIRECTORY + "/lilac/tumor_sample.lilac.qc.csv";
+    private static final String LILAC_RESULT_TSV = RUN_DIRECTORY + "/lilac/tumor_sample.lilac.tsv";
+    private static final String LILAC_QC_TSV = RUN_DIRECTORY + "/lilac/tumor_sample.lilac.qc.tsv";
     private static final String ANNOTATED_VIRUS_TSV = RUN_DIRECTORY + "/virusinterprtr/tumor_sample.virus.annotated.tsv";
     private static final String CHORD_PREDICTION_TXT = RUN_DIRECTORY + "/chord/tumor_sample_chord_prediction.txt";
     private static final String CUPPA_RESULT_CSV = RUN_DIRECTORY + "/cuppa/tumor_sample.cup.data.csv";
@@ -57,6 +58,7 @@ public final class TestOrangeConfigFactory
     public static OrangeConfig createMinimalConfig()
     {
         return ImmutableOrangeConfig.builder()
+                .experimentType(ExperimentType.TARGETED)
                 .tumorSampleId(TUMOR_SAMPLE_ID)
                 .samplingDate(LocalDate.now())
                 .refGenomeVersion(OrangeRefGenomeVersion.V37)
@@ -73,8 +75,8 @@ public final class TestOrangeConfigFactory
                 .purpleDataDirectory(PURPLE_DATA_DIRECTORY)
                 .purplePlotDirectory(PURPLE_PLOT_DIRECTORY)
                 .linxSomaticDataDirectory(LINX_SOMATIC_DATA_DIRECTORY)
-                .lilacResultCsv(LILAC_RESULT_CSV)
-                .lilacQcCsv(LILAC_QC_CSV)
+                .lilacResultTsv(LILAC_RESULT_TSV)
+                .lilacQcTsv(LILAC_QC_TSV)
                 .convertGermlineToSomatic(false)
                 .limitJsonOutput(false)
                 .addDisclaimer(false)
@@ -86,6 +88,7 @@ public final class TestOrangeConfigFactory
     {
         return ImmutableOrangeConfig.builder()
                 .from(createMinimalConfig())
+                .experimentType(ExperimentType.TARGETED)
                 .addPrimaryTumorDoids(MELANOMA_DOID)
                 .linxPlotDirectory(LINX_PLOT_DIRECTORY)
                 .pipelineVersionFile(PIPELINE_VERSION_FILE)
@@ -97,28 +100,35 @@ public final class TestOrangeConfigFactory
     {
         return ImmutableOrangeConfig.builder()
                 .from(createTargetedConfig())
-                .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
-                .chordPredictionTxt(CHORD_PREDICTION_TXT)
-                .cuppaResultCsv(CUPPA_RESULT_CSV)
-                .cuppaSummaryPlot(CUPPA_SUMMARY_PLOT)
-                .cuppaChartPlot(CUPPA_CHART_PLOT)
-                .sigsAllocationTsv(SIGS_ALLOCATION_TSV)
+                .experimentType(ExperimentType.WHOLE_GENOME)
+                .wgsRefConfig(ImmutableOrangeWGSRefConfig.builder()
+                        .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
+                        .chordPredictionTxt(CHORD_PREDICTION_TXT)
+                        .cuppaResultCsv(CUPPA_RESULT_CSV)
+                        .cuppaSummaryPlot(CUPPA_SUMMARY_PLOT)
+                        .cuppaChartPlot(CUPPA_CHART_PLOT)
+                        .sigsAllocationTsv(SIGS_ALLOCATION_TSV)
+                        .build())
                 .build();
     }
 
     @NotNull
     public static OrangeConfig createWGSConfigTumorNormal()
     {
+        OrangeConfig wgsConfigTumorOnly = createWGSConfigTumorOnly();
         return ImmutableOrangeConfig.builder()
-                .from(createWGSConfigTumorOnly())
-                .referenceSampleId(REFERENCE_SAMPLE_ID)
+                .from(wgsConfigTumorOnly)
                 .rnaConfig(null)
-                .refSampleWGSMetricsFile(REF_SAMPLE_WGS_METRICS_FILE)
-                .refSampleFlagstatFile(REF_SAMPLE_FLAGSTAT_FILE)
-                .sageGermlineGeneCoverageTsv(SAGE_GERMLINE_GENE_COVERAGE)
-                .sageSomaticRefSampleBQRPlot(SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT)
-                .linxGermlineDataDirectory(LINX_GERMLINE_DATA_DIRECTORY)
-                .peachGenotypeTsv(PEACH_GENOTYPE_TSV)
+                .wgsRefConfig(ImmutableOrangeWGSRefConfig.builder()
+                        .from(wgsConfigTumorOnly.wgsRefConfig())
+                        .referenceSampleId(REFERENCE_SAMPLE_ID)
+                        .refSampleWGSMetricsFile(REF_SAMPLE_WGS_METRICS_FILE)
+                        .refSampleFlagstatFile(REF_SAMPLE_FLAGSTAT_FILE)
+                        .sageGermlineGeneCoverageTsv(SAGE_GERMLINE_GENE_COVERAGE)
+                        .sageSomaticRefSampleBQRPlot(SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT)
+                        .linxGermlineDataDirectory(LINX_GERMLINE_DATA_DIRECTORY)
+                        .peachGenotypeTsv(PEACH_GENOTYPE_TSV)
+                        .build())
                 .build();
     }
 

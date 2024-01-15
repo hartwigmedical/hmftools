@@ -141,7 +141,7 @@ public class ClinvarAnnotation extends AnnotationData implements Callable
                 ++entryCount;
             }
 
-            PV_LOGGER.info("loaded {} Clinvar entries from file({}), strCache({})", entryCount, filename, mStringCache.size());
+            PV_LOGGER.info("loaded {} Clinvar entries from file({})", entryCount, filename);
         }
         catch(Exception e)
         {

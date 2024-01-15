@@ -194,19 +194,19 @@ public class FragmentSizeCalcs implements Callable
             mCurrentFragmentCount = 0;
             mCurrentGenes = overlappingGenes.get(0).GeneName;
 
-            final List<ChrBaseRegion> regions = Lists.newArrayList(new ChrBaseRegion(mChromosome, mCurrentGenesRange));
+            ChrBaseRegion sliceRegion = new ChrBaseRegion(mChromosome, mCurrentGenesRange);
 
             ISF_LOGGER.trace("chromosome({}) gene({} index={}) fragCount({}) nextRegion({})",
-                    mChromosome, mCurrentGenes, currentGeneIndex, mProcessedFragments, regions.get(0).toString());
+                    mChromosome, mCurrentGenes, currentGeneIndex, mProcessedFragments, sliceRegion);
 
             try
             {
-                mBamSlicer.slice(mSamReader, regions, this::processBamRead);
+                mBamSlicer.slice(mSamReader, sliceRegion, this::processBamRead);
             }
             catch(Exception e)
             {
                 ISF_LOGGER.error("chromosome({}) geneIndex({}) fragCount({}) currentRegion({}) error slicing bam: {}",
-                        mChromosome, currentGeneIndex, mProcessedFragments, regions.get(0).toString(), e.toString());
+                        mChromosome, currentGeneIndex, mProcessedFragments, sliceRegion, e.toString());
                 return;
             }
 

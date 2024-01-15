@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.markdups.consensus;
 
 import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.calcBaseQualAverage;
+import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.INVALID_POSITION;
 import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.NO_BASE;
+import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.isDualStrandAndIsFirstInPair;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MISMATCH;
@@ -20,6 +20,8 @@ import static htsjdk.samtools.CigarOperator.S;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -51,6 +53,11 @@ public class IndelConsensusReads
             return;
         }
 
+        int readCount = reads.size();
+
+        boolean[] isFirstInPair = new boolean[readCount];
+        boolean isDualStrand = isDualStrandAndIsFirstInPair(reads, isFirstInPair);
+
         // find the most common read by CIGAR, and where there are equal counts choose the one with the least soft-clips
         SAMRecord selectedConsensusRead = selectConsensusRead(cigarFrequencies);
 
@@ -71,10 +78,10 @@ public class IndelConsensusReads
             CigarElement element = selectElements.get(cigarIndex);
 
             // simplest scenario is where all reads agree about this next element
-            addElementBases(consensusState, readStates, element, baseIndex);
+            addElementBases(consensusState, readStates, element, baseIndex, isDualStrand, isFirstInPair);
 
             if(consensusState.outcome() == INDEL_FAIL)
-                return;
+                break;
 
             if(!deleteOrSplit(element.getOperator()))
             {
@@ -90,12 +97,18 @@ public class IndelConsensusReads
                 --cigarIndex;
         }
 
-        consensusState.setOutcome(INDEL_MISMATCH);
+        if(consensusState.outcome() != INDEL_FAIL)
+            consensusState.setOutcome(INDEL_MISMATCH);
     }
 
     private void addElementBases(
-            final ConsensusState consensusState, final List<ReadParseState> readStates, final CigarElement selectedElement, int baseIndex)
+            final ConsensusState consensusState, final List<ReadParseState> readStates, final CigarElement selectedElement, int baseIndex,
+            boolean isDualStrand, final boolean[] isFirstInPair)
     {
+        int chromosomeLength = mBaseBuilder.chromosomeLength();
+        if(chromosomeLength == 0)
+            chromosomeLength = mBaseBuilder.refGenome().getChromosomeLength(readStates.get(0).Read.getReferenceName());
+
         int readCount = readStates.size();
 
         consensusState.addCigarElement(selectedElement.getLength(), selectedElement.getOperator());
@@ -215,11 +228,25 @@ public class IndelConsensusReads
             {
                 int basePosition = consensusState.MinUnclippedPosStart + baseIndex;
 
-                byte[] consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(
-                        locationBases, locationQuals, consensusState.Chromosome, basePosition);
+                if(basePosition < 1 || basePosition > chromosomeLength)
+                    basePosition = BaseBuilder.INVALID_POSITION;
+
+                byte[] consensusBaseAndQual;
+
+                if(isDualStrand && basePosition != INVALID_POSITION)
+                {
+                    // split the reads into 2 consensus reads and then compare
+                    consensusBaseAndQual = mBaseBuilder.determineDualStrandBaseAndQual(
+                            isFirstInPair, locationBases, locationQuals, consensusState.Chromosome, basePosition);
+                }
+                else
+                {
+                    consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(
+                            locationBases, locationQuals, consensusState.Chromosome, basePosition);
+                }
 
                 consensusState.Bases[baseIndex] = consensusBaseAndQual[0];
-                consensusState.BaseQualities[baseIndex] = consensusBaseAndQual[1];
+                consensusState.BaseQualities[baseIndex] = BaseQualAdjustment.adjustBaseQual(consensusBaseAndQual[1]);
             }
 
             if(consensusState.IsForward)
@@ -271,5 +298,4 @@ public class IndelConsensusReads
 
         return maxRead;
     }
-
 }

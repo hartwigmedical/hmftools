@@ -2,6 +2,7 @@ package com.hartwig.hmftools.markdups;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
@@ -20,30 +21,28 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.markdups.write.BamWriter;
 import com.hartwig.hmftools.markdups.common.CandidateDuplicates;
 import com.hartwig.hmftools.markdups.common.DuplicateGroup;
 import com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
+import com.hartwig.hmftools.markdups.common.HighDepthRegion;
 import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.PartitionResults;
 import com.hartwig.hmftools.markdups.common.Statistics;
+import com.hartwig.hmftools.markdups.common.UnmapRegionState;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
+import com.hartwig.hmftools.markdups.write.BamWriter;
 
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
 
 public class PartitionReader implements Consumer<List<Fragment>>
 {
     private final MarkDupsConfig mConfig;
 
-    private final SamReader mSamReader;
-    private final BamSlicer mBamSlicer;
+    private final BamReader mBamReader;
     private final PartitionDataStore mPartitionDataStore;
     private final BamWriter mBamWriter;
     private final ReadPositionsCache mReadPositions;
@@ -54,7 +53,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
     private String mCurrentStrPartition;
     private PartitionData mCurrentPartitionData;
-    private final List<BaseRegion> mUnmapRegions;
+    private UnmapRegionState mUnmapRegionState;
 
     private final Map<String,List<SAMRecord>> mPendingIncompleteReads;
 
@@ -66,31 +65,26 @@ public class PartitionReader implements Consumer<List<Fragment>>
     private final PerformanceCounter mPcPendingIncompletes;
 
     public PartitionReader(
-            final MarkDupsConfig config, final SamReader samReader,
+            final MarkDupsConfig config, final BamReader bamReader,
             final BamWriter bamWriter, final PartitionDataStore partitionDataStore)
     {
         mConfig = config;
-        mCurrentRegion = null;
         mPartitionDataStore = partitionDataStore;
         mBamWriter = bamWriter;
-
-        mSamReader = samReader;
-
-        mBamSlicer = new BamSlicer(0, true, true, false);
-        mBamSlicer.setKeepUnmapped();
+        mBamReader = bamReader;
 
         mReadPositions = new ReadPositionsCache(config.BufferSize, !config.NoMateCigar, this);
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
-        mConsensusReads = new ConsensusReads(config.RefGenome);
+        mStats = mDuplicateGroupBuilder.statistics();
+        mConsensusReads = new ConsensusReads(config.RefGenome, mStats.ConsensusStats);
         mConsensusReads.setDebugOptions(config.RunChecks);
 
-        mUnmapRegions = Lists.newArrayList();
+        mCurrentRegion = null;
+        mUnmapRegionState = null;
 
         mPendingIncompleteReads = Maps.newHashMap();
 
         mPartitionRecordCount = 0;
-
-        mStats = mDuplicateGroupBuilder.statistics();
 
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
         mPcTotal = new PerformanceCounter("Total");
@@ -108,6 +102,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
     public void setupRegion(final ChrBaseRegion region)
     {
         mCurrentRegion = region;
+        mConsensusReads.setChromosomeLength(mConfig.RefGenome.getChromosomeLength(region.Chromosome));
 
         perfCountersStart();
 
@@ -123,9 +118,9 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
     public void processRegion()
     {
-        if(mSamReader != null)
+        if(mBamReader != null)
         {
-            mBamSlicer.slice(mSamReader, mCurrentRegion, this::processSamRecord);
+            mBamReader.sliceRegion(mCurrentRegion, this::processSamRecord);
         }
 
         postProcessRegion();
@@ -163,6 +158,9 @@ public class PartitionReader implements Consumer<List<Fragment>>
         if(!mCurrentRegion.containsPosition(read.getAlignmentStart())) // to avoid processing reads from the prior region again
             return;
 
+        if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // drop any consensus reads from previous MarkDup-generated BAMs runs
+            return;
+
         if(mConfig.SpecificRegionsFilterType != NONE && readOutsideSpecifiedRegions(
                 read, mConfig.SpecificChrRegions.Regions, mConfig.SpecificChrRegions.Chromosomes, mConfig.SpecificRegionsFilterType))
         {
@@ -177,9 +175,16 @@ public class PartitionReader implements Consumer<List<Fragment>>
             MD_LOGGER.debug("specific read: {}", readToString(read));
         }
 
+        if(read.isSecondaryAlignment())
+        {
+            mBamWriter.setBoundaryPosition(read.getAlignmentStart(), false);
+            mBamWriter.writeRead(read, FragmentStatus.UNSET);
+            return;
+        }
+
         if(mConfig.UnmapRegions.enabled())
         {
-            mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegions);
+            mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
 
             if(read.getSupplementaryAlignmentFlag() && read.getReadUnmappedFlag())
                 return; // drop unmapped supplementaries
@@ -212,6 +217,11 @@ public class PartitionReader implements Consumer<List<Fragment>>
                 && !read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
         {
             ++mStats.MissingMateCigar;
+
+            if(mStats.MissingMateCigar < 3 && mConfig.PerfDebug)
+            {
+                MD_LOGGER.debug("read without mate cigar: {}", readToString(read));
+            }
         }
     }
 
@@ -327,15 +337,13 @@ public class PartitionReader implements Consumer<List<Fragment>>
         boolean logDetails = mConfig.PerfDebug && posFragmentCount > LOG_PERF_FRAG_COUNT; // was 10000
         long startTimeMs = logDetails ? System.currentTimeMillis() : 0;
 
-        boolean inExcludedRegion = false; // dropped logic since added region unmapping logic
-
         findDuplicateFragments(positionFragments, resolvedFragments, positionDuplicateGroups, candidateDuplicatesList, mConfig.UMIs.Enabled);
 
-        List<Fragment> singleFragments = mConfig.UMIs.Enabled && !inExcludedRegion ?
+        List<Fragment> singleFragments = mConfig.UMIs.Enabled ?
                 resolvedFragments.stream().filter(x -> x.status() == FragmentStatus.NONE).collect(Collectors.toList()) : Collections.EMPTY_LIST;
 
         List<DuplicateGroup> duplicateGroups = mDuplicateGroupBuilder.processDuplicateGroups(
-                positionDuplicateGroups, true, singleFragments, inExcludedRegion);
+                positionDuplicateGroups, true, singleFragments);
 
         if(logDetails)
         {
@@ -370,21 +378,32 @@ public class PartitionReader implements Consumer<List<Fragment>>
             mBamWriter.writeFragments(resolvedFragments, true);
 
             mStats.LocalComplete += resolvedFragments.stream().mapToInt(x -> x.readCount()).sum();
+
+            int nonDuplicateFragments = (int)resolvedFragments.stream().filter(x -> x.status() == FragmentStatus.NONE).count();
+            mStats.addNonDuplicateCounts(nonDuplicateFragments);
         }
 
-        mBamWriter.setBoundaryPosition(position, true);
+        if(position > 0) // note the reversed fragment coordinate positions are skipped for updating sorted BAM writing routines
+            mBamWriter.setBoundaryPosition(position, true);
 
         mPcAcceptPositions.pause();
     }
 
     private void setUnmappedRegions()
     {
-        mUnmapRegions.clear();
+        List<HighDepthRegion> chrUnmapRegions = mConfig.UnmapRegions.getRegions(mCurrentRegion.Chromosome);
 
-        List<BaseRegion> chrRegions = mConfig.UnmapRegions.getRegions(mCurrentRegion.Chromosome);
+        List<HighDepthRegion> partitionRegions;
+        if(chrUnmapRegions != null)
+        {
+            partitionRegions = chrUnmapRegions.stream().filter(x -> x.overlaps(mCurrentRegion)).collect(Collectors.toList());
+        }
+        else
+        {
+            partitionRegions = Collections.emptyList();
+        }
 
-        if(chrRegions != null)
-            chrRegions.stream().filter(x -> x.overlaps(mCurrentRegion)).forEach(x -> mUnmapRegions.add(x));
+        mUnmapRegionState = new UnmapRegionState(mCurrentRegion, partitionRegions);
     }
 
     private void perfCountersStart()

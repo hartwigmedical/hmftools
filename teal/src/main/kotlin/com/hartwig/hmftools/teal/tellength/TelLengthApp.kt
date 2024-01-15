@@ -52,10 +52,10 @@ class TelLengthApp
 
         val start = Instant.now()
 
-        if (params.gc50ReadsPerKb == null)
+        if (params.gc50ReadDepth == null)
         {
-            logger.info("no gc50ReadsPerKb provided, using meanReadsPerKb({})", params.meanReadsPerKb)
-            params.gc50ReadsPerKb = params.meanReadsPerKb
+            logger.info("no gc50_read_depth provided, using meanDepth({})", params.meanReadDepth)
+            params.gc50ReadDepth = params.meanReadDepth
         }
 
         calcTelomereLength()
@@ -77,8 +77,8 @@ class TelLengthApp
             purity = params.purity,
             ploidy = params.ploidy,
             duplicateProportion = params.duplicatePercent,
-            meanReadsPerKb = params.meanReadsPerKb,
-            gc50ReadsPerKb = params.gc50ReadsPerKb!!,
+            meanReadDepth = params.meanReadDepth,
+            gc50ReadDepth = params.gc50ReadDepth!!,
             germlineTelomereLength = params.germlineTelomereLength)
         analyser.processReadGroups(telbamReader.readGroups.values)
         analyser.writeTelLengthTsv(params.outputFile!!, params.sampleId!!, params.sampleType!!)

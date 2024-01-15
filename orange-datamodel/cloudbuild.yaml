@@ -29,7 +29,7 @@ steps:
   - name: 'maven:3-jdk-11'
     id: 'Deploying orange-datamodel to Maven'
     entrypoint: mvn
-    args: ['deploy', '-B']
+    args: [ 'deploy', '-B', '-Pshade' ]
     dir: 'orange-datamodel'
     volumes:
       - path: '/cache/.m2'

@@ -10,5 +10,6 @@ public enum FilterReason
     LOW_CONFIDENCE,
     SUBCLONAL,
     GC_RATIO,
-    LOW_QUAL_PER_AD;
+    LOW_QUAL_PER_AD,
+    CHIP;
 }
