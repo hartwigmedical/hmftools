@@ -24,13 +24,49 @@ public class LinxReportableClustersTest
     @Test
     public void shouldFindAllReportableClusters()
     {
-        LinxData linxData = createTestLinxData();
+        LinxData linxData = linxDataBuilder().build();
         Set<Integer> clusters = LinxReportableClusters.findReportableClusters(linxData);
         assertEquals(new HashSet<>(Set.of(10, 50, 100)), clusters);
     }
 
+    @Test
+    public void shouldNotCountSimpleClusters()
+    {
+        // cluster 10 has single chain link and no exons -> should not be counted
+        LinxData linxData = linxDataBuilder()
+                .clusterIdToChainCount(Map.of(10, 1, 50, 2, 100, 2))
+                .clusterIdToExonCount(Map.of(50, 1, 100, 1))
+                .build();
+        Set<Integer> clusters = LinxReportableClusters.findReportableClusters(linxData);
+        assertEquals(new HashSet<>(Set.of(50, 100)), clusters);
+    }
+
+    @Test
+    public void shouldCountMultiLinkClustersWithNoExon()
+    {
+        // cluster 10 has two chain links and no exons -> not simple so should be counted
+        LinxData linxData2 = linxDataBuilder()
+                .clusterIdToChainCount(Map.of(10, 2, 50, 2, 100, 2))
+                .clusterIdToExonCount(Map.of(50, 1, 100, 1))
+                .build();
+        Set<Integer> clusters2 = LinxReportableClusters.findReportableClusters(linxData2);
+        assertEquals(new HashSet<>(Set.of(10, 50, 100)), clusters2);
+    }
+
+    @Test
+    public void shouldCountSingleLinkClusterWithExon()
+    {
+        // cluster 10 has single chain link and one exon -> not simple so should be counted
+        LinxData linxData3 = linxDataBuilder()
+                .clusterIdToChainCount(Map.of(10, 1, 50, 2, 100, 2))
+                .clusterIdToExonCount(Map.of(10, 1, 50, 1, 100, 1))
+                .build();
+        Set<Integer> clusters3 = LinxReportableClusters.findReportableClusters(linxData3);
+        assertEquals(new HashSet<>(Set.of(10, 50, 100)), clusters3);
+    }
+
     @NotNull
-    private static LinxData createTestLinxData()
+    private static ImmutableLinxData.Builder linxDataBuilder()
     {
         List<LinxBreakend> breakends = new ArrayList<>();
         breakends.add(LinxTestFactory.breakendBuilder().svId(15).reportedDisruption(true).build());
@@ -40,13 +76,15 @@ public class LinxReportableClustersTest
 
         List<Integer> fusions = List.of(50);
         Map<Integer, Integer> svToCluster = Map.of(15, 100);
+        Map<Integer, Integer> clusterIdToChainCount = Map.of(10, 2, 50, 2, 100, 2);
+        Map<Integer, Integer> clusterIdToExonCount = Map.of(10, 1, 50, 1, 100, 1);
 
         return ImmutableLinxData.builder()
                 .reportableSomaticBreakends(breakends)
                 .somaticDrivers(drivers)
                 .fusionClusterIds(fusions)
-                .putAllSvIdToClusterId(svToCluster)
-                .putAllClusterIdToChainCount(Map.of(10, 2, 50, 2, 100, 2))
-                .build();
+                .svIdToClusterId(svToCluster)
+                .clusterIdToChainCount(clusterIdToChainCount)
+                .clusterIdToExonCount(clusterIdToExonCount);
     }
 }

@@ -20,9 +20,8 @@ public final class LinxReportableClusters
     @NotNull
     public static Set<Integer> findReportableClusters(@NotNull LinxData linx)
     {
-        Set<Integer> clusterIds = new HashSet<>();
 
-        clusterIds.addAll(linx.fusionClusterIds());
+        Set<Integer> clusterIds = new HashSet<>(linx.fusionClusterIds());
 
         List<LinxBreakend> breakends = linx.reportableSomaticBreakends();
         List<Integer> svIds = breakends.stream().map(LinxBreakend::svId).collect(toList());
@@ -38,7 +37,7 @@ public final class LinxReportableClusters
     private static boolean isSimpleCluster(@NotNull LinxData linx, int clusterId)
     {
         boolean hasSingleLink = !linx.clusterIdToChainCount().containsKey(clusterId) || linx.clusterIdToChainCount().get(clusterId) == 1;
-        boolean hasNoExons = !linx.clusterIdToExonCount().containsKey(clusterId);
+        boolean hasNoExons = !linx.clusterIdToExonCount().containsKey(clusterId) || linx.clusterIdToExonCount().get(clusterId) == 0;
         return hasSingleLink && hasNoExons;
     }
 }
