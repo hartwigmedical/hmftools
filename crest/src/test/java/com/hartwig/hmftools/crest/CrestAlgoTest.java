@@ -10,7 +10,7 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class CrestTest
+public class CrestAlgoTest
 {
     private static final String MINIMAL_VCF_FILE = Resources.getResource("minimal.vcf").getPath();
     private static final String PURPLE_DIR = Resources.getResource("purple").getPath();
