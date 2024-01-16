@@ -116,10 +116,11 @@ public class ReadDataWriter
             mWriter.write(format("\t%.2f\t%d\t%s\t%d",
                     avgBaseQual, read.getMappingQuality(), suppData != null ? suppData.asCsv() : "N/A", read.getFlags()));
 
+            boolean isPaired = read.getReadPairedFlag();
             mWriter.write(format("\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
-                    read.getFirstOfPairFlag(), read.getReadNegativeStrandFlag(), read.getMateNegativeStrandFlag(),
+                    !isPaired || read.getFirstOfPairFlag(), read.getReadNegativeStrandFlag(), isPaired && read.getMateNegativeStrandFlag(),
                     read.getReadUnmappedFlag(), unmapOrigCoords != null ? unmapOrigCoords : "",
-                    read.getMateUnmappedFlag(), read.getSupplementaryAlignmentFlag(), read.isSecondaryAlignment()));
+                    isPaired && read.getMateUnmappedFlag(), read.getSupplementaryAlignmentFlag(), read.isSecondaryAlignment()));
 
             mWriter.newLine();
         }

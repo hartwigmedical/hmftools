@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.test;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome.MT_LENGTH_37;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_INDEX;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_NAME;
@@ -9,6 +10,7 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
@@ -34,6 +36,8 @@ public final class SamRecordTestUtils
         {
             SAM_DICTIONARY_V37.addSequence(new SAMSequenceRecord(chromosome.toString(), v37Coords.Lengths.get(chromosome)));
         }
+
+        SAM_DICTIONARY_V37.addSequence(new SAMSequenceRecord(MitochondrialChromosome.MT.toString(), MT_LENGTH_37));
     }
 
     public static SAMRecord createSamRecord(
@@ -70,7 +74,7 @@ public final class SamRecordTestUtils
         recordBuilder.getHeader().setSequenceDictionary(SAM_DICTIONARY_V37);
         recordBuilder.setUnmappedHasBasesAndQualities(false);
 
-        int chrIndex = !chrStr.equals(NO_CHROMOSOME_NAME) ? HumanChromosome.fromString(chrStr).ordinal() : NO_CHROMOSOME_INDEX;
+        int chrIndex = !chrStr.equals(NO_CHROMOSOME_NAME) ? chromosomeOrdinal(chrStr) : NO_CHROMOSOME_INDEX;
 
         SAMRecord record = recordBuilder.addFrag(
                 readId, chrIndex, readStart, isReversed, false,
@@ -97,14 +101,14 @@ public final class SamRecordTestUtils
         {
             record.setMateReferenceName(mateChr);
             record.setMateAlignmentStart(mateStart);
-            record.setMateReferenceIndex(HumanChromosome.fromString(mateChr).ordinal());
+            record.setMateReferenceIndex(chromosomeOrdinal(mateChr));
             record.setProperPairFlag(true);
         }
         else
         {
             record.setMateUnmappedFlag(true);
             record.setMateReferenceName(NO_CHROMOSOME_NAME);
-            record.setMateAlignmentStart(NO_POSITION);
+            record.setMateAlignmentStart(readStart);
             record.setMateReferenceIndex(NO_CHROMOSOME_INDEX);
             record.setProperPairFlag(false);
         }
@@ -123,5 +127,16 @@ public final class SamRecordTestUtils
             record.setInferredInsertSize(0);
 
         return record;
+    }
+
+    public static int chromosomeOrdinal(final String chromosome)
+    {
+        if(HumanChromosome.contains(chromosome))
+            return HumanChromosome.fromString(chromosome).ordinal();
+
+        if(MitochondrialChromosome.contains(chromosome))
+            return HumanChromosome.values().length;
+
+        else return HumanChromosome.values().length + 1;
     }
 }

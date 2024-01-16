@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.addConfig;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.markdups.common.Constants.LOCK_ACQUIRE_LONG_TIME_MS;
+import static com.hartwig.hmftools.markdups.common.ReadUnmapper.unmapMateAlignment;
+import static com.hartwig.hmftools.markdups.common.ReadUnmapper.unmapReadAlignment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +36,6 @@ import com.hartwig.hmftools.markdups.write.BamWriter;
 import com.hartwig.hmftools.markdups.write.FileWriterCache;
 
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
 
 public class MarkDuplicates
 {
@@ -105,7 +106,7 @@ public class MarkDuplicates
         consensusReads.setDebugOptions(mConfig.RunChecks);
 
         // write any orphaned or remaining fragments (can be supplementaries)
-        BamWriter recordWriter = partitionTasks.get(0).bamWriter();
+        BamWriter recordWriter = fileWriterCache.getUnsortedBamWriter();
 
         for(PartitionData partitionData : partitionDataStore.partitions())
         {
@@ -187,7 +188,7 @@ public class MarkDuplicates
         if(mConfig.SpecificChrRegions.hasFilters() || !mConfig.WriteBam)
             return 0;
 
-        BamWriter bamWriter = fileWriterCache.getFullyUnmappedReadsBamWriter();
+        BamWriter bamWriter = fileWriterCache.getUnsortedBamWriter();
 
         BamReader bamReader = new BamReader(mConfig);
 
@@ -199,12 +200,39 @@ public class MarkDuplicates
             unmappedCount.incrementAndGet();
         });
 
+        // do the same for non-human contigs
+        bamReader.queryNonHumanContigs((final SAMRecord record) ->
+        {
+            processNonHumanContigReads(record, bamWriter);
+            unmappedCount.incrementAndGet();
+        });
+
         if(unmappedCount.get() > 0)
         {
             MD_LOGGER.debug("wrote {} unmapped reads", unmappedCount);
         }
 
         return unmappedCount.get();
+    }
+
+    private void processNonHumanContigReads(final SAMRecord record, final BamWriter bamWriter)
+    {
+        // if these have a mate in a human chromosome, then they have been unmapped in that read, so do so here as well
+        if(record.getReadPairedFlag() && !record.getMateUnmappedFlag() && HumanChromosome.contains(record.getMateReferenceName()))
+        {
+            boolean mateUnmapped = mConfig.UnmapRegions.mateInUnmapRegion(record);
+
+            // if the human-chromosome mate was unmapped (ie in an unmap region), then this read should also now be unmapped
+            // otherwise it should be unmapped but leave its mate attributes as-is
+            unmapReadAlignment(record, mateUnmapped, mateUnmapped);
+
+            if(mateUnmapped)
+            {
+                unmapMateAlignment(record, false, true);
+            }
+        }
+
+        bamWriter.writeRead(record, FragmentStatus.UNSET);
     }
 
     private void setReadLength()

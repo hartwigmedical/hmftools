@@ -61,9 +61,10 @@ public class Fragment
 
                 if(read.getMateUnmappedFlag()) // unmapped reads come through the same slice
                 {
-                    if(read.hasAttribute(UNMAP_ATTRIBUTE))
+                    String mateCoordsStr = read.getStringAttribute(UNMAP_ATTRIBUTE);
+                    if(mateCoordsStr != null)
                     {
-                        String[] mateCoords = parseUnmappedCoords(read);
+                        String[] mateCoords = parseUnmappedCoords(mateCoordsStr);
                         String mateChr = mateCoords[0];
                         int matePosition = Integer.parseInt(mateCoords[1]);
 

@@ -147,7 +147,9 @@ public class ConsensusState
             int elemLength = cigarElement.getLength();
 
             if(isIndelOrMismatch(cigarOp))
+            {
                 NumMutations += elemLength;
+            }
             else if(cigarOp == CigarOperator.M)
             {
                 for(int i = 0; i < elemLength; i++)

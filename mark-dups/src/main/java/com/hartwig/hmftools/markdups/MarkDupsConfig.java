@@ -228,7 +228,7 @@ public class MarkDupsConfig
         LogReadType = ReadOutput.valueOf(configBuilder.getValue(READ_OUTPUTS, NONE.toString()));
 
         WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM);
-        MultiBam = WriteBam && Threads > 1 && configBuilder.hasFlag(MULTI_BAM);
+        MultiBam = WriteBam && Threads > 1; // now on automatically && configBuilder.hasFlag(MULTI_BAM);
         KeepInterimBams = configBuilder.hasFlag(KEEP_INTERIM_BAMS);
 
         LogReadIds = parseLogReadIds(configBuilder);

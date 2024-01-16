@@ -64,7 +64,7 @@ public class FileWriterCache
         return createBamWriter(fileId, false, true);
     }
 
-    public BamWriter getFullyUnmappedReadsBamWriter()
+    public BamWriter getUnsortedBamWriter()
     {
         if(!mConfig.MultiBam)
             return mSharedUnsortedWriter;
