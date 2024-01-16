@@ -33,7 +33,7 @@ public class CrestAlgo
     @Nullable
     private final String outputDir;
     @NotNull
-    final String sampleId;
+    private final String sampleId;
     @NotNull
     private final String sampleToCheck;
 
