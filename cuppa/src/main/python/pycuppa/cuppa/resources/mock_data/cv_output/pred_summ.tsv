@@ -1,321 +1,705 @@
-sample_id	actual_class	clf_group	clf_name	is_correct_pred	which_correct_pred	pred_class_1	pred_class_2	pred_class_3	pred_prob_1	pred_prob_2	pred_prob_3	feat_contrib_1	feat_contrib_2	feat_contrib_3
-Pro_9	Prostate	combined	combined	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.7250428368797789	0.27473332287894675	0.00022384024127436615			
-Pro_9	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.6478217077965683	0.24547268294104435	0.10670560926238727			
-Pro_9	Prostate	rna	rna_combined	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
-Pro_9	Prostate	dna	gen_pos	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.359294385728385	0.27749148585560823	0.22299565073156574			
-Pro_9	Prostate	dna	snv96	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.7732381161819043	0.10255994103474066	0.0911260746938588			
-Pro_9	Prostate	dna	event	False	2.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.3898000605101379	0.2721134272468857	0.22065117593972428	event.sv.SIMPLE_DUP_100KB_5MB=29.0: 0.1 | event.sv.SIMPLE_DUP_32B_200B=0.0: 0.0 | event.tmb.indels_per_mb=0.38: 0.0	event.sv.MAX_COMPLEX_SIZE=28.0: 0.1 | event.tmb.indels_per_mb=0.38: 0.0 | event.tmb.snv_count=6700.0: 0.0	event.tmb.indels_per_mb=0.38: 0.0 | event.tmb.snv_count=6700.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=28.0: 0.0
-Pro_9	Prostate	rna	gene_exp	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
-Pro_9	Prostate	rna	alt_sj	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
-Ski_5	Skin: Other	combined	combined											
-Ski_5	Skin: Other	dna	dna_combined	True	1.0	Skin: Other	Myeloid: Acute myeloid leukemia	Prostate	0.9361280453683652	0.0638719546316347	0.0			
-Ski_5	Skin: Other	rna	rna_combined											
-Ski_5	Skin: Other	dna	gen_pos	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5923859201722006	0.1998856533195546	0.14051197430285778			
-Ski_5	Skin: Other	dna	snv96	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.9634968142875335	0.030119238740907765	0.0040900743243017425			
-Ski_5	Skin: Other	dna	event	False	3.0	Gynecologic: Ovary/Fallopian tube	Myeloid: Acute myeloid leukemia	Skin: Other	0.2965995111172879	0.26419531613798775	0.25887843579613556	event.sv.SIMPLE_DUP_32B_200B=1.0: 0.0 | event.tmb.indels_per_mb=0.18: 0.0 | event.tmb.snv_count=140000.0: 0.0	event.sv.SIMPLE_DUP_32B_200B=1.0: 0.3 | event.sv.SIMPLE_DEL_20KB_1MB=5.0: 0.1 | event.tmb.indels_per_mb=0.18: 0.0	event.tmb.indels_per_mb=0.18: 0.0 | event.tmb.snv_count=140000.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=5.0: 0.0
-Ski_5	Skin: Other	rna	gene_exp											
-Ski_5	Skin: Other	rna	alt_sj											
-Mye_6	Myeloid: Acute myeloid leukemia	combined	combined											
-Mye_6	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.7373444723309241	0.16740803058117765	0.09524749708789819			
-Mye_6	Myeloid: Acute myeloid leukemia	rna	rna_combined											
-Mye_6	Myeloid: Acute myeloid leukemia	dna	gen_pos	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.2820610803765789	0.27821053044405053	0.24067009550660157			
-Mye_6	Myeloid: Acute myeloid leukemia	dna	snv96	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.7004577026597569	0.10864629724480356	0.09704311455218663			
-Mye_6	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.6963054951921204	0.1455971853642893	0.1114018562011311	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.2 | event.sv.SIMPLE_DUP_32B_200B=0.0: 0.8 | event.tmb.indels_per_mb=0.0: 0.0	event.sv.SIMPLE_DUP_32B_200B=0.0: 0.0 | event.tmb.indels_per_mb=0.0: 0.0 | event.tmb.snv_count=290.0: 0.0	event.tmb.indels_per_mb=0.0: 0.0 | event.tmb.snv_count=290.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=0.0: 0.0
-Mye_6	Myeloid: Acute myeloid leukemia	rna	gene_exp											
-Mye_6	Myeloid: Acute myeloid leukemia	rna	alt_sj											
-Gyn_9	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8082331243662864	0.1915480438306714	0.0002188318030422958			
-Gyn_9	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.7386797651254293	0.1750641736417526	0.08625606123281815			
-Gyn_9	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
-Gyn_9	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.44602803056733514	0.22992687310102816	0.17257751162886145			
-Gyn_9	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.36160104914014585	0.32105102669689395	0.20438851053200444			
-Gyn_9	Gynecologic: Ovary/Fallopian tube	dna	event	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.396903357784508	0.26661614161769887	0.25261365439241235	event.sv.MAX_COMPLEX_SIZE=160.0: 0.7 | event.tmb.indels_per_mb=0.03: 0.0 | event.tmb.snv_count=4500.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=11.0: 0.1 | event.sv.SIMPLE_DUP_32B_200B=1.0: 0.0 | event.tmb.indels_per_mb=0.03: 0.0	event.sv.TELOMERIC_SGL=1.0: 0.2 | event.tmb.indels_per_mb=0.03: 0.0 | event.tmb.snv_count=4500.0: 0.0
-Gyn_9	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
-Gyn_9	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
-Pro_5	Prostate	combined	combined	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.6989507610223031	0.30082476567099975	0.00022447330669701437			
-Pro_5	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.6227473291207143	0.268027205637454	0.10922546524183165			
-Pro_5	Prostate	rna	rna_combined	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
-Pro_5	Prostate	dna	gen_pos	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.3177504594198969	0.29642422224633463	0.2669910688995827			
-Pro_5	Prostate	dna	snv96	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.47743256002332646	0.4242829938128625	0.08916293879857459			
-Pro_5	Prostate	dna	event	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.4235430115019345	0.2958782205344729	0.2485698044030323	event.sv.MAX_COMPLEX_SIZE=270.0: 0.5 | event.tmb.indels_per_mb=0.27: 0.1 | event.tmb.snv_count=8000.0: 0.0	event.sv.TELOMERIC_SGL=2.0: 0.2 | event.tmb.snv_count=8000.0: 0.0 | event.sv.SIMPLE_DUP_32B_200B=3.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=18.0: 0.0 | event.tmb.snv_count=8000.0: 0.0 | event.sv.TELOMERIC_SGL=2.0: 0.0
-Pro_5	Prostate	rna	gene_exp	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
-Pro_5	Prostate	rna	alt_sj	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
-Ski_1	Skin: Other	combined	combined											
-Ski_1	Skin: Other	dna	dna_combined	False	2.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.4434623287498561	0.2832764836624881	0.27326118758765583			
-Ski_1	Skin: Other	rna	rna_combined											
-Ski_1	Skin: Other	dna	gen_pos	False	2.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.2862769047772352	0.25226531552737136	0.24730955723723705			
-Ski_1	Skin: Other	dna	snv96	False	3.0	Myeloid: Acute myeloid leukemia	Prostate	Skin: Other	0.38903987974933596	0.26752558006779026	0.1986012398621586			
-Ski_1	Skin: Other	dna	event	False	3.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.4199425691609675	0.26619968919189985	0.1595169688834734	event.sv.SIMPLE_DEL_20KB_1MB=1.0: 0.8 | event.sv.SIMPLE_DUP_32B_200B=1.0: 0.4 | event.tmb.indels_per_mb=0.017: 0.0	event.tmb.indels_per_mb=0.017: 0.1 | event.sv.SIMPLE_DUP_100KB_5MB=7.0: 0.0 | event.tmb.snv_count=1500.0: 0.0	event.tmb.indels_per_mb=0.017: 0.0 | event.sv.MAX_COMPLEX_SIZE=3.0: 0.0 | event.sv.SIMPLE_DUP_100KB_5MB=7.0: 0.0
-Ski_1	Skin: Other	rna	gene_exp											
-Ski_1	Skin: Other	rna	alt_sj											
-Mye_5	Myeloid: Acute myeloid leukemia	combined	combined											
-Mye_5	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.9927838966094197	0.003826633706614279	0.0033894696839660904			
-Mye_5	Myeloid: Acute myeloid leukemia	rna	rna_combined											
-Mye_5	Myeloid: Acute myeloid leukemia	dna	gen_pos	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.2978340787425846	0.26567447882484463	0.22855704513992742			
-Mye_5	Myeloid: Acute myeloid leukemia	dna	snv96	True	1.0	Myeloid: Acute myeloid leukemia	Prostate	Gynecologic: Ovary/Fallopian tube	0.5770388245109598	0.19576969280620532	0.13186882088581928			
-Mye_5	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.4403444129239268	0.2527952962287705	0.16104173047548048	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.3 | event.tmb.indels_per_mb=0.016: 0.0 | event.tmb.snv_count=1400.0: 0.0	event.tmb.indels_per_mb=0.016: 0.1 | event.tmb.snv_count=1400.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.sv.SIMPLE_DUP_32B_200B=2.0: 0.0 | event.tmb.indels_per_mb=0.016: 0.0 | event.sv.MAX_COMPLEX_SIZE=2.0: 0.0
-Mye_5	Myeloid: Acute myeloid leukemia	rna	gene_exp											
-Mye_5	Myeloid: Acute myeloid leukemia	rna	alt_sj											
-Gyn_2	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.5441617329396242	0.45561625381527754	0.00022201324509820946			
-Gyn_2	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.4902065484416569	0.4104406055717368	0.09935284598660635			
-Gyn_2	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
-Gyn_2	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.3409318731506692	0.3219284610309191	0.18761644989808401			
-Gyn_2	Gynecologic: Ovary/Fallopian tube	dna	snv96	False	3.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5026064567111752	0.39115641741760565	0.09330520551594004			
-Gyn_2	Gynecologic: Ovary/Fallopian tube	dna	event	False	3.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.31506116986401417	0.26568345278165856	0.2523178119347631	event.sv.MAX_COMPLEX_SIZE=120.0: 0.4 | event.tmb.indels_per_mb=0.16: 0.0 | event.tmb.snv_count=18000.0: 0.0	event.tmb.snv_count=18000.0: 0.2 | event.sv.TELOMERIC_SGL=1.0: 0.1 | event.tmb.indels_per_mb=0.16: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=38.0: 0.1 | event.tmb.snv_count=18000.0: 0.0 | event.sv.TELOMERIC_SGL=1.0: 0.0
-Gyn_2	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
-Gyn_2	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
-Pro_2	Prostate	combined	combined	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.7090594203317578	0.290715753835312	0.00022482583293021298			
-Pro_2	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.6307632989415886	0.2586141904124973	0.11062251064591408			
-Pro_2	Prostate	rna	rna_combined	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
-Pro_2	Prostate	dna	gen_pos	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.34119140312478347	0.3145416961513362	0.21465885648454075			
-Pro_2	Prostate	dna	snv96	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5371495411872935	0.31726918165250495	0.10105090873833093			
-Pro_2	Prostate	dna	event	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3876003364885072	0.2897730847564181	0.27368059145237766	event.sv.MAX_COMPLEX_SIZE=140.0: 0.2 | event.tmb.indels_per_mb=0.24: 0.2 | event.sv.SIMPLE_DUP_32B_200B=2.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=16.0: 0.0 | event.tmb.indels_per_mb=0.24: 0.0 | event.tmb.snv_count=8000.0: 0.0	event.tmb.indels_per_mb=0.24: 0.0 | event.tmb.snv_count=8000.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=140.0: 0.0
-Pro_2	Prostate	rna	gene_exp	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
-Pro_2	Prostate	rna	alt_sj	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
-Ski_6	Skin: Other	combined	combined											
-Ski_6	Skin: Other	dna	dna_combined	True	1.0	Skin: Other	Prostate	Myeloid: Acute myeloid leukemia	0.8952222318223695	0.06399949473562036	0.040778273442010245			
-Ski_6	Skin: Other	rna	rna_combined											
-Ski_6	Skin: Other	dna	gen_pos	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.6352001662874521	0.16255025543492244	0.13896072697554734			
-Ski_6	Skin: Other	dna	snv96	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.9902692997723701	0.008827145349205165	0.0008132841315247848			
-Ski_6	Skin: Other	dna	event	False	3.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3391897085952171	0.2872489342460044	0.28214296450516113	event.tmb.indels_per_mb=0.35: 0.4 | event.sv.SIMPLE_DUP_32B_200B=9.0: 0.1 | event.tmb.snv_count=610000.0: 0.0	event.tmb.indels_per_mb=0.35: 0.0 | event.tmb.snv_count=610000.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.35: 0.0 | event.tmb.snv_count=610000.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=3.0: 0.0
-Ski_6	Skin: Other	rna	gene_exp											
-Ski_6	Skin: Other	rna	alt_sj											
-Mye_2	Myeloid: Acute myeloid leukemia	combined	combined											
-Mye_2	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.9961325029050593	0.0023947899326518395	0.0014727071622888976			
-Mye_2	Myeloid: Acute myeloid leukemia	rna	rna_combined											
-Mye_2	Myeloid: Acute myeloid leukemia	dna	gen_pos	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.29601524769028575	0.25605700865645137	0.2345682263282374			
-Mye_2	Myeloid: Acute myeloid leukemia	dna	snv96	True	1.0	Myeloid: Acute myeloid leukemia	Prostate	Skin: Other	0.718005233696074	0.11185450659457183	0.09239346252883526			
-Mye_2	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.6476940040172425	0.13575422654175173	0.13482171562728984	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.7 | event.sv.SIMPLE_DUP_32B_200B=0.0: 0.5 | event.tmb.indels_per_mb=0.0052: 0.0	event.tmb.indels_per_mb=0.0052: 0.0 | event.tmb.snv_count=910.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=4.0: 0.0	event.tmb.indels_per_mb=0.0052: 0.0 | event.tmb.snv_count=910.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
-Mye_2	Myeloid: Acute myeloid leukemia	rna	gene_exp											
-Mye_2	Myeloid: Acute myeloid leukemia	rna	alt_sj											
-Gyn_4	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8307113167912857	0.16905982550895934	0.0002288576997549287			
-Gyn_4	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.7259631794611668	0.14774230947002992	0.12629451106880318			
-Gyn_4	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
-Gyn_4	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.3830273822651156	0.2839384827841931	0.17214156562168098			
-Gyn_4	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Prostate	Myeloid: Acute myeloid leukemia	0.46186321464840985	0.21694741953087665	0.19633143171372616			
-Gyn_4	Gynecologic: Ovary/Fallopian tube	dna	event	False	2.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.32721918198010747	0.23904276531316682	0.23114434353412747	event.sv.SIMPLE_DEL_20KB_1MB=1.0: 1.1 | event.tmb.indels_per_mb=0.11: 0.0 | event.tmb.snv_count=5200.0: 0.0	event.tmb.indels_per_mb=0.11: 0.0 | event.tmb.snv_count=5200.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.11: 0.0 | event.tmb.snv_count=5200.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=11.0: 0.0
-Gyn_4	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
-Gyn_4	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
-Pro_8	Prostate	combined	combined	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.7397669659157118	0.26001135989636875	0.00022167418791946132			
-Pro_8	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.6674362701935185	0.23458875599069395	0.09797497381578775			
-Pro_8	Prostate	rna	rna_combined	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
-Pro_8	Prostate	dna	gen_pos	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.3352094860239608	0.3139355223622064	0.24953507577997733			
-Pro_8	Prostate	dna	snv96	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.6591988498495689	0.20583438177458932	0.09504186439581058			
-Pro_8	Prostate	dna	event	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.36361133915345	0.3067132553353231	0.2789585316363146	event.sv.MAX_COMPLEX_SIZE=43.0: 0.3 | event.tmb.indels_per_mb=0.18: 0.1 | event.tmb.snv_count=7400.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=8.0: 0.0 | event.tmb.indels_per_mb=0.18: 0.0 | event.tmb.snv_count=7400.0: 0.0	event.tmb.snv_count=7400.0: 0.0 | event.tmb.indels_per_mb=0.18: 0.0 | event.sv.MAX_COMPLEX_SIZE=43.0: 0.0
-Pro_8	Prostate	rna	gene_exp	False	3.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
-Pro_8	Prostate	rna	alt_sj	False	3.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
-Ski_8	Skin: Other	combined	combined	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.9893120014916089	0.010478429910187355	0.00020956859820374713			
-Ski_8	Skin: Other	dna	dna_combined	True	1.0	Skin: Other	Myeloid: Acute myeloid leukemia	Prostate	0.9441414505524138	0.05585854944758615	0.0			
-Ski_8	Skin: Other	rna	rna_combined	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
-Ski_8	Skin: Other	dna	gen_pos	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.45454728180580845	0.38666124780381167	0.10834384374093363			
-Ski_8	Skin: Other	dna	snv96	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.9893404902816494	0.008757781539417265	0.0015730539149632888			
-Ski_8	Skin: Other	dna	event	False	3.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.462518460505488	0.2638479557878146	0.23552851884267054	event.sv.MAX_COMPLEX_SIZE=83.0: 0.5 | event.tmb.indels_per_mb=0.32: 0.4 | event.tmb.snv_count=230000.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=15.0: 0.1 | event.tmb.indels_per_mb=0.32: 0.0 | event.tmb.snv_count=230000.0: 0.0	event.tmb.snv_count=230000.0: 0.0 | event.tmb.indels_per_mb=0.32: 0.0 | event.sv.MAX_COMPLEX_SIZE=83.0: 0.0
-Ski_8	Skin: Other	rna	gene_exp	False	2.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
-Ski_8	Skin: Other	rna	alt_sj	False	2.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
-Mye_3	Myeloid: Acute myeloid leukemia	combined	combined											
-Mye_3	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.9609203338555637	0.03238867628435754	0.006690989860078588			
-Mye_3	Myeloid: Acute myeloid leukemia	rna	rna_combined											
-Mye_3	Myeloid: Acute myeloid leukemia	dna	gen_pos	False	3.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Myeloid: Acute myeloid leukemia	0.29799207461073085	0.27524392051790225	0.22483622782100837			
-Mye_3	Myeloid: Acute myeloid leukemia	dna	snv96	False	2.0	Gynecologic: Ovary/Fallopian tube	Myeloid: Acute myeloid leukemia	Skin: Other	0.6780397005215096	0.20496108455985806	0.09898156434797323			
-Mye_3	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.6451359845154572	0.14707922171314933	0.13618531636689793	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.4 | event.sv.SIMPLE_DUP_32B_200B=0.0: 0.6 | event.tmb.indels_per_mb=0.011: 0.0	event.tmb.indels_per_mb=0.011: 0.0 | event.sv.MAX_COMPLEX_SIZE=4.0: 0.0 | event.sv.SIMPLE_DUP_100KB_5MB=0.0: 0.0	event.tmb.indels_per_mb=0.011: 0.0 | event.tmb.snv_count=2600.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
-Mye_3	Myeloid: Acute myeloid leukemia	rna	gene_exp											
-Mye_3	Myeloid: Acute myeloid leukemia	rna	alt_sj											
-Gyn_10	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8828857405249203	0.116902367958644	0.00021189151643562565			
-Gyn_10	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.833337507207985	0.11034171629439433	0.056320776497620545			
-Gyn_10	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
-Gyn_10	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.546096343046483	0.20141977553053692	0.1283704796402998			
-Gyn_10	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.6121644222991393	0.2807333563149445	0.09331723635629997			
-Gyn_10	Gynecologic: Ovary/Fallopian tube	dna	event	True	1.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.33687216639400586	0.3051895751375683	0.27418946864663063	event.sv.SIMPLE_DUP_100KB_5MB=34.0: 0.1 | event.tmb.indels_per_mb=0.087: 0.0 | event.tmb.snv_count=7900.0: 0.0	event.sv.MAX_COMPLEX_SIZE=47.0: 0.3 | event.tmb.snv_count=7900.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.snv_count=7900.0: 0.0 | event.tmb.indels_per_mb=0.087: 0.0 | event.sv.MAX_COMPLEX_SIZE=47.0: 0.0
-Gyn_10	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
-Gyn_10	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
-Pro_10	Prostate	combined	combined	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.6810173018291481	0.31875299546122154	0.0002297027096303847			
-Pro_10	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.5929553925811106	0.2775352506499622	0.12950935676892722			
-Pro_10	Prostate	rna	rna_combined	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
-Pro_10	Prostate	dna	gen_pos	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.31773228440685425	0.2971534114328836	0.21898127032784284			
-Pro_10	Prostate	dna	snv96	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.4784613002137078	0.33803735190830586	0.12909472543073672			
-Pro_10	Prostate	dna	event	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.376501403842656	0.31466572448435814	0.2485096997176548	event.sv.MAX_COMPLEX_SIZE=280.0: 0.3 | event.tmb.indels_per_mb=0.15: 0.0 | event.tmb.snv_count=4500.0: 0.0	event.tmb.indels_per_mb=0.15: 0.0 | event.tmb.snv_count=4500.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.15: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=280.0: 0.0
-Pro_10	Prostate	rna	gene_exp	False	3.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
-Pro_10	Prostate	rna	alt_sj	False	3.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
-Ski_3	Skin: Other	combined	combined	True	1.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5055006656582904	0.49409699656842215	0.00040233777328734595			
-Ski_3	Skin: Other	dna	dna_combined	False	2.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.5031052371447065	0.25128173351860084	0.24561302933669252			
-Ski_3	Skin: Other	rna	rna_combined	True	1.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
-Ski_3	Skin: Other	dna	gen_pos	False	4.0	Myeloid: Acute myeloid leukemia	Prostate	Gynecologic: Ovary/Fallopian tube	0.28849752590149486	0.2647641525628027	0.2350340166413974			
-Ski_3	Skin: Other	dna	snv96	False	4.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Prostate	0.4928539311795564	0.1766332014429453	0.1733197390060646			
-Ski_3	Skin: Other	dna	event	False	3.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3662441674705686	0.2928235940215373	0.17102765301468661	event.sv.SIMPLE_DEL_20KB_1MB=1.0: 1.0 | event.tmb.indels_per_mb=0.026: 0.0 | event.tmb.snv_count=1200.0: 0.0	event.tmb.indels_per_mb=0.026: 0.0 | event.tmb.snv_count=1200.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.026: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=2.0: 0.0
-Ski_3	Skin: Other	rna	gene_exp	False	2.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
-Ski_3	Skin: Other	rna	alt_sj	False	2.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
-Mye_4	Myeloid: Acute myeloid leukemia	combined	combined											
-Mye_4	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.8750970857138974	0.12490291428610258	0.0			
-Mye_4	Myeloid: Acute myeloid leukemia	rna	rna_combined											
-Mye_4	Myeloid: Acute myeloid leukemia	dna	gen_pos	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.33409557656987227	0.2718489914805958	0.20724377585867435			
-Mye_4	Myeloid: Acute myeloid leukemia	dna	snv96	True	1.0	Myeloid: Acute myeloid leukemia	Prostate	Gynecologic: Ovary/Fallopian tube	0.8212674094286635	0.07248824246745597	0.05626448213518963			
-Mye_4	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Prostate	0.6712437536762343	0.1611929007380917	0.08845055348497577	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.5 | event.sv.SIMPLE_DUP_32B_200B=0.0: 0.5 | event.tmb.indels_per_mb=0.0035: 0.0	event.tmb.indels_per_mb=0.0035: 0.0 | event.tmb.snv_count=540.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.snv_count=540.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0 | event.sv.SIMPLE_DUP_100KB_5MB=0.0: 0.0
-Mye_4	Myeloid: Acute myeloid leukemia	rna	gene_exp											
-Mye_4	Myeloid: Acute myeloid leukemia	rna	alt_sj											
-Gyn_11	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8496834248115861	0.15010420335793284	0.00021237183048105005			
-Gyn_11	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.800184678812573	0.14135980559938402	0.05845551558804286			
-Gyn_11	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
-Gyn_11	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.37762004071920896	0.28376233461156336	0.22409325844974365			
-Gyn_11	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8120390622357984	0.0860889183528655	0.08250039539720232			
-Gyn_11	Gynecologic: Ovary/Fallopian tube	dna	event	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.3258655772357282	0.3184691809123536	0.2627765089790939	event.tmb.indels_per_mb=0.077: 0.0 | event.tmb.snv_count=11000.0: 0.0 | event.sv.TELOMERIC_SGL=1.0: 0.0	event.tmb.snv_count=11000.0: 0.1 | event.tmb.indels_per_mb=0.077: 0.0 | event.sv.TELOMERIC_SGL=1.0: 0.0	event.sv.MAX_COMPLEX_SIZE=24.0: 0.0 | event.tmb.snv_count=11000.0: 0.0 | event.sv.TELOMERIC_SGL=1.0: 0.0
-Gyn_11	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
-Gyn_11	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
-Pro_1	Prostate	combined	combined	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.8357132080358154	0.16406809165352076	0.00021870031066383895			
-Pro_1	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.7642542486557122	0.15003919395954352	0.08570655738474424			
-Pro_1	Prostate	rna	rna_combined	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
-Pro_1	Prostate	dna	gen_pos	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.43605520033087025	0.23343511749523235	0.17870323116718148			
-Pro_1	Prostate	dna	snv96	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.8225958378280264	0.08741485677010367	0.05760180495102683			
-Pro_1	Prostate	dna	event	False	2.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.30775642119521096	0.2892971318749265	0.2838630436323738	event.sv.SIMPLE_DUP_100KB_5MB=15.0: 0.2 | event.tmb.indels_per_mb=0.25: 0.0 | event.tmb.snv_count=5000.0: 0.0	event.tmb.indels_per_mb=0.25: 0.2 | event.sv.MAX_COMPLEX_SIZE=23.0: 0.1 | event.tmb.snv_count=5000.0: 0.0	event.sv.SIMPLE_DUP_32B_200B=3.0: 0.1 | event.tmb.indels_per_mb=0.25: 0.0 | event.tmb.snv_count=5000.0: 0.0
-Pro_1	Prostate	rna	gene_exp	False	3.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
-Pro_1	Prostate	rna	alt_sj	False	3.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
-Ski_4	Skin: Other	combined	combined	True	1.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.9323880334770601	0.06740373074916335	0.00020823577377642057			
-Ski_4	Skin: Other	dna	dna_combined	True	1.0	Skin: Other	Prostate	Myeloid: Acute myeloid leukemia	0.8955118676948854	0.0647378973619909	0.039750234943123616			
-Ski_4	Skin: Other	rna	rna_combined	True	1.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
-Ski_4	Skin: Other	dna	gen_pos	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.6203658228639511	0.1772552840497018	0.14349379168272083			
-Ski_4	Skin: Other	dna	snv96	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.9979046374934523	0.0017900847628072225	0.0001872007087995485			
-Ski_4	Skin: Other	dna	event	True	1.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.3158796160870756	0.30739642139085094	0.29751073084553775	event.sv.SIMPLE_DUP_32B_200B=3.0: 0.1 | event.tmb.indels_per_mb=0.31: 0.0 | event.tmb.snv_count=640000.0: 0.0	event.tmb.indels_per_mb=0.31: 0.2 | event.tmb.snv_count=640000.0: 0.0 | event.sv.TELOMERIC_SGL=4.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=7.0: 0.0 | event.tmb.indels_per_mb=0.31: 0.0 | event.tmb.snv_count=640000.0: 0.0
-Ski_4	Skin: Other	rna	gene_exp	False	2.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
-Ski_4	Skin: Other	rna	alt_sj	False	2.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
-Mye_1	Myeloid: Acute myeloid leukemia	combined	combined											
-Mye_1	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.9955884870476579	0.002809246046195761	0.0016022669061463444			
-Mye_1	Myeloid: Acute myeloid leukemia	rna	rna_combined											
-Mye_1	Myeloid: Acute myeloid leukemia	dna	gen_pos	False	2.0	Skin: Other	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	0.29826906709563794	0.2866824978673386	0.2165312532415096			
-Mye_1	Myeloid: Acute myeloid leukemia	dna	snv96	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Prostate	0.7151318832269049	0.10891021109781626	0.09234757102796189			
-Mye_1	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.5789385333816522	0.19168408472144904	0.13769976960671357	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.5 | event.sv.SIMPLE_DUP_32B_200B=1.0: 0.2 | event.tmb.indels_per_mb=0.018: 0.0	event.tmb.indels_per_mb=0.018: 0.0 | event.tmb.snv_count=1500.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.018: 0.0 | event.tmb.snv_count=1500.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
-Mye_1	Myeloid: Acute myeloid leukemia	rna	gene_exp											
-Mye_1	Myeloid: Acute myeloid leukemia	rna	alt_sj											
-Gyn_1	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.7926077700034699	0.2071313283138908	0.00026090168263933293			
-Gyn_1	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Myeloid: Acute myeloid leukemia	Skin: Other	0.6075911523339315	0.23362771124831197	0.1587811364177566			
-Gyn_1	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
-Gyn_1	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	True	1.0	Gynecologic: Ovary/Fallopian tube	Myeloid: Acute myeloid leukemia	Skin: Other	0.3307166543357217	0.2521040820758765	0.2334318677071363			
-Gyn_1	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Myeloid: Acute myeloid leukemia	Prostate	0.3454325418040365	0.26391863298855817	0.25286742613580737			
-Gyn_1	Gynecologic: Ovary/Fallopian tube	dna	event	False	3.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.5194490758391975	0.234429137611771	0.15414032931622543	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.5 | event.tmb.indels_per_mb=0.022: 0.0 | event.tmb.snv_count=1900.0: 0.0	event.sv.SIMPLE_DUP_32B_200B=2.0: 0.0 | event.tmb.indels_per_mb=0.022: 0.0 | event.tmb.snv_count=1900.0: 0.0	event.tmb.indels_per_mb=0.022: 0.0 | event.tmb.snv_count=1900.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
-Gyn_1	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
-Gyn_1	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
-Pro_4	Prostate	combined	combined											
-Pro_4	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.5790334961844538	0.3076443918444249	0.11332211197112135			
-Pro_4	Prostate	rna	rna_combined											
-Pro_4	Prostate	dna	gen_pos	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.3275625463221405	0.3262972954948437	0.21432814279994683			
-Pro_4	Prostate	dna	snv96	False	2.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.43859658304732135	0.4249388887066937	0.12246279283340326			
-Pro_4	Prostate	dna	event	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.38037291985644084	0.3345686687762657	0.2587486213809076	event.sv.MAX_COMPLEX_SIZE=590.0: 0.6 | event.tmb.snv_count=6400.0: 0.0 | event.sv.TELOMERIC_SGL=3.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=34.0: 0.2 | event.tmb.indels_per_mb=0.1: 0.0 | event.tmb.snv_count=6400.0: 0.0	event.sv.SIMPLE_DUP_32B_200B=4.0: 0.0 | event.tmb.snv_count=6400.0: 0.0 | event.tmb.indels_per_mb=0.1: 0.0
-Pro_4	Prostate	rna	gene_exp											
-Pro_4	Prostate	rna	alt_sj											
-Ski_2	Skin: Other	combined	combined	False	2.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.6116827986274044	0.3880983925962122	0.00021880877638341976			
-Ski_2	Skin: Other	dna	dna_combined	False	2.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.5591026180371754	0.3547375009457074	0.0861598810171173			
-Ski_2	Skin: Other	rna	rna_combined	True	1.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
-Ski_2	Skin: Other	dna	gen_pos	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5866463049269377	0.20436389308695604	0.13475740152460802			
-Ski_2	Skin: Other	dna	snv96	False	3.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.7722761022102184	0.12724182693330147	0.09784525449740569			
-Ski_2	Skin: Other	dna	event	True	1.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.35682176896095325	0.2967294764076957	0.289251051528014	event.tmb.snv_count=75000.0: 0.1 | event.sv.SIMPLE_DUP_32B_200B=5.0: 0.0 | event.tmb.indels_per_mb=0.19: 0.0	event.tmb.indels_per_mb=0.19: 0.2 | event.sv.MAX_COMPLEX_SIZE=15.0: 0.0 | event.tmb.snv_count=75000.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=6.0: 0.0 | event.tmb.snv_count=75000.0: 0.0 | event.sv.TELOMERIC_SGL=2.0: 0.0
-Ski_2	Skin: Other	rna	gene_exp	False	3.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3669434128965285	0.36168225565461193	0.27137433144885964			
-Ski_2	Skin: Other	rna	alt_sj	False	3.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3669434128965285	0.36168225565461193	0.27137433144885964			
-Mye_10	Myeloid: Acute myeloid leukemia	combined	combined											
-Mye_10	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.9980666300334667	0.0019333699665332158	0.0			
-Mye_10	Myeloid: Acute myeloid leukemia	rna	rna_combined											
-Mye_10	Myeloid: Acute myeloid leukemia	dna	gen_pos	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3010777498387323	0.2483212026495235	0.24382901897381237			
-Mye_10	Myeloid: Acute myeloid leukemia	dna	snv96	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.7924999672728356	0.080745675846343	0.07027432590603774			
-Mye_10	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.6594446935327636	0.15237459755315352	0.12622596477581494	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.6 | event.sv.SIMPLE_DUP_32B_200B=0.0: 0.6 | event.tmb.indels_per_mb=0.0035: 0.0	event.tmb.indels_per_mb=0.0035: 0.2 | event.tmb.snv_count=700.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.0035: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=2.0: 0.0
-Mye_10	Myeloid: Acute myeloid leukemia	rna	gene_exp											
-Mye_10	Myeloid: Acute myeloid leukemia	rna	alt_sj											
-Gyn_7	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8867055961409808	0.11308549171032754	0.0002089121486916856			
-Gyn_7	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.8488789203442532	0.1082612882194995	0.04285979143624738			
-Gyn_7	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
-Gyn_7	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.5082775992569503	0.30632014254468165	0.09405018936210277			
-Gyn_7	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.7625647477490529	0.18082853353570236	0.05454640190378528			
-Gyn_7	Gynecologic: Ovary/Fallopian tube	dna	event	False	3.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.5342911856704315	0.23600653644956693	0.21505627343293496	event.sv.MAX_COMPLEX_SIZE=310.0: 0.6 | event.tmb.indels_per_mb=0.33: 0.5 | event.tmb.snv_count=25000.0: 0.0	event.tmb.snv_count=25000.0: 0.1 | event.sv.SIMPLE_DUP_32B_200B=2.0: 0.0 | event.tmb.indels_per_mb=0.33: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=300.0: 0.3 | event.tmb.snv_count=25000.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
-Gyn_7	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3669434128965285	0.36168225565461193	0.27137433144885964			
-Gyn_7	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3669434128965285	0.36168225565461193	0.27137433144885964			
-Pro_7	Prostate	combined	combined											
-Pro_7	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.6256946396440611	0.23867702257395332	0.13562833778198546			
-Pro_7	Prostate	rna	rna_combined											
-Pro_7	Prostate	dna	gen_pos	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.3276099047741119	0.2925570064638171	0.20896066260566074			
-Pro_7	Prostate	dna	snv96	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.6438737977142246	0.1261327325843658	0.11970716058698862			
-Pro_7	Prostate	dna	event	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.31706865939819373	0.3025954574344864	0.2735530029268468	event.sv.MAX_COMPLEX_SIZE=53.0: 0.3 | event.tmb.snv_count=3600.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.sv.SIMPLE_DUP_32B_200B=8.0: 0.2 | event.tmb.indels_per_mb=0.12: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.12: 0.0 | event.tmb.snv_count=3600.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
-Pro_7	Prostate	rna	gene_exp											
-Pro_7	Prostate	rna	alt_sj											
-Ski_7	Skin: Other	combined	combined	False	2.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.6597941743261251	0.3399749654232285	0.00023086025064646804			
-Ski_7	Skin: Other	dna	dna_combined	False	2.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.5715961690923681	0.2945288021400057	0.13387502876762625			
-Ski_7	Skin: Other	rna	rna_combined	True	1.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
-Ski_7	Skin: Other	dna	gen_pos	False	2.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.3441316370732288	0.3197314675879797	0.24748848018823374			
-Ski_7	Skin: Other	dna	snv96	False	3.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.6440360582520561	0.30995010282182117	0.040467026433725614			
-Ski_7	Skin: Other	dna	event	False	2.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.4101496220121352	0.298725535700242	0.27551782912256195	event.sv.MAX_COMPLEX_SIZE=120.0: 0.5 | event.tmb.indels_per_mb=0.2: 0.1 | event.tmb.snv_count=26000.0: 0.0	event.tmb.snv_count=26000.0: 0.1 | event.sv.SIMPLE_DUP_32B_200B=5.0: 0.1 | event.tmb.indels_per_mb=0.2: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=16.0: 0.1 | event.tmb.indels_per_mb=0.2: 0.0 | event.tmb.snv_count=26000.0: 0.0
-Ski_7	Skin: Other	rna	gene_exp	False	3.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3669434128965285	0.36168225565461193	0.27137433144885964			
-Ski_7	Skin: Other	rna	alt_sj	False	3.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3669434128965285	0.36168225565461193	0.27137433144885964			
-Mye_9	Myeloid: Acute myeloid leukemia	combined	combined											
-Mye_9	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.9960124802528293	0.0025387584602631504	0.0014487612869076107			
-Mye_9	Myeloid: Acute myeloid leukemia	rna	rna_combined											
-Mye_9	Myeloid: Acute myeloid leukemia	dna	gen_pos	False	3.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.2754502957967018	0.26212541329257577	0.24925940801519628			
-Mye_9	Myeloid: Acute myeloid leukemia	dna	snv96	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.7172418944100166	0.10984374681639854	0.0928079887098557			
-Mye_9	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.6604054265492048	0.1545145905287332	0.11482797216898341	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.4 | event.sv.SIMPLE_DUP_32B_200B=0.0: 0.5 | event.tmb.indels_per_mb=0.0007: 0.0	event.tmb.indels_per_mb=0.0007: 0.0 | event.tmb.snv_count=180.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.sv.MAX_COMPLEX_SIZE=2.0: 0.0 | event.tmb.indels_per_mb=0.0007: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
-Mye_9	Myeloid: Acute myeloid leukemia	rna	gene_exp											
-Mye_9	Myeloid: Acute myeloid leukemia	rna	alt_sj											
-Gyn_8	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.892861624442569	0.10692779320393353	0.00021058235349750886			
-Gyn_8	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.8479928252422455	0.10155437189108864	0.05045280286666586			
-Gyn_8	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
-Gyn_8	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.40873312004708534	0.3264635190263306	0.15735300709458783			
-Gyn_8	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.838773922800859	0.11987136275676173	0.02936679932336848			
-Gyn_8	Gynecologic: Ovary/Fallopian tube	dna	event	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.37003580050199875	0.349067176395821	0.22703130902231816	event.sv.SIMPLE_DUP_100KB_5MB=19.0: 0.1 | event.tmb.indels_per_mb=0.054: 0.0 | event.tmb.snv_count=9300.0: 0.0	event.sv.SIMPLE_DUP_32B_200B=3.0: 0.1 | event.tmb.snv_count=9300.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=14.0: 0.0	event.tmb.snv_count=9300.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0 | event.sv.SIMPLE_DUP_100KB_5MB=19.0: 0.0
-Gyn_8	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3669434128965285	0.36168225565461193	0.27137433144885964			
-Gyn_8	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3669434128965285	0.36168225565461193	0.27137433144885964			
-Pro_6	Prostate	combined	combined											
-Pro_6	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.6356232447770299	0.2713184253731265	0.09305832984984364			
-Pro_6	Prostate	rna	rna_combined											
-Pro_6	Prostate	dna	gen_pos	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.3698594931063685	0.3106807982509611	0.18984083269555166			
-Pro_6	Prostate	dna	snv96	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.6252189940423473	0.27465954539521514	0.08769724459674474			
-Pro_6	Prostate	dna	event	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.39609166140005314	0.30489528641880986	0.2785637578874951	event.sv.SIMPLE_DUP_32B_200B=12.0: 0.6 | event.tmb.snv_count=7600.0: 0.0 | event.tmb.indels_per_mb=0.26: 0.0	event.sv.MAX_COMPLEX_SIZE=47.0: 0.3 | event.tmb.indels_per_mb=0.26: 0.1 | event.tmb.snv_count=7600.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=31.0: 0.2 | event.tmb.indels_per_mb=0.26: 0.0 | event.tmb.snv_count=7600.0: 0.0
-Pro_6	Prostate	rna	gene_exp											
-Pro_6	Prostate	rna	alt_sj											
-Mye_8	Myeloid: Acute myeloid leukemia	combined	combined											
-Mye_8	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.761894835437521	0.1515383797451143	0.08656678481736464			
-Mye_8	Myeloid: Acute myeloid leukemia	rna	rna_combined											
-Mye_8	Myeloid: Acute myeloid leukemia	dna	gen_pos	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.27327911729254833	0.26956393458425243	0.25489516002355256			
-Mye_8	Myeloid: Acute myeloid leukemia	dna	snv96	True	1.0	Myeloid: Acute myeloid leukemia	Prostate	Skin: Other	0.7934573641515613	0.08470764583919471	0.06901503186846257			
-Mye_8	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.6711188884002061	0.1438554264187657	0.1031403090047507	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.4 | event.sv.SIMPLE_DUP_32B_200B=0.0: 0.6 | event.tmb.indels_per_mb=0.0091: 0.0	event.tmb.indels_per_mb=0.0091: 0.0 | event.tmb.snv_count=1500.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.0091: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=2.0: 0.0
-Mye_8	Myeloid: Acute myeloid leukemia	rna	gene_exp											
-Mye_8	Myeloid: Acute myeloid leukemia	rna	alt_sj											
-Gyn_5	Gynecologic: Ovary/Fallopian tube	combined	combined											
-Gyn_5	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.8136009650093899	0.1338557400192086	0.052543294971401505			
-Gyn_5	Gynecologic: Ovary/Fallopian tube	rna	rna_combined											
-Gyn_5	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.4544324253907256	0.3081130286151227	0.13528845522032418			
-Gyn_5	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.5754931048827865	0.3515930082932005	0.069776326187724			
-Gyn_5	Gynecologic: Ovary/Fallopian tube	dna	event	False	3.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.3843126122583504	0.29787130452430943	0.27966907020661125	event.sv.MAX_COMPLEX_SIZE=140.0: 0.6 | event.tmb.snv_count=13000.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.sv.SIMPLE_DUP_32B_200B=4.0: 0.3 | event.tmb.snv_count=13000.0: 0.0 | event.tmb.indels_per_mb=0.096: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=30.0: 0.2 | event.tmb.indels_per_mb=0.096: 0.0 | event.tmb.snv_count=13000.0: 0.0
-Gyn_5	Gynecologic: Ovary/Fallopian tube	rna	gene_exp											
-Gyn_5	Gynecologic: Ovary/Fallopian tube	rna	alt_sj											
-Gyn_12	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8047154946263114	0.1950693176511455	0.0002151877225432263			
-Gyn_12	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.7479195235821713	0.1813015309104919	0.07077894550733688			
-Gyn_12	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
-Gyn_12	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.36895374560182315	0.27107581878370096	0.23013160912769			
-Gyn_12	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.5724757878032124	0.3412653413599615	0.0695823033095042			
-Gyn_12	Gynecologic: Ovary/Fallopian tube	dna	event	False	3.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.3296425906606167	0.3025966180232639	0.2982301631241662	event.sv.SIMPLE_DUP_32B_200B=3.0: 0.2 | event.tmb.snv_count=6700.0: 0.0 | event.tmb.indels_per_mb=0.057: 0.0	event.sv.MAX_COMPLEX_SIZE=33.0: 0.2 | event.tmb.snv_count=6700.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=6.0: 0.0 | event.tmb.indels_per_mb=0.057: 0.0 | event.tmb.snv_count=6700.0: 0.0
-Gyn_12	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.8508659209455863	0.08213545626441494	0.06699862278999888			
-Gyn_12	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.8508659209455863	0.08213545626441494	0.06699862278999888			
-Pro_3	Prostate	combined	combined											
-Pro_3	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.7362861827059533	0.1778712028601792	0.08584261443386755			
-Pro_3	Prostate	rna	rna_combined											
-Pro_3	Prostate	dna	gen_pos	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.36004207441982233	0.30123292950344205	0.18554082493643087			
-Pro_3	Prostate	dna	snv96	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Myeloid: Acute myeloid leukemia	0.8216869774796081	0.08698381868918391	0.05333206795063769			
-Pro_3	Prostate	dna	event	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.37794349466545907	0.31659734671584305	0.24123574530539765	event.sv.SIMPLE_DUP_32B_200B=8.0: 0.2 | event.tmb.indels_per_mb=0.25: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.25: 0.1 | event.sv.MAX_COMPLEX_SIZE=22.0: 0.0 | event.tmb.snv_count=4200.0: 0.0	event.tmb.snv_count=4200.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=22.0: 0.0
-Pro_3	Prostate	rna	gene_exp											
-Pro_3	Prostate	rna	alt_sj											
-Mye_7	Myeloid: Acute myeloid leukemia	combined	combined											
-Mye_7	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.8090266134181993	0.19097338658180066	0.0			
-Mye_7	Myeloid: Acute myeloid leukemia	rna	rna_combined											
-Mye_7	Myeloid: Acute myeloid leukemia	dna	gen_pos	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.3131867112644883	0.25272773407961974	0.22737292032721002			
-Mye_7	Myeloid: Acute myeloid leukemia	dna	snv96	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.7847236413386761	0.09076214064444509	0.0793810470987653			
-Mye_7	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.5800605335645531	0.16889953011491454	0.1601982649033732	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.6 | event.sv.SIMPLE_DUP_32B_200B=1.0: 0.2 | event.tmb.indels_per_mb=0.0024: 0.0	event.tmb.indels_per_mb=0.0024: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=2.0: 0.0	event.tmb.indels_per_mb=0.0024: 0.2 | event.tmb.snv_count=720.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
-Mye_7	Myeloid: Acute myeloid leukemia	rna	gene_exp											
-Mye_7	Myeloid: Acute myeloid leukemia	rna	alt_sj											
-Gyn_3	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.7416250847602229	0.25810319878195265	0.00027171645782435175			
-Gyn_3	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Myeloid: Acute myeloid leukemia	Skin: Other	0.5458816081281603	0.26413858656405753	0.18997980530778208			
-Gyn_3	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
-Gyn_3	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.31521441899399	0.3094492906156354	0.1897090529881154			
-Gyn_3	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Myeloid: Acute myeloid leukemia	Prostate	0.3141424057646103	0.29119420924491884	0.24668723712474236			
-Gyn_3	Gynecologic: Ovary/Fallopian tube	dna	event	False	3.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.5912863174240498	0.17250337899119464	0.15032085241024476	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.6 | event.sv.SIMPLE_DUP_32B_200B=1.0: 0.2 | event.tmb.indels_per_mb=0.041: 0.0	event.tmb.indels_per_mb=0.041: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=1.0: 0.0	event.tmb.indels_per_mb=0.041: 0.2 | event.tmb.snv_count=2900.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
-Gyn_3	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.8508659209455863	0.08213545626441494	0.06699862278999888			
-Gyn_3	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.8508659209455863	0.08213545626441494	0.06699862278999888			
-Gyn_6	Gynecologic: Ovary/Fallopian tube	combined	combined											
-Gyn_6	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.8005716011603072	0.15190636980759722	0.0475220290320955			
-Gyn_6	Gynecologic: Ovary/Fallopian tube	rna	rna_combined											
-Gyn_6	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.445024935894781	0.31735614595875955	0.15712242425711884			
-Gyn_6	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.7893964669716429	0.15375033704238117	0.05600905777769741			
-Gyn_6	Gynecologic: Ovary/Fallopian tube	dna	event	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.34682088547847273	0.32162865925991774	0.3011553903648131	event.sv.SIMPLE_DUP_32B_200B=2.0: 0.0 | event.tmb.snv_count=28000.0: 0.0 | event.tmb.indels_per_mb=0.3: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=25.0: 0.2 | event.tmb.snv_count=28000.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.3: 0.1 | event.tmb.snv_count=28000.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
-Gyn_6	Gynecologic: Ovary/Fallopian tube	rna	gene_exp											
-Gyn_6	Gynecologic: Ovary/Fallopian tube	rna	alt_sj											
+sample_id	actual_class	clf_group	clf_name	is_correct_pred	which_correct_pred	pred_class_1	pred_class_2	pred_class_3	pred_prob_1	pred_prob_2	pred_prob_3
+0_Breast	Breast	combined	combined	True	1	Breast	Melanoma	Lung	0.6241034904600785	0.36602537881103087	0.009577523518901338
+0_Breast	Breast	dna	dna_combined	True	1	Breast	Lung	Melanoma	0.42351445828135326	0.3262019185174232	0.2502836232012235
+0_Breast	Breast	rna	rna_combined	True	1	Breast	Melanoma	Prostate	0.5019051524876124	0.4980948475123876	0.0
+0_Breast	Breast	dna	gen_pos	True	1	Breast	Prostate	AML	0.5382703086881141	0.15162829697894778	0.1502986881789936
+0_Breast	Breast	dna	snv96	False	2	Prostate	Breast	Lung	0.3160651862030227	0.27765814493717156	0.25816200744079665
+0_Breast	Breast	dna	event	True	1	Breast	Prostate	Lung	0.35939732033036764	0.29910436827553893	0.1900508723267104
+0_Breast	Breast	rna	gene_exp	False	2	Melanoma	Breast	Lung	0.8436880069470927	0.07198027027380001	0.05647585398620042
+0_Breast	Breast	rna	alt_sj	True	1	Breast	Prostate	Lung	0.466866679897489	0.3322822046894411	0.12681932870505422
+1_Breast	Breast	combined	combined	True	1	Breast	Lung	Prostate	0.7286951948251594	0.2709250974916433	0.00018985384159863223
+1_Breast	Breast	dna	dna_combined	True	1	Breast	Lung	Prostate	0.5848671106567769	0.4151328893432231	0.0
+1_Breast	Breast	rna	rna_combined	True	1	Breast	Lung	Prostate	0.6562500000000001	0.3437499999999999	0.0
+1_Breast	Breast	dna	gen_pos	True	1	Breast	AML	Prostate	0.5738173405976779	0.13985221678343907	0.11692650714423643
+1_Breast	Breast	dna	snv96	True	1	Breast	Lung	Prostate	0.5562857182156224	0.27967722045439175	0.08680804018272083
+1_Breast	Breast	dna	event	False	2	Prostate	Breast	Lung	0.3410684293992442	0.33595831077034566	0.2388578571223377
+1_Breast	Breast	rna	gene_exp	False	2	Lung	Breast	Melanoma	0.5926899581895949	0.2874674259248538	0.06258538703800684
+1_Breast	Breast	rna	alt_sj	True	1	Breast	Prostate	Lung	0.822360839277208	0.15271734933593512	0.019860284712410966
+2_Breast	Breast	combined	combined	True	1	Breast	Prostate	Melanoma	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+2_Breast	Breast	dna	dna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+2_Breast	Breast	rna	rna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+2_Breast	Breast	dna	gen_pos	True	1	Breast	AML	Prostate	0.5937961476523422	0.14769600813796913	0.13740956147730662
+2_Breast	Breast	dna	snv96	True	1	Breast	Lung	Melanoma	0.9817073406283402	0.010277694197458408	0.007402705929245155
+2_Breast	Breast	dna	event	True	1	Breast	Prostate	Lung	0.43587540930712276	0.35829489626264166	0.1476473185154191
+2_Breast	Breast	rna	gene_exp	True	1	Breast	Lung	Prostate	0.8403017895108027	0.09975224032583527	0.05978491779961494
+2_Breast	Breast	rna	alt_sj	True	1	Breast	Prostate	Lung	0.7720457872903482	0.1887575835254605	0.03477312287356507
+26_Prostate	Prostate	combined	combined	True	1	Prostate	Lung	Breast	0.9910188316554217	0.007979332589918968	0.0008147926194006228
+26_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Lung	Breast	0.5298343776608205	0.4266038728917317	0.04356174944744774
+26_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+26_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	Lung	0.5527295030040974	0.20218717921380144	0.12167916608445066
+26_Prostate	Prostate	dna	snv96	True	1	Prostate	Lung	Breast	0.728666500008124	0.14666616080012357	0.09176308551759496
+26_Prostate	Prostate	dna	event	False	3	Lung	Breast	Prostate	0.4134975595221698	0.26519020345176875	0.25031026849740295
+26_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Breast	Lung	0.9579763437762739	0.021803197588968662	0.020096456370900788
+26_Prostate	Prostate	rna	alt_sj	False	3	Lung	Breast	Prostate	0.3761683028620312	0.30963048056669634	0.30958483985649826
+27_Prostate	Prostate	combined	combined	True	1	Prostate	Melanoma	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+27_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+27_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+27_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	Lung	0.6049558634807009	0.13944365692879868	0.09398454268348888
+27_Prostate	Prostate	dna	snv96	True	1	Prostate	Breast	Lung	0.8114741756756312	0.09670307458883999	0.052149639808881994
+27_Prostate	Prostate	dna	event	True	1	Prostate	Breast	Lung	0.3499630468242155	0.32574821731703574	0.20533421312317587
+27_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Lung	Breast	0.9353531879475286	0.03544408891509147	0.029031489202802404
+27_Prostate	Prostate	rna	alt_sj	False	3	Lung	Breast	Prostate	0.3761683028620312	0.30963048056669634	0.30958483985649826
+48_Melanoma	Melanoma	combined	combined	True	1	Melanoma	Prostate	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+48_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+48_Melanoma	Melanoma	rna	rna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+48_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	Prostate	Breast	0.8760099146062018	0.03978675526322647	0.03943757400205556
+48_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	Breast	Lung	0.9813392606281219	0.008061745778324133	0.0063014550792892775
+48_Melanoma	Melanoma	dna	event	True	1	Melanoma	Breast	Prostate	0.9898648211129442	0.005235370842146735	0.003710598114814377
+48_Melanoma	Melanoma	rna	gene_exp	True	1	Melanoma	Breast	Lung	0.9572915895284935	0.01881056267486663	0.014393023633004683
+48_Melanoma	Melanoma	rna	alt_sj	True	1	Melanoma	Breast	Prostate	0.9918402005800324	0.00327865711554654	0.0030266965032650513
+49_Melanoma	Melanoma	combined	combined	True	1	Melanoma	Prostate	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+49_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+49_Melanoma	Melanoma	rna	rna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+49_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	Prostate	Lung	0.8459704228672755	0.06199566008645121	0.03839802131024565
+49_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	Breast	Lung	0.9923698893363903	0.004105302068775915	0.002042342134881951
+49_Melanoma	Melanoma	dna	event	True	1	Melanoma	Prostate	Breast	0.8947614359029736	0.043462424679766305	0.036983095370785625
+49_Melanoma	Melanoma	rna	gene_exp	True	1	Melanoma	Breast	Lung	0.9561803860630885	0.0182883131738913	0.015155482885889719
+49_Melanoma	Melanoma	rna	alt_sj	True	1	Melanoma	Prostate	Breast	0.9230237001994511	0.04364397159796657	0.024186656761936008
+66_Lung	Lung	combined	combined	True	1	Lung	Breast	Prostate	0.5483801022309653	0.45119989936676597	0.0002099992011343971
+66_Lung	Lung	dna	dna_combined	True	1	Lung	Breast	Prostate	0.6351169523852476	0.3648830476147525	0.0
+66_Lung	Lung	rna	rna_combined	False	2	Breast	Lung	Prostate	0.5888404892657497	0.41115951073425033	0.0
+66_Lung	Lung	dna	gen_pos	True	1	Lung	Breast	Prostate	0.4371931165911916	0.26837681789340484	0.15299287458641858
+66_Lung	Lung	dna	snv96	True	1	Lung	Breast	Prostate	0.39049524365614957	0.32010371564638496	0.2501946835437392
+66_Lung	Lung	dna	event	True	1	Lung	Breast	Prostate	0.9461436061066139	0.029837944887798677	0.0205162494836233
+66_Lung	Lung	rna	gene_exp	True	1	Lung	Breast	Prostate	0.5759250122896609	0.3960233258533138	0.02660399999292325
+66_Lung	Lung	rna	alt_sj	True	1	Lung	Breast	Prostate	0.3761683028620312	0.30963048056669634	0.30958483985649826
+80_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Breast	Melanoma	0.6047318072483406	0.39526819275165936	0.0
+80_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	Melanoma	0.5935370074632996	0.1910115178921036	0.08034566472544308
+80_Prostate	Prostate	dna	snv96	True	1	Prostate	Breast	Lung	0.6359101606380605	0.24555741545170892	0.08575236364611998
+80_Prostate	Prostate	dna	event	True	1	Prostate	Breast	Lung	0.4633613271513109	0.3202517687371278	0.1673197496213274
+86_AML	AML	dna	dna_combined	True	1	AML	Prostate	Melanoma	1.0	0.0	0.0
+86_AML	AML	dna	gen_pos	True	1	AML	Breast	Lung	0.28234593472861	0.19264799371768734	0.18253158508120293
+86_AML	AML	dna	snv96	True	1	AML	Breast	Melanoma	0.9090849343345374	0.0438898178515714	0.023368476085114945
+86_AML	AML	dna	event	True	1	AML	Prostate	Breast	0.88483577270061	0.0572731204424181	0.036489931932640114
+3_Breast	Breast	combined	combined	True	1	Breast	Prostate	Melanoma	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+3_Breast	Breast	dna	dna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+3_Breast	Breast	rna	rna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+3_Breast	Breast	dna	gen_pos	True	1	Breast	Prostate	Melanoma	0.604756320415449	0.15987714661169267	0.08657931210991643
+3_Breast	Breast	dna	snv96	True	1	Breast	Lung	Melanoma	0.9051563918811123	0.07956704854730383	0.011342175581440917
+3_Breast	Breast	dna	event	True	1	Breast	Prostate	Lung	0.48974231683323627	0.35068653271900446	0.1025090303889846
+3_Breast	Breast	rna	gene_exp	False	3	Prostate	Lung	Breast	0.8412857408202864	0.08078923611666984	0.07787709461533947
+3_Breast	Breast	rna	alt_sj	True	1	Breast	Prostate	Lung	0.8200643270008736	0.14823640463095153	0.028867580433475135
+4_Breast	Breast	combined	combined	True	1	Breast	Prostate	Melanoma	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+4_Breast	Breast	dna	dna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+4_Breast	Breast	rna	rna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+4_Breast	Breast	dna	gen_pos	True	1	Breast	Prostate	Melanoma	0.5121511878621515	0.29647473835953486	0.08009077063523093
+4_Breast	Breast	dna	snv96	True	1	Breast	Lung	Melanoma	0.9754991672848029	0.022010221120004073	0.0024749064198529534
+4_Breast	Breast	dna	event	True	1	Breast	Prostate	Lung	0.3520341429440824	0.34763205464761304	0.24280874771143948
+4_Breast	Breast	rna	gene_exp	True	1	Breast	Lung	Prostate	0.7654395970146395	0.1864707638487898	0.0479263977033941
+4_Breast	Breast	rna	alt_sj	False	3	Lung	Prostate	Breast	0.39419337636306984	0.32593762591127173	0.2764341403942677
+5_Breast	Breast	combined	combined	True	1	Breast	Lung	Melanoma	0.9823422611655547	0.013476361653572067	0.003909286473486116
+5_Breast	Breast	dna	dna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+5_Breast	Breast	rna	rna_combined	False	2	Lung	Breast	Melanoma	0.49528930197522586	0.361034844077881	0.14367585394689308
+5_Breast	Breast	dna	gen_pos	True	1	Breast	Prostate	Melanoma	0.5603394897175833	0.1798608578334238	0.09504850674409396
+5_Breast	Breast	dna	snv96	True	1	Breast	Lung	Melanoma	0.9442222481943209	0.05171116130028381	0.0039443427045154425
+5_Breast	Breast	dna	event	False	2	Prostate	Breast	Lung	0.44337254823299077	0.37252986004991395	0.11302249460476171
+5_Breast	Breast	rna	gene_exp	False	2	Lung	Breast	Melanoma	0.41474335666573	0.38552228733174587	0.16546038111295017
+5_Breast	Breast	rna	alt_sj	False	3	Lung	Prostate	Breast	0.39419337636306984	0.32593762591127173	0.2764341403942677
+28_Prostate	Prostate	combined	combined	True	1	Prostate	Lung	Breast	0.9845378367651272	0.008197524772091456	0.006525016062258666
+28_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Lung	Breast	0.38902942538951674	0.3239162815906952	0.2578289177486864
+28_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+28_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	Lung	0.5405273208734215	0.1669303923460128	0.10584790315363757
+28_Prostate	Prostate	dna	snv96	True	1	Prostate	Breast	Lung	0.5939954854517043	0.20534883297938958	0.14348030980417706
+28_Prostate	Prostate	dna	event	False	3	Breast	Lung	Prostate	0.40843766462115905	0.31902072512126434	0.2364608442978065
+28_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Lung	Breast	0.9464443076919119	0.031198697840734865	0.022335010102769896
+28_Prostate	Prostate	rna	alt_sj	False	2	Lung	Prostate	Breast	0.39419337636306984	0.32593762591127173	0.2764341403942677
+29_Prostate	Prostate	combined	combined	True	1	Prostate	Breast	Melanoma	0.994998294574827	0.004708535064958838	0.00014658518010707107
+29_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Breast	Melanoma	0.6787850544291344	0.32121494557086566	0.0
+29_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+29_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	AML	0.5547324515517231	0.15035326758174028	0.11174101920818605
+29_Prostate	Prostate	dna	snv96	True	1	Prostate	Breast	Lung	0.7011718869424601	0.20150129213461712	0.06110082842038364
+29_Prostate	Prostate	dna	event	False	2	Breast	Prostate	Lung	0.5103484310205507	0.27795525111511915	0.14627673941166872
+29_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Lung	Breast	0.9500852400864407	0.028981477821883907	0.02091286700376939
+29_Prostate	Prostate	rna	alt_sj	True	1	Prostate	Breast	Lung	0.6972037165796734	0.19589386319338378	0.09514885723074246
+50_Melanoma	Melanoma	combined	combined	True	1	Melanoma	Breast	Prostate	0.9980605001398962	0.0017057723137998673	0.0001168637731519883
+50_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Breast	Prostate	0.854037545785775	0.14596245421422505	0.0
+50_Melanoma	Melanoma	rna	rna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+50_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	Prostate	Lung	0.7000499577857092	0.13622047997063988	0.07174320657856155
+50_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	Breast	Lung	0.9590894650583464	0.01331251562416069	0.012877356926523828
+50_Melanoma	Melanoma	dna	event	False	4	Breast	Prostate	Lung	0.45442311529583224	0.3286383939133343	0.10685466741014386
+50_Melanoma	Melanoma	rna	gene_exp	True	1	Melanoma	Breast	Lung	0.9477406714477421	0.03043614517716543	0.019482157958832416
+50_Melanoma	Melanoma	rna	alt_sj	True	1	Melanoma	Prostate	Breast	0.9885143942719001	0.00478297155749664	0.0038927631344832674
+51_Melanoma	Melanoma	combined	combined	True	1	Melanoma	Prostate	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+51_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+51_Melanoma	Melanoma	rna	rna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+51_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	Prostate	AML	0.9062924824986387	0.027573362108790373	0.025121681128409148
+51_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	Breast	AML	0.978324941435886	0.010486588467855024	0.005818573205582483
+51_Melanoma	Melanoma	dna	event	True	1	Melanoma	AML	Prostate	0.9064979372330503	0.03589813956493263	0.034941094811155815
+51_Melanoma	Melanoma	rna	gene_exp	True	1	Melanoma	Lung	Breast	0.951954870032162	0.023158621451904282	0.021530790801808048
+51_Melanoma	Melanoma	rna	alt_sj	True	1	Melanoma	Prostate	Breast	0.9915568067224257	0.003235049708204534	0.002821335361834398
+67_Lung	Lung	combined	combined	True	1	Lung	Breast	Prostate	0.9924226935401929	0.007234139138332452	0.00017158366073734383
+67_Lung	Lung	dna	dna_combined	True	1	Lung	Prostate	Melanoma	1.0	0.0	0.0
+67_Lung	Lung	rna	rna_combined	True	1	Lung	Breast	Prostate	0.5783899756395627	0.42161002436043726	0.0
+67_Lung	Lung	dna	gen_pos	True	1	Lung	Prostate	Melanoma	0.9087404865319894	0.03182224604694977	0.022374782159013253
+67_Lung	Lung	dna	snv96	True	1	Lung	Prostate	Breast	0.9932449477437022	0.0041860503304533316	0.002140769531493104
+67_Lung	Lung	dna	event	False	3	Prostate	Breast	Lung	0.38032780735519495	0.35560627986375665	0.18216551974735232
+67_Lung	Lung	rna	gene_exp	True	1	Lung	Breast	Prostate	0.5586816283471105	0.3714117558688708	0.058844063420924214
+67_Lung	Lung	rna	alt_sj	True	1	Lung	Prostate	Breast	0.39419337636306984	0.32593762591127173	0.2764341403942677
+81_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+81_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	Lung	0.6285939863603835	0.12371468499483805	0.11954141237768551
+81_Prostate	Prostate	dna	snv96	True	1	Prostate	Breast	Lung	0.7498802448714853	0.12015121006689075	0.11173102097099624
+81_Prostate	Prostate	dna	event	False	2	Breast	Prostate	Lung	0.4198034792989473	0.3951759672360297	0.11238403848398357
+87_AML	AML	dna	dna_combined	True	1	AML	Breast	Melanoma	0.43690391492645486	0.34861847572441534	0.2144776093491298
+87_AML	AML	dna	gen_pos	False	3	Breast	Prostate	AML	0.2589715313361883	0.21991031403140593	0.20517747793793867
+87_AML	AML	dna	snv96	True	1	AML	Breast	Melanoma	0.6595500822828592	0.20329098680577168	0.07005471207660875
+87_AML	AML	dna	event	True	1	AML	Prostate	Breast	0.8821788229799242	0.05273454101142271	0.03501796231312386
+6_Breast	Breast	combined	combined	True	1	Breast	Lung	Melanoma	0.5464860728820502	0.4476470675631334	0.0056120565036607215
+6_Breast	Breast	dna	dna_combined	True	1	Breast	Lung	Melanoma	0.39296345153625745	0.3867857909391574	0.22025075752458523
+6_Breast	Breast	rna	rna_combined	True	1	Breast	Lung	Prostate	0.5457859035540189	0.4542140964459811	0.0
+6_Breast	Breast	dna	gen_pos	True	1	Breast	Prostate	Melanoma	0.3475068506687497	0.2918494415273317	0.1578346723739041
+6_Breast	Breast	dna	snv96	False	3	Prostate	Lung	Breast	0.6748929305259689	0.20655658959844372	0.11518265178802094
+6_Breast	Breast	dna	event	False	2	Prostate	Breast	Lung	0.4160567447953938	0.39178692890306915	0.1400248975016518
+6_Breast	Breast	rna	gene_exp	True	1	Breast	Lung	Prostate	0.5575796995411264	0.35709416787965825	0.08447612990958314
+6_Breast	Breast	rna	alt_sj	False	3	Lung	Prostate	Breast	0.40130509578125684	0.30588026078254194	0.2888832594651876
+7_Breast	Breast	combined	combined	True	1	Breast	Prostate	Melanoma	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+7_Breast	Breast	dna	dna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+7_Breast	Breast	rna	rna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+7_Breast	Breast	dna	gen_pos	True	1	Breast	Prostate	AML	0.6428123766036292	0.12813607465791288	0.10822121307082902
+7_Breast	Breast	dna	snv96	True	1	Breast	Prostate	Lung	0.5419988921300363	0.29020793912778525	0.09312632411074954
+7_Breast	Breast	dna	event	True	1	Breast	Prostate	Lung	0.4421978085885936	0.34899519306935906	0.16010817723111034
+7_Breast	Breast	rna	gene_exp	True	1	Breast	Lung	Prostate	0.6797736834218663	0.3095349193771679	0.010345294851443563
+7_Breast	Breast	rna	alt_sj	True	1	Breast	Prostate	Lung	0.8245464562776491	0.14546775533746675	0.027462731679126922
+8_Breast	Breast	combined	combined	True	1	Breast	Lung	Prostate	0.9978214232259567	0.0019402083229393603	0.00011918422555198927
+8_Breast	Breast	dna	dna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+8_Breast	Breast	rna	rna_combined	True	1	Breast	Lung	Prostate	0.8372093023255814	0.16279069767441862	0.0
+8_Breast	Breast	dna	gen_pos	True	1	Breast	Prostate	Melanoma	0.5264837615736977	0.28977747960761036	0.0688609657030208
+8_Breast	Breast	dna	snv96	True	1	Breast	Lung	Melanoma	0.9442094042677266	0.04704804715179649	0.005946961898276841
+8_Breast	Breast	dna	event	True	1	Breast	Prostate	Lung	0.43204789919493664	0.3267929281108026	0.18593040709509956
+8_Breast	Breast	rna	gene_exp	True	1	Breast	Lung	Prostate	0.7242921355569371	0.2706333694159522	0.004350939285986399
+8_Breast	Breast	rna	alt_sj	False	3	Lung	Prostate	Breast	0.40130509578125684	0.30588026078254194	0.2888832594651876
+30_Prostate	Prostate	combined	combined	True	1	Prostate	Melanoma	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+30_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+30_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+30_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Lung	AML	0.5844580985336494	0.20910924211358511	0.0717375027896599
+30_Prostate	Prostate	dna	snv96	True	1	Prostate	Lung	Breast	0.8869682800434483	0.08026706230895085	0.02801315415727642
+30_Prostate	Prostate	dna	event	False	2	Breast	Prostate	Lung	0.35316492256260995	0.347223739557201	0.23479494673886342
+30_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Lung	Breast	0.9598972603737127	0.02913532219674513	0.010930969809228816
+30_Prostate	Prostate	rna	alt_sj	False	2	Lung	Prostate	Breast	0.40130509578125684	0.30588026078254194	0.2888832594651876
+31_Prostate	Prostate	combined	combined	True	1	Prostate	Melanoma	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+31_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+31_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+31_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	Lung	0.6963473445927528	0.10875650284030258	0.06619830411725995
+31_Prostate	Prostate	dna	snv96	True	1	Prostate	Lung	Breast	0.8540378099358961	0.07135070049535641	0.060945947232476795
+31_Prostate	Prostate	dna	event	True	1	Prostate	Breast	Lung	0.4724266581760504	0.3451161088428084	0.13157130131882963
+31_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Lung	Breast	0.9649213728069471	0.025444726358336535	0.009601493013561106
+31_Prostate	Prostate	rna	alt_sj	False	2	Lung	Prostate	Breast	0.40130509578125684	0.30588026078254194	0.2888832594651876
+52_Melanoma	Melanoma	combined	combined	True	1	Melanoma	Breast	Prostate	0.9908242981206625	0.008801506882071885	0.0001870974986327851
+52_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+52_Melanoma	Melanoma	rna	rna_combined	True	1	Melanoma	Breast	Prostate	0.52957645364642	0.47042354635358	0.0
+52_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	Breast	Prostate	0.6899158321412837	0.131841106048621	0.06827861546029758
+52_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	Breast	AML	0.9662951857002929	0.018971441000555984	0.006195536913621808
+52_Melanoma	Melanoma	dna	event	True	1	Melanoma	Prostate	Breast	0.9071013463437871	0.04078411354910358	0.03300044215822612
+52_Melanoma	Melanoma	rna	gene_exp	False	2	Breast	Melanoma	Lung	0.5286916447525575	0.34702691960302146	0.11710806309524725
+52_Melanoma	Melanoma	rna	alt_sj	True	1	Melanoma	Prostate	Breast	0.6919949448884932	0.20983163097349655	0.08475846152417715
+53_Melanoma	Melanoma	combined	combined	True	1	Melanoma	Breast	Lung	0.9396997314953426	0.04269414750005921	0.011060265835535462
+53_Melanoma	Melanoma	dna	dna_combined	False	3	Lung	Breast	Melanoma	0.2862277029188381	0.27907203560774196	0.2532089483823144
+53_Melanoma	Melanoma	rna	rna_combined	True	1	Melanoma	Breast	Prostate	0.9604088491920968	0.03959115080790329	0.0
+53_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	AML	Prostate	0.3209651368970206	0.2079561563644651	0.19386249891029295
+53_Melanoma	Melanoma	dna	snv96	False	5	Breast	Prostate	AML	0.3312688028019535	0.29973009152730895	0.16535693214123284
+53_Melanoma	Melanoma	dna	event	True	1	Melanoma	Breast	Prostate	0.8805317665833254	0.040068672934209876	0.038734098366793444
+53_Melanoma	Melanoma	rna	gene_exp	True	1	Melanoma	Breast	Lung	0.9121003740425101	0.050690096949829455	0.027257325829950864
+53_Melanoma	Melanoma	rna	alt_sj	True	1	Melanoma	Breast	Prostate	0.7128960659923603	0.11527206708512461	0.09508932903945794
+68_Lung	Lung	combined	combined	False	2	Breast	Lung	Melanoma	0.536942120769642	0.45118525922691805	0.006433525967400522
+68_Lung	Lung	dna	dna_combined	True	1	Lung	Breast	Melanoma	0.33447407972838894	0.2926250690209156	0.2020672192904361
+68_Lung	Lung	rna	rna_combined	False	2	Breast	Lung	Prostate	0.5763187530593136	0.4236812469406865	0.0
+68_Lung	Lung	dna	gen_pos	False	2	Prostate	Lung	Breast	0.429883536705036	0.2121052542666796	0.1787228624855295
+68_Lung	Lung	dna	snv96	True	1	Lung	Breast	Melanoma	0.5978790483083343	0.3892379460436584	0.007486998711260018
+68_Lung	Lung	dna	event	True	1	Lung	Breast	Prostate	0.5121928609251192	0.23302615520058254	0.22680367015120081
+68_Lung	Lung	rna	gene_exp	False	2	Breast	Lung	Prostate	0.6122833996680194	0.35665493739960963	0.030445678368642516
+68_Lung	Lung	rna	alt_sj	True	1	Lung	Prostate	Breast	0.40130509578125684	0.30588026078254194	0.2888832594651876
+82_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+82_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	Prostate	Breast	0.6972991435533806	0.1235580340613157	0.08419409046696774
+82_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	Breast	AML	0.971716312503389	0.01578395150044729	0.011010463267722693
+82_Melanoma	Melanoma	dna	event	True	1	Melanoma	Breast	Prostate	0.9911722208889193	0.003982057761713513	0.003811728749950823
+88_AML	AML	dna	dna_combined	True	1	AML	Breast	Prostate	0.9986979998054407	0.001302000194559299	0.0
+88_AML	AML	dna	gen_pos	True	1	AML	Prostate	Breast	0.276868497118134	0.23100018313034543	0.2143538387167698
+88_AML	AML	dna	snv96	True	1	AML	Breast	Lung	0.8577573672107971	0.06630778621495576	0.03324864911119099
+88_AML	AML	dna	event	True	1	AML	Breast	Prostate	0.8532604793657721	0.06119969111101422	0.05584982472475222
+9_Breast	Breast	combined	combined	True	1	Breast	Lung	Prostate	0.992513401247261	0.007145192227931056	0.00017070326240403667
+9_Breast	Breast	dna	dna_combined	True	1	Breast	Lung	Prostate	0.5814261469110568	0.4185738530889432	0.0
+9_Breast	Breast	rna	rna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+9_Breast	Breast	dna	gen_pos	True	1	Breast	Lung	Prostate	0.4469780552539226	0.2572192920115109	0.16335345533928725
+9_Breast	Breast	dna	snv96	True	1	Breast	Lung	Prostate	0.6938270281142325	0.18129066331223068	0.09983458406711256
+9_Breast	Breast	dna	event	False	2	Prostate	Breast	Lung	0.383462275014508	0.37311151175792184	0.18881382503859317
+9_Breast	Breast	rna	gene_exp	True	1	Breast	Lung	Prostate	0.9022601014984633	0.08315666264675212	0.013392036079740896
+9_Breast	Breast	rna	alt_sj	True	1	Breast	Lung	Prostate	0.46799309664641536	0.24200407475163124	0.2170078084319087
+10_Breast	Breast	combined	combined	True	1	Breast	Prostate	Melanoma	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+10_Breast	Breast	dna	dna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+10_Breast	Breast	rna	rna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+10_Breast	Breast	dna	gen_pos	True	1	Breast	AML	Prostate	0.6213464846487753	0.1352402597577998	0.10640023541960648
+10_Breast	Breast	dna	snv96	True	1	Breast	Lung	Melanoma	0.7627757039164185	0.15161722593070626	0.05418843409646407
+10_Breast	Breast	dna	event	True	1	Breast	Prostate	Lung	0.502917939277004	0.33522291402875215	0.10887869300900234
+10_Breast	Breast	rna	gene_exp	True	1	Breast	Lung	Prostate	0.919613870493689	0.06928455816042857	0.010939159833184438
+10_Breast	Breast	rna	alt_sj	False	3	Lung	Prostate	Breast	0.36252351081863415	0.32507895856105984	0.3074908266385266
+11_Breast	Breast	combined	combined	True	1	Breast	Prostate	Melanoma	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+11_Breast	Breast	dna	dna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+11_Breast	Breast	rna	rna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+11_Breast	Breast	dna	gen_pos	True	1	Breast	Prostate	AML	0.7202986770164275	0.09452239743549722	0.06976807853649744
+11_Breast	Breast	dna	snv96	True	1	Breast	Lung	Melanoma	0.887979139828672	0.10801897079134948	0.0037818751689036043
+11_Breast	Breast	dna	event	True	1	Breast	Prostate	Lung	0.4630978472173734	0.35648575087194195	0.11733641272154414
+11_Breast	Breast	rna	gene_exp	True	1	Breast	Lung	Prostate	0.7496647942497928	0.22686981899287023	0.022872001906113444
+11_Breast	Breast	rna	alt_sj	False	3	Lung	Prostate	Breast	0.36252351081863415	0.32507895856105984	0.3074908266385266
+32_Prostate	Prostate	combined	combined	True	1	Prostate	Breast	Melanoma	0.9944758146437567	0.005220872738543681	0.0001516563088498125
+32_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Breast	Melanoma	0.6557431221859692	0.34425687781403075	0.0
+32_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+32_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	Melanoma	0.6118183746841438	0.2286042326127039	0.09286732694524087
+32_Prostate	Prostate	dna	snv96	True	1	Prostate	Lung	Breast	0.6614625355013312	0.20907915178629746	0.1195445724626239
+32_Prostate	Prostate	dna	event	True	1	Prostate	Breast	Lung	0.39840431520267794	0.35476452970794037	0.17816293058237892
+32_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Breast	Lung	0.942298750834999	0.047012302776885916	0.010672342015056317
+32_Prostate	Prostate	rna	alt_sj	False	2	Lung	Prostate	Breast	0.36252351081863415	0.32507895856105984	0.3074908266385266
+33_Prostate	Prostate	combined	combined	True	1	Prostate	Breast	Melanoma	0.9994895202172888	0.0003044920379096045	0.00010299387240082492
+33_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+33_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Breast	Melanoma	0.9704359074174237	0.029564092582576373	0.0
+33_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Lung	Breast	0.5998339358689447	0.13756027848768967	0.1322003846840016
+33_Prostate	Prostate	dna	snv96	True	1	Prostate	Lung	Breast	0.8214894863317118	0.07451696993211213	0.06616014951994376
+33_Prostate	Prostate	dna	event	False	2	Breast	Prostate	Lung	0.3854422859634479	0.3699153833443729	0.1631545855306936
+33_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Breast	Lung	0.9361802413834843	0.051654482743056146	0.012147044764765037
+33_Prostate	Prostate	rna	alt_sj	False	2	Lung	Prostate	Breast	0.36252351081863415	0.32507895856105984	0.3074908266385266
+54_Melanoma	Melanoma	combined	combined	True	1	Melanoma	Prostate	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+54_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+54_Melanoma	Melanoma	rna	rna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+54_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	Breast	AML	0.7624065842476924	0.09283576314848378	0.053534629620033386
+54_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	AML	Lung	0.9675008846450506	0.012729757926357905	0.009509904378534335
+54_Melanoma	Melanoma	dna	event	True	1	Melanoma	Breast	Prostate	0.8761979149266346	0.050715462997012795	0.04964904495281773
+54_Melanoma	Melanoma	rna	gene_exp	True	1	Melanoma	Lung	Breast	0.963980956032669	0.02506240295385363	0.009044028432668777
+54_Melanoma	Melanoma	rna	alt_sj	True	1	Melanoma	Breast	Prostate	0.9923666858187479	0.0029552699776450504	0.002708230038903194
+55_Melanoma	Melanoma	combined	combined	True	1	Melanoma	Prostate	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+55_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+55_Melanoma	Melanoma	rna	rna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+55_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	Prostate	Breast	0.7501106434662977	0.09550496666333035	0.07653431314375919
+55_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	Breast	Lung	0.9662283569889334	0.026178739321396683	0.003642453557450964
+55_Melanoma	Melanoma	dna	event	True	1	Melanoma	Prostate	Breast	0.8899293718577667	0.04903464638891998	0.04506385877731341
+55_Melanoma	Melanoma	rna	gene_exp	True	1	Melanoma	Lung	Breast	0.9477790284800135	0.042277619803258226	0.007456759540912416
+55_Melanoma	Melanoma	rna	alt_sj	True	1	Melanoma	Breast	Prostate	0.9904464207101686	0.0037399745838653216	0.003564686716019457
+69_Lung	Lung	combined	combined	False	2	Breast	Lung	Melanoma	0.4975124378109453	0.44143751141709625	0.05607492639384906
+69_Lung	Lung	dna	dna_combined	True	1	Lung	Melanoma	Prostate	0.8872893979483634	0.1127106020516366	0.0
+69_Lung	Lung	rna	rna_combined	False	4	Breast	Prostate	Melanoma	1.0	0.0	0.0
+69_Lung	Lung	dna	gen_pos	True	1	Lung	Breast	AML	0.897864040954605	0.032418215832140725	0.02605582246114548
+69_Lung	Lung	dna	snv96	True	1	Lung	Breast	Prostate	0.9934230884157094	0.003080649761598115	0.0027797197927046254
+69_Lung	Lung	dna	event	False	2	Melanoma	Lung	Prostate	0.49791552466077393	0.15642322516235388	0.1356762781523449
+69_Lung	Lung	rna	gene_exp	False	2	Breast	Lung	Prostate	0.93605258238986	0.05398729351141808	0.009677593836179775
+69_Lung	Lung	rna	alt_sj	True	1	Lung	Prostate	Breast	0.36252351081863415	0.32507895856105984	0.3074908266385266
+83_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+83_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	Prostate	Breast	0.8880689232971636	0.04105884742980734	0.03005989697314111
+83_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	Breast	Lung	0.9911977104607186	0.004199729802055134	0.0031961044834084604
+83_Melanoma	Melanoma	dna	event	True	1	Melanoma	Prostate	Breast	0.8862694103727075	0.046439314736327716	0.035987584624962585
+89_AML	AML	dna	dna_combined	True	1	AML	Prostate	Melanoma	1.0	0.0	0.0
+89_AML	AML	dna	gen_pos	True	1	AML	Prostate	Melanoma	0.23868600622859706	0.20878361520336097	0.20689645870716755
+89_AML	AML	dna	snv96	True	1	AML	Breast	Prostate	0.820930930023463	0.10051513036307234	0.03617195130677926
+89_AML	AML	dna	event	True	1	AML	Prostate	Breast	0.8821433700867349	0.05750654097180586	0.04007496783072415
+12_Breast	Breast	combined	combined	True	1	Breast	Lung	Prostate	0.9280099438066411	0.0716368010065931	0.00017662759338292846
+12_Breast	Breast	dna	dna_combined	True	1	Breast	Lung	Prostate	0.5818381463186234	0.41816185368137654	0.0
+12_Breast	Breast	rna	rna_combined	True	1	Breast	Lung	Prostate	0.9030086018015483	0.09699139819845173	0.0
+12_Breast	Breast	dna	gen_pos	True	1	Breast	Prostate	AML	0.7257743173546178	0.10326837241760145	0.06697866843823307
+12_Breast	Breast	dna	snv96	False	3	Lung	Prostate	Breast	0.6297660445228763	0.17173669231194094	0.1705854517608742
+12_Breast	Breast	dna	event	True	1	Breast	Prostate	Lung	0.5027847775628548	0.29066157805807397	0.13195082640943254
+12_Breast	Breast	rna	gene_exp	True	1	Breast	Lung	Melanoma	0.7200377295056569	0.26048328301263635	0.017471162378499286
+12_Breast	Breast	rna	alt_sj	False	3	Lung	Prostate	Breast	0.3677597224183314	0.3291088188725201	0.29722862987703463
+13_Breast	Breast	combined	combined	True	1	Breast	Lung	Melanoma	0.7336046773043462	0.25856225398691285	0.007566267671936468
+13_Breast	Breast	dna	dna_combined	True	1	Breast	Lung	Melanoma	0.4026365373561951	0.30562620937895624	0.28359213901720554
+13_Breast	Breast	rna	rna_combined	True	1	Breast	Lung	Prostate	0.6829067355175454	0.3170932644824547	0.0
+13_Breast	Breast	dna	gen_pos	True	1	Breast	AML	Prostate	0.455945854314629	0.1914561084389209	0.16912503207541002
+13_Breast	Breast	dna	snv96	True	1	Breast	AML	Lung	0.37067916465358947	0.27252531748407993	0.16382570231935248
+13_Breast	Breast	dna	event	False	2	Prostate	Breast	Lung	0.4013575980888911	0.359093878294156	0.08775860634312517
+13_Breast	Breast	rna	gene_exp	True	1	Breast	Lung	Prostate	0.586054041248558	0.4035471877362789	0.006287126180892789
+13_Breast	Breast	rna	alt_sj	False	3	Lung	Prostate	Breast	0.3677597224183314	0.3291088188725201	0.29722862987703463
+14_Breast	Breast	combined	combined	True	1	Breast	Lung	Prostate	0.6802369502401826	0.31937650379646526	0.00019327298167615126
+14_Breast	Breast	dna	dna_combined	True	1	Breast	Lung	Prostate	0.5826906228873847	0.4173093771126153	0.0
+14_Breast	Breast	rna	rna_combined	True	1	Breast	Lung	Prostate	0.6040196163370384	0.39598038366296173	0.0
+14_Breast	Breast	dna	gen_pos	True	1	Breast	Prostate	Lung	0.48971978851001235	0.30782578146442047	0.0891447557353513
+14_Breast	Breast	dna	snv96	True	1	Breast	Lung	Prostate	0.5618447990166334	0.3406297681414757	0.08409093846146222
+14_Breast	Breast	dna	event	True	1	Breast	Prostate	Lung	0.44618336269913134	0.29399668562881	0.20090999972914303
+14_Breast	Breast	rna	gene_exp	False	2	Lung	Breast	Melanoma	0.6066354274527843	0.379121623453524	0.012814985333591733
+14_Breast	Breast	rna	alt_sj	False	3	Lung	Prostate	Breast	0.3677597224183314	0.3291088188725201	0.29722862987703463
+34_Prostate	Prostate	combined	combined	True	1	Prostate	Melanoma	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+34_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+34_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+34_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	Lung	0.6406474053163499	0.11166133540690901	0.0999954239223717
+34_Prostate	Prostate	dna	snv96	True	1	Prostate	Lung	Breast	0.7009319754675616	0.15364560050918527	0.1263548736618163
+34_Prostate	Prostate	dna	event	False	3	Breast	Lung	Prostate	0.3481314661155888	0.3021937959465306	0.2938926007859231
+34_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Breast	Lung	0.9745792547730643	0.01992096447074903	0.005461442140977313
+34_Prostate	Prostate	rna	alt_sj	False	2	Lung	Prostate	Breast	0.3677597224183314	0.3291088188725201	0.29722862987703463
+35_Prostate	Prostate	combined	combined	False	2	Breast	Prostate	Lung	0.4360614603128174	0.4233688332585311	0.13627216436060952
+35_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Breast	Melanoma	0.9851418009537453	0.014858199046254832	0.0
+35_Prostate	Prostate	rna	rna_combined	False	3	Breast	Lung	Prostate	0.6829067355175454	0.3170932644824547	0.0
+35_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	Lung	0.4845903458212464	0.18659801793820124	0.1132979789148889
+35_Prostate	Prostate	dna	snv96	True	1	Prostate	Lung	Breast	0.8813773733616342	0.049211111479619	0.04905813693656673
+35_Prostate	Prostate	dna	event	True	1	Prostate	Breast	Lung	0.32416369377690685	0.30834222944699485	0.26582337304297776
+35_Prostate	Prostate	rna	gene_exp	False	4	Breast	Lung	Melanoma	0.5266718563861736	0.39539326249693324	0.060562258937703534
+35_Prostate	Prostate	rna	alt_sj	False	2	Lung	Prostate	Breast	0.3677597224183314	0.3291088188725201	0.29722862987703463
+56_Melanoma	Melanoma	combined	combined	True	1	Melanoma	Prostate	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+56_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+56_Melanoma	Melanoma	rna	rna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+56_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	Breast	Prostate	0.7178445899554137	0.10662245960831335	0.08612028668677164
+56_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	Breast	Lung	0.9672505373446513	0.01350158505089665	0.010122610294889573
+56_Melanoma	Melanoma	dna	event	True	1	Melanoma	Prostate	Breast	0.9361608438641977	0.02807006229729041	0.024937138069431194
+56_Melanoma	Melanoma	rna	gene_exp	True	1	Melanoma	Breast	Lung	0.9677183017699007	0.02488745994621041	0.00551961543002314
+56_Melanoma	Melanoma	rna	alt_sj	True	1	Melanoma	Breast	Prostate	0.9972310853867874	0.0009759639125874663	0.0009032723955660946
+57_Melanoma	Melanoma	combined	combined	True	1	Melanoma	Prostate	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+57_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+57_Melanoma	Melanoma	rna	rna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+57_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	AML	Prostate	0.8931120344285474	0.02896303480971992	0.02873684676673553
+57_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	Breast	Lung	0.9693495700121728	0.011773350969407568	0.011756663953432651
+57_Melanoma	Melanoma	dna	event	True	1	Melanoma	Prostate	Breast	0.9587376224974948	0.020062133996538428	0.015821796000822248
+57_Melanoma	Melanoma	rna	gene_exp	True	1	Melanoma	Breast	Lung	0.9674933734068555	0.025486211956353394	0.0056481693873275994
+57_Melanoma	Melanoma	rna	alt_sj	True	1	Melanoma	Breast	Prostate	0.9959735789456349	0.001672195222440059	0.0012659114951770983
+70_Lung	Lung	combined	combined	True	1	Lung	Breast	Prostate	0.9586665326211739	0.04033503340421768	0.0004992169873042942
+70_Lung	Lung	dna	dna_combined	True	1	Lung	Prostate	Melanoma	1.0	0.0	0.0
+70_Lung	Lung	rna	rna_combined	False	2	Breast	Lung	Prostate	0.8079659632982751	0.19203403670172495	0.0
+70_Lung	Lung	dna	gen_pos	True	1	Lung	Prostate	Melanoma	0.8716865697450479	0.042373079266998154	0.04026568267161451
+70_Lung	Lung	dna	snv96	True	1	Lung	Breast	Prostate	0.999181463428008	0.0006647883445861882	0.00010906493447969664
+70_Lung	Lung	dna	event	False	3	Prostate	Breast	Lung	0.38683585733256765	0.360739211627952	0.18347206156270912
+70_Lung	Lung	rna	gene_exp	False	2	Breast	Lung	Melanoma	0.6589029267167723	0.25971597396927604	0.07980309361161464
+70_Lung	Lung	rna	alt_sj	True	1	Lung	Prostate	Breast	0.3677597224183314	0.3291088188725201	0.29722862987703463
+84_Lung	Lung	dna	dna_combined	True	1	Lung	Prostate	Melanoma	1.0	0.0	0.0
+84_Lung	Lung	dna	gen_pos	True	1	Lung	Prostate	AML	0.8787698769114014	0.03740290934161313	0.03149947153244533
+84_Lung	Lung	dna	snv96	True	1	Lung	Prostate	Breast	0.8994151217518003	0.0656542395832383	0.030981881432867137
+84_Lung	Lung	dna	event	False	3	Breast	Prostate	Lung	0.43103349871266683	0.36225311256756465	0.12334633842849164
+90_AML	AML	dna	dna_combined	False	3	Melanoma	Breast	AML	0.345797802648746	0.34524578122315996	0.30895641612809405
+90_AML	AML	dna	gen_pos	False	4	Breast	Prostate	Melanoma	0.3327742182221356	0.2123496741402982	0.1919285759388347
+90_AML	AML	dna	snv96	True	1	AML	Prostate	Melanoma	0.4303314100598086	0.28115088580540426	0.22074429270669266
+90_AML	AML	dna	event	True	1	AML	Prostate	Breast	0.7406702954022545	0.11097990733751932	0.0956354939711285
+15_Breast	Breast	combined	combined	True	1	Breast	Lung	Melanoma	0.8587960690037482	0.07723184155971019	0.06375896336813357
+15_Breast	Breast	dna	dna_combined	True	1	Breast	Lung	Melanoma	0.6074571959467427	0.2122165191230702	0.1803262849301871
+15_Breast	Breast	rna	rna_combined	True	1	Breast	Lung	Melanoma	0.6633424543169136	0.17075783124675745	0.16589971443632887
+15_Breast	Breast	dna	gen_pos	True	1	Breast	AML	Prostate	0.573662833355907	0.17362248233305944	0.14112642618770194
+15_Breast	Breast	dna	snv96	False	2	Prostate	Breast	Lung	0.3519940921780633	0.2686327340545358	0.24410109917873885
+15_Breast	Breast	dna	event	True	1	Breast	Prostate	Lung	0.40243652430451504	0.2443176732533644	0.14860543307625548
+15_Breast	Breast	rna	gene_exp	False	2	Lung	Breast	Prostate	0.5174246023354743	0.38823559328937696	0.04827154203106596
+15_Breast	Breast	rna	alt_sj	False	2	Prostate	Breast	Lung	0.42517602352329154	0.3803961046985757	0.11606633285030843
+16_Breast	Breast	combined	combined	True	1	Breast	Lung	Prostate	0.9975394028064108	0.002216754228458691	0.000121921482565228
+16_Breast	Breast	dna	dna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+16_Breast	Breast	rna	rna_combined	True	1	Breast	Lung	Prostate	0.8181818181818182	0.18181818181818182	0.0
+16_Breast	Breast	dna	gen_pos	True	1	Breast	Prostate	AML	0.6485903500173096	0.21532304593818097	0.05918270108140514
+16_Breast	Breast	dna	snv96	True	1	Breast	Lung	Melanoma	0.9787596716017134	0.019745503898261043	0.0014759624338903014
+16_Breast	Breast	dna	event	True	1	Breast	Prostate	Lung	0.34279851389176796	0.32004480891757536	0.13295200365065013
+16_Breast	Breast	rna	gene_exp	True	1	Breast	Lung	Prostate	0.5848949496566697	0.4099448816852856	0.004518579998470018
+16_Breast	Breast	rna	alt_sj	False	3	Lung	Prostate	Breast	0.36603545375405755	0.32809140415979215	0.2998053364330197
+17_Breast	Breast	combined	combined	True	1	Breast	Lung	Prostate	0.9941079699758468	0.005581576892311787	0.00015522656592070256
+17_Breast	Breast	dna	dna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+17_Breast	Breast	rna	rna_combined	True	1	Breast	Lung	Prostate	0.6404238630671547	0.35957613693284524	0.0
+17_Breast	Breast	dna	gen_pos	True	1	Breast	AML	Prostate	0.6095127194964152	0.1675694327533879	0.11089659356775583
+17_Breast	Breast	dna	snv96	True	1	Breast	Lung	AML	0.6064150792495218	0.20612413402830132	0.08306929389543216
+17_Breast	Breast	dna	event	True	1	Breast	Prostate	Lung	0.5763476148913643	0.21973213360834926	0.09411287120485995
+17_Breast	Breast	rna	gene_exp	True	1	Breast	Lung	Prostate	0.5569142786274183	0.4233815635184889	0.016833651010895977
+17_Breast	Breast	rna	alt_sj	False	3	Lung	Prostate	Breast	0.36603545375405755	0.32809140415979215	0.2998053364330197
+36_Prostate	Prostate	combined	combined	True	1	Prostate	Melanoma	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+36_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+36_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+36_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	Lung	0.6992903192818674	0.13560357348843372	0.06779681518602108
+36_Prostate	Prostate	dna	snv96	True	1	Prostate	Breast	Lung	0.7038926750410407	0.14213994791761425	0.138609034148958
+36_Prostate	Prostate	dna	event	False	3	Lung	Breast	Prostate	0.32300159896310227	0.316067785000323	0.26779031843871237
+36_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Breast	Lung	0.969519914596474	0.018272955719923923	0.012199766141801086
+36_Prostate	Prostate	rna	alt_sj	False	2	Lung	Prostate	Breast	0.36603545375405755	0.32809140415979215	0.2998053364330197
+37_Prostate	Prostate	combined	combined	True	1	Prostate	Melanoma	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+37_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+37_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+37_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	Melanoma	0.6423556073866653	0.16253413613606416	0.08069656219058334
+37_Prostate	Prostate	dna	snv96	True	1	Prostate	Lung	Breast	0.823909243198276	0.09979339462760746	0.06398852443741901
+37_Prostate	Prostate	dna	event	False	2	Breast	Prostate	AML	0.36264548454882156	0.2786688943223025	0.1954012273573652
+37_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Breast	Lung	0.9691022636822586	0.01864453290015095	0.012245797333461646
+37_Prostate	Prostate	rna	alt_sj	False	2	Lung	Prostate	Breast	0.36603545375405755	0.32809140415979215	0.2998053364330197
+58_Melanoma	Melanoma	combined	combined	True	1	Melanoma	Prostate	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+58_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+58_Melanoma	Melanoma	rna	rna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+58_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	Breast	AML	0.37413079068730853	0.18216897636712276	0.1805342050954109
+58_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	AML	Breast	0.7075107034525449	0.1474190004666622	0.07649035888061174
+58_Melanoma	Melanoma	dna	event	True	1	Melanoma	Breast	Prostate	0.9439784408925886	0.02048527558065093	0.017197804579377633
+58_Melanoma	Melanoma	rna	gene_exp	True	1	Melanoma	Lung	Breast	0.949430948378614	0.028725308285301177	0.018441880003088454
+58_Melanoma	Melanoma	rna	alt_sj	True	1	Melanoma	Breast	Prostate	0.9957511001141651	0.001767260392251749	0.001482130866225947
+59_Melanoma	Melanoma	combined	combined	True	1	Melanoma	Prostate	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+59_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+59_Melanoma	Melanoma	rna	rna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+59_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	Prostate	Breast	0.8475044957126008	0.05989842879284864	0.039573022076457166
+59_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	Breast	AML	0.9777041231980957	0.01137664744420221	0.006498084546772668
+59_Melanoma	Melanoma	dna	event	True	1	Melanoma	Breast	Prostate	0.943787595636257	0.02159349240322677	0.02018156430292232
+59_Melanoma	Melanoma	rna	gene_exp	True	1	Melanoma	Lung	Breast	0.963293725462293	0.021218882904112626	0.012873916092531003
+59_Melanoma	Melanoma	rna	alt_sj	True	1	Melanoma	Breast	Prostate	0.9951424124982764	0.002267010487396929	0.0014368171767983704
+71_Lung	Lung	combined	combined	True	1	Lung	Breast	Prostate	0.9913147625435504	0.00832056323915773	0.00018233710864593237
+71_Lung	Lung	dna	dna_combined	True	1	Lung	Prostate	Melanoma	1.0	0.0	0.0
+71_Lung	Lung	rna	rna_combined	True	1	Lung	Breast	Prostate	0.5436714281065601	0.45632857189343984	0.0
+71_Lung	Lung	dna	gen_pos	True	1	Lung	Breast	Prostate	0.5570023401200492	0.1467773096547176	0.14480351929185795
+71_Lung	Lung	dna	snv96	False	2	Prostate	Lung	Breast	0.4428988634956394	0.30567331311178486	0.16217191782438034
+71_Lung	Lung	dna	event	True	1	Lung	Prostate	AML	0.8933446216012084	0.03247466164029706	0.03210155751451196
+71_Lung	Lung	rna	gene_exp	True	1	Lung	Breast	Prostate	0.7148842877604845	0.25907243489466936	0.025876204950069478
+71_Lung	Lung	rna	alt_sj	True	1	Lung	Prostate	Breast	0.36603545375405755	0.32809140415979215	0.2998053364330197
+85_Lung	Lung	dna	dna_combined	True	1	Lung	Prostate	Melanoma	1.0	0.0	0.0
+85_Lung	Lung	dna	gen_pos	True	1	Lung	AML	Breast	0.9422982874878931	0.02034506748330928	0.014073795615427298
+85_Lung	Lung	dna	snv96	True	1	Lung	Prostate	Breast	0.8999125456524467	0.07617130985579257	0.019313930821587288
+85_Lung	Lung	dna	event	True	1	Lung	Breast	Prostate	0.5395119466905629	0.21244087925402855	0.17262570972554822
+91_AML	AML	dna	dna_combined	True	1	AML	Breast	Prostate	0.8315165034734028	0.16848349652659722	0.0
+91_AML	AML	dna	gen_pos	False	2	Breast	AML	Prostate	0.2396337284014768	0.22831063059143072	0.1885396923181015
+91_AML	AML	dna	snv96	True	1	AML	Breast	Prostate	0.773324899677122	0.07806850374218678	0.07737052715436293
+91_AML	AML	dna	event	True	1	AML	Prostate	Breast	0.8677898458789246	0.044857546014725816	0.043668314499405905
+18_Breast	Breast	combined	combined	True	1	Breast	Melanoma	Prostate	0.9976693771143099	0.0020893029512424606	0.0001206599672238556
+18_Breast	Breast	dna	dna_combined	True	1	Breast	Melanoma	Prostate	0.8268437329038669	0.17315626709613313	0.0
+18_Breast	Breast	rna	rna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+18_Breast	Breast	dna	gen_pos	True	1	Breast	Prostate	AML	0.3895922020764732	0.2829855537249699	0.12560449342817648
+18_Breast	Breast	dna	snv96	True	1	Breast	Prostate	Lung	0.6607363421501643	0.11666264607485882	0.11507044724690212
+18_Breast	Breast	dna	event	True	1	Breast	Prostate	Lung	0.4891270420246838	0.37260386661351735	0.07193140227429978
+18_Breast	Breast	rna	gene_exp	True	1	Breast	Lung	Prostate	0.937875814342675	0.04727000875344039	0.014474599897880953
+18_Breast	Breast	rna	alt_sj	True	1	Breast	Prostate	Melanoma	0.4739524941960874	0.23686967235049422	0.22632290510094336
+19_Breast	Breast	combined	combined	True	1	Breast	Lung	Prostate	0.9989042992113749	0.0008783528713557024	0.00010867395863469453
+19_Breast	Breast	dna	dna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+19_Breast	Breast	rna	rna_combined	True	1	Breast	Lung	Prostate	0.9191754048172415	0.08082459518275847	0.0
+19_Breast	Breast	dna	gen_pos	True	1	Breast	AML	Prostate	0.6072410885308838	0.1363761178724667	0.10469460220517489
+19_Breast	Breast	dna	snv96	True	1	Breast	Lung	AML	0.7088220320793951	0.15606785648459123	0.08847957718214342
+19_Breast	Breast	dna	event	True	1	Breast	Prostate	Lung	0.407612738918626	0.3755558273726937	0.10405603248774203
+19_Breast	Breast	rna	gene_exp	True	1	Breast	Lung	Melanoma	0.8133534394656604	0.10490915981124328	0.0549779162846228
+19_Breast	Breast	rna	alt_sj	False	3	Lung	Prostate	Breast	0.3575646246894293	0.32729793032327964	0.30953963703949805
+38_Prostate	Prostate	combined	combined	False	3	Lung	Breast	Prostate	0.5738067241224597	0.4097736279533172	0.012872131955072988
+38_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Breast	Lung	0.354198459491706	0.289647021107542	0.2585386236283329
+38_Prostate	Prostate	rna	rna_combined	False	3	Lung	Breast	Prostate	0.610711904326095	0.389288095673905	0.0
+38_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	Melanoma	0.6166926846599998	0.17619707961926812	0.10426542173167609
+38_Prostate	Prostate	dna	snv96	True	1	Prostate	Breast	Lung	0.3938555940592645	0.3394352191633708	0.23925213555560326
+38_Prostate	Prostate	dna	event	True	1	Prostate	Breast	Lung	0.39869316085930784	0.3507689543464835	0.1617397378867752
+38_Prostate	Prostate	rna	gene_exp	False	3	Lung	Breast	Prostate	0.9439198022840773	0.03468749130949866	0.021326420313521655
+38_Prostate	Prostate	rna	alt_sj	False	3	Breast	Lung	Prostate	0.7602528934272563	0.10545173576600864	0.0965255858159627
+39_Prostate	Prostate	combined	combined	True	1	Prostate	Breast	Melanoma	0.9967780749004146	0.002963303416279817	0.00012931084165283962
+39_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+39_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Breast	Melanoma	0.7708387496049722	0.22916125039502777	0.0
+39_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	Melanoma	0.5679389151077627	0.13925115263976645	0.10813538456277452
+39_Prostate	Prostate	dna	snv96	True	1	Prostate	Lung	Breast	0.8099396192786609	0.13764340697757987	0.03960520102245194
+39_Prostate	Prostate	dna	event	True	1	Prostate	Breast	Lung	0.41379935355101977	0.301558881878172	0.2242454985351788
+39_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Breast	Lung	0.9199842241601545	0.05939948510059395	0.0205109202171042
+39_Prostate	Prostate	rna	alt_sj	False	2	Lung	Prostate	Breast	0.3575646246894293	0.32729793032327964	0.30953963703949805
+40_Prostate	Prostate	combined	combined	True	1	Prostate	Lung	Breast	0.9796988773541906	0.008674979132362452	0.00750410022885795
+40_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Lung	Breast	0.32550177773755634	0.2882233709449605	0.24932129874545045
+40_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+40_Prostate	Prostate	dna	gen_pos	True	1	Prostate	AML	Breast	0.5358809626689879	0.13798161435789355	0.13118050949261617
+40_Prostate	Prostate	dna	snv96	True	1	Prostate	Breast	Lung	0.43780645927746603	0.24323542219659525	0.19939040038271563
+40_Prostate	Prostate	dna	event	False	2	Breast	Prostate	Lung	0.36874676241091714	0.3303469320342545	0.23936133301985324
+40_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Breast	Lung	0.9535874044645365	0.035527380582767776	0.010821904303322784
+40_Prostate	Prostate	rna	alt_sj	False	2	Lung	Prostate	Breast	0.3575646246894293	0.32729793032327964	0.30953963703949805
+60_Melanoma	Melanoma	combined	combined	True	1	Melanoma	Prostate	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+60_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+60_Melanoma	Melanoma	rna	rna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+60_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	Prostate	Breast	0.8489697538507296	0.06354050018530166	0.0365225229360654
+60_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	Breast	Lung	0.9952180419746681	0.002105618950313283	0.0015566670850948312
+60_Melanoma	Melanoma	dna	event	True	1	Melanoma	Breast	Prostate	0.874082176128841	0.062322872108221405	0.042808784845418224
+60_Melanoma	Melanoma	rna	gene_exp	True	1	Melanoma	Breast	Prostate	0.9694020681377472	0.01715214797196313	0.007234016537581307
+60_Melanoma	Melanoma	rna	alt_sj	True	1	Melanoma	Breast	Lung	0.9943476835069569	0.0028058062507712368	0.00142846090845289
+72_Lung	Lung	combined	combined	True	1	Lung	Breast	Prostate	0.9637966275890222	0.02718655121118803	0.008562946559325789
+72_Lung	Lung	dna	dna_combined	True	1	Lung	Prostate	Melanoma	1.0	0.0	0.0
+72_Lung	Lung	rna	rna_combined	False	2	Breast	Lung	Prostate	0.598988107892359	0.2123486402773327	0.18866325183030833
+72_Lung	Lung	dna	gen_pos	True	1	Lung	Prostate	Melanoma	0.8525976341993865	0.06502638965314297	0.03666543273763155
+72_Lung	Lung	dna	snv96	True	1	Lung	Breast	Prostate	0.9977573265004906	0.0015484243501452223	0.0005900782583157845
+72_Lung	Lung	dna	event	True	1	Lung	Prostate	Breast	0.5357367560863486	0.27107034430672233	0.1627188373262362
+72_Lung	Lung	rna	gene_exp	False	2	Breast	Lung	Prostate	0.6828874084102947	0.16859600940852995	0.10311529716363409
+72_Lung	Lung	rna	alt_sj	True	1	Lung	Prostate	Breast	0.3575646246894293	0.32729793032327964	0.30953963703949805
+73_Lung	Lung	combined	combined	True	1	Lung	Breast	Melanoma	0.9911308553064649	0.008110843121934918	0.0005723564899506926
+73_Lung	Lung	dna	dna_combined	True	1	Lung	Breast	Melanoma	0.5330234317112502	0.4361956256107629	0.030780942677986863
+73_Lung	Lung	rna	rna_combined	True	1	Lung	Prostate	Melanoma	1.0	0.0	0.0
+73_Lung	Lung	dna	gen_pos	True	1	Lung	Breast	Prostate	0.4379793596580984	0.2352860889627876	0.1981696941246614
+73_Lung	Lung	dna	snv96	False	3	Breast	Prostate	Lung	0.6380364614210327	0.16615643923246048	0.13823912467167931
+73_Lung	Lung	dna	event	True	1	Lung	Breast	Prostate	0.9281097195778992	0.03311643964281996	0.030359425128553535
+73_Lung	Lung	rna	gene_exp	True	1	Lung	Breast	Prostate	0.982461483445636	0.010549672410016352	0.006969986637703991
+73_Lung	Lung	rna	alt_sj	True	1	Lung	Prostate	Breast	0.3575646246894293	0.32729793032327964	0.30953963703949805
+92_AML	AML	dna	dna_combined	True	1	AML	Prostate	Melanoma	1.0	0.0	0.0
+92_AML	AML	dna	gen_pos	True	1	AML	Breast	Prostate	0.2755088477075937	0.2652741982488408	0.16885748059650132
+92_AML	AML	dna	snv96	True	1	AML	Breast	Melanoma	0.8808319285018195	0.048073357193450086	0.03669714945927272
+92_AML	AML	dna	event	True	1	AML	Prostate	Breast	0.8944577730960552	0.049836300467814364	0.03482666003594928
+93_AML	AML	dna	dna_combined	True	1	AML	Breast	Prostate	0.689862893090539	0.31013710690946095	0.0
+93_AML	AML	dna	gen_pos	False	2	Breast	AML	Melanoma	0.2777377975620408	0.25881206947418417	0.18034542716068674
+93_AML	AML	dna	snv96	True	1	AML	Melanoma	Breast	0.858203359145174	0.04355934549814975	0.04318969388201937
+93_AML	AML	dna	event	True	1	AML	Prostate	Breast	0.7656867390287275	0.10379196583268137	0.0725320193229862
+20_Breast	Breast	combined	combined	True	1	Breast	Lung	Prostate	0.9670741430858698	0.032090629495601077	0.0004176137092645977
+20_Breast	Breast	dna	dna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+20_Breast	Breast	rna	rna_combined	False	2	Lung	Breast	Prostate	0.7684285449371738	0.23157145506282628	0.0
+20_Breast	Breast	dna	gen_pos	True	1	Breast	Prostate	Melanoma	0.6234359804045908	0.23804323239115416	0.07128498682483458
+20_Breast	Breast	dna	snv96	True	1	Breast	Lung	Melanoma	0.9864561329768007	0.012752609249860934	0.0006113698813443355
+20_Breast	Breast	dna	event	True	1	Breast	Lung	Prostate	0.44415963055596075	0.3142702596652928	0.19193782711434856
+20_Breast	Breast	rna	gene_exp	False	2	Lung	Breast	Prostate	0.7031390822556088	0.24105257508091982	0.031902844932516834
+20_Breast	Breast	rna	alt_sj	False	3	Lung	Prostate	Breast	0.3567906020337717	0.33068308825545084	0.30918590843223487
+21_Breast	Breast	combined	combined	False	2	Lung	Breast	Melanoma	0.7133269053537576	0.26295730506439613	0.023413205339377612
+21_Breast	Breast	dna	dna_combined	True	1	Breast	Lung	Melanoma	0.3934730469908645	0.3133507491026954	0.28871121741855704
+21_Breast	Breast	rna	rna_combined	False	2	Lung	Breast	Melanoma	0.7523355086686884	0.22086349691656115	0.026800994414750555
+21_Breast	Breast	dna	gen_pos	True	1	Breast	Prostate	AML	0.48178275298860274	0.16475326906476898	0.14481323793528034
+21_Breast	Breast	dna	snv96	False	3	Prostate	Lung	Breast	0.29039796629008957	0.2636031519176467	0.23670621634358904
+21_Breast	Breast	dna	event	True	1	Breast	Prostate	AML	0.3851175790238075	0.24761736982105617	0.20437763238997714
+21_Breast	Breast	rna	gene_exp	False	2	Lung	Breast	Melanoma	0.6757865255633132	0.18289212523465775	0.11674697136811861
+21_Breast	Breast	rna	alt_sj	False	3	Lung	Prostate	Breast	0.3567906020337717	0.33068308825545084	0.30918590843223487
+41_Prostate	Prostate	combined	combined	True	1	Prostate	Breast	Melanoma	0.9921189857711538	0.007530185291772611	0.0001754144685368323
+41_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Breast	Melanoma	0.5655856065047653	0.42927960017114974	0.005134793324084946
+41_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+41_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	Lung	0.4881861365336768	0.20818249193774252	0.12737221361630957
+41_Prostate	Prostate	dna	snv96	True	1	Prostate	Breast	Lung	0.667435719690604	0.18264401033244226	0.0977058533768884
+41_Prostate	Prostate	dna	event	False	2	Breast	Prostate	Lung	0.5012892472905884	0.2842159528333124	0.15269066338283702
+41_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Breast	Lung	0.9479496095794929	0.04311495291030999	0.008842157038881618
+41_Prostate	Prostate	rna	alt_sj	False	2	Breast	Prostate	Lung	0.4139013137334972	0.3236257213662828	0.13606427074064487
+42_Prostate	Prostate	combined	combined	True	1	Prostate	Melanoma	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+42_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+42_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+42_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	Lung	0.5303385824181582	0.1497622003726363	0.11527830505139823
+42_Prostate	Prostate	dna	snv96	True	1	Prostate	Breast	AML	0.7519097076366074	0.09680706456211913	0.0878234740285855
+42_Prostate	Prostate	dna	event	True	1	Prostate	Lung	Breast	0.8608682917382715	0.06271512142422551	0.056806250786755094
+42_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Breast	Lung	0.958673138301569	0.03521537949794422	0.006034951682829792
+42_Prostate	Prostate	rna	alt_sj	False	2	Lung	Prostate	Breast	0.3567906020337717	0.33068308825545084	0.30918590843223487
+43_Prostate	Prostate	combined	combined	True	1	Prostate	Breast	Melanoma	0.9947834107034499	0.004919247661185717	0.00014867081768220216
+43_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Breast	Melanoma	0.6691181404745435	0.3308818595254565	0.0
+43_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+43_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	Lung	0.519599171153704	0.19069043280818276	0.10231998734932793
+43_Prostate	Prostate	dna	snv96	True	1	Prostate	Breast	Lung	0.7892052868453797	0.1276620771912434	0.04486608081921416
+43_Prostate	Prostate	dna	event	False	2	Breast	Prostate	Lung	0.3990070197402323	0.34745810643104824	0.12450294398488293
+43_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Breast	Lung	0.957016902151247	0.03645691514634675	0.0064469841501589445
+43_Prostate	Prostate	rna	alt_sj	False	2	Lung	Prostate	Breast	0.3567906020337717	0.33068308825545084	0.30918590843223487
+61_Melanoma	Melanoma	combined	combined	True	1	Melanoma	Prostate	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+61_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+61_Melanoma	Melanoma	rna	rna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+61_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	Prostate	Breast	0.8883044295976678	0.03031549874757042	0.028867231448161123
+61_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	Lung	Breast	0.9649964139527824	0.019149930238151574	0.009025776079615078
+61_Melanoma	Melanoma	dna	event	True	1	Melanoma	Breast	Prostate	0.9902879407538091	0.004235490925690539	0.00336380085044002
+61_Melanoma	Melanoma	rna	gene_exp	True	1	Melanoma	Lung	Breast	0.9677090470161847	0.023787230257284273	0.0076732534113313705
+61_Melanoma	Melanoma	rna	alt_sj	True	1	Melanoma	Breast	Prostate	0.9921789035127198	0.0030666137151860624	0.0028208095901539974
+74_Lung	Lung	combined	combined	True	1	Lung	Breast	Prostate	0.8547064236023073	0.14493829621853818	0.00017764008957728018
+74_Lung	Lung	dna	dna_combined	True	1	Lung	Breast	Prostate	0.6073494256109127	0.39265057438908735	0.0
+74_Lung	Lung	rna	rna_combined	True	1	Lung	Breast	Prostate	0.7922045990874329	0.20779540091256715	0.0
+74_Lung	Lung	dna	gen_pos	True	1	Lung	Breast	Prostate	0.5792652655856683	0.13678847900569205	0.13007042123378146
+74_Lung	Lung	dna	snv96	False	3	Breast	Prostate	Lung	0.49215945856138305	0.29663369353925223	0.16450357196362556
+74_Lung	Lung	dna	event	True	1	Lung	Breast	Prostate	0.886658218195545	0.05102229358247546	0.043295824032951166
+74_Lung	Lung	rna	gene_exp	True	1	Lung	Prostate	Breast	0.9475175630953038	0.026202157202122912	0.02347169801912978
+74_Lung	Lung	rna	alt_sj	True	1	Lung	Prostate	Breast	0.3567906020337717	0.33068308825545084	0.30918590843223487
+75_Lung	Lung	combined	combined	True	1	Lung	Breast	Prostate	0.983970957947439	0.015521811628403399	0.0002536152120787779
+75_Lung	Lung	dna	dna_combined	True	1	Lung	Prostate	Melanoma	1.0	0.0	0.0
+75_Lung	Lung	rna	rna_combined	False	2	Breast	Lung	Prostate	0.6120221062915586	0.3879778937084414	0.0
+75_Lung	Lung	dna	gen_pos	True	1	Lung	Prostate	AML	0.8421228964216281	0.044170832240267764	0.03887164240376528
+75_Lung	Lung	dna	snv96	True	1	Lung	Breast	Prostate	0.928532494906006	0.042828813690468204	0.017804247963637852
+75_Lung	Lung	dna	event	True	1	Lung	Breast	Prostate	0.9148880602230727	0.03546050652048383	0.027020306232094966
+75_Lung	Lung	rna	gene_exp	True	1	Lung	Breast	Prostate	0.5588697721436312	0.3875290947720278	0.028466493177521913
+75_Lung	Lung	rna	alt_sj	True	1	Lung	Prostate	Breast	0.3567906020337717	0.33068308825545084	0.30918590843223487
+94_AML	AML	dna	dna_combined	True	1	AML	Breast	Prostate	0.8636233773307568	0.13637662266924327	0.0
+94_AML	AML	dna	gen_pos	True	1	AML	Breast	Prostate	0.2612753675957399	0.24584770995520422	0.1985140720229688
+94_AML	AML	dna	snv96	True	1	AML	Breast	Melanoma	0.8410457512893421	0.08994512311351065	0.04030542925511462
+94_AML	AML	dna	event	True	1	AML	Prostate	Breast	0.7671112016632713	0.10685224426778119	0.07257123041390573
+95_AML	AML	dna	dna_combined	True	1	AML	Breast	Prostate	0.6768216688973605	0.3231783311026395	0.0
+95_AML	AML	dna	gen_pos	False	2	Breast	AML	Melanoma	0.3057396389567103	0.27230857360495064	0.1518189238820265
+95_AML	AML	dna	snv96	True	1	AML	Breast	Melanoma	0.8653027484273756	0.06758393434821443	0.0308790076605329
+95_AML	AML	dna	event	True	1	AML	Prostate	Breast	0.728494107962013	0.10147320258499538	0.08963120780295669
+22_Breast	Breast	combined	combined	False	2	Lung	Breast	Melanoma	0.7007684924553478	0.293553730691967	0.005422302679544602
+22_Breast	Breast	dna	dna_combined	True	1	Breast	Lung	Melanoma	0.40468727187151154	0.38306807682436433	0.21224465130412426
+22_Breast	Breast	rna	rna_combined	False	2	Lung	Breast	Prostate	0.716063609849312	0.28393639015068806	0.0
+22_Breast	Breast	dna	gen_pos	True	1	Breast	Prostate	AML	0.3765172724083838	0.26453657444720957	0.13766785747676052
+22_Breast	Breast	dna	snv96	False	2	Prostate	Breast	Lung	0.6984352845565727	0.17508544559836642	0.113257099762149
+22_Breast	Breast	dna	event	True	1	Breast	Prostate	Lung	0.4560114164755755	0.24496094164068744	0.21944745529845697
+22_Breast	Breast	rna	gene_exp	False	2	Lung	Breast	Prostate	0.7734669388573961	0.2075373647269189	0.017397929328230508
+22_Breast	Breast	rna	alt_sj	False	3	Lung	Prostate	Breast	0.3723733377946745	0.31922902757144533	0.30284102098472937
+23_Breast	Breast	combined	combined	False	2	Lung	Breast	Melanoma	0.6073367228736519	0.3836385476502452	0.008707804733556656
+23_Breast	Breast	dna	dna_combined	True	1	Breast	Lung	Melanoma	0.3431365338718357	0.2960866573392358	0.2747593849441506
+23_Breast	Breast	rna	rna_combined	False	2	Lung	Breast	Prostate	0.6472239184618963	0.3527760815381037	0.0
+23_Breast	Breast	dna	gen_pos	True	1	Breast	AML	Prostate	0.43698375558711744	0.251503218185698	0.15907550361079836
+23_Breast	Breast	dna	snv96	True	1	Breast	AML	Lung	0.3700800067308849	0.2282782429396713	0.22421362330512903
+23_Breast	Breast	dna	event	True	1	Breast	Prostate	AML	0.4174935541308935	0.18777039993283695	0.1820126199222303
+23_Breast	Breast	rna	gene_exp	False	2	Lung	Breast	Prostate	0.6257934061147961	0.3542245356506593	0.01937406374062765
+23_Breast	Breast	rna	alt_sj	False	3	Lung	Prostate	Breast	0.3723733377946745	0.31922902757144533	0.30284102098472937
+44_Prostate	Prostate	combined	combined	True	1	Prostate	Breast	Melanoma	0.9992139157763308	0.0005747465103077854	0.00010566885668071093
+44_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+44_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Breast	Melanoma	0.945608713071966	0.054391286928034036	0.0
+44_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	AML	0.5734297818493788	0.14577792194110004	0.10503687146992992
+44_Prostate	Prostate	dna	snv96	True	1	Prostate	Breast	Lung	0.8932376549185526	0.04416758327890957	0.0349045293267218
+44_Prostate	Prostate	dna	event	False	2	Breast	Prostate	Lung	0.44522926487209324	0.29879696310182957	0.1824056780461737
+44_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Lung	Breast	0.9557182301877507	0.02599387294218074	0.01811908322302074
+44_Prostate	Prostate	rna	alt_sj	False	2	Lung	Prostate	Breast	0.3723733377946745	0.31922902757144533	0.30284102098472937
+45_Prostate	Prostate	combined	combined	True	1	Prostate	Breast	Melanoma	0.9955466363949058	0.004226631565328391	0.00011336601988288928
+45_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Breast	Melanoma	0.951812128092744	0.04818787190725607	0.0
+45_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Breast	Melanoma	0.9226297953810119	0.07737020461898816	0.0
+45_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	Melanoma	0.6264834604790936	0.17249849267215436	0.10663566892785305
+45_Prostate	Prostate	dna	snv96	True	1	Prostate	Lung	Breast	0.791568312525748	0.13997727285798758	0.05848686119538919
+45_Prostate	Prostate	dna	event	False	2	Breast	Prostate	Lung	0.42255171881654924	0.290130247034946	0.1908552445312943
+45_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Breast	Lung	0.9462557299503728	0.027657124313366095	0.025918817834289513
+45_Prostate	Prostate	rna	alt_sj	False	2	Lung	Prostate	Breast	0.3723733377946745	0.31922902757144533	0.30284102098472937
+62_Melanoma	Melanoma	combined	combined	True	1	Melanoma	Prostate	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+62_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+62_Melanoma	Melanoma	rna	rna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+62_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	Breast	Prostate	0.8313186142995658	0.07089750482295545	0.04691512264721106
+62_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	Breast	AML	0.9883698341804507	0.007366572703719244	0.002651880719475873
+62_Melanoma	Melanoma	dna	event	True	1	Melanoma	Breast	Prostate	0.9914640126485311	0.003462477096304809	0.002834276840081134
+62_Melanoma	Melanoma	rna	gene_exp	True	1	Melanoma	Breast	Lung	0.9829484932742053	0.007405497071907969	0.007216383791467023
+62_Melanoma	Melanoma	rna	alt_sj	True	1	Melanoma	Prostate	Breast	0.9906145871911296	0.0044737573826880515	0.0026771312349587605
+63_Melanoma	Melanoma	combined	combined	True	1	Melanoma	Prostate	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+63_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+63_Melanoma	Melanoma	rna	rna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+63_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	Prostate	AML	0.9066350725374493	0.027215370365383195	0.025973352365337026
+63_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	Breast	AML	0.9785776182161654	0.008357286514421879	0.007194669452188041
+63_Melanoma	Melanoma	dna	event	True	1	Melanoma	AML	Prostate	0.8864378771764977	0.054197525517536746	0.026475426841583462
+63_Melanoma	Melanoma	rna	gene_exp	True	1	Melanoma	Lung	Breast	0.9738902568936545	0.011830548550482201	0.009285582962517934
+63_Melanoma	Melanoma	rna	alt_sj	True	1	Melanoma	Breast	Prostate	0.9945328761418595	0.002132663189814509	0.001771403237168173
+76_Lung	Lung	combined	combined	True	1	Lung	Breast	Prostate	0.9976102506400294	0.002147281676316262	0.00012123384182716558
+76_Lung	Lung	dna	dna_combined	True	1	Lung	Prostate	Melanoma	1.0	0.0	0.0
+76_Lung	Lung	rna	rna_combined	True	1	Lung	Breast	Prostate	0.822881000556141	0.17711899944385895	0.0
+76_Lung	Lung	dna	gen_pos	True	1	Lung	Prostate	Melanoma	0.8879587899670691	0.05228086526089058	0.02569935104291161
+76_Lung	Lung	dna	snv96	True	1	Lung	Prostate	Breast	0.9956688236135881	0.003480900672541369	0.0007330817690937114
+76_Lung	Lung	dna	event	True	1	Lung	Breast	Prostate	0.4020315086818041	0.3175456497390684	0.2354131466085742
+76_Lung	Lung	rna	gene_exp	True	1	Lung	Breast	Prostate	0.930630086917384	0.056336876234906824	0.012260393109006729
+76_Lung	Lung	rna	alt_sj	True	1	Lung	Prostate	Breast	0.3723733377946745	0.31922902757144533	0.30284102098472937
+78_Breast	Breast	dna	dna_combined	True	1	Breast	Melanoma	AML	0.33906471690889584	0.33255689202637456	0.3283783910647296
+78_Breast	Breast	dna	gen_pos	True	1	Breast	AML	Prostate	0.35338011993028506	0.2530103680203267	0.16932689083548205
+78_Breast	Breast	dna	snv96	False	3	Prostate	AML	Breast	0.28566914961600065	0.26694087132091654	0.22178481199257943
+78_Breast	Breast	dna	event	False	3	AML	Prostate	Breast	0.8293149854493419	0.07817051018111211	0.048199161548572976
+96_AML	AML	dna	dna_combined	True	1	AML	Breast	Melanoma	0.9340242591039146	0.044366951329548925	0.021608789566536543
+96_AML	AML	dna	gen_pos	True	1	AML	Prostate	Breast	0.23568174242512566	0.22055541434058537	0.203487971463333
+96_AML	AML	dna	snv96	True	1	AML	Prostate	Breast	0.7416402882188617	0.10721591055355187	0.08391917722992558
+96_AML	AML	dna	event	True	1	AML	Prostate	Breast	0.8103177958557183	0.0763798515910756	0.05421263004127431
+24_Breast	Breast	combined	combined	True	1	Breast	Lung	Melanoma	0.7108341492439407	0.2828577249464966	0.006023599636317163
+24_Breast	Breast	dna	dna_combined	True	1	Breast	Lung	Melanoma	0.3758521565839703	0.29649602825102916	0.21170634559232188
+24_Breast	Breast	rna	rna_combined	True	1	Breast	Lung	Prostate	0.6647051050936343	0.3352948949063657	0.0
+24_Breast	Breast	dna	gen_pos	True	1	Breast	AML	Prostate	0.4040564696029381	0.1856806503627995	0.1514366798327929
+24_Breast	Breast	dna	snv96	True	1	Breast	AML	Lung	0.6253487376812479	0.18346736276402717	0.09457419858850331
+24_Breast	Breast	dna	event	False	2	AML	Breast	Lung	0.6715678544706132	0.14070998695938472	0.09917458267085137
+24_Breast	Breast	rna	gene_exp	True	1	Breast	Lung	Prostate	0.4325848908957742	0.3956169583531846	0.17161759302626012
+24_Breast	Breast	rna	alt_sj	False	3	Lung	Prostate	Breast	0.36658774004003025	0.32827513590613566	0.2995192520745906
+25_Breast	Breast	combined	combined	True	1	Breast	Prostate	Melanoma	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+25_Breast	Breast	dna	dna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+25_Breast	Breast	rna	rna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+25_Breast	Breast	dna	gen_pos	True	1	Breast	Prostate	AML	0.66779470087038	0.14325286863495257	0.09130861853154473
+25_Breast	Breast	dna	snv96	True	1	Breast	Lung	Melanoma	0.9919406989091972	0.005553634159298629	0.0024449077789919613
+25_Breast	Breast	dna	event	True	1	Breast	Prostate	Lung	0.5663876132069842	0.23141739066834247	0.14206151671324002
+25_Breast	Breast	rna	gene_exp	False	3	Prostate	Lung	Breast	0.8604874723440056	0.0730058601545234	0.06646288378993605
+25_Breast	Breast	rna	alt_sj	False	3	Lung	Prostate	Breast	0.36658774004003025	0.32827513590613566	0.2995192520745906
+46_Prostate	Prostate	combined	combined	True	1	Prostate	Breast	Melanoma	0.9896073496613617	0.00999483222422165	0.00019890905720835268
+46_Prostate	Prostate	dna	dna_combined	False	2	Breast	Prostate	Melanoma	0.5024825095698027	0.49751749043019733	0.0
+46_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+46_Prostate	Prostate	dna	gen_pos	False	2	Breast	Prostate	Melanoma	0.564808151860215	0.31770254121684094	0.07739030088576676
+46_Prostate	Prostate	dna	snv96	True	1	Prostate	Lung	AML	0.9995141558342614	0.00036819728737779995	5.26982185269413e-05
+46_Prostate	Prostate	dna	event	False	2	Breast	Prostate	Lung	0.32005502556913634	0.31360705126758165	0.275980997460449
+46_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Lung	Breast	0.966208107674436	0.020681799169122633	0.013096495288854355
+46_Prostate	Prostate	rna	alt_sj	False	2	Lung	Prostate	Breast	0.36658774004003025	0.32827513590613566	0.2995192520745906
+47_Prostate	Prostate	combined	combined	True	1	Prostate	Breast	Melanoma	0.997377724332234	0.002375294238136788	0.00012349071481459128
+47_Prostate	Prostate	dna	dna_combined	True	1	Prostate	Breast	Melanoma	0.8076540214620144	0.19234597853798563	0.0
+47_Prostate	Prostate	rna	rna_combined	True	1	Prostate	Melanoma	Lung	1.0	0.0	0.0
+47_Prostate	Prostate	dna	gen_pos	True	1	Prostate	Breast	Melanoma	0.5798859400883275	0.17896894045388584	0.08724903464809
+47_Prostate	Prostate	dna	snv96	True	1	Prostate	Lung	Breast	0.7984692681184882	0.13222475998360025	0.0404082002045807
+47_Prostate	Prostate	dna	event	False	2	Breast	Prostate	Lung	0.38873721855156174	0.22342303469232147	0.1915327909049497
+47_Prostate	Prostate	rna	gene_exp	True	1	Prostate	Lung	Breast	0.963423430416549	0.022254575201847798	0.014307366238754927
+47_Prostate	Prostate	rna	alt_sj	False	2	Lung	Prostate	Breast	0.36658774004003025	0.32827513590613566	0.2995192520745906
+64_Melanoma	Melanoma	combined	combined	True	1	Melanoma	Prostate	Lung	0.9997000899730081	9.997000899730082e-05	9.997000899730082e-05
+64_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+64_Melanoma	Melanoma	rna	rna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+64_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	Prostate	Breast	0.7452929716247175	0.10001562781543258	0.07887732727702555
+64_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	Breast	AML	0.980748698530292	0.010468477392689333	0.006083038718355912
+64_Melanoma	Melanoma	dna	event	True	1	Melanoma	Breast	Prostate	0.8887951682716148	0.06831144752879852	0.02310944885210586
+64_Melanoma	Melanoma	rna	gene_exp	True	1	Melanoma	Lung	Breast	0.9706460534204159	0.012980504283040359	0.012338486667203915
+64_Melanoma	Melanoma	rna	alt_sj	True	1	Melanoma	Breast	Prostate	0.9962220870907895	0.001633280535076512	0.001147902252873868
+65_Melanoma	Melanoma	combined	combined	True	1	Melanoma	Breast	Prostate	0.9924183058414341	0.007238441664115383	0.00017162624722529723
+65_Melanoma	Melanoma	dna	dna_combined	True	1	Melanoma	Breast	Prostate	0.5782439002693257	0.42175609973067435	0.0
+65_Melanoma	Melanoma	rna	rna_combined	True	1	Melanoma	Prostate	Lung	1.0	0.0	0.0
+65_Melanoma	Melanoma	dna	gen_pos	True	1	Melanoma	Breast	Prostate	0.6413891524948677	0.1247922456609761	0.11299691492219989
+65_Melanoma	Melanoma	dna	snv96	True	1	Melanoma	Breast	AML	0.9042673018871444	0.06594773648784577	0.025734658747024183
+65_Melanoma	Melanoma	dna	event	False	4	Breast	Prostate	Lung	0.6184250285073992	0.18953424460132165	0.10700060159187731
+65_Melanoma	Melanoma	rna	gene_exp	True	1	Melanoma	Lung	Breast	0.957938646204936	0.017960898078365886	0.016018211874565074
+65_Melanoma	Melanoma	rna	alt_sj	True	1	Melanoma	Breast	Prostate	0.9961523284917155	0.0014700962199934535	0.0013289382108592734
+77_Lung	Lung	combined	combined	False	2	Breast	Lung	Prostate	0.49666394156697985	0.49515395143363233	0.00788090139210363
+77_Lung	Lung	dna	dna_combined	True	1	Lung	Breast	Prostate	0.6640261422954581	0.33597385770454186	0.0
+77_Lung	Lung	rna	rna_combined	False	3	Breast	Prostate	Lung	0.4907881772083339	0.2616452417057959	0.24756658108587024
+77_Lung	Lung	dna	gen_pos	True	1	Lung	Prostate	Breast	0.47116148729240287	0.26605863079754205	0.12371004691457103
+77_Lung	Lung	dna	snv96	False	2	Breast	Lung	Prostate	0.4991100914509897	0.4505821350415442	0.02445114754888091
+77_Lung	Lung	dna	event	True	1	Lung	Breast	Prostate	0.8491314308487381	0.08886806037266967	0.046902395339416925
+77_Lung	Lung	rna	gene_exp	False	2	Breast	Lung	Prostate	0.527960856056227	0.36821711736909163	0.103153769294255
+77_Lung	Lung	rna	alt_sj	True	1	Lung	Prostate	Breast	0.36658774004003025	0.32827513590613566	0.2995192520745906
+79_Breast	Breast	dna	dna_combined	True	1	Breast	Prostate	Melanoma	1.0	0.0	0.0
+79_Breast	Breast	dna	gen_pos	True	1	Breast	Prostate	Melanoma	0.6211535808485892	0.125555499751691	0.0962994397787836
+79_Breast	Breast	dna	snv96	True	1	Breast	Lung	Melanoma	0.85211950714116	0.10937617809971406	0.02350442921788196
+79_Breast	Breast	dna	event	True	1	Breast	Prostate	Lung	0.5687006523689163	0.2291292870511925	0.17073903336536575
+97_AML	AML	dna	dna_combined	True	1	AML	Prostate	Melanoma	1.0	0.0	0.0
+97_AML	AML	dna	gen_pos	True	1	AML	Prostate	Breast	0.30296261895242693	0.23631127557213694	0.2243333746600676
+97_AML	AML	dna	snv96	True	1	AML	Breast	Prostate	0.9191474951773437	0.0365156829141001	0.01837598512699308
+97_AML	AML	dna	event	True	1	AML	Breast	Prostate	0.7748687172911805	0.09103090737201093	0.06036457528501207

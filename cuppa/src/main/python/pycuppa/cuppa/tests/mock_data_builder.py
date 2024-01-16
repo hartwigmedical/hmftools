@@ -33,7 +33,6 @@ if __name__ == '__main__':
     ## Output paths --------------------------------
     mock_features_path = os.path.join(MOCK_DATA_DIR, "training_data/features.tsv.gz")
     mock_metadata_path = os.path.join(MOCK_DATA_DIR, "training_data/metadata.tsv")
-    mock_classifier_path = os.path.join(MOCK_DATA_DIR, "cuppa_classifier.mock.pickle.gz")
 
     ## Training data --------------------------------
     n_samples_per_class = pd.DataFrame.from_records([
@@ -45,7 +44,7 @@ if __name__ == '__main__':
     ])
 
     training_data_builder = MockTrainingDataBuilder(
-        metadata_path = input_dir + "cup_ref_sample_data.csv",
+        metadata_path = metadata_path,
         features_dir = input_dir,
         n_samples_per_class=n_samples_per_class
     )
@@ -59,19 +58,12 @@ if __name__ == '__main__':
     )
     cv_data_builder.build_and_export(out_dir=os.path.join(MOCK_DATA_DIR, "cv_output"))
 
-    ## Classifier --------------------------------
+    ## Final model --------------------------------
     classifier_builder = MockClassifierBuilder.from_paths(
         features_path=mock_features_path,
         metadata_path=mock_metadata_path
     )
-    classifier_builder.build_and_export(mock_classifier_path)
-
-    # ## Intermediate probs --------------------------------
-    # probs_builder = MockIntermediateProbsBuilder(
-    #     cuppa_classifier_path=mock_classifier_path,
-    #     features_path=mock_features_path
-    # )
-    # probs_builder.build_and_export(os.path.join(MOCK_DATA_DIR, "probs_fit_transform"))
+    classifier_builder.build_and_export(out_dir=os.path.join(MOCK_DATA_DIR, "final_model"))
 
 
 class MockTrainingDataBuilder(LoggerMixin):
@@ -320,7 +312,7 @@ class MockCvOutputBuilder(LoggerMixin):
         performance.to_tsv(os.path.join(out_dir, "performance.tsv"))
 
 
-class MockClassifierBuilder:
+class MockClassifierBuilder(LoggerMixin):
     def __init__(self, features: CuppaFeatures, metadata: SampleMetadata):
         self.X = features
         self.y = metadata["CancerSubtype"]
@@ -331,38 +323,20 @@ class MockClassifierBuilder:
         metadata = pd.read_csv(metadata_path, sep='\t', index_col=0)
         return cls(features=features, metadata=metadata)
 
-    def build_and_export(self, out_path: str):
+    def build_and_export(self, out_dir: str):
         classifier = CuppaClassifier(fusion_overrides_path=None)
         classifier.fit(X=self.X, y=self.y)
-        classifier.to_file(out_path)
 
-#
-# class MockIntermediateProbsBuilder(LoggerMixin):
-#     def __init__(self, cuppa_classifier_path: str, features_path: str):
-#         self.cuppa_classifier = CuppaClassifier.from_file(cuppa_classifier_path)
-#         self.features = pd.read_csv(features_path, sep='\t', index_col=0)
-#
-#     @cached_property
-#     def _build_cached(self) -> dict[str, pd.DataFrame]:
-#
-#         probs = self.cuppa_classifier.predict_proba(self.features)
-#
-#         clf_names = probs.index.get_level_values("clf_name").unique()
-#         probs_per_clf = {}
-#         for clf_name in clf_names:
-#             probs_i = probs[probs.index.get_level_values("clf_name") == clf_name].copy()
-#             probs_i.index = probs_i.index.get_level_values("sample_id")
-#             probs_i.columns.name = None
-#             probs_per_clf[clf_name] = probs_i
-#
-#         return probs_per_clf
-#
-#     def build_and_export(self, out_dir: str):
-#         #out_dir = os.path.join(MOCK_DATA_DIR, "probs_fit_transform/")
-#
-#         self.logger.info("Exporting output to: " + out_dir)
-#         os.makedirs(out_dir, exist_ok=True)
-#
-#         probs_per_clf = self._build_cached
-#         for clf_name, probs_i in probs_per_clf.items():
-#             probs_i.to_csv(os.path.join(out_dir, clf_name + ".tsv"), sep='\t')
+        predictions = classifier.predict(self.X)
+        predictions.get_data_types("prob").get_clf_names("gen_pos")
+
+        self.logger.info("Exporting output to: " + out_dir)
+        os.makedirs(out_dir, exist_ok=True)
+
+        predictions.to_tsv(os.path.join(out_dir, "predictions.tsv.gz"), signif_digits=None)
+        classifier.to_file(os.path.join(out_dir, "cuppa_classifier.pickle.gz"))
+
+        # predictions.get_data_types("prob").get_clf_names("gen_pos")
+        #
+        # path = "/Users/lnguyen/Hartwig/hartwigmedical/hmftools/cuppa/src/main/python/pycuppa/cuppa/resources/mock_data/final_model/predictions.tsv.gz"
+        # predictions.from_tsv(path).get_data_types("prob").get_clf_names("gen_pos")
