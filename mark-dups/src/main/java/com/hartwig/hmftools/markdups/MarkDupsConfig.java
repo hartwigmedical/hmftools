@@ -237,7 +237,7 @@ public class MarkDupsConfig
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
         RunChecks = configBuilder.hasFlag(RUN_CHECKS);
         LogFinalCache = configBuilder.hasFlag(LOG_FINAL_CACHE);
-        DropDuplicates = !configBuilder.hasFlag(DROP_DUPLICATES);
+        DropDuplicates = configBuilder.hasFlag(DROP_DUPLICATES);
 
         if(RunChecks)
         {

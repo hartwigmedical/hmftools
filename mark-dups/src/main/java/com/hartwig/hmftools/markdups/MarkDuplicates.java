@@ -193,6 +193,7 @@ public class MarkDuplicates
         BamReader bamReader = new BamReader(mConfig);
 
         AtomicLong unmappedCount = new AtomicLong();
+        AtomicLong nonHumanContigCount = new AtomicLong();
 
         bamReader.queryUnmappedReads((final SAMRecord record) ->
         {
@@ -204,12 +205,12 @@ public class MarkDuplicates
         bamReader.queryNonHumanContigs((final SAMRecord record) ->
         {
             processNonHumanContigReads(record, bamWriter);
-            unmappedCount.incrementAndGet();
+            nonHumanContigCount.incrementAndGet();
         });
 
-        if(unmappedCount.get() > 0)
+        if(unmappedCount.get() > 0 || nonHumanContigCount.get() > 0)
         {
-            MD_LOGGER.debug("wrote {} unmapped reads", unmappedCount);
+            MD_LOGGER.debug("wrote unmapped({}) otherChromosome({}) reads", unmappedCount, nonHumanContigCount);
         }
 
         return unmappedCount.get();
@@ -220,6 +221,9 @@ public class MarkDuplicates
         // if these have a mate in a human chromosome, then they have been unmapped in that read, so do so here as well
         if(record.getReadPairedFlag() && !record.getMateUnmappedFlag() && HumanChromosome.contains(record.getMateReferenceName()))
         {
+            if(record.getSupplementaryAlignmentFlag())
+                return; // drop as per standard logic
+
             boolean mateUnmapped = mConfig.UnmapRegions.mateInUnmapRegion(record);
 
             // if the human-chromosome mate was unmapped (ie in an unmap region), then this read should also now be unmapped

@@ -120,7 +120,7 @@ public class BamReader
 
     public void queryNonHumanContigs(final Consumer<SAMRecord> consumer)
     {
-        BamSlicer bamSlicer = new BamSlicer(0);
+        BamSlicer bamSlicer = new BamSlicer(0, true, true, true);
         bamSlicer.setKeepUnmapped();
 
         for(BamFileReader reader : mBamReaders)
