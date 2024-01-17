@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UNMAP_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getFivePrimeUnclippedPosition;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.NO_COORDS;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.SUPPLEMENTARY;
@@ -235,6 +236,19 @@ public class Fragment
     }
 
     public int readCount() { return mReads.size(); }
+
+    public boolean isPreciseInversion()
+    {
+        SAMRecord first = mReads.stream().filter(x -> !x.getSupplementaryAlignmentFlag() && x.getFirstOfPairFlag()).findFirst().orElse(null);
+        SAMRecord second = mReads.stream().filter(x -> !x.getSupplementaryAlignmentFlag() && x.getSecondOfPairFlag()).findFirst().orElse(null);
+
+        if(first == null || second == null)
+            return false;
+
+        return first.getReadNegativeStrandFlag() == second.getReadNegativeStrandFlag()
+                && !first.getReadUnmappedFlag() && !second.getReadUnmappedFlag()
+                && getFivePrimeUnclippedPosition(first) == getFivePrimeUnclippedPosition(second);
+    }
 
     public String toString()
     {
