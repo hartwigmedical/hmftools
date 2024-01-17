@@ -1,6 +1,6 @@
 # MarkDups
 
-The HMF mark duplicates component performs both UMI aware and UMI agnositc duplicate marking. 
+The HMF mark duplicates component performs both UMI aware and UMI agnostic duplicate marking. 
 As the first component to run after alignment it also performs post-alignment improvements to the BAM, specifically by unmapping certain reads and deleting supplementary reads in specific problematic regions of the BAM
 
 UMI are used to label each molecule in a sample with a unique sequence prior to PCR amplification.
@@ -27,7 +27,6 @@ java -jar mark-dups.jar
     -output_dir /path_to_output/
     -log_level DEBUG 
     -threads 24
-    -multi_bam 
 ```
 
 ## Arguments
@@ -42,7 +41,6 @@ ref_genome_version | Required | V37 or V38
 form_consensus | Optional | Form a consensus read from duplicates
 unmap_regions | Optional | Regions of high depth, repeats or otherwise problematic for mapping
 threads | Optional | Number of threads, default = 1
-multi_bam | Optional | Write a BAM per thread prior to final merge, see note in 'Performance'
 sambamba | Optional | Used to merge BAMs per thread when used with 'multi_bam' option and threads > 1
 samtools | Optional | Used to sort and index final output BAM
 output_dir | Optional | If not specified will write output same directory as input BAM
@@ -69,7 +67,6 @@ java -jar mark-dups.jar
     -output_dir /path_to_output/
     -log_level DEBUG 
     -threads 24
-    -multi_bam 
 ```
 
 ### UMI Arguments
