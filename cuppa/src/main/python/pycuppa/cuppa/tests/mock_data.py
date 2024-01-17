@@ -15,8 +15,10 @@ from cuppa.constants import MOCK_DATA_DIR
 
 
 class MockInputData:
-    path_tsv_new_format_colo = os.path.join(MOCK_DATA_DIR, "input_data/COLO829T.cuppa_data.tsv.gz")
-    path_tsv_new_format_prostate = os.path.join(MOCK_DATA_DIR, "input_data/prostate_sample.cuppa_data.tsv.gz")
+    path_tsv_new_format_colo = os.path.join(MOCK_DATA_DIR, "input_data/new_format/COLO829T.cuppa_data.tsv.gz")
+    path_tsv_new_format_prostate = os.path.join(MOCK_DATA_DIR, "input_data/new_format/prostate_sample.cuppa_data.tsv.gz")
+
+    dir_old_format = os.path.join(MOCK_DATA_DIR, "input_data/old_format")
 
 
 class MockTrainingData:

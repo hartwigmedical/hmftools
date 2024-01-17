@@ -23,6 +23,7 @@ if __name__ == '__main__':
         MockTrainingDataBuilder,
         MockCvOutputBuilder,
         MockClassifierBuilder,
+        MockOldCuppaFeaturesBuilder
     )
 
     ## Input paths --------------------------------
@@ -64,6 +65,10 @@ if __name__ == '__main__':
         metadata_path=mock_metadata_path
     )
     classifier_builder.build_and_export(out_dir=os.path.join(MOCK_DATA_DIR, "final_model"))
+
+    ## --------------------------------
+    mock_features_builder = MockOldCuppaFeaturesBuilder(out_dir=os.path.join(MOCK_DATA_DIR, "input_data/old_format"))
+    mock_features_builder.build_and_export()
 
 
 class MockTrainingDataBuilder(LoggerMixin):
@@ -301,7 +306,7 @@ class MockCvOutputBuilder(LoggerMixin):
 
         return (predictions, pred_summ, performance)
 
-    def build_and_export(self, out_dir: str):
+    def build_and_export(self, out_dir: str) -> None:
         predictions, pred_summ, performance = self._build_cached
 
         self.logger.info("Exporting output to: " + out_dir)
@@ -323,7 +328,7 @@ class MockClassifierBuilder(LoggerMixin):
         metadata = pd.read_csv(metadata_path, sep='\t', index_col=0)
         return cls(features=features, metadata=metadata)
 
-    def build_and_export(self, out_dir: str):
+    def build_and_export(self, out_dir: str) -> None:
         classifier = CuppaClassifier(fusion_overrides_path=None)
         classifier.fit(X=self.X, y=self.y)
 
@@ -336,7 +341,163 @@ class MockClassifierBuilder(LoggerMixin):
         predictions.to_tsv(os.path.join(out_dir, "predictions.tsv.gz"), signif_digits=None)
         classifier.to_file(os.path.join(out_dir, "cuppa_classifier.pickle.gz"))
 
-        # predictions.get_data_types("prob").get_clf_names("gen_pos")
-        #
-        # path = "/Users/lnguyen/Hartwig/hartwigmedical/hmftools/cuppa/src/main/python/pycuppa/cuppa/resources/mock_data/final_model/predictions.tsv.gz"
-        # predictions.from_tsv(path).get_data_types("prob").get_clf_names("gen_pos")
+
+class MockOldCuppaFeaturesBuilder(LoggerMixin):
+
+    def __init__(self, out_dir: str):
+        self.out_dir = out_dir
+
+    def get_out_path(self, feature_type: str):
+        BASENAMES = dict(
+            gen_pos="cup_ref_sample_pos_freq_counts.csv.gz",
+            snv96="cup_ref_snv_counts.csv.gz",
+            driver_fusion_virus="cup_ref_cohort_feature_data.csv",
+            sv="cup_ref_cohort_sv_data.csv",
+            trait="cup_ref_cohort_traits_data.csv",
+            sig="cup_ref_cohort_signature_data.csv",
+
+            gene_exp="cup_ref_gene_exp_sample.csv",
+            alt_sj="cup_ref_alt_sj_sample.csv",
+        )
+        return os.path.join(self.out_dir, BASENAMES[feature_type])
+
+
+    @staticmethod
+    def make_dummy_names(n: int, prefix: str = "sample_"):
+        return prefix + pd.Series(range(1, n+1)).astype(str)
+
+    def make_feature_x_sample_matrix(
+        self,
+        n_samples: int = 2,
+        n_features: int = 3,
+        dtype: object = int,
+        feature_names: list[str] | pd.Index | None = None
+    ) -> pd.DataFrame:
+        #n_samples=3
+        #n_features=2
+
+        matrix = pd.DataFrame(
+            np.zeros((n_samples, n_features)),
+            index = "sample_" + pd.Series(range(1, n_samples+1)).astype(str)
+        )
+
+        if feature_names is not None:
+            matrix.columns = feature_names
+
+        matrix = matrix.astype(dtype)
+
+        return matrix
+
+    def make_gen_pos_matrix(self, n_samples: int = 2) -> pd.DataFrame:
+        return self.make_feature_x_sample_matrix(n_samples=n_samples, n_features=6220).transpose()
+
+    def make_snv96_matrix(self, n_samples: int = 2) -> pd.DataFrame:
+        return self.make_feature_x_sample_matrix(n_samples=n_samples, n_features=96).transpose()
+
+    def make_sv_matrix(self, n_samples: int = 2) -> pd.DataFrame:
+        matrix = self.make_feature_x_sample_matrix(
+            n_samples=n_samples, n_features=6,
+            feature_names=[
+                "LINE",
+                "SIMPLE_DEL_20KB_1MB","SIMPLE_DUP_32B_200B","SIMPLE_DUP_100KB_5MB",
+                "MAX_COMPLEX_SIZE","TELOMERIC_SGL"
+            ]
+        )
+        matrix = matrix.reset_index(names="SampleId")
+        return matrix
+
+    def make_trait_matrix(self, n_samples: int = 2) -> pd.DataFrame:
+        matrix = self.make_feature_x_sample_matrix(
+            n_samples=n_samples, n_features=6, dtype=float,
+            feature_names=["Gender", "WholeGenomeDuplication", "Purity", "Ploidy", "MsIndelsPerMb", "ChordHrd"]
+        )
+        matrix = matrix.reset_index(names="SampleId")
+
+        matrix["Gender"] = "FEMALE"
+        matrix["WholeGenomeDuplication"] = "false"
+
+        return matrix
+
+    def make_gene_exp_matrix(self, n_samples: int = 2) -> pd.DataFrame:
+
+        feature_names = pd.MultiIndex.from_tuples([
+            ("ENSG00000000001", "GENE1"),
+            ("ENSG00000000002", "GENE2"),
+            ("ENSG00000000003", "GENE3"),
+        ], names=["GeneId","GeneName"])
+
+        matrix = self.make_feature_x_sample_matrix(
+            n_samples=n_samples, n_features=len(feature_names), dtype=float,
+            feature_names=feature_names
+        )
+
+        matrix = matrix.transpose().reset_index()
+
+        return matrix
+
+    def make_alt_sj_matrix(self, n_samples: int = 2) -> pd.DataFrame:
+
+        feature_names = pd.MultiIndex.from_tuples([
+            ("ENSG00000000001", "1", 1000, 2000),
+            ("ENSG00000000002", "1", 3000, 4000),
+            ("ENSG00000000003", "1", 5000, 6000),
+        ], names=["GeneId", "Chromosome","PosStart","PosEnd"])
+
+        matrix = self.make_feature_x_sample_matrix(
+            n_samples=n_samples, n_features=len(feature_names),
+            feature_names=feature_names
+        )
+
+        matrix = matrix.transpose().reset_index()
+
+        return matrix
+
+    def make_event_matrix_one_sample(
+        self,
+        event_types = ["DRIVER", "FUSION", "VIRUS", "INDEL"],
+        sample_num: int = 1
+    ) -> pd.DataFrame:
+
+        template = pd.DataFrame.from_dict(dict(
+            SampleId="sample_" + str(sample_num),
+            Name=["driver_1", "fusion_1", "virus_1", "indel_1"],
+            Type=["DRIVER", "FUSION", "VIRUS", "INDEL"],
+            Likelihood=[0.0, 0.0, 0.0, 0.0],
+            ExtraInfo=["TYPE=DEL", "", "", ""]
+        ))
+
+        return template[template["Type"].isin(event_types)]
+
+    def make_signature_matrix(self, n_samples: int = 2) -> pd.DataFrame:
+        template = pd.DataFrame.from_dict(dict(
+            SampleId="sample_",
+            SigName=["Sig2", "Sig13", "Sig4", "Sig6", "Sig7", "Sig17"],
+            Allocation=0.0
+        ))
+
+        dfs = []
+        for i in range(1, n_samples + 1):
+            df = template.copy()
+            df["SampleId"] = df["SampleId"] + str(i)
+            dfs.append(df)
+
+        return pd.concat(dfs).reset_index(drop=True)
+
+    def build_and_export(self):
+
+        n_dna_samples = 3
+        self.make_gen_pos_matrix(n_samples=n_dna_samples).to_csv(self.get_out_path("gen_pos"), index=False)
+        self.make_snv96_matrix(n_samples=n_dna_samples).to_csv(self.get_out_path("snv96"), index=False)
+        self.make_sv_matrix(n_samples=n_dna_samples).to_csv(self.get_out_path("sv"), index=False)
+        self.make_signature_matrix(n_samples=n_dna_samples).to_csv(self.get_out_path("sig"), index=False)
+        self.make_trait_matrix(n_samples=n_dna_samples).to_csv(self.get_out_path("trait"), index=False)
+
+        self.make_event_matrix_one_sample().to_csv(self.get_out_path("driver_fusion_virus"), index=False)
+
+        n_rna_samples = 2
+        self.make_gene_exp_matrix(n_samples=n_rna_samples).to_csv(self.get_out_path("gene_exp"), index=False)
+        self.make_alt_sj_matrix(n_samples=n_rna_samples).to_csv(self.get_out_path("alt_sj"), index=False)
+
+
+
+
