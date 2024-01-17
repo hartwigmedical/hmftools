@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.esvee.SvConstants.POLY_G_TRIM_LENGTH;
 import static com.hartwig.hmftools.esvee.common.BaseType.G;
 import static com.hartwig.hmftools.esvee.common.BaseType.C;
 
-import static htsjdk.samtools.CigarOperator.I;
-
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 

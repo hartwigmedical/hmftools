@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.esvee.SvConstants.READ_FILTER_MIN_ALIGNED_BASES;
 import static com.hartwig.hmftools.esvee.SvConstants.READ_SOFT_CLIP_JUNCTION_BUFFER;
@@ -21,7 +22,7 @@ public final class ReadFilters
 {
     public static boolean alignmentCrossesJunction(final Read read, final Junction junction)
     {
-        return read.unclippedStart() <= junction.Position && junction.Position <= read.unclippedEnd();
+        return positionWithin(junction.Position, read.unclippedStart(), read.unclippedEnd());
     }
 
     public static boolean isRecordAverageQualityAbove(final byte[] baseQualities, final int averageBaseQThreshold)
@@ -103,7 +104,7 @@ public final class ReadFilters
         return !isBadlyMapped(read);
     }
 
-    private static boolean isBadlyMapped(final Read read)
+    public static boolean isBadlyMapped(final Read read)
     {
         if(!isDiscordant(read))
             return false;

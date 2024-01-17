@@ -20,10 +20,6 @@ public final class SvConstants
     public static final int INDEL_TO_SC_MIN_SIZE_SOFTCLIP = 6;
     public static final int INDEL_TO_SC_MAX_EDGE_DISTANCE = 16;
 
-
-    // variant calling
-    public static final int MAX_DUP_LENGTH = 6; // then classified as an INS
-
     // primary assembly
     public static final int READ_SOFT_CLIP_JUNCTION_BUFFER = 2;
 
@@ -34,17 +30,26 @@ public final class SvConstants
     public static final int PRIMARY_ASSEMBLY_MIN_MISMATCH_READS = 2; // new
     public static final int PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL = 60; // new
 
+    public static final int PRIMARY_ASSEMBLY_READ_MAX_BASE_MISMATCH = 1;
+
     // common
     public static int AVG_BASE_QUAL_THRESHOLD = 30; // original name: averageQualityThreshold
     public static int LOW_BASE_QUAL_THRESHOLD = 26; // original name: lowQualBaseThreshold
 
 
-    // read support
-    public static final int PRIMARY_ASSEMBLY_WEAK_SUPPORT_MIN_BASES = 3; // new
 
     public static final int SUPPORT_MAX_MISMATCH_STRONG = 1;
     public static final int SUPPORT_MAX_MISMATCH_WEAK = 4;
     public static final int SUPPORT_MAX_MISMATCH_DEDUPING_ASSEMBLIES = 5;
+
+
+    // variant calling
+    public static final int MAX_DUP_LENGTH = 6; // then classified as an INS
+
+
+    // OLD CODE - may still be used
+    // read support
+    public static final int PRIMARY_ASSEMBLY_WEAK_SUPPORT_MIN_BASES = 3; // new
 
 
     // UNCLASSIFIED

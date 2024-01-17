@@ -24,6 +24,7 @@ import com.hartwig.hmftools.esvee.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.read.BamReader;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.old.PrimaryAssembly;
+import com.hartwig.hmftools.esvee.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.read.ReadFilters;
 
 import htsjdk.samtools.SAMRecord;
@@ -143,6 +144,8 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             PrimaryAssembler primaryAssembler = new PrimaryAssembler(mConfig, mResultsWriter, junction);
 
+            // FIXME: doesn't seem to be making a big difference, but this is in efficient for long-range junction groups
+            // since both the junctions and reads are ordered. Could consider re-ordering by unclipped start and comparing to junction position
             List<Read> junctionCandidateReads = mCurrentJunctionGroup.candidateReads().stream()
                     .filter(x -> ReadFilters.alignmentCrossesJunction(x, junction))
                     .collect(Collectors.toList());
@@ -166,11 +169,13 @@ public class JunctionGroupAssembler extends ThreadTask
         if(!ReadFilters.isRecordAverageQualityAbove(record.getBaseQualities(), SvConstants.AVG_BASE_QUAL_THRESHOLD))
             return;
 
-        // mReadRescue::rescueRead) // CHECK: not required
-
-        // mNormaliser::normalise() on each record
-
         Read read = new Read(record);
+
+        // CHECK: could track for stats
+        ReadAdjustments.trimPolyGSequences(read);
+        ReadAdjustments.convertEdgeIndelsToSoftClip(read);
+
+        // mReadRescue::rescueRead) // CHECK: logic and purple
 
         mCurrentJunctionGroup.addCandidateRead(read);
 
