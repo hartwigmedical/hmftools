@@ -5,16 +5,17 @@ from cuppa.components.profile_similarity import cos_sim, ProfileSimilarityTransf
     NonBestSimilarityScaler
 from cuppa.misc.cached_class_property import cached_class_property
 
+
 class TestCosSim:
 
-    def test_array_vs_array(self):
+    def test_array_vs_array_cos_sim_is_correct(self):
         mut_counts = np.array([1, 0.5, 0.25, 0.1])
         mut_profile = np.array([0.75, 0.65, 0.51, 0.4])
         result = cos_sim(mut_counts, mut_profile)
 
         assert round(result, 3) == 0.911
 
-    def test_matrix_vs_matrix(self):
+    def test_matrix_vs_matrix_cos_sim_values_are_correct(self):
 
         ## n_samples (2) x n_features (3)
         mut_counts = np.array([
@@ -66,7 +67,7 @@ class TestProfileSimilarityTransformer:
             "Lung"
         ])
 
-    def test_agg_func_sum(self):
+    def test_fit_with_agg_func_sum_gives_expected_profile_matrix(self):
         transformer = ProfileSimilarityTransformer(agg_func="sum")
         transformer.fit(self.X, self.y)
 
@@ -79,7 +80,7 @@ class TestProfileSimilarityTransformer:
         expected_profiles.columns = ["Breast", "Lung"]
         assert transformer.profiles_.equals(expected_profiles)
 
-    def test_count_ceiling_1000(self):
+    def test_fit_with_count_ceiling_1000_gives_expected_profile_matrix(self):
         transformer = ProfileSimilarityTransformer(agg_func="sum", count_ceiling=1000)
         transformer.fit(self.X, self.y)
 
@@ -98,13 +99,13 @@ class TestNoiseProfileAdder:
     y: pd.Series = TestProfileSimilarityTransformer.y
     transformer = NoiseProfileAdder(agg_func="median", noise_counts=100)
 
-    def test_fit(self):
+    def test_fit_gives_expected_noise_profile(self):
         self.transformer.fit(self.X, self.y)
 
         expected_profile = np.array([0.490, 0.504, 0.005])
         assert all(self.transformer.noise_profile.round(3) == expected_profile)
 
-    def test_transform(self):
+    def test_transform_gives_expected_profile_matrix(self):
         X_trans = self.transformer.fit_transform(self.X, self.y)
 
         expected_X_trans = pd.DataFrame([
@@ -120,7 +121,7 @@ class TestNoiseProfileAdder:
 
 
 class TestNonBestSimilarityScaler:
-    def test_transform(self):
+    def test_scaling_gives_correct_cos_sim_values(self):
         cos_sims = pd.DataFrame([
             [0.95, 0.92, 0.87, 0.86, 0.75]
         ])

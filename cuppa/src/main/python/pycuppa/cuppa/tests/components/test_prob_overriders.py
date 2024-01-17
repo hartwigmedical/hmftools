@@ -5,9 +5,7 @@ from cuppa.components.prob_overriders import SexProbFilter, FusionProbOverrider
 
 class TestFusionProbOverrider:
 
-    def test_sample_with_two_target_fusions(self):
-        # from cuppa.components.postprocessing import FusionProbOverrider
-        # import pandas as pd
+    def test_sample_with_two_target_fusions_has_increased_target_probs_after_override(self):
 
         ## Inputs
         probs = pd.DataFrame(
@@ -45,7 +43,7 @@ class TestFusionProbOverrider:
 
 
 class TestSexProbFilter:
-    def test_male_sample(self):
+    def test_prostate_prob_for_male_sample_is_increased_after_override(self):
 
         probs = pd.DataFrame(
             [[0.8, 0.2, np.nan]],
@@ -58,7 +56,7 @@ class TestSexProbFilter:
 
         assert probs_trans["Prostate"][0] > probs["Prostate"][0]
 
-    def test_female_sample(self):
+    def test_ovarian_prob_for_female_sample_is_increased_after_override(self):
         probs = pd.DataFrame(
             [[0.1, 0.9, np.nan]],
             columns=["Prostate", "Ovarian", "Skin"]

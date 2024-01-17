@@ -1,12 +1,10 @@
 import pandas as pd
-
-from cuppa.tests.mock_data import MockTrainingData, MockTrainingOutput
 from cuppa.components.prob_combiner import ProbCombiner
 
 
 class TestProbCombiner:
 
-    def test_non_zero_probs(self):
+    def test_can_multiply_probs_without_zeroes(self):
         probs = pd.DataFrame(
             [[0.9, 0.8, 0.1, 0.2]],
             columns=[
@@ -22,7 +20,7 @@ class TestProbCombiner:
 
         assert probs_combined["Breast"][0] == 0.973
 
-    def test_probs_with_zeros(self):
+    def test_can_multiply_probs_with_zeroes(self):
         probs = pd.DataFrame(
             [[1.0, 0.8, 0.0, 0.2]],
             columns=[
@@ -37,12 +35,4 @@ class TestProbCombiner:
         probs_combined = combiner.transform(probs).round(3)
 
         assert probs_combined["Breast"][0] == 0.998
-
-    def _probs_from_mock_data(self):
-        cuppa_classifier = MockTrainingOutput.cuppa_classifier
-        X = MockTrainingData.X
-        cuppa_classifier._set_sample_sexes(X)
-        dna_rna_combined_probs = cuppa_classifier.transform(X, until_step="meta_clfs")
-        return dna_rna_combined_probs
-
 
