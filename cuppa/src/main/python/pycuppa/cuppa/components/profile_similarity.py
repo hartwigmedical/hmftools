@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 import pandas as pd
 from scipy.stats import trim_mean
@@ -122,7 +124,11 @@ class ProfileSimilarityTransformer(BaseEstimator, LoggerMixin):
         self.normalize_profiles = normalize_profiles
         self.feature_prefix = feature_prefix
 
-    def _check_X_y_shape(self, X: pd.DataFrame | NDArray, y = pd.Series | NDArray):
+    def _check_X_y_shape(
+        self,
+        X: pd.DataFrame | NDArray,
+        y: pd.Series | NDArray
+    ):
         if X.ndim != 2:
             self.logger.error("X must be a 2D array-like")
             raise TypeError

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import importlib
+import importlib_resources as impresources
 
 ## Classifier ================================
 class SUB_CLF_NAMES:
@@ -45,12 +45,12 @@ CUPPA_PREDICTION_INDEX_NAMES = ["sample_id", "data_type", "clf_group", "clf_name
 
 
 ## Paths ================================
-RESOURCES_DIR = importlib.resources.files("resources")
+RESOURCES_DIR = impresources.files("cuppa")/"resources"
 
 DEFAULT_CUPPA_CLASSIFIER_PATH = str(RESOURCES_DIR/"cuppa_classifier.pickle.gz")
 DEFAULT_FUSION_OVERRIDES_PATH = str(RESOURCES_DIR/"feature_overrides/20230731-fusion_overrides.split_adenoid_salivary.txt")
 MOCK_DATA_DIR = str(RESOURCES_DIR/"mock_data")
-RSCRIPT_PLOT_PREDICTIONS_PATH = str(importlib.resources.files("cuppa")/"visualization/plot_predictions.R")
+RSCRIPT_PLOT_PREDICTIONS_PATH = str(impresources.files("cuppa")/"visualization/plot_predictions.R")
 
 
 ## Misc ================================

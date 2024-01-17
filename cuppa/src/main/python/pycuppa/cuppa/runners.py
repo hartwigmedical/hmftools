@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import argparse
 import os
 import sys
 from functools import cached_property
 from pprint import pformat
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold
@@ -40,7 +42,7 @@ class DEFAULT_RUNNER_ARGS:
     n_jobs: int = 1
 
     log_to_file: bool = False
-    log_path: str | None = None
+    log_path: Optional[str] = None
 
 
 class RunnerArgParser:
@@ -238,7 +240,7 @@ class TrainingRunner(LoggerMixin):
         n_jobs: int = DEFAULT_RUNNER_ARGS.n_jobs,
 
         log_to_file: bool = DEFAULT_RUNNER_ARGS.log_to_file,
-        log_path: str | None = DEFAULT_RUNNER_ARGS.log_path
+        log_path: Optional[str] = DEFAULT_RUNNER_ARGS.log_path
     ):
         ## Args --------------------------------
         ## Data
@@ -476,14 +478,14 @@ class PredictionRunner(LoggerMixin):
         self,
         features_path: str,
         output_dir: str,
-        sample_id: str | None = None,
+        sample_id: Optional[str] = None,
         compress_tsv_files: bool = False,
-        classifier_path: str | None = None,
+        classifier_path: Optional[str] = None,
         using_old_features_format: bool = DEFAULT_RUNNER_ARGS.using_old_features_format,
         genome_version: int = DEFAULT_RUNNER_ARGS.genome_version,
         excl_chroms: str | list[str] = DEFAULT_RUNNER_ARGS.excl_chroms,
         log_to_file: bool = DEFAULT_RUNNER_ARGS.log_to_file,
-        log_path: str | None = DEFAULT_RUNNER_ARGS.log_path
+        log_path: Optional[str] = DEFAULT_RUNNER_ARGS.log_path
     ):
         ## Args --------------------------------
         self.features_path = features_path
