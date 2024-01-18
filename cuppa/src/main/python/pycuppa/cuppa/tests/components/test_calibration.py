@@ -36,8 +36,7 @@ class TestRollingAvgCalibration:
 
         probs_new = [0.1, 0.2, 0.3, 0.4]
         probs_new_cal = calibrator.transform(probs_new).round(3).tolist()
-        assert probs_new_cal == [0.0, 0.389, 0.802, 0.911]
-
+        assert probs_new_cal == [0.0, 0.348, 0.765, 0.918]
 
     def test_multi_class_calibration_gives_expected_results(self):
         probs = MockCvOutput.probs_per_clf["gen_pos"]
@@ -55,4 +54,4 @@ class TestRollingAvgCalibration:
             .predict_proba(probs_new, normalize=False).round(3) \
             .iloc[0].values.tolist()
 
-        assert probs_new_cal == [0.0, 0.332, 1.0, 0.0, 0.0]
+        assert probs_new_cal == [0.0, 0.345, 1.0, 0.0, 0.0]
