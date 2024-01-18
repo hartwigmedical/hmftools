@@ -79,7 +79,7 @@ public class LossOfHeterozygositySelectorTest {
         String gene = LossOfHeterozygositySelector.HRD_GENES.iterator().next();
         GeneCopyNumber hrdGene = GeneCopyNumberTestFactory.builder().geneName(gene).minMinorAlleleCopyNumber(1D).minCopyNumber(2D).build();
 
-        GermlineDeletion hetDeletion = GermlineDeletionTestFactory.create(gene, true, GermlineStatus.HET_DELETION);
+        GermlineDeletion hetDeletion = GermlineDeletionTestFactory.create(gene, true, GermlineStatus.HET_DELETION, 1);
         List<GeneCopyNumber> lohList = runWithHRDOneGeneOneGermlineDeletion(hrdGene, hetDeletion);
         assertEquals(1, lohList.size());
 
