@@ -187,7 +187,7 @@ For each sample CUPPA outputs a visualization of the predictions (PNG file), as 
 TSV file. Please see later sections for more info on the [features](#features) and [classifiers](#classifier-structure) 
 shown in the visualization.
 
-![](../../../../../extended-docs/cuppa/visualization/cuppa_vis.png)
+![](doc/visualization/cuppa_vis.png)
 
 ### Probabilities by classifier
 The CUPPA visualization is split into 4 panels. The first panel shows the probabilities for each cancer subtype 
@@ -370,7 +370,7 @@ transformations, after which a logistic regression weighs the importance of each
 followed by some post-processing steps.
 - **Combined layer**: Combines the probabilities from the meta-classifiers by multiplying them together.
 
-![](../../../../../extended-docs/cuppa/diagrams/classifier_structure.jpg)
+![](doc/diagrams/classifier_structure.jpg)
 
 ### LogisticRegression
 The [logistic regressions](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)
@@ -420,7 +420,7 @@ Conversely, we want hypermutator samples to contribute less to the consensus pro
 Thus, if a sample has more than 10,000 SNVs (`count_ceiling=10000`), the GEN_POS profile of that sample will be scaled 
 down such that the TMB sums to 10,000.
 
-<img src="../../../../../extended-docs/cuppa/diagrams/gen_pos_transformations.jpg" width="600"/>
+<img src="./doc/diagrams/gen_pos_transformations.jpg" width="600"/>
 
 For the GENE_EXP and ALT_SJ classifiers, no `count_ceiling` is used and the mean (`agg_func="mean"`) to generate the 
 consensus profiles. This is because the (log transformed) GENE_EXP and ALT_SJ features are not skewed by outliers. 
@@ -677,7 +677,7 @@ different 'folds', each yielding cancer type probabilities for a different 10% s
 every sample in the training set. These probabilities were then used to calculate various performance metrics (e.g. 
 number of samples correctly predicted per cancer type).
 
-<img src="../../../../../extended-docs/cuppa/diagrams/training_and_cross_validation.jpg" width="600"/>
+<img src="./doc/diagrams/training_and_cross_validation.jpg" width="600"/>
 
 # Known issues
 

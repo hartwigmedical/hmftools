@@ -1,3 +1,5 @@
+import importlib_resources as impresources
+
 import importlib
 from cuppa.misc.mock_data import MockCvOutput
 
