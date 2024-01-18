@@ -3,10 +3,10 @@ from __future__ import annotations
 import os
 from functools import cached_property
 
-from sklearn.feature_selection import chi2
-
 import pandas as pd
 import numpy as np
+from sklearn.feature_selection import chi2
+from sklearn.model_selection import StratifiedKFold
 
 from cuppa.constants import MOCK_DATA_DIR
 from cuppa.logger import LoggerMixin
@@ -51,6 +51,18 @@ if __name__ == '__main__':
     )
 
     training_data_builder.build_and_export(os.path.join(MOCK_DATA_DIR, "training_data"))
+
+    fusion_overrides = pd.DataFrame.from_records(
+        columns=("feat_prefix", "feat_basename", "target_class"),
+        data=[
+            ("event.fusion.", "CBFB_MYH11", "AML"),
+            ("event.fusion.", "RUNX1_RUNX1T1", "AML"),
+        ]
+    )
+    fusion_overrides.to_csv(
+        os.path.join(MOCK_DATA_DIR, "training_data/fusion_overrides.tsv"),
+        sep='\t', index=False
+    )
 
     ## CV --------------------------------
     cv_data_builder = MockCvOutputBuilder.from_paths(
@@ -292,6 +304,7 @@ class MockCvOutputBuilder(LoggerMixin):
             X=self.X,
             y=self.y,
             y_split=self.y_split,
+            cv=StratifiedKFold(n_splits=10, random_state=0, shuffle=True),
         )
         cross_validator.fit(cache_training=False)
         return cross_validator

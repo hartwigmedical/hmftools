@@ -25,6 +25,7 @@ class MockTrainingData:
 
     path_features = os.path.join(MOCK_DATA_DIR, "training_data/features.tsv.gz")
     path_metadata = os.path.join(MOCK_DATA_DIR, "training_data/metadata.tsv")
+    path_fusion_overrides = os.path.join(MOCK_DATA_DIR, "training_data/fusion_overrides.tsv")
 
     @cached_class_property
     def X(self) -> pd.DataFrame:
