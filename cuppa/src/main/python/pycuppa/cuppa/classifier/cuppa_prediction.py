@@ -302,7 +302,7 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
     def to_tsv(
         self,
         path: str,
-        signif_digits: int = 4,
+        signif_digits: int | None = 4,
         chunksize: int = 1000,
         verbose: bool = False,
         *args, **kwargs
