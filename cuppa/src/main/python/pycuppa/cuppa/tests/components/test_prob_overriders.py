@@ -1,6 +1,11 @@
 import numpy as np
 import pandas as pd
+import os
+import tempfile
+
 from cuppa.components.prob_overriders import SexProbFilter, FusionProbOverrider
+from cuppa.classifier.cuppa_classifier import CuppaClassifier
+from cuppa.tests.mock_data import MockTrainingData
 
 
 class TestFusionProbOverrider:
@@ -32,7 +37,9 @@ class TestFusionProbOverrider:
             overrides=overrides
         )
 
-        probs_trans = transformer.transform(probs)
+        transformer.transform(X=probs, debug=True)
+
+        probs_trans = transformer.transform(X=probs, verbose=True)
 
         ## Check output
         def _prob_trans_gt_probs(pred_class):
@@ -40,6 +47,47 @@ class TestFusionProbOverrider:
 
         assert _prob_trans_gt_probs("Head and neck: Adenoid cystic")
         assert _prob_trans_gt_probs("Head and neck: Salivary gland")
+
+    def test_overriden_probs_are_different_to_raw_probs_in_full_cuppa_classifier(self):
+        X = MockTrainingData.X
+        y = MockTrainingData.y
+        fusion_overrides_path = MockTrainingData.path_fusion_overrides
+
+        ## Train classifier
+        classifier = CuppaClassifier(fusion_overrides_path=fusion_overrides_path)
+        classifier.fit(X, y)
+
+        ## Get probabilities before meta-classifiers
+        probs_sub_clf = classifier.transform(X, until_step="sub_clfs")
+        probs_sub_clf = probs_sub_clf.loc[:, probs_sub_clf.columns.str.match("gen_pos|snv96|event")]
+
+        ## Get probabilities before 'fusion_overrider' in dna_combined meta-classifier
+        dna_combined_clf = classifier.meta_clf_layer["dna_combined"]
+        probs_dna_combined = dna_combined_clf.transform(probs_sub_clf, until_step="calibrator")
+
+        overrider = dna_combined_clf["fusion_overrider"]
+
+        ## --------------------------------
+        ## Using the mock features as input, the raw and transformed probs are equal because all the non-zero probs
+        ## are 1.0. Not useful as a test case...
+
+        overrider.sample_fusions = X.loc[:,X.columns.str.contains("fusion")] ## Set sample_fusions manually. This is normally done by CuppaClassifier.predict()
+        transform_output = overrider.transform(probs_dna_combined, debug=True)
+        assert transform_output["X"].round(3).equals(transform_output["X_trans"].round(3))
+
+        ## Create dummy test case from probs_dna_combined --------------------------------
+        selected_samples = ["97_AML"]
+
+        overrider.sample_fusions = X.loc[selected_samples, X.columns.str.contains("fusion")]
+
+        probs_dna_combined_constructed = pd.DataFrame.from_records(
+            [dict(AML=0.5, Breast=0.5,  Lung=0.0,  Melanoma=0.0, Prostate=0.0)],
+            index=selected_samples
+        )
+
+        transform_output = overrider.transform(probs_dna_combined_constructed, debug=True)
+
+        assert transform_output["X_trans"]["AML"][0] > transform_output["X"]["AML"][0]
 
 
 class TestSexProbFilter:
