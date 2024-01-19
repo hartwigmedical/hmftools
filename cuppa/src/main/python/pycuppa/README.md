@@ -78,23 +78,30 @@ CUPPA can be installed via `pip` using the below bash commands.
 
 ```commandline
 ## Download CUPPA
-git clone https://github.com/hartwigmedical/hmftools/tree/master/cuppa/src/main/resources/pycuppa/ ~
+git clone https://github.com/hartwigmedical/hmftools/tree/master/cuppa/src/main/resources/pycuppa/ $HOME
 
 ## Create python virtual environment
-python3 -m venv ~/pycuppa_env
+python3 -m venv $HOME/pycuppa_env
 
 ## Activate environment
-source ~/pycuppa/bin/activate
+source $HOME/pycuppa/bin/activate
 
 ## Install CUPPA python package. This will also install required python packages.
-pip install ~/pycuppa
+pip install $HOME/pycuppa
 ```
 
-### Runners
-The command line interface of CUPPA internally calls the `PredictionRunner` and `TrainingRunner` classes.
+### Running CUPPA within python
+Training of CUPPA and making predictions can be done interactively in Python. Please refer to these jupyter notebooks
+for example code at [doc/notebooks/](): 
+- Predict: [predict_example.html](doc/notebooks/predict_example.html) / [predict_example.ipynb](doc/notebooks/predict_example.ipynb)
+- Train: [train_example.html](doc/notebooks/train_example.html) / [train_example.ipynb](doc/notebooks/train_example.ipynb)
 
-To predict on a single sample, the below example commands can be used. This produces the outputs as specified in section: 
-[Classifier output](#classifier-output).
+### Command line interface
+CUPPA can also be called from the command line (which internally calls the `PredictionRunner` and `TrainingRunner` 
+classes). 
+
+To predict on a single sample, the below example commands can be used.  This produces the outputs as specified in 
+section: [Classifier output](#classifier-output).
 
 ```commandline
 source ~/pycuppa/bin/activate ## Activate the virtual environment
@@ -143,7 +150,7 @@ The below table lists all possible arguments of `TrainingRunner` and `Prediction
 
 ### Input files format
 
-#### Features
+_Features_
 The features for one sample are provided to CUPPA in the following format.
 
 ```
