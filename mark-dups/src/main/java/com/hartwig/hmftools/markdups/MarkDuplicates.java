@@ -213,7 +213,7 @@ public class MarkDuplicates
             MD_LOGGER.debug("wrote unmapped({}) otherChromosome({}) reads", unmappedCount, nonHumanContigCount);
         }
 
-        return unmappedCount.get();
+        return unmappedCount.get() + nonHumanContigCount.get();
     }
 
     private void processNonHumanContigReads(final SAMRecord record, final BamWriter bamWriter)
