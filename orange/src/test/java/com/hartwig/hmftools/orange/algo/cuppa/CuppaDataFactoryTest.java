@@ -1,128 +1,97 @@
 package com.hartwig.hmftools.orange.algo.cuppa;
 
-import static com.hartwig.hmftools.common.cuppa.CategoryType.COMBINED;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
-import com.hartwig.hmftools.common.cuppa.DataTypes;
-import com.hartwig.hmftools.common.cuppa.ResultType;
+import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
 
-import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class CuppaDataFactoryTest
 {
-    private static final String CUPPA_TEST_CSV = Resources.getResource("test_run/cuppa/tumor_sample.cup.data.csv").getPath();
-
     private static final double EPSILON = 1.0E-10;
 
+    private static final String CUPPA_VIS_DATA_TSV = Resources.getResource("test_run/cuppa/tumor_sample.cuppa.vis_data.tsv").getPath();
+
     @Test
-    public void canCreateCorrectDataForTestRun() throws IOException
+    public void canExtractPredictionsFromCuppaV2() throws Exception
     {
-        CuppaData cuppaData = CuppaDataFactory.create(CuppaDataFile.read(CUPPA_TEST_CSV));
+        CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_TSV);
 
-        assertEquals(36, cuppaData.predictions().size());
-        Map<String, CuppaPrediction> actualPredictionsByCancerType =
-                cuppaData.predictions().stream().collect(Collectors.toMap(CuppaPrediction::cancerType, entry -> entry));
+        CuppaData cuppaData = CuppaDataFactory.create(cuppaPredictions);
+        List<CuppaPrediction> predictionEntries = cuppaData.predictions();
+        predictionEntries.stream().forEach(o -> System.out.println(o.toString()));
 
-        for(CuppaPrediction expected : List.of(prediction("Melanoma", 0.996, 0.979, 0.990, 0.972),
-                prediction("Pancreas", 0.00013, 6.75e-28, 6.05e-05, 1.8e-05),
-                prediction("Lung: Non-small Cell", 0.00013, 4.83e-28, 2.91e-05, 0.00518)))
+        assertEquals(40, predictionEntries.size());
+        assertEquals(cuppaData.bestPrediction().cancerType().toString(), "Skin: Melanoma");
+
+        Map<String, CuppaPrediction> actualPredictionsByCancerType = new HashMap<>();
+        for(CuppaPrediction prediction : predictionEntries)
         {
-            CuppaPrediction actual = actualPredictionsByCancerType.get(expected.cancerType());
-            assertNotNull(actual);
-            List<Function<CuppaPrediction, Double>> functionsToVerify = List.of(CuppaPrediction::likelihood,
-                    CuppaPrediction::snvPairwiseClassifier,
-                    CuppaPrediction::genomicPositionClassifier,
-                    CuppaPrediction::featureClassifier,
-                    CuppaPrediction::altSjCohortClassifier,
-                    CuppaPrediction::expressionPairwiseClassifier);
-            for(Function<CuppaPrediction, Double> function : functionsToVerify)
-            {
-                assertCuppaPredictionField(expected, actual, function);
-            }
+            actualPredictionsByCancerType.put(prediction.cancerType(), prediction);
         }
 
-        assertEquals(3, cuppaData.simpleDups32To200B());
-        assertEquals(8, cuppaData.maxComplexSize());
-        assertEquals(0, cuppaData.telomericSGLs());
-        assertEquals(3, cuppaData.lineCount());
-    }
+        Map<String, CuppaPrediction> expectedPredictionsByCancerType = new HashMap<>();
+        expectedPredictionsByCancerType.put(
+                "Skin: Melanoma",
+                ImmutableCuppaPrediction.builder()
+                        .cancerType("Skin: Melanoma").likelihood(0.9968)
+                        .genomicPositionClassifier(0.9966).snvPairwiseClassifier(0.8176).featureClassifier(0.9077)
+                        .expressionPairwiseClassifier(1.0).altSjCohortClassifier(0.9999)
+                        .build()
+        );
+        expectedPredictionsByCancerType.put(
+                "Skin: Other",
+                ImmutableCuppaPrediction.builder()
+                        .cancerType("Skin: Other").likelihood(1.005E-4)
+                        .genomicPositionClassifier(4.215E-4).snvPairwiseClassifier(0.1806).featureClassifier(6.333E-5)
+                        .expressionPairwiseClassifier(8.853E-6).altSjCohortClassifier(1.505E-7)
+                        .build()
+        );
+        expectedPredictionsByCancerType.put(
+                "Prostate",
+                ImmutableCuppaPrediction.builder()
+                        .cancerType("Prostate").likelihood(1.005E-4)
+                        .genomicPositionClassifier(9.123E-5).snvPairwiseClassifier(5.793E-12).featureClassifier(2.02E-4)
+                        .expressionPairwiseClassifier(7.483E-7).altSjCohortClassifier(9.09E-7)
+                        .build()
+        );
 
-    @Test
-    public void respectOrderingOfCombinedDataTypes()
-    {
-        CuppaDataFile rna = create(DataTypes.DATA_TYPE_RNA_COMBINED, "rna");
-        CuppaDataFile dna = create(DataTypes.DATA_TYPE_DNA_COMBINED, "dna");
-        CuppaDataFile overall = create(DataTypes.DATA_TYPE_COMBINED, "overall");
-
-        CuppaData fromRna = CuppaDataFactory.create(Lists.newArrayList(rna));
-        assertEquals("rna", fromRna.predictions().get(0).cancerType());
-
-        CuppaData fromRnaDna = CuppaDataFactory.create(Lists.newArrayList(rna, dna));
-        assertEquals("dna", fromRnaDna.predictions().get(0).cancerType());
-
-        CuppaData fromAll = CuppaDataFactory.create(Lists.newArrayList(rna, dna, overall));
-        assertEquals("overall", fromAll.predictions().get(0).cancerType());
-    }
-
-    @Test
-    public void doNotCrashOnMissingEntries()
-    {
-        assertNotNull(CuppaDataFactory.create(Lists.newArrayList()));
-    }
-
-    @NotNull
-    private static ImmutableCuppaPrediction prediction(@NotNull String cancerType, double likelihood, double snvPairwiseClassifier,
-            double genomicPositionClassifier, double featureClassifier)
-    {
-        return ImmutableCuppaPrediction.builder()
-                .cancerType(cancerType)
-                .likelihood(likelihood)
-                .snvPairwiseClassifier(snvPairwiseClassifier)
-                .genomicPositionClassifier(genomicPositionClassifier)
-                .featureClassifier(featureClassifier)
-                .build();
-    }
-
-    private static void assertCuppaPredictionField(@NotNull CuppaPrediction expected, @NotNull CuppaPrediction actual,
-            @NotNull Function<CuppaPrediction, Double> function)
-    {
-        Double expectedValue = function.apply(expected);
-        Double actualValue = function.apply(actual);
-        if(expectedValue == null)
+        for(String cancerType : expectedPredictionsByCancerType.keySet())
         {
-            assertNull(actualValue);
-        }
-        else
-        {
-            assertNotNull(actualValue);
-            assertEquals(expectedValue, actualValue, EPSILON);
+            CuppaPrediction expectedPrediction = expectedPredictionsByCancerType.get(cancerType);
+            CuppaPrediction actualPrediction = actualPredictionsByCancerType.get(cancerType);
+
+            assertEquals(expectedPrediction.genomicPositionClassifier(), actualPrediction.genomicPositionClassifier(), EPSILON);
+            assertEquals(expectedPrediction.snvPairwiseClassifier(), actualPrediction.snvPairwiseClassifier(), EPSILON);
+            assertEquals(expectedPrediction.featureClassifier(), actualPrediction.featureClassifier(), EPSILON);
+            assertEquals(expectedPrediction.expressionPairwiseClassifier(), actualPrediction.expressionPairwiseClassifier(), EPSILON);
+            assertEquals(expectedPrediction.altSjCohortClassifier(), actualPrediction.altSjCohortClassifier(), EPSILON);
         }
     }
 
-    @NotNull
-    private static CuppaDataFile create(@NotNull String dataType, @NotNull String refCancerType)
+    @Test
+    public void canGetCorrectSvFeatureValue() throws Exception
     {
-        Map<String, Double> cancerTypeValues = Maps.newHashMap();
-        cancerTypeValues.put(refCancerType, 0D);
+        CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_TSV);
+        int featureValue = CuppaDataFactory.getSvFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE");
+        int expectedFeatureValue = 751;
+        assertEquals(expectedFeatureValue, featureValue);
+    }
 
-        return new CuppaDataFile(COMBINED, ResultType.CLASSIFIER, dataType, Strings.EMPTY, cancerTypeValues);
+    @Test
+    public void doNotCrashOnMissingEntries() throws Exception
+    {
+        CuppaPredictions cuppaPredictions = new CuppaPredictions(new ArrayList<>());
+        assertNotNull(CuppaDataFactory.create(cuppaPredictions));
     }
 }

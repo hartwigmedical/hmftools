@@ -14,19 +14,19 @@ import org.junit.Test;
 public class ReportWriterTest
 {
     @Test
-    public void canGenerateTestReportForTargetedFromTestResources() throws IOException
+    public void canGenerateTestReportForTargetedFromTestResources() throws Exception
     {
         run(TestOrangeConfigFactory.createTargetedConfig());
     }
 
     @Test
-    public void canGenerateTestReportForWGSTumorOnlyFromTestResources() throws IOException
+    public void canGenerateTestReportForWGSTumorOnlyFromTestResources() throws Exception
     {
         run(TestOrangeConfigFactory.createWGSConfigTumorOnly());
     }
 
     @Test
-    public void canGenerateTestReportForWGSTumorNormalFromTestResources() throws IOException
+    public void canGenerateTestReportForWGSTumorNormalFromTestResources() throws Exception
     {
         run(TestOrangeConfigFactory.createWGSConfigTumorNormal());
     }
@@ -51,7 +51,7 @@ public class ReportWriterTest
         writer.write(report);
     }
 
-    private static void run(@NotNull OrangeConfig config) throws IOException
+    private static void run(@NotNull OrangeConfig config) throws Exception
     {
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);
         algo.setSuppressGeneWarnings();

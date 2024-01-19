@@ -13,7 +13,7 @@ import org.junit.Test;
 public class OrangeAlgoTest
 {
     @Test
-    public void canRunReportFromTestDirOnMinimalConfig() throws IOException
+    public void canRunReportFromTestDirOnMinimalConfig() throws Exception
     {
         OrangeConfig config = TestOrangeConfigFactory.createMinimalConfig();
         OrangeAlgo algo = createOrangeAlgo(config);
@@ -22,7 +22,7 @@ public class OrangeAlgoTest
     }
 
     @Test
-    public void canRunReportFromTestDirTargeted() throws IOException
+    public void canRunReportFromTestDirTargeted() throws Exception
     {
         OrangeConfig config = TestOrangeConfigFactory.createTargetedConfig();
         OrangeAlgo algo = createOrangeAlgo(config);
@@ -31,7 +31,7 @@ public class OrangeAlgoTest
     }
 
     @Test
-    public void canRunReportFromTestDirWGSTumorOnly() throws IOException
+    public void canRunReportFromTestDirWGSTumorOnly() throws Exception
     {
         OrangeConfig config = TestOrangeConfigFactory.createWGSConfigTumorOnly();
         OrangeAlgo algo = createOrangeAlgo(config);
@@ -40,7 +40,7 @@ public class OrangeAlgoTest
     }
 
     @Test
-    public void canRunReportFromTestDirWGSTumorNormal() throws IOException
+    public void canRunReportFromTestDirWGSTumorNormal() throws Exception
     {
         OrangeConfig config = TestOrangeConfigFactory.createWGSConfigTumorNormal();
         OrangeAlgo algo = createOrangeAlgo(config);
@@ -49,7 +49,7 @@ public class OrangeAlgoTest
     }
 
     @Test
-    public void canRunReportFromTestDirWGTSTumorNormal() throws IOException
+    public void canRunReportFromTestDirWGTSTumorNormal() throws Exception
     {
         OrangeConfig config = TestOrangeConfigFactory.createWGTSConfigTumorNormal();
         OrangeAlgo algo = createOrangeAlgo(config);
