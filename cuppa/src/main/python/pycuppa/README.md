@@ -92,7 +92,7 @@ pip install $HOME/pycuppa
 
 ### Running CUPPA within python
 Training of CUPPA and making predictions can be done interactively in Python. Please refer to these jupyter notebooks
-for example code at [doc/notebooks/](): 
+for example code at [doc/notebooks/](doc/notebooks/):
 - [predict_example.ipynb](doc/notebooks/predict_example.ipynb): view on [nbviewer.org](https://nbviewer.org/github/hartwigmedical/hmftools/blob/master/cuppa/src/main/python/pycuppa/doc/notebooks/predict_example.ipynb)
 - [train_example.ipynb](doc/notebooks/train_example.ipynb): view on [nbviewer.org](https://nbviewer.org/github/hartwigmedical/hmftools/blob/master/cuppa/src/main/python/pycuppa/doc/notebooks/train_example.ipynb)
 
