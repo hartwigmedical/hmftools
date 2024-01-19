@@ -52,6 +52,11 @@
             <resource>
                 <directory>src/main/python</directory>
                 <filtering>false</filtering>
+                <excludes>
+                    <exclude>**/.*/</exclude>
+                    <exclude>**/build/</exclude>
+                    <exclude>**/pycuppa.egg-info/</exclude>
+                </excludes>
             </resource>
         </resources>
         <plugins>
