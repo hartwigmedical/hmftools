@@ -48,7 +48,7 @@ class CuppaPredictionBuilder(LoggerMixin):
         cuppa_classifier: CuppaClassifier,
         X: pd.DataFrame,
         probs_only: bool = False,
-        rm_all_zero_rows: bool = True,
+        rm_all_zero_rows: bool = False,
         verbose: bool = False
     ):
         self.cuppa_classifier = cuppa_classifier
@@ -302,7 +302,7 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
     def to_tsv(
         self,
         path: str,
-        signif_digits: int = 4,
+        signif_digits: int | None = 4,
         chunksize: int = 1000,
         verbose: bool = False,
         *args, **kwargs
@@ -315,6 +315,8 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
         df = self.reset_index()
         df.columns = pd.MultiIndex.from_arrays([column_metadata, columns])
 
+        float_format = f"%.{signif_digits}g" if signif_digits is not None else None
+
         if verbose:
             self.logger.info("Writing predictions to: " + path)
 
@@ -322,7 +324,7 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
             path,
             sep="\t",
             index=False,
-            float_format=f"%.{signif_digits}g",
+            float_format=float_format,
             chunksize=chunksize,
             *args, **kwargs
         )
@@ -664,9 +666,6 @@ class CuppaPredSummaryBuilder(LoggerMixin):
         ## Align sample_id and pred_class
         top_feat_values = top_feat_values.loc[self.top_features.index]
 
-        ## Format to 2 significant figures
-        top_feat_values = self._signif(top_feat_values, precision=2)
-
         return top_feat_values
 
     @cached_property
@@ -678,7 +677,7 @@ class CuppaPredSummaryBuilder(LoggerMixin):
         ## Dataframe: (sample_id, pred_class) x feat_rank
         strings_semi_long = \
             self.top_features + "=" + \
-            self.top_feat_values.astype(str) + "," + \
+            self._signif(self.top_feat_values, precision=2).astype(str) + "," + \
             self.top_contribs.round(decimals=1).astype(str)
 
         ## Remove feat group prefix
