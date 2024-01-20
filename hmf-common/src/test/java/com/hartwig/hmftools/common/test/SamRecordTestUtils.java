@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.test;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome.MT_LENGTH_37;
+import static com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome.MT_LENGTH;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_INDEX;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_NAME;
@@ -37,7 +37,7 @@ public final class SamRecordTestUtils
             SAM_DICTIONARY_V37.addSequence(new SAMSequenceRecord(chromosome.toString(), v37Coords.Lengths.get(chromosome)));
         }
 
-        SAM_DICTIONARY_V37.addSequence(new SAMSequenceRecord(MitochondrialChromosome.MT.toString(), MT_LENGTH_37));
+        SAM_DICTIONARY_V37.addSequence(new SAMSequenceRecord(MitochondrialChromosome.MT.toString(), MT_LENGTH));
     }
 
     public static SAMRecord createSamRecord(

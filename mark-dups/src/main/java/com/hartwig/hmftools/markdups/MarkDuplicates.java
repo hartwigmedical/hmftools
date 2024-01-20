@@ -210,7 +210,7 @@ public class MarkDuplicates
 
         if(unmappedCount.get() > 0 || nonHumanContigCount.get() > 0)
         {
-            MD_LOGGER.debug("wrote unmapped({}) otherChromosome({}) reads", unmappedCount, nonHumanContigCount);
+            MD_LOGGER.debug("wrote unmapped({}) otherContig({}) reads", unmappedCount, nonHumanContigCount);
         }
 
         return unmappedCount.get() + nonHumanContigCount.get();
