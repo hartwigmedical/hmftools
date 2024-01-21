@@ -17,6 +17,9 @@ public interface CuppaData
     @NotNull
     List<CuppaPrediction> predictions();
 
+    @Nullable
+    CuppaPrediction bestPrediction();
+
     int simpleDups32To200B();
 
     int maxComplexSize();

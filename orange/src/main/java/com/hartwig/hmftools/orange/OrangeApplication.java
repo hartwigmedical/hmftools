@@ -19,7 +19,7 @@ public class OrangeApplication
 
     public static final String VERSION = OrangeApplication.class.getPackage().getImplementationVersion();
 
-    public static void main(String[] args) throws IOException
+    public static void main(String[] args) throws Exception
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
@@ -38,7 +38,7 @@ public class OrangeApplication
         this.config = config;
     }
 
-    private void run() throws IOException
+    private void run() throws Exception
     {
         LOGGER.info("Generating ORANGE report data");
 

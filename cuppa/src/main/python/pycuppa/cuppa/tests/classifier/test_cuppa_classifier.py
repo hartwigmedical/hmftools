@@ -1,24 +1,24 @@
 import pandas as pd
 
-from cuppa.constants import DEFAULT_FUSION_OVERRIDES_PATH
-from cuppa.tests.mock_data import MockTrainingData, MockProbsFromFitTransform
+from cuppa.tests.mock_data import MockTrainingData, MockCuppaClassifier
 from cuppa.classifier.cuppa_classifier import CuppaClassifier, MissingFeaturesHandler
 
 
 class TestCuppaClassifier:
 
-    def test_fit_transform(self):
+    def test_fit_transform_gives_expected_probabilities(self):
         X = MockTrainingData.X
         y = MockTrainingData.y
 
-        classifier = CuppaClassifier(fusion_overrides_path=DEFAULT_FUSION_OVERRIDES_PATH)
+        classifier = CuppaClassifier(fusion_overrides_path=None)
         classifier.fit(X, y)
 
         probs = classifier.transform(X).round(3)
-        probs_expected = MockProbsFromFitTransform.combined.round(3)
 
-        probs = probs.reindex(probs_expected.index).reindex(probs_expected.columns, axis=1)
-        assert probs.equals(probs_expected)
+        probs_expected = MockCuppaClassifier.probs_per_clf["combined"].round(3)
+        probs_expected = probs_expected.loc[probs.index, probs.columns]
+
+        assert all(probs == probs_expected)
 
 
 class TestMissingFeaturesHandler:

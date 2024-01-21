@@ -78,23 +78,30 @@ CUPPA can be installed via `pip` using the below bash commands.
 
 ```commandline
 ## Download CUPPA
-git clone https://github.com/hartwigmedical/hmftools/tree/master/cuppa/src/main/resources/pycuppa/ ~
+git clone https://github.com/hartwigmedical/hmftools/tree/master/cuppa/src/main/resources/pycuppa/ $HOME
 
 ## Create python virtual environment
-python3 -m venv ~/pycuppa_env
+python3 -m venv $HOME/pycuppa_env
 
 ## Activate environment
-source ~/pycuppa/bin/activate
+source $HOME/pycuppa/bin/activate
 
 ## Install CUPPA python package. This will also install required python packages.
-pip install ~/pycuppa
+pip install $HOME/pycuppa
 ```
 
-### Runners
-The command line interface of CUPPA internally calls the `PredictionRunner` and `TrainingRunner` classes.
+### Running CUPPA within python
+Training of CUPPA and making predictions can be done interactively in Python. Please refer to these jupyter notebooks
+for example code at [doc/notebooks/](doc/notebooks/):
+- [predict_example.ipynb](doc/notebooks/predict_example.ipynb): view on [nbviewer.org](https://nbviewer.org/github/hartwigmedical/hmftools/blob/master/cuppa/src/main/python/pycuppa/doc/notebooks/predict_example.ipynb)
+- [train_example.ipynb](doc/notebooks/train_example.ipynb): view on [nbviewer.org](https://nbviewer.org/github/hartwigmedical/hmftools/blob/master/cuppa/src/main/python/pycuppa/doc/notebooks/train_example.ipynb)
 
-To predict on a single sample, the below example commands can be used. This produces the outputs as specified in section: 
-[Classifier output](#classifier-output).
+### Command line interface
+CUPPA can also be called from the command line (which internally calls the `PredictionRunner` and `TrainingRunner` 
+classes). 
+
+To predict on a single sample, the below example commands can be used.  This produces the outputs as specified in 
+section: [Classifier output](#classifier-output).
 
 ```commandline
 source ~/pycuppa/bin/activate ## Activate the virtual environment
@@ -143,7 +150,7 @@ The below table lists all possible arguments of `TrainingRunner` and `Prediction
 
 ### Input files format
 
-#### Features
+_Features_
 The features for one sample are provided to CUPPA in the following format.
 
 ```
@@ -187,7 +194,7 @@ For each sample CUPPA outputs a visualization of the predictions (PNG file), as 
 TSV file. Please see later sections for more info on the [features](#features) and [classifiers](#classifier-structure) 
 shown in the visualization.
 
-![](../../../../../extended-docs/cuppa/visualization/cuppa_vis.png)
+![](doc/visualization/cuppa_vis.png)
 
 ### Probabilities by classifier
 The CUPPA visualization is split into 4 panels. The first panel shows the probabilities for each cancer subtype 
@@ -370,7 +377,7 @@ transformations, after which a logistic regression weighs the importance of each
 followed by some post-processing steps.
 - **Combined layer**: Combines the probabilities from the meta-classifiers by multiplying them together.
 
-![](../../../../../extended-docs/cuppa/diagrams/classifier_structure.jpg)
+![](doc/diagrams/classifier_structure.jpg)
 
 ### LogisticRegression
 The [logistic regressions](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)
@@ -420,7 +427,7 @@ Conversely, we want hypermutator samples to contribute less to the consensus pro
 Thus, if a sample has more than 10,000 SNVs (`count_ceiling=10000`), the GEN_POS profile of that sample will be scaled 
 down such that the TMB sums to 10,000.
 
-<img src="../../../../../extended-docs/cuppa/diagrams/gen_pos_transformations.jpg" width="600"/>
+<img src="./doc/diagrams/gen_pos_transformations.jpg" width="600"/>
 
 For the GENE_EXP and ALT_SJ classifiers, no `count_ceiling` is used and the mean (`agg_func="mean"`) to generate the 
 consensus profiles. This is because the (log transformed) GENE_EXP and ALT_SJ features are not skewed by outliers. 
@@ -677,7 +684,7 @@ different 'folds', each yielding cancer type probabilities for a different 10% s
 every sample in the training set. These probabilities were then used to calculate various performance metrics (e.g. 
 number of samples correctly predicted per cancer type).
 
-<img src="../../../../../extended-docs/cuppa/diagrams/training_and_cross_validation.jpg" width="600"/>
+<img src="./doc/diagrams/training_and_cross_validation.jpg" width="600"/>
 
 # Known issues
 

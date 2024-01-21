@@ -595,6 +595,10 @@ class PredictionRunner(LoggerMixin):
         self.get_pred_summ()
         self.get_vis_data()
 
+        if not os.path.exists(self.output_dir):
+            os.mkdir(self.output_dir)
+            self.logger.info("Created output dir: " + self.output_dir)
+
         self.pred_summ.to_tsv(self.pred_summ_path, verbose=True)
         self.vis_data.to_tsv(self.vis_data_path, verbose=True)
 

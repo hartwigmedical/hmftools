@@ -1,4 +1,6 @@
 import pandas as pd
+import os
+import tempfile
 
 from cuppa.performance.performance_stats import PerformanceStatsBuilder, PerformanceStats
 from cuppa.performance.confusion_matrix import ConfusionMatrix
@@ -6,20 +8,20 @@ from cuppa.tests.mock_data import MockCvOutput
 
 
 class TestPerformanceStatsBuilder:
-    def test_build_from_pred_summ(self):
+    def test_can_build_from_pred_summ(self):
         pred_summ = MockCvOutput.pred_summ
         builder = PerformanceStatsBuilder(pred_summ)
 
         perf = builder.build()
+
+        assert list(perf.columns) == ['class', 'clf_name', 'n_total', 'n_predicted', 'n_correct', 'recall', 'precision']
         assert isinstance(perf, PerformanceStats)
 
 
 class TestPerformanceStats:
 
-    def test_init_from_tsv(self):
-        #df = pd.read_table("/Users/lnguyen/Hartwig/hartwigmedical/analysis/cup/pycuppa/data/models/Hartwig_PCAWG/29-pre_prod/02-train_entry_point/cv/report/perf.tsv")
-        df = pd.read_table(MockCvOutput.path_performance)
-        performance = PerformanceStats.from_data_frame(df)
+    def test_can_load_from_tsv(self):
+        performance = PerformanceStats.from_tsv(MockCvOutput.path_performance)
         assert isinstance(performance, PerformanceStats)
 
     def test_cuppa_prediction_format_has_correct_indexes(self):
@@ -31,14 +33,17 @@ class TestPerformanceStats:
 
 
 class TestConfusionMatrix:
-    def test_init_from_pred_summ(self):
+    def test_can_initialize_from_prediction_summary(self):
         pred_summ = MockCvOutput.pred_summ
         confusion = ConfusionMatrix(pred_summ, clf_name="dna_combined")
 
         assert confusion.counts_matrix.index.name == "pred_class_1" and confusion.counts_matrix.columns.name == "actual_class"
         assert confusion.props_matrix.index.name == "pred_class_1" and confusion.props_matrix.columns.name == "actual_class"
 
-    def _test_plot_succeeds(self):
+    def test_can_plot_confusion_matrix(self):
         pred_summ = MockCvOutput.pred_summ
         confusion = ConfusionMatrix(pred_summ, clf_name="dna_combined")
-        confusion.plot()
+
+        plot_path = os.path.join(tempfile.gettempdir(), "plot.pdf")
+        confusion.plot(path=plot_path)
+        os.remove(plot_path)

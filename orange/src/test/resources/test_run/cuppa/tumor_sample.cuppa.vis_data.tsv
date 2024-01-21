@@ -1,0 +1,1321 @@
+sample_id	data_type	clf_group	clf_name	feat_name	feat_value	cancer_type	data_value	rank	rank_group
+MELANOMA_SAMPLE	prob	combined	combined			Anogenital	0.0001005	2	0
+MELANOMA_SAMPLE	prob	combined	combined			Bone/Soft tissue: Cartilaginous neoplasm		34	0
+MELANOMA_SAMPLE	prob	combined	combined			Bone/Soft tissue: GIST	0.0001005	3	0
+MELANOMA_SAMPLE	prob	combined	combined			Bone/Soft tissue: Leiomyosarcoma	0.0001005	4	0
+MELANOMA_SAMPLE	prob	combined	combined			Bone/Soft tissue: Liposarcoma	0.0001005	5	0
+MELANOMA_SAMPLE	prob	combined	combined			Bone/Soft tissue: Osteosarcoma		35	0
+MELANOMA_SAMPLE	prob	combined	combined			Bone/Soft tissue: Undiff. sarcoma	0.0001005	6	0
+MELANOMA_SAMPLE	prob	combined	combined			Bone/Soft tissue: Other	0.0001005	7	0
+MELANOMA_SAMPLE	prob	combined	combined			Breast: Triple negative	0.0001005	8	0
+MELANOMA_SAMPLE	prob	combined	combined			Breast: Other	0.0001005	9	0
+MELANOMA_SAMPLE	prob	combined	combined			CNS: Glioma	0.0001005	10	0
+MELANOMA_SAMPLE	prob	combined	combined			CNS: Medulloblastoma		36	0
+MELANOMA_SAMPLE	prob	combined	combined			CNS: Pilocytic astrocytoma		37	0
+MELANOMA_SAMPLE	prob	combined	combined			Colorectum/Small intestine/Appendix	0.0001005	11	0
+MELANOMA_SAMPLE	prob	combined	combined			Esophagus/Stomach	0.0001005	12	0
+MELANOMA_SAMPLE	prob	combined	combined			Gynecologic: Endometrium	0.0001005	13	0
+MELANOMA_SAMPLE	prob	combined	combined			Gynecologic: Ovary/Fallopian tube	0.0001005	14	0
+MELANOMA_SAMPLE	prob	combined	combined			HPB: Bile duct/Gallbladder	0.0001005	15	0
+MELANOMA_SAMPLE	prob	combined	combined			HPB: Liver	0.0001005	16	0
+MELANOMA_SAMPLE	prob	combined	combined			HPB: Pancreas	0.0001005	17	0
+MELANOMA_SAMPLE	prob	combined	combined			Head and neck: Adenoid cystic	0.0001005	18	0
+MELANOMA_SAMPLE	prob	combined	combined			Head and neck: Salivary gland	0.0001005	19	0
+MELANOMA_SAMPLE	prob	combined	combined			Head and neck: Other	0.0001005	20	0
+MELANOMA_SAMPLE	prob	combined	combined			Kidney: Chromophobe		38	0
+MELANOMA_SAMPLE	prob	combined	combined			Kidney: Other	0.0001005	21	0
+MELANOMA_SAMPLE	prob	combined	combined			Lung: Non-small cell: LUAD	0.0001005	22	0
+MELANOMA_SAMPLE	prob	combined	combined			Lung: Non-small cell: LUSC	0.0001005	23	0
+MELANOMA_SAMPLE	prob	combined	combined			Lung: Small cell	0.0001005	24	0
+MELANOMA_SAMPLE	prob	combined	combined			Lymphoid tissue	0.0001005	25	0
+MELANOMA_SAMPLE	prob	combined	combined			Mesothelium	0.0001005	26	0
+MELANOMA_SAMPLE	prob	combined	combined			Myeloid: Acute myeloid leukemia		39	0
+MELANOMA_SAMPLE	prob	combined	combined			Myeloid: Myeloproliferative neoplasm		40	0
+MELANOMA_SAMPLE	prob	combined	combined			NET: Colorectum/Small intestine	0.0001005	27	0
+MELANOMA_SAMPLE	prob	combined	combined			NET: Lung	0.0001005	28	0
+MELANOMA_SAMPLE	prob	combined	combined			NET: Pancreas	0.0001005	29	0
+MELANOMA_SAMPLE	prob	combined	combined			Prostate	0.0001005	30	0
+MELANOMA_SAMPLE	prob	combined	combined			Skin: Melanoma	0.9968	1	0
+MELANOMA_SAMPLE	prob	combined	combined			Skin: Other	0.0001005	31	0
+MELANOMA_SAMPLE	prob	combined	combined			Thyroid gland	0.0001005	32	0
+MELANOMA_SAMPLE	prob	combined	combined			Urothelial tract	0.0001005	33	0
+MELANOMA_SAMPLE	prob	dna	dna_combined			Anogenital	0.0	5	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Bone/Soft tissue: Cartilaginous neoplasm	5.598e-05	3	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Bone/Soft tissue: GIST	0.0	6	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Bone/Soft tissue: Leiomyosarcoma	0.0	7	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Bone/Soft tissue: Liposarcoma	0.0	8	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Bone/Soft tissue: Osteosarcoma	0.0	9	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Bone/Soft tissue: Undiff. sarcoma	0.0	10	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Bone/Soft tissue: Other	0.0002544	2	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Breast: Triple negative	0.0	11	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Breast: Other	0.0	12	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			CNS: Glioma	0.0	13	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			CNS: Medulloblastoma	0.0	14	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			CNS: Pilocytic astrocytoma	0.0	15	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Colorectum/Small intestine/Appendix	0.0	16	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Esophagus/Stomach	0.0	17	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Gynecologic: Endometrium	0.0	18	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Gynecologic: Ovary/Fallopian tube	0.0	19	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			HPB: Bile duct/Gallbladder	0.0	20	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			HPB: Liver	0.0	21	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			HPB: Pancreas	0.0	22	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Head and neck: Adenoid cystic	5.12e-05	4	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Head and neck: Salivary gland	0.0	23	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Head and neck: Other	0.0	24	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Kidney: Chromophobe	0.0	25	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Kidney: Other	0.0	26	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Lung: Non-small cell: LUAD	0.0	27	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Lung: Non-small cell: LUSC	0.0	28	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Lung: Small cell	0.0	29	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Lymphoid tissue	0.0	30	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Mesothelium	0.0	31	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Myeloid: Acute myeloid leukemia	0.0	32	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Myeloid: Myeloproliferative neoplasm	0.0	33	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			NET: Colorectum/Small intestine	0.0	34	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			NET: Lung	0.0	35	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			NET: Pancreas	0.0	36	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Prostate	0.0	37	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Skin: Melanoma	0.9996	1	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Skin: Other	0.0	38	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Thyroid gland	0.0	39	1
+MELANOMA_SAMPLE	prob	dna	dna_combined			Urothelial tract	0.0	40	1
+MELANOMA_SAMPLE	prob	rna	rna_combined			Anogenital	0.0	8	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Bone/Soft tissue: Cartilaginous neoplasm		34	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Bone/Soft tissue: GIST	0.0	9	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Bone/Soft tissue: Leiomyosarcoma	0.0	10	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Bone/Soft tissue: Liposarcoma	0.002122	3	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Bone/Soft tissue: Osteosarcoma		35	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Bone/Soft tissue: Undiff. sarcoma	0.0007553	5	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Bone/Soft tissue: Other	0.0	11	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Breast: Triple negative	0.0	12	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Breast: Other	0.0	13	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			CNS: Glioma	0.0	14	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			CNS: Medulloblastoma		36	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			CNS: Pilocytic astrocytoma		37	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Colorectum/Small intestine/Appendix	0.0	15	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Esophagus/Stomach	0.0007268	6	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Gynecologic: Endometrium	0.0	16	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Gynecologic: Ovary/Fallopian tube	0.0	17	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			HPB: Bile duct/Gallbladder	0.0	18	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			HPB: Liver	0.0	19	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			HPB: Pancreas	0.0	20	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Head and neck: Adenoid cystic	0.00253	2	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Head and neck: Salivary gland	0.0	21	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Head and neck: Other	0.0005138	7	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Kidney: Chromophobe		38	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Kidney: Other	0.0	22	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Lung: Non-small cell: LUAD	0.0	23	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Lung: Non-small cell: LUSC	0.0	24	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Lung: Small cell	0.0	25	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Lymphoid tissue	0.0	26	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Mesothelium	0.0	27	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Myeloid: Acute myeloid leukemia		39	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Myeloid: Myeloproliferative neoplasm		40	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			NET: Colorectum/Small intestine	0.0	28	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			NET: Lung	0.001271	4	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			NET: Pancreas	0.0	29	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Prostate	0.0	30	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Skin: Melanoma	0.9921	1	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Skin: Other	0.0	31	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Thyroid gland	0.0	32	2
+MELANOMA_SAMPLE	prob	rna	rna_combined			Urothelial tract	0.0	33	2
+MELANOMA_SAMPLE	prob	dna	rmd			Anogenital	1.315e-05	27	3
+MELANOMA_SAMPLE	prob	dna	rmd			Bone/Soft tissue: Cartilaginous neoplasm	1.369e-07	40	3
+MELANOMA_SAMPLE	prob	dna	rmd			Bone/Soft tissue: GIST	5.79e-06	34	3
+MELANOMA_SAMPLE	prob	dna	rmd			Bone/Soft tissue: Leiomyosarcoma	0.0002282	7	3
+MELANOMA_SAMPLE	prob	dna	rmd			Bone/Soft tissue: Liposarcoma	7.188e-05	13	3
+MELANOMA_SAMPLE	prob	dna	rmd			Bone/Soft tissue: Osteosarcoma	6.581e-05	14	3
+MELANOMA_SAMPLE	prob	dna	rmd			Bone/Soft tissue: Undiff. sarcoma	0.0004673	3	3
+MELANOMA_SAMPLE	prob	dna	rmd			Bone/Soft tissue: Other	0.0005127	2	3
+MELANOMA_SAMPLE	prob	dna	rmd			Breast: Triple negative	7.684e-05	12	3
+MELANOMA_SAMPLE	prob	dna	rmd			Breast: Other	6.038e-05	15	3
+MELANOMA_SAMPLE	prob	dna	rmd			CNS: Glioma	0.0002913	6	3
+MELANOMA_SAMPLE	prob	dna	rmd			CNS: Medulloblastoma	0.0001472	8	3
+MELANOMA_SAMPLE	prob	dna	rmd			CNS: Pilocytic astrocytoma	4.04e-05	19	3
+MELANOMA_SAMPLE	prob	dna	rmd			Colorectum/Small intestine/Appendix	2.171e-06	36	3
+MELANOMA_SAMPLE	prob	dna	rmd			Esophagus/Stomach	5.837e-06	33	3
+MELANOMA_SAMPLE	prob	dna	rmd			Gynecologic: Endometrium	5.887e-06	32	3
+MELANOMA_SAMPLE	prob	dna	rmd			Gynecologic: Ovary/Fallopian tube	4.941e-05	18	3
+MELANOMA_SAMPLE	prob	dna	rmd			HPB: Bile duct/Gallbladder	1.617e-05	26	3
+MELANOMA_SAMPLE	prob	dna	rmd			HPB: Liver	1.88e-05	23	3
+MELANOMA_SAMPLE	prob	dna	rmd			HPB: Pancreas	1.256e-05	28	3
+MELANOMA_SAMPLE	prob	dna	rmd			Head and neck: Adenoid cystic	5.215e-07	38	3
+MELANOMA_SAMPLE	prob	dna	rmd			Head and neck: Salivary gland	5.246e-05	17	3
+MELANOMA_SAMPLE	prob	dna	rmd			Head and neck: Other	3.973e-05	20	3
+MELANOMA_SAMPLE	prob	dna	rmd			Kidney: Chromophobe	0.0001031	9	3
+MELANOMA_SAMPLE	prob	dna	rmd			Kidney: Other	1.646e-05	25	3
+MELANOMA_SAMPLE	prob	dna	rmd			Lung: Non-small cell: LUAD	1.866e-05	24	3
+MELANOMA_SAMPLE	prob	dna	rmd			Lung: Non-small cell: LUSC	3.786e-06	35	3
+MELANOMA_SAMPLE	prob	dna	rmd			Lung: Small cell	1.132e-05	30	3
+MELANOMA_SAMPLE	prob	dna	rmd			Lymphoid tissue	2.721e-07	39	3
+MELANOMA_SAMPLE	prob	dna	rmd			Mesothelium	9.004e-05	11	3
+MELANOMA_SAMPLE	prob	dna	rmd			Myeloid: Acute myeloid leukemia	9.407e-07	37	3
+MELANOMA_SAMPLE	prob	dna	rmd			Myeloid: Myeloproliferative neoplasm	9.267e-06	31	3
+MELANOMA_SAMPLE	prob	dna	rmd			NET: Colorectum/Small intestine	1.249e-05	29	3
+MELANOMA_SAMPLE	prob	dna	rmd			NET: Lung	5.328e-05	16	3
+MELANOMA_SAMPLE	prob	dna	rmd			NET: Pancreas	0.0002984	5	3
+MELANOMA_SAMPLE	prob	dna	rmd			Prostate	9.123e-05	10	3
+MELANOMA_SAMPLE	prob	dna	rmd			Skin: Melanoma	0.9966	1	3
+MELANOMA_SAMPLE	prob	dna	rmd			Skin: Other	0.0004215	4	3
+MELANOMA_SAMPLE	prob	dna	rmd			Thyroid gland	3.697e-05	21	3
+MELANOMA_SAMPLE	prob	dna	rmd			Urothelial tract	1.961e-05	22	3
+MELANOMA_SAMPLE	prob	dna	snv96			Anogenital	5.969e-05	10	4
+MELANOMA_SAMPLE	prob	dna	snv96			Bone/Soft tissue: Cartilaginous neoplasm	4.362e-10	36	4
+MELANOMA_SAMPLE	prob	dna	snv96			Bone/Soft tissue: GIST	6.785e-09	33	4
+MELANOMA_SAMPLE	prob	dna	snv96			Bone/Soft tissue: Leiomyosarcoma	2.47e-08	27	4
+MELANOMA_SAMPLE	prob	dna	snv96			Bone/Soft tissue: Liposarcoma	2.149e-08	30	4
+MELANOMA_SAMPLE	prob	dna	snv96			Bone/Soft tissue: Osteosarcoma	2.509e-07	24	4
+MELANOMA_SAMPLE	prob	dna	snv96			Bone/Soft tissue: Undiff. sarcoma	5.976e-06	16	4
+MELANOMA_SAMPLE	prob	dna	snv96			Bone/Soft tissue: Other	0.0003149	4	4
+MELANOMA_SAMPLE	prob	dna	snv96			Breast: Triple negative	2.25e-05	13	4
+MELANOMA_SAMPLE	prob	dna	snv96			Breast: Other	4.84e-05	11	4
+MELANOMA_SAMPLE	prob	dna	snv96			CNS: Glioma	2.273e-08	28	4
+MELANOMA_SAMPLE	prob	dna	snv96			CNS: Medulloblastoma	1.658e-10	38	4
+MELANOMA_SAMPLE	prob	dna	snv96			CNS: Pilocytic astrocytoma	2.624e-07	23	4
+MELANOMA_SAMPLE	prob	dna	snv96			Colorectum/Small intestine/Appendix	2.916e-12	40	4
+MELANOMA_SAMPLE	prob	dna	snv96			Esophagus/Stomach	3.107e-05	12	4
+MELANOMA_SAMPLE	prob	dna	snv96			Gynecologic: Endometrium	1.252e-05	15	4
+MELANOMA_SAMPLE	prob	dna	snv96			Gynecologic: Ovary/Fallopian tube	2.403e-07	25	4
+MELANOMA_SAMPLE	prob	dna	snv96			HPB: Bile duct/Gallbladder	0.0003592	3	4
+MELANOMA_SAMPLE	prob	dna	snv96			HPB: Liver	1.062e-08	32	4
+MELANOMA_SAMPLE	prob	dna	snv96			HPB: Pancreas	6.641e-07	20	4
+MELANOMA_SAMPLE	prob	dna	snv96			Head and neck: Adenoid cystic	0.0002259	7	4
+MELANOMA_SAMPLE	prob	dna	snv96			Head and neck: Salivary gland	9.232e-05	9	4
+MELANOMA_SAMPLE	prob	dna	snv96			Head and neck: Other	0.0002298	6	4
+MELANOMA_SAMPLE	prob	dna	snv96			Kidney: Chromophobe	3.853e-10	37	4
+MELANOMA_SAMPLE	prob	dna	snv96			Kidney: Other	2.799e-06	17	4
+MELANOMA_SAMPLE	prob	dna	snv96			Lung: Non-small cell: LUAD	2.267e-08	29	4
+MELANOMA_SAMPLE	prob	dna	snv96			Lung: Non-small cell: LUSC	1.944e-06	18	4
+MELANOMA_SAMPLE	prob	dna	snv96			Lung: Small cell	4.158e-09	34	4
+MELANOMA_SAMPLE	prob	dna	snv96			Lymphoid tissue	1.105e-06	19	4
+MELANOMA_SAMPLE	prob	dna	snv96			Mesothelium	3.582e-07	22	4
+MELANOMA_SAMPLE	prob	dna	snv96			Myeloid: Acute myeloid leukemia	1.752e-09	35	4
+MELANOMA_SAMPLE	prob	dna	snv96			Myeloid: Myeloproliferative neoplasm	1.589e-08	31	4
+MELANOMA_SAMPLE	prob	dna	snv96			NET: Colorectum/Small intestine	1.149e-07	26	4
+MELANOMA_SAMPLE	prob	dna	snv96			NET: Lung	4.556e-07	21	4
+MELANOMA_SAMPLE	prob	dna	snv96			NET: Pancreas	0.0001757	8	4
+MELANOMA_SAMPLE	prob	dna	snv96			Prostate	5.793e-12	39	4
+MELANOMA_SAMPLE	prob	dna	snv96			Skin: Melanoma	0.8176	1	4
+MELANOMA_SAMPLE	prob	dna	snv96			Skin: Other	0.1806	2	4
+MELANOMA_SAMPLE	prob	dna	snv96			Thyroid gland	1.277e-05	14	4
+MELANOMA_SAMPLE	prob	dna	snv96			Urothelial tract	0.0002343	5	4
+MELANOMA_SAMPLE	prob	dna	event			Anogenital	0.0002658	14	5
+MELANOMA_SAMPLE	prob	dna	event			Bone/Soft tissue: Cartilaginous neoplasm	1.436e-07	36	5
+MELANOMA_SAMPLE	prob	dna	event			Bone/Soft tissue: GIST	1.457e-05	27	5
+MELANOMA_SAMPLE	prob	dna	event			Bone/Soft tissue: Leiomyosarcoma	0.01036	4	5
+MELANOMA_SAMPLE	prob	dna	event			Bone/Soft tissue: Liposarcoma	0.003682	5	5
+MELANOMA_SAMPLE	prob	dna	event			Bone/Soft tissue: Osteosarcoma	0.0009382	10	5
+MELANOMA_SAMPLE	prob	dna	event			Bone/Soft tissue: Undiff. sarcoma	0.05607	2	5
+MELANOMA_SAMPLE	prob	dna	event			Bone/Soft tissue: Other	0.01087	3	5
+MELANOMA_SAMPLE	prob	dna	event			Breast: Triple negative	4.056e-07	35	5
+MELANOMA_SAMPLE	prob	dna	event			Breast: Other	9.569e-06	29	5
+MELANOMA_SAMPLE	prob	dna	event			CNS: Glioma	3.04e-05	26	5
+MELANOMA_SAMPLE	prob	dna	event			CNS: Medulloblastoma	6.424e-07	34	5
+MELANOMA_SAMPLE	prob	dna	event			CNS: Pilocytic astrocytoma	6.07e-08	37	5
+MELANOMA_SAMPLE	prob	dna	event			Colorectum/Small intestine/Appendix	4.033e-05	25	5
+MELANOMA_SAMPLE	prob	dna	event			Esophagus/Stomach	0.0001585	17	5
+MELANOMA_SAMPLE	prob	dna	event			Gynecologic: Endometrium	1.529e-08	38	5
+MELANOMA_SAMPLE	prob	dna	event			Gynecologic: Ovary/Fallopian tube	7.681e-07	33	5
+MELANOMA_SAMPLE	prob	dna	event			HPB: Bile duct/Gallbladder	0.001292	9	5
+MELANOMA_SAMPLE	prob	dna	event			HPB: Liver	0.0001765	16	5
+MELANOMA_SAMPLE	prob	dna	event			HPB: Pancreas	8.06e-05	19	5
+MELANOMA_SAMPLE	prob	dna	event			Head and neck: Adenoid cystic	4.164e-06	30	5
+MELANOMA_SAMPLE	prob	dna	event			Head and neck: Salivary gland	0.002417	6	5
+MELANOMA_SAMPLE	prob	dna	event			Head and neck: Other	5.408e-05	22	5
+MELANOMA_SAMPLE	prob	dna	event			Kidney: Chromophobe	8.554e-07	32	5
+MELANOMA_SAMPLE	prob	dna	event			Kidney: Other	0.0005125	12	5
+MELANOMA_SAMPLE	prob	dna	event			Lung: Non-small cell: LUAD	0.001784	8	5
+MELANOMA_SAMPLE	prob	dna	event			Lung: Non-small cell: LUSC	7.55e-05	20	5
+MELANOMA_SAMPLE	prob	dna	event			Lung: Small cell	1.67e-06	31	5
+MELANOMA_SAMPLE	prob	dna	event			Lymphoid tissue	1.387e-05	28	5
+MELANOMA_SAMPLE	prob	dna	event			Mesothelium	0.0008541	11	5
+MELANOMA_SAMPLE	prob	dna	event			Myeloid: Acute myeloid leukemia	3.611e-10	40	5
+MELANOMA_SAMPLE	prob	dna	event			Myeloid: Myeloproliferative neoplasm	1.403e-09	39	5
+MELANOMA_SAMPLE	prob	dna	event			NET: Colorectum/Small intestine	4.124e-05	24	5
+MELANOMA_SAMPLE	prob	dna	event			NET: Lung	0.001827	7	5
+MELANOMA_SAMPLE	prob	dna	event			NET: Pancreas	4.632e-05	23	5
+MELANOMA_SAMPLE	prob	dna	event			Prostate	0.000202	15	5
+MELANOMA_SAMPLE	prob	dna	event			Skin: Melanoma	0.9077	1	5
+MELANOMA_SAMPLE	prob	dna	event			Skin: Other	6.333e-05	21	5
+MELANOMA_SAMPLE	prob	dna	event			Thyroid gland	0.0002965	13	5
+MELANOMA_SAMPLE	prob	dna	event			Urothelial tract	9.622e-05	18	5
+MELANOMA_SAMPLE	prob	rna	gene_exp			Anogenital	2.165e-07	26	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Bone/Soft tissue: Cartilaginous neoplasm		34	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Bone/Soft tissue: GIST	3.621e-07	21	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Bone/Soft tissue: Leiomyosarcoma	4.417e-08	28	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Bone/Soft tissue: Liposarcoma	2.801e-08	29	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Bone/Soft tissue: Osteosarcoma		35	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Bone/Soft tissue: Undiff. sarcoma	3.427e-07	23	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Bone/Soft tissue: Other	1.572e-06	8	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Breast: Triple negative	5.456e-07	18	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Breast: Other	4.422e-07	20	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			CNS: Glioma	3.546e-07	22	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			CNS: Medulloblastoma		36	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			CNS: Pilocytic astrocytoma		37	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Colorectum/Small intestine/Appendix	3.149e-07	24	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Esophagus/Stomach	9.748e-07	12	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Gynecologic: Endometrium	2.379e-06	6	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Gynecologic: Ovary/Fallopian tube	4.324e-06	4	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			HPB: Bile duct/Gallbladder	5.879e-07	17	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			HPB: Liver	8.634e-07	13	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			HPB: Pancreas	6.169e-07	16	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Head and neck: Adenoid cystic	1.878e-11	33	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Head and neck: Salivary gland	3.763e-06	5	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Head and neck: Other	7.471e-06	3	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Kidney: Chromophobe		38	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Kidney: Other	1.353e-06	9	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Lung: Non-small cell: LUAD	4.43e-07	19	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Lung: Non-small cell: LUSC	8.992e-09	32	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Lung: Small cell	8.36e-07	14	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Lymphoid tissue	2.014e-06	7	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Mesothelium	5.916e-08	27	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Myeloid: Acute myeloid leukemia		39	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Myeloid: Myeloproliferative neoplasm		40	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			NET: Colorectum/Small intestine	2.853e-07	25	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			NET: Lung	1.218e-08	31	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			NET: Pancreas	1.116e-06	11	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Prostate	7.483e-07	15	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Skin: Melanoma	1.0	1	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Skin: Other	8.853e-06	2	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Thyroid gland	1.147e-06	10	6
+MELANOMA_SAMPLE	prob	rna	gene_exp			Urothelial tract	2.388e-08	30	6
+MELANOMA_SAMPLE	prob	rna	alt_sj			Anogenital	1.314e-06	21	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Bone/Soft tissue: Cartilaginous neoplasm		34	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Bone/Soft tissue: GIST	3.143e-06	11	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Bone/Soft tissue: Leiomyosarcoma	1.878e-06	18	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Bone/Soft tissue: Liposarcoma	2.579e-06	14	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Bone/Soft tissue: Osteosarcoma		35	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Bone/Soft tissue: Undiff. sarcoma	1.955e-06	17	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Bone/Soft tissue: Other	1.823e-05	2	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Breast: Triple negative	1.059e-05	3	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Breast: Other	1.712e-06	19	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			CNS: Glioma	5.173e-06	6	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			CNS: Medulloblastoma		36	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			CNS: Pilocytic astrocytoma		37	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Colorectum/Small intestine/Appendix	2.07e-06	15	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Esophagus/Stomach	3.484e-06	10	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Gynecologic: Endometrium	2.828e-06	13	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Gynecologic: Ovary/Fallopian tube	3.788e-06	9	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			HPB: Bile duct/Gallbladder	1.959e-06	16	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			HPB: Liver	6.878e-06	5	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			HPB: Pancreas	4.286e-07	27	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Head and neck: Adenoid cystic	2.982e-06	12	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Head and neck: Salivary gland	2.363e-07	29	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Head and neck: Other	4.84e-06	7	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Kidney: Chromophobe		38	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Kidney: Other	9.777e-06	4	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Lung: Non-small cell: LUAD	1.349e-06	20	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Lung: Non-small cell: LUSC	2.954e-07	28	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Lung: Small cell	1.308e-06	22	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Lymphoid tissue	4.247e-06	8	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Mesothelium	1.257e-06	23	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Myeloid: Acute myeloid leukemia		39	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Myeloid: Myeloproliferative neoplasm		40	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			NET: Colorectum/Small intestine	1.423e-07	31	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			NET: Lung	5.713e-08	33	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			NET: Pancreas	8.68e-07	25	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Prostate	9.09e-07	24	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Skin: Melanoma	0.9999	1	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Skin: Other	1.505e-07	30	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Thyroid gland	9.696e-08	32	7
+MELANOMA_SAMPLE	prob	rna	alt_sj			Urothelial tract	8.591e-07	26	7
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Anogenital	0.5349	38	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Bone/Soft tissue: Cartilaginous neoplasm	242.6	2	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Bone/Soft tissue: GIST	3.539	11	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Bone/Soft tissue: Leiomyosarcoma	2.58	14	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Bone/Soft tissue: Liposarcoma	3.19	12	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Bone/Soft tissue: Osteosarcoma	2.813	13	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Bone/Soft tissue: Undiff. sarcoma	1.706	15	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Bone/Soft tissue: Other	0.9942	20	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Breast: Triple negative	0.9259	32	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Breast: Other	0.7838	33	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	CNS: Glioma	0.9941	21	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	CNS: Medulloblastoma	34.83	6	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	CNS: Pilocytic astrocytoma	447.8	1	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Colorectum/Small intestine/Appendix	0.9927	22	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Esophagus/Stomach	0.9461	29	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Gynecologic: Endometrium	0.9607	28	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Gynecologic: Ovary/Fallopian tube	0.972	27	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	HPB: Bile duct/Gallbladder	0.9834	26	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	HPB: Liver	1.541	16	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	HPB: Pancreas	1.012	17	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Head and neck: Adenoid cystic	43.59	5	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Head and neck: Salivary gland	0.9271	31	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Head and neck: Other	0.6258	35	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Kidney: Chromophobe	7.55	7	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Kidney: Other	0.9968	19	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Lung: Non-small cell: LUAD	0.6568	34	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Lung: Non-small cell: LUSC	0.5419	37	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Lung: Small cell	0.9455	30	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Lymphoid tissue	0.9926	23	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Mesothelium	3.883	10	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Myeloid: Acute myeloid leukemia	212.3	3	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Myeloid: Myeloproliferative neoplasm	167.7	4	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	NET: Colorectum/Small intestine	4.095	9	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	NET: Lung	5.438	8	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	NET: Pancreas	0.9837	25	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Prostate	0.9975	18	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Skin: Melanoma	0.3534	39	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Skin: Other	0.5726	36	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Thyroid gland	0.9868	24	8
+MELANOMA_SAMPLE	sig_quantile			AID/APOBEC (SBS2/13)	4075.0	Urothelial tract	0.3501	40	8
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Anogenital	0.0	1	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Bone/Soft tissue: Cartilaginous neoplasm	0.0	2	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Bone/Soft tissue: GIST	0.0	3	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Bone/Soft tissue: Leiomyosarcoma	0.0	4	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Bone/Soft tissue: Liposarcoma	0.0	5	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Bone/Soft tissue: Osteosarcoma	0.0	6	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Bone/Soft tissue: Undiff. sarcoma	0.0	7	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Bone/Soft tissue: Other	0.0	8	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Breast: Triple negative	0.0	9	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Breast: Other	0.0	10	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	CNS: Glioma	0.0	11	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	CNS: Medulloblastoma	0.0	12	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	CNS: Pilocytic astrocytoma	0.0	13	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Colorectum/Small intestine/Appendix	0.0	14	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Esophagus/Stomach	0.0	15	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Gynecologic: Endometrium	0.0	16	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Gynecologic: Ovary/Fallopian tube	0.0	17	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	HPB: Bile duct/Gallbladder	0.0	18	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	HPB: Liver	0.0	19	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	HPB: Pancreas	0.0	20	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Head and neck: Adenoid cystic	0.0	21	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Head and neck: Salivary gland	0.0	22	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Head and neck: Other	0.0	23	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Kidney: Chromophobe	0.0	24	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Kidney: Other	0.0	25	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Lung: Non-small cell: LUAD	0.0	26	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Lung: Non-small cell: LUSC	0.0	27	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Lung: Small cell	0.0	28	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Lymphoid tissue	0.0	29	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Mesothelium	0.0	30	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Myeloid: Acute myeloid leukemia	0.0	31	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Myeloid: Myeloproliferative neoplasm	0.0	32	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	NET: Colorectum/Small intestine	0.0	33	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	NET: Lung	0.0	34	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	NET: Pancreas	0.0	35	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Prostate	0.0	36	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Skin: Melanoma	0.0	37	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Skin: Other	0.0	38	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Thyroid gland	0.0	39	9
+MELANOMA_SAMPLE	sig_quantile			Smoking (SBS4)	0.0	Urothelial tract	0.0	40	9
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Anogenital	0.0	1	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Bone/Soft tissue: Cartilaginous neoplasm	0.0	2	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Bone/Soft tissue: GIST	0.0	3	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Bone/Soft tissue: Leiomyosarcoma	0.0	4	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Bone/Soft tissue: Liposarcoma	0.0	5	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Bone/Soft tissue: Osteosarcoma	0.0	6	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Bone/Soft tissue: Undiff. sarcoma	0.0	7	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Bone/Soft tissue: Other	0.0	8	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Breast: Triple negative	0.0	9	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Breast: Other	0.0	10	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	CNS: Glioma	0.0	11	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	CNS: Medulloblastoma	0.0	12	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	CNS: Pilocytic astrocytoma	0.0	13	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Colorectum/Small intestine/Appendix	0.0	14	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Esophagus/Stomach	0.0	15	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Gynecologic: Endometrium	0.0	16	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Gynecologic: Ovary/Fallopian tube	0.0	17	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	HPB: Bile duct/Gallbladder	0.0	18	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	HPB: Liver	0.0	19	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	HPB: Pancreas	0.0	20	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Head and neck: Adenoid cystic	0.0	21	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Head and neck: Salivary gland	0.0	22	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Head and neck: Other	0.0	23	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Kidney: Chromophobe	0.0	24	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Kidney: Other	0.0	25	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Lung: Non-small cell: LUAD	0.0	26	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Lung: Non-small cell: LUSC	0.0	27	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Lung: Small cell	0.0	28	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Lymphoid tissue	0.0	29	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Mesothelium	0.0	30	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Myeloid: Acute myeloid leukemia	0.0	31	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Myeloid: Myeloproliferative neoplasm	0.0	32	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	NET: Colorectum/Small intestine	0.0	33	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	NET: Lung	0.0	34	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	NET: Pancreas	0.0	35	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Prostate	0.0	36	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Skin: Melanoma	0.0	37	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Skin: Other	0.0	38	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Thyroid gland	0.0	39	10
+MELANOMA_SAMPLE	sig_quantile			MMRD (SBS6)	0.0	Urothelial tract	0.0	40	10
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Anogenital	13.49	31	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Bone/Soft tissue: Cartilaginous neoplasm	1243.0	3	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Bone/Soft tissue: GIST	161.8	8	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Bone/Soft tissue: Leiomyosarcoma	69.47	13	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Bone/Soft tissue: Liposarcoma	73.23	12	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Bone/Soft tissue: Osteosarcoma	56.57	17	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Bone/Soft tissue: Undiff. sarcoma	1.916	36	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Bone/Soft tissue: Other	0.9932	38	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Breast: Triple negative	18.6	26	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Breast: Other	4.423	35	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	CNS: Glioma	334.0	4	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	CNS: Medulloblastoma	278.3	5	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	CNS: Pilocytic astrocytoma	2747.0	2	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Colorectum/Small intestine/Appendix	27.35	22	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Esophagus/Stomach	18.25	27	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Gynecologic: Endometrium	42.94	19	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Gynecologic: Ovary/Fallopian tube	29.97	21	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	HPB: Bile duct/Gallbladder	16.22	29	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	HPB: Liver	40.38	20	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	HPB: Pancreas	24.76	23	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Head and neck: Adenoid cystic	245.8	6	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Head and neck: Salivary gland	20.78	24	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Head and neck: Other	12.43	32	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Kidney: Chromophobe	111.3	10	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Kidney: Other	20.76	25	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Lung: Non-small cell: LUAD	5.533	34	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Lung: Non-small cell: LUSC	15.43	30	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Lung: Small cell	12.03	33	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Lymphoid tissue	16.42	28	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Mesothelium	44.72	18	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Myeloid: Acute myeloid leukemia	227.1	7	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Myeloid: Myeloproliferative neoplasm	28390.0	1	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	NET: Colorectum/Small intestine	99.56	11	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	NET: Lung	62.35	16	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	NET: Pancreas	64.52	15	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Prostate	64.82	14	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Skin: Melanoma	0.2726	40	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Skin: Other	0.4548	39	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Thyroid gland	157.9	9	11
+MELANOMA_SAMPLE	sig_quantile			UV (SBS7)	17030.0	Urothelial tract	0.9959	37	11
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Anogenital	0.0	1	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Bone/Soft tissue: Cartilaginous neoplasm	0.0	2	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Bone/Soft tissue: GIST	0.0	3	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Bone/Soft tissue: Leiomyosarcoma	0.0	4	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Bone/Soft tissue: Liposarcoma	0.0	5	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Bone/Soft tissue: Osteosarcoma	0.0	6	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Bone/Soft tissue: Undiff. sarcoma	0.0	7	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Bone/Soft tissue: Other	0.0	8	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Breast: Triple negative	0.0	9	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Breast: Other	0.0	10	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	CNS: Glioma	0.0	11	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	CNS: Medulloblastoma	0.0	12	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	CNS: Pilocytic astrocytoma	0.0	13	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Colorectum/Small intestine/Appendix	0.0	14	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Esophagus/Stomach	0.0	15	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Gynecologic: Endometrium	0.0	16	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Gynecologic: Ovary/Fallopian tube	0.0	17	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	HPB: Bile duct/Gallbladder	0.0	18	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	HPB: Liver	0.0	19	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	HPB: Pancreas	0.0	20	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Head and neck: Adenoid cystic	0.0	21	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Head and neck: Salivary gland	0.0	22	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Head and neck: Other	0.0	23	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Kidney: Chromophobe	0.0	24	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Kidney: Other	0.0	25	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Lung: Non-small cell: LUAD	0.0	26	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Lung: Non-small cell: LUSC	0.0	27	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Lung: Small cell	0.0	28	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Lymphoid tissue	0.0	29	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Mesothelium	0.0	30	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Myeloid: Acute myeloid leukemia	0.0	31	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Myeloid: Myeloproliferative neoplasm	0.0	32	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	NET: Colorectum/Small intestine	0.0	33	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	NET: Lung	0.0	34	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	NET: Pancreas	0.0	35	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Prostate	0.0	36	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Skin: Melanoma	0.0	37	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Skin: Other	0.0	38	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Thyroid gland	0.0	39	12
+MELANOMA_SAMPLE	sig_quantile			ROS/5FU (SBS17)	0.0	Urothelial tract	0.0	40	12
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Anogenital	0.3675117456086936	36	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Bone/Soft tissue: Cartilaginous neoplasm	3.1298966974567826	2	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Bone/Soft tissue: GIST	0.7877299113272275	29	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Bone/Soft tissue: Leiomyosarcoma	0.6320416405876234	34	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Bone/Soft tissue: Liposarcoma	1.527908795264732	5	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Bone/Soft tissue: Osteosarcoma	0.7486377929108913	30	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Bone/Soft tissue: Undiff. sarcoma	1.107604970571425	13	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Bone/Soft tissue: Other	0.8498461040065416	24	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Breast: Triple negative	0.06808488795979738	40	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Breast: Other	0.14572995401294306	37	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	CNS: Glioma	0.998484150062878	23	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	CNS: Medulloblastoma	1.0	19	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	CNS: Pilocytic astrocytoma	0.8096121282623018	27	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Colorectum/Small intestine/Appendix	0.7159105857908841	31	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Esophagus/Stomach	1.3437980897844	8	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Gynecologic: Endometrium	0.09144660764700577	38	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Gynecologic: Ovary/Fallopian tube	0.06946029393215682	39	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	HPB: Bile duct/Gallbladder	0.8062188881159689	28	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	HPB: Liver	1.0710184304989103	14	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	HPB: Pancreas	0.8403809315498219	25	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Head and neck: Adenoid cystic	1.02025235136903	16	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Head and neck: Salivary gland	1.56893963584607	4	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Head and neck: Other	1.8021853286760772	3	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Kidney: Chromophobe	1.0	20	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Kidney: Other	1.3423207245854643	9	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Lung: Non-small cell: LUAD	0.6750287475861332	32	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Lung: Non-small cell: LUSC	1.3651987193741741	7	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Lung: Small cell	1.0	21	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Lymphoid tissue	1.006826192968592	17	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Mesothelium	1.18317322163025	11	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Myeloid: Acute myeloid leukemia	1.0	22	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Myeloid: Myeloproliferative neoplasm	1.4878022037680325	6	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	NET: Colorectum/Small intestine	1.197456830540378	10	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	NET: Lung	0.6738821735792758	33	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	NET: Pancreas	1.0585605356599919	15	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Prostate	5.882606817643809	1	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Skin: Melanoma	0.8189764091504738	26	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Skin: Other	1.1485496815701788	12	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Thyroid gland	0.5603464644739192	35	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.is_male	1.0	Urothelial tract	1.0008720800408641	18	13
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Anogenital	0.8382826032242335	34	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Bone/Soft tissue: Cartilaginous neoplasm	5.606911313988792	1	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Bone/Soft tissue: GIST	1.3478355371967867	8	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Bone/Soft tissue: Leiomyosarcoma	1.1997341612975272	11	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Bone/Soft tissue: Liposarcoma	1.5700382780710798	4	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Bone/Soft tissue: Osteosarcoma	0.837444739622632	35	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Bone/Soft tissue: Undiff. sarcoma	1.0	19	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Bone/Soft tissue: Other	0.8339348476489015	36	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Breast: Triple negative	0.7214443750486127	38	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Breast: Other	0.872493565253825	32	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	CNS: Glioma	2.1110807074662454	2	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	CNS: Medulloblastoma	1.0	20	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	CNS: Pilocytic astrocytoma	1.0729265410197573	14	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Colorectum/Small intestine/Appendix	0.9265752656693498	28	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Esophagus/Stomach	0.9999258727475605	23	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Gynecologic: Endometrium	0.8851483685026271	30	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Gynecologic: Ovary/Fallopian tube	0.871795849525125	33	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	HPB: Bile duct/Gallbladder	0.8727553525895382	31	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	HPB: Liver	1.0582853456969656	15	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	HPB: Pancreas	1.000024730305789	18	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Head and neck: Adenoid cystic	1.1397398105535637	13	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Head and neck: Salivary gland	1.2836402668381013	9	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Head and neck: Other	0.9996934469969768	24	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Kidney: Chromophobe	0.9870446524445435	26	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Kidney: Other	1.0	21	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Lung: Non-small cell: LUAD	0.7515631811022884	37	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Lung: Non-small cell: LUSC	0.9533911679448692	27	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Lung: Small cell	1.0022024217756431	16	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Lymphoid tissue	1.7031849529806309	3	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Mesothelium	1.0	22	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Myeloid: Acute myeloid leukemia	0.419496540429176	40	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Myeloid: Myeloproliferative neoplasm	1.4775717043744152	6	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	NET: Colorectum/Small intestine	1.4501978566707276	7	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	NET: Lung	0.8940442575003572	29	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	NET: Pancreas	0.7141230446838015	39	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Prostate	1.1880341900147176	12	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Skin: Melanoma	1.0001681141295966	17	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Skin: Other	1.5609584131204979	5	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Thyroid gland	1.2108226443930468	10	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	trait.whole_genome_duplication	0.0	Urothelial tract	0.9937416654672113	25	14
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Anogenital	1.0	16	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Bone/Soft tissue: Cartilaginous neoplasm	0.2934640894531121	38	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Bone/Soft tissue: GIST	1.0	17	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Bone/Soft tissue: Leiomyosarcoma	1.0	18	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Bone/Soft tissue: Liposarcoma	1.0	19	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Bone/Soft tissue: Osteosarcoma	0.35134030334599786	37	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Bone/Soft tissue: Undiff. sarcoma	1.0	20	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Bone/Soft tissue: Other	1.000003465006003	14	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Breast: Triple negative	0.9999997093000422	30	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Breast: Other	1.000002463003033	15	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	CNS: Glioma	1.0	21	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	CNS: Medulloblastoma	0.27225939746146455	39	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	CNS: Pilocytic astrocytoma	0.15092081253826656	40	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Colorectum/Small intestine/Appendix	1.0000191301829797	12	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Esophagus/Stomach	1.0000692423971442	11	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Gynecologic: Endometrium	1.0	22	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Gynecologic: Ovary/Fallopian tube	1.0	23	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	HPB: Bile duct/Gallbladder	0.9999999511200012	29	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	HPB: Liver	1.553328425631882	8	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	HPB: Pancreas	0.9999874300790021	31	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Head and neck: Adenoid cystic	1.0	24	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Head and neck: Salivary gland	0.9320209369595469	33	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Head and neck: Other	1.0002045209115504	10	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Kidney: Chromophobe	0.5425364537350954	35	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Kidney: Other	1.1659077871221122	9	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Lung: Non-small cell: LUAD	3.095656500124711	3	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Lung: Non-small cell: LUSC	2.8122925364724907	5	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Lung: Small cell	5.370924210765565	1	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Lymphoid tissue	1.0	25	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Mesothelium	1.0	26	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Myeloid: Acute myeloid leukemia	1.0	27	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Myeloid: Myeloproliferative neoplasm	0.4591400479960701	36	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	NET: Colorectum/Small intestine	1.9713133583826983	6	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	NET: Lung	1.7478736639617798	7	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	NET: Pancreas	0.9999743203297283	32	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Prostate	1.0	28	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Skin: Melanoma	3.6400593992835644	2	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Skin: Other	2.88060401618483	4	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Thyroid gland	0.7867852023723728	34	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.snv_count	23940.0	Urothelial tract	1.0000132000871205	13	15
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Anogenital	1.0	3	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Bone/Soft tissue: Cartilaginous neoplasm	1.0	4	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Bone/Soft tissue: GIST	1.0	5	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Bone/Soft tissue: Leiomyosarcoma	1.0	6	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Bone/Soft tissue: Liposarcoma	1.0	7	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Bone/Soft tissue: Osteosarcoma	1.0	8	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Bone/Soft tissue: Undiff. sarcoma	1.0	9	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Bone/Soft tissue: Other	1.0	10	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Breast: Triple negative	1.0	11	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Breast: Other	1.0	12	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	CNS: Glioma	0.8497611236452298	40	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	CNS: Medulloblastoma	1.0	13	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	CNS: Pilocytic astrocytoma	1.0	14	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Colorectum/Small intestine/Appendix	0.9033908357415418	39	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Esophagus/Stomach	0.9358968608271978	36	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Gynecologic: Endometrium	0.9324311164046695	37	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Gynecologic: Ovary/Fallopian tube	1.0	15	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	HPB: Bile duct/Gallbladder	0.9088729168717176	38	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	HPB: Liver	1.0	16	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	HPB: Pancreas	1.0	17	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Head and neck: Adenoid cystic	1.0	18	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Head and neck: Salivary gland	1.0	19	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Head and neck: Other	1.0	20	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Kidney: Chromophobe	1.0	21	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Kidney: Other	1.0	22	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Lung: Non-small cell: LUAD	1.0	23	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Lung: Non-small cell: LUSC	1.0390325086189034	1	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Lung: Small cell	1.0	24	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Lymphoid tissue	1.0	25	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Mesothelium	1.0	26	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Myeloid: Acute myeloid leukemia	1.0	27	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Myeloid: Myeloproliferative neoplasm	1.0	28	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	NET: Colorectum/Small intestine	1.0	29	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	NET: Lung	1.0	30	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	NET: Pancreas	1.0	31	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Prostate	1.0	32	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Skin: Melanoma	1.0	33	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Skin: Other	1.0321252231914246	2	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Thyroid gland	1.0	34	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	tmb.indels_per_mb	0.0714	Urothelial tract	1.0	35	16
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Anogenital	0.8547895334972296	39	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Bone/Soft tissue: Cartilaginous neoplasm	1.0	7	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Bone/Soft tissue: GIST	1.0	8	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Bone/Soft tissue: Leiomyosarcoma	1.0	9	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Bone/Soft tissue: Liposarcoma	1.0	10	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Bone/Soft tissue: Osteosarcoma	1.0	11	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Bone/Soft tissue: Undiff. sarcoma	1.0	12	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Bone/Soft tissue: Other	1.0	13	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Breast: Triple negative	1.0	14	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Breast: Other	1.0	15	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	CNS: Glioma	1.0	16	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	CNS: Medulloblastoma	1.0	17	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	CNS: Pilocytic astrocytoma	1.0	18	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Colorectum/Small intestine/Appendix	0.5881342740059852	40	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Esophagus/Stomach	0.8724063202596221	38	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Gynecologic: Endometrium	1.0863353852154516	3	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Gynecologic: Ovary/Fallopian tube	1.0492440998408714	6	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	HPB: Bile duct/Gallbladder	0.8910987741711249	37	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	HPB: Liver	0.9692138500054999	35	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	HPB: Pancreas	1.0	19	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Head and neck: Adenoid cystic	1.0	20	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Head and neck: Salivary gland	1.1324687679209204	2	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Head and neck: Other	1.0600541587721106	5	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Kidney: Chromophobe	1.0	21	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Kidney: Other	1.0	22	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Lung: Non-small cell: LUAD	0.9999567509352678	32	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Lung: Non-small cell: LUSC	0.9959721337017805	33	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Lung: Small cell	1.240730104130994	1	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Lymphoid tissue	1.0	23	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Mesothelium	1.0	24	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Myeloid: Acute myeloid leukemia	1.0	25	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Myeloid: Myeloproliferative neoplasm	1.0	26	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	NET: Colorectum/Small intestine	1.0	27	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	NET: Lung	1.072787069635261	4	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	NET: Pancreas	0.9210048285640681	36	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Prostate	0.9838911578390713	34	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Skin: Melanoma	1.0	28	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Skin: Other	1.0	29	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Thyroid gland	1.0	30	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.APC.mut	0.0	Urothelial tract	1.0	31	17
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Anogenital	1.6845525844010358	11	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Bone/Soft tissue: Cartilaginous neoplasm	1.0	14	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Bone/Soft tissue: GIST	1.0	15	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Bone/Soft tissue: Leiomyosarcoma	1.0	16	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Bone/Soft tissue: Liposarcoma	1.0	17	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Bone/Soft tissue: Osteosarcoma	1.0	18	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Bone/Soft tissue: Undiff. sarcoma	1.0	19	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Bone/Soft tissue: Other	1.0	20	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Breast: Triple negative	0.6467470624138435	36	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Breast: Other	1.0	21	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	CNS: Glioma	0.7404479041582228	35	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	CNS: Medulloblastoma	0.5749340157425613	39	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	CNS: Pilocytic astrocytoma	7.893187139516048	5	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Colorectum/Small intestine/Appendix	8.356168427787704	4	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Esophagus/Stomach	1.0	22	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Gynecologic: Endometrium	1.0	23	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Gynecologic: Ovary/Fallopian tube	4.384168569593947	7	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	HPB: Bile duct/Gallbladder	3.99083307565913	9	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	HPB: Liver	1.0	24	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	HPB: Pancreas	1.3535083510230144	13	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Head and neck: Adenoid cystic	1.0	25	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Head and neck: Salivary gland	15.440593762844651	3	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Head and neck: Other	0.6103638647864883	38	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Kidney: Chromophobe	0.8236579042685769	34	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Kidney: Other	1.0	26	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Lung: Non-small cell: LUAD	5.078419037180081	6	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Lung: Non-small cell: LUSC	0.6163132019122897	37	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Lung: Small cell	1.0	27	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Lymphoid tissue	4.047097671906688	8	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Mesothelium	1.0	28	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Myeloid: Acute myeloid leukemia	1.0	29	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Myeloid: Myeloproliferative neoplasm	1.0	30	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	NET: Colorectum/Small intestine	1.0	31	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	NET: Lung	3.0041660239464334	10	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	NET: Pancreas	1.0	32	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Prostate	1.0	33	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Skin: Melanoma	44.745908035838426	1	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Skin: Other	0.3862385867786095	40	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Thyroid gland	22.73714657458838	2	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.BRAF.mut	1.0	Urothelial tract	1.4647725874353708	12	18
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Anogenital	0.9999894100560739	26	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Bone/Soft tissue: Cartilaginous neoplasm	1.0	19	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Bone/Soft tissue: GIST	0.9610488873248215	27	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Bone/Soft tissue: Leiomyosarcoma	1.6612992882821278	9	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Bone/Soft tissue: Liposarcoma	1.0	20	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Bone/Soft tissue: Osteosarcoma	1.708473018601725	8	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Bone/Soft tissue: Undiff. sarcoma	3.3770413975343523	1	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Bone/Soft tissue: Other	1.8744213528900837	6	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Breast: Triple negative	0.9248811834911439	28	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Breast: Other	0.4991742728568875	32	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	CNS: Glioma	2.767653917130152	2	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	CNS: Medulloblastoma	0.24561254623381226	37	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	CNS: Pilocytic astrocytoma	1.0	21	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Colorectum/Small intestine/Appendix	0.1839667949291528	39	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Esophagus/Stomach	1.1295281735535383	16	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Gynecologic: Endometrium	0.18919065798198204	38	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Gynecologic: Ovary/Fallopian tube	0.49683365852681505	33	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	HPB: Bile duct/Gallbladder	2.4341557942137584	3	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	HPB: Liver	0.6370545444472607	31	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	HPB: Pancreas	2.1666885756048915	4	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Head and neck: Adenoid cystic	0.8598476986592055	29	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Head and neck: Salivary gland	1.0004224892234421	18	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Head and neck: Other	1.2535756652781869	13	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Kidney: Chromophobe	0.16629366289060088	40	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Kidney: Other	1.4254677421972126	10	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Lung: Non-small cell: LUAD	1.0582853456969656	17	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Lung: Non-small cell: LUSC	1.1376901241657316	15	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Lung: Small cell	0.43465615879814606	34	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Lymphoid tissue	0.4207148460857936	35	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Mesothelium	1.8277761330066946	7	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Myeloid: Acute myeloid leukemia	1.0	22	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Myeloid: Myeloproliferative neoplasm	1.0	23	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	NET: Colorectum/Small intestine	1.0	24	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	NET: Lung	0.6946827586514648	30	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	NET: Pancreas	1.3654717864238437	12	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Prostate	0.2766505836319734	36	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Skin: Melanoma	1.3840306459807514	11	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Skin: Other	1.175154936788726	14	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Thyroid gland	1.0	25	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Urothelial tract	1.8787374836494102	5	19
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Anogenital	9.115716393040305	1	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Bone/Soft tissue: Cartilaginous neoplasm	1.0	5	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Bone/Soft tissue: GIST	1.0	6	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Bone/Soft tissue: Leiomyosarcoma	2.871975153901346	3	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Bone/Soft tissue: Liposarcoma	1.0	7	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Bone/Soft tissue: Osteosarcoma	1.0	8	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Bone/Soft tissue: Undiff. sarcoma	1.1543068108071077	4	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Bone/Soft tissue: Other	1.0	9	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Breast: Triple negative	4.208052703697844	2	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Breast: Other	1.0	10	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	CNS: Glioma	1.0	11	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	CNS: Medulloblastoma	1.0	12	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	CNS: Pilocytic astrocytoma	1.0	13	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Colorectum/Small intestine/Appendix	1.0	14	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Esophagus/Stomach	1.0	15	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Gynecologic: Endometrium	1.0	16	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Gynecologic: Ovary/Fallopian tube	1.0	17	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	HPB: Bile duct/Gallbladder	1.0	18	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	HPB: Liver	1.0	19	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	HPB: Pancreas	1.0	20	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Head and neck: Adenoid cystic	1.0	21	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Head and neck: Salivary gland	1.0	22	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Head and neck: Other	1.0	23	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Kidney: Chromophobe	1.0	24	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Kidney: Other	1.0	25	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Lung: Non-small cell: LUAD	1.0	26	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Lung: Non-small cell: LUSC	1.0	27	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Lung: Small cell	1.0	28	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Lymphoid tissue	1.0	29	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Mesothelium	1.0	30	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Myeloid: Acute myeloid leukemia	1.0	31	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Myeloid: Myeloproliferative neoplasm	1.0	32	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	NET: Colorectum/Small intestine	1.0	33	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	NET: Lung	1.0	34	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	NET: Pancreas	1.0	35	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Prostate	1.0	36	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Skin: Melanoma	1.0	37	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Skin: Other	1.0	38	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Thyroid gland	1.0	39	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.JAK2.amp	1.0	Urothelial tract	1.0	40	20
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Anogenital	0.9234025568143399	31	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Bone/Soft tissue: Cartilaginous neoplasm	1.0104340590825203	12	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Bone/Soft tissue: GIST	0.9737214518184958	27	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Bone/Soft tissue: Leiomyosarcoma	0.9104375234646792	33	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Bone/Soft tissue: Liposarcoma	1.2280161732042632	1	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Bone/Soft tissue: Osteosarcoma	0.8783588990680836	35	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Bone/Soft tissue: Undiff. sarcoma	1.0	15	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Bone/Soft tissue: Other	1.0288585666200982	9	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Breast: Triple negative	0.8573577525000615	36	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Breast: Other	0.8518029996130394	37	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	CNS: Glioma	0.8366913784203646	38	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	CNS: Medulloblastoma	1.0	16	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	CNS: Pilocytic astrocytoma	1.0	17	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Colorectum/Small intestine/Appendix	1.0	18	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Esophagus/Stomach	1.0	19	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Gynecologic: Endometrium	0.7476651961050049	40	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Gynecologic: Ovary/Fallopian tube	1.0	20	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	HPB: Bile duct/Gallbladder	1.0234507441022487	11	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	HPB: Liver	1.0	21	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	HPB: Pancreas	1.0286322426319934	10	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Head and neck: Adenoid cystic	1.0	22	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Head and neck: Salivary gland	0.8914552849782014	34	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Head and neck: Other	1.039126025752887	7	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Kidney: Chromophobe	0.9507539286723269	29	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Kidney: Other	1.0	23	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Lung: Non-small cell: LUAD	1.072840710329749	6	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Lung: Non-small cell: LUSC	0.9177410580429788	32	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Lung: Small cell	1.0299291361290337	8	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Lymphoid tissue	1.135984868241162	4	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Mesothelium	1.1338285461461874	5	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Myeloid: Acute myeloid leukemia	1.0	24	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Myeloid: Myeloproliferative neoplasm	1.0	25	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	NET: Colorectum/Small intestine	1.1773898536673217	3	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	NET: Lung	0.9257694957489567	30	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	NET: Pancreas	1.005566435347822	13	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Prostate	0.8133449228978111	39	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Skin: Melanoma	0.9626551798475947	28	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Skin: Other	1.0	26	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Thyroid gland	1.2102173843984585	2	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.PTEN.mut	0.0	Urothelial tract	1.000437395629584	14	21
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Anogenital	0.7991552873277282	35	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Bone/Soft tissue: Cartilaginous neoplasm	1.0	12	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Bone/Soft tissue: GIST	1.0	13	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Bone/Soft tissue: Leiomyosarcoma	1.046027859908717	9	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Bone/Soft tissue: Liposarcoma	1.0	14	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Bone/Soft tissue: Osteosarcoma	1.0	15	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Bone/Soft tissue: Undiff. sarcoma	1.062473839642097	8	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Bone/Soft tissue: Other	1.0	16	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Breast: Triple negative	1.10403317806672	5	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Breast: Other	1.0	17	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	CNS: Glioma	0.6378832538994762	40	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	CNS: Medulloblastoma	0.8501010960846428	34	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	CNS: Pilocytic astrocytoma	1.0	18	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Colorectum/Small intestine/Appendix	1.0	19	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Esophagus/Stomach	1.107604970571425	4	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Gynecologic: Endometrium	1.0	20	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Gynecologic: Ovary/Fallopian tube	1.0	21	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	HPB: Bile duct/Gallbladder	0.9640134810284757	29	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	HPB: Liver	0.868576164971429	32	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	HPB: Pancreas	1.083547087772364	7	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Head and neck: Adenoid cystic	1.0	22	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Head and neck: Salivary gland	1.0	23	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Head and neck: Other	0.8868317491079402	31	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Kidney: Chromophobe	0.8970891814132342	30	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Kidney: Other	0.8587306229075087	33	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Lung: Non-small cell: LUAD	1.0143012989136013	11	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Lung: Non-small cell: LUSC	1.3780920912460342	1	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Lung: Small cell	1.346623030922977	2	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Lymphoid tissue	1.0	24	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Mesothelium	0.9689328187405013	28	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Myeloid: Acute myeloid leukemia	1.0	25	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Myeloid: Myeloproliferative neoplasm	1.0	26	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	NET: Colorectum/Small intestine	1.1531530809573696	3	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	NET: Lung	1.0967157149637499	6	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	NET: Pancreas	1.0259510130054534	10	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Prostate	1.0	27	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Skin: Melanoma	0.7362393568589595	36	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Skin: Other	0.7284764358443131	37	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Thyroid gland	0.710561341139456	38	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TERT.mut	0.0	Urothelial tract	0.6607366037584322	39	22
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Anogenital	0.9996060776078072	24	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Bone/Soft tissue: Cartilaginous neoplasm	1.0589099182817217	15	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Bone/Soft tissue: GIST	1.713606133480012	7	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Bone/Soft tissue: Leiomyosarcoma	0.7433412894183322	30	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Bone/Soft tissue: Liposarcoma	0.9913337701447813	25	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Bone/Soft tissue: Osteosarcoma	0.6890785559681998	32	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Bone/Soft tissue: Undiff. sarcoma	1.2294906771375276	11	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Bone/Soft tissue: Other	1.3505339057402677	9	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Breast: Triple negative	0.3906669000952613	39	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Breast: Other	1.0	18	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	CNS: Glioma	0.6950301868806097	31	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	CNS: Medulloblastoma	1.738982200778929	6	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	CNS: Pilocytic astrocytoma	1.0	19	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Colorectum/Small intestine/Appendix	0.7914409560341144	29	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Esophagus/Stomach	0.8989750481612314	26	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Gynecologic: Endometrium	0.646553067395827	33	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Gynecologic: Ovary/Fallopian tube	0.5487567576743838	37	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	HPB: Bile duct/Gallbladder	1.1150508396820396	13	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	HPB: Liver	1.0830379403001396	14	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	HPB: Pancreas	0.5878402803735152	35	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Head and neck: Adenoid cystic	3.6146679572174474	2	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Head and neck: Salivary gland	0.5065663331993536	38	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Head and neck: Other	1.000298044406411	17	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Kidney: Chromophobe	0.8489117872605549	28	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Kidney: Other	1.786217043523638	5	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Lung: Non-small cell: LUAD	1.0366662131012216	16	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Lung: Non-small cell: LUSC	0.5579421476624763	36	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Lung: Small cell	0.36276501352395324	40	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Lymphoid tissue	1.0	20	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Mesothelium	2.6588667548369487	3	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Myeloid: Acute myeloid leukemia	1.0	21	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Myeloid: Myeloproliferative neoplasm	1.0	22	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	NET: Colorectum/Small intestine	1.305387589335339	10	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	NET: Lung	4.392945680918756	1	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	NET: Pancreas	1.553483766241346	8	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Prostate	1.2159187939221712	12	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Skin: Melanoma	2.5671594108004316	4	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Skin: Other	0.6053188106462243	34	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Thyroid gland	0.9998902060277994	23	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	driver.TP53.mut	0.0	Urothelial tract	0.8551315177029098	27	23
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Anogenital	0.8978071399034698	36	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Bone/Soft tissue: Cartilaginous neoplasm	1.0	16	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Bone/Soft tissue: GIST	1.148319994603327	2	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Bone/Soft tissue: Leiomyosarcoma	1.0658365672868075	7	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Bone/Soft tissue: Liposarcoma	1.0	17	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Bone/Soft tissue: Osteosarcoma	1.0490447623995582	8	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Bone/Soft tissue: Undiff. sarcoma	1.0361376481280649	10	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Bone/Soft tissue: Other	1.013632080922548	14	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Breast: Triple negative	1.032445231609356	11	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Breast: Other	1.0	18	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	CNS: Glioma	1.0973629681564945	4	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	CNS: Medulloblastoma	1.0316505547708632	12	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	CNS: Pilocytic astrocytoma	1.0	19	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Colorectum/Small intestine/Appendix	0.8857681892725391	39	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Esophagus/Stomach	0.8674477495858852	40	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Gynecologic: Endometrium	0.9923375077257195	29	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Gynecologic: Ovary/Fallopian tube	0.9595220337642255	32	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	HPB: Bile duct/Gallbladder	1.0	20	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	HPB: Liver	1.0212322639091063	13	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	HPB: Pancreas	0.9712610502657578	30	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Head and neck: Adenoid cystic	1.0	21	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Head and neck: Salivary gland	0.9999997460000323	27	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Head and neck: Other	0.8882518156568044	38	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Kidney: Chromophobe	0.9627418227126514	31	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Kidney: Other	1.0	22	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Lung: Non-small cell: LUAD	1.0008430551714056	15	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Lung: Non-small cell: LUSC	0.9016760227418554	35	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Lung: Small cell	1.0	23	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Lymphoid tissue	1.0835145818473222	5	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Mesothelium	1.0411126530872281	9	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Myeloid: Acute myeloid leukemia	1.0	24	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Myeloid: Myeloproliferative neoplasm	1.3687528544179415	1	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	NET: Colorectum/Small intestine	1.1032275279448034	3	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	NET: Lung	1.0	25	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	NET: Pancreas	0.9999995991000804	28	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Prostate	0.923476431973852	34	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Skin: Melanoma	1.0741074095735126	6	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Skin: Other	0.9489017649579418	33	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Thyroid gland	1.0	26	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.LINE	7.0	Urothelial tract	0.8932399796479293	37	24
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Anogenital	1.1007590639939788	11	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Bone/Soft tissue: Cartilaginous neoplasm	0.17170111795585358	40	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Bone/Soft tissue: GIST	1.0	16	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Bone/Soft tissue: Leiomyosarcoma	1.3922205632905305	5	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Bone/Soft tissue: Liposarcoma	1.0	17	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Bone/Soft tissue: Osteosarcoma	1.4909298712974335	4	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Bone/Soft tissue: Undiff. sarcoma	1.315477871505222	7	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Bone/Soft tissue: Other	1.106166019630446	10	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Breast: Triple negative	1.0657086745724493	13	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Breast: Other	1.0	18	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	CNS: Glioma	0.9899112364744788	27	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	CNS: Medulloblastoma	0.3726930948635714	38	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	CNS: Pilocytic astrocytoma	0.8356043863263639	28	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Colorectum/Small intestine/Appendix	1.6233631243278506	2	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Esophagus/Stomach	1.1456818935948618	9	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Gynecologic: Endometrium	1.0	19	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Gynecologic: Ovary/Fallopian tube	1.3579823065478924	6	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	HPB: Bile duct/Gallbladder	1.0576928718115466	14	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	HPB: Liver	1.0	20	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	HPB: Pancreas	0.9999970130044611	25	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Head and neck: Adenoid cystic	1.0	21	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Head and neck: Salivary gland	0.9998337138270785	26	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Head and neck: Other	1.1678915160520622	8	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Kidney: Chromophobe	1.0	22	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Kidney: Other	0.7334469562242892	31	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Lung: Non-small cell: LUAD	0.7815313615370046	30	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Lung: Non-small cell: LUSC	1.0002192240260754	15	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Lung: Small cell	0.4204204487446242	36	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Lymphoid tissue	1.8919347826926802	1	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Mesothelium	1.618338490848221	3	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Myeloid: Acute myeloid leukemia	0.49733074068499744	33	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Myeloid: Myeloproliferative neoplasm	0.2483291984366453	39	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	NET: Colorectum/Small intestine	0.419496540429176	37	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	NET: Lung	0.4888497971421809	34	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	NET: Pancreas	0.600495578812266	32	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Prostate	1.0	23	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Skin: Melanoma	1.0	24	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Skin: Other	0.7867852023723728	29	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Thyroid gland	0.4455704088510339	35	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	27.0	Urothelial tract	1.0863679757658637	12	25
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Anogenital	0.6839981951723384	40	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Bone/Soft tissue: Cartilaginous neoplasm	0.7188518446530818	39	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Bone/Soft tissue: GIST	1.0	15	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Bone/Soft tissue: Leiomyosarcoma	1.5108916904299392	4	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Bone/Soft tissue: Liposarcoma	1.556749509981219	3	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Bone/Soft tissue: Osteosarcoma	1.0	16	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Bone/Soft tissue: Undiff. sarcoma	1.0	17	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Bone/Soft tissue: Other	1.031392674368564	11	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Breast: Triple negative	1.0000018610017316	13	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Breast: Other	1.0	18	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	CNS: Glioma	1.102731187242262	9	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	CNS: Medulloblastoma	0.8856796168823051	34	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	CNS: Pilocytic astrocytoma	1.0	19	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Colorectum/Small intestine/Appendix	1.0465614701763226	10	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Esophagus/Stomach	1.000001747001526	14	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Gynecologic: Endometrium	1.0	20	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Gynecologic: Ovary/Fallopian tube	0.8328514367166442	35	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	HPB: Bile duct/Gallbladder	1.0	21	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	HPB: Liver	1.0	22	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	HPB: Pancreas	1.0	23	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Head and neck: Adenoid cystic	1.0	24	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Head and neck: Salivary gland	1.2182312357547045	8	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Head and neck: Other	0.9722230748291064	33	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Kidney: Chromophobe	1.8059738944680805	2	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Kidney: Other	2.983210292408358	1	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Lung: Non-small cell: LUAD	0.9992612729932485	32	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Lung: Non-small cell: LUSC	1.000295843753134	12	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Lung: Small cell	1.0	25	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Lymphoid tissue	0.7524655982616166	37	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Mesothelium	0.768818775344729	36	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Myeloid: Acute myeloid leukemia	0.7350623157719568	38	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Myeloid: Myeloproliferative neoplasm	1.0	26	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	NET: Colorectum/Small intestine	1.0	27	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	NET: Lung	1.0	28	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	NET: Pancreas	1.221891416988684	7	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Prostate	1.0	29	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Skin: Melanoma	1.301997989991688	6	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Skin: Other	1.0	30	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Thyroid gland	1.313243458912488	5	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	7.0	Urothelial tract	0.9999968500049612	31	26
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Anogenital	1.0	18	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Bone/Soft tissue: Cartilaginous neoplasm	0.05579896266503612	40	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Bone/Soft tissue: GIST	1.0	19	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Bone/Soft tissue: Leiomyosarcoma	0.5882519126242561	36	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Bone/Soft tissue: Liposarcoma	2.0515590165543007	5	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Bone/Soft tissue: Osteosarcoma	1.285824311203446	11	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Bone/Soft tissue: Undiff. sarcoma	1.0000075390284184	17	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Bone/Soft tissue: Other	1.1690599917085696	15	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Breast: Triple negative	3.2284430720889725	3	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Breast: Other	1.9345988648422305	7	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	CNS: Glioma	1.2361478850785035	12	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	CNS: Medulloblastoma	4.7350865251594225	1	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	CNS: Pilocytic astrocytoma	1.0	20	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Colorectum/Small intestine/Appendix	0.8422318048133024	30	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Esophagus/Stomach	1.170229636425166	14	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Gynecologic: Endometrium	3.264151984837927	2	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Gynecologic: Ovary/Fallopian tube	2.3683653702769565	4	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	HPB: Bile duct/Gallbladder	1.6180148555146636	9	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	HPB: Liver	1.0000157401238745	16	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	HPB: Pancreas	0.8149732405184549	31	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Head and neck: Adenoid cystic	0.7342541917742922	34	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Head and neck: Salivary gland	1.5958396116114968	10	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Head and neck: Other	0.7738323739278322	32	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Kidney: Chromophobe	0.23177226634335518	39	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Kidney: Other	0.8501861104448984	29	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Lung: Non-small cell: LUAD	0.998535074053082	26	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Lung: Non-small cell: LUSC	0.8969097815175392	27	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Lung: Small cell	1.0	21	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Lymphoid tissue	0.2808316217783798	38	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Mesothelium	1.0	22	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Myeloid: Acute myeloid leukemia	1.0	23	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Myeloid: Myeloproliferative neoplasm	0.8900300969766776	28	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	NET: Colorectum/Small intestine	1.0	24	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	NET: Lung	0.6403118216205885	35	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	NET: Pancreas	0.5774115549019733	37	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Prostate	1.9981065357479348	6	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Skin: Melanoma	1.6734711463152634	8	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Skin: Other	0.7559349133206992	33	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Thyroid gland	1.0	25	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	38.0	Urothelial tract	1.2092495976572515	13	27
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Anogenital	1.8274106143331792	10	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Bone/Soft tissue: Cartilaginous neoplasm	86.66065720491456	1	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Bone/Soft tissue: GIST	0.8684024671088	30	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Bone/Soft tissue: Leiomyosarcoma	1.0	18	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Bone/Soft tissue: Liposarcoma	3.479887619437994	3	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Bone/Soft tissue: Osteosarcoma	2.986194994803239	5	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Bone/Soft tissue: Undiff. sarcoma	3.3736660440948167	4	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Bone/Soft tissue: Other	1.2612458471070211	14	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Breast: Triple negative	1.0	19	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Breast: Other	2.674867910830512	7	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	CNS: Glioma	1.0000117300687967	17	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	CNS: Medulloblastoma	1.0	20	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	CNS: Pilocytic astrocytoma	0.1266915356654413	39	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Colorectum/Small intestine/Appendix	0.9999820101618191	28	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Esophagus/Stomach	1.0	21	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Gynecologic: Endometrium	0.16480373465863135	38	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Gynecologic: Ovary/Fallopian tube	0.18231852212822103	37	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	HPB: Bile duct/Gallbladder	1.4182163634451812	12	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	HPB: Liver	1.0	22	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	HPB: Pancreas	0.9999885600654366	27	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Head and neck: Adenoid cystic	1.0	23	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Head and neck: Salivary gland	1.3895778555876106	13	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Head and neck: Other	0.8133449228978111	31	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Kidney: Chromophobe	0.3338711963680944	35	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Kidney: Other	1.0	24	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Lung: Non-small cell: LUAD	2.181254129178649	9	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Lung: Non-small cell: LUSC	0.7973193423129871	32	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Lung: Small cell	1.0	25	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Lymphoid tissue	0.3896914526623597	34	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Mesothelium	2.734640546507821	6	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Myeloid: Acute myeloid leukemia	0.0030094438040602985	40	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Myeloid: Myeloproliferative neoplasm	0.2937577003235328	36	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	NET: Colorectum/Small intestine	0.47725707116796406	33	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	NET: Lung	8.49094243955983	2	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	NET: Pancreas	0.9999985810010068	26	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Prostate	1.5647092124708242	11	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Skin: Melanoma	2.616401760563278	8	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Skin: Other	1.0012067275104297	15	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Thyroid gland	0.9045660075241612	29	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	751.0	Urothelial tract	1.0003678676467131	16	28
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Anogenital	1.0	13	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Bone/Soft tissue: Cartilaginous neoplasm	1.0	14	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Bone/Soft tissue: GIST	1.0	15	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Bone/Soft tissue: Leiomyosarcoma	56.59949143944756	1	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Bone/Soft tissue: Liposarcoma	8.297879498060171	6	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Bone/Soft tissue: Osteosarcoma	10.590951452433778	3	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Bone/Soft tissue: Undiff. sarcoma	41.22315033982355	2	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Bone/Soft tissue: Other	10.044246670658561	4	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Breast: Triple negative	0.17429604804611157	39	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Breast: Other	1.0	16	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	CNS: Glioma	1.0317846780608084	10	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	CNS: Medulloblastoma	1.0	17	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	CNS: Pilocytic astrocytoma	1.0	18	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Colorectum/Small intestine/Appendix	1.0	19	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Esophagus/Stomach	1.0	20	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Gynecologic: Endometrium	0.5813513335414122	36	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Gynecologic: Ovary/Fallopian tube	0.42801373191562775	38	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	HPB: Bile duct/Gallbladder	0.7681271497251323	35	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	HPB: Liver	1.0	21	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	HPB: Pancreas	1.0	22	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Head and neck: Adenoid cystic	1.0	23	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Head and neck: Salivary gland	1.000061761907188	12	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Head and neck: Other	0.471894422292842	37	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Kidney: Chromophobe	2.3669447772753087	7	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Kidney: Other	1.0	24	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Lung: Non-small cell: LUAD	1.046666131556322	9	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Lung: Non-small cell: LUSC	1.0095361823693292	11	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Lung: Small cell	0.1641458363937241	40	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Lymphoid tissue	1.0	25	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Mesothelium	1.0	26	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Myeloid: Acute myeloid leukemia	1.0	27	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Myeloid: Myeloproliferative neoplasm	1.0	28	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	NET: Colorectum/Small intestine	1.0	29	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	NET: Lung	1.0	30	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	NET: Pancreas	1.1363257148260657	8	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Prostate	1.0	31	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Skin: Melanoma	9.640760542879283	5	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Skin: Other	1.0	32	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Thyroid gland	1.0	33	29
+MELANOMA_SAMPLE	feat_contrib	dna	event	sv.TELOMERIC_SGL	33.0	Urothelial tract	1.0	34	29
+	cv_performance	dna	dna_combined	n_samples		Anogenital	128.0	18	30
+	cv_performance	dna	dna_combined	n_samples		Head and neck: Other	101.0	20	30
+	cv_performance	dna	dna_combined	n_samples		Kidney: Chromophobe	44.0	34	30
+	cv_performance	dna	dna_combined	n_samples		Kidney: Other	277.0	9	30
+	cv_performance	dna	dna_combined	n_samples		Lung: Non-small cell: LUAD	254.0	10	30
+	cv_performance	dna	dna_combined	n_samples		Lung: Non-small cell: LUSC	78.0	23	30
+	cv_performance	dna	dna_combined	n_samples		Lung: Small cell	56.0	29	30
+	cv_performance	dna	dna_combined	n_samples		Lymphoid tissue	216.0	12	30
+	cv_performance	dna	dna_combined	n_samples		Mesothelium	77.0	24	30
+	cv_performance	dna	dna_combined	n_samples		Myeloid: Acute myeloid leukemia	12.0	38	30
+	cv_performance	dna	dna_combined	n_samples		Myeloid: Myeloproliferative neoplasm	18.0	37	30
+	cv_performance	dna	dna_combined	n_samples		NET: Colorectum/Small intestine	56.0	30	30
+	cv_performance	dna	dna_combined	n_samples		NET: Lung	46.0	33	30
+	cv_performance	dna	dna_combined	n_samples		NET: Pancreas	118.0	19	30
+	cv_performance	dna	dna_combined	n_samples		Prostate	607.0	3	30
+	cv_performance	dna	dna_combined	n_samples		Skin: Melanoma	408.0	4	30
+	cv_performance	dna	dna_combined	n_samples		Skin: Other	49.0	31	30
+	cv_performance	dna	dna_combined	n_samples		Urothelial tract	241.0	11	30
+	cv_performance	dna	dna_combined	n_samples		Head and neck: Salivary gland	26.0	36	30
+	cv_performance	dna	dna_combined	n_samples		Head and neck: Adenoid cystic	10.0	39	30
+	cv_performance	dna	dna_combined	n_samples		Thyroid gland	71.0	25	30
+	cv_performance	dna	dna_combined	n_samples		HPB: Liver	341.0	7	30
+	cv_performance	dna	dna_combined	n_samples		HPB: Pancreas	372.0	5	30
+	cv_performance	dna	dna_combined	n_samples		Bone/Soft tissue: GIST	66.0	26	30
+	cv_performance	dna	dna_combined	n_samples		Bone/Soft tissue: Leiomyosarcoma	80.0	22	30
+	cv_performance	dna	dna_combined	n_samples		Bone/Soft tissue: Liposarcoma	59.0	27	30
+	cv_performance	dna	dna_combined	n_samples		Bone/Soft tissue: Osteosarcoma	47.0	32	30
+	cv_performance	dna	dna_combined	n_samples		Bone/Soft tissue: Undiff. sarcoma	37.0	35	30
+	cv_performance	dna	dna_combined	n_samples		Bone/Soft tissue: Other	157.0	15	30
+	cv_performance	dna	dna_combined	n_samples		Breast: Triple negative	183.0	13	30
+	cv_performance	dna	dna_combined	n_samples		Bone/Soft tissue: Cartilaginous neoplasm	9.0	40	30
+	cv_performance	dna	dna_combined	n_samples		CNS: Glioma	159.0	14	30
+	cv_performance	dna	dna_combined	n_samples		CNS: Medulloblastoma	138.0	16	30
+	cv_performance	dna	dna_combined	n_samples		CNS: Pilocytic astrocytoma	58.0	28	30
+	cv_performance	dna	dna_combined	n_samples		Colorectum/Small intestine/Appendix	837.0	2	30
+	cv_performance	dna	dna_combined	n_samples		Esophagus/Stomach	349.0	6	30
+	cv_performance	dna	dna_combined	n_samples		Gynecologic: Endometrium	85.0	21	30
+	cv_performance	dna	dna_combined	n_samples		Gynecologic: Ovary/Fallopian tube	320.0	8	30
+	cv_performance	dna	dna_combined	n_samples		Breast: Other	908.0	1	30
+	cv_performance	dna	dna_combined	n_samples		HPB: Bile duct/Gallbladder	131.0	17	30
+	cv_performance	dna	dna_combined	recall		HPB: Bile duct/Gallbladder	0.5419847328244275	36	31
+	cv_performance	dna	dna_combined	recall		Gynecologic: Ovary/Fallopian tube	0.9125	12	31
+	cv_performance	dna	dna_combined	recall		Gynecologic: Endometrium	0.611764705882353	34	31
+	cv_performance	dna	dna_combined	recall		Esophagus/Stomach	0.8481375358166189	16	31
+	cv_performance	dna	dna_combined	recall		Colorectum/Small intestine/Appendix	0.955794504181601	6	31
+	cv_performance	dna	dna_combined	recall		CNS: Pilocytic astrocytoma	0.7413793103448276	25	31
+	cv_performance	dna	dna_combined	recall		CNS: Medulloblastoma	0.9420289855072465	10	31
+	cv_performance	dna	dna_combined	recall		Bone/Soft tissue: Other	0.6751592356687898	30	31
+	cv_performance	dna	dna_combined	recall		Breast: Other	0.9438325991189428	8	31
+	cv_performance	dna	dna_combined	recall		Breast: Triple negative	0.7049180327868853	29	31
+	cv_performance	dna	dna_combined	recall		Bone/Soft tissue: Undiff. sarcoma	0.4324324324324324	38	31
+	cv_performance	dna	dna_combined	recall		Bone/Soft tissue: Osteosarcoma	0.574468085106383	35	31
+	cv_performance	dna	dna_combined	recall		Bone/Soft tissue: Liposarcoma	0.847457627118644	17	31
+	cv_performance	dna	dna_combined	recall		Bone/Soft tissue: Leiomyosarcoma	0.7625	22	31
+	cv_performance	dna	dna_combined	recall		HPB: Liver	0.9618768328445748	4	31
+	cv_performance	dna	dna_combined	recall		Bone/Soft tissue: GIST	0.9545454545454546	7	31
+	cv_performance	dna	dna_combined	recall		CNS: Glioma	0.9559748427672956	5	31
+	cv_performance	dna	dna_combined	recall		HPB: Pancreas	0.8817204301075269	15	31
+	cv_performance	dna	dna_combined	recall		Lymphoid tissue	0.9861111111111112	2	31
+	cv_performance	dna	dna_combined	recall		Head and neck: Salivary gland	0.2692307692307692	40	31
+	cv_performance	dna	dna_combined	recall		Bone/Soft tissue: Cartilaginous neoplasm	0.3333333333333333	39	31
+	cv_performance	dna	dna_combined	recall		Skin: Other	0.7346938775510204	27	31
+	cv_performance	dna	dna_combined	recall		Skin: Melanoma	0.9852941176470588	3	31
+	cv_performance	dna	dna_combined	recall		Prostate	0.9884678747940692	1	31
+	cv_performance	dna	dna_combined	recall		NET: Pancreas	0.7966101694915254	19	31
+	cv_performance	dna	dna_combined	recall		NET: Lung	0.7391304347826086	26	31
+	cv_performance	dna	dna_combined	recall		NET: Colorectum/Small intestine	0.7857142857142857	20	31
+	cv_performance	dna	dna_combined	recall		Head and neck: Adenoid cystic	0.5	37	31
+	cv_performance	dna	dna_combined	recall		Myeloid: Myeloproliferative neoplasm	0.6666666666666666	31	31
+	cv_performance	dna	dna_combined	recall		Mesothelium	0.9090909090909092	13	31
+	cv_performance	dna	dna_combined	recall		Lung: Small cell	0.8392857142857143	18	31
+	cv_performance	dna	dna_combined	recall		Lung: Non-small cell: LUSC	0.6538461538461539	33	31
+	cv_performance	dna	dna_combined	recall		Lung: Non-small cell: LUAD	0.9133858267716536	11	31
+	cv_performance	dna	dna_combined	recall		Kidney: Other	0.9422382671480144	9	31
+	cv_performance	dna	dna_combined	recall		Kidney: Chromophobe	0.7727272727272727	21	31
+	cv_performance	dna	dna_combined	recall		Head and neck: Other	0.6633663366336634	32	31
+	cv_performance	dna	dna_combined	recall		Myeloid: Acute myeloid leukemia	0.75	23	31
+	cv_performance	dna	dna_combined	recall		Anogenital	0.7421875	24	31
+	cv_performance	dna	dna_combined	recall		Urothelial tract	0.8838174273858921	14	31
+	cv_performance	dna	dna_combined	recall		Thyroid gland	0.7323943661971831	28	31
+	cv_performance	dna	dna_combined	precision		Gynecologic: Ovary/Fallopian tube	0.8390804597701149	20	32
+	cv_performance	dna	dna_combined	precision		Gynecologic: Endometrium	0.8253968253968254	21	32
+	cv_performance	dna	dna_combined	precision		Esophagus/Stomach	0.8731563421828908	15	32
+	cv_performance	dna	dna_combined	precision		Colorectum/Small intestine/Appendix	0.9626955475330926	1	32
+	cv_performance	dna	dna_combined	precision		CNS: Pilocytic astrocytoma	0.9148936170212766	11	32
+	cv_performance	dna	dna_combined	precision		CNS: Medulloblastoma	0.8552631578947368	18	32
+	cv_performance	dna	dna_combined	precision		CNS: Glioma	0.9440993788819876	7	32
+	cv_performance	dna	dna_combined	precision		Breast: Other	0.9136460554371002	12	32
+	cv_performance	dna	dna_combined	precision		Urothelial tract	0.922077922077922	9	32
+	cv_performance	dna	dna_combined	precision		Bone/Soft tissue: Other	0.6385542168674698	35	32
+	cv_performance	dna	dna_combined	precision		Bone/Soft tissue: Undiff. sarcoma	0.3478260869565217	40	32
+	cv_performance	dna	dna_combined	precision		Bone/Soft tissue: Osteosarcoma	0.7714285714285715	28	32
+	cv_performance	dna	dna_combined	precision		Bone/Soft tissue: Liposarcoma	0.8064516129032258	23	32
+	cv_performance	dna	dna_combined	precision		Bone/Soft tissue: Leiomyosarcoma	0.7721518987341772	26	32
+	cv_performance	dna	dna_combined	precision		Bone/Soft tissue: GIST	0.9130434782608696	13	32
+	cv_performance	dna	dna_combined	precision		Bone/Soft tissue: Cartilaginous neoplasm	0.75	32	32
+	cv_performance	dna	dna_combined	precision		Anogenital	0.7661290322580645	30	32
+	cv_performance	dna	dna_combined	precision		HPB: Bile duct/Gallbladder	0.7553191489361702	31	32
+	cv_performance	dna	dna_combined	precision		Breast: Triple negative	0.7678571428571429	29	32
+	cv_performance	dna	dna_combined	precision		HPB: Liver	0.9318181818181818	8	32
+	cv_performance	dna	dna_combined	precision		Head and neck: Adenoid cystic	0.625	36	32
+	cv_performance	dna	dna_combined	precision		Skin: Other	0.8181818181818182	22	32
+	cv_performance	dna	dna_combined	precision		Skin: Melanoma	0.9571428571428572	3	32
+	cv_performance	dna	dna_combined	precision		Prostate	0.9584664536741214	2	32
+	cv_performance	dna	dna_combined	precision		NET: Pancreas	0.7286821705426356	33	32
+	cv_performance	dna	dna_combined	precision		NET: Lung	0.7906976744186046	24	32
+	cv_performance	dna	dna_combined	precision		NET: Colorectum/Small intestine	0.7719298245614035	27	32
+	cv_performance	dna	dna_combined	precision		Myeloid: Myeloproliferative neoplasm	0.5454545454545454	38	32
+	cv_performance	dna	dna_combined	precision		Myeloid: Acute myeloid leukemia	0.6428571428571429	34	32
+	cv_performance	dna	dna_combined	precision		Mesothelium	0.9210526315789472	10	32
+	cv_performance	dna	dna_combined	precision		Lymphoid tissue	0.9551569506726456	4	32
+	cv_performance	dna	dna_combined	precision		Lung: Small cell	0.8545454545454545	19	32
+	cv_performance	dna	dna_combined	precision		Lung: Non-small cell: LUSC	0.7727272727272727	25	32
+	cv_performance	dna	dna_combined	precision		Lung: Non-small cell: LUAD	0.8923076923076924	14	32
+	cv_performance	dna	dna_combined	precision		Kidney: Other	0.9525547445255474	5	32
+	cv_performance	dna	dna_combined	precision		Kidney: Chromophobe	0.9444444444444444	6	32
+	cv_performance	dna	dna_combined	precision		Head and neck: Other	0.5982142857142857	37	32
+	cv_performance	dna	dna_combined	precision		Head and neck: Salivary gland	0.4666666666666667	39	32
+	cv_performance	dna	dna_combined	precision		Thyroid gland	0.8666666666666667	16	32
+	cv_performance	dna	dna_combined	precision		HPB: Pancreas	0.8631578947368421	17	32
