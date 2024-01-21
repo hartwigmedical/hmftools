@@ -5,14 +5,15 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.read.Read;
@@ -84,23 +85,20 @@ public class JunctionAssembly
 
     public boolean checkReadMatches(final Read read, int permittedMismatches)
     {
-        ReadSequenceCoords readCoordsPastJunction = new ReadSequenceCoords(read, this, false);
-        return checkReadMatches(read, readCoordsPastJunction, permittedMismatches);
-    }
-
-    public boolean checkReadMatches(final Read read, final ReadSequenceCoords readCoords, int permittedMismatches)
-    {
         int mismatchCount = 0;
 
-        if(readCoords.AssemblyStartIndex < 0)
+        int junctionReadIndex = read.getReadIndexAtReferencePosition(mInitialJunction.Position, true);
+        int assemblyIndex = getReadAssemblyStartIndex(read, junctionReadIndex, false);
+
+        if(assemblyIndex < 0)
         {
             // SV_LOGGER.debug("readCoords({}) invalid for assembly({}) read({})", readCoords, toString(), read.toString());
             return false;
         }
 
-        int assemblyIndex = readCoords.AssemblyStartIndex;
+        int[] readIndexRange = getReadIndexCoordinates(read, junctionReadIndex, false);
 
-        for(int i = readCoords.ReadIndexStart; i <= readCoords.ReadIndexEnd; ++i, ++assemblyIndex)
+        for(int i = readIndexRange[SE_START]; i <= readIndexRange[SE_END]; ++i, ++assemblyIndex)
         {
             if(i >= mBases.length) // CHECK: similar to issue with INDELs in addRead() ??
                 break;
@@ -118,70 +116,84 @@ public class JunctionAssembly
         return true;
    }
 
-    private class ReadSequenceCoords
-    {
-        public final int JunctionReadIndex;
-        public final int AssemblyStartIndex;
-        public final int ReadIndexStart;
-        public final int ReadIndexEnd;
-        public final boolean ByReference;
+   private int[] getReadIndexCoordinates(final Read read, final int junctionReadIndex, boolean byReferenceBases)
+   {
+       int[] readIndexCoords = {0, 0};
 
-        public ReadSequenceCoords(final Read read, final JunctionAssembly sequence, boolean byReferenceBases)
-        {
-            JunctionReadIndex = read.getReadIndexAtReferencePosition(sequence.initialJunction().Position, true);
-            ByReference = byReferenceBases;
+       if(byReferenceBases)
+       {
+           if(mInitialJunction.isForward())
+           {
+               readIndexCoords[0] = 0;
+               readIndexCoords[1] = junctionReadIndex - 1; // the base at the junction will have already been set
+           }
+           else
+           {
+               readIndexCoords[0] = junctionReadIndex + 1;
+               readIndexCoords[1] = read.basesLength() - 1;
+           }
+       }
+       else
+       {
+           if(mInitialJunction.isForward())
+           {
+               readIndexCoords[0] = junctionReadIndex;
+               readIndexCoords[1] = read.basesLength() - 1;
+           }
+           else
+           {
+               readIndexCoords[0] = 0;
+               readIndexCoords[1] = junctionReadIndex;
+           }
+       }
 
-            if(byReferenceBases)
-            {
-                if(mInitialJunction.isForward())
-                {
-                    ReadIndexStart = 0;
-                    ReadIndexEnd = JunctionReadIndex - 1; // the base at the junction will have already been set
-                    AssemblyStartIndex = read.unclippedStart() - mMinAlignedPosition;
-                }
-                else
-                {
-                    ReadIndexStart = JunctionReadIndex + 1;
-                    ReadIndexEnd = read.basesLength() - 1;
-                    AssemblyStartIndex = mInitialJunction.position() - mMinAlignedPosition + 1;
-                }
-            }
-            else
-            {
-                if(mInitialJunction.isForward())
-                {
-                    ReadIndexStart = JunctionReadIndex;
-                    ReadIndexEnd = read.basesLength() - 1;
-                    AssemblyStartIndex = 0;
-                }
-                else
-                {
-                    ReadIndexStart = 0;
-                    ReadIndexEnd = JunctionReadIndex;
-                    AssemblyStartIndex = read.unclippedStart() - mMinAlignedPosition;
-                }
-            }
-        }
+       return readIndexCoords;
+   }
 
-        public String toString()
-        {
-            return format("asmIndex(%d) read(junc=%d start=%d end=%d)",
-                AssemblyStartIndex, JunctionReadIndex, ReadIndexStart, ReadIndexEnd);
-        }
-    }
+   private int getReadAssemblyStartIndex(final Read read, final int junctionReadIndex, boolean byReferenceBases)
+   {
+       if(byReferenceBases)
+       {
+           if(mInitialJunction.isForward())
+               return read.unclippedStart() - mMinAlignedPosition;
+           else
+               return mInitialJunction.position() - mMinAlignedPosition + 1;
+       }
+       else
+       {
+           if(mInitialJunction.isForward())
+               return 0;
+           else
+               return read.unclippedStart() - mMinAlignedPosition;
+       }
+   }
 
     public void addRead(final Read read, boolean registerMismatches)
     {
-        ReadSequenceCoords readCoordsPastJunction = new ReadSequenceCoords(read, this, false);
-        addRead(read, registerMismatches, readCoordsPastJunction);
+        addRead(read, registerMismatches, null);
     }
 
-    public void addRead(final Read read, boolean registerMismatches, final ReadSequenceCoords readCoords)
+    private void addRead(final Read read, boolean registerMismatches, @Nullable final AssemblySupport existingSupport)
     {
         int mismatchCount = 0;
-        int assemblyIndex = readCoords.AssemblyStartIndex;
 
-        for(int i = readCoords.ReadIndexStart; i <= readCoords.ReadIndexEnd; ++i, ++assemblyIndex)
+        int junctionReadIndex;
+
+        boolean byReference = existingSupport != null;
+
+        if(existingSupport == null)
+        {
+            junctionReadIndex = read.getReadIndexAtReferencePosition(mInitialJunction.Position, true);
+        }
+        else
+        {
+            junctionReadIndex = existingSupport.junctionReadIndex();
+        }
+
+        int assemblyIndex = getReadAssemblyStartIndex(read, junctionReadIndex, byReference);
+        int[] readIndexRange = getReadIndexCoordinates(read, junctionReadIndex, byReference);
+
+        for(int i = readIndexRange[SE_START]; i <= readIndexRange[SE_END]; ++i, ++assemblyIndex)
         {
             if(assemblyIndex >= mBases.length)
             {
@@ -225,9 +237,20 @@ public class JunctionAssembly
             }
         }
 
-        mSupport.add(new AssemblySupport(
-                read, readCoords.AssemblyStartIndex, readCoords.ReadIndexStart, readCoords.ReadIndexEnd,
-                mismatchCount, readCoords.ByReference));
+        if(existingSupport == null)
+        {
+            mSupport.add(new AssemblySupport(read, assemblyIndex, junctionReadIndex, readIndexRange, mismatchCount));
+        }
+        else
+        {
+            int[] existingReadRange = existingSupport.readIndexRange();
+
+            existingSupport.setReadIndexRange(
+                    min(existingReadRange[SE_START], readIndexRange[SE_START]),
+                    max(existingReadRange[SE_END], readIndexRange[SE_END]));
+
+            existingSupport.setReferenceMismatches(mismatchCount);
+        }
     }
 
     public void expandReferenceBases()
@@ -237,17 +260,22 @@ public class JunctionAssembly
 
         boolean isForwardJunction = mInitialJunction.isForward();
 
-        List<Read> supportReads = mSupport.stream().map(x -> x.read()).collect(Collectors.toList());
+        AssemblySupport minNmSupport = null;
 
-        for(Read read : supportReads)
+        for(AssemblySupport support : mSupport)
         {
             if(isForwardJunction)
             {
-                minAlignedPosition = min(minAlignedPosition, read.unclippedStart());
+                minAlignedPosition = min(minAlignedPosition, support.read().unclippedStart());
             }
             else
             {
-                maxAlignedPosition = max(maxAlignedPosition, read.unclippedEnd());
+                maxAlignedPosition = max(maxAlignedPosition, support.read().unclippedEnd());
+            }
+
+            if(minNmSupport == null || support.read().numberOfEvents() < minNmSupport.read().numberOfEvents())
+            {
+                minNmSupport = support;
             }
         }
 
@@ -258,15 +286,6 @@ public class JunctionAssembly
 
         // consider adjusting the assembly indices to be zero based, but actually keeping them based around zero for the junction
         // may make more sense
-        /*
-        if(mInitialJunction.isForward())
-        {
-            int assemblyOffset = mMinAlignedPosition - minAlignedPosition;
-            Set<Integer> assemblyIndices = mSequenceMismatches.indexedBaseMismatches().keySet();
-        }
-        */
-
-        // mSequenceMismatches = new SequenceMismatches();
 
         int newBaseLength = maxAlignedPosition - minAlignedPosition + 1;
         int baseOffset = isForwardJunction ? mMinAlignedPosition - minAlignedPosition : 0;
@@ -316,13 +335,17 @@ public class JunctionAssembly
         }
 
         // order by NM to favour the ref where possible
-        Collections.sort(supportReads, Comparator.comparingInt(x -> x.numberOfEvents()));
-
-        // now add reference bases from all reads
-        for(Read read : supportReads)
+        if(minNmSupport != null)
         {
-            ReadSequenceCoords referenceReadCoords = new ReadSequenceCoords(read, this, true);
-            addRead(read, true, referenceReadCoords);
+            addRead(minNmSupport.read(), false, minNmSupport);
+        }
+
+        for(AssemblySupport support : mSupport)
+        {
+            if(support == minNmSupport)
+                continue;
+
+            addRead(support.read(), false, support);
         }
     }
 

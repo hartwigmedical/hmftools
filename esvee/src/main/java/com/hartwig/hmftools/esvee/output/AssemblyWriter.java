@@ -91,10 +91,8 @@ public class AssemblyWriter
             {
                 uniqueReads.add(support.read());
 
-                if(support.isReferenceBases())
-                    refBaseMismatches += support.mismatches();
-                else
-                    softClipBaseMismatches += support.mismatches();
+                refBaseMismatches += support.referenceMismatches();
+                softClipBaseMismatches += support.junctionMismatches();
             }
 
             sj.add(String.valueOf(uniqueReads.size()));

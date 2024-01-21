@@ -36,7 +36,7 @@ public class AssemblyMismatchSplitter
 
         for(AssemblySupport support : mSequence.support())
         {
-            if(support.mismatches() == 0)
+            if(support.junctionMismatches() == 0)
             {
                 noMismatchReads.add(support.read());
             }

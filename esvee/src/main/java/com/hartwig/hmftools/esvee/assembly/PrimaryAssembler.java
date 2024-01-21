@@ -6,11 +6,9 @@ import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMAT
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_READ_MAX_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.buildFromJunctionReads;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.purgeLowSupport;
-import static com.hartwig.hmftools.esvee.old.PrimaryAssembler.realignForJunction;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.SvConfig;
@@ -95,7 +93,7 @@ public class PrimaryAssembler
 
         List<JunctionAssembly> initialAssemblies = createInitialAssemblies(junctionReads);
 
-        // FIXME: look for further support for non-junction reads
+        // look for further support for non-junction reads
         for(Read read : otherReads)
         {
             for(JunctionAssembly assembly : initialAssemblies)
@@ -106,6 +104,11 @@ public class PrimaryAssembler
                 }
             }
         }
+
+        // dedup assemblies for this junction based on overlapping read support
+
+
+
 
         initialAssemblies.forEach(x -> mResultsWriter.writeAssembly(x));
 
@@ -144,8 +147,6 @@ public class PrimaryAssembler
 
         // extend these sequences in the direction away from the junction
         junctionSequences.forEach(x -> x.expandReferenceBases());
-
-
 
         return junctionSequences;
     }
