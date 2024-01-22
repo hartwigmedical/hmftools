@@ -16,12 +16,14 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-final class LossOfHeterozygositySelector {
+final class LossOfHeterozygositySelector
+{
 
     static final Set<String> HRD_GENES = Sets.newHashSet();
     static final Set<String> MSI_GENES = Sets.newHashSet();
 
-    static {
+    static
+    {
         HRD_GENES.add("BRCA1");
         HRD_GENES.add("BRCA2");
         HRD_GENES.add("PALB2");
@@ -35,23 +37,30 @@ final class LossOfHeterozygositySelector {
         MSI_GENES.add("EPCAM");
     }
 
-    private LossOfHeterozygositySelector() {
+    private LossOfHeterozygositySelector()
+    {
     }
 
     @NotNull
     public static List<GeneCopyNumber> selectHRDOrMSIGenesWithLOH(@NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers,
             @Nullable List<GermlineDeletion> allGermlineDeletions, @NotNull MicrosatelliteStatus microsatelliteStatus,
-            @Nullable ChordStatus chordStatus) {
+            @Nullable ChordStatus chordStatus)
+    {
         List<GeneCopyNumber> suspectGeneCopyNumbersWithLOH = Lists.newArrayList();
-        for (GeneCopyNumber geneCopyNumber : allSomaticGeneCopyNumbers) {
+        for(GeneCopyNumber geneCopyNumber : allSomaticGeneCopyNumbers)
+        {
             boolean isRelevantHRD = HRD_GENES.contains(geneCopyNumber.geneName()) && chordStatus == ChordStatus.HR_DEFICIENT;
             boolean isRelevantMSI = MSI_GENES.contains(geneCopyNumber.geneName()) && microsatelliteStatus == MicrosatelliteStatus.MSI;
             boolean hasReportedGermlineHomozygousDeletion = hasReportedGermlineHomDeletion(geneCopyNumber, allGermlineDeletions);
 
-            if ((isRelevantHRD || isRelevantMSI) && !hasReportedGermlineHomozygousDeletion) {
-                if (hasLOH(geneCopyNumber)) {
+            if((isRelevantHRD || isRelevantMSI) && !hasReportedGermlineHomozygousDeletion)
+            {
+                if(hasLOH(geneCopyNumber))
+                {
                     suspectGeneCopyNumbersWithLOH.add(geneCopyNumber);
-                } else if (notFullyLostInTumor(geneCopyNumber) && hasReportedGermlineHetDeletion(geneCopyNumber, allGermlineDeletions)) {
+                }
+                else if(notFullyLostInTumor(geneCopyNumber) && hasReportedGermlineHetDeletion(geneCopyNumber, allGermlineDeletions))
+                {
                     final GeneCopyNumber correctedGeneCopyNumber = correctForGermlineImpact(geneCopyNumber, allGermlineDeletions);
                     suspectGeneCopyNumbersWithLOH.add(correctedGeneCopyNumber);
                 }
@@ -60,7 +69,8 @@ final class LossOfHeterozygositySelector {
         return suspectGeneCopyNumbersWithLOH;
     }
 
-    private static boolean hasLOH(@NotNull GeneCopyNumber geneCopyNumber) {
+    private static boolean hasLOH(@NotNull GeneCopyNumber geneCopyNumber)
+    {
         return geneCopyNumber.minMinorAlleleCopyNumber() < 0.5 && notFullyLostInTumor(geneCopyNumber);
     }
 
@@ -70,18 +80,22 @@ final class LossOfHeterozygositySelector {
     }
 
     private static boolean hasReportedGermlineHetDeletion(@NotNull GeneCopyNumber geneCopyNumber,
-            @Nullable List<GermlineDeletion> allGermlineDeletions) {
-        if (allGermlineDeletions == null) {
+            @Nullable List<GermlineDeletion> allGermlineDeletions)
+    {
+        if(allGermlineDeletions == null)
+        {
             return false;
         }
 
-        return  allGermlineDeletions.stream()
+        return allGermlineDeletions.stream()
                 .anyMatch(d -> isMatchingReportedGermlineDeletion(d, geneCopyNumber.geneName(), GermlineStatus.HET_DELETION));
     }
 
     private static boolean hasReportedGermlineHomDeletion(@NotNull GeneCopyNumber geneCopyNumber,
-            @Nullable List<GermlineDeletion> allGermlineDeletions) {
-        if (allGermlineDeletions == null) {
+            @Nullable List<GermlineDeletion> allGermlineDeletions)
+    {
+        if(allGermlineDeletions == null)
+        {
             return false;
         }
 
@@ -91,7 +105,8 @@ final class LossOfHeterozygositySelector {
 
     @NotNull
     private static GeneCopyNumber correctForGermlineImpact(@NotNull GeneCopyNumber geneCopyNumber,
-            @NotNull List<GermlineDeletion> allGermlineDeletions) {
+            @NotNull List<GermlineDeletion> allGermlineDeletions)
+    {
         double adjustedMinCopyNumber = adjustMinCopyNumberForGermlineImpact(geneCopyNumber, allGermlineDeletions);
         return ImmutableGeneCopyNumber.builder()
                 .from(geneCopyNumber)
@@ -107,14 +122,18 @@ final class LossOfHeterozygositySelector {
                 .filter(d1 -> isMatchingReportedGermlineDeletion(d1, geneCopyNumber.geneName(), GermlineStatus.HET_DELETION))
                 .mapToDouble(d -> d.TumorCopyNumber)
                 .min();
-        if(minimumTumorCopyNumber.isPresent()) {
+        if(minimumTumorCopyNumber.isPresent())
+        {
             return Math.min(minimumTumorCopyNumber.getAsDouble(), geneCopyNumber.minCopyNumber());
-        } else {
+        }
+        else
+        {
             return geneCopyNumber.minCopyNumber();
         }
     }
 
-    private static boolean isMatchingReportedGermlineDeletion(GermlineDeletion deletion, String geneName, GermlineStatus tumorStatus) {
+    private static boolean isMatchingReportedGermlineDeletion(GermlineDeletion deletion, String geneName, GermlineStatus tumorStatus)
+    {
         return deletion.GeneName.equals(geneName) && deletion.Reported && deletion.TumorStatus == tumorStatus;
     }
 }

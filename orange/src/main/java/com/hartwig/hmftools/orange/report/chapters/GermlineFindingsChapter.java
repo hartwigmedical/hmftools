@@ -110,11 +110,11 @@ public class GermlineFindingsChapter implements ReportChapter {
             document.add(GainLossTable.build(title, contentWidth(), reportableGermlineGainsLosses, report.isofox(), reportResources));
         }
 
-        List<PurpleHeterozygousDeletion> reportableGermlineHeterozygousDeletions = report.purple().reportableGermlineHeterozygousDeletions();
-        if (reportableGermlineHeterozygousDeletions != null) {
-            String title = "Potentially pathogenic heterozygous germline deletions (" + reportableGermlineHeterozygousDeletions.size() + ")";
-            document.add(GermlineHeterozygousDeletionTable.build(title, contentWidth(), reportableGermlineHeterozygousDeletions,
-                    report.isofox(), reportResources));
+        List<PurpleHeterozygousDeletion> reportableGermlineHetDeletions = report.purple().reportableGermlineHeterozygousDeletions();
+        if(reportableGermlineHetDeletions != null)
+        {
+            String title = "Potentially pathogenic heterozygous germline deletions (" + reportableGermlineHetDeletions.size() + ")";
+            document.add(GermlineHeterozygousDeletionTable.build(title, contentWidth(), reportableGermlineHetDeletions, report.isofox(), reportResources));
         }
     }
 

@@ -15,7 +15,8 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 
 import org.jetbrains.annotations.NotNull;
 
-public class GermlineGainLossFactory {
+public class GermlineGainLossFactory
+{
     @NotNull
     private final EnsemblDataCache ensemblDataCache;
 
