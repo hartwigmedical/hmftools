@@ -209,7 +209,7 @@ public class SomaticFindingsChapter implements ReportChapter {
 
     private void addLossOfHeterozygosity(@NotNull Document document) {
         List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH = report.purple().suspectGeneCopyNumbersWithLOH();
-        String title = "Potentially interesting LOH events in case of MSI or HRD (" + suspectGeneCopyNumbersWithLOH.size() + ")";
+        String title = "Potentially interesting LOH events (" + suspectGeneCopyNumbersWithLOH.size() + ")";
         document.add(LossOfHeterozygosityTable.build(title, contentWidth(), suspectGeneCopyNumbersWithLOH, reportResources));
     }
 

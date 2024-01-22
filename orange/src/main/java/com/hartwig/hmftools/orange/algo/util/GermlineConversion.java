@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.algo.util;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -22,12 +23,15 @@ import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
+import com.hartwig.hmftools.datamodel.purple.PurpleHeterozygousDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
@@ -62,14 +66,22 @@ public final class GermlineConversion {
         List<PurpleDriver> mergedDrivers;
         List<PurpleVariant> additionalReportableVariants;
         List<PurpleGainLoss> additionalReportableGainsLosses;
+        List<PurpleGeneCopyNumber> additionalSuspectGeneCopyNumbersWithLOH;
         if (containsTumorCells) {
             mergedDrivers = mergeGermlineDriversIntoSomatic(purple.somaticDrivers(), purple.germlineDrivers());
             additionalReportableVariants = toSomaticVariants(purple.reportableGermlineVariants());
             additionalReportableGainsLosses = toSomaticGainsLosses(purple.reportableGermlineFullLosses());
+            additionalSuspectGeneCopyNumbersWithLOH = getAdditionalSuspectGeneCopyNumberWithLOH(
+                    purple.reportableGermlineHeterozygousDeletions(),
+                    purple.suspectGeneCopyNumbersWithLOH(),
+                    purple.allSomaticGeneCopyNumbers(),
+                    purple.reportableGermlineFullLosses()
+            );
         } else {
             mergedDrivers = purple.somaticDrivers();
             additionalReportableVariants = Lists.newArrayList();
             additionalReportableGainsLosses = Lists.newArrayList();
+            additionalSuspectGeneCopyNumbersWithLOH = Lists.newArrayList();
         }
 
         return ImmutablePurpleRecord.builder()
@@ -87,6 +99,9 @@ public final class GermlineConversion {
                 .allGermlineDeletions(null)
                 .allGermlineFullLosses(null)
                 .reportableGermlineFullLosses(null)
+                .addAllSuspectGeneCopyNumbersWithLOH(additionalSuspectGeneCopyNumbersWithLOH)
+                .allGermlineHeterozygousDeletions(null)
+                .reportableGermlineHeterozygousDeletions(null)
                 .build();
     }
 
@@ -145,6 +160,85 @@ public final class GermlineConversion {
     @NotNull
     private static List<PurpleGainLoss> toSomaticGainsLosses(@Nullable List<PurpleGainLoss> reportableGermlineGainsLosses) {
         return reportableGermlineGainsLosses != null ? reportableGermlineGainsLosses : Lists.newArrayList();
+    }
+
+    @NotNull
+    private static List<PurpleGeneCopyNumber> getAdditionalSuspectGeneCopyNumberWithLOH(
+            @Nullable List<PurpleHeterozygousDeletion> reportableGermlineHeterozygousDeletions,
+            @NotNull List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH,
+            @NotNull List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers,
+            @Nullable List<PurpleGainLoss> reportableGermlineFullLosses) {
+        if (reportableGermlineHeterozygousDeletions == null) {
+            return Lists.newArrayList();
+        }
+
+        List<String> relevantGenes = reportableGermlineHeterozygousDeletions.stream()
+                .map(PurpleHeterozygousDeletion::gene)
+                .distinct()
+                .collect(Collectors.toList());
+
+        List<PurpleGeneCopyNumber> additionalSuspectGeneCopyNumberWithLOH = Lists.newArrayList();
+        for (String gene : relevantGenes) {
+            PurpleGeneCopyNumber candidate = findMatchingGeneCopyNumber(gene, allSomaticGeneCopyNumbers);
+
+            if (candidate != null && shouldAddSuspectGeneCopyNumberWithLOH(candidate, suspectGeneCopyNumbersWithLOH, reportableGermlineFullLosses)) {
+                PurpleGeneCopyNumber adjustedGeneCopyNumber = correctForGermlineImpact(candidate, reportableGermlineHeterozygousDeletions);
+                additionalSuspectGeneCopyNumberWithLOH.add(adjustedGeneCopyNumber);
+            }
+        }
+        return additionalSuspectGeneCopyNumberWithLOH;
+    }
+
+    private static boolean shouldAddSuspectGeneCopyNumberWithLOH(@NotNull PurpleGeneCopyNumber candidateSuspectGeneCopyNumber,
+            @NotNull List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH,
+            @Nullable List<PurpleGainLoss> reportableGermlineFullLosses) {
+        String gene = candidateSuspectGeneCopyNumber.geneName();
+
+        boolean alreadySuspectGeneCopyNumberWithLOH = findMatchingGeneCopyNumber(gene, suspectGeneCopyNumbersWithLOH) != null;
+        boolean hasReportableGermlineFullLoss = reportableGermlineFullLosses != null
+                && reportableGermlineFullLosses.stream().anyMatch(l -> l.gene().equals(gene));
+        boolean notFullyLostInTumor = notFullyLostInTumor(candidateSuspectGeneCopyNumber);
+
+        return !alreadySuspectGeneCopyNumberWithLOH && !hasReportableGermlineFullLoss && notFullyLostInTumor;
+    }
+
+    @Nullable
+    private static PurpleGeneCopyNumber findMatchingGeneCopyNumber(@NotNull String gene,
+            @NotNull List<PurpleGeneCopyNumber> geneCopyNumbers) {
+        for (PurpleGeneCopyNumber geneCopyNumber : geneCopyNumbers) {
+            if (geneCopyNumber.geneName().equals(gene)) {
+                return geneCopyNumber;
+            }
+        }
+        return null;
+    }
+
+    private static boolean notFullyLostInTumor(@NotNull PurpleGeneCopyNumber geneCopyNumber) {
+        return geneCopyNumber.minCopyNumber() > 0.5;
+    }
+
+    @NotNull
+    private static PurpleGeneCopyNumber correctForGermlineImpact(@NotNull PurpleGeneCopyNumber geneCopyNumber,
+            @NotNull List<PurpleHeterozygousDeletion> reportableGermlineHeterozygousDeletions) {
+        double adjustedMinCopyNumber = adjustMinCopyNumberForGermlineImpact(geneCopyNumber, reportableGermlineHeterozygousDeletions);
+        return ImmutablePurpleGeneCopyNumber.builder()
+                .from(geneCopyNumber)
+                .minCopyNumber(adjustedMinCopyNumber)
+                .minMinorAlleleCopyNumber(0D)
+                .build();
+    }
+
+    private static double adjustMinCopyNumberForGermlineImpact(@NotNull PurpleGeneCopyNumber geneCopyNumber,
+            @NotNull List<PurpleHeterozygousDeletion> reportableGermlineHeterozygousDeletions) {
+        OptionalDouble minimumTumorCopyNumber = reportableGermlineHeterozygousDeletions.stream()
+                .filter(d -> d.gene().equals(geneCopyNumber.geneName()))
+                .mapToDouble(PurpleHeterozygousDeletion::minCopies)
+                .min();
+        if(minimumTumorCopyNumber.isPresent()) {
+            return Math.min(minimumTumorCopyNumber.getAsDouble(), geneCopyNumber.minCopyNumber());
+        } else {
+            return geneCopyNumber.minCopyNumber();
+        }
     }
 
     @NotNull
