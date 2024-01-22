@@ -39,7 +39,7 @@ class Maven:
     @staticmethod
     def deploy_all(*modules):
         module_str = ','.join([m.name for m in modules])
-        subprocess.run(['mvn', 'deploy', '-B', '-pl', module_str, '-am', '-DdeployAtEnd=true'])
+        subprocess.run(['mvn', 'deploy', '-B', '-pl', module_str, '-am', '-DdeployAtEnd=true'], check=True)
 
 
 def extract_hmftools_dependencies(pom_path):
