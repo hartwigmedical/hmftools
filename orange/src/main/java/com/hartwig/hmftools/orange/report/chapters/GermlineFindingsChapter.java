@@ -17,7 +17,6 @@ import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
-import com.hartwig.hmftools.datamodel.purple.PurpleHeterozygousDeletion;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
@@ -27,7 +26,6 @@ import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
 import com.hartwig.hmftools.orange.report.tables.BreakendTable;
 import com.hartwig.hmftools.orange.report.tables.GainLossTable;
-import com.hartwig.hmftools.orange.report.tables.GermlineHeterozygousDeletionTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
 import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.PharmacogeneticsTable;
@@ -108,13 +106,6 @@ public class GermlineFindingsChapter implements ReportChapter {
         if (reportableGermlineGainsLosses != null) {
             String title = "Potentially pathogenic germline deletions (" + reportableGermlineGainsLosses.size() + ")";
             document.add(GainLossTable.build(title, contentWidth(), reportableGermlineGainsLosses, report.isofox(), reportResources));
-        }
-
-        List<PurpleHeterozygousDeletion> reportableGermlineHeterozygousDeletions = report.purple().reportableGermlineHeterozygousDeletions();
-        if (reportableGermlineHeterozygousDeletions != null) {
-            String title = "Potentially pathogenic heterozygous germline deletions (" + reportableGermlineHeterozygousDeletions.size() + ")";
-            document.add(GermlineHeterozygousDeletionTable.build(title, contentWidth(), reportableGermlineHeterozygousDeletions,
-                    report.isofox(), reportResources));
         }
     }
 

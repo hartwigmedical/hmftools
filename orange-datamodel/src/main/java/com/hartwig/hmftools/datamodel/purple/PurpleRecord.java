@@ -71,10 +71,4 @@ public interface PurpleRecord {
 
     @Nullable
     List<PurpleGainLoss> reportableGermlineFullLosses();
-
-    @Nullable
-    List<PurpleHeterozygousDeletion> allGermlineHeterozygousDeletions();
-
-    @Nullable
-    List<PurpleHeterozygousDeletion> reportableGermlineHeterozygousDeletions();
 }

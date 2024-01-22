@@ -68,8 +68,6 @@ public final class ReportLimiter {
                 .allGermlineDeletions(max1(purple.allGermlineDeletions()))
                 .allGermlineFullLosses(max1(purple.allGermlineFullLosses()))
                 .reportableGermlineFullLosses(max1(purple.reportableGermlineFullLosses()))
-                .allGermlineHeterozygousDeletions(max1(purple.allGermlineHeterozygousDeletions()))
-                .reportableGermlineHeterozygousDeletions(max1(purple.reportableGermlineHeterozygousDeletions()))
                 .build();
     }
 
