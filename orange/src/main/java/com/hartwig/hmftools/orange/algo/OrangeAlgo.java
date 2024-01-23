@@ -735,11 +735,11 @@ public class OrangeAlgo
 
     private static void verifyPlots(@NotNull OrangePlots orangePlots, @NotNull LinxData linxData)
     {
-        Set<Integer> linxReportableClusters = LinxReportableClusters.findReportableClusters(linxData);
+        Set<Integer> linxVisualizedClusters = LinxReportableClusters.findVisualizedClusters(linxData);
 
-        if(linxReportableClusters.size() != orangePlots.linxDriverPlots().size())
+        if(linxVisualizedClusters.size() != orangePlots.linxDriverPlots().size())
         {
-            LOGGER.warn("Expected {} linx plots, but found {}", linxReportableClusters.size(), orangePlots.linxDriverPlots().size());
+            LOGGER.warn("Expected {} linx plots, but found {}", linxVisualizedClusters.size(), orangePlots.linxDriverPlots().size());
         }
     }
 

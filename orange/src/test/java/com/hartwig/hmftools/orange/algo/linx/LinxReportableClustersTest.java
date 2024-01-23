@@ -25,8 +25,8 @@ public class LinxReportableClustersTest
     public void shouldFindAllReportableClusters()
     {
         LinxData linxData = linxDataBuilder().build();
-        Set<Integer> clusters = LinxReportableClusters.findReportableClusters(linxData);
-        assertEquals(new HashSet<>(Set.of(10, 50, 100)), clusters);
+        Set<Integer> clusters = LinxReportableClusters.findVisualizedClusters(linxData);
+        assertEquals(Set.of(10, 50, 100), clusters);
     }
 
     @Test
@@ -37,7 +37,7 @@ public class LinxReportableClustersTest
                 .clusterIdToChainCount(Map.of(10, 1, 50, 2, 100, 2))
                 .clusterIdToExonCount(Map.of(50, 1, 100, 1))
                 .build();
-        Set<Integer> clusters = LinxReportableClusters.findReportableClusters(linxData);
+        Set<Integer> clusters = LinxReportableClusters.findVisualizedClusters(linxData);
         assertEquals(new HashSet<>(Set.of(50, 100)), clusters);
     }
 
@@ -45,24 +45,24 @@ public class LinxReportableClustersTest
     public void shouldCountMultiLinkClustersWithNoExon()
     {
         // cluster 10 has two chain links and no exons -> not simple so should be counted
-        LinxData linxData2 = linxDataBuilder()
+        LinxData linxData = linxDataBuilder()
                 .clusterIdToChainCount(Map.of(10, 2, 50, 2, 100, 2))
                 .clusterIdToExonCount(Map.of(50, 1, 100, 1))
                 .build();
-        Set<Integer> clusters2 = LinxReportableClusters.findReportableClusters(linxData2);
-        assertEquals(new HashSet<>(Set.of(10, 50, 100)), clusters2);
+        Set<Integer> clusters = LinxReportableClusters.findVisualizedClusters(linxData);
+        assertEquals(new HashSet<>(Set.of(10, 50, 100)), clusters);
     }
 
     @Test
     public void shouldCountSingleLinkClusterWithExon()
     {
         // cluster 10 has single chain link and one exon -> not simple so should be counted
-        LinxData linxData3 = linxDataBuilder()
+        LinxData linxData = linxDataBuilder()
                 .clusterIdToChainCount(Map.of(10, 1, 50, 2, 100, 2))
                 .clusterIdToExonCount(Map.of(10, 1, 50, 1, 100, 1))
                 .build();
-        Set<Integer> clusters3 = LinxReportableClusters.findReportableClusters(linxData3);
-        assertEquals(new HashSet<>(Set.of(10, 50, 100)), clusters3);
+        Set<Integer> clusters = LinxReportableClusters.findVisualizedClusters(linxData);
+        assertEquals(new HashSet<>(Set.of(10, 50, 100)), clusters);
     }
 
     @NotNull

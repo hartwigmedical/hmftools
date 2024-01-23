@@ -223,12 +223,12 @@ public final class LinxDataLoader
     }
 
     @NotNull
-    private static VisSvData loadSvToCluster(@NotNull String filename) throws IOException
+    private static VisSvData loadSvToCluster(@NotNull String somaticVisSvDataTsv) throws IOException
     {
-        List<String> lines = Files.readAllLines(new File(filename).toPath());
+        List<String> lines = Files.readAllLines(new File(somaticVisSvDataTsv).toPath());
         if(lines.isEmpty())
         {
-            throw new IllegalStateException(String.format("File lacks header: %s", filename));
+            throw new IllegalStateException(String.format("File lacks header: %s", somaticVisSvDataTsv));
         }
 
         Map<Integer, Integer> svToCluster = new HashMap<>();
@@ -258,8 +258,7 @@ public final class LinxDataLoader
             }
         }
 
-        VisSvData visSvData = new VisSvData(svToCluster, clusterIdToChainCount);
-        return visSvData;
+        return new VisSvData(svToCluster, clusterIdToChainCount);
     }
 
     private static String generateVisGeneExonFilename(@NotNull String basePath, @NotNull String sample)
