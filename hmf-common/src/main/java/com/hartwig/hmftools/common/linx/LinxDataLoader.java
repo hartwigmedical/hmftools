@@ -126,7 +126,7 @@ public final class LinxDataLoader
                 .somaticHomozygousDisruptions(somaticHomozygousDisruptions)
                 .fusionClusterIds(fusionClusterIds)
                 .svIdToClusterId(visSvData.svIdToClusterId())
-                .clusterIdToChainCount(visSvData.clusterIdToChainCount())
+                .clusterIdToLinkCount(visSvData.clusterIdToLinkCount())
                 .clusterIdToExonCount(clusterIdToExonCount)
                 .allGermlineStructuralVariants(allGermlineStructuralVariants)
                 .allGermlineBreakends(allGermlineBreakends)
@@ -304,12 +304,12 @@ class VisSvData
     @NotNull
     private final Map<Integer, Integer> svIdToClusterId;
     @NotNull
-    private final Map<Integer, Integer> clusterIdToChainCount;
+    private final Map<Integer, Integer> clusterIdToLinkCount;
 
-    VisSvData(@NotNull Map<Integer, Integer> svIdToClusterId, @NotNull Map<Integer, Integer> clusterIdToChainCount)
+    VisSvData(@NotNull Map<Integer, Integer> svIdToClusterId, @NotNull Map<Integer, Integer> clusterIdToLinkCount)
     {
         this.svIdToClusterId = svIdToClusterId;
-        this.clusterIdToChainCount = clusterIdToChainCount;
+        this.clusterIdToLinkCount = clusterIdToLinkCount;
     }
 
     @NotNull
@@ -319,8 +319,8 @@ class VisSvData
     }
 
     @NotNull
-    public Map<Integer, Integer> clusterIdToChainCount()
+    public Map<Integer, Integer> clusterIdToLinkCount()
     {
-        return clusterIdToChainCount;
+        return clusterIdToLinkCount;
     }
 }

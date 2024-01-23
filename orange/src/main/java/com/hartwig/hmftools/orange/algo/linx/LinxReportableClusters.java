@@ -36,7 +36,7 @@ public final class LinxReportableClusters
 
     private static boolean isSimpleClusterAffectingNoExons(@NotNull LinxData linx, int clusterId)
     {
-        boolean hasSingleLink = !linx.clusterIdToChainCount().containsKey(clusterId) || linx.clusterIdToChainCount().get(clusterId) == 1;
+        boolean hasSingleLink = !linx.clusterIdToLinkCount().containsKey(clusterId) || linx.clusterIdToLinkCount().get(clusterId) == 1;
         boolean hasNoExons = !linx.clusterIdToExonCount().containsKey(clusterId) || linx.clusterIdToExonCount().get(clusterId) == 0;
         return hasSingleLink && hasNoExons;
     }
