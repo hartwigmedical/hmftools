@@ -125,8 +125,8 @@ public final class LinxDataLoader
                 .reportableSomaticBreakends(reportableSomaticBreakends)
                 .somaticHomozygousDisruptions(somaticHomozygousDisruptions)
                 .fusionClusterIds(fusionClusterIds)
-                .svIdToClusterId(visSvData.getSvIdToClusterId())
-                .clusterIdToChainCount(visSvData.getClusterIdToChainCount())
+                .svIdToClusterId(visSvData.svIdToClusterId())
+                .clusterIdToChainCount(visSvData.clusterIdToChainCount())
                 .clusterIdToExonCount(clusterIdToExonCount)
                 .allGermlineStructuralVariants(allGermlineStructuralVariants)
                 .allGermlineBreakends(allGermlineBreakends)
@@ -313,13 +313,13 @@ class VisSvData
     }
 
     @NotNull
-    public Map<Integer, Integer> getSvIdToClusterId()
+    public Map<Integer, Integer> svIdToClusterId()
     {
         return svIdToClusterId;
     }
 
     @NotNull
-    public Map<Integer, Integer> getClusterIdToChainCount()
+    public Map<Integer, Integer> clusterIdToChainCount()
     {
         return clusterIdToChainCount;
     }
