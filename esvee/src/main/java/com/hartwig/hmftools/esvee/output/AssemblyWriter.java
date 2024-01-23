@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.esvee.output;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -99,11 +102,21 @@ public class AssemblyWriter
             sj.add(String.valueOf(softClipBaseMismatches));
             sj.add(String.valueOf(refBaseMismatches));
 
-            String junctionSequence = assembly.initialJunction().isForward() ?
-                    assembly.formSequence(assembly.initialJunction().Position, assembly.maxAlignedPosition()) :
-                    assembly.formSequence(assembly.minAlignedPosition(), assembly.initialJunction().Position);
+            int posStart;
+            int posEnd;
 
-            sj.add(junctionSequence);
+            if(assembly.initialJunction().isForward())
+            {
+                posStart = max(assembly.initialJunction().Position - 5, assembly.minAlignedPosition());
+                posEnd = assembly.maxAlignedPosition();
+            }
+            else
+            {
+                posStart = assembly.minAlignedPosition();
+                posEnd = min(assembly.initialJunction().Position + 5, assembly.maxAlignedPosition());
+            }
+
+            sj.add(assembly.formSequence(posStart, posEnd));
 
             mWriter.write(sj.toString());
             mWriter.newLine();

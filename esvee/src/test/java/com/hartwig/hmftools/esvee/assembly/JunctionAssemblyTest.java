@@ -2,22 +2,16 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_READS;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
-import static com.hartwig.hmftools.esvee.common.AssemblyUtils.purgeLowSupport;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.common.AssemblyMismatchSplitter;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.BaseMismatch;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.read.Read;
 
@@ -72,10 +66,6 @@ public class JunctionAssemblyTest
         assertEquals(5, junctionSequence.mismatches().allBaseMismatches().size());
         assertEquals(7, junctionSequence.supportCount());
         assertEquals(4, junctionSequence.mismatches().positionCount());
-
-        // assertTrue(purgeLowSupport(junctionSequence, PRIMARY_ASSEMBLY_MIN_MISMATCH_READS, PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL));
-        // assertEquals(2, junctionSequence.mismatches().positionCount());
-        // assertEquals(2, junctionSequence.mismatches().allBaseMismatches().size());
 
         AssemblyMismatchSplitter splitter = new AssemblyMismatchSplitter(junctionSequence);
         List<JunctionAssembly> allSequences = splitter.splitOnMismatches(5);

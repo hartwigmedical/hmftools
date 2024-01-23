@@ -3,10 +3,8 @@ package com.hartwig.hmftools.esvee.assembly;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_READS;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_READ_MAX_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.buildFromJunctionReads;
-import static com.hartwig.hmftools.esvee.common.AssemblyUtils.purgeLowSupport;
 
 import java.util.Collections;
 import java.util.List;
@@ -138,23 +136,6 @@ public class PrimaryAssembler
             return Collections.emptyList();
 
         // no filtering of the initial sequence and instead rely on the sequence splitting to do this with all initial mismatches preserved
-        /*
-        boolean hasValidMismatches = purgeLowSupport(
-                junctionSequence, PRIMARY_ASSEMBLY_MIN_MISMATCH_READS, PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL);
-
-        List<JunctionAssembly> junctionSequences;
-
-        if(hasValidMismatches)
-        {
-            AssemblyMismatchSplitter splitter = new AssemblyMismatchSplitter(junctionSequence);
-            junctionSequences = splitter.splitOnMismatches(PRIMARY_ASSEMBLY_MIN_LENGTH);
-        }
-        else
-        {
-            junctionSequences = List.of(junctionSequence);
-        }
-        */
-
         AssemblyMismatchSplitter splitter = new AssemblyMismatchSplitter(junctionSequence);
         List<JunctionAssembly> junctionSequences = splitter.splitOnMismatches(PRIMARY_ASSEMBLY_MIN_LENGTH);
 

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.read;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
@@ -120,8 +121,7 @@ public final class ReadFilters
                 .sum();
 
         // CHECK
-        Object nmAttribute = read.getAttribute(NUM_MUTATONS_ATTRIBUTE);
-        int nmCount = nmAttribute != null ? (int)nmAttribute : indelCount;
+        int nmCount = max(read.numberOfEvents(), indelCount);
 
         final int mismatchedBases = nmCount - indelCount;
         final int matchedBases = mappedSize - mismatchedBases;
@@ -149,12 +149,12 @@ public final class ReadFilters
         return false;
     }
 
-    private static float[] mappedBaseStats(final Read alignment)
+    private static float[] mappedBaseStats(final Read read)
     {
         final int[] baseCount = new int[5];
 
         int readPosition = 1;
-        for(CigarElement element : alignment.getCigar().getCigarElements())
+        for(CigarElement element : read.cigarElements())
         {
             if(element.getOperator() != CigarOperator.M)
             {
@@ -165,7 +165,7 @@ public final class ReadFilters
 
             for(int i = 0; i < element.getLength(); i++)
             {
-                final byte base = alignment.getBases()[readPosition + i - 1];
+                final byte base = read.getBases()[readPosition + i - 1];
                 baseCount[baseToIndex(base)]++;
             }
         }
@@ -173,7 +173,9 @@ public final class ReadFilters
         final float totalBases = Arrays.stream(baseCount).sum();
         final float[] baseFrequency = new float[baseCount.length];
         for(int i = 0; i < baseCount.length; i++)
+        {
             baseFrequency[i] = baseCount[i] / totalBases;
+        }
 
         return baseFrequency;
     }

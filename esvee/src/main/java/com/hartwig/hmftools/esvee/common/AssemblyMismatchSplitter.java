@@ -229,5 +229,7 @@ public class AssemblyMismatchSplitter
 
             return true;
         }
+
+        public String toString() { return format("reads(%d) mismatches(%d)", Reads.size(), Mismatches.size()); }
     }
 }

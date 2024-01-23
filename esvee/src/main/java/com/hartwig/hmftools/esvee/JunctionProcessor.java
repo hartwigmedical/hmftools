@@ -168,7 +168,10 @@ public class JunctionProcessor
             writeAllResults();
             */
 
-            mPerfCounters.forEach(x -> x.logStats());
+            if(mConfig.PerfDebug || !mConfig.SpecificChrRegions.hasFilters())
+            {
+                mPerfCounters.forEach(x -> x.logStats());
+            }
         }
         catch(Exception e)
         {
