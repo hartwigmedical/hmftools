@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_A
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 
@@ -46,6 +47,7 @@ public class Read
         mMateRead = null;
 
         mCigarString = record.getCigarString();
+
         mCigarElements = cigarElementsFromStr(mCigarString);
 
         setBoundaries(mRecord.getAlignmentStart());
@@ -58,6 +60,15 @@ public class Read
     {
         mAlignmentStart = newReadStart;
         mUnclippedStart = mAlignmentStart;
+
+        if(mCigarElements.isEmpty())
+        {
+            // undefined for unmapped reads
+            mAlignmentEnd = mAlignmentStart;
+            mUnclippedEnd = mAlignmentStart;
+            return;
+        }
+
         int currentPosition = mAlignmentStart;
 
         for(int i = 0; i < mCigarElements.size(); ++i)

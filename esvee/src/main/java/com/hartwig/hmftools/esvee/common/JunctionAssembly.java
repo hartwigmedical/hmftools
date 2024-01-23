@@ -100,7 +100,7 @@ public class JunctionAssembly
 
         for(int i = readIndexRange[SE_START]; i <= readIndexRange[SE_END]; ++i, ++assemblyIndex)
         {
-            if(i >= mBases.length) // CHECK: similar to issue with INDELs in addRead() ??
+            if(assemblyIndex >= mBases.length) // CHECK: similar to issue with INDELs in addRead() ??
                 break;
 
             if(!basesMatch(
@@ -226,9 +226,8 @@ public class JunctionAssembly
                     mBaseQuals[assemblyIndex] = qual;
                     mBaseQualTotals[assemblyIndex] += qual;
                 }
-                else if(registerMismatches)
+                else
                 {
-                    // register a mismatch
                     ++mismatchCount;
 
                     if(registerMismatches)
@@ -349,6 +348,18 @@ public class JunctionAssembly
         }
     }
 
+    public void removeSupportRead(final Read read)
+    {
+        for(int i = 0; i < mSupport.size(); ++i)
+        {
+            if(mSupport.get(i).read() == read)
+            {
+                mSupport.remove(i);
+                return;
+            }
+        }
+    }
+
     public String toString()
     {
         return format("junc(%s) range(%d - %d len=%d) support(%d) mismatches(pos=%d all=%d)",
@@ -398,6 +409,4 @@ public class JunctionAssembly
 
         return true;
     }
-
-
 }

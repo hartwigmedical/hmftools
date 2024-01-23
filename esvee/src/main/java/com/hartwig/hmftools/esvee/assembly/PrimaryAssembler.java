@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_READS;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL;
@@ -46,27 +47,34 @@ public class PrimaryAssembler
         {
             boolean isJunctionRead = true;
 
-            if(!ReadFilters.recordSoftClipsNearJunction(read, mJunction))
+            try
             {
-                isJunctionRead = false;
-            }
-            else if(!ReadFilters.isRecordAverageQualityPastJunctionAbove(read, mJunction, SvConstants.AVG_BASE_QUAL_THRESHOLD))
-            {
-                isJunctionRead = false;
-            }
-            else if(!ReadFilters.hasAcceptableMapQ(read, SvConstants.READ_FILTER_MIN_JUNCTION_MAPQ))
-            {
-                isJunctionRead = false;
-            }
-            else if(ReadFilters.isBadlyMapped(read))
-            {
-                isJunctionRead = false;
-            }
+                if(!ReadFilters.recordSoftClipsNearJunction(read, mJunction))
+                {
+                    isJunctionRead = false;
+                }
+                else if(!ReadFilters.isRecordAverageQualityPastJunctionAbove(read, mJunction, SvConstants.AVG_BASE_QUAL_THRESHOLD))
+                {
+                    isJunctionRead = false;
+                }
+                else if(!ReadFilters.hasAcceptableMapQ(read, SvConstants.READ_FILTER_MIN_JUNCTION_MAPQ))
+                {
+                    isJunctionRead = false;
+                }
+                else if(ReadFilters.isBadlyMapped(read))
+                {
+                    isJunctionRead = false;
+                }
 
-            if(isJunctionRead)
-                junctionReads.add(read);
-            else
-                otherReads.add(read);
+                if(isJunctionRead)
+                    junctionReads.add(read);
+                else
+                    otherReads.add(read);
+            }
+            catch(Exception e)
+            {
+                SV_LOGGER.error("error filtering read: {}", read.toString());
+            }
         }
 
         /*
@@ -129,7 +137,8 @@ public class PrimaryAssembler
         if(junctionSequence.length() < PRIMARY_ASSEMBLY_MIN_LENGTH)
             return Collections.emptyList();
 
-        // filter
+        // no filtering of the initial sequence and instead rely on the sequence splitting to do this with all initial mismatches preserved
+        /*
         boolean hasValidMismatches = purgeLowSupport(
                 junctionSequence, PRIMARY_ASSEMBLY_MIN_MISMATCH_READS, PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL);
 
@@ -144,6 +153,10 @@ public class PrimaryAssembler
         {
             junctionSequences = List.of(junctionSequence);
         }
+        */
+
+        AssemblyMismatchSplitter splitter = new AssemblyMismatchSplitter(junctionSequence);
+        List<JunctionAssembly> junctionSequences = splitter.splitOnMismatches(PRIMARY_ASSEMBLY_MIN_LENGTH);
 
         // extend these sequences in the direction away from the junction
         junctionSequences.forEach(x -> x.expandReferenceBases());

@@ -112,7 +112,7 @@ public class JunctionProcessor
             SV_LOGGER.debug("merged into {} junctions", mChrJunctionsMap.values().stream().mapToInt(x -> x.size()).sum());
         }
 
-        return true;
+        return !mChrJunctionsMap.isEmpty();
     }
 
     public void run()

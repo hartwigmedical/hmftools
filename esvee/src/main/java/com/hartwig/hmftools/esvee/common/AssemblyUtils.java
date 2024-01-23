@@ -4,7 +4,10 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public final class AssemblyUtils
@@ -97,8 +100,18 @@ public final class AssemblyUtils
 
         boolean hasSupportedMismatches = false;
 
-        for(BaseMismatches baseMismatches : junctionAssembly.mismatches().baseMismatches())
+        // any mismatch with low support will be removed, along with the reads which had the mismatch
+        Set<Read> lowSupportMismatchReads = Sets.newHashSet();
+        Set<Integer> mismatchIndicesToRemove = Sets.newHashSet();
+
+        Map<Integer,BaseMismatches> indexedMismatchMap = junctionAssembly.mismatches().indexedBaseMismatches();
+
+        for(Map.Entry<Integer,BaseMismatches> entry : indexedMismatchMap.entrySet())
         {
+            BaseMismatches baseMismatches = entry.getValue();
+
+            boolean indexHasMismatches = false;
+
             for(int j = 0; j < baseMismatches.Mismatches.length; ++j)
             {
                 if(baseMismatches.Mismatches[j] == null)
@@ -109,15 +122,34 @@ public final class AssemblyUtils
                 if(mismatch.Reads.size() >= minReadCount && mismatch.QualTotal >= minTotalQual)
                 {
                     hasSupportedMismatches = true;
+                    indexHasMismatches = true;
                 }
                 else
                 {
-                    // remove the mismatch
+                    // remove the mismatch entry and assembly support from low-support reads
+                    for(Read read : baseMismatches.Mismatches[j].Reads)
+                    {
+                        if(lowSupportMismatchReads.contains(read))
+                            continue;
+
+                        lowSupportMismatchReads.add(read);
+
+                        // since this is just the starting assembly, keep all reads as support and rely on the assembly splitter to
+                        // re-test support
+
+                        // junctionAssembly.removeSupportRead(read);
+                    }
+
                     baseMismatches.Mismatches[j].Reads.clear();
                     baseMismatches.Mismatches[j] = null;
                 }
             }
+
+            if(!indexHasMismatches)
+                mismatchIndicesToRemove.add(entry.getKey());
         }
+
+        mismatchIndicesToRemove.forEach(x -> indexedMismatchMap.remove(x));
 
         return hasSupportedMismatches;
     }

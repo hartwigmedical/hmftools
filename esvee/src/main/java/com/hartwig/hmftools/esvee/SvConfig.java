@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.esvee.SvConstants.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.SvConstants.SV_PREP_JUNCTIONS_FILE_ID;
+import static com.hartwig.hmftools.esvee.WriteType.VCF;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -144,18 +145,17 @@ public class SvConfig
 
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
-        VcfFile = configBuilder.getValue(OUTPUT_VCF);
-
-        if(configBuilder.hasValue(OUTPUT_DIR))
+        if(!configBuilder.hasValue(OUTPUT_VCF) && !configBuilder.hasValue(OUTPUT_DIR))
         {
-            OutputDir = parseOutputDir(configBuilder);
-        }
-        else
-        {
-            OutputDir = pathFromFile(VcfFile);
+            SV_LOGGER.error("VCF output file or output directory required config");
+            System.exit(1);
         }
 
+        String vcfFile = configBuilder.getValue(OUTPUT_VCF);
+        OutputDir = configBuilder.hasValue(OUTPUT_DIR) ? parseOutputDir(configBuilder) : pathFromFile(vcfFile);
         OutputId = configBuilder.getValue(OUTPUT_ID);
+
+        VcfFile = vcfFile != null ? vcfFile : outputFilename(VCF);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
 
@@ -192,7 +192,7 @@ public class SvConfig
         configBuilder.addPath(REFERENCE_BAM, false, REFERENCE_BAM_DESC);
         configBuilder.addConfigItem(SAMPLE_IDS, true, "List of sample IDs, separated by ','");
         configBuilder.addConfigItem(SAMPLE_BAMS, false, "List of sample BAMs, separated by ','");
-        configBuilder.addConfigItem(OUTPUT_VCF, true, "Output VCF filename");
+        configBuilder.addConfigItem(OUTPUT_VCF, false, "Output VCF filename");
 
         configBuilder.addPaths(
                 JUNCTION_FILES, false, "List of SvPrep junction files, separated by ',', default is to match by sample name");

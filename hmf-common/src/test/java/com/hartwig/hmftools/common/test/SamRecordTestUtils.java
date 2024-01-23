@@ -66,6 +66,21 @@ public final class SamRecordTestUtils
         return record;
     }
 
+    public static SAMRecord cloneSamRecord(final SAMRecord record, final String newReadId)
+    {
+        try
+        {
+            SAMRecord newRecord = (SAMRecord)record.clone();
+            newRecord.setReadName(newReadId);
+            return newRecord;
+        }
+        catch(Exception e)
+        {
+            return null;
+        }
+    }
+
+
     public static SAMRecord createSamRecord(
             final String readId, final String chrStr, int readStart, final String readBases, final String cigar, final String mateChr,
             int mateStart, boolean isReversed, boolean isSupplementary, final SupplementaryReadData suppAlignment)

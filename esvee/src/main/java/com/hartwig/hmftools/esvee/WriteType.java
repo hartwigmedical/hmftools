@@ -5,6 +5,7 @@ public enum WriteType
     ASSEMBLY_BAM("assembly.bam"),
     ASSEMBLIES("assemblies.tsv"),
     READS("reads.tsv"),
+    VCF("esvee.vcf.gz"),
     BREAKENDS("breakends.tsv");
 
     private final String mFileId;

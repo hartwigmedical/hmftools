@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.cloneSamRecord;
 
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
@@ -43,6 +44,12 @@ public class TestUtils
                 readId, CHR_1, readStart, readBases, cigar, CHR_1, readStart + 1000,
                 false, false, null);
         return new Read(record);
+    }
+
+    public static Read cloneRead(final Read read, final String newReadId)
+    {
+        SAMRecord newRecord = cloneSamRecord(read.bamRecord(), newReadId);
+        return new Read(newRecord);
     }
 
     public static String makeCigarString(final String readBases, int scLeft, int scRight)

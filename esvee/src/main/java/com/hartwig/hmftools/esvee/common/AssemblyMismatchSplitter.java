@@ -2,6 +2,8 @@ package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_READS;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_READ_MAX_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.buildFromJunctionReads;
 
@@ -28,10 +30,12 @@ public class AssemblyMismatchSplitter
 
     public List<JunctionAssembly> splitOnMismatches(int minSequenceLength)
     {
+        int permittedMismatches = PRIMARY_ASSEMBLY_READ_MAX_BASE_MISMATCH;
+        int minReadSupport = PRIMARY_ASSEMBLY_MIN_MISMATCH_READS;
+
         // every remaining mismatch should have 2+ (or whatever configured) supporting reads
         // build unique collections of mismatches for each long enough read
         List<Read> noMismatchReads = Lists.newArrayList();
-        List<Read> mismatchReads = Lists.newArrayList();
         Set<Read> longMismatchReads = Sets.newHashSet();
 
         for(AssemblySupport support : mSequence.support())
@@ -42,15 +46,65 @@ public class AssemblyMismatchSplitter
             }
             else
             {
-                mismatchReads.add(support.read());
-
                 if(support.readRangeLength() >= minSequenceLength)
                     longMismatchReads.add(support.read());
             }
         }
 
-        if(longMismatchReads.isEmpty())
+        List<SequenceMismatches> uniqueSequenceMismatches = findOtherSequences(longMismatchReads);
+
+        List<JunctionAssembly> finalSequences = Lists.newArrayList();
+        Set<Read> processedReads = Sets.newHashSet();
+
+        if(noMismatchReads.size() >= minReadSupport)
+        {
+            // add the 'initial' sequence from reads without mismatches
+            JunctionAssembly initialSequence = buildFromJunctionReads(mSequence.initialJunction(), noMismatchReads, false);
+            processedReads.addAll(noMismatchReads);
+            finalSequences.add(initialSequence);
+        }
+
+        // and then add each unique mismatched sequence
+        for(SequenceMismatches sequenceMismatches : uniqueSequenceMismatches)
+        {
+            List<Read> candidateReads = sequenceMismatches.Reads;
+
+            // required for example 2+ reads and 2+ mismatches to add a unique sequence
+            if(candidateReads.size() < minReadSupport || sequenceMismatches.Mismatches.size() <= permittedMismatches)
+                continue;
+
+            processedReads.addAll(candidateReads);
+
+            JunctionAssembly mismatchSequence = buildFromJunctionReads(mSequence.initialJunction(), candidateReads, false);
+            finalSequences.add(mismatchSequence);
+        }
+
+        // test each read not already used to define the unique sequence against each final sequence
+        for(AssemblySupport support : mSequence.support())
+        {
+            if(processedReads.contains(support.read()))
+                continue;
+
+            for(JunctionAssembly sequence : finalSequences)
+            {
+                if(sequence.checkReadMatches(support.read(), permittedMismatches))
+                {
+                    sequence.addRead(support.read(), false);
+                }
+            }
+        }
+
+        return finalSequences;
+    }
+
+    private List<SequenceMismatches> findOtherSequences(final Set<Read> longMismatchReads)
+    {
+        int minReadSupport = PRIMARY_ASSEMBLY_MIN_MISMATCH_READS;
+
+        if(longMismatchReads.size() <= minReadSupport)
             return Collections.emptyList();
+
+        int maxMismatchQual = PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL;
 
         // make a support for each read with mismatches and then add if unique
         Map<Read,SequenceMismatches> readSequenceMismatches = Maps.newHashMap();
@@ -66,6 +120,9 @@ public class AssemblyMismatchSplitter
                     continue;
 
                 BaseMismatch baseMismatch = baseMismatches.Mismatches[j];
+
+                if(baseMismatch.Reads.size() < minReadSupport || baseMismatch.QualTotal < maxMismatchQual)
+                    continue;
 
                 Mismatch mismatch = new Mismatch(assemblyIndex, baseMismatch.base(), baseMismatch.MaxQual, baseMismatch.QualTotal);
 
@@ -122,42 +179,7 @@ public class AssemblyMismatchSplitter
             }
         }
 
-        // add the 'initial' sequence from reads without mismatches
-        int permittedMismatches = PRIMARY_ASSEMBLY_READ_MAX_BASE_MISMATCH; // CHECK
-
-        Set<Read> processedReads = Sets.newHashSet();
-        JunctionAssembly initialSequence = buildFromJunctionReads(mSequence.initialJunction(), noMismatchReads, false);
-        processedReads.addAll(noMismatchReads);
-
-        List<JunctionAssembly> finalSequences = Lists.newArrayListWithCapacity(1 + uniqueSequenceMismatches.size());
-        finalSequences.add(initialSequence);
-
-        // and then add each unique mismatched sequence
-        for(SequenceMismatches sequenceMismatches : uniqueSequenceMismatches)
-        {
-            List<Read> candidateReads = sequenceMismatches.Reads;
-            processedReads.addAll(candidateReads);
-
-            JunctionAssembly mismatchSequence = buildFromJunctionReads(mSequence.initialJunction(), candidateReads, false);
-            finalSequences.add(mismatchSequence);
-        }
-
-        // test each read now against
-        for(AssemblySupport support : mSequence.support())
-        {
-            if(processedReads.contains(support.read()))
-                continue;
-
-            for(JunctionAssembly sequence : finalSequences)
-            {
-                if(sequence.checkReadMatches(support.read(), permittedMismatches))
-                {
-                    sequence.addRead(support.read(), false);
-                }
-            }
-        }
-
-        return finalSequences;
+        return uniqueSequenceMismatches;
     }
 
     private class Mismatch
@@ -208,5 +230,4 @@ public class AssemblyMismatchSplitter
             return true;
         }
     }
-
 }

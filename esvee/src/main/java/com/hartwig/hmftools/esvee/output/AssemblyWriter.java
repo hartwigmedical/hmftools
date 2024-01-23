@@ -96,8 +96,8 @@ public class AssemblyWriter
             }
 
             sj.add(String.valueOf(uniqueReads.size()));
-            sj.add(String.valueOf(refBaseMismatches));
             sj.add(String.valueOf(softClipBaseMismatches));
+            sj.add(String.valueOf(refBaseMismatches));
 
             String junctionSequence = assembly.initialJunction().isForward() ?
                     assembly.formSequence(assembly.initialJunction().Position, assembly.maxAlignedPosition()) :

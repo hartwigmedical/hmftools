@@ -17,8 +17,7 @@ public class AssemblySupport
     private int mReferenceMismatches;
 
     public AssemblySupport(
-            final Read read, final int assemblyIndex, final int junctionReadIndex,
-            final int[] readIndexRange, final int mismatches)
+            final Read read, final int assemblyIndex, final int junctionReadIndex, final int[] readIndexRange, final int mismatches)
     {
         mRead = read;
         mAssemblyIndex = assemblyIndex;
@@ -39,7 +38,7 @@ public class AssemblySupport
 
     public int readRangeLength() { return mReadIndexRange[1] - mReadIndexRange[0] + 1; }
     public int assemblyIndex() { return mAssemblyIndex; }
-    public int junctionReadIndex() { return mJunctionReadIndex  ; }
+    public int junctionReadIndex() { return mJunctionReadIndex; }
 
     public int junctionMismatches() { return mJunctionMismatches; }
     public int referenceMismatches() { return mReferenceMismatches; }

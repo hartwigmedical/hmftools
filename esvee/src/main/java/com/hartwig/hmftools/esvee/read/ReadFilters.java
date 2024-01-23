@@ -109,12 +109,12 @@ public final class ReadFilters
         if(!isDiscordant(read))
             return false;
 
-        final int mappedSize = read.getCigar().getCigarElements().stream()
+        final int mappedSize = read.cigarElements().stream()
                 .filter(element -> element.getOperator() == CigarOperator.M)
                 .mapToInt(CigarElement::getLength)
                 .sum();
 
-        int indelCount = read.getCigar().getCigarElements().stream()
+        int indelCount = read.cigarElements().stream()
                 .filter(element -> element.getOperator() == CigarOperator.D || element.getOperator() == CigarOperator.I)
                 .mapToInt(CigarElement::getLength)
                 .sum();

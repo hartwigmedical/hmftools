@@ -128,6 +128,9 @@ public class Junction implements Comparable<Junction>
                 int position = Integer.parseInt(values[posIndex]);
                 byte orientation = Byte.parseByte(values[orientIndex]);
 
+                if(!specificRegions.includeChromosome(chromosome))
+                    continue;
+
                 if(!specificRegions.includePosition(chromosome, position))
                     continue;
 

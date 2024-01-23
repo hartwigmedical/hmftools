@@ -52,6 +52,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.esvee.SvConfig;
+import com.hartwig.hmftools.esvee.WriteType;
 import com.hartwig.hmftools.esvee.filters.FilterType;
 import com.hartwig.hmftools.esvee.old.VariantAssembly;
 import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
@@ -83,7 +84,7 @@ public class VcfWriter implements AutoCloseable
     {
         mConfig = config;
 
-        if(config.VcfFile != null && !config.VcfFile.isEmpty() && config.RefGenome instanceof RefGenomeSource)
+        if(config.WriteTypes.contains(WriteType.VCF) && config.VcfFile != null)
         {
             final RefGenomeSource refGenomeSource = (RefGenomeSource) config.RefGenome;
 
@@ -102,7 +103,6 @@ public class VcfWriter implements AutoCloseable
         {
             mWriter = null;
         }
-
     }
 
     private void writeHeader(final List<String> sampleNames)
