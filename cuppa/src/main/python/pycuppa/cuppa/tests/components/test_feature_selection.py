@@ -6,9 +6,6 @@ from cuppa.tests.mock_data import MockTrainingData
 
 class TestChi2FeatureSelector:
 
-    #from cuppa.components.test.test_feature_selection import TestChi2FeatureSelector
-    #self=TestChi2FeatureSelector
-
     X = pd.DataFrame([
         [10, 0, 0, 0],
         [10, 1, 0, 0],
@@ -61,7 +58,6 @@ class TestChi2FeatureSelector:
         X = MockTrainingData.X[make_column_selector(pattern="^event[.](?:driver|fusion|virus|trait)")]
         y = MockTrainingData.y
         selector = Chi2FeatureSelector(mode="fdr", threshold=0.001)
-        #self = selector
         selector.fit(X, y)
 
 

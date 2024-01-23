@@ -39,7 +39,7 @@ public class BamSampler
         mMaxReadCount = maxReadCount;
         mRefGenome = loadRefGenome(referenceGenome);
 
-        mSlicer = new BamSlicer(1);
+        mSlicer = new BamSlicer(0);
     }
 
     public int maxReadLength() { return mMaxReadLength; }

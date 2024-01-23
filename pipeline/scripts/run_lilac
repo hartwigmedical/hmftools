@@ -28,7 +28,7 @@ args="-sample ${tumor_id}"
 if [ "${reference_bam}" != "none" ]; then
   args="${args} -reference_bam ${reference_bam} -tumor_bam ${tumor_bam}"
 else
-  args="${args} -reference_bam ${tumor_bam}"
+  args="${args} -tumor_bam ${tumor_bam}"
 fi  
 
 args="${args} -ref_genome_version ${ref_genome_version} \

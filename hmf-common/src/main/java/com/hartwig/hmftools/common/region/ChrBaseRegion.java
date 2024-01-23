@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -176,6 +177,20 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
             return 0;
 
         return rank1 < rank2 ? -1 : 1;
+    }
+
+    public static List<ChrBaseRegion> loadChrBaseRegionList(final String filename)
+    {
+        Map<String,List<BaseRegion>> chrRegionMap = loadChrBaseRegions(filename);
+
+        List<ChrBaseRegion> regions = Lists.newArrayList();
+
+        for(Map.Entry<String,List<BaseRegion>> entry : chrRegionMap.entrySet())
+        {
+            entry.getValue().forEach(x -> regions.add(new ChrBaseRegion(entry.getKey(), x.start(), x.end())));
+        }
+
+        return regions;
     }
 
     public static Map<String,List<BaseRegion>> loadChrBaseRegions(final String filename)

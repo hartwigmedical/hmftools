@@ -5,14 +5,15 @@ import tempfile
 
 import pandas as pd
 
+from cuppa.tests.mock_data import MockTrainingData, MockCuppaClassifier, MockInputData, MockCvOutput
+from cuppa.classifier.cuppa_classifier import CuppaClassifier
+from cuppa.constants import DEFAULT_CUPPA_CLASSIFIER_PATH
 from cuppa.runners import PredictionRunner, TrainingRunner, RunnerArgParser
-from cuppa.constants import DEFAULT_FUSION_OVERRIDES_PATH, DEFAULT_CUPPA_CLASSIFIER_PATH
-from cuppa.tests.mock_data import MockTrainingData, MockTrainingOutput, MockInputData, MockCvOutput
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredSummary
 
 
 class TestRunnerArgParser:
-    def test_get_args_predict_are_valid(self):
+    def test_can_create_prediction_runner_from_required_command_line_args(self):
 
         sys.argv = [
             "example_module.py",
@@ -27,7 +28,7 @@ class TestRunnerArgParser:
         runner = PredictionRunner(**kwargs)
         assert True
 
-    def test_get_args_train_are_valid(self):
+    def test_can_create_training_runner_from_required_command_line_args(self):
         sys.argv = [
             "example_module.py",
             "--features_path=/path/to/features/",
@@ -44,7 +45,7 @@ class TestRunnerArgParser:
 
 class TestPredictionRunner:
 
-    def test_run_using_new_input_format_gives_correct_results_and_writes_output(self):
+    def test_predict_with_real_classifier_and_sample_gives_correct_results_and_writes_output(self):
 
         output_dir = os.path.join(tempfile.gettempdir(), "pycuppa_prediction_run_test")
         os.makedirs(output_dir, exist_ok=True)
@@ -73,44 +74,64 @@ class TestPredictionRunner:
 
         shutil.rmtree(output_dir)
 
-    def test_run_on_mock_data_gives_correct_results(self):
+    def test_fusion_override_alters_probabilities(self):
+
+        output_dir = os.path.join(tempfile.gettempdir(), "pycuppa_prediction_run_test")
+        os.makedirs(output_dir, exist_ok=True)
 
         runner = PredictionRunner(
-            features_path="/PLACEHOLDER",
-            output_dir="/PLACEHOLDER",
-            classifier_path=MockTrainingOutput.path_cuppa_classifier
+            features_path=MockInputData.path_tsv_new_format_prostate,
+            sample_id="TEST_SAMPLE",
+            classifier_path=DEFAULT_CUPPA_CLASSIFIER_PATH,
+            output_dir=output_dir,
+            using_old_features_format=False
         )
 
+        runner.run()
+
+    def test_predict_with_mock_classifier_and_data_gives_correct_results(self):
+
+        runner = PredictionRunner(
+            features_path="/PLACEHOLDER/PATH/",
+            output_dir="/PLACEHOLDER/PATH/",
+            classifier_path=MockCuppaClassifier.path_classifier,
+        )
+
+        ## Mock features is already in 'samples x features' matrix form and doesn't need to be parsed
+        ## Therefore manually assign features into runner to skip the parsing steps
         runner.X = MockTrainingData.X
+
         runner.get_predictions()
         runner.get_pred_summ()
 
         assert isinstance(runner.predictions, CuppaPrediction)
         assert isinstance(runner.pred_summ, CuppaPredSummary)
 
-        sample_prediction = runner.pred_summ.query("sample_id=='Pro_1' & clf_name=='combined'")
-        assert sample_prediction["pred_prob_1"].round(3).iloc[0] == 0.938
+        sample_prediction = runner.pred_summ.query("sample_id=='35_Prostate' & clf_name=='combined'")
+        assert sample_prediction["pred_prob_1"].round(3).iloc[0] == 0.944
         assert sample_prediction["pred_class_1"].iloc[0] == "Prostate"
 
-        sample_prediction = runner.pred_summ.query("sample_id=='Ski_2' & clf_name=='combined'")
-        assert sample_prediction["pred_prob_1"].round(3).iloc[0] == 0.990
-        assert sample_prediction["pred_class_1"].iloc[0] == "Skin: Other"
+        sample_prediction = runner.pred_summ.query("sample_id=='66_Lung' & clf_name=='rna_combined'")
+        assert sample_prediction["pred_prob_1"].round(3).iloc[0] == 0.857
+        assert sample_prediction["pred_class_1"].iloc[0] == "Lung"
 
 
 class TestTrainingRunner:
 
-    # from cuppa.test.test_runners import TestTrainingRunner
+    # from cuppa.tests.test_runners import TestTrainingRunner
     # self = TestTrainingRunner
 
-    runner = TrainingRunner(
-        features_path="PLACEHOLDER",
-        metadata_path="PLACEHOLDER",
-        output_dir="/Users/lnguyen/Hartwig/hartwigmedical/analysis/cup/pycuppa/output/runner_output/",
+    output_dir = os.path.join(tempfile.gettempdir(), "pycuppa_prediction_run_test")
+    os.makedirs(output_dir, exist_ok=True)
 
-        fusion_overrides_path=DEFAULT_FUSION_OVERRIDES_PATH,
+    runner = TrainingRunner(
+        features_path="/PLACEHOLDER/PATH/",
+        metadata_path="/PLACEHOLDER/PATH/",
+        output_dir=output_dir,
+
+        fusion_overrides_path=None,
         n_jobs=1,
         cache_training=False,
-        # log_to_file=True
     )
 
     runner.X = MockTrainingData.X
@@ -123,19 +144,27 @@ class TestTrainingRunner:
         self.runner.get_cv_pred_summ()
         self.runner.get_cv_performance()
 
-        def get_recall(perf):
-            return perf.set_index(["class","clf_name"])["recall"].round(4).dropna()
+        actual_performance = self.runner.cv_performance.copy()
+        expected_performance = MockCvOutput.performance.copy()
 
-        recall_comparison = pd.DataFrame(dict(
-            actual = get_recall(self.runner.cv_performance),
-            expected = get_recall(MockCvOutput.performance)
-        ))
-        recall_comparison = recall_comparison.round(3)
+        ## Align rows
+        actual_performance = actual_performance.set_index(["class", "clf_name"])
+        expected_performance = expected_performance.set_index(["class", "clf_name"])
 
-        assert all(recall_comparison["actual"] == recall_comparison["expected"])
+        comparison = pd.concat(
+            dict(actual=actual_performance, expected=expected_performance),
+            axis=1
+        )
+
+        ## Fill NAs with zero so that equal comparison works
+        comparison = comparison.fillna(0).round(3)
+
+        assert all(comparison[("actual","recall")] == comparison[("expected","recall")])
+        assert all(comparison[("actual","precision")] == comparison[("expected","precision")])
 
     def test_train_final_model_successful(self):
         self.runner.train_final_model()
+        assert isinstance(self.runner.cuppa_classifier, CuppaClassifier)
 
     def _run_individual_steps_on_real_data(self):
 
@@ -143,7 +172,7 @@ class TestTrainingRunner:
 
         runner = TrainingRunner(
             features_path=input_dir,
-            output_dir="/Users/lnguyen/Hartwig/hartwigmedical/analysis/cup/pycuppa/data/models/Hartwig_PCAWG/29-pre_prod/06-pip_env",
+            output_dir="/Users/lnguyen/Hartwig/hartwigmedical/analysis/cup/pycuppa/data/models/Hartwig_PCAWG/29-pre_prod/07-pip_env_2",
             metadata_path=os.path.join(input_dir, "cup_ref_sample_data.csv"),
             log_to_file=True,
             using_old_features_format=True,

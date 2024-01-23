@@ -34,7 +34,7 @@ else
 fi  
 
 if [ "${run_mode}" == "PANEL" ]; then
-  args="${args} -target_region ${target_region_normalisation} -pcf_gamma 15"
+  args="${args} -target_region ${target_region_normalisation} -pcf_gamma 50"
 fi
 
 args="${args} -ref_genome ${ref_genome} \

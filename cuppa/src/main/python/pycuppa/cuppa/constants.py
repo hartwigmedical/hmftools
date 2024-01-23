@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-import importlib_resources as impresources
+try:
+    from importlib import resources as impresources
+except ImportError:
+    ## Try `importlib_resources` backported for Python<3.7
+    import importlib_resources as impresources
 
 ## Classifier ================================
 class SUB_CLF_NAMES:

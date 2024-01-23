@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_PO
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
+import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.markdups.common.Constants.UNMAP_MIN_HIGH_DEPTH;
 
 import static org.junit.Assert.assertEquals;
@@ -23,10 +24,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.markdups.common.HighDepthRegion;
 import com.hartwig.hmftools.markdups.common.ReadUnmapper;
 import com.hartwig.hmftools.markdups.common.UnmapRegionState;
+import com.hartwig.hmftools.markdups.consensus.ConsensusReadInfo;
+import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 
 import org.junit.Test;
 
@@ -565,6 +569,38 @@ public class UnmapReadsTest
         assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
         assertTrue(checkTransformRead(read, CHR_2));
         assertTrue(read.getReadUnmappedFlag());
+    }
+
+    @Test
+    public void testUnmapReadsWithNonHumanContigMates()
+    {
+        String mtChr = "MT";
+
+        UnmapRegionState regionState = new UnmapRegionState(new ChrBaseRegion(
+                CHR_1, 1, 1000000), CHR_LOCATION_MAP.get(CHR_1));
+
+        SAMRecord read1 = SamRecordTestUtils.createSamRecord(
+                "READ_01", CHR_1, 1, READ_BASES, READ_CIGAR,
+                mtChr, 200, false, false, null);
+
+        READ_UNMAPPER.checkTransformRead(read1, regionState);
+        assertTrue(read1.getMateUnmappedFlag());
+
+        SAMRecord read2 = SamRecordTestUtils.createSamRecord(
+                "READ_02", CHR_1, 1, READ_BASES, READ_CIGAR,
+                mtChr, 200, false, false, null);
+
+        READ_UNMAPPER.checkTransformRead(read2, regionState);
+        assertTrue(read2.getMateUnmappedFlag());
+
+        MockRefGenome refGenome = new MockRefGenome();
+        refGenome.RefGenomeMap.put(CHR_1, REF_BASES);
+        ConsensusReads consensusReads = new ConsensusReads(refGenome);
+
+        ConsensusReadInfo consensusReadInfo = consensusReads.createConsensusRead(
+                List.of(read1, read2), null, null, null);
+
+        assertFalse(consensusReadInfo.ConsensusRead.getReadPairedFlag());
     }
 
     private boolean checkTransformRead(final SAMRecord read, final String chromosome)

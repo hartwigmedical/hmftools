@@ -1,6 +1,6 @@
 import pandas as pd
 from cuppa.components.calibration import RollingAvgCalibration
-from cuppa.tests.mock_data import MockProbsPreCal
+from cuppa.tests.mock_data import MockCvOutput, MockTrainingData
 
 
 class TestKernel:
@@ -24,32 +24,34 @@ class TestKernel:
 
 class TestRollingAvgCalibration:
 
-    def test_one_cal_variable_gaussian_kernel(self):
-        x = MockProbsPreCal.X["Lung: Small cell"]
-        y = MockProbsPreCal.y == "Lung: Small cell"
+    def test_one_class_calibration_gives_expected_results(self):
+        probs = MockCvOutput.probs_per_clf["gen_pos"]["Lung"]
+        y = MockTrainingData.y=="Lung"
 
         transformer = RollingAvgCalibration()
         calibrator = transformer._fit_one_calibrator(
-            x, y,
+            probs, y,
             window_size="variable", n_true_exponent=0.7, edge_weight=0.16, kernel="gaussian"
         )
 
-        assert calibrator.transform([0.3]).round(3) == 0.841
+        probs_new = [0.1, 0.2, 0.3, 0.4]
+        probs_new_cal = calibrator.transform(probs_new).round(3).tolist()
+        assert probs_new_cal == [0.0, 0.348, 0.765, 0.918]
 
-    def test_all_cal_variable_gaussian_kernel(self):
-        X = MockProbsPreCal.X
-        y = MockProbsPreCal.y
+    def test_multi_class_calibration_gives_expected_results(self):
+        probs = MockCvOutput.probs_per_clf["gen_pos"]
+        y = MockTrainingData.y
 
         transformer = RollingAvgCalibration(window_size="variable", n_true_exponent=0.7, edge_weight=0.16, kernel="gaussian")
-        transformer.fit(X, y)
+        transformer.fit(probs, y)
 
-        X_new = pd.DataFrame(
-            [[0.05, 0.30, 0.65]],
-            columns=X.columns
+        probs_new = pd.DataFrame(
+            [[0.05, 0.30, 0.65, 0, 0]],
+            columns=probs.columns
         )
 
-        X_new_trans = transformer.predict_proba(X_new, normalize=False).round(3)
-        assert X_new_trans.loc[0, "Lung: Small cell"] == 0.841
+        probs_new_cal = transformer\
+            .predict_proba(probs_new, normalize=False).round(3) \
+            .iloc[0].values.tolist()
 
-        X_new_trans = transformer.predict_proba(X_new, normalize=True).round(3)
-        assert X_new_trans.loc[0, "Lung: Small cell"] == 0.297
+        assert probs_new_cal == [0.0, 0.345, 1.0, 0.0, 0.0]

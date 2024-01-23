@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_READ_MAX_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.buildFromJunctionReads;
 
 import java.util.Collections;
@@ -35,7 +36,7 @@ public class AssemblyMismatchSplitter
 
         for(AssemblySupport support : mSequence.support())
         {
-            if(support.mismatches() == 0)
+            if(support.junctionMismatches() == 0)
             {
                 noMismatchReads.add(support.read());
             }
@@ -122,7 +123,7 @@ public class AssemblyMismatchSplitter
         }
 
         // add the 'initial' sequence from reads without mismatches
-        int permittedMismatches = 1; // CHECK
+        int permittedMismatches = PRIMARY_ASSEMBLY_READ_MAX_BASE_MISMATCH; // CHECK
 
         Set<Read> processedReads = Sets.newHashSet();
         JunctionAssembly initialSequence = buildFromJunctionReads(mSequence.initialJunction(), noMismatchReads, false);

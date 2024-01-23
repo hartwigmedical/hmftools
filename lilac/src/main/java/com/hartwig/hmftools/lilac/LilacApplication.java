@@ -206,7 +206,7 @@ public class LilacApplication
         {
             if(mConfig.tumorOnly())
                 mTumorBamReader = mRefBamReader;
-            else
+            else if(!mConfig.TumorBam.isEmpty())
                 mTumorBamReader = new BamRecordReader(mConfig.TumorBam, mConfig.RefGenome, mRefData.HlaTranscriptData, mNucleotideFragFactory);
         }
 

@@ -354,6 +354,9 @@ class FeatureLoaderNew(LoggerMixin):
         ]
         df = df.transpose()
 
+        ## Make dummy sample ids
+        df.index = "sample_" + pd.Series(range(1, len(df)+1)).astype(str)
+
         return CuppaFeatures(df)
 
 

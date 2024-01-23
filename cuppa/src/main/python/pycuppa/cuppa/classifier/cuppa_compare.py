@@ -118,7 +118,7 @@ class CuppaCompare(LoggerMixin):
         return df
 
     @cached_property
-    def prediction_comparison(self) -> pd.DataFrame:
+    def _prediction_comparison(self) -> pd.DataFrame:
 
         new = self.pred_summ_new.copy()
         old = self.pred_summ_old.copy()
@@ -178,19 +178,7 @@ class CuppaCompare(LoggerMixin):
         return comparison
 
     @cached_property
-    def correct_type_stats(self) -> pd.DataFrame:
-        comparison = self.prediction_comparison
-
-        stats = comparison["info"]\
-            .groupby("clf_name")\
-            ["correct_type"]\
-            .value_counts(dropna=False)\
-            .reset_index()
-
-        return stats
-
-    @cached_property
-    def performance_comparison(self) -> pd.DataFrame:
+    def _performance_comparison(self) -> pd.DataFrame:
         new = self.pred_summ_new.performance()
         old = self.pred_summ_old.performance()
 
@@ -212,6 +200,23 @@ class CuppaCompare(LoggerMixin):
         comparison = self._move_index_to_columns(comparison)
 
         return comparison
+
+    def compare_predictions(self):
+        return self._prediction_comparison
+
+    def compare_performance(self):
+        return self._performance_comparison
+
+    def compare_n_correct(self) -> pd.DataFrame:
+        comparison = self._prediction_comparison
+
+        stats = comparison["info"]\
+            .groupby("clf_name")\
+            ["correct_type"]\
+            .value_counts(dropna=False)\
+            .reset_index()
+
+        return stats
 
 
 

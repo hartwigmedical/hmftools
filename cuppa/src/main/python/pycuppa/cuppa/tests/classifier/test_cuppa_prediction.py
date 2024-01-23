@@ -1,113 +1,136 @@
 import pandas as pd
+import numpy as np
 from cuppa.classifier.cuppa_prediction import CuppaPredictionBuilder, CuppaPrediction, CuppaPredSummaryBuilder, CuppaPredSummary
-from cuppa.tests.mock_data import MockCvOutput, MockTrainingOutput, MockTrainingData
+from cuppa.tests.mock_data import MockCvOutput, MockCuppaClassifier, MockTrainingData
 
 
 class TestCuppaPredictionBuilder:
-    #from cuppa.classifier.test.test_cuppa_prediction import TestCuppaPredictionBuilder
-    #self=TestCuppaPredictionBuilder
 
-    cuppa_classifier = MockTrainingOutput.cuppa_classifier
-    X = MockTrainingData.X
-    cuppa_classifier.cv_performance = MockCvOutput.performance
+    def test_can_build_predictions_from_cuppa_classifier_and_features(self):
 
-    builder = CuppaPredictionBuilder(cuppa_classifier=cuppa_classifier, X=X)
+        builder = CuppaPredictionBuilder(
+            cuppa_classifier=MockCuppaClassifier.cuppa_classifier,
+            X=MockTrainingData.X
+        )
+        predictions = builder.build()
 
-    def test_probs_builder_equals_probs_predict(self):
-        probs_predict = self.cuppa_classifier.predict_proba(self.X)
-        probs_builder = self.builder.probs
+        cancer_types = np.unique(MockTrainingData.y).tolist()
+        assert predictions.columns.sort_values().tolist() == cancer_types
 
-        assert probs_predict.iloc[0,].round(5).equals( probs_builder.iloc[0,].round(5) )
+        assert list(predictions.index.names) == ['sample_id', 'data_type', 'clf_group', 'clf_name', 'feat_name', 'feat_value']
+        assert isinstance(predictions, CuppaPrediction)
 
-    def test_feat_contrib_and_values_alignment(self):
-        contribs = self.builder.feat_contribs
+    def test_probs_from_builder_equals_probs_from_predict(self):
 
-        sel_feature = "event.tmb.snv_count"
+        cuppa_classifier = MockCuppaClassifier.cuppa_classifier
+        X = MockTrainingData.X
+        builder = CuppaPredictionBuilder(cuppa_classifier=cuppa_classifier, X=X)
 
-        ## Feat value alignment
-        feature_contribs = contribs[contribs.index.get_level_values("feat_name") == sel_feature]
+        probs_from_builder = builder.probs.round(3).fillna(0)
+        probs_from_predict = cuppa_classifier.predict_proba(X).round(3).fillna(0)
 
-        feature_values = feature_contribs.loc[self.X.index].index.get_level_values("feat_value")
-        feature_values = pd.Series(feature_values).astype(int)
+        assert np.all(probs_from_predict.values == probs_from_builder.values)
 
-        feature_values_X = self.X[sel_feature]
+    def test_corresponding_feature_contrib_and_value_are_on_the_same_row(self):
+        cuppa_classifier = MockCuppaClassifier.cuppa_classifier
+        X = MockTrainingData.X
+        builder = CuppaPredictionBuilder(cuppa_classifier=cuppa_classifier, X=X)
 
-        assert all(feature_values.values == feature_values_X.values)
+        contribs = builder.feat_contribs
+
+        target_feature = "event.tmb.snv_count"
+        target_feature_contribs = contribs[contribs.index.get_level_values("feat_name") == target_feature]
+        target_feature_values = target_feature_contribs.loc[X.index].index.get_level_values("feat_value")
+        target_feature_values = pd.Series(target_feature_values).astype(int)
+
+        target_feature_values_in_X = X[target_feature]
+
+        assert all(target_feature_values.values == target_feature_values_in_X.values)
 
 
 class TestCuppaPrediction:
-    #from cuppa.classifier.test.test_cuppa_prediction import TestCuppaPrediction
-    #self = TestCuppaPrediction
 
-    def test_load_from_tsv(self):
+    def test_can_load_from_tsv(self):
         predictions = CuppaPrediction.from_tsv(MockCvOutput.path_predictions)
         assert True
 
-    def test_add_cv_performance_yields_the_same_columns(self):
+    def test_that_adding_cv_performance_does_not_create_unwanted_columns(self):
         predictions = MockCvOutput.predictions
-        #self=predictions
-        perf = MockCvOutput.performance
+        performance = MockCvOutput.performance
 
-        predictions_with_perf = predictions.add_cv_performance(perf)
+        predictions_with_perf = predictions.add_cv_performance(performance)
 
         assert all(predictions.columns == predictions_with_perf.columns)
 
-    def test_wide_to_long_successful(self):
-        predictions = MockCvOutput.predictions_for_vis
-        predictions.get_samples(1).wide_to_long() #.to_csv("/Users/lnguyen/Desktop/predictions.long.tsv", sep='\t', index=False)
+    def test_can_cast_from_wide_to_long_dataframe(self):
+        predictions_wide = MockCvOutput.predictions
+        predictions_long = predictions_wide.get_samples(1).wide_to_long()
         assert True
 
 
 class TestCuppaPredSummaryBuilder:
-    #from cuppa.classifier.test.test_cuppa_prediction import TestCuppaPredSummaryBuilder
+
+    #from cuppa.tests.classifier.test_cuppa_prediction import TestCuppaPredSummaryBuilder
     #self = TestCuppaPredSummaryBuilder
 
-    predictions = CuppaPrediction.from_tsv(MockCvOutput.path_predictions)
-    actual_classes = MockTrainingData.y
-    builder = CuppaPredSummaryBuilder(predictions=predictions, actual_classes=actual_classes)
+    dummy_predictions = pd.DataFrame.from_records([
+        (0, np.nan),
+        (0, 0),
+        (0, 0),
+    ])
 
-    def test_alignment_of_top_features_and_top_feat_values(self):
-        row = 2
-        column = 2
+    dummy_predictions.columns = ["cancer_type_1", "cancer_type_2"]
+    dummy_predictions.index = pd.MultiIndex.from_tuples(
+        [
+            ("sample_1", "prob", "dna", "dna_combined", np.nan, 0),
+            ("sample_1", "feat_contrib", "dna", "event", "event.tmb.snv_count", 0),
+            ("sample_1", "sig_quantile", np.nan, np.nan, "SBS7", 0),
+        ],
+        names=["sample_id", "data_type", "clf_group", "clf_name", "feat_name", "feat_value"]
+    )
 
-        ##
-        top_features = self.builder.top_features
-        target_feat_name = top_features.iloc[row, column]
-        target_sample_id = top_features.index.get_level_values("sample_id")[row]
-        target_pred_class = top_features.index.get_level_values("pred_class")[column]
+    dummy_predictions = CuppaPrediction(dummy_predictions)
 
-        ## Get expected feature value
-        predictions_index = self.predictions.index.to_frame(index=False)
-        expected_feat_value = predictions_index.loc[
-            (predictions_index["sample_id"] == target_sample_id) &
-            (predictions_index["feat_name"] == target_feat_name),
+    def test_can_build_from_dummy_predictions(self):
 
-            "feat_value"
-        ]
-
-        ## Get position of target feature
-        top_features = self.builder.top_features
-        top_features_row = top_features.loc[(target_sample_id, target_pred_class)]
-
-        ## Get target feat value
-        top_feat_values = self.builder.top_feat_values
-        top_feat_values_row = top_feat_values.loc[(target_sample_id, target_pred_class)]
-        target_feat_value = top_feat_values_row[top_features_row == target_feat_name]
-
-        assert expected_feat_value.values[0] == target_feat_value.values[0]
-
-
-    def test_build_without_feat_info_or_actual_class(self):
-
-        predictions = self.predictions
-        predictions = predictions[predictions.index.get_level_values("data_type")=="prob"]
-
-        builder = CuppaPredSummaryBuilder(predictions=predictions, actual_classes=None)
+        builder = CuppaPredSummaryBuilder(predictions=self.dummy_predictions)
         pred_summ = builder.build()
 
-        assert True
+        expected_columns = pd.Series(["sample_id", "clf_name", "pred_class_1", "pred_prob_1"])
+        assert expected_columns.isin(pred_summ.columns).all()
+        assert isinstance(pred_summ, CuppaPredSummary)
 
-    def _test_build_from_real_data(self):
+    def test_can_build_from_dummy_predictions_with_actual_classes_provided(self):
+
+        dummy_actual_classes = pd.Series(["cancer_type_1"], index=["sample_1"])
+
+        builder = CuppaPredSummaryBuilder(predictions=self.dummy_predictions, actual_classes=dummy_actual_classes)
+        pred_summ = builder.build()
+
+        expected_additional_columns = pd.Series(["actual_class", "is_correct_pred", "which_correct_pred"])
+        assert expected_additional_columns.isin(pred_summ.columns).all()
+
+
+    def test_top_feature_names_and_top_feature_values_dataframes_have_correct_corresponding_values(self):
+        predictions = CuppaPrediction.from_tsv(MockCvOutput.path_predictions)
+        actual_classes = MockTrainingData.y
+
+        ## Build
+        builder = CuppaPredSummaryBuilder(predictions=predictions, actual_classes=actual_classes)
+
+        ## Get expected feature values
+        target_sample_id = "1_Breast"
+        target_pred_class = "Breast"
+        target_feat_names = builder.top_features.loc[(target_sample_id, target_pred_class)].values
+
+        expected_feat_values = MockTrainingData.X.loc[target_sample_id, target_feat_names]
+
+        ## Get feature values in pred summary
+        actual_feat_values = builder.top_feat_values.loc[(target_sample_id, target_pred_class)]
+
+        assert np.all(expected_feat_values.values == actual_feat_values.values)
+
+    def _test_can_build_from_real_data(self):
         predictions = CuppaPrediction.from_tsv("/Users/lnguyen/Hartwig/hartwigmedical/analysis/cup/pycuppa/data/models/Hartwig_PCAWG/29-pre_prod/06-pip_env/cv/report/predictions.tsv.gz")
 
         metadata = pd.read_csv("/Users/lnguyen/Hartwig/hartwigmedical/analysis/cup/pycuppa/data/features/Hartwig_PCAWG/017/06-NET_as_prefix/tables/cup_ref_sample_data.csv")
@@ -120,11 +143,11 @@ class TestCuppaPredSummaryBuilder:
 
 class TestCuppaPredSummary:
 
-    def test_init_from_predictions(self):
+    def test_can_initialize_from_predictions(self):
         predictions = CuppaPrediction.from_tsv(MockCvOutput.path_predictions)
         pred_summ = predictions.summarize()
         assert True
 
-    def test_load_from_tsv(self):
+    def test_can_load_from_tsv(self):
         pred_summ = CuppaPredSummary.from_tsv(MockCvOutput.path_pred_summ)
         assert True

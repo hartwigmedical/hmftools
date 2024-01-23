@@ -29,7 +29,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
-import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
 import com.hartwig.hmftools.orange.algo.purple.DriverInterpretation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
@@ -168,14 +167,14 @@ public class FrontPageChapter implements ReportChapter
     }
 
     @NotNull
-    private static String cuppaCancerType(@Nullable CuppaData cuppa)
+    private static String cuppaCancerType(@Nullable CuppaData cuppaData)
     {
-        if(cuppa == null)
+        if(cuppaData == null)
         {
             return ReportResources.NOT_AVAILABLE;
         }
 
-        CuppaPrediction best = CuppaInterpretation.best(cuppa);
+        CuppaPrediction best = cuppaData.bestPrediction();
         return best.cancerType() + " (" + formatPercentage(best.likelihood()) + ")";
     }
 

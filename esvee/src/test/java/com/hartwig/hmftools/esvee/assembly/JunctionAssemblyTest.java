@@ -70,11 +70,11 @@ public class JunctionAssemblyTest
 
         allSequences.forEach(x -> x.expandReferenceBases());
 
-        // for now support count is duplicate across reads for ref bases and post-junction bases
-        assertEquals(4, allSequences.get(0).supportCount());
-        assertEquals(1, allSequences.get(0).mismatches().positionCount());
-        assertEquals(8, allSequences.get(1).supportCount());
-        assertEquals(2, allSequences.get(1).mismatches().positionCount());
+        // for now support count is duplicated across reads for ref bases and post-junction bases
+        assertEquals(2, allSequences.get(0).supportCount());
+        assertEquals(0, allSequences.get(0).mismatches().positionCount());
+        assertEquals(4, allSequences.get(1).supportCount());
+        assertEquals(0, allSequences.get(1).mismatches().positionCount());
 
     }
 }

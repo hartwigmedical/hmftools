@@ -102,6 +102,10 @@
   },
   "peach": [],
   "cuppa": {
+    "bestPrediction": {
+      "cancerType": "cancer",
+      "likelihood": 0
+    },
     "predictions": [
     ],
     "simpleDups32To200B": 0,

@@ -13,6 +13,8 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTI
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegionList;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegions;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.samtools.BamUtils.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
@@ -22,8 +24,11 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
 
+import java.util.List;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -95,7 +100,15 @@ public class SliceConfig
 
         SpecificChrRegions = new SpecificRegions();
 
-        mIsValid &= loadSpecificRegionsConfig(configBuilder, SpecificChrRegions.Chromosomes, SpecificChrRegions.Regions);
+        if(configBuilder.hasValue(REGIONS_FILE))
+        {
+            List<ChrBaseRegion> regions = loadChrBaseRegionList(configBuilder.getValue(REGIONS_FILE));
+            regions.forEach(x -> SpecificChrRegions.addRegion(x));
+        }
+        else
+        {
+            mIsValid &= loadSpecificRegionsConfig(configBuilder, SpecificChrRegions.Chromosomes, SpecificChrRegions.Regions);
+        }
 
         if(SpecificChrRegions.Regions.isEmpty())
         {
@@ -130,7 +143,7 @@ public class SliceConfig
 
         configBuilder.addPath(
                 REGIONS_FILE, false,
-                "TSV or BED file with regions to analyse, expected columns Chromosome,PositionStart,PositionEnd or no headers");
+                "TSV or BED file with regions to slice, expected columns Chromosome,PositionStart,PositionEnd or no headers");
 
         addRefGenomeFile(configBuilder, true);;
         configBuilder.addConfigItem(OUTPUT_PREFIX, "File prefix for BAM and read TSV");
