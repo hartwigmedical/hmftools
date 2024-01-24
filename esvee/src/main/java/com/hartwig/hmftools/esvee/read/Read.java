@@ -169,18 +169,18 @@ public class Read
     public int getReadIndexAtReferencePosition(final int refPosition, boolean allowExtrapolation)
     {
         // finds the read index given a reference position, and extrapolates outwards from alignments as required
-        if(refPosition < mAlignmentStart)
+        if(refPosition <= mAlignmentStart)
         {
-            if(!allowExtrapolation)
+            if(!allowExtrapolation && refPosition < mAlignmentStart)
                 return INVALID_INDEX;
 
             int baseDiff = mAlignmentStart - refPosition;
             int softClipBases = mAlignmentStart - mUnclippedStart;
             return baseDiff <= softClipBases ? softClipBases - baseDiff : INVALID_INDEX;
         }
-        else if(refPosition > mAlignmentEnd)
+        else if(refPosition >= mAlignmentEnd)
         {
-            if(!allowExtrapolation)
+            if(!allowExtrapolation && refPosition > mAlignmentEnd)
                 return INVALID_INDEX;
 
             int baseDiff = refPosition - mAlignmentEnd;

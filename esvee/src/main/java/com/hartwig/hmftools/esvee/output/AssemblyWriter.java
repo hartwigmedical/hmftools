@@ -102,21 +102,7 @@ public class AssemblyWriter
             sj.add(String.valueOf(softClipBaseMismatches));
             sj.add(String.valueOf(refBaseMismatches));
 
-            int posStart;
-            int posEnd;
-
-            if(assembly.initialJunction().isForward())
-            {
-                posStart = max(assembly.initialJunction().Position - 5, assembly.minAlignedPosition());
-                posEnd = assembly.maxAlignedPosition();
-            }
-            else
-            {
-                posStart = assembly.minAlignedPosition();
-                posEnd = min(assembly.initialJunction().Position + 5, assembly.maxAlignedPosition());
-            }
-
-            sj.add(assembly.formSequence(posStart, posEnd));
+            sj.add(assembly.formSequence(5));
 
             mWriter.write(sj.toString());
             mWriter.newLine();

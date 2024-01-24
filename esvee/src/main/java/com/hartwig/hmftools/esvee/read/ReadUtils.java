@@ -50,16 +50,10 @@ public final class ReadUtils
         return qualitySum / length;
     }
 
+    @Deprecated
     public static int getReadPositionAtReferencePosition(final Read read, final int position)
     {
         // CHECK: is this the same implementation as below? obviously needs to adjust for any changes to cigar
-        return read.bamRecord().getReadPositionAtReferencePosition(position);
-    }
-
-    public static int getReadIndexAtReferencePosition(final Read read, final int position)
-    {
-        // finds the read index given a reference position, and extrapolates outwards from alignments as required
-
         return read.bamRecord().getReadPositionAtReferencePosition(position);
     }
 

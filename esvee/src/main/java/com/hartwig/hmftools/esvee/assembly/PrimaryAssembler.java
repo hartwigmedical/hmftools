@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MERGE_READ_SUPPORT_OVERLAP;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_READS;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_READ_MAX_BASE_MISMATCH;
@@ -112,6 +113,7 @@ public class PrimaryAssembler
         }
 
         // dedup assemblies for this junction based on overlapping read support
+        AssemblyDeduper.dedupJunctionAssemblies(initialAssemblies);
 
 
 
@@ -144,5 +146,9 @@ public class PrimaryAssembler
 
         return junctionSequences;
     }
+
+
+
+
 
 }

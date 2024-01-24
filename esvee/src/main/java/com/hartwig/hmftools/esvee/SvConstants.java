@@ -32,6 +32,8 @@ public final class SvConstants
 
     public static final int PRIMARY_ASSEMBLY_READ_MAX_BASE_MISMATCH = 1;
 
+    public static final int PRIMARY_ASSEMBLY_MERGE_READ_SUPPORT_OVERLAP = 2;
+
     // common
     public static int AVG_BASE_QUAL_THRESHOLD = 30; // original name: averageQualityThreshold
     public static int LOW_BASE_QUAL_THRESHOLD = 26; // original name: lowQualBaseThreshold
