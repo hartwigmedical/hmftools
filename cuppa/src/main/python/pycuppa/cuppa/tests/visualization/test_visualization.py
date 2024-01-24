@@ -5,17 +5,37 @@ from subprocess import CalledProcessError
 import pandas as pd
 import pytest
 
-from cuppa.tests.mock_data import MockCvOutput
+from cuppa.tests.mock_data import MockCvOutput, MockVisData
 from cuppa.visualization.visualization import CuppaVisDataBuilder, CuppaVisPlotter, CuppaVisData
 
 
-class TestCuppaVisDataBuilder:
-    def can_build_from_mock_predictions(self):
-        pass
-        ## TODO: build fails due to missing feature types (i.e. trait). Need to update test feature matrix to not exclude these features
-        # builder = CuppaVisDataBuilder(MockCvOutput.predictions, sample_id=1)
-        # vis_data = builder.build()
-        # assert isinstance(vis_data, CuppaVisData)
+class TestCuppaVisData:
+
+    EXPECTED_COLUMNS = pd.Series((
+        "sample_id", "data_type",
+        "clf_group", "clf_name",
+        "feat_name", "feat_value",
+        "cancer_type", "data_value",
+        "rank", "rank_group"
+    ))
+
+    def test_can_build_from_mock_predictions(self):
+
+        builder = CuppaVisDataBuilder(
+            predictions=MockCvOutput.predictions,
+            sample_id=1,
+            require_all_feat_types=False ## Mock data is missing 'trait' and 'virus' features
+        )
+        vis_data = builder.build()
+
+        assert self.EXPECTED_COLUMNS.isin(vis_data.columns).all()
+        assert isinstance(vis_data, CuppaVisData)
+
+    def test_can_load_from_tsv(self):
+        vis_data = CuppaVisData.from_tsv(MockVisData.path_vis_data)
+
+        assert self.EXPECTED_COLUMNS.isin(vis_data.columns).all()
+        assert isinstance(vis_data, CuppaVisData)
 
 
 class TestCuppaVisPlotter:
@@ -27,7 +47,7 @@ class TestCuppaVisPlotter:
 
         plotter = CuppaVisPlotter(
             vis_data=dummy_vis_data,
-            plot_path="/cuppa_vis.png"
+            plot_path="/dummy_path.pdf"
         )
 
         with pytest.raises(CalledProcessError):
@@ -36,12 +56,12 @@ class TestCuppaVisPlotter:
     def test_can_plot_one_sample(self):
         plot_path = os.path.join(tempfile.gettempdir(), "cuppa_vis.png")
 
-        builder = CuppaVisDataBuilder(MockCvOutput.predictions_for_vis, sample_id=1)
+        builder = CuppaVisDataBuilder(MockVisData.predictions, sample_id=1)
         vis_data = builder.build()
 
         plotter = CuppaVisPlotter(
             vis_data=vis_data,
-            plot_path=plot_path
+            plot_path=plot_path,
         )
         plotter.plot()
 
