@@ -442,7 +442,6 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
     def plot(
         self,
         plot_path: str,
-        vis_data_path: Optional[str] = None,
         sample_id: Optional[str | int] = None,
         verbose: bool = True
     ) -> None:
@@ -454,7 +453,6 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
         plotter = CuppaVisPlotter(
             vis_data = vis_data,
             plot_path = plot_path,
-            vis_data_path= vis_data_path,
             verbose = verbose
         )
         plotter.plot()

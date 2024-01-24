@@ -602,9 +602,8 @@ class PredictionRunner(LoggerMixin):
         self.pred_summ.to_tsv(self.pred_summ_path, verbose=True)
         self.vis_data.to_tsv(self.vis_data_path, verbose=True)
 
-        if self.X.shape[0] > 1:
-            self.logger.warning("Cannot plot visualization when predicting on multiple samples")
-            return None
-
-        plotter = CuppaVisPlotter(vis_data=self.vis_data, plot_path=self.plot_path, vis_data_path=self.vis_data_path)
-        plotter.plot()
+        CuppaVisPlotter.plot_from_tsv(
+            vis_data_path=self.vis_data_path,
+            plot_path=self.plot_path,
+            verbose=True
+        )

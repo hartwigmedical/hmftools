@@ -118,8 +118,8 @@ class CuppaVisDataBuilder(LoggerMixin):
             self.logger.debug("Getting top event features")
 
         wide = self.predictions.__class__.concat([
-            self._subset_feat_contrib_by_feat_pattern("trait"),
             self._subset_feat_contrib_by_feat_pattern("tmb"),
+            self._subset_feat_contrib_by_feat_pattern("trait"),
 
             self._get_existing_fusions(),
             self._get_existing_viruses(),
@@ -152,6 +152,7 @@ class CuppaVisDataBuilder(LoggerMixin):
             self.logger.debug("Getting cross-validation performance")
 
         required_metrics = ["n_total", "recall", "precision"]
+        cancer_type_order = self.predictions.class_metadata.index
 
         wide = self.predictions.get_data_types("cv_performance")
         wide = wide[
@@ -159,10 +160,11 @@ class CuppaVisDataBuilder(LoggerMixin):
             (wide.index.get_level_values("clf_name") == clf_name)
         ]
 
-        ## Force metric order
+        ## Force metric and cancer type order
         long = wide.wide_to_long()
         long["feat_name"] = pd.Categorical(long["feat_name"], required_metrics)
-        long = long.sort_values("feat_name")
+        long["cancer_type"] = pd.Categorical(long["cancer_type"], cancer_type_order)
+        long = long.sort_values(["feat_name","cancer_type"])
 
         ## Rename
         long["feat_name"] = long["feat_name"].replace(dict(n_total="n_samples"))
@@ -247,54 +249,42 @@ class CuppaVisData(pd.DataFrame, LoggerMixin):
 
 
 class CuppaVisPlotter(LoggerMixin):
-    def __init__(
-        self,
-        vis_data: CuppaVisData,
-        plot_path: str,
-        vis_data_path: Optional[str] = None,
-        verbose: bool = True
-    ):
+    def __init__(self, vis_data: CuppaVisData, plot_path: str, verbose: bool = True):
         self.vis_data = vis_data
+        self._check_vis_data_has_one_sample()
+
         self.plot_path = os.path.expanduser(plot_path)
-        self._check_plot_path()
+        self._check_plot_path_extension()
 
         self.verbose = verbose
 
-        if vis_data_path is None:
-            self._using_tmp_vis_data_path = True
-            self.vis_data_path = self._get_tmp_vis_data_path()
-        else:
-            self.vis_data_path = vis_data_path
-            self._using_tmp_vis_data_path = False
+    def _check_vis_data_has_one_sample(self):
+        sample_ids = self.vis_data["sample_id"].dropna().unique()
+        if len(sample_ids) > 1:
+            self.logger.error("Cannot plot visualization when `vis_data` contains multiple samples")
+            raise Exception
 
-    def _check_plot_path(self) -> None:
-
+    def _check_plot_path_extension(self):
         if not self.plot_path.endswith((".pdf", ".png", ".jpg")):
             self.logger.error("`plot_path` must end with .pdf, .png, or .jpg")
             raise ValueError
 
-    def _get_tmp_vis_data_path(self) -> str:
-        ## If no prediction_path is specified, write to tmp location so that it can be passed to R
-        vis_data_path = os.path.join(tempfile.gettempdir(), "vis_data.tsv")
+    @property
+    def tmp_vis_data_path(self):
+        return os.path.join(os.path.dirname(self.plot_path), "cuppa.vis_data.tmp.tsv")
 
+    def write_tmp_vis_data(self):
         if self.verbose:
-            self.logger.info("`vis_data_path` not specified. Using temporary path: " + vis_data_path)
+            self.logger.debug("Writing vis data to temporary path: " + self.tmp_vis_data_path)
+        self.vis_data.to_tsv(self.tmp_vis_data_path)
 
-        if os.path.exists(vis_data_path):
-            self.logger.info("Removing existing temporary `vis_data_path`: " + vis_data_path)
-            os.remove(vis_data_path)
-
-        return vis_data_path
-
-    def remove_tmp_vis_data(self) -> None:
-        if not self._using_tmp_vis_data_path:
-            return None
-
+    def remove_tmp_vis_data(self):
         if self.verbose:
-            self.logger.info("Removing temporary vis data")
+            self.logger.debug("Removing temporary vis data at: " + self.tmp_vis_data_path)
+        os.remove(self.tmp_vis_data_path)
 
-    def run_r_script(self) -> None:
-        command = f"Rscript --vanilla {RSCRIPT_PLOT_PREDICTIONS_PATH} {self.vis_data_path} {self.plot_path}"
+    def plot_in_r(self, vis_data_path: str, plot_path: str) -> None:
+        command = f"Rscript --vanilla {RSCRIPT_PLOT_PREDICTIONS_PATH} {vis_data_path} {plot_path}"
 
         if self.verbose:
             self.logger.info("Running shell command: '%s'" % command)
@@ -309,10 +299,18 @@ class CuppaVisPlotter(LoggerMixin):
             raise CalledProcessError(return_code, command)
 
     def plot(self) -> None:
-        if not os.path.exists(self.vis_data_path):
-            self.vis_data.to_tsv(self.vis_data_path)
-        else:
-            self.logger.info("Using existing vis_data file at: " + self.vis_data_path)
+        self.write_tmp_vis_data()
 
-        self.run_r_script()
-        self.remove_tmp_vis_data()
+        try:
+            self.plot_in_r(vis_data_path=self.tmp_vis_data_path, plot_path=self.plot_path)
+            self.remove_tmp_vis_data()
+        except CalledProcessError:
+            self.remove_tmp_vis_data()
+
+    @classmethod
+    def plot_from_tsv(cls, vis_data_path: str, plot_path: str, verbose: bool = True):
+        ## This utility method exists to avoid writing a temporary vis data file if a vis data file already exists
+        vis_data = CuppaVisData.from_tsv(vis_data_path)
+        plotter = cls(vis_data=vis_data, plot_path=plot_path, verbose=verbose)
+        plotter.plot()
+
