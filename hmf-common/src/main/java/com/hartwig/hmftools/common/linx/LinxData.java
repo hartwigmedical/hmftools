@@ -56,4 +56,10 @@ public interface LinxData
 
     @NotNull
     Map<Integer, Integer> svIdToClusterId();
+
+    @NotNull
+    Map<Integer, Integer> clusterIdToLinkCount();
+
+    @NotNull
+    Map<Integer, Integer> clusterIdToExonCount();
 }
