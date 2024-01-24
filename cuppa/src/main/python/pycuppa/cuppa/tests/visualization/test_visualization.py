@@ -1,4 +1,5 @@
 import os
+import tempfile
 from subprocess import CalledProcessError
 
 import pandas as pd
@@ -8,43 +9,41 @@ from cuppa.tests.mock_data import MockCvOutput
 from cuppa.visualization.visualization import CuppaVisDataBuilder, CuppaVisPlotter, CuppaVisData
 
 
+class TestCuppaVisDataBuilder:
+    def can_build_from_mock_predictions(self):
+        pass
+        ## TODO: build fails due to missing feature types (i.e. trait). Need to update test feature matrix to not exclude these features
+        # builder = CuppaVisDataBuilder(MockCvOutput.predictions, sample_id=1)
+        # vis_data = builder.build()
+        # assert isinstance(vis_data, CuppaVisData)
+
+
 class TestCuppaVisPlotter:
 
     def test_r_script_error(self):
+
+        dummy_vis_data = pd.DataFrame(dict(sample_id="test_sample"), index=[0])
+        dummy_vis_data = CuppaVisData(dummy_vis_data)
+
         plotter = CuppaVisPlotter(
-            CuppaVisData(pd.DataFrame()),
+            vis_data=dummy_vis_data,
             plot_path="/cuppa_vis.png"
         )
 
         with pytest.raises(CalledProcessError):
-            plotter.plot()
+            plotter.plot_in_r(vis_data_path="/invalid_path", plot_path="/invalid_path")
 
-    def _test_plot_one_sample_successful(self):
-        predictions = MockCvOutput.predictions_for_vis
+    def test_can_plot_one_sample(self):
+        plot_path = os.path.join(tempfile.gettempdir(), "cuppa_vis.png")
 
-        builder = CuppaVisDataBuilder(predictions, sample_id=1)
+        builder = CuppaVisDataBuilder(MockCvOutput.predictions_for_vis, sample_id=1)
         vis_data = builder.build()
 
-        plot_path = os.path.expanduser("~/Desktop/cuppa_vis.png")
-        vis_data_out_path = os.path.expanduser("~/Desktop/cuppa_vis_data.tsv")
-
         plotter = CuppaVisPlotter(
-            vis_data,
-            plot_path=plot_path,
-            vis_data_path=vis_data_out_path
+            vis_data=vis_data,
+            plot_path=plot_path
         )
         plotter.plot()
 
         assert os.path.exists(plot_path)
         os.remove(plot_path)
-        os.remove(vis_data_out_path)
-
-    def _test_plot_one_sample_from_cuppa_prediction_successful(self):
-        predictions = MockCvOutput.predictions_for_vis
-
-        plot_path = os.path.expanduser("~/Desktop/cuppa_vis.png")
-        predictions.plot(plot_path=plot_path, sample_id=1)
-
-        assert os.path.exists(plot_path)
-        os.remove(plot_path)
-
