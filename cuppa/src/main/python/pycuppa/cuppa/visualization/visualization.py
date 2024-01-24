@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 from subprocess import Popen, PIPE, STDOUT, CalledProcessError
-import tempfile
 
 import numpy as np
 import pandas as pd
@@ -24,10 +23,12 @@ class CuppaVisDataBuilder(LoggerMixin):
         self,
         predictions: CuppaPrediction,
         sample_id: Optional[str | int] = None,
+        require_all_feat_types: bool = True,
         verbose: bool = True
     ):
         self.predictions = predictions
         self.sample_id = sample_id
+        self.require_all_feat_types = require_all_feat_types
         self.verbose = verbose
 
         self._get_predictions_one_sample()
@@ -52,6 +53,15 @@ class CuppaVisDataBuilder(LoggerMixin):
 
         self.predictions = predictions
 
+    def _check_snv_counts_feature_exists(self):
+        FEAT_NAME_SNV_COUNT = "event.tmb.snv_count"
+        if FEAT_NAME_SNV_COUNT not in self.predictions.index.get_level_values("feat_name"):
+            self.logger.error(
+                "Feature contributions / values for '%s' do not exist. "
+                "This is required for calculating relative mutational signature counts"
+            )
+            raise LookupError
+
     ## Probs ================================
     def get_probs(self) -> pd.DataFrame:
 
@@ -72,14 +82,18 @@ class CuppaVisDataBuilder(LoggerMixin):
     def feat_contrib(self) -> CuppaPrediction:
         return self.predictions.get_data_types("feat_contrib")
 
-    def _subset_feat_contrib_by_feat_pattern(self, pattern: str) -> CuppaPrediction:
+    def _subset_feat_contrib_by_feat_pattern(self, pattern: str) -> CuppaPrediction | None:
         feat_contrib = self.feat_contrib[
             self.feat_contrib.index.get_level_values("feat_name").str.contains(pattern)
         ]
 
         if len(feat_contrib) == 0:
-            self.logger.error("No features found with pattern '%s'" % pattern)
-            raise LookupError
+            if self.require_all_feat_types:
+                self.logger.error("No features found with pattern '%s'" % pattern)
+                raise LookupError
+            else:
+                self.logger.warning("No features found with pattern '%s'. Returning None" % pattern)
+                return None
 
         return feat_contrib
 
@@ -87,8 +101,11 @@ class CuppaVisDataBuilder(LoggerMixin):
         self,
         min_driver_contrib: Optional[float] = 0.2,
         min_driver_likelihood: Optional[float] = 0.2,
-    ) -> CuppaPrediction:
+    ) -> CuppaPrediction | None:
         feat_contrib = self._subset_feat_contrib_by_feat_pattern("driver")
+
+        if feat_contrib is None:
+            return None
 
         index = feat_contrib.index.to_frame(index=False)
         row_maxes = (feat_contrib.max(axis=1) >= min_driver_contrib).values
@@ -96,16 +113,20 @@ class CuppaVisDataBuilder(LoggerMixin):
 
         return feat_contrib[selected_rows.values]
 
-    def _get_existing_features(self, feat_pattern: str):
+    def _get_existing_features(self, feat_pattern: str) -> CuppaPrediction | None:
         feat_contrib = self._subset_feat_contrib_by_feat_pattern(feat_pattern)
+
+        if feat_contrib is None:
+            return None
+
         max_contrib_by_row = feat_contrib.max(axis=1)
         feat_values = feat_contrib.index.get_level_values("feat_value")
         return feat_contrib[(max_contrib_by_row > 0) & (feat_values > 0)]
 
-    def _get_existing_fusions(self) -> CuppaPrediction:
+    def _get_existing_fusions(self) -> CuppaPrediction | None:
         return self._get_existing_features("fusion")
 
-    def _get_existing_viruses(self) -> CuppaPrediction:
+    def _get_existing_viruses(self) -> CuppaPrediction | None:
         return self._get_existing_features("virus")
 
     def get_top_feat_contrib(
@@ -117,7 +138,7 @@ class CuppaVisDataBuilder(LoggerMixin):
         if self.verbose:
             self.logger.debug("Getting top event features")
 
-        wide = self.predictions.__class__.concat([
+        wide = self.predictions.__class__.concat([  ## Indirect call to CuppaPrediction.concat() to avoid circular import
             self._subset_feat_contrib_by_feat_pattern("tmb"),
             self._subset_feat_contrib_by_feat_pattern("trait"),
 
