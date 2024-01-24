@@ -1,4 +1,5 @@
 options(max.print=500)
+options(stringsAsFactors=FALSE)
 
 library(ggplot2)
 library(ggh4x)
