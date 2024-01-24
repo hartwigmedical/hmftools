@@ -67,8 +67,6 @@ class MockCvOutput:
     path_pred_summ = os.path.join(MOCK_DATA_DIR, "cv_output/pred_summ.tsv")
     path_performance = os.path.join(MOCK_DATA_DIR, "cv_output/performance.tsv")
 
-    path_predictions_for_vis = os.path.join(MOCK_DATA_DIR, "visualization/predictions.tsv.gz")
-
     @cached_class_property
     def predictions(self) -> CuppaPrediction:
         return CuppaPrediction.from_tsv(self.path_predictions)
@@ -80,10 +78,6 @@ class MockCvOutput:
     @cached_class_property
     def performance(self) -> pd.DataFrame:
         return PerformanceStats.from_tsv(self.path_performance)
-
-    @cached_class_property
-    def predictions_for_vis(self) -> CuppaPrediction:
-        return CuppaPrediction.from_tsv(self.path_predictions_for_vis)
 
     @cached_class_property
     def probs_per_clf(self) -> dict[str, pd.DataFrame]:
@@ -109,3 +103,19 @@ class MockCuppaClassifier:
     def probs_per_clf(self) -> dict[str, pd.DataFrame]:
         return _get_probs_per_clf(self.predictions)
 
+
+class MockVisData:
+    """
+    This data belongs to a sample from a cross-validation run from real training data
+    """
+
+    path_predictions = os.path.join(MOCK_DATA_DIR, "visualization/predictions.tsv.gz")
+    path_vis_data = os.path.join(MOCK_DATA_DIR, "visualization/vis_data.tsv")
+
+    @cached_class_property
+    def predictions(self) -> CuppaPrediction:
+        return CuppaPrediction.from_tsv(self.path_predictions)
+
+    @cached_class_property
+    def vis_data(self) -> CuppaPrediction:
+        return CuppaPrediction.from_tsv(self.path_vis_data)
