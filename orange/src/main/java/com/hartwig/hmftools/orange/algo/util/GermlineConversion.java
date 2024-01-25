@@ -226,9 +226,9 @@ public final class GermlineConversion {
 
     @NotNull
     private static PurpleGeneCopyNumber correctForGermlineImpact(@NotNull PurpleGeneCopyNumber geneCopyNumber,
-            @NotNull List<PurpleLossOfHeterozygosity> reportableGermlineHeterozygousDeletions)
+            @NotNull List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities)
     {
-        double adjustedMinCopyNumber = adjustMinCopyNumberForGermlineImpact(geneCopyNumber, reportableGermlineHeterozygousDeletions);
+        double adjustedMinCopyNumber = adjustMinCopyNumberForGermlineImpact(geneCopyNumber, reportableGermlineLossOfHeterozygosities);
         return ImmutablePurpleGeneCopyNumber.builder()
                 .from(geneCopyNumber)
                 .minCopyNumber(adjustedMinCopyNumber)
@@ -237,9 +237,9 @@ public final class GermlineConversion {
     }
 
     private static double adjustMinCopyNumberForGermlineImpact(@NotNull PurpleGeneCopyNumber geneCopyNumber,
-            @NotNull List<PurpleLossOfHeterozygosity> reportableGermlineHeterozygousDeletions)
+            @NotNull List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities)
     {
-        OptionalDouble minimumTumorCopyNumber = reportableGermlineHeterozygousDeletions.stream()
+        OptionalDouble minimumTumorCopyNumber = reportableGermlineLossOfHeterozygosities.stream()
                 .filter(d -> d.gene().equals(geneCopyNumber.geneName()))
                 .mapToDouble(PurpleLossOfHeterozygosity::minCopies)
                 .min();
