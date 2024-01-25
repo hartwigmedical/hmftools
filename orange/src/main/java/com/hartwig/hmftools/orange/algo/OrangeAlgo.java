@@ -19,7 +19,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
-import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
@@ -48,7 +47,6 @@ import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
-import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.flagstat.Flagstat;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
@@ -575,12 +573,12 @@ public class OrangeAlgo
         }
 
         CuppaPredictions cuppaPredictions = null;
-        String cuppavisDataTsv = config.wgsRefConfig().cuppaVisDataTsv();
-        if(cuppavisDataTsv != null)
+        String cuppaVisDataTsv = config.wgsRefConfig().cuppaVisDataTsv();
+        if(cuppaVisDataTsv != null)
         {
-            LOGGER.info("Loading CUPPA predictions from {}", new File(cuppavisDataTsv).getParent());
-            cuppaPredictions = CuppaPredictions.fromTsv(cuppavisDataTsv);
-            LOGGER.info(" Loaded {} CUPPA prediction entries from {}", cuppaPredictions.PredictionEntries.size(), cuppavisDataTsv);
+            LOGGER.info("Loading CUPPA predictions from {}", new File(cuppaVisDataTsv).getParent());
+            cuppaPredictions = CuppaPredictions.fromTsv(cuppaVisDataTsv);
+            LOGGER.info(" Loaded {} CUPPA prediction entries from {}", cuppaPredictions.PredictionEntries.size(), cuppaVisDataTsv);
         }
 
         return CuppaDataFactory.create(cuppaPredictions);

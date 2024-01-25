@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.cuppa2.Categories;
 import com.hartwig.hmftools.common.cuppa2.CuppaPredictionEntry;
 import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
@@ -20,7 +21,6 @@ public final class CuppaDataFactory
     @NotNull
     public static CuppaData create(@NotNull CuppaPredictions cuppaPredictions) throws Exception
     {
-
         List<CuppaPrediction> predictions = extractSortedProbabilities(cuppaPredictions);
 
         CuppaPrediction bestPrediction = null;
@@ -31,7 +31,7 @@ public final class CuppaDataFactory
         int simpleDups32To200B = NULL_INT_VALUE;
         int telomericSGLs = NULL_INT_VALUE;
 
-        if(predictions.size() != 0)
+        if(!predictions.isEmpty())
         {
             bestPrediction = predictions.get(0);
             lineCount = getSvFeatureValue(cuppaPredictions, "sv.LINE");
@@ -86,7 +86,8 @@ public final class CuppaDataFactory
         return cuppaPredictionsOrangeFormat;
     }
 
-    public static int getSvFeatureValue(CuppaPredictions cuppaPredictions, String featureName) throws Exception
+    @VisibleForTesting
+    static int getSvFeatureValue(@NotNull CuppaPredictions cuppaPredictions, @NotNull String featureName) throws Exception
     {
         // Feature values are replicated for each cancer type because the `cuppaPredictions` table is in long form.
         // Use `.findFirst()` to get a single value
