@@ -51,35 +51,26 @@ final class LossOfHeterozygositySelector
         {
             boolean isRelevantHRD = HRD_GENES.contains(geneCopyNumber.geneName()) && chordStatus == ChordStatus.HR_DEFICIENT;
             boolean isRelevantMSI = MSI_GENES.contains(geneCopyNumber.geneName()) && microsatelliteStatus == MicrosatelliteStatus.MSI;
-            boolean hasReportedGermlineHomozygousDeletion = hasReportedGermlineHomDeletion(geneCopyNumber, allGermlineDeletions);
+            boolean hasReportedGermlineLoss =
+                    hasReportedGermlineDeletionWithTumorStatus(geneCopyNumber.geneName(), GermlineStatus.HOM_DELETION, allGermlineDeletions);
+            boolean fullyLostInTumor = geneCopyNumber.minCopyNumber() < 0.5;
 
-            if((isRelevantHRD || isRelevantMSI) && !hasReportedGermlineHomozygousDeletion)
+            if((isRelevantHRD || isRelevantMSI) && !hasReportedGermlineLoss && !fullyLostInTumor)
             {
-                if(hasLOH(geneCopyNumber))
+                if(geneCopyNumber.minMinorAlleleCopyNumber() < 0.5)
                 {
                     suspectGeneCopyNumbersWithLOH.add(geneCopyNumber);
                 }
-                else if(notFullyLostInTumor(geneCopyNumber) && hasReportedGermlineHetDeletion(geneCopyNumber, allGermlineDeletions))
+                else if(hasReportedGermlineDeletionWithTumorStatus(geneCopyNumber.geneName(), GermlineStatus.HET_DELETION, allGermlineDeletions))
                 {
-                    final GeneCopyNumber correctedGeneCopyNumber = correctForGermlineImpact(geneCopyNumber, allGermlineDeletions);
-                    suspectGeneCopyNumbersWithLOH.add(correctedGeneCopyNumber);
+                    suspectGeneCopyNumbersWithLOH.add(correctForGermlineImpact(geneCopyNumber, allGermlineDeletions));
                 }
             }
         }
         return suspectGeneCopyNumbersWithLOH;
     }
 
-    private static boolean hasLOH(@NotNull GeneCopyNumber geneCopyNumber)
-    {
-        return geneCopyNumber.minMinorAlleleCopyNumber() < 0.5 && notFullyLostInTumor(geneCopyNumber);
-    }
-
-    private static boolean notFullyLostInTumor(@NotNull GeneCopyNumber geneCopyNumber)
-    {
-        return geneCopyNumber.minCopyNumber() > 0.5;
-    }
-
-    private static boolean hasReportedGermlineHetDeletion(@NotNull GeneCopyNumber geneCopyNumber,
+    private static boolean hasReportedGermlineDeletionWithTumorStatus(@NotNull String geneName, @NotNull GermlineStatus tumorStatus,
             @Nullable List<GermlineDeletion> allGermlineDeletions)
     {
         if(allGermlineDeletions == null)
@@ -87,35 +78,21 @@ final class LossOfHeterozygositySelector
             return false;
         }
 
-        return allGermlineDeletions.stream()
-                .anyMatch(d -> isMatchingReportedGermlineDeletion(d, geneCopyNumber.geneName(), GermlineStatus.HET_DELETION));
-    }
-
-    private static boolean hasReportedGermlineHomDeletion(@NotNull GeneCopyNumber geneCopyNumber,
-            @Nullable List<GermlineDeletion> allGermlineDeletions)
-    {
-        if(allGermlineDeletions == null)
-        {
-            return false;
-        }
-
-        return allGermlineDeletions.stream()
-                .anyMatch(d -> isMatchingReportedGermlineDeletion(d, geneCopyNumber.geneName(), GermlineStatus.HOM_DELETION));
+        return allGermlineDeletions.stream().anyMatch(d -> isMatchingReportedGermlineDeletion(d, geneName, tumorStatus));
     }
 
     @NotNull
     private static GeneCopyNumber correctForGermlineImpact(@NotNull GeneCopyNumber geneCopyNumber,
             @NotNull List<GermlineDeletion> allGermlineDeletions)
     {
-        double adjustedMinCopyNumber = adjustMinCopyNumberForGermlineImpact(geneCopyNumber, allGermlineDeletions);
         return ImmutableGeneCopyNumber.builder()
                 .from(geneCopyNumber)
-                .minCopyNumber(adjustedMinCopyNumber)
+                .minCopyNumber(adjustMinCopyNumberForGermlineImpact(geneCopyNumber, allGermlineDeletions))
                 .minMinorAlleleCopyNumber(0D)
                 .build();
     }
 
-    private static double adjustMinCopyNumberForGermlineImpact(GeneCopyNumber geneCopyNumber,
+    private static double adjustMinCopyNumberForGermlineImpact(@NotNull GeneCopyNumber geneCopyNumber,
             @NotNull List<GermlineDeletion> allGermlineDeletions)
     {
         OptionalDouble minimumTumorCopyNumber = allGermlineDeletions.stream()

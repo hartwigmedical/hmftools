@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.purple.GeneProportion;
-import com.hartwig.hmftools.datamodel.purple.PurpleHeterozygousDeletion;
+import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
@@ -21,19 +21,19 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class GermlineHeterozygousDeletionTable
+public final class GermlineLossOfHeterozygosityTable
 {
 
-    private GermlineHeterozygousDeletionTable()
+    private GermlineLossOfHeterozygosityTable()
     {
     }
 
     @NotNull
     public static Table build(@NotNull String title, float width,
-            @NotNull List<PurpleHeterozygousDeletion> heterozygousDeletions,
+            @NotNull List<PurpleLossOfHeterozygosity> lossOfHeterozygosities,
             @Nullable IsofoxRecord isofox, @NotNull ReportResources reportResources)
     {
-        if(heterozygousDeletions.isEmpty())
+        if(lossOfHeterozygosities.isEmpty())
         {
             return new Tables(reportResources).createEmpty(title, width);
         }
@@ -45,14 +45,14 @@ public final class GermlineHeterozygousDeletionTable
                         cells.createHeader("Type"), cells.createHeader("CN"), cells.createHeader("TPM"), cells.createHeader("Perc (Type)"),
                         cells.createHeader("FC (Type)"), cells.createHeader("Perc (DB)"), cells.createHeader("FC (DB)") });
 
-        for(PurpleHeterozygousDeletion heterozygousDeletion : sort(heterozygousDeletions))
+        for(PurpleLossOfHeterozygosity lossOfHeterozygosity : sort(lossOfHeterozygosities))
         {
-            table.addCell(cells.createContent(heterozygousDeletion.chromosome() + heterozygousDeletion.chromosomeBand()));
-            table.addCell(cells.createContent(displayGene(heterozygousDeletion)));
-            table.addCell(cells.createContent(displayProportion(heterozygousDeletion.geneProportion())));
-            table.addCell(cells.createContent(formatSingleDigitDecimal(heterozygousDeletion.minCopies())));
+            table.addCell(cells.createContent(lossOfHeterozygosity.chromosome() + lossOfHeterozygosity.chromosomeBand()));
+            table.addCell(cells.createContent(displayGene(lossOfHeterozygosity)));
+            table.addCell(cells.createContent(displayProportion(lossOfHeterozygosity.geneProportion())));
+            table.addCell(cells.createContent(formatSingleDigitDecimal(lossOfHeterozygosity.minCopies())));
 
-            GeneExpression expression = findExpressionForGene(isofox, heterozygousDeletion.gene());
+            GeneExpression expression = findExpressionForGene(isofox, lossOfHeterozygosity.gene());
             if(expression != null)
             {
                 table.addCell(cells.createContent(Expressions.tpm(expression)));
@@ -86,16 +86,16 @@ public final class GermlineHeterozygousDeletionTable
     }
 
     @NotNull
-    private static List<PurpleHeterozygousDeletion> sort(@NotNull List<PurpleHeterozygousDeletion> heterozygousDeletions)
+    private static List<PurpleLossOfHeterozygosity> sort(@NotNull List<PurpleLossOfHeterozygosity> lossOfHeterozygosities)
     {
-        return heterozygousDeletions.stream().sorted((deletion1, deletion2) ->
+        return lossOfHeterozygosities.stream().sorted((loh1, loh2) ->
         {
-            String location1 = Chromosomes.zeroPrefixed(deletion1.chromosome() + deletion1.chromosomeBand());
-            String location2 = Chromosomes.zeroPrefixed(deletion2.chromosome() + deletion2.chromosomeBand());
+            String location1 = Chromosomes.zeroPrefixed(loh1.chromosome() + loh1.chromosomeBand());
+            String location2 = Chromosomes.zeroPrefixed(loh2.chromosome() + loh2.chromosomeBand());
 
             if(location1.equals(location2))
             {
-                return deletion1.gene().compareTo(deletion2.gene());
+                return loh1.gene().compareTo(loh2.gene());
             }
             else
             {
@@ -105,7 +105,7 @@ public final class GermlineHeterozygousDeletionTable
     }
 
     @NotNull
-    private static String displayGene(@NotNull PurpleHeterozygousDeletion deletion)
+    private static String displayGene(@NotNull PurpleLossOfHeterozygosity deletion)
     {
         String addon = Strings.EMPTY;
         if(!deletion.isCanonical())

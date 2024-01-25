@@ -35,7 +35,6 @@ import org.junit.Test;
 
 public class PurpleInterpreterTest
 {
-
     private static final String TEST_GENE = "gene";
 
     @Test
@@ -67,34 +66,22 @@ public class PurpleInterpreterTest
     }
 
     @Test
-    public void canImplyDeletionsFromBreakendsWildtypeLostHomozygous()
+    public void canImplyDeletionFromBreakendsWhenHomozygousInTumorWithWildtypeLost()
     {
-        LinxBreakend left = LinxOrangeTestFactory.breakendBuilder()
-                .reportedDisruption(true)
-                .gene(TEST_GENE)
-                .transcriptId("trans 1")
-                .svId(1)
-                .type(LinxBreakendType.DEL)
-                .undisruptedCopyNumber(0.3)
-                .build();
-        LinxBreakend right = LinxOrangeTestFactory.breakendBuilder()
-                .reportedDisruption(true)
-                .gene(TEST_GENE)
-                .transcriptId("trans 1")
-                .svId(1)
-                .type(LinxBreakendType.DEL)
-                .undisruptedCopyNumber(0.4)
-                .build();
-        DriverGene driverGene = createDriverGene(DriverGeneGermlineReporting.WILDTYPE_LOST);
+        double leftBreakendUndisruptedCopyNumber = 0.3;
+        double rightBreakendUndisruptedCopyNumber = 0.4;
+        DriverGeneGermlineReporting reportGermlineDeletion = DriverGeneGermlineReporting.WILDTYPE_LOST;
+        int shortSvStartPosition = 10;
+        int shortSvEndPosition = 20;
 
-        StructuralVariant shortSv = create("vcf id 1", 10, 20);
-        LinxSvAnnotation svAnnotation = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).vcfId(shortSv.id()).build();
-
-        List<GermlineDeletion> impliedMatch = PurpleInterpreter.implyDeletionsFromBreakends(Lists.newArrayList(),
-                Lists.newArrayList(left, right),
-                Lists.newArrayList(shortSv),
-                Lists.newArrayList(svAnnotation),
-                Lists.newArrayList(driverGene));
+        List<GermlineDeletion> impliedMatch = doTestRunImplyDeletionsFromBreakends(
+                leftBreakendUndisruptedCopyNumber,
+                rightBreakendUndisruptedCopyNumber,
+                shortSvStartPosition,
+                shortSvEndPosition,
+                reportGermlineDeletion,
+                Lists.newArrayList()
+        );
 
         assertEquals(1, impliedMatch.size());
         GermlineDeletion deletion = impliedMatch.get(0);
@@ -105,86 +92,69 @@ public class PurpleInterpreterTest
         assertEquals(20, deletion.RegionEnd);
 
         GermlineDeletion existingDeletion = GermlineDeletionTestFactory.create(TEST_GENE);
-        List<GermlineDeletion> impliedExisting = PurpleInterpreter.implyDeletionsFromBreakends(Lists.newArrayList(existingDeletion),
-                Lists.newArrayList(left, right),
-                Lists.newArrayList(shortSv),
-                Lists.newArrayList(svAnnotation),
-                Lists.newArrayList(driverGene));
+        List<GermlineDeletion> impliedExisting = doTestRunImplyDeletionsFromBreakends(
+                leftBreakendUndisruptedCopyNumber,
+                rightBreakendUndisruptedCopyNumber,
+                shortSvStartPosition,
+                shortSvEndPosition,
+                reportGermlineDeletion,
+                Lists.newArrayList(existingDeletion)
+        );
 
         assertEquals(0, impliedExisting.size());
 
-        StructuralVariant longSv = create("vcf id 1", 10, 200000);
-        List<GermlineDeletion> impliedTooLong = PurpleInterpreter.implyDeletionsFromBreakends(Lists.newArrayList(existingDeletion),
-                Lists.newArrayList(left, right),
-                Lists.newArrayList(longSv),
-                Lists.newArrayList(svAnnotation),
-                Lists.newArrayList(driverGene));
+        int longSvStartPosition = 10;
+        int longSvEndPosition = 200000;
+        List<GermlineDeletion> impliedTooLong = doTestRunImplyDeletionsFromBreakends(
+                leftBreakendUndisruptedCopyNumber,
+                rightBreakendUndisruptedCopyNumber,
+                longSvStartPosition,
+                longSvEndPosition,
+                reportGermlineDeletion,
+                Lists.newArrayList()
+        );
 
         assertEquals(0, impliedTooLong.size());
     }
 
     @Test
-    public void canImplyDeletionsFromBreakendsWildtypeLostHeterozygous()
+    public void cannotImplyDeletionFromBreakendsWhenHeterozygousInTumorWithWildtypeLost()
     {
-        LinxBreakend left = LinxOrangeTestFactory.breakendBuilder()
-                .reportedDisruption(true)
-                .gene(TEST_GENE)
-                .transcriptId("trans 1")
-                .svId(1)
-                .type(LinxBreakendType.DEL)
-                .undisruptedCopyNumber(1.2)
-                .build();
-        LinxBreakend right = LinxOrangeTestFactory.breakendBuilder()
-                .reportedDisruption(true)
-                .gene(TEST_GENE)
-                .transcriptId("trans 1")
-                .svId(1)
-                .type(LinxBreakendType.DEL)
-                .undisruptedCopyNumber(0.9)
-                .build();
-        DriverGene driverGene = createDriverGene(DriverGeneGermlineReporting.WILDTYPE_LOST);
+        double leftBreakendUndisruptedCopyNumber = 1.2;
+        double rightBreakendUndisruptedCopyNumber = 0.9;
+        DriverGeneGermlineReporting reportGermlineDeletion = DriverGeneGermlineReporting.WILDTYPE_LOST;
+        int shortSvStartPosition = 10;
+        int shortSvEndPosition = 20;
 
-        StructuralVariant shortSv = create("vcf id 1", 10, 20);
-        LinxSvAnnotation svAnnotation = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).vcfId(shortSv.id()).build();
-
-        List<GermlineDeletion> impliedMatch = PurpleInterpreter.implyDeletionsFromBreakends(Lists.newArrayList(),
-                Lists.newArrayList(left, right),
-                Lists.newArrayList(shortSv),
-                Lists.newArrayList(svAnnotation),
-                Lists.newArrayList(driverGene));
+        List<GermlineDeletion> impliedMatch = doTestRunImplyDeletionsFromBreakends(
+                leftBreakendUndisruptedCopyNumber,
+                rightBreakendUndisruptedCopyNumber,
+                shortSvStartPosition,
+                shortSvEndPosition,
+                reportGermlineDeletion,
+                Lists.newArrayList()
+        );
 
         assertEquals(0, impliedMatch.size());
     }
 
     @Test
-    public void canImplyDeletionsFromBreakendsAnyHomozygous()
+    public void canImplyDeletionFromBreakendsWhenHomozygousInTumorWithAny()
     {
-        LinxBreakend left = LinxOrangeTestFactory.breakendBuilder()
-                .reportedDisruption(true)
-                .gene(TEST_GENE)
-                .transcriptId("trans 1")
-                .svId(1)
-                .type(LinxBreakendType.DEL)
-                .undisruptedCopyNumber(0.3)
-                .build();
-        LinxBreakend right = LinxOrangeTestFactory.breakendBuilder()
-                .reportedDisruption(true)
-                .gene(TEST_GENE)
-                .transcriptId("trans 1")
-                .svId(1)
-                .type(LinxBreakendType.DEL)
-                .undisruptedCopyNumber(0.4)
-                .build();
-        DriverGene driverGene = createDriverGene(DriverGeneGermlineReporting.ANY);
+        double leftBreakendUndisruptedCopyNumber = 0.3;
+        double rightBreakendUndisruptedCopyNumber = 0.4;
+        DriverGeneGermlineReporting reportGermlineDeletion = DriverGeneGermlineReporting.ANY;
+        int shortSvStartPosition = 10;
+        int shortSvEndPosition = 20;
 
-        StructuralVariant shortSv = create("vcf id 1", 10, 20);
-        LinxSvAnnotation svAnnotation = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).vcfId(shortSv.id()).build();
-
-        List<GermlineDeletion> impliedMatch = PurpleInterpreter.implyDeletionsFromBreakends(Lists.newArrayList(),
-                Lists.newArrayList(left, right),
-                Lists.newArrayList(shortSv),
-                Lists.newArrayList(svAnnotation),
-                Lists.newArrayList(driverGene));
+        List<GermlineDeletion> impliedMatch = doTestRunImplyDeletionsFromBreakends(
+                leftBreakendUndisruptedCopyNumber,
+                rightBreakendUndisruptedCopyNumber,
+                shortSvStartPosition,
+                shortSvEndPosition,
+                reportGermlineDeletion,
+                Lists.newArrayList()
+        );
 
         assertEquals(1, impliedMatch.size());
         GermlineDeletion deletion = impliedMatch.get(0);
@@ -195,26 +165,103 @@ public class PurpleInterpreterTest
         assertEquals(20, deletion.RegionEnd);
 
         GermlineDeletion existingDeletion = GermlineDeletionTestFactory.create(TEST_GENE);
-        List<GermlineDeletion> impliedExisting = PurpleInterpreter.implyDeletionsFromBreakends(Lists.newArrayList(existingDeletion),
-                Lists.newArrayList(left, right),
-                Lists.newArrayList(shortSv),
-                Lists.newArrayList(svAnnotation),
-                Lists.newArrayList(driverGene));
+        List<GermlineDeletion> impliedExisting = doTestRunImplyDeletionsFromBreakends(
+                leftBreakendUndisruptedCopyNumber,
+                rightBreakendUndisruptedCopyNumber,
+                shortSvStartPosition,
+                shortSvEndPosition,
+                reportGermlineDeletion,
+                Lists.newArrayList(existingDeletion)
+        );
 
         assertEquals(0, impliedExisting.size());
 
-        StructuralVariant longSv = create("vcf id 1", 10, 200000);
-        List<GermlineDeletion> impliedTooLong = PurpleInterpreter.implyDeletionsFromBreakends(Lists.newArrayList(existingDeletion),
-                Lists.newArrayList(left, right),
-                Lists.newArrayList(longSv),
-                Lists.newArrayList(svAnnotation),
-                Lists.newArrayList(driverGene));
+        int longSvStartPosition = 10;
+        int longSvEndPosition = 200000;
+        List<GermlineDeletion> impliedTooLong = doTestRunImplyDeletionsFromBreakends(
+                leftBreakendUndisruptedCopyNumber,
+                rightBreakendUndisruptedCopyNumber,
+                longSvStartPosition,
+                longSvEndPosition,
+                reportGermlineDeletion,
+                Lists.newArrayList()
+        );
 
         assertEquals(0, impliedTooLong.size());
     }
 
     @Test
-    public void canImplyDeletionsFromBreakendsAnyHeterozygous()
+    public void canImplyDeletionFromBreakendsWhenHeterozygousInTumorWithAny()
+    {
+        double leftBreakendUndisruptedCopyNumber = 1.2;
+        double rightBreakendUndisruptedCopyNumber = 0.9;
+        DriverGeneGermlineReporting reportGermlineDeletion = DriverGeneGermlineReporting.ANY;
+        int shortSvStartPosition = 10;
+        int shortSvEndPosition = 20;
+
+        List<GermlineDeletion> impliedMatch = doTestRunImplyDeletionsFromBreakends(
+                leftBreakendUndisruptedCopyNumber,
+                rightBreakendUndisruptedCopyNumber,
+                shortSvStartPosition,
+                shortSvEndPosition,
+                reportGermlineDeletion,
+                Lists.newArrayList()
+        );
+
+        assertEquals(1, impliedMatch.size());
+        GermlineDeletion deletion = impliedMatch.get(0);
+        assertEquals(TEST_GENE, deletion.GeneName);
+        assertEquals(GermlineStatus.HET_DELETION, deletion.TumorStatus);
+        assertEquals(leftBreakendUndisruptedCopyNumber, deletion.TumorCopyNumber, EPSILON);
+        assertEquals(shortSvStartPosition, deletion.RegionStart);
+        assertEquals(shortSvEndPosition, deletion.RegionEnd);
+
+        GermlineDeletion existingDeletion = GermlineDeletionTestFactory.create(TEST_GENE);
+        List<GermlineDeletion> impliedExisting = doTestRunImplyDeletionsFromBreakends(
+                leftBreakendUndisruptedCopyNumber,
+                rightBreakendUndisruptedCopyNumber,
+                shortSvStartPosition,
+                shortSvEndPosition,
+                reportGermlineDeletion,
+                Lists.newArrayList(existingDeletion)
+        );
+
+        assertEquals(0, impliedExisting.size());
+
+        int longSvStartPosition = 10;
+        int longSvEndPosition = 200000;
+        List<GermlineDeletion> impliedTooLong = doTestRunImplyDeletionsFromBreakends(
+                leftBreakendUndisruptedCopyNumber,
+                rightBreakendUndisruptedCopyNumber,
+                longSvStartPosition,
+                longSvEndPosition,
+                reportGermlineDeletion,
+                Lists.newArrayList()
+        );
+
+        assertEquals(0, impliedTooLong.size());
+    }
+
+    @NotNull
+    private static List<GermlineDeletion> doTestRunImplyDeletionsFromBreakends(double leftBreakendUndisruptedCopyNumber,
+            double rightBreakendUndisruptedCopyNumber, int svStartPosition, int svEndPosition,
+            DriverGeneGermlineReporting reportGermlineDeletion, List<GermlineDeletion> existingDeletions)
+    {
+        List<LinxBreakend> breakends = createBreakends(leftBreakendUndisruptedCopyNumber, rightBreakendUndisruptedCopyNumber);
+        StructuralVariant sv = createStructuralVariant(svStartPosition, svEndPosition);
+        List<DriverGene> driverGenes = Lists.newArrayList(createDriverGene(reportGermlineDeletion));
+
+        return PurpleInterpreter.implyDeletionsFromBreakends(
+                existingDeletions,
+                breakends,
+                Lists.newArrayList(sv),
+                Lists.newArrayList(createSvAnnotation(sv)),
+                driverGenes
+        );
+    }
+
+    @NotNull
+    private static List<LinxBreakend> createBreakends(double leftUndisruptedCopyNumber, double rightUndisruptedCopyNumber)
     {
         LinxBreakend left = LinxOrangeTestFactory.breakendBuilder()
                 .reportedDisruption(true)
@@ -222,7 +269,7 @@ public class PurpleInterpreterTest
                 .transcriptId("trans 1")
                 .svId(1)
                 .type(LinxBreakendType.DEL)
-                .undisruptedCopyNumber(1.2)
+                .undisruptedCopyNumber(leftUndisruptedCopyNumber)
                 .build();
         LinxBreakend right = LinxOrangeTestFactory.breakendBuilder()
                 .reportedDisruption(true)
@@ -230,44 +277,9 @@ public class PurpleInterpreterTest
                 .transcriptId("trans 1")
                 .svId(1)
                 .type(LinxBreakendType.DEL)
-                .undisruptedCopyNumber(0.9)
+                .undisruptedCopyNumber(rightUndisruptedCopyNumber)
                 .build();
-        DriverGene driverGene = createDriverGene(DriverGeneGermlineReporting.ANY);
-
-        StructuralVariant shortSv = create("vcf id 1", 10, 20);
-        LinxSvAnnotation svAnnotation = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).vcfId(shortSv.id()).build();
-
-        List<GermlineDeletion> impliedMatch = PurpleInterpreter.implyDeletionsFromBreakends(Lists.newArrayList(),
-                Lists.newArrayList(left, right),
-                Lists.newArrayList(shortSv),
-                Lists.newArrayList(svAnnotation),
-                Lists.newArrayList(driverGene));
-
-        assertEquals(1, impliedMatch.size());
-        GermlineDeletion deletion = impliedMatch.get(0);
-        assertEquals(TEST_GENE, deletion.GeneName);
-        assertEquals(GermlineStatus.HET_DELETION, deletion.TumorStatus);
-        assertEquals(1.2, deletion.TumorCopyNumber, EPSILON);
-        assertEquals(10, deletion.RegionStart);
-        assertEquals(20, deletion.RegionEnd);
-
-        GermlineDeletion existingDeletion = GermlineDeletionTestFactory.create(TEST_GENE);
-        List<GermlineDeletion> impliedExisting = PurpleInterpreter.implyDeletionsFromBreakends(Lists.newArrayList(existingDeletion),
-                Lists.newArrayList(left, right),
-                Lists.newArrayList(shortSv),
-                Lists.newArrayList(svAnnotation),
-                Lists.newArrayList(driverGene));
-
-        assertEquals(0, impliedExisting.size());
-
-        StructuralVariant longSv = create("vcf id 1", 10, 200000);
-        List<GermlineDeletion> impliedTooLong = PurpleInterpreter.implyDeletionsFromBreakends(Lists.newArrayList(existingDeletion),
-                Lists.newArrayList(left, right),
-                Lists.newArrayList(longSv),
-                Lists.newArrayList(svAnnotation),
-                Lists.newArrayList(driverGene));
-
-        assertEquals(0, impliedTooLong.size());
+        return Lists.newArrayList(left, right);
     }
 
     @NotNull
@@ -308,21 +320,23 @@ public class PurpleInterpreterTest
     {
         PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(new PaveAlgo(ensemblDataCache));
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
-        GermlineHeterozygousDeletionFactory germlineHeterozygousDeletionFactory = new GermlineHeterozygousDeletionFactory(ensemblDataCache);
+        GermlineLossOfHeterozygosityFactory germlineLossOfHeterozygosityFactory = new GermlineLossOfHeterozygosityFactory(ensemblDataCache);
 
-        return new PurpleInterpreter(purpleVariantFactory,
+        return new PurpleInterpreter(
+                purpleVariantFactory,
                 germlineGainLossFactory,
-                germlineHeterozygousDeletionFactory,
+                germlineLossOfHeterozygosityFactory,
                 Lists.newArrayList(),
                 TestLinxInterpretationFactory.createMinimalTestLinxData(),
-                null);
+                null
+        );
     }
 
     @NotNull
-    private static StructuralVariant create(@NotNull String vcfId, int start, int end)
+    private static StructuralVariant createStructuralVariant(int start, int end)
     {
         return ImmutableStructuralVariantImpl.builder()
-                .id(vcfId)
+                .id("vcf id 1")
                 .start(ImmutableStructuralVariantLegImpl.builder()
                         .orientation((byte) 0)
                         .homology(Strings.EMPTY)
@@ -343,5 +357,11 @@ public class PurpleInterpreterTest
                 .recovered(false)
                 .hotspot(false)
                 .build();
+    }
+
+    @NotNull
+    private static LinxSvAnnotation createSvAnnotation(@NotNull StructuralVariant sv)
+    {
+        return LinxOrangeTestFactory.svAnnotationBuilder().svId(1).vcfId(sv.id()).build();
     }
 }

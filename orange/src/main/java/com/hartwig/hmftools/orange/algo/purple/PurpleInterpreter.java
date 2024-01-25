@@ -39,7 +39,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
 import com.hartwig.hmftools.datamodel.purple.PurpleFittedPurityMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
-import com.hartwig.hmftools.datamodel.purple.PurpleHeterozygousDeletion;
+import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
@@ -66,7 +66,7 @@ public class PurpleInterpreter
     @NotNull
     private final GermlineGainLossFactory germlineGainLossFactory;
     @NotNull
-    private final GermlineHeterozygousDeletionFactory germlineHeterozygousDeletionFactory;
+    private final GermlineLossOfHeterozygosityFactory germlineLossOfHeterozygosityFactory;
     @NotNull
     private final List<DriverGene> driverGenes;
     @NotNull
@@ -76,12 +76,12 @@ public class PurpleInterpreter
 
     public PurpleInterpreter(@NotNull final PurpleVariantFactory purpleVariantFactory,
             @NotNull final GermlineGainLossFactory germlineGainLossFactory,
-            @NotNull final GermlineHeterozygousDeletionFactory germlineHeterozygousDeletionFactory,
+            @NotNull final GermlineLossOfHeterozygosityFactory germlineLossOfHeterozygosityFactory,
             @NotNull final List<DriverGene> driverGenes, @NotNull final LinxRecord linx, @Nullable final ChordData chord)
     {
         this.purpleVariantFactory = purpleVariantFactory;
         this.germlineGainLossFactory = germlineGainLossFactory;
-        this.germlineHeterozygousDeletionFactory = germlineHeterozygousDeletionFactory;
+        this.germlineLossOfHeterozygosityFactory = germlineLossOfHeterozygosityFactory;
         this.driverGenes = driverGenes;
         this.linx = linx;
         this.chord = chord;
@@ -138,8 +138,8 @@ public class PurpleInterpreter
 
         List<PurpleGainLoss> allGermlineFullLosses = null;
         List<PurpleGainLoss> reportableGermlineFullLosses = null;
-        List<PurpleHeterozygousDeletion> allGermlineHeterozygousDeletions = null;
-        List<PurpleHeterozygousDeletion> reportableGermlineHeterozygousDeletions = null;
+        List<PurpleLossOfHeterozygosity> allGermlineLossOfHeterozygosities = null;
+        List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities = null;
 
         if(allGermlineDeletions != null)
         {
@@ -154,21 +154,21 @@ public class PurpleInterpreter
             mergedGermlineDeletions.addAll(allGermlineDeletions);
             mergedGermlineDeletions.addAll(impliedDeletions);
 
-            Map<PurpleGainLoss, GermlineDeletion> fullDeletionMap =
+            Map<PurpleGainLoss, GermlineDeletion> fullLossMap =
                     germlineGainLossFactory.mapDeletions(mergedGermlineDeletions, purple.allSomaticGeneCopyNumbers());
 
-            allGermlineFullLosses = Lists.newArrayList(fullDeletionMap.keySet());
-            reportableGermlineFullLosses = selectReportableGainLosses(fullDeletionMap);
+            allGermlineFullLosses = Lists.newArrayList(fullLossMap.keySet());
+            reportableGermlineFullLosses = selectReportableGainLosses(fullLossMap);
 
             LOGGER.info(" Resolved {} germline losses of which {} are reportable", allGermlineFullLosses.size(), reportableGermlineFullLosses.size());
 
-            Map<PurpleHeterozygousDeletion, GermlineDeletion> heterozygousDeletionMap =
-                    germlineHeterozygousDeletionFactory.mapDeletions(mergedGermlineDeletions, purple.allSomaticGeneCopyNumbers());
+            Map<PurpleLossOfHeterozygosity, GermlineDeletion> lossOfHeterozygosityMap =
+                    germlineLossOfHeterozygosityFactory.mapDeletions(mergedGermlineDeletions, purple.allSomaticGeneCopyNumbers());
 
-            allGermlineHeterozygousDeletions = Lists.newArrayList(heterozygousDeletionMap.keySet());
-            reportableGermlineHeterozygousDeletions = selectReportableHeterozygousDeletions(heterozygousDeletionMap);
+            allGermlineLossOfHeterozygosities = Lists.newArrayList(lossOfHeterozygosityMap.keySet());
+            reportableGermlineLossOfHeterozygosities = selectReportableLossOfHeterozygosities(lossOfHeterozygosityMap);
 
-            LOGGER.info(" Resolved {} germline heterozygous deletions of which {} are reportable", allGermlineHeterozygousDeletions.size(), reportableGermlineHeterozygousDeletions.size());
+            LOGGER.info(" Resolved {} germline heterozygous deletions of which {} are reportable", allGermlineLossOfHeterozygosities.size(), reportableGermlineLossOfHeterozygosities.size());
         }
 
         return ImmutablePurpleRecord.builder()
@@ -192,8 +192,8 @@ public class PurpleInterpreter
                 .allGermlineDeletions(ConversionUtil.mapToIterable(purple.allGermlineDeletions(), PurpleConversion::convert))
                 .allGermlineFullLosses(allGermlineFullLosses)
                 .reportableGermlineFullLosses(reportableGermlineFullLosses)
-                .allGermlineHeterozygousDeletions(allGermlineHeterozygousDeletions)
-                .reportableGermlineHeterozygousDeletions(reportableGermlineHeterozygousDeletions)
+                .allGermlineLossOfHeterozygosities(allGermlineLossOfHeterozygosities)
+                .reportableGermlineLossOfHeterozygosities(reportableGermlineLossOfHeterozygosities)
                 .build();
     }
 
@@ -258,7 +258,7 @@ public class PurpleInterpreter
         return impliedDeletions;
     }
 
-    private static boolean wouldBeReportableGermlineDeletion(@NotNull String gene, GermlineStatus tumorStatus,
+    private static boolean wouldBeReportableGermlineDeletion(@NotNull String gene, @NotNull GermlineStatus tumorStatus,
             @NotNull List<DriverGene> driverGenes)
     {
         Optional<DriverGene> optionalDriverGene = driverGenes.stream().filter(d -> d.gene().equals(gene)).findFirst();
@@ -347,17 +347,17 @@ public class PurpleInterpreter
     }
 
     @NotNull
-    private static List<PurpleHeterozygousDeletion> selectReportableHeterozygousDeletions(
-            @NotNull Map<PurpleHeterozygousDeletion, GermlineDeletion> deletionMap)
+    private static List<PurpleLossOfHeterozygosity> selectReportableLossOfHeterozygosities(
+            @NotNull Map<PurpleLossOfHeterozygosity, GermlineDeletion> deletionMap)
     {
-        List<PurpleHeterozygousDeletion> reportable = Lists.newArrayList();
-        for(Map.Entry<PurpleHeterozygousDeletion, GermlineDeletion> entry : deletionMap.entrySet())
+        List<PurpleLossOfHeterozygosity> reportable = Lists.newArrayList();
+        for(Map.Entry<PurpleLossOfHeterozygosity, GermlineDeletion> entry : deletionMap.entrySet())
         {
-            PurpleHeterozygousDeletion heterozygousDeletion = entry.getKey();
+            PurpleLossOfHeterozygosity lossOfHeterozygosity = entry.getKey();
             GermlineDeletion deletion = entry.getValue();
             if(deletion.Reported)
             {
-                reportable.add(heterozygousDeletion);
+                reportable.add(lossOfHeterozygosity);
             }
         }
         return reportable;

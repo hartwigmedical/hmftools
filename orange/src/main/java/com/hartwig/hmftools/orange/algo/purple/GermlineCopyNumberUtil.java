@@ -10,11 +10,10 @@ import com.hartwig.hmftools.common.purple.GermlineDeletion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class GermlineCopyNumberUtil
+class GermlineCopyNumberUtil
 {
-
     public static double getSomaticMaxCopyNumber(@NotNull GermlineDeletion deletion,
-            @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers, EnsemblDataCache ensemblDataCache)
+            @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers, @NotNull EnsemblDataCache ensemblDataCache)
     {
         TranscriptData canonicalTranscript = findCanonicalTranscript(deletion.GeneName, ensemblDataCache);
         return deletionCoversTranscript(deletion, canonicalTranscript)
@@ -27,9 +26,9 @@ public class GermlineCopyNumberUtil
         return Math.max(0, deletion.TumorCopyNumber);
     }
 
-    public static boolean deletionCoversTranscript(@NotNull GermlineDeletion deletion, @NotNull TranscriptData canonicalTranscript)
+    public static boolean deletionCoversTranscript(@NotNull GermlineDeletion deletion, @NotNull TranscriptData transcript)
     {
-        return deletion.RegionStart < canonicalTranscript.TransStart && deletion.RegionEnd > canonicalTranscript.TransEnd;
+        return deletion.RegionStart < transcript.TransStart && deletion.RegionEnd > transcript.TransEnd;
     }
 
     @NotNull

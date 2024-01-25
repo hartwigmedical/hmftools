@@ -10,34 +10,34 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.datamodel.purple.GeneProportion;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleHeterozygousDeletion;
-import com.hartwig.hmftools.datamodel.purple.PurpleHeterozygousDeletion;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleLossOfHeterozygosity;
+import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 
 import org.jetbrains.annotations.NotNull;
 
-public class GermlineHeterozygousDeletionFactory
+public class GermlineLossOfHeterozygosityFactory
 {
     @NotNull
     private final EnsemblDataCache ensemblDataCache;
 
-    public GermlineHeterozygousDeletionFactory(@NotNull final EnsemblDataCache ensemblDataCache)
+    public GermlineLossOfHeterozygosityFactory(@NotNull final EnsemblDataCache ensemblDataCache)
     {
         this.ensemblDataCache = ensemblDataCache;
     }
 
     @NotNull
-    public Map<PurpleHeterozygousDeletion, GermlineDeletion> mapDeletions(@NotNull List<GermlineDeletion> germlineDeletions,
+    public Map<PurpleLossOfHeterozygosity, GermlineDeletion> mapDeletions(@NotNull List<GermlineDeletion> germlineDeletions,
             @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers)
     {
-        Map<PurpleHeterozygousDeletion, GermlineDeletion> deletionMap = Maps.newHashMap();
+        Map<PurpleLossOfHeterozygosity, GermlineDeletion> deletionMap = Maps.newHashMap();
         for(GermlineDeletion germlineDeletion : germlineDeletions)
         {
             if(germlineDeletion.TumorStatus == GermlineStatus.HET_DELETION)
             {
-                PurpleHeterozygousDeletion heterozygousDeletion = toHeterozygousDeletion(germlineDeletion, allSomaticGeneCopyNumbers);
-                if(!deletionMap.containsKey(heterozygousDeletion))
+                PurpleLossOfHeterozygosity lossOfHeterozygosity = toLossOfHeterozygosity(germlineDeletion, allSomaticGeneCopyNumbers);
+                if(!deletionMap.containsKey(lossOfHeterozygosity))
                 {
-                    deletionMap.put(heterozygousDeletion, germlineDeletion);
+                    deletionMap.put(lossOfHeterozygosity, germlineDeletion);
                 }
             }
         }
@@ -45,7 +45,7 @@ public class GermlineHeterozygousDeletionFactory
     }
 
     @NotNull
-    private PurpleHeterozygousDeletion toHeterozygousDeletion(@NotNull GermlineDeletion deletion,
+    private PurpleLossOfHeterozygosity toLossOfHeterozygosity(@NotNull GermlineDeletion deletion,
             @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers)
     {
         TranscriptData canonicalTranscript = GermlineCopyNumberUtil.findCanonicalTranscript(deletion.GeneName, ensemblDataCache);
@@ -55,7 +55,7 @@ public class GermlineHeterozygousDeletionFactory
         double minCopies = GermlineCopyNumberUtil.getSomaticMinCopyNumber(deletion);
         double maxCopies = GermlineCopyNumberUtil.getSomaticMaxCopyNumber(deletion, allSomaticGeneCopyNumbers, ensemblDataCache);
 
-        return ImmutablePurpleHeterozygousDeletion.builder()
+        return ImmutablePurpleLossOfHeterozygosity.builder()
                 .geneProportion(geneProportion)
                 .chromosome(deletion.Chromosome)
                 .chromosomeBand(deletion.ChromosomeBand)
