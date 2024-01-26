@@ -28,12 +28,10 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DE
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.OrangeConfig.TUMOR_SAMPLE_ID;
 import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
-import static com.hartwig.hmftools.orange.util.PathUtil.optionalPath;
 
 import java.io.File;
 
 import com.hartwig.hmftools.common.chord.ChordDataFile;
-import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
 import com.hartwig.hmftools.common.sage.SageCommon;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;

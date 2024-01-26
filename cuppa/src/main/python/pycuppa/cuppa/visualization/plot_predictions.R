@@ -1,4 +1,5 @@
 options(max.print=500)
+options(stringsAsFactors=FALSE)
 
 library(ggplot2)
 library(ggh4x)
@@ -131,8 +132,6 @@ get_plot_data_probs <- function(VIS_DATA, data_value_rounding = 2){
       NA,
       "darkgrey"
    )
-   
-   plot_data <- as_factor_unsorted(plot_data)
    
    return(plot_data)
 }

@@ -32,7 +32,7 @@ public class CuppaDataFactoryTest
         predictionEntries.stream().forEach(o -> System.out.println(o.toString()));
 
         assertEquals(40, predictionEntries.size());
-        assertEquals(cuppaData.bestPrediction().cancerType().toString(), "Skin: Melanoma");
+        assertEquals("Skin: Melanoma", cuppaData.bestPrediction().cancerType());
 
         Map<String, CuppaPrediction> actualPredictionsByCancerType = new HashMap<>();
         for(CuppaPrediction prediction : predictionEntries)

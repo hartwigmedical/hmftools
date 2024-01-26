@@ -231,6 +231,10 @@ investigate potential causes for QC failure.
 ## Version History and Download Links
 
 - Upcoming
+    - Bugfix: exclude simple clusters affecting no exons when counting expected number of linx plots
+- [3.1.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.1.0)
+    - ORANGE report now shows the new CUPPA v2.0 visualization
+    - New ORANGE-datamodel (v2.2.0) supports the tabular output from both CUPPA v2.0 and CUPPA v1.x
     - `::` is used rather than `_` to concatenate the two genes fused in DNA and RNA fusions (impacting orange-datamodel!)
 - [3.0.2](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.0.2)
     - Fixed bug with selecting high/low expressed genes for samples without a specific cancer-type (e.g. CUPs)

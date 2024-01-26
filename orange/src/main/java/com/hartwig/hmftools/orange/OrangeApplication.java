@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.orange;
 
-import java.io.IOException;
-
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;

@@ -18,8 +18,9 @@ from cuppa.compose.pipeline import Pipeline
 This module has the classes containing the sub-classifiers and meta-classifiers of CUPPA (as sklearn Pipeline-like
 objects), as well the these classifiers combined into classifier layers (as sklearn ColumnTransformer-like objects). 
 
-Methods are used to return the classifiers. This enforces new classifier objects to be instantiated to avoid their
-parameters from being overwritten if they were class attributes and where `fit()` would be called more than once.
+Methods are used to return the classifiers to force new classifier objects to always be instantiated. One-time
+instantiation would result in parameters being overwritten e.g. if `fit()` would be called more than once, which is
+unwanted behavior.
 """
 
 class SubClassifiers:
@@ -55,6 +56,7 @@ class SubClassifiers:
             ("logistic_regression", cls.DnaLogisticRegression()),
         ])
 
+    ## TODO: add option to whitelist certain features (e.g. event.tmb.snv_count) by Chi2FeatureSelector in EventClassifier
     @classmethod
     def EventClassifier(cls) -> Pipeline:
         return Pipeline([

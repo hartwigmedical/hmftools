@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 from subprocess import Popen, PIPE, STDOUT, CalledProcessError
-import tempfile
 
 import numpy as np
 import pandas as pd
@@ -24,10 +23,12 @@ class CuppaVisDataBuilder(LoggerMixin):
         self,
         predictions: CuppaPrediction,
         sample_id: Optional[str | int] = None,
+        require_all_feat_types: bool = True,
         verbose: bool = True
     ):
         self.predictions = predictions
         self.sample_id = sample_id
+        self.require_all_feat_types = require_all_feat_types
         self.verbose = verbose
 
         self._get_predictions_one_sample()
@@ -52,6 +53,15 @@ class CuppaVisDataBuilder(LoggerMixin):
 
         self.predictions = predictions
 
+    def _check_snv_counts_feature_exists(self):
+        FEAT_NAME_SNV_COUNT = "event.tmb.snv_count"
+        if FEAT_NAME_SNV_COUNT not in self.predictions.index.get_level_values("feat_name"):
+            self.logger.error(
+                "Feature contributions / values for '%s' do not exist. "
+                "This is required for calculating relative mutational signature counts"
+            )
+            raise LookupError
+
     ## Probs ================================
     def get_probs(self) -> pd.DataFrame:
 
@@ -72,14 +82,18 @@ class CuppaVisDataBuilder(LoggerMixin):
     def feat_contrib(self) -> CuppaPrediction:
         return self.predictions.get_data_types("feat_contrib")
 
-    def _subset_feat_contrib_by_feat_pattern(self, pattern: str) -> CuppaPrediction:
+    def _subset_feat_contrib_by_feat_pattern(self, pattern: str) -> CuppaPrediction | None:
         feat_contrib = self.feat_contrib[
             self.feat_contrib.index.get_level_values("feat_name").str.contains(pattern)
         ]
 
         if len(feat_contrib) == 0:
-            self.logger.error("No features found with pattern '%s'" % pattern)
-            raise LookupError
+            if self.require_all_feat_types:
+                self.logger.error("No features found with pattern '%s'" % pattern)
+                raise LookupError
+            else:
+                self.logger.warning("No features found with pattern '%s'. Returning None" % pattern)
+                return None
 
         return feat_contrib
 
@@ -87,8 +101,11 @@ class CuppaVisDataBuilder(LoggerMixin):
         self,
         min_driver_contrib: Optional[float] = 0.2,
         min_driver_likelihood: Optional[float] = 0.2,
-    ) -> CuppaPrediction:
+    ) -> CuppaPrediction | None:
         feat_contrib = self._subset_feat_contrib_by_feat_pattern("driver")
+
+        if feat_contrib is None:
+            return None
 
         index = feat_contrib.index.to_frame(index=False)
         row_maxes = (feat_contrib.max(axis=1) >= min_driver_contrib).values
@@ -96,16 +113,20 @@ class CuppaVisDataBuilder(LoggerMixin):
 
         return feat_contrib[selected_rows.values]
 
-    def _get_existing_features(self, feat_pattern: str):
+    def _get_existing_features(self, feat_pattern: str) -> CuppaPrediction | None:
         feat_contrib = self._subset_feat_contrib_by_feat_pattern(feat_pattern)
+
+        if feat_contrib is None:
+            return None
+
         max_contrib_by_row = feat_contrib.max(axis=1)
         feat_values = feat_contrib.index.get_level_values("feat_value")
         return feat_contrib[(max_contrib_by_row > 0) & (feat_values > 0)]
 
-    def _get_existing_fusions(self) -> CuppaPrediction:
+    def _get_existing_fusions(self) -> CuppaPrediction | None:
         return self._get_existing_features("fusion")
 
-    def _get_existing_viruses(self) -> CuppaPrediction:
+    def _get_existing_viruses(self) -> CuppaPrediction | None:
         return self._get_existing_features("virus")
 
     def get_top_feat_contrib(
@@ -117,9 +138,9 @@ class CuppaVisDataBuilder(LoggerMixin):
         if self.verbose:
             self.logger.debug("Getting top event features")
 
-        wide = self.predictions.__class__.concat([
-            self._subset_feat_contrib_by_feat_pattern("trait"),
+        wide = self.predictions.__class__.concat([  ## Indirect call to CuppaPrediction.concat() to avoid circular import
             self._subset_feat_contrib_by_feat_pattern("tmb"),
+            self._subset_feat_contrib_by_feat_pattern("trait"),
 
             self._get_existing_fusions(),
             self._get_existing_viruses(),
@@ -152,6 +173,7 @@ class CuppaVisDataBuilder(LoggerMixin):
             self.logger.debug("Getting cross-validation performance")
 
         required_metrics = ["n_total", "recall", "precision"]
+        cancer_type_order = self.predictions.class_metadata.index
 
         wide = self.predictions.get_data_types("cv_performance")
         wide = wide[
@@ -159,10 +181,11 @@ class CuppaVisDataBuilder(LoggerMixin):
             (wide.index.get_level_values("clf_name") == clf_name)
         ]
 
-        ## Force metric order
+        ## Force metric and cancer type order
         long = wide.wide_to_long()
         long["feat_name"] = pd.Categorical(long["feat_name"], required_metrics)
-        long = long.sort_values("feat_name")
+        long["cancer_type"] = pd.Categorical(long["cancer_type"], cancer_type_order)
+        long = long.sort_values(["feat_name","cancer_type"])
 
         ## Rename
         long["feat_name"] = long["feat_name"].replace(dict(n_total="n_samples"))
@@ -247,54 +270,42 @@ class CuppaVisData(pd.DataFrame, LoggerMixin):
 
 
 class CuppaVisPlotter(LoggerMixin):
-    def __init__(
-        self,
-        vis_data: CuppaVisData,
-        plot_path: str,
-        vis_data_path: Optional[str] = None,
-        verbose: bool = True
-    ):
+    def __init__(self, vis_data: CuppaVisData, plot_path: str, verbose: bool = True):
         self.vis_data = vis_data
+        self._check_vis_data_has_one_sample()
+
         self.plot_path = os.path.expanduser(plot_path)
-        self._check_plot_path()
+        self._check_plot_path_extension()
 
         self.verbose = verbose
 
-        if vis_data_path is None:
-            self._using_tmp_vis_data_path = True
-            self.vis_data_path = self._get_tmp_vis_data_path()
-        else:
-            self.vis_data_path = vis_data_path
-            self._using_tmp_vis_data_path = False
+    def _check_vis_data_has_one_sample(self):
+        sample_ids = self.vis_data["sample_id"].dropna().unique()
+        if len(sample_ids) > 1:
+            self.logger.error("Cannot plot visualization when `vis_data` contains multiple samples")
+            raise Exception
 
-    def _check_plot_path(self) -> None:
-
+    def _check_plot_path_extension(self):
         if not self.plot_path.endswith((".pdf", ".png", ".jpg")):
             self.logger.error("`plot_path` must end with .pdf, .png, or .jpg")
             raise ValueError
 
-    def _get_tmp_vis_data_path(self) -> str:
-        ## If no prediction_path is specified, write to tmp location so that it can be passed to R
-        vis_data_path = os.path.join(tempfile.gettempdir(), "vis_data.tsv")
+    @property
+    def tmp_vis_data_path(self):
+        return os.path.join(os.path.dirname(self.plot_path), "cuppa.vis_data.tmp.tsv")
 
+    def write_tmp_vis_data(self):
         if self.verbose:
-            self.logger.info("`vis_data_path` not specified. Using temporary path: " + vis_data_path)
+            self.logger.debug("Writing vis data to temporary path: " + self.tmp_vis_data_path)
+        self.vis_data.to_tsv(self.tmp_vis_data_path)
 
-        if os.path.exists(vis_data_path):
-            self.logger.info("Removing existing temporary `vis_data_path`: " + vis_data_path)
-            os.remove(vis_data_path)
-
-        return vis_data_path
-
-    def remove_tmp_vis_data(self) -> None:
-        if not self._using_tmp_vis_data_path:
-            return None
-
+    def remove_tmp_vis_data(self):
         if self.verbose:
-            self.logger.info("Removing temporary vis data")
+            self.logger.debug("Removing temporary vis data at: " + self.tmp_vis_data_path)
+        os.remove(self.tmp_vis_data_path)
 
-    def run_r_script(self) -> None:
-        command = f"Rscript --vanilla {RSCRIPT_PLOT_PREDICTIONS_PATH} {self.vis_data_path} {self.plot_path}"
+    def plot_in_r(self, vis_data_path: str, plot_path: str) -> None:
+        command = f"Rscript --vanilla {RSCRIPT_PLOT_PREDICTIONS_PATH} {vis_data_path} {plot_path}"
 
         if self.verbose:
             self.logger.info("Running shell command: '%s'" % command)
@@ -309,10 +320,18 @@ class CuppaVisPlotter(LoggerMixin):
             raise CalledProcessError(return_code, command)
 
     def plot(self) -> None:
-        if not os.path.exists(self.vis_data_path):
-            self.vis_data.to_tsv(self.vis_data_path)
-        else:
-            self.logger.info("Using existing vis_data file at: " + self.vis_data_path)
+        self.write_tmp_vis_data()
 
-        self.run_r_script()
-        self.remove_tmp_vis_data()
+        try:
+            self.plot_in_r(vis_data_path=self.tmp_vis_data_path, plot_path=self.plot_path)
+            self.remove_tmp_vis_data()
+        except CalledProcessError:
+            self.remove_tmp_vis_data()
+
+    @classmethod
+    def plot_from_tsv(cls, vis_data_path: str, plot_path: str, verbose: bool = True):
+        ## This utility method exists to avoid writing a temporary vis data file if a vis data file already exists
+        vis_data = CuppaVisData.from_tsv(vis_data_path)
+        plotter = cls(vis_data=vis_data, plot_path=plot_path, verbose=verbose)
+        plotter.plot()
+
