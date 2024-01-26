@@ -231,7 +231,8 @@ investigate potential causes for QC failure.
 ## Version History and Download Links
 
 - Upcoming
-    - Bugfix: exclude simple clusters affecting no exons when counting expected number of linx plots
+    - Bugfix: Exclude simple clusters affecting no exons when counting expected number of linx plots
+    - Bugfix: Throw an exception in case a cancer type is resolved for isofox that does not exist in the gene distribution data.
 - [3.1.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.1.0)
     - ORANGE report now shows the new CUPPA v2.0 visualization
     - New ORANGE-datamodel (v2.2.0) supports the tabular output from both CUPPA v2.0 and CUPPA v1.x
