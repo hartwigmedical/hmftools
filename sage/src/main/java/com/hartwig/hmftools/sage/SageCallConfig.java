@@ -3,6 +3,8 @@ package com.hartwig.hmftools.sage;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAMS_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.sage.SageCommon.SAMPLE_DELIM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -110,8 +112,8 @@ public class SageCallConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(TUMOR, true, "Tumor sample, or collection separated by ','");
-        configBuilder.addConfigItem(TUMOR_BAM, true, "Tumor bam file(s)");
+        configBuilder.addConfigItem(TUMOR, true, TUMOR_IDS_DESC);
+        configBuilder.addConfigItem(TUMOR_BAM, true, TUMOR_BAMS_DESC);
 
         configBuilder.addPath(RESOURCE_DIR, false, "Path to Sage resource files");
         configBuilder.addPrefixedPath(HIGH_CONFIDENCE_BED, false, "High confidence regions bed file", RESOURCE_DIR);

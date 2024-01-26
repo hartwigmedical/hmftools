@@ -7,6 +7,13 @@ import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChro
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PLURALS_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAMS_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
@@ -91,8 +98,6 @@ public class SageConfig
     // allow Sage to auto-adjust to the longest observed read length
     private int mReadLength;
 
-    private static final String REFERENCE = "reference";
-    private static final String REFERENCE_BAM = "reference_bam";
     private static final String OUTPUT_VCF = "output_vcf";
     private static final String MIN_MAP_QUALITY = "min_map_quality";
     private static final String MAX_READ_DEPTH = "max_read_depth";
@@ -288,8 +293,8 @@ public class SageConfig
 
     public static void registerCommonConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(REFERENCE, false, "Reference sample, or collection separated by ','");
-        configBuilder.addConfigItem(REFERENCE_BAM, false, "Reference bam file");
+        configBuilder.addConfigItem(REFERENCE, false, REFERENCE_IDS_DESC);
+        configBuilder.addConfigItem(REFERENCE_BAM, false, REFERENCE_BAMS_DESC);
 
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, "Path to sample data files");
         configBuilder.addConfigItem(OUTPUT_VCF, true, "Output VCF filename");
