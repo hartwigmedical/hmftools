@@ -2,9 +2,11 @@ package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_READS;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_READ_MAX_BASE_MISMATCH;
+import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.buildFromJunctionReads;
 
 import java.util.Collections;
@@ -79,6 +81,9 @@ public class AssemblyMismatchSplitter
             finalSequences.add(mismatchSequence);
         }
 
+        // remove any sequences which are contained by a longer sequence
+        dedupByAssemblyContainsAnother(finalSequences);
+
         // test each read not already used to define the unique sequence against each final sequence
         for(AssemblySupport support : mSequence.support())
         {
@@ -106,7 +111,7 @@ public class AssemblyMismatchSplitter
 
         int maxMismatchQual = PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL;
 
-        // make a support for each read with mismatches and then add if unique
+        // find all mismatches by read
         Map<Read,SequenceMismatches> readSequenceMismatches = Maps.newHashMap();
 
         for(Map.Entry<Integer,BaseMismatches> entry : mSequence.mismatches().indexedBaseMismatches().entrySet())
@@ -151,7 +156,7 @@ public class AssemblyMismatchSplitter
         Set<Read> matchedReads = Sets.newHashSet();
 
         List<SequenceMismatches> sortedSequenceMismatches = readSequenceMismatches.values().stream()
-                .sorted(Comparator.comparingInt(x -> x.Mismatches.size())).collect(Collectors.toList());
+                .sorted(Collections.reverseOrder(Comparator.comparingInt(x -> x.Mismatches.size()))).collect(Collectors.toList());
 
         for(SequenceMismatches readMismatches : sortedSequenceMismatches)
         {
@@ -215,13 +220,13 @@ public class AssemblyMismatchSplitter
 
         public boolean matchesOrContains(final SequenceMismatches other)
         {
-            if(other.Mismatches.size() > Mismatches.size())
+            if(other.Mismatches.size() != Mismatches.size())
                 return false;
 
             for(int i = 0; i < Mismatches.size(); ++i)
             {
-                if(i >= other.Mismatches.size())
-                    return true;
+                // if(i >= other.Mismatches.size())
+                //    return true;
 
                 if(!Mismatches.get(i).matches(other.Mismatches.get(i)))
                     return false;
@@ -231,5 +236,74 @@ public class AssemblyMismatchSplitter
         }
 
         public String toString() { return format("reads(%d) mismatches(%d)", Reads.size(), Mismatches.size()); }
+    }
+
+    private static void dedupByAssemblyContainsAnother(final List<JunctionAssembly> assemblies)
+    {
+        Collections.sort(assemblies, Collections.reverseOrder(Comparator.comparingInt(x -> x.length())));
+
+        int i = 0;
+        while(i < assemblies.size())
+        {
+            JunctionAssembly first = assemblies.get(i);
+
+            int j = i + 1;
+            while(j < assemblies.size())
+            {
+                JunctionAssembly second = assemblies.get(j);
+
+                if(assemblyContainsAnother(first, second))
+                {
+                    assemblies.remove(j);
+                    first.checkAddReadSupport(second);
+
+                    continue;
+                }
+
+                ++j;
+            }
+
+            ++i;
+        }
+    }
+
+    private static boolean assemblyContainsAnother(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        // only checks the junction (non-ref) bases
+        int firstIndexStart;
+        int firstIndexEnd;
+
+        if(first.initialJunction().isForward())
+        {
+            firstIndexStart = first.junctionIndex();
+            firstIndexEnd = first.length() - 1;
+        }
+        else
+        {
+            firstIndexStart = 0;
+            firstIndexEnd = first.junctionIndex();
+        }
+
+        int secondOffset = second.junctionIndex() - first.junctionIndex();
+
+        for(int i = firstIndexStart; i <= firstIndexEnd; ++i)
+        {
+            int secondIndex = i + secondOffset;
+
+            if(secondIndex < 0)
+                continue;
+
+            if(secondIndex >= second.length())
+                break;
+
+            if(!basesMatch(
+                    first.bases()[i], second.bases()[i + secondOffset],
+                    first.baseQuals()[i], second.baseQuals()[i + secondOffset], LOW_BASE_QUAL_THRESHOLD))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

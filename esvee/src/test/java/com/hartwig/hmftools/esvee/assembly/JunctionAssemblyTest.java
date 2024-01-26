@@ -60,7 +60,7 @@ public class JunctionAssemblyTest
         JunctionAssembly junctionSequence = AssemblyUtils.buildFromJunctionReads(
                 junction, List.of(read1, read1b, read2, read3, read4, read5, read6), true);
 
-        assertEquals(0, junctionSequence.junctionSequenceIndex());
+        assertEquals(0, junctionSequence.junctionIndex());
         assertEquals(29, junctionSequence.minAlignedPosition());
         assertEquals(37, junctionSequence.maxAlignedPosition());
 
@@ -79,9 +79,9 @@ public class JunctionAssemblyTest
 
         // for now support count is duplicated across reads for ref bases and post-junction bases
         assertEquals(4, allSequences.get(0).supportCount());
-        assertEquals(0, allSequences.get(0).mismatches().positionCount());
+        assertEquals(1, allSequences.get(0).mismatches().positionCount());
         assertEquals(4, allSequences.get(1).supportCount());
-        assertEquals(0, allSequences.get(1).mismatches().positionCount());
+        assertEquals(1, allSequences.get(1).mismatches().positionCount());
     }
 
     @Test
@@ -117,7 +117,7 @@ public class JunctionAssemblyTest
         JunctionAssembly junctionSequence = AssemblyUtils.buildFromJunctionReads(
                 junction, List.of(read1, read2, read3, read4, read5), true);
 
-        assertEquals(10, junctionSequence.junctionSequenceIndex());
+        assertEquals(10, junctionSequence.junctionIndex());
         assertEquals(10, junctionSequence.minAlignedPosition());
         assertEquals(20, junctionSequence.maxAlignedPosition());
 

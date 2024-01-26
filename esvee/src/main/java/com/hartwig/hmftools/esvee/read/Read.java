@@ -51,7 +51,7 @@ public class Read
         mCigarElements = cigarElementsFromStr(mCigarString);
 
         setBoundaries(mRecord.getAlignmentStart());
-        mNumberOfEvents = 0;
+        mNumberOfEvents = null;
         mBases = null;
         mBaseQuals = null;
     }

@@ -2,6 +2,8 @@ package com.hartwig.hmftools.esvee.output;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
@@ -10,6 +12,7 @@ import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -19,6 +22,7 @@ import com.hartwig.hmftools.esvee.WriteType;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.read.ReadUtils;
 
 public class AssemblyWriter
 {
@@ -58,6 +62,13 @@ public class AssemblyWriter
             sj.add("RefBaseMismatches");
             sj.add("JunctionSequence");
 
+            sj.add("AvgNmCount");
+            sj.add("AvgIndelLength");
+            sj.add("AvgRefSideSoftClip");
+            sj.add("AvgBaseQual");
+            sj.add("AvgMapQual");
+            sj.add("InitialReadId");
+
             writer.write(sj.toString());
             writer.newLine();
 
@@ -88,21 +99,28 @@ public class AssemblyWriter
 
             int refBaseMismatches = 0;
             int softClipBaseMismatches = 0;
-            Set<Read> uniqueReads = Sets.newHashSet();
 
             for(AssemblySupport support : assembly.support())
             {
-                uniqueReads.add(support.read());
-
                 refBaseMismatches += support.referenceMismatches();
                 softClipBaseMismatches += support.junctionMismatches();
             }
 
-            sj.add(String.valueOf(uniqueReads.size()));
+            sj.add(String.valueOf(assembly.supportCount()));
             sj.add(String.valueOf(softClipBaseMismatches));
             sj.add(String.valueOf(refBaseMismatches));
 
             sj.add(assembly.formSequence(5));
+
+            // ref sequence stats purely for analysis
+            ReadStats readStats = buildReadStats(assembly.support(), assembly.initialJunction().isForward());
+            sj.add(statString(readStats.NmCountTotal, assembly.supportCount()));
+            sj.add(statString(readStats.IndelLengthTotal, assembly.supportCount()));
+            sj.add(statString(readStats.RefSideSoftClipLengthTotal, assembly.supportCount()));
+            sj.add(statString(readStats.BaseQualTotal, assembly.supportCount()));
+            sj.add(statString(readStats.MapQualTotal, assembly.supportCount()));
+
+            sj.add(assembly.initialRead().getName());
 
             mWriter.write(sj.toString());
             mWriter.newLine();
@@ -111,5 +129,50 @@ public class AssemblyWriter
         {
             SV_LOGGER.error("failed to write assembly: {}", e.toString());
         }
+    }
+
+    private static String statString(int count, double readCount)
+    {
+        double avgValue = count/readCount;
+        return format("%d", round(avgValue));
+    }
+
+    private class ReadStats
+    {
+        public int NmCountTotal;
+        public int IndelLengthTotal;
+        public int RefSideSoftClipLengthTotal;
+        public int BaseQualTotal;
+        public int MapQualTotal;
+
+        public ReadStats()
+        {
+            NmCountTotal = 0;
+            IndelLengthTotal = 0;
+            RefSideSoftClipLengthTotal = 0;
+            BaseQualTotal = 0;
+            MapQualTotal = 0;
+        }
+    }
+
+    private ReadStats buildReadStats(final List<AssemblySupport> supportReads, boolean isForwardJunction)
+    {
+        ReadStats readStats = new ReadStats();
+
+        for(AssemblySupport support : supportReads)
+        {
+            Read read = support.read();
+            readStats.NmCountTotal += read.numberOfEvents();
+            readStats.MapQualTotal += read.mappingQuality();
+            readStats.BaseQualTotal += ReadUtils.avgBaseQuality(read);
+            readStats.IndelLengthTotal += read.cigarElements().stream().filter(x -> x.getOperator().isIndel()).mapToInt(x -> x.getLength()).sum();
+
+            if(isForwardJunction)
+                readStats.RefSideSoftClipLengthTotal += read.alignmentStart() - read.unclippedStart();
+            else
+                readStats.RefSideSoftClipLengthTotal += read.unclippedEnd() - read.alignmentEnd();
+        }
+
+        return readStats;
     }
 }

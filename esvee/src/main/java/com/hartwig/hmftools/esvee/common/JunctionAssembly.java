@@ -60,7 +60,14 @@ public class JunctionAssembly
     public Read initialRead() { return mInitialRead; }
     public Junction initialJunction() { return mInitialJunction; }
 
-    public int junctionSequenceIndex() { return mJunctionSequenceIndex; };
+    public int junctionIndex() { return mJunctionSequenceIndex; };
+
+    // eg 21 bases, junction index at 10 (so 0-9 before, 11-20 after)
+    public int lowerDistanceFromJunction() { return mJunctionSequenceIndex; };
+    public int upperDistanceFromJunction() { return mBases.length - mJunctionSequenceIndex - 1; };
+
+    // purely for informational purposes at this stage - since past the junction is just the soft-clip length, and on the
+    // reference side doesn't take into account any INDELs
     public int minAlignedPosition() { return mMinAlignedPosition; }
     public int maxAlignedPosition() { return mMaxAlignedPosition; }
     public int length() { return mBases.length; }
@@ -368,7 +375,7 @@ public class JunctionAssembly
             if(support == minNmSupport)
                 continue;
 
-            addRead(support.read(), false, support);
+            addRead(support.read(), true, support);
         }
     }
 

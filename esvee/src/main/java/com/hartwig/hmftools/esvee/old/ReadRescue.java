@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.old;
 
-import static com.hartwig.hmftools.esvee.read.ReadUtils.getAvgBaseQuality;
+import static com.hartwig.hmftools.esvee.read.ReadUtils.avgBaseQuality;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 import static com.hartwig.hmftools.esvee.util.CommonUtils.reverseBytes;
 
@@ -44,8 +44,8 @@ public class ReadRescue
             if(repeatCount >= 10)
             {
                 final int averageQuality = direction == Direction.FORWARDS
-                        ? getAvgBaseQuality(read, i + 1, read.getBases().length - i + 1)
-                        : getAvgBaseQuality(read, 1, index + 1);
+                        ? avgBaseQuality(read, i + 1, read.getBases().length - i + 1)
+                        : avgBaseQuality(read, 1, index + 1);
                 if(averageQuality > 25)
                     continue;
 

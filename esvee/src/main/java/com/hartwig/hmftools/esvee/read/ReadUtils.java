@@ -38,15 +38,31 @@ public final class ReadUtils
         return fragmentSize == 0 || fragmentSize >= discordantPairFragmentLength;
     }
 
-    public static int getAvgBaseQuality(final Read read, final int startPosition, final int length)
+    public static double avgBaseQuality(final Read read)
     {
-        final byte[] baseQualities = read.getBaseQuality();
-        final int startIndex = startPosition - 1;
-        final int endIndex = Math.min(startIndex + length, baseQualities.length);
+        byte[] baseQualities = read.getBaseQuality();
+
+        int qualitySum = 0;
+        for(int i = 0; i < baseQualities.length; i++)
+        {
+            qualitySum += baseQualities[i];
+        }
+
+        return qualitySum / (double)baseQualities.length;
+    }
+
+    public static int avgBaseQuality(final Read read, final int startPosition, final int length)
+    {
+        byte[] baseQualities = read.getBaseQuality();
+        int startIndex = startPosition - 1;
+        int endIndex = Math.min(startIndex + length, baseQualities.length);
 
         int qualitySum = 0;
         for(int i = startIndex; i < endIndex; i++)
+        {
             qualitySum += baseQualities[i];
+        }
+
         return qualitySum / length;
     }
 
