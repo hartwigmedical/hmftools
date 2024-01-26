@@ -65,6 +65,8 @@ public class JunctionAssembly
     // eg 21 bases, junction index at 10 (so 0-9 before, 11-20 after)
     public int lowerDistanceFromJunction() { return mJunctionSequenceIndex; };
     public int upperDistanceFromJunction() { return mBases.length - mJunctionSequenceIndex - 1; };
+    public int refBaseLength() { return mInitialJunction.isForward() ? lowerDistanceFromJunction() : upperDistanceFromJunction(); }
+    public int extensionLength() { return mInitialJunction.isForward() ? upperDistanceFromJunction() : lowerDistanceFromJunction(); }
 
     // purely for informational purposes at this stage - since past the junction is just the soft-clip length, and on the
     // reference side doesn't take into account any INDELs
@@ -434,34 +436,4 @@ public class JunctionAssembly
 
         return sb.toString();
     }
-
-    /*
-    public boolean matches(final JunctionAssembly other, int minOverlapBases, int maxMismatchCount)
-    {
-        int overlapMinIndex = max(mMinAlignedPosition, other.minAlignedPosition());
-        int overlapMaxIndex = min(mMaxAlignedPosition, other.maxAlignedPosition());
-
-        int overlapLength = overlapMaxIndex - overlapMinIndex + 1;
-        if(overlapLength < minOverlapBases)
-            return false;
-
-        int offset = overlapMinIndex - minAlignedPosition();
-        int otherOffset = overlapMinIndex - other.minAlignedPosition();
-
-        int mismatchCount = 0;
-
-        for(int i = 0; i < overlapLength; ++i)
-        {
-            if(mBases[i + offset] != other.bases()[i + otherOffset])
-            {
-                ++mismatchCount;
-
-                if(mismatchCount > maxMismatchCount)
-                    return false;
-            }
-        }
-
-        return true;
-    }
-    */
 }

@@ -171,6 +171,9 @@ public class JunctionGroupAssembler extends ThreadTask
 
         Read read = new Read(record);
 
+        if(mBamReader.currentIsReferenceSample())
+            read.markReference();
+
         // CHECK: could track for stats
         ReadAdjustments.trimPolyGSequences(read);
         ReadAdjustments.convertEdgeIndelsToSoftClip(read);

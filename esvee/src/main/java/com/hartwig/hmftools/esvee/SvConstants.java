@@ -34,6 +34,9 @@ public final class SvConstants
 
     public static final int PRIMARY_ASSEMBLY_MERGE_READ_SUPPORT_OVERLAP = 2;
 
+    // filters
+    public static final int PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH = 32;
+
     // common
     public static int AVG_BASE_QUAL_THRESHOLD = 30; // original name: averageQualityThreshold
     public static int LOW_BASE_QUAL_THRESHOLD = 26; // original name: lowQualBaseThreshold

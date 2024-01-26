@@ -8,10 +8,16 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAMS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_IDS_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAMS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
@@ -44,8 +50,12 @@ import htsjdk.samtools.ValidationStringency;
 
 public class SvConfig
 {
-    public final List<String> SampleNames;
-    public final List<String> BamFiles;
+    public final List<String> TumorIds;
+    public final List<String> ReferenceIds;
+
+    public final List<String> TumorBams;
+    public final List<String> ReferenceBams;
+
     public final List<String> JunctionFiles;
 
     public final RefGenomeVersion RefGenVersion;
@@ -76,7 +86,11 @@ public class SvConfig
 
     // alternative to specifically load a tumor and/or ref sample and BAM
     public static final String SAMPLE_IDS = "samples";
+    public static final String TUMOR_IDS = "samples";
+    public static final String REFERENCE_IDS = "samples";
     public static final String SAMPLE_BAMS = "bam_files";
+    public static final String TUMOR_BAMS = "bam_files";
+    public static final String REFERENCE_BAMS = "bam_files";
 
     public static final String WRITE_TYPES = "write_types";
     public static final String HTML_SUMMARY_DIR = "html_dir";
@@ -88,12 +102,15 @@ public class SvConfig
 
     public SvConfig(final ConfigBuilder configBuilder)
     {
-        SampleNames = Arrays.stream(configBuilder.getValue(SAMPLE_IDS).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
-        BamFiles = Arrays.stream(configBuilder.getValue(SAMPLE_BAMS).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+        TumorIds = Arrays.stream(configBuilder.getValue(TUMOR).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+        ReferenceIds = Arrays.stream(configBuilder.getValue(REFERENCE).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
 
-        if(SampleNames.isEmpty() || SampleNames.size() != BamFiles.size())
+        TumorBams = Arrays.stream(configBuilder.getValue(TUMOR_BAM).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+        ReferenceBams = Arrays.stream(configBuilder.getValue(REFERENCE_BAM).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+
+        if(TumorIds.isEmpty() || TumorIds.size() != TumorBams.size() || ReferenceIds.size() != ReferenceBams.size())
         {
-            SV_LOGGER.error("sample IDs must match bam files");
+            SV_LOGGER.error("tumor and reference IDs must match BAM files");
             System.exit(1);
         }
 
@@ -105,9 +122,11 @@ public class SvConfig
         }
         else
         {
-            String bamPath = pathFromFile(BamFiles.get(0));
+            String bamPath = pathFromFile(TumorBams.get(0));
+            List<String> combinedSampleIds = Lists.newArrayList(TumorIds);
+            combinedSampleIds.addAll(ReferenceIds);
 
-            for(String sampleId : SampleNames)
+            for(String sampleId : combinedSampleIds)
             {
                 String junctionFile = bamPath + sampleId + SV_PREP_JUNCTIONS_FILE_ID;
 
@@ -166,17 +185,28 @@ public class SvConfig
         Threads = parseThreads(configBuilder);
     }
 
-    public String primaryBam() { return BamFiles.get(0); }
+    public String tumorBam() { return TumorBams.get(0); }
+    public String referenceBam() { return !ReferenceBams.isEmpty() ? ReferenceBams.get(1) : null; }
 
-    // FIXME: decide on how represented
-    public String tumorBam() { return BamFiles.get(0); }
-    public String referenceBam() { return BamFiles.size() > 1 ? BamFiles.get(1) : null; }
+    public List<String> combinedSampleIds()
+    {
+        List<String> combinedSampleIds = Lists.newArrayList(TumorIds);
+        combinedSampleIds.addAll(ReferenceIds);
+        return combinedSampleIds;
+    }
+
+    public List<String> combinedBamFiles()
+    {
+        List<String> combinedSampleIds = Lists.newArrayList(TumorBams);
+        combinedSampleIds.addAll(ReferenceBams);
+        return combinedSampleIds;
+    }
 
     public String outputFilename(final WriteType writeType)
     {
         String filename = OutputDir;
 
-        filename += SampleNames.get(0);
+        filename += TumorIds.get(0);
 
         if(OutputId != null)
             filename += "." + OutputId;
@@ -188,10 +218,12 @@ public class SvConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPath(TUMOR_BAM, false, TUMOR_BAM_DESC);
-        configBuilder.addPath(REFERENCE_BAM, false, REFERENCE_BAM_DESC);
-        configBuilder.addConfigItem(SAMPLE_IDS, true, "List of sample IDs, separated by ','");
-        configBuilder.addConfigItem(SAMPLE_BAMS, false, "List of sample BAMs, separated by ','");
+        configBuilder.addConfigItem(TUMOR, true, TUMOR_IDS_DESC);
+        configBuilder.addConfigItem(TUMOR_BAM, true, TUMOR_BAMS_DESC);
+
+        configBuilder.addConfigItem(REFERENCE, false, REFERENCE_IDS_DESC);
+        configBuilder.addConfigItem(REFERENCE_BAM, false, REFERENCE_BAMS_DESC);
+
         configBuilder.addConfigItem(OUTPUT_VCF, false, "Output VCF filename");
 
         configBuilder.addPaths(
@@ -215,5 +247,4 @@ public class SvConfig
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
     }
-
 }

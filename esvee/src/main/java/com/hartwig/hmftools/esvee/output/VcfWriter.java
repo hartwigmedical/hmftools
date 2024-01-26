@@ -97,7 +97,7 @@ public class VcfWriter implements AutoCloseable
                     .setReferenceDictionary(sequenceDictionary)
                     .build();
 
-            writeHeader(mConfig.SampleNames);
+            writeHeader(mConfig.combinedSampleIds());
         }
         else
         {

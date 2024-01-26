@@ -4,11 +4,13 @@ import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MERGE_READ_SUPPORT_OVERLAP;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_READS;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_READ_MAX_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.buildFromJunctionReads;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.SvConfig;
@@ -115,10 +117,14 @@ public class PrimaryAssembler
         // dedup assemblies for this junction based on overlapping read support
         AssemblyDeduper.dedupJunctionAssemblies(initialAssemblies);
 
+        // filters
 
+        // by soft-clip length
+        List<JunctionAssembly> filteredAssemblies = initialAssemblies.stream()
+                .filter(x -> x.extensionLength() >= PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
+                        .collect(Collectors.toList());
 
-
-        initialAssemblies.forEach(x -> mResultsWriter.writeAssembly(x));
+        filteredAssemblies.forEach(x -> mResultsWriter.writeAssembly(x));
 
         return initialAssemblies;
     }

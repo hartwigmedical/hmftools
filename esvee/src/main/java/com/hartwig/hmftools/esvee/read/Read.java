@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_A
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 
@@ -41,6 +40,8 @@ public class Read
     private byte[] mBases;
     private byte[] mBaseQuals;
 
+    private boolean mIsReference;
+
     public Read(final SAMRecord record)
     {
         mRecord = record;
@@ -54,6 +55,7 @@ public class Read
         mNumberOfEvents = null;
         mBases = null;
         mBaseQuals = null;
+        mIsReference = false;
     }
 
     private void setBoundaries(int newReadStart)
@@ -245,6 +247,8 @@ public class Read
     }
 
     public String sampleName() { return mRecord.getHeader().getAttribute(BAM_HEADER_SAMPLE_ID_TAG); }
+    public boolean isReference() { return mIsReference; }
+    public void markReference() { mIsReference = true; }
 
     @VisibleForTesting
     public String getBasesString() { return bytesToString(getBases()); }

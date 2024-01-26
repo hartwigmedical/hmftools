@@ -58,6 +58,7 @@ public class AssemblyWriter
             sj.add("RangeEnd");
             sj.add("Length");
             sj.add("SupportCount");
+            sj.add("RefSupportCount");
             sj.add("SoftClipMismatches");
             sj.add("RefBaseMismatches");
             sj.add("JunctionSequence");
@@ -107,6 +108,8 @@ public class AssemblyWriter
             }
 
             sj.add(String.valueOf(assembly.supportCount()));
+            long referenceSupportCount = assembly.support().stream().filter(x -> x.read().isReference()).count();
+            sj.add(String.valueOf(referenceSupportCount));
             sj.add(String.valueOf(softClipBaseMismatches));
             sj.add(String.valueOf(refBaseMismatches));
 
