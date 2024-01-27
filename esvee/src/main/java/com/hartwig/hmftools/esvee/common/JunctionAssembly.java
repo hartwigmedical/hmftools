@@ -29,7 +29,6 @@ public class JunctionAssembly
 
     private byte mBases[];
     private byte mBaseQuals[];
-    private int mBaseQualTotals[];
 
     private final List<AssemblySupport> mSupport;
 
@@ -54,7 +53,6 @@ public class JunctionAssembly
         mBases = new byte[initialAssemblyLength];
 
         mBaseQuals = new byte[initialAssemblyLength];
-        mBaseQualTotals = new int[initialAssemblyLength];
         mSequenceMismatches = new SequenceMismatches();
 
         mSupport = Lists.newArrayList();
@@ -86,7 +84,6 @@ public class JunctionAssembly
 
     public byte[] bases() { return mBases; }
     public byte[] baseQuals() { return mBaseQuals; }
-    public int[] baseQualTotals() { return mBaseQualTotals; }
 
     public List<AssemblySupport> support() { return mSupport; }
     public int supportCount() { return mSupport.size(); }
@@ -100,7 +97,6 @@ public class JunctionAssembly
         {
             mBases[i] = 0;
             mBaseQuals[i] = 0;
-            mBaseQualTotals[i] = 0;
         }
 
         addRead(read, false);
@@ -186,7 +182,6 @@ public class JunctionAssembly
             {
                 mBases[assemblyIndex] = base;
                 mBaseQuals[assemblyIndex] = qual;
-                mBaseQualTotals[assemblyIndex] = qual;
             }
             else
             {
@@ -194,14 +189,11 @@ public class JunctionAssembly
                 {
                     if((int)qual > (int)mBaseQuals[assemblyIndex])
                         mBaseQuals[assemblyIndex] = qual;
-
-                    mBaseQualTotals[assemblyIndex] += qual;
                 }
                 else if(mBaseQuals[assemblyIndex] < LOW_BASE_QUAL_THRESHOLD)
                 {
                     mBases[assemblyIndex] = base;
                     mBaseQuals[assemblyIndex] = qual;
-                    mBaseQualTotals[assemblyIndex] += qual;
                 }
                 else
                 {
@@ -269,7 +261,6 @@ public class JunctionAssembly
         // copy existing bases and quals
         byte[] existingBases = copyArray(mBases);
         byte[] existingQuals = copyArray(mBaseQuals);
-        int[] existingBaseTotals = copyArray(mBaseQualTotals);
 
         int newBaseLength = mBases.length + maxDistanceFromJunction;
 
@@ -280,7 +271,6 @@ public class JunctionAssembly
 
         mBases = new byte[newBaseLength];
         mBaseQuals = new byte[newBaseLength];
-        mBaseQualTotals = new int[newBaseLength];
 
         mMinAlignedPosition = minAlignedPosition;
         mMaxAlignedPosition = maxAlignedPosition;
@@ -296,13 +286,11 @@ public class JunctionAssembly
                 {
                     mBases[i] = 0;
                     mBaseQuals[i] = 0;
-                    mBaseQualTotals[i] = 0;
                 }
                 else
                 {
                     mBases[i] = existingBases[i - baseOffset];
                     mBaseQuals[i] = existingQuals[i - baseOffset];
-                    mBaseQualTotals[i] = existingBaseTotals[i - baseOffset];
                 }
             }
             else
@@ -311,13 +299,11 @@ public class JunctionAssembly
                 {
                     mBases[i] = existingBases[i];
                     mBaseQuals[i] = existingQuals[i];
-                    mBaseQualTotals[i] = existingBaseTotals[i];
                 }
                 else
                 {
                     mBases[i] = 0;
                     mBaseQuals[i] = 0;
-                    mBaseQualTotals[i] = 0;
                 }
             }
         }

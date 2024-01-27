@@ -103,26 +103,4 @@ public final class AssemblyUtils
     {
         return first == second || firstQual < lowQualThreshold || secondQual < lowQualThreshold;
     }
-
-    public static boolean haveOverlappingReads(final JunctionAssembly first, final JunctionAssembly second, final int minOverlapReads)
-    {
-        int matchedCount = 0;
-
-        for(AssemblySupport firstSupport : first.support())
-        {
-            for(AssemblySupport secondSupport : second.support())
-            {
-                if(firstSupport.read() == secondSupport.read())
-                {
-                    ++matchedCount;
-                    break;
-                }
-            }
-
-            if(matchedCount >= minOverlapReads)
-                return true;
-        }
-
-        return false;
-    }
 }
