@@ -162,13 +162,13 @@ public class RepeatInfo
         if(index + MIN_OTHER_REPEAT * DUAL_DUAL_LENGTH >= bases.length)
             return null;
 
+        // check for initial repeat type
         if(bases[index] != bases[index + 1] || bases[index + 2] != bases[index + 3])
             return null;
 
         int i = index + DUAL_DUAL_LENGTH;
         while(i < bases.length - 3)
         {
-            // check for intial repeat type
             if(bases[i] != bases[index] || bases[i + 1] != bases[index + 1] || bases[i + 2] != bases[index + 2]
             || bases[i + 3] != bases[index + 3])
             {

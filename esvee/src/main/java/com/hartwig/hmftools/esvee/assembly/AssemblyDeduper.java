@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MERGE_READ_OVERLAP;
+import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_JUNCTION_DISTANCE;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 
@@ -55,6 +57,70 @@ public class AssemblyDeduper
 
             ++index;
         }
+    }
+
+    public static void dedupProximateAssemblies(final List<JunctionAssembly> existingAssemblies, final List<JunctionAssembly> newAssemblies)
+    {
+        if(newAssemblies.isEmpty() || existingAssemblies.isEmpty())
+            return;
+
+        // start with the most recent previous assemblies since they are added in order
+        int index = existingAssemblies.size() - 1;
+        int minPosition = newAssemblies.get(0).initialJunction().Position - PROXIMATE_JUNCTION_DISTANCE;
+
+        List<JunctionAssembly> removeExisting = Lists.newArrayList();
+
+        while(index >= 0)
+        {
+            JunctionAssembly assembly = existingAssemblies.get(index);
+
+            if(assembly.initialJunction().Position < minPosition)
+                break;
+
+            int newIndex = 0;
+
+            while(newIndex < newAssemblies.size())
+            {
+                JunctionAssembly newAssembly = newAssemblies.get(newIndex);
+
+                if(newAssembly.initialJunction() == assembly.initialJunction()
+                || newAssembly.initialJunction().Orientation != assembly.initialJunction().Orientation)
+                {
+                    ++newIndex;
+                    continue;
+                }
+
+                if(!haveOverlappingReads(assembly, newAssembly))
+                {
+                    ++newIndex;
+                    continue;
+                }
+
+                if(!SequenceCompare.matchedAssemblySequences(assembly, newAssembly))
+                {
+                    ++newIndex;
+                    continue;
+                }
+
+                // take the assembly with the most read support
+                if(assembly.supportCount() >= newAssembly.supportCount())
+                {
+                    assembly.addMergedAssembly();
+                    newAssemblies.remove(newIndex);
+                }
+                else
+                {
+                    // keep this assembly and mark the existing one for removal
+                    newAssembly.addMergedAssembly();
+                    removeExisting.add(assembly);
+                    ++newIndex;
+                }
+            }
+
+            --index;
+        }
+
+        removeExisting.forEach(x -> existingAssemblies.remove(x));
     }
 
     private static boolean haveOverlappingReads(final JunctionAssembly first, final JunctionAssembly second)

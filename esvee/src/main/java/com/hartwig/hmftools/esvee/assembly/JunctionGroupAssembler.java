@@ -3,8 +3,8 @@ package com.hartwig.hmftools.esvee.assembly;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
-import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_JUNCTION_DISTANCE;
 import static com.hartwig.hmftools.esvee.SvConstants.TASK_LOG_COUNT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
 
 import java.util.List;
 import java.util.Map;
@@ -207,45 +207,6 @@ public class JunctionGroupAssembler extends ThreadTask
             {
                 mReadGroupMap.put(read.getName(), read);
             }
-        }
-    }
-
-    private void dedupProximateAssemblies(final List<JunctionAssembly> existingAssemblies, final List<JunctionAssembly> newAssemblies)
-    {
-        if(newAssemblies.isEmpty() || existingAssemblies.isEmpty())
-            return;
-
-        // start with the most recent previous assemblies since they are added in order
-        int index = existingAssemblies.size() - 1;
-        int minPosition = newAssemblies.get(0).initialJunction().Position - PROXIMATE_JUNCTION_DISTANCE;
-
-        while(index >= 0)
-        {
-            JunctionAssembly assembly = existingAssemblies.get(index);
-
-            if(assembly.initialJunction().Position < minPosition)
-                break;
-
-            int newIndex = 0;
-
-            while(newIndex < newAssemblies.size())
-            {
-                JunctionAssembly nextAssembly = newAssemblies.get(newIndex);
-
-                if(nextAssembly.initialJunction() == assembly.initialJunction())
-                {
-                    ++newIndex;
-                    continue;
-                }
-
-                // test merging logic - for now just mark as having a proximate junction?
-                // assembly.markHasProximateJunctions();
-                // nextAssembly.markHasProximateJunctions();
-
-                ++newIndex;
-            }
-
-            --index;
         }
     }
 

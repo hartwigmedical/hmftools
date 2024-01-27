@@ -22,10 +22,21 @@ public final class SequenceCompare
         int secondIndexStart;
         int secondIndexEnd;
 
+        int junctionDiff = first.initialJunction().Position - second.initialJunction().Position;
+
         if(first.initialJunction().isForward())
         {
-            firstIndexStart = first.junctionIndex();
-            secondIndexStart = second.junctionIndex();
+            // where the junction position diff, take the index into the ref bases
+            if(junctionDiff > 0)
+            {
+                firstIndexStart = first.junctionIndex() - junctionDiff;
+                secondIndexStart = second.junctionIndex();
+            }
+            else
+            {
+                firstIndexStart = first.junctionIndex();
+                secondIndexStart = second.junctionIndex() + junctionDiff;
+            }
 
             int minDistanceFromJunction = min(first.upperDistanceFromJunction(), second.upperDistanceFromJunction());
             firstIndexEnd = firstIndexStart + minDistanceFromJunction;
@@ -34,8 +45,18 @@ public final class SequenceCompare
         else
         {
             int minDistanceFromJunction = min(first.lowerDistanceFromJunction(), second.lowerDistanceFromJunction());
-            firstIndexEnd = first.junctionIndex();
-            secondIndexEnd = second.junctionIndex();
+
+            if(junctionDiff > 0)
+            {
+                firstIndexEnd = first.junctionIndex();
+                secondIndexEnd = second.junctionIndex() + junctionDiff; // brings position back into the reference bases
+            }
+            else
+            {
+                firstIndexEnd = first.junctionIndex() - junctionDiff;
+                secondIndexEnd = second.junctionIndex();
+            }
+
             firstIndexStart = firstIndexEnd - minDistanceFromJunction;
             secondIndexStart = secondIndexEnd - minDistanceFromJunction;
         }
@@ -97,11 +118,6 @@ public final class SequenceCompare
                 continue; // check the next base again
             }
 
-            // example:
-            // first index = 10, repeat length = 2, count = 5, so goes from 10-19
-            // second index = 15, repeat length = 2, count = 7, so goes from 15-28
-            // so would expect the repeat mismatch to occur at the base after either repeat ends
-
             ++mismatchCount;
 
             if(mismatchCount > maxMismatches)
@@ -118,6 +134,12 @@ public final class SequenceCompare
             int firstIndex, final List<RepeatInfo> firstRepeats, int secondIndex, final List<RepeatInfo> secondRepeats)
     {
         // look for matching repeats, and if found return the expected difference in bases if the repeats have diff counts
+
+        // example:
+        // first index = 10, repeat length = 2, count = 5, so goes from 10-19
+        // second index = 15, repeat length = 2, count = 7, so goes from 15-28
+        // so would expect the repeat mismatch to occur at the base after either repeat ends
+
         RepeatInfo firstRepeat = findRepeat(firstIndex, firstRepeats);
         RepeatInfo secondRepeat = findRepeat(secondIndex, secondRepeats);
 
@@ -195,6 +217,4 @@ public final class SequenceCompare
 
         return true;
     }
-
-
 }
