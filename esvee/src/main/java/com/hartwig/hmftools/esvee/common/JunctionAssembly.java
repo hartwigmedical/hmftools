@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
+import static com.hartwig.hmftools.esvee.common.RepeatInfo.findRepeats;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 
 import java.util.List;
@@ -33,6 +34,10 @@ public class JunctionAssembly
     private final List<AssemblySupport> mSupport;
 
     private final SequenceMismatches mSequenceMismatches;
+    private final List<RepeatInfo> mRepeatInfo;
+
+    // TEMP
+    private boolean mHasProximateJunctions;
 
     public JunctionAssembly(final Junction initialJunction, final Read read, final int maxExtensionDistance,
             final int minAlignedPosition, final int maxAlignedPosition)
@@ -53,12 +58,18 @@ public class JunctionAssembly
         mSequenceMismatches = new SequenceMismatches();
 
         mSupport = Lists.newArrayList();
+        mRepeatInfo = Lists.newArrayList();
 
         addInitialRead(read);
+
+        mHasProximateJunctions = false;
     }
 
     public Read initialRead() { return mInitialRead; }
     public Junction initialJunction() { return mInitialJunction; }
+
+    public boolean hasProximateJunctions() { return mHasProximateJunctions; }
+    public void markHasProximateJunctions() { mHasProximateJunctions = true; }
 
     public int junctionIndex() { return mJunctionSequenceIndex; };
 
@@ -402,6 +413,16 @@ public class JunctionAssembly
 
             addRead(support.read(), false);
         }
+    }
+
+    public List<RepeatInfo> repeatInfo() { return mRepeatInfo; }
+
+    public void buildRepeatInfo()
+    {
+        mRepeatInfo.clear();
+        List<RepeatInfo> repeats = findRepeats(mBases);
+        if(repeats != null)
+            mRepeatInfo.addAll(repeats);
     }
 
     public String toString()

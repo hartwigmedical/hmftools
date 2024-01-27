@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.assembly;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
+import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_JUNCTON_DISTANCE;
 import static com.hartwig.hmftools.esvee.SvConstants.TASK_LOG_COUNT;
 
 import java.util.List;
@@ -42,7 +43,6 @@ public class JunctionGroupAssembler extends ThreadTask
 
     private final Map<String,Read> mReadGroupMap;
 
-    private final List<PrimaryAssembly> mPrimaryAssemblies;
     private final List<JunctionAssembly> mJunctionAssemblies;
 
     public JunctionGroupAssembler(
@@ -57,11 +57,9 @@ public class JunctionGroupAssembler extends ThreadTask
 
         mReadGroupMap = Maps.newHashMap();
         mCurrentJunctionGroup = null;
-        mPrimaryAssemblies = Lists.newArrayList();
         mJunctionAssemblies = Lists.newArrayList();
     }
 
-    public List<PrimaryAssembly> primaryAssemblies() { return mPrimaryAssemblies; }
     public List<JunctionAssembly> junctionAssemblies() { return mJunctionAssemblies; }
 
     public static List<JunctionGroupAssembler> createThreadTasks(
@@ -139,9 +137,13 @@ public class JunctionGroupAssembler extends ThreadTask
         SV_LOGGER.debug("junctionGroup({}:{}-{} count={}) slice complete, readCount({})",
                 mCurrentJunctionGroup.chromosome(), sliceStart, sliceEnd, mCurrentJunctionGroup.count(), mCurrentJunctionGroup.candidateReadCount());
 
+        List<JunctionAssembly> junctionGroupAssemblies = Lists.newArrayList();
+
         // now pass applicable reads to each primary assembler
-        for(Junction junction : mCurrentJunctionGroup.junctions())
+        for(int i = 0; i < mCurrentJunctionGroup.junctions().size(); ++i)
         {
+            Junction junction = mCurrentJunctionGroup.junctions().get(i);
+
             PrimaryAssembler primaryAssembler = new PrimaryAssembler(mConfig, mResultsWriter, junction);
 
             // FIXME: doesn't seem to be making a big difference, but this is in efficient for long-range junction groups
@@ -154,8 +156,16 @@ public class JunctionGroupAssembler extends ThreadTask
                 continue;
 
             List<JunctionAssembly> candidateAssemblies = primaryAssembler.processJunction(junctionCandidateReads);
-            mJunctionAssemblies.addAll(candidateAssemblies);
+
+            // dedup proximate junction assemblies
+            dedupProximateAssemblies(junctionGroupAssemblies, candidateAssemblies);
+
+            junctionGroupAssemblies.addAll(candidateAssemblies);
+
+            candidateAssemblies.forEach(x -> mResultsWriter.writeAssembly(x));
         }
+
+        mJunctionAssemblies.addAll(junctionGroupAssemblies);
 
         mCurrentJunctionGroup = null;
         mReadGroupMap.clear();
@@ -201,17 +211,49 @@ public class JunctionGroupAssembler extends ThreadTask
         }
     }
 
+    private void dedupProximateAssemblies(final List<JunctionAssembly> existingAssemblies, final List<JunctionAssembly> newAssemblies)
+    {
+        if(newAssemblies.isEmpty() || existingAssemblies.isEmpty())
+            return;
+
+        // start with the most recent previous assemblies since they are added in order
+        int index = existingAssemblies.size() - 1;
+        int minPosition = newAssemblies.get(0).initialJunction().Position - PROXIMATE_JUNCTON_DISTANCE;
+
+        while(index >= 0)
+        {
+            JunctionAssembly assembly = existingAssemblies.get(index);
+
+            if(assembly.initialJunction().Position < minPosition)
+                break;
+
+            int newIndex = 0;
+
+            while(newIndex < newAssemblies.size())
+            {
+                JunctionAssembly nextAssembly = newAssemblies.get(newIndex);
+
+                if(nextAssembly.initialJunction() == assembly.initialJunction())
+                {
+                    ++newIndex;
+                    continue;
+                }
+
+                // test merging logic - for now just mark as having a proximate junction?
+                assembly.markHasProximateJunctions();
+                nextAssembly.markHasProximateJunctions();
+
+                ++newIndex;
+            }
+
+            --index;
+        }
+    }
+
     public static List<JunctionAssembly> mergeJunctionAssemblies(final List<JunctionGroupAssembler> assemblers)
     {
         List<JunctionAssembly> JunctionAssemblies = Lists.newArrayList();
         assemblers.forEach(x -> JunctionAssemblies.addAll(x.junctionAssemblies()));
         return JunctionAssemblies;
-    }
-
-    public static List<PrimaryAssembly> mergePrimaryAssemblies(final List<JunctionGroupAssembler> assemblers)
-    {
-        List<PrimaryAssembly> primaryAssemblies = Lists.newArrayList();
-        assemblers.forEach(x -> primaryAssemblies.addAll(x.primaryAssemblies()));
-        return primaryAssemblies;
     }
 }

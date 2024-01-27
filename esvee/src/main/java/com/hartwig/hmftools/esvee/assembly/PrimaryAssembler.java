@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MERGE_READ_SUPPORT_OVERLAP;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_READS;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
@@ -124,9 +123,9 @@ public class PrimaryAssembler
                 .filter(x -> x.extensionLength() >= PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
                         .collect(Collectors.toList());
 
-        filteredAssemblies.forEach(x -> mResultsWriter.writeAssembly(x));
+        filteredAssemblies.forEach(x -> x.buildRepeatInfo());
 
-        return initialAssemblies;
+        return filteredAssemblies;
     }
 
     private String nextAssemblyName()

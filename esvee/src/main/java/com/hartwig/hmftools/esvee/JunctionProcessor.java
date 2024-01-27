@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.alignment.Aligner.mergeAlignedAssemblies;
 import static com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler.mergeJunctionAssemblies;
-import static com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler.mergePrimaryAssemblies;
 import static com.hartwig.hmftools.esvee.old.PhasedMerger.createThreadTasks;
 import static com.hartwig.hmftools.esvee.old.PhasedMerger.mergePhasedResults;
 import static com.hartwig.hmftools.esvee.common.JunctionGroup.buildJunctionGroups;
@@ -245,7 +244,7 @@ public class JunctionProcessor
         if(!runThreadTasks(threadTasks))
             System.exit(1);
 
-        List<PrimaryAssembly> primaryAssemblies = mergePrimaryAssemblies(primaryAssemblyTasks);
+        List<PrimaryAssembly> primaryAssemblies = Collections.emptyList(); // mergePrimaryAssemblies(primaryAssemblyTasks);
 
         mPerfCounters.add(ThreadTask.mergePerfCounters(primaryAssemblyTasks.stream().collect(Collectors.toList())));
 

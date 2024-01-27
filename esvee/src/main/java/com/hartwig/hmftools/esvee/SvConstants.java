@@ -34,6 +34,8 @@ public final class SvConstants
 
     public static final int PRIMARY_ASSEMBLY_MERGE_READ_SUPPORT_OVERLAP = 2;
 
+    public static final int PROXIMATE_JUNCTON_DISTANCE = 10;
+
     // filters
     public static final int PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH = 32;
 

@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.RepeatInfo.repeatsAsString;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -21,6 +22,7 @@ import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.WriteType;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.common.RepeatInfo;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.read.ReadUtils;
 
@@ -69,6 +71,9 @@ public class AssemblyWriter
             sj.add("AvgBaseQual");
             sj.add("AvgMapQual");
             sj.add("InitialReadId");
+
+            sj.add("RepeatInfo");
+            sj.add("HasProximateJunc");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -125,6 +130,10 @@ public class AssemblyWriter
 
             sj.add(assembly.initialRead().getName());
 
+            sj.add(repeatsInfoStr(assembly.repeatInfo()));
+
+            sj.add(String.valueOf(assembly.hasProximateJunctions()));
+
             mWriter.write(sj.toString());
             mWriter.newLine();
         }
@@ -178,4 +187,21 @@ public class AssemblyWriter
 
         return readStats;
     }
+
+    private static String repeatsInfoStr(final List<RepeatInfo> repeats)
+    {
+        if(repeats.isEmpty())
+            return "";
+
+        RepeatInfo longest = null;
+
+        for(RepeatInfo repeat : repeats)
+        {
+            if(longest == null || repeat.Count > longest.Count)
+                longest = repeat;
+        }
+
+        return format("%d %s=%d", repeats.size(), longest.Bases, longest.Count);
+    }
+
 }
