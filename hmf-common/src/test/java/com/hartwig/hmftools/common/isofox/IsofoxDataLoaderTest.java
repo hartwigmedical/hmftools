@@ -35,4 +35,16 @@ public class IsofoxDataLoaderTest
         assertEquals(2, isofox.novelSpliceJunctions().size());
         assertEquals(2, isofox.fusions().size());
     }
+
+    @Test(expected = IllegalStateException.class)
+    public void throwExceptionOnNonExistingCancerType() throws IOException
+    {
+        IsofoxDataLoader.load("Does not exist",
+                ISOFOX_GENE_DISTRIBUTION_CSV,
+                ISOFOX_ALT_SJ_COHORT_CSV,
+                ISOFOX_SUMMARY_CSV,
+                ISOFOX_GENE_DATA_CSV,
+                ISOFOX_FUSION_CSV,
+                ISOFOX_ALT_SPLICE_JUNCTION_CSV);
+    }
 }
