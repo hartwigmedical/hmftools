@@ -20,6 +20,11 @@ public class RepeatInfo
         Count = count;
     }
 
+    public int postRepeatIndex() { return Index + length(); }
+    public int length() { return Count * Bases.length(); }
+
+    public boolean matchesType(final RepeatInfo other) { return Bases.equals(other.Bases); }
+
     public String toString() { return format("%d: %s-%d", Index, Bases, Count); }
 
     public static final int MIN_SINGLE_REPEAT = 4;
@@ -61,7 +66,7 @@ public class RepeatInfo
                 else
                     repeats.add(repeat);
 
-                index += repeat.Count * repeat.Bases.length();
+                index += repeat.length();
             }
             else
             {

@@ -73,7 +73,7 @@ public class AssemblyWriter
             sj.add("InitialReadId");
 
             sj.add("RepeatInfo");
-            sj.add("HasProximateJunc");
+            sj.add("MergedAssemblies");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -132,7 +132,7 @@ public class AssemblyWriter
 
             sj.add(repeatsInfoStr(assembly.repeatInfo()));
 
-            sj.add(String.valueOf(assembly.hasProximateJunctions()));
+            sj.add(String.valueOf(assembly.mergedAssemblyCount()));
 
             mWriter.write(sj.toString());
             mWriter.newLine();
@@ -194,14 +194,19 @@ public class AssemblyWriter
             return "";
 
         RepeatInfo longest = null;
+        RepeatInfo longestSequence = null;
 
         for(RepeatInfo repeat : repeats)
         {
             if(longest == null || repeat.Count > longest.Count)
                 longest = repeat;
+
+            if(longestSequence == null || repeat.length() > longest.length())
+                longestSequence = repeat;
         }
 
-        return format("%d %s=%d", repeats.size(), longest.Bases, longest.Count);
+        return format("%d max(%s=%d) long(%s=%d)",
+                repeats.size(), longest.Bases, longest.Count, longestSequence.Bases, longestSequence.Count);
     }
 
 }

@@ -30,11 +30,12 @@ public final class SvConstants
     public static final int PRIMARY_ASSEMBLY_MIN_MISMATCH_READS = 2; // new
     public static final int PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL = 60; // new
 
+    // primary assembly deduplication
     public static final int PRIMARY_ASSEMBLY_READ_MAX_BASE_MISMATCH = 1;
+    public static final int PRIMARY_ASSEMBLY_MERGE_MISMATCH = 3;
+    public static final int PRIMARY_ASSEMBLY_MERGE_READ_OVERLAP = 2;
 
-    public static final int PRIMARY_ASSEMBLY_MERGE_READ_SUPPORT_OVERLAP = 2;
-
-    public static final int PROXIMATE_JUNCTON_DISTANCE = 10;
+    public static final int PROXIMATE_JUNCTION_DISTANCE = 10;
 
     // filters
     public static final int PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH = 32;

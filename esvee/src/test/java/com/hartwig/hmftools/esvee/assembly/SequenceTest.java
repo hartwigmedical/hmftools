@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_BASE_QUAL;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findDualBaseRepeat;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findDualDualRepeat;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findRepeats;
@@ -16,7 +17,7 @@ import com.hartwig.hmftools.esvee.common.RepeatInfo;
 
 import org.junit.Test;
 
-public class RepeatTest
+public class SequenceTest
 {
     @Test
     public void testRepeatTypes()
@@ -98,6 +99,44 @@ public class RepeatTest
         assertEquals("CCTT", repeats.get(3).Bases);
         assertEquals(3, repeats.get(3).Count);
         assertEquals(28, repeats.get(3).Index);
+    }
+
+    @Test
+    public void testSequenceComparisons()
+    {
+        //                   0123456789012345678901234567890123456789
+        String firstBases = "ATTTTTAACTCTCTCTAAAGGCTGACGTATTCC";
+        List<RepeatInfo> firstRepeats = findRepeats(firstBases.getBytes());
+        assertEquals(2, firstRepeats.size());
+
+        byte[] firstBaseQuals = buildBaseQuals(firstBases.length());
+
+        //                    0123456789012345678901234567890123456789
+        String secondBases = "ATTTTTTTTTAACTCTCTAAACTGACGTAGTTCC";
+        List<RepeatInfo> secondRepeats = findRepeats(secondBases.getBytes());
+        assertEquals(2, secondRepeats.size());
+
+        byte[] secondBaseQuals = buildBaseQuals(secondBases.length());
+
+        // diffs are extra Ts in the second, the 'CT' repeat in first, then extra 'GG' in first then extra 'G' in second
+
+        int mismatches = SequenceCompare.compareSequences(
+                firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
+                secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats, 5);
+
+        assertEquals(4, mismatches);
+    }
+
+    private static byte[] buildBaseQuals(final int length)
+    {
+        byte[] baseQuals = new byte[length];
+
+        for(int i = 0; i < baseQuals.length; ++i)
+        {
+            baseQuals[i] = (byte)DEFAULT_BASE_QUAL;
+        }
+
+        return baseQuals;
     }
 }
 

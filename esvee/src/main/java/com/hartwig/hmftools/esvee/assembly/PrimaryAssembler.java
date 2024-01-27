@@ -113,17 +113,17 @@ public class PrimaryAssembler
             }
         }
 
-        // dedup assemblies for this junction based on overlapping read support
-        AssemblyDeduper.dedupJunctionAssemblies(initialAssemblies);
-
         // filters
 
         // by soft-clip length
         List<JunctionAssembly> filteredAssemblies = initialAssemblies.stream()
                 .filter(x -> x.extensionLength() >= PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
-                        .collect(Collectors.toList());
+                .collect(Collectors.toList());
 
         filteredAssemblies.forEach(x -> x.buildRepeatInfo());
+
+        // dedup assemblies for this junction based on overlapping read support
+        AssemblyDeduper.dedupJunctionAssemblies(filteredAssemblies);
 
         return filteredAssemblies;
     }

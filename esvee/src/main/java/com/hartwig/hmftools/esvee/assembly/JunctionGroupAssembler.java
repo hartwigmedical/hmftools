@@ -3,7 +3,7 @@ package com.hartwig.hmftools.esvee.assembly;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
-import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_JUNCTON_DISTANCE;
+import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_JUNCTION_DISTANCE;
 import static com.hartwig.hmftools.esvee.SvConstants.TASK_LOG_COUNT;
 
 import java.util.List;
@@ -24,7 +24,6 @@ import com.hartwig.hmftools.esvee.common.ThreadTask;
 import com.hartwig.hmftools.esvee.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.read.BamReader;
 import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.old.PrimaryAssembly;
 import com.hartwig.hmftools.esvee.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.read.ReadFilters;
 
@@ -218,7 +217,7 @@ public class JunctionGroupAssembler extends ThreadTask
 
         // start with the most recent previous assemblies since they are added in order
         int index = existingAssemblies.size() - 1;
-        int minPosition = newAssemblies.get(0).initialJunction().Position - PROXIMATE_JUNCTON_DISTANCE;
+        int minPosition = newAssemblies.get(0).initialJunction().Position - PROXIMATE_JUNCTION_DISTANCE;
 
         while(index >= 0)
         {
@@ -240,8 +239,8 @@ public class JunctionGroupAssembler extends ThreadTask
                 }
 
                 // test merging logic - for now just mark as having a proximate junction?
-                assembly.markHasProximateJunctions();
-                nextAssembly.markHasProximateJunctions();
+                // assembly.markHasProximateJunctions();
+                // nextAssembly.markHasProximateJunctions();
 
                 ++newIndex;
             }

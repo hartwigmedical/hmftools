@@ -36,8 +36,8 @@ public class JunctionAssembly
     private final SequenceMismatches mSequenceMismatches;
     private final List<RepeatInfo> mRepeatInfo;
 
-    // TEMP
-    private boolean mHasProximateJunctions;
+    // info only
+    private int mMergedAssemblies;
 
     public JunctionAssembly(final Junction initialJunction, final Read read, final int maxExtensionDistance,
             final int minAlignedPosition, final int maxAlignedPosition)
@@ -59,17 +59,16 @@ public class JunctionAssembly
 
         mSupport = Lists.newArrayList();
         mRepeatInfo = Lists.newArrayList();
+        mMergedAssemblies = 0;
 
         addInitialRead(read);
-
-        mHasProximateJunctions = false;
     }
 
     public Read initialRead() { return mInitialRead; }
     public Junction initialJunction() { return mInitialJunction; }
 
-    public boolean hasProximateJunctions() { return mHasProximateJunctions; }
-    public void markHasProximateJunctions() { mHasProximateJunctions = true; }
+    public int mergedAssemblyCount() { return mMergedAssemblies; }
+    public void addMergedAssembly() { ++mMergedAssemblies; }
 
     public int junctionIndex() { return mJunctionSequenceIndex; };
 
@@ -141,60 +140,6 @@ public class JunctionAssembly
 
         return true;
    }
-
-   private int[] getReadIndexCoordinates(final Read read, final int readJunctionIndex, boolean byReferenceBases)
-   {
-       // using the position of the junction within the read coordinates, gets the read index range either from the junction into
-       // soft-clip / junction bases, or from the junction, but not including it, back into reference bases
-       int[] readIndexCoords = {0, 0};
-
-       if(byReferenceBases)
-       {
-           if(mInitialJunction.isForward())
-           {
-               readIndexCoords[0] = 0;
-               readIndexCoords[1] = readJunctionIndex - 1; // the base at the junction will have already been set
-           }
-           else
-           {
-               readIndexCoords[0] = readJunctionIndex + 1;
-               readIndexCoords[1] = read.basesLength() - 1;
-           }
-       }
-       else
-       {
-           if(mInitialJunction.isForward())
-           {
-               readIndexCoords[0] = readJunctionIndex;
-               readIndexCoords[1] = read.basesLength() - 1;
-           }
-           else
-           {
-               readIndexCoords[0] = 0;
-               readIndexCoords[1] = readJunctionIndex;
-           }
-       }
-
-       return readIndexCoords;
-   }
-
-    private int getReadAssemblyStartIndex(final int readJunctionIndex, final int readStartIndex, final boolean byReferenceBases)
-    {
-        if(byReferenceBases)
-        {
-            if(mInitialJunction.isForward())
-                return mJunctionSequenceIndex - (readJunctionIndex - readStartIndex);
-            else
-                return mJunctionSequenceIndex + 1;
-        }
-        else
-        {
-            if(mInitialJunction.isForward())
-                return mJunctionSequenceIndex; // ie bases starting from the junction
-            else
-                return mJunctionSequenceIndex - (readJunctionIndex - readStartIndex);
-        }
-    }
 
     public void addRead(final Read read, boolean registerMismatches)
     {
@@ -389,6 +334,60 @@ public class JunctionAssembly
                 continue;
 
             addRead(support.read(), true, support);
+        }
+    }
+
+    private int[] getReadIndexCoordinates(final Read read, final int readJunctionIndex, boolean byReferenceBases)
+    {
+        // using the position of the junction within the read coordinates, gets the read index range either from the junction into
+        // soft-clip / junction bases, or from the junction, but not including it, back into reference bases
+        int[] readIndexCoords = {0, 0};
+
+        if(byReferenceBases)
+        {
+            if(mInitialJunction.isForward())
+            {
+                readIndexCoords[0] = 0;
+                readIndexCoords[1] = readJunctionIndex - 1; // the base at the junction will have already been set
+            }
+            else
+            {
+                readIndexCoords[0] = readJunctionIndex + 1;
+                readIndexCoords[1] = read.basesLength() - 1;
+            }
+        }
+        else
+        {
+            if(mInitialJunction.isForward())
+            {
+                readIndexCoords[0] = readJunctionIndex;
+                readIndexCoords[1] = read.basesLength() - 1;
+            }
+            else
+            {
+                readIndexCoords[0] = 0;
+                readIndexCoords[1] = readJunctionIndex;
+            }
+        }
+
+        return readIndexCoords;
+    }
+
+    private int getReadAssemblyStartIndex(final int readJunctionIndex, final int readStartIndex, final boolean byReferenceBases)
+    {
+        if(byReferenceBases)
+        {
+            if(mInitialJunction.isForward())
+                return mJunctionSequenceIndex - (readJunctionIndex - readStartIndex);
+            else
+                return mJunctionSequenceIndex + 1;
+        }
+        else
+        {
+            if(mInitialJunction.isForward())
+                return mJunctionSequenceIndex; // ie bases starting from the junction
+            else
+                return mJunctionSequenceIndex - (readJunctionIndex - readStartIndex);
         }
     }
 
