@@ -70,6 +70,61 @@ public final class AssemblyUtils
         return new JunctionAssembly(junction, maxJunctionBaseQualRead, maxDistanceFromJunction, minAlignedPosition,  maxAlignedPosition);
     }
 
+    public static void expandReferenceBases(final JunctionAssembly assembly)
+    {
+        // find the longest length of reference bases extending back from the junction
+        int minAlignedPosition = assembly.minAlignedPosition();
+        int maxAlignedPosition = assembly.maxAlignedPosition();
+
+        int junctionPosition = assembly.initialJunction().Position;
+        boolean junctionIsForward = assembly.initialJunction().isForward();
+
+        int maxDistanceFromJunction = 0;
+
+        AssemblySupport minNmSupport = null;
+
+        for(AssemblySupport support : assembly.support())
+        {
+            int readJunctionIndex = support.read().getReadIndexAtReferencePosition(junctionPosition, true);
+
+            // for positive orientations, if read length is 10, and junction index is at 4, then extends with indices 0-3 ie 4
+            // for negative orientations, if read length is 10, and junction index is at 6, then extends with indices 7-9 ie 4
+            int extensionDistance = junctionIsForward ? readJunctionIndex : support.read().basesLength() - readJunctionIndex - 1;
+
+            maxDistanceFromJunction = max(maxDistanceFromJunction, extensionDistance);
+
+            if(junctionIsForward)
+            {
+                minAlignedPosition = min(minAlignedPosition, support.read().unclippedStart());
+            }
+            else
+            {
+                maxAlignedPosition = max(maxAlignedPosition, support.read().unclippedEnd());
+            }
+
+            if(minNmSupport == null || support.read().numberOfEvents() < minNmSupport.read().numberOfEvents())
+            {
+                minNmSupport = support;
+            }
+        }
+
+        assembly.extendBases(maxDistanceFromJunction, minAlignedPosition, maxAlignedPosition);
+
+        // order by NM to favour the ref where possible
+        if(minNmSupport != null)
+        {
+            assembly.extendReadSupport(minNmSupport.read(), minNmSupport);
+        }
+
+        for(AssemblySupport support : assembly.support())
+        {
+            if(support == minNmSupport)
+                continue;
+
+            assembly.extendReadSupport(support.read(), support);
+        }
+    }
+
     protected static int readQualFromJunction(final Read read, final Junction junction)
     {
         int readJunctionIndex = read.getReadIndexAtReferencePosition(junction.Position, true);

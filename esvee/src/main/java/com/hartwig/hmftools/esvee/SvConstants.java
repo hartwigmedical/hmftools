@@ -27,7 +27,7 @@ public final class SvConstants
     public static final int READ_FILTER_MIN_ALIGNED_BASES = 30; // new (ie previously hard-coded)
 
     public static final int PRIMARY_ASSEMBLY_MIN_LENGTH = 10;
-    public static final int PRIMARY_ASSEMBLY_MIN_MISMATCH_READS = 2; // new
+    public static final int PRIMARY_ASSEMBLY_MIN_READ_SUPPORT = 2; // new
     public static final int PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL = 60; // new
 
     // primary assembly deduplication
@@ -36,6 +36,7 @@ public final class SvConstants
     public static final int PRIMARY_ASSEMBLY_MERGE_READ_OVERLAP = 2;
 
     public static final int PROXIMATE_JUNCTION_DISTANCE = 10;
+    public static final int PROXIMATE_JUNCTION_OVERLAP = 100;
 
     // filters
     public static final int PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH = 32;

@@ -6,12 +6,12 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.esvee.common.AssemblyUtils.expandReferenceBases;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.common.AssemblyMismatchSplitter;
 import com.hartwig.hmftools.esvee.common.AssemblyUtils;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.Junction;
@@ -75,7 +75,7 @@ public class JunctionAssemblyTest
         assertEquals(4, allSequences.get(0).supportCount());
         assertEquals(4, allSequences.get(1).supportCount());
 
-        allSequences.forEach(x -> x.expandReferenceBases());
+        allSequences.forEach(x -> expandReferenceBases(x));
 
         // for now support count is duplicated across reads for ref bases and post-junction bases
         assertEquals(4, allSequences.get(0).supportCount());
@@ -132,7 +132,7 @@ public class JunctionAssemblyTest
         assertEquals(3, allSequences.get(0).supportCount());
         assertEquals(3, allSequences.get(1).supportCount());
 
-        allSequences.forEach(x -> x.expandReferenceBases());
+        allSequences.forEach(x -> expandReferenceBases(x));
 
         // for now support count is duplicated across reads for ref bases and post-junction bases
         JunctionAssembly firstSequence = allSequences.stream().filter(x -> x.initialRead() == read3).findFirst().orElse(null);

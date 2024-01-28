@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.common;
+package com.hartwig.hmftools.esvee.old;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.util.CommonUtils;
 
 public class RegionOfInterest extends ChrBaseRegion

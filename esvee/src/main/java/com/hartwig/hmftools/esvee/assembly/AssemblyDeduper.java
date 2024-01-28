@@ -1,7 +1,11 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MERGE_READ_OVERLAP;
 import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_JUNCTION_DISTANCE;
+import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_JUNCTION_OVERLAP;
 
 import java.util.List;
 
@@ -90,7 +94,7 @@ public class AssemblyDeduper
                     continue;
                 }
 
-                if(!haveOverlappingReads(assembly, newAssembly))
+                if(!haveOverlapDistance(assembly, newAssembly) || !haveOverlappingReads(assembly, newAssembly))
                 {
                     ++newIndex;
                     continue;
@@ -121,6 +125,14 @@ public class AssemblyDeduper
         }
 
         removeExisting.forEach(x -> existingAssemblies.remove(x));
+    }
+
+    private static boolean haveOverlapDistance(final JunctionAssembly lower, final JunctionAssembly upper)
+    {
+        int overlapDistance = min(upper.maxAlignedPosition(), lower.maxAlignedPosition())
+                - max(upper.minAlignedPosition(), lower.minAlignedPosition());
+
+        return overlapDistance >= PROXIMATE_JUNCTION_OVERLAP;
     }
 
     private static boolean haveOverlappingReads(final JunctionAssembly first, final JunctionAssembly second)

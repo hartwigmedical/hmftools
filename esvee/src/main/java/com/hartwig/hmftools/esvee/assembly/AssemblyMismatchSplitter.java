@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.esvee.common;
+package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_READS;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_READ_MAX_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
@@ -19,6 +19,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.esvee.common.AssemblySupport;
+import com.hartwig.hmftools.esvee.common.BaseMismatch;
+import com.hartwig.hmftools.esvee.common.BaseMismatches;
+import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public class AssemblyMismatchSplitter
@@ -33,7 +37,7 @@ public class AssemblyMismatchSplitter
     public List<JunctionAssembly> splitOnMismatches(int minSequenceLength)
     {
         int permittedMismatches = PRIMARY_ASSEMBLY_READ_MAX_BASE_MISMATCH;
-        int minReadSupport = PRIMARY_ASSEMBLY_MIN_MISMATCH_READS;
+        int minReadSupport = PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 
         // every remaining mismatch should have 2+ (or whatever configured) supporting reads
         // build unique collections of mismatches for each long enough read
@@ -104,7 +108,7 @@ public class AssemblyMismatchSplitter
 
     private List<SequenceMismatches> findOtherSequences(final Set<Read> longMismatchReads)
     {
-        int minReadSupport = PRIMARY_ASSEMBLY_MIN_MISMATCH_READS;
+        int minReadSupport = PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 
         if(longMismatchReads.size() <= minReadSupport)
             return Collections.emptyList();
@@ -114,7 +118,7 @@ public class AssemblyMismatchSplitter
         // find all mismatches by read
         Map<Read,SequenceMismatches> readSequenceMismatches = Maps.newHashMap();
 
-        for(Map.Entry<Integer,BaseMismatches> entry : mSequence.mismatches().indexedBaseMismatches().entrySet())
+        for(Map.Entry<Integer, BaseMismatches> entry : mSequence.mismatches().indexedBaseMismatches().entrySet())
         {
             BaseMismatches baseMismatches = entry.getValue();
             int assemblyIndex = entry.getKey();

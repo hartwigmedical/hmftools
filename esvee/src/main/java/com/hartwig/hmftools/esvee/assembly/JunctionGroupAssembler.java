@@ -143,7 +143,7 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             Junction junction = mCurrentJunctionGroup.junctions().get(i);
 
-            PrimaryAssembler primaryAssembler = new PrimaryAssembler(mConfig, mResultsWriter, junction);
+            JunctionAssembler junctionAssembler = new JunctionAssembler(mConfig, junction);
 
             // FIXME: doesn't seem to be making a big difference, but this is in efficient for long-range junction groups
             // since both the junctions and reads are ordered. Could consider re-ordering by unclipped start and comparing to junction position
@@ -154,12 +154,19 @@ public class JunctionGroupAssembler extends ThreadTask
             if(junctionCandidateReads.isEmpty())
                 continue;
 
-            List<JunctionAssembly> candidateAssemblies = primaryAssembler.processJunction(junctionCandidateReads);
+            List<JunctionAssembly> candidateAssemblies = junctionAssembler.processJunction(junctionCandidateReads);
 
-            // dedup proximate junction assemblies
+            // dedup assemblies with close junction positions, same orientation
             dedupProximateAssemblies(junctionGroupAssemblies, candidateAssemblies);
 
             junctionGroupAssemblies.addAll(candidateAssemblies);
+
+            // extend assemblies with non-junction and discordant reads
+            // CHECK: skip likely germline reads here?
+            for(JunctionAssembly assembly : candidateAssemblies)
+            {
+                AssemblyExtension.extendAssembly(assembly, junctionAssembler.nonJunctionReads());
+            }
 
             candidateAssemblies.forEach(x -> mResultsWriter.writeAssembly(x));
         }

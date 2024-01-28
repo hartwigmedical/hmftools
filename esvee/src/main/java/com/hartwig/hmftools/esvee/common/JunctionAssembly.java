@@ -142,6 +142,11 @@ public class JunctionAssembly
         addRead(read, registerMismatches, null);
     }
 
+    public void extendReadSupport(final Read read, final AssemblySupport existingSupport)
+    {
+        addRead(read, true, existingSupport);
+    }
+
     private void addRead(final Read read, boolean registerMismatches, @Nullable final AssemblySupport existingSupport)
     {
         int mismatchCount = 0;
@@ -170,7 +175,7 @@ public class JunctionAssembly
 
             if(assemblyIndex >= mBases.length)
             {
-                // can happen with INDELs in the CIGAR, need to adjust the read index ranges or iterate by elements
+                // can possibly happen with INDELs in the CIGAR or not now that aligned positions are used to establish read coordinates?
                 // SV_LOGGER.debug("i({}) readCoords({}) assembly({}) read({})", i, readCoords, toString(), read.toString());
                 break;
             }
@@ -221,48 +226,15 @@ public class JunctionAssembly
         }
     }
 
-    public void expandReferenceBases()
+    public void extendBases(int maxDistanceFromJunction, int newMinAlignedPosition, int newMaxAlignedPosition)
     {
-        // find the long length of reference bases extending back from the junction
-        int minAlignedPosition = mMinAlignedPosition;
-        int maxAlignedPosition = mMaxAlignedPosition;
-
-        boolean isForwardJunction = mInitialJunction.isForward();
-        int junctionPosition = mInitialJunction.Position;
-        int maxDistanceFromJunction = 0;
-
-        AssemblySupport minNmSupport = null;
-
-        for(AssemblySupport support : mSupport)
-        {
-            int readJunctionIndex = support.read().getReadIndexAtReferencePosition(junctionPosition, true);
-
-            // for positive orientations, if read length is 10, and junction index is at 4, then extends with indices 0-3 ie 4
-            // for negative orientations, if read length is 10, and junction index is at 6, then extends with indices 7-9 ie 4
-            int extensionDistance = isForwardJunction ? readJunctionIndex : support.read().basesLength() - readJunctionIndex - 1;
-
-            maxDistanceFromJunction = max(maxDistanceFromJunction, extensionDistance);
-
-            if(isForwardJunction)
-            {
-                minAlignedPosition = min(minAlignedPosition, support.read().unclippedStart());
-            }
-            else
-            {
-                maxAlignedPosition = max(maxAlignedPosition, support.read().unclippedEnd());
-            }
-
-            if(minNmSupport == null || support.read().numberOfEvents() < minNmSupport.read().numberOfEvents())
-            {
-                minNmSupport = support;
-            }
-        }
-
         // copy existing bases and quals
         byte[] existingBases = copyArray(mBases);
         byte[] existingQuals = copyArray(mBaseQuals);
 
         int newBaseLength = mBases.length + maxDistanceFromJunction;
+
+        boolean isForwardJunction = mInitialJunction.isForward();
 
         if(isForwardJunction)
             mJunctionSequenceIndex += maxDistanceFromJunction;
@@ -272,8 +244,8 @@ public class JunctionAssembly
         mBases = new byte[newBaseLength];
         mBaseQuals = new byte[newBaseLength];
 
-        mMinAlignedPosition = minAlignedPosition;
-        mMaxAlignedPosition = maxAlignedPosition;
+        mMinAlignedPosition = newMinAlignedPosition;
+        mMaxAlignedPosition = newMaxAlignedPosition;
 
         // forward junction: 0 up to base offset - 1 -> set to zero, base offset to new length -> copy bases
         // reverse junction: 0 up to base offset - 1 -> copy bases, base offset to new length -> set to zero
@@ -306,20 +278,6 @@ public class JunctionAssembly
                     mBaseQuals[i] = 0;
                 }
             }
-        }
-
-        // order by NM to favour the ref where possible
-        if(minNmSupport != null)
-        {
-            addRead(minNmSupport.read(), false, minNmSupport);
-        }
-
-        for(AssemblySupport support : mSupport)
-        {
-            if(support == minNmSupport)
-                continue;
-
-            addRead(support.read(), true, support);
         }
     }
 
