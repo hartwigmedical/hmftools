@@ -16,7 +16,8 @@ public enum SoftFilter
     MAX_GERMLINE_ALT_SUPPORT(
             "maxGermlineAltSupport", "max_germline_alt_support", false, true, "Excess germline alt support"),
     MIN_AVG_BASE_QUALITY("minAvgBaseQual", "", true, false, "Variant average base quality below limit"),
-    STRAND_BIAS("strandBias", "", true, false, "Variant exceeds strand bias limit"),
+    FRAGMENT_STRAND_BIAS("fragmentStrandBias", "", true, false, "Variant exceeds fragment strand bias limit"),
+    READ_STRAND_BIAS("readStrandBias", "", true, false, "Variant exceeds read strand bias limit"),
     FRAGMENT_COORDS("minFragmentCoords", "", true, false, "Insufficient fragment coordinate variation"),
     MAX_EDGE_DISTANCE("maxEdgeDistance", "", true, false, "Variant close to read edge"),
     MAP_QUAL_REF_ALT_DIFFERENCE("mapQualRefAltDiff", "", true, false, "Alt support map qual well below ref support"),

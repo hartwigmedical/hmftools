@@ -185,13 +185,15 @@ public class VariantFilters
                 filters.add(SoftFilter.FRAGMENT_COORDS.filterName());
             }
 
-            boolean checkRefBias = tier == VariantTier.PANEL;
+            if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasRef(), true))
+            {
+                filters.add(SoftFilter.FRAGMENT_STRAND_BIAS.filterName());
+            }
 
-            if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasRef(), checkRefBias)
-            || mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBiasAlt(), primaryTumor.readStrandBiasRef(), checkRefBias)
+            if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBiasAlt(), primaryTumor.readStrandBiasRef(), true)
             || (primaryTumor.isIndel() && mStrandBiasCalcs.allOneSide(primaryTumor.readStrandBiasAlt())))
             {
-                filters.add(SoftFilter.STRAND_BIAS.filterName());
+                filters.add(SoftFilter.READ_STRAND_BIAS.filterName());
             }
 
             if(failsJitterFilter(primaryTumor))
