@@ -75,23 +75,11 @@ public interface OrangeWGSRefConfig
     @NotNull
     String chordPredictionTxt();
 
-    @Nullable
+    @NotNull
     String cuppaVisDataTsv();
 
-    @Nullable
+    @NotNull
     String cuppaSummaryPlot();
-
-    @Deprecated
-    @Nullable
-    String cuppaFeaturePlot();
-
-    @Deprecated
-    @Nullable
-    String cuppaChartPlot();
-
-    @Deprecated
-    @Nullable
-    String cuppaResultCsv();
 
     @NotNull
     String sigsAllocationTsv();
