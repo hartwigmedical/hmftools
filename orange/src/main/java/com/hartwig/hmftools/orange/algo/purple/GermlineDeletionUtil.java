@@ -19,9 +19,10 @@ class GermlineDeletionUtil
     public static double getSomaticMaxCopyNumber(@NotNull List<GermlineDeletion> deletionsForGene,
             @NotNull GeneCopyNumber somaticGeneCopyNumber, @NotNull TranscriptData canonicalTranscript)
     {
+        double maximumTumorCopyNumberFromDeletions = getMaximumTumorCopyNumberFromDeletions(deletionsForGene);
         double maxCopyNumber = deletionsCoverTranscript(deletionsForGene, canonicalTranscript)
-                ? getMaximumTumorCopyNumberFromDeletions(deletionsForGene)
-                : somaticGeneCopyNumber.maxCopyNumber();
+                ? maximumTumorCopyNumberFromDeletions
+                : Math.max(maximumTumorCopyNumberFromDeletions, somaticGeneCopyNumber.maxCopyNumber());
         return Math.max(0, maxCopyNumber);
     }
 

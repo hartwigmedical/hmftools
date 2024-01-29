@@ -28,7 +28,7 @@ public class GermlineDeletionUtilTest
     private static final double EPSILON = 1.0E-2;
 
     @Test
-    public void canCalculateMaxCopyNumberForPartialDeletionsHetInTumor()
+    public void canCalculateMaxCopyNumberForPartialDeletionsHetInTumorWithHighSomaticCopyNumber()
     {
         // Gene runs from 150 to 950
         // Exons are 250-350, 450-550 and 600-900
@@ -41,6 +41,22 @@ public class GermlineDeletionUtilTest
         GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).maxCopyNumber(2D).build();
         double maxCopyNumber = GermlineDeletionUtil.getSomaticMaxCopyNumber(deletions, geneCopyNumber, transcript);
         assertEquals(2.0, maxCopyNumber, EPSILON);
+    }
+
+    @Test
+    public void canCalculateMaxCopyNumberForPartialDeletionsHetInTumorWithLowSomaticCopyNumber()
+    {
+        // Gene runs from 150 to 950
+        // Exons are 250-350, 450-550 and 600-900
+        TranscriptData transcript = getTestTranscript();
+        GermlineDeletion partialDeletionHetInTumor1 =
+                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1.1D, 300, 400);
+        GermlineDeletion partialDeletionHetInTumor2 =
+                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 0.9D, 600, 800);
+        List<GermlineDeletion> deletions = Lists.newArrayList(partialDeletionHetInTumor1, partialDeletionHetInTumor2);
+        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).maxCopyNumber(0.8D).build();
+        double maxCopyNumber = GermlineDeletionUtil.getSomaticMaxCopyNumber(deletions, geneCopyNumber, transcript);
+        assertEquals(1.1, maxCopyNumber, EPSILON);
     }
 
     @Test
