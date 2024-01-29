@@ -70,8 +70,12 @@ public class SomaticPurityEstimator
 
         // firstly estimate raw purity without consideration of clonal peaks
         double noiseRate = mConfig.noiseRate(false);
+
         purityCalcData.RawPurityEstimate = estimatedPurity(
                 tumorPurity, fragmentTotals.adjTumorVaf(), fragmentTotals.adjSampleVaf(), noiseRate);
+
+        double expectedNoiseFragments = noiseRate * fragmentTotals.sampleDepthTotal();
+        purityCalcData.Probability = estimatedProbability(fragmentTotals.sampleAdTotal(), expectedNoiseFragments);
 
         purityCalcData.PurityEstimate = purityCalcData.RawPurityEstimate;
 

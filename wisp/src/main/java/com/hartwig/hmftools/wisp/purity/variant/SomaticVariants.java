@@ -240,6 +240,7 @@ public class SomaticVariants
                 // override basic AD and DP if umit totals are set
                 depth = umiTypeCounts.totalCount();
                 alleleCount = umiTypeCounts.alleleCount();
+                umiTypeCounts = new UmiTypeCounts(depth, 0, 0, alleleCount, 0, 0);
             }
 
             somaticVariant.Samples.add(new GenotypeFragments(genotype.getSampleName(), alleleCount, depth, qualTotal, umiTypeCounts));

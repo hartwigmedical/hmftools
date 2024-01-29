@@ -54,6 +54,7 @@ public class SomaticPurityResult
         sj.add("ChipVariants");
         sj.add("SNVPurity");
         sj.add("RawSomaticPurity");
+        sj.add("SNVProbability");
         sj.add("SNVPurityLow");
         sj.add("SNVPurityHigh");
         sj.add("ClonalMethod");
@@ -85,6 +86,7 @@ public class SomaticPurityResult
         sj.add(format("%d", ChipVariants));
         sj.add(formatPurityValue(PurityCalcs.PurityEstimate));
         sj.add(formatPurityValue(PurityCalcs.RawPurityEstimate));
+        sj.add(formatProbabilityValue(PurityCalcs.Probability));
         sj.add(formatPurityValue(PurityCalcs.PurityRangeLow));
         sj.add(formatPurityValue(PurityCalcs.PurityRangeHigh));
         sj.add(String.valueOf(PurityCalcs.Clonality.Method));
