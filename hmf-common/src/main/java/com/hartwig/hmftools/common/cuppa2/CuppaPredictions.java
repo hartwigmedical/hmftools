@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
+import org.jetbrains.annotations.NotNull;
+
 public class CuppaPredictions
 {
     public final List<CuppaPredictionEntry> PredictionEntries;
@@ -19,8 +21,13 @@ public class CuppaPredictions
     public final List<Categories.DataType> DataTypes;
     public final Categories.ClfName MainCombinedClfName;
 
-    public CuppaPredictions(final List<CuppaPredictionEntry> predictionEntries)
+    public CuppaPredictions(final @NotNull List<CuppaPredictionEntry> predictionEntries)
     {
+        if(predictionEntries.isEmpty())
+        {
+            throw new IllegalStateException("`CuppaPredictions` must be instantiated with a non-empty list");
+        }
+
         PredictionEntries = predictionEntries;
 
         CancerTypes = PredictionEntries.stream().map(o -> o.CancerType).distinct().collect(Collectors.toList());

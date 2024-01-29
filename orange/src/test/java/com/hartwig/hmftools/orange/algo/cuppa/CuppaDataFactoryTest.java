@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.orange.algo.cuppa;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,12 +84,5 @@ public class CuppaDataFactoryTest
         int featureValue = CuppaDataFactory.getSvFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE");
         int expectedFeatureValue = 751;
         assertEquals(expectedFeatureValue, featureValue);
-    }
-
-    @Test
-    public void doNotCrashOnMissingEntries() throws Exception
-    {
-        CuppaPredictions cuppaPredictions = new CuppaPredictions(new ArrayList<>());
-        assertNotNull(CuppaDataFactory.create(cuppaPredictions));
     }
 }
