@@ -6,7 +6,9 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarElementsFromStr;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarStringFromElements;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.extractAlignment;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
@@ -18,6 +20,7 @@ import static htsjdk.samtools.util.StringUtil.bytesToString;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -37,8 +40,12 @@ public class Read
     private int mUnclippedStart;
     private int mUnclippedEnd;
     private Integer mNumberOfEvents;
+    private Integer mMateAlignmentEnd;
     private byte[] mBases;
     private byte[] mBaseQuals;
+
+    private boolean mSuppDataExtracted;
+    private SupplementaryReadData mSupplementaryData;
 
     private boolean mIsReference;
 
@@ -55,7 +62,10 @@ public class Read
         mNumberOfEvents = null;
         mBases = null;
         mBaseQuals = null;
+        mMateAlignmentEnd = null;
         mIsReference = false;
+        mSuppDataExtracted = false;
+        mSupplementaryData = null;
     }
 
     private void setBoundaries(int newReadStart)
@@ -94,7 +104,12 @@ public class Read
 
     public SAMRecord bamRecord() { return mRecord; }
 
-    public void setMateRead(final Read mate) { mMateRead = mate; }
+    public void setMateRead(final Read mate)
+    {
+        mMateRead = mate;
+        mMateAlignmentEnd = mate.alignmentEnd();
+    }
+
     public boolean hasMateSet() { return mMateRead != null; }
     public Read mateRead() { return mMateRead; }
 
@@ -145,14 +160,17 @@ public class Read
 
     public int mateAlignmentEnd()
     {
-        // if used then should be calculated and cached
+        if(mMateAlignmentEnd != null)
+            return mMateAlignmentEnd;
+
         if(isMateUnmapped())
             return alignmentEnd();
 
         if(mMateRead != null)
             return mMateRead.alignmentEnd();
 
-        return getMateAlignmentEnd(mRecord);
+        mMateAlignmentEnd = getMateAlignmentEnd(mRecord);
+        return mMateAlignmentEnd;
     }
 
     public boolean isMateMapped() { return mRecord.getReadPairedFlag() && !mRecord.getMateUnmappedFlag(); }
@@ -160,6 +178,19 @@ public class Read
 
     public boolean matePositiveStrand() { return !mRecord.getMateNegativeStrandFlag(); }
     public boolean mateNegativeStrand() { return mRecord.getMateNegativeStrandFlag(); }
+
+    public boolean hasSupplementary() { return supplementaryData() != null; }
+
+    public SupplementaryReadData supplementaryData()
+    {
+        if(!mSuppDataExtracted)
+        {
+            mSuppDataExtracted = true;
+            mSupplementaryData = extractAlignment(mRecord);
+        }
+
+        return mSupplementaryData;
+    }
 
     public static final int INVALID_INDEX = -1;
 

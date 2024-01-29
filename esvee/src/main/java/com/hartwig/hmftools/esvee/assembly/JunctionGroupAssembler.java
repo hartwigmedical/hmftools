@@ -147,8 +147,9 @@ public class JunctionGroupAssembler extends ThreadTask
 
             // FIXME: doesn't seem to be making a big difference, but this is in efficient for long-range junction groups
             // since both the junctions and reads are ordered. Could consider re-ordering by unclipped start and comparing to junction position
+
             List<Read> junctionCandidateReads = mCurrentJunctionGroup.candidateReads().stream()
-                    .filter(x -> ReadFilters.alignmentCrossesJunction(x, junction))
+                    .filter(x -> ReadFilters.isCandidateJunctionRead(x, junction))
                     .collect(Collectors.toList());
 
             if(junctionCandidateReads.isEmpty())
@@ -167,11 +168,11 @@ public class JunctionGroupAssembler extends ThreadTask
             {
                 AssemblyExtension.extendAssembly(assembly, junctionAssembler.nonJunctionReads());
             }
-
-            candidateAssemblies.forEach(x -> mResultsWriter.writeAssembly(x));
         }
 
         mJunctionAssemblies.addAll(junctionGroupAssemblies);
+
+        junctionGroupAssemblies.forEach(x -> mResultsWriter.writeAssembly(x));
 
         mCurrentJunctionGroup = null;
         mReadGroupMap.clear();
@@ -217,7 +218,7 @@ public class JunctionGroupAssembler extends ThreadTask
         }
     }
 
-    public static List<JunctionAssembly> mergeJunctionAssemblies(final List<JunctionGroupAssembler> assemblers)
+    public static List<JunctionAssembly> collectJunctionAssemblies(final List<JunctionGroupAssembler> assemblers)
     {
         List<JunctionAssembly> JunctionAssemblies = Lists.newArrayList();
         assemblers.forEach(x -> JunctionAssemblies.addAll(x.junctionAssemblies()));

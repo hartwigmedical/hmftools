@@ -5,15 +5,15 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.SvConstants.READ_FILTER_MIN_ALIGNED_BASES;
 import static com.hartwig.hmftools.esvee.SvConstants.READ_SOFT_CLIP_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import java.util.Arrays;
 
-import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.common.Junction;
 
 import htsjdk.samtools.CigarElement;
@@ -21,9 +21,12 @@ import htsjdk.samtools.CigarOperator;
 
 public final class ReadFilters
 {
-    public static boolean alignmentCrossesJunction(final Read read, final Junction junction)
+    public static boolean isCandidateJunctionRead(final Read read, final Junction junction)
     {
-        return positionWithin(junction.Position, read.unclippedStart(), read.unclippedEnd());
+        int junctionBoundaryStart = junction.isForward() ? junction.Position - BAM_READ_JUNCTION_BUFFER : junction.Position;
+        int junctionBoundaryEnd = junction.isForward() ? junction.Position : junction.Position + BAM_READ_JUNCTION_BUFFER;
+
+        return positionsOverlap(junctionBoundaryStart, junctionBoundaryEnd, read.unclippedStart(), read.unclippedEnd());
     }
 
     public static boolean isRecordAverageQualityAbove(final byte[] baseQualities, final int averageBaseQThreshold)
@@ -132,21 +135,30 @@ public final class ReadFilters
         if(indelCount > 0 && mismatchedBases >= 3)
             return true;
 
-        final float[] stats = mappedBaseStats(read);
-        int countAbove70 = 0;
-        int countAbove35 = 0;
-        for(float frequency : stats)
+        try
         {
-            if(frequency > 0.7f)
-                countAbove70++;
-            if(frequency > 0.35f)
-                countAbove35++;
+            final float[] stats = mappedBaseStats(read);
+
+            int countAbove70 = 0;
+            int countAbove35 = 0;
+            for(float frequency : stats)
+            {
+                if(frequency > 0.7f)
+                    countAbove70++;
+                if(frequency > 0.35f)
+                    countAbove35++;
+            }
+
+            if(countAbove70 >= 1 || countAbove35 >= 2)
+                return true;
+
+            return false;
         }
-
-        if(countAbove70 >= 1 || countAbove35 >= 2)
+        catch(Exception e)
+        {
+            SV_LOGGER.error("failed to handle read mapping stats: {}", read.toString());
             return true;
-
-        return false;
+        }
     }
 
     private static float[] mappedBaseStats(final Read read)
@@ -165,7 +177,7 @@ public final class ReadFilters
 
             for(int i = 0; i < element.getLength(); i++)
             {
-                final byte base = read.getBases()[readPosition + i - 1];
+                byte base = read.getBases()[readPosition + i - 1];
                 baseCount[baseToIndex(base)]++;
             }
         }

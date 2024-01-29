@@ -88,6 +88,11 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
         return positionsOverlap(mStart, mEnd, other.mStart, other.mEnd);
     }
 
+    public boolean overlaps(final String chromosome, final int posStart, final int posEnd)
+    {
+        return Chromosome.equals(chromosome) && positionsOverlap(mStart, mEnd, posStart, posEnd);
+    }
+
     public boolean containsPosition(int position) { return positionWithin(position, start(), end()); }
 
     public boolean containsPosition(final String chromosome, int position)

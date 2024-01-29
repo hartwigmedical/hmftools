@@ -31,7 +31,10 @@ public class EsveeApplication
         JunctionProcessor junctionProcessor = new JunctionProcessor(mConfig);
 
         if(!junctionProcessor.loadJunctionFiles())
+        {
+            SV_LOGGER.error("failed to load junction files");
             System.exit(1);
+        }
 
         loadAlignerLibrary();
 

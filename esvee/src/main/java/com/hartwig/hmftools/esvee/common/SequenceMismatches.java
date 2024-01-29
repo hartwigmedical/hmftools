@@ -51,8 +51,6 @@ public class SequenceMismatches
         }
     }
 
-    public Collection<BaseMismatches> baseMismatches() { return mBaseMismatches.values(); }
-
     public Map<Integer,BaseMismatches> indexedBaseMismatches() { return mBaseMismatches; }
 
     @VisibleForTesting

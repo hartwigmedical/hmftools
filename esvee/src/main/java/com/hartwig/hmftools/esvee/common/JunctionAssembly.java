@@ -38,6 +38,8 @@ public class JunctionAssembly
     // info only
     private int mMergedAssemblies;
 
+    private final List<RemoteRegion> mRemoteRegions;
+
     public JunctionAssembly(final Junction initialJunction, final Read read, final int maxExtensionDistance,
             final int minAlignedPosition, final int maxAlignedPosition)
     {
@@ -57,6 +59,7 @@ public class JunctionAssembly
 
         mSupport = Lists.newArrayList();
         mRepeatInfo = Lists.newArrayList();
+        mRemoteRegions = Lists.newArrayList();
         mMergedAssemblies = 0;
 
         addInitialRead(read);
@@ -367,6 +370,9 @@ public class JunctionAssembly
         if(repeats != null)
             mRepeatInfo.addAll(repeats);
     }
+
+    public List<RemoteRegion> remoteRegions() { return mRemoteRegions; }
+    public void addRemoteRegions(final List<RemoteRegion> regions) { mRemoteRegions.addAll(regions); }
 
     public String toString()
     {

@@ -13,6 +13,8 @@ import static com.hartwig.hmftools.esvee.common.RepeatInfo.repeatsAsString;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -22,6 +24,7 @@ import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.WriteType;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.common.RemoteRegion;
 import com.hartwig.hmftools.esvee.common.RepeatInfo;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.read.ReadUtils;
@@ -74,6 +77,8 @@ public class AssemblyWriter
 
             sj.add("RepeatInfo");
             sj.add("MergedAssemblies");
+            sj.add("RemoteRegionCount");
+            sj.add("RemoteRegionInfo");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -133,6 +138,9 @@ public class AssemblyWriter
             sj.add(repeatsInfoStr(assembly.repeatInfo()));
 
             sj.add(String.valueOf(assembly.mergedAssemblyCount()));
+
+            sj.add(String.valueOf(assembly.remoteRegions().size()));
+            sj.add(remoteRegionInfoStr(assembly.remoteRegions()));
 
             mWriter.write(sj.toString());
             mWriter.newLine();
@@ -207,6 +215,24 @@ public class AssemblyWriter
 
         return format("%d max(%s=%d) long(%s=%d)",
                 repeats.size(), longest.Bases, longest.Count, longestSequence.Bases, longestSequence.Count);
+    }
+
+    private static String remoteRegionInfoStr(final List<RemoteRegion> regions)
+    {
+        if(regions.isEmpty())
+            return "";
+
+        // log first N by read support
+        Collections.sort(regions, Comparator.comparing(x -> -x.readCount()));
+
+        StringJoiner sj = new StringJoiner(" ");
+
+        for(int i = 0; i < min(3, regions.size()); ++i)
+        {
+            sj.add(format("%s=%d", regions.get(i).region(), regions.get(i).readCount()));
+        }
+
+        return sj.toString();
     }
 
 }
