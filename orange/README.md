@@ -223,6 +223,7 @@ investigate potential causes for QC failure.
       - Converted to somatic LOH events when `convert_germline_to_somatic` parameter is provided.
       - Changed titles of somatic LOH and germline losses on PDF report to accommodate these changes.
     - Combine multiple germline loss calls for the same gene into one call.
+    - Merge germline and somatic losses when both exist for the same gene.
 - [2.5.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.5.0)
     - Bugfix: Maintain linx clusters after ORANGE germline conversion
     - Include breakdown by classifier in CUPPA predictions
