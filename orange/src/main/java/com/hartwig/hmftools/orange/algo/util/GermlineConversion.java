@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalDouble;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -67,21 +68,21 @@ public final class GermlineConversion {
         List<PurpleDriver> mergedDrivers;
         List<PurpleVariant> additionalReportableVariants;
         List<PurpleGainLoss> additionalReportableGainsLosses;
-        List<PurpleGeneCopyNumber> additionalSuspectGeneCopyNumbersWithLOH;
+        List<PurpleGeneCopyNumber> mergedSuspectGeneCopyNumbersWithLOH;
         if(containsTumorCells)
         {
             mergedDrivers =
                     mergeGermlineDriversIntoSomatic(purple.somaticDrivers(), purple.germlineDrivers(), purple.reportableGermlineFullLosses());
             additionalReportableVariants = toSomaticVariants(purple.reportableGermlineVariants());
             additionalReportableGainsLosses = toSomaticGainsLosses(purple.reportableGermlineFullLosses());
-            additionalSuspectGeneCopyNumbersWithLOH = getAdditionalSuspectGeneCopyNumberWithLOH(purple);
+            mergedSuspectGeneCopyNumbersWithLOH = mergeSuspectGeneCopyNumberWithLOH(purple);
         }
         else
         {
             mergedDrivers = purple.somaticDrivers();
             additionalReportableVariants = Lists.newArrayList();
             additionalReportableGainsLosses = Lists.newArrayList();
-            additionalSuspectGeneCopyNumbersWithLOH = Lists.newArrayList();
+            mergedSuspectGeneCopyNumbersWithLOH = purple.suspectGeneCopyNumbersWithLOH();
         }
 
         return ImmutablePurpleRecord.builder()
@@ -99,7 +100,7 @@ public final class GermlineConversion {
                 .allGermlineDeletions(null)
                 .allGermlineFullLosses(null)
                 .reportableGermlineFullLosses(null)
-                .addAllSuspectGeneCopyNumbersWithLOH(additionalSuspectGeneCopyNumbersWithLOH)
+                .suspectGeneCopyNumbersWithLOH(mergedSuspectGeneCopyNumbersWithLOH)
                 .allGermlineLossOfHeterozygosities(null)
                 .reportableGermlineLossOfHeterozygosities(null)
                 .build();
@@ -165,21 +166,34 @@ public final class GermlineConversion {
     }
 
     @NotNull
-    private static List<PurpleGeneCopyNumber> getAdditionalSuspectGeneCopyNumberWithLOH(@NotNull PurpleRecord purple)
+    private static List<PurpleGeneCopyNumber> mergeSuspectGeneCopyNumberWithLOH(@NotNull PurpleRecord purple)
     {
         List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities = purple.reportableGermlineLossOfHeterozygosities();
         if(reportableGermlineLossOfHeterozygosities == null)
         {
-            return Lists.newArrayList();
+            return purple.suspectGeneCopyNumbersWithLOH();
         }
 
-        List<String> relevantGenes = reportableGermlineLossOfHeterozygosities.stream()
+        Set<String> genesWithReportableGermlineLOH = reportableGermlineLossOfHeterozygosities.stream()
                 .map(PurpleLossOfHeterozygosity::gene)
-                .distinct()
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
-        List<PurpleGeneCopyNumber> additionalSuspectGeneCopyNumberWithLOH = Lists.newArrayList();
-        for(String gene : relevantGenes)
+        List<PurpleGeneCopyNumber> mergedSuspectGeneCopyNumberWithLOH = Lists.newArrayList();
+        for(PurpleGeneCopyNumber somaticSuspectLOH : purple.suspectGeneCopyNumbersWithLOH())
+        {
+            if(genesWithReportableGermlineLOH.contains(somaticSuspectLOH.geneName()))
+            {
+                PurpleGeneCopyNumber adjustedSuspectLOH =
+                        correctForGermlineImpact(somaticSuspectLOH, reportableGermlineLossOfHeterozygosities);
+                mergedSuspectGeneCopyNumberWithLOH.add(adjustedSuspectLOH);
+            }
+            else
+            {
+                mergedSuspectGeneCopyNumberWithLOH.add(somaticSuspectLOH);
+            }
+        }
+
+        for(String gene : genesWithReportableGermlineLOH)
         {
             PurpleGeneCopyNumber candidate = findMatchingGeneCopyNumber(gene, purple.allSomaticGeneCopyNumbers());
 
@@ -191,10 +205,10 @@ public final class GermlineConversion {
             if(shouldAddSuspectGeneCopyNumberWithLOH(candidate, purple.suspectGeneCopyNumbersWithLOH(), purple.reportableGermlineFullLosses()))
             {
                 PurpleGeneCopyNumber adjustedGeneCopyNumber = correctForGermlineImpact(candidate, reportableGermlineLossOfHeterozygosities);
-                additionalSuspectGeneCopyNumberWithLOH.add(adjustedGeneCopyNumber);
+                mergedSuspectGeneCopyNumberWithLOH.add(adjustedGeneCopyNumber);
             }
         }
-        return additionalSuspectGeneCopyNumberWithLOH;
+        return mergedSuspectGeneCopyNumberWithLOH;
     }
 
     private static boolean shouldAddSuspectGeneCopyNumberWithLOH(@NotNull PurpleGeneCopyNumber candidateSuspectGeneCopyNumber,

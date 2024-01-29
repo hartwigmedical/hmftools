@@ -175,8 +175,9 @@ public class GermlineConversionTest {
     }
 
     @Test
-    public void doesNotConvertGermlineLOHIfAlreadySomaticLOH() {
-        PurpleGeneCopyNumber suspectSomaticGeneCopyNumberWithLOH = TestPurpleGeneCopyNumberFactory.builder().geneName(TEST_GENE1).build();
+    public void mergesGermlineLOHIfAlreadySomaticLOH() {
+        PurpleGeneCopyNumber suspectSomaticGeneCopyNumberWithLOH =
+                TestPurpleGeneCopyNumberFactory.builder().geneName(TEST_GENE1).minCopyNumber(0.7).minMinorAlleleCopyNumber(0.1).build();
 
         PurpleLossOfHeterozygosity germlineLOH = TestPurpleLossOfHeterozygosityFactory.builder().gene(TEST_GENE1).minCopies(0.8).build();
         PurpleGeneCopyNumber geneCopyNumber = TestPurpleGeneCopyNumberFactory.builder()
@@ -197,7 +198,8 @@ public class GermlineConversionTest {
         assertEquals(0, converted.somaticDrivers().size());
 
         assertEquals(1, converted.suspectGeneCopyNumbersWithLOH().size());
-        assertTrue(converted.suspectGeneCopyNumbersWithLOH().contains(suspectSomaticGeneCopyNumberWithLOH));
+        assertEquals(0.7, converted.suspectGeneCopyNumbersWithLOH().get(0).minCopyNumber(), EPSILON);
+        assertEquals(0., converted.suspectGeneCopyNumbersWithLOH().get(0).minMinorAlleleCopyNumber(), EPSILON);
     }
 
     @Test
