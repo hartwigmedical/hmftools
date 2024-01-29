@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
@@ -45,24 +46,54 @@ public class PurpleInterpreterTest
     }
 
     @Test
-    public void canCreateGermlineFullLosses()
+    public void canCreateReportableGermlineFullLosses()
     {
         // Gene is needed to be able to match with ensembl test data
         GermlineDeletion hetReported = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1);
         GermlineDeletion homReported = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 2);
-        GermlineDeletion homUnreported = GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HOM_DELETION, 3);
 
-        PurpleData purple = ImmutablePurpleData.builder()
-                .from(PurpleTestFactory.createMinimalTestPurpleData())
-                .addAllSomaticGeneCopyNumbers(GeneCopyNumberTestFactory.builder().chromosome("1").geneName(TEST_GENE).build())
-                .allGermlineStructuralVariants(Lists.newArrayList())
-                .addAllGermlineDeletions(hetReported, homReported, homUnreported)
-                .addReportableGermlineDeletions(hetReported, homReported)
-                .build();
+        PurpleData purple = createPurpleTestData(Lists.newArrayList(hetReported, homReported));
 
         PurpleInterpreter interpreter = createRealInterpreter();
         PurpleRecord interpreted = interpreter.interpret(purple);
+        assertEquals(1, interpreted.allGermlineFullLosses().size());
         assertEquals(1, interpreted.reportableGermlineFullLosses().size());
+        assertEquals(1, interpreted.allGermlineLossOfHeterozygosities().size());
+        assertEquals(1, interpreted.reportableGermlineLossOfHeterozygosities().size());
+    }
+
+    @Test
+    public void canHandleHalfReportableGermlineFullLosses()
+    {
+        // Gene is needed to be able to match with ensembl test data
+        GermlineDeletion hetUnreported = GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HET_DELETION, 1);
+        GermlineDeletion homReported = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 2);
+
+        PurpleData purple = createPurpleTestData(Lists.newArrayList(hetUnreported, homReported));
+
+        PurpleInterpreter interpreter = createRealInterpreter();
+        PurpleRecord interpreted = interpreter.interpret(purple);
+        assertEquals(1, interpreted.allGermlineFullLosses().size());
+        assertEquals(1, interpreted.reportableGermlineFullLosses().size());
+        assertEquals(1, interpreted.allGermlineLossOfHeterozygosities().size());
+        assertEquals(0, interpreted.reportableGermlineLossOfHeterozygosities().size());
+    }
+
+    @Test
+    public void canCreateNonReportableGermlineFullLosses()
+    {
+        // Gene is needed to be able to match with ensembl test data
+        GermlineDeletion hetUnreported = GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HET_DELETION, 1);
+        GermlineDeletion homUnreported = GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HOM_DELETION, 2);
+
+        PurpleData purple = createPurpleTestData(Lists.newArrayList(hetUnreported, homUnreported));
+
+        PurpleInterpreter interpreter = createRealInterpreter();
+        PurpleRecord interpreted = interpreter.interpret(purple);
+        assertEquals(1, interpreted.allGermlineFullLosses().size());
+        assertEquals(0, interpreted.reportableGermlineFullLosses().size());
+        assertEquals(1, interpreted.allGermlineLossOfHeterozygosities().size());
+        assertEquals(0, interpreted.reportableGermlineLossOfHeterozygosities().size());
     }
 
     @Test
@@ -240,6 +271,18 @@ public class PurpleInterpreterTest
         );
 
         assertEquals(0, impliedTooLong.size());
+    }
+
+    @NotNull
+    private static ImmutablePurpleData createPurpleTestData(@NotNull List<GermlineDeletion> allGermlineDeletions)
+    {
+        return ImmutablePurpleData.builder()
+                .from(PurpleTestFactory.createMinimalTestPurpleData())
+                .addAllSomaticGeneCopyNumbers(GeneCopyNumberTestFactory.builder().chromosome("1").geneName(TEST_GENE).build())
+                .allGermlineStructuralVariants(Lists.newArrayList())
+                .allGermlineDeletions(allGermlineDeletions)
+                .reportableGermlineDeletions(allGermlineDeletions.stream().filter(d -> d.Reported).collect(Collectors.toList()))
+                .build();
     }
 
     @NotNull

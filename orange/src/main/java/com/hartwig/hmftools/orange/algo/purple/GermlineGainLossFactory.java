@@ -2,6 +2,8 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -26,39 +28,45 @@ public class GermlineGainLossFactory
     }
 
     @NotNull
-    public Map<PurpleGainLoss, GermlineDeletion> mapDeletions(@NotNull List<GermlineDeletion> germlineDeletions,
+    public Map<PurpleGainLoss, Boolean> getReportabilityMap(@NotNull List<GermlineDeletion> germlineDeletions,
             @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers)
     {
-        Map<PurpleGainLoss, GermlineDeletion> deletionMap = Maps.newHashMap();
-        for(GermlineDeletion germlineDeletion : germlineDeletions)
+        List<GermlineDeletion> germlineDeletionsHomozygousInTumor =
+                germlineDeletions.stream().filter(d -> d.TumorStatus == GermlineStatus.HOM_DELETION).collect(Collectors.toList());
+        Set<String> relevantGeneNames = germlineDeletionsHomozygousInTumor.stream().map(d -> d.GeneName).collect(Collectors.toSet());
+
+        Map<PurpleGainLoss, Boolean> lossToReportability = Maps.newHashMap();
+        for(String geneName : relevantGeneNames)
         {
-            if(germlineDeletion.TumorStatus == GermlineStatus.HOM_DELETION)
-            {
-                PurpleGainLoss gainLoss = toGainLoss(germlineDeletion, allSomaticGeneCopyNumbers);
-                if(!deletionMap.containsKey(gainLoss))
-                {
-                    deletionMap.put(gainLoss, germlineDeletion);
-                }
-            }
+            List<GermlineDeletion> deletionsForGene =
+                    germlineDeletionsHomozygousInTumor.stream().filter(d -> d.GeneName.equals(geneName)).collect(Collectors.toList());
+            GeneCopyNumber somaticGeneCopyNumber = GermlineDeletionUtil.findGeneCopyNumberForGene(geneName, allSomaticGeneCopyNumbers);
+
+            PurpleGainLoss loss = toGainLoss(geneName, deletionsForGene, somaticGeneCopyNumber);
+            boolean reported = GermlineDeletionUtil.getReportedStatus(deletionsForGene);
+            lossToReportability.put(loss, reported);
         }
-        return deletionMap;
+        return lossToReportability;
     }
 
     @NotNull
-    private PurpleGainLoss toGainLoss(@NotNull GermlineDeletion deletion, @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers)
+    private PurpleGainLoss toGainLoss(@NotNull String geneName, @NotNull List<GermlineDeletion> deletionsForGene,
+            @NotNull GeneCopyNumber somaticGeneCopyNumber)
     {
-        TranscriptData canonicalTranscript = GermlineCopyNumberUtil.findCanonicalTranscript(deletion.GeneName, ensemblDataCache);
-        CopyNumberInterpretation interpretation = GermlineCopyNumberUtil.deletionCoversTranscript(deletion, canonicalTranscript)
+        TranscriptData canonicalTranscript = GermlineDeletionUtil.findCanonicalTranscript(geneName, ensemblDataCache);
+        CopyNumberInterpretation interpretation = GermlineDeletionUtil.deletionsCoverTranscript(deletionsForGene, canonicalTranscript)
                 ? CopyNumberInterpretation.FULL_LOSS
                 : CopyNumberInterpretation.PARTIAL_LOSS;
-        double minCopies = GermlineCopyNumberUtil.getSomaticMinCopyNumber(deletion);
-        double maxCopies = GermlineCopyNumberUtil.getSomaticMaxCopyNumber(deletion, allSomaticGeneCopyNumbers, ensemblDataCache);
+        double minCopies = GermlineDeletionUtil.getSomaticMinCopyNumber(deletionsForGene);
+        double maxCopies = GermlineDeletionUtil.getSomaticMaxCopyNumber(deletionsForGene, somaticGeneCopyNumber, canonicalTranscript);
+        String chromosome = GermlineDeletionUtil.getChromosome(deletionsForGene);
+        String chromosomeBand = GermlineDeletionUtil.getChromosomeBand(deletionsForGene);
 
         return ImmutablePurpleGainLoss.builder()
                 .interpretation(interpretation)
-                .chromosome(deletion.Chromosome)
-                .chromosomeBand(deletion.ChromosomeBand)
-                .gene(deletion.GeneName)
+                .chromosome(chromosome)
+                .chromosomeBand(chromosomeBand)
+                .gene(geneName)
                 .transcript(canonicalTranscript.TransName)
                 .isCanonical(true)
                 .minCopies(minCopies)

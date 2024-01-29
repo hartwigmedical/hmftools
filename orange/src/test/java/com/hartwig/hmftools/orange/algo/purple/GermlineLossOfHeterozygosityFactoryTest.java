@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
@@ -30,49 +32,86 @@ public class GermlineLossOfHeterozygosityFactoryTest
         GermlineLossOfHeterozygosityFactory factory = createTestFactory();
 
         GermlineDeletion reportableHom = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION);
-        assertTrue(factory.mapDeletions(Lists.newArrayList(reportableHom), Lists.newArrayList()).isEmpty());
+        assertTrue(factory.getReportabilityMap(Lists.newArrayList(reportableHom), Lists.newArrayList()).isEmpty());
     }
 
     @Test
-    public void canTransformPartialHetDeletionToLOH()
+    public void canTransformReportablePartialHetDeletionsToLOH()
+    {
+        GermlineLossOfHeterozygosityFactory factory = createTestFactory();
+
+        // Gene runs from 150 to 950
+        // Exons are 250-350, 450-550 and 600-900
+        GermlineDeletion reportablePartial1 =
+                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1D, 400, 700);
+        GermlineDeletion reportablePartial2 =
+                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 2D, 800, 1000);
+        List<GermlineDeletion> deletions = Lists.newArrayList(reportablePartial2, reportablePartial1);
+
+        GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(2D).maxCopyNumber(4D).build();
+
+        Map<PurpleLossOfHeterozygosity, Boolean> map = factory.getReportabilityMap(deletions, Lists.newArrayList(geneCopyNumber));
+        PurpleLossOfHeterozygosity loh = map.keySet().iterator().next();
+
+        assertEquals(1, map.keySet().size());
+        assertTrue(map.get(loh));
+        assertEquals(GeneProportion.PARTIAL_GENE, loh.geneProportion());
+        assertEquals(TEST_GENE, loh.gene());
+        assertEquals(1, loh.minCopies(), EPSILON);
+        assertEquals(4, loh.maxCopies(), EPSILON);
+    }
+
+    @Test
+    public void canTransformNonReportableFullHetDeletionToLOH()
     {
         GermlineLossOfHeterozygosityFactory factory = createTestFactory();
 
         // Gene runs from 150 to 950
         GermlineDeletion reportablePartial =
-                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1D, 400, 500);
+                GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HET_DELETION, 1D, 100, 1000);
         GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(2D).maxCopyNumber(4D).build();
 
-        Map<PurpleLossOfHeterozygosity, GermlineDeletion> map =
-                factory.mapDeletions(Lists.newArrayList(reportablePartial), Lists.newArrayList(geneCopyNumber));
-        PurpleLossOfHeterozygosity heterozygousDeletion = map.keySet().iterator().next();
+        Map<PurpleLossOfHeterozygosity, Boolean> map =
+                factory.getReportabilityMap(Lists.newArrayList(reportablePartial), Lists.newArrayList(geneCopyNumber));
+        PurpleLossOfHeterozygosity loh = map.keySet().iterator().next();
 
-        assertEquals(reportablePartial, map.get(heterozygousDeletion));
-        assertEquals(GeneProportion.PARTIAL_GENE, heterozygousDeletion.geneProportion());
-        assertEquals(TEST_GENE, heterozygousDeletion.gene());
-        assertEquals(1, heterozygousDeletion.minCopies(), EPSILON);
-        assertEquals(4, heterozygousDeletion.maxCopies(), EPSILON);
+        assertEquals(1, map.keySet().size());
+        assertFalse(map.get(loh));
+        assertEquals(GeneProportion.FULL_GENE, loh.geneProportion());
+        assertEquals(TEST_GENE, loh.gene());
+        assertEquals(1, loh.minCopies(), EPSILON);
+        assertEquals(1, loh.maxCopies(), EPSILON);
     }
 
     @Test
-    public void canTransformFullHetDeletionToLOH()
+    public void canTransformReportablePartialHetDeletionsToFullGeneLOH()
     {
         GermlineLossOfHeterozygosityFactory factory = createTestFactory();
 
         // Gene runs from 150 to 950
-        GermlineDeletion reportablePartial =
-                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1D, 100, 1000);
+        // Exons are 250-350, 450-550 and 600-900
+        GermlineDeletion reportablePartial1 =
+                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 0.9D, 200, 375);
+        GermlineDeletion reportablePartial2 =
+                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1.3D, 425, 450);
+        GermlineDeletion reportablePartial3 =
+                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1.3D, 425, 525);
+        GermlineDeletion reportablePartial4 =
+                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 3D, 500, 2000);
+        List<GermlineDeletion> germlineDeletions =
+                Lists.newArrayList(reportablePartial4, reportablePartial3, reportablePartial2, reportablePartial1);
+
         GeneCopyNumber geneCopyNumber = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(2D).maxCopyNumber(4D).build();
 
-        Map<PurpleLossOfHeterozygosity, GermlineDeletion> map =
-                factory.mapDeletions(Lists.newArrayList(reportablePartial), Lists.newArrayList(geneCopyNumber));
-        PurpleLossOfHeterozygosity heterozygousDeletion = map.keySet().iterator().next();
+        Map<PurpleLossOfHeterozygosity, Boolean> map = factory.getReportabilityMap(germlineDeletions, Lists.newArrayList(geneCopyNumber));
+        PurpleLossOfHeterozygosity loh = map.keySet().iterator().next();
 
-        assertEquals(reportablePartial, map.get(heterozygousDeletion));
-        assertEquals(GeneProportion.FULL_GENE, heterozygousDeletion.geneProportion());
-        assertEquals(TEST_GENE, heterozygousDeletion.gene());
-        assertEquals(1, heterozygousDeletion.minCopies(), EPSILON);
-        assertEquals(1, heterozygousDeletion.maxCopies(), EPSILON);
+        assertEquals(1, map.keySet().size());
+        assertTrue(map.get(loh));
+        assertEquals(GeneProportion.FULL_GENE, loh.geneProportion());
+        assertEquals(TEST_GENE, loh.gene());
+        assertEquals(0.9, loh.minCopies(), EPSILON);
+        assertEquals(3, loh.maxCopies(), EPSILON);
     }
 
     @NotNull

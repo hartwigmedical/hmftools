@@ -2,6 +2,8 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -26,40 +28,46 @@ public class GermlineLossOfHeterozygosityFactory
     }
 
     @NotNull
-    public Map<PurpleLossOfHeterozygosity, GermlineDeletion> mapDeletions(@NotNull List<GermlineDeletion> germlineDeletions,
+    public Map<PurpleLossOfHeterozygosity, Boolean> getReportabilityMap(@NotNull List<GermlineDeletion> germlineDeletions,
             @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers)
     {
-        Map<PurpleLossOfHeterozygosity, GermlineDeletion> deletionMap = Maps.newHashMap();
-        for(GermlineDeletion germlineDeletion : germlineDeletions)
+        List<GermlineDeletion> germlineDeletionsHeterozygousInTumor =
+                germlineDeletions.stream().filter(d -> d.TumorStatus == GermlineStatus.HET_DELETION).collect(Collectors.toList());
+        Set<String> relevantGeneNames = germlineDeletionsHeterozygousInTumor.stream().map(d -> d.GeneName).collect(Collectors.toSet());
+
+        Map<PurpleLossOfHeterozygosity, Boolean> lohToReportability = Maps.newHashMap();
+        for(String geneName : relevantGeneNames)
         {
-            if(germlineDeletion.TumorStatus == GermlineStatus.HET_DELETION)
-            {
-                PurpleLossOfHeterozygosity lossOfHeterozygosity = toLossOfHeterozygosity(germlineDeletion, allSomaticGeneCopyNumbers);
-                if(!deletionMap.containsKey(lossOfHeterozygosity))
-                {
-                    deletionMap.put(lossOfHeterozygosity, germlineDeletion);
-                }
-            }
+            List<GermlineDeletion> deletionsForGene =
+                    germlineDeletionsHeterozygousInTumor.stream().filter(d -> d.GeneName.equals(geneName)).collect(Collectors.toList());
+            GeneCopyNumber somaticGeneCopyNumber = GermlineDeletionUtil.findGeneCopyNumberForGene(geneName, allSomaticGeneCopyNumbers);
+
+            PurpleLossOfHeterozygosity lossOfHeterozygosity =
+                    toPurpleLossOfHeterozygosity(geneName, deletionsForGene, somaticGeneCopyNumber);
+            boolean reported = GermlineDeletionUtil.getReportedStatus(deletionsForGene);
+            lohToReportability.put(lossOfHeterozygosity, reported);
         }
-        return deletionMap;
+        return lohToReportability;
     }
 
     @NotNull
-    private PurpleLossOfHeterozygosity toLossOfHeterozygosity(@NotNull GermlineDeletion deletion,
-            @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers)
+    private PurpleLossOfHeterozygosity toPurpleLossOfHeterozygosity(@NotNull String geneName,
+            @NotNull List<GermlineDeletion> deletionsForGene, @NotNull GeneCopyNumber somaticGeneCopyNumber)
     {
-        TranscriptData canonicalTranscript = GermlineCopyNumberUtil.findCanonicalTranscript(deletion.GeneName, ensemblDataCache);
-        GeneProportion geneProportion = GermlineCopyNumberUtil.deletionCoversTranscript(deletion, canonicalTranscript)
+        TranscriptData canonicalTranscript = GermlineDeletionUtil.findCanonicalTranscript(geneName, ensemblDataCache);
+        GeneProportion geneProportion = GermlineDeletionUtil.deletionsCoverTranscript(deletionsForGene, canonicalTranscript)
                 ? GeneProportion.FULL_GENE
                 : GeneProportion.PARTIAL_GENE;
-        double minCopies = GermlineCopyNumberUtil.getSomaticMinCopyNumber(deletion);
-        double maxCopies = GermlineCopyNumberUtil.getSomaticMaxCopyNumber(deletion, allSomaticGeneCopyNumbers, ensemblDataCache);
+        double minCopies = GermlineDeletionUtil.getSomaticMinCopyNumber(deletionsForGene);
+        double maxCopies = GermlineDeletionUtil.getSomaticMaxCopyNumber(deletionsForGene, somaticGeneCopyNumber, canonicalTranscript);
+        String chromosome = GermlineDeletionUtil.getChromosome(deletionsForGene);
+        String chromosomeBand = GermlineDeletionUtil.getChromosomeBand(deletionsForGene);
 
         return ImmutablePurpleLossOfHeterozygosity.builder()
                 .geneProportion(geneProportion)
-                .chromosome(deletion.Chromosome)
-                .chromosomeBand(deletion.ChromosomeBand)
-                .gene(deletion.GeneName)
+                .chromosome(chromosome)
+                .chromosomeBand(chromosomeBand)
+                .gene(geneName)
                 .transcript(canonicalTranscript.TransName)
                 .isCanonical(true)
                 .minCopies(minCopies)
