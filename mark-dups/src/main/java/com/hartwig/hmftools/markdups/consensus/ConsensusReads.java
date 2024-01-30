@@ -99,7 +99,19 @@ public class ConsensusReads
             return new ConsensusReadInfo(consensusRead, templateRead, SUPPLEMENTARY);
         }
 
-        List<SAMRecord> readsView = reads.size() < CONSENSUS_MAX_DEPTH ? reads : reads.subList(0, CONSENSUS_MAX_DEPTH);
+        List<SAMRecord> readsView;
+
+        if(reads.size() < CONSENSUS_MAX_DEPTH)
+        {
+            readsView = reads;
+        }
+        else
+        {
+            readsView = reads.subList(0, CONSENSUS_MAX_DEPTH);
+
+            if(readsView.stream().noneMatch(x -> x == templateRead)) // ensure it is included since it drives cigar selection
+                readsView.add(templateRead);
+        }
 
         boolean isForward = !templateRead.getReadNegativeStrandFlag();
         boolean hasIndels = false;

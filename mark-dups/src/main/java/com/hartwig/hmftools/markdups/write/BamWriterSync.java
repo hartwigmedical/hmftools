@@ -2,6 +2,7 @@ package com.hartwig.hmftools.markdups.write;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
 
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
 

@@ -202,7 +202,9 @@ public class SortedBamWriter
             }
 
             for(ReadOrAlignmentStart readOrAlignmentStart : records)
+            {
                 mWriter.addAlignment(readOrAlignmentStart.Read);
+            }
         }
 
         mMaxWrite = max(mMaxWrite, records.size());
