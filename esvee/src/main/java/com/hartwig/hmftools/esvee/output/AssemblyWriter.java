@@ -9,6 +9,9 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_DISCORDANT_READ;
+import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_MATE;
+import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_SUPP;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.repeatsAsString;
 
 import java.io.BufferedWriter;
@@ -23,6 +26,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.WriteType;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
+import com.hartwig.hmftools.esvee.common.BaseMismatches;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.RemoteRegion;
 import com.hartwig.hmftools.esvee.common.RepeatInfo;
@@ -66,6 +70,7 @@ public class AssemblyWriter
             sj.add("RefSupportCount");
             sj.add("SoftClipMismatches");
             sj.add("RefBaseMismatches");
+            sj.add("RefBaseDominantMismatches");
             sj.add("JunctionSequence");
 
             sj.add("AvgNmCount");
@@ -78,7 +83,11 @@ public class AssemblyWriter
             sj.add("RepeatInfo");
             sj.add("MergedAssemblies");
             sj.add("RemoteRegionCount");
+            sj.add("RemoteRegionJuncMate");
+            sj.add("RemoteRegionJuncSupps");
+            sj.add("RemoteRegionDiscordant");
             sj.add("RemoteRegionInfo");
+            sj.add("RefExtensionDistance");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -117,11 +126,25 @@ public class AssemblyWriter
                 softClipBaseMismatches += support.junctionMismatches();
             }
 
+            // where the mismatches on a ref base exceeds 50% of the junction read count, suggesting the wrong base was used or there are
+            // valid alternatives
+            int refBaseDominantMismatches = 0;
+
+            if(assembly.mismatches().hasMismatches())
+            {
+                for(BaseMismatches baseMismatch : assembly.mismatches().indexedBaseMismatches().values())
+                {
+                    if(baseMismatch.mismatchReadTotal() >= assembly.supportCount() * 0.4)
+                        ++refBaseDominantMismatches;
+                }
+            }
+
             sj.add(String.valueOf(assembly.supportCount()));
             long referenceSupportCount = assembly.support().stream().filter(x -> x.read().isReference()).count();
             sj.add(String.valueOf(referenceSupportCount));
             sj.add(String.valueOf(softClipBaseMismatches));
             sj.add(String.valueOf(refBaseMismatches));
+            sj.add(String.valueOf(refBaseDominantMismatches));
 
             sj.add(assembly.formSequence(5));
 
@@ -140,7 +163,25 @@ public class AssemblyWriter
             sj.add(String.valueOf(assembly.mergedAssemblyCount()));
 
             sj.add(String.valueOf(assembly.remoteRegions().size()));
+
+            int remoteJunctSupp = 0;
+            int remoteJunctMate = 0;
+            int remoteDiscordant = 0;
+
+            for(RemoteRegion region : assembly.remoteRegions())
+            {
+                remoteJunctMate += region.readTypeCounts()[REMOTE_READ_TYPE_JUNCTION_MATE];
+                remoteJunctSupp += region.readTypeCounts()[REMOTE_READ_TYPE_JUNCTION_SUPP];
+                remoteDiscordant += region.readTypeCounts()[REMOTE_READ_TYPE_DISCORDANT_READ];
+            }
+
+            sj.add(String.valueOf(remoteJunctMate));
+            sj.add(String.valueOf(remoteJunctSupp));
+            sj.add(String.valueOf(remoteDiscordant));
+
             sj.add(remoteRegionInfoStr(assembly.remoteRegions()));
+
+            sj.add(String.valueOf(assembly.refExtensionDistance()));
 
             mWriter.write(sj.toString());
             mWriter.newLine();

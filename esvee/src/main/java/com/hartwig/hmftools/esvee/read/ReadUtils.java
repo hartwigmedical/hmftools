@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.read;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
@@ -33,7 +34,7 @@ public final class ReadUtils
         if(read.positiveStrand() == read.matePositiveStrand())
             return true;
 
-        int fragmentSize = read.insertSize();
+        int fragmentSize = abs(read.insertSize());
 
         return fragmentSize == 0 || fragmentSize >= discordantPairFragmentLength;
     }

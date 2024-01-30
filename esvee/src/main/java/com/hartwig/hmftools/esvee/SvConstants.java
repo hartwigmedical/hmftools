@@ -45,6 +45,8 @@ public final class SvConstants
     public static int AVG_BASE_QUAL_THRESHOLD = 30; // original name: averageQualityThreshold
     public static int LOW_BASE_QUAL_THRESHOLD = 26; // original name: lowQualBaseThreshold
 
+    // assembly extension
+    public static final int ASSEMBLY_EXTENSION_OVERLAP_BASES = 20;
 
 
     public static final int SUPPORT_MAX_MISMATCH_STRONG = 1;

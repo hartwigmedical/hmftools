@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.common;
 
-import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import java.util.List;

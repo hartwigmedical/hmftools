@@ -39,6 +39,7 @@ public class JunctionAssembly
     private int mMergedAssemblies;
 
     private final List<RemoteRegion> mRemoteRegions;
+    private int mRefExtensionDistance;
 
     public JunctionAssembly(final Junction initialJunction, final Read read, final int maxExtensionDistance,
             final int minAlignedPosition, final int maxAlignedPosition)
@@ -60,6 +61,7 @@ public class JunctionAssembly
         mSupport = Lists.newArrayList();
         mRepeatInfo = Lists.newArrayList();
         mRemoteRegions = Lists.newArrayList();
+        mRefExtensionDistance = 0;
         mMergedAssemblies = 0;
 
         addInitialRead(read);
@@ -92,7 +94,6 @@ public class JunctionAssembly
     public int supportCount() { return mSupport.size(); }
 
     public SequenceMismatches mismatches() { return mSequenceMismatches; }
-    public boolean hasMismatches() { return mSequenceMismatches.hasMismatches(); }
 
     private void addInitialRead(final Read read)
     {
@@ -373,6 +374,9 @@ public class JunctionAssembly
 
     public List<RemoteRegion> remoteRegions() { return mRemoteRegions; }
     public void addRemoteRegions(final List<RemoteRegion> regions) { mRemoteRegions.addAll(regions); }
+
+    public int refExtensionDistance() { return mRefExtensionDistance; }
+    public void setRefExtensionDistance(int distance) { mRefExtensionDistance = distance; }
 
     public String toString()
     {

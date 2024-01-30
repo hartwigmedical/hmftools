@@ -4,6 +4,10 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_OVERLAP_BASES;
+import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_DISCORDANT_READ;
+import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_MATE;
+import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_SUPP;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import java.util.Comparator;
@@ -33,7 +37,7 @@ public final class AssemblyExtension
 
         boolean isForwardJunction = assembly.initialJunction().isForward();
 
-        // process in order of closest to furtherest out reads in the ref base direction
+        // process in order of closest to furthest-out reads in the ref base direction
         List<Read> sortedNonJunctionReads = nonJunctionReads.stream()
                 .sorted(Comparator.comparingInt(x -> isForwardJunction ? -x.unclippedEnd() : x.unclippedStart()))
                 .collect(Collectors.toList());
@@ -42,15 +46,14 @@ public final class AssemblyExtension
         {
             if(isForwardJunction)
             {
-                // CHECK: must aligned read overlap by any min number of bases to be considered for extension?
-                if(read.unclippedEnd() < minAlignedPosition)
+                if(read.unclippedEnd() < minAlignedPosition + ASSEMBLY_EXTENSION_OVERLAP_BASES)
                     break;
 
                 minAlignedPosition = min(minAlignedPosition, read.unclippedStart());
             }
             else
             {
-                if(read.unclippedStart() > maxAlignedPosition)
+                if(read.unclippedStart() > maxAlignedPosition - ASSEMBLY_EXTENSION_OVERLAP_BASES)
                     break;
 
                 maxAlignedPosition = max(maxAlignedPosition, read.unclippedEnd());
@@ -63,7 +66,7 @@ public final class AssemblyExtension
             {
                 discordantReads.add(read);
 
-                addOrCreateMateRemoteRegion(remoteRegions, read);
+                addOrCreateMateRemoteRegion(remoteRegions, read, false);
             }
 
             // alternatively if it is local it may have a mate even further away, but is this interesting?
@@ -77,7 +80,7 @@ public final class AssemblyExtension
             {
                 // discordantReads.add(support.read());
 
-                addOrCreateMateRemoteRegion(remoteRegions, support.read());
+                addOrCreateMateRemoteRegion(remoteRegions, support.read(), true);
             }
 
             // factor any supplementaries into remote regions
@@ -87,9 +90,14 @@ public final class AssemblyExtension
         RemoteRegion.mergeRegions(remoteRegions);
 
         assembly.addRemoteRegions(remoteRegions);
+
+        if(isForwardJunction)
+            assembly.setRefExtensionDistance(assembly.minAlignedPosition() - minAlignedPosition);
+        else
+            assembly.setRefExtensionDistance(maxAlignedPosition - assembly.maxAlignedPosition());
     }
 
-    private static void addOrCreateMateRemoteRegion(final List<RemoteRegion> remoteRegions, final Read read)
+    private static void addOrCreateMateRemoteRegion(final List<RemoteRegion> remoteRegions, final Read read, boolean isJunctionRead)
     {
         if(read.isMateUnmapped())
             return;
@@ -99,22 +107,25 @@ public final class AssemblyExtension
         if(!HumanChromosome.contains(mateChr))
             return;
 
-        addOrCreateRemoteRegion(remoteRegions, read, mateChr, read.mateAlignmentStart(), read.mateAlignmentEnd());
+        addOrCreateRemoteRegion(
+                remoteRegions, read, isJunctionRead ? REMOTE_READ_TYPE_JUNCTION_MATE : REMOTE_READ_TYPE_DISCORDANT_READ,
+                mateChr, read.mateAlignmentStart(), read.mateAlignmentEnd());
     }
 
     private static void addOrCreateRemoteRegion(
-            final List<RemoteRegion> remoteRegions, final Read read, final String remoteChr, final int remotePosStart, final int remotePosEnd)
+            final List<RemoteRegion> remoteRegions, final Read read, final int readType,
+            final String remoteChr, final int remotePosStart, final int remotePosEnd)
     {
         RemoteRegion matchedRegion = remoteRegions.stream()
                 .filter(x -> x.overlaps(remoteChr, remotePosStart, remotePosEnd)).findFirst().orElse(null);
 
         if(matchedRegion != null)
         {
-            matchedRegion.addReadDetails(read.getName(), remotePosStart, remotePosEnd);
+            matchedRegion.addReadDetails(read.getName(), remotePosStart, remotePosEnd, readType);
         }
         else
         {
-            remoteRegions.add(new RemoteRegion(new ChrBaseRegion(remoteChr, remotePosStart, remotePosEnd), read.getName()));
+            remoteRegions.add(new RemoteRegion(new ChrBaseRegion(remoteChr, remotePosStart, remotePosEnd), read.getName(), readType));
         }
 
     }
@@ -128,6 +139,6 @@ public final class AssemblyExtension
 
         int remotePosEnd = getMateAlignmentEnd(suppData.Position, suppData.Cigar);
 
-        addOrCreateRemoteRegion(remoteRegions, read, suppData.Chromosome, suppData.Position, remotePosEnd);
+        addOrCreateRemoteRegion(remoteRegions, read, REMOTE_READ_TYPE_JUNCTION_SUPP, suppData.Chromosome, suppData.Position, remotePosEnd);
     }
 }

@@ -20,6 +20,7 @@ public class BaseMismatches
     }
 
     public int mismatchCount() { return (int)Arrays.stream(Mismatches).filter(x -> x != null).count(); }
+    public int mismatchReadTotal() { return (int)Arrays.stream(Mismatches).filter(x -> x != null).mapToInt(x -> x.Reads.size()).sum(); }
 
     public void addMismatch(final byte base, final Read read, final byte qual)
     {

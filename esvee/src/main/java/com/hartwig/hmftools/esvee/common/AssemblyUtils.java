@@ -82,6 +82,7 @@ public final class AssemblyUtils
         int maxDistanceFromJunction = 0;
 
         AssemblySupport minNmSupport = null;
+        int minNmSupportMaxDistance = 0;
 
         for(AssemblySupport support : assembly.support())
         {
@@ -102,9 +103,12 @@ public final class AssemblyUtils
                 maxAlignedPosition = max(maxAlignedPosition, support.read().unclippedEnd());
             }
 
-            if(minNmSupport == null || support.read().numberOfEvents() < minNmSupport.read().numberOfEvents())
+            if(minNmSupport == null
+            || support.read().numberOfEvents() < minNmSupport.read().numberOfEvents()
+            || (support.read().numberOfEvents() == minNmSupport.read().numberOfEvents() && extensionDistance < minNmSupportMaxDistance))
             {
                 minNmSupport = support;
+                minNmSupportMaxDistance = extensionDistance;
             }
         }
 
