@@ -23,30 +23,24 @@ public final class CuppaDataFactory
     {
         List<CuppaPrediction> predictions = extractSortedProbabilities(cuppaPredictions);
 
-        CuppaPrediction bestPrediction = null;
-
-        int NULL_INT_VALUE = -1;
-        int lineCount = NULL_INT_VALUE;
-        int maxComplexSize = NULL_INT_VALUE;
-        int simpleDups32To200B = NULL_INT_VALUE;
-        int telomericSGLs = NULL_INT_VALUE;
-
-        if(!predictions.isEmpty())
+        if(predictions.isEmpty())
         {
-            bestPrediction = predictions.get(0);
-            lineCount = getSvFeatureValue(cuppaPredictions, "sv.LINE");
-            maxComplexSize = getSvFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE");
-            simpleDups32To200B = getSvFeatureValue(cuppaPredictions, "sv.SIMPLE_DEL_20KB_1MB");
-            telomericSGLs = getSvFeatureValue(cuppaPredictions, "sv.TELOMERIC_SGL");
+            throw new IllegalStateException("`CuppaPredictions` must contain a non-empty list of predictions");
         }
+
+        CuppaPrediction bestPrediction = predictions.get(0);
+        int simpleDups32To200B = getSvFeatureValue(cuppaPredictions, "sv.SIMPLE_DEL_20KB_1MB");
+        int maxComplexSize = getSvFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE");
+        int telomericSGLs = getSvFeatureValue(cuppaPredictions, "sv.TELOMERIC_SGL");
+        int lineCount = getSvFeatureValue(cuppaPredictions, "sv.LINE");
 
         return ImmutableCuppaData.builder()
                 .predictions(predictions)
                 .bestPrediction(bestPrediction)
-                .lineCount(lineCount)
-                .maxComplexSize(maxComplexSize)
                 .simpleDups32To200B(simpleDups32To200B)
+                .maxComplexSize(maxComplexSize)
                 .telomericSGLs(telomericSGLs)
+                .lineCount(lineCount)
                 .build();
     }
 

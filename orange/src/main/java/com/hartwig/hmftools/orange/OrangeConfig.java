@@ -243,6 +243,7 @@ public interface OrangeConfig
         }
         else
         {
+            LOGGER.debug("No sampling date has been configured. Setting sampling data to current date");
             samplingDate = LocalDate.now();
         }
 
