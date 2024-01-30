@@ -73,6 +73,12 @@ public final class AssemblyExtension
         for(AssemblySupport support : assembly.support())
         {
             // look to extend from local mates
+            if(isDiscordant(support.read()))
+            {
+                // discordantReads.add(support.read());
+
+                addOrCreateMateRemoteRegion(remoteRegions, support.read());
+            }
 
             // factor any supplementaries into remote regions
             addOrCreateSupplementaryRemoteRegion(remoteRegions, support.read());

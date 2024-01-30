@@ -50,8 +50,7 @@ public class JunctionAssembler
 
         for(Read read : rawReads)
         {
-            if(!ReadFilters.hasAcceptableMapQ(read, SvConstants.READ_FILTER_MIN_JUNCTION_MAPQ)
-            || ReadFilters.isBadlyMapped(read))
+            if(!ReadFilters.hasAcceptableMapQ(read, SvConstants.READ_FILTER_MIN_JUNCTION_MAPQ))
             {
                 // CHECK: any use for these, eg for extension?
                 mFilteredReads.add(read);
@@ -71,13 +70,6 @@ public class JunctionAssembler
             }
 
             junctionReads.add(read);
-
-            /*
-            catch(Exception e)
-            {
-                SV_LOGGER.error("error filtering read: {}", read.toString());
-            }
-            */
         }
 
         // CHECK: is read realignment to the specific junction required?

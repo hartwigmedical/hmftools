@@ -5,8 +5,11 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_WEAK_SUPPORT_MIN_BASES;
+import static com.hartwig.hmftools.esvee.SvConstants.READ_FILTER_MIN_ALIGNED_BASES;
+import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -67,7 +70,7 @@ public class PrimaryAssembler
         final List<Read> filteredAlignments = withLowQAlignments.stream()
                 .filter(alignment -> ReadFilters.isRecordAverageQualityPastJunctionAbove(alignment, mJunction, SvConstants.AVG_BASE_QUAL_THRESHOLD)) // mCounters.ReadsPassingJunctionQualityThreshold
                 .filter(alignment -> ReadFilters.hasAcceptableMapQ(alignment, SvConstants.READ_FILTER_MIN_JUNCTION_MAPQ)) // mCounters.HasAcceptableMapQ
-                .filter(ReadFilters::isNotBadlyMapped) // mCounters.WellMapped
+                .filter(x -> isNotBadlyMapped(x)) // mCounters.WellMapped
                 .collect(Collectors.toList());
 
         if(filteredAlignments.isEmpty())
@@ -106,6 +109,113 @@ public class PrimaryAssembler
         // assemblies.forEach(assembly -> assembly.addErrata(junctionMetrics));
 
         return assemblies;
+    }
+
+    private static boolean isNotBadlyMapped(final Read read)
+    {
+        return !isBadlyMapped(read);
+    }
+
+    private static boolean isBadlyMapped(final Read read)
+    {
+        if(!isDiscordant(read))
+            return false;
+
+        final int mappedSize = read.cigarElements().stream()
+                .filter(element -> element.getOperator() == CigarOperator.M)
+                .mapToInt(CigarElement::getLength)
+                .sum();
+
+        int indelCount = read.cigarElements().stream()
+                .filter(element -> element.getOperator() == CigarOperator.D || element.getOperator() == CigarOperator.I)
+                .mapToInt(CigarElement::getLength)
+                .sum();
+
+        // CHECK
+        int nmCount = max(read.numberOfEvents(), indelCount);
+
+        final int mismatchedBases = nmCount - indelCount;
+        final int matchedBases = mappedSize - mismatchedBases;
+
+        if(matchedBases < READ_FILTER_MIN_ALIGNED_BASES)
+            return true;
+
+        if(indelCount > 0 && mismatchedBases >= 3)
+            return true;
+
+
+        try
+        {
+            final float[] stats = mappedBaseStats(read);
+
+            int countAbove70 = 0;
+            int countAbove35 = 0;
+            for(float frequency : stats)
+            {
+                if(frequency > 0.7f)
+                    countAbove70++;
+                if(frequency > 0.35f)
+                    countAbove35++;
+            }
+
+            if(countAbove70 >= 1 || countAbove35 >= 2)
+                return true;
+
+            return false;
+        }
+        catch(Exception e)
+        {
+            SV_LOGGER.error("failed to handle read mapping stats: {}", read.toString());
+            return true;
+        }
+    }
+
+    private static float[] mappedBaseStats(final Read read)
+    {
+        final int[] baseCount = new int[5];
+
+        int readPosition = 1;
+        for(CigarElement element : read.cigarElements())
+        {
+            if(element.getOperator() != CigarOperator.M)
+            {
+                if(element.getOperator().consumesReadBases())
+                    readPosition += element.getLength();
+                continue;
+            }
+
+            for(int i = 0; i < element.getLength(); i++)
+            {
+                byte base = read.getBases()[readPosition + i - 1];
+                baseCount[baseToIndex(base)]++;
+            }
+        }
+
+        final float totalBases = Arrays.stream(baseCount).sum();
+        final float[] baseFrequency = new float[baseCount.length];
+        for(int i = 0; i < baseCount.length; i++)
+        {
+            baseFrequency[i] = baseCount[i] / totalBases;
+        }
+
+        return baseFrequency;
+    }
+
+    private static int baseToIndex(final byte base)
+    {
+        switch(base)
+        {
+            case 'A':
+                return 0;
+            case 'T':
+                return 1;
+            case 'C':
+                return 2;
+            case 'G':
+                return 3;
+            default:
+                return 4;
+        }
     }
 
     private List<PrimaryAssembly> extendInitial(final List<Read> alignments, final List<PrimaryAssembly> assemblies)
