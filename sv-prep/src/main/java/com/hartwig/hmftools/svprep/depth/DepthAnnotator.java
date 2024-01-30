@@ -149,7 +149,8 @@ public class DepthAnnotator
         }
 
         final List<Callable> callableList = depthTasks.stream().collect(Collectors.toList());
-        TaskExecutor.executeTasks(callableList, mConfig.Threads);
+        if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
+            System.exit(1);
 
         // write output VCF
         writeVcf(vcfHeader, depthTasks);

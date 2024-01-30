@@ -379,7 +379,7 @@ public class DepthTask implements Callable
         // ignore reads which cannot span the current variant(s)
         if(read.getAlignmentEnd() < variantInfo.PositionMin)
         {
-            if(read.getMateUnmappedFlag() || read.getMateReferenceIndex() != read.getReferenceIndex())
+            if(!read.getReadPairedFlag() || read.getMateUnmappedFlag() || read.getMateReferenceIndex() != read.getReferenceIndex())
                 return false;
 
             // both reads before the variants
@@ -388,7 +388,7 @@ public class DepthTask implements Callable
         }
         else if(read.getAlignmentStart() > variantInfo.PositionMax)
         {
-            if(read.getMateUnmappedFlag() || read.getMateReferenceIndex() != read.getReferenceIndex())
+            if(!read.getReadPairedFlag() || read.getMateUnmappedFlag() || read.getMateReferenceIndex() != read.getReferenceIndex())
                 return false;
 
             return false;
