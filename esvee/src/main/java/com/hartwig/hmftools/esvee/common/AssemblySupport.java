@@ -12,6 +12,7 @@ import com.hartwig.hmftools.esvee.read.Read;
 public class AssemblySupport
 {
     private final Read mRead;
+    private final SupportType mType;
     private final int mAssemblyIndex;
     private final int mJunctionReadIndex; // index within this read of the junction position
     private final int[] mReadIndexRange;
@@ -19,9 +20,10 @@ public class AssemblySupport
     private int mReferenceMismatches;
 
     public AssemblySupport(
-            final Read read, final int assemblyIndex, final int junctionReadIndex, final int[] readIndexRange, final int mismatches)
+            final Read read, final SupportType type, final int assemblyIndex, final int junctionReadIndex, final int[] readIndexRange, final int mismatches)
     {
         mRead = read;
+        mType = type;
         mAssemblyIndex = assemblyIndex;
         mJunctionReadIndex = junctionReadIndex;
         mReadIndexRange = readIndexRange;
@@ -30,6 +32,7 @@ public class AssemblySupport
     }
 
     public Read read() { return mRead; }
+    public SupportType type() { return mType; }
 
     public int[] readIndexRange() { return mReadIndexRange; }
     public void setReadIndexRange(final int readIndexStart, final int readIndexEnd)
@@ -48,8 +51,8 @@ public class AssemblySupport
 
     public String toString()
     {
-        return format("read(%s) asmIndex(%d) juncIndex(%d) readIndeRange(%d-%d) mismatch(junc=%d ref=%d)",
-                mRead.getName(), mAssemblyIndex, mJunctionReadIndex, mReadIndexRange[0], mReadIndexRange[1],
+        return format("read(%s) type(%s) asmIndex(%d) juncIndex(%d) readIndeRange(%d-%d) mismatch(junc=%d ref=%d)",
+                mRead.getName(), mType, mAssemblyIndex, mJunctionReadIndex, mReadIndexRange[0], mReadIndexRange[1],
                 mJunctionMismatches, mReferenceMismatches);
     }
 }

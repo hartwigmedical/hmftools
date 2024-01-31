@@ -70,7 +70,7 @@ public class AssemblyDeduper
 
         // start with the most recent previous assemblies since they are added in order
         int index = existingAssemblies.size() - 1;
-        int minPosition = newAssemblies.get(0).initialJunction().Position - PROXIMATE_JUNCTION_DISTANCE;
+        int minPosition = newAssemblies.get(0).junction().Position - PROXIMATE_JUNCTION_DISTANCE;
 
         List<JunctionAssembly> removeExisting = Lists.newArrayList();
 
@@ -78,7 +78,7 @@ public class AssemblyDeduper
         {
             JunctionAssembly assembly = existingAssemblies.get(index);
 
-            if(assembly.initialJunction().Position < minPosition)
+            if(assembly.junction().Position < minPosition)
                 break;
 
             int newIndex = 0;
@@ -87,8 +87,8 @@ public class AssemblyDeduper
             {
                 JunctionAssembly newAssembly = newAssemblies.get(newIndex);
 
-                if(newAssembly.initialJunction() == assembly.initialJunction()
-                || newAssembly.initialJunction().Orientation != assembly.initialJunction().Orientation)
+                if(newAssembly.junction() == assembly.junction()
+                || newAssembly.junction().Orientation != assembly.junction().Orientation)
                 {
                     ++newIndex;
                     continue;

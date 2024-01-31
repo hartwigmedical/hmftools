@@ -12,24 +12,25 @@ import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_DISCORDANT_READ;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_SUPP;
-import static com.hartwig.hmftools.esvee.common.RepeatInfo.repeatsAsString;
+import static com.hartwig.hmftools.esvee.common.SupportType.DISCORDANT;
+import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import java.util.StringJoiner;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.WriteType;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.BaseMismatches;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.common.RefBaseAssembly;
 import com.hartwig.hmftools.esvee.common.RemoteRegion;
 import com.hartwig.hmftools.esvee.common.RepeatInfo;
+import com.hartwig.hmftools.esvee.common.SupportType;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.read.ReadUtils;
 
@@ -82,12 +83,17 @@ public class AssemblyWriter
 
             sj.add("RepeatInfo");
             sj.add("MergedAssemblies");
+
+            sj.add("RefExtDistance");
+            sj.add("RefExtJuncMates");
+            sj.add("RefExtDiscReads");
+            sj.add("RefExtMismatches");
+
             sj.add("RemoteRegionCount");
             sj.add("RemoteRegionJuncMate");
             sj.add("RemoteRegionJuncSupps");
             sj.add("RemoteRegionDiscordant");
             sj.add("RemoteRegionInfo");
-            sj.add("RefExtensionDistance");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -110,12 +116,12 @@ public class AssemblyWriter
         {
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            sj.add(assembly.initialJunction().Chromosome);
-            sj.add(String.valueOf(assembly.initialJunction().Position));
-            sj.add(String.valueOf(assembly.initialJunction().Orientation));
+            sj.add(assembly.junction().Chromosome);
+            sj.add(String.valueOf(assembly.junction().Position));
+            sj.add(String.valueOf(assembly.junction().Orientation));
             sj.add(String.valueOf(assembly.minAlignedPosition()));
             sj.add(String.valueOf(assembly.maxAlignedPosition()));
-            sj.add(String.valueOf(assembly.length()));
+            sj.add(String.valueOf(assembly.baseLength()));
 
             int refBaseMismatches = 0;
             int softClipBaseMismatches = 0;
@@ -149,7 +155,7 @@ public class AssemblyWriter
             sj.add(assembly.formSequence(5));
 
             // ref sequence stats purely for analysis
-            ReadStats readStats = buildReadStats(assembly.support(), assembly.initialJunction().isForward());
+            ReadStats readStats = buildReadStats(assembly.support(), assembly.junction().isForward());
             sj.add(statString(readStats.NmCountTotal, assembly.supportCount()));
             sj.add(statString(readStats.IndelLengthTotal, assembly.supportCount()));
             sj.add(statString(readStats.RefSideSoftClipLengthTotal, assembly.supportCount()));
@@ -161,6 +167,23 @@ public class AssemblyWriter
             sj.add(repeatsInfoStr(assembly.repeatInfo()));
 
             sj.add(String.valueOf(assembly.mergedAssemblyCount()));
+
+            RefBaseAssembly refBaseAssembly = assembly.refBaseAssembly();
+
+            if(refBaseAssembly != null)
+            {
+                sj.add(String.valueOf(refBaseAssembly.nonJunctionReadExtension()));
+
+                int juncMateCount = (int)refBaseAssembly.support().stream().filter(x -> x.type() == JUNCTION_MATE).count();
+                int discordantReadCount = (int)refBaseAssembly.support().stream().filter(x -> x.type() == DISCORDANT).count();
+                sj.add(String.valueOf(juncMateCount));
+                sj.add(String.valueOf(discordantReadCount));
+                sj.add(String.valueOf(refBaseAssembly.mismatches().readBaseCount()));
+            }
+            else
+            {
+                sj.add("0").add("0").add("0").add("0");
+            }
 
             sj.add(String.valueOf(assembly.remoteRegions().size()));
 
@@ -180,8 +203,6 @@ public class AssemblyWriter
             sj.add(String.valueOf(remoteDiscordant));
 
             sj.add(remoteRegionInfoStr(assembly.remoteRegions()));
-
-            sj.add(String.valueOf(assembly.refExtensionDistance()));
 
             mWriter.write(sj.toString());
             mWriter.newLine();

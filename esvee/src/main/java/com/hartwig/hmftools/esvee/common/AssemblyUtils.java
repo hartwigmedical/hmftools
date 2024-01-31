@@ -4,10 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public final class AssemblyUtils
@@ -76,8 +73,8 @@ public final class AssemblyUtils
         int minAlignedPosition = assembly.minAlignedPosition();
         int maxAlignedPosition = assembly.maxAlignedPosition();
 
-        int junctionPosition = assembly.initialJunction().Position;
-        boolean junctionIsForward = assembly.initialJunction().isForward();
+        int junctionPosition = assembly.junction().Position;
+        boolean junctionIsForward = assembly.junction().isForward();
 
         int maxDistanceFromJunction = 0;
 

@@ -5,7 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_READ_MAX_BASE_MISMATCH;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.buildFromJunctionReads;
 
@@ -36,7 +36,7 @@ public class AssemblyMismatchSplitter
 
     public List<JunctionAssembly> splitOnMismatches(int minSequenceLength)
     {
-        int permittedMismatches = PRIMARY_ASSEMBLY_READ_MAX_BASE_MISMATCH;
+        int permittedMismatches = PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
         int minReadSupport = PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 
         // every remaining mismatch should have 2+ (or whatever configured) supporting reads
@@ -65,7 +65,7 @@ public class AssemblyMismatchSplitter
         if(noMismatchReads.size() >= minReadSupport)
         {
             // add the 'initial' sequence from reads without mismatches
-            JunctionAssembly initialSequence = buildFromJunctionReads(mSequence.initialJunction(), noMismatchReads, false);
+            JunctionAssembly initialSequence = buildFromJunctionReads(mSequence.junction(), noMismatchReads, false);
             processedReads.addAll(noMismatchReads);
             finalSequences.add(initialSequence);
         }
@@ -81,7 +81,7 @@ public class AssemblyMismatchSplitter
 
             processedReads.addAll(candidateReads);
 
-            JunctionAssembly mismatchSequence = buildFromJunctionReads(mSequence.initialJunction(), candidateReads, false);
+            JunctionAssembly mismatchSequence = buildFromJunctionReads(mSequence.junction(), candidateReads, false);
             finalSequences.add(mismatchSequence);
         }
 
@@ -244,7 +244,7 @@ public class AssemblyMismatchSplitter
 
     private static void dedupByAssemblyContainsAnother(final List<JunctionAssembly> assemblies)
     {
-        Collections.sort(assemblies, Collections.reverseOrder(Comparator.comparingInt(x -> x.length())));
+        Collections.sort(assemblies, Collections.reverseOrder(Comparator.comparingInt(x -> x.baseLength())));
 
         int i = 0;
         while(i < assemblies.size())
@@ -277,10 +277,10 @@ public class AssemblyMismatchSplitter
         int firstIndexStart;
         int firstIndexEnd;
 
-        if(first.initialJunction().isForward())
+        if(first.junction().isForward())
         {
             firstIndexStart = first.junctionIndex();
-            firstIndexEnd = first.length() - 1;
+            firstIndexEnd = first.baseLength() - 1;
         }
         else
         {
@@ -297,7 +297,7 @@ public class AssemblyMismatchSplitter
             if(secondIndex < 0)
                 continue;
 
-            if(secondIndex >= second.length())
+            if(secondIndex >= second.baseLength())
                 break;
 
             if(!basesMatch(

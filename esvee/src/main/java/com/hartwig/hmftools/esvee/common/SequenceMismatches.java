@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.common;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +25,11 @@ public class SequenceMismatches
     public int distinctBaseCount()
     {
         return mBaseMismatches != null ? mBaseMismatches.values().stream().mapToInt(x -> x.mismatchCount()).sum() : 0;
+    }
+
+    public int readBaseCount()
+    {
+        return mBaseMismatches != null ? mBaseMismatches.values().stream().mapToInt(x -> x.mismatchReadTotal()).sum() : 0;
     }
 
     public void add(final int assemblyIndex, final byte base, final Read read, final byte qual)

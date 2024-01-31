@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.common.Junction;
@@ -105,7 +104,7 @@ public class JunctionAssembler
     {
         JunctionAssembly junctionSequence = buildFromJunctionReads(mJunction, junctionReads, true);
 
-        if(junctionSequence.length() < PRIMARY_ASSEMBLY_MIN_LENGTH)
+        if(junctionSequence.baseLength() < PRIMARY_ASSEMBLY_MIN_LENGTH)
             return Collections.emptyList();
 
         // no filtering of the initial sequence and instead rely on the sequence splitting to do this with all initial mismatches preserved

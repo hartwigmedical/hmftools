@@ -22,9 +22,9 @@ public final class SequenceCompare
         int secondIndexStart;
         int secondIndexEnd;
 
-        int junctionDiff = first.initialJunction().Position - second.initialJunction().Position;
+        int junctionDiff = first.junction().Position - second.junction().Position;
 
-        if(first.initialJunction().isForward())
+        if(first.junction().isForward())
         {
             // where the junction position diff, take the index into the ref bases
             if(junctionDiff > 0)

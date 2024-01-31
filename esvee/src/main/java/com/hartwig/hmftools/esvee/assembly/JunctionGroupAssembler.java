@@ -166,7 +166,8 @@ public class JunctionGroupAssembler extends ThreadTask
             // CHECK: skip likely germline reads here?
             for(JunctionAssembly assembly : candidateAssemblies)
             {
-                AssemblyExtension.extendAssembly(assembly, junctionAssembler.nonJunctionReads());
+                AssemblyExtender assemblyExtender = new AssemblyExtender(assembly);
+                assemblyExtender.extendAssembly(junctionAssembler.nonJunctionReads());
             }
         }
 
@@ -195,13 +196,18 @@ public class JunctionGroupAssembler extends ThreadTask
         ReadAdjustments.trimPolyGSequences(read);
         ReadAdjustments.convertEdgeIndelsToSoftClip(read);
 
-        // mReadRescue::rescueRead) // CHECK: logic and purple
+        // mReadRescue::rescueRead) // CHECK: logic and purpose
 
         mCurrentJunctionGroup.addCandidateRead(read);
 
         // link first and second in pair if within the same group
-        if(read.isMateMapped() && read.mateChromosome().equals(read.chromosome())
-        && positionWithin(read.mateAlignmentStart(), mCurrentJunctionGroup.minPosition() - MATE_READ_BUFFER, mCurrentJunctionGroup.maxPosition()))
+        if(!read.isMateMapped() || !read.mateChromosome().equals(read.chromosome()))
+            return;
+
+        if(positionWithin(
+                read.mateAlignmentStart(),
+                mCurrentJunctionGroup.minPosition() - BAM_READ_JUNCTION_BUFFER,
+                mCurrentJunctionGroup.maxPosition() + BAM_READ_JUNCTION_BUFFER))
         {
             Read mateRead = mReadGroupMap.get(read.getName());
 

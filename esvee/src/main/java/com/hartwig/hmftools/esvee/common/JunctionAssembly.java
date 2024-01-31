@@ -9,18 +9,20 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findRepeats;
+import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 
 import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public class JunctionAssembly
 {
-    private final Junction mInitialJunction;
+    private final Junction mJunction;
     private final Read mInitialRead;
 
     private int mJunctionSequenceIndex;
@@ -39,12 +41,13 @@ public class JunctionAssembly
     private int mMergedAssemblies;
 
     private final List<RemoteRegion> mRemoteRegions;
-    private int mRefExtensionDistance;
+    private RefBaseAssembly mRefBaseAssembly;
 
-    public JunctionAssembly(final Junction initialJunction, final Read read, final int maxExtensionDistance,
+    public JunctionAssembly(
+            final Junction initialJunction, final Read read, final int maxExtensionDistance,
             final int minAlignedPosition, final int maxAlignedPosition)
     {
-        mInitialJunction = initialJunction;
+        mJunction = initialJunction;
         mInitialRead = read;
 
         mJunctionSequenceIndex = initialJunction.isForward() ? 0 : maxExtensionDistance;
@@ -61,14 +64,14 @@ public class JunctionAssembly
         mSupport = Lists.newArrayList();
         mRepeatInfo = Lists.newArrayList();
         mRemoteRegions = Lists.newArrayList();
-        mRefExtensionDistance = 0;
+        mRefBaseAssembly = null;
         mMergedAssemblies = 0;
 
         addInitialRead(read);
     }
 
     public Read initialRead() { return mInitialRead; }
-    public Junction initialJunction() { return mInitialJunction; }
+    public Junction junction() { return mJunction; }
 
     public int mergedAssemblyCount() { return mMergedAssemblies; }
     public void addMergedAssembly() { ++mMergedAssemblies; }
@@ -78,14 +81,14 @@ public class JunctionAssembly
     // eg 21 bases, junction index at 10 (so 0-9 before, 11-20 after)
     public int lowerDistanceFromJunction() { return mJunctionSequenceIndex; };
     public int upperDistanceFromJunction() { return mBases.length - mJunctionSequenceIndex - 1; };
-    public int refBaseLength() { return mInitialJunction.isForward() ? lowerDistanceFromJunction() : upperDistanceFromJunction(); }
-    public int extensionLength() { return mInitialJunction.isForward() ? upperDistanceFromJunction() : lowerDistanceFromJunction(); }
+    public int refBaseLength() { return mJunction.isForward() ? lowerDistanceFromJunction() : upperDistanceFromJunction(); }
+    public int extensionLength() { return mJunction.isForward() ? upperDistanceFromJunction() : lowerDistanceFromJunction(); }
 
     // purely for informational purposes at this stage - since past the junction is just the soft-clip length, and on the
     // reference side doesn't take into account any INDELs
     public int minAlignedPosition() { return mMinAlignedPosition; }
     public int maxAlignedPosition() { return mMaxAlignedPosition; }
-    public int length() { return mBases.length; }
+    public int baseLength() { return mBases.length; }
 
     public byte[] bases() { return mBases; }
     public byte[] baseQuals() { return mBaseQuals; }
@@ -110,7 +113,7 @@ public class JunctionAssembly
     {
         int mismatchCount = 0;
 
-        int readJunctionIndex = read.getReadIndexAtReferencePosition(mInitialJunction.Position, true);
+        int readJunctionIndex = read.getReadIndexAtReferencePosition(mJunction.Position, true);
         int[] readIndexRange = getReadIndexCoordinates(read, readJunctionIndex, false);
         int assemblyIndex = getReadAssemblyStartIndex(readJunctionIndex, readIndexRange[SE_START], false);
 
@@ -161,7 +164,7 @@ public class JunctionAssembly
 
         if(existingSupport == null)
         {
-            readJunctionIndex = read.getReadIndexAtReferencePosition(mInitialJunction.Position, true);
+            readJunctionIndex = read.getReadIndexAtReferencePosition(mJunction.Position, true);
         }
         else
         {
@@ -216,7 +219,7 @@ public class JunctionAssembly
 
         if(existingSupport == null)
         {
-            mSupport.add(new AssemblySupport(read, assemblyIndex, readJunctionIndex, readIndexRange, mismatchCount));
+            mSupport.add(new AssemblySupport(read, JUNCTION, assemblyIndex, readJunctionIndex, readIndexRange, mismatchCount));
         }
         else
         {
@@ -238,7 +241,7 @@ public class JunctionAssembly
 
         int newBaseLength = mBases.length + maxDistanceFromJunction;
 
-        boolean isForwardJunction = mInitialJunction.isForward();
+        boolean isForwardJunction = mJunction.isForward();
 
         if(isForwardJunction)
             mJunctionSequenceIndex += maxDistanceFromJunction;
@@ -293,7 +296,7 @@ public class JunctionAssembly
 
         if(byReferenceBases)
         {
-            if(mInitialJunction.isForward())
+            if(mJunction.isForward())
             {
                 readIndexCoords[0] = 0;
                 readIndexCoords[1] = readJunctionIndex - 1; // the base at the junction will have already been set
@@ -306,7 +309,7 @@ public class JunctionAssembly
         }
         else
         {
-            if(mInitialJunction.isForward())
+            if(mJunction.isForward())
             {
                 readIndexCoords[0] = readJunctionIndex;
                 readIndexCoords[1] = read.basesLength() - 1;
@@ -325,14 +328,14 @@ public class JunctionAssembly
     {
         if(byReferenceBases)
         {
-            if(mInitialJunction.isForward())
+            if(mJunction.isForward())
                 return mJunctionSequenceIndex - (readJunctionIndex - readStartIndex);
             else
                 return mJunctionSequenceIndex + 1;
         }
         else
         {
-            if(mInitialJunction.isForward())
+            if(mJunction.isForward())
                 return mJunctionSequenceIndex; // ie bases starting from the junction
             else
                 return mJunctionSequenceIndex - (readJunctionIndex - readStartIndex);
@@ -355,11 +358,16 @@ public class JunctionAssembly
     {
         for(AssemblySupport support : other.support())
         {
-            if(mSupport.stream().anyMatch(x -> x.read() == support.read()))
+            if(hasReadSupport(support.read()))
                 continue;
 
             addRead(support.read(), false);
         }
+    }
+
+    public boolean hasReadSupport(final Read read)
+    {
+        return  mSupport.stream().anyMatch(x -> x.read() == read);
     }
 
     public List<RepeatInfo> repeatInfo() { return mRepeatInfo; }
@@ -375,13 +383,13 @@ public class JunctionAssembly
     public List<RemoteRegion> remoteRegions() { return mRemoteRegions; }
     public void addRemoteRegions(final List<RemoteRegion> regions) { mRemoteRegions.addAll(regions); }
 
-    public int refExtensionDistance() { return mRefExtensionDistance; }
-    public void setRefExtensionDistance(int distance) { mRefExtensionDistance = distance; }
+    public RefBaseAssembly refBaseAssembly() { return mRefBaseAssembly; }
+    public void setRefBaseAssembly(final RefBaseAssembly refBaseAssembly) { mRefBaseAssembly = refBaseAssembly; }
 
     public String toString()
     {
         return format("junc(%s) range(%d - %d len=%d) juncIndex(%d) support(%d) mismatches(pos=%d all=%d)",
-                mInitialJunction, mMinAlignedPosition, mMaxAlignedPosition, length(), mJunctionSequenceIndex,
+                mJunction, mMinAlignedPosition, mMaxAlignedPosition, baseLength(), mJunctionSequenceIndex,
                 mSupport.size(), mSequenceMismatches.positionCount(), mSequenceMismatches.distinctBaseCount());
     }
 
@@ -390,7 +398,7 @@ public class JunctionAssembly
         int seqIndexStart;
         int seqIndexEnd;
 
-        if(mInitialJunction.isForward())
+        if(mJunction.isForward())
         {
             seqIndexStart = max(0, mJunctionSequenceIndex - maxRefBaseCount);
             seqIndexEnd = mBases.length - 1;
@@ -409,5 +417,27 @@ public class JunctionAssembly
         }
 
         return sb.toString();
+    }
+
+
+    @VisibleForTesting
+    public JunctionAssembly(
+            final Junction junction, final byte[] bases, final byte[] quals, final int minAlignedPosition, final int maxAlignedPosition)
+    {
+        mJunction = junction;
+        mInitialRead = null;
+
+        mJunctionSequenceIndex = junction.isForward() ? junction.Position - minAlignedPosition : maxAlignedPosition - junction.Position;
+
+        mMinAlignedPosition = minAlignedPosition;
+        mMaxAlignedPosition = maxAlignedPosition;
+
+        mBases = copyArray(bases);
+        mBaseQuals = copyArray(quals);
+        mSequenceMismatches = new SequenceMismatches();
+        mSupport = Lists.newArrayList();
+        mRepeatInfo = Lists.newArrayList();
+        mRemoteRegions = Lists.newArrayList();
+        mMergedAssemblies = 0;
     }
 }
