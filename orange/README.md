@@ -217,6 +217,13 @@ investigate potential causes for QC failure.
       - `isofox_gene_distribution_csv` parameter has been renamed to `isofox_gene_distribution`
       - `isofox_alt_sj_cohort_csv` parameter has been renamed to `isofox_alt_sj_cohort`
       - `log_level` parameter has been added to allow manual override of the default log level
+    - Support germline deletions heterozygous in the tumor:
+      - Included in new section "Potentially pathogenic germline LOH events" on PDF report.
+      - Included in new fields `allGermlineLossOfHeterozygosities` and `reportableGermlineLossOfHeterozygosities` in the JSON.
+      - Converted to somatic LOH events when `convert_germline_to_somatic` parameter is provided.
+      - Changed titles of somatic LOH and germline losses on PDF report to accommodate these changes.
+    - Combine multiple germline loss calls for the same gene into one call.
+    - Merge germline and somatic losses when both exist for the same gene.
 - [2.5.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.5.0)
     - Bugfix: Maintain linx clusters after ORANGE germline conversion
     - Include breakdown by classifier in CUPPA predictions
