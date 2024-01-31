@@ -34,8 +34,8 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
-import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
+import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 
@@ -269,12 +269,12 @@ public final class GermlineConversion {
 
     private static boolean isFullLoss(@NotNull PurpleGainLoss gainLoss)
     {
-        return gainLoss.interpretation().equals(CopyNumberInterpretation.FULL_LOSS);
+        return gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS;
     }
 
     private static boolean isPartialLoss(final @NotNull PurpleGainLoss gainLoss)
     {
-        return gainLoss.interpretation().equals(CopyNumberInterpretation.PARTIAL_LOSS);
+        return gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS;
     }
 
     @NotNull
