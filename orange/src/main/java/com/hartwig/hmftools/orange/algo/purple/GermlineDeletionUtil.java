@@ -17,10 +17,10 @@ import org.jetbrains.annotations.NotNull;
 class GermlineDeletionUtil
 {
     public static double getSomaticMaxCopyNumber(@NotNull List<GermlineDeletion> deletionsForGene,
-            @NotNull GeneCopyNumber somaticGeneCopyNumber, @NotNull TranscriptData canonicalTranscript)
+            @NotNull GeneCopyNumber somaticGeneCopyNumber, @NotNull TranscriptData transcript)
     {
         double maximumTumorCopyNumberFromDeletions = getMaximumTumorCopyNumberFromDeletions(deletionsForGene);
-        double maxCopyNumber = deletionsCoverTranscript(deletionsForGene, canonicalTranscript)
+        double maxCopyNumber = deletionsCoverTranscript(deletionsForGene, transcript)
                 ? maximumTumorCopyNumberFromDeletions
                 : Math.max(maximumTumorCopyNumberFromDeletions, somaticGeneCopyNumber.maxCopyNumber());
         return Math.max(0, maxCopyNumber);
@@ -65,14 +65,15 @@ class GermlineDeletionUtil
     @NotNull
     public static String getChromosome(@NotNull List<GermlineDeletion> deletions)
     {
+        if(deletions.isEmpty())
+        {
+            throw new IllegalArgumentException("No germline deletions provided to get chromosome from.");
+        }
+
         Set<String> chromosomes = deletions.stream().map(d -> d.Chromosome).collect(Collectors.toSet());
         if(chromosomes.size() == 1)
         {
             return chromosomes.iterator().next();
-        }
-        else if(chromosomes.isEmpty())
-        {
-            throw new IllegalArgumentException("No germline deletions provided to get chromosome from.");
         }
         else
         {
@@ -83,36 +84,19 @@ class GermlineDeletionUtil
     @NotNull
     public static String getChromosomeBand(@NotNull List<GermlineDeletion> deletions)
     {
+        if(deletions.isEmpty())
+        {
+            throw new IllegalArgumentException("No germline deletions provided to get chromosome band from.");
+        }
+
         Set<String> chromosomeBands = deletions.stream().map(d -> d.ChromosomeBand).collect(Collectors.toSet());
         if(chromosomeBands.size() == 1)
         {
             return chromosomeBands.iterator().next();
         }
-        else if(chromosomeBands.isEmpty())
-        {
-            throw new IllegalArgumentException("No germline deletions provided to get chromosome band from.");
-        }
         else
         {
             throw new IllegalStateException("Germline deletions disagree on chromosome band.");
-        }
-    }
-
-    @NotNull
-    public static boolean getReportedStatus(@NotNull List<GermlineDeletion> deletions)
-    {
-        Set<Boolean> reportedStatuses = deletions.stream().map(d -> d.Reported).collect(Collectors.toSet());
-        if(reportedStatuses.size() == 1)
-        {
-            return reportedStatuses.iterator().next();
-        }
-        else if(reportedStatuses.isEmpty())
-        {
-            throw new IllegalArgumentException("No germline deletions provided to get reported statuses from.");
-        }
-        else
-        {
-            throw new IllegalStateException("Germline deletions disagree on reported statuses.");
         }
     }
 

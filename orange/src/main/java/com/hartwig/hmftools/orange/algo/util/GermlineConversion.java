@@ -226,13 +226,14 @@ public final class GermlineConversion {
                 .equals(somaticGainLoss.transcript());
     }
 
+    @NotNull
     private static PurpleGainLoss mergeLosses(@NotNull PurpleGainLoss somaticLoss, @NotNull PurpleGainLoss germlineLoss)
     {
         double minCopies = Math.min(somaticLoss.minCopies(), germlineLoss.minCopies());
 
         CopyNumberInterpretation interpretation;
         double maxCopies;
-        if(somaticLoss.interpretation().equals(germlineLoss.interpretation()))
+        if(somaticLoss.interpretation() == germlineLoss.interpretation())
         {
             interpretation = somaticLoss.interpretation();
             maxCopies = Math.max(somaticLoss.maxCopies(), germlineLoss.maxCopies());

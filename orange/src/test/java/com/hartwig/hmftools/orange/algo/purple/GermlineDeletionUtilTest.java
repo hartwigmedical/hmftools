@@ -229,25 +229,6 @@ public class GermlineDeletionUtilTest
     }
 
     @Test
-    public void testGetReportedStatusTrue()
-    {
-        GermlineDeletion deletion1 = GermlineDeletionTestFactory.create(TEST_GENE, true, "1", "q20.30");
-        GermlineDeletion deletion2 = GermlineDeletionTestFactory.create(TEST_GENE, true, "1", "q20.30");
-        GermlineDeletion deletion3 = GermlineDeletionTestFactory.create(TEST_GENE, true, "1", "q20.30");
-        List<GermlineDeletion> deletions = Lists.newArrayList(deletion1, deletion2, deletion3);
-        assertTrue(GermlineDeletionUtil.getReportedStatus(deletions));
-    }
-
-    @Test
-    public void testGetReportedStatusFalse()
-    {
-        GermlineDeletion deletion1 = GermlineDeletionTestFactory.create(TEST_GENE, false, "1", "q20.30");
-        GermlineDeletion deletion2 = GermlineDeletionTestFactory.create(TEST_GENE, false, "1", "q20.30");
-        List<GermlineDeletion> deletions = Lists.newArrayList(deletion1, deletion2);
-        assertFalse(GermlineDeletionUtil.getReportedStatus(deletions));
-    }
-
-    @Test
     public void testFindCopyNumberForGene()
     {
         GeneCopyNumber geneCopyNumberToFind = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).build();

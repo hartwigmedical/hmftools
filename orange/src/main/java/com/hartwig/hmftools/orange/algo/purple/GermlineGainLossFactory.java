@@ -43,7 +43,7 @@ public class GermlineGainLossFactory
             GeneCopyNumber somaticGeneCopyNumber = GermlineDeletionUtil.findGeneCopyNumberForGene(geneName, allSomaticGeneCopyNumbers);
 
             PurpleGainLoss loss = toGainLoss(geneName, deletionsForGene, somaticGeneCopyNumber);
-            boolean reported = GermlineDeletionUtil.getReportedStatus(deletionsForGene);
+            boolean reported = deletionsForGene.stream().anyMatch(d -> d.Reported);
             lossToReportability.put(loss, reported);
         }
         return lossToReportability;
