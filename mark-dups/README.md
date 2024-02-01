@@ -95,7 +95,7 @@ Note that when a read is unmapped or a supplementary is deleted, other reads in 
 
 ### Deduplication
 
-There are 3 main steps in the deduplication algorithm
+There are 2 steps in the deduplication algorithm:
 
 #### 1. Identify duplicates 
 Duplicates can be marked either with or without UMIs. If UMIs are not available, then simply mark any fragments (including any secondary & supplementary alignments) with the same fragment strand orientation and identical unclipped 5’ alignment coordinates (allowing for strand) on both reads in fragment are identified as belonging to the same duplicate group.  For non-paired reads the length of the fragment must also be identical. For paired reads, the MC (mate cigar) tag is used, where available (note BWA normally populates this but not STAR), to identify from the 1st read whether the fragment is in the same duplicate group. Where it is not available, both reads are assessed together, at the cost of higher runtime memory. If a primary read is marked as duplicate, all supplementary and secondary reads from the same fragment will also be marked duplicate. If one of the reads is unmapped then all fragments with the same start coordinates on the mappable side are placed in the same duplicate group. 
