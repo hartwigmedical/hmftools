@@ -325,7 +325,7 @@ public class SomaticFindingsChapter implements ReportChapter
 
     private void addLossOfHeterozygosity(@NotNull Document document)
     {
-        String lohTitle = "Potentially interesting LOH events in case of MSI or HRD";
+        String lohTitle = "Potentially interesting LOH events";
 
         if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
         {

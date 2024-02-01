@@ -72,6 +72,7 @@ import com.hartwig.hmftools.orange.algo.plot.DummyPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.FileBasedPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.PlotManager;
 import com.hartwig.hmftools.orange.algo.purple.GermlineGainLossFactory;
+import com.hartwig.hmftools.orange.algo.purple.GermlineLossOfHeterozygosityFactory;
 import com.hartwig.hmftools.orange.algo.purple.PurpleData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
@@ -198,8 +199,9 @@ public class OrangeAlgo
 
         PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(pave);
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
+        GermlineLossOfHeterozygosityFactory germlineLOHFactory = new GermlineLossOfHeterozygosityFactory(ensemblDataCache);
         PurpleInterpreter purpleInterpreter =
-                new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, driverGenes, linx, chord);
+                new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, germlineLOHFactory, driverGenes, linx, chord);
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
 
         IsofoxRecord isofox = null;

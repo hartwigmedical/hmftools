@@ -10,7 +10,8 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface PurpleRecord {
+public interface PurpleRecord
+{
 
     @NotNull
     PurpleFit fit();
@@ -71,4 +72,10 @@ public interface PurpleRecord {
 
     @Nullable
     List<PurpleGainLoss> reportableGermlineFullLosses();
+
+    @Nullable
+    List<PurpleLossOfHeterozygosity> allGermlineLossOfHeterozygosities();
+
+    @Nullable
+    List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities();
 }

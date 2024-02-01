@@ -214,6 +214,13 @@ investigate potential causes for QC failure.
     - Data is displayed in the report as "NA" in case of purple QC failure, in case the data by itself is not interpretable (e.g. TML)
     - The TMB status (high vs low) is displayed on the front page along with the actual TMB
     - The status of UGT1A1 is displayed on the front page
+    - Support germline deletions heterozygous in the tumor:
+        - Included in new section "Potentially pathogenic germline LOH events" on PDF report.
+        - Included in new fields `allGermlineLossOfHeterozygosities` and `reportableGermlineLossOfHeterozygosities` in the JSON.
+        - Converted to somatic LOH events when `convert_germline_to_somatic` parameter is provided.
+        - Changed titles of somatic LOH and germline losses on PDF report to accommodate these changes.
+    - Combine multiple germline loss calls for the same gene into one call.
+    - Merge germline and somatic losses when both exist for the same gene.
 - [2.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.7.0)
     - Supports panel tumor-only mode:
         - Omits Cuppa, Chord, Sigs and VirusBreakends
