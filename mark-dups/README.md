@@ -199,8 +199,6 @@ In hg38, 152 genes in total have some overlap with the problematic regions file,
 
 ## Known Issues / Future improvements
 
--Finally, to allow for indels at the 5’ end of the read we collapse groups with identical UMIs that match coordinates on 1 end and within 8 bases on the other end.
-
 **Duplicate marking**
 - **Read length for unpaired** - Should read length need to match for non-paired reads 
 - **Reads with unmapped mates** – currently marked as duplicates based on the coordinates (and UMI) of the aligned read only.  Could lead to over-clustering.
@@ -221,6 +219,4 @@ In hg38, 152 genes in total have some overlap with the problematic regions file,
 - We should trinculeotide repeats of at least 30 length and all dinculeotide / single base repeats of  of 20-30 bases to the problematic regions file. 
 - We should increase minimum 10 bases outside of problematic region to 20. 
 
- 
-
-## Version History and Download Links
+ ## Version History and Download Links
