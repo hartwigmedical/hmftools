@@ -80,7 +80,6 @@ public final class SamRecordTestUtils
         }
     }
 
-
     public static SAMRecord createSamRecord(
             final String readId, final String chrStr, int readStart, final String readBases, final String cigar, final String mateChr,
             int mateStart, boolean isReversed, boolean isSupplementary, final SupplementaryReadData suppAlignment)
@@ -97,7 +96,7 @@ public final class SamRecordTestUtils
 
         record.setReadBases(readBases.getBytes());
 
-        final byte[] qualities = new byte[readBases.length()];
+        byte[] qualities = buildBaseQuals(readBases.length());
 
         for(int i = 0; i < readBases.length(); ++i)
         {
@@ -153,5 +152,19 @@ public final class SamRecordTestUtils
             return HumanChromosome.values().length;
 
         else return HumanChromosome.values().length + 1;
+    }
+
+    public static byte[] buildBaseQuals(int length) { return buildBaseQuals(length, DEFAULT_BASE_QUAL); }
+
+    public static byte[] buildBaseQuals(int length, int qualValue)
+    {
+        final byte[] baseQuals = new byte[length];
+
+        for(int i = 0; i < length; ++i)
+        {
+            baseQuals[i] = (byte)qualValue;
+        }
+
+        return baseQuals;
     }
 }
