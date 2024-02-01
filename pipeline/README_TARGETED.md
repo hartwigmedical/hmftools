@@ -161,7 +161,7 @@ The GC bias is calculated using on target regions only.
 ### Amber
 
 The following filters are applied:
-* min_depth (in tumor) is set to 25
+* min_depth (in tumor) > 25
 * Tumor ref and alt support >= 2
 * Min_depth_percent and max_depth_percent are not applied
 * Tumor ref and alt VAF >= 0.05
