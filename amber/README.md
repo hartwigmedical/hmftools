@@ -121,7 +121,6 @@ The `reference` and `reference_bam` arguments supports multiple arguments separa
 When run in this mode the heterozygous baf points are taken as the intersection of each of the reference bams. 
 No change is made to the SNPCheck or contamination output. These will be run on the first reference bam in the list. 
 
-
 ## Algorithm 
 
 ### Analysis and filtering of BAF points
@@ -135,7 +134,6 @@ The Bioconductor copy number package is then used to generate pcf segments from 
 ```
 TO DO
 ```
-
 
 ### Regions of Homozygosity
 Amber outputs a file which contains continuous regions of homozygous sites.  The sex chromosomes are excluded from consideration, as are the short arms of chr 13,14,15,21 & 22 as well as regions within 1M bases of centromeric gaps and large regions of heterochromatin (ie for chr 1,chr9, chr 16).
@@ -210,6 +208,8 @@ ORDER BY sampleCount desc;
 | REFERENCE.amber.snp.vcf.gz           | Entry at each SNP location in the reference.                                             |
 | REFERENCE.amber.homozygousregion.tsv | Regions of homozygosity found in the reference.                                          |
 
+# Known issues / future improvements
+- **Population based phasing**: Could significantly increase resolution of subclonal/low tumor fraction BAF segmentation.
 
  
 # Version History and Download Links
