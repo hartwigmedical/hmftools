@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_C
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_BAM;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_BAM_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
@@ -92,8 +94,6 @@ public class LilacConfig
     // config strings
     public static final String RESOURCE_DIR = "resource_dir";
     public static final String RESOURCE_DIR_DESC = "Path to resource files";
-
-    private static final String RNA_BAM = "rna_bam";
 
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String GENE_COPY_NUMBER = "gene_copy_number";
@@ -285,9 +285,9 @@ public class LilacConfig
         configBuilder.addRequiredConfigItem(SAMPLE, "Name of sample");
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
 
-        configBuilder.addPath(REFERENCE_BAM, false,REFERENCE_BAM_DESC);
-        configBuilder.addPath(TUMOR_BAM, false,TUMOR_BAM_DESC);
-        configBuilder.addPath(RNA_BAM, false,"Analyse tumor BAM only");
+        configBuilder.addPath(REFERENCE_BAM, false, REFERENCE_BAM_DESC);
+        configBuilder.addPath(TUMOR_BAM, false, TUMOR_BAM_DESC);
+        configBuilder.addPath(RNA_BAM, false, RNA_BAM_DESC);
 
         configBuilder.addPath(RESOURCE_DIR, true, RESOURCE_DIR_DESC);
 

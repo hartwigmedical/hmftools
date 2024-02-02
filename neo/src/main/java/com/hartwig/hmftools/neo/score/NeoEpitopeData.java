@@ -118,11 +118,11 @@ public class NeoEpitopeData
                     if(sampleTPMs.containsKey(transName))
                         transExpression = sampleTPMs.get(transName);
                     else
-                        NE_LOGGER.warn("sample({}) missing transcript({}) TPM", sampleData.Id, transName);
+                        NE_LOGGER.warn("sample({}) missing transcript({}) TPM", sampleData.TumorId, transName);
                 }
                 else
                 {
-                    transExpression = transExpressionCache.getExpression(transName, sampleData.Id);
+                    transExpression = transExpressionCache.getExpression(transName, sampleData.TumorId);
                 }
 
                 // distinguish non-existent expression vs zero TPM

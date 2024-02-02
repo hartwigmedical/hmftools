@@ -7,13 +7,13 @@ import java.util.List;
 
 public class CuppaPredictionEntry
 {
-    public static final String FLD_SAMPLE_ID = "sample_id";
+    protected static final String FLD_SAMPLE_ID = "sample_id";
     public static final String FLD_DATA_TYPE = "data_type";
     public static final String FLD_CLF_GROUP = "clf_group"; // Potentially unused
     public static final String FLD_CLF_NAME = "clf_name";
     public static final String FLD_FEAT_NAME = "feat_name";
     public static final String FLD_FEAT_VALUE = "feat_value";
-    public static final String FLD_CANCER_TYPE = "cancer_type";
+    protected static final String FLD_CANCER_TYPE = "cancer_type";
     public static final String FLD_DATA_VALUE = "data_value";
     public static final String FLD_RANK = "rank";
     public static final String FLD_RANK_GROUP = "rank_group";

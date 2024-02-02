@@ -32,6 +32,13 @@ public final class CommonConfig
     public static final String REFERENCE_BAM_DESC = "Reference BAM file";
     public static final String REFERENCE_BAMS_DESC = REFERENCE_BAM_DESC + PLURALS_DESC;
 
+    public static final String RNA_SAMPLE_ID = "rna_sample";
+    public static final String RNA_SAMPLE_DESC = "RNA sample ID";
+
+    public static final String RNA_BAM = "rna_bam";
+    public static final String RNA_BAM_DESC = "RNA BAM file";
+
+
     public static final String LOG_READ_IDS = "log_read_ids";
     public static final String LOG_READ_IDS_DESC = "Log specific read IDs, separated by ';'";
 
