@@ -43,6 +43,8 @@ public class JunctionAssembly
     private final List<RemoteRegion> mRemoteRegions;
     private RefBaseAssembly mRefBaseAssembly;
 
+    private PrimaryPhaseGroup mPrimaryPhaseGroup;
+
     public JunctionAssembly(
             final Junction initialJunction, final Read read, final int maxExtensionDistance,
             final int minAlignedPosition, final int maxAlignedPosition)
@@ -66,6 +68,7 @@ public class JunctionAssembly
         mRemoteRegions = Lists.newArrayList();
         mRefBaseAssembly = null;
         mMergedAssemblies = 0;
+        mPrimaryPhaseGroup = null;
 
         addInitialRead(read);
     }
@@ -370,6 +373,11 @@ public class JunctionAssembly
         return  mSupport.stream().anyMatch(x -> x.read() == read);
     }
 
+    public boolean hasMatchingFragmentSupport(final Read read)
+    {
+        return  mSupport.stream().anyMatch(x -> x.read().getName().equals(read.getName()));
+    }
+
     public List<RepeatInfo> repeatInfo() { return mRepeatInfo; }
 
     public void buildRepeatInfo()
@@ -385,6 +393,9 @@ public class JunctionAssembly
 
     public RefBaseAssembly refBaseAssembly() { return mRefBaseAssembly; }
     public void setRefBaseAssembly(final RefBaseAssembly refBaseAssembly) { mRefBaseAssembly = refBaseAssembly; }
+
+    public PrimaryPhaseGroup primaryPhaseGroup() { return mPrimaryPhaseGroup; }
+    public void setPrimaryPhaseGroup(final PrimaryPhaseGroup primaryPhaseGroup) { mPrimaryPhaseGroup = primaryPhaseGroup; }
 
     public String toString()
     {

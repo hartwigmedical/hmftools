@@ -20,12 +20,15 @@ public class JunctionGroup implements Comparable<JunctionGroup>
 
     private final List<Read> mCandidateReads;
 
+    private final List<JunctionAssembly> mJunctionAssemblies;
+
     public JunctionGroup(final Junction junction)
     {
         mJunctions = Lists.newArrayList(junction);
         mMaxPosition = junction.Position;
         mMinPosition = junction.Position;
         mCandidateReads = Lists.newArrayList();
+        mJunctionAssemblies = Lists.newArrayList();
     }
 
     public List<Junction> junctions() { return mJunctions; }
@@ -48,6 +51,9 @@ public class JunctionGroup implements Comparable<JunctionGroup>
     public void addCandidateRead(final Read read) { mCandidateReads.add(read); }
     public void clearCandidateReads() { mCandidateReads.clear(); }
     public int candidateReadCount() { return mCandidateReads.size(); }
+
+    public void addJunctionAssemblies(final List<JunctionAssembly> assemblies) { mJunctionAssemblies.addAll(assemblies); }
+    public List<JunctionAssembly> junctionAssemblies() { return mJunctionAssemblies; }
 
     public String toString()
     {

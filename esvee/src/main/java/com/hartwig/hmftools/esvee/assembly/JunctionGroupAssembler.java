@@ -42,8 +42,6 @@ public class JunctionGroupAssembler extends ThreadTask
 
     private final Map<String,Read> mReadGroupMap;
 
-    private final List<JunctionAssembly> mJunctionAssemblies;
-
     public JunctionGroupAssembler(
             final SvConfig config, final BamReader bamReader, final Queue<JunctionGroup> junctionGroups, final ResultsWriter resultsWriter)
     {
@@ -56,10 +54,7 @@ public class JunctionGroupAssembler extends ThreadTask
 
         mReadGroupMap = Maps.newHashMap();
         mCurrentJunctionGroup = null;
-        mJunctionAssemblies = Lists.newArrayList();
     }
-
-    public List<JunctionAssembly> junctionAssemblies() { return mJunctionAssemblies; }
 
     public static List<JunctionGroupAssembler> createThreadTasks(
             final List<JunctionGroup> junctionGroups, final List<BamReader> bamReaders, final SvConfig config,
@@ -171,7 +166,7 @@ public class JunctionGroupAssembler extends ThreadTask
             }
         }
 
-        mJunctionAssemblies.addAll(junctionGroupAssemblies);
+        mCurrentJunctionGroup.addJunctionAssemblies(junctionGroupAssemblies);
 
         junctionGroupAssemblies.forEach(x -> mResultsWriter.writeAssembly(x));
 
@@ -222,12 +217,5 @@ public class JunctionGroupAssembler extends ThreadTask
                 mReadGroupMap.put(read.getName(), read);
             }
         }
-    }
-
-    public static List<JunctionAssembly> collectJunctionAssemblies(final List<JunctionGroupAssembler> assemblers)
-    {
-        List<JunctionAssembly> JunctionAssemblies = Lists.newArrayList();
-        assemblers.forEach(x -> JunctionAssemblies.addAll(x.junctionAssemblies()));
-        return JunctionAssemblies;
     }
 }

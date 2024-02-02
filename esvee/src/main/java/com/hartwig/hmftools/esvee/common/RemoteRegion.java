@@ -70,7 +70,7 @@ public class RemoteRegion
                 if(region.region().overlaps(nextRegion.region()))
                 {
                     regions.remove(nextIndex);
-                    region.region().setEnd(nextRegion.region().end());
+                    region.region().setEnd(max(region.region().end(), nextRegion.region().end()));
                     region.readIds().addAll(nextRegion.readIds());
 
                     for(int i = 0; i < region.readTypeCounts().length; ++i)
