@@ -161,11 +161,11 @@ The GC bias is calculated using on target regions only.
 ### Amber
 
 The following filters are applied:
-* Tumor min depth is set to 25
+* min_depth (in tumor) > 25
 * Tumor ref and alt support >= 2
+* Min_depth_percent and max_depth_percent are not applied
 * Tumor ref and alt VAF >= 0.05
 * Amber loci must be within 300 bases of a target region
-
 
 ### Purple
 To estimate MSI, a set of microsatellites with high coverage in the panel must also be defined.

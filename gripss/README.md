@@ -128,6 +128,7 @@ PON | PON files | FALSE | Breakpoint must be found < 3 times in our cohort in po
 maxPolyAHomLength | N/A | 6 | Variants with long poly-A homology are frequent artefacts at low VAF
 maxPolyGLength | N/A | 16 | Long stretches of poly-G/poly-C are extremely rare in the ref genome but are known sequencer artefacts.  Single breakends with insert sequences containing long polyG homopolymers are filtered.   This filter is also applied to break junctions where 1 end maps in any of the following POLY-G regions (v38: {chr2:32,916,190-32,916,630; chr4:41,216,410-41,216,450; chr17:44,569,050-44,569,090}; v37: {2:33,141,260-33,141,700; 4:41,218,427-41,218,467; 17:42646418-42646458}).
 maxNormalRelativeSupport | soft_max_normal_relative_support* | 0.03 | Too many support reads from the normal sample relative to the tumor. Indicates the variant is likely germline or artefact.
+qualPerAD | qual_per_ad | 30 | Require an average qual contributrion per VF support.  ly in targeted mode.  Does not apply to HOTSPOTS
 
 <nowiki>*</nowiki> This argument is also used for one of the hard filters
 
@@ -145,7 +146,7 @@ shortSRTumorSupport | N/A | TRUE | INS,DEL & DUP(<1kb) | Short DELs and DUPs mus
 shortSRNormalSupport | N/A | FALSE | INS,DEL & DUP(<1kb) | Short DELs and DUPs must not be supported by 1 split read or 1 indel containing read in the normal 
 shortDelInsArtefact | N/A | TRUE | DEL(<1kb) | Filter any short DEL where the insert sequence length + 1 = deletion length, unless the insert sequence is identical to the reverse complement (ie a short reciprocal inversion).  This is a known GRIDSS artefact.
 
-For targeted data with higher depth please see additional recommendations for filters [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md).
+For targeted panel data filter are customised and single breakends are not called. Please see [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md).
 
 ## 4. Linkage, deduplication and rescue
 
