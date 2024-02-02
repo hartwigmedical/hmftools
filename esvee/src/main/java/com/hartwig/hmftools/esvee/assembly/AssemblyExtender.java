@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_DISCORDANT_READ;
@@ -48,24 +49,28 @@ public class AssemblyExtender
 
         // process in order of closest to furthest-out reads in the ref base direction
         List<Read> discordantReads = nonJunctionReads.stream()
-                .filter(x -> isDiscordant(x))
+                .filter(x -> isDiscordant(x) || x.isMateUnmapped())
                 .filter(x -> !x.hasMateSet() || !mAssembly.hasReadSupport(x.mateRead()))
                 .collect(Collectors.toList());
 
         List<NonJunctionRead> candidateReads = discordantReads.stream().map(x -> new NonJunctionRead(x, DISCORDANT)).collect(Collectors.toList());
 
         List<Read> remoteJunctionMates = Lists.newArrayList();
+        List<Read> suppJunctionReads = Lists.newArrayList();
 
         // add any junction mates in the same window
         for(AssemblySupport support : mAssembly.support())
         {
+            if(support.read().hasSupplementary())
+                suppJunctionReads.add(support.read());
+
             if(isDiscordant(support.read()))
             {
                 remoteJunctionMates.add(support.read());
                 continue;
             }
 
-            // look to extend from local mates
+            // look to extend from local mates on the ref side of the junction
             Read mateRead = support.read().mateRead();
 
             if(mateRead == null || discordantReads.contains(mateRead))
@@ -85,7 +90,7 @@ public class AssemblyExtender
             candidateReads.add(new NonJunctionRead(mateRead, JUNCTION_MATE));
         }
 
-        findRemoteRegions(discordantReads, remoteJunctionMates);
+        findRemoteRegions(discordantReads, remoteJunctionMates, suppJunctionReads);
 
         if(candidateReads.isEmpty())
             return;
@@ -141,7 +146,7 @@ public class AssemblyExtender
         public SupportType type() { return mType; }
     }
 
-    private void findRemoteRegions(final List<Read> discordantReads, final List<Read> remoteJunctionMates)
+    private void findRemoteRegions(final List<Read> discordantReads, final List<Read> remoteJunctionMates, final List<Read> suppJunctionReads)
     {
         if(remoteJunctionMates.isEmpty() && discordantReads.isEmpty())
             return;
@@ -154,7 +159,10 @@ public class AssemblyExtender
         {
             // look to extend from local mates
             addOrCreateMateRemoteRegion(remoteRegions, read, true);
+        }
 
+        for(Read read : suppJunctionReads)
+        {
             // factor any supplementaries into remote regions
             addOrCreateSupplementaryRemoteRegion(remoteRegions, read);
         }
@@ -194,10 +202,9 @@ public class AssemblyExtender
         {
             remoteRegions.add(new RemoteRegion(new ChrBaseRegion(remoteChr, remotePosStart, remotePosEnd), read.getName(), readType));
         }
-
     }
 
-    private static void addOrCreateSupplementaryRemoteRegion(final List<RemoteRegion> remoteRegions, final Read read)
+    private void addOrCreateSupplementaryRemoteRegion(final List<RemoteRegion> remoteRegions, final Read read)
     {
         SupplementaryReadData suppData = read.supplementaryData();
 
@@ -205,6 +212,11 @@ public class AssemblyExtender
             return;
 
         int remotePosEnd = getMateAlignmentEnd(suppData.Position, suppData.Cigar);
+
+        /*
+        SV_LOGGER.debug("asmJunction({}) read({} flags={}) supp({})",
+                mAssembly.junction(), read.getName(), read.getFlags(), suppData);
+        */
 
         addOrCreateRemoteRegion(remoteRegions, read, REMOTE_READ_TYPE_JUNCTION_SUPP, suppData.Chromosome, suppData.Position, remotePosEnd);
     }

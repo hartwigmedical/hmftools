@@ -12,9 +12,8 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
-public class RemoteRegion
+public class RemoteRegion extends ChrBaseRegion
 {
-    private ChrBaseRegion mRegion;
     private final Set<String> mReadIds;
 
     public static final int REMOTE_READ_TYPE_JUNCTION_MATE = 0;
@@ -25,7 +24,7 @@ public class RemoteRegion
 
     public RemoteRegion(final ChrBaseRegion region, final String readId, final int readType)
     {
-        mRegion = region;
+        super(region.Chromosome, region.start(), region.end());
         mReadIds = Sets.newHashSet(readId);
         mReadTypeCount = new int[REMOTE_READ_TYPE_DISCORDANT_READ+1];
         ++mReadTypeCount[readType];
@@ -33,29 +32,22 @@ public class RemoteRegion
 
     public void addReadDetails(final String readId, final int posStart, final int posEnd, final int readType)
     {
-        mRegion.setStart(min(mRegion.start(), posStart));
-        mRegion.setEnd(max(mRegion.end(), posEnd));
+        setStart(min(start(), posStart));
+        setEnd(max(end(), posEnd));
         mReadIds.add(readId);
         ++mReadTypeCount[readType];
     }
-
-    public boolean overlaps(final String chromosome, final int posStart, final int posEnd)
-    {
-        return mRegion.overlaps(chromosome, posStart, posEnd);
-    }
-
-    public ChrBaseRegion region() { return mRegion; }
 
     public Set<String> readIds() { return mReadIds; }
     public int readCount() { return mReadIds.size(); }
 
     public int[] readTypeCounts() { return mReadTypeCount; }
 
-    public String toString() { return format("%s reads(%d)", mRegion, mReadIds.size()); }
+    public String toString() { return format("%s reads(%d)", super.toString(), mReadIds.size()); }
 
     public static void mergeRegions(final List<RemoteRegion> regions)
     {
-        Collections.sort(regions, Comparator.comparing(x -> x.region()));
+        Collections.sort(regions, Comparator.comparing(x -> x));
 
         int index = 0;
         while(index < regions.size() - 1)
@@ -67,10 +59,10 @@ public class RemoteRegion
             {
                 RemoteRegion nextRegion = regions.get(nextIndex);
 
-                if(region.region().overlaps(nextRegion.region()))
+                if(region.overlaps(nextRegion))
                 {
                     regions.remove(nextIndex);
-                    region.region().setEnd(max(region.region().end(), nextRegion.region().end()));
+                    region.setEnd(max(region.end(), nextRegion.end()));
                     region.readIds().addAll(nextRegion.readIds());
 
                     for(int i = 0; i < region.readTypeCounts().length; ++i)

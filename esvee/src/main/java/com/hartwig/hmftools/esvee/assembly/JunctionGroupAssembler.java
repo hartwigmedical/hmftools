@@ -41,6 +41,7 @@ public class JunctionGroupAssembler extends ThreadTask
     private final BamReader mBamReader;
 
     private final Map<String,Read> mReadGroupMap;
+    private int mLowQualFilteredReads;
 
     public JunctionGroupAssembler(
             final SvConfig config, final BamReader bamReader, final Queue<JunctionGroup> junctionGroups, final ResultsWriter resultsWriter)
@@ -54,6 +55,7 @@ public class JunctionGroupAssembler extends ThreadTask
 
         mReadGroupMap = Maps.newHashMap();
         mCurrentJunctionGroup = null;
+        mLowQualFilteredReads = 0;
     }
 
     public static List<JunctionGroupAssembler> createThreadTasks(
@@ -115,6 +117,8 @@ public class JunctionGroupAssembler extends ThreadTask
             }
         }
     }
+
+    public int lowQualFilteredReads() { return mLowQualFilteredReads; }
 
     private void processJunctionGroup(final JunctionGroup junctionGroup)
     {
@@ -180,7 +184,10 @@ public class JunctionGroupAssembler extends ThreadTask
     {
         // CHECK: do in SvPrep if worthwhile
         if(!ReadFilters.isRecordAverageQualityAbove(record.getBaseQualities(), SvConstants.AVG_BASE_QUAL_THRESHOLD))
+        {
+            ++mLowQualFilteredReads;
             return;
+        }
 
         Read read = new Read(record);
 

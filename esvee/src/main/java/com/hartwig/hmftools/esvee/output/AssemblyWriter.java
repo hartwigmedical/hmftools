@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_DI
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_SUPP;
 import static com.hartwig.hmftools.esvee.common.SupportType.DISCORDANT;
+import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 
 import java.io.BufferedWriter;
@@ -88,6 +89,8 @@ public class AssemblyWriter
             sj.add("RefExtJuncMates");
             sj.add("RefExtDiscReads");
             sj.add("RefExtMismatches");
+
+            sj.add("UnmappedJuncReads");
 
             sj.add("RemoteRegionCount");
             sj.add("RemoteRegionJuncMate");
@@ -184,6 +187,9 @@ public class AssemblyWriter
             {
                 sj.add("0").add("0").add("0").add("0");
             }
+
+            int unmappedJuncReads = (int)assembly.support().stream().filter(x -> x.type() == JUNCTION && !x.read().isMateMapped()).count();
+            sj.add(String.valueOf(unmappedJuncReads));
 
             sj.add(String.valueOf(assembly.remoteRegions().size()));
 
@@ -291,7 +297,7 @@ public class AssemblyWriter
 
         for(int i = 0; i < min(3, regions.size()); ++i)
         {
-            sj.add(format("%s=%d", regions.get(i).region(), regions.get(i).readCount()));
+            sj.add(format("%s=%d", regions.get(i), regions.get(i).readCount()));
         }
 
         return sj.toString();

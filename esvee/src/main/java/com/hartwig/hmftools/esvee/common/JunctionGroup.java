@@ -4,6 +4,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -54,6 +56,11 @@ public class JunctionGroup implements Comparable<JunctionGroup>
 
     public void addJunctionAssemblies(final List<JunctionAssembly> assemblies) { mJunctionAssemblies.addAll(assemblies); }
     public List<JunctionAssembly> junctionAssemblies() { return mJunctionAssemblies; }
+
+    public boolean containsRemoteRegion(final RemoteRegion region)
+    {
+        return positionsOverlap(mMinPosition, mMaxPosition, region.start(), region.end());
+    }
 
     public String toString()
     {

@@ -138,12 +138,16 @@ public class JunctionProcessor
 
         int totalJunctionAssemblies = junctionGroups.stream().mapToInt(x -> x.junctionAssemblies().size()).sum();
 
+        int totalLowQualFilteredReads = primaryAssemblyTasks.stream().mapToInt(x -> x.lowQualFilteredReads()).sum();
+
         SV_LOGGER.info("created {} junction assemblies", totalJunctionAssemblies);
 
         mPerfCounters.add(ThreadTask.mergePerfCounters(primaryAssemblyTasks.stream().collect(Collectors.toList())));
 
         int totalCachedReads = junctionGroups.stream().mapToInt(x -> x.candidateReadCount()).sum();
-        SV_LOGGER.info("cached read count({}) from {} junction groups", totalCachedReads, junctionGroups.size());
+
+        SV_LOGGER.info("cached read count({}) from {} junction groups, lowQualFiltered({})",
+                totalCachedReads, junctionGroups.size(), totalLowQualFilteredReads);
     }
 
     private void formPrimaryPhaseGroups()

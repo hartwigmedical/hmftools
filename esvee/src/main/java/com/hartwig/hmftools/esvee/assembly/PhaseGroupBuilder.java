@@ -5,9 +5,11 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
@@ -55,6 +57,8 @@ public class PhaseGroupBuilder
         PrimaryPhaseGroup primaryPhaseGroup = null;
         boolean linksWithExisting = false;
 
+        Set<JunctionGroup> processedGroups = Sets.newHashSet();
+
         for(RemoteRegion region : assembly.remoteRegions())
         {
             if(isFiltered(region))
@@ -72,6 +76,11 @@ public class PhaseGroupBuilder
 
             for(JunctionGroup junctionGroup : overlappingJunctions)
             {
+                if(processedGroups.contains(junctionGroup))
+                    continue;
+
+                processedGroups.add(junctionGroup);
+
                 for(JunctionAssembly otherAssembly : junctionGroup.junctionAssemblies())
                 {
                     if(assembly == otherAssembly)
@@ -130,14 +139,12 @@ public class PhaseGroupBuilder
 
     private List<JunctionGroup> findOverlappingJunctionGroups(final RemoteRegion region)
     {
-        List<JunctionGroup> junctionGroups = mJunctionGroupMap.get(region.region().Chromosome);
+        List<JunctionGroup> junctionGroups = mJunctionGroupMap.get(region.Chromosome);
 
         if(junctionGroups == null)
             return Collections.emptyList();
 
-        return junctionGroups.stream()
-                .filter(x -> positionsOverlap(x.minPosition(), x.maxPosition(), region.region().start(), region.region().end()))
-                .collect(Collectors.toList());
+        return junctionGroups.stream().filter(x -> x.containsRemoteRegion(region)).collect(Collectors.toList());
     }
 
     private static boolean assembliesShareReads(final JunctionAssembly first, final JunctionAssembly second)
@@ -160,19 +167,18 @@ public class PhaseGroupBuilder
         return false;
     }
 
-
     private boolean isFiltered(final RemoteRegion region)
     {
+        // ignore any remote region filtered out by config
         if(!mConfig.SpecificChrRegions.hasFilters())
             return false;
 
-        if(mConfig.SpecificChrRegions.excludeChromosome(region.region().Chromosome))
+        if(mConfig.SpecificChrRegions.excludeChromosome(region.Chromosome))
             return true;
 
         if(mConfig.SpecificChrRegions.Regions.isEmpty())
             return false;
 
-        return mConfig.SpecificChrRegions.Regions.stream().noneMatch(x -> x.overlaps(region.region()));
+        return mConfig.SpecificChrRegions.Regions.stream().noneMatch(x -> x.overlaps(region));
     }
-
 }

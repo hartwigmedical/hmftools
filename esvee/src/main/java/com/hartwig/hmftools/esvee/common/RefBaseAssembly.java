@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.Math.abs;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
@@ -15,7 +16,7 @@ public class RefBaseAssembly
 {
     private final Junction mJunction;
     private final int mExtensionRefPosition;
-    private final int nNonJunctionReadExtension;
+    private final int mNonJunctionReadExtension;
     private int mJunctionSequenceIndex;
 
     private byte mBases[];
@@ -42,7 +43,7 @@ public class RefBaseAssembly
         // copy the ref bases from the junction assembly, for now ignoring mismatches even if they're dominant
         // could also lower the qual for those, but better to sort this out prior or properly
 
-        nNonJunctionReadExtension = mJunction.isForward() ?
+        mNonJunctionReadExtension = mJunction.isForward() ?
                 assembly.minAlignedPosition() - extensionRefPosition : extensionRefPosition - assembly.maxAlignedPosition();
 
         int copyIndexStart;
@@ -51,7 +52,7 @@ public class RefBaseAssembly
 
         if(mJunction.isForward())
         {
-            copyIndexStart = nNonJunctionReadExtension;
+            copyIndexStart = mNonJunctionReadExtension;
             copyIndexEnd = assemblyLength - 1;
             assemblyIndex = 0;
             mJunctionSequenceIndex = assemblyLength - 1;
@@ -83,7 +84,7 @@ public class RefBaseAssembly
     public int extensionRefPosition() { return mExtensionRefPosition; }
     public int baseLength() { return mBases.length; }
 
-    public int nonJunctionReadExtension() { return nNonJunctionReadExtension; }
+    public int nonJunctionReadExtension() { return mNonJunctionReadExtension; }
 
     public byte[] bases() { return mBases; }
     public byte[] baseQuals() { return mBaseQuals; }
@@ -186,4 +187,12 @@ public class RefBaseAssembly
 
         mSupport.add(new AssemblySupport(read, supportType, assemblyIndex, 0, readIndexRange, mismatchCount));
     }
+
+    public String toString()
+    {
+        return format("junc(%s) extension(pos=%d dist=%d) length(%d) support(%d) mismatches(pos=%d all=%d)",
+                mJunction, mExtensionRefPosition, mNonJunctionReadExtension, baseLength(),
+                mSupport.size(), mSequenceMismatches.positionCount(), mSequenceMismatches.distinctBaseCount());
+    }
 }
+
