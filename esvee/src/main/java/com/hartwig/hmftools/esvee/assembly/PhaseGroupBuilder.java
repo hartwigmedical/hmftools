@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.binarySearch;
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,30 +33,46 @@ public class PhaseGroupBuilder
         mMissingRemoteGroups = 0;
     }
 
+    private static final int LOG_COUNT = 10000;
+
     public void buildGroups()
     {
+        int processed = 0;
         for(List<JunctionGroup> junctionGroups : mJunctionGroupMap.values())
         {
             for(JunctionGroup junctionGroup : junctionGroups)
             {
                 for(JunctionAssembly assembly : junctionGroup.junctionAssemblies())
                 {
-                    findLinkedAssemblies(assembly);
+                    findLinkedAssemblies(junctionGroup, assembly);
+
+                    ++processed;
+
+                    if((processed % LOG_COUNT) == 0)
+                    {
+                        SV_LOGGER.debug("primary phasing processed {} assemblies, groups({})",
+                                processed, mPrimaryPhaseGroups.size());
+                    }
                 }
             }
+        }
+
+        for(int i = 0; i < mPrimaryPhaseGroups.size(); ++i)
+        {
+            mPrimaryPhaseGroups.get(i).setId(i);
         }
     }
 
     public List<PrimaryPhaseGroup> primaryPhaseGroups() { return mPrimaryPhaseGroups; }
     public int missingRemoteGroups() { return mMissingRemoteGroups; }
 
-    private void findLinkedAssemblies(final JunctionAssembly assembly)
+    private void findLinkedAssemblies(final JunctionGroup assemblyJunctionGroup, final JunctionAssembly assembly)
     {
         if(assembly.remoteRegions().isEmpty())
             return;
 
-        PrimaryPhaseGroup primaryPhaseGroup = null;
-        boolean linksWithExisting = false;
+        PrimaryPhaseGroup primaryPhaseGroup = assembly.primaryPhaseGroup(); // may have been set from an earlier assembly link
+        boolean linksWithExisting = primaryPhaseGroup != null;
 
         Set<JunctionGroup> processedGroups = Sets.newHashSet();
 
@@ -64,7 +81,7 @@ public class PhaseGroupBuilder
             if(isFiltered(region))
                 continue;
 
-            List<JunctionGroup> overlappingJunctions = findOverlappingJunctionGroups(region);
+            List<JunctionGroup> overlappingJunctions = findOverlappingJunctionGroups(assemblyJunctionGroup, region);
 
             if(overlappingJunctions == null)
             {
@@ -137,15 +154,44 @@ public class PhaseGroupBuilder
         }
     }
 
-    private List<JunctionGroup> findOverlappingJunctionGroups(final RemoteRegion region)
+    private List<JunctionGroup> findOverlappingJunctionGroups(final JunctionGroup assemblyJunctionGroup, final RemoteRegion region)
     {
+        if(assemblyJunctionGroup.containsRemoteRegion(region))
+            return List.of(assemblyJunctionGroup);
+
         List<JunctionGroup> junctionGroups = mJunctionGroupMap.get(region.Chromosome);
 
         if(junctionGroups == null)
             return Collections.emptyList();
 
-        return junctionGroups.stream().filter(x -> x.containsRemoteRegion(region)).collect(Collectors.toList());
+        // make use of the binary search for junction groups to find the closest index
+        int startIndex = JunctionGroup.binarySearch(region.start(), junctionGroups);
+
+        List<JunctionGroup> overlapGroups = Lists.newArrayList();
+
+        for(int d = 0; d <= 1; ++d)
+        {
+            boolean searchUp = (d == 0);
+
+            int index = searchUp ? startIndex + 1 : startIndex;
+
+            while(index >= 0 && index < junctionGroups.size())
+            {
+                if(!junctionGroups.get(index).overlapsRemoteRegion(region))
+                    break;
+
+                overlapGroups.add(junctionGroups.get(index));
+
+                if(searchUp)
+                    ++index;
+                else
+                    --index;
+            }
+        }
+
+        return overlapGroups;
     }
+
 
     private static boolean assembliesShareReads(final JunctionAssembly first, final JunctionAssembly second)
     {

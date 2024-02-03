@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.esvee.common.JunctionGroup.buildJunctionGroup
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -95,6 +96,14 @@ public class JunctionProcessor
 
             formPrimaryPhaseGroups();
 
+            // write here to show PPG data - may move back later on
+            if(mConfig.WriteTypes.contains(WriteType.ASSEMBLIES))
+            {
+                mJunctionGroupMap.values().forEach(x -> x.stream()
+                        .forEach(y -> y.junctionAssemblies()
+                                .forEach(z -> mResultsWriter.writeAssembly(z))));
+            }
+
             if(mConfig.PerfDebug || !mConfig.SpecificChrRegions.hasFilters())
             {
                 mPerfCounters.forEach(x -> x.logStats());
@@ -125,7 +134,7 @@ public class JunctionProcessor
         mJunctionGroupMap.values().forEach(x -> junctionGroups.addAll(x));
 
         // sorted by groups with the latest range, assuming that these will have the most reads and junctions
-        Collections.sort(junctionGroups);
+        Collections.sort(junctionGroups, Comparator.comparingInt(x -> -x.range()));
 
         List<Thread> threadTasks = new ArrayList<>();
 

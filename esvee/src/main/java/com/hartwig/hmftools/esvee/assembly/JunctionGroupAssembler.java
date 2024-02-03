@@ -3,7 +3,6 @@ package com.hartwig.hmftools.esvee.assembly;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
-import static com.hartwig.hmftools.esvee.SvConstants.TASK_LOG_COUNT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
 
 import java.util.List;
@@ -83,6 +82,8 @@ public class JunctionGroupAssembler extends ThreadTask
         return primaryAssemblyTasks;
     }
 
+    private static final int TASK_LOG_COUNT = 1000;
+
     @Override
     public void run()
     {
@@ -102,7 +103,7 @@ public class JunctionGroupAssembler extends ThreadTask
 
                 if(processedCount > 0 && (processedCount % TASK_LOG_COUNT) == 0)
                 {
-                    SV_LOGGER.info("processed {} junction groups, remaining({})", processedCount, remainingCount);
+                    SV_LOGGER.debug("processed {} junction groups, remaining({})", processedCount, remainingCount);
                 }
             }
             catch(NoSuchElementException e)
@@ -132,7 +133,7 @@ public class JunctionGroupAssembler extends ThreadTask
 
         mBamReader.sliceBam(mCurrentJunctionGroup.chromosome(), sliceStart, sliceEnd, this::processRecord);
 
-        SV_LOGGER.debug("junctionGroup({}:{}-{} count={}) slice complete, readCount({})",
+        SV_LOGGER.trace("junctionGroup({}:{}-{} count={}) slice complete, readCount({})",
                 mCurrentJunctionGroup.chromosome(), sliceStart, sliceEnd, mCurrentJunctionGroup.count(), mCurrentJunctionGroup.candidateReadCount());
 
         List<JunctionAssembly> junctionGroupAssemblies = Lists.newArrayList();
@@ -172,7 +173,7 @@ public class JunctionGroupAssembler extends ThreadTask
 
         mCurrentJunctionGroup.addJunctionAssemblies(junctionGroupAssemblies);
 
-        junctionGroupAssemblies.forEach(x -> mResultsWriter.writeAssembly(x));
+        // junctionGroupAssemblies.forEach(x -> mResultsWriter.writeAssembly(x));
 
         mCurrentJunctionGroup = null;
         mReadGroupMap.clear();

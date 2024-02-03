@@ -98,6 +98,9 @@ public class AssemblyWriter
             sj.add("RemoteRegionDiscordant");
             sj.add("RemoteRegionInfo");
 
+            sj.add("PhaseGroupId");
+            sj.add("PhaseGroupCount");
+
             writer.write(sj.toString());
             writer.newLine();
 
@@ -209,6 +212,16 @@ public class AssemblyWriter
             sj.add(String.valueOf(remoteDiscordant));
 
             sj.add(remoteRegionInfoStr(assembly.remoteRegions()));
+
+            if(assembly.primaryPhaseGroup() != null)
+            {
+                sj.add(String.valueOf(assembly.primaryPhaseGroup().id()));
+                sj.add(String.valueOf(assembly.primaryPhaseGroup().assemblyCount()));
+            }
+            else
+            {
+                sj.add("-1").add("0");
+            }
 
             mWriter.write(sj.toString());
             mWriter.newLine();
