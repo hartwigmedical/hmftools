@@ -6,6 +6,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,8 +20,9 @@ import org.jetbrains.annotations.NotNull;
 public class JunctionGroup extends BaseRegion
 {
     private final List<Junction> mJunctions;
-
     private final List<Read> mCandidateReads;
+
+    private int mIndex; // in the full list for the chromosome
 
     private final List<JunctionAssembly> mJunctionAssemblies;
 
@@ -30,6 +32,7 @@ public class JunctionGroup extends BaseRegion
         mJunctions = Lists.newArrayList(junction);
         mCandidateReads = Lists.newArrayList();
         mJunctionAssemblies = Lists.newArrayList();
+        mIndex = -1;
     }
 
     public List<Junction> junctions() { return mJunctions; }
@@ -40,6 +43,12 @@ public class JunctionGroup extends BaseRegion
     public int minPosition() { return start(); }
     public int maxPosition() { return end(); }
     public int range() { return super.baseLength(); }
+
+    public int readRangeStart() { return start() - BAM_READ_JUNCTION_BUFFER; }
+    public int readRangeEnd() { return end() + BAM_READ_JUNCTION_BUFFER; }
+
+    public void setIndex(int index) { mIndex = index; }
+    public int index() { return mIndex; }
 
     public void addJunction(final Junction junction)
     {
@@ -58,12 +67,7 @@ public class JunctionGroup extends BaseRegion
 
     public boolean overlapsRemoteRegion(final RemoteRegion region)
     {
-        return positionsOverlap(start(), end(), region.start(), region.end());
-    }
-
-    public boolean containsRemoteRegion(final RemoteRegion region)
-    {
-        return positionsWithin(region.start(), region.end(), start(), end());
+        return positionsOverlap(readRangeStart(), readRangeEnd(), region.start(), region.end());
     }
 
     public String toString()

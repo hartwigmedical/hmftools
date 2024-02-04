@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.assembly;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
@@ -50,7 +51,8 @@ public class AssemblyExtender
         // process in order of closest to furthest-out reads in the ref base direction
         List<Read> discordantReads = nonJunctionReads.stream()
                 .filter(x -> isDiscordant(x) || x.isMateUnmapped())
-                .filter(x -> !x.hasMateSet() || !mAssembly.hasReadSupport(x.mateRead()))
+                .filter(x -> !x.hasMateSet())
+                .filter(x -> !mAssembly.hasReadSupport(x.mateRead()))
                 .collect(Collectors.toList());
 
         List<NonJunctionRead> candidateReads = discordantReads.stream().map(x -> new NonJunctionRead(x, DISCORDANT)).collect(Collectors.toList());
@@ -90,45 +92,45 @@ public class AssemblyExtender
             candidateReads.add(new NonJunctionRead(mateRead, JUNCTION_MATE));
         }
 
+        if(!candidateReads.isEmpty())
+        {
+            List<NonJunctionRead> sortedNonJunctionReads = candidateReads.stream()
+                    .sorted(Comparator.comparingInt(x -> isForwardJunction ? -x.read().unclippedEnd() : x.read().unclippedStart()))
+                    .collect(Collectors.toList());
+
+            for(NonJunctionRead njRead : sortedNonJunctionReads)
+            {
+                Read read = njRead.read();
+
+                if(isForwardJunction)
+                {
+                    if(read.unclippedEnd() < minAlignedPosition + ASSEMBLY_EXTENSION_OVERLAP_BASES)
+                        break;
+
+                    minAlignedPosition = min(minAlignedPosition, read.unclippedStart());
+                }
+                else
+                {
+                    if(read.unclippedStart() > maxAlignedPosition - ASSEMBLY_EXTENSION_OVERLAP_BASES)
+                        break;
+
+                    maxAlignedPosition = max(maxAlignedPosition, read.unclippedEnd());
+                }
+            }
+
+            // find a support read which extend out the furthest from the junction and with the least mismatches
+            int extensionRefPosition = isForwardJunction ? minAlignedPosition : maxAlignedPosition;
+            RefBaseAssembly refBaseAssembly = new RefBaseAssembly(mAssembly, extensionRefPosition);
+
+            for(NonJunctionRead njRead : sortedNonJunctionReads)
+            {
+                refBaseAssembly.checkAddRead(njRead.read(), njRead.type(), ASSEMBLY_EXTENSION_BASE_MISMATCH);
+            }
+
+            mAssembly.setRefBaseAssembly(refBaseAssembly);
+        }
+
         findRemoteRegions(discordantReads, remoteJunctionMates, suppJunctionReads);
-
-        if(candidateReads.isEmpty())
-            return;
-
-        List<NonJunctionRead> sortedNonJunctionReads = candidateReads.stream()
-                .sorted(Comparator.comparingInt(x -> isForwardJunction ? -x.read().unclippedEnd() : x.read().unclippedStart()))
-                .collect(Collectors.toList());
-
-        for(NonJunctionRead njRead : sortedNonJunctionReads)
-        {
-            Read read = njRead.read();
-
-            if(isForwardJunction)
-            {
-                if(read.unclippedEnd() < minAlignedPosition + ASSEMBLY_EXTENSION_OVERLAP_BASES)
-                    break;
-
-                minAlignedPosition = min(minAlignedPosition, read.unclippedStart());
-            }
-            else
-            {
-                if(read.unclippedStart() > maxAlignedPosition - ASSEMBLY_EXTENSION_OVERLAP_BASES)
-                    break;
-
-                maxAlignedPosition = max(maxAlignedPosition, read.unclippedEnd());
-            }
-        }
-
-        // find a support read which extend out the furthest from the junction and with the least mismatches
-        int extensionRefPosition = isForwardJunction ? minAlignedPosition : maxAlignedPosition;
-        RefBaseAssembly refBaseAssembly = new RefBaseAssembly(mAssembly, extensionRefPosition);
-
-        for(NonJunctionRead njRead : sortedNonJunctionReads)
-        {
-            refBaseAssembly.checkAddRead(njRead.read(), njRead.type(), ASSEMBLY_EXTENSION_BASE_MISMATCH);
-        }
-
-        mAssembly.setRefBaseAssembly(refBaseAssembly);
     }
 
     private class NonJunctionRead
@@ -172,7 +174,7 @@ public class AssemblyExtender
         mAssembly.addRemoteRegions(remoteRegions);
     }
 
-    private static void addOrCreateMateRemoteRegion(final List<RemoteRegion> remoteRegions, final Read read, boolean isJunctionRead)
+    private void addOrCreateMateRemoteRegion(final List<RemoteRegion> remoteRegions, final Read read, boolean isJunctionRead)
     {
         if(read.isMateUnmapped())
             return;
@@ -187,10 +189,21 @@ public class AssemblyExtender
                 mateChr, read.mateAlignmentStart(), read.mateAlignmentEnd());
     }
 
-    private static void addOrCreateRemoteRegion(
+    private void addOrCreateRemoteRegion(
             final List<RemoteRegion> remoteRegions, final Read read, final int readType,
             final String remoteChr, final int remotePosStart, final int remotePosEnd)
     {
+        // keep 'remote' regions local to this assembly since they may indicate short TIs, DUPs or INVs
+
+        /*
+        // ignore those in this assembly's region
+        if(mAssembly.junction().Chromosome.equals(remoteChr)
+        && positionsOverlap(remotePosStart, remotePosEnd, mAssembly.minAlignedPosition(), mAssembly.maxAlignedPosition()))
+        {
+            return;
+        }
+        */
+
         RemoteRegion matchedRegion = remoteRegions.stream()
                 .filter(x -> x.overlaps(remoteChr, remotePosStart, remotePosEnd)).findFirst().orElse(null);
 

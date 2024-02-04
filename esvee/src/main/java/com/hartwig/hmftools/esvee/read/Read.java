@@ -29,7 +29,6 @@ import htsjdk.samtools.SAMRecord;
 public class Read
 {
     private final SAMRecord mRecord;
-    private Read mMateRead;
 
     // cached state and adjusted properties of the read
     private String mCigarString;
@@ -44,6 +43,9 @@ public class Read
     private byte[] mBases;
     private byte[] mBaseQuals;
 
+    // fragment state
+    private Read mMateRead;
+    private Read mSupplementaryRead;
     private boolean mSuppDataExtracted;
     private SupplementaryReadData mSupplementaryData;
 
@@ -52,10 +54,8 @@ public class Read
     public Read(final SAMRecord record)
     {
         mRecord = record;
-        mMateRead = null;
 
         mCigarString = record.getCigarString();
-
         mCigarElements = cigarElementsFromStr(mCigarString);
 
         setBoundaries(mRecord.getAlignmentStart());
@@ -64,6 +64,8 @@ public class Read
         mBaseQuals = null;
         mMateAlignmentEnd = null;
         mIsReference = false;
+        mMateRead = null;
+        mSupplementaryRead = null;
         mSuppDataExtracted = false;
         mSupplementaryData = null;
     }
@@ -150,7 +152,8 @@ public class Read
     public boolean positiveStrand() { return !mRecord.getReadNegativeStrandFlag(); }
     public boolean negativeStrand() { return mRecord.getReadNegativeStrandFlag(); }
     public byte orientation() { return mRecord.getReadNegativeStrandFlag() ? NEG_ORIENT : POS_ORIENT; }
-    public boolean firstInPair() { return mRecord.getFirstOfPairFlag(); }
+
+    public boolean firstInPair() { return mRecord.getReadPairedFlag() && mRecord.getFirstOfPairFlag(); }
     public boolean secondInPair() { return mRecord.getReadPairedFlag() && mRecord.getSecondOfPairFlag(); }
 
     public int mappingQuality() { return mRecord.getMappingQuality(); }
@@ -180,6 +183,9 @@ public class Read
     public boolean mateNegativeStrand() { return mRecord.getMateNegativeStrandFlag(); }
 
     public boolean hasSupplementary() { return supplementaryData() != null; }
+
+    public void setSupplementaryRead(final Read mate) { mSupplementaryRead = mate; }
+    public Read supplementaryRead() { return mSupplementaryRead; }
 
     public SupplementaryReadData supplementaryData()
     {

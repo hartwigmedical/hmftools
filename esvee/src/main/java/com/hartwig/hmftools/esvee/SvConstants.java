@@ -49,6 +49,12 @@ public final class SvConstants
     public static final int ASSEMBLY_EXTENSION_OVERLAP_BASES = 20;
     public static final int ASSEMBLY_EXTENSION_BASE_MISMATCH = 2;
 
+    // phased assembly overlaps
+    public static final int PHASED_ASSEMBLY_OVERLAP_BASES = 100;
+    public static final int PHASED_ASSEMBLY_JUNCTION_OVERLAP = 30;
+    public static final int PHASED_ASSEMBLY_OVERLAP_BASE_MISMATCH = 2;
+
+
 
     public static final int SUPPORT_MAX_MISMATCH_STRONG = 1;
     public static final int SUPPORT_MAX_MISMATCH_WEAK = 4;
@@ -124,19 +130,10 @@ public final class SvConstants
     public static final int LOW_OVERHANG_THRESHOLD = 30;
 
     // The threshold below which a LOW_QUALITY filter will be applied to the VCF
-    // FIXME: make config
     public static final int LOW_QUALITY_THRESHOLD = 40;
-
 
     public static final boolean EXTEND_PRIMARIES = false;
 
     // performance and logging related
     public static final int TASK_LOG_COUNT = 100;
-
-    // Whether individual operations are timed to prevent slow processing
-    public static final boolean TIMEOUTS_ENABLED = false;
-    public static final int PRIMARY_TIMEOUT = 5000;
-    public static final int EXTENSION_TIMEOUT = 5000;
-
-
 }

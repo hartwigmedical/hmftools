@@ -49,6 +49,11 @@ public class AssemblySupport
     public int referenceMismatches() { return mReferenceMismatches; }
     public void setReferenceMismatches(int mismatches) { mReferenceMismatches = mismatches; }
 
+    public static boolean hasMatchingFragment(final List<AssemblySupport> support, final Read read)
+    {
+        return support.stream().anyMatch(x -> x.read().getName().equals(read.getName()));
+    }
+
     public String toString()
     {
         return format("read(%s) type(%s) asmIndex(%d) juncIndex(%d) readIndeRange(%d-%d) mismatch(junc=%d ref=%d)",

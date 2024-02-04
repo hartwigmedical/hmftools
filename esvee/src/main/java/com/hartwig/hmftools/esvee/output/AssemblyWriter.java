@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.WriteType;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
@@ -310,7 +311,8 @@ public class AssemblyWriter
 
         for(int i = 0; i < min(3, regions.size()); ++i)
         {
-            sj.add(format("%s=%d", regions.get(i), regions.get(i).readCount()));
+            RemoteRegion region = regions.get(i);
+            sj.add(format("%s:%d-%d=%d", region.Chromosome, region.start(), region.end(), region.readCount()));
         }
 
         return sj.toString();

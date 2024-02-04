@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
@@ -16,8 +18,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_ID
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAMS_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
@@ -42,10 +44,12 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.read.Read;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.ValidationStringency;
 
 public class SvConfig
@@ -77,6 +81,8 @@ public class SvConfig
     public final boolean PerfDebug;
     public final double PerfLogTime;
     public final boolean OtherDebug;
+    private final List<String> mLogReadIds;
+    private final boolean mCheckLogReadIds;
 
     public final int Threads;
 
@@ -178,6 +184,9 @@ public class SvConfig
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
 
+        mLogReadIds = parseLogReadIds(configBuilder);
+        mCheckLogReadIds = !mLogReadIds.isEmpty();
+
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
         OtherDebug = configBuilder.hasFlag(OTHER_DEBUG);
@@ -216,6 +225,25 @@ public class SvConfig
         return filename;
     }
 
+    public void logReadId(final SAMRecord record, final String caller)
+    {
+        if(mCheckLogReadIds)
+            logReadId(record.getReadName(), caller);
+    }
+
+    public void logReadId(final Read read, final String caller)
+    {
+        if(mCheckLogReadIds)
+            logReadId(read.getName(), caller);
+    }
+
+    private void logReadId(final String readId, final String caller)
+    {
+        // debugging only
+        if(mLogReadIds.contains(readId))
+            SV_LOGGER.debug("caller({}) specific readId({})", caller, readId);
+    }
+
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(TUMOR, true, TUMOR_IDS_DESC);
@@ -237,6 +265,7 @@ public class SvConfig
         String writeTypes = Arrays.stream(WriteType.values()).map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM));
         configBuilder.addConfigItem(WRITE_TYPES, false, "Write types from list: " + writeTypes);
 
+        configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addDecimal(PERF_LOG_TIME, "Log performance data for routine exceeding specified time (0 = disabled)", 0);
         configBuilder.addFlag(OTHER_DEBUG, "Various other debugging");

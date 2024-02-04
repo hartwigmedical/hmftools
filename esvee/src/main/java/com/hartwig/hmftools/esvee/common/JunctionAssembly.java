@@ -75,6 +75,7 @@ public class JunctionAssembly
 
     public Read initialRead() { return mInitialRead; }
     public Junction junction() { return mJunction; }
+    public boolean isForwardJunction() { return mJunction.isForward(); }
 
     public int mergedAssemblyCount() { return mMergedAssemblies; }
     public void addMergedAssembly() { ++mMergedAssemblies; }
@@ -85,6 +86,8 @@ public class JunctionAssembly
     public int lowerDistanceFromJunction() { return mJunctionSequenceIndex; };
     public int upperDistanceFromJunction() { return mBases.length - mJunctionSequenceIndex - 1; };
     public int refBaseLength() { return mJunction.isForward() ? lowerDistanceFromJunction() : upperDistanceFromJunction(); }
+
+    // base count beyond the junction
     public int extensionLength() { return mJunction.isForward() ? upperDistanceFromJunction() : lowerDistanceFromJunction(); }
 
     // purely for informational purposes at this stage - since past the junction is just the soft-clip length, and on the
@@ -371,11 +374,6 @@ public class JunctionAssembly
     public boolean hasReadSupport(final Read read)
     {
         return  mSupport.stream().anyMatch(x -> x.read() == read);
-    }
-
-    public boolean hasMatchingFragmentSupport(final Read read)
-    {
-        return  mSupport.stream().anyMatch(x -> x.read().getName().equals(read.getName()));
     }
 
     public List<RepeatInfo> repeatInfo() { return mRepeatInfo; }

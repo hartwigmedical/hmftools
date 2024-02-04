@@ -1,13 +1,12 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.binarySearch;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -17,6 +16,8 @@ import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
 import com.hartwig.hmftools.esvee.common.PrimaryPhaseGroup;
 import com.hartwig.hmftools.esvee.common.RemoteRegion;
+import com.hartwig.hmftools.esvee.common.SupportType;
+import com.hartwig.hmftools.esvee.read.Read;
 
 public class PhaseGroupBuilder
 {
@@ -31,6 +32,14 @@ public class PhaseGroupBuilder
         mJunctionGroupMap = junctionGroupMap;
         mPrimaryPhaseGroups = Lists.newArrayList();
         mMissingRemoteGroups = 0;
+
+        for(List<JunctionGroup> junctionGroups : mJunctionGroupMap.values())
+        {
+            for(int index = 0; index < junctionGroups.size(); ++index)
+            {
+                junctionGroups.get(index).setIndex(index);
+            }
+        }
     }
 
     private static final int LOG_COUNT = 10000;
@@ -61,6 +70,8 @@ public class PhaseGroupBuilder
         {
             mPrimaryPhaseGroups.get(i).setId(i);
         }
+
+        // buildPhasedAssemblies();
     }
 
     public List<PrimaryPhaseGroup> primaryPhaseGroups() { return mPrimaryPhaseGroups; }
@@ -89,6 +100,8 @@ public class PhaseGroupBuilder
                 continue;
             }
 
+            // the matching to other assemblies for each of this assembly's remote groups is purely for informational purposes
+            // but in time may be replaced by actual linking to all expected remote mate reads
             boolean matched = false;
 
             for(JunctionGroup junctionGroup : overlappingJunctions)
@@ -102,6 +115,13 @@ public class PhaseGroupBuilder
                 {
                     if(assembly == otherAssembly)
                         continue;
+
+                    if(otherAssembly.primaryPhaseGroup() != null && otherAssembly.primaryPhaseGroup() == primaryPhaseGroup)
+                    {
+                        // already linked
+                        matched = true;
+                        continue;
+                    }
 
                     if(!assembliesShareReads(assembly, otherAssembly))
                         continue;
@@ -156,16 +176,22 @@ public class PhaseGroupBuilder
 
     private List<JunctionGroup> findOverlappingJunctionGroups(final JunctionGroup assemblyJunctionGroup, final RemoteRegion region)
     {
-        if(assemblyJunctionGroup.containsRemoteRegion(region))
-            return List.of(assemblyJunctionGroup);
-
         List<JunctionGroup> junctionGroups = mJunctionGroupMap.get(region.Chromosome);
 
         if(junctionGroups == null)
             return Collections.emptyList();
 
-        // make use of the binary search for junction groups to find the closest index
-        int startIndex = JunctionGroup.binarySearch(region.start(), junctionGroups);
+        int startIndex;
+
+        if(assemblyJunctionGroup.chromosome().equals(region.Chromosome) && assemblyJunctionGroup.overlapsRemoteRegion(region))
+        {
+            startIndex = assemblyJunctionGroup.index();
+        }
+        else
+        {
+            // make use of the binary search for junction groups to find the closest index
+            startIndex = JunctionGroup.binarySearch(region.start(), junctionGroups);
+        }
 
         List<JunctionGroup> overlapGroups = Lists.newArrayList();
 
@@ -192,12 +218,12 @@ public class PhaseGroupBuilder
         return overlapGroups;
     }
 
-
     private static boolean assembliesShareReads(final JunctionAssembly first, final JunctionAssembly second)
     {
+        // tests matching reads in both the junction reads and any extension reads (ie discordant)
         for(AssemblySupport support : first.support())
         {
-            if(second.hasMatchingFragmentSupport(support.read()))
+            if(hasMatchingFragmentSupport(second, support.read()))
                 return true;
         }
 
@@ -205,12 +231,20 @@ public class PhaseGroupBuilder
         {
             for(AssemblySupport support : first.refBaseAssembly().support())
             {
-                if(second.hasMatchingFragmentSupport(support.read()))
+                if(support.type() == SupportType.DISCORDANT && hasMatchingFragmentSupport(second, support.read()))
                     return true;
             }
         }
 
         return false;
+    }
+
+    private static boolean hasMatchingFragmentSupport(final JunctionAssembly assembly, final Read read)
+    {
+        if(hasMatchingFragment(assembly.support(), read))
+            return true;
+
+        return assembly.refBaseAssembly() != null && hasMatchingFragment(assembly.refBaseAssembly().support(), read);
     }
 
     private boolean isFiltered(final RemoteRegion region)
@@ -226,5 +260,16 @@ public class PhaseGroupBuilder
             return false;
 
         return mConfig.SpecificChrRegions.Regions.stream().noneMatch(x -> x.overlaps(region));
+    }
+
+    private void buildPhasedAssemblies()
+    {
+        for(PrimaryPhaseGroup phaseGroup : mPrimaryPhaseGroups)
+        {
+            // where there are more than 2 assemblies, start with the ones with the most support and overlapping junction reads
+            AssemblyOverlapper assemblyOverlapper = new AssemblyOverlapper(phaseGroup);
+
+            assemblyOverlapper.buildPhasedAssembly();
+        }
     }
 }

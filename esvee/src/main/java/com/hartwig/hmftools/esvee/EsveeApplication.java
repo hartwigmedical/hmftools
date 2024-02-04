@@ -24,8 +24,6 @@ public class EsveeApplication
     {
         long startTimeMs = System.currentTimeMillis();
 
-        SV_LOGGER.info("starting Esvee");
-
         SV_LOGGER.info("writing output to VCF({}) directory({})", filenamePart(mConfig.VcfFile), mConfig.OutputDir);
 
         JunctionProcessor junctionProcessor = new JunctionProcessor(mConfig);
