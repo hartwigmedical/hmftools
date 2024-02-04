@@ -344,7 +344,7 @@ If the segments identified by the PCF algorithm are not contiguous, then there r
 
 Once the segments have been established we map our observations to them.  In each segment we take the median BAF of the tumor sample and the median read ratio of both the tumor and reference samples.  We also record the number of BAF points within the segment as the BAFCount and the number of tumor read depth windows within the segment as the depth window count.
 
-A reference sample copy number status is determined at this this stage based on the observed copy number ratio in the reference sample, either ‘DIPLOID’ (0.85<= read depth ratio<=1.15), ‘HETEROZYGOUS_DELETION’ (0.1<=ratio<0.85), ‘HOMOZYGOUS_DELETION’ (ratio<0.1),’AMPLIFICATION’(1.15<ratio<=2.2) or ‘NOISE’ (ratio>2.2).  The purity fitting and smoothing steps below use only the DIPLOID germline segments.
+A reference sample copy number status is determined at this this stage based on the observed copy number ratio in the reference sample, either ‘DIPLOID’ (0.85<= read depth ratio<=1.15), ‘HETEROZYGOUS_DELETION’ (0.1<=ratio<0.85), ‘HOMOZYGOUS_DELETION’ (ratio<0.1),’AMPLIFICATION’(1.15<ratio<=2.2) or ‘NOISE’ (ratio>2.2).  Regions within 2MB of a centromere and in the IG and TCR regions are also masked.   The purity fitting and smoothing steps below use only the DIPLOID germline segments. 
 
 ### 3. Sample Purity and Ploidy
 
@@ -370,7 +370,7 @@ Each of the 3 penalty terms is described in detail in the following sections.
 #### Deviation Penalty
 The deviation penalty aims to penalise [ploidy|purity] combinations which require extensive sub-clonality to explain the observed copy number pattern.
 
-For each [ploidy|purity] combination tested an implied major and minor allele copy number is calculated based on the observed BAF and depth ratio.    A deviation penalty is then calculated for each segment for both minor and major allele based on the implied copy numbers (note Y chromosome, X chromsome for males & chromosomes with detected germline aberrations are all excluded from fitting).   The function used is designed to explicitly capture a set of intuitive rules relating to known biology of cancer genomes, specifically:
+For each [ploidy|purity] combination tested an implied major and minor allele copy number is calculated based on the observed BAF and depth ratio. Purities are considerd in the range of 7% to 100% in 1% increments or 0.5% increments below 20%.    A deviation penalty is then calculated for each segment for both minor and major allele based on the implied copy numbers (note Y chromosome, X chromsome for males & chromosomes with detected germline aberrations are all excluded from fitting).     The function used is designed to explicitly capture a set of intuitive rules relating to known biology of cancer genomes, specifically:
 - For major allele copy number > 1 and minor allele copy number > 0 a deviation penalty applies to penalise solutions which imply subclonality:
   - the penalty depends only on the distance to the nearest integer copy number and varies between a minimum of a small baseline deviation [0.2] and a max of 1.
   - small deviations from an integer don’t occur any additional penalty, but once a certain noise level is exceeded the penalty grows rapidly to the maximum penalty reflecting the increasing probability that the observed deviation requires an implied non-integer (subclonal) copy number.
