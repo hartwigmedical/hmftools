@@ -456,7 +456,7 @@ To reduce processing the following hard filters are applied:
 Filter | Default Value | Field
 ---|---------------|---
 hard_min_tumor_qual | 50            | `QUAL`
-hard_min_tumor_vaf | 0.01          | `AF`
+hard_min_tumor_vaf | 0.002         | `AF`
 hard_min_tumor_raw_alt_support | 2             | `RAD[1]`
 hard_min_tumor_raw_base_quality | 0             | `RABQ[1]`
 filtered_max_normal_alt_support | 3             | Normal `AD[1]`
@@ -530,7 +530,7 @@ For targeted sequencing, the `high_depth_mode` flag should be provided. This all
 * SNV variants with VAF < 1% and inside a microsatellite repeat of length > 5 get soft filtered with `jitter`
 * `modifiedMapQuality` is calculated in a different way, using the ratio of average Ref and Alt raw MAPQ
 
-We also recommend setting `hotspot_min_tumor_vaf` to 0.015, `hard_min_tumor_vaf` to 0.002  and `panel_min_tumor_qual` to 150 for targeted sequencing.
+We also recommend setting `hotspot_min_tumor_vaf` to 0.015 and `panel_min_tumor_qual` to 150 for targeted sequencing.
 
 ## 6. Phasing
 
