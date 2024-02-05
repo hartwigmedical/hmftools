@@ -448,7 +448,6 @@ The outputs of this stage are found in the VCF as:
  `MED`                    | Max read edge distance for alt-supporting reads                                                         
  `RSB[0,1]`               | Proportion of alt-supporting reads on the forward strand                                          
  `SB[0,1]`                | Proportion of alt-supporting fragments with F1R2 orientation                                           
- `QUAL`                   | Variant Quality (=RC_QUAL\[0\] + RC_QUAL\[1\] - RC_JIT\[2\])                                            
 
 ### Hard Filters
 
