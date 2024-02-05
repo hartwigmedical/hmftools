@@ -320,4 +320,17 @@ public class GermlineConversionTest
         assertEquals(1, converted.somaticHomozygousDisruptions().size());
         assertTrue(converted.somaticHomozygousDisruptions().contains(germlineHomozygousDisruption));
     }
+
+    @Test
+    public void shouldAdjustClonalLikelihoodWhenConvertingVariantsToSomatic()
+    {
+        PurpleVariant germlineVariantA = TestPurpleVariantFactory.builder().variantCopyNumber(0).build();
+        PurpleVariant germlineVariantB = TestPurpleVariantFactory.builder().variantCopyNumber(1).build();
+
+        final List<PurpleVariant> germlineVariants = Lists.newArrayList(germlineVariantA, germlineVariantB);
+
+        final List<PurpleVariant> somaticVariants = GermlineConversion.toSomaticVariants(germlineVariants);
+        assertEquals(100, somaticVariants.get(0).subclonalLikelihood(), EPSILON);
+        assertEquals(0, somaticVariants.get(1).subclonalLikelihood(), EPSILON);
+    }
 }
