@@ -289,6 +289,8 @@ public class SageConfig
         return false;
     }
 
+    public boolean bqrRecordWritingOnly() { return QualityRecalibration.WriteReads; }
+
     public boolean logPerfStats() { return PerfWarnTime > 0; }
 
     public static void registerCommonConfig(final ConfigBuilder configBuilder)

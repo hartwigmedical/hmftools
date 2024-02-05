@@ -124,11 +124,13 @@ public class BaseQualityRecalibration
 
         SG_LOGGER.debug("samples({}) building base-qual recalibration map from {} regions", sampleId, regionCount);
 
+        BqrRecordWriter recordWriter = new BqrRecordWriter(mConfig, sampleId);
+
         List<Thread> workers = new ArrayList<>();
 
         for(int i = 0; i < min(mRegions.size(), mConfig.Threads); ++i)
         {
-            workers.add(new BqrThread(mConfig, mRefGenome, bamFile, mRegions, mResults));
+            workers.add(new BqrThread(mConfig, mRefGenome, bamFile, mRegions, mResults, recordWriter));
         }
 
         if(!runThreadTasks(workers))
@@ -144,6 +146,8 @@ public class BaseQualityRecalibration
         // write results to file
         if(mConfig.QualityRecalibration.WriteFile)
             writeSampleData(sampleId, records);
+
+        recordWriter.close();
     }
 
     private void buildEmptyRecalibrations()

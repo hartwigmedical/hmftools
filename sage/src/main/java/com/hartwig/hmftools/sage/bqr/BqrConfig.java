@@ -13,6 +13,7 @@ public class BqrConfig
     public final boolean LoadBqrFiles;
     public final boolean WriteFile;
     public final boolean WritePlot;
+    public final boolean WriteReads;
     public final double MaxAltPerc;
     public final int MaxAltCount;
     public final int SampleSize;
@@ -22,6 +23,7 @@ public class BqrConfig
     private static final String LOAD_BQR_FILES = "load_bqr";
     private static final String WRITE_BQR_DATA = "write_bqr_data";
     private static final String WRITE_BQR_PLOT = "write_bqr_plot";
+    private static final String WRITE_BQR_READS = "write_bqr_reads";
 
     private static final String BQR_SAMPLE_SIZE = "bqr_sample_size";
     private static final String BQR_MAX_ALT_PERC = "bqr_max_alt_perc";
@@ -37,12 +39,14 @@ public class BqrConfig
             LoadBqrFiles = true;
             WriteFile = false;
             WritePlot = false;
+            WriteReads = false;
         }
         else
         {
             LoadBqrFiles = false;
             WriteFile = Enabled || configBuilder.hasFlag(WRITE_BQR_DATA); // written by default now
             WritePlot = configBuilder.hasFlag(WRITE_BQR_PLOT);
+            WriteReads = configBuilder.hasFlag(WRITE_BQR_READS);
         }
 
         MaxAltPerc = configBuilder.getDecimal(BQR_MAX_ALT_PERC);
@@ -55,6 +59,7 @@ public class BqrConfig
     {
         Enabled = false;
         WritePlot = false;
+        WriteReads = false;
         LoadBqrFiles = false;
         WriteFile = false;
         MaxAltPerc = DEFAULT_BQR_MAX_ALT_PERC;
@@ -68,6 +73,7 @@ public class BqrConfig
         configBuilder.addFlag(DISABLE_BQR, "Disable Base Quality Recalibration");
         configBuilder.addFlag(WRITE_BQR_DATA, "Write BQR output file");
         configBuilder.addFlag(WRITE_BQR_PLOT, "Generate BQR plot");
+        configBuilder.addFlag(WRITE_BQR_READS, "Write detailed read data as contributes to BQR");
         configBuilder.addFlag(LOAD_BQR_FILES, "Attemps to find and load previously-written BQR files");
         configBuilder.addDecimal(BQR_MAX_ALT_PERC, "BQR maximum alt percent to be an error", DEFAULT_BQR_MAX_ALT_PERC);
         configBuilder.addInteger(BQR_MAX_ALT_COUNT, "BQR maximum alt count to be an error", DEFAULT_BQR_MAX_ALT_COUNT);

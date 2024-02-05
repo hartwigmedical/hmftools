@@ -33,10 +33,12 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class BqrRegionReader implements CigarHandler
 {
-    private final SamReader mBamReader;
-    private final ReferenceSequenceFile mRefGenome;
     private final SageConfig mConfig;
+    private final ReferenceSequenceFile mRefGenome;
+    private final SamReader mBamReader;
     private final BaseQualityResults mResults;
+    private final BqrRecordWriter mRecordWriter;
+    private final boolean mWriteReadData;
 
     private ChrBaseRegion mRegion;
     private IndexedBases mIndexedBases;
@@ -57,13 +59,16 @@ public class BqrRegionReader implements CigarHandler
     private static final int BASE_DATA_POS_BUFFER = 100;
 
     public BqrRegionReader(
-            final SageConfig config, final SamReader bamReader, final ReferenceSequenceFile refGenome, final BaseQualityResults results)
+            final SageConfig config, final SamReader bamReader, final ReferenceSequenceFile refGenome, final BaseQualityResults results,
+            final BqrRecordWriter recordWriter)
     {
         mConfig = config;
         mBamReader = bamReader;
 
         mRefGenome = refGenome;
         mResults = results;
+        mRecordWriter = recordWriter;
+        mWriteReadData = mRecordWriter.enabled();
 
         mBaseQualityData = null;
         mQualityCounts = Sets.newHashSet();
@@ -187,7 +192,6 @@ public class BqrRegionReader implements CigarHandler
         ++mReadCounter;
         setShortFragmentBoundaries(record);
 
-
         CigarTraversal.traverseCigar(record, this);
 
         if(mReadCounter > 0 && (mReadCounter % 1000) == 0)
@@ -292,6 +296,9 @@ public class BqrRegionReader implements CigarHandler
 
             BaseQualityData baseQualityData = getOrCreateBaseQualData(position, ref, trinucleotideContext);
             baseQualityData.processReadBase(alt, quality);
+
+            if(mWriteReadData && ref != alt)
+                mRecordWriter.writeRecordData(record, position, readIndex, ref, alt, trinucleotideContext, quality);
         }
     }
 
