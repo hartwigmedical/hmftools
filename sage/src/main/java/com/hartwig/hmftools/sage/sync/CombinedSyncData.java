@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.BASE_MISMATCH;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.CIGAR_MISMATCH;
@@ -270,7 +271,7 @@ public class CombinedSyncData
         final byte[] secondBases = second.getReadBases();
         final int secondLength = second.getReadLength();
 
-        int baseMismatches = 0;
+        // int baseMismatches = 0;
 
         CigarState combinedCigar = new CigarState(mCombinedCigar);
         int currentPosition = mCombinedEffectiveStart;
@@ -406,11 +407,11 @@ public class CombinedSyncData
         else if(firstQual > secondQual)
         {
             // use the difference in quals
-            return new byte[] { firstBase, (byte)((int)firstQual - (int)secondQual) };
+            return new byte[] { firstBase, (byte)max(BASE_QUAL_MINIMUM, firstQual - secondQual) };
         }
         else
         {
-            return new byte[] { secondBase, (byte)((int)secondQual - (int)firstQual) };
+            return new byte[] { secondBase, (byte)max(BASE_QUAL_MINIMUM, secondQual - firstQual) };
         }
     }
 
