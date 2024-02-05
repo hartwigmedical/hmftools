@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Collection;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.sage.SageConfig;
 
 import org.junit.Test;
 
@@ -16,8 +17,10 @@ public class BaseQualityRecalibrationTest
     @Test
     public void testBaseQualityCounts()
     {
+        SageConfig config = createSageConfig();
+
         BqrRegionReader bqrCounter = new BqrRegionReader(
-                createSageConfig(), null, null, new BaseQualityResults());
+                config, null, null, new BaseQualityResults(), new BqrRecordWriter(config, "SAMPLE_ID"));
 
         bqrCounter.initialise(new ChrBaseRegion("1", 100, 300));
 
