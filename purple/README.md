@@ -336,7 +336,7 @@ Finally we compare the AMBER and COBALT sexes. If they are inconsistent we use t
 
 ### 2. Segmentation
 
-We segment the genome into regions of uniform copy number by combining segments generated from the COBALT read ratios for both tumor and reference sample, the BAF points from AMBER, and passing structural variant breakpoints derived from GRIDSS. Read ratios and BAF points are segmented independently using the Bioconductor copynumber package which uses a piecewise constant fit (PCF) algorithm (with custom settings: gamma = 100, k =1). These segment breaks are then combined with the structural variants breaks according to the following rules:
+We segment the genome into regions of uniform copy number by combining segments generated from the COBALT read ratios for both tumor and reference sample, the BAF points from AMBER, and passing structural variant breakpoints derived from GRIPSS both germline and somatic. Read ratios and BAF points are segmented independently using the Bioconductor copynumber package which uses a piecewise constant fit (PCF) algorithm (with custom settings: gamma = 100, k =1). These segment breaks are then combined with the structural variants breaks according to the following rules:
 1. Every structural variant break starts a new segment, as does chromosome starts, ends and centromeres. 
 2. Ratio and BAF segment breaks are only included if they are at least one complete mappable read depth window away from an existing segment. 
 
@@ -523,7 +523,8 @@ Following the successful recovery any structural variants we will rerun the segm
 
 PURPLE searches for candidate germline gene deletions based on the combined tumor normal raw segmented copy number files.  
 For the purposes of purity and ploidy fitting and copy number smoothing each segment is already annotated according to its genotype in the germline based on its observedNormal ratio, ie, one of DIPLOID (0.85-1.15), HET_DELETION (0.1-0.85), HOM_DELETION (<0.1), AMPLIFICATION (1.15-2.2) or NOISE.
-Any driver gene panel gene with a HET_DELETION or HOM_DELETION segment overlapping (within +/- 500 bases to allow for depth window resolution) an exonic region is marked as a germline gene deletion.    
+
+Any gene with a HET_DELETION or HOM_DELETION segment overlapping (within +/- 500 bases to allow for depth window resolution) an exonic region is marked as a germline gene deletion.    
 
 Deletions  are filtered with the following criteria
 Filter|Description
@@ -531,6 +532,7 @@ Filter|Description
 minLength|the deleted segment must be >1kb long
 inconsistentTumorCN|the implied refNormalisedCopyNumber of the deleted segment in the tumor must be less than the major allele copy number +max(20%,0.5)
 highNormalRatio|the deleted segment must have an observedNormalCopyNumberRatio < 0.65 (ie equivalent to germline copyNumber < 1.3)
+cohortFrequency|the deleted segment is observed in > 3 samples in our cohort
 
 ### 9. Determine a QC Status for the tumor
 
