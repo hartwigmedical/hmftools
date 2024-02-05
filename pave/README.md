@@ -52,6 +52,7 @@ output_dir | Output directory for VCF and transcript CSV, will use input VCF dir
 output_vcf_file | Specify the output VCF filename
 only_canonical | Only annotate impacts on canonical transcripts
 read_pass_only | Only process passing variants
+threads | Splits variants by chromosome across threads
 write_pass_only | Only write passing variants
 write_transcript_data | Write a detailed TSV file for each impacted transcript
 
@@ -64,6 +65,7 @@ java -jar pave.jar
   -ref_genome /path_to_ref_genome_fasta/
   -ref_genome_version [37 or 38] 
   -output_dir /path_to_write_data_files/ 
+  -threads 8
 ```
 
 ### Optional Annotations
