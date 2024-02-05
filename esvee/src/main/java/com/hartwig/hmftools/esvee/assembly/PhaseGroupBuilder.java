@@ -116,7 +116,7 @@ public class PhaseGroupBuilder
                     if(assembly == otherAssembly)
                         continue;
 
-                    if(otherAssembly.primaryPhaseGroup() != null && otherAssembly.primaryPhaseGroup() == primaryPhaseGroup)
+                    if(primaryPhaseGroup != null && otherAssembly.primaryPhaseGroup() == primaryPhaseGroup)
                     {
                         // already linked
                         matched = true;

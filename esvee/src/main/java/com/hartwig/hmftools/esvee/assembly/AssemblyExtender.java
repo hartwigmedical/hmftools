@@ -3,7 +3,6 @@ package com.hartwig.hmftools.esvee.assembly;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
@@ -48,9 +47,8 @@ public class AssemblyExtender
         boolean isForwardJunction = mAssembly.junction().isForward();
         int junctionPosition = mAssembly.junction().Position;
 
-        // process in order of closest to furthest-out reads in the ref base direction
         List<Read> discordantReads = nonJunctionReads.stream()
-                .filter(x -> isDiscordant(x) || x.isMateUnmapped())
+                .filter(x -> isDiscordant(x)) // not keeping reads with unmapped mates since not sure how to incorporate their bases
                 .filter(x -> !x.hasMateSet())
                 .filter(x -> !mAssembly.hasReadSupport(x.mateRead()))
                 .collect(Collectors.toList());
@@ -94,6 +92,7 @@ public class AssemblyExtender
 
         if(!candidateReads.isEmpty())
         {
+            // process in order of closest to furthest-out reads in the ref base direction
             List<NonJunctionRead> sortedNonJunctionReads = candidateReads.stream()
                     .sorted(Comparator.comparingInt(x -> isForwardJunction ? -x.read().unclippedEnd() : x.read().unclippedStart()))
                     .collect(Collectors.toList());

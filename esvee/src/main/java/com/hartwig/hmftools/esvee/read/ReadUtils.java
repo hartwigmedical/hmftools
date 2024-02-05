@@ -25,7 +25,7 @@ public final class ReadUtils
 
     public static boolean isDiscordant(final Read read, final int discordantPairFragmentLength)
     {
-        if(!read.isMateMapped())
+        if(read.isMateUnmapped())
             return false;
 
         if(!read.chromosome().equals(read.mateChromosome()))
