@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.qual;
 
+import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.BASE_QUAL_MINIMUM;
+
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
@@ -27,7 +29,7 @@ public class BaseQualAdjustmentTest
         // assertEquals(10, BaseQualAdjustment.adjustBaseQual(rawQual - 1));
         assertEquals(rawQual, BaseQualAdjustment.adjustBaseQual(rawQual - 1.99), 0.01);
 
-        assertEquals(0, BaseQualAdjustment.adjustBaseQual(8.99));
+        assertEquals(BASE_QUAL_MINIMUM, BaseQualAdjustment.adjustBaseQual(8.99));
 
     }
 }
