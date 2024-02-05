@@ -22,23 +22,30 @@ The following files define the panel and are typically compiled manually:
 
 | File Name             | Tool(s)  | Purpose                                                                                                 |
 |-----------------------|----------|---------------------------------------------------------------------------------------------------------|
-| Driver gene panel TSV | Multiple | Defines the set of genes in the panel, and which are reported for various events (SNVs, AMPs, DELs etc) |
+| Driver Gene Panel TSV | Multiple | Defines the set of genes in the panel, and which are reported for various events (SNVs, AMPs, DELs etc) |
 | Panel regions BED     | Multiple | Panel's targeted regions, often gene exonic regions, tiles introns for fusions                          |
 
 The following files are the output of the training process described below:
 
-| File Name                        | Tool(s) | Purpose                                                     |
-|----------------------------------|--------|-------------------------------------------------------------|
-| Target Regions Normalisation TSV | Cobalt | Normalise copy number regions and mask off-target regions   |
-| Coverage Coding Regions BED      | Sage   | Gene regions to assess coverage                             |
-| Actionable Coding Regions BED    | Sage   | Gene coding regions to for sensitive variant calling        |
+| File Name                        | Tool(s) | Purpose                                                   |
+|----------------------------------|--------|-----------------------------------------------------------|
+| Target Regions Normalisation TSV | Cobalt | Normalise copy number regions and mask off-target regions |
+| Coverage Coding Regions BED      | Sage   | Gene regions to assess coverage                           |
+| Actionable Coding Regions BED    | Sage   | Gene coding regions for sensitive variant calling       |
 | Additional PON                   | Pave   | Panel-specific PON to apply in addition to standard WGS PON |
-| MSI Indels TSV                   | Purple | List of MSI locii to consider in MSI model                  |
-| TMB/L Calculation Adjustments    | Purple | Adjustments for TMB/L estimation                            |
-| TPM Normalisation                | Isofox | Normalise TPM for genes in panel                            |
+| MSI Indels TSV                   | Purple | List of MSI loci to consider in MSI model                 |
+| TMB/L Calculation Adjustments    | Purple | Adjustments for TMB/L estimation                          |
+| TPM Normalisation                | Isofox | Normalise TPM for genes in panel                          |
 
 These files are then used by the pipeline in panel mode to produce well-calibrated, accurate results ideally without panel-specific biases.
 
+### Coding Regions BED files
+The 2 coding region BED files are used by Sage to define panel regions for variant calling and coverage, and typically cover the set of genes' exonic regions only.
+The same file can be used for both.
+
+The file(s) can be created manually, or generated automatically from the panel Driver Gene Panel TSV using the routine in the 
+[GeneUtils](https://github.com/hartwigmedical/hmftools/tree/master/gene-utils) tool and the section:
+"Generating the Sage gene panel regions files"
 
 ## Training process to build panel-specific resource files
 
