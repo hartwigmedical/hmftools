@@ -154,8 +154,8 @@ public final class GermlineConversion
     {
         return reportableGermlineVariants != null ? reportableGermlineVariants.stream()
                 .map(variant -> variant.variantCopyNumber() > 0.5
-                        ? ImmutablePurpleVariant.builder().from(variant).subclonalLikelihood(0).build()
-                        : ImmutablePurpleVariant.builder().from(variant).subclonalLikelihood(100).build())
+                        ? ImmutablePurpleVariant.builder().from(variant).subclonalLikelihood(0.0).build()
+                        : ImmutablePurpleVariant.builder().from(variant).subclonalLikelihood(1.0).build())
                 .collect(Collectors.toList()) : Lists.newArrayList();
     }
 
