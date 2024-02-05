@@ -2,6 +2,7 @@ package com.hartwig.hmftools.markdups;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.BASE_QUAL_MINIMUM;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
@@ -145,7 +146,7 @@ public class ConsensusReadsTest
 
         assertEquals("AATAATAAAA", readInfo.ConsensusRead.getReadString());
         assertEquals(11, readInfo.ConsensusRead.getBaseQualities()[2]); // lowered from 19
-        assertEquals(0, readInfo.ConsensusRead.getBaseQualities()[5]);
+        assertEquals(BASE_QUAL_MINIMUM, readInfo.ConsensusRead.getBaseQualities()[5]);
         assertEquals(11, readInfo.ConsensusRead.getBaseQualities()[8]);
 
         // test preference for reference base when quals are qual
@@ -538,7 +539,7 @@ public class ConsensusReadsTest
         assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
         assertEquals("10M", readInfo.ConsensusRead.getCigarString());
         assertEquals(37, (int) readInfo.ConsensusRead.getBaseQualities()[0]); // non mutated base
-        assertEquals(0, (int) readInfo.ConsensusRead.getBaseQualities()[mutatedBaseIndex]); // mutated base
+        assertEquals(BASE_QUAL_MINIMUM, (int) readInfo.ConsensusRead.getBaseQualities()[mutatedBaseIndex]); // mutated base
         assertEquals(posStart, readInfo.ConsensusRead.getAlignmentStart());
     }
 

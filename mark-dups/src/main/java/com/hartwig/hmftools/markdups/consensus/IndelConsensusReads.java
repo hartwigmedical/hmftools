@@ -224,7 +224,7 @@ public class IndelConsensusReads
             if(!hasMismatch)
             {
                 consensusState.Bases[baseIndex] = firstBase;
-                consensusState.BaseQualities[baseIndex] = (byte) maxQual;
+                consensusState.BaseQualities[baseIndex] = (byte)maxQual;
             }
             else
             {
