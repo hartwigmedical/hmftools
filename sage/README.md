@@ -372,7 +372,7 @@ A match can be:
 
 Note that errors are tolerated in flanks so long as raw base qual at mismatch base < 20. The CORE must match precisely except for INS over 20 bases in length where 1 mismatch with raw base qual <20 is tolerated per 20 bases of insertion.
 
-Also note that by default, if the positive and negative stranded reads of a fragment overlap, a consensus of the overlap is taken, and the 2 reads in the fragment converted into a single consensus read. For each base, if the R1 and R2 observations agree, set the consensus base qual to the high base qual from either read. If there is disagreement, the nucleotide with the highest base qual is chosen and the quality is set to the difference in base quals. Sage considers R1 and R2 of a paired end fragment independently if they overlap. However, if `-sync_fragments=False` then each read is processed individually in this instance.
+Also note that by default, if the positive and negative stranded reads of a fragment overlap, a consensus of the overlap is taken, and the 2 reads in the fragment converted into a single consensus read. For each base, if the R1 and R2 observations agree, set the consensus base qual to the high base qual from either read. If there is disagreement, the nucleotide with the highest base qual is chosen and the quality is set to the difference in base quals. However, if `-sync_fragments=False` then each read is processed individually in this instance.
 
 Failing any of the above matches, SAGE searches for matches that would occur if a repeat in the complete read context was extended or retracted.  Matches of this type we call 'jitter' and are tallied as `LENGTHENED` or `SHORTENED`. 
 
@@ -456,7 +456,7 @@ To reduce processing the following hard filters are applied:
 Filter | Default Value | Field
 ---|---------------|---
 hard_min_tumor_qual | 50            | `QUAL`
-hard_min_tumor_vaf | 0.01          | `AF`
+hard_min_tumor_vaf | 0.002         | `AF`
 hard_min_tumor_raw_alt_support | 2             | `RAD[1]`
 hard_min_tumor_raw_base_quality | 0             | `RABQ[1]`
 filtered_max_normal_alt_support | 3             | Normal `AD[1]`
@@ -530,7 +530,7 @@ For targeted sequencing, the `high_depth_mode` flag should be provided. This all
 * SNV variants with VAF < 1% and inside a microsatellite repeat of length > 5 get soft filtered with `jitter`
 * `modifiedMapQuality` is calculated in a different way, using the ratio of average Ref and Alt raw MAPQ
 
-We also recommend setting `hotspot_min_tumor_vaf` to 0.015, `hard_min_tumor_vaf` to 0.002  and `panel_min_tumor_qual` to 150 for targeted sequencing.
+We also recommend setting `hotspot_min_tumor_vaf` to 0.015 and `panel_min_tumor_qual` to 150 for targeted sequencing.
 
 ## 6. Phasing
 
