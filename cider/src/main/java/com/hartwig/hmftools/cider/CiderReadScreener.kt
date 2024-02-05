@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
 import com.hartwig.hmftools.common.genome.region.Strand
 import com.hartwig.hmftools.common.samtools.CigarUtils
+import com.hartwig.hmftools.common.samtools.SamRecordUtils
 import com.hartwig.hmftools.common.utils.IntPair
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.util.CoordMath
@@ -53,7 +54,7 @@ class CiderReadScreener(// collect the reads and sort by types
             samRecord.referenceName,
             samRecord.alignmentStart, samRecord.alignmentEnd)
 
-        val readRecordKey = ReadRecordKey(samRecord.readName, samRecord.firstOfPairFlag,
+        val readRecordKey = ReadRecordKey(samRecord.readName, SamRecordUtils.firstInPair(samRecord),
                                             samRecord.referenceIndex, samRecord.alignmentStart)
 
         if (!mProcessedReadRecords.add(readRecordKey))
@@ -189,6 +190,7 @@ class CiderReadScreener(// collect the reads and sort by types
     // this locus. This is needed to make sure we find the correct locus
     private fun tryMatchUnmappedReadByBlosum(read: SAMRecord): Boolean
     {
+        require(read.readPairedFlag)
         require(read.readUnmappedFlag)
         require(!read.mateUnmappedFlag)
 

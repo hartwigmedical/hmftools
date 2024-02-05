@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.common.codon.Nucleotides
+import com.hartwig.hmftools.common.samtools.SamRecordUtils
 import com.hartwig.hmftools.common.utils.IntPair
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.util.SequenceUtil
@@ -27,7 +28,7 @@ class ReadSlice(
 
     val firstOfPairFlag: Boolean get()
     {
-        return read.firstOfPairFlag
+        return SamRecordUtils.firstInPair(read)
     }
 
     // just the data we want from here
