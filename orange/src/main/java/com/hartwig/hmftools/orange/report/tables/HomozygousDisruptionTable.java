@@ -3,7 +3,7 @@ package com.hartwig.hmftools.orange.report.tables;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 public final class HomozygousDisruptionTable
 {
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<HomozygousDisruption> homozygousDisruptions,
+    public static Table build(@NotNull String title, float width, @NotNull List<LinxHomozygousDisruption> homozygousDisruptions,
             @NotNull ReportResources reportResources)
     {
         if(homozygousDisruptions.isEmpty())
@@ -30,7 +30,7 @@ public final class HomozygousDisruptionTable
                 new float[] { 1, 1, 4 },
                 new Cell[] { cells.createHeader("Location"), cells.createHeader("Gene"), cells.createHeader(Strings.EMPTY) });
 
-        for(HomozygousDisruption homozygousDisruption : sort(homozygousDisruptions))
+        for(LinxHomozygousDisruption homozygousDisruption : sort(homozygousDisruptions))
         {
             table.addCell(cells.createContent(homozygousDisruption.chromosome() + homozygousDisruption.chromosomeBand()));
             table.addCell(cells.createContent(gene(homozygousDisruption)));
@@ -41,7 +41,7 @@ public final class HomozygousDisruptionTable
     }
 
     @NotNull
-    private static List<HomozygousDisruption> sort(@NotNull List<HomozygousDisruption> homozygousDisruptions)
+    private static List<LinxHomozygousDisruption> sort(@NotNull List<LinxHomozygousDisruption> homozygousDisruptions)
     {
         return homozygousDisruptions.stream().sorted((disruption1, disruption2) ->
         {
@@ -60,7 +60,7 @@ public final class HomozygousDisruptionTable
     }
 
     @NotNull
-    private static String gene(@NotNull HomozygousDisruption homozygousDisruption)
+    private static String gene(@NotNull LinxHomozygousDisruption homozygousDisruption)
     {
         String addon = Strings.EMPTY;
         if(!homozygousDisruption.isCanonical())

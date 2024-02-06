@@ -1,6 +1,7 @@
 {
   "sampleId": "TEST",
-  "experimentDate": {
+  "experimentType": "WHOLE_GENOME",
+  "samplingDate": {
     "year": 2022,
     "month": 1,
     "day": 20
@@ -49,8 +50,6 @@
         "amberMeanDepth": 0
       },
       "fittedPurityMethod": "NORMAL",
-      "hasSufficientQuality": false,
-      "containsTumorCells": false,
       "purity": 0,
       "minPurity": 0,
       "maxPurity": 0,
@@ -103,6 +102,10 @@
   },
   "peach": [],
   "cuppa": {
+    "bestPrediction": {
+      "cancerType": "cancer",
+      "likelihood": 0
+    },
     "predictions": [
     ],
     "simpleDups32To200B": 0,
@@ -122,6 +125,7 @@
     "purpleClonalityPlot": "",
     "purpleCopyNumberPlot": "",
     "purpleVariantCopyNumberPlot": "",
-    "purplePurityRangePlot": ""
+    "purplePurityRangePlot": "",
+    "purpleKataegisPlot": ""
   }
 }

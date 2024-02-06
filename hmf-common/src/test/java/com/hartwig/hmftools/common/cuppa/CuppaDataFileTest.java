@@ -11,7 +11,6 @@ import org.junit.Test;
 
 public class CuppaDataFileTest
 {
-
     private static final String CUPPA_DATA_CSV = Resources.getResource("cuppa/sample.cup.data.csv").getPath();
 
     @Test

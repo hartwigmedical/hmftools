@@ -12,10 +12,12 @@ import com.google.common.collect.Lists;
 
 import org.junit.Test;
 
-public class BiopsyTreatmentResponseDataTest {
+public class BiopsyTreatmentResponseDataTest
+{
 
     @Test
-    public void sortsCorrectly() {
+    public void sortsCorrectly()
+    {
         BiopsyTreatmentResponseData response2017 = biopsyTreatmentResponseBuilder().responseDate(LocalDate.parse("2017-01-01")).build();
         BiopsyTreatmentResponseData responseNull = biopsyTreatmentResponseBuilder().responseDate(null).build();
         BiopsyTreatmentResponseData response2015 = biopsyTreatmentResponseBuilder().responseDate(LocalDate.parse("2015-01-01")).build();

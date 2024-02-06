@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo.util;
 
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,11 +15,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
@@ -32,14 +34,14 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
+import com.hartwig.hmftools.datamodel.purple.PurpleFittedPurityMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
+import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
-
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -49,7 +51,7 @@ public final class GermlineConversion
     @NotNull
     public static OrangeRecord convertGermlineToSomatic(@NotNull OrangeRecord report)
     {
-        boolean containsTumorCells = report.purple().fit().containsTumorCells();
+        boolean containsTumorCells = containsTumorCells(report.purple().fit());
 
         return ImmutableOrangeRecord.builder()
                 .from(report)
@@ -57,6 +59,12 @@ public final class GermlineConversion
                 .purple(convertPurpleGermline(containsTumorCells, report.purple()))
                 .linx(convertLinxGermline(containsTumorCells, report.linx()))
                 .build();
+    }
+
+    private static boolean containsTumorCells(@NotNull PurpleFit purpleFit)
+    {
+        return purpleFit.fittedPurityMethod() != PurpleFittedPurityMethod.NO_TUMOR
+                && !purpleFit.qc().status().contains(PurpleQCStatus.FAIL_NO_TUMOR);
     }
 
     @NotNull
@@ -126,7 +134,7 @@ public final class GermlineConversion
         for(PurpleDriver somaticDriver : somaticDrivers)
         {
             PurpleDriver matchingGermlineDriver = findMatchingGermlineDriver(somaticDriver, germlineDrivers);
-            if(somaticDriver.driver() == PurpleDriverType.MUTATION && matchingGermlineDriver != null)
+            if(somaticDriver.type() == PurpleDriverType.MUTATION && matchingGermlineDriver != null)
             {
                 merged.add(mergeSomaticMutationDriverWithGermline(somaticDriver, matchingGermlineDriver));
             }
@@ -140,28 +148,18 @@ public final class GermlineConversion
         {
             for(PurpleDriver germlineDriver : germlineDrivers)
             {
-                if(germlineDriver.driver() == PurpleDriverType.GERMLINE_MUTATION
+                if(germlineDriver.type() == PurpleDriverType.GERMLINE_MUTATION
                         && findMatchingSomaticDriver(germlineDriver, somaticDrivers, PurpleDriverType.MUTATION) == null)
                 {
                     merged.add(convertToSomaticMutationDriver(germlineDriver));
                 }
 
-                if(germlineDriver.driver() == PurpleDriverType.GERMLINE_DELETION
+                if(germlineDriver.type() == PurpleDriverType.GERMLINE_DELETION
                         && findMatchingSomaticDriver(germlineDriver, somaticDrivers, PurpleDriverType.DEL) == null
                         && reportableGermlineFullLosses != null && reportableGermlineFullLosses.stream()
                         .anyMatch(l -> l.gene().equals(germlineDriver.gene())))
                 {
                     merged.add(convertToSomaticDeletionDriver(germlineDriver));
-                }
-
-                if(germlineDriver.driver() == PurpleDriverType.GERMLINE_DISRUPTION)
-                {
-                    merged.add(convertToSomaticDisruptionDriver(germlineDriver));
-                }
-
-                if(germlineDriver.driver() == PurpleDriverType.GERMLINE_HOM_DUP_DISRUPTION)
-                {
-                    merged.add(convertToSomaticHomozygousDisruptionDriver(germlineDriver));
                 }
             }
         }
@@ -301,7 +299,7 @@ public final class GermlineConversion
         List<PurpleGeneCopyNumber> mergedSuspectGeneCopyNumberWithLOH = Lists.newArrayList();
         for(PurpleGeneCopyNumber somaticSuspectLOH : purple.suspectGeneCopyNumbersWithLOH())
         {
-            if(genesWithReportableGermlineLOH.contains(somaticSuspectLOH.geneName()))
+            if(genesWithReportableGermlineLOH.contains(somaticSuspectLOH.gene()))
             {
                 PurpleGeneCopyNumber adjustedSuspectLOH =
                         correctForGermlineImpact(somaticSuspectLOH, reportableGermlineLossOfHeterozygosities);
@@ -334,7 +332,7 @@ public final class GermlineConversion
     private static boolean shouldAddSuspectGeneCopyNumberWithLOH(@NotNull PurpleGeneCopyNumber candidateSuspectGeneCopyNumber,
             @NotNull List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH, @Nullable List<PurpleGainLoss> reportableGermlineFullLosses)
     {
-        String gene = candidateSuspectGeneCopyNumber.geneName();
+        String gene = candidateSuspectGeneCopyNumber.gene();
 
         boolean alreadySuspectGeneCopyNumberWithLOH = findMatchingGeneCopyNumber(gene, suspectGeneCopyNumbersWithLOH) != null;
         boolean hasReportableGermlineFullLoss =
@@ -350,7 +348,7 @@ public final class GermlineConversion
     {
         for(PurpleGeneCopyNumber geneCopyNumber : geneCopyNumbers)
         {
-            if(geneCopyNumber.geneName().equals(gene))
+            if(geneCopyNumber.gene().equals(gene))
             {
                 return geneCopyNumber;
             }
@@ -374,7 +372,7 @@ public final class GermlineConversion
             @NotNull List<PurpleLossOfHeterozygosity> reportableGermlineLossOfHeterozygosities)
     {
         OptionalDouble minimumTumorCopyNumber = reportableGermlineLossOfHeterozygosities.stream()
-                .filter(d -> d.gene().equals(geneCopyNumber.geneName()))
+                .filter(d -> d.gene().equals(geneCopyNumber.gene()))
                 .mapToDouble(PurpleLossOfHeterozygosity::minCopies)
                 .min();
         if(minimumTumorCopyNumber.isPresent())
@@ -423,7 +421,7 @@ public final class GermlineConversion
     {
         for(PurpleDriver driver : drivers)
         {
-            if(driver.driver() == PurpleDriverTypeToFind && driver.gene().equals(geneToFind) && driver.transcript()
+            if(driver.type() == PurpleDriverTypeToFind && driver.gene().equals(geneToFind) && driver.transcript()
                     .equals(transcriptToFind))
             {
                 return driver;
@@ -441,11 +439,11 @@ public final class GermlineConversion
             LOGGER.warn("Germline driver converted to somatic with driver likelihood <> 1: {}", germlineDriver);
         }
 
-        assert germlineDriver.driver() == PurpleDriverType.GERMLINE_MUTATION;
+        assert germlineDriver.type() == PurpleDriverType.GERMLINE_MUTATION;
 
         return ImmutablePurpleDriver.builder()
                 .from(germlineDriver)
-                .driver(PurpleDriverType.MUTATION)
+                .type(PurpleDriverType.MUTATION)
                 .likelihoodMethod(PurpleLikelihoodMethod.HOTSPOT)
                 .build();
     }
@@ -453,37 +451,11 @@ public final class GermlineConversion
     @NotNull
     private static PurpleDriver convertToSomaticDeletionDriver(@NotNull PurpleDriver germlineDriver)
     {
-        assert germlineDriver.driver() == PurpleDriverType.GERMLINE_DELETION;
+        assert germlineDriver.type() == PurpleDriverType.GERMLINE_DELETION;
 
         return ImmutablePurpleDriver.builder()
                 .from(germlineDriver)
-                .driver(PurpleDriverType.DEL)
-                .likelihoodMethod(PurpleLikelihoodMethod.DEL)
-                .build();
-    }
-
-    @NotNull
-    private static PurpleDriver convertToSomaticDisruptionDriver(@NotNull PurpleDriver germlineDriver)
-    {
-        assert germlineDriver.driver() == PurpleDriverType.GERMLINE_DISRUPTION;
-
-        return ImmutablePurpleDriver.builder()
-                .from(germlineDriver)
-                .driver(PurpleDriverType.DISRUPTION)
-                .driverLikelihood(0D)
-                .likelihoodMethod(PurpleLikelihoodMethod.DEL)
-                .build();
-    }
-
-    @NotNull
-    private static PurpleDriver convertToSomaticHomozygousDisruptionDriver(@NotNull PurpleDriver germlineDriver)
-    {
-        assert germlineDriver.driver() == PurpleDriverType.GERMLINE_HOM_DUP_DISRUPTION;
-
-        return ImmutablePurpleDriver.builder()
-                .from(germlineDriver)
-                .driver(PurpleDriverType.HOM_DUP_DISRUPTION)
-                .driverLikelihood(1D)
+                .type(PurpleDriverType.DEL)
                 .likelihoodMethod(PurpleLikelihoodMethod.DEL)
                 .build();
     }
@@ -494,7 +466,7 @@ public final class GermlineConversion
     {
         List<LinxSvAnnotation> additionalStructuralVariants = Lists.newArrayList();
         List<LinxBreakend> additionalReportableBreakends = Lists.newArrayList();
-        List<HomozygousDisruption> additionalHomozygousDisruptions = Lists.newArrayList();
+        List<LinxHomozygousDisruption> additionalHomozygousDisruptions = Lists.newArrayList();
 
         if(containsTumorCells)
         {
@@ -646,8 +618,8 @@ public final class GermlineConversion
     }
 
     @NotNull
-    private static List<HomozygousDisruption> toSomaticHomozygousDisruptions(
-            @Nullable List<HomozygousDisruption> germlineHomozygousDisruptions)
+    private static List<LinxHomozygousDisruption> toSomaticHomozygousDisruptions(
+            @Nullable List<LinxHomozygousDisruption> germlineHomozygousDisruptions)
     {
         return germlineHomozygousDisruptions != null ? germlineHomozygousDisruptions : Lists.newArrayList();
     }

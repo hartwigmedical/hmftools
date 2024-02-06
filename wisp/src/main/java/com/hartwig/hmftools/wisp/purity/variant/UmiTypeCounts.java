@@ -4,9 +4,9 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 
 public class UmiTypeCounts
 {
-    public int RefNone;
-    public int RefSingle;
-    public int RefDual;
+    public int TotalNone;
+    public int TotalSingle;
+    public int TotalDual;
     public int AlleleNone;
     public int AlleleSingle;
     public int AlleleDual;
@@ -21,7 +21,7 @@ public class UmiTypeCounts
 
         String[] umiValues = ((String)umiTypeCountsRaw).split(",", UMI_TYPE_COUNT);
 
-        if(umiValues.length != UMI_TYPE_COUNT)
+        if(umiValues.length < UMI_TYPE_COUNT)
             return NO_UMI_COUNTS;
 
         int index = 0;
@@ -31,11 +31,11 @@ public class UmiTypeCounts
     }
 
     public UmiTypeCounts(
-            final int refNone, final int refSingle, final int refDual, final int alleleNone, final int alleleSingle, final int alleleDual)
+            final int totalNone, final int totalSingle, final int totalDual, final int alleleNone, final int alleleSingle, final int alleleDual)
     {
-        RefNone = refNone;
-        RefSingle = refSingle;
-        RefDual = refDual;
+        TotalNone = totalNone;
+        TotalSingle = totalSingle;
+        TotalDual = totalDual;
         AlleleNone = alleleNone;
         AlleleSingle = alleleSingle;
         AlleleDual = alleleDual;
@@ -43,9 +43,9 @@ public class UmiTypeCounts
 
     public void add(final UmiTypeCounts other)
     {
-        RefNone += other.RefNone;
-        RefSingle += other.RefSingle;
-        RefDual += other.RefDual;
+        TotalNone += other.TotalNone;
+        TotalSingle += other.TotalSingle;
+        TotalDual += other.TotalDual;
         AlleleNone += other.AlleleNone;
         AlleleSingle += other.AlleleSingle;
         AlleleDual += other.AlleleDual;
@@ -56,8 +56,6 @@ public class UmiTypeCounts
         this(0, 0, 0, 0, 0, 0);
     }
 
-    public int refTotal() { return RefNone + RefSingle + RefDual; }
-    public int alleleTotal() { return AlleleNone + AlleleSingle + AlleleDual; }
-    public int total() { return refTotal() + alleleTotal(); }
-    public int dualTotal() { return RefDual + AlleleDual; }
+    public int alleleCount() { return AlleleNone + AlleleSingle + AlleleDual; }
+    public int totalCount() { return TotalNone + TotalSingle + TotalDual; }
 }

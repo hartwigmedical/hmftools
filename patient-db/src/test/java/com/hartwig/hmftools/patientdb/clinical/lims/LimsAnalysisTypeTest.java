@@ -4,16 +4,19 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class LimsAnalysisTypeTest {
+public class LimsAnalysisTypeTest
+{
 
     @Test
-    public void canExtractLimsAnalysisType() {
+    public void canExtractLimsAnalysisType()
+    {
         assertEquals(LimsAnalysisType.SOMATIC_R, LimsAnalysisType.extractAnalysisType("Somatic_R"));
         assertEquals(LimsAnalysisType.SOMATIC_T, LimsAnalysisType.extractAnalysisType("Somatic_T"));
     }
 
     @Test(expected = IllegalStateException.class)
-    public void hasUnknownAnalysisType() {
+    public void hasUnknownAnalysisType()
+    {
         //noinspection ResultOfMethodCallIgnored
         LimsAnalysisType.extractAnalysisType("somatic_T");
     }

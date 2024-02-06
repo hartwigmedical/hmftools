@@ -11,4 +11,4 @@ public interface RefGenomeInterface
     int getChromosomeLength(final String chromosome);
 
     byte[] getBases(final String chromosome, int posStart, int posEnd);
-;}
+}

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.genotype.GenotypeStatus.UNKNOWN;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.byteToBoolean;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.checkStringLength;
@@ -205,6 +207,25 @@ public class SomaticVariantDAO
 
     private static void addRecord(Timestamp timestamp, InsertValuesStepN inserter, String sample, SomaticVariant variant)
     {
+        // append reportable status for each transcript where non-canonical may be reportable
+        String otherReportedEffects = variant.otherReportedEffects();
+
+        if(variant.reportableTranscripts() != null)
+        {
+            boolean hasCanonical = false;
+
+            for(String reportedTrans : variant.reportableTranscripts())
+            {
+                if(reportedTrans.equals(variant.canonicalTranscript()))
+                    hasCanonical = true;
+                else
+                    otherReportedEffects = otherReportedEffects.replaceFirst(reportedTrans, format("%s|REPORTED", reportedTrans));
+            }
+
+            if(!hasCanonical)
+                otherReportedEffects = otherReportedEffects + ";CANONICAL_NOT_REPORTED";
+        }
+
         inserter.values(sample,
                 variant.chromosome(),
                 variant.position(),
@@ -221,7 +242,7 @@ public class SomaticVariantDAO
                 checkTrimHgsvString(variant.canonicalHgvsCodingImpact(), SOMATICVARIANT.CANONICALHGVSCODINGIMPACT),
                 checkTrimHgsvString(variant.canonicalHgvsProteinImpact(), SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT),
                 variant.spliceRegion(),
-                variant.otherReportedEffects(),
+                otherReportedEffects,
                 variant.alleleReadCount(),
                 variant.totalReadCount(),
                 DatabaseUtil.decimal(variant.adjustedCopyNumber()),

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.cup.liftover;
 
-import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.LIFTOVER_MAPPING_FILE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
@@ -43,7 +42,7 @@ public class SnvLiftover
         }
         mThreads = parseThreads(configBuilder);
 
-        mMappingCache = new GenomeLiftoverCache(true, true);
+        mMappingCache = new GenomeLiftoverCache(true);
     }
 
     public void run()

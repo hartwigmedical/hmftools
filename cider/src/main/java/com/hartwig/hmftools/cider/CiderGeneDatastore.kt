@@ -1,26 +1,16 @@
 package com.hartwig.hmftools.cider
 
+import com.google.common.collect.*
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
 import org.apache.logging.log4j.LogManager
-import org.eclipse.collections.api.collection.ImmutableCollection
-import org.eclipse.collections.api.factory.Lists
-import org.eclipse.collections.api.factory.Maps
-import org.eclipse.collections.api.factory.Sets
-import org.eclipse.collections.api.list.ImmutableList
-import org.eclipse.collections.api.map.ImmutableMap
-import org.eclipse.collections.api.map.MutableMap
-import org.eclipse.collections.api.multimap.ImmutableMultimap
-import org.eclipse.collections.api.multimap.MutableMultimap
-import org.eclipse.collections.api.set.SetIterable
-import org.eclipse.collections.impl.map.mutable.UnifiedMap
-import org.eclipse.collections.impl.multimap.list.FastListMultimap
+import java.util.EnumMap
 import java.util.stream.Collectors
 
 // we use immutable collections here, data can be accessed by multiple threads
 interface ICiderGeneDatastore
 {
-    fun getAnchorSequenceSet(geneType: VJGeneType): SetIterable<String>
+    fun getAnchorSequenceSet(geneType: VJGeneType): Set<String>
     fun getByAnchorSequence(anchorSeq: String): ImmutableCollection<VJAnchorTemplate>
     fun getByAnchorSequence(geneType: VJGeneType, anchorSeq: String): ImmutableCollection<VJAnchorTemplate>
     fun getByGeneLocation(genomicLocation: GenomicLocation): ImmutableCollection<VJAnchorTemplate>
@@ -39,10 +29,10 @@ open class CiderGeneDatastore(vjAnchorTemplates: List<VJAnchorTemplate>, igTcrCo
     private val mVjAnchorGenomeLocations: ImmutableList<VJAnchorGenomeLocation>
     private val mIgTcrConstantDiversityRegions: ImmutableList<IgTcrConstantDiversityRegion>
 
-    override fun getAnchorSequenceSet(geneType: VJGeneType): SetIterable<String>
+    override fun getAnchorSequenceSet(geneType: VJGeneType): ImmutableSet<String>
     {
         val anchorSeqMap = mGeneTypeAnchorSeqMap[geneType]
-        return if (anchorSeqMap != null) anchorSeqMap.keySet() else Sets.immutable.empty()
+        return if (anchorSeqMap != null) anchorSeqMap.keySet() else ImmutableSet.of()
     }
 
     override fun getByAnchorSequence(anchorSeq: String): ImmutableCollection<VJAnchorTemplate>
@@ -53,7 +43,7 @@ open class CiderGeneDatastore(vjAnchorTemplates: List<VJAnchorTemplate>, igTcrCo
     override fun getByAnchorSequence(geneType: VJGeneType, anchorSeq: String): ImmutableCollection<VJAnchorTemplate>
     {
         val anchorSeqMap = mGeneTypeAnchorSeqMap[geneType]
-        return if (anchorSeqMap != null) anchorSeqMap[anchorSeq] else Sets.immutable.empty()
+        return if (anchorSeqMap != null) anchorSeqMap[anchorSeq] else ImmutableSet.of()
     }
 
     override fun getByGeneLocation(genomicLocation: GenomicLocation): ImmutableCollection<VJAnchorTemplate>
@@ -73,10 +63,10 @@ open class CiderGeneDatastore(vjAnchorTemplates: List<VJAnchorTemplate>, igTcrCo
 
     init
     {
-        val anchorSequenceMap: MutableMultimap<String, VJAnchorTemplate> = FastListMultimap()
-        val geneTypeAnchorSeqMap: MutableMap<VJGeneType, MutableMultimap<String, VJAnchorTemplate>> = UnifiedMap()
-        val geneLocationVJGeneMap: MutableMultimap<GenomicLocation, VJAnchorTemplate> = FastListMultimap()
-        val vjAnchorGenomeLocationMap: MutableMap<GenomicLocation, VJGeneType> = UnifiedMap()
+        val anchorSequenceMap: Multimap<String, VJAnchorTemplate> = ArrayListMultimap.create()
+        val geneTypeAnchorSeqMap: MutableMap<VJGeneType, Multimap<String, VJAnchorTemplate>> = EnumMap(VJGeneType::class.java)
+        val geneLocationVJGeneMap: Multimap<GenomicLocation, VJAnchorTemplate> = ArrayListMultimap.create()
+        val vjAnchorGenomeLocationMap: MutableMap<GenomicLocation, VJGeneType> = HashMap()
 
         // from this we find all the anchor sequence locations and fix them
         for (gene in vjAnchorTemplates)
@@ -100,28 +90,28 @@ open class CiderGeneDatastore(vjAnchorTemplates: List<VJAnchorTemplate>, igTcrCo
             if (gene.anchorSequence.isNotEmpty())
             {
                 anchorSequenceMap.put(gene.anchorSequence, gene)
-                geneTypeAnchorSeqMap.computeIfAbsent(gene.type) { o: VJGeneType? -> FastListMultimap() }
+                geneTypeAnchorSeqMap.computeIfAbsent(gene.type) { o: VJGeneType? -> ArrayListMultimap.create() }
                     .put(gene.anchorSequence, gene)
             }
         }
-        mAnchorSequenceMap = anchorSequenceMap.toImmutable()
+        mAnchorSequenceMap = ImmutableMultimap.copyOf(anchorSequenceMap)
 
         // copy to immutable, have to convert each entry to immutable version as well
-        mGeneTypeAnchorSeqMap = Maps.immutable.ofMap(
+        mGeneTypeAnchorSeqMap = ImmutableMap.copyOf(
             geneTypeAnchorSeqMap.entries.stream().collect(
                 Collectors.toMap(
                     { entry -> entry.key },
-                    { entry -> entry.value.toImmutable() }
+                    { entry -> ImmutableMultimap.copyOf(entry.value) }
                 )))
 
-        mGeneLocationTemplateMap = geneLocationVJGeneMap.toImmutable()
+        mGeneLocationTemplateMap = ImmutableMultimap.copyOf(geneLocationVJGeneMap)
 
         mVjAnchorGenomeLocations =
-            Lists.immutable.fromStream(vjAnchorGenomeLocationMap.entries.stream().map({ o -> VJAnchorGenomeLocation(o.value, o.key) }))
+            ImmutableList.copyOf(vjAnchorGenomeLocationMap.entries.map({ o -> VJAnchorGenomeLocation(o.value, o.key) }))
 
         // also the constant region
-        mIgTcrConstantDiversityRegions = Lists.immutable.ofAll(igTcrConstantDiversityRegions)
+        mIgTcrConstantDiversityRegions = ImmutableList.copyOf(igTcrConstantDiversityRegions)
 
-        sLogger.info("found {} gene locations", mGeneLocationTemplateMap.keySet().size())
+        sLogger.info("found {} gene locations", mGeneLocationTemplateMap.keySet().size)
     }
 }

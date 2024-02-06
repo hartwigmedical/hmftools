@@ -6,10 +6,14 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecor
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_PARTITION_SIZE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.markdups.common.Fragment;
+import com.hartwig.hmftools.markdups.consensus.ConsensusReadInfo;
+import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -18,7 +22,6 @@ public final class TestUtils
     public static final String TEST_READ_BASES = MockRefGenome.generateRandomBases(100);
     public static final String TEST_READ_ID = "READ_01";
     public static final String TEST_READ_CIGAR = "100M";
-    public static final String TEST_READ_ID_PREFIX = "123:ABC:1:4455:";
 
     public static final String REF_BASES_A = "AAAAAAAAAA";
     public static final String REF_BASES_C = "CCCCCCCCCC";
@@ -29,6 +32,8 @@ public final class TestUtils
 
     public static final String REF_BASES = "X" + REF_BASES_RANDOM + REF_BASES_A + REF_BASES_C + REF_BASES_G + REF_BASES_T
             + REF_BASES_A + REF_BASES_C + REF_BASES_G + REF_BASES_T + REF_BASES_RANDOM;
+
+    public static final String REF_BASES_REPEAT_40 = REF_BASES.repeat(40);
 
     public static final int DEFAULT_QUAL = SamRecordTestUtils.DEFAULT_BASE_QUAL;
 
@@ -82,4 +87,8 @@ public final class TestUtils
         read.setSecondOfPairFlag(true);
     }
 
+    public static ConsensusReadInfo createConsensusRead(final ConsensusReads consensusReads, final List<SAMRecord> reads, final String umiId)
+    {
+        return consensusReads.createConsensusRead(reads, null, null, umiId);
+    }
 }

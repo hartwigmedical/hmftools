@@ -37,8 +37,8 @@ object TelomereMatcher
 
         val numMatch = alignment.operators.count({ op -> op == AlignmentOperator.MATCH })
 
-        // at least need to match 6 (TTAGGG)
-        if (numMatch < 6)
+        // at least need to match 12 (2 x TTAGGG)
+        if (numMatch < TealConstants.MIN_TELOMERE_MATCH_BASES)
             return null
 
         val matchRatio = numMatch / alignment.firstSequenceAlignLength

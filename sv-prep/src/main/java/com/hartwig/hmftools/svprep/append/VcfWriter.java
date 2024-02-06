@@ -2,11 +2,9 @@ package com.hartwig.hmftools.svprep.append;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SGL_FRAGMENT_COUNT;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMENT_COUNT;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS_DESCRIPTION;
@@ -22,7 +20,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.samtools.UmiReadType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.svprep.reads.ReadType;
 
@@ -36,7 +33,6 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFConstants;
 import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
@@ -129,17 +125,17 @@ public class VcfWriter
         // Gridss does not write AD & DP, so instead for now write ref support into REF and junction support into VF and BVF
         // and capture UMI counts if available
         Map<String, Object> attributes = Maps.newHashMap();
-        attributes.put(REF_READ_COVERAGE, refSupport);
+        attributes.put(REF_DEPTH, refSupport);
 
         if(breakendData.IsSingle)
         {
-            attributes.put(SGL_FRAGMENT_COUNT, junctionSupport);
-            attributes.put(SV_FRAGMENT_COUNT, 0);
+            attributes.put(SGL_FRAG_COUNT, junctionSupport);
+            attributes.put(SV_FRAG_COUNT, 0);
         }
         else
         {
-            attributes.put(SGL_FRAGMENT_COUNT, 0);
-            attributes.put(SV_FRAGMENT_COUNT, junctionSupport);
+            attributes.put(SGL_FRAG_COUNT, 0);
+            attributes.put(SV_FRAG_COUNT, junctionSupport);
         }
 
         int[] umiTypeCounts = new int[UMI_TYPE_COUNT];

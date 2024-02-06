@@ -1,6 +1,6 @@
 # Lilac
 
-LILAC is a WGS tool to determine the HLA Class I types for the germline of each patient as well as determining the status of each of those alleles in the tumor including complete loss of one or more alleles, allele specific somatic mutations and allelic imbalance.  Lilac is described in this preprint(https://www.biorxiv.org/content/10.1101/2022.02.23.481444v1.full.pdf).
+LILAC is a WGS tool to determine the HLA Class I types for the germline of each patient as well as determining the status of each of those alleles in the tumor including complete loss of one or more alleles, allele specific somatic mutations and allelic imbalance.  Lilac is described and validated in this manuscript (https://www.nature.com/articles/s41588-023-01367-1).
 
 LILAC uses the IMGT/HLA database (https://www.ebi.ac.uk/ipd/imgt/hla/download) as a reference set of Human MHC class I alleles, and performs typing to 4-digits, which means it uniquely identifies a specific protein, but ignores synonymous variants (6 digits) and intronic differences (8 digits).
 
@@ -372,6 +372,7 @@ nucleotide matches are permitted.
  </pre>
 
 ## Version History and Download Links
+- [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.5.2)
 - [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.4.2)
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.3)
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.2)

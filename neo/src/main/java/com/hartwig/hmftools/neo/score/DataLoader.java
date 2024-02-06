@@ -26,8 +26,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.score.AlleleCoverage.EXPECTED_ALLELE_COUNT;
-
-import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
+import static com.hartwig.hmftools.neo.score.NeoScorerConfig.RNA_SAMPLE_ID_SUFFIX;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,11 +43,9 @@ import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
 
 public class DataLoader
 {
@@ -140,9 +137,11 @@ public class DataLoader
     }
 
     public static List<SomaticVariant> loadSomaticVariants(
-            final SampleData sample, final String rnaSampleId, final String rnaSomaticVcf, final List<NeoEpitopeData> pointNeos)
+            final SampleData sample, final String rnaSomaticVcf, final List<NeoEpitopeData> pointNeos)
     {
-        String vcfFile = rnaSomaticVcf.replaceAll("\\*", sample.Id);
+        String vcfFile = rnaSomaticVcf.replaceAll("\\*", sample.TumorId);
+
+        String rnaSampleId = sample.RnaSampleId != null ? sample.RnaSampleId : sample.TumorId + RNA_SAMPLE_ID_SUFFIX;
 
         if(!Files.exists(Paths.get(vcfFile)))
             return sample.HasRna ? null : Lists.newArrayList();
@@ -150,14 +149,14 @@ public class DataLoader
         try
         {
             List<SomaticVariant> matchedVariants = Lists.newArrayList();
-            final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
+            VcfFileReader fileReader = new VcfFileReader(vcfFile);
 
-            for(VariantContext variantContext : reader.iterator())
+            for(VariantContext variantContext : fileReader.iterator())
             {
                 if(variantContext.isFiltered())
                     continue;
 
-                SomaticVariant variant = SomaticVariant.fromContext(variantContext, sample.Id, rnaSampleId);
+                SomaticVariant variant = SomaticVariant.fromContext(variantContext, sample.TumorId, rnaSampleId);
 
                 if(variant == null)
                     continue;
@@ -170,7 +169,7 @@ public class DataLoader
                 }
             }
 
-            NE_LOGGER.debug("sample({}) loaded {} somatic RNA-annotated variants", sample.Id, matchedVariants.size());
+            NE_LOGGER.debug("sample({}) loaded {} somatic RNA-annotated variants", sample.TumorId, matchedVariants.size());
             return matchedVariants;
         }
         catch(Exception e)
@@ -209,7 +208,7 @@ public class DataLoader
         if(isofoxDataDir == null)
             return Lists.newArrayList();
 
-        String filename = RnaNeoEpitope.generateFilename(isofoxDataDir, sample.Id);
+        String filename = RnaNeoEpitope.generateFilename(isofoxDataDir, sample.TumorId);
 
         if(!Files.exists(Paths.get(filename)))
             return sample.HasRna ? null : Lists.newArrayList();
@@ -219,15 +218,14 @@ public class DataLoader
             List<RnaNeoEpitope> rnaNeoDataList = RnaNeoEpitope.read(filename).stream()
                     .filter(x -> x.VariantType.isFusion()).collect(Collectors.toList());
 
-            NE_LOGGER.debug("sample({}) loaded {} fusion RNA-annotated neoepitopes", sample.Id, rnaNeoDataList.size());
+            NE_LOGGER.debug("sample({}) loaded {} fusion RNA-annotated neoepitopes", sample.TumorId, rnaNeoDataList.size());
 
             return rnaNeoDataList;
         }
         catch(IOException exception)
         {
-            NE_LOGGER.error("failed to read sample({}) Isofox neoepitopes file: {}", sample.Id, exception.toString());
+            NE_LOGGER.error("failed to read sample({}) Isofox neoepitopes file: {}", sample.TumorId, exception.toString());
             return null;
         }
     }
-
 }

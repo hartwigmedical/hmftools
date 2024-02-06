@@ -25,14 +25,12 @@ data class BlastnMatch(
 {
     fun toGenomicLocation() : GenomicLocation?
     {
-        require(subjectTitle.contains(REF_GENOME_NAME)) { "subject title must contain $REF_GENOME_NAME" }
-
         // parse the chromosome / assembly
         val m = CHROMOSOME_ASSEMBLY_REGEX.matchEntire(subjectTitle)
 
         if (m == null)
         {
-            // might not have a chromosome
+            // might not have a chromosome, or it is mitochondrion
             return null
         }
 
@@ -53,7 +51,7 @@ data class BlastnMatch(
 
     companion object
     {
-        val REF_GENOME_NAME = "GRCh38.p13"
+        // val REF_GENOME_NAME = "GRCh38.p13"
         val CHROMOSOME_ASSEMBLY_REGEX = Regex("^Homo sapiens chromosome (\\w+).*, GRCh38.p13 (.+)$")
         val PRIMARY_ASSEMBLY_NAME = "Primary Assembly".intern()
 

@@ -9,8 +9,8 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
-import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
@@ -20,7 +20,7 @@ import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
 import com.hartwig.hmftools.orange.report.tables.BreakendTable;
-import com.hartwig.hmftools.orange.report.tables.DNAFusionTable;
+import com.hartwig.hmftools.orange.report.tables.DnaFusionTable;
 import com.hartwig.hmftools.orange.report.tables.GainLossTable;
 import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.LossOfHeterozygosityTable;
@@ -233,14 +233,18 @@ public class SomaticFindingsChapter implements ReportChapter
         else
         {
             String titleDrivers = driverFusionsTitle + " (" + report.linx().reportableSomaticFusions().size() + ")";
-            document.add(DNAFusionTable.build(titleDrivers, contentWidth(), report.linx().reportableSomaticFusions(), report.isofox(),
+            document.add(DnaFusionTable.build(titleDrivers,
+                    contentWidth(),
+                    report.linx().reportableSomaticFusions(),
+                    report.isofox(),
                     reportResources));
 
             String titleNonDrivers = nonDriverFusionsTitle + " (" + report.linx().additionalSuspectSomaticFusions().size() + ")";
-            document.add(DNAFusionTable.build(titleNonDrivers,
+            document.add(DnaFusionTable.build(titleNonDrivers,
                     contentWidth(),
                     max10(report.linx().additionalSuspectSomaticFusions()),
-                    report.isofox(), reportResources));
+                    report.isofox(),
+                    reportResources));
         }
     }
 
@@ -264,8 +268,8 @@ public class SomaticFindingsChapter implements ReportChapter
                 String titleDrivers = driverVirusTitle + " (" + virusInterpreter.reportableViruses().size() + ")";
                 document.add(ViralPresenceTable.build(titleDrivers, contentWidth(), virusInterpreter.reportableViruses(), reportResources));
 
-                List<AnnotatedVirus> unreported = Lists.newArrayList();
-                for(AnnotatedVirus virus : virusInterpreter.allViruses())
+                List<VirusInterpreterEntry> unreported = Lists.newArrayList();
+                for(VirusInterpreterEntry virus : virusInterpreter.allViruses())
                 {
                     if(!virus.reported())
                     {
@@ -291,8 +295,10 @@ public class SomaticFindingsChapter implements ReportChapter
         else
         {
             String title = homozygousDisruptionTitle + " (" + report.linx().somaticHomozygousDisruptions().size() + ")";
-            document.add(HomozygousDisruptionTable.build(title, contentWidth(), report.linx()
-                    .somaticHomozygousDisruptions(), reportResources));
+            document.add(HomozygousDisruptionTable.build(title,
+                    contentWidth(),
+                    report.linx().somaticHomozygousDisruptions(),
+                    reportResources));
         }
     }
 
@@ -309,15 +315,16 @@ public class SomaticFindingsChapter implements ReportChapter
         }
         else
         {
-            List<BreakendEntry> reportableBreakends =
-                    BreakendEntryFactory.create(report.linx().reportableSomaticBreakends(), report.linx().allSomaticStructuralVariants());
+            List<BreakendEntry> reportableBreakends = BreakendEntryFactory.create(report.linx().reportableSomaticBreakends(),
+                    report.linx().allSomaticStructuralVariants(),
+                    report.linx().somaticDrivers());
 
             String titleDriver = driverGeneDisruptionsTitle + " (" + reportableBreakends.size() + ")";
             document.add(BreakendTable.build(titleDriver, contentWidth(), reportableBreakends, reportResources));
 
-            List<BreakendEntry> additionalSuspectBreakends =
-                    BreakendEntryFactory.create(report.linx().additionalSuspectSomaticBreakends(), report.linx()
-                            .allSomaticStructuralVariants());
+            List<BreakendEntry> additionalSuspectBreakends = BreakendEntryFactory.create(report.linx().additionalSuspectSomaticBreakends(),
+                    report.linx().allSomaticStructuralVariants(),
+                    report.linx().somaticDrivers());
             String titleNonDrivers = nonDriverGeneDisruptionsTitle + " (" + additionalSuspectBreakends.size() + ")";
             document.add(BreakendTable.build(titleNonDrivers, contentWidth(), additionalSuspectBreakends, reportResources));
         }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.datamodel.linx;
 
-public enum LinxFusionType {
+public enum LinxFusionType
+{
     NONE,
     PROMISCUOUS_3,
     PROMISCUOUS_5,

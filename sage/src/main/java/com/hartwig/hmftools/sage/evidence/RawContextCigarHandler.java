@@ -8,26 +8,26 @@ import static com.hartwig.hmftools.sage.SageConstants.MIN_SOFT_CLIP_MIN_BASE_QUA
 import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
 
 import com.hartwig.hmftools.common.samtools.CigarHandler;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.read.ExpandedBasesFactory;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.sage.read.SplitReadUtils;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class RawContextCigarHandler implements CigarHandler
 {
-    private final VariantHotspot mVariant;
+    private final SimpleVariant mVariant;
     private final boolean mIsInsert;
     private final boolean mIsDelete;
     private final boolean mIsSNV;
 
     private RawContext mResult;
 
-    public RawContextCigarHandler(final VariantHotspot variant)
+    public RawContextCigarHandler(final SimpleVariant variant)
     {
         mVariant = variant;
-        mIsInsert = variant.ref().length() < variant.alt().length();
-        mIsDelete = variant.ref().length() > variant.alt().length();
+        mIsInsert = variant.isInsert();
+        mIsDelete = variant.isDelete();
         mIsSNV = variant.ref().length() == variant.alt().length();
     }
 
@@ -169,7 +169,7 @@ public class RawContextCigarHandler implements CigarHandler
         if(mResult != null)
             return;
 
-        if(e.getLength() > ExpandedBasesFactory.MAX_SKIPPED_REFERENCE_REGIONS)
+        if(e.getLength() > SplitReadUtils.MAX_SKIPPED_REFERENCE_REGIONS)
         {
             int refPositionEnd = refPosition + e.getLength();
             if(refPositionEnd >= mVariant.position())

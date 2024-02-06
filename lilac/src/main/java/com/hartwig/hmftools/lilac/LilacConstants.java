@@ -55,7 +55,8 @@ public class LilacConstants
 
     public static final List<String> GENE_IDS = Lists.newArrayList(GENE_A, GENE_B, GENE_C);
     public static final List<String> HLA_GENES = Lists.newArrayList(HLA_A, HLA_B, HLA_C);
-    public static String HLA_CHR = "6";
+
+    public static String HLA_CHR = "6"; // note this is set as a versioned chromosome during initialisation
 
     public static final int EXPECTED_ALLELE_COUNT = 6;
 

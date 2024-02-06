@@ -40,18 +40,15 @@ args="${args} -hotspots ${hotspots} \
   -ref_genome ${ref_genome} \
   -ref_genome_version ${ref_genome_version} \
   -ensembl_data_dir ${ensembl_dir} \
-  -threads ${threads} \
   -write_bqr_data \
-  -out ${sage_vcf}"
+  -output_vcf ${sage_vcf} \
+  -threads ${threads}"
 
 if [ "${run_mode}" == "PANEL" ]; then
-  args="${args} -hard_min_tumor_vaf 0.005 \
-    -hotspot_min_tumor_vaf 0.01 -hotspot_min_tumor_qual 100 \
-    -panel_min_tumor_qual 250 \
-    -high_confidence_min_tumor_qual 350 \
-    -low_confidence_min_tumor_qual 500 \
-    -max_read_depth 100000 \
-    -sync_fragments"
+  args="${args} -high_depth_mode \
+    -hard_min_tumor_vaf 0.002 \
+    -hotspot_min_tumor_vaf 0.015 \
+    -panel_min_tumor_qual 150"
 fi  
 
 # optional: -write_bqr_plot

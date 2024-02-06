@@ -142,6 +142,30 @@ public class UmiGroupsTest
     }
 
     @Test
+    public void testUmiGroupAssignment3()
+    {
+        // test a final merge of groups with 4 bases difference if the groups are large enough
+        String umi1 = "TTAAGG";
+        String umi2 = "TTAGGA"; // 2-base diff from #1
+        String umi3 = "CCGGTT"; // unrelated
+        String umi4 = "TTCCCC"; // 4-base diff from #1 and #2
+
+        List<Fragment> fragments = Lists.newArrayList();
+
+        fragments.add(createFragment(FIXED_READ_ID + umi1, CHR_1, 100));
+        fragments.add(createFragment(FIXED_READ_ID + umi2, CHR_1, 100));
+        fragments.add(createFragment(FIXED_READ_ID + umi3, CHR_1, 100));
+
+        for(int i = 0; i < 51; ++i)
+        {
+            fragments.add(createFragment(FIXED_READ_ID + umi4, CHR_1, 100));
+        }
+
+        List<DuplicateGroup> groups = buildUmiGroups(fragments, UMI_CONFIG);
+        assertEquals(2, groups.size());
+    }
+
+    @Test
     public void testDefinedUmis()
     {
         UmiConfig umiConfig = new UmiConfig(true, false, "", false);

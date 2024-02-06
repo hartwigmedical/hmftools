@@ -19,8 +19,8 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 
-public class GenomePositionSelectorTest {
-
+public class GenomePositionSelectorTest
+{
     private GenomePositionSelector<GenomePosition> listSelector;
     private GenomePositionSelector<GenomePosition> iteratorSelector;
 
@@ -39,7 +39,8 @@ public class GenomePositionSelectorTest {
     private GenomePosition afterRegion3;
 
     @Before
-    public void setup() {
+    public void setup()
+    {
         region1 = GenomeRegions.create("1", 200, 300);
         region2 = GenomeRegions.create("1", 400, 500);
         region3 = GenomeRegions.create("2", 1, 100);
@@ -64,7 +65,8 @@ public class GenomePositionSelectorTest {
     }
 
     @Test
-    public void testIdenticalPositionsInListSelector() {
+    public void testIdenticalPositionsInListSelector()
+    {
         final GenomeRegion tinyRegion = GenomeRegions.create("1", 250, 250);
         final GenomePosition inTinyRegion = GenomePositions.create(tinyRegion.chromosome(), tinyRegion.start());
         final GenomePosition alsoInTinyRegion = GenomePositions.create(tinyRegion.chromosome(), tinyRegion.start());
@@ -77,7 +79,8 @@ public class GenomePositionSelectorTest {
     }
 
     @Test
-    public void testListSelectorPositionInOrder() {
+    public void testListSelectorPositionInOrder()
+    {
         assertSelectExisting(listSelector, beforeRegion1);
         assertSelectExisting(listSelector, inRegion1a);
         assertSelectExisting(listSelector, inRegion1b);
@@ -89,7 +92,8 @@ public class GenomePositionSelectorTest {
     }
 
     @Test
-    public void testListSelectorPositionOutOfOrder() {
+    public void testListSelectorPositionOutOfOrder()
+    {
         assertSelectExisting(listSelector, inRegion1a);
         assertSelectExisting(listSelector, beforeRegion1);
         assertSelectExisting(listSelector, inRegion3);
@@ -101,7 +105,8 @@ public class GenomePositionSelectorTest {
     }
 
     @Test
-    public void testIteratorSelectorPositionInOrder() {
+    public void testIteratorSelectorPositionInOrder()
+    {
         assertSelectExisting(iteratorSelector, beforeRegion1);
         assertSelectExisting(iteratorSelector, inRegion1a);
         assertSelectExisting(iteratorSelector, inRegion1b);
@@ -113,28 +118,33 @@ public class GenomePositionSelectorTest {
     }
 
     @Test(expected = NoSuchElementException.class)
-    public void testIteratorSelectorPositionOutOfOrder() {
+    public void testIteratorSelectorPositionOutOfOrder()
+    {
         assertSelectExisting(iteratorSelector, inRegion1a);
         assertSelectExisting(iteratorSelector, beforeRegion1);
     }
 
     private static void assertSelectExisting(@NotNull final GenomePositionSelector<GenomePosition> victim,
-            @NotNull GenomePosition existingPosition) {
+            @NotNull GenomePosition existingPosition)
+    {
         Optional<GenomePosition> result = victim.select(existingPosition);
         assertEquals(result.get(), existingPosition);
     }
 
     private static void assertRegion(@NotNull final GenomePositionSelector<GenomePosition> victim, GenomeRegion region,
-            GenomePosition... expectedPositions) {
+            GenomePosition... expectedPositions)
+    {
         final ListConsumer consumer = new ListConsumer();
         victim.select(region, consumer);
-        for (int i = 0; i < expectedPositions.length; i++) {
+        for(int i = 0; i < expectedPositions.length; i++)
+        {
             assertEquals(expectedPositions[i], consumer.positions().get(i));
         }
     }
 
     @Test
-    public void testListSelectInRegion() {
+    public void testListSelectInRegion()
+    {
         assertRegion(listSelector, region1, inRegion1a, inRegion1b, inRegion1c);
         assertRegion(listSelector, region2, inRegion2);
         assertRegion(listSelector, region3, inRegion3);
@@ -145,7 +155,8 @@ public class GenomePositionSelectorTest {
     }
 
     @Test
-    public void testListSelectOutOfOrderRegion() {
+    public void testListSelectOutOfOrderRegion()
+    {
         assertRegion(listSelector, region2, inRegion2);
         assertRegion(listSelector, region1, inRegion1a, inRegion1b, inRegion1c);
         assertRegion(listSelector, region1, inRegion1a, inRegion1b, inRegion1c);
@@ -157,34 +168,40 @@ public class GenomePositionSelectorTest {
     }
 
     @Test
-    public void testIteratorSelectInRegion() {
+    public void testIteratorSelectInRegion()
+    {
         assertRegion(iteratorSelector, region1, inRegion1a, inRegion1b, inRegion1c);
         assertRegion(iteratorSelector, region2, inRegion2);
         assertRegion(iteratorSelector, region3, inRegion3);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testIteratorSelectOutOfOrderRegion() {
+    public void testIteratorSelectOutOfOrderRegion()
+    {
         assertRegion(iteratorSelector, region2, inRegion2);
         assertRegion(iteratorSelector, region1, inRegion1a, inRegion1b, inRegion1c);
     }
 
     @Test(expected = IndexOutOfBoundsException.class)
-    public void testIteratorSelectDuplicateRegion() {
+    public void testIteratorSelectDuplicateRegion()
+    {
         assertRegion(iteratorSelector, region2, inRegion2);
         assertRegion(iteratorSelector, region2, inRegion2);
     }
 
-    private static class ListConsumer implements Consumer<GenomePosition> {
+    private static class ListConsumer implements Consumer<GenomePosition>
+    {
 
         private final List<GenomePosition> positions = Lists.newArrayList();
 
-        List<GenomePosition> positions() {
+        List<GenomePosition> positions()
+        {
             return positions;
         }
 
         @Override
-        public void accept(final GenomePosition genomePosition) {
+        public void accept(final GenomePosition genomePosition)
+        {
             positions.add(genomePosition);
         }
     }

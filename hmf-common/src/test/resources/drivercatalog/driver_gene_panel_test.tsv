@@ -4,3 +4,4 @@ ABL1	true	false	false	false	false	true	true	ONCO	NONE	NONE	NONE		false
 ACVR1	true	false	false	false	false	true	true	ONCO	NONE	NONE	NONE		false
 KRAS	true	false	false	false	false	true	true	ONCO	NONE	NONE	NONE		false
 MYC	false	false	false	false	false	true	false	ONCO	NONE	NONE	NONE		false
+AR	true	true	true	true	true	true	true	ONCO	NONE	NONE	NONE		false

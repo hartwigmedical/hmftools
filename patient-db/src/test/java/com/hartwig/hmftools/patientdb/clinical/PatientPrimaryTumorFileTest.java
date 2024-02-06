@@ -10,12 +10,14 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class PatientPrimaryTumorFileTest {
+public class PatientPrimaryTumorFileTest
+{
 
     private static final String TEST_TSV = Resources.getResource("primary_tumors/patient_primary_tumor.tsv").getPath();
 
     @Test
-    public void canConvertStringLists() {
+    public void canConvertStringLists()
+    {
         String string1 = "str1";
         String string2 = "str2";
 
@@ -28,7 +30,8 @@ public class PatientPrimaryTumorFileTest {
     }
 
     @Test
-    public void canReadFileAndConvertLines() throws IOException {
+    public void canReadFileAndConvertLines() throws IOException
+    {
         List<PatientPrimaryTumor> patientPrimaryTumors = PatientPrimaryTumorFile.read(TEST_TSV);
 
         assertEquals(3, patientPrimaryTumors.size());
@@ -37,7 +40,8 @@ public class PatientPrimaryTumorFileTest {
                 PatientPrimaryTumorFile.fromLines(PatientPrimaryTumorFile.toLines(patientPrimaryTumors));
 
         assertEquals(3, convertedPrimaryTumors.size());
-        for (int i = 0; i < convertedPrimaryTumors.size(); i++) {
+        for(int i = 0; i < convertedPrimaryTumors.size(); i++)
+        {
             assertEquals(patientPrimaryTumors.get(i), convertedPrimaryTumors.get(i));
         }
     }

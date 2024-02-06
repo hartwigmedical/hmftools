@@ -128,18 +128,18 @@ class VdjAnnotatorTest
         assertEquals(vdjSeq, vdj.sequence)
 
         // set up the non split read calculation
-        val readCandidate1 = createReadCandidate(read1.sequence, false,
+        val readCandidate1 = createReadCandidate(read1.sequenceString, false,
             false, VJ.V, 0, 20)
         adaptor.readCandidateMap[read1] = readCandidate1
         adaptor.readSliceMap[read1] = ReadSlice(readCandidate1.read, false,
-            0, read1.sequence.length)
+            0, read1.sequence.size)
 
-        val readCandidate2 = createReadCandidate(read2.sequence, false,
+        val readCandidate2 = createReadCandidate(read2.sequenceString, false,
             false, VJ.V, 0, 20)
 
         adaptor.readCandidateMap[read2] = readCandidate2
         adaptor.readSliceMap[read2] = ReadSlice(readCandidate2.read, false,
-        0, read2.sequence.length)
+        0, read2.sequence.size)
 
         // make it non split
         readCandidate2.read.cigarString = "50M"

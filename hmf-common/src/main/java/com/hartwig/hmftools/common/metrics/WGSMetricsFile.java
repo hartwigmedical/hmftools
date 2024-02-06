@@ -12,6 +12,8 @@ import java.util.Map;
 
 import org.jetbrains.annotations.NotNull;
 
+// Picard WgsMetrics file output, internally superceded with BamMetricsSummary
+
 public final class WGSMetricsFile
 {
     public static final String GENOME_TERRITORY_COLUMN = "GENOME_TERRITORY";
@@ -62,9 +64,11 @@ public final class WGSMetricsFile
         }
 
         if(headerLine == null)
+        {
             throw new IOException("invalid WGS metrics file: " + filename);
+        }
 
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(headerLine, TSV_DELIM);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(headerLine, TSV_DELIM);
         String[] values = valuesLine.split(TSV_DELIM, -1);
 
         // NOTE: adapter and 1x coverage not exist in older versions
@@ -72,8 +76,8 @@ public final class WGSMetricsFile
         return ImmutableWGSMetrics.builder()
                 .meanCoverage(Double.parseDouble(values[fieldsIndexMap.get(MEAN_COVERAGE_COLUMN)]))
                 .sdCoverage(Double.parseDouble(values[fieldsIndexMap.get(SD_COVERAGE_COLUMN)]))
-                .medianCoverage((int)Double.parseDouble(values[fieldsIndexMap.get(MEDIAN_COVERAGE_COLUMN)]))
-                .madCoverage((int)Double.parseDouble(values[fieldsIndexMap.get(MAD_COVERAGE_COLUMN)]))
+                .medianCoverage((int) Double.parseDouble(values[fieldsIndexMap.get(MEDIAN_COVERAGE_COLUMN)]))
+                .madCoverage((int) Double.parseDouble(values[fieldsIndexMap.get(MAD_COVERAGE_COLUMN)]))
                 .pctExcAdapter(fieldsIndexMap.containsKey(PCT_EXC_ADAPTER_COLUMN) ?
                         Double.parseDouble(values[fieldsIndexMap.get(PCT_EXC_ADAPTER_COLUMN)]) : null)
                 .pctExcMapQ(Double.parseDouble(values[fieldsIndexMap.get(PCT_EXC_MAPQ_COLUMN)]))

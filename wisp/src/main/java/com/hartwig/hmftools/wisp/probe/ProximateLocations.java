@@ -16,13 +16,12 @@ public class ProximateLocations
     private final Map<String,List<Location>> mRegisteredLocations;
 
     private final byte NO_ORIENTATION = 0;
+    private static final int NEAR_DISTANCE = 50;
 
     public ProximateLocations()
     {
         mRegisteredLocations = Maps.newHashMap();
     }
-
-    public static final int NEAR_DISTANCE = 50;
 
     public boolean isNearRegisteredLocation(final String chromosome, final int position)
     {

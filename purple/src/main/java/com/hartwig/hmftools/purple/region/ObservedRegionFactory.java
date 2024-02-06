@@ -183,108 +183,120 @@ public class ObservedRegionFactory
             return false;
         }
 
-        double ratio = rawNormalRatio / normalRatio;
-        return ratio < GERMLINE_DEL_RATIO || ratio > GERMLINE_AMP_RATIO;
+        return isGermlineAmpDelRatio(rawNormalRatio, normalRatio);
     }
 
     private static boolean isGermlineAmpDelCandidate(final ObservedRegion region)
     {
-        double rawNormalRatio = region.unnormalisedObservedNormalRatio();
-        double normalRatio = region.observedNormalRatio();
+        return isGermlineAmpDelRatio(region.unnormalisedObservedNormalRatio(), region.observedNormalRatio());
+    }
 
-        if(normalRatio <= 0)
+    private static boolean isGermlineAmpDelRatio(double rawNormalRatio, double normalRatio)
+    {
+        if(normalRatio == 0)
             return false;
 
         double ratio = rawNormalRatio / normalRatio;
         return ratio < GERMLINE_DEL_RATIO || ratio > GERMLINE_AMP_RATIO;
     }
 
-    private void findGermlineAmpDelRegions(
-            final List<ObservedRegion> observedRegions, final List<Integer> candidateGermlineAmpDelRegions)
+    private void findGermlineAmpDelRegions(final List<ObservedRegion> observedRegions, final List<Integer> candidateGermlineAmpDelRegions)
     {
         // test for diploid regions with evidence of germline AMPs or DELs
-        if(!candidateGermlineAmpDelRegions.isEmpty())
+        if(candidateGermlineAmpDelRegions.isEmpty())
+            return;
+
+        Set<Integer> processedCandidateIndices = Sets.newHashSet();
+
+        for(Integer candidateRegionIndex : candidateGermlineAmpDelRegions)
         {
-            Set<Integer> processedCandidateIndices = Sets.newHashSet();
+            if(processedCandidateIndices.contains(candidateRegionIndex))
+                continue;
 
-            for(Integer candidateRegionIndex : candidateGermlineAmpDelRegions)
+            ObservedRegion candidateRegion = observedRegions.get(candidateRegionIndex);
+
+            int candidateRangeMin = 0;
+            int candidateRangeMax = 0;
+            int candidateIndexMin = 0;
+            int candidateIndexMax = 0;
+
+            // walk forwards and backwards to the nearest diploid regions or end of the arm
+            for(int j = candidateRegionIndex - 1; j >= 0; --j)
             {
-                if(processedCandidateIndices.contains(candidateRegionIndex))
-                    continue;
+                ObservedRegion nextRegion = observedRegions.get(j);
 
-                ObservedRegion candidateRegion = observedRegions.get(candidateRegionIndex);
+                if(!nextRegion.chromosome().equals(candidateRegion.chromosome()))
+                    break;
 
-                int candidateRangeMin = 0;
-                int candidateRangeMax = 0;
-                int candidateIndexMin = 0;
-                int candidateIndexMax = 0;
-
-                // walk forwards and backwards to the nearest diploid regions or end of the arm
-                for(int j = candidateRegionIndex - 1; j >= 0; --j)
+                if(nextRegion.support() == SegmentSupport.CENTROMERE
+                || nextRegion.germlineStatus() == DIPLOID && !isGermlineAmpDelCandidate(nextRegion))
                 {
-                    ObservedRegion nextRegion = observedRegions.get(j);
-
-                    if(nextRegion.support() == SegmentSupport.CENTROMERE
-                    || nextRegion.germlineStatus() == DIPLOID && !isGermlineAmpDelCandidate(nextRegion))
-                    {
-                        candidateRangeMin = nextRegion.end();
-                        break;
-                    }
-                    else if(nextRegion.support() == SegmentSupport.TELOMERE)
-                    {
-                        candidateRangeMin = nextRegion.start();
-                        candidateIndexMin = j;
-                        break;
-                    }
-
+                    candidateRangeMin = nextRegion.end();
+                    break;
+                }
+                else if(nextRegion.support() == SegmentSupport.TELOMERE)
+                {
+                    candidateRangeMin = nextRegion.start();
                     candidateIndexMin = j;
+                    break;
                 }
 
-                for(int j = candidateRegionIndex + 1; j < observedRegions.size(); ++j)
+                candidateIndexMin = j;
+            }
+
+            for(int j = candidateRegionIndex + 1; j < observedRegions.size(); ++j)
+            {
+                ObservedRegion nextRegion = observedRegions.get(j);
+
+                if(!nextRegion.chromosome().equals(candidateRegion.chromosome()))
                 {
-                    ObservedRegion nextRegion = observedRegions.get(j);
+                    // telomere segment status hasn't been set, so take the previous
+                    candidateIndexMax = j - 1;
+                    candidateRangeMax = observedRegions.get(candidateIndexMax).end();
 
-                    if(nextRegion.support() == SegmentSupport.CENTROMERE
-                    || nextRegion.germlineStatus() == DIPLOID && !isGermlineAmpDelCandidate(nextRegion))
-                    {
-                        candidateRangeMax = nextRegion.start();
-                        break;
-                    }
-                    else if(nextRegion.support() == SegmentSupport.TELOMERE)
-                    {
-                        candidateRangeMax = nextRegion.end();
-                        candidateIndexMax = j;
-                        break;
-                    }
+                    break;
+                }
 
+                if(nextRegion.support() == SegmentSupport.CENTROMERE
+                || nextRegion.germlineStatus() == DIPLOID && !isGermlineAmpDelCandidate(nextRegion))
+                {
+                    candidateRangeMax = nextRegion.start();
+                    break;
+                }
+                else if(nextRegion.support() == SegmentSupport.TELOMERE)
+                {
+                    candidateRangeMax = nextRegion.end();
                     candidateIndexMax = j;
+                    break;
                 }
 
-                if(candidateRangeMax - candidateRangeMin >= GERMLINE_DEL_MIN_LENGTH)
+                candidateIndexMax = j;
+            }
+
+            if(candidateRangeMax - candidateRangeMin >= GERMLINE_DEL_MIN_LENGTH)
+            {
+                PPL_LOGGER.info("germline event from region({}:{}-{}) normalRatio({}) range({}-{})",
+                        candidateRegion.chromosome(), candidateRegion.start(), candidateRegion.end(),
+                        format("%.2f unnorm=%.2f", candidateRegion.observedNormalRatio(),
+                                candidateRegion.unnormalisedObservedNormalRatio()),
+                        candidateRangeMin, candidateRangeMax);
+
+                // override the normalised ratio for all regions within these bounds
+                for(int j = candidateIndexMin; j <= candidateIndexMax; ++j)
                 {
-                    PPL_LOGGER.info("germline event from region({}:{}-{}) normalRatio({}) range({}-{})",
-                            candidateRegion.chromosome(), candidateRegion.start(), candidateRegion.end(),
-                            format("%.2f unnorm=%.2f", candidateRegion.observedNormalRatio(),
-                                    candidateRegion.unnormalisedObservedNormalRatio()),
-                            candidateRangeMin, candidateRangeMax);
+                    ObservedRegion region = observedRegions.get(j);
+                    region.setObservedNormalRatio(region.unnormalisedObservedNormalRatio());
 
-                    // override the normalised ratio for all regions within these bounds
-                    for(int j = candidateIndexMin; j <= candidateIndexMax; ++j)
+                    // recalc germline status
+                    if(region.germlineStatus() != EXCLUDED && region.germlineStatus() != CENTROMETIC)
                     {
-                        ObservedRegion region = observedRegions.get(j);
-                        region.setObservedNormalRatio(region.unnormalisedObservedNormalRatio());
+                        GermlineStatus newGermlineStatus = mStatusFactory.calcStatus(
+                                region.chromosome(), region.observedNormalRatio(), region.observedTumorRatio(), region.depthWindowCount());
 
-                        // recalc germline status
-                        if(region.germlineStatus() != EXCLUDED && region.germlineStatus() != CENTROMETIC)
-                        {
-                            GermlineStatus newGermlineStatus = mStatusFactory.calcStatus(
-                                    region.chromosome(), region.observedNormalRatio(), region.observedTumorRatio(), region.depthWindowCount());
-
-                            region.setGermlineStatus(newGermlineStatus);
-                        }
-
-                        processedCandidateIndices.add(j);
+                        region.setGermlineStatus(newGermlineStatus);
                     }
+
+                    processedCandidateIndices.add(j);
                 }
             }
         }

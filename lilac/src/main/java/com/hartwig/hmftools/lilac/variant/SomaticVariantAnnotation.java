@@ -5,11 +5,11 @@ import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.LilacConstants;
 import com.hartwig.hmftools.lilac.LociPosition;
@@ -19,15 +19,11 @@ import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
-import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFFileReader;
 
-import java.io.File;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class SomaticVariantAnnotation
@@ -39,7 +35,6 @@ public class SomaticVariantAnnotation
 
     private final List<SomaticVariant> mSomaticVariants;
 
-    private final Set<CodingEffect> UNKNOWN_CODING_EFFECT;
     private final Map<String,TranscriptData> mHlaTranscriptData;
 
     private final LociPosition mLociPositionFinder;
@@ -49,7 +44,6 @@ public class SomaticVariantAnnotation
     {
         mConfig = config;
         mHlaTranscriptData = transcriptData;
-        UNKNOWN_CODING_EFFECT = Sets.newHashSet(CodingEffect.NONE, CodingEffect.UNDEFINED);
 
         mGeneVariantLoci = Maps.newHashMap();
 
@@ -209,6 +203,10 @@ public class SomaticVariantAnnotation
             // check that the variant covers any exon
             if(transData.exons().stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x.Start, x.End)))
                 return true;
+
+            // otherwise any splice variant
+            if(variant.variantImpact() != null && variant.variantImpact().CanonicalCodingEffect == CodingEffect.SPLICE)
+                return true;
         }
 
         return false;
@@ -223,14 +221,10 @@ public class SomaticVariantAnnotation
 
         if(!mConfig.SomaticVariantsFile.isEmpty())
         {
-            VCFFileReader fileReader = new VCFFileReader(new File(mConfig.SomaticVariantsFile), false);
+            VcfFileReader vcfReader = new VcfFileReader(mConfig.SomaticVariantsFile);
 
-            final CloseableIterator<VariantContext> variantIter = fileReader.iterator();
-
-            while(variantIter.hasNext())
+            for(VariantContext variantContext : vcfReader.iterator())
             {
-                VariantContext variantContext = variantIter.next();
-
                 if(variantContext.isFiltered() && !variantContext.getFilters().contains(SomaticVariantFactory.PASS_FILTER))
                     continue;
 
@@ -245,10 +239,9 @@ public class SomaticVariantAnnotation
             }
 
             LL_LOGGER.info("loaded {} HLA variants from file: {}", variants.size(), mConfig.SomaticVariantsFile);
-            fileReader.close();
+            vcfReader.close();
         }
 
         return variants;
     }
-
 }

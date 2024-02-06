@@ -11,31 +11,33 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class RepeatContextFactory {
-
+public final class RepeatContextFactory
+{
     private static final int MIN_COUNT = 2;
     private static final int MAX_LENGTH = 10;
 
     private static final Logger LOGGER = LogManager.getLogger(RepeatContextFactory.class);
 
-    private RepeatContextFactory() {
-    }
-
     @NotNull
-    public static Optional<RepeatContext> repeats(int index, final byte[] readSequence) {
+    public static Optional<RepeatContext> repeats(int index, final byte[] readSequence)
+    {
         final List<RepeatContext> repeatContexts = Lists.newArrayList();
 
-        if (readSequence.length >= index) {
+        if(readSequence.length >= index)
+        {
 
-            for (int repeatStartIndex = Math.max(0, index - MAX_LENGTH); repeatStartIndex <= index; repeatStartIndex++) {
-                for (int repeatEndIndex = index;
-                        repeatEndIndex <= Math.min(readSequence.length, repeatStartIndex + MAX_LENGTH); repeatEndIndex++) {
+            for(int repeatStartIndex = Math.max(0, index - MAX_LENGTH); repeatStartIndex <= index; repeatStartIndex++)
+            {
+                for(int repeatEndIndex = index;
+                        repeatEndIndex <= Math.min(readSequence.length, repeatStartIndex + MAX_LENGTH); repeatEndIndex++)
+                {
 
                     int repeatLength = repeatEndIndex - repeatStartIndex + 1;
                     int forwardsCount = forwardRepeats(repeatStartIndex, repeatLength, readSequence);
                     int backwardsCount = backwardRepeats(repeatStartIndex, repeatLength, readSequence);
 
-                    if (forwardsCount + backwardsCount >= MIN_COUNT) {
+                    if(forwardsCount + backwardsCount >= MIN_COUNT)
+                    {
                         int startIndex = repeatStartIndex - backwardsCount * repeatLength;
                         int endIndex = repeatStartIndex + forwardsCount * repeatLength - 1;
                         int additionalBasesAtEnd = matchingBasesFromLeft(repeatStartIndex, repeatLength, endIndex + 1, readSequence);
@@ -50,7 +52,9 @@ public final class RepeatContextFactory {
                     }
                 }
             }
-        } else {
+        }
+        else
+        {
             LOGGER.warn("Repeats requested outside of sequence length");
         }
 
@@ -59,36 +63,47 @@ public final class RepeatContextFactory {
     }
 
     @NotNull
-    public static Optional<RepeatContext> repeats(int index, @NotNull final String sequence) {
+    public static Optional<RepeatContext> repeats(int index, @NotNull final String sequence)
+    {
         return repeats(index, sequence.getBytes());
     }
 
     @VisibleForTesting
-    static int forwardRepeats(int index, int repeatLength, final byte[] readSequence) {
-        for (int count = 1; ; count++) {
-            if (!match(index, repeatLength, index + count * repeatLength, readSequence)) {
+    static int forwardRepeats(int index, int repeatLength, final byte[] readSequence)
+    {
+        for(int count = 1; ; count++)
+        {
+            if(!match(index, repeatLength, index + count * repeatLength, readSequence))
+            {
                 return count;
             }
         }
     }
 
-    public static int backwardRepeats(int index, int repeatLength, final byte[] readSequence) {
-        for (int count = 1; ; count++) {
-            if (!match(index, repeatLength, index - count * repeatLength, readSequence)) {
+    public static int backwardRepeats(int index, int repeatLength, final byte[] readSequence)
+    {
+        for(int count = 1; ; count++)
+        {
+            if(!match(index, repeatLength, index - count * repeatLength, readSequence))
+            {
                 return count - 1;
             }
         }
     }
 
     @VisibleForTesting
-    static boolean match(int repeatIndex, int repeatLength, int readIndex, byte[] readSequence) {
+    static boolean match(int repeatIndex, int repeatLength, int readIndex, byte[] readSequence)
+    {
         return matchingBasesFromLeft(repeatIndex, repeatLength, readIndex, readSequence) == repeatLength;
     }
 
-    private static int matchingBasesFromLeft(int repeatIndex, int repeatLength, int readIndex, byte[] readSequence) {
-        for (int i = 0; i < repeatLength; i++) {
-            if (outOfBounds(repeatIndex + i, readSequence) || outOfBounds(readIndex + i, readSequence)
-                    || readSequence[repeatIndex + i] != readSequence[readIndex + i]) {
+    private static int matchingBasesFromLeft(int repeatIndex, int repeatLength, int readIndex, byte[] readSequence)
+    {
+        for(int i = 0; i < repeatLength; i++)
+        {
+            if(outOfBounds(repeatIndex + i, readSequence) || outOfBounds(readIndex + i, readSequence)
+                    || readSequence[repeatIndex + i] != readSequence[readIndex + i])
+            {
                 return i;
             }
         }
@@ -96,7 +111,8 @@ public final class RepeatContextFactory {
         return repeatLength;
     }
 
-    private static boolean outOfBounds(int index, byte[] sequence) {
+    private static boolean outOfBounds(int index, byte[] sequence)
+    {
         return index < 0 || index >= sequence.length;
     }
 }

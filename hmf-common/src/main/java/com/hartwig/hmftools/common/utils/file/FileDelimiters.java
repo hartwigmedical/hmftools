@@ -11,6 +11,8 @@ public final class FileDelimiters
 
     public static final String CSV_EXTENSION = ".csv";
     public static final String TSV_EXTENSION = ".tsv";
+    public static final String TSV_ZIP_EXTENSION = ".tsv.gz";
+    public static final String ZIP_EXTENSION = ".gz";
 
     public static String inferFileDelimiter(final String filename)
     {

@@ -12,36 +12,42 @@ import com.google.common.io.Resources;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class MetaDataResolverTest {
+public class MetaDataResolverTest
+{
 
     private static final String RESOURCE_DIR = Resources.getResource("context").getPath();
 
     @Test
-    public void noMetaDataReturnsNull() throws IOException {
+    public void noMetaDataReturnsNull() throws IOException
+    {
         String noMetaDataRunDir = RESOURCE_DIR + File.separator + "RunDirNoMetaData";
         assertNull(MetaDataResolver.fromMetaDataFile(noMetaDataRunDir, ""));
     }
 
     @Test
-    public void noRefSampleReturnsNull() throws IOException{
+    public void noRefSampleReturnsNull() throws IOException
+    {
         String noRefSampleRunDir = RESOURCE_DIR + File.separator + "RunDirNoRefSample";
         assertNull(MetaDataResolver.fromMetaDataFile(noRefSampleRunDir, ""));
     }
 
     @Test
-    public void noSetNameReturnsNull() throws IOException{
+    public void noSetNameReturnsNull() throws IOException
+    {
         String noSetNameRunDir = RESOURCE_DIR + File.separator + "RunDirNoSetName";
         assertNull(MetaDataResolver.fromMetaDataFile(noSetNameRunDir, ""));
     }
 
     @Test
-    public void canResolveMetaDataFilePV5() throws IOException{
+    public void canResolveMetaDataFilePV5() throws IOException
+    {
         String noSetNameRunDir = RESOURCE_DIR + File.separator + "RunDirP5";
         assertNotNull(MetaDataResolver.fromMetaDataFile(noSetNameRunDir, "pipeline.version"));
     }
 
     @Test
-    public void canResolveSomaticMetaDataP4() throws IOException{
+    public void canResolveSomaticMetaDataP4() throws IOException
+    {
         String setName = "RunDirSomatic";
         String runDirectory = RESOURCE_DIR + File.separator + setName;
         RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory, "");
@@ -55,7 +61,8 @@ public class MetaDataResolverTest {
     }
 
     @Test
-    public void canResolveSomaticMetaDataP5() throws IOException{
+    public void canResolveSomaticMetaDataP5() throws IOException
+    {
         String setName = "RunDirP5";
         String runDirectory = RESOURCE_DIR + File.separator + setName;
         RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory, "pipeline.version");
@@ -69,7 +76,8 @@ public class MetaDataResolverTest {
     }
 
     @Test
-    public void canResolveSomaticMetaDataPostP5_15() throws IOException{
+    public void canResolveSomaticMetaDataPostP5_15() throws IOException
+    {
         String setName = "RunDirPostP5_15";
         String runDirectory = RESOURCE_DIR + File.separator + setName;
         RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory, "pipeline.version");

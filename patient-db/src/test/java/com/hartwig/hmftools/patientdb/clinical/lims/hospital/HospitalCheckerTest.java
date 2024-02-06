@@ -10,12 +10,14 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class HospitalCheckerTest {
+public class HospitalCheckerTest
+{
 
     private static final String LIMS_DIRECTORY = Resources.getResource("lims").getPath();
 
     @Test
-    public void canCreateFromLimsDirectoryWithoutWarnings() throws IOException {
+    public void canCreateFromLimsDirectoryWithoutWarnings() throws IOException
+    {
         HospitalModel hospitalModel = HospitalModelFactory.fromLimsDirectory(LIMS_DIRECTORY);
         assertNotNull(hospitalModel);
 
@@ -23,7 +25,8 @@ public class HospitalCheckerTest {
     }
 
     @Test
-    public void canValidateIntegrityCorrectly() {
+    public void canValidateIntegrityCorrectly()
+    {
         HospitalModel emptyModel = ImmutableHospitalModel.builder().build();
         assertTrue(HospitalChecker.validateModelIntegrity(emptyModel));
 

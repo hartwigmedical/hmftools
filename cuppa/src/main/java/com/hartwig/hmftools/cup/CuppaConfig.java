@@ -47,11 +47,11 @@ import static com.hartwig.hmftools.common.cuppa.CategoryType.isDna;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.isRna;
 import static com.hartwig.hmftools.cup.common.CupConstants.DEFAULT_RNA_LENGTH;
 import static com.hartwig.hmftools.cup.common.CupConstants.FEATURE_DAMPEN_FACTOR_DEFAULT;
+import static com.hartwig.hmftools.cup.prep.PrepConfig.addPipelineDirectories;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.REF_COHORT_FEATURES_FILE;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.REF_COHORT_SAMPLE_TRAITS_FILE;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.REF_COHORT_SIG_CONTRIBS_FILE;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.REF_COHORT_SV_DATA_FILE;
-import static com.hartwig.hmftools.cup.ref.RefDataConfig.addPipelineDirectories;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
@@ -65,6 +65,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.file.CommonFields;
 import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.feature.FeatureClassifier;
 import com.hartwig.hmftools.cup.rna.AltSjClassifier;
@@ -184,8 +185,8 @@ public class CuppaConfig
     public static final Logger CUP_LOGGER = LogManager.getLogger(CuppaConfig.class);
 
     // file fields
-    public static final String FLD_SAMPLE_ID = "SampleId";
-    public static final String FLD_CANCER_TYPE = "CancerType";
+    public static final String FLD_SAMPLE_ID = CommonFields.FLD_SAMPLE_ID;
+    public static final String FLD_CANCER_TYPE = CommonFields.FLD_CANCER_TYPE;
     public static final String FLD_CANCER_SUBTYPE = "CancerSubtype";
     public static final String FLD_RNA_READ_LENGTH = "RnaReadLength";
     public static final String CANCER_SUBTYPE_OTHER = "Other";

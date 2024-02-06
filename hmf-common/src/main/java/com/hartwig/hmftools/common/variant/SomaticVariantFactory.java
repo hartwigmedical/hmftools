@@ -5,10 +5,10 @@ import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.KATAEGIS_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LIKELIHOOD;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS_DELIM;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
-
-import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
@@ -28,14 +29,11 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
-import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticVariantFactory implements VariantContextFilter
@@ -102,50 +100,49 @@ public class SomaticVariantFactory implements VariantContextFilter
             final String tumor, @Nullable final String reference, @Nullable final String rna,
             final String vcfFile, boolean useCheckReference, Consumer<SomaticVariant> consumer) throws IOException
     {
-        try(final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false))
+        VcfFileReader reader = new VcfFileReader(vcfFile);
+
+        final VCFHeader header = reader.vcfHeader();
+
+        if(!sampleInFile(tumor, header))
         {
-            final VCFHeader header = (VCFHeader) reader.getHeader();
+            throw new IllegalArgumentException("Sample " + tumor + " not found in vcf file " + vcfFile);
+        }
 
-            if(!sampleInFile(tumor, header))
-            {
-                throw new IllegalArgumentException("Sample " + tumor + " not found in vcf file " + vcfFile);
-            }
+        if(useCheckReference && reference != null && !sampleInFile(reference, header))
+        {
+            throw new IllegalArgumentException("Sample " + reference + " not found in vcf file " + vcfFile);
+        }
 
-            if(useCheckReference && reference != null && !sampleInFile(reference, header))
-            {
-                throw new IllegalArgumentException("Sample " + reference + " not found in vcf file " + vcfFile);
-            }
+        if(rna != null && !sampleInFile(rna, header))
+        {
+            throw new IllegalArgumentException("Sample " + rna + " not found in vcf file " + vcfFile);
+        }
 
-            if(rna != null && !sampleInFile(rna, header))
-            {
-                throw new IllegalArgumentException("Sample " + rna + " not found in vcf file " + vcfFile);
-            }
+        if(!header.hasFormatLine("AD"))
+        {
+            throw new IllegalArgumentException("Allelic depths is a required format field in vcf file " + vcfFile);
+        }
 
-            if(!header.hasFormatLine("AD"))
+        for(VariantContext variant : reader.iterator())
+        {
+            if(mFilter.test(variant))
             {
-                throw new IllegalArgumentException("Allelic depths is a required format field in vcf file " + vcfFile);
-            }
+                Optional<SomaticVariant> varOptional = createVariant(tumor, reference, rna, variant);
 
-            for(VariantContext variant : reader.iterator())
-            {
-                if(mFilter.test(variant))
+                if(varOptional.isPresent())
                 {
-                    Optional<SomaticVariant> varOptional = createVariant(tumor, reference, rna, variant);
-
-                    if(varOptional.isPresent())
-                    {
-                        varOptional.ifPresent(consumer);
-                        ++mCreatedCount;
-                    }
-                    else
-                    {
-                        ++mFilteredCount;
-                    }
+                    varOptional.ifPresent(consumer);
+                    ++mCreatedCount;
                 }
                 else
                 {
                     ++mFilteredCount;
                 }
+            }
+            else
+            {
+                ++mFilteredCount;
             }
         }
     }
@@ -155,8 +152,8 @@ public class SomaticVariantFactory implements VariantContextFilter
         return createVariant(sample, null, null, context);
     }
 
-    public Optional<SomaticVariant> createVariant(final String sample, @Nullable final String reference,
-            @Nullable final String rna, final VariantContext context)
+    public Optional<SomaticVariant> createVariant(
+            final String sample, @Nullable final String reference, @Nullable final String rna, final VariantContext context)
     {
         final Genotype genotype = context.getGenotype(sample);
 
@@ -196,6 +193,25 @@ public class SomaticVariantFactory implements VariantContextFilter
         final VariantContextDecorator decorator = new VariantContextDecorator(context);
         final VariantImpact variantImpact = decorator.variantImpact();
 
+        List<String> reportableTranscripts = null;
+
+        if(context.hasAttribute(REPORTABLE_TRANSCRIPTS))
+        {
+            String reportableTransStr = context.getAttributeAsString(REPORTABLE_TRANSCRIPTS, "");
+
+            reportableTranscripts = Arrays.stream(reportableTransStr.split("\\" + REPORTABLE_TRANSCRIPTS_DELIM, -1))
+                    .collect(Collectors.toList());
+        }
+
+        // to protect against changes in types, which aren't expected to impact downstream processing
+        GermlineStatus germlineStatus = GermlineStatus.UNKNOWN;
+
+        try
+        {
+            germlineStatus = GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, germlineStatus.toString()));
+        }
+        catch(Exception e) {}
+
         ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder()
                 .qual(decorator.qual())
                 .type(decorator.type())
@@ -227,10 +243,11 @@ public class SomaticVariantFactory implements VariantContextFilter
                 .canonicalHgvsProteinImpact(variantImpact.CanonicalHgvsProtein)
                 .spliceRegion(variantImpact.CanonicalSpliceRegion)
                 .otherReportedEffects(variantImpact.OtherReportableEffects)
+                .reportableTranscripts(reportableTranscripts)
                 .worstCodingEffect(variantImpact.WorstCodingEffect)
                 .genesAffected(variantImpact.GenesAffected)
                 .subclonalLikelihood(context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
-                .germlineStatus(GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, "UNKNOWN")))
+                .germlineStatus(germlineStatus)
                 .kataegis(context.getAttributeAsString(KATAEGIS_FLAG, Strings.EMPTY))
                 .recovered(context.getAttributeAsBoolean(RECOVERED_FLAG, false))
                 .clinvarInfo(context.getAttributeAsString(CLNSIG, ""))

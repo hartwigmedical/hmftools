@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
+
 import java.util.List;
 
 import org.apache.commons.compress.utils.Lists;
@@ -72,6 +74,11 @@ public class SomaticGenotypeEnrichment
         updatedGenotypes.add(tumorGenotype);
 
         VariantContextBuilder builder = new VariantContextBuilder(origContext).genotypes(updatedGenotypes);
+
+        // remove any fields set by Pave (in regression testing only)
+        if(variant.context().hasAttribute(REPORTED_FLAG))
+            builder.rmAttribute(REPORTED_FLAG);
+
         VariantContext newContext = builder.make();
         variant.setContext(newContext);
     }

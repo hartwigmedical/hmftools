@@ -13,12 +13,14 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class XMLEcrfDatamodelReaderTest {
+public class XMLEcrfDatamodelReaderTest
+{
 
     private static final String DATAMODEL_TEST = Resources.getResource("ecrf/datamodel_example.xml").getPath();
 
     @Test
-    public void canExtractDatamodelFromEcrf() throws FileNotFoundException, XMLStreamException {
+    public void canExtractDatamodelFromEcrf() throws FileNotFoundException, XMLStreamException
+    {
         XMLInputFactory factory = XMLInputFactory.newInstance();
         XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(DATAMODEL_TEST));
         XMLEcrfDatamodel datamodel = XMLEcrfDatamodelReader.readXMLDatamodel(reader);

@@ -26,6 +26,7 @@ import static com.hartwig.hmftools.cup.common.CupConstants.GENE_EXP_CSS_THRESHOL
 import static com.hartwig.hmftools.common.cuppa.ResultType.CLASSIFIER;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
+import static com.hartwig.hmftools.cup.rna.AltSpliceJunctionPrep.loadRefAltSjIndices;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_END;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_START;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.loadSampleAltSjMatrixData;
@@ -133,7 +134,6 @@ public class AltSjClassifier implements CuppaClassifier
         {
             int sampleCount = mSampleDataCache.SampleDataList.size();
             mSampleFragCounts = new short[sampleCount][mRefCancerTypeMatrix.Cols];
-
 
             for(int i = 0; i < mSampleDataCache.SampleDataList.size(); ++i)
             {
@@ -321,7 +321,7 @@ public class AltSjClassifier implements CuppaClassifier
     {
         final List<String> ignoreFields = Lists.newArrayList(FLD_GENE_ID, FLD_CHROMOSOME, FLD_POS_START, FLD_POS_END);
 
-        if(!loadRefAltSjIndices(mConfig.RefAltSjCancerFile))
+        if(!loadRefAltSjIndices(mConfig.RefAltSjCancerFile, mRefAsjIndexMap))
             return;
 
         mRefCancerTypeMatrix = loadMatrixDataFile(mConfig.RefAltSjCancerFile, mRefCancerTypes, ignoreFields, true);
@@ -356,6 +356,7 @@ public class AltSjClassifier implements CuppaClassifier
         }
     }
 
+    /*
     private boolean loadRefAltSjIndices(final String filename)
     {
         try
@@ -393,6 +394,7 @@ public class AltSjClassifier implements CuppaClassifier
 
         return true;
     }
+    */
 
     private boolean loadSampleAltSJs(final String sampleId, int sampleIndex)
     {

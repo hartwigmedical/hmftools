@@ -1,18 +1,14 @@
 package com.hartwig.hmftools.gripss.common;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.HOTSPOT;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IHOMPOS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.IMPRECISE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.LOCAL_LINKED_BY;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PAR_ID;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_COUNT;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPAIR_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REMOTE_LINKED_BY;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.TAF;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SGL_FRAGMENT_COUNT;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMENT_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEID;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEIDL;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_AS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BASRP;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BASSR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BSC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_CAS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_RAS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 
 import java.util.List;
@@ -26,57 +22,6 @@ public class VcfUtils
 {
     // VCF fields used by Gripss
 
-    // qual-related
-    public static final String VT_QUAL = "QUAL";
-    public static final String VT_BQ = "BQ";
-    public static final String VT_BAQ = "BAQ";
-    public static final String VT_SRQ = "SRQ";
-    public static final String VT_RPQ = "RPQ";
-    public static final String VT_BUMQ = "BUMQ";
-
-    // read counts
-    public static final String VT_SR = "SR";
-    public static final String VT_VF = SV_FRAGMENT_COUNT;
-    public static final String VT_BVF = SGL_FRAGMENT_COUNT;
-    public static final String VT_RP = "RP";
-    public static final String VT_IC = "IC";
-    public static final String VT_REF = REF_READ_COVERAGE;
-    public static final String VT_REFPAIR = REF_READPAIR_COVERAGE;
-    public static final String VT_BUM = "BUM";
-    public static final String VT_ASRP = "ASRP";
-    public static final String VT_ASSR = "ASSR";
-    public static final String VT_BASRP = "BASRP";
-    public static final String VT_BASSR = "BASSR";
-
-    // other links and info
-    public static final String VT_BEID = "BEID";
-    public static final String VT_BEIDL = "BEIDL";
-    public static final String VT_HOMSEQ = "HOMSEQ";
-    public static final String VT_IHOMPOS = IHOMPOS;
-
-    public static final String VT_PAR_ID = PAR_ID;
-
-    public static final String VT_AS = "AS";
-    public static final String VT_CAS = "CAS";
-    public static final String VT_RAS = "RAS";
-
-    public static final String VT_EVENT = "EVENT";
-    public static final String VT_SB = "SB";
-    public static final String VT_BSC = "BSC";
-    public static final String VT_CIPOS = CIPOS;
-    public static final String VT_CIRPOS = "CIRPOS";
-    public static final String VT_IMPRECISE = IMPRECISE;
-
-    public static final String VT_LOCAL_LINKED_BY = LOCAL_LINKED_BY;
-    public static final String VT_REMOTE_LINKED_BY = REMOTE_LINKED_BY;
-    public static final String VT_PON_COUNT = PON_COUNT;
-    public static final String VT_TAF = TAF;
-    public static final String VT_HOTSPOT = HOTSPOT;
-    public static final String VT_REALIGN = "REALIGN";
-    public static final String VT_EVENT_TYPE = "EVENTTYPE";
-    public static final String VT_ALT_PATH = "ALT_PATH";
-    public static final String VT_RESCUE_INFO = "RESCUED";
-
     public static final Interval confidenceInterval(final VariantContext variantContext, final String attribute)
     {
         if(!variantContext.hasAttribute(attribute))
@@ -88,10 +33,10 @@ public class VcfUtils
 
     public static int sglFragmentCount(final Genotype genotype)
     {
-        int bsc = getGenotypeAttributeAsInt(genotype, VT_BSC, 0);
-        int basrp = getGenotypeAttributeAsInt(genotype, VT_BASRP, 0);
-        int bassr = getGenotypeAttributeAsInt(genotype, VT_BASSR, 0);
-        int bvf = getGenotypeAttributeAsInt(genotype, VT_BVF, 0);
+        int bsc = getGenotypeAttributeAsInt(genotype, GRIDSS_BSC, 0);
+        int basrp = getGenotypeAttributeAsInt(genotype, GRIDSS_BASRP, 0);
+        int bassr = getGenotypeAttributeAsInt(genotype, GRIDSS_BASSR, 0);
+        int bvf = getGenotypeAttributeAsInt(genotype, SGL_FRAG_COUNT, 0);
 
         if(bsc == 0 && basrp == 0 && bassr == 0)
             return 0;
@@ -103,14 +48,14 @@ public class VcfUtils
     {
         List<String> assemblies = Lists.newArrayList();
 
-        int assemblyCount = variantContext.getAttributeAsInt(VT_AS, 0)
-                + variantContext.getAttributeAsInt(VT_RAS, 0)
-                + variantContext.getAttributeAsInt(VT_CAS, 0);
+        int assemblyCount = variantContext.getAttributeAsInt(GRIDSS_AS, 0)
+                + variantContext.getAttributeAsInt(GRIDSS_RAS, 0)
+                + variantContext.getAttributeAsInt(GRIDSS_CAS, 0);
 
-        if(assemblyCount >= 2 && variantContext.hasAttribute(VT_BEID) && variantContext.hasAttribute(VT_BEIDL))
+        if(assemblyCount >= 2 && variantContext.hasAttribute(BEID) && variantContext.hasAttribute(BEIDL))
         {
-            List<String> beids = variantContext.getAttributeAsStringList(VT_BEID, "");
-            List<String> beidls = variantContext.getAttributeAsStringList(VT_BEIDL, "");
+            List<String> beids = variantContext.getAttributeAsStringList(BEID, "");
+            List<String> beidls = variantContext.getAttributeAsStringList(BEIDL, "");
 
             if(beidls.size() == beids.size())
             {

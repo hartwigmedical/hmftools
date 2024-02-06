@@ -1,6 +1,7 @@
 {
   "sampleId": "TEST",
-  "experimentDate": {
+  "experimentType": "WHOLE_GENOME",
+  "samplingDate": {
     "year": 2022,
     "month": 1,
     "day": 20
@@ -50,8 +51,6 @@
         "amberMeanDepth": 111
       },
       "fittedPurityMethod": "NORMAL",
-      "hasSufficientQuality": true,
-      "containsTumorCells": false,
       "purity": 0.12,
       "minPurity": 0.97,
       "maxPurity": 1.0,
@@ -73,7 +72,7 @@
       {
         "gene": "SF3B1",
         "transcript": "ENST00000335508",
-        "driver": "MUTATION",
+        "type": "MUTATION",
         "driverLikelihood": 0.2,
         "likelihoodMethod": "HOTSPOT",
         "isCanonical": false
@@ -81,7 +80,7 @@
       {
         "gene": "SMAD4",
         "transcript": "ENST00000342988",
-        "driver": "DEL",
+        "type": "DEL",
         "driverLikelihood": 1.0,
         "likelihoodMethod": "HOTSPOT",
         "isCanonical": false
@@ -91,7 +90,7 @@
       {
         "gene": "BRCA1",
         "transcript": "ENST00000471181",
-        "driver": "GERMLINE_MUTATION",
+        "type": "GERMLINE_MUTATION",
         "driverLikelihood": 0.8,
         "likelihoodMethod": "HOTSPOT",
         "isCanonical": false
@@ -114,7 +113,7 @@
           "hgvsProteinImpact": "p.Pro718Leu",
           "affectedCodon": 2153,
           "affectedExon": 12,
-          "spliceRegion": false,
+          "inSpliceRegion": false,
           "effects": [
             "MISSENSE"
           ],
@@ -153,7 +152,7 @@
           "hgvsProteinImpact": "p.Pro718Leu",
           "affectedCodon": 2153,
           "affectedExon": 12,
-          "spliceRegion": false,
+          "inSpliceRegion": false,
           "effects": [
             "MISSENSE"
           ],
@@ -192,7 +191,7 @@
           "hgvsProteinImpact": "p.?",
           "affectedCodon": null,
           "affectedExon": null,
-          "spliceRegion": true,
+          "inSpliceRegion": true,
           "effects": [
             "SPLICE_DONOR",
             "INTRONIC"
@@ -235,7 +234,7 @@
           "hgvsProteinImpact": "p.?",
           "affectedCodon": null,
           "affectedExon": null,
-          "spliceRegion": true,
+          "inSpliceRegion": true,
           "effects": [
             "SPLICE_DONOR",
             "INTRONIC"
@@ -271,7 +270,7 @@
     ],
     "allSomaticGeneCopyNumbers": [
       {
-        "geneName": "gene",
+        "gene": "gene",
         "chromosome": "12",
         "chromosomeBand": "p13",
         "minCopyNumber": 1.2,
@@ -304,7 +303,7 @@
     ],
     "suspectGeneCopyNumbersWithLOH": [
       {
-        "geneName": "gene",
+        "gene": "gene",
         "chromosome": "12",
         "chromosomeBand": "p13",
         "minCopyNumber": 1.2,
@@ -340,7 +339,7 @@
       {
         "reported": true,
         "reportedType": "KNOWN_PAIR",
-        "likelihood": "HIGH",
+        "driverLikelihood": "HIGH",
         "fusedExonUp": 1,
         "fusedExonDown": 2,
         "name": "TMPRSS2-ETV4",
@@ -362,7 +361,7 @@
       {
         "reported": true,
         "reportedType": "KNOWN_PAIR",
-        "likelihood": "HIGH",
+        "driverLikelihood": "HIGH",
         "fusedExonUp": 1,
         "fusedExonDown": 2,
         "name": "TMPRSS2-ETV4",
@@ -382,15 +381,15 @@
     ],
     "allSomaticBreakends": [
       {
-        "reportedDisruption": false,
+        "reported": false,
         "disruptive": false,
         "id": 0,
         "svId": 1,
         "gene": "NF1",
         "chromosome": "1",
-        "chrBand": "p12",
-        "transcriptId": "trans",
-        "canonical": true,
+        "chromosomeBand": "p12",
+        "transcript": "trans",
+        "isCanonical": true,
         "type": "DUP",
         "junctionCopyNumber": 1.1,
         "undisruptedCopyNumber": 1.0,
@@ -406,15 +405,15 @@
     ],
     "reportableSomaticBreakends": [
       {
-        "reportedDisruption": false,
+        "reported": false,
         "disruptive": false,
         "id": 0,
         "svId": 1,
         "gene": "NF1",
         "chromosome": "1",
-        "chrBand": "p12",
-        "transcriptId": "trans",
-        "canonical": true,
+        "chromosomeBand": "p12",
+        "transcript": "trans",
+        "isCanonical": true,
         "type": "DUP",
         "junctionCopyNumber": 1.1,
         "undisruptedCopyNumber": 1.0,
@@ -439,15 +438,15 @@
     ],
     "additionalSuspectSomaticBreakends": [
       {
-        "reportedDisruption": false,
+        "reported": false,
         "disruptive": false,
         "id": 0,
         "svId": 1,
         "gene": "NF1",
         "chromosome": "1",
-        "chrBand": "p12",
-        "transcriptId": "trans",
-        "canonical": true,
+        "chromosomeBand": "p12",
+        "transcript": "trans",
+        "isCanonical": true,
         "type": "DUP",
         "junctionCopyNumber": 1.1,
         "undisruptedCopyNumber": 1.0,
@@ -471,7 +470,7 @@
         "integrations": 1,
         "interpretation": "HPV",
         "reported": true,
-        "virusDriverLikelihoodType": "HIGH",
+        "driverLikelihood": "HIGH",
         "percentageCovered": 0.9,
         "meanCoverage": 0
       },
@@ -481,7 +480,7 @@
         "integrations": 0,
         "interpretation": null,
         "reported": false,
-        "virusDriverLikelihoodType": "LOW",
+        "driverLikelihood": "LOW",
         "percentageCovered": 0.4,
         "meanCoverage": 0
       }
@@ -493,7 +492,7 @@
         "integrations": 1,
         "interpretation": "HPV",
         "reported": true,
-        "virusDriverLikelihoodType": "HIGH",
+        "driverLikelihood": "HIGH",
         "percentageCovered": 0.9,
         "meanCoverage": 0
       }
@@ -518,6 +517,15 @@
     }
   ],
   "cuppa": {
+    "bestPrediction": {
+      "cancerType": "Melanoma",
+      "likelihood": 0.996,
+      "snvPairwiseClassifier": 0.979,
+      "genomicPositionClassifier": 0.990,
+      "featureClassifier": 0.972,
+      "altSjCohortClassifier": null,
+      "expressionPairwiseClassifier": null
+    },
     "predictions": [
       {
         "cancerType": "Melanoma",
@@ -558,6 +566,7 @@
     "purpleClonalityPlot": "",
     "purpleCopyNumberPlot": "",
     "purpleVariantCopyNumberPlot": "",
-    "purplePurityRangePlot": ""
+    "purplePurityRangePlot": "",
+    "purpleKataegisPlot": ""
   }
 }

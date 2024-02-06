@@ -9,10 +9,10 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
-import com.hartwig.hmftools.common.isofox.GeneExpressionDistributionData;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 public class ExpressionSelectorTest
@@ -38,7 +38,7 @@ public class ExpressionSelectorTest
     @Test
     public void shouldSelectHighExpressionGeneWithoutCohort()
     {
-        GeneExpression highExpressionGene = create("gene 1", GeneExpressionDistributionData.NOT_AVAILABLE, 0.95);
+        GeneExpression highExpressionGene = create("gene 1", 0.95, null);
         DriverGene driver = DriverGeneTestFactory.builder().gene("gene 1").likelihoodType(DriverCategory.ONCO).build();
 
         List<GeneExpression> highExpression = ExpressionSelector.selectHighExpressionGenes(List.of(highExpressionGene), List.of(driver));
@@ -68,7 +68,7 @@ public class ExpressionSelectorTest
     @Test
     public void shouldSelectLowExpressionGenesWithoutCohort()
     {
-        GeneExpression lowExpressionGene = create("gene 2", GeneExpressionDistributionData.NOT_AVAILABLE, 0.02);
+        GeneExpression lowExpressionGene = create("gene 2", 0.02, null);
         DriverGene driver = DriverGeneTestFactory.builder().gene("gene 2").likelihoodType(DriverCategory.TSG).build();
 
         List<GeneExpression> lowExpression = ExpressionSelector.selectLowExpressionGenes(List.of(lowExpressionGene), List.of(driver));
@@ -78,10 +78,10 @@ public class ExpressionSelectorTest
     }
 
     @NotNull
-    private static GeneExpression create(@NotNull String gene, double percentileCohort, double percentileCancer)
+    private static GeneExpression create(@NotNull String gene, double percentileCohort, @Nullable Double percentileCancer)
     {
         return OrangeIsofoxTestFactory.geneExpressionBuilder()
-                .geneName(gene)
+                .gene(gene)
                 .percentileCohort(percentileCohort)
                 .percentileCancer(percentileCancer)
                 .build();

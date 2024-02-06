@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.cider.layout.ReadLayout
+import htsjdk.samtools.util.SequenceUtil.N
 import org.apache.logging.log4j.LogManager
 
 object VdjBuilderUtils
@@ -74,7 +75,7 @@ object VdjBuilderUtils
     // ----------------++++++++++++++++++++++         j layout
     //                 |--- overlap (<0) ---|
     //
-    fun findSequenceOverlap(seq1: String, seq2: String, minOverlappedBases: Int) : SequenceOverlap?
+    fun findSequenceOverlap(seq1: ByteArray, seq2: ByteArray, minOverlappedBases: Int) : SequenceOverlap?
     {
         var highQualMatchBases: Int
 
@@ -86,11 +87,11 @@ object VdjBuilderUtils
         //  seq1   ==================
         //  seq2            ==================
         //  -i     |--------|
-        for (i in -(seq1.length - minOverlappedBases) until (seq2.length - minOverlappedBases))
+        for (i in -(seq1.size - minOverlappedBases) until (seq2.size - minOverlappedBases))
         {
             var seqMatch = true
             highQualMatchBases = 0
-            val overlapSize = if (i > 0) Math.min(seq2.length - i, seq1.length) else Math.min(seq1.length + i, seq2.length)
+            val overlapSize = if (i > 0) Math.min(seq2.size - i, seq1.size) else Math.min(seq1.size + i, seq2.size)
 
             // check for overlap
             for (j in 0 until overlapSize)
@@ -112,7 +113,7 @@ object VdjBuilderUtils
                 val vBase = seq1[seq1Index]
                 val jBase = seq2[seq2Index]
 
-                val bothHighQual = (vBase != 'N' && jBase != 'N')
+                val bothHighQual = (vBase != N && jBase != N)
 
                 if (bothHighQual)
                 {
@@ -143,7 +144,7 @@ object VdjBuilderUtils
 
     // TODO write unit test
     fun vdjSequenceCompare(vdj1: VDJSequence, vdj2: VDJSequence,
-                                   diffAccumulator: (Map.Entry<Char, Int>, Map.Entry<Char, Int>) -> Boolean) : Boolean
+                                   diffAccumulator: (Map.Entry<Byte, Int>, Map.Entry<Byte, Int>) -> Boolean) : Boolean
     {
         require((vdj1.vAnchor != null) == (vdj2.vAnchor != null))
         require((vdj1.jAnchor != null) == (vdj2.jAnchor != null))
@@ -356,7 +357,7 @@ object VdjBuilderUtils
             mergedLayout.alignedPosition, vdjPrimary.layout.alignedPosition)
 
         sLogger.trace("layout: {}, aligned pos: {}, layout slice: {}-{}, v: {}, j: {}",
-            mergedLayout.consensusSequence(), mergedLayout.alignedPosition, layoutSliceStart, layoutSliceEnd,
+            mergedLayout.consensusSequenceString(), mergedLayout.alignedPosition, layoutSliceStart, layoutSliceEnd,
             vAnchor?.anchorBoundary, jAnchor?.anchorBoundary)
 
         val combinedVDJ = VDJSequence(mergedLayout, layoutSliceStart, layoutSliceEnd, vAnchor, jAnchor)

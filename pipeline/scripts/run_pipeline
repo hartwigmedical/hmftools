@@ -197,7 +197,7 @@ ${scripts_dir}/run_amber ${amber_jar} \
   ${tumor_id} ${tumor_bam} ${reference_id} ${reference_bam} \
   ${amber_dir} \
   ${run_mode} ${ref_genome_version} ${ref_genome} \
-  ${amber_loci_vcf} ${threads} ${max_memory} \
+  ${amber_loci_vcf} ${target_regions_definition} ${threads} ${max_memory} \
 
 
 # Cobalt
@@ -243,6 +243,7 @@ ${scripts_dir}/run_pave_somatic ${pave_jar} \
   ${sage_vcf} ${pave_somatic_dir} ${pave_vcf} \
   ${run_mode} ${ref_genome_version} ${ref_genome} \
   ${ensembl_dir} ${driver_gene_panel} ${somatic_pon_file} ${pon_artefact_file} ${mappability_bed} ${gnomad_path} \
+  ${threads} ${max_memory} \
 
 
 # Sage germline
@@ -267,7 +268,9 @@ if [ "${reference_id}" != "none" ]; then
     ${tumor_id}  \
     ${sage_germline_vcf} ${pave_germline_dir} ${pave_germline_vcf} \
     ${ref_genome_version} ${ref_genome} \
-    ${ensembl_dir} ${driver_gene_panel} ${mappability_bed} ${clinvar_vcf} ${germline_blacklist_bed} ${germline_blacklist_vcf} ${gnomad_path}
+    ${ensembl_dir} ${driver_gene_panel} ${mappability_bed} ${clinvar_vcf} \
+    ${germline_blacklist_bed} ${germline_blacklist_vcf} ${gnomad_path} \
+    ${threads} ${max_memory} \
 fi
 
 

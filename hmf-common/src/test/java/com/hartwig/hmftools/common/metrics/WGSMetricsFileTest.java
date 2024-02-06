@@ -9,8 +9,8 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class WGSMetricsFileTest {
-
+public class WGSMetricsFileTest
+{
     private static final String METRICS_DIRECTORY = Resources.getResource("metrics").getPath();
     private static final double EPSILON = 1.0E-10;
 
@@ -22,7 +22,8 @@ public class WGSMetricsFileTest {
     private static final String NON_EXISTING_FILE = WGSMetricsFile.generateFilename(METRICS_DIRECTORY, "sample.non-existing");
 
     @Test
-    public void worksForPv4Input() throws IOException {
+    public void worksForPv4Input() throws IOException
+    {
         WGSMetrics metrics = WGSMetricsFile.read(PV4_FILE);
 
         assertEquals(0.000856, metrics.meanCoverage(), EPSILON);
@@ -47,7 +48,8 @@ public class WGSMetricsFileTest {
     }
 
     @Test
-    public void worksForPv5Input() throws IOException {
+    public void worksForPv5Input() throws IOException
+    {
         WGSMetrics metrics = WGSMetricsFile.read(PV5_FILE);
 
         assertEquals(31.440964, metrics.meanCoverage(), EPSILON);
@@ -72,17 +74,20 @@ public class WGSMetricsFileTest {
     }
 
     @Test(expected = IOException.class)
-    public void emptyFileYieldsIOException() throws IOException {
+    public void emptyFileYieldsIOException() throws IOException
+    {
         WGSMetricsFile.read(EMPTY_FILE);
     }
 
     @Test(expected = IOException.class)
-    public void nonExistingFileYieldsIOException() throws IOException {
+    public void nonExistingFileYieldsIOException() throws IOException
+    {
         WGSMetricsFile.read(NON_EXISTING_FILE);
     }
 
     @Test(expected = IOException.class)
-    public void incorrectRefFileYieldsIOException() throws IOException {
+    public void incorrectRefFileYieldsIOException() throws IOException
+    {
         WGSMetricsFile.read(INCORRECT_FILE);
     }
 }

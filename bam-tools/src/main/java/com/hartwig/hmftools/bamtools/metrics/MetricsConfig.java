@@ -1,16 +1,28 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE_DESC;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTITION_SIZE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.addCommonCommandOptions;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.REGIONS_FILE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.checkFileExists;
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.loadSpecificRegionsConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.from;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegions;
+import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.samtools.BamUtils.deriveRefGenomeVersion;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
@@ -20,7 +32,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.mergeChrBaseRegionOverlaps;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -28,13 +39,17 @@ import java.io.InputStreamReader;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.bamtools.common.CommonUtils;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.bed.BedFileReader;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -53,6 +68,9 @@ public class MetricsConfig
 
     public final List<ChrBaseRegion> UnmappableRegions;
 
+    public final Map<String,List<BaseRegion>> TargetRegions;
+    public final boolean OnlyTargetRegions;
+
     // metrics capture config
     public final boolean ExcludeZeroCoverage;
     public final boolean WriteOldStyle;
@@ -62,10 +80,10 @@ public class MetricsConfig
 
     public final int Threads;
 
+    public final SpecificRegions SpecificChrRegions;
+
     // debug
-    public final List<String> SpecificChromosomes;
     public final List<String> LogReadIds;
-    public final List<ChrBaseRegion> SpecificRegions;
     public final boolean PerfDebug;
 
     private boolean mIsValid;
@@ -75,6 +93,7 @@ public class MetricsConfig
     private static final String MAX_COVERAGE = "max_coverage";
     private static final String EXCLUDE_ZERO_COVERAGE = "exclude_zero_coverage";
     private static final String WRITE_OLD_STYLE = "write_old_style";
+    private static final String ONLY_TARGET = "only_target";
 
     private static final int DEFAULT_MAP_QUAL_THRESHOLD = 20;
     private static final int DEFAULT_BASE_QUAL_THRESHOLD = 10;
@@ -106,8 +125,7 @@ public class MetricsConfig
             mIsValid = false;
         }
 
-        RefGenVersion = RefGenomeVersion.from(configBuilder);
-
+        RefGenVersion = configBuilder.hasValue(REF_GENOME_VERSION) ? from(configBuilder) : deriveRefGenomeVersion(BamFile);
         BT_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         BT_LOGGER.info("output({})", OutputDir);
 
@@ -119,18 +137,15 @@ public class MetricsConfig
         ExcludeZeroCoverage = configBuilder.hasFlag(EXCLUDE_ZERO_COVERAGE);
         WriteOldStyle = configBuilder.hasFlag(WRITE_OLD_STYLE);
 
+        TargetRegions = loadChrBaseRegions(configBuilder.getValue(REGIONS_FILE));
+        OnlyTargetRegions = !TargetRegions.isEmpty() && configBuilder.hasFlag(ONLY_TARGET);
+
         UnmappableRegions = Lists.newArrayList();
         loadUnmappableRegions();
 
-        SpecificChromosomes = Lists.newArrayList();
-        SpecificRegions = Lists.newArrayList();
+        SpecificChrRegions = SpecificRegions.from(configBuilder);
 
-        mIsValid &= loadSpecificRegionsConfig(configBuilder, SpecificChromosomes, SpecificRegions);
-
-        if(mIsValid && !SpecificRegions.isEmpty())
-        {
-            mergeChrBaseRegionOverlaps(SpecificRegions, true);
-        }
+        mIsValid &= SpecificChrRegions != null;
 
         LogReadIds = parseLogReadIds(configBuilder);
 
@@ -168,21 +183,42 @@ public class MetricsConfig
 
     public String formFilename(final String fileType)
     {
-        return CommonUtils.formFilename(SampleId, BamFile, OutputDir, OutputId, fileType);
+        String filename = OutputDir + SampleId + BamMetricsSummary.BAM_METRICS_FILE_ID;
+
+        filename += "." + fileType;
+
+        if(OutputId != null)
+            filename += "." + OutputId;
+
+        return filename + TSV_EXTENSION;
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        addCommonCommandOptions(configBuilder);
+        addRefGenomeFile(configBuilder, true);
+        addRefGenomeVersion(configBuilder);
+
+        addSpecificChromosomesRegionsConfig(configBuilder);
+        configBuilder.addPath(BAM_FILE, true, BAM_FILE_DESC);
+        configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
+
+        configBuilder.addPath(
+                REGIONS_FILE, false,
+                "TSV or BED file with regions to analyse, expected columns Chromosome,PositionStart,PositionEnd or no headers");
 
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
         configBuilder.addInteger(MAP_QUAL_THRESHOLD, "Map quality threshold", DEFAULT_MAP_QUAL_THRESHOLD);
         configBuilder.addInteger(BASE_QUAL_THRESHOLD, "Base quality threshold", DEFAULT_BASE_QUAL_THRESHOLD);
         configBuilder.addInteger(MAX_COVERAGE, "Max coverage", DEFAULT_MAX_COVERAGE);
+        configBuilder.addFlag(ONLY_TARGET, "Only capture metrics within the specific regions file");
         configBuilder.addFlag(EXCLUDE_ZERO_COVERAGE, "Exclude bases with zero coverage");
         configBuilder.addFlag(WRITE_OLD_STYLE, "Write data in same format as Picard CollectWgsMetrics");
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
+
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
+        addThreadOptions(configBuilder);
     }
 
     @VisibleForTesting
@@ -204,10 +240,11 @@ public class MetricsConfig
         ExcludeZeroCoverage = false;
         WriteOldStyle = false;
 
-        SpecificChromosomes = Collections.emptyList();
-        SpecificRegions = Collections.emptyList();
+        SpecificChrRegions = new SpecificRegions();
         LogReadIds = Collections.emptyList();
         UnmappableRegions = Collections.emptyList();
+        TargetRegions = Maps.newHashMap();
+        OnlyTargetRegions = false;
 
         Threads = 0;
         PerfDebug = false;

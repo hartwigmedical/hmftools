@@ -17,7 +17,7 @@ public final class TestPurpleGeneCopyNumberFactory
         return ImmutablePurpleGeneCopyNumber.builder()
                 .chromosome(Strings.EMPTY)
                 .chromosomeBand(Strings.EMPTY)
-                .geneName(Strings.EMPTY)
+                .gene(Strings.EMPTY)
                 .minCopyNumber(0)
                 .minMinorAlleleCopyNumber(0);
     }

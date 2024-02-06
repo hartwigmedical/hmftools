@@ -26,17 +26,17 @@ public class CobaltUtils
             Table input)
     {
         Multimap<com.hartwig.hmftools.common.genome.chromosome.Chromosome, ReadRatio> output = ArrayListMultimap.create();
-        for (String c : input.stringColumn("chromosome").unique())
+        for (String c : input.stringColumn(CobaltColumns.CHROMOSOME).unique())
         {
-            if (HumanChromosome.contains(c))
+            if(HumanChromosome.contains(c))
             {
-                Table inputFiltered = input.where(input.stringColumn("chromosome").isEqualTo(c));
+                Table inputFiltered = input.where(input.stringColumn(CobaltColumns.CHROMOSOME).isEqualTo(c));
 
                 List<ReadRatio> ratios = inputFiltered.stream().map(
                         r -> ImmutableReadRatio.builder()
                             .chromosome(c)
-                            .position(r.getInt("position"))
-                            .ratio(r.getDouble("ratio"))
+                            .position(r.getInt(CobaltColumns.POSITION))
+                            .ratio(r.getDouble(CobaltColumns.RATIO))
                             .build()).collect(Collectors.toList());
 
                 output.putAll(HumanChromosome.fromString(c), ratios);
@@ -50,11 +50,14 @@ public class CobaltUtils
         return ImmutableCobaltRatio.builder()
                 .chromosome(chromosomePosCodec.decodeChromosome(row.getLong(CobaltColumns.ENCODED_CHROMOSOME_POS)))
                 .position(chromosomePosCodec.decodePosition(row.getLong(CobaltColumns.ENCODED_CHROMOSOME_POS)))
-                .referenceReadCount(row.getInt("referenceReadCount"))
-                .tumorReadCount(row.getInt("tumorReadCount"))
+                .referenceReadDepth(row.getDouble(CobaltColumns.REFERENCE_READ_DEPTH))
+                .tumorReadDepth(row.getDouble(CobaltColumns.TUMOR_READ_DEPTH))
                 .referenceGCRatio(row.getDouble("referenceGCRatio"))
                 .tumorGCRatio(row.getDouble("tumorGCRatio"))
-                .referenceGCDiploidRatio(row.getDouble("referenceGCDiploidRatio")).build();
+                .referenceGCDiploidRatio(row.getDouble("referenceGCDiploidRatio"))
+                .referenceGcContent(row.getDouble(CobaltColumns.REFERENCE_GC_CONTENT))
+                .tumorGcContent(row.getDouble(CobaltColumns.TUMOR_GC_CONTENT))
+                .build();
     }
 
     public static Table createReadCountTable()
@@ -62,7 +65,7 @@ public class CobaltUtils
         return Table.create(
                 StringColumn.create(CobaltColumns.CHROMOSOME),
                 IntColumn.create(CobaltColumns.POSITION),
-                IntColumn.create(CobaltColumns.READ_COUNT));
+                DoubleColumn.create(CobaltColumns.READ_DEPTH));
     }
 
     public static Table createRatioTable()

@@ -1,435 +1,756 @@
-# Cuppa
+# CUPPA: Cancer of Unknown Primary Prediction Algorithm
 
-## Overview
-CUPPA is a tool that weighs multiple features observed from WGS and/or WTS data to predict the tissue of origin of a tumor sample. It is intended to 1) provide molecular tumor type prediction to verify histopathological classification, 2) provide support for specific tumor type classification in case of inconclusive histopathological outcome (differential diagnosis) and 3) prediction of primary tumor location for Cancer of Unknown Primary (CUP). 
+# Introduction
 
-The key inputs to Cuppa are:
-- a collection of reference data files which define rates of various DNA and RNA features and characteristics
-- the measurements of those same DNA and RNA features for the sample or samples being evaluated
+CUPPA is a tissue of origin classifier that uses features derived from whole genome sequencing (WGS; DNA) and/or whole 
+transcriptome sequencing data (WTS; RNA). The Python classifier component of CUPPA is built off the 
+[scikit-learn](https://scikit-learn.org/) library and is based on multiple logistic regressions chained together. Please 
+see the section [Classifier structure](#classifier-structure) for more information.
 
-Cuppa then runs 1 or more of the following 'classifiers' to make its assessment of a sample:
+CUPPA is intended to provide:
+1) Molecular tumor type prediction to verify histopathological classification
+2) Support for specific tumor type classification in case of inconclusive histopathological outcome (differential diagnosis)
+3) Predictions of primary tumor location for Cancer of Unknown Primary (CUP)
 
-### DNA Classifiers
-There are 3 DNA-based classifiers
-- SNV trinucleotide counts - calculated using a pairwise test against each reference sample's SNV counts
-- SNV genomic position frequencies - frequency of SNVs in 500K positional buckets, calculated using a test against per-cancer-type counts
-- features - drawing on any other somatic event such as gene fusions, drivers, structural variant characteristics, viral insertions or 
-other recurrent events, and using a likelihood-based calculation model
+# Table of contents
+<!-- TOC -->
+* [CUPPA: Cancer of Unknown Primary Prediction Algorithm](#cuppa--cancer-of-unknown-primary-prediction-algorithm)
+* [Introduction](#introduction)
+* [Table of contents](#table-of-contents)
+* [Usage](#usage)
+  * [Feature extraction (Java component)](#feature-extraction--java-component-)
+    * [Per sample](#per-sample)
+    * [Cohort](#cohort)
+  * [Classification (Python component)](#classification--python-component-)
+    * [Installation](#installation)
+    * [Running CUPPA within python](#running-cuppa-within-python)
+    * [Command line interface](#command-line-interface)
+    * [Input files format](#input-files-format)
+      * [Features](#features)
+      * [Metadata](#metadata)
+      * [Fusion overrides file](#fusion-overrides-file)
+* [Classifier output](#classifier-output)
+    * [Probabilities by classifier](#probabilities-by-classifier)
+    * [SNV96: Mutational signatures](#snv96--mutational-signatures)
+    * [EVENT: Feature contributions](#event--feature-contributions)
+    * [DNA_COMBINED: Training set performance](#dnacombined--training-set-performance)
+    * [TSV file](#tsv-file)
+* [Features](#features-1)
+    * [GEN_POS](#genpos)
+    * [SNV96](#snv96)
+    * [EVENT](#event)
+      * [Driver mutations](#driver-mutations)
+      * [Fusions](#fusions)
+      * [Viral insertions](#viral-insertions)
+      * [Structural variants (SVs)](#structural-variants--svs-)
+      * [Tumor mutational burden (TMB)](#tumor-mutational-burden--tmb-)
+      * [Whole genome duplication (WGD)](#whole-genome-duplication--wgd-)
+      * [Sex](#sex)
+    * [GENE_EXP](#geneexp)
+    * [ALT_SJ](#altsj)
+* [Classifier structure](#classifier-structure)
+    * [CuppaClassifier](#cuppaclassifier)
+    * [LogisticRegression](#logisticregression)
+    * [ProbCombiner](#probcombiner)
+    * [Feature transformers](#feature-transformers)
+      * [ProfileSimilarityTransformer](#profilesimilaritytransformer)
+      * [NoiseProfileAdder](#noiseprofileadder)
+      * [NonBestSimilarityScaler](#nonbestsimilarityscaler)
+      * [Log1pTransformer](#log1ptransformer)
+      * [MaxScaler](#maxscaler)
+      * [Chi2FeatureSelector (drivers, fusions, virus, sex, whole genome duplication)](#chi2featureselector--drivers-fusions-virus-sex-whole-genome-duplication-)
+      * [NaRowFilter](#narowfilter)
+    * [Adjustment of probabilities](#adjustment-of-probabilities)
+      * [RollingAvgCalibration](#rollingavgcalibration)
+      * [FusionProbOverrider](#fusionproboverrider)
+      * [SexProbFilter](#sexprobfilter)
+* [Training set](#training-set)
+    * [Sample selection](#sample-selection)
+    * [Cancer subtype definitions](#cancer-subtype-definitions)
+    * [Cancer subtype groups](#cancer-subtype-groups)
+    * [Training procedure](#training-procedure)
+* [Known issues](#known-issues)
+    * [Common misclassifications](#common-misclassifications)
+    * [Other misclassifications](#other-misclassifications)
+    * [Other issues](#other-issues)
+* [Version History and Download Links](#version-history-and-download-links)
+<!-- TOC -->
 
-### RNA Classifiers
-There are 2 RNA-based classifiers
-- Gene expression - calculated using a pairwise test against each reference sample's gene expression TPMs
-- Alternate splice junctions - using splice junctions undocumented by Ensembl, and then calculated from per-cancer-type average fragment support for each alternate splice junction
+# Usage
+## Feature extraction (Java component)
+### Per sample
+The `CuppaDataPrep` java class can be used to extract the features required for predicting the cancer of one sample:
 
-Each classifier is optional and run if enabled by config.
-
-## Reference Data
-Cuppa can be used to produce reference data files itself - see instructions below.
-
-A publically available reference data set is available from the HMF Tools resource page [here](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/cuppa_ref_data/37/cuppa_ref_data.v16.gz)
-
-Cuppa will attempt to load these files from a reference directory supplied in its command-line arguments. The files are:
-
-Data Type | Source | Filename                             | Description 
----|--------|--------------------------------------|---
-Sample Set | ALL    | cup_ref_sample_data                  | List of the reference samples - SampleId and CancerType
-Features | DNA    | cup_ref_feature_prev.csv             | Prevalence of fusions, viral insertions, drivers and known INDELs per cancer type
-Features | DNA    | cup_ref_driver_avg.csv               | Average driver counts per cancer types 
-Sample Traits | DNA    | cup_ref_sample_trait_percentiles.csv | Percentiles for purity, ploidy and MS Indels per cancer type
-Sample Traits | DNA    | cup_ref_sample_trait_rates.csv       | Whole genome duplicate and gender rates per cancer type
-Sample Traits | DNA    | cup_ref_gender_rates.csv             | Optional overrides for expected rates of gender per cancer type 
-SNVs | DNA    | cup_ref_snv_counts.csv               | Matrix of trinucleotide buckets (in rows) for each sample (columns)
-SNVs | DNA    | cup_ref_sample_pos_freq_counts.csv   | Matrix of genomic position frequency counts (in rows) for each sample (columns) 
-SNVs | DNA    | cup_ref_sig_percentiles.csv          | Percentiles of each signature per cancer type
-SVs | DNA    | cup_ref_sv_percentiles.csv           | Percentiles of key structural variant characteristics per cancer type
-Gene Expression Sample Matrix | RNA | cup_ref_gene_exp_sample.csv.gz       | Log TPM per sample and gene
-Alt Splice Junctions Cancer-Type Matrix | RNA | cup_ref_alt_sj_cancer.csv            | Log of cohort counts per cancer type and alt splice site
-
-
-## Data Sources
-Sample data for both the reference data and the samples being evaluated can be sourced from any of 3 different inputs:
-- a MySQL HMF Patients database
-- flat-files from a HMF pipeline run (Purple, Linx, Isofox)
-- generic flat files
-
-### Database
-
-Data Type | Table 
----|---
-Features | svFusion, viralAnnotation, driverCatalog and somaticVariant (for known INDELs)
-SNVs | somaticVariant
-Traits | purity
-
-### Pipeline Files
-
-Data Type | File Details 
----|---
-Features | Linx fusion, viral annotations and driver catalog files, Purple somatic VCF
-SNVs | Purple somatic VCF
-Traits | Purple purity file
-
-### Cohort Files
-Cuppa also accepts CSV inputs files conforming to the same file format as produced when generating reference data as described below.
-This can be handy and much more efficient when testing a large cohort in a single run.
-
-Data Type | Cohort Filename | Fields & Comments
----|---|---
-Features | cup_ref_cohort_feature_data.csv | SampleId,Name,Type(DRIVER,FUSION,VIRUS or INDEL),Likelihood,ExtraInfo
-SNVs | cup_ref_snv_counts.csv | Matrix of trinucleotide counts in rows, SampleIds in columns 
-SNVs | cup_ref_sample_pos_freq_counts.csv | Matrix of genomic position frequency counts in rows, SampleIds in columns
-SNVs | cup_ref_cohort_signature_data.csv | SampleId,Signature,AllocationPercentage 
-Traits | cup_ref_cohort_traits_data.csv | SampleId,Gender,WholeGenomeDuplication,Purity,Ploidy,MsIndelsPerMb,ChordHrd
-SVs | cup_ref_cohort_sv_data.csv | SampleId,LINE,SIMPLE_DEL_20KB_1MB,SIMPLE_DUP_32B_200B,SIMPLE_DUP_100KB_5MB,MAX_COMPLEX_SIZE,TELOMERIC_SGL
-
-## Running Cuppa
-
-### Mandatory Arguments
-
-Argument | Description 
----|---
-sample_data | Sample ID
-ref_data_dir | Reference data directory
-sample_data_dir | Sample data directory containing Linx, Purple and Isofox (if available) files
-output_dir | Path to write sample Cuppa output
-
-### Optional Arguments
-
-Argument | Description 
----|---
-categories | By default Cuppa will run all DNA categories. A subset can be specified as a ';' list from SNV, SV, SAMPLE_TRAIT, FEATURE
-write_condensed | Write a single line of output for each sample showing top scores and classifications by category
-linx_dir, purple_dir, isofox_fir | Specify these tool directories instead of 'sample_data_dir' as required (eg for pipeline output)     
-write_similarities | Write the top-20 cosine similarities for SNVs
-
-### Example using pipeline files
+```shell
+java -cp cuppa.jar com.hartwig.hmftools.cup.prep.CuppaDataPrep \
+  -sample SAMPLE_ID \
+  -categories DNA \
+  -ref_genome_version V37 \
+  -sample_data_dir /path/to/dir/with/pipeline/output/ \
+  -output_dir /path/to/output/dir/
 ```
-java -jar cuppa_jar \
-    -categories DNA \
-    -ref_data_dir /reference_data_dir/ \
-    -sample_data SAMPLE_ID \
-    -sample_data_dir /sample_pipeline_files_dir/ \
-    -output_dir /output_dir/ \
+This will produce a TSV file with the following format:
+```
+Source    Category       Key      Value
+   DNA       SNV96   C>A_ACA	    131
+   DNA	   GEN_POS  1_500000          2
+   RNA  EXPRESSION      TP53  3.330e+00
+   ...         ...       ...        ...
 ```
 
-### Example using database
-```
-java -jar cuppa_jar \
-    -categories DNA \
-    -ref_data_dir /reference_data_dir/ \
-    -sample_data SAMPLE_ID \
-    -db_url DB_URL -db_user DB_USER -db_pass DB_PASS \
-    -output_dir /output_dir/ \
-```
+In `sample_data_dir`, the required pipeline files are described below:
 
-## Reference data generation
-Cuppa can be used to generate the reference files used for subsequently evaluating samples.
+| Tool              | Filename suffix          | File details                                     |
+|-------------------|--------------------------|--------------------------------------------------|
+| PURPLE            | .purple.somatic.vcf.gz   | SNVs; used for the GEN_POS and SNV96 features    |
+| PURPLE            | .purple.purity.tsv       | Sample sex and WGD presence (amongst other data) |
+| LINX              | .linx.driver.catalog.tsv | Driver mutations                                 |
+| LINX              | .linx.fusion.tsv         | Gene fusions                                     |
+| Virus Interpreter | .virus.annotated.tsv     | Viral sequence insertions                        |
 
-To generate reference data, the key input is a list of sample IDs and their designated cancer-type classification. 
-The unique set of cancer types defined in the reference data will then drive the evaluation of each sample subsequently tested by Cuppa.
+### Cohort
+Features can also be extracted for multiple samples. This is useful when training a new CUPPA classifier.
 
-### Mandatory Arguments
-Argument | Description
----|---
-ref_sample_data | a CSV file of SampleId,CancerType for each reference sample
-db_url,db_user,db_pass | Connection details to MySQL HMF patients DB
+**THIS SECTION IS CURRENTLY WORK IN PROGRESS**
 
-### Optional Arguments
-Argument | Description
----|---
-gender_rates | Optional, expected rate of cancer for specific cancer types in form 'CancerType1;FemaleRate1;MaleRate1,CancerType2;FemaleRate2;MaleRate2'
-feature_override_file | Override specific feature prevalences
-write_cohort_files | Rewrites the reference sample's data for each category for subsequent optimised use in Cuppa 
+## Classification (Python component)
 
-An example command to generate reference data for a cohort is shown below. 
-The file 'cup_ref_sample_data.csv' is a CSV file of SampleId,CancerType for each reference sample. 
+### Installation
+The core classification component of CUPPA is a python package (`pycuppa`) can be installed via `pip` using the below bash commands.
 
-```
-java -cp cuppa.jar com.hartwig.hmftools.cup.ref.RefDataBuilder \ 
-  -ref_sample_data_file cup_ref_sample_data.csv 
-  -db_url DB_URL -db_user DB_USER -db_pass DB_PASSWORD \ 
-  -gender_rates "Breast;1;0.1" \
-  -write_cohort_files \
-  -output_dir /output_dir \
+```commandline
+## Download CUPPA
+git clone https://github.com/hartwigmedical/hmftools/tree/master/cuppa/src/main/resources/pycuppa/ $HOME
+
+## Create python virtual environment
+python3 -m venv $HOME/pycuppa_env
+
+## Activate environment
+source $HOME/pycuppa/bin/activate
+
+## Install CUPPA python package. This will also install required python packages.
+pip install $HOME/pycuppa
 ```
 
-If cohort files are already available, then they can be used to generated reference data instead of sourcing data from the database:
-```
-java -cp cuppa.jar com.hartwig.hmftools.cup.ref.RefDataBuilder \ 
-  -ref_sample_data_file cup_ref_sample_data.csv 
-  -ref_snv_counts_file cup_ref_snv_counts.csv \
-  -ref_sample_snv_pos_freq_file cup_ref_sample_pos_freq_counts.csv \
-  -cohort_sample_traits_file cup_ref_cohort_traits_data.csv \
-  -cohort_sig_contribs_file cup_ref_cohort_signature_data.csv \
-  -cohort_sv_data_file cup_ref_cohort_sv_data.csv \
-  -cohort_features_file cup_ref_cohort_feature_data.csv \ 
-  -output_dir /output_dir \
-```
+### Running CUPPA within python
+Training of CUPPA and making predictions can be done interactively in Python. Please refer to these jupyter notebooks
+for example code at [doc/notebooks/](src/main/python/pycuppa/doc/notebooks/). This below links:
+- [predict_example.ipynb](src/main/python/pycuppa/doc/notebooks/predict_example.ipynb): view on [nbviewer.org](https://nbviewer.org/github/hartwigmedical/hmftools/blob/master/cuppa/src/main/python/pycuppa/doc/notebooks/predict_example.ipynb)
+- [train_example.ipynb](src/main/python/pycuppa/doc/notebooks/train_example.ipynb): view on [nbviewer.org](https://nbviewer.org/github/hartwigmedical/hmftools/blob/master/cuppa/src/main/python/pycuppa/doc/notebooks/train_example.ipynb)
 
-## Output Files
-Cuppa writes a probability for each feature or characteristic per cancer type. From this is computes an overall 'COMBINED' probability per cancer type.
+### Command line interface
+CUPPA can also be called from the command line (which internally calls the `PredictionRunner` and `TrainingRunner` 
+classes). 
 
-The output file has these fields
+To predict on a single sample, the below example commands can be used.  This produces the outputs as specified in 
+section: [Classifier output](#classifier-output).
 
-Field | Description
----|---
-SampleId | Sample being evaluated
-Category | SNV, SV, SAMPLE_TRAIT, FEATURE and CLASSIFIER (for the COMBINED score)
-ResultType | Percentile, prevalence or likelihood
-DataType | Detailed description of the category being evaluated
-Value | The sample's value for this category if applicable
-RefCancerType | Reference cancer type evaluated against
-RefValue | Probability of the reference cancer type for this category of data
+```commandline
+source ~/pycuppa/bin/activate ## Activate the virtual environment
 
-# Algorithm
-
-## Determination of cancer type cohorts
-
-Cohorts for training the algorithm were constructed from the HMF database by selecting the highest purity sample from each unique patient from our database with qcStatus = ‘PASS’. 37 tumor categories were defined based on the clinical annotations in the HMF database of primaryTumorLocation, primaryTumorSubLocation, primaryTumorType and primaryTumorSubType as follows:
-
-CUPPA Category | primaryTumorLocation:subLocation (primaryTumorType:primaryTumorSubType)
----|---
-Acute myeloid leukemia | 
-Anogenital | Penis, Vulva, Vagina, Anus ({excl. melanoma}), Uterus:Cervix, Cervix-AdenoCA, Cervix-SCC 
-Bile duct /Gallbladder | Bile duct; Hepatobiliary system; Gallbladder
-Bone/Soft tissue: Other | Bone/Soft tissue ({other or unspecified}), Bone-Epith, Bone-Osteoblast
-Breast | Breast
-Cartilaginous neoplasm | 
-Colorectum/Appendix/Small intestine | Colorectum ({other or unspecified}); Appendix; Small intestine({other}), ColoRect-AdenoCA
-Esophagus/Stomach | Esophagus ({excl. Nueroendocrine tumor}); Stomach ({excl. Nueroendocrine tumor}); Gastroesophageal
-GIST | Bone/Soft tissue (Gastrointestinal stromal tumor)
-Glioma | Nervous system (Glioma),CNS-GBM, CNS-Oligo
-Head and neck: other | Head and neck({other})
-Kidney | Kidney
-Kidney-ChRCC | Kidney-ChRCC
-Leiomyosarcoma | Bone/Soft tissue (Leiomyosarcoma), SoftTissue-Leiomyo
-Liposarcoma | Bone/Soft tissue (Liposarcoma), SoftTissue-Liposarc
-Liver | Liver ({excluding Nueroendocrine tumor})
-Lung: NET | Lung(Neuroendocrine tumor)
-Lung: Non-small Cell | Lung(Carcinoma:Non-small cell carcinoma); Lung(Carcinoma:Adenocarcinoma); Lung({other}), Lung-AdenoCA, Lung-SCC
-Lung: Small Cell | Lung(Carcinoma:Small cell carcinoma); Lung(Carcinoma:Small cell carcinoma combined type)
-Lymphoid tissue | Lymphoid tissue, Chronic lymphocytic leukemia 
-Medulloblastoma | Medulloblastoma
-Mesothelium | Mesothelium
-Osteosarcoma | Bone/Soft tissue (Osteosarcoma)
-Other | Gastrointestinal tract, Eye, Bone marrow, Nervous system({other}), Adrenal Gland, Thymus, Testis, Esophagus (Nueroendocrine tumor),Stomach (Neuroendocrine tumor), Myeloid-MDS
-Ovary/Fallopian tube | Ovary; Fallopian tube
-Pancreas | Pancreas ({other>)
-Pancreas: NET | Pancreas (Neuroendocrine Tumor)
-Pilocytic astrocytoma | Nervous system (Pilocytic astrocytoma)
-Prostate | Prostate
-Salivary gland/Adenoid cystic | Head and Neck:Salivary gland, Head and Neck:Parotid gland, Head and Neck:Sublingual gland, {any}(Carcinoma:Adenoid cystic carcinoma), Trachea
-Melanoma | <Any, excluding Eye> (Melanoma)
-Skin:Other | Skin ({other})
-Small intestine/Colorectum: NET | Small intestine(Neuroendocrine tumor); Colorectum(Neuroendocrine tumor)
-Thyroid gland | Thyroid gland, Thy-AdenoCA	
-Urothelial tract | Urothelial tract, Bladder-TCC
-Uterus:Endometrium | Uterus:Endometrium, Uterus-AdenoCA
-Myeloproliferative neoplasm |
-
-Certain cancers such as Esophagus and Stomach were combined for the categorisation as we found empirically that the CUPPA classifiers had little ability to distinguish between them. For other cancers including Lung, Bone/Soft tissue, Skin, Uterus & Pancreatic cancers we have broken into subtypes where histological information allows. All cancers not in one of these 36 cohorts was deemed as “Other” and was excluded from the reference cohorts for analysis.   Samples with ‘unknown’ tumor type are also excluded. Finally, 45 samples were also explicitly excluded from the reference cohort where our analysis strongly suggested the clinical configured cancer type may be incorrect for these samples
-
-# Sub cohorts
-
-The concept of sub-cohorts are also supported in CUPPA.    Classifiers are assessed at sub-cohort level, but the values are added together and results presented at cohort level.  For now the only cancer type split into sub-cohorts is Breast, which is split into Tripple Negative vs other.   This was separated due to the ALT_SJ junction classifier having poor performance for tripple negative breast cancers, since the typical alt_sj profile is very distinct for tripple negative samples and not similar to other breast samples.  
-
-## DNA Classifier logic
-
-CUPPA includes 3 orthogonal DNA classifiers based on positional mutational distribution, SNV mutational profile and feature prevalence, and a 4th classifier which combines the 3 together to make an overall prediction. Each classifier assigns a likelihood to each cancer type with the sum of the likelihoods adding up to 1 across the cancer types. 
-
-The algorithm for each of the classifiers is described below:
-
-### GENOMIC_POSITION_SIMILARITY
-
-This classifier solely relies on the mutational distribution of tumors of genomic position, which has been shown previously to have strong predictive power for tissue of origin (eg. https://www.nature.com/articles/s41467-019-13825-8). 
-
-CUPPA calculates a consensus mutation distribution for each cohort by counting SNV TMB by bucketed genomic position across each cohort. Chr Y is excluded to avoid gender effects.   We also exclude the highly characteristic mutations of AID-APOBEC hyper mutation (TCN>T and TCN>G) from our cohorts for the purpose of genomic position similarity, as wwe observe them to have a a distinct genomic position profile which does not generally match the cancer specific profile (predominantly effecting Lung, Breast and Urothelial cancers).  High TMB samples are downsampled to 20k mutations in this consensus so that individual samples cannot dominate a cohort. CUPPA counts mutations using a window size of 500kb bases (chosen after testing various sizes from 100kb to 10Mb).   
-
-Since some cohorts are relatively small and may have significant noise in their distribution, we blend each cohort with the median cohort wide proportional bucket weights to smooth the distribution. Specifically the following  adjustments to the final cohort bucket weights
-```
-AdjCohortBucketWeight = CohortBucketWeight + 100k * median[ProportionalBucketWeight]
-```
-For our smaller cohorts which have around 100k total TMB the effect is a blending of 50%.  For larger cohorts the effect is negliggable
-
-The genomic position similarity likelihood for a given sample is determined by first calculating the cosine similarity (CSS) of a sample to each cohort consensus distribution and then weighing using the following algorithm:
-```
-Score(sample=s,cancerType=i) = 30^[100*min[(CSS(i,s)-BestCSS(i)),0.012]]*3^[100*max[(CSS(i,s)-BestCSS(i))-0.012,0]] 
-```
-The 2 exponents used (30 and 3) are set empirically to match the confidence empirically observed accuracy based on relative CSS similarity
-
-CUPPA sums the scores across each tumor type to estimate a likelihood for each cancer type:
-```
-Likelihood(tumorType=i) = Score(i) / SUM(all tumors) [Score]
+python3 -m cuppa.predict \
+--features_path=~/pycuppa/resources/mock_data/input_data/prostate_sample.cuppa_data.tsv.gz \
+--classifier_path=~/pycuppa/resources/cuppa_classifier.pickle.gz \
+--output_dir=~/predict_output/ 
 ```
 
-### SNV_96_PAIRWISE_SIMILARITY
+To train a new model, the following example commands can be used.
+```commandline
+source ~/pycuppa/bin/activate ## Activate the virtual environment
 
-This classifier relies solely on relative SNV counts via the 96 trinucleotide buckets frequently used for cosmic signatures. The cosmic signatures are not used directly, but the classifier is designed to capture the obvious similarities that can also be observed via signatures capturing known cancer specific mutagenic effects such as UV & Smoking and also background signatures per cancer type. 
-
-Unlike the genomic position similarity which determines a consensus view of mutational distribution, the SNV_96_PAIRWISE classifier does not create a consensus view per tumor type as tumor types may have a diverse range of mutational profiles. Instead the classifier calculates a pairwise cosine similarity between the sample in question and every other sample in the Hartwig cohort.   To help smooth the noise in low tumor mutational burden samples, a fixed 100 mutations are added to each sample matching the median cohort SNV96 distribution pan-cancer prior to the calculation of pair-wise similarity
-
-Once a pairwise CSS has been determined, a score is calculated for each pair using the following formula:
-```
-Score(i,j) = 50^[-100*(1-CSS)] ^[ maxCSS^10] * mutationCountWeightFactor * cohortSizeWeightFactor
-```
-Where:
-* MaxCSS is the maximum pairwise CSS for any sample in the cohort. This factor reduces confidences in general for samples that have no close pairwise match.
-* mutationCountWeightFactor penalises pairs with large differences in SNV TMB. This is implemented as:
-```
-mutationCountWeightFactor = min(SNV_TMB(i)/SNV_TMB(j),SNV_TMB(j)/SNV_TMB(i)) 
-```
-* cohortSizeWeightFactor penalises larger cohorts which will have more similar tumors just by chance (eg. Breast cohort =~ 750 samples vs Thyroid cohort =~ 20 samples), implemented as:
-```
-cohortSizeWeightFactor = sqrt(# of samples of tumor type) / SUM(i)[sqrt(# of samples of tumor type i)]
-```
-As for genomic position similarity, CUPPA sums the scores across each tumor type to estimate the likelihood:
-```
-Likelihood(tumorType=i) = SUM(tumorType=i)[ Score] / SUM(all tumors) [Score]
+python3 -m cuppa.train \
+--features_path=/path/to/features/ \
+--metadata_path=/path/to/metadata/ \
+--output_dir=/path/to/output_dir/ \
+--using_old_features_format \
+--n_jobs=5 \
+--log_to_file
 ```
 
-### FEATURE 
+The below table lists all possible arguments of `TrainingRunner` and `PredictionRunner`.
 
-The FEATURE classifier uses observed prevalence of both cancer type specific drivers as well as certain passenger mutational features that may be significantly enriched or depleted in certain types to predict the cancer type of a sample. 
+| Argument name               | Runner           | Description                                                                                                                                                                                |
+|-----------------------------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `features_path`             | Both             | **Required**. Old features format: Directory with the input features csv files. New features format: Path to the input features tsv file                                                   |
+| `output_dir`                | Both             | **Required**. Output directory                                                                                                                                                             |
+| `metadata_path`             | TrainingRunner   | **Required**. Path to the metadata file with cancer type labels per sample                                                                                                                 |
+| `classifier_path`           | PredictionRunner | Path to the pickle file of the classifier. If not specified, the default classifier will be used located at `pycuppa/resources/cuppa_classifier.pickle.gz`                                 |
+| `sample_id`                 | PredictionRunner | If provided, will prepend `sample_id` to the output filenames when running `PredictionRunner`                                                                                              |
+| `compress_tsv_files`        | PredictionRunner | Compress tsv files with gzip? (will add .gz to the file extension)                                                                                                                         |
+| `using_old_features_format` | Both             | Are the features from `features_path` in the old input features format?                                                                                                                    |
+| `genome_version`            | Both             | Genome version, Can be 37 or 38. Used for getting the gen_pos bin names. Default: 37                                                                                                       |
+| `excl_chroms`               | Both             | Comma separated list of chromosomes to exclude from the gen_pos matrix. E.g. 'chrY' or 'chr1,chr2'. Default: ChrY,Y                                                                        |
+| `excl_classes`              | TrainingRunner   | Comma separated list of cancer subtypes to exclude from training. E.g. 'Breast' or 'Breast,Lung'. Default: '_Other,_Unknown'                                                               |
+| `min_samples_with_rna`      | TrainingRunner   | Minimum number of samples with RNA in each cancer subtype. If the cancer subtype has fewer samples with RNA than this value, the cancer subtype will be excluded from training. Default: 5 |
+| `fusion_overrides_path`     | TrainingRunner   | Path to the fusion overrides tsv file. See section [FusionProbOverrider](#fusionproboverrider) for how this file should be formatted                                                       |
+| `cv_folds`                  | TrainingRunner   | Number of cross-validation folds. Default: 10                                                                                                                                              |
+| `skip_cv`                   | TrainingRunner   | Skip cross-validation?                                                                                                                                                                     |
+| `no_cache_training`         | TrainingRunner   | Don't cache models during cross-validation and training of final model?                                                                                                                    |
+| `n_jobs`                    | TrainingRunner   | Number of threads to use for cross-validation. If -1, all threads are used. Default = 1                                                                                                    |
+| `log_to_file`               | TrainingRunner   | Output logs to a file?                                                                                                                                                                     |
+| `log_path`                  | TrainingRunner   | Path to log file. Default: `$output_dir/run.log`                                                                                                                                           |
 
-#### Driver Prevalence
-Driver (or driver like) features used include all driver point mutation, high amplification, homozygous deletion and homozygous disruptions in the driver catalog as well as viral insertions & fusions.  Homozygous deletions, disruptions and mutations drivers are considered together, but amplifications are treated as a separate feature as some oncogenes tend to be amplified in specific cancer types and mutated in others (notable examples are KRAS,EGFR,SPOP & FOXA1).   For fusions, known pathogenic fusion pairs, IG rearrangement pairs and exon deletions/duplications configured in the HMF fusion knowledge base are all considered as features as are fusions with highly promiscuous exons such as ALK exon 20-21. For Sarcomas specifically, we override the prevalence for a list of 56 pathognomic fusions which are highly diagnostic but may not be prevalent enough to be present in our database to the appropriate cancer type with the maximal allowed feature weight.
+### Input files format
 
-Indels in repeat contexts of 6 or less bases in 3 lineage defining genes: ALB (highly specific to Liver cancer) and SFTPB & SLC34A2 (highly specific to Lung cancer) are also treated as additional features (note though that they are ignored for MSI samples). A set of Lung cancer specific EGFR hotspots (including T790M, L858R and exon 19 and 20 inframe deletions) are also treated as a single feature.
+#### Features
 
-Features are weighted by driver likelihood. For point mutations the driver likelihood (the dnds calculated probability between 0 and 1 that the mutation is a driver) is used to weight the mutations, whilst other mutations, virus insertions and fusions are assumed to have probability of 1. 
+The features for one sample are provided to CUPPA in the following format (as described [in the previous section](#per-sample)):
 
-The prevalence of each feature in each cancer type is calculated
 ```
-Prevalence = minPrevalence + sum (driverLikelihood) / COUNT(samples)
-```
-Where minPrevalence is a fixed notional background rate of observing a passenger set to 0.15 / count of cancer types for drivers or indels in lineage defining genes and 0.01 / count of cancer types for fusions and viral insertions which are rarely passengers. 
-
-A combined driver score for each cancer type is calculated by taking the product of the observed prevalence of each of the drivers from the sample in the cancer type cohort, discounted by the driver likelihood in the cancer itself. ie:
-```
-DriverScore = weightFactor(cohort)* PRODUCT[Prevalence(d)^driverLikelihood(d,s)]
-```
-Where the weight factor = meanDriverLoad(pan-cancer) / meanDriverLikelihood(cohort) and is intended to reduce the tendency for cancer types with higher average rates of drivers such as Urinary Tract and Esophagus to have higher driver scores
-
-#### Passenger Prevalence
-In addition to drivers, mutational burdens of certain types of events can vary widely across different cancer types. For example LINE insertions are universally observed in Esophagus and certain other cancers but almost non-existent in other cancers. Depending on the feature it may be useful to test that the rate observed is either higher or lower than what is expected of the cancer type. 
-
-Since different cancers may have different characteristic frequencies, this is modeled for this classifier as a prevalence with a dynamic cutoff based on the rate observed in the sample itself. Specifically if testing for an enriched rate, the cutoff is set to 25% below the observed rate limited to a maximum value of the highest observed 95th percentile rate of any cancer cohort. Conversely if testing for a depleted rate, the cutoff is set to 25% below the observed rate limited to a maximum value of the highest observed 95th percentile rate of any cancer cohort. 
-
-The following features are tested for enrichment and/or depletion:
-
-Feature | Enrichment | Depletion
----|---|---
-SNV_TMB | TRUE | TRUE
-MS_INDEL_TMB | TRUE | TRUE
-LINE_COUNT | TRUE | TRUE
-TELOMERIC_SGL_BE_COUNT | TRUE | NA
-MAX_COMPLEX_SIZE | TRUE | NA
-SIMPLE_DUP_32B_200B | TRUE | NA
-
-As for drivers the prevalence in each cancer type is added to a minPrevalence set to 0.15 / count of cancer types. The passenger score is simply the product of all the passenger prevalence rates
-```
-PassengerScore = PRODUCT[max(Passenger Prevalence,minPrevalence)]
+Source    Category       Key      Value
+   DNA       SNV96   C>A_ACA	    131
+   DNA	   GEN_POS  1_500000          2
+   RNA  EXPRESSION      TP53  3.330e+00
+   ...         ...       ...        ...
 ```
 
-#### Combining scores to a likelihood
-The passenger and driver scores are multiplied together to get a single score:
-```
-Score = PassengerScore * Driver Score
-```
-And finally CUPPA sums the scores across each tumor type to estimate the likelihood:
-```
-Likelihood(tumorType=i) = Score(i)^correlationDampenFactor / SUM(all tumors) [Score^correlationDampenFactor]
-```
-The correlationDampenFactor is introduced to reduce the confidence of the classifier and set at 0.75 to empirically match the observed accuracy. This is required as some of the driver or passenger features may be correlated with each other - for example same arm amplifications are highly correlated and TMB might be positively correlated with more drivers in general
+#### Metadata
 
-### DNA_COMBINED CLASSIFIER
+This file specifies the cancer type labels for each sample. Internally, `CancerSubtype` is used as the label for each
+sample, and corresponds to the cancer types that CUPPA classifies. 
 
-A combined score is calculated by multiplying the 3 likelihoods together with an absolute floor set at 1% per likelihood. The likelihood is then calculated as
-```
-Likelihood(tumorType=i) = PRODUCT(max(0.01,Classifier(i,j)))^correlationDampenFactor / SUM(all tumors)[PRODUCT(max(0.01,Classifier(j)))]^correlationDampenFactor
-```
-As for the feature classifier, a correlationDampenFactor is introduced to reduce the confidence of the classifier and reflect the fact that the individual classifiers are not completely independent. A value of 0.65 is chosen to empirically match the confidence to the observed accuracy.
+`RnaReadLength` together with `CancerSubtype` is used to create 
+[stratified](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.StratifiedKFold.html) 
+cross-validation splits so that `RnaReadLength` and `CancerSubtype` is evenly distributed across the cross-validation 
+folds. `RnaReadLength` is also used when the `min_samples_with_rna` argument is specified (see above table).
 
-For the DNA_COMBINED classifier, males are excluded from matching ‘Ovary’ and ‘Uterus’ cancer cohorts and females are excluded from matching the ‘Prostate' cohort. ‘Breast’ cancer scores for male cancer cohorts are penalised but not excluded.
-
-## RNA Classifier logic
-
-CUPPA has 2 WTS based RNA classifiers and a combined RNA classifier:
-
-### EXPRESSION_PAIRWISE classifier
-The pairwise classifier calculates a pairwise cosine similarity of log(adjTPM+1) per gene, between the sample in question and every other sample in the Hartwig cohort.
-
-Once a pairwise CSS has been determined, a score is calculated for each pair using the following formula:
 ```
-Score(i,j) = 50^[-100*(1-CSS)] * cohortSizeWeightFactor
-```
-Where cohortSizeWeightFactor penalises larger cohorts which will have more similar tumors just by chance. It its calculated as:
-```
-cohortSizeWeightFactor = sqrt(# of samples of tumor type) / SUM(i)[sqrt(# of samples of tumor type i)]
-```
-CUPPA then sums the scores across each tumor type to estimate the likelihood:
-```
-Likelihood(tumorType=i) = SUM(tumorType=i)[Score] / SUM(all tumors)[Score]
+SampleId CancerType   CancerSubtype  RnaReadLength
+sample_1   Prostate        Prostate            151
+sample_2       Skin  Skin: Melanoma              0
+     ...        ...             ...            ...
 ```
 
-### Novel Splice Junction (ALT_SJ_COHORT) classifier
+#### Fusion overrides file
 
-A novel splice junction is defined in this context as any splice junction that is not annotated in ensembl.  A set of recurring novel splice junctions sites were identified within each cancer cohort - ie. those with 3 or more fragments supporting a novel site in 2 or more samples.  Intronic splice sites were excluded from the analysis. A reference file was then formed by calculating the average fragment count per cancer cohort at each of these novel sites.  To reduce noise in smaller cancer cohorts, a fixed number of 500k altSJ fragments was blended into each cohort matching the median cohort average observed fragments for each site.  This has a significant impact on small cohorts but negligable on large cohorts.  
-
-The novel splice junction classifier tests a sample’s fragment counts against each cancer cohort’s average fragment count per novel splice junction site. This is done by calculating a cosine similarity of log(fragmentCount + 1).
 ```
-Score(sample=s,cancerType=i) = 3.5^[100*(CSS(i,s)-BestCSS(s))] 
-```
-CUPPA sums the scores across each tumor type to estimate a likelihood for each cancer type:
-```
-Likelihood(tumorType=i) = SUM(tumorType=i)[ Score] / SUM(all tumors) [Score]
+  feat_prefix  feat_basename                     target_class
+event.fusion.     CBFB_MYH11  Myeloid: Acute myeloid leukemia
+event.fusion.   CTNNB1_PLAG1    Head and neck: Salivary gland
+event.fusion.      FUS_DDIT3    Bone/Soft tissue: Liposarcoma
+          ...            ...                              ...
 ```
 
-#### Impact of read length
-The HMF RNA cohort contains a mix of samples sequenced with 151 and 76 read lengths, and each of these lengths exhibit differences in novel splice junction fragment support. The 151-read-length samples were sequenced with greater depth, and in addition to often having greater fragment count support per novel splice site, approximately 10% of novel splice sites were only present in 151 read-length samples. Those cancer cohorts with a predominance of samples with either read-length of 76 or 151 read bases tended to find a closer CSS match with other samples of the same read-length. 
 
-To address this bias, the reference cancer cohort file was split into average fragment counts per cancer type and per read-length group. A sample was only tested against the cancer reference data for its matching read length sub-cohorts.
+# Classifier output
+For each sample CUPPA outputs a visualization of the predictions (PNG file), as well as the raw visualization data as a 
+TSV file. Please see later sections for more info on the [features](#features) and [classifiers](#classifier-structure) 
+shown in the visualization.
 
-### RNA_COMBINED classifier
+![](src/main/python/pycuppa/doc/visualization/cuppa_vis.png)
 
-A combined RNA classifier is calculated using the same formula as the combined DNA based on the 2 expression classifiers. The correlationDampenFactor is set to 0.7 via empirical analysis for the RNA_COMBINED confidence calculation. Gender restrictions are applied in the same manner as for the DNA_COMBINED score.
+### Probabilities by classifier
+The CUPPA visualization is split into 4 panels. The first panel shows the probabilities for each cancer subtype 
+(columns) for each classifier (rows). The grey tabs indicate cancer type groupings based on molecular/histological
+supertypes (e.g. Lung cancer) but also by organ type (Bone/Soft tissue cancers). Group probabilities are shown for the 
+COMBINED, DNA_COMBINED and RNA_COMBINED classifiers, where these probabilities are simply the sum of probabilities 
+within the cancer type grouping and classifier (merged cells).
 
-## Overall Combined Classifier
+### SNV96: Mutational signatures
+This panel shows the presence of certain [mutational signatures](https://cancer.sanger.ac.uk/signatures/sbs/) relative
+to their presence in each cancer type in the training set. Each heatmap cell shows the where a given sample lies in the 
+cancer type cohort distribution for a particular signature (quantile).
 
-The RNA and DNA classifiers can be further merged into a consensus classifier in the same manner as the RNA_COMBINED and DNA_COMBINED, by merging all 5 individual classifiers. The correlationDampenFactor is set to 0.4 via empirical analysis for the overall COMBINED confidence calculation. Gender restrictions are applied in the same manner as for the DNA_COMBINED score.
+**NOTE: CUPPA does not use signatures as features internally**. These are only displayed for informational 
+purposes to confirm or reject CUPPA's predictions, such as in the following scenario:
+- A pathologist determines that a tumor is a breast cancer
+- CUPPA predicts the tumor to be a lung cancer
+- This tumor has over 10,000 SBS4 (smoking) mutations, which falls within the typical range for lung cancers
+- This tumor is therefore more likely to be a lung cancer
 
-## Nearest Neighbor Analysis
+### EVENT: Feature contributions
+This panel shows which [EVENT features](#event) (driver mutations, fusions, viral insertions, and various other 
+features) were most important for the resulting prediction (from the EVENT classifier). Each heatmap cell shows an 
+odds ratio, where a higher odds ratio means the feature was predictive for the respective cancer type. The odds ratio 
+specifically refers to the odds of the sample belonging to the target cancer type vs the odds of _not_ belonging to
+the target cancer type. For a given feature, the odds ratio is calculated from [SHAP values](https://shap.readthedocs.io/en/latest/example_notebooks/overviews/An%20introduction%20to%20explainable%20AI%20with%20Shapley%20values.html) 
+as follows:
+```
+shap_value = coef * (x – X_mean) ## SHAP values are in log(odds) space
+odds_ratio = e ** shap_value ## Exponentiate by e (=2.718) to get to odds space
+```
 
-In addition to the classifiers, the 20 nearest neighbour samples by pairwise cosine similarity are reported for 3 different features:
-* Count of SNV TMB per 500k genomic position buckets 
-* Count of SNV TMB by 96 mutational context bucket
-* Log(TPM+1) RNA expression by gene
+### DNA_COMBINED: Training set performance
+For each cancer type, the number of training samples, as well recall and precision (as determined by 
+[cross-validation](#training-procedure)) are shown to give an idea about how reliably each cancer type can be predicted. 
 
-Note that all samples are used for this analysis including rare cancer types that are not one of the CUPPA categorisations used in the classifiers.
+- Number of training samples: Cancer types with more training samples are usually more reliably predicted
+- Recall: A recall of e.g. 0.95 for prostate cancer means that CUPPA expects to miss 5% of prostate cancer cases
+- Precision: A precision of e.g. 0.95 for prostate cancer means that of 100 samples CUPPA predicts as prostate cancer,
+5% of those predictions are wrong
 
-## Known potential biases or issues
+### TSV file
+The visualization data TSV is a [long form table](https://tavareshugo.github.io/r-intro-tidyverse-gapminder/09-reshaping/index.html).
+The first few rows of the table are shown below.
 
-Bias | % of samples | Classifier | Description
----|---|---|---
-Small cohort size | 2% | All | Rounding issues and noise dominate all classifiers where cohort size is small (<25 samples), prevents us from small cohorts such as Testis, and diminishes performance even > 25 samples. Also true for pairwise classifiers even though we adjust for it.  This has been partially improved now by blending small cohorts with the cancer wide medians.
-TMBPerMb < .7 | 0.5% | ALL DNA | Generally low confidence.   Often mismatch to Pancreas:NET, likely due to ‘Low TMBPerMB’ feature
-High driver load | 1% | FEATURE | Samples with a high number of drivers tend to match Urothelial Tract cancers (these have the highest rate of drivers)
-MSI | 0.3% | GENOMIC_ POSITION | Samples with MSI typically have very low GENOMIC_POSITION scores to the correct cancer type.  Similar to AID_APOBEC effect 
-Pathognomonic events | 1% | FEATURE | Rare pathognomonic events may not be found previously in our cohort or may not be weighed highly enough due to ‘min_prevalence’.  For some drivers the mechanism may be diagnostic whereas we only calculate features at a gene level, eg: SPOP amp (breast) vs mutation (prostate), KIT amp (lung) vs mutation (sarcoma), FOXA1 amp (lung) vs  mutation (breast/prostate), KRAS amp (esophagus) vs mutation (CRC/pancreas), Hypermutations in BCL2 & other genes (Lymphoid)
-Metastasis site | 0.2% | RNA |  Liver mets can be mistaken for liver primary particularly low purity samples
-Copy number | ? | GENOMIC_ POSITION | Adjusting for copy number may improve weightings
-Treatment signatures | 0.1% | SNV_96 | Samples with strong treatment signatures (eg SYD985) will match each other with high certainty
-Lung: Small-cell vs non small cell | 0.5% | GENOMIC_ POSITION | ‘Lung: non-small cell’ can strongly match the genomic position profile of Lung: small cell with high confidence.   Possibly due to timing of transformation to small cell?
-Bile Duct / Gallbladder | 1% | ALL | Can be mistaken for Liver or Pancreas with high confidence
-Non-smoking Lung | 0.2% | GENOMIC_ POSITION | Performance is weaker, but can mostly be explained by AID_APOBEC / pathognomonic events
-Esophagus / Stomach vs Colorectal | 0.5% | ALL RNA | Esophagus frequently presents as Colorectal on all RNA classifiers
-Anogenital vs Head & Neck: Other | 0.4% | All | Can often be mistaken for each other.
-Sarcoma | 1.5% | ALL | Frequent mismatches between Leiomyosarcoma, Liposarcoma, Osteosarcoma and ‘other’.  Multiple causes.  Larger cohorts would help make clearer cohorts and could allow distinct groups for Rhabdomyosarcoma and others.  Some samples are marked as ‘Sarcoma’ and matched to Leiomyosarcoma are reported as match=F, but may be TP. Spindle cell sarcoma appear to group better with Leioymyosarcoma but are marked as ‘other’
-Liposarcoma | ? | GENOMIC_ POSITION | MDM2+CDK4 coamplified liposarcomas (well-differentiated/dedifferentiated liposarcoma) resolve better to the Liposarcoma cohort compared to liposarcomas with diagnostic fusions (e.g. myxoid liposarcoma)
-Hodgkins Lympohoma | ? | DNA | Poorly match the lymphoid cohort which is dominated by NHL
+```
+    sample_id     data_type clf_group  clf_name         feat_name  feat_value                               cancer_type  data_value  rank  rank_group
+0    SAMPLE_X          prob  combined  combined               NaN         NaN                                Anogenital    0.000218     6           0
+1    SAMPLE_X          prob  combined  combined               NaN         NaN  Bone/Soft tissue: Cartilaginous neoplasm         NaN    34           0
+2    SAMPLE_X          prob  combined  combined               NaN         NaN                    Bone/Soft tissue: GIST    0.000218     7           0
+3    SAMPLE_X          prob  combined  combined               NaN         NaN          Bone/Soft tissue: Leiomyosarcoma    0.000218     8           0
+4    SAMPLE_X          prob  combined  combined               NaN         NaN             Bone/Soft tissue: Liposarcoma    0.000218     9           0
+          ...           ...       ...       ...               ...         ...                                       ...         ...   ...         ...
+635  SAMPLE_X  feat_contrib       dna     event  sv.TELOMERIC_SGL         1.0                                  Prostate    1.000000    30          28
+636  SAMPLE_X  feat_contrib       dna     event  sv.TELOMERIC_SGL         1.0                            Skin: Melanoma    1.306432     4          28
+637  SAMPLE_X  feat_contrib       dna     event  sv.TELOMERIC_SGL         1.0                               Skin: Other    1.000000    31          28
+638  SAMPLE_X  feat_contrib       dna     event  sv.TELOMERIC_SGL         1.0                             Thyroid gland    1.000000    32          28
+639  SAMPLE_X  feat_contrib       dna     event  sv.TELOMERIC_SGL         1.0                          Urothelial tract    1.000000    33          28
+```
+
+Below is a description of the columns:
+
+| Column name  | Column description                                                               | Data type | Valid values / Value description                                                                                                                                                       |
+|--------------|----------------------------------------------------------------------------------|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `sample_id`  | Sample ID                                                                        | String    |                                                                                                                                                                                        |
+| `data_type`  | Data type                                                                        | String    | prob: probabilities <br> feat_contrib: feature contributions <br> sig_quantiles: mutational signature quantiles <br> cv_performance: training set cross-validation performance metrics |
+| `clf_group`  | Classifier group                                                                 | String    | combined, dna, rna                                                                                                                                                                     |
+| `clf_name`   | Classifier name                                                                  | String    | combined, dna_combined, gen_pos, snv96, event, rna_combined, gene_exp, alt_sj                                                                                                          |
+| `feat_name`  | EVENT feature name                                                               | String    | e.g. tmb.snv_count. Only when `data_type` is "feat_contrib" or "cv_performance", otherwise empty                                                                                       |
+| `feat_value` | EVENT feature value                                                              | Float     | e.g. 20000.0. Only when `data_type` is "feat_contrib", otherwise empty                                                                                                                 |
+| `data_value` | Value of `data_type`                                                             | Float     | e.g. if `data_type` is "prob", `data_value` represents probabilities                                                                                                                   |
+| `rank`       | Rank of `data_value`                                                             | Integer   |                                                                                                                                                                                        |
+| `rank_group` | Grouping of [`data_type`, `clf_name`, `feat_name`] by which data_value is ranked | Integer   |                                                                                                                                                                                        |
 
 
+# Features
 
-## Version History and Download Links
+The features used by CUPPA are derived from DNA and RNA sequencing. These features are provided to CUPPA as a single 
+dataframe containing the features (columns) for each sample (rows).
+
+| Source | Feature type | Feature description                                           | No. of features |
+|--------|--------------|---------------------------------------------------------------|-----------------|
+| DNA    | GEN_POS      | No. of SNVs per 500kb bin across the genome                   | 6,101           |
+| DNA    | SNV96        | No. of SNVs per 96-trinucleotide context                      | 96              |
+| DNA    | EVENT        | Mutations in genes (driver likelihood)                        | 620             |
+| DNA    | EVENT        | Gene fusions (presence)                                       | 143             |
+| DNA    | EVENT        | Viral insertions (presence) of HBV, HPV, HSV or MCPyV         | 4               |
+| DNA    | EVENT        | Structural variant (SV) types                                 | 6               |
+| DNA    | EVENT        | Tumor mutational burden (TMB; no. of SNVs and indels)         | 2               |
+| DNA    | EVENT        | Whole genome duplication (presence)                           | 1               |
+| DNA    | EVENT        | Sample sex (male/female)                                      | 1               |
+| RNA    | GENE_EXP     | log(transcripts per million + 1) for each gene                | 37,985          |
+| RNA    | ALT_SJ       | log(number of reads + 1) for each alternative splice junction | 236,328         |
+
+### GEN_POS
+The genomic position of somatic SNVs, also known as regional mutational density (RMD). These have been 
+previously associated with tissue type-specific chromatin states [[Lehner et al. 2012, Nature](https://www.nature.com/articles/nature11273)] 
+and were shown to have strong predictive power for tissue of origin [[Jiao et al. 2020, NatComm](https://www.nature.com/articles/s41467-019-13825-8)].
+
+For CUPPA, we count the number of SNVs in each 500kb bin across the genome for each sample. Chromosome Y is excluded to 
+avoid sex-related effects. We also exclude the mutations characteristic of AID-APOBEC hypermutation (T[C>T]N and 
+T[C>G]N) as we observe them to have a distinct genomic position profile which does not generally match the cancer 
+specific profile (predominantly affecting Lung, Breast and Urothelial cancers).
+
+### SNV96
+The SNV counts in the 96-trinucleotide contexts reflects specific mutagenic effects such as UV radiation, smoking, and 
+background mutational processes. While these trinucleotide contexts are often used for the COSMIC single base 
+substitution (SBS) [signatures](https://cancer.sanger.ac.uk/signatures/sbs/), CUPPA does not use the COSMIC signatures 
+directly. However, the SNV96 sub-classifier is designed to capture the obvious similarities that can also be observed 
+via signatures.
+
+### EVENT
+The EVENT group of features contains various driver and passenger mutational features that are specific to certain 
+cancer types.
+
+#### Driver mutations
+Driver (or driver like) features used include all driver point mutation, high amplification, homozygous deletion and 
+homozygous disruptions in the driver catalog. Homozygous deletions, disruptions and mutations drivers are considered 
+together, but amplifications are treated as a separate feature as some oncogenes tend to be amplified in specific cancer
+types and mutated in others (notable examples are KRAS, EGFR, SPOP & FOXA1).
+
+Indels in repeat contexts of 6 or fewer bases in 3 lineage defining genes: ALB (highly specific to Liver cancer) and 
+SFTPB & SLC34A2 (highly specific to Lung cancer) are also treated as additional features (note though that they are 
+ignored for MSI samples). A set of Lung cancer specific EGFR hotspots (including T790M, L858R and exon 19 and 20 inframe
+deletions) are also treated as a single feature.
+
+#### Fusions
+Known pathogenic fusion pairs, immunoglobulin (IG) rearrangement pairs and exon deletions/duplications configured in the
+HMF fusion knowledge base are all considered as features, as are fusions with highly promiscuous exons such as ALK exon 
+20-21.
+
+#### Viral insertions
+Some viruses can integrate their DNA into the host genome and are thus carcinogenic [[Zapatka et al. 2020, NatGen](https://www.nature.com/articles/s41588-019-0558-9)]. 
+Some of these are also cancer type specific and have been included as features, including human papillomavirus (HPV; 
+cervical and head & neck cancers), merkel cell polyomavirus (MCPyV; skin carcinomas), hepatitis B virus (HBV; liver 
+cancer), and herpes simplex virus (HSV; various cancer types).
+
+#### Structural variants (SVs)
+CUPPA uses various cancer type specific SV types as features:
+- LINE: Long interspersed nuclear elements. Often found in esophageal, head & neck, and colorectal cancers [[Roderiguez-Martin et al. 2020, NatGen](https://www.nature.com/articles/s41588-019-0562-0)]
+- SIMPLE_DEL_20KB_1MB: Simple structural deletions, 10kb to 1Mb in size
+- SIMPLE_DUP_32B_200B: Simple structural duplications, 30bp to 200bp in size
+- SIMPLE_DUP_100KB_5MB: Simple structural duplications, 100kb to 5Mb in size
+- MAX_COMPLEX_SIZE: Size of the largest complex structural event (number of chained SVs), a proxy measure for the presence of chromothripsis
+- TELOMERIC_SGL: Telomeric single breakends. Associated with telomere lengthening in Leiomyosarcomas [[Chudasama et al. 2018, NatComm](https://www.nature.com/articles/s41467-017-02602-0)]
+
+#### Tumor mutational burden (TMB)
+Certain cancer types have an extremely high number of mutations, such as skin and lung cancers (due to UV radiation and 
+smoking respectively), while other have very few mutations, such as medulloblastomas and pilocytic astrocytomas (due to 
+typically being pediatric cancers). CUPPA thus uses the total number of SNVs and indels as features.
+
+#### Whole genome duplication (WGD)
+The rate of WGD varies by cancer type [[Priestley et al. 2019, Nature](https://www.nature.com/articles/s41586-019-1689-y)].
+
+#### Sex
+Cancers of the reproductive organs are exclusively male (e.g. prostate cancer) or female (e.g. ovarian, uterine, 
+cervical cancers). Sex (male/female) is determined using the copy number of the sex chromosomes and is used as a feature 
+in CUPPA.
+
+### GENE_EXP
+Genes are differentially expressed across tissue types and can thus be used for CUP classification. Normalized 
+transcript counts for each gene in `log(transcripts per million + 1)` are used as input for CUPPA.
+
+### ALT_SJ
+A novel splice junction is defined in this context as any splice junction that is not annotated in ENSEMBL. A set of 
+recurring novel splice junctions sites were identified within each cancer cohort – i.e. those with 3 or more fragments 
+supporting a novel site in 2 or more samples. Intronic splice sites were excluded from the analysis. A reference file 
+was then formed by calculating the average fragment count per cancer cohort at each of these novel sites.
+
+# Classifier structure
+This section provides details on each component of the CUPPA classifier. CamelCase headings refer to the class name of 
+the respective component.
+
+### CuppaClassifier
+CUPPA is composed of 2 main layers of multinomial logistic regressions, and a final post-processing layer:
+- **Sub-classifier layer**: Each of the 5 feature types (GEN_POS, SNV96, EVENT, GENE_EXP, ALT_SJ) is passed 
+as input to a sub-classifier for the corresponding feature type. Each sub-classifier performs some feature 
+transformations, after which a logistic regression weighs the importance of each transformed feature.
+- **Meta-classifier layer**: This layer uses 2 logistic regressions to weigh the importance of the DNA and RNA sub-classifiers, 
+followed by some post-processing steps.
+- **Combined layer**: Combines the probabilities from the meta-classifiers by multiplying them together.
+
+![](src/main/python/pycuppa/doc/diagrams/classifier_structure.jpg)
+
+### LogisticRegression
+The [logistic regressions](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)
+in all CUPPA classifiers share the following arguments:
+
+- `multi_class="multinomial"`: A multinomial regression is used as our task is to classify multiple cancer types ('classes')
+- `solver="saga"`: The SAGA (Stochastic Average Gradient Accelerated) solver is used as it is the only one that 
+supports multinomial LASSO logistic regression in scikit-learn. SAGA is an optimized variant of stochastic gradient 
+descent (SGD).
+- `class_weight="balanced"`: Some cancer types in the training set have more samples than others. The "balanced" 
+argument forces the logistic regression to optimize equally every cancer type cohort by weighing cohorts by the inverse 
+of their sample size: `cancer_type_weight = n_samples_total x (1 / n_samples_in_cancer_type)`.
+- `random_state=0`: Set the random seed so that re-running the training produces the same model.
+
+
+The GEN_POS, SNV96, and EVENT logistic regressions use the following non-default arguments:
+- `penalty="l1"`: LASSO (aka L1) regularization is used to remove irrelevant features during training by setting their
+weights to 0
+- `max_iter=1000`: Number of gradient descent iterations
+
+The GENE_EXP and ALT_SJ logistic regressions use the following non-default arguments:
+- `penalty="l1"`: See above
+- `max_iter=10000`: See above
+
+The DNA_COMBINED and RNA_COMBINED logistic regressions use the following non-default arguments:
+- `penalty='l2'`: Ridge regularization reduces the weights of less relevant features. Ridge is used instead of LASSO 
+here as all output probabilities from sub-classifiers are relevant albeit to different extents.
+- `C=4`: Increased C from 1 (default) to 4 to reduce the strength of ridge regularization
+- `max_iter=1000`: See above
+
+### ProbCombiner
+This layer combines the probabilities of the DNA_COMBINED and RNA_COMBINED meta-classifiers by multiplying them together. 
+It is however possible that the probability for a cancer type is 0.99 for DNA_COMBINED but 0.00 for RNA_COMBINED, which 
+when multiplied together equals 0.00. To avoid this issue, all probabilities <0.01 are set to 0.01 (`prob_floor=0.01`) 
+prior to multiplication. After multiplying the probabilities, they are normalized to sum to 1.
+
+### Feature transformers
+#### ProfileSimilarityTransformer
+For the GEN_POS classifier, consensus GEN_POS profiles are calculated per cancer type at training time. At prediction 
+time, the cosine similarity of a sample's profile to each per cancer type profile is then calculated.
+
+The consensus profile is the sum (`agg_func="sum"`) of each 500k bin in samples of a particular cancer 
+type. Sum is used instead of mean as we want samples with low TMB (which have a noisier GEN_POS profile) to contribute 
+less to the consensus profile.
+
+Conversely, we want hypermutator samples to contribute less to the consensus profile as to not dominate the profile. 
+Thus, if a sample has more than 10,000 SNVs (`count_ceiling=10000`), the GEN_POS profile of that sample will be scaled 
+down such that the TMB sums to 10,000.
+
+<img src="src/main/python/pycuppa/doc/diagrams/gen_pos_transformations.jpg" width="600"/>
+
+For the GENE_EXP and ALT_SJ classifiers, no `count_ceiling` is used and the mean (`agg_func="mean"`) to generate the 
+consensus profiles. This is because the (log transformed) GENE_EXP and ALT_SJ features are not skewed by outliers. 
+
+#### NoiseProfileAdder
+For cancer types cohorts with few samples, the addition of one hypothetical new sample would result in a drastic change 
+in the consensus profile. Small cancer type cohorts therefore tend to have highly variable consensus GEN_POS profiles.
+
+To counteract this, we add a background 'noise' GEN_POS profile totalling 500 mutations (`noise_counts=500`) to every 
+sample before generating the consensus profiles. The noise GEN_POS profile is the median of the per-cancer type 
+profiles as generated by `ProfileSimilarityTransformer`, and is calculated at training time.
+
+The GEN_POS consensus profiles of small cohorts will therefore tend towards the noise profile, thereby diminishing the 
+importance of GEN_POS for these cohorts (and increasing the relative importance of other feature types).
+
+#### NonBestSimilarityScaler
+A major problem with cosine similarities is that they tend towards 1.0 with higher the numbers of dimensions (i.e. 
+features). With 6101 GEN_POS bins, the (sorted) cosine similarities are often squished towards 1.0 like this: 
+
+`cos_sims = [0.95, 0.92, 0.87, 0.86, 0.75, …]`
+
+However, we want larger differences between consecutive cosine similarities as this improves the performance of the 
+downstream logistic regression. To achieve this, we perform the following computations:
+
+```python
+exponent = 5
+max_value = max(cos_sims) ## 0.95
+scale_factors = cos_sims - max_value + 1 ## [1.00, 0.97, 0.92, 0.91, 0.80, ...]
+scale_factors = scale_factors ** exponent ## [1.00, 0.86, 0.67, 0.62, 0.32, ...]
+cos_sims_scaled = scale_factors * cos_sims ## [0.95, 0.79, 0.57, 0.54, 0.23, ...]
+```
+
+Larger `exponent` values push the bottom values closer to zero. `exponent` values were empirically chosen based on the
+one that yield the best performance:
+- GEN_POS: `exponent=5`
+- GENE_EXP: `exponent=5`
+- ALT_SJ: `exponent=2`
+
+#### Log1pTransformer
+Log transformation is performed to eliminate the effect of outliers (e.g. samples with exceptional high number of SNVs).
+The "+1" pseudocount is to prevent calculating log(0) which is undefined.
+
+#### MaxScaler
+Max scaling is performed to scale (non-negative) features to range from 0 to 1. This is because the downstream logistic 
+regression expects features to be (roughly) in the same scale and range. This is performed for the SV and TMB features
+as well as for the GENE_EXP and ALT_SJ features.
+
+#### Chi2FeatureSelector (drivers, fusions, virus, sex, whole genome duplication)
+The [chi2 test](https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.chi2.html) is used to as a 
+preliminary feature selection step remove irrelevant features. This test which quantifies how much each feature varies 
+across every cancer type in the training set compared to an expected (background) value for that feature. The below 
+pseudo-code describes the feature selection procedure.
+
+```python
+## Inputs
+X ## Feature values per sample. Matrix of shape [n_samples, n_features]
+y ## Cancer type labels per sample. Array of length n_samples
+
+## Sum of the values of each feature across all samples. Array of length n_features
+feature_counts = X.sum(axis="columns") 
+
+## Proportions of each cancer type in `y`. Array of length n_cancer_types
+cancer_type_freq = count_samples_per_cancer_type(y) / len(y)
+
+## Calculate expected counts per feature per cancer type. Matrix of shape [n_cancer_types, n_features]
+expected_counts = dot_product(cancer_type_freq, feature_counts)
+
+## Calculate observed feature counts per cancer type
+X_split = split_rows_by_cancer_type(X)
+observed_counts = [X_i.sum(axis="columns") for X_i in X_split] ## List of length n_cancer_types
+observed_counts = as_matrix(observed_counts) ## Matrix of shape [n_cancer_types, n_features]
+
+## Calculate chi2 statistic. Array of length n_features
+chi2_stat = (observed_counts – expected_counts)**2
+
+## Calculate pvalue = area under the right-hand tail of the chi2 probability density function
+## Array of length n_features
+pvalue = chi2_pdf(chi2_stat)
+
+## Calculate false discovery rate and select features
+## Array of length n_features
+fdr = benjamini_hochberg(pvalue) 
+selected_feature_names = X.columns[fdr<0.001]
+```
+
+For the GENE_EXP and ALT_SJ classifiers, MaxScaledChi2FeatureSelector combines the MaxScaler and Chi2FeatureSelector
+steps.
+
+#### NaRowFilter
+Samples with no RNA data will bypass the RNA classifiers (GENE_EXP, ALT_SJ, RNA_COMBINED).
+
+### Adjustment of probabilities
+#### RollingAvgCalibration
+[Probability calibration](https://scikit-learn.org/stable/modules/calibration.html) is performed to ensure that a 
+probability of 0.8 means that: of 100 samples predicted as e.g. breast cancer, 80 of these are actually breast cancer. Logistic regressions generally output under-confident probabilities, e.g. a probability of 0.75 in practice means a 
+probability of 0.85. Calibration of logistic regression probabilities increases the number of high confidence 
+probabilities (>0.8, the threshold for a diagnosis), allowing for more CUP patients to be diagnosed. CUPPA uses a 
+modified probability calibration approach based on [isotonic regression](https://en.wikipedia.org/wiki/Isotonic_regression). 
+For each cancer type, this is performed with the below procedure:
+
+Given:
+- An array of probabilities
+- An array of booleans, indicating whether a sample belongs to a cancer type
+
+Perform the following steps:
+- Sort both arrays by the probabilities
+- Slide a window along the boolean array and take the mean of the values in the window at each step
+- Fit an isotonic regression, with the x-values being the probabilities and y-values being the sliding window means
+
+This approach results in more granular y-values, which improves the isotonic regression fit.
+
+#### FusionProbOverrider
+Certain gene fusions are highly characteristic of certain cancer types, e.g. RUNX1-RUNX1T1 for acute myeloid leukemia 
+(AML), but were not prevalent enough in the training set (i.e. too few training samples) to be picked up as dominant 
+feature for that cancer type. If a RUNX1-RUNX1T1 fusion were found in a sample for example, we would force a high 
+probability of AML. This 'fusion override' for this example sample is done using the below pseudo-code:
+
+```python
+## Raw probabilities for sample with RUNX1-RUNX1T1 fusion
+## Acute myeloid leukemia (AML) is often misclassified as myeloproliferative neoplasm (MPN)
+classes = ["AML", "MPN", "Liver", "Prostate", ...]
+probs = [0.26, 0.31, 0.02, 0.01, ...]
+
+## Make 'mask' array
+## 1.00 for target cancer type(s). Can be multiple cancer types
+## 0.01 for other cancer types. Value specified with the `mask_base_value` argument
+mask = [1.00, 0.01, 0.01, 0.01, ...]
+
+## Apply mask
+probs = probs * mask ## [0.26, 0.03, 0.00, 0.00, ...]
+
+## Make probs sum to 1
+probs = probs / sum(probs)
+```
+
+In total, there are 64 pathognomic fusion-cancer type mappings for which we apply a fusion override. These mappings are 
+provided to the `overrides` argument of FusionProbFilter as a dataframe in the format shown in section
+[Fusion overrides file](#fusion-overrides-file)
+
+#### SexProbFilter
+It is possible for e.g. a female sample to have a non-zero probability of Prostate, since the logistic regressions do 
+not treat female and male cancer types differently. We therefore force the probability of male cancer types to be 0 in 
+female cancer types, and vice versa.
+
+Keywords for male and female cancer types are specified to the `keywords_male_classes` and `keywords_female_classes` 
+SexProbFilter arguments. SexProbFilter will be applied to any cancer types containing these keywords (case insensitive). 
+By default, the keywords are:
+
+```python
+_DEFAULT_KEYWORDS_MALE_CLASSES = [
+    "prostate",
+    "penis","penile",
+    "testis","testicular"
+]
+
+_DEFAULT_KEYWORDS_FEMALE_CLASSES = [
+    "ovary","fallopian","ovarian",
+    "uterus","uterine","endometrium","endometrial",
+    "cervix","cervical"
+] ## We do not override "breast" as breast cancers are also found in male patients
+```
+
+After overriding the probabilities, they are normalized to sum to 1.
+
+# Training set
+### Sample selection
+Samples were included in the training set if they passed the following criteria:
+
+- From the `purity` SQL table:
+  - qcStatus == "PASS"
+  - purity > 0.195
+  - fitMethod != "NO_TUMOR"
+- From LAMA (patient consent database):
+  - intUse == TRUE
+  - storeData == TRUE
+
+As multiple samples can originate from the same patient, we de-duplicate samples by prioritizing samples with 151bp read 
+length RNA data, followed by highest tumor purity.
+
+### Cancer subtype definitions
+The below table summarizes the cancer subtype mappings based on clinical annotations in the HMF database as well as in 
+the PCAWG metadata. The definitions are specified in following format:
+
+- `primaryTumorLocation`/`pcawgCancerType`: `primaryTumorSublocation`
+- (`primaryTumorType`: `primaryTumorSubType`)
+- <`histology`>
+
+Additionally, two special operators are used:
+- `[ ]`: list/grouping
+- `not`: excludes the proceeding cancer types
+
+| Cancer subtype                           | Rules                                                                                                 | Samples | Samples w/ RNA |
+|------------------------------------------|-------------------------------------------------------------------------------------------------------|---------|----------------|
+| Anogenital                               | Anus, Penis, Vulva, Vagina, Uterus: Cervix, Cervix-AdenoCA, Cervix-SCC                                | 128     | 46             |
+| Bone/Soft tissue: Cartilaginous neoplasm | Bone-Cart                                                                                             | 9       | 0              |
+| Bone/Soft tissue: GIST                   | Bone/Soft tissue (Gastrointestinal stromal tumor)                                                     | 66      | 27             |
+| Bone/Soft tissue: Leiomyosarcoma         | Bone/Soft tissue (Leiomyosarcoma), SoftTissue-Leiomyo                                                 | 80      | 19             |
+| Bone/Soft tissue: Liposarcoma            | Bone/Soft tissue (Liposarcoma), SoftTissue-Liposarc                                                   | 59      | 5              |
+| Bone/Soft tissue: Osteosarcoma           | Bone/Soft tissue (Osteosarcoma), Bone-Osteosarc                                                       | 47      | 0              |
+| Bone/Soft tissue: Undiff. sarcoma        | Bone/Soft tissue (Undifferentiated sarcoma), Bone/Soft tissue (Fibrous histiocytoma)                  | 37      | 6              |
+| Bone/Soft tissue: Other                  | Bone/Soft tissue ([not Skin, unspecified]), Bone-Epith, Bone-Osteoblast                               | 157     | 49             |
+| Breast: Other                            | Breast (unspecified: not Triple negative), [Breast-AdenoCA, Breast-DCIS, Breast-LobularCA] <not TNBC> | 908     | 412            |
+| Breast: Triple negative                  | Breast (unspecified: Triple negative), [Breast-AdenoCA, Breast-DCIS, Breast-LobularCA] <TNBC>         | 183     | 59             |
+| CNS: Glioma                              | Nervous system (Glioma), CNS-GBM, CNS-Oligo                                                           | 159     | 63             |
+| CNS: Medulloblastoma                     | Nervous system (unspecified: Medulloblastoma), CNS-Medullo                                            | 138     | 0              |
+| CNS: Pilocytic astrocytoma               | CNS-PiloAstro                                                                                         | 58      | 0              |
+| Colorectum/Small intestine/Appendix      | [Colorectum, Appendix, Small intestine] (not Neuroendocrine tumor), ColoRect-AdenoCA                  | 837     | 336            |
+| Esophagus/Stomach                        | [Esophagus, Stomach, Gastroesophageal] (not Neuroendocrine tumor), Stomach-AdenoCA, Eso-AdenoCA       | 349     | 130            |
+| Gynecologic: Endometrium                 | Uterus: Endometrium (not Neuroendocrine tumor)                                                        | 85      | 24             |
+| Gynecologic: Ovary/Fallopian tube        | [Ovary, Fallopian tube, Ovary-AdenoCA] (not Neuroendocrine tumor)                                     | 320     | 112            |
+| Head and neck: Adenoid cystic            | (Carcinoma: Adenoid cystic carcinoma)                                                                 | 10      | 5              |
+| Head and neck: Salivary gland            | Salivary gland, Trachea, Head and neck: [Salivary gland, Parotid gland, Sublingual gland]             | 26      | 15             |
+| Head and neck: Other                     | Head and neck: unspecified                                                                            | 101     | 28             |
+| HPB: Bile duct/Gallbladder               | Bile duct, Hepatobiliary system, Gallbladder, Biliary-AdenoCA                                         | 131     | 78             |
+| HPB: Liver                               | Liver, Liver-HCC                                                                                      | 341     | 35             |
+| HPB: Pancreas                            | Pancreas (not Neuroendocrine tumor), Panc-AdenoCA                                                     | 372     | 65             |
+| Kidney: Chromophobe                      | Kidney (unspecified: Chromophobe renal cell carcinoma), Kidney-ChRCC                                  | 44      | 0              |
+| Kidney: Other                            | Kidney (unspecified), Kidney-RCC                                                                      | 277     | 76             |
+| Lung: Non-small cell: LUAD               | Lung [(Carcinoma: Adenocarcinoma), <Adenocarcinoma>], Lung-AdenoCA                                    | 254     | 107            |
+| Lung: Non-small cell: LUSC               | Lung [(Carcinoma: Squamous cell carcinoma), <Squamous cell carcinoma>], Lung-SCC                      | 78      | 12             |
+| Lung: Small cell                         | Lung (Carcinoma: [Small cell carcinoma, Small cell carcinoma combined type])                          | 56      | 35             |
+| Lymphoid tissue                          | Lymphoid tissue, Lymph-BNHL, Lymph-CLL                                                                | 216     | 20             |
+| Mesothelium                              | Mesothelium                                                                                           | 77      | 23             |
+| Myeloid: Acute myeloid leukemia          | Myeloid-AML                                                                                           | 12      | 0              |
+| Myeloid: Myeloproliferative neoplasm     | Myeloid-MPN                                                                                           | 18      | 0              |
+| NET: Colorectum/Small intestine          | [Colorectum, Small intestine] (Neuroendocrine tumor)                                                  | 56      | 34             |
+| NET: Lung                                | Lung (Neuroendocrine tumor)                                                                           | 46      | 5              |
+| NET: Pancreas                            | Pancreas (Neuroendocrine tumor), Panc-Endocrine                                                       | 118     | 21             |
+| Prostate                                 | Prostate (not Neuroendocrine tumor), Prost-AdenoCA                                                    | 607     | 161            |
+| Skin: Melanoma                           | Skin (Melanoma), Skin-Melanoma                                                                        | 408     | 133            |
+| Skin: Other                              | Skin (unspecified), Bone/Soft tissue: Skin                                                            | 49      | 19             |
+| Thyroid gland                            | Thyroid gland, Thy-AdenoCA                                                                            | 71      | 16             |
+| Urothelial tract                         | Urothelial tract, Bladder-TCC                                                                         | 241     | 45             |
+
+### Cancer subtype groups
+Grouping of subtypes are made based on molecular/histological supertypes (e.g. Lung cancer) but also by organ type 
+(Bone/Soft tissue cancers) for the visualization of CUPPA.
+
+The cancer subtype group is simply the prefix before the first colon (":"). For example, 
+"Bone/Soft tissue: GIST" maps to the "Bone/Soft tissue" group. Subtypes with no prefix (i.e. no ":") belong to their own 
+standalone group. For example, "Anogenital" maps to the "Anogenital" supertype.
+
+CUPPA internally predicts subtype probabilities. Group probabilities are simply the sum of the subtype probabilities 
+of a particular group.
+
+### Training procedure
+The training data for CUPPA includes: i) a dataframe containing the features (columns) per sample (rows), and ii) an 
+array of known cancer type labels for each sample. All samples from the training set are used to train the final CUPPA 
+classifier.
+
+10-fold cross-validation was used to assess the performance of CUPPA. Here, the training data was split into 10 parts, 
+training was performed on 90% of samples, and tested on the remaining 10% of samples. This was repeated for the 10 
+different 'folds', each yielding cancer type probabilities for a different 10% subset of samples, and ultimately for 
+every sample in the training set. These probabilities were then used to calculate various performance metrics (e.g. 
+number of samples correctly predicted per cancer type).
+
+<img src="src/main/python/pycuppa/doc/diagrams/training_and_cross_validation.jpg" width="600"/>
+
+# Known issues
+
+### Common misclassifications
+- Salivary gland (n=9/26) -> Breast. Annotated as "Salivary duct carcinoma" = 6. Breast adenoid cystic carcinomas?
+[[ref](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4266822/)]
+- Bile duct -> Pancreas (n=24/131) or Liver (n=14/131). Intra vs extra-hepatic cholangiocarcinomas?
+- Head & Neck: Other, squamous cell carcinoma (n=6/110) -> Anogenital
+- HPV+ samples -\> Anogenital. Head & Neck: Other = 6, Urothelial = 3, Colorectum = 1, Skin: Other = 1
+- PiloAstro non KIAA1549-BRAF fusion samples (n=10/58) -> Medulloblastoma
+- Endometrium (n=26/85) -> Ovary
+
+### Other misclassifications
+- Non-liver primary but liver metastases (biopsySite="Liver") -> Liver (n=11)
+- OMIC squamous esophagus (n=6) and CPCT/DRUP/ACTN/CORE esophagus (non-adeno, potentially squamous; n=15) -> Head & neck
+- \>20,000 TMB samples _may be_ mistaken as Skin (n=11) or Urothelial (n=9)
+- 0 TMB samples -> PiloAstro (n=2). Lymphoid=1, Esophagus=1. Issue warning when TMB < 5 (likely pipeline QC issue)?
+
+### Other issues
+- DNA_COMBINED prob\>0.8, RNA_COMBINED wrong prediction. 55 become low confidence (prob < 0.8) in combined
+- Samples with strong treatment signatures (eg SYD985) will match each other with high certainty
+
+# Version History and Download Links
 - [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.8)
 - [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.7.2)
 - [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.6)
@@ -439,10 +760,3 @@ Hodgkins Lympohoma | ? | DNA | Poorly match the lymphoid cohort which is dominat
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.2)
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.1)
 - [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.0)
-
-
-
-
-
-
-

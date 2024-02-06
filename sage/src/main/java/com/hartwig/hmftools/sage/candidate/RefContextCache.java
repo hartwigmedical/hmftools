@@ -37,8 +37,9 @@ public class RefContextCache
 
         final Consumer<RefContext> evictionHandler = (refContext) -> processAltContexts(refContext);
 
-        int minCapacity = config.ExpectedReadLength == DEFAULT_READ_LENGTH ?
-                MIN_CAPACITY : max(MIN_CAPACITY, config.ExpectedReadLength * 2);
+        int minCapacity = config.getReadLength() == DEFAULT_READ_LENGTH ?
+                MIN_CAPACITY : max(MIN_CAPACITY, config.getReadLength() * 2);
+
         mEvictingArray = new EvictingArray(minCapacity, evictionHandler);
     }
 
@@ -103,6 +104,6 @@ public class RefContextCache
             return true;
 
         return altContext.rawAltBaseQuality() >= mConfig.Filter.HardMinTumorRawBaseQuality
-                && altContext.rawAltSupport() >= mConfig.Filter.HardMinTumorRawAltSupport;
+            && altContext.rawAltSupport() >= mConfig.Filter.HardMinTumorRawAltSupport;
     }
 }

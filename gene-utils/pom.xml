@@ -11,7 +11,7 @@
     <artifactId>gene-utils</artifactId>
     <packaging>jar</packaging>
     <version>${gene-utils.version}</version>
-    <name>HMF Tools - Gene Reference Data Utilities</name>
+    <name>HMF Tools - Gene Utilities</name>
 
     <dependencies>
         <dependency>

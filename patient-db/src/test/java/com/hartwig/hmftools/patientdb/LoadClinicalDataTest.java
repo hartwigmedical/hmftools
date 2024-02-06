@@ -37,7 +37,8 @@ import com.hartwig.hmftools.patientdb.clinical.validators.PatientValidator;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class LoadClinicalDataTest {
+public class LoadClinicalDataTest
+{
 
     private static final String TEST_ECRF = Resources.getResource("ecrf/test_cpct_ecrf.xml").getPath();
     private static final String INFORMED_CONSENTS_TSV = Resources.getResource("consents/informed_consents.tsv").getPath();
@@ -45,7 +46,8 @@ public class LoadClinicalDataTest {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Test
-    public void canLoadUpRealCpctEcrf() throws IOException, XMLStreamException {
+    public void canLoadUpRealCpctEcrf() throws IOException, XMLStreamException
+    {
         PrimaryTumorCurator primaryTumorCurator = CuratorTestFactory.primaryTumorCurator();
         BiopsySiteCurator biopsySiteCurator = CuratorTestFactory.biopsySiteCurator();
         TreatmentCurator treatmentCurator = CuratorTestFactory.treatmentCurator();
@@ -60,8 +62,10 @@ public class LoadClinicalDataTest {
                 treatmentCurator);
 
         List<ValidationFinding> allFindings = Lists.newArrayList();
-        for (EcrfPatient ecrfPatient : cpctEcrfModel.patients()) {
-            Patient patient = cpctPatientReader.read(ecrfPatient, Lists.newArrayList(), ConsentConfigFactory.read(INFORMED_CONSENTS_TSV), "CPCT");
+        for(EcrfPatient ecrfPatient : cpctEcrfModel.patients())
+        {
+            Patient patient =
+                    cpctPatientReader.read(ecrfPatient, Lists.newArrayList(), ConsentConfigFactory.read(INFORMED_CONSENTS_TSV), "CPCT");
             assertPatient(patient);
             allFindings.addAll(PatientValidator.validatePatient(patient));
         }
@@ -69,7 +73,8 @@ public class LoadClinicalDataTest {
         assertTrue(allFindings.size() > 0);
     }
 
-    private static void assertPatient(@Nullable Patient patient) {
+    private static void assertPatient(@Nullable Patient patient)
+    {
         assertNotNull(patient);
         assertEquals("CPCT02252500", patient.patientIdentifier());
         assertEquals(0, patient.sequencedBiopsies().size());

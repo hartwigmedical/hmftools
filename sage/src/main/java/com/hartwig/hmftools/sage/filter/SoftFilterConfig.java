@@ -3,7 +3,6 @@ package com.hartwig.hmftools.sage.filter;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_GERMLINE_DEPTH;
-import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_GERMLINE_DEPTH_ALLOSOME;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_QUAL;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_VAF;
 
@@ -29,8 +28,8 @@ public class SoftFilterConfig
 
         MinGermlineCoverage = configBuilder.getInteger(prefix + "_" + MIN_GERMLINE_DEPTH.configName());
         MinGermlineCoverageLongInsert = configBuilder.getInteger(prefix + "_" + MIN_GERMLINE_DEPTH.configName());
-        MinGermlineCoverageAllosome = configBuilder.getInteger(prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME.configName());
-        MinGermlineCoverageAllosomeLongInsert = configBuilder.getInteger(prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME.configName());
+        MinGermlineCoverageAllosome = defaultValue.MinGermlineCoverageAllosome;
+        MinGermlineCoverageAllosomeLongInsert = defaultValue.MinGermlineCoverageAllosomeLongInsert;
         MaxGermlineVaf = configBuilder.getDecimal(prefix + "_" + MAX_GERMLINE_VAF.configName());
         MaxGermlineRelativeQual = configBuilder.getDecimal(prefix + "_" + MAX_GERMLINE_REL_RAW_BASE_QUAL.configName());
     }
@@ -65,10 +64,6 @@ public class SoftFilterConfig
         configBuilder.addInteger(
                 prefix + "_" + MIN_GERMLINE_DEPTH.configName(),
                 "Minimum " + prefix + " germline depth", defaultConfig.MinGermlineCoverage);
-
-        configBuilder.addInteger(
-                prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME.configName(),
-                "Minimum " + prefix + " germline depth", defaultConfig.MinGermlineCoverageAllosome);
 
         configBuilder.addDecimal(
                 prefix + "_" + MAX_GERMLINE_VAF.configName(), "Maximum " + prefix + " germline VAF", defaultConfig.MaxGermlineVaf);

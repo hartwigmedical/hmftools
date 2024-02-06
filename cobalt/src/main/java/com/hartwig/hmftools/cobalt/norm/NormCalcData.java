@@ -5,8 +5,8 @@ import java.util.Map;
 
 public class NormCalcData
 {
-    public final double SampleMeanReadCount;
-    public final double SampleMedianReadCount;
+    public final double SampleMeanReadDepth;
+    public final double SampleMedianReadDepth;
     public final int SampleFilteredRegionCount;
 
     public final Map<Integer,Double> GcBucketMedians;
@@ -15,15 +15,15 @@ public class NormCalcData
             0, 0, 0, Collections.emptyMap());
 
     public NormCalcData(
-            final double sampleMeanReadCount, final double sampleMedianReadCount, final int sampleFilteredRegionCount,
+            final double sampleMeanReadDepth, final double sampleMedianReadDepth, final int sampleFilteredRegionCount,
             final Map<Integer,Double> gcBucketMedians)
     {
-        SampleMeanReadCount = sampleMeanReadCount;
-        SampleMedianReadCount = sampleMedianReadCount;
+        SampleMeanReadDepth = sampleMeanReadDepth;
+        SampleMedianReadDepth = sampleMedianReadDepth;
         SampleFilteredRegionCount = sampleFilteredRegionCount;
         GcBucketMedians = gcBucketMedians;
     }
 
-    public double sampleMedianNormalisation() { return SampleMeanReadCount > 0 ? SampleMedianReadCount / SampleMeanReadCount : 0; }
+    public double sampleMedianNormalisation() { return SampleMeanReadDepth > 0 ? SampleMedianReadDepth / SampleMeanReadDepth : 0; }
 
 }

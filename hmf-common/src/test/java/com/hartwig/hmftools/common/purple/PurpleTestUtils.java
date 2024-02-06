@@ -40,11 +40,13 @@ public class PurpleTestUtils
         return ImmutableCobaltRatio.builder()
                 .chromosome(chromosome)
                 .position(position)
-                .tumorReadCount(0)
-                .referenceReadCount(0)
+                .tumorReadDepth(0)
+                .referenceReadDepth(0)
                 .referenceGCRatio(1)
                 .referenceGCDiploidRatio(1)
-                .tumorGCRatio(ratio);
+                .tumorGCRatio(ratio)
+                .referenceGcContent(0.5)
+                .tumorGcContent(0.5);
     }
 
     public static ImmutablePurpleCopyNumber.Builder createCopyNumber(

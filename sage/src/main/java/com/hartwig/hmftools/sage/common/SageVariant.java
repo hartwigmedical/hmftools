@@ -2,9 +2,9 @@ package com.hartwig.hmftools.sage.common;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
@@ -18,6 +18,7 @@ public class SageVariant
     private final List<ReadContextCounter> mTumorReadCounters;
 
     private int mMixedImpact;
+    private boolean mDedupIndelDiff; // temp during switch to new method
 
     public SageVariant(
             final Candidate candidate,  final List<ReadContextCounter> normalCounters, final List<ReadContextCounter> tumorReadCounters)
@@ -26,6 +27,7 @@ public class SageVariant
         mNormalReadCounters = normalCounters;
         mTumorReadCounters = tumorReadCounters;
         mFilters = Sets.newHashSet();
+        mDedupIndelDiff = false;
     }
 
     public Candidate candidate()
@@ -109,8 +111,7 @@ public class SageVariant
         {
             if(mTumorReadCounters.get(0).localPhaseSets().get(i) == lps)
             {
-                final int[] counts = mTumorReadCounters.get(0).lpsCounts().get(i);
-                return counts[0] + counts[1];
+                return mTumorReadCounters.get(0).lpsCounts().get(i);
             }
         }
 
@@ -134,7 +135,7 @@ public class SageVariant
     }
 
     @Nullable
-    public List<int[]> localPhaseSetCounts()
+    public List<Integer> localPhaseSetCounts()
     {
         if(mTumorReadCounters.isEmpty())
             return null;
@@ -147,14 +148,18 @@ public class SageVariant
 
     public boolean isPassing() { return mFilters.isEmpty(); }
 
+    public boolean dedupIndelDiff() { return mDedupIndelDiff; }
+    public void markDedupIndelDiff() { mDedupIndelDiff = true; }
+
     public boolean isTumorEmpty() { return mTumorReadCounters.isEmpty(); }
     public boolean isNormalEmpty() { return mNormalReadCounters.isEmpty(); }
 
-    public VariantHotspot variant() { return mCandidate.variant(); }
+    public SimpleVariant variant() { return mCandidate.variant(); }
 
     public VariantTier tier() { return mCandidate.tier(); }
 
     public Set<String> filters() { return mFilters; }
+    public String filtersStr() { return mFilters.stream().collect(Collectors.joining(",")); }
 
     public ReadContext readContext() { return mTumorReadCounters.get(0).readContext(); }
 
@@ -167,17 +172,14 @@ public class SageVariant
     }
 
     public boolean isIndel() { return variant().ref().length() != variant().alt().length(); }
-
     public boolean isMnv()
     {
         return variant().ref().length() > 1 && variant().ref().length() == variant().alt().length();
     }
-
     public boolean isSnv()
     {
         return variant().ref().length() == 1 && variant().alt().length() == 1;
     }
-
     public boolean isDelete() { return variant().ref().length() > variant().alt().length(); }
     public boolean isInsert() { return variant().ref().length() < variant().alt().length(); }
 

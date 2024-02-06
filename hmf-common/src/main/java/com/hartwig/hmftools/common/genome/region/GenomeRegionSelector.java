@@ -7,8 +7,8 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface GenomeRegionSelector<R extends GenomeRegion> {
-
+public interface GenomeRegionSelector<R extends GenomeRegion>
+{
     @NotNull
     Optional<R> select(@NotNull GenomePosition position);
 

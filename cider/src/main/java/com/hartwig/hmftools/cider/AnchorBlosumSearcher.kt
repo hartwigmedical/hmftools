@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.cider
 
+import com.google.common.collect.ImmutableCollection
 import org.apache.logging.log4j.LogManager
-import org.eclipse.collections.api.collection.ImmutableCollection
-import org.eclipse.collections.api.set.SetIterable
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -74,7 +73,7 @@ class AnchorBlosumSearcher(
 
         for (targetAnchorGeneType in targetAnchorGeneTypes)
         {
-            val templateAnchorSequences : SetIterable<String> = ciderGeneDatastore.getAnchorSequenceSet(targetAnchorGeneType)
+            val templateAnchorSequences : Set<String> = ciderGeneDatastore.getAnchorSequenceSet(targetAnchorGeneType)
 
             // We match each template anchor against the input DNA
             for (i in startOffset  until endOffset)

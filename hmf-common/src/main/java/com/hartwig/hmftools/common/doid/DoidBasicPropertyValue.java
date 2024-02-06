@@ -7,8 +7,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class DoidBasicPropertyValue {
-
+public abstract class DoidBasicPropertyValue
+{
     @NotNull
     public abstract String pred();
 

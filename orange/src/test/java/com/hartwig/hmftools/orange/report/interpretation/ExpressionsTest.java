@@ -19,19 +19,22 @@ public class ExpressionsTest
     @Test
     public void canCalcFoldChange()
     {
-        GeneExpression normal = builder().tpm(1).medianTpmCancer(2).medianTpmCohort(3).build();
+        GeneExpression normal = builder().tpm(1).medianTpmCancer(2D).medianTpmCohort(3D).build();
         assertEquals("0.5", Expressions.foldChangeType(normal));
         assertEquals("0.3", Expressions.foldChangeDatabase(normal));
 
-        GeneExpression zeroMedian = builder().tpm(0).medianTpmCancer(0).medianTpmCohort(0).build();
+        GeneExpression zeroMedian = builder().tpm(0).medianTpmCancer(0D).medianTpmCohort(0D).build();
         assertEquals(ReportResources.NOT_AVAILABLE, Expressions.foldChangeType(zeroMedian));
         assertEquals(ReportResources.NOT_AVAILABLE, Expressions.foldChangeDatabase(zeroMedian));
+
+        GeneExpression missingCancerTPM = builder().tpm(1).medianTpmCancer(null).medianTpmCohort(3D).build();
+        assertEquals(ReportResources.NOT_AVAILABLE, Expressions.foldChangeType(missingCancerTPM));
     }
 
     @Test
     public void canFindExpressionByGene()
     {
-        GeneExpression entry = builder().geneName("gene 1").build();
+        GeneExpression entry = builder().gene("gene 1").build();
 
         List<GeneExpression> expressions = Lists.newArrayList(entry);
         assertEquals(entry, Expressions.findByGene(expressions, "gene 1"));
@@ -46,6 +49,9 @@ public class ExpressionsTest
         assertEquals("1.2", Expressions.tpm(expression));
         assertEquals("0.12", Expressions.percentileType(expression));
         assertEquals("0.23", Expressions.percentileDatabase(expression));
+
+        GeneExpression cancerExpressionMissing = builder().tpm(0).percentileCancer(null).percentileCohort(0).build();
+        assertEquals(ReportResources.NOT_AVAILABLE, Expressions.percentileType(cancerExpressionMissing));
     }
 
     @NotNull

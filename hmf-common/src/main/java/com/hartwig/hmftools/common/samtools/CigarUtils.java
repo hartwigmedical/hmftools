@@ -1,7 +1,17 @@
 package com.hartwig.hmftools.common.samtools;
 
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
+
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.N;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,29 +23,42 @@ import htsjdk.samtools.SAMRecord;
 
 public final class CigarUtils
 {
-    public static Cigar cigarFromStr(final String cigarStr)
+    public static List<CigarElement> cigarElementsFromStr(final String cigarStr)
     {
-        Cigar cigar = new Cigar();
+        if(cigarStr.equals(NO_CIGAR))
+            return Collections.emptyList();
+
+        List<CigarElement> cigarElements = Lists.newArrayList();
 
         int length = 0;
-        for (int i = 0; i < cigarStr.length(); ++i)
+        for(int i = 0; i < cigarStr.length(); ++i)
         {
             char c = cigarStr.charAt(i);
             int digit = c - '0';
 
-            if (digit >= 0 && digit <= 9)
+            if(digit >= 0 && digit <= 9)
             {
                 length = length * 10 + digit;
             }
             else
             {
                 CigarOperator operator = CigarOperator.characterToEnum(c);
-                cigar.add(new CigarElement(length, operator));
+                cigarElements.add(new CigarElement(length, operator));
                 length = 0;
             }
         }
 
-        return cigar;
+        return cigarElements;
+    }
+
+    public static Cigar cigarFromStr(final String cigarStr)
+    {
+        return new Cigar(cigarElementsFromStr(cigarStr));
+    }
+
+    public static String cigarStringFromElements(final List<CigarElement> elements)
+    {
+        return elements.stream().map(x -> format("%d%s", x.getLength(), x.getOperator())).collect(Collectors.joining());
     }
 
     public static int cigarBaseLength(final Cigar cigar)
@@ -47,7 +70,7 @@ public final class CigarUtils
     {
         int baseLength = 0;
         int currentElementLength = 0;
-        for (int i = 0; i < cigarStr.length(); ++i)
+        for(int i = 0; i < cigarStr.length(); ++i)
         {
             char c = cigarStr.charAt(i);
             boolean isAddItem = (c == 'D' || c == 'M');
@@ -59,7 +82,7 @@ public final class CigarUtils
                 continue;
             }
             int digit = c - '0';
-            if (digit >= 0 && digit <= 9)
+            if(digit >= 0 && digit <= 9)
             {
                 currentElementLength = currentElementLength * 10 + digit;
             }
@@ -86,15 +109,19 @@ public final class CigarUtils
         return cigar.getCigarElements().get(cigar.getCigarElements().size() - 1).getOperator() == CigarOperator.S;
     }
 
-    public static int leftSoftClipLength(final SAMRecord record)
+    public static int leftSoftClipLength(final SAMRecord record) { return leftSoftClipLength(record.getCigar()); }
+
+    public static int rightSoftClipLength(final SAMRecord record) { return rightSoftClipLength(record.getCigar()); }
+
+    public static int leftSoftClipLength(final Cigar cigar)
     {
-        CigarElement firstElement = record.getCigar().getFirstCigarElement();
+        CigarElement firstElement = cigar.getFirstCigarElement();
         return (firstElement != null && firstElement.getOperator() == CigarOperator.S) ? firstElement.getLength() : 0;
     }
 
-    public static int rightSoftClipLength(final SAMRecord record)
+    public static int rightSoftClipLength(final Cigar cigar)
     {
-        CigarElement lastElement = record.getCigar().getLastCigarElement();
+        CigarElement lastElement = cigar.getLastCigarElement();
         return (lastElement != null && lastElement.getOperator() == CigarOperator.S) ? lastElement.getLength() : 0;
     }
 
@@ -116,5 +143,57 @@ public final class CigarUtils
             return null;
 
         return record.getReadString().substring(record.getReadString().length() - rightClip);
+    }
+
+    public static int getReadBoundaryPosition(
+            final int readStart, @NotNull final String cigarStr, final boolean getReadStart, boolean includeSoftClipped)
+    {
+        // gets either the read start position or read end position, either with or without soft-clipped bases
+        int currentPosition = readStart;
+        int elementLength = 0;
+
+        for(int i = 0; i < cigarStr.length(); ++i)
+        {
+            char c = cigarStr.charAt(i);
+            boolean isAddItem = (c == 'D' || c == 'M' || c == 'S' || c == 'N');
+
+            if(isAddItem)
+            {
+                if(getReadStart)
+                {
+                    // back out the left clip if present
+                    return c == 'S' ? readStart - elementLength : readStart;
+                }
+
+                if(c == 'S' && readStart == currentPosition)
+                {
+                    // ignore left-clip since getting the read end position
+                }
+                else if(c == 'S' && !includeSoftClipped)
+                {
+                    break;
+                }
+                else
+                {
+                    currentPosition += elementLength;
+                }
+
+                elementLength = 0;
+                continue;
+            }
+
+            int digit = c - '0';
+            if (digit >= 0 && digit <= 9)
+            {
+                elementLength = elementLength * 10 + digit;
+            }
+            else
+            {
+                elementLength = 0;
+            }
+        }
+
+        // always pointing to the start of the next element, so need to move back a base
+        return currentPosition - 1;
     }
 }

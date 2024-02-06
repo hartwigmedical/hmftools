@@ -4,24 +4,32 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.addConsensusReadAttribute;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getFivePrimeUnclippedPosition;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
+import static com.hartwig.hmftools.common.samtools.UmiReadType.DUAL;
+import static com.hartwig.hmftools.common.samtools.UmiReadType.SINGLE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.common.Constants.CONSENSUS_PREFIX;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
-import static com.hartwig.hmftools.markdups.common.FragmentUtils.getUnclippedPosition;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
+import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM;
+import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM_STR;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -34,7 +42,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class DuplicateGroup
 {
-    private final String mId;
+    private final String mUmiId; // the UMI if enabled
     private final List<Fragment> mFragments;
     private List<String> mReadIds;
     private int mFragmentCount;
@@ -44,6 +52,9 @@ public class DuplicateGroup
     private final boolean[] mReadGroupComplete;
     private final ReadTypeId[] mPrimaryReadTypeIndex; // details for primary and mate reads
     private final String mCoordinatesKey;
+
+    private SAMRecord mPrimaryTemplateRead; // read on which the primary consensus read is based
+    private String mGroupReadId;
     private boolean mDualStrand;
 
     private static final int MAX_READ_TYPES = ReadType.values().length;
@@ -51,7 +62,7 @@ public class DuplicateGroup
 
     public DuplicateGroup(final String id, final Fragment fragment)
     {
-        mId = id;
+        mUmiId = id;
         mFragments = Lists.newArrayList(fragment);
         mReadIds = null;
         mReadGroups = new List[MAX_READ_TYPES];
@@ -59,6 +70,8 @@ public class DuplicateGroup
         mPrimaryReadTypeIndex = new ReadTypeId[PRIMARY_READ_TYPES];
         mFragmentCount = 0;
         mCoordinatesKey = fragment.coordinates().keyOriented();
+        mPrimaryTemplateRead = null;
+        mGroupReadId = null;
         mDualStrand = false;
     }
 
@@ -69,7 +82,7 @@ public class DuplicateGroup
     public String coordinatesKey() { return mCoordinatesKey; }
     public FragmentCoordinates fragmentCoordinates() { return !mFragments.isEmpty() ? mFragments.get(0).coordinates() : null; }
 
-    public String id() { return mId; }
+    public String umiId() { return mUmiId; }
 
     public void registerDualStrand() { mDualStrand = true; }
     public boolean hasDualStrand() { return mDualStrand; }
@@ -91,7 +104,7 @@ public class DuplicateGroup
         {
             SAMRecord read = firstFragment.reads().get(i);
 
-            SupplementaryReadData suppData = SupplementaryReadData.from(read);
+            SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
             boolean hasValidSupp = suppData != null && HumanChromosome.contains(suppData.Chromosome);
 
             if(i == 0)
@@ -111,11 +124,16 @@ public class DuplicateGroup
         for(Fragment fragment : mFragments)
         {
             mReadIds.add(fragment.id());
-            fragment.setUmi(mId);
+
+            // FIXME: at the moment this fragment ID used to both store the UMI, and to indicate at the fragment is part of a duplicate group,
+            // including for when UMIs are disabled and it's a standard duplicate group. Consider renaming or altering meaning
+            fragment.setUmi(mUmiId != null ? mUmiId : "");
             fragment.setStatus(DUPLICATE);
 
+            boolean checkFirstInPair = fragment.isPreciseInversion();
+
             // add non-supps first to establish the correct primary read type info
-            fragment.reads().stream().filter(x -> !x.getSupplementaryAlignmentFlag()).forEach(x -> addRead(x));
+            fragment.reads().stream().filter(x -> !x.getSupplementaryAlignmentFlag()).forEach(x -> addRead(x, checkFirstInPair));
         }
 
         // add supplementaries once all primaries have been added and their expected supps & types registered
@@ -124,9 +142,11 @@ public class DuplicateGroup
         mFragments.clear();
     }
 
-    public void addRead(final SAMRecord read)
+    public void addRead(final SAMRecord read) { addRead(read, false); }
+
+    private void addRead(final SAMRecord read, boolean checkFirstInPair)
     {
-        int readTypeIndex = getReadTypeIndex(read);
+        int readTypeIndex = getReadTypeIndex(read, checkFirstInPair);
 
         if(mReadGroups[readTypeIndex] == null)
         {
@@ -146,6 +166,9 @@ public class DuplicateGroup
 
     private class ReadTypeId
     {
+        // a class for distinguishing between reads in a fragment - first & second, and any supplementaries
+        // first/second in pair is not sufficient where reverse orientation fragments have R1 and R2 swapped
+        // so coordinates are also used
         public final String Chromosome;
         public final int UnclippedPosition;
         public final int[] PositionRange;
@@ -173,7 +196,7 @@ public class DuplicateGroup
             PositionRange[SE_END] = max(PositionRange[SE_END], position);
         }
 
-        public boolean primaryMatches(final SAMRecord read)
+        private boolean primaryMatches(final SAMRecord read, boolean checkFirstInPair)
         {
             if(Unmapped || read.getReadUnmappedFlag())
                 return Unmapped == read.getReadUnmappedFlag();
@@ -184,7 +207,10 @@ public class DuplicateGroup
             if(orientation(read) != Orientation)
                 return false;
 
-            return getUnclippedPosition(read) == UnclippedPosition;
+            if(checkFirstInPair && FirstInPair != read.getFirstOfPairFlag())
+                return false;
+
+            return getFivePrimeUnclippedPosition(read) == UnclippedPosition;
         }
 
         public boolean supplementaryMatches(final SAMRecord read, final SupplementaryReadData suppData)
@@ -207,11 +233,11 @@ public class DuplicateGroup
         }
     }
 
-    private int getReadTypeIndex(final SAMRecord read)
+    private int getReadTypeIndex(final SAMRecord read, boolean checkFirstInPair)
     {
         if(!read.getSupplementaryAlignmentFlag())
         {
-            SupplementaryReadData suppData = SupplementaryReadData.from(read);
+            SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
             boolean hasValidSupp = suppData != null && HumanChromosome.contains(suppData.Chromosome);
 
             int index = 0;
@@ -220,7 +246,7 @@ public class DuplicateGroup
                 if(mPrimaryReadTypeIndex[index] == null)
                     break;
 
-                if(mPrimaryReadTypeIndex[index].primaryMatches(read))
+                if(mPrimaryReadTypeIndex[index].primaryMatches(read, checkFirstInPair))
                 {
                     // update details for this primary index
                     mPrimaryReadTypeIndex[index].updatePosition(read.getAlignmentStart());
@@ -237,7 +263,7 @@ public class DuplicateGroup
 
             mPrimaryReadTypeIndex[index] = new ReadTypeId(
                     read.getReferenceName(),
-                    read.getReadUnmappedFlag() ? 0 : getUnclippedPosition(read), read.getAlignmentStart(),
+                    read.getReadUnmappedFlag() ? 0 : getFivePrimeUnclippedPosition(read), read.getAlignmentStart(),
                     read.getReadUnmappedFlag() ? 0 : orientation(read),
                     hasValidSupp, read.getFirstOfPairFlag(), read.getReadUnmappedFlag());
 
@@ -254,9 +280,7 @@ public class DuplicateGroup
             return index;
         }
 
-        // boolean checkSuppData = Arrays.stream(mPrimaryReadTypeIndex).filter(x -> x != null && x.HasSupplementary).count() == 2;
-        // SupplementaryReadData suppData = checkSuppData ? SupplementaryReadData.from(read) : null;
-        SupplementaryReadData suppData = SupplementaryReadData.from(read);
+        SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
 
         int matchedPrimaryIndex;
 
@@ -323,24 +347,40 @@ public class DuplicateGroup
                 if(i == ReadType.PRIMARY_SUPPLEMENTARY.ordinal() || i == ReadType.MATE_SUPPLEMENTARY.ordinal())
                 {
                     // supplementaries can go to difference places and some reads have more than one, so go with the most frequent
-                    consensusReadInfo = consensusReads.createConsensusRead(findConsistentSupplementaries(readGroup), mId);
+                    consensusReadInfo = consensusReads.createConsensusRead(
+                            findConsistentSupplementaries(readGroup), mPrimaryTemplateRead, mGroupReadId, mUmiId);
                 }
                 else
                 {
-                    consensusReadInfo = consensusReads.createConsensusRead(readGroup, mId);
+                    consensusReadInfo = consensusReads.createConsensusRead(readGroup, mPrimaryTemplateRead, mGroupReadId, mUmiId);
+
+                    // cache to ensure subsequent consensus reads use the same properties
+                    if(mPrimaryTemplateRead == null)
+                    {
+                        mPrimaryTemplateRead = consensusReadInfo.TemplateRead;
+                        mGroupReadId = consensusReadInfo.ConsensusRead.getReadName();
+
+                    }
                 }
 
                 // set consensus read attributes
-                consensusReadInfo.ConsensusRead.setAttribute(CONSENSUS_READ_ATTRIBUTE, readGroup.size());
+                int firstInPairCount = (int)readGroup.stream().filter(x -> x.getFirstOfPairFlag()).count();
+                int readCount = readGroup.size();
+                boolean isDualStrand = mDualStrand || (firstInPairCount > 0 && firstInPairCount < readCount);
+                boolean isPrimaryGroup = (i == ReadType.PRIMARY.ordinal() || i == ReadType.PRIMARY_SUPPLEMENTARY.ordinal());
 
-                String umiReadType = mDualStrand ? UmiReadType.DUAL_STRAND.toString() : UmiReadType.SINGLE.toString();
-                consensusReadInfo.ConsensusRead.setAttribute(UMI_TYPE_ATTRIBUTE, umiReadType);
+                if(!isPrimaryGroup)
+                    firstInPairCount = readCount - firstInPairCount; // adjusted so both reads report the same ratio
+
+                UmiReadType umiReadType = isDualStrand ? DUAL : SINGLE;
+
+                addConsensusReadAttribute(consensusReadInfo.ConsensusRead, readCount, firstInPairCount,  umiReadType);
 
                 reads.add(consensusReadInfo.ConsensusRead);
             }
             catch(Exception e)
             {
-                MD_LOGGER.error("error forming consensus: umi({}) coords({})", toString());
+                MD_LOGGER.error("error forming consensus: {}", toString());
 
                 for(SAMRecord read : readGroup)
                 {
@@ -366,7 +406,7 @@ public class DuplicateGroup
         for(int i = 0; i < readGroup.size(); ++i)
         {
             SAMRecord read = readGroup.get(i);
-            String chrPosStr = format("%s_%d", read.getReferenceName(), getUnclippedPosition(read));
+            String chrPosStr = format("%s_%d", read.getReferenceName(), getFivePrimeUnclippedPosition(read));
             readChrPositions[i] = chrPosStr;
             Integer count = posCounts.get(chrPosStr);
             posCounts.put(chrPosStr, count != null ? count + 1 : 1);
@@ -415,7 +455,7 @@ public class DuplicateGroup
     public String toString()
     {
         if(mFragmentCount == 0)
-            return format("id(%s) fragments(%d) coords(%s)", mId, mFragments.size(), mCoordinatesKey);
+            return format("id(%s) fragments(%d) coords(%s)", mUmiId, mFragments.size(), mCoordinatesKey);
 
         StringJoiner sj = new StringJoiner(", ");
         for(ReadType readType : ReadType.values())
@@ -432,6 +472,6 @@ public class DuplicateGroup
             sj.add(format("%s=%d %s", readType, readGroup.size(), state));
         }
 
-        return format("id(%s) fragments(%d) coords(%s) readCounts(%s)", mId, mFragmentCount, mCoordinatesKey, sj);
+        return format("id(%s) fragments(%d) coords(%s) readCounts(%s)", mUmiId, mFragmentCount, mCoordinatesKey, sj);
     }
 }

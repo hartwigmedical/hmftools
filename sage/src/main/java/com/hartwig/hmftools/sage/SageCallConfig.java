@@ -3,7 +3,8 @@ package com.hartwig.hmftools.sage;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAMS_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.sage.SageCommon.SAMPLE_DELIM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -12,10 +13,8 @@ import static com.hartwig.hmftools.sage.SageConfig.registerCommonConfig;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.util.Strings;
@@ -31,7 +30,7 @@ public class SageCallConfig
     public final String PanelBed;
     public final String Hotspots;
     public final boolean PanelOnly;
-    public final Set<Integer> SpecificPositions;
+    public final boolean OldIndelDedup; // run first but then override
 
     private final String mResourceDir;
 
@@ -41,7 +40,7 @@ public class SageCallConfig
     private static final String PANEL_BED = "panel_bed";
     private static final String HOTSPOTS = "hotspots";
     private static final String PANEL_ONLY = "panel_only";
-    private static final String SPECIFIC_POSITIONS = "specific_positions";
+    private static final String RUN_OLD_DEDUP = "old_indel_dedup_diffs";
 
     public SageCallConfig(final String version, final ConfigBuilder configBuilder)
     {
@@ -68,16 +67,7 @@ public class SageCallConfig
         Hotspots = getReferenceFile(configBuilder, HOTSPOTS);
 
         PanelOnly = configBuilder.hasFlag(PANEL_ONLY);
-
-        SpecificPositions = Sets.newHashSet();
-        if(configBuilder.hasValue(SPECIFIC_POSITIONS))
-        {
-            final String positionList = configBuilder.getValue(SPECIFIC_POSITIONS, Strings.EMPTY);
-            if(!positionList.isEmpty())
-            {
-                Arrays.stream(positionList.split(ITEM_DELIM)).forEach(x -> SpecificPositions.add(Integer.parseInt(x)));
-            }
-        }
+        OldIndelDedup = configBuilder.hasFlag(RUN_OLD_DEDUP);
     }
 
     public boolean isValid()
@@ -122,8 +112,8 @@ public class SageCallConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(TUMOR, true, "Tumor sample, or collection separated by ','");
-        configBuilder.addConfigItem(TUMOR_BAM, true, "Tumor bam file(s)");
+        configBuilder.addConfigItem(TUMOR, true, TUMOR_IDS_DESC);
+        configBuilder.addConfigItem(TUMOR_BAM, true, TUMOR_BAMS_DESC);
 
         configBuilder.addPath(RESOURCE_DIR, false, "Path to Sage resource files");
         configBuilder.addPrefixedPath(HIGH_CONFIDENCE_BED, false, "High confidence regions bed file", RESOURCE_DIR);
@@ -131,17 +121,15 @@ public class SageCallConfig
         configBuilder.addPrefixedPath(HOTSPOTS, false, "Hotspots", RESOURCE_DIR);
         configBuilder.addPrefixedPath(COVERAGE_BED, false, "Coverage is calculated for optionally supplied bed", RESOURCE_DIR);
         configBuilder.addFlag(PANEL_ONLY, "Only examine panel for variants");
+        configBuilder.addFlag(RUN_OLD_DEDUP, "Run old INDEL dedup logic but only to annotate differences with new");
 
         registerCommonConfig(configBuilder);
         addEnsemblDir(configBuilder);
-
-        // debug
-        configBuilder.addConfigItem(SPECIFIC_POSITIONS, "Run for specific positions(s) separated by ';', for debug purposes");
     }
 
     public SageCallConfig()
     {
-        Common = new SageConfig();
+        Common = new SageConfig(false);
         TumorIds = Lists.newArrayList();
         TumorBams = Lists.newArrayList();
         HighConfidenceBed = "highConf";
@@ -149,7 +137,7 @@ public class SageCallConfig
         PanelBed = "panel";
         Hotspots = "hotspots";
         PanelOnly = false;
-        SpecificPositions = Sets.newHashSet();
+        OldIndelDedup = false;
         mResourceDir = "";
     }
 

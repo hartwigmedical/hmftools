@@ -1,40 +1,40 @@
 package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_REGIONS_V37;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEID;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEIDL;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.CIRPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.EVENT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_AS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_ASRP;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_ASSR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BAQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BSC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BUM;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BUMQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_CAS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_RAS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_RPQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_SRQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.INDEL_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.PAR_ID;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.READ_PAIRS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_READS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.gripss.GripssTestApp.TEST_REF_ID;
 import static com.hartwig.hmftools.gripss.GripssTestApp.TEST_SAMPLE_ID;
 import static com.hartwig.hmftools.gripss.VcfIdGenerator.vcfId;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_AS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASRP;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASSR;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BEID;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BEIDL;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BQ;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BSC;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BUM;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BUMQ;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BVF;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CAS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIPOS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CIRPOS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_EVENT;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOMSEQ;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IC;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_PAR_ID;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RAS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REF;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REFPAIR;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RP;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RPQ;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SB;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SR;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SRQ;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formPairedAltString;
 import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formSingleAltString;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_HARD_MAX_NORMAL_ABSOLUTE_SUPPORT;
@@ -77,7 +77,7 @@ public class GripssTestUtils
     public static final String LINE_INSERT_SEQ_A = "AAAAAAAAAAAAAAAAAAAA";
     public static final String LINE_INSERT_SEQ_T = "TTTTTTTTTTTTTTTTTTTT";
 
-    public static final double DEFAULT_QUAL = 1000;
+    public static final double DEFAULT_QUAL = 5000;
 
     public static StructuralVariantFactory defaultSvFactory()
     {
@@ -221,16 +221,16 @@ public class GripssTestUtils
             commonAttributes.putAll(commonOverrides);
 
         if(mateId != null)
-            commonAttributes.put(VT_PAR_ID, mateId);
+            commonAttributes.put(PAR_ID, mateId);
 
         Map<String,Object> refAttributes = makeGenotypeAttributes(qual);
         Map<String,Object> tumorAttributes = makeGenotypeAttributes(qual);
 
         // defaults to indicate a somatic variant
-        tumorAttributes.put(VT_VF, 100);
-        tumorAttributes.put(VT_BVF, 100);
-        tumorAttributes.put(VT_BSC, 100);
-        tumorAttributes.put(VT_SR, 1);
+        tumorAttributes.put(SV_FRAG_COUNT, 50);
+        tumorAttributes.put(SGL_FRAG_COUNT, 50);
+        tumorAttributes.put(GRIDSS_BSC, 100);
+        tumorAttributes.put(SPLIT_READS, 1);
 
         if(refOverrides != null)
             refAttributes.putAll(refOverrides);
@@ -281,36 +281,36 @@ public class GripssTestUtils
         String eventId = vcfId.substring(0, vcfId.length() - 1);
 
         // quals
-        attributes.put(VT_QUAL, qual);
-        attributes.put(VT_BQ, qual);
-        attributes.put(VT_BAQ, qual);
-        attributes.put(VT_SRQ, qual);
-        attributes.put(VT_RPQ, qual);
-        attributes.put(VT_BUMQ, 0);
+        attributes.put(QUAL, qual);
+        attributes.put(GRIDSS_BQ, qual);
+        attributes.put(GRIDSS_BAQ, qual);
+        attributes.put(GRIDSS_SRQ, qual);
+        attributes.put(GRIDSS_RPQ, qual);
+        attributes.put(GRIDSS_BUMQ, 0);
 
         // read counts
-        attributes.put(VT_SR, 1);
-        attributes.put(VT_VF, 100);
-        attributes.put(VT_RP, 1);
-        attributes.put(VT_ASRP, 1);
-        attributes.put(VT_ASSR, 1);
-        attributes.put(VT_BUM, 0);
-        attributes.put(VT_BVF, 100);
+        attributes.put(SPLIT_READS, 1);
+        attributes.put(SV_FRAG_COUNT, 100);
+        attributes.put(READ_PAIRS, 1);
+        attributes.put(GRIDSS_ASRP, 1);
+        attributes.put(GRIDSS_ASSR, 1);
+        attributes.put(GRIDSS_BUM, 0);
+        attributes.put(SGL_FRAG_COUNT, 100);
 
-        attributes.put(VT_IC, 0);
-        attributes.put(VT_BEID, "");
-        attributes.put(VT_BEIDL, "");
-        attributes.put(VT_HOMSEQ, "");
+        attributes.put(INDEL_COUNT, 0);
+        attributes.put(BEID, "");
+        attributes.put(BEIDL, "");
+        attributes.put(HOMSEQ, "");
 
-        attributes.put(VT_AS, 0);
-        attributes.put(VT_CAS, 0);
-        attributes.put(VT_RAS, 0);
+        attributes.put(GRIDSS_AS, 0);
+        attributes.put(GRIDSS_CAS, 0);
+        attributes.put(GRIDSS_RAS, 0);
 
-        attributes.put(VT_EVENT, eventId);
-        attributes.put(VT_SB, 0.5);
-        attributes.put(VT_REFPAIR, 1);
-        attributes.put(VT_CIPOS, Lists.newArrayList(0, 0));
-        attributes.put(VT_CIRPOS, Lists.newArrayList(0, 0));
+        attributes.put(EVENT, eventId);
+        attributes.put(STRAND_BIAS, 0.5);
+        attributes.put(REF_DEPTH_PAIR, 1);
+        attributes.put(CIPOS, Lists.newArrayList(0, 0));
+        attributes.put(CIRPOS, Lists.newArrayList(0, 0));
         attributes.put("SVTYPE", "BND");
 
         return attributes;
@@ -321,35 +321,35 @@ public class GripssTestUtils
         Map<String,Object> attributes = Maps.newHashMap();
 
         // quals
-        attributes.put(VT_QUAL, qual);
-        attributes.put(VT_BQ, qual);
-        attributes.put(VT_BAQ, qual);
-        attributes.put(VT_SRQ, qual);
-        attributes.put(VT_RPQ, qual);
-        attributes.put(VT_BUMQ, 0);
+        attributes.put(QUAL, qual);
+        attributes.put(GRIDSS_BQ, qual);
+        attributes.put(GRIDSS_BAQ, qual);
+        attributes.put(GRIDSS_SRQ, qual);
+        attributes.put(GRIDSS_RPQ, qual);
+        attributes.put(GRIDSS_BUMQ, 0);
 
         // read counts
-        attributes.put(VT_SR, 0);
-        attributes.put(VT_VF, 1);
-        attributes.put(VT_RP, 1);
-        attributes.put(VT_ASRP, 1);
-        attributes.put(VT_ASSR, 1);
-        attributes.put(VT_BUM, 0);
-        attributes.put(VT_BVF, 1);
-        attributes.put(VT_BSC, 1);
-        attributes.put(VT_REF, 10);
+        attributes.put(SPLIT_READS, 0);
+        attributes.put(SV_FRAG_COUNT, 1);
+        attributes.put(READ_PAIRS, 1);
+        attributes.put(GRIDSS_ASRP, 1);
+        attributes.put(GRIDSS_ASSR, 1);
+        attributes.put(GRIDSS_BUM, 0);
+        attributes.put(SGL_FRAG_COUNT, 1);
+        attributes.put(GRIDSS_BSC, 1);
+        attributes.put(REF_DEPTH, 10);
 
         // other
-        attributes.put(VT_IC, 0);
-        attributes.put(VT_BEID, "");
-        attributes.put(VT_BEIDL, "");
-        attributes.put(VT_HOMSEQ, "");
+        attributes.put(INDEL_COUNT, 0);
+        attributes.put(BEID, "");
+        attributes.put(BEIDL, "");
+        attributes.put(HOMSEQ, "");
 
-        attributes.put(VT_AS, 0);
-        attributes.put(VT_CAS, 0);
-        attributes.put(VT_RAS, 0);
+        attributes.put(GRIDSS_AS, 0);
+        attributes.put(GRIDSS_CAS, 0);
+        attributes.put(GRIDSS_RAS, 0);
 
-        attributes.put(VT_REFPAIR, 1);
+        attributes.put(REF_DEPTH_PAIR, 1);
 
         return attributes;
     }
@@ -373,18 +373,21 @@ public class GripssTestUtils
                 DEFAULT_PON_DISTANCE,
                 POLY_G_REGIONS_V37,
                 PMS2_V37,
-                false);
+                false,
+                30,
+                0.03,
+                0.005);
     }
 
     public static Map<String,Object> buildLinkAttributes(final String beid, final String beidl)
     {
         Map<String,Object> attributes = Maps.newHashMap();
-        attributes.put(VT_AS, 2); // set automatically from assembly strings
+        attributes.put(GRIDSS_AS, 2); // set automatically from assembly strings
 
         String[] beids = beid.split(",");
         String[] beidls = beidl.split(",");
-        attributes.put(VT_BEID, beids);
-        attributes.put(VT_BEIDL, beidls);
+        attributes.put(BEID, beids);
+        attributes.put(BEIDL, beidls);
         return attributes;
     }
 

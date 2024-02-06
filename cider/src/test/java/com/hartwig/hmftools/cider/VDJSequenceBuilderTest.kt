@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.cider
 
-import org.eclipse.collections.api.factory.Lists
+import com.google.common.collect.ImmutableList
 import org.junit.Before
 import kotlin.test.*
 
@@ -38,7 +38,7 @@ class VDJSequenceBuilderTest
 
         // create a blosum match of type IGHJ, which will match with IGHV
         mockAnchorBlosumSearcher.anchorBlosumMatch = AnchorBlosumMatch(20, 25, "CCCCC",
-            Lists.immutable.of(TestUtils.ighJ1), 10)
+            ImmutableList.of(TestUtils.ighJ1), 10)
 
         // now we should be able to build a VDJ sequence
         val vdjSeq = vdjSeqBuilder.tryCompleteLayoutWithBlosum(VJGeneType.IGHV, layout)
@@ -79,7 +79,7 @@ class VDJSequenceBuilderTest
 
         // create a blosum match of type IGHV, which will match with IGHJ
         mockAnchorBlosumSearcher.anchorBlosumMatch = AnchorBlosumMatch(3, 10, "CCCCC",
-            Lists.immutable.of(TestUtils.ighV1_18), 10)
+            ImmutableList.of(TestUtils.ighV1_18), 10)
 
         // now we should be able to build a VDJ sequence
         val vdjSeq = vdjSeqBuilder.tryCompleteLayoutWithBlosum(VJGeneType.IGHJ, layout)
@@ -171,7 +171,7 @@ class VDJSequenceBuilderTest
         assertNotNull(vdjSeq)
         assertNotNull(vdjSeq.vAnchor)
         assertNotNull(vdjSeq.jAnchor)
-        assertEquals(seq, vdjSeq.layout.consensusSequence())
+        assertEquals(seq, vdjSeq.layout.consensusSequenceString())
         assertEquals(VJGeneType.TRAV, vdjSeq.vAnchor!!.geneType)
         assertEquals(VJGeneType.TRAJ, vdjSeq.jAnchor!!.geneType)
         assertIs<VJAnchorByReadMatch>(vdjSeq.vAnchor)
@@ -214,7 +214,7 @@ class VDJSequenceBuilderTest
         assertNotNull(vdjSeq)
         assertNotNull(vdjSeq.vAnchor)
         assertNotNull(vdjSeq.jAnchor)
-        assertEquals(seq, vdjSeq.layout.consensusSequence())
+        assertEquals(seq, vdjSeq.layout.consensusSequenceString())
         assertEquals(VJGeneType.TRAV, vdjSeq.vAnchor!!.geneType)
         assertEquals(VJGeneType.TRAJ, vdjSeq.jAnchor!!.geneType)
         assertIs<VJAnchorByReadMatch>(vdjSeq.vAnchor)
@@ -257,7 +257,7 @@ class VDJSequenceBuilderTest
         assertNotNull(vdjSeq)
         assertNotNull(vdjSeq.vAnchor)
         assertNotNull(vdjSeq.jAnchor)
-        assertEquals(seq, vdjSeq.layout.consensusSequence())
+        assertEquals(seq, vdjSeq.layout.consensusSequenceString())
         assertEquals(VJGeneType.TRAV, vdjSeq.vAnchor!!.geneType)
         assertEquals(VJGeneType.TRAJ, vdjSeq.jAnchor!!.geneType)
         assertIs<VJAnchorByReadMatch>(vdjSeq.vAnchor)

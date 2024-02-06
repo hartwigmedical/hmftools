@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.neo.score;
 
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.NEO_FILE_ID;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
@@ -47,7 +49,7 @@ public class NeoScorerConfig
 
     public final String OutputDir;
     public final String OutputId;
-    public final String RnaSampleSuffix;
+    public final String RnaSampleId;
     public final List<OutputType> WriteTypes;
 
     public final double LikelihoodThreshold;
@@ -56,7 +58,6 @@ public class NeoScorerConfig
 
     public static final String CANCER_TYPE = "cancer_type";
     public static final String RNA_SOMATIC_VCF = "rna_somatic_vcf";
-    public static final String RNA_SAMPLE_SUFFIX = "rna_sample_suffix";
     public static final String COHORT_SAMPLE_TPM_FILE = "cohort_trans_exp_file";
 
     public static final String COHORT_TPM_MEDIANS_FILE = "cancer_tpm_medians_file";
@@ -68,7 +69,7 @@ public class NeoScorerConfig
 
     private static final String WRITE_TYPES = "write_types";
 
-    public static final String RNA_SAMPLE_APPEND_SUFFIX = "_RNA";
+    public static final String RNA_SAMPLE_ID_SUFFIX = "_RNA";
 
     public NeoScorerConfig(final ConfigBuilder configBuilder)
     {
@@ -82,7 +83,7 @@ public class NeoScorerConfig
         IsofoxDir = checkAddDirSeparator(configBuilder.getValue(ISOFOX_DIR_CFG, sampleDataDir));
         RnaSomaticVcf = configBuilder.getValue(RNA_SOMATIC_VCF, sampleDataDir);
         OutputDir = configBuilder.hasValue(OUTPUT_DIR) ? parseOutputDir(configBuilder) : sampleDataDir;
-        RnaSampleSuffix = configBuilder.getValue(RNA_SAMPLE_SUFFIX);
+        RnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
 
         CohortSampleTpmFile = configBuilder.getValue(COHORT_SAMPLE_TPM_FILE);
         CohortTpmMediansFile = configBuilder.getValue(COHORT_TPM_MEDIANS_FILE);
@@ -112,7 +113,7 @@ public class NeoScorerConfig
         String filename = OutputDir;
 
         if(Samples.size() == 1)
-            filename += Samples.get(0).Id + "." + NEO_FILE_ID;
+            filename += Samples.get(0).TumorId + "." + NEO_FILE_ID;
         else
             filename += "neo_cohort";
 
@@ -135,10 +136,7 @@ public class NeoScorerConfig
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
         configBuilder.addPath(LILAC_DIR_CFG, false, LILAC_DIR_DESC);
         configBuilder.addPath(RNA_SOMATIC_VCF, false, "Directory for Purple somatic variant RNA-appended files");
-
-        configBuilder.addConfigItem(
-                RNA_SAMPLE_SUFFIX, false, "RNA sample suffix in Sage-appended VCF", RNA_SAMPLE_APPEND_SUFFIX);
-
+        configBuilder.addConfigItem(RNA_SAMPLE_ID, RNA_SAMPLE_DESC + " in Sage-appended VCF");
         configBuilder.addPath(ISOFOX_DIR_CFG, false, "Directory for Isofox files (Transcript expresion, Neoepitope coverage)");
         configBuilder.addPath(COHORT_SAMPLE_TPM_FILE, false, "Cohort gene expression matrix");
         configBuilder.addPath(COHORT_TPM_MEDIANS_FILE, false, COHORT_TPM_MEDIANS_FILE_DESC);

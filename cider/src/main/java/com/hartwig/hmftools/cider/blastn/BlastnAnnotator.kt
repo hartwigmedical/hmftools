@@ -79,7 +79,7 @@ class BlastnAnnotator
             val blastnRunData = BlastnRunData(vdj,
                 key++,
                 querySeqRange,
-                vdj.layout.consensusSequence().substring(querySeqRange))
+                vdj.layout.consensusSequenceString().substring(querySeqRange))
             blastnRunDataMap[blastnRunData.key] = blastnRunData
         }
 
@@ -314,7 +314,7 @@ class BlastnAnnotator
 
         fun blastnQuerySeqRange(vdj: VDJSequence) : IntRange
         {
-            val fullSeq = vdj.layout.consensusSequence()
+            val fullSeq = vdj.layout.consensusSequenceString()
             val vdjSeq = vdj.sequence
             return blastnQuerySeqRange(vdjSeq, fullSeq)
         }

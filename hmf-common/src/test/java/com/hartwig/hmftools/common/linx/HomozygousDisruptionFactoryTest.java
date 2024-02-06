@@ -10,10 +10,11 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class HomozygousDisruptionFactoryTest {
-
+public class HomozygousDisruptionFactoryTest
+{
     private static final String SOMATIC_DRIVERS_CATALOG_TSV = Resources.getResource("linx/sample.linx.driver.catalog.tsv").getPath();
-    private static final String GERMLINE_DRIVERS_CATALOG_TSV = Resources.getResource("linx/sample.linx.germline.driver.catalog.tsv").getPath();
+    private static final String GERMLINE_DRIVERS_CATALOG_TSV =
+            Resources.getResource("linx/sample.linx.germline.driver.catalog.tsv").getPath();
 
     @Test
     public void canExtractSomaticHomozygousDisruptions() throws IOException

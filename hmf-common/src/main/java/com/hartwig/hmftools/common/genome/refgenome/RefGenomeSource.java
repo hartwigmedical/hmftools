@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.common.genome.refgenome;
 
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,10 +12,10 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class RefGenomeSource implements RefGenomeInterface
@@ -25,15 +27,16 @@ public class RefGenomeSource implements RefGenomeInterface
 
     private static final Logger LOGGER = LogManager.getLogger(RefGenomeSource.class);
 
-    public static void addRefGenomeConfig(final Options options)
-    {
-        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-    }
+    public IndexedFastaSequenceFile refGenomeFile() { return mRefGenome; }
 
     public static void addRefGenomeVersion(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
+    }
+
+    public static void addRefGenomeFile(final ConfigBuilder configBuilder, boolean required)
+    {
+        configBuilder.addPath(REF_GENOME, required, REF_GENOME_CFG_DESC);
     }
 
     public static void addRefGenomeConfig(final ConfigBuilder configBuilder, boolean required)
@@ -77,6 +80,12 @@ public class RefGenomeSource implements RefGenomeInterface
         return mRefGenome.getSubsequenceAt(chromosome, posStart, posEnd).getBases();
     }
 
+    public static RefGenomeVersion deriveRefGenomeVersion(final RefGenomeSource refGenomeSource)
+    {
+        String firstChromosome = refGenomeSource.refGenomeFile().getSequenceDictionary().getSequences().get(0).getSequenceName();
+        return firstChromosome.startsWith(CHR_PREFIX) ? V38 : V37;
+    }
+
     public static RefGenomeSource loadRefGenome(final String filename)
     {
         if(filename == null || filename.isEmpty())
@@ -84,7 +93,7 @@ public class RefGenomeSource implements RefGenomeInterface
 
         try
         {
-            LOGGER.debug("loading indexed fasta reference file");
+            // LOGGER.debug("loading indexed fasta reference file");
             IndexedFastaSequenceFile refFastaSeqFile = new IndexedFastaSequenceFile(new File(filename));
             return new RefGenomeSource(refFastaSeqFile);
         }
@@ -94,5 +103,4 @@ public class RefGenomeSource implements RefGenomeInterface
             return null;
         }
     }
-
 }

@@ -10,12 +10,13 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class LimsCohortModelFactoryTest {
-
+public class LimsCohortModelFactoryTest
+{
     private static final String COHORT_MODEL_TSV = Resources.getResource("lims/cohort_config.tsv").getPath();
 
     @Test
-    public void canReadCohortConfigFile() throws IOException {
+    public void canReadCohortConfigFile() throws IOException
+    {
         LimsCohortModel cohortModel = LimsCohortModelFactory.read(COHORT_MODEL_TSV);
 
         assertEquals(1, cohortModel.limsCohortMap().size());

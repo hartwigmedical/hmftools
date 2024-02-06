@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.samtools;
 
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.samtools.CigarUtils.getReadBoundaryPosition;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -12,40 +15,37 @@ import com.google.common.collect.Lists;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMTag;
 
 public final class SamRecordUtils
 {
-    public static final int PHRED_OFFSET = 33;
+    public static final String SUPPLEMENTARY_ATTRIBUTE = SAMTag.SA.name();
+    public static final String MATE_CIGAR_ATTRIBUTE = SAMTag.MC.name();
+    public static final String NUM_MUTATONS_ATTRIBUTE = SAMTag.NM.name();
+    public static final String SECONDARY_ATTRIBUTE = SAMTag.HI.name();
 
-    public static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
-    public static final String MATE_CIGAR_ATTRIBUTE = "MC";
-    public static final String NUM_MUTATONS_ATTRIBUTE = "NM";
+    // in-house attributes
     public static final String CONSENSUS_READ_ATTRIBUTE = "CR";
     public static final String UMI_TYPE_ATTRIBUTE = "UT";
     public static final String UMI_ATTRIBUTE = "UI";
-    public static final String SECONDARY_ATTRIBUTE = "HI";
+    public static final String CONSENSUS_INFO_DELIM = ";";
+
+    public static final String UNMAP_ATTRIBUTE = "UM"; // a read has been unmapped (ie by MarkDups)
 
     public static final String NO_CHROMOSOME_NAME = "*";
     public static final String NO_CIGAR = "*";
     public static final int NO_CHROMOSOME_INDEX = -1;
     public static final int NO_POSITION = 0;
 
+    private static final int PHRED_OFFSET = 33;
+
     public static final Logger SAM_LOGGER = LogManager.getLogger(SamRecordUtils.class);
-
-    public static int getBaseQuality(final char quality)
-    {
-        return quality - PHRED_OFFSET;
-    }
-
-    public static int getBaseQuality(final SAMRecord record, int readPosition)
-    {
-        return getAvgBaseQuality(record, readPosition, 1);
-    }
 
     // convenience methods to avoid triggering a crash if unpaired
     public static boolean firstInPair(final SAMRecord record)
@@ -75,18 +75,68 @@ public final class SamRecordUtils
 
     public static byte orientation(final SAMRecord read) { return !read.getReadNegativeStrandFlag() ? POS_ORIENT : NEG_ORIENT; }
 
-    public static int getAvgBaseQuality(final SAMRecord record, int readPosition, int length)
+    public static int getBaseQuality(final char quality)
     {
-        assert (readPosition > 0);
+        return quality - PHRED_OFFSET;
+    }
 
-        int score = 0;
-        final String baseQualities = record.getBaseQualityString();
-        for(int index = readPosition - 1; index < Math.min(readPosition - 1 + length, baseQualities.length()); index++)
+    public static void addConsensusReadAttribute(final SAMRecord record, int readCount, int firstInPairCount, final UmiReadType umiReadType)
+    {
+        record.setAttribute(CONSENSUS_READ_ATTRIBUTE, format("%d;%d", readCount, firstInPairCount));
+        record.setAttribute(UMI_TYPE_ATTRIBUTE, umiReadType.toString());
+    }
+
+    @Deprecated
+    private static final String DUAL_STRAND_OLD = "DUAL_STRAND";
+
+    public static UmiReadType extractUmiType(final SAMRecord record)
+    {
+        String umiTypeStr = record.getStringAttribute(UMI_TYPE_ATTRIBUTE);
+
+        if(umiTypeStr != null)
+            return umiTypeStr.equals(DUAL_STRAND_OLD) ? UmiReadType.DUAL : UmiReadType.valueOf(umiTypeStr);
+        else
+            return UmiReadType.NONE;
+    }
+
+    public static int getMateAlignmentEnd(final SAMRecord read)
+    {
+        String mateCigarStr = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
+        if(mateCigarStr == null || mateCigarStr.equals(NO_CIGAR))
+            return NO_POSITION;
+
+        return getMateAlignmentEnd(read.getMateAlignmentStart(), mateCigarStr);
+    }
+
+    public static int getMateAlignmentEnd(final int readStart, @NotNull final String cigarStr)
+    {
+        return getReadBoundaryPosition(readStart, cigarStr, false, false);
+    }
+
+    public static int getFivePrimeUnclippedPosition(final int readStart, @NotNull final String cigarStr, final boolean forwardStrand)
+    {
+        return getReadBoundaryPosition(readStart, cigarStr, forwardStrand, true);
+    }
+
+    public static int getFivePrimeUnclippedPosition(final SAMRecord read)
+    {
+        // returns the 5' position of the read, factoring in any soft-clipped bases
+        int position;
+
+        if(orientation(read) == POS_ORIENT)
         {
-            int baseScore = getBaseQuality(baseQualities.charAt(index));
-            score += baseScore;
+            position = read.getAlignmentStart();
+            if(read.getCigar().isLeftClipped())
+                position -= read.getCigar().getFirstCigarElement().getLength();
         }
-        return score / length;
+        else
+        {
+            position = read.getAlignmentEnd();
+            if(read.getCigar().isRightClipped())
+                position += read.getCigar().getLastCigarElement().getLength();
+        }
+
+        return position;
     }
 
     public static List<int[]> generateMappedCoords(final Cigar cigar, int posStart)
@@ -139,5 +189,29 @@ public final class SamRecordUtils
         }
 
         return mappedCoords;
+    }
+
+    public static String getOrientationString(final SAMRecord read)
+    {
+        if(!read.getReadPairedFlag())
+            return "";
+
+        if(read.getReadUnmappedFlag() || read.getMateUnmappedFlag())
+            return "";
+
+        String firstStr;
+        String secondStr;
+        if(read.getFirstOfPairFlag())
+        {
+            firstStr = read.getReadNegativeStrandFlag() ? "R" : "F";
+            secondStr = read.getMateNegativeStrandFlag() ? "R" : "F";
+        }
+        else
+        {
+            firstStr = read.getMateNegativeStrandFlag() ? "R" : "F";
+            secondStr = read.getReadNegativeStrandFlag() ? "R" : "F";
+        }
+
+        return format("%s1%s2", firstStr, secondStr);
     }
 }

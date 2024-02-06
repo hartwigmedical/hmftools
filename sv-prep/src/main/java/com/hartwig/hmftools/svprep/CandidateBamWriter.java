@@ -127,7 +127,9 @@ public class CandidateBamWriter
         }
 
         final List<Callable> callableList = chromosomeTasks.stream().collect(Collectors.toList());
-        TaskExecutor.executeTasks(callableList, mConfig.Threads);
+
+        if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
+            System.exit(1);
 
         SV_LOGGER.info("candidate reads assignment complete");
 

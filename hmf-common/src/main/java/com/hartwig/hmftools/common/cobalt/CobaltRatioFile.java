@@ -1,46 +1,63 @@
 package com.hartwig.hmftools.common.cobalt;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ZIP_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createGzipBufferedReader;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createGzipBufferedWriter;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
-import java.io.BufferedReader;
-import java.io.File;
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-import java.util.StringJoiner;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.utils.file.DelimFileReader;
+import com.hartwig.hmftools.common.utils.file.DelimFileWriter;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class CobaltRatioFile
 {
-    private static final DecimalFormat FORMAT = new DecimalFormat("#.####");
+    enum Column
+    {
+        chromosome,
+        position,
+        referenceReadDepth,
+        tumorReadDepth,
+        referenceGCRatio,
+        tumorGCRatio,
+        referenceGCDiploidRatio,
+        referenceGCContent,
+        tumorGCContent
+    }
+
+    private static final DecimalFormat FORMAT = new DecimalFormat("#.####", new DecimalFormatSymbols(Locale.ENGLISH));
 
     private static final String EXTENSION = ".cobalt.ratio.tsv.gz";
+
+    // old column names for backwards compatibility
+    private static final String COL_REF_READ_COUNT  = "referenceReadCount";
+    private static final String COL_TUMOR_READ_COUNT  = "tumorReadCount";
 
     @Deprecated
     public static final String TUMOR_ONLY_REFERENCE_SAMPLE = "DIPLOID";
 
     @NotNull
-    public static String generateFilenameForWriting(final String basePath, final String sample)
+    public static String generateFilename(final String basePath, final String sample)
     {
         return checkAddDirSeparator(basePath) + sample + EXTENSION;
     }
@@ -48,14 +65,17 @@ public final class CobaltRatioFile
     @NotNull
     public static String generateFilenameForReading(final String basePath, final String sample)
     {
-        String filename = checkAddDirSeparator(basePath) + sample + EXTENSION;
-        if(new File(filename).exists())
-        {
-            return filename;
-        }
+        // some old samples have unzipped ratio files, so check for these
+        String filename = generateFilename(basePath, sample);
 
-        // or maybe it is not gzipped (old version)
-        filename = filename.substring(0, filename.length() - 3);
+        if(Files.exists(Paths.get(filename)))
+            return filename;
+
+        String unzippedFile = filename.replaceAll(ZIP_EXTENSION, "");
+
+        if(Files.exists(Paths.get(unzippedFile)))
+            return unzippedFile;
+
         return filename;
     }
 
@@ -80,47 +100,72 @@ public final class CobaltRatioFile
         return read(filename, gender, hasTumor);
     }
 
-    private static final String CHROMOSOME = "chromosome";
-    private static final String POSITION = "position";
-    private static final String REF_READ_COUNT = "referenceReadCount";
-    private static final String TUMOR_READ_COUNT = "tumorReadCount";
-    private static final String REF_GC_RATIO = "referenceGCRatio";
-    private static final String TUMOR_GC_RATIO= "tumorGCRatio";
-    private static final String REF_GC_DIP_RATIO = "referenceGCDiploidRatio";
+    private static final int DEFAULT_READ_LENGTH = 151;
+    private static final double READ_DEPTH_INVALID = -1;
+
+    private static double convertReadCount(final double readCount)
+    {
+        if(readCount <= 0)
+            return readCount;
+
+        return readCount * DEFAULT_READ_LENGTH /GCProfileFactory.WINDOW_SIZE;
+    }
 
     private static Map<Chromosome,List<CobaltRatio>> read(final String filename, final Gender gender, boolean hasTumor)
-            throws IOException
     {
-        Map<Chromosome,List<CobaltRatio>> chrRatiosMap = Maps.newHashMap();
+        Map<Chromosome,List<CobaltRatio>> chrRatiosMap = new HashMap<>();
 
-        try(BufferedReader reader = filename.endsWith(".gz") ? createGzipBufferedReader(filename) : createBufferedReader(filename))
+        try(DelimFileReader reader = new DelimFileReader(filename))
         {
-            String line = reader.readLine();
-            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, TSV_DELIM);
-
-            int chrIndex = fieldsIndexMap.get(CHROMOSOME);
-            int posIndex = fieldsIndexMap.get(POSITION);
-            int refReadCountIndex = fieldsIndexMap.get(REF_READ_COUNT);
-            int tumorReadCountIndex = fieldsIndexMap.get(TUMOR_READ_COUNT);
-            int refGcRatioIndex = fieldsIndexMap.get(REF_GC_RATIO);
-            int tumorGcRatioIndex = fieldsIndexMap.get(TUMOR_GC_RATIO);
-            int refGcDiplodRatioIndex = fieldsIndexMap.get(REF_GC_DIP_RATIO);
-
             List<CobaltRatio> ratios = null;
-            String currentChromosome = "";
+            String currentChromosome = null;
 
-            while((line = reader.readLine()) != null)
+            int chrIndex = reader.getColumnIndex(Column.chromosome);
+            int posIndex = reader.getColumnIndex(Column.position);
+
+            int refGcRatioIndex = reader.getColumnIndex(Column.referenceGCRatio);
+            int tumorGcRatioIndex = reader.getColumnIndex(Column.tumorGCRatio);
+            int refGcDiplodRatioIndex = reader.getColumnIndex(Column.referenceGCDiploidRatio);
+
+            // 1.15 field updates
+            // changes: referenceReadCount -> referenceReadDepth, tumorReadCount -> tumorReadDepth
+            // added: referenceGCContent, tumorGCContent
+
+            // v1.16 onwards
+            Integer refReadDepthIndex = reader.getColumnIndex(Column.referenceReadDepth);
+            Integer tumorReadDepthIndex = reader.getColumnIndex(Column.tumorReadDepth);
+            Integer refGcContentIndex = reader.getColumnIndex(Column.referenceGCContent);
+            Integer tumorGcContentIndex = reader.getColumnIndex(Column.tumorGCContent);
+
+            // v1.15 backwards compatibility with conversion below
+            Integer refReadCountIndex = reader.getColumnIndex(COL_REF_READ_COUNT);
+            Integer tumorReadCountIndex = reader.getColumnIndex(COL_TUMOR_READ_COUNT);
+
+            boolean useReadCount = refReadCountIndex != null && tumorReadCountIndex != null;
+            boolean hasGcContent = refGcContentIndex != null && tumorGcContentIndex != null;
+
+            for(DelimFileReader.Row row : reader)
             {
-                String[] values = line.split(TSV_DELIM, -1);
+                String chromosome = row.get(chrIndex);
 
-                String chromosome = values[chrIndex];
+                if(currentChromosome == null || !currentChromosome.equals(chromosome))
+                {
+                    currentChromosome = chromosome;
+                    ratios = new ArrayList<>();
+                    chrRatiosMap.put(HumanChromosome.fromString(chromosome), ratios);
+                }
+                else
+                {
+                    // use the same String object for better performance
+                    chromosome = currentChromosome;
+                }
 
-                int refReadCount = Integer.parseInt(values[refReadCountIndex]);
+                double refReadDepth = useReadCount ? convertReadCount(row.getDouble(refReadCountIndex)) : row.getDouble(refReadDepthIndex);
 
-                double initialRefGCRatio = Double.parseDouble(values[refGcRatioIndex]);
-                double initialRefGCDiploidRatio = Double.parseDouble(values[refGcDiplodRatioIndex]);
+                double initialRefGCRatio = row.getDouble(refGcRatioIndex);
+                double initialRefGCDiploidRatio = row.getDouble(refGcDiplodRatioIndex);
 
-                if(refReadCount == -1)
+                if(refReadDepth == READ_DEPTH_INVALID)
                 {
                     // revert to a default ref ratio where no information is available (ie in tumor/panel only)
                     initialRefGCRatio = 1;
@@ -129,25 +174,24 @@ public final class CobaltRatioFile
 
                 double refGcRatio = genderAdjustedDiploidRatio(gender, chromosome, initialRefGCRatio);
                 double refGcDiploadRatio = genderAdjustedDiploidRatio(gender, chromosome, initialRefGCDiploidRatio);
-                double tumorGCRatio = hasTumor ? Double.parseDouble(values[tumorGcRatioIndex]) : refGcDiploadRatio;
-                int tumorReadCount = Integer.parseInt(values[tumorReadCountIndex]);
+                double tumorGCRatio = hasTumor ? row.getDouble(tumorGcRatioIndex) : refGcDiploadRatio;
+
+                double tumorReadDepth = useReadCount ? convertReadCount(row.getDouble(tumorReadCountIndex)) : row.getDouble(tumorReadDepthIndex);
+
+                double refGcContent = hasGcContent ? row.getDouble(refGcContentIndex) : 0;
+                double tumorGcContent = hasGcContent ? row.getDouble(tumorGcContentIndex) : 0;
 
                 CobaltRatio ratio = ImmutableCobaltRatio.builder()
                         .chromosome(chromosome)
-                        .position(Integer.parseInt(values[posIndex]))
-                        .referenceReadCount(refReadCount)
-                        .tumorReadCount(tumorReadCount)
+                        .position(row.getInt(posIndex))
+                        .referenceReadDepth(refReadDepth)
+                        .tumorReadDepth(tumorReadDepth)
                         .tumorGCRatio(tumorGCRatio)
                         .referenceGCRatio(refGcRatio)
                         .referenceGCDiploidRatio(refGcDiploadRatio)
+                        .referenceGcContent(refGcContent)
+                        .tumorGcContent(tumorGcContent)
                         .build();
-
-                if(!currentChromosome.equals(chromosome))
-                {
-                    currentChromosome = chromosome;
-                    ratios = Lists.newArrayList();
-                    chrRatiosMap.put(HumanChromosome.fromString(chromosome), ratios);
-                }
 
                 ratios.add(ratio);
             }
@@ -176,50 +220,26 @@ public final class CobaltRatioFile
 
         return initialRatio;
     }
+
     public static void write(final String fileName, Collection<CobaltRatio> ratios) throws IOException
     {
         List<CobaltRatio> sorted = new ArrayList<>(ratios);
         Collections.sort(sorted);
-        try(Writer writer = createGzipBufferedWriter(fileName))
+
+        try(BufferedWriter writer = createGzipBufferedWriter(fileName))
         {
-            for(String line : toLines(sorted))
-            {
-                writer.write(line + '\n');
-            }
+            DelimFileWriter.write(writer, Column.values(), sorted,
+                (ratio, row) -> {
+                    row.set(Column.chromosome, ratio.chromosome());
+                    row.set(Column.position, ratio.position());
+                    row.set(Column.referenceReadDepth, ratio.referenceReadDepth(), FORMAT);
+                    row.set(Column.tumorReadDepth, ratio.tumorReadDepth(), FORMAT);
+                    row.set(Column.referenceGCRatio, ratio.referenceGCRatio(), FORMAT);
+                    row.set(Column.tumorGCRatio, ratio.tumorGCRatio(), FORMAT);
+                    row.set(Column.referenceGCDiploidRatio, ratio.referenceGCDiploidRatio(), FORMAT);
+                    row.set(Column.referenceGCContent, ratio.referenceGcContent(), FORMAT);
+                    row.set(Column.tumorGCContent, ratio.tumorGcContent(), FORMAT);
+                });
         }
-    }
-
-    private static List<String> toLines(final List<CobaltRatio> ratio)
-    {
-        final List<String> lines = new ArrayList<>();
-        lines.add(header());
-        ratio.stream().map(CobaltRatioFile::toString).forEach(lines::add);
-        return lines;
-    }
-
-    private static String header()
-    {
-        return new StringJoiner(TSV_DELIM)
-                .add(CHROMOSOME)
-                .add(POSITION)
-                .add(REF_READ_COUNT)
-                .add(TUMOR_READ_COUNT)
-                .add(REF_GC_RATIO)
-                .add(TUMOR_GC_RATIO)
-                .add(REF_GC_DIP_RATIO)
-                .toString();
-    }
-
-    private static String toString(final CobaltRatio position)
-    {
-        return new StringJoiner(TSV_DELIM)
-                .add(position.chromosome())
-                .add(String.valueOf(position.position()))
-                .add(String.valueOf(position.referenceReadCount()))
-                .add(String.valueOf(position.tumorReadCount()))
-                .add(FORMAT.format(position.referenceGCRatio()))
-                .add(FORMAT.format(position.tumorGCRatio()))
-                .add(FORMAT.format(position.referenceGCDiploidRatio()))
-                .toString();
     }
 }

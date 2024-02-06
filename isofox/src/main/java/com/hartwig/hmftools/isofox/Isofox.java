@@ -2,14 +2,15 @@ package com.hartwig.hmftools.isofox;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.rna.RnaStatistics.LOW_COVERAGE_PANEL_THRESHOLD;
 import static com.hartwig.hmftools.common.rna.RnaStatistics.LOW_COVERAGE_THRESHOLD;
+import static com.hartwig.hmftools.common.rna.RnaStatistics.SPLICE_GENE_THRESHOLD;
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.APP_NAME;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.PANEL_LOW_COVERAGE_FACTOR;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.PRIORITISED_CHROMOSOMES;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NEO_EPITOPES;
@@ -287,13 +288,21 @@ public class Isofox
         {
             double medianGCRatio = nonEnrichedGcRatioCounts.getPercentileRatio(0.5);
 
-            int lowCoverageThreshold = !mConfig.Filters.RestrictedGeneIds.isEmpty() && !mConfig.PanelTpmNormFile.isEmpty()
-                    ? LOW_COVERAGE_PANEL_THRESHOLD : LOW_COVERAGE_THRESHOLD;
+            int lowCoverageThreshold = LOW_COVERAGE_THRESHOLD;
+            int splicedGeneThreshold = SPLICE_GENE_THRESHOLD;
+
+            if(!mConfig.Filters.RestrictedGeneIds.isEmpty() && !mConfig.PanelTpmNormFile.isEmpty())
+            {
+                // could be adjusted for the specific panel
+                double panelGeneCoverage = mConfig.Filters.RestrictedGeneIds.size() / 37000.0; // total gene count
+                lowCoverageThreshold = (int)(lowCoverageThreshold * panelGeneCoverage * PANEL_LOW_COVERAGE_FACTOR);
+                splicedGeneThreshold = (int)(panelGeneCoverage * SPLICE_GENE_THRESHOLD);
+            }
 
             final RnaStatistics summaryStats = createSummaryStats(
                     totalFragmentCounts, enrichedGeneFragCount, spliceGeneCount,
                     medianGCRatio, mFragmentLengthDistribution, mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength,
-                    lowCoverageThreshold);
+                    lowCoverageThreshold, splicedGeneThreshold);
 
             mResultsWriter.writeSummaryStats(summaryStats);
         }

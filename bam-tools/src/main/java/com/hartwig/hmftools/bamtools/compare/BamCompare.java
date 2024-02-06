@@ -1,23 +1,21 @@
 package com.hartwig.hmftools.bamtools.compare;
 
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.bamtools.common.PartitionTask.partitionChromosome;
+import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.PartitionTask;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -78,18 +76,8 @@ public class BamCompare
             workers.add(partitionThread);
         }
 
-        for(Thread worker : workers)
-        {
-            try
-            {
-                worker.join();
-            }
-            catch(InterruptedException e)
-            {
-                BT_LOGGER.error("task execution error: {}", e.toString());
-                e.printStackTrace();
-            }
-        }
+        if(!runThreadTasks(workers))
+            System.exit(1);
 
         Statistics combinedStats = new Statistics();
         partitionTasks.forEach(x -> combinedStats.merge(x.stats()));

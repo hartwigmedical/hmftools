@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.report.interpretation;
 
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatTwoDigitDecimal;
 
@@ -9,7 +10,6 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.orange.report.ReportResources;
 
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,7 +20,7 @@ public final class Expressions
     {
         for(GeneExpression expression : expressions)
         {
-            if(expression.geneName().equals(geneToFind))
+            if(expression.gene().equals(geneToFind))
             {
                 return expression;
             }
@@ -39,7 +39,7 @@ public final class Expressions
     @NotNull
     public static String percentileType(@NotNull GeneExpression expression)
     {
-        return formatTwoDigitDecimal(expression.percentileCancer());
+        return expression.percentileCancer() == null ? ReportResources.NOT_AVAILABLE : formatTwoDigitDecimal(expression.percentileCancer());
     }
 
     @NotNull
@@ -61,9 +61,9 @@ public final class Expressions
     }
 
     @NotNull
-    private static String toFoldChange(double expression, double median)
+    private static String toFoldChange(double expression, @Nullable Double median)
     {
-        if(Doubles.lessOrEqual(median, 0))
+        if(median == null || Doubles.lessOrEqual(median, 0))
         {
             return ReportResources.NOT_AVAILABLE;
         }

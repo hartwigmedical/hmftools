@@ -9,18 +9,21 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class ProductionRunContextFactoryTest {
+public class ProductionRunContextFactoryTest
+{
 
     private static final String RESOURCE_DIR = Resources.getResource("context").getPath();
 
     @Test
-    public void picksMetadataWhenAvailable() throws IOException {
+    public void picksMetadataWhenAvailable() throws IOException
+    {
         String runDirectory = RESOURCE_DIR + File.separator + "RunDirSomatic";
         assertNotNull(ProductionRunContextFactory.fromRunDirectory(runDirectory, ""));
     }
 
     @Test(expected = IOException.class)
-    public void throwExceptionWhenNoMetaData() throws IOException {
+    public void throwExceptionWhenNoMetaData() throws IOException
+    {
         String runDirectory = RESOURCE_DIR + File.separator + "DoesNotExist";
         assertNotNull(ProductionRunContextFactory.fromRunDirectory(runDirectory, ""));
     }

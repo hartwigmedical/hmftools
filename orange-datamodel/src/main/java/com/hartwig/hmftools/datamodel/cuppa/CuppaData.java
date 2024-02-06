@@ -12,10 +12,13 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface CuppaData {
-
+public interface CuppaData
+{
     @NotNull
     List<CuppaPrediction> predictions();
+
+    @NotNull
+    CuppaPrediction bestPrediction();
 
     int simpleDups32To200B();
 

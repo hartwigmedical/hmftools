@@ -40,8 +40,8 @@ public final class ExpressionTable
         // TODO Build the expression datamodel table prior to rendering.
         for(GeneExpression expression : sort(expressions, sortAscending))
         {
-            table.addCell(cells.createContent(expression.geneName()));
-            table.addCell(cells.createContent(lookupTumorCN(allSomaticGeneCopyNumbers, expression.geneName())));
+            table.addCell(cells.createContent(expression.gene()));
+            table.addCell(cells.createContent(lookupTumorCN(allSomaticGeneCopyNumbers, expression.gene())));
             table.addCell(cells.createContent(Expressions.tpm(expression)));
             table.addCell(cells.createContent(Expressions.percentileType(expression)));
             table.addCell(cells.createContent(Expressions.foldChangeType(expression)));
@@ -70,7 +70,7 @@ public final class ExpressionTable
     {
         for(PurpleGeneCopyNumber geneCopyNumber : geneCopyNumbers)
         {
-            if(geneCopyNumber.geneName().equals(geneToFind))
+            if(geneCopyNumber.gene().equals(geneToFind))
             {
                 return geneCopyNumber;
             }

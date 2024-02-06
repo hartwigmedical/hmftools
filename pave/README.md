@@ -52,6 +52,7 @@ output_dir | Output directory for VCF and transcript CSV, will use input VCF dir
 output_vcf_file | Specify the output VCF filename
 only_canonical | Only annotate impacts on canonical transcripts
 read_pass_only | Only process passing variants
+threads | Splits variants by chromosome across threads
 write_pass_only | Only write passing variants
 write_transcript_data | Write a detailed TSV file for each impacted transcript
 
@@ -64,6 +65,7 @@ java -jar pave.jar
   -ref_genome /path_to_ref_genome_fasta/
   -ref_genome_version [37 or 38] 
   -output_dir /path_to_write_data_files/ 
+  -threads 8
 ```
 
 ### Optional Annotations
@@ -100,8 +102,8 @@ The effects and codingEffects supported by PAVE are the following:
 Effect<sup>1</sup>|Coding effect<sup>2</sup>
 ---|---
 • upstream_gene_variant (<1kb)<br />• intron_variant<br />• 5_prime_UTR_variant<br />• 3_prime_UTR_variant<br />• non_coding_transcript_exon_variant | NONE
-• synonymous_variant | SYNONYMOUS
-• missense_variant<br />• inframe_insertion<sup>3</sup><br />• inframe_deletion<sup>3</sup><br />• phased_inframe_insertion<sup>4</sup><br />• phased_inframe_deletion<sup>4</sup> | MISSENSE
+• synonymous_variant<br />• phased_synonymous<sup>4</sup> | SYNONYMOUS
+• missense_variant<br />• inframe_insertion<sup>3</sup><br />• inframe_deletion<sup>3</sup><br />• phased_inframe_insertion<sup>4</sup><br />• phased_inframe_deletion<sup>4</sup><br />• phased_missense<sup>4</sup> | MISSENSE
 • stop_gained<br />• frameshift<br />• start_lost<sup>5</sup><br />• stop_lost<sup>5</sup> | NONSENSE_OR_FRAMESHIFT
 • splice_donor_variant (D-1,D+1,D+2,D+5)<br />• splice_acceptor_variant (A+1;A+2; A+3 if ALT=G only) | SPLICE<sup>6,7</sup>
 
@@ -116,7 +118,7 @@ Notes:
    - SYNONYMOUS
    - NONE
 3. Inframe INDELs may occasionally be annotated as notionally partially or completely outside the coding region due to left alignment and microhomology. Any INDEL with a length that is a multiplier of 3, that can be right aligned to be fully inside the coding regions should be marked as effect=inframe_insertion/inframe_deletion (notable examples include known pathogenic variants in KIT (4:55593579 CAGAAACCCATGTATGAAGTACAGTGGA > C) and EGFR (7:55248980 C > CTCCAGGAAGCCT)). 
-4. Where there are 2 or more frameshift variants with the same LPS (local phase set), if the combined impact causes an inframe indel, then mark both as effect = phased_inframe_deletion / phased_inframe_insertion.   If a phased inframe indel and snv or mnv affect the same codon, then mark both as phased_inframe_deletion / phased_inframe_insertion and calculate the combined coding effect (eg.  EGFR p.Glu746_Ser752delinsVal).
+4. Where there are 2 or more frameshift variants with the same LPS (local phase set), if the combined impact causes an inframe indel, then mark both as effect = phased_inframe_deletion / phased_inframe_insertion.   If a phased inframe indel and snv or mnv affect the same codon, then mark both as phased_inframe_deletion / phased_inframe_insertion and calculate the combined coding effect (eg.  EGFR p.Glu746_Ser752delinsVal). If the net impact is no inserted or deleted bases, then classify the phased variants as phased missense or synonymous. 
 5. Where an INDEL also leads to a stop_lost or start_lost, the lost effects are prioritised
 6. A SPLICE MNV needs to be marked as splice if any base overlaps a splice site.
 7. Any INDEL which overlaps a canonical splice region (ie.[D-1:D+5] OR [A+3:A+1]) should be marked as splice_donor/splice_acceptor if and only if the canonical sites are changed according to the SPLICE rules listed above. Where an INDEL has microhomology extends over a splice donor or splice acceptor region, the variant is tested at both the leftmost and rightmost alignment, with intronic only effects prioritised highest, then exonic effects and finally splice effects.   A notable recurrent example where D+5 is not affected by an indel with microhomology in GRCH37 are indels at the homopolymer at MSH2 2:47641559.  Both splice and frameshift/inframe effects may be reported together if a deletion unambiguously both overlaps coding bases and changes canonical splice sites.

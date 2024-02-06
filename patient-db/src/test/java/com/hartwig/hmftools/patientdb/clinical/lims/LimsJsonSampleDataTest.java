@@ -7,10 +7,12 @@ import static org.junit.Assert.assertEquals;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class LimsJsonSampleDataTest {
+public class LimsJsonSampleDataTest
+{
 
     @Test
-    public void canConvertSOPsToLabProceduresString() {
+    public void canConvertSOPsToLabProceduresString()
+    {
         LimsJsonSampleData missingPrepNum = buildLimsSampleEntry("PREPV23-QC037V20-SEQ008V25");
         assertEquals(Lims.NOT_AVAILABLE_STRING, missingPrepNum.labProcedures());
 
@@ -44,7 +46,8 @@ public class LimsJsonSampleDataTest {
     }
 
     @NotNull
-    private static LimsJsonSampleData buildLimsSampleEntry(@NotNull String labSopVersions) {
+    private static LimsJsonSampleData buildLimsSampleEntry(@NotNull String labSopVersions)
+    {
         return createLimsSampleDataBuilder().labSopVersions(labSopVersions).build();
     }
 }

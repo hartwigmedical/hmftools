@@ -996,8 +996,10 @@ CREATE TABLE `svBreakend`
     `regionType` VARCHAR(20) NOT NULL,
     `codingContext` VARCHAR(20),
     `biotype` VARCHAR(255),
+    `exonUp` SMALLINT NOT NULL,
+    `exonDown` SMALLINT NOT NULL,
     `exonicBasePhase` TINYINT,
-    `nextSpliceExonRank` TINYINT UNSIGNED,
+    `nextSpliceExonRank` SMALLINT,
     `nextSpliceExonPhase` TINYINT,
     `nextSpliceDistance` INT,
     `totalExonCount` SMALLINT NOT NULL,
@@ -1232,8 +1234,11 @@ CREATE TABLE `cuppa`
 (   `id` INT NOT NULL AUTO_INCREMENT,
     `modified` DATETIME NOT NULL,
     `sampleId` VARCHAR(255) NOT NULL,
-    `cuppaTumorLocation` VARCHAR(255) NOT NULL,
-    `cuppaPrediction` VARCHAR(255),
+    `clfName` VARCHAR(255) DEFAULT NULL,
+    `cancerType` VARCHAR(255),
+    `prob` DOUBLE PRECISION,
+    `rank` INT NOT NULL,
+    `isOldCuppaOutput` TINYINT NOT NULL,
     PRIMARY KEY (`id`)
 );
 
@@ -1333,3 +1338,55 @@ CREATE TABLE `rnaFusion`
 
 CREATE INDEX `rnaFusion_sampleId_name` ON `rnaFusion` (`sampleId`, `name`);
 CREATE INDEX `rnaFusion_name` ON `rnaFusion` (`name`);
+
+DROP TABLE IF EXISTS `cdr3Sequence`;
+CREATE TABLE `cdr3Sequence`
+(   `id` INT NOT NULL AUTO_INCREMENT,
+    `modified` DATETIME NOT NULL,
+    `sampleId` VARCHAR(50) NOT NULL,
+    `cdr3Seq` VARCHAR(255) NOT NULL,
+    `cdr3AA` VARCHAR(100) NOT NULL,
+    `locus` VARCHAR(10) NOT NULL,
+    `filter` VARCHAR(50) NOT NULL,
+    `blastnStatus` VARCHAR(10) NOT NULL,
+    `minHighQualBaseReads` INT NOT NULL,
+    `assignedReads` INT NOT NULL,
+    `inFrame` TINYINT NOT NULL,
+    `containsStop` TINYINT NOT NULL,
+    PRIMARY KEY (`id`)
+);
+
+DROP TABLE IF EXISTS `cdr3LocusSummary`;
+CREATE TABLE `cdr3LocusSummary`
+(    `id` INT NOT NULL AUTO_INCREMENT,
+     `modified` DATETIME NOT NULL,
+     `sampleId` VARCHAR(50) NOT NULL,
+     `locus` VARCHAR(10) NOT NULL,
+     `readsUsed` INT NOT NULL,
+     `readsTotal` INT NOT NULL,
+     `downSampled` TINYINT NOT NULL,
+     `sequences` INT NOT NULL,
+     `passSequences` INT NOT NULL,
+     PRIMARY KEY (`id`)
+);
+
+CREATE UNIQUE INDEX `cdr3LocusSummary_sampleId_locus` ON `cdr3LocusSummary` (`sampleId`, `locus`);
+
+DROP TABLE IF EXISTS `telomereLength`;
+CREATE TABLE `telomereLength`
+(    `id` INT NOT NULL AUTO_INCREMENT,
+     `modified` DATETIME NOT NULL,
+     `sampleId` VARCHAR(50) NOT NULL,
+     `germlineTelomereLength` DOUBLE PRECISION,
+     `somaticTelomereLength` DOUBLE PRECISION,
+     `germlineFullFragments` INT,
+     `germlineCRichPartialFragments` INT,
+     `germlineGRichPartialFragments` INT,
+     `somaticFullFragments` INT,
+     `somaticCRichPartialFragments` INT,
+     `somaticGRichPartialFragments` INT,
+     `sampleMixLength` DOUBLE PRECISION,
+     PRIMARY KEY (`id`)
+);
+
+CREATE UNIQUE INDEX `telomereLength_sampleId` ON `telomereLength` (`sampleId`);

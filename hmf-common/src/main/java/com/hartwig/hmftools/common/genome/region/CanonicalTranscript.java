@@ -6,8 +6,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface CanonicalTranscript extends TranscriptRegion {
-
+public interface CanonicalTranscript extends TranscriptRegion
+{
     @NotNull
     String geneId();
 

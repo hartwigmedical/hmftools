@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.utils.config;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.config.ConfigItemType.PATHS;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.DECIMAL;
@@ -12,8 +14,11 @@ import static com.hartwig.hmftools.common.utils.config.ConfigItemType.STRING;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -129,6 +134,11 @@ public class ConfigBuilder
         addConfigItem(PATH, name, required, description, null);
     }
 
+    public void addPaths(final String name, final boolean required, final String description)
+    {
+        addConfigItem(PATHS, name, required, description, null);
+    }
+
     // add a config path item with an optional path prefix set from another item
     public void addPrefixedPath(final String name, final boolean required, final String description, final String prefixConfig)
     {
@@ -177,6 +187,22 @@ public class ConfigBuilder
     public int getInteger(final String name) { return getItem(name).integer(); }
     public boolean hasFlag(final String name) { return getItem(name).bool(); }
 
+    public static double getConfigDecimal(final ConfigBuilder configBuilder, final String configName, final double defaultValue)
+    {
+        if(configBuilder.hasValue(configName))
+            return configBuilder.getDecimal(configName);
+
+        return defaultValue;
+    }
+
+    public static int getConfigInteger(final ConfigBuilder configBuilder, final String configName, final int defaultValue)
+    {
+        if(configBuilder.hasValue(configName))
+            return configBuilder.getInteger(configName);
+
+        return defaultValue;
+    }
+
     public boolean isValid()
     {
         for(ConfigItem item : mItems)
@@ -186,7 +212,7 @@ public class ConfigBuilder
                 LOGGER.error("missing required config: {}: {}", item.Name, item.Description);
                 mErrors.add(ErrorType.MISSING_REQUIRED);
             }
-            else if(item.Type == PATH)
+            else if(item.Type == PATH || item.Type == PATHS)
             {
                 if(!isValidPath(item))
                 {
@@ -220,17 +246,24 @@ public class ConfigBuilder
         if(!item.hasValue() || item.value().contains("*"))
             return true;
 
-        String path = item.value();
+        List<String> paths = item.Type == PATHS ?
+                Arrays.stream(item.value().split(CONFIG_FILE_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList(item.value());
 
         ConfigItem pathPrefixConfigItem = item.pathPrefixName() != null ? getItem(item.pathPrefixName()) : null;
 
-        if(pathPrefixConfigItem != null && pathPrefixConfigItem.hasValue())
+        for(String path : paths)
         {
-            String pathPrefix = checkAddDirSeparator(pathPrefixConfigItem.value());
-            path = pathPrefix + path;
+            if(pathPrefixConfigItem != null && pathPrefixConfigItem.hasValue())
+            {
+                String pathPrefix = checkAddDirSeparator(pathPrefixConfigItem.value());
+                path = pathPrefix + path;
+            }
+
+            if(!Files.exists(Paths.get(path)))
+                return false;
         }
 
-        return Files.exists(Paths.get(path));
+        return true;
     }
 
     public void checkAndParseCommandLine(final String[] args)
@@ -262,7 +295,7 @@ public class ConfigBuilder
 
             if(matchedItem != null)
             {
-                if(argument.startsWith(mConfigPrefix) && matchedItem.Type != DECIMAL) // account for negative decimal values
+                if(argument.startsWith(mConfigPrefix) && matchedItem.Type != DECIMAL && matchedItem.Type != INTEGER) // account for negative values
                 {
                     LOGGER.error("config item({}) has invalid argument: {}", matchedItem.Name, argument);
                     mErrors.add(ErrorType.INCORRECT_ARGUMENT);
@@ -321,8 +354,6 @@ public class ConfigBuilder
     {
         List<String> output = Lists.newArrayList();
 
-        output.add("registered config items:");
-
         for(ConfigItem item : mItems)
         {
             StringBuilder sb = new StringBuilder();
@@ -341,6 +372,10 @@ public class ConfigBuilder
 
             output.add(sb.toString());
         }
+
+        Collections.sort(output);
+
+        output.add(0, "registered config items:");
 
         if(asLog)
             output.forEach(x -> LOGGER.info(x));

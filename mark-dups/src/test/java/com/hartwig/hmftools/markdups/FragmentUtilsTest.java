@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.markdups;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getFivePrimeUnclippedPosition;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
+import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.calcBaseQualAverage;
 import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.findPrimaryFragment;
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.NO_COORDS;
-import static com.hartwig.hmftools.markdups.common.FragmentUtils.getUnclippedPosition;
+import static com.hartwig.hmftools.markdups.common.FragmentUtils.formChromosomePartition;
 import static com.hartwig.hmftools.markdups.TestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_CIGAR;
@@ -12,9 +14,13 @@ import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.markdups.TestUtils.createFragment;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.samtools.CigarUtils;
+import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.markdups.common.DuplicateGroup;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.FragmentCoordinates;
 import com.hartwig.hmftools.markdups.common.FragmentUtils;
+import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 
 import static com.hartwig.hmftools.markdups.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
@@ -39,19 +45,19 @@ public class FragmentUtilsTest
         SAMRecord read = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "100M", CHR_1, 200,
                 false, false, null);
 
-        int ucPos = getUnclippedPosition(read);
+        int ucPos = getFivePrimeUnclippedPosition(read);
         assertEquals(100, ucPos);
 
         read = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "5S95M", CHR_1, 200,
                 false, false, null);
 
-        ucPos = getUnclippedPosition(read);
+        ucPos = getFivePrimeUnclippedPosition(read);
         assertEquals(95, ucPos);
 
         read = createSamRecord(TEST_READ_ID, CHR_1, 100, TEST_READ_BASES, "5S80M15S", CHR_1, 200,
                 true, false, null);
 
-        ucPos = getUnclippedPosition(read);
+        ucPos = getFivePrimeUnclippedPosition(read);
         assertEquals(194, ucPos);
 
         // test a read pair with one read unmapped
@@ -88,22 +94,22 @@ public class FragmentUtilsTest
     {
         // test coordinates from CIGAR strings
         String cigarStr = "5S100M5S";
-        int ucPos = getUnclippedPosition(100, cigarStr, true);
+        int ucPos = getFivePrimeUnclippedPosition(100, cigarStr, true);
         assertEquals(95, ucPos);
 
-        ucPos = getUnclippedPosition(100, cigarStr, false);
+        ucPos = getFivePrimeUnclippedPosition(100, cigarStr, false);
         assertEquals(204, ucPos);
 
         cigarStr = "5S10M5D10I15D20M5S"; // +10 + 5, ignore 10, +15, +20, +5 = 40
-        ucPos = getUnclippedPosition(100, cigarStr, false);
+        ucPos = getFivePrimeUnclippedPosition(100, cigarStr, false);
         assertEquals(154, ucPos);
 
         // RNA
         cigarStr = "5S60M2000N40M10S";
-        ucPos = getUnclippedPosition(100, cigarStr, true); // -5
+        ucPos = getFivePrimeUnclippedPosition(100, cigarStr, true); // -5
         assertEquals(95, ucPos);
 
-        ucPos = getUnclippedPosition(100, cigarStr, false); // +60, +2000, +40, +10
+        ucPos = getFivePrimeUnclippedPosition(100, cigarStr, false); // +60, +2000, +40, +10
         assertEquals(2209, ucPos);
 
         // test coordinates from reads
@@ -183,5 +189,56 @@ public class FragmentUtilsTest
 
         Fragment primary = findPrimaryFragment(fragments, false);
         assertEquals(primary, fragment);
+    }
+
+    @Test
+    public void testReadChromosomePartition()
+    {
+        assertEquals("1_0", formChromosomePartition(CHR_1, 1, 1000));
+        assertEquals("1_0", formChromosomePartition(CHR_1, 999, 1000));
+        assertEquals("1_1", formChromosomePartition(CHR_1, 1000, 1000));
+    }
+
+    @Test
+    public void testDuplicateGroupReadAllocation()
+    {
+        int posStart = 1;
+        SAMRecord read1 = createSamRecord("READ_01", CHR_1, posStart, TEST_READ_BASES, "100M", CHR_1, posStart,
+                false, false, null);
+        read1.setFirstOfPairFlag(true);
+
+        SAMRecord mate1 = createSamRecord("READ_01", CHR_1, posStart, TEST_READ_BASES, "100M", CHR_1, posStart,
+                false, false, null);
+        mate1.setSecondOfPairFlag(true);
+        mate1.setFirstOfPairFlag(false);
+
+        Fragment frag1 = new Fragment(read1);
+        frag1.addRead(mate1);
+        assertTrue(frag1.isPreciseInversion());
+
+        SAMRecord read2 = createSamRecord("READ_02", CHR_1, posStart, TEST_READ_BASES, "100M", CHR_1, posStart,
+                false, false, null);
+        read2.setFirstOfPairFlag(true);
+
+        SAMRecord mate2 = createSamRecord("READ_02", CHR_1, posStart, TEST_READ_BASES, "100M", CHR_1, posStart,
+                false, false, null);
+        mate2.setSecondOfPairFlag(true);
+        mate2.setFirstOfPairFlag(false);
+
+        Fragment frag2 = new Fragment(read2);
+        frag2.addRead(mate2);
+        assertTrue(frag2.isPreciseInversion());
+
+        DuplicateGroup duplicateGroup = new DuplicateGroup(null, frag1);
+        duplicateGroup.addFragment(frag2);
+
+        duplicateGroup.categoriseReads();
+
+        MockRefGenome refGenome = new MockRefGenome();
+        refGenome.RefGenomeMap.put(CHR_1, REF_BASES);
+        ConsensusReads consensusReads = new ConsensusReads(refGenome);
+        List<SAMRecord> reads = duplicateGroup.popCompletedReads(consensusReads, false);
+        assertEquals(6, reads.size());
+
     }
 }

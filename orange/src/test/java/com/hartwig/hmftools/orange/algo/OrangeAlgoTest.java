@@ -4,8 +4,6 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.orange.ImmutableOrangeConfig;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
 
@@ -15,16 +13,25 @@ import org.junit.Test;
 public class OrangeAlgoTest
 {
     @Test
-    public void canRunReportFromTestDirPanel() throws IOException
+    public void canRunReportFromTestDirOnMinimalConfig() throws Exception
     {
-        OrangeConfig config = TestOrangeConfigFactory.createPanelConfig();
+        OrangeConfig config = TestOrangeConfigFactory.createMinimalConfig();
         OrangeAlgo algo = createOrangeAlgo(config);
 
         assertNotNull(algo.run(config));
     }
 
     @Test
-    public void canRunReportFromTestDirWGSTumorOnly() throws IOException
+    public void canRunReportFromTestDirTargeted() throws Exception
+    {
+        OrangeConfig config = TestOrangeConfigFactory.createTargetedConfig();
+        OrangeAlgo algo = createOrangeAlgo(config);
+
+        assertNotNull(algo.run(config));
+    }
+
+    @Test
+    public void canRunReportFromTestDirWGSTumorOnly() throws Exception
     {
         OrangeConfig config = TestOrangeConfigFactory.createWGSConfigTumorOnly();
         OrangeAlgo algo = createOrangeAlgo(config);
@@ -33,7 +40,7 @@ public class OrangeAlgoTest
     }
 
     @Test
-    public void canRunReportFromTestDirWGSTumorNormal() throws IOException
+    public void canRunReportFromTestDirWGSTumorNormal() throws Exception
     {
         OrangeConfig config = TestOrangeConfigFactory.createWGSConfigTumorNormal();
         OrangeAlgo algo = createOrangeAlgo(config);
@@ -42,22 +49,9 @@ public class OrangeAlgoTest
     }
 
     @Test
-    public void canRunReportFromTestDirWGTSTumorNormal() throws IOException
+    public void canRunReportFromTestDirWGTSTumorNormal() throws Exception
     {
         OrangeConfig config = TestOrangeConfigFactory.createWGTSConfigTumorNormal();
-        OrangeAlgo algo = createOrangeAlgo(config);
-
-        assertNotNull(algo.run(config));
-    }
-
-    @Test
-    public void canCreateReportWithoutTumorDoids() throws IOException
-    {
-        OrangeConfig config = ImmutableOrangeConfig.builder()
-                .from(TestOrangeConfigFactory.createWGSConfigTumorNormal())
-                .primaryTumorDoids(Sets.newHashSet())
-                .build();
-
         OrangeAlgo algo = createOrangeAlgo(config);
 
         assertNotNull(algo.run(config));

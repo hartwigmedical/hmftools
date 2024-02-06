@@ -8,7 +8,7 @@ It combines B-allele frequency (BAF) from [AMBER](../amber), read depth ratios f
 
 PURPLE supports both grch 37 and 38 reference assemblies. 
 
-PURPLE may also be run on targeted data. For more info please see [here](https://github.com/hartwigmedical/hmftools/blob/master/README_TARGETED.md)
+PURPLE may also be run on targeted data. For more info please see [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md)
 
 ## Contents
 
@@ -336,7 +336,7 @@ Finally we compare the AMBER and COBALT sexes. If they are inconsistent we use t
 
 ### 2. Segmentation
 
-We segment the genome into regions of uniform copy number by combining segments generated from the COBALT read ratios for both tumor and reference sample, the BAF points from AMBER, and passing structural variant breakpoints derived from GRIDSS. Read ratios and BAF points are segmented independently using the Bioconductor copynumber package which uses a piecewise constant fit (PCF) algorithm (with custom settings: gamma = 100, k =1). These segment breaks are then combined with the structural variants breaks according to the following rules:
+We segment the genome into regions of uniform copy number by combining segments generated from the COBALT read ratios for both tumor and reference sample, the BAF points from AMBER, and passing structural variant breakpoints derived from GRIPSS both germline and somatic. Read ratios and BAF points are segmented independently using the Bioconductor copynumber package which uses a piecewise constant fit (PCF) algorithm (with custom settings: gamma = 100, k =1). These segment breaks are then combined with the structural variants breaks according to the following rules:
 1. Every structural variant break starts a new segment, as does chromosome starts, ends and centromeres. 
 2. Ratio and BAF segment breaks are only included if they are at least one complete mappable read depth window away from an existing segment. 
 
@@ -344,7 +344,7 @@ If the segments identified by the PCF algorithm are not contiguous, then there r
 
 Once the segments have been established we map our observations to them.  In each segment we take the median BAF of the tumor sample and the median read ratio of both the tumor and reference samples.  We also record the number of BAF points within the segment as the BAFCount and the number of tumor read depth windows within the segment as the depth window count.
 
-A reference sample copy number status is determined at this this stage based on the observed copy number ratio in the reference sample, either ‘DIPLOID’ (0.85<= read depth ratio<=1.15), ‘HETEROZYGOUS_DELETION’ (0.1<=ratio<0.85), ‘HOMOZYGOUS_DELETION’ (ratio<0.1),’AMPLIFICATION’(1.15<ratio<=2.2) or ‘NOISE’ (ratio>2.2).  The purity fitting and smoothing steps below use only the DIPLOID germline segments.
+A reference sample copy number status is determined at this this stage based on the observed copy number ratio in the reference sample, either ‘DIPLOID’ (0.85<= read depth ratio<=1.15), ‘HETEROZYGOUS_DELETION’ (0.1<=ratio<0.85), ‘HOMOZYGOUS_DELETION’ (ratio<0.1),’AMPLIFICATION’(1.15<ratio<=2.2) or ‘NOISE’ (ratio>2.2). The 'diploid normalised' copy number ratio is used for this annotation. However,  if a continuous region of >5MB has diploisedNormalisedRatio / rawRatio < 0.7 or >1.3 (aside from the following noisy regions chr1:1-50M, chr9:135M-end, chr17:75M-end, chr19:1-20M), then this likely indicates a (rare) large copy number event the raw ratio is used instead.    Regions within 2MB of a centromere and in the IG and TCR regions are further masked.   The purity fitting and smoothing steps below use only the DIPLOID germline segments. 
 
 ### 3. Sample Purity and Ploidy
 
@@ -370,7 +370,7 @@ Each of the 3 penalty terms is described in detail in the following sections.
 #### Deviation Penalty
 The deviation penalty aims to penalise [ploidy|purity] combinations which require extensive sub-clonality to explain the observed copy number pattern.
 
-For each [ploidy|purity] combination tested an implied major and minor allele copy number is calculated based on the observed BAF and depth ratio.    A deviation penalty is then calculated for each segment for both minor and major allele based on the implied copy numbers (note Y chromosome, X chromsome for males & chromosomes with detected germline aberrations are all excluded from fitting).   The function used is designed to explicitly capture a set of intuitive rules relating to known biology of cancer genomes, specifically:
+For each [ploidy|purity] combination tested an implied major and minor allele copy number is calculated based on the observed BAF and depth ratio. Purities are considerd in the range of 7% to 100% in 1% increments or 0.5% increments below 20%.    A deviation penalty is then calculated for each segment for both minor and major allele based on the implied copy numbers (note Y chromosome, X chromsome for males & chromosomes with detected germline aberrations are all excluded from fitting).     The function used is designed to explicitly capture a set of intuitive rules relating to known biology of cancer genomes, specifically:
 - For major allele copy number > 1 and minor allele copy number > 0 a deviation penalty applies to penalise solutions which imply subclonality:
   - the penalty depends only on the distance to the nearest integer copy number and varies between a minimum of a small baseline deviation [0.2] and a max of 1.
   - small deviations from an integer don’t occur any additional penalty, but once a certain noise level is exceeded the penalty grows rapidly to the maximum penalty reflecting the increasing probability that the observed deviation requires an implied non-integer (subclonal) copy number.
@@ -523,7 +523,8 @@ Following the successful recovery any structural variants we will rerun the segm
 
 PURPLE searches for candidate germline gene deletions based on the combined tumor normal raw segmented copy number files.  
 For the purposes of purity and ploidy fitting and copy number smoothing each segment is already annotated according to its genotype in the germline based on its observedNormal ratio, ie, one of DIPLOID (0.85-1.15), HET_DELETION (0.1-0.85), HOM_DELETION (<0.1), AMPLIFICATION (1.15-2.2) or NOISE.
-Any driver gene panel gene with a HET_DELETION or HOM_DELETION segment overlapping (within +/- 500 bases to allow for depth window resolution) an exonic region is marked as a germline gene deletion.    
+
+Any gene with a HET_DELETION or HOM_DELETION segment overlapping (within +/- 500 bases to allow for depth window resolution) an exonic region is marked as a germline gene deletion.    
 
 Deletions  are filtered with the following criteria
 Filter|Description
@@ -531,6 +532,7 @@ Filter|Description
 minLength|the deleted segment must be >1kb long
 inconsistentTumorCN|the implied refNormalisedCopyNumber of the deleted segment in the tumor must be less than the major allele copy number +max(20%,0.5)
 highNormalRatio|the deleted segment must have an observedNormalCopyNumberRatio < 0.65 (ie equivalent to germline copyNumber < 1.3)
+cohortFrequency|the deleted segment is observed in > 3 samples in our cohort
 
 ### 9. Determine a QC Status for the tumor
 
@@ -939,6 +941,13 @@ We can determine the likelihood of a variant being subclonal at any given varian
 <p align="center">
   <img src="src/main/resources/readme/COLO829T.somatic.clonality.png" width="500" alt="Somatic clonality">
 </p>
+
+## HRD (homologous recombination deficiency) classifier
+
+In Targeted Mode from release 5.34, Purple provides a HRD+ or HRD- prediction akin to the CHORD module.
+
+This HRD classifier is still in experimental stage due to the small number of training and validation samples available. This tool will be continuously improved as more HRD+ samples are received. 
+
 
 ## Known issues / points for improvement
 

@@ -54,10 +54,7 @@ public class MismatchWriter
 
                     BufferedWriter writer = createBufferedWriter(detailedFile, false);
 
-                    if(mConfig.multiSample())
-                        writer.write("SampleId\t");
-
-                    writer.write(Mismatch.commonHeader());
+                    writer.write(Mismatch.commonHeader(mConfig.multiSample(), false));
 
                     final List<String> compareFields = comparer.comparedFieldNames();
 
@@ -78,10 +75,7 @@ public class MismatchWriter
 
                 mCombinedWriter = createBufferedWriter(outputFile, false);
 
-                if(mConfig.multiSample())
-                    mCombinedWriter.write("SampleId\t");
-
-                mCombinedWriter.write(Mismatch.header());
+                mCombinedWriter.write(Mismatch.header(mConfig.multiSample()));
                 mCombinedWriter.newLine();
             }
         }

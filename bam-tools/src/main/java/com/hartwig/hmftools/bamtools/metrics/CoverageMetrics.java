@@ -35,6 +35,8 @@ public class CoverageMetrics
     public void addCoverageBases(long bases) { mCoverageBases += bases; }
     public long coverageBases() { return mCoverageBases; }
     public long zeroCoverageBases() { return CoverageFrequency[0]; }
+
+    // note this does not include unmappable regions (eg 'N' in centromeres and telomeres)
     public long genomeTerritory() { return zeroCoverageBases() + coverageBases(); }
 
     public Statistics statistics() { return mStatistics; }

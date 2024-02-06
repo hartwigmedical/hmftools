@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
@@ -133,7 +133,7 @@ public class GermlineFindingsChapter implements ReportChapter
 
     private void addGermlineHomozygousDisruptions(@NotNull Document document)
     {
-        List<HomozygousDisruption> germlineHomozygousDisruptions = report.linx().germlineHomozygousDisruptions();
+        List<LinxHomozygousDisruption> germlineHomozygousDisruptions = report.linx().germlineHomozygousDisruptions();
         if(germlineHomozygousDisruptions != null)
         {
             String title = "Potentially pathogenic germline homozygous disruptions (" + germlineHomozygousDisruptions.size() + ")";
@@ -148,8 +148,9 @@ public class GermlineFindingsChapter implements ReportChapter
 
         if(allGermlineStructuralVariants != null && reportableGermlineBreakends != null)
         {
+            // TODO: Load Linx germline drivers properly
             List<BreakendEntry> reportableBreakends =
-                    BreakendEntryFactory.create(reportableGermlineBreakends, allGermlineStructuralVariants);
+                    BreakendEntryFactory.create(reportableGermlineBreakends, allGermlineStructuralVariants, List.of());
 
             String title = "Potentially pathogenic germline gene disruptions (" + reportableBreakends.size() + ")";
             document.add(BreakendTable.build(title, contentWidth(), reportableBreakends, reportResources));

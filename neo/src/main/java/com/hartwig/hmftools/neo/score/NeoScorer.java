@@ -41,7 +41,7 @@ public class NeoScorer
         }
 
         NE_LOGGER.info("running neoepitope scoring for {}",
-                mConfig.Samples.size() == 1 ? mConfig.Samples.get(0).Id : String.format("%d samples", mConfig.Samples.size()));
+                mConfig.Samples.size() == 1 ? mConfig.Samples.get(0).TumorId : String.format("%d samples", mConfig.Samples.size()));
 
         List<NeoScorerTask> sampleTasks = Lists.newArrayList();
 

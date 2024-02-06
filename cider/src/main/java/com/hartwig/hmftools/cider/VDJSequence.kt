@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.cider
 
+import com.google.common.collect.ImmutableCollection
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.codon.Codons
-import org.eclipse.collections.api.collection.ImmutableCollection
 
 interface VJAnchor
 {
@@ -69,7 +69,7 @@ class VDJSequence(
 
     val sequence: String get()
     {
-        return layout.consensusSequence().substring(layoutSliceStart, layoutSliceEnd)
+        return layout.consensusSequenceString().substring(layoutSliceStart, layoutSliceEnd)
     }
 
     val isFullyRearranged: Boolean get()
@@ -230,7 +230,7 @@ class VDJSequence(
         return Math.floorMod(jAnchorBoundary!! - vAnchorBoundary!!, 3) == 0
     }
 
-    fun getSupportAt(index: Int) : Map.Entry<Char, Int>
+    fun getSupportAt(index: Int) : Map.Entry<Byte, Int>
     {
         return layout.getHighQualSequenceSupportAt(layoutSliceStart + index)
     }

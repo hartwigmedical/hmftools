@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.isofox.GeneExpressionDistributionData;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 
 import org.jetbrains.annotations.NotNull;
@@ -41,11 +40,10 @@ final class ExpressionSelector
     {
         return expressions.stream().filter(expression ->
         {
-            boolean geneMatchesType = genesOfType.contains(expression.geneName());
-            boolean percentileCancerMeetsThreshold = evaluatePercentileThreshold.test(expression.percentileCancer());
-            boolean percentileCohortMeetsThreshold =
-                    expression.percentileCohort() == GeneExpressionDistributionData.NOT_AVAILABLE || evaluatePercentileThreshold.test(
-                            expression.percentileCohort());
+            boolean geneMatchesType = genesOfType.contains(expression.gene());
+            boolean percentileCancerMeetsThreshold =
+                    expression.percentileCancer() == null || evaluatePercentileThreshold.test(expression.percentileCancer());
+            boolean percentileCohortMeetsThreshold = evaluatePercentileThreshold.test(expression.percentileCohort());
             return geneMatchesType && percentileCancerMeetsThreshold && percentileCohortMeetsThreshold;
         }).collect(Collectors.toList());
     }

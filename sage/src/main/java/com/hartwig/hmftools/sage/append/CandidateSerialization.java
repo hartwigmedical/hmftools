@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.append;
 
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_DEPTH;
@@ -14,12 +15,11 @@ import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_RIGHT_FLANK;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.RefSequence;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
 import org.apache.logging.log4j.util.Strings;
@@ -65,12 +65,9 @@ public final class CandidateSerialization
 
     public static Candidate toCandidate(final VariantContext context, final IndexedBases readBases, final IndexedBases refBases)
     {
-        final VariantHotspot variant = ImmutableVariantHotspotImpl.builder()
-                .chromosome(context.getContig())
-                .position(context.getStart())
-                .ref(context.getReference().getBaseString())
-                .alt(context.getAlternateAllele(0).getBaseString())
-                .build();
+        SimpleVariant variant = new SimpleVariant(
+                context.getContig(), context.getStart(),
+                context.getReference().getBaseString(), context.getAlternateAllele(0).getBaseString());
 
         final VariantTier tier = VariantTier.valueOf(context.getAttributeAsString(TIER, "LOW_CONFIDENCE"));
         final int repeatCount = context.getAttributeAsInt(READ_CONTEXT_REPEAT_COUNT, 0);
@@ -83,7 +80,7 @@ public final class CandidateSerialization
         for(Genotype genotype : context.getGenotypes().immutable())
         {
             maxDepth = Math.max(maxDepth, genotype.getDP());
-            maxDepth = Math.max(maxDepth, genotype.getAttributeAsInt(RAW_DEPTH, 0));
+            maxDepth = Math.max(maxDepth, getGenotypeAttributeAsInt(genotype, RAW_DEPTH, 0));
         }
 
         return new Candidate(tier, variant, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0);
@@ -121,7 +118,7 @@ public final class CandidateSerialization
     }
 
     @NotNull
-    private static List<Allele> createAlleles(final VariantHotspot variant)
+    private static List<Allele> createAlleles(final SimpleVariant variant)
     {
         final Allele ref = Allele.create(variant.ref(), true);
         final Allele alt = Allele.create(variant.alt(), false);

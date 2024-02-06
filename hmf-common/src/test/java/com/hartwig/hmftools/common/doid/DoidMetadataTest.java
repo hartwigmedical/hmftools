@@ -5,10 +5,11 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
-public class DoidMetadataTest {
-
+public class DoidMetadataTest
+{
     @Test
-    public void canResolveSnomedConceptID() {
+    public void canResolveSnomedConceptID()
+    {
         DoidMetadata emptyMetadata = ImmutableDoidMetadata.builder().build();
         assertNull(emptyMetadata.snomedConceptId());
 

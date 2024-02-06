@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cider
 
+import com.google.common.collect.ImmutableCollection
 import com.hartwig.hmftools.cider.VJReadCandidate.MatchMethod
 import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
@@ -7,12 +8,12 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
 import com.hartwig.hmftools.common.genome.region.Strand
 import com.hartwig.hmftools.common.samtools.CigarUtils
+import com.hartwig.hmftools.common.samtools.SamRecordUtils
 import com.hartwig.hmftools.common.utils.IntPair
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.util.CoordMath
 import htsjdk.samtools.util.SequenceUtil
 import org.apache.logging.log4j.LogManager
-import org.eclipse.collections.api.collection.ImmutableCollection
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -53,7 +54,7 @@ class CiderReadScreener(// collect the reads and sort by types
             samRecord.referenceName,
             samRecord.alignmentStart, samRecord.alignmentEnd)
 
-        val readRecordKey = ReadRecordKey(samRecord.readName, samRecord.firstOfPairFlag,
+        val readRecordKey = ReadRecordKey(samRecord.readName, SamRecordUtils.firstInPair(samRecord),
                                             samRecord.referenceIndex, samRecord.alignmentStart)
 
         if (!mProcessedReadRecords.add(readRecordKey))
@@ -174,7 +175,7 @@ class CiderReadScreener(// collect the reads and sort by types
             // want to make sure same gene is not included twice
             val genes: ImmutableCollection<VJAnchorTemplate> = mCiderGeneDatastore.getByGeneLocation(anchorLocation.genomeLocation)
 
-            if (!genes.isEmpty)
+            if (!genes.isEmpty())
             {
                 return addVjReadCandidate(samRecord, genes, MatchMethod.ALIGN,
                     anchorLocation.strand === Strand.REVERSE,
@@ -189,6 +190,7 @@ class CiderReadScreener(// collect the reads and sort by types
     // this locus. This is needed to make sure we find the correct locus
     private fun tryMatchUnmappedReadByBlosum(read: SAMRecord): Boolean
     {
+        require(read.readPairedFlag)
         require(read.readUnmappedFlag)
         require(!read.mateUnmappedFlag)
 
@@ -406,7 +408,7 @@ class CiderReadScreener(// collect the reads and sort by types
         templateLocation: GenomicLocation? = null)
     : VJReadCandidate?
     {
-        if (vjAnchorTemplates.isEmpty)
+        if (vjAnchorTemplates.isEmpty())
         {
             return null
         }

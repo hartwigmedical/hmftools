@@ -11,10 +11,12 @@ import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfDatamodelField
 
 import org.junit.Test;
 
-public class XMLEcrfDatamodelToEcrfFieldsTest {
+public class XMLEcrfDatamodelToEcrfFieldsTest
+{
 
     @Test
-    public void canConvertXMLObjectContainerToEcrfFields() {
+    public void canConvertXMLObjectContainerToEcrfFields()
+    {
         String studyOID = "SE.Study";
         String formOID = "FRM.Form";
         String itemGroupOID = "GRP.ItemGroup";

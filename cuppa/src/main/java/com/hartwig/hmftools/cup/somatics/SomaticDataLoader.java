@@ -32,6 +32,7 @@ import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.jooq.Record;
@@ -191,24 +192,23 @@ public class SomaticDataLoader
 
         List<SomaticVariant> variants = Lists.newArrayList();
 
-        try
+        VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
+
+        if(!vcfFileReader.fileValid())
         {
-            final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false);
-
-            for(VariantContext variantContext : reader.iterator())
-            {
-                if(!filter.test(variantContext))
-                    continue;
-
-                if(types.isEmpty() || types.contains(VariantType.type(variantContext)))
-                {
-                    variants.add(SomaticVariant.fromContext(variantContext));
-                }
-            }
+            CUP_LOGGER.error(" failed to read somatic VCF file({})", vcfFile);
+            return variants;
         }
-        catch(IOException e)
+
+        for(VariantContext variantContext : vcfFileReader.iterator())
         {
-            CUP_LOGGER.error(" failed to read somatic VCF file({}): {}", vcfFile, e.toString());
+            if(!filter.test(variantContext))
+                continue;
+
+            if(types.isEmpty() || types.contains(VariantType.type(variantContext)))
+            {
+                variants.add(SomaticVariant.fromContext(variantContext));
+            }
         }
 
         return variants;

@@ -1,25 +1,26 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.bamtools.common.PartitionTask.partitionChromosome;
+import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.PartitionTask;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class BamMetrics
 {
@@ -41,17 +42,39 @@ public class BamMetrics
 
         List<ChrBaseRegion> allRegions = Lists.newArrayList();
 
-        for(HumanChromosome chromosome : HumanChromosome.values())
+        if(!mConfig.TargetRegions.isEmpty())
         {
-            String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
+            int targetRegionCount = mConfig.TargetRegions.values().stream().mapToInt(x -> x.size()).sum();
 
-            if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosomeStr))
-                continue;
+            int targetRegionBaseCount = mConfig.TargetRegions.values().stream()
+                    .mapToInt(x -> x.stream().mapToInt(y -> y.baseLength()).sum()).sum();
 
-            allRegions.addAll(partitionChromosome(chromosomeStr, mConfig.RefGenVersion, mConfig.SpecificRegions, mConfig.PartitionSize));
+            BT_LOGGER.info("capturing data for {} target regions, total base count({})",
+                    targetRegionCount, targetRegionBaseCount);
         }
 
-        BT_LOGGER.info("splitting {} regions across {} threads", allRegions.size(), mConfig.Threads);
+        if(!mConfig.OnlyTargetRegions)
+        {
+            for(HumanChromosome chromosome : HumanChromosome.values())
+            {
+                String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
+
+                if(mConfig.SpecificChrRegions.excludeChromosome(chromosomeStr))
+                    continue;
+
+                allRegions.addAll(partitionChromosome(
+                        chromosomeStr, mConfig.RefGenVersion, mConfig.SpecificChrRegions.Regions, mConfig.PartitionSize));
+            }
+        }
+        else
+        {
+            for(Map.Entry<String,List<BaseRegion>> entry : mConfig.TargetRegions.entrySet())
+            {
+                entry.getValue().forEach(x -> allRegions.add(new ChrBaseRegion(entry.getKey(), x.start(), x.end())));
+            }
+
+            Collections.sort(allRegions);
+        }
 
         Queue<PartitionTask> partitions = new ConcurrentLinkedQueue<>();
 
@@ -63,33 +86,32 @@ public class BamMetrics
 
         CombinedStats combinedStats = new CombinedStats(mConfig.MaxCoverage);
 
-        List<Thread> workers = new ArrayList<>();
-
-        for(int i = 0; i < min(allRegions.size(), mConfig.Threads); ++i)
+        if(allRegions.size() == 1 || mConfig.Threads <= 1)
         {
-            workers.add(new PartitionThread(mConfig, partitions, combinedStats));
+            PartitionThread partitionThread = new PartitionThread(mConfig, partitions, combinedStats);
+            partitionThread.run();
+        }
+        else
+        {
+            BT_LOGGER.info("splitting {} regions across {} threads", allRegions.size(), mConfig.Threads);
+
+            List<Thread> workers = new ArrayList<>();
+
+            for(int i = 0; i < min(allRegions.size(), mConfig.Threads); ++i)
+            {
+                workers.add(new PartitionThread(mConfig, partitions, combinedStats));
+            }
+
+            if(!runThreadTasks(workers))
+                System.exit(1);
         }
 
-        for(Thread worker : workers)
-        {
-            try
-            {
-                worker.join();
-            }
-            catch(InterruptedException e)
-            {
-                BT_LOGGER.error("task execution error: {}", e.toString());
-                e.printStackTrace();
-            }
-        }
-
-        BT_LOGGER.info("all regions complete, totalReads({})", combinedStats.totalReads());
+        BT_LOGGER.info("all regions complete");
 
         combinedStats.coverageMetrics().finalise(mConfig.ExcludeZeroCoverage);
         MetricsWriter.writeResults(combinedStats, mConfig);
-        BT_LOGGER.info("final stats: {}", combinedStats.coverageMetrics());
 
-        BT_LOGGER.info("all regions complete, totalReads({}) stats: {}", combinedStats.totalReads(), combinedStats.coverageMetrics());
+        BT_LOGGER.info("totalReads({}) stats: {}", combinedStats.readCounts().TotalReads, combinedStats.coverageMetrics());
 
         if(mConfig.PerfDebug)
         {
@@ -100,7 +122,7 @@ public class BamMetrics
         BT_LOGGER.info("BamMetrics complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    public static void main(@NotNull final String[] args)
+    public static void main(final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         MetricsConfig.addConfig(configBuilder);

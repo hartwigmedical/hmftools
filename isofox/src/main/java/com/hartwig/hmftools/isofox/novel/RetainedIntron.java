@@ -2,8 +2,6 @@ package com.hartwig.hmftools.isofox.novel;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
-
 import java.util.List;
 import java.util.StringJoiner;
 

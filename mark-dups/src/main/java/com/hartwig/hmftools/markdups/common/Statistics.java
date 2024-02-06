@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
+import com.hartwig.hmftools.markdups.consensus.ConsensusStatistics;
 import com.hartwig.hmftools.markdups.umi.UmiStatistics;
 
 public class Statistics
@@ -25,13 +26,17 @@ public class Statistics
 
     // technical metrics
     public long LocalComplete; // fragments where all reads are in the same partition
-    public long Incomplete; // count of mates and secondaries where lower coord reads wasn't cached
+    public long Incomplete; // read in same partition as base partition but not resolved immediately (eg an earlier supplementary)
     public long InterPartition; // reads where base partition (lower of mate or supplementary's primary) isn't the current partition
     public long MissingMateCigar;
+    public long Unmapped; // fully, ie primary and mate
+    public long PairedAltChromosome; // paired with a non-human chromosome
 
     public final Map<Integer,DuplicateFrequency> DuplicateFrequencies;
 
     public final UmiStatistics UmiStats;
+
+    public final ConsensusStatistics ConsensusStats;
 
     public Statistics()
     {
@@ -42,8 +47,11 @@ public class Statistics
         LocalComplete = 0;
         Incomplete = 0;
         MissingMateCigar = 0;
+        Unmapped = 0;
+        PairedAltChromosome = 0;
         DuplicateFrequencies = Maps.newHashMap();
         UmiStats = new UmiStatistics();
+        ConsensusStats = new ConsensusStatistics();
     }
 
     public void merge(final Statistics other)
@@ -55,6 +63,8 @@ public class Statistics
         Incomplete += other.Incomplete;
         InterPartition += other.InterPartition;
         MissingMateCigar += other.MissingMateCigar;
+        Unmapped += other.Unmapped;
+        PairedAltChromosome += other.PairedAltChromosome;
 
         for(DuplicateFrequency dupFreq : other.DuplicateFrequencies.values())
         {
@@ -62,6 +72,7 @@ public class Statistics
         }
 
         UmiStats.merge(other.UmiStats);
+        ConsensusStats.merge(other.ConsensusStats);
     }
 
     public void addFrequency(int frequency)
@@ -69,7 +80,13 @@ public class Statistics
         addFrequency(frequency, 1, 0);
     }
 
-    private void addFrequency(int duplicateCount, int count, int dualStrandCount)
+    public void addNonDuplicateCounts(int fragmentCount)
+    {
+        if(fragmentCount > 0)
+            addFrequency(1, fragmentCount, 0);
+    }
+
+    private void addFrequency(int duplicateCount, long count, int dualStrandCount)
     {
         int rounded = roundFrequency(duplicateCount);
         DuplicateFrequency dupFreq = DuplicateFrequencies.get(rounded);
@@ -100,21 +117,27 @@ public class Statistics
 
     public void logStats()
     {
-        MD_LOGGER.info("stats: totalReads({}) duplicates({}) duplicationGroups({}) umiGroups({})",
-                TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups);
+        MD_LOGGER.info("stats: totalReads({}) duplicates({}) duplicationGroups({}) umiGroups({}) {}",
+                TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups, ConsensusStats);
 
         if(MD_LOGGER.isDebugEnabled())
         {
-            MD_LOGGER.debug("stats: fragments(complete={} incomplete={} interPartition={}) missingMateCigar({})",
-                    LocalComplete, Incomplete, InterPartition, MissingMateCigar);
+            MD_LOGGER.debug("stats: fragments(complete={} incomplete={} interPartition={} unmapped={} pairedAltChr={}))",
+                    LocalComplete, Incomplete, InterPartition, Unmapped, PairedAltChromosome);
 
             List<Integer> frequencies = DuplicateFrequencies.keySet().stream().collect(Collectors.toList());
             Collections.sort(frequencies);
 
-            for(Integer frequency : frequencies)
-            {
-                MD_LOGGER.debug("duplicate frequency({}={})", frequency, DuplicateFrequencies.get(frequency).Frequency);
-            }
+            String dupFreqStr = frequencies.stream()
+                    .map(x -> format("%d=%d", x, DuplicateFrequencies.get(x).Frequency))
+                    .collect(Collectors.joining(", "));
+
+            MD_LOGGER.debug("duplicate frequency: {}", dupFreqStr);
+        }
+
+        if(MissingMateCigar > 0)
+        {
+            MD_LOGGER.warn("stats: found {} reads without MateCigar attribute", MissingMateCigar);
         }
     }
 

@@ -17,11 +17,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class IsofoxTestFactory
 {
-
-    private IsofoxTestFactory()
-    {
-    }
-
     @NotNull
     public static IsofoxData createMinimalIsofoxTestData()
     {

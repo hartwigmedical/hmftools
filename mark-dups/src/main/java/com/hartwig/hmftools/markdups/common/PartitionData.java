@@ -4,12 +4,11 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANOS_IN_SECOND;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANO_IN_MILLISECOND;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.CANDIDATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.SUPPLEMENTARY;
-import static com.hartwig.hmftools.markdups.common.FragmentUtils.overlapsExcludedRegion;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
 import static com.hartwig.hmftools.markdups.common.ReadMatch.NO_READ_MATCH;
 import static com.hartwig.hmftools.markdups.common.ResolvedFragmentState.fragmentState;
@@ -25,9 +24,8 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
-import com.hartwig.hmftools.markdups.BamWriter;
+import com.hartwig.hmftools.markdups.write.BamWriter;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 
 import htsjdk.samtools.SAMRecord;
@@ -57,9 +55,8 @@ public class PartitionData
 
     private Set<DuplicateGroup> mUpdatedDuplicateGroups;
     private Set<CandidateDuplicates> mUpdatedCandidateDuplicates;
-    private ChrBaseRegion mExcludedRegion;
 
-    private static final int LOG_CACHE_COUNT = 10000;
+    private static final int LOG_CACHE_COUNT = 50000;
 
     public PartitionData(final String chrPartition, final MarkDupsConfig config)
     {
@@ -71,7 +68,6 @@ public class PartitionData
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
         mUpdatedDuplicateGroups = Sets.newHashSet();
         mUpdatedCandidateDuplicates = Sets.newHashSet();
-        mExcludedRegion = null;
 
         mLock = new ReentrantLock();
         mLockAcquireTime = 0;
@@ -82,9 +78,7 @@ public class PartitionData
     public Statistics statistics() { return mDuplicateGroupBuilder.statistics(); }
 
     public void togglePerfChecks() { mPerfChecks = true; }
-    public double totalLockTime() { return mLockAcquireTime / NANOS_IN_SECOND; }
-
-    public synchronized void setExcludedRegion(final ChrBaseRegion excludedRegion) { mExcludedRegion = excludedRegion; }
+    public double totalLockTimeMs() { return mLockAcquireTime / NANO_IN_MILLISECOND; }
 
     public void processPrimaryFragments(
             final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList, final List<DuplicateGroup> duplicateGroups)
@@ -323,7 +317,7 @@ public class PartitionData
         return NO_READ_MATCH;
     }
 
-    private void storeUmiGroup(final DuplicateGroup duplicateGroup)
+    private void storeDuplicateGroup(final DuplicateGroup duplicateGroup)
     {
         if(duplicateGroup.allReadsReceived())
             return;
@@ -338,13 +332,6 @@ public class PartitionData
 
         // remove by each read ID
         List<String> groupReadIds = duplicateGroup.getReadIds();
-
-        if(groupReadIds == null)
-        {
-            MD_LOGGER.error("duplicateGroup({}) has no read IDs: {}", duplicateGroup.id(), duplicateGroup.toString());
-            return;
-        }
-
         groupReadIds.forEach(x -> mDuplicateGroupMap.remove(x));
     }
 
@@ -355,11 +342,8 @@ public class PartitionData
 
         List<List<Fragment>> rawDuplicateGroups = candidateDuplicates.finaliseFragmentStatus(mDuplicateGroupBuilder.umiConfig().Enabled);
 
-        boolean inExcludedRegion = mExcludedRegion != null && rawDuplicateGroups.stream()
-                .anyMatch(x -> x.stream().anyMatch(y -> y.reads().stream().anyMatch(z -> overlapsExcludedRegion(mExcludedRegion, z))));
-
         List<DuplicateGroup> duplicateGroups = mDuplicateGroupBuilder.processDuplicateGroups(
-                rawDuplicateGroups, false, Collections.EMPTY_LIST, inExcludedRegion);
+                rawDuplicateGroups, false, Collections.EMPTY_LIST);
 
         if(duplicateGroups != null)
         {
@@ -368,7 +352,7 @@ public class PartitionData
                 mUpdatedDuplicateGroups.add(duplicateGroup);
 
                 // store only if incomplete
-                storeUmiGroup(duplicateGroup);
+                storeDuplicateGroup(duplicateGroup);
             }
         }
 
@@ -380,7 +364,7 @@ public class PartitionData
             if(fragment.allReadsPresent())
                 continue;
 
-            if(fragment.umi() != null) // cached with the UMI group
+            if(fragment.umi() != null) // if not null, then part of a duplicate group and status is derived from the group
                 continue;
 
             ResolvedFragmentState resolvedState = fragmentState(fragment);
@@ -418,8 +402,6 @@ public class PartitionData
 
         mUpdatedDuplicateGroups.clear();
     }
-
-    private boolean umiEnabled() { return mDuplicateGroupBuilder.umiConfig().Enabled; }
 
     public int writeRemainingReads(final BamWriter recordWriter, final ConsensusReads consensusReads, boolean logCachedReads)
     {

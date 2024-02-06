@@ -10,7 +10,10 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface LinxRecord {
+public interface LinxRecord
+{
+    @NotNull
+    List<LinxDriver> somaticDrivers();
 
     @NotNull
     List<LinxSvAnnotation> allSomaticStructuralVariants();
@@ -43,8 +46,8 @@ public interface LinxRecord {
     List<LinxBreakend> additionalSuspectSomaticBreakends();
 
     @NotNull
-    List<HomozygousDisruption> somaticHomozygousDisruptions();
+    List<LinxHomozygousDisruption> somaticHomozygousDisruptions();
 
     @Nullable
-    List<HomozygousDisruption> germlineHomozygousDisruptions();
+    List<LinxHomozygousDisruption> germlineHomozygousDisruptions();
 }

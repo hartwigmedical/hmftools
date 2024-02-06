@@ -4,11 +4,28 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.LOCAL_LINKED_BY;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER_PON;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REMOTE_LINKED_BY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_AS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_ASRP;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BAQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BASRP;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BASSR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BSC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_CAS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_RAS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.INDEL_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.LOCAL_LINKED_BY;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_FILTER_PON;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REMOTE_LINKED_BY;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.READ_PAIRS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_READS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
@@ -23,27 +40,10 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_AS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASRP;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BASRP;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BASSR;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BQ;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BSC;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BVF;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_CAS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IC;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_QUAL;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RAS;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REF;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REFPAIR;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RP;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SB;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_SR;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_VF;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -57,7 +57,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.gripss.VariantBuilder;
 import com.hartwig.hmftools.gripss.common.Breakend;
@@ -68,10 +67,7 @@ import com.hartwig.hmftools.gripss.filters.TargetRegions;
 
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class GripssCompareVcfs
@@ -141,39 +137,39 @@ public class GripssCompareVcfs
     {
         if(mRefDepthDiffsOnly)
         {
-            mVcfCheckFields.add(new VcfCompareField(VT_REF, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-            mVcfCheckFields.add(new VcfCompareField(VT_REFPAIR, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+            mVcfCheckFields.add(new VcfCompareField(REF_DEPTH, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+            mVcfCheckFields.add(new VcfCompareField(REF_DEPTH_PAIR, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
             return;
         }
 
         if(!mGridssDiffsOnly)
         {
-            mVcfCheckFields.add(new VcfCompareField(VT_REF, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-            mVcfCheckFields.add(new VcfCompareField(VT_REFPAIR, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+            mVcfCheckFields.add(new VcfCompareField(REF_DEPTH, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+            mVcfCheckFields.add(new VcfCompareField(REF_DEPTH_PAIR, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
         }
 
-        mVcfCheckFields.add(new VcfCompareField(VT_SB, GenotypeScope.COMBINED, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(VT_SR, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(VT_IC, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(STRAND_BIAS, GenotypeScope.COMBINED, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(SPLIT_READS, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(INDEL_COUNT, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
 
         // SV only
-        mVcfCheckFields.add(new VcfCompareField(VT_QUAL, GenotypeScope.BOTH, VariantTypeScope.SV, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(VT_VF, GenotypeScope.BOTH, VariantTypeScope.SV, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(VT_RP, GenotypeScope.BOTH, VariantTypeScope.SV, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(VT_ASRP, GenotypeScope.BOTH, VariantTypeScope.SV, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(QUAL, GenotypeScope.BOTH, VariantTypeScope.SV, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(SV_FRAG_COUNT, GenotypeScope.BOTH, VariantTypeScope.SV, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(READ_PAIRS, GenotypeScope.BOTH, VariantTypeScope.SV, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(GRIDSS_ASRP, GenotypeScope.BOTH, VariantTypeScope.SV, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
 
         // assembly
-        mVcfCheckFields.add(new VcfCompareField(VT_AS, GenotypeScope.COMBINED, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(VT_CAS, GenotypeScope.COMBINED, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(VT_RAS, GenotypeScope.COMBINED, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(GRIDSS_AS, GenotypeScope.COMBINED, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(GRIDSS_CAS, GenotypeScope.COMBINED, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(GRIDSS_RAS, GenotypeScope.COMBINED, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
 
         // SGL only
-        mVcfCheckFields.add(new VcfCompareField(VT_BVF, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(VT_BQ, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(VT_BAQ, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(VT_BSC, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(VT_BASRP, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(VT_BASSR, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(SGL_FRAG_COUNT, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(GRIDSS_BQ, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(GRIDSS_BAQ, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(GRIDSS_BSC, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(GRIDSS_BASRP, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(GRIDSS_BASSR, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
     }
 
     public void run()
@@ -623,7 +619,7 @@ public class GripssCompareVcfs
         ConfigBuilder configBuilder = new ConfigBuilder();
 
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
-        configBuilder.addConfigItem(REFERENCE, true, REFERENCE_DESC);
+        configBuilder.addConfigItem(REFERENCE, false, REFERENCE_DESC);
         configBuilder.addPath(ORIGINAL_VCF, true, "Optional, name of the reference sample");
         configBuilder.addPath(NEW_VCF, true, "Path to the GRIDSS structural variant VCF file");
         configBuilder.addFlag(IGNORE_PON_DIFF, "Ignore diffs if just PON filter");

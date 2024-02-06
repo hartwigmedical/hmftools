@@ -13,7 +13,8 @@ import com.hartwig.hmftools.patientdb.clinical.lims.cohort.LimsCohortTestFactory
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class HospitalModelTest {
+public class HospitalModelTest
+{
 
     private static final String HOSPITAL_NAME = "HMF Name";
     private static final String HOSPITAL_ZIP = "HMF Zip";
@@ -32,7 +33,8 @@ public class HospitalModelTest {
     private static final String MANUALLY_MAPPED_CORE_SAMPLE = "COREManualMap";
 
     @Test
-    public void canExtractHospitalDataFromHospitalModel() {
+    public void canExtractHospitalDataFromHospitalModel()
+    {
         String hospitalId = "01";
         HospitalModel model = buildTestHospitalModel(hospitalId);
 
@@ -90,7 +92,8 @@ public class HospitalModelTest {
     }
 
     @NotNull
-    private static HospitalModel buildTestHospitalModel(@NotNull String hospitalId) {
+    private static HospitalModel buildTestHospitalModel(@NotNull String hospitalId)
+    {
         Map<String, HospitalAddress> hospitalAddress = Maps.newHashMap();
         Map<String, HospitalPersons> hospitalContactCPCT = Maps.newHashMap();
         Map<String, HospitalPersons> hospitalContactDRUP = Maps.newHashMap();

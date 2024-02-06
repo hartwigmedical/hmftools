@@ -14,10 +14,6 @@ public final class VirusInterpreterDataLoader
 {
     private static final Logger LOGGER = LogManager.getLogger(VirusInterpreterDataLoader.class);
 
-    private VirusInterpreterDataLoader()
-    {
-    }
-
     @NotNull
     public static VirusInterpreterData load(@NotNull String annotatedVirusTsv) throws IOException
     {

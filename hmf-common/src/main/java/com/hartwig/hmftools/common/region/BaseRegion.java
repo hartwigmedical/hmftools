@@ -60,6 +60,17 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
         return positionsOverlap(mStart, mEnd, other.start(), other.end());
     }
 
+    public boolean containsRegion(final BaseRegion region)
+    {
+        return positionsWithin(region.start(), region.end(), mStart, mEnd);
+    }
+
+    public boolean containsRegion(final ChrBaseRegion region)
+    {
+        // assumes chromosome check is not relevant
+        return positionsWithin(region.start(), region.end(), mStart, mEnd);
+    }
+
     public boolean containsPosition(int position) { return positionWithin(position, start(), end()); }
 
     public boolean matches(final BaseRegion other)
@@ -111,7 +122,7 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
     }
 
     @Override
-    public int compareTo(@NotNull final BaseRegion other)
+    public int compareTo(final BaseRegion other)
     {
         if(start() < other.start())
         {
@@ -167,6 +178,24 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
                 ++index;
             }
         }
+    }
+
+    public static <E extends BaseRegion> int binarySearch(int readStart, final List<E> regions)
+    {
+        // Returns index of the last region in regions with start pos less than or equal to readStart
+        // If all regions have start pos larger than readStart then return zero. It is assumed that regions are sorted
+        int binarySearchIndex = Collections.binarySearch(regions, new BaseRegion(readStart, readStart));
+
+        if(binarySearchIndex >= 0)
+            return binarySearchIndex; // found with exact match for start pos
+
+        // get insertion point
+        int insertionIndex = -(binarySearchIndex + 1);
+
+        if(insertionIndex == 0)
+            return 0;
+
+        return insertionIndex - 1;
     }
 }
 

@@ -4,6 +4,10 @@ import static java.lang.Math.abs;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_CHECK_THRESHOLD;
+import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_REF_MIN_BIAS;
+import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_REF_MIN_DEPTH;
+
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
@@ -20,8 +24,6 @@ public class StrandBiasCalcs
     private static final double PROB_DIFF = 0.0001;
     private static final double EXPECTED_RATE = 0.5;
     private static final double INVALID_STRAND_BIAS = -1;
-    private static final double STRAND_BIAS_CHECK_THRESHOLD = 0.1;
-
 
     public StrandBiasCalcs()
     {
@@ -30,12 +32,38 @@ public class StrandBiasCalcs
         mMaxStrandBiasValue = mStrandBiasValues[mStrandBiasValues.length - 1];
     }
 
-    public boolean isDepthBelowProbability(double strandBias, int depth)
+    public boolean allOneSide(final StrandBiasData strandBiasDataAlt)
     {
+        if(strandBiasDataAlt.depth() < STRAND_BIAS_REF_MIN_DEPTH)
+            return false;
+
+        return strandBiasDataAlt.forward() == 0 || strandBiasDataAlt.reverse() == 0;
+    }
+
+    public boolean isDepthBelowProbability(
+            final StrandBiasData strandBiasDataAlt, final StrandBiasData strandBiasDataRef, boolean checkRef)
+    {
+        double strandBias = strandBiasDataAlt.bias();
+
         double minStrandBias = min(strandBias, 1 - strandBias);
         if(minStrandBias > STRAND_BIAS_CHECK_THRESHOLD)
             return false;
 
+        if(checkRef)
+        {
+            // to use the ref there must be min depth observed
+            if(strandBiasDataRef.forward() < STRAND_BIAS_REF_MIN_DEPTH || strandBiasDataRef.reverse() < STRAND_BIAS_REF_MIN_DEPTH)
+                return false;
+
+            double refBias = strandBiasDataRef.bias();
+
+            double minRefBias = min(refBias, 1 - refBias);
+
+            if(minRefBias < STRAND_BIAS_REF_MIN_BIAS && (refBias < 0.5) == (strandBias < 0.5))
+                return false;
+        }
+
+        int depth = strandBiasDataAlt.depth();
         double requiredStrandBias = depth < mStrandBiasValues.length ? mStrandBiasValues[depth] : mMaxStrandBiasValue;
 
         if(requiredStrandBias == INVALID_STRAND_BIAS)
@@ -43,6 +71,9 @@ public class StrandBiasCalcs
 
         return Doubles.lessOrEqual(minStrandBias, requiredStrandBias);
     }
+
+    private static final int INVALID_OBSERVED = -1;
+    private static final double EPSILON = 1e-6;
 
     private void buildProbabilityCache()
     {
@@ -54,13 +85,14 @@ public class StrandBiasCalcs
             {
                 int observed = findMinStrandBiasVsProb(depth, currentObserved);
 
-                if(observed < 0)
+                if(observed == INVALID_OBSERVED)
                 {
                     mStrandBiasValues[depth] = INVALID_STRAND_BIAS;
                 }
                 else
                 {
-                    mStrandBiasValues[depth] = observed / (double) depth;
+                    // the observed level is the first which exceeds the probability threshold, so set this to epsilon below
+                    mStrandBiasValues[depth] = (observed - EPSILON) / depth;
                     currentObserved = observed;
                 }
             }
@@ -83,9 +115,9 @@ public class StrandBiasCalcs
             if(prob > STRAND_BIAS_PROB)
             {
                 if(observed == 0)
-                    return -1;
+                    return INVALID_OBSERVED;
                 else
-                    return observed - 1;
+                    return observed;
             }
         }
 

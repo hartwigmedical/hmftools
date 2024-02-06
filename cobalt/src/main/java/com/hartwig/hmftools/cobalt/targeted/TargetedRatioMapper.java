@@ -112,10 +112,10 @@ public class TargetedRatioMapper implements RatioMapper
         CB_LOGGER.info("off target after consolidation: \n{}", offTargetRatios);
 
         // apply gc normalisation
-        GcNormalizedRatioMapper gcNormalizedRatioMapper = new GcNormalizedRatioMapper(true);
+        GcNormalizedRatioMapper gcNormalizedRatioMapper = new GcNormalizedRatioMapper();
         offTargetRatios = gcNormalizedRatioMapper.mapRatios(offTargetRatios);
 
-        CB_LOGGER.info("off target gc normalisation: \n{}", gcNormalizedRatioMapper.gcMedianReadCountTable());
+        CB_LOGGER.info("off target gc normalisation: \n{}", gcNormalizedRatioMapper.gcMedianReadDepthTable());
         CB_LOGGER.info("off target after gc normalisation: \n{}", offTargetRatios);
 
         return offTargetRatios;
@@ -194,7 +194,7 @@ public class TargetedRatioMapper implements RatioMapper
             int offTargetWindowSize, final String chromosome, int windowStart, final List<ReadRatio> windowGcRatios,
             final List<GenomePosition> targetRegions)
     {
-        int minNumGcRatios = (int)round(offTargetWindowSize / CobaltConstants.WINDOW_SIZE * CobaltConstants.MIN_OFF_TARGET_WINDOW_RATIO);
+        int minNumGcRatios = (int)round((double)offTargetWindowSize / CobaltConstants.WINDOW_SIZE * CobaltConstants.MIN_OFF_TARGET_WINDOW_RATIO);
 
         int windowEnd = windowStart + offTargetWindowSize - 1;
 

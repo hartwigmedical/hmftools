@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_FRA
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_NUC;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_READS;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_SOMATIC_VCF;
+import static com.hartwig.hmftools.lilac.fragment.FragmentSource.REFERENCE;
+import static com.hartwig.hmftools.lilac.fragment.FragmentSource.TUMOR;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -32,6 +34,7 @@ import com.hartwig.hmftools.lilac.coverage.HlaComplexFile;
 import com.hartwig.hmftools.lilac.coverage.HlaYCoverage;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
+import com.hartwig.hmftools.lilac.fragment.FragmentSource;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.qc.AminoAcidQC;
 import com.hartwig.hmftools.lilac.qc.BamQC;
@@ -138,7 +141,7 @@ public class ResultsWriter
 
         HlaComplexFile.writeFragmentAssignment(mConfig.formFileId(LILAC_FILE_CANDIDATE_FRAGS), rankedComplexes, refFragAlleles);
 
-        writeFragments("REFERENCE", refNucleotideFrags);
+        writeFragments(mConfig.tumorOnly() ? TUMOR : REFERENCE, refNucleotideFrags);
     }
 
     public void writeFailedSampleFileOutputs(final Map<String,int[]> geneBaseDepth, int medianBaseQuality)
@@ -185,7 +188,7 @@ public class ResultsWriter
         }
     }
 
-    public void writeFragments(final String source, final List<Fragment> fragments)
+    public void writeFragments(final FragmentSource source, final List<Fragment> fragments)
     {
         if(mFragmentWriter == null)
             return;
@@ -198,7 +201,7 @@ public class ResultsWriter
                 fragment.getGenes().forEach(x -> genesStr.add(x));
 
                 mFragmentWriter.write(String.format("%s\t%s\t%s\t%s",
-                        source, fragment.id(), fragment.readInfo(), genesStr));
+                        source.toString(), fragment.id(), fragment.readInfo(), genesStr));
 
                 mFragmentWriter.write(String.format("\t%d\t%d\t%d\t%d\t%s",
                         fragment.minNucleotideLocus(), fragment.maxNucleotideLocus(),

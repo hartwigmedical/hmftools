@@ -11,11 +11,10 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_C
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_COLUMN;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
@@ -25,12 +24,19 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.DEFAULT_PROBE_LENGTH;
+import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_FRAG_COUNT_MIN;
+import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_FRAG_COUNT_MIN_LOWER;
+import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_GC_THRESHOLD_MAX;
+import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_GC_THRESHOLD_MAX_LOWER;
+import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_GC_THRESHOLD_MIN;
+import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_GC_THRESHOLD_MIN_LOWER;
+import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_PROBE_COUNT;
+import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_VAF_MIN;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -54,7 +60,14 @@ public class ProbeConfig
 
     public final double VafMin;
     public final int FragmentCountMin;
-    public final int FragmentCountOtherMutationMin;
+    public final double GcRatioLimitMin;
+    public final double GcRatioLimitMax;
+
+    // for second-round considerations
+    public final int FragmentCountMinLower;
+    public final double GcRatioLimitLowerMin;
+    public final double GcRatioLimitLowerMax;
+
     public final int ProbeCount;
     public final int ProbeLength;
     public final int NonReportableSvCount;
@@ -70,7 +83,7 @@ public class ProbeConfig
     private static final String REFERENCE_VARIANTS_FILE = "ref_variants";
     private static final String VAF_THRESHOLD = "vaf_min";
     private static final String FRAG_COUNT_THRESHOLD = "frag_count_min";
-    private static final String FRAG_COUNT_OTHER_MUT_THRESHOLD = "frag_count_other_mutation_min";
+    private static final String FRAG_COUNT_THRESHOLD_LOWER = "frag_count_min_lower";
     private static final String PROBE_COUNT = "probe_count";
     private static final String PROBE_LENGTH = "probe_length";
     private static final String NON_REPORTABLE_SV_COUNT = "non_reportable_sv_count";
@@ -78,22 +91,6 @@ public class ProbeConfig
     private static final String WRITE_ALL = "write_all";
     private static final String ALLOW_MISSING = "allow_missing";
     private static final String SAMPLE_BATCH_COUNT = "sample_batch_count";
-
-    private static final int DEFAULT_PROBE_COUNT = 500;
-    private static final double DEFAULT_VAF_MIN = 0.05;
-    private static final int DEFAULT_FRAG_COUNT_MIN = 11;
-    private static final int DEFAULT_FRAG_COUNT_OHTER_MUTATION_MIN = 8;
-    private static final int DEFAULT_NON_REPORTABLE_SV_COUNT = 30;
-    public static final double DEFAULT_GC_THRESHOLD_MIN = 0.4;
-    public static final double DEFAULT_GC_THRESHOLD_MAX = 0.6;
-    public static final double DEFAULT_MAPPABILITY_MIN = 0.5;
-    public static final double DEFAULT_REPEAT_COUNT_MAX = 3;
-    public static final double DEFAULT_SUBCLONAL_LIKELIHOOD_MIN = 0.95;
-    public static final int DEFAULT_SV_BREAKENDS_PER_GENE = 5;
-
-    public static final int MAX_INSERT_BASES = 60;
-    public static final int MAX_INDEL_LENGTH = 32;
-    public static final int MAX_POLY_A_T_BASES = 7;
 
     public static final String NO_BATCH_ID = "NONE";
 
@@ -130,7 +127,13 @@ public class ProbeConfig
         SubclonalCount = configBuilder.getInteger(SUBCLONAL_COUNT);
         VafMin = configBuilder.getDecimal(VAF_THRESHOLD);
         FragmentCountMin = configBuilder.getInteger(FRAG_COUNT_THRESHOLD);
-        FragmentCountOtherMutationMin = configBuilder.getInteger(FRAG_COUNT_OTHER_MUT_THRESHOLD);
+        FragmentCountMinLower = configBuilder.getInteger(FRAG_COUNT_THRESHOLD_LOWER);
+
+        GcRatioLimitMin = DEFAULT_GC_THRESHOLD_MIN;
+        GcRatioLimitMax = DEFAULT_GC_THRESHOLD_MAX;
+        GcRatioLimitLowerMin = DEFAULT_GC_THRESHOLD_MIN_LOWER;
+        GcRatioLimitLowerMax = DEFAULT_GC_THRESHOLD_MAX_LOWER;
+
         WriteAll = configBuilder.hasFlag(WRITE_ALL);
         AllowMissing = configBuilder.hasFlag(ALLOW_MISSING);
         Threads = parseThreads(configBuilder);
@@ -158,10 +161,14 @@ public class ProbeConfig
     public boolean checkSampleDirectories(final String sampleId)
     {
         String purpleDir = getSampleFilePath(sampleId, PurpleDir);
+
+        // allow Linx inputs to be optional
         String linxDir = getSampleFilePath(sampleId, LinxDir);
         String linxGermlineDir = getSampleFilePath(sampleId, LinxGermlineDir);
 
-        if(!Files.exists(Paths.get(purpleDir)) || !Files.exists(Paths.get(linxDir)) || !Files.exists(Paths.get(linxGermlineDir)))
+        if(!Files.exists(Paths.get(purpleDir))
+        || (linxDir != null && !Files.exists(Paths.get(linxDir)))
+        || (linxGermlineDir != null && !Files.exists(Paths.get(linxGermlineDir))))
         {
             if(!AllowMissing)
             {
@@ -186,7 +193,7 @@ public class ProbeConfig
 
             Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
 
-            int idIndex = fieldsIndexMap.get(SAMPLE_ID_COLUMN);
+            int idIndex = fieldsIndexMap.get(FLD_SAMPLE_ID);
             Integer batchIndex = fieldsIndexMap.get("BatchId");
 
             for(String line : lines)
@@ -233,7 +240,11 @@ public class ProbeConfig
         SubclonalCount = 0;
         VafMin = vafMin;
         FragmentCountMin = fragmentCountMin;
-        FragmentCountOtherMutationMin = DEFAULT_FRAG_COUNT_OHTER_MUTATION_MIN;
+        FragmentCountMinLower = DEFAULT_FRAG_COUNT_MIN_LOWER;
+        GcRatioLimitMin = DEFAULT_GC_THRESHOLD_MIN;
+        GcRatioLimitMax = DEFAULT_GC_THRESHOLD_MAX;
+        GcRatioLimitLowerMin = DEFAULT_GC_THRESHOLD_MIN_LOWER;
+        GcRatioLimitLowerMax = DEFAULT_GC_THRESHOLD_MAX_LOWER;
         SampleIds = Lists.newArrayList();
         BatchSampleIds = Maps.newHashMap();
         PurpleDir = "";
@@ -254,7 +265,7 @@ public class ProbeConfig
         configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
         addSampleIdFile(configBuilder, false);
         configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
-        configBuilder.addPath(LINX_GERMLINE_DIR_CFG, true, LINX_GERMLINE_DIR_DESC);
+        configBuilder.addPath(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
         configBuilder.addPath(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(REFERENCE_VARIANTS_FILE, false, "Reference variants file");
@@ -264,8 +275,8 @@ public class ProbeConfig
         configBuilder.addInteger(FRAG_COUNT_THRESHOLD, "Fragment count threshold", DEFAULT_FRAG_COUNT_MIN);
 
         configBuilder.addInteger(
-                FRAG_COUNT_OTHER_MUT_THRESHOLD, "Fragment count threshold for other somatic mutations",
-                DEFAULT_FRAG_COUNT_OHTER_MUTATION_MIN);
+                FRAG_COUNT_THRESHOLD_LOWER, "Fragment count lower threshold for second-round selection",
+                DEFAULT_FRAG_COUNT_MIN_LOWER);
 
         configBuilder.addInteger(PROBE_COUNT, "Probe count", DEFAULT_PROBE_COUNT);
         configBuilder.addInteger(PROBE_LENGTH, "Probe length", DEFAULT_PROBE_LENGTH);

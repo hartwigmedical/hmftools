@@ -1,43 +1,47 @@
 package com.hartwig.hmftools.bamtools.slice;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE_DESC;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.READ_LENGTH;
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.addCommonCommandOptions;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.REGIONS_FILE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.checkFileExists;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.loadSpecificRegionsConfig;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTITION_SIZE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegionList;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegions;
+import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.samtools.BamUtils.deriveRefGenomeVersion;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.bamtools.common.CommonUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class SliceConfig
 {
-    public final String SampleId;
     public final String BamFile;
+    public final String OutputPrefix;
     public final String RefGenomeFile;
     public final RefGenomeVersion RefGenVersion;
 
     public final int PartitionSize;
 
     public final String OutputDir;
-    public final String OutputId;
 
     public final boolean WriteBam;
     public final boolean UnsortedBam;
@@ -55,6 +59,7 @@ public class SliceConfig
 
     private boolean mIsValid;
 
+    private static final String OUTPUT_PREFIX = "output_prefix";
     private static final String WRITE_BAM = "write_bam";
     private static final String UNSORTED_BAM = "unsorted_bam";
     private static final String WRITE_READS = "write_reads";
@@ -67,11 +72,10 @@ public class SliceConfig
     {
         mIsValid = true;
 
-        SampleId = configBuilder.getValue(SAMPLE);
+        OutputPrefix = configBuilder.getValue(OUTPUT_PREFIX);
         BamFile = configBuilder.getValue(BAM_FILE);
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
         OutputDir = parseOutputDir(configBuilder);
-        OutputId = configBuilder.getValue(OUTPUT_ID);
         WriteReads = configBuilder.hasFlag(WRITE_READS);
         WriteBam = configBuilder.hasFlag(WRITE_BAM) || !WriteReads;
         UnsortedBam = configBuilder.hasFlag(UNSORTED_BAM);
@@ -88,16 +92,23 @@ public class SliceConfig
             mIsValid = false;
         }
 
-        RefGenVersion = RefGenomeVersion.from(configBuilder);
-
-        BT_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
-        BT_LOGGER.info("output({})", OutputDir);
+        RefGenVersion = deriveRefGenomeVersion(BamFile);
+        BT_LOGGER.info("input bam({}) refGenome({})", BamFile, RefGenVersion);
+        BT_LOGGER.info("output({}) and file prefix({})", OutputDir, OutputPrefix);
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
 
         SpecificChrRegions = new SpecificRegions();
 
-        mIsValid &= loadSpecificRegionsConfig(configBuilder, SpecificChrRegions.Chromosomes, SpecificChrRegions.Regions);
+        if(configBuilder.hasValue(REGIONS_FILE))
+        {
+            List<ChrBaseRegion> regions = loadChrBaseRegionList(configBuilder.getValue(REGIONS_FILE));
+            regions.forEach(x -> SpecificChrRegions.addRegion(x));
+        }
+        else
+        {
+            mIsValid &= loadSpecificRegionsConfig(configBuilder, SpecificChrRegions.Chromosomes, SpecificChrRegions.Regions);
+        }
 
         if(SpecificChrRegions.Regions.isEmpty())
         {
@@ -119,12 +130,25 @@ public class SliceConfig
         return mIsValid;
     }
 
-    public String formFilename(final String fileType) { return CommonUtils.formFilename(SampleId, BamFile, OutputDir, OutputId, fileType); }
+    public String formFilename(final WriteType fileType)
+    {
+        String outputFile = OutputDir + OutputPrefix + fileType.extension();
+        return outputFile;
+    }
 
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        addCommonCommandOptions(configBuilder);
+        configBuilder.addPath(BAM_FILE, true, BAM_FILE_DESC);
+
+        configBuilder.addPath(
+                REGIONS_FILE, false,
+                "TSV or BED file with regions to slice, expected columns Chromosome,PositionStart,PositionEnd or no headers");
+
+        addRefGenomeFile(configBuilder, true);;
+        configBuilder.addConfigItem(OUTPUT_PREFIX, "File prefix for BAM and read TSV");
+
+        configBuilder.addInteger(READ_LENGTH, "Read length", DEFAULT_READ_LENGTH);
 
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
         configBuilder.addInteger(MAX_PARTITION_READS, "Max partition reads (perf-only)", 0);
@@ -135,17 +159,22 @@ public class SliceConfig
         configBuilder.addFlag(DROP_EXCLUDED, "Ignore remote reads in excluded regions (eg poly-G)");
         configBuilder.addFlag(DROP_REMOTE_SUPPS, "Ignore remote supplementary reads");
         configBuilder.addFlag(PERF_DEBUG, "Detailed performance tracking and logging");
+
+        addThreadOptions(configBuilder);
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
+        addSpecificChromosomesRegionsConfig(configBuilder);
     }
 
     @VisibleForTesting
     public SliceConfig()
     {
         mIsValid = true;
-        SampleId = "";
+        OutputPrefix = "";
         BamFile = "";
         RefGenomeFile = "";
+        RefGenVersion = V37;
         OutputDir = "";
-        OutputId = null;
         WriteReads = false;
         WriteBam = false;
         UnsortedBam = false;
@@ -153,7 +182,6 @@ public class SliceConfig
         DropRemoteSupplementaries = false;
         MaxRemoteReads = 0;
         MaxPartitionReads = 0;
-        RefGenVersion = V37;
         PartitionSize = DEFAULT_CHR_PARTITION_SIZE;
         SpecificChrRegions = new SpecificRegions();
         Threads = 0;

@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.sage.ReferenceData.loadRefGenome;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
@@ -27,8 +28,9 @@ import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.common.PartitionTask;
 import com.hartwig.hmftools.sage.coverage.Coverage;
+import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -39,11 +41,12 @@ public class ChromosomePipeline implements AutoCloseable
     private final SageCallConfig mConfig;
     private final IndexedFastaSequenceFile mRefGenome;
 
-    private final Map<String,QualityRecalibrationMap> mQualityRecalibrationMap;
+    private final Map<String, BqrRecordMap> mQualityRecalibrationMap;
     private final Coverage mCoverage;
     private  final PhaseSetCounter mPhaseSetCounter;
 
     private final VcfWriter mVcfWriter;
+    private final FragmentLengths mFragmentLengths;
     private final Queue<PartitionTask> mPartitions;
     private final RegionResults mRegionResults;
 
@@ -55,8 +58,8 @@ public class ChromosomePipeline implements AutoCloseable
 
     public ChromosomePipeline(
             final String chromosome, final SageCallConfig config,
-            final ReferenceData refData, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap,
-            final Coverage coverage, final PhaseSetCounter phaseSetCounter, final VcfWriter vcfWriter)
+            final ReferenceData refData, final Map<String, BqrRecordMap> qualityRecalibrationMap,
+            final Coverage coverage, final PhaseSetCounter phaseSetCounter, final VcfWriter vcfWriter, final FragmentLengths fragmentLengths)
     {
         mChromosome = chromosome;
         mConfig = config;
@@ -66,6 +69,7 @@ public class ChromosomePipeline implements AutoCloseable
         mPhaseSetCounter = phaseSetCounter;
 
         mVcfWriter = vcfWriter;
+        mFragmentLengths = fragmentLengths;
 
         final Chromosome chr = HumanChromosome.contains(chromosome)
                 ? HumanChromosome.fromString(chromosome) : MitochondrialChromosome.fromString(chromosome);
@@ -114,22 +118,11 @@ public class ChromosomePipeline implements AutoCloseable
         {
             workers.add(new RegionThread(
                     mChromosome, mConfig, mQualityRecalibrationMap, mCoverage, mPhaseSetCounter,
-                    mPanelRegions, mHotspots, mTranscripts, mHighConfidenceRegions, mPartitions, mRegionResults));
+                    mPanelRegions, mHotspots, mTranscripts, mHighConfidenceRegions, mPartitions, mRegionResults, mFragmentLengths));
         }
 
-        for(Thread worker : workers)
-        {
-            try
-            {
-                worker.join();
-            }
-            catch(InterruptedException e)
-            {
-                SG_LOGGER.error("task execution error: {}", e.toString());
-                e.printStackTrace();
-                System.exit(1);
-            }
-        }
+        if(!runThreadTasks(workers))
+            System.exit(1);
 
         SG_LOGGER.debug("chromosome({}) {} regions complete, processed {} reads, writing {} variants",
                 mChromosome, regionCount, mRegionResults.totalReads(), mRegionResults.totalVariants());
@@ -139,7 +132,6 @@ public class ChromosomePipeline implements AutoCloseable
         if(mConfig.Common.logPerfStats())
         {
             mRegionResults.logPerfCounters();
-            SG_LOGGER.debug("chromosome({}) max memory({})", mChromosome, mRegionResults.maxMemoryUsage());
             SG_LOGGER.debug("chromosome({}) evidence stats: {}", mChromosome, mRegionResults.evidenceStats().toString());
         }
 
@@ -148,8 +140,6 @@ public class ChromosomePipeline implements AutoCloseable
 
         SG_LOGGER.info("chromosome({}) analysis complete", mChromosome);
     }
-
-    public int maxMemoryUsage() { return mRegionResults.maxMemoryUsage(); }
 
     @Override
     public void close() throws IOException

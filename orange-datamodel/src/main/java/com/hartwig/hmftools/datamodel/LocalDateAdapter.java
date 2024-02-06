@@ -8,11 +8,13 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 public class LocalDateAdapter extends TypeAdapter<LocalDate>
 {
-
     @Override
-    public void write(final JsonWriter jsonWriter, final LocalDate localDate) throws IOException
+    public void write(@NotNull JsonWriter jsonWriter, @Nullable LocalDate localDate) throws IOException
     {
         if(localDate == null)
         {
@@ -27,7 +29,7 @@ public class LocalDateAdapter extends TypeAdapter<LocalDate>
     }
 
     @Override
-    public LocalDate read(final JsonReader jsonReader) throws IOException
+    public LocalDate read(@NotNull JsonReader jsonReader) throws IOException
     {
         if(jsonReader.peek() == JsonToken.NULL)
         {

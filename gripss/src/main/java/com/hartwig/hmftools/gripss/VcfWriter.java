@@ -1,19 +1,27 @@
 package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.UNTEMPLATED_SEQUENCE_REPEAT_CLASS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.UNTEMPLATED_SEQUENCE_REPEAT_TYPE;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ALT_PATH;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_EVENT_TYPE;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_HOTSPOT;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_LOCAL_LINKED_BY;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_PON_COUNT;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REALIGN;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_REMOTE_LINKED_BY;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_RESCUE_INFO;
-import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_TAF;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ALT_PATH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ALT_PATH_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.EVENT_TYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.EVENT_TYPE_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.LOCAL_LINKED_BY;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.LOCAL_LINKED_BY_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REALIGN;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REALIGN_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REMOTE_LINKED_BY;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REMOTE_LINKED_BY_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.RESCUE_INFO;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.RESCUE_INFO_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.TAF;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.TAF_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_CLASS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_TYPE;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.gripss.filters.FilterType.HARD_FILTERED;
 import static com.hartwig.hmftools.gripss.filters.FilterType.PON;
 
@@ -32,7 +40,6 @@ import com.hartwig.hmftools.gripss.links.LinkStore;
 import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotation;
 
 import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.variant.variantcontext.FastGenotype;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -105,28 +112,28 @@ public class VcfWriter
             if(filter == HARD_FILTERED)
                 continue;
 
-            newHeader.addMetaDataLine(new VCFFilterHeaderLine(FilterType.vcfName(filter), FilterType.vcfInfoString(filter)));
+            newHeader.addMetaDataLine(new VCFFilterHeaderLine(filter.vcfTag(), filter.vcfDesc()));
         }
 
-        newHeader.addMetaDataLine(new VCFInfoHeaderLine(VT_REALIGN, 1, VCFHeaderLineType.Flag, "Variant was realigned"));
-        newHeader.addMetaDataLine(new VCFInfoHeaderLine(VT_EVENT_TYPE, 1, VCFHeaderLineType.String, "Structural variant type"));
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(REALIGN, 1, VCFHeaderLineType.Flag, REALIGN_DESC));
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(EVENT_TYPE, 1, VCFHeaderLineType.String, EVENT_TYPE_DESC));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                VT_TAF, 1, VCFHeaderLineType.Float,"Tumor allelic frequency (fragment support / total support)"));
-        newHeader.addMetaDataLine(new VCFInfoHeaderLine(VT_ALT_PATH, 1, VCFHeaderLineType.String, "Alternate path"));
+                TAF, 1, VCFHeaderLineType.Float,TAF_DESC));
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(ALT_PATH, 1, VCFHeaderLineType.String, ALT_PATH_DESC));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                VT_LOCAL_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Breakend linking information"));
+                LOCAL_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, LOCAL_LINKED_BY_DESC));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                VT_REMOTE_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Partner breakend linking information"));
+                REMOTE_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, REMOTE_LINKED_BY_DESC));
 
-        newHeader.addMetaDataLine(new VCFInfoHeaderLine(VT_HOTSPOT, 1, VCFHeaderLineType.Flag, "Variant is a hotspot"));
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(HOTSPOT, 1, VCFHeaderLineType.Flag, HOTSPOT_DESC));
 
-        newHeader.addMetaDataLine(new VCFInfoHeaderLine(VT_PON_COUNT, 1, VCFHeaderLineType.Integer, "PON count if in PON"));
+        newHeader.addMetaDataLine(new VCFInfoHeaderLine(PON_COUNT, 1, VCFHeaderLineType.Integer, "PON count if in PON"));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                VT_RESCUE_INFO, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "Partner breakend rescue"));
+                RESCUE_INFO, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, RESCUE_INFO_DESC));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
                 UNTEMPLATED_SEQUENCE_REPEAT_CLASS, 1, VCFHeaderLineType.String, "Inserted sequence repeatmasker repeat class"));
@@ -196,24 +203,24 @@ public class VcfWriter
         VariantContextBuilder builder = new VariantContextBuilder(breakend.Context).genotypes(genotypes).filters();
 
         builder.log10PError(breakend.Qual / -10.0)
-                .attribute(VT_TAF, String.format("%.4f", breakend.allelicFrequency()))
-                .attribute(VT_HOTSPOT, mFilterCache.isHotspot(breakend.sv()))
-                .attribute(VT_EVENT_TYPE, breakend.type());
+                .attribute(TAF, String.format("%.4f", breakend.allelicFrequency()))
+                .attribute(HOTSPOT, mFilterCache.isHotspot(breakend.sv()))
+                .attribute(EVENT_TYPE, breakend.type());
 
-        builder.rmAttribute(VT_ALT_PATH); // remove if set from an earlier run's file
+        builder.rmAttribute(ALT_PATH); // remove if set from an earlier run's file
 
         if(!localLinks.isEmpty())
-            builder.attribute(VT_LOCAL_LINKED_BY, localLinks);
+            builder.attribute(LOCAL_LINKED_BY, localLinks);
         else
-            builder.attribute(VT_LOCAL_LINKED_BY, "");
+            builder.attribute(LOCAL_LINKED_BY, "");
 
         if(!remoteLinks.isEmpty())
-            builder.attribute(VT_REMOTE_LINKED_BY, remoteLinks);
+            builder.attribute(REMOTE_LINKED_BY, remoteLinks);
         else
-            builder.attribute(VT_REMOTE_LINKED_BY, "");
+            builder.attribute(REMOTE_LINKED_BY, "");
 
         if(sv.ponCount() > 0)
-            builder.attribute(VT_PON_COUNT, breakend.sv().ponCount());
+            builder.attribute(PON_COUNT, breakend.sv().ponCount());
 
         if(sv.getRmAnnotation() != null)
         {
@@ -250,7 +257,7 @@ public class VcfWriter
         }
         else
         {
-            svFilters.forEach(x -> builder.filter(FilterType.vcfName(x)));
+            svFilters.forEach(x -> builder.filter(x.vcfTag()));
         }
 
         VariantContext variantContext = builder.make(true);
@@ -262,10 +269,10 @@ public class VcfWriter
 
         // write additional status and working data to unfiltered VCF
         if(altPathStr != null && !altPathStr.isEmpty())
-            builder.attribute(VT_ALT_PATH, altPathStr);
+            builder.attribute(ALT_PATH, altPathStr);
 
         if(rescueInfo != null)
-            builder.attribute(VT_RESCUE_INFO, rescueInfo);
+            builder.attribute(RESCUE_INFO, rescueInfo);
 
         mUnfilteredWriter.add(variantContext);
     }

@@ -43,8 +43,9 @@ Slice a BAM and gather remote mate and supplementary reads
 ```
 java -cp bam-tools.jar com.hartwig.hmftools.bamtools.slice.RegionSlicer \
    -bam_file SAMPLE.bam \
+   -output_prefix 
    -ref_genome ref_genome.fasta \
-   -ref_genome_version 37 \
+   -specific_regions 
    -output_dir /output_dir/ \
    -threads 10 \
 ```
@@ -53,13 +54,14 @@ java -cp bam-tools.jar com.hartwig.hmftools.bamtools.slice.RegionSlicer \
 
 Filter | Description
 ---|---
-sample | Optional sample ID, used to set output filenames
-bam_file | BAM file to analyse
+bam_file | BAM file to slice
+output_prefix | Use in file output
 ref_genome | Reference genome file used to create the BAM
-ref_genome_version | Reference genome version, V37 (default) or V38
-regions_bed_file | Optional BED file to restrict the sections of the genome analysed
+regions_file | Optional BED file to restrict the sections of the genome analysed
 partition_size | Default 1M bases, splits chromosomes to analyse in partitions
 specific_regions | Optional list of regions to analyse. Format 'chr:posStart-posEnd; etc'
+write_reads | Write reads to TSV file
+drop_remote_supps | Ignore remote supplementary reads
 output_dir | Path for output file, if omitted will write to same directory as BAM file
 log_level | INFO or DEBUG
 threads | Multi-thread count, default 1

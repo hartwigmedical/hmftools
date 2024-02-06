@@ -29,6 +29,8 @@ public class IsofoxConstants
 
     public static final double MAX_GENE_PERC_CONTRIBUTION = 0.01;
 
+    public static final double PANEL_LOW_COVERAGE_FACTOR = 5; // expected rate for panel vs full genome
+
     public static void populateEnrichedGeneIds(final List<String> geneIds, final RefGenomeVersion version)
     {
         if(version == RefGenomeVersion.V38)

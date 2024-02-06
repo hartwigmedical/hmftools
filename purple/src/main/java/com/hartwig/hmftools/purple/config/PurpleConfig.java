@@ -106,9 +106,9 @@ public class PurpleConfig
             mIsValid &= createDirectory(Charting.PlotDirectory);
         }
 
-        Fitting = new FittingConfig(configBuilder);
-        SomaticFitting = new SomaticFitConfig(configBuilder);
         TargetRegionsMode = configBuilder.hasValue(TARGET_REGIONS_BED);
+        Fitting = new FittingConfig(configBuilder, TargetRegionsMode);
+        SomaticFitting = new SomaticFitConfig(configBuilder);
         Threads = parseThreads(configBuilder);
 
         RunDrivers = DriverGenePanelConfig.isConfigured(configBuilder);

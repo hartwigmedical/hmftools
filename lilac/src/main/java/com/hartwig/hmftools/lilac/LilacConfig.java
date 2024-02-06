@@ -10,11 +10,14 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_C
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_BAM;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_BAM_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
@@ -92,8 +95,6 @@ public class LilacConfig
     public static final String RESOURCE_DIR = "resource_dir";
     public static final String RESOURCE_DIR_DESC = "Path to resource files";
 
-    private static final String RNA_BAM = "rna_bam";
-
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String GENE_COPY_NUMBER = "gene_copy_number";
 
@@ -139,18 +140,8 @@ public class LilacConfig
         {
             SampleDataDir = "";
 
-            if(!configBuilder.hasValue(REFERENCE_BAM) && configBuilder.hasValue(TUMOR_BAM))
-            {
-                // interpret this as tumor-only mode
-                ReferenceBam = configBuilder.getValue(TUMOR_BAM, "");
-                TumorBam = "";
-            }
-            else
-            {
-                ReferenceBam = configBuilder.getValue(REFERENCE_BAM, "");
-                TumorBam = configBuilder.getValue(TUMOR_BAM, "");
-            }
-
+            ReferenceBam = configBuilder.getValue(REFERENCE_BAM, "");
+            TumorBam = configBuilder.getValue(TUMOR_BAM, "");
             RnaBam = configBuilder.getValue(RNA_BAM, "");
             OutputDir = parseOutputDir(configBuilder);
         }
@@ -214,6 +205,8 @@ public class LilacConfig
         }
     }
 
+    public boolean tumorOnly() { return ReferenceBam.isEmpty() && !TumorBam.isEmpty(); }
+
     private String checkFileExists(final String filename)
     {
         return Files.exists(Paths.get(filename)) ? filename : "";
@@ -226,12 +219,14 @@ public class LilacConfig
 
     public void logParams()
     {
-        LL_LOGGER.info("sample({}) inputs: tumorBam({}) somaticVCF({}) geneCopyNumber({}) rnaBam({})",
-                Sample, !TumorBam.isEmpty(), !SomaticVariantsFile.isEmpty(), !CopyNumberFile.isEmpty(), !RnaBam.isEmpty());
+        LL_LOGGER.info("sample({}) inputs: referenceBam({}) tumorBam({}) somaticVCF({}) geneCopyNumber({}) rnaBam({})",
+                Sample, !ReferenceBam.isEmpty(), !TumorBam.isEmpty(), !SomaticVariantsFile.isEmpty(), !CopyNumberFile.isEmpty(), !RnaBam.isEmpty());
 
+        /*
         LL_LOGGER.info("minBaseQual({}), minEvidence({}) minFragmentsPerAllele({}) "
                 + "minFragmentsToRemoveSingle({}) maxDistanceFromTopScore({})",
                 MinBaseQual, MinEvidence, MinFragmentsPerAllele, MinFragmentsToRemoveSingle, TopScoreThreshold);
+        */
 
         if(RunValidation)
         {
@@ -289,9 +284,11 @@ public class LilacConfig
     {
         configBuilder.addRequiredConfigItem(SAMPLE, "Name of sample");
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
-        configBuilder.addPath(REFERENCE_BAM, false,REFERENCE_BAM_DESC);
-        configBuilder.addPath(TUMOR_BAM, false,TUMOR_BAM_DESC);
-        configBuilder.addPath(RNA_BAM, false,"Analyse tumor BAM only");
+
+        configBuilder.addPath(REFERENCE_BAM, false, REFERENCE_BAM_DESC);
+        configBuilder.addPath(TUMOR_BAM, false, TUMOR_BAM_DESC);
+        configBuilder.addPath(RNA_BAM, false, RNA_BAM_DESC);
+
         configBuilder.addPath(RESOURCE_DIR, true, RESOURCE_DIR_DESC);
 
         configBuilder.addInteger(MIN_BASE_QUAL,"Min base quality threshold", DEFAULT_MIN_BASE_QUAL);
@@ -323,6 +320,7 @@ public class LilacConfig
         addRefGenomeConfig(configBuilder, true);
         addOutputDir(configBuilder);
         addThreadOptions(configBuilder);
+        addLoggingOptions(configBuilder);
     }
 
     private final List<HlaAllele> parseAlleleList(final String allelesStr)

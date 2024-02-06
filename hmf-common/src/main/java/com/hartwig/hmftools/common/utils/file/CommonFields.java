@@ -2,8 +2,9 @@ package com.hartwig.hmftools.common.utils.file;
 
 public final class CommonFields
 {
-    // pipeline
+    // common
     public static final String FLD_SAMPLE_ID = "SampleId";
+    public static final String FLD_CANCER_TYPE = "CancerType";
 
     // location
     public static final String FLD_CHROMOSOME = "Chromosome";
@@ -12,6 +13,7 @@ public final class CommonFields
     public static final String FLD_POSITION_START = "PositionStart";
     public static final String FLD_POS_END = "PosEnd";
     public static final String FLD_POSITION_END = "PositionEnd";
+    public static final String FLD_ORIENTATION = "Orientation";
 
     // genes
     public static final String FLD_GENE_ID = "GeneId";

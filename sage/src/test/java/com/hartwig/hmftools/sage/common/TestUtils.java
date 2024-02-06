@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.sage.common;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_FULL;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 
@@ -11,13 +12,11 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -26,10 +25,28 @@ import htsjdk.samtools.SAMRecordSetBuilder;
 
 public class TestUtils
 {
-    public static final SageConfig TEST_CONFIG = new SageConfig();
-    private static final QualityRecalibrationMap RECALIBRATION = new QualityRecalibrationMap(Collections.emptyList());
+    public static final SageConfig TEST_CONFIG = createSageConfig();
+
+    public static final BqrRecordMap RECALIBRATION = new BqrRecordMap(Collections.emptyList());
+
     private static final IndexedBases REF_BASES = new IndexedBases(550, 0, "TGTTTCTGTTTC".getBytes());
     public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG.Quality, RECALIBRATION, REF_BASES);
+
+    public static SageConfig createSageConfig()
+    {
+        // add input arguments as necessary or take the defaults
+        return new SageConfig(false);
+    }
+
+    public static SimpleVariant createSimpleVariant(int position)
+    {
+        return new SimpleVariant(CHR_1, position, "A", "C");
+    }
+
+    public static SimpleVariant createSimpleVariant(int position, final String ref, final String alt)
+    {
+        return new SimpleVariant(CHR_1, position, ref, alt);
+    }
 
     public static SageVariant createVariant(int position, final String ref, final String alt)
     {
@@ -44,12 +61,20 @@ public class TestUtils
         IndexedBases indexBases = new IndexedBases(
                 position, index, leftCoreIndex, rightCoreIndex, DEFAULT_READ_CONTEXT_FLANK_SIZE, readBases.getBytes());
 
-        return createVariant(position, ref, alt, indexBases);
+        return createVariant(CHR_1, position, ref, alt, indexBases);
     }
 
-    public static SageVariant createVariant(int position, final String ref, final String alt, final IndexedBases indexBases)
+    public static SageVariant createVariant(final ReadContextCounter readContextCounter)
     {
-        VariantHotspot variant = createVariantHotspot(position, ref, alt);
+        Candidate candidate = new Candidate(
+                VariantTier.HIGH_CONFIDENCE, readContextCounter.variant(), readContextCounter.readContext(), 1, 1);
+
+        return new SageVariant(candidate, Collections.emptyList(), Lists.newArrayList(readContextCounter));
+    }
+
+    public static SageVariant createVariant(final String chromosome, int position, final String ref, final String alt, final IndexedBases indexBases)
+    {
+        SimpleVariant variant = new SimpleVariant(chromosome, position, ref, alt);
 
         ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
 
@@ -77,8 +102,8 @@ public class TestUtils
 
     public static void setTumorQuality(final SageVariant variant, int count, int quality)
     {
-        variant.tumorReadCounters().get(0).counts()[RC_FULL] = count;
-        variant.tumorReadCounters().get(0).quality()[RC_FULL] = quality;
+        variant.tumorReadCounters().get(0).readSupportCounts().Full = count;
+        variant.tumorReadCounters().get(0).readSupportQualityCounts().Full = quality;
     }
 
     public static void addLocalPhaseSet(final SageVariant variant, int lps, int readCount)
@@ -108,27 +133,9 @@ public class TestUtils
         return flank + core + alt + core + flank;
     }
 
-    public static VariantHotspot createVariantHotspot(int position, final String ref, final String alt)
+    public static SimpleVariant createSimpleVariant(final String chromosome, int position, final String ref, final String alt)
     {
-        return ImmutableVariantHotspotImpl.builder().chromosome("1").position(position).ref(ref).alt(alt).build();
-    }
-
-    public static ReadContextCounter createReadCounter(
-            int position, final String ref, final String alt,
-            int index, int leftCoreIndex, int rightCoreIndex, int flankSize, final String readBases)
-    {
-        VariantHotspot variant = ImmutableVariantHotspotImpl.builder()
-                .chromosome("1")
-                .position(position)
-                .ref(ref)
-                .alt(alt).build();
-
-        IndexedBases indexBases = new IndexedBases(position, index, leftCoreIndex, rightCoreIndex, flankSize, readBases.getBytes());
-        ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
-
-        return new ReadContextCounter(
-                0, variant, readContext, VariantTier.LOW_CONFIDENCE,
-                100, 1, TEST_CONFIG, QUALITY_CALCULATOR, null);
+        return new SimpleVariant(chromosome, position, ref, alt);
     }
 
     public static ReadContext createReadContext(
@@ -165,6 +172,12 @@ public class TestUtils
         record.setBaseQualities(qualities);
         record.setReferenceName(chrStr);
         record.setReferenceIndex(chromosome.ordinal()); // need to override since no header is present
+
+        record.setMateReferenceName(chrStr);
+        record.setMateReferenceIndex(chromosome.ordinal());
+        record.setMateAlignmentStart(readStart + 300);
+        record.setMateNegativeStrandFlag(true);
+        record.setAttribute(MATE_CIGAR_ATTRIBUTE, cigar);
 
         // to be correct this should match the cigar element count
         record.setAttribute(NUM_MUTATONS_ATTRIBUTE, 1);

@@ -197,7 +197,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             if (layoutAnchorRange == null || layoutAnchorRange.last < 0)
                 continue
 
-            var seq = jLayout.highConfidenceSequence(CiderConstants.MIN_VJ_LAYOUT_HIGH_QUAL_READ_FRACTION)
+            var seq = String(jLayout.highConfidenceSequence(CiderConstants.MIN_VJ_LAYOUT_HIGH_QUAL_READ_FRACTION))
 
             // for j layout, we only hash bases up to the anchor start, reason is that the anchor sequences
             // are too repetitive to make hashing meaningful
@@ -223,7 +223,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
             if (layoutAnchorRange == null || layoutAnchorRange.last < 0)
                 continue
 
-            var seq = vLayout.highConfidenceSequence(CiderConstants.MIN_VJ_LAYOUT_HIGH_QUAL_READ_FRACTION)
+            var seq = String(vLayout.highConfidenceSequence(CiderConstants.MIN_VJ_LAYOUT_HIGH_QUAL_READ_FRACTION))
 
             // for v layout, we only hash from anchor end, reason is that the anchor sequences
             // are too repetitive to make hashing meaningful
@@ -281,12 +281,12 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
     fun tryCompleteLayoutWithBlosum(layoutGeneType: VJGeneType, layout: ReadLayout)
             : VDJSequence?
     {
-        sLogger.trace("try complete {} layout: {}", layoutGeneType, layout.consensusSequence())
+        sLogger.trace("try complete {} layout: {}", layoutGeneType, layout.consensusSequenceString())
 
         val targetAnchorTypes = layoutGeneType.pairedVjGeneTypes()
 
         // we want to use the indices to work where things are
-        val layoutSeq: String = layout.consensusSequence()
+        val layoutSeq: String = layout.consensusSequenceString()
 
         val layoutAnchorRange: IntRange? = vjLayoutAdaptor.getAnchorRange(layoutGeneType.vj, layout)
 
@@ -446,7 +446,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
         sLogger.trace("overlap: {}, jAlignShift: {}, vAnchor: {}, jAnchor: {}, vLayout: {}, jLayout: {}, combinedLayout: {}",
             vjLayoutOverlap, jAlignedPositionShift, vAnchorRange, jAnchorRange,
-            vLayout.consensusSequence(), jLayout.consensusSequence(), combinedVjLayout.consensusSequence())
+            vLayout.consensusSequenceString(), jLayout.consensusSequenceString(), combinedVjLayout.consensusSequenceString())
 
         val layoutSliceStart: Int
         val layoutSliceEnd = Math.min(jAnchorRange.last + 1, combinedVjLayout.length) // inclusive to exclusive
@@ -495,14 +495,14 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
         sLogger.debug("built VDJ sequence: {}, by overlapping V layout({}): {} and J layout({}): {}",
             vdj.aminoAcidSequenceFormatted,
-            vLayout.id, vLayout.consensusSequence(), jLayout.id, jLayout.consensusSequence())
+            vLayout.id, vLayout.consensusSequenceString(), jLayout.id, jLayout.consensusSequenceString())
 
         return vdj
     }
 
     fun tryCreateOneSidedVdj(layoutGeneType: VJGeneType, layout: ReadLayout): VDJSequence?
     {
-        sLogger.debug("create one sided {} layout: {}", layoutGeneType, layout.consensusSequence())
+        sLogger.debug("create one sided {} layout: {}", layoutGeneType, layout.consensusSequenceString())
 
         // we want to use the indices to work where things are
         val layoutAnchorRange: IntRange? = vjLayoutAdaptor.getAnchorRange(layoutGeneType.vj, layout)
@@ -652,7 +652,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
 
                 var numBaseDiff = 0
                 var maxReadsAtDiff = 0
-                val diffAccumulator = { s1: Map.Entry<Char, Int>, s2: Map.Entry<Char, Int> ->
+                val diffAccumulator = { s1: Map.Entry<Byte, Int>, s2: Map.Entry<Byte, Int> ->
                     if (s1.value >= 1 && s2.value >= 1)
                     {
                         ++numBaseDiff
@@ -689,7 +689,7 @@ class VDJSequenceBuilder(private val vjLayoutAdaptor: IVJReadLayoutAdaptor,
         fun vdjSequenceIdentical(vdj1: VDJSequence, vdj2: VDJSequence) : Boolean
         {
             var numBaseDiff = 0
-            val diffAccumulator = { baseSupport1: Map.Entry<Char, Int>, baseSupport2: Map.Entry<Char, Int> ->
+            val diffAccumulator = { baseSupport1: Map.Entry<Byte, Int>, baseSupport2: Map.Entry<Byte, Int> ->
 
                 // only count diff if support is not zero
                 if (baseSupport1.value >= 1 && baseSupport2.value >= 1)

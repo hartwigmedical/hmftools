@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
@@ -17,6 +18,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
+import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class CompareConfig
@@ -31,6 +33,7 @@ public class CompareConfig
     public final int MaxPartitionReads;
     public final boolean ExcludeRegions;
     public final boolean IgnoreDupDiffs;
+    public final boolean IgnoreAlterations; // consensus reads and internal unmappings
 
     public final int Threads;
     public final List<String> LogReadIds;
@@ -44,6 +47,7 @@ public class CompareConfig
     private static final String EXCLUDE_REGIONS = "exclude_regions";
     private static final String MAX_PARTITION_READS = "max_partition_reads";
     private static final String IGNORE_DUP_DIFFS = "ignore_dup_diffs";
+    private static final String IGNORE_ALTERATIONS = "ignore_alterations";
 
     private static final int DEFAULT_CHR_PARTITION_SIZE = 100000;
 
@@ -61,14 +65,16 @@ public class CompareConfig
             System.exit(1);
         }
 
-        RefGenVersion = RefGenomeVersion.from(configBuilder);
+        RefGenVersion = BamUtils.deriveRefGenomeVersion(RefBamFile);
 
+        BT_LOGGER.info("refGenomeVersion({}) refBam({}) newBam({})", RefGenVersion, RefBamFile, NewBamFile);
         BT_LOGGER.info("refBam({}) newBam({})", RefBamFile, NewBamFile);
         BT_LOGGER.info("output file({})", OutputFile);
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
         MaxPartitionReads = configBuilder.getInteger(MAX_PARTITION_READS);
         IgnoreDupDiffs = configBuilder.hasFlag(IGNORE_DUP_DIFFS);
+        IgnoreAlterations = configBuilder.hasFlag(IGNORE_ALTERATIONS);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
 
@@ -84,17 +90,18 @@ public class CompareConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
+        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output comparison file");
+        configBuilder.addPath(REF_BAM_FILE, true, "Ref BAM file");
+        configBuilder.addPath(NEW_BAM_FILE,true, "New BAM file");
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
         configBuilder.addInteger(MAX_PARTITION_READS, "Maximum partition reads before exit", 0);
 
-        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output comparison file");
-        configBuilder.addRequiredConfigItem(REF_BAM_FILE, "Ref BAM file");
-        configBuilder.addRequiredConfigItem(NEW_BAM_FILE,"New BAM file");
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
         configBuilder.addFlag(EXCLUDE_REGIONS, "Ignore excluded regions");
         configBuilder.addFlag(IGNORE_DUP_DIFFS, "Ignore duplicate diffs");
+        configBuilder.addFlag(IGNORE_ALTERATIONS, "Ignore consensus reads and internal unmappings");
 
-        addRefGenomeConfig(configBuilder, true);;
+        addRefGenomeFile(configBuilder, true);;
         addSpecificChromosomesRegionsConfig(configBuilder);
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);

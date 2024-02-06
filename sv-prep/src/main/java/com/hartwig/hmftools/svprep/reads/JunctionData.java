@@ -17,6 +17,7 @@ public class JunctionData
     public final int Position;
     public final byte Orientation;
 
+    private final boolean mIsExisting;
     public final List<ReadGroup> JunctionGroups; // with a read matching the junction
     public final List<ReadGroup> SupportingGroups;
     public final List<ReadGroup> ExactSupportGroups;
@@ -35,6 +36,7 @@ public class JunctionData
         Position = position;
         Orientation = orientation;
 
+        mIsExisting = read == null;
         JunctionGroups = Lists.newArrayList();
         SupportingGroups = Lists.newArrayList();
         ExactSupportGroups = Lists.newArrayList();
@@ -53,7 +55,7 @@ public class JunctionData
         mDepth = 0;
     }
 
-    public boolean isExisting() { return mTopJunctionRead == null; }
+    public boolean isExisting() { return mIsExisting; }
 
     public ReadRecord topJunctionRead() { return mTopJunctionRead; }
 

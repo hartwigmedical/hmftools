@@ -26,5 +26,4 @@ public class MatrixTest
 
         // assertTrue(NmfRun.signaturesEqual(matrix1, matrix2));
     }
-
 }

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -20,7 +22,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporti
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGenePanel;
-import com.hartwig.hmftools.common.purple.FittedPurityMethod;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
@@ -49,7 +51,6 @@ import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
 import org.apache.commons.lang3.tuple.Pair;
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -101,35 +102,29 @@ public class PurpleInterpreter
                 GermlineVariantSelector.selectInterestingUnreportedVariants(allGermlineVariants);
         if(additionalSuspectGermlineVariants != null)
         {
-            LOGGER.info(" Found an additional {} germline variants that are potentially interesting",
-                    additionalSuspectGermlineVariants.size());
+            LOGGER.info(" Found an additional {} germline variants that are potentially interesting", additionalSuspectGermlineVariants.size());
         }
 
-        List<PurpleGainLoss> allSomaticGainsLosses = extractAllGainsLosses(purple.purityContext().qc().status(),
-                purple.purityContext().bestFit().ploidy(),
-                purple.purityContext().targeted(),
-                purple.allSomaticGeneCopyNumbers());
+        List<PurpleGainLoss> allSomaticGainsLosses =
+                extractAllGainsLosses(purple.purityContext().qc().status(), purple.purityContext().gender(), purple.purityContext()
+                        .bestFit()
+                        .ploidy(), purple.purityContext().targeted(), purple.allSomaticGeneCopyNumbers());
         List<PurpleGainLoss> reportableSomaticGainsLosses = somaticGainsLossesFromDrivers(purple.somaticDrivers());
 
         List<PurpleGainLoss> nearReportableSomaticGains =
-                CopyNumberSelector.selectNearReportableSomaticGains(purple.allSomaticGeneCopyNumbers(),
-                        purple.purityContext().bestFit().ploidy(),
-                        allSomaticGainsLosses,
-                        driverGenes);
-        LOGGER.info(" Found an additional {} near-reportable somatic gains that are potentially interesting",
-                nearReportableSomaticGains.size());
+                CopyNumberSelector.selectNearReportableSomaticGains(purple.allSomaticGeneCopyNumbers(), purple.purityContext()
+                        .bestFit()
+                        .ploidy(), allSomaticGainsLosses, driverGenes);
+        LOGGER.info(" Found an additional {} near-reportable somatic gains that are potentially interesting", nearReportableSomaticGains.size());
 
         List<PurpleGainLoss> additionalSuspectSomaticGainsLosses =
                 CopyNumberSelector.selectInterestingUnreportedGainsLosses(allSomaticGainsLosses, reportableSomaticGainsLosses);
-        LOGGER.info(" Found an additional {} somatic gains/losses that are potentially interesting",
-                additionalSuspectSomaticGainsLosses.size());
+        LOGGER.info(" Found an additional {} somatic gains/losses that are potentially interesting", additionalSuspectSomaticGainsLosses.size());
 
         List<GermlineDeletion> allGermlineDeletions = purple.allGermlineDeletions();
         List<GeneCopyNumber> suspectGeneCopyNumbersWithLOH =
-                LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(purple.allSomaticGeneCopyNumbers(),
-                        allGermlineDeletions,
-                        purple.purityContext().microsatelliteStatus(),
-                        chord != null ? chord.hrStatus() : null);
+                LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(purple.allSomaticGeneCopyNumbers(), allGermlineDeletions, purple.purityContext()
+                        .microsatelliteStatus(), chord != null ? chord.hrStatus() : null);
         LOGGER.info(" Found an additional {} suspect gene copy numbers with LOH", suspectGeneCopyNumbersWithLOH.size());
 
         List<PurpleGainLoss> allGermlineFullLosses = null;
@@ -139,11 +134,8 @@ public class PurpleInterpreter
 
         if(allGermlineDeletions != null)
         {
-            List<GermlineDeletion> impliedDeletions = implyDeletionsFromBreakends(allGermlineDeletions,
-                    linx.reportableGermlineBreakends(),
-                    purple.allGermlineStructuralVariants(),
-                    linx.allGermlineStructuralVariants(),
-                    driverGenes);
+            List<GermlineDeletion> impliedDeletions =
+                    implyDeletionsFromBreakends(allGermlineDeletions, linx.reportableGermlineBreakends(), purple.allGermlineStructuralVariants(), linx.allGermlineStructuralVariants(), driverGenes);
             LOGGER.info(" Implied {} additional reportable germline deletions from breakends", impliedDeletions.size());
 
             List<GermlineDeletion> mergedGermlineDeletions = Lists.newArrayList();
@@ -211,10 +203,10 @@ public class PurpleInterpreter
             LinxBreakend first = breakendPair.getLeft();
             LinxBreakend second = breakendPair.getRight();
 
-            boolean bothReported = first.reportedDisruption() && second.reportedDisruption();
+            boolean bothReported = first.reported() && second.reported();
             boolean bothDel = first.type() == LinxBreakendType.DEL && second.type() == LinxBreakendType.DEL;
             boolean sameGene = first.gene().equals(second.gene());
-            boolean sameTranscript = first.transcriptId().equals(second.transcriptId());
+            boolean sameTranscript = first.transcript().equals(second.transcript());
 
             StructuralVariant sv = findBySvId(allPurpleGermlineSvs, allLinxGermlineSvAnnotations, first.svId());
             boolean meetsMaxLength = false;
@@ -233,22 +225,9 @@ public class PurpleInterpreter
                     && wouldBeReportableDeletion)
             {
                 // assumes deletion is heterozygous in germline
-                impliedDeletions.add(new GermlineDeletion(first.gene(),
-                        first.chromosome(),
-                        first.chrBand(),
-                        Math.min(sv.start().position(), sv.end().position()),
-                        Math.max(sv.start().position(), sv.end().position()),
-                        0,
-                        0,
-                        0,
-                        GermlineDetectionMethod.SEGMENT,
-                        GermlineStatus.HET_DELETION,
-                        tumorStatus,
-                        1D,
-                        tumorCopyNumber,
-                        Strings.EMPTY,
-                        0,
-                        true));
+                impliedDeletions.add(new GermlineDeletion(first.gene(), first.chromosome(), first.chromosomeBand(), Math.min(sv.start()
+                        .position(), sv.end().position()), Math.max(sv.start().position(), sv.end()
+                        .position()), 0, 0, 0, GermlineDetectionMethod.SEGMENT, GermlineStatus.HET_DELETION, tumorStatus, 1D, tumorCopyNumber, Strings.EMPTY, 0, true));
             }
         }
         return impliedDeletions;
@@ -360,8 +339,8 @@ public class PurpleInterpreter
     }
 
     @NotNull
-    private static List<PurpleGainLoss> extractAllGainsLosses(@NotNull Set<PurpleQCStatus> qcStatus, double ploidy, boolean isTargetRegions,
-            @NotNull List<GeneCopyNumber> allGeneCopyNumbers)
+    private static List<PurpleGainLoss> extractAllGainsLosses(@NotNull Set<PurpleQCStatus> qcStatus, @NotNull Gender gender, double ploidy,
+            boolean isTargetRegions, @NotNull List<GeneCopyNumber> allGeneCopyNumbers)
     {
         List<DriverGene> allGenes = Lists.newArrayList();
         for(GeneCopyNumber geneCopyNumber : allGeneCopyNumbers)
@@ -385,11 +364,12 @@ public class PurpleInterpreter
         }
 
         DriverGenePanel allGenesPanel = ImmutableDriverGenePanel.builder().driverGenes(allGenes).build();
-        AmplificationDrivers ampDrivers = new AmplificationDrivers(qcStatus, allGenesPanel);
         DeletionDrivers delDrivers = new DeletionDrivers(qcStatus, allGenesPanel);
 
         List<DriverCatalog> allGainLosses = Lists.newArrayList();
-        allGainLosses.addAll(ampDrivers.amplifications(ploidy, allGeneCopyNumbers, isTargetRegions));
+
+        allGainLosses.addAll(AmplificationDrivers.findAmplifications(qcStatus, gender, allGenesPanel, ploidy, allGeneCopyNumbers, isTargetRegions));
+
         allGainLosses.addAll(delDrivers.deletions(allGeneCopyNumbers, isTargetRegions));
 
         return somaticGainsLossesFromDrivers(allGainLosses);
@@ -434,9 +414,7 @@ public class PurpleInterpreter
     {
         return ImmutablePurpleFit.builder()
                 .qc(PurpleConversion.convert(purple.purityContext().qc()))
-                .hasSufficientQuality(purple.purityContext().qc().pass())
                 .fittedPurityMethod(PurpleFittedPurityMethod.valueOf(purple.purityContext().method().name()))
-                .containsTumorCells(purple.purityContext().method() != FittedPurityMethod.NO_TUMOR)
                 .purity(purple.purityContext().bestFit().purity())
                 .minPurity(purple.purityContext().score().minPurity())
                 .maxPurity(purple.purityContext().score().maxPurity())

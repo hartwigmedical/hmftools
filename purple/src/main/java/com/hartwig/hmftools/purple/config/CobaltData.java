@@ -57,7 +57,7 @@ public class CobaltData
         final String cobaltFilename = CobaltRatioFile.generateFilenameForReading(cobaltDirectory, tumorId);
         if(!new File(cobaltFilename).exists())
         {
-            throw new ParseException("uable to open Cobalt ratio file: " + cobaltFilename);
+            throw new ParseException("unable to open Cobalt ratio file: " + cobaltFilename);
         }
 
         PPL_LOGGER.info("reading Cobalt ratios from {}", cobaltFilename);

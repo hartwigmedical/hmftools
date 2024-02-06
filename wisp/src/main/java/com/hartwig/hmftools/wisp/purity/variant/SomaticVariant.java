@@ -2,6 +2,8 @@ package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NO_FILTER;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -18,12 +20,14 @@ public class SomaticVariant
     public final double SubclonalPerc;
 
     public final List<GenotypeFragments> Samples;
-    public final boolean PassFilters;
+
+    private List<FilterReason> mFilterReasons;
 
     private final VariantContextDecorator mVariant;
     private double mSequenceGcRatio;
+    private boolean mIsProbeVariant;
 
-    public SomaticVariant(final VariantContextDecorator variant, final double subclonalPerc, final boolean passFilters)
+    public SomaticVariant(final VariantContextDecorator variant, final double subclonalPerc, final List<FilterReason> filterReasons)
     {
         Chromosome = variant.chromosome();
         Position = variant.position();
@@ -32,10 +36,20 @@ public class SomaticVariant
         Type = variant.type();
         SubclonalPerc = subclonalPerc;
         Samples = Lists.newArrayList();
-        PassFilters = passFilters;
+        mFilterReasons = filterReasons;
         mVariant = variant;
         mSequenceGcRatio = 0;
+        mIsProbeVariant = false;
     }
+
+    public void addFilterReason(final FilterReason filterReason) { mFilterReasons.add(filterReason); }
+
+    public List<FilterReason> filterReasons() { return mFilterReasons; }
+
+    public boolean isFiltered() { return !mFilterReasons.isEmpty(); }
+
+    public boolean isProbeVariant() { return mIsProbeVariant; }
+    public void markProbeVariant() { mIsProbeVariant = true; }
 
     public GenotypeFragments findGenotypeData(final String sampleId)
     {
@@ -44,6 +58,9 @@ public class SomaticVariant
 
     public void setSequenceGcRatio(double ratio) { mSequenceGcRatio = ratio; }
     public double sequenceGcRatio() { return mSequenceGcRatio; }
+
+    public double copyNumber() { return mVariant.adjustedCopyNumber(); }
+    public double variantCopyNumber() { return mVariant.variantCopyNumber(); }
 
     public VariantContextDecorator decorator() { return mVariant; }
 

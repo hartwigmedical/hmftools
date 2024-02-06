@@ -10,6 +10,7 @@ run_mode=$1 && shift
 ref_genome_version=$1 && shift
 ref_genome=$1 && shift
 loci_vcf=$1 && shift
+target_regions_bed=$1 && shift
 threads=$1 && shift
 max_memory=$1 && shift
 
@@ -37,7 +38,7 @@ args="${args} -ref_genome ${ref_genome} \
   -output_dir ${output_dir}"
 
 if [ "${run_mode}" == "PANEL" ]; then
-  args="${args} -tumor_only_min_depth 80"
+  args="${args} -target_regions_bed ${target_regions_bed}"
 fi
 
 echo "Running Amber with args: ${args}"

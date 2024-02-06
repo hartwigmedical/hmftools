@@ -2,6 +2,8 @@ package com.hartwig.hmftools.markdups.umi;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.markdups.common.Constants.MAX_IMBALANCED_UMI_BASE_DIFF;
+import static com.hartwig.hmftools.markdups.common.Constants.MAX_IMBALANCED_UMI_COUNT;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.NONE;
 import static com.hartwig.hmftools.markdups.umi.UmiUtils.exceedsUmiIdDiff;
 
@@ -89,7 +91,7 @@ public class UmiGroupBuilder
 
                 for(DuplicateGroup existing : cluster)
                 {
-                    if(existing.fragmentCount() >= second.fragmentCount() && !exceedsUmiIdDiff(existing.id(), second.id(), config.PermittedBaseDiff))
+                    if(existing.fragmentCount() >= second.fragmentCount() && !exceedsUmiIdDiff(existing.umiId(), second.umiId(), config.PermittedBaseDiff))
                     {
                         merged = true;
                         break;
@@ -118,7 +120,7 @@ public class UmiGroupBuilder
             ++i;
         }
 
-        // run a final check allowing collapsing of UMIs with 2-base differences
+        // run a check allowing collapsing of UMIs with 2-base differences
         if(orderedGroups.size() > 1)
         {
             i = 0;
@@ -131,7 +133,40 @@ public class UmiGroupBuilder
                 {
                     DuplicateGroup second = orderedGroups.get(j);
 
-                    if(!exceedsUmiIdDiff(first.id(), second.id(), config.PermittedBaseDiff + 1))
+                    if(!exceedsUmiIdDiff(first.umiId(), second.umiId(), config.PermittedBaseDiff + 1))
+                    {
+                        first.fragments().addAll(second.fragments());
+                        orderedGroups.remove(j);
+                    }
+                    else
+                    {
+                        ++j;
+                    }
+                }
+
+                ++i;
+            }
+        }
+
+        // run a check allowing collapsing of UMIs with 4-base differences where significant imbalance exists
+        boolean hasLargeGroups = orderedGroups.stream().anyMatch(x -> x.fragmentCount() >= MAX_IMBALANCED_UMI_COUNT);
+
+        if(orderedGroups.size() > 1 && hasLargeGroups)
+        {
+            i = 0;
+            while(i < orderedGroups.size())
+            {
+                DuplicateGroup first = orderedGroups.get(i);
+
+                int j = i + 1;
+                while(j < orderedGroups.size())
+                {
+                    DuplicateGroup second = orderedGroups.get(j);
+
+                    double maxCountRatio = first.fragmentCount() >= second.fragmentCount() ?
+                            first.fragmentCount() / (double)second.fragmentCount() : second.fragmentCount() / (double)first.fragmentCount();
+
+                    if(maxCountRatio >= MAX_IMBALANCED_UMI_COUNT && !exceedsUmiIdDiff(first.umiId(), second.umiId(), MAX_IMBALANCED_UMI_BASE_DIFF))
                     {
                         first.fragments().addAll(second.fragments());
                         orderedGroups.remove(j);
@@ -360,6 +395,8 @@ public class UmiGroupBuilder
 
     private void collapseCoordinateGroup(final List<DuplicateGroup> allUmiGroups, final CoordinateGroup coordGroup)
     {
+        // up until now fragments with the same coordinates but different ordering (ie F1R2 vs F2R1) have been kept separate.
+        // but now merge these if they either don't use UMIs or have complementary duplex UMIs
         if(!coordGroup.hasOpposites())
         {
             addUmiGroup(allUmiGroups, coordGroup.ForwardGroups);
@@ -376,7 +413,7 @@ public class UmiGroupBuilder
             if(first instanceof DuplicateGroup)
             {
                 firstGroup = (DuplicateGroup) first;
-                firstUmi = firstGroup.id();
+                firstUmi = firstGroup.umiId();
             }
             else
             {
@@ -395,7 +432,7 @@ public class UmiGroupBuilder
                 if(second instanceof DuplicateGroup)
                 {
                     secondGroup = (DuplicateGroup) second;
-                    secondUmi = secondGroup.id();
+                    secondUmi = secondGroup.umiId();
                 }
                 else
                 {
@@ -404,7 +441,7 @@ public class UmiGroupBuilder
                 }
 
                 boolean canCollapse = mUmiConfig.Duplex ?
-                        hasDuplexUmiMatch(firstUmi, secondUmi, mUmiConfig.DuplexDelim, mUmiConfig.PermittedBaseDiff) : true;
+                        hasDuplexUmiMatch(firstUmi, secondUmi, mUmiConfig.DuplexDelim, mUmiConfig.PermittedBaseDiff) : false;
 
                 if(canCollapse)
                 {
@@ -428,8 +465,9 @@ public class UmiGroupBuilder
                         firstGroup.addFragment(secondFragment);
                     }
 
-                    // collapsing only occurs between a pair, not 1:M
                     firstGroup.registerDualStrand();
+
+                    // collapsing only occurs between a pair, not 1:M
                     break;
                 }
                 else

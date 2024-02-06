@@ -1,12 +1,16 @@
 package com.hartwig.hmftools.bamtools.slice;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.samtools.BamUtils.deriveRefGenomeVersion;
 
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -28,7 +32,7 @@ public class RemoteReadSlicer implements Callable
     private final SliceWriter mSliceWriter;
 
     private final List<RemotePosition> mSlicePositions;
-    private int mCurrentSliceIndex;
+    private ChrBaseRegion mCurrentSlice;
     private int mMatchedPositions;
     private int mTotalReads;
     private int mSliceCount;
@@ -54,7 +58,7 @@ public class RemoteReadSlicer implements Callable
         mTotalReads = 0;
         mMatchedPositions = 0;
         mSliceCount = 0;
-        mCurrentSliceIndex = 0;
+        mCurrentSlice = null;
     }
 
     private static final int MAX_POSITION_DIFF = 300;
@@ -64,6 +68,7 @@ public class RemoteReadSlicer implements Callable
     {
         BT_LOGGER.debug("processing chromosome({}) with {} remote reads", mChromosome, mRemotePositions.size());
 
+        // likely unmapped now with MarkDups, so not so important
         List<ChrBaseRegion> excludedRegions = ExcludedRegions.getPolyGRegions(mConfig.RefGenVersion);
 
         for(int i = 0; i < mRemotePositions.size(); )
@@ -107,18 +112,16 @@ public class RemoteReadSlicer implements Callable
 
     private void sliceRemotePositions()
     {
-        ChrBaseRegion sliceRegion = new ChrBaseRegion(
+        mCurrentSlice = new ChrBaseRegion(
                 mChromosome,
                 mSlicePositions.get(0).Position,
                 mSlicePositions.get(mSlicePositions.size() - 1).Position);
 
         BT_LOGGER.trace("remote region slice({}) for {} remote positions, matched({}/{}), processed {} reads",
-                sliceRegion, mSlicePositions.size(), mMatchedPositions, mRemotePositions.size(), mTotalReads);
-
-        mCurrentSliceIndex = 0;
+                mCurrentSlice, mSlicePositions.size(), mMatchedPositions, mRemotePositions.size(), mTotalReads);
 
         ++mSliceCount;
-        mBamSlicer.slice(mSamReader, sliceRegion, this::processSamRecord);
+        mBamSlicer.slice(mSamReader, mCurrentSlice, this::processSamRecord);
     }
 
     private void processSamRecord(final SAMRecord read)
@@ -153,7 +156,10 @@ public class RemoteReadSlicer implements Callable
             if(remotePosition.Position == readStartPos && read.getReadName().equals(remotePosition.ReadId))
             {
                 mSliceWriter.writeRead(read);
-                mSlicePositions.remove(i);
+
+                if(!expectOtherRead(read))
+                    mSlicePositions.remove(i); // keep if expects a mate or supp to be in this same region
+
                 ++mMatchedPositions;
 
                 if(mSlicePositions.isEmpty())
@@ -164,5 +170,20 @@ public class RemoteReadSlicer implements Callable
 
             ++i;
         }
+    }
+
+    private boolean expectOtherRead(final SAMRecord read)
+    {
+        if(read.getMateUnmappedFlag())
+            return true;
+
+        if(!read.getMateReferenceName().equals(mChromosome))
+            return false;
+
+        int mateStartPos = read.getMateAlignmentStart();
+
+        return positionsOverlap(
+                mCurrentSlice.start(), mCurrentSlice.end(),
+                mateStartPos, mateStartPos + read.getReadBases().length * 2);
     }
 }

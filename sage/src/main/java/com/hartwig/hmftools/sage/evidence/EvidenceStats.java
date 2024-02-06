@@ -2,6 +2,8 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static java.lang.String.format;
 
+import java.util.StringJoiner;
+
 public class EvidenceStats
 {
     public long ReadCount;
@@ -38,9 +40,7 @@ public class EvidenceStats
 
     public String toString()
     {
-        return format("partiions(%s) slices(%d totalLen=%d) reads(%d noVar=%s) readType(none=%d no=%d support=%d)",
-                PartitionCount, SliceCount, SliceLength, ReadCount, NoVariantReadCount,
-                SupportCounts[ReadMatchType.UNRELATED.ordinal()], SupportCounts[ReadMatchType.NO_SUPPORT.ordinal()],
-                SupportCounts[ReadMatchType.SUPPORT.ordinal()]);
+        return format("partitions(%s) slices(%d totalLen=%d) reads(%d noVar=%s) readTypeCounts(%s)",
+                PartitionCount, SliceCount, SliceLength, ReadCount, NoVariantReadCount, ReadMatchType.countsToString(SupportCounts));
     }
 }

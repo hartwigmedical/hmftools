@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.common.region;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.checkMergeOverlaps;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
@@ -14,11 +14,11 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -86,6 +86,11 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
             return false;
 
         return positionsOverlap(mStart, mEnd, other.mStart, other.mEnd);
+    }
+
+    public boolean overlaps(final String chromosome, final int posStart, final int posEnd)
+    {
+        return Chromosome.equals(chromosome) && positionsOverlap(mStart, mEnd, posStart, posEnd);
     }
 
     public boolean containsPosition(int position) { return positionWithin(position, start(), end()); }
@@ -179,9 +184,27 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
         return rank1 < rank2 ? -1 : 1;
     }
 
+    public static List<ChrBaseRegion> loadChrBaseRegionList(final String filename)
+    {
+        Map<String,List<BaseRegion>> chrRegionMap = loadChrBaseRegions(filename);
+
+        List<ChrBaseRegion> regions = Lists.newArrayList();
+
+        for(Map.Entry<String,List<BaseRegion>> entry : chrRegionMap.entrySet())
+        {
+            entry.getValue().forEach(x -> regions.add(new ChrBaseRegion(entry.getKey(), x.start(), x.end())));
+        }
+
+        return regions;
+    }
+
     public static Map<String,List<BaseRegion>> loadChrBaseRegions(final String filename)
     {
-        return loadChrBaseRegions(filename, false);
+        if(filename == null)
+            return Collections.emptyMap();
+
+        boolean isBedFile = filename.endsWith(".bed") || filename.endsWith(".bed.gz");
+        return loadChrBaseRegions(filename, isBedFile);
     }
 
     public static Map<String,List<BaseRegion>> loadChrBaseRegions(final String filename, boolean isBedFile)
@@ -242,13 +265,38 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
                 line = fileReader.readLine();
             }
 
-            chrRegionsMap.values().forEach(x -> checkMergeOverlaps(x));
+            chrRegionsMap.values().forEach(x -> BaseRegion.checkMergeOverlaps(x));
 
             return chrRegionsMap;
         }
         catch(IOException e)
         {
             return null;
+        }
+    }
+
+
+    public static void checkMergeOverlaps(final List<ChrBaseRegion> regions, boolean checkSorted)
+    {
+        if(checkSorted)
+            Collections.sort(regions);
+
+        // merge any adjacent regions
+        int index = 0;
+        while(index < regions.size() - 1)
+        {
+            ChrBaseRegion region = regions.get(index);
+            ChrBaseRegion nextRegion = regions.get(index + 1);
+
+            if(region.Chromosome.equals(nextRegion.Chromosome) && region.end() >= nextRegion.start() - 2)
+            {
+                region.setEnd(nextRegion.end());
+                regions.remove(index + 1);
+            }
+            else
+            {
+                ++index;
+            }
         }
     }
 
@@ -260,6 +308,16 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
             return fieldIndexMap.get(FLD_CHROMOSOME);
         else if(fieldIndexMap.containsKey(FLD_CHROMOSOME.toLowerCase()))
             return fieldIndexMap.get(FLD_CHROMOSOME.toLowerCase());
+
+        return INVALID_FIELD;
+    }
+
+    public static int getPositionFieldIndex(final Map<String,Integer> fieldIndexMap)
+    {
+        if(fieldIndexMap.containsKey(FLD_POSITION))
+            return fieldIndexMap.get(FLD_POSITION);
+        else if(fieldIndexMap.containsKey(FLD_POSITION.toLowerCase()))
+            return fieldIndexMap.get(FLD_POSITION.toLowerCase());
 
         return INVALID_FIELD;
     }

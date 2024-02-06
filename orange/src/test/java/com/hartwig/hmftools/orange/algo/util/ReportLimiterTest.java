@@ -9,7 +9,7 @@ import org.junit.Test;
 public class ReportLimiterTest
 {
     @Test
-    public void canLimitAllListsToOne()
+    public void canLimitMockDataSuccessfully()
     {
         assertNotNull(ReportLimiter.limitAllListsToMaxOne(TestOrangeReportFactory.createMinimalTestReport()));
 

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.utils.r;
 
+import static java.lang.String.format;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -67,7 +69,7 @@ public final class RExecutor
 
         final File outputFile = File.createTempFile(rScriptName, ".out");
 
-        LOGGER.info(String.format("Executing R script via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
+        LOGGER.debug(format("executing R script via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
         Process process = new ProcessBuilder(command).redirectOutput(outputFile).start();
 
         int result = process.waitFor();

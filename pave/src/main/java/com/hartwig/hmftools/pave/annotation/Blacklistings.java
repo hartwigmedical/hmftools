@@ -2,8 +2,6 @@ package com.hartwig.hmftools.pave.annotation;
 
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
-import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -11,14 +9,12 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.pave.VariantData;
 
 import org.apache.commons.compress.utils.Lists;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
@@ -121,27 +117,18 @@ public class Blacklistings extends AnnotationData
             return;
         }
 
-        try
+        VcfFileReader vcfFileReader = new VcfFileReader(filename);
+
+        for(VariantContext context : vcfFileReader.iterator())
         {
-            final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(
-                    filename, new VCFCodec(), false);
+            int position = context.getStart();
+            String ref = context.getReference().getBaseString();
+            String alt = context.getAlternateAlleles().get(0).toString();
 
-            for(VariantContext context : reader.iterator())
-            {
-                int position = context.getStart();
-                String ref = context.getReference().getBaseString();
-                String alt = context.getAlternateAlleles().get(0).toString();
-
-                mVcfEntries.add(new VcfEntry(position, ref, alt));
-            }
-
-            PV_LOGGER.info("loaded {} BLacklist VCF entries from file({})", mVcfEntries.size(), filename);
+            mVcfEntries.add(new VcfEntry(position, ref, alt));
         }
-        catch(IOException e)
-        {
-            PV_LOGGER.error("failed to load Blacklist BED file: {}", e.toString());
-            mHasValidData = false;
-        }
+
+        PV_LOGGER.info("loaded {} blacklist VCF entries from file({})", mVcfEntries.size(), filename);
     }
 
     public static void addHeader(final VCFHeader header)

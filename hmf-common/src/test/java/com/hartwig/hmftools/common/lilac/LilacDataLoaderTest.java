@@ -9,8 +9,8 @@ import com.hartwig.hmftools.common.hla.LilacSummaryData;
 
 import org.junit.Test;
 
-public class LilacDataLoaderTest {
-
+public class LilacDataLoaderTest
+{
     private static final String LILAC_QC_CSV = Resources.getResource("lilac/sample.lilac.qc.csv").getPath();
     private static final String LILAC_RESULT_CSV = Resources.getResource("lilac/sample.lilac.csv").getPath();
 

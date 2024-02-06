@@ -14,6 +14,8 @@ clinvar_vcf=$1 && shift
 blacklist_bed=$1 && shift
 blacklist_vcf=$1 && shift
 gnomad_path=$1 && shift
+threads=$1 && shift
+max_memory=$1 && shift
 
 if [[ ! -d "${output_dir}" ]]; then
   mkdir ${output_dir}
@@ -43,15 +45,17 @@ args="-sample ${sample_id} \
   -gnomad_pon_filter -1 \
   -vcf_file ${sage_vcf} \
   -read_pass_only \
-  -output_vcf_file ${pave_germline_vcf}"
+  -output_vcf_file ${pave_germline_vcf} \
+  -threads ${threads}"
+
 
 if [ "${ref_genome_version}" == "V37" ]; then
   args="${args} -gnomad_freq_file ${gnomad_path}"
 else
-  args="${args} -gnomad_freq_dir ${gnomad_path} -gnomad_load_chr_on_demand"
+  args="${args} -gnomad_freq_dir ${gnomad_path}"
 fi
 
 
 echo "Running Pave germline with args: ${args}"
 
-java -jar ${pave_jar} ${args}
+java -Xmx${max_memory}G -jar ${pave_jar} ${args}
