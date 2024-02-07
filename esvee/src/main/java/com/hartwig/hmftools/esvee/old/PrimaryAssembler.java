@@ -6,6 +6,8 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_WEAK_SUPPORT_MIN_BASES;
 import static com.hartwig.hmftools.esvee.SvConstants.READ_FILTER_MIN_ALIGNED_BASES;
+import static com.hartwig.hmftools.esvee.old.ReadFilters.hasAcceptableMapQ;
+import static com.hartwig.hmftools.esvee.old.ReadFilters.isRecordAverageQualityPastJunctionAbove;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import java.util.ArrayList;
@@ -68,8 +70,8 @@ public class PrimaryAssembler
                 .collect(Collectors.toList());
 
         final List<Read> filteredAlignments = withLowQAlignments.stream()
-                .filter(alignment -> ReadFilters.isRecordAverageQualityPastJunctionAbove(alignment, mJunction, SvConstants.AVG_BASE_QUAL_THRESHOLD)) // mCounters.ReadsPassingJunctionQualityThreshold
-                .filter(alignment -> ReadFilters.hasAcceptableMapQ(alignment, SvConstants.READ_FILTER_MIN_JUNCTION_MAPQ)) // mCounters.HasAcceptableMapQ
+                .filter(alignment -> isRecordAverageQualityPastJunctionAbove(alignment, mJunction, SvConstants.AVG_BASE_QUAL_THRESHOLD)) // mCounters.ReadsPassingJunctionQualityThreshold
+                .filter(alignment -> hasAcceptableMapQ(alignment, SvConstants.READ_FILTER_MIN_JUNCTION_MAPQ)) // mCounters.HasAcceptableMapQ
                 .filter(x -> isNotBadlyMapped(x)) // mCounters.WellMapped
                 .collect(Collectors.toList());
 

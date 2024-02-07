@@ -187,13 +187,6 @@ public class JunctionGroupAssembler extends ThreadTask
     {
         mConfig.logReadId(record, "JunctionGroupAssembler:processRecord");
 
-        // CHECK: do in SvPrep if worthwhile
-        if(!ReadFilters.isRecordAverageQualityAbove(record.getBaseQualities(), SvConstants.AVG_BASE_QUAL_THRESHOLD))
-        {
-            ++mLowQualFilteredReads;
-            return;
-        }
-
         Read read = new Read(record);
 
         if(mBamReader.currentIsReferenceSample())

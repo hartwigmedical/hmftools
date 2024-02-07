@@ -49,20 +49,13 @@ public class JunctionAssembler
 
         for(Read read : rawReads)
         {
-            if(!ReadFilters.hasAcceptableMapQ(read, SvConstants.READ_FILTER_MIN_JUNCTION_MAPQ))
-            {
-                // CHECK: any use for these, eg for extension?
-                mFilteredReads.add(read);
-                continue;
-            }
-
             if(!ReadFilters.recordSoftClipsNearJunction(read, mJunction))
             {
                 mNonJunctionReads.add(read);
                 continue;
             }
 
-            if(!ReadFilters.isRecordAverageQualityPastJunctionAbove(read, mJunction, SvConstants.AVG_BASE_QUAL_THRESHOLD))
+            if(!ReadFilters.isRecordAverageQualityPastJunctionAbove(read, mJunction))
             {
                 mFilteredReads.add(read);
                 continue;

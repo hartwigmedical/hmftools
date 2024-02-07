@@ -89,10 +89,11 @@ public class TestUtils
     public static List<SAMRecord> createJunctionReads(
             final MockRefGenome refGenome, final String readId, int anchorLength,
             final String chrStart, int junctionPosStart, byte junctionOrientStart,
-            final String chrEnd, int junctionPosEnd, byte junctionOrientEnd, int matePosStart)
+            final String chrEnd, int junctionPosEnd, byte junctionOrientEnd, int mateStart)
     {
+        // creates a junction read, its supplementary and a local mate if the coords are supplied
         int readBaseLength = anchorLength * 2;
-        int readStart, readEnd, suppStart, suppEnd, mateStart;
+        int readStart, readEnd, suppStart, suppEnd;
         String readCigar, suppCigar;
         String basesStart, basesEnd;
 
@@ -158,34 +159,42 @@ public class TestUtils
         List<SAMRecord> reads = Lists.newArrayList();
 
         String mateCigar = NO_CIGAR;
-        int matePosEnd = 0;
-        byte[] mateBases = null;
+        int mateEnd = 0;
+        String mateBases = null;
 
-        if(matePosStart > 0)
+        if(mateStart > 0)
         {
-            mateCigar = format("%dM", anchorLength * 2);
-            matePosEnd = matePosStart + anchorLength * 2 - 1;
-            mateBases = refGenome.getBases(chrStart, matePosStart, matePosEnd);
+            mateCigar = format("%dM", readBaseLength);
+            mateEnd = mateStart + readBaseLength - 1;
+            mateBases = refGenome.getBaseString(chrStart, mateStart, mateEnd);
         }
 
         SupplementaryReadData readSuppData = new SupplementaryReadData(
                 chrEnd, suppStart, isSuppNegStrand ? SUPP_NEG_STRAND : SUPP_POS_STRAND, suppCigar, 60, 0);
 
-        SupplementaryReadData suppReadData = new SupplementaryReadData(
-                chrStart, readStart, SUPP_POS_STRAND, readCigar, 60, 0);
-
         SAMRecord read = SamRecordTestUtils.createSamRecord(
-                readId, chrStart, readStart, readBases, readCigar, chrStart, matePosStart, false,
+                readId, chrStart, readStart, readBases, readCigar, chrStart, mateStart, false,
                 false, readSuppData, true, mateCigar);
 
         reads.add(read);
 
-        /*
-        final String readId, final String chrStr, int readStart, final String readBases, final String cigar, final String mateChr,
-            int mateStart, boolean isReversed, boolean isSupplementary, final SupplementaryReadData suppAlignment,
-            boolean mateReversed, final String mateCigar
-        */
+        SupplementaryReadData suppReadData = new SupplementaryReadData(
+                chrStart, readStart, SUPP_POS_STRAND, readCigar, 60, 0);
 
+        SAMRecord supp = SamRecordTestUtils.createSamRecord(
+                readId, chrEnd, suppStart, suppBases, suppCigar, chrStart, mateStart, false,
+                true, suppReadData, true, mateCigar);
+
+        reads.add(supp);
+
+        if(mateStart > 0)
+        {
+            SAMRecord mate = SamRecordTestUtils.createSamRecord(
+                readId, chrStart, mateStart, mateBases, mateCigar, chrStart, readStart, true,
+                false, null, false, readCigar);
+
+            reads.add(mate);
+        }
 
         return reads;
     }
