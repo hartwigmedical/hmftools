@@ -24,6 +24,7 @@ public class ResultsWriter
     private final SvConfig mConfig;
     private final BufferedWriter mVariantWriter;
     private final AssemblyWriter mAssemblyWriter;
+    private final AssemblyReadWriter mReadWriter;
     private final BamWriter mBamWriter;
 
     public ResultsWriter(final SvConfig config)
@@ -31,6 +32,7 @@ public class ResultsWriter
         mConfig = config;
         mVariantWriter = initialiseVariantWriter();
         mAssemblyWriter = new AssemblyWriter(config);
+        mReadWriter = new AssemblyReadWriter(config);
         mBamWriter = new BamWriter(config);
     }
 
@@ -39,6 +41,7 @@ public class ResultsWriter
         closeBufferedWriter(mVariantWriter);
 
         mAssemblyWriter.close();
+        mReadWriter.close();
         mBamWriter.close();
     }
 
@@ -84,6 +87,7 @@ public class ResultsWriter
     public synchronized void writeAssembly(final JunctionAssembly assembly)
     {
         mAssemblyWriter.writeAssembly(assembly);
+        mReadWriter.writeAssemblyReads(assembly);
     }
 
     public synchronized void writeVariantAssemblyBamRecords(final List<VariantCall> variants)

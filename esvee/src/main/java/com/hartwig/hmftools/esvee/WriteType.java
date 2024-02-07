@@ -4,9 +4,10 @@ public enum WriteType
 {
     ASSEMBLY_BAM("assembly.bam"),
     ASSEMBLIES("assemblies.tsv"),
+    ASSEMBLY_READS("assembly_reads.tsv"),
     READS("reads.tsv"),
     VCF("esvee.vcf.gz"),
-    BREAKENDS("breakends.tsv");
+    BREAKENDS("breakends.tsv"); // not currently defined or written
 
     private final String mFileId;
 

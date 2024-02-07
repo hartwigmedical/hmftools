@@ -30,6 +30,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.esvee.SvConstants.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.SvConstants.SV_PREP_JUNCTIONS_FILE_ID;
+import static com.hartwig.hmftools.esvee.WriteType.ASSEMBLY_BAM;
+import static com.hartwig.hmftools.esvee.WriteType.ASSEMBLY_READS;
 import static com.hartwig.hmftools.esvee.WriteType.VCF;
 
 import java.nio.file.Files;
@@ -149,13 +151,18 @@ public class SvConfig
 
             if(writeTypesStr.equals(WriteType.ALL))
             {
-                Arrays.stream(WriteType.values()).forEach(x -> WriteTypes.add(x));
+                Arrays.stream(WriteType.values()).filter(x -> x != ASSEMBLY_READS).forEach(x -> WriteTypes.add(x));
             }
             else
             {
                 String[] writeTypes = writeTypesStr.split(ITEM_DELIM, -1);
                 Arrays.stream(writeTypes).forEach(x -> WriteTypes.add(WriteType.valueOf(x)));
             }
+        }
+        else
+        {
+            WriteTypes.add(VCF);
+            WriteTypes.add(ASSEMBLY_BAM);
         }
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);

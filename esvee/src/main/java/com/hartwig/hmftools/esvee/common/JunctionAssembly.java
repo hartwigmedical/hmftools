@@ -22,6 +22,7 @@ import com.hartwig.hmftools.esvee.read.Read;
 
 public class JunctionAssembly
 {
+    private int mAssemblyId;
     private final Junction mJunction;
     private final Read mInitialRead;
 
@@ -72,6 +73,9 @@ public class JunctionAssembly
 
         addInitialRead(read);
     }
+
+    public void setId(int id) { mAssemblyId = id; }
+    public int id() { return mAssemblyId; }
 
     public Read initialRead() { return mInitialRead; }
     public Junction junction() { return mJunction; }
