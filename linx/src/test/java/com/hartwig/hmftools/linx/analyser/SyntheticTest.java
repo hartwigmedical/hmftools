@@ -93,7 +93,7 @@ public class SyntheticTest
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DEL);
         assertEquals(getSyntheticLength(cluster), var2.position(true) - var1.position(true));
-        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(false));
+        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(false) + 1);
 
         assertEquals(2, cluster.getArmClusters().size());
         assertEquals(DSB, cluster.getArmClusters().get(0).getType());
@@ -123,7 +123,7 @@ public class SyntheticTest
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DUP);
         assertEquals(getSyntheticLength(cluster), var1.position(true) - var2.position(true));
-        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(false));
+        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(false) + 1);
 
         assertEquals(2, cluster.getArmClusters().size());
         assertEquals(COMPLEX_OTHER, cluster.getArmClusters().get(0).getType());
@@ -164,7 +164,7 @@ public class SyntheticTest
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DEL);
         assertEquals(getSyntheticLength(cluster), var2.position(true) - var1.position(true));
-        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(false));
+        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(false) + 1);
 
         // 2 TIs with a DUP
         var1 = createBnd(tester.nextVarId(), "1", 200, 1, "2", 200, 1);
@@ -178,7 +178,7 @@ public class SyntheticTest
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DUP);
         assertEquals(getSyntheticLength(cluster), var1.position(true) - var2.position(true));
-        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(false));
+        assertEquals(getSyntheticTiLength(cluster), var1.position(false) - var2.position(false) + 1);
     }
 
     @Test
@@ -198,7 +198,7 @@ public class SyntheticTest
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DUP);
         assertEquals(getSyntheticLength(cluster), var1.position(true) - var2.position(true));
-        assertEquals(getSyntheticTiLength(cluster), var2.position(false) - var1.position(false));
+        assertEquals(getSyntheticTiLength(cluster), var2.position(false) - var1.position(false) + 1);
 
         // DEL and DUP - DEL overlapping DUP
         var1 = createDel(tester.nextVarId(), "1", 100, 350);
@@ -212,7 +212,7 @@ public class SyntheticTest
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DEL);
         assertEquals(getSyntheticLength(cluster), var2.position(true) - var1.position(true));
-        assertEquals(getSyntheticTiLength(cluster), var2.position(false) - var1.position(false));
+        assertEquals(getSyntheticTiLength(cluster), var2.position(false) - var1.position(false) + 1);
 
         // DEL and DUP - overlapping the other way
         var1 = createDup(tester.nextVarId(), "1", 100, 350);
@@ -226,7 +226,7 @@ public class SyntheticTest
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DEL);
         assertEquals(getSyntheticLength(cluster), var2.position(false) - var1.position(false));
-        assertEquals(getSyntheticTiLength(cluster), var2.position(true) - var1.position(true));
+        assertEquals(getSyntheticTiLength(cluster), var2.position(true) - var1.position(true) + 1);
 
         // 2 DUPs next to each other - since the short TI overlaps the chain ends, it's not considered a synthetic
         var1 = createDup(tester.nextVarId(), "1", 100, 2200);
@@ -277,7 +277,7 @@ public class SyntheticTest
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == DEL);
         assertEquals(getSyntheticLength(cluster), var3.position(true) - var1.position(true));
-        assertEquals(400, getSyntheticTiLength(cluster)); // takes the longest
+        assertEquals(401, getSyntheticTiLength(cluster)); // takes the longest
 
         tester.clearClustersAndSVs();
 
@@ -298,13 +298,10 @@ public class SyntheticTest
         assertTrue(cluster.getResolvedType() == DUP);
         assertTrue(cluster.isSyntheticType());
         assertEquals(getSyntheticLength(cluster), var1.position(true) - var4.position(true));
-        assertEquals(600, getSyntheticTiLength(cluster)); // takes average
+        assertEquals(601, getSyntheticTiLength(cluster)); // takes average
 
         tester.clearClustersAndSVs();
     }
-
-
-
 
     @Test
     public void testSyntheticIncompletes()

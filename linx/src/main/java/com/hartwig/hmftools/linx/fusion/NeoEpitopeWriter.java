@@ -88,7 +88,7 @@ public class NeoEpitopeWriter
 
         if(traversedPairs != null)
         {
-            chainLength = traversedPairs.stream().mapToInt(x -> x.length()).sum();
+            chainLength = traversedPairs.stream().mapToInt(x -> x.baseLength()).sum();
 
             if(traversedPairs.size() > FUSION_MAX_CHAIN_LINKS || chainLength > FUSION_MAX_CHAIN_LENGTH)
                 return;
@@ -114,8 +114,8 @@ public class NeoEpitopeWriter
                     continue;
 
                 int geneStreamIndex = gene1.isUpstream() ? FS_UP : FS_DOWN;
-                extensionLengths[geneStreamIndex] = lowerLink != null ? lowerLink.length() : -1;
-                extensionLengths[switchStream(geneStreamIndex)] = upperLink != null ? upperLink.length() : -1;
+                extensionLengths[geneStreamIndex] = lowerLink != null ? lowerLink.positionDistance() : -1;
+                extensionLengths[switchStream(geneStreamIndex)] = upperLink != null ? upperLink.positionDistance() : -1;
 
                 int maxUpstreamDistance = getMaxUpstreamDistance(upGene.geneName(), downGene.geneName());
 

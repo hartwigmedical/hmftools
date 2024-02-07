@@ -56,7 +56,7 @@ public class ProposedLinks
         mFoldbackChain = null;
         mJcnMatchType = PM_NONE;
 
-        mShortestDistance = link.length();
+        mShortestDistance = link.baseLength();
     }
 
     public ProposedLinks(List<LinkedPair> links, ChainingRule rule, final SvChain targetChain, final SvChain foldbackChain)
@@ -73,7 +73,7 @@ public class ProposedLinks
         mFoldbackChain = foldbackChain;
         mJcnMatchType = PM_NONE;
 
-        mShortestDistance = Links.stream().mapToInt(x -> x.length()).min().getAsInt();
+        mShortestDistance = Links.stream().mapToInt(x -> x.positionDistance()).min().getAsInt();
     }
 
     public final SvChain targetChain() { return mChainTarget; }

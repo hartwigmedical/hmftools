@@ -261,7 +261,7 @@ public class ClusterClassification
 
         final SvChain chain = cluster.getChains().get(0);
 
-        return chain.getLinkedPairs().stream().mapToInt(x -> x.length()).max().getAsInt();
+        return chain.getLinkedPairs().stream().mapToInt(x -> x.baseLength()).max().getAsInt();
     }
 
     public static int getSyntheticGapLength(final SvCluster cluster)
@@ -281,7 +281,7 @@ public class ClusterClassification
 
         for(final LinkedPair pair : chain.getLinkedPairs())
         {
-            if(pair.length() > SHORT_TI_LENGTH)
+            if(pair.baseLength() > SHORT_TI_LENGTH)
             {
                 if(!pair.chromosome().equals(chainStart.chromosome()))
                     return NO_LENGTH;
@@ -321,11 +321,11 @@ public class ClusterClassification
         int longestTILength = 0;
         for(LinkedPair pair : chain.getLinkedPairs())
         {
-            if(pair.length() > SHORT_TI_LENGTH)
+            if(pair.baseLength() > SHORT_TI_LENGTH)
                 return;
 
-            longestTILength = max(pair.length(), longestTILength);
-            totalChainLength += pair.length();
+            longestTILength = max(pair.baseLength(), longestTILength);
+            totalChainLength += pair.baseLength();
         }
 
         // first look for chains ending in SGLs or INFs

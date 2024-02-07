@@ -483,7 +483,7 @@ public class DisruptionFinder implements CohortFileInterface
                     if(markNonDisruptiveTranscript(trans1, trans2, NON_DISRUPT_REASON_SAME_INTRON))
                     {
                         LNX_LOGGER.debug("cluster({}) chain({}) pair({}) length({}) fully intronic)",
-                                breakend1.getSV().getCluster().id(), chain.id(), pair, pair.length());
+                                breakend1.getSV().getCluster().id(), chain.id(), pair, pair.baseLength());
                     }
                 }
             }
@@ -540,7 +540,7 @@ public class DisruptionFinder implements CohortFileInterface
                 if(traversesGene)
                     break;
 
-                chainLength += nextPair.length();
+                chainLength += nextPair.baseLength();
 
                 if(chainLength > MAX_NON_DISRUPTED_CHAIN_LENGTH)
                     break;
@@ -660,7 +660,7 @@ public class DisruptionFinder implements CohortFileInterface
             {
                 if(markNonDisruptiveTranscripts(transList1, transList2, NON_DISRUPT_REASON_OTHER_NON_GENIC))
                 {
-                    LNX_LOGGER.debug("pair({}) length({}) fully intronic)", pair, pair.length());
+                    LNX_LOGGER.debug("pair({}) length({}) fully intronic)", pair, pair.positionDistance());
                 }
             }
         }

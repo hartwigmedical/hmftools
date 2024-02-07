@@ -65,7 +65,7 @@ public class ChainUtils
             {
                 ++linkData[CHAIN_LINK_COUNT];
 
-                linkData[CHAIN_LENGTH] += pair.length();
+                linkData[CHAIN_LENGTH] += pair.baseLength();
 
                 if(pair.isAssembled())
                     ++linkData[CHAIN_ASSEMBLY_LINK_COUNT];
@@ -259,7 +259,7 @@ public class ChainUtils
                 SvBreakend chainStart = chain.getOpenBreakend(true);
                 LinkedPair newLink = LinkedPair.from(chainStart, pair.secondBreakend());
 
-                if(newLink.length() <= 0)
+                if(newLink.positionDistance() <= 0)
                     return false;
 
                 newLink.setLinkReason("RECIP_INV_RECONFIG", 0);
@@ -289,7 +289,7 @@ public class ChainUtils
                 SvBreakend chainEnd = chain.getOpenBreakend(false);
                 LinkedPair newLink = LinkedPair.from(pair.firstBreakend(), chainEnd);
 
-                if(newLink.length() <= 0)
+                if(newLink.positionDistance() <= 0)
                     return false;
 
                 newLink.setLinkReason("RECIP_INV_RECONFIG", 0);
