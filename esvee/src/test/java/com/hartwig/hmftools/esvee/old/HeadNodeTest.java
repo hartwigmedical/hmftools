@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.old;
 
-import static com.hartwig.hmftools.esvee.TestUtils.createSAMRecord;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -15,16 +15,38 @@ import com.hartwig.hmftools.esvee.read.Read;
 
 import org.junit.Test;
 
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMRecord;
+
 public class HeadNodeTest
 {
     private static HeadNode create(final String sequence, final int position, final boolean isForwards)
     {
-        return HeadNode.create(TestUtils.createSAMRecord(sequence), position, isForwards);
+        return HeadNode.create(createSAMRecord(sequence), position, isForwards);
     }
 
     private static HeadNode create(final Read read, final int position, final boolean isForwards)
     {
         return Objects.requireNonNull(HeadNode.create(read, position, isForwards));
+    }
+
+    private static Read createSAMRecord(final String sequence)
+    {
+        return createSAMRecord(sequence, 1);
+    }
+
+    private static Read createSAMRecord(final String sequence, final int position)
+    {
+        final SAMRecord record = new SAMRecord(new SAMFileHeader());
+        record.setReferenceName(CHR_1);
+        record.setReadName(String.valueOf(System.nanoTime()));
+        record.setCigarString(sequence.length() + "M");
+        record.setAlignmentStart(position);
+        record.setReadString(sequence);
+        record.setBaseQualityString("F".repeat(sequence.length()));
+        record.setReadPairedFlag(true);
+        record.setMateUnmappedFlag(true);
+        return new Read(record);
     }
 
     @Test
@@ -106,12 +128,12 @@ public class HeadNodeTest
         String altSequence = "TTCGATCGATCG";
 
         List<Read> records = List.of(
-                TestUtils.createSAMRecord(mainSequence, junctionPos),
-                TestUtils.createSAMRecord(altSequence, junctionPos),
-                TestUtils.createSAMRecord(mainSequence, junctionPos),
-                TestUtils.createSAMRecord(mainSequence, junctionPos),
-                TestUtils.createSAMRecord(mainSequence, junctionPos),
-                TestUtils.createSAMRecord(mainSequence, junctionPos));
+                createSAMRecord(mainSequence, junctionPos),
+                createSAMRecord(altSequence, junctionPos),
+                createSAMRecord(mainSequence, junctionPos),
+                createSAMRecord(mainSequence, junctionPos),
+                createSAMRecord(mainSequence, junctionPos),
+                createSAMRecord(mainSequence, junctionPos));
 
         HeadNode merged = records.stream().map(record -> HeadNode.create(record, junctionPos, true))
                 .reduce(HeadNode::combine)

@@ -373,7 +373,7 @@ public class JunctionAssembly
 
     public boolean hasReadSupport(final Read read)
     {
-        return  mSupport.stream().anyMatch(x -> x.read() == read);
+        return read != null && mSupport.stream().anyMatch(x -> x.read() == read);
     }
 
     public List<RepeatInfo> repeatInfo() { return mRepeatInfo; }

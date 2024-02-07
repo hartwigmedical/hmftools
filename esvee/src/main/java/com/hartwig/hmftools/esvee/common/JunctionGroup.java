@@ -4,8 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
 
 import java.util.Collections;
@@ -14,8 +12,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.esvee.read.Read;
-
-import org.jetbrains.annotations.NotNull;
 
 public class JunctionGroup extends BaseRegion
 {

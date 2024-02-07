@@ -192,7 +192,7 @@ public class AssemblyWriter
                 sj.add("0").add("0").add("0").add("0");
             }
 
-            int unmappedJuncReads = (int)assembly.support().stream().filter(x -> x.type() == JUNCTION && !x.read().isMateMapped()).count();
+            int unmappedJuncReads = (int)assembly.support().stream().filter(x -> x.type() == JUNCTION && x.read().isMateUnmapped()).count();
             sj.add(String.valueOf(unmappedJuncReads));
 
             sj.add(String.valueOf(assembly.remoteRegions().size()));

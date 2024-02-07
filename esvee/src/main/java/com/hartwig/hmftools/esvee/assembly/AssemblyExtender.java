@@ -49,7 +49,7 @@ public class AssemblyExtender
 
         List<Read> discordantReads = nonJunctionReads.stream()
                 .filter(x -> isDiscordant(x)) // not keeping reads with unmapped mates since not sure how to incorporate their bases
-                .filter(x -> !x.hasMateSet())
+                // .filter(x -> !x.hasMateSet()) // will now be set for local INVs and DUPs, so cannot bea an excluding criteria
                 .filter(x -> !mAssembly.hasReadSupport(x.mateRead()))
                 .collect(Collectors.toList());
 
