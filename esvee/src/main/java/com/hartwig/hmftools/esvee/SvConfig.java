@@ -30,9 +30,9 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.esvee.SvConstants.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.SvConstants.SV_PREP_JUNCTIONS_FILE_ID;
-import static com.hartwig.hmftools.esvee.WriteType.ASSEMBLY_BAM;
-import static com.hartwig.hmftools.esvee.WriteType.ASSEMBLY_READS;
-import static com.hartwig.hmftools.esvee.WriteType.VCF;
+import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLY_BAM;
+import static com.hartwig.hmftools.esvee.output.WriteType.READS;
+import static com.hartwig.hmftools.esvee.output.WriteType.VCF;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -46,6 +46,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.output.WriteType;
 import com.hartwig.hmftools.esvee.read.Read;
 
 import org.apache.logging.log4j.LogManager;
@@ -151,7 +152,7 @@ public class SvConfig
 
             if(writeTypesStr.equals(WriteType.ALL))
             {
-                Arrays.stream(WriteType.values()).filter(x -> x != ASSEMBLY_READS).forEach(x -> WriteTypes.add(x));
+                Arrays.stream(WriteType.values()).filter(x -> x != READS).forEach(x -> WriteTypes.add(x));
             }
             else
             {
@@ -190,6 +191,11 @@ public class SvConfig
         VcfFile = vcfFile != null ? vcfFile : outputFilename(VCF);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
+
+        if(!SpecificChrRegions.hasFilters() && WriteTypes.contains(READS))
+        {
+            SV_LOGGER.warn("writing assembly reads to TSV without region filtering may result in large output files & impact performance");
+        }
 
         mLogReadIds = parseLogReadIds(configBuilder);
         mCheckLogReadIds = !mLogReadIds.isEmpty();

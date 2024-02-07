@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.WriteType;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
@@ -34,12 +33,12 @@ public class AssemblyReadWriter
 
     private BufferedWriter initialiseWriter()
     {
-        if(!mConfig.WriteTypes.contains(WriteType.ASSEMBLY_READS))
+        if(!mConfig.WriteTypes.contains(WriteType.READS))
             return null;
 
         try
         {
-            BufferedWriter writer = createBufferedWriter(mConfig.outputFilename(WriteType.ASSEMBLY_READS));
+            BufferedWriter writer = createBufferedWriter(mConfig.outputFilename(WriteType.READS));
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
@@ -87,8 +86,7 @@ public class AssemblyReadWriter
 
         try
         {
-            String assemblyInfo = format("%s:%d:%d",
-                    assembly.junction().Chromosome, assembly.junction().Position, assembly.junction().Orientation);
+            String assemblyInfo = format("%s", assembly.junction().toString());
 
             for(int i = 0; i <= 1; ++i)
             {
