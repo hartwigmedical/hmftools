@@ -50,8 +50,12 @@ class TestCuppaVisPlotter:
             plot_path="/dummy_path.pdf"
         )
 
+        ## Override tmp vis data path to be a valid one.
+        ## This is usually auto generated from `plot_path`, but here it would not result in a valid path
+        plotter._tmp_vis_data_path = os.path.join(tempfile.gettempdir(), "vis_data.tsv")
+
         with pytest.raises(CalledProcessError):
-            plotter.plot_in_r(vis_data_path="/invalid_path", plot_path="/invalid_path")
+            plotter.plot()
 
     def test_can_plot_one_sample(self):
         plot_path = os.path.join(tempfile.gettempdir(), "cuppa_vis.png")
