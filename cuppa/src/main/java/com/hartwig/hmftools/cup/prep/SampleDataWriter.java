@@ -3,7 +3,6 @@ package com.hartwig.hmftools.cup.prep;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_ZIP_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -57,36 +56,36 @@ public class SampleDataWriter
 
     public boolean isValid() { return mWriter != null || !mCategoryWriters.isEmpty(); }
 
+    public String getOutputPathSingleSample()
+    {
+        return mConfig.OutputDir + mConfig.SampleIds.get(0) + ".cuppa_data" + TSV_ZIP_EXTENSION;
+    }
+
+    public String getOutputPathMultiSample(@Nullable final CategoryType categoryType)
+    {
+        String path = mConfig.OutputDir + "cuppa_cohort_data";
+
+        if(mConfig.OutputId != null)
+        {
+            path += "." + mConfig.OutputId;
+        }
+
+        if(categoryType != null)
+        {
+            path += "." + categoryType.toString().toLowerCase();
+        }
+
+        return path;
+    }
+
     private BufferedWriter initialiseWriter(@Nullable final CategoryType categoryType)
     {
         try
         {
-            String filename = mConfig.OutputDir;
+            String path = (mConfig.isSingleSample()) ? getOutputPathSingleSample() : getOutputPathMultiSample(categoryType);
+            CUP_LOGGER.info("writing {} data to {}", categoryType != null ? categoryType.toString() : "sample", path);
 
-            if(mConfig.isSingleSample())
-            {
-                filename += mConfig.SampleIds.get(0) + ".cuppa_data";
-            }
-            else
-            {
-                filename += "cuppa_cohort_data";
-
-                if(mConfig.OutputId != null)
-                {
-                    filename += "." + mConfig.OutputId;
-                }
-
-                if(categoryType != null)
-                {
-                    filename += "." + categoryType.toString().toLowerCase();
-                }
-            }
-
-            filename += TSV_ZIP_EXTENSION;
-
-            CUP_LOGGER.info("writing {} data to {}", categoryType != null ? categoryType.toString() : "sample", filename);
-
-            BufferedWriter writer = createBufferedWriter(filename, false);
+            BufferedWriter writer = createBufferedWriter(path, false);
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
