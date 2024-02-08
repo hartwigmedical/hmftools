@@ -232,6 +232,7 @@ public class FileWriterCache
         if(!sortingOk && mConfig.Threads > 1)
         {
             // try again with a single thread
+            MD_LOGGER.debug("reattempting sort with single thread");
             sortBamTask = new SortBamTask(unsortedBamFilename, finalBamFilename, 1);
             sortBamTask.call();
             sortingOk = sortBamTask.success();
