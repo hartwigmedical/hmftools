@@ -15,6 +15,7 @@ public class RefSideSoftClip
 
     private final List<Read> mReads;
     private int mMaxLength;
+    private boolean mMatchedOriginal;
 
     public RefSideSoftClip(final int position, final byte orientation, final Read read, final int readSoftClipLength)
     {
@@ -22,11 +23,15 @@ public class RefSideSoftClip
         Orientation = orientation;
         mReads = Lists.newArrayList(read);
         mMaxLength = readSoftClipLength;
+        mMatchedOriginal = false;
     }
 
     public List<Read> reads() { return mReads; }
     public int maxLength() { return mMaxLength; }
     public int readCount() { return mReads.size(); }
+
+    public void markMatchesOriginal() { mMatchedOriginal = true; }
+    public boolean matchesOriginal() { return mMatchedOriginal; }
 
     public void addRead(final Read read, final int readSoftClipLength)
     {

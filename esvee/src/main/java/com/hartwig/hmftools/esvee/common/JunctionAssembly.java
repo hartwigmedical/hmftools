@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.common;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -15,6 +16,7 @@ import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -28,7 +30,7 @@ public class JunctionAssembly
     private final Junction mJunction;
     private final Read mInitialRead;
 
-    private int mJunctionSequenceIndex;
+    private int mJunctionSequenceIndex; // position of the junction in the read bases
     private int mMinAlignedPosition;
     private int mMaxAlignedPosition;
 
@@ -403,19 +405,13 @@ public class JunctionAssembly
 
         if(isForwardJunction())
         {
-            if(read.leftClipLength() >= PRIMARY_ASSEMBLY_MIN_LENGTH)
-            {
-                refSideSoftClipPosition = read.alignmentStart();
-                refSideSoftClipLength = read.leftClipLength();
-            }
+            refSideSoftClipPosition = read.alignmentStart();
+            refSideSoftClipLength = read.leftClipLength();
         }
         else
         {
-            if(read.rightClipLength() >= PRIMARY_ASSEMBLY_MIN_LENGTH)
-            {
-                refSideSoftClipPosition = read.alignmentEnd();
-                refSideSoftClipLength = read.rightClipLength();
-            }
+            refSideSoftClipPosition = read.alignmentEnd();
+            refSideSoftClipLength = read.rightClipLength();
         }
 
         if(refSideSoftClipLength == 0)
@@ -436,18 +432,45 @@ public class JunctionAssembly
         return true;
     }
 
-    public void purgeRefSideSoftClips(int minCount)
+    public void purgeRefSideSoftClips(int minCount, int minLength, int nonSoftClipRefPosition)
     {
-        if(mRefSideSoftClips.isEmpty() || mRefSideSoftClips.stream().noneMatch(x -> x.readCount() < minCount))
+        if(mRefSideSoftClips.isEmpty())
             return;
 
+        // drop if not sufficient support or matches the original assembly's ref extension position anyway
+        // or is close to it - where say homology causes aligned bases to match the soft-clip
         int index = 0;
+        RefSideSoftClip matching = null;
+
         while(index < mRefSideSoftClips.size())
         {
-            if(mRefSideSoftClips.get(index).readCount() < minCount)
-                mRefSideSoftClips.remove (index);
+            RefSideSoftClip refSideSoftClip = mRefSideSoftClips.get(index);
+
+            boolean isPositionMatchOrClose = abs(refSideSoftClip.Position - nonSoftClipRefPosition) < 4;
+
+            if(refSideSoftClip.readCount() < minCount || refSideSoftClip.maxLength() < minLength || isPositionMatchOrClose)
+            {
+                mRefSideSoftClips.remove(index);
+
+                if(isPositionMatchOrClose)
+                {
+                    if(refSideSoftClip.Position == nonSoftClipRefPosition)
+                        matching = refSideSoftClip;
+                    else if(matching == null || matching.readCount() < refSideSoftClip.readCount())
+                         matching = refSideSoftClip;
+                }
+            }
             else
+            {
                 ++index;
+            }
+        }
+
+        // retain info about any matching soft-clip
+        if(matching != null)
+        {
+            matching.markMatchesOriginal();
+            mRefSideSoftClips.add(matching);
         }
     }
 
@@ -459,6 +482,39 @@ public class JunctionAssembly
 
     public PrimaryPhaseGroup primaryPhaseGroup() { return mPrimaryPhaseGroup; }
     public void setPrimaryPhaseGroup(final PrimaryPhaseGroup primaryPhaseGroup) { mPrimaryPhaseGroup = primaryPhaseGroup; }
+
+    public JunctionAssembly(
+            final JunctionAssembly initialAssembly, final RefSideSoftClip refSideSoftClip, final Set<Read> excludedReads)
+    {
+        mJunction = initialAssembly.junction();
+        mInitialRead = initialAssembly.initialRead(); // possible that this read isn't in the final assembly if it supports a different ref
+
+        mJunctionSequenceIndex = initialAssembly.junctionIndex();
+
+        mMinAlignedPosition = initialAssembly.minAlignedPosition();
+        mMaxAlignedPosition = initialAssembly.maxAlignedPosition();
+
+        mBases = new byte[initialAssembly.baseLength()];
+        mBaseQuals = new byte[initialAssembly.baseLength()];
+
+        mBases = copyArray(initialAssembly.bases());
+        mBaseQuals = copyArray(initialAssembly.baseQuals());
+        mSequenceMismatches = new SequenceMismatches();
+
+        mSupport = Lists.newArrayList();
+        mRepeatInfo = Lists.newArrayList();
+        mRefSideSoftClips = Lists.newArrayList(refSideSoftClip);
+        mRemoteRegions = Lists.newArrayList();
+        mRefBaseAssembly = null;
+        mMergedAssemblies = 0;
+        mPrimaryPhaseGroup = null;
+
+        for(AssemblySupport support : initialAssembly.support())
+        {
+            if(!excludedReads.contains(support.read()))
+                mSupport.add(support);
+        }
+    }
 
     public String toString()
     {
