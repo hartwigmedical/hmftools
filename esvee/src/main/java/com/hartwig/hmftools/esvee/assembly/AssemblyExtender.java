@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
@@ -60,7 +61,7 @@ public class AssemblyExtender
         int junctionPosition = assembly.junction().Position;
 
         List<Read> discordantReads = unfilteredNonJunctionReads.stream()
-                .filter(x -> isDiscordant(x)) // not keeping reads with unmapped mates since not sure how to incorporate their bases
+                .filter(x -> isDiscordantCandidate(x, isForwardJunction, junctionPosition)) // not keeping reads with unmapped mates since not sure how to incorporate their bases
                 // .filter(x -> !x.hasMateSet()) // will now be set for local INVs and DUPs, so cannot bea an excluding criteria
                 .filter(x -> !assembly.hasReadSupport(x.mateRead()))
                 .collect(Collectors.toList());
@@ -251,6 +252,28 @@ public class AssemblyExtender
 
         public Read read() { return mRead; }
         public SupportType type() { return mType; }
+
+        public String toString()
+        {
+            return format("%s: %s", type(), mRead);
+        }
+    }
+
+    private boolean isDiscordantCandidate(final Read read, boolean isForwardJunction, int junctionPosition)
+    {
+        // cannot cross the junction since will already have considered all junction candidate reads
+        if(isForwardJunction)
+        {
+            if(read.alignmentEnd() >= junctionPosition)
+                return false;
+        }
+        else
+        {
+            if(read.alignmentStart() <= junctionPosition)
+                return false;
+        }
+
+        return isDiscordant(read);
     }
 
     private List<Set<Read>> allocateExcludedReads(final JunctionAssembly assembly, final List<NonJunctionRead> nonJunctionReads)
@@ -379,7 +402,7 @@ public class AssemblyExtender
 
         String mateChr = read.mateChromosome();
 
-        if(!HumanChromosome.contains(mateChr))
+        if(mateChr == null || !HumanChromosome.contains(mateChr))
             return;
 
         addOrCreateRemoteRegion(
