@@ -64,12 +64,6 @@ public class PositionEvidence implements GenomePosition
     public boolean equalsRef(final char base) { return Base.valueOf(String.valueOf(base)) == Ref; }
     public boolean equalsAlt(final char base) { return Base.valueOf(String.valueOf(base)) == Alt; }
 
-    public boolean matchesSite(final AmberSite amberSite)
-    {
-        return Chromosome.equals(amberSite.Chromosome) && Position == amberSite.Position
-                && ref().equals(amberSite.Ref) && alt().equals(amberSite.Alt);
-    }
-
     public BaseDepthData toBaseDepthData()
     {
         return ImmutableBaseDepthData.builder()

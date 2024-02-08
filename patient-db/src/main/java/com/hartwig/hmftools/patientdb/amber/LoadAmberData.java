@@ -19,8 +19,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSitesFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
-import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -51,16 +49,14 @@ public class LoadAmberData
         String amberSnpPath = configBuilder.getValue(AMBER_SNP_VCF);
         String snpCheckSitesVcf = configBuilder.getValue(SNPCHECK_VCF);
 
-        final ListMultimap<Chromosome,AmberSite> snpCheckSites = AmberSitesFile.loadVcf(snpCheckSitesVcf);
+        final ListMultimap<Chromosome,AmberSite> sampleSnpCheckSites = AmberSitesFile.loadVcf(snpCheckSitesVcf);
 
-        LOGGER.info("loaded {} SnpCheck sites from {}", snpCheckSites.size(), snpCheckSitesVcf);
+        LOGGER.info("loaded {} SnpCheck sites from {}", sampleSnpCheckSites.size(), snpCheckSitesVcf);
 
         final AmberSampleFactory amberSampleFactory = new AmberSampleFactory(
                 DEFAULT_MIN_DEPTH, DEFAULT_MIN_HET_AF_PERCENTAGE, DEFAULT_MAX_HET_AF_PERCENTAGE);
 
-        GenomePositionSelector<AmberSite> selector = GenomePositionSelectorFactory.create(snpCheckSites);
-
-        List<SiteEvidence> siteEvidenceList = Lists.newArrayListWithCapacity(snpCheckSites.size());
+        List<SiteEvidence> siteEvidenceList = Lists.newArrayListWithCapacity(sampleSnpCheckSites.size());
 
         DatabaseAccess dbAccess = databaseAccess(configBuilder);
 
@@ -72,16 +68,20 @@ public class LoadAmberData
         for(VariantContext variant : fileReader.iterator())
         {
             SiteEvidence siteEvidence = SiteEvidence.fromVariantContext(variant);
-            ++refSiteCount;
 
-            if(selector.select(siteEvidence).isPresent())
+            // check evidence sites vs required reference ones
+            if(sampleSnpCheckSites.values().stream().anyMatch(x -> x.matches(
+                    siteEvidence.Chromosome, siteEvidence.Position, siteEvidence.Ref, siteEvidence.Alt)))
+            {
+                ++refSiteCount;
                 siteEvidenceList.add(siteEvidence);
+            }
         }
 
-        if(siteEvidenceList.size() != snpCheckSites.size())
+        if(siteEvidenceList.size() != sampleSnpCheckSites.size())
         {
             LOGGER.error("sample({}) missing sites: required({}) matched({})",
-                    tumorSample, snpCheckSites.size(), siteEvidenceList.size());
+                    tumorSample, sampleSnpCheckSites.size(), siteEvidenceList.size());
             System.exit(1);
         }
 

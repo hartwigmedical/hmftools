@@ -39,6 +39,8 @@ public class SnpCheckFilter implements Predicate<PositionEvidence>
     public boolean test(final PositionEvidence baseDepth)
     {
         List<AmberSite> chrSites = mSnpLoci.get(baseDepth.Chromosome);
-        return chrSites != null && chrSites.stream().anyMatch(x -> baseDepth.matchesSite(x));
+
+        return chrSites != null && chrSites.stream()
+                .anyMatch(x -> x.matches(baseDepth.Chromosome, baseDepth.Position, baseDepth.ref(), baseDepth.alt()));
     }
 }
