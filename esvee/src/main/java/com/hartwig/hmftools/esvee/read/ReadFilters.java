@@ -13,14 +13,6 @@ import com.hartwig.hmftools.esvee.common.Junction;
 
 public final class ReadFilters
 {
-    public static boolean isCandidateJunctionRead(final Read read, final Junction junction)
-    {
-        int junctionBoundaryStart = junction.isForward() ? junction.Position - BAM_READ_JUNCTION_BUFFER : junction.Position;
-        int junctionBoundaryEnd = junction.isForward() ? junction.Position : junction.Position + BAM_READ_JUNCTION_BUFFER;
-
-        return positionsOverlap(junctionBoundaryStart, junctionBoundaryEnd, read.unclippedStart(), read.unclippedEnd());
-    }
-
     private static int getAvgBaseQuality(final Read read, final int readPosition, final int length)
     {
         int startIndex = readPosition - 1;

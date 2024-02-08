@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -22,12 +23,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.BaseMismatches;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.RefBaseAssembly;
+import com.hartwig.hmftools.esvee.common.RefSideSoftClip;
 import com.hartwig.hmftools.esvee.common.RemoteRegion;
 import com.hartwig.hmftools.esvee.common.RepeatInfo;
 import com.hartwig.hmftools.esvee.read.Read;
@@ -63,9 +66,9 @@ public class AssemblyWriter
             sj.add("Chromosome");
             sj.add("JunctionPosition");
             sj.add("JunctionOrientation");
-            sj.add("RangeStart");
-            sj.add("RangeEnd");
-            sj.add("Length");
+            sj.add("SoftClipLength");
+            sj.add("RefBasePosition");
+            sj.add("RefBaseLength");
             sj.add("SupportCount");
             sj.add("RefSupportCount");
             sj.add("SoftClipMismatches");
@@ -75,13 +78,14 @@ public class AssemblyWriter
 
             sj.add("AvgNmCount");
             sj.add("AvgIndelLength");
-            sj.add("AvgRefSideSoftClip");
             sj.add("AvgBaseQual");
             sj.add("AvgMapQual");
             sj.add("InitialReadId");
 
             sj.add("RepeatInfo");
             sj.add("MergedAssemblies");
+
+            sj.add("RefSideSoftClips");
 
             sj.add("RefExtDistance");
             sj.add("RefExtJuncMates");
@@ -123,9 +127,19 @@ public class AssemblyWriter
             sj.add(assembly.junction().Chromosome);
             sj.add(String.valueOf(assembly.junction().Position));
             sj.add(String.valueOf(assembly.junction().Orientation));
-            sj.add(String.valueOf(assembly.minAlignedPosition()));
-            sj.add(String.valueOf(assembly.maxAlignedPosition()));
-            sj.add(String.valueOf(assembly.baseLength()));
+            sj.add(String.valueOf(assembly.extensionLength()));
+
+            if(assembly.refBaseAssembly() != null)
+            {
+                sj.add(String.valueOf(assembly.refBaseAssembly().extensionRefPosition()));
+                sj.add(String.valueOf(assembly.refBaseAssembly().baseLength())); // since includes the junction base itself
+
+            }
+            else
+            {
+                sj.add(String.valueOf(assembly.isForwardJunction() ? assembly.minAlignedPosition() : assembly.maxAlignedPosition()));
+                sj.add(String.valueOf(assembly.refBaseLength()));
+            }
 
             int refBaseMismatches = 0;
             int softClipBaseMismatches = 0;
@@ -162,7 +176,6 @@ public class AssemblyWriter
             ReadStats readStats = buildReadStats(assembly.support(), assembly.junction().isForward());
             sj.add(statString(readStats.NmCountTotal, assembly.supportCount()));
             sj.add(statString(readStats.IndelLengthTotal, assembly.supportCount()));
-            sj.add(statString(readStats.RefSideSoftClipLengthTotal, assembly.supportCount()));
             sj.add(statString(readStats.BaseQualTotal, assembly.supportCount()));
             sj.add(statString(readStats.MapQualTotal, assembly.supportCount()));
 
@@ -171,6 +184,8 @@ public class AssemblyWriter
             sj.add(repeatsInfoStr(assembly.repeatInfo()));
 
             sj.add(String.valueOf(assembly.mergedAssemblyCount()));
+
+            sj.add(refSideSoftClipsStr(assembly.refSideSoftClips()));
 
             RefBaseAssembly refBaseAssembly = assembly.refBaseAssembly();
 
@@ -240,7 +255,6 @@ public class AssemblyWriter
     {
         public int NmCountTotal;
         public int IndelLengthTotal;
-        public int RefSideSoftClipLengthTotal;
         public int BaseQualTotal;
         public int MapQualTotal;
 
@@ -248,7 +262,6 @@ public class AssemblyWriter
         {
             NmCountTotal = 0;
             IndelLengthTotal = 0;
-            RefSideSoftClipLengthTotal = 0;
             BaseQualTotal = 0;
             MapQualTotal = 0;
         }
@@ -265,14 +278,19 @@ public class AssemblyWriter
             readStats.MapQualTotal += read.mappingQuality();
             readStats.BaseQualTotal += ReadUtils.avgBaseQuality(read);
             readStats.IndelLengthTotal += read.cigarElements().stream().filter(x -> x.getOperator().isIndel()).mapToInt(x -> x.getLength()).sum();
-
-            if(isForwardJunction)
-                readStats.RefSideSoftClipLengthTotal += read.alignmentStart() - read.unclippedStart();
-            else
-                readStats.RefSideSoftClipLengthTotal += read.unclippedEnd() - read.alignmentEnd();
         }
 
         return readStats;
+    }
+
+    private static String refSideSoftClipsStr(final List<RefSideSoftClip> refSideSoftClips)
+    {
+        if(refSideSoftClips.isEmpty())
+            return "";
+
+        StringJoiner sj = new StringJoiner(ITEM_DELIM);
+        refSideSoftClips.forEach(x -> sj.add(format("%d:%d=%d", x.Position, x.maxLength(), x.readCount())));
+        return sj.toString();
     }
 
     private static String repeatsInfoStr(final List<RepeatInfo> repeats)

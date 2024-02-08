@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignme
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_OVERLAP_BASES;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_DISCORDANT_READ;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_SUPP;
@@ -97,50 +98,66 @@ public class AssemblyExtender
                     .sorted(Comparator.comparingInt(x -> isForwardJunction ? -x.read().unclippedEnd() : x.read().unclippedStart()))
                     .collect(Collectors.toList());
 
+            List<NonJunctionRead> softClippedReads = Lists.newArrayList();
+            List<NonJunctionRead> unclippedReads = Lists.newArrayList();
+
             for(NonJunctionRead njRead : sortedNonJunctionReads)
             {
                 Read read = njRead.read();
 
                 if(isForwardJunction)
                 {
-                    if(read.unclippedEnd() < minAlignedPosition + ASSEMBLY_EXTENSION_OVERLAP_BASES)
+                    if(read.alignmentEnd() < minAlignedPosition + ASSEMBLY_EXTENSION_OVERLAP_BASES)
                         break;
 
-                    minAlignedPosition = min(minAlignedPosition, read.unclippedStart());
+                    minAlignedPosition = min(minAlignedPosition, read.alignmentStart());
                 }
                 else
                 {
-                    if(read.unclippedStart() > maxAlignedPosition - ASSEMBLY_EXTENSION_OVERLAP_BASES)
+                    if(read.alignmentStart() > maxAlignedPosition - ASSEMBLY_EXTENSION_OVERLAP_BASES)
                         break;
 
-                    maxAlignedPosition = max(maxAlignedPosition, read.unclippedEnd());
+                    maxAlignedPosition = max(maxAlignedPosition, read.alignmentEnd());
                 }
+
+                if(mAssembly.checkAddRefSideSoftClip(read))
+                    softClippedReads.add(njRead);
+                else
+                    unclippedReads.add(njRead);
             }
 
-            // find a support read which extend out the furthest from the junction and with the least mismatches
-            int extensionRefPosition = isForwardJunction ? minAlignedPosition : maxAlignedPosition;
-            RefBaseAssembly refBaseAssembly = new RefBaseAssembly(mAssembly, extensionRefPosition);
-
-            for(NonJunctionRead njRead : sortedNonJunctionReads)
+            if(!unclippedReads.isEmpty())
             {
-                refBaseAssembly.checkAddRead(njRead.read(), njRead.type(), ASSEMBLY_EXTENSION_BASE_MISMATCH);
-            }
+                // find a support read which extend out the furthest from the junction and with the least mismatches
+                int extensionRefPosition = isForwardJunction ? minAlignedPosition : maxAlignedPosition;
+                RefBaseAssembly refBaseAssembly = new RefBaseAssembly(mAssembly, extensionRefPosition);
 
-            mAssembly.setRefBaseAssembly(refBaseAssembly);
+                for(NonJunctionRead njRead : unclippedReads)
+                {
+                    refBaseAssembly.checkAddRead(njRead.read(), njRead.type(), ASSEMBLY_EXTENSION_BASE_MISMATCH);
+                }
+
+                mAssembly.setRefBaseAssembly(refBaseAssembly);
+            }
         }
 
+        mAssembly.purgeRefSideSoftClips(PRIMARY_ASSEMBLY_MIN_READ_SUPPORT);
+
         findRemoteRegions(discordantReads, remoteJunctionMates, suppJunctionReads);
+
     }
 
     private class NonJunctionRead
     {
         private final Read mRead;
         private final SupportType mType;
+        private boolean mHasRefSideSoftClip;
 
         public NonJunctionRead(final Read read, final SupportType type)
         {
             mRead = read;
             mType = type;
+            mHasRefSideSoftClip = false;
         }
 
         public Read read() { return mRead; }

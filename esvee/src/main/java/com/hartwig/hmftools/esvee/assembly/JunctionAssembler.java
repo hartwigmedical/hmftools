@@ -86,13 +86,6 @@ public class JunctionAssembler
         return filteredAssemblies;
     }
 
-    private String nextAssemblyName()
-    {
-        // consider naming based on initial length and support? try to make typically deterministic
-        return String.format("%s:%s%s:%s", mJunction.Chromosome, mJunction.Position,
-                mJunction.direction() == Direction.FORWARDS ? "F" : "R", mNextAssemblyNumber++);
-    }
-
     private List<JunctionAssembly> createInitialAssemblies(final List<Read> junctionReads)
     {
         JunctionAssembly junctionSequence = buildFromJunctionReads(mJunction, junctionReads, true);
@@ -108,5 +101,12 @@ public class JunctionAssembler
         junctionSequences.forEach(x -> expandReferenceBases(x));
 
         return junctionSequences;
+    }
+
+    private String nextAssemblyName()
+    {
+        // consider naming based on initial length and support? try to make typically deterministic
+        return String.format("%s:%s%s:%s", mJunction.Chromosome, mJunction.Position,
+                mJunction.direction() == Direction.FORWARDS ? "F" : "R", mNextAssemblyNumber++);
     }
 }

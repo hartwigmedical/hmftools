@@ -3,6 +3,8 @@ package com.hartwig.hmftools.esvee.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
+
 import java.util.List;
 
 import com.hartwig.hmftools.esvee.read.Read;
@@ -26,7 +28,7 @@ public final class AssemblyUtils
 
     protected static JunctionAssembly buildFromJunction(final Junction junction, final List<Read> reads)
     {
-        // find the longest extension out from the junction into the unmapped region ie opposite to the orientation
+        // find the longest extension out from the junction into the soft-clipped bases ie opposite to the junction's orientation
         int minAlignedPosition = junction.Position;
         int maxAlignedPosition = junction.Position;
 
@@ -69,7 +71,7 @@ public final class AssemblyUtils
 
     public static void expandReferenceBases(final JunctionAssembly assembly)
     {
-        // find the longest length of reference bases extending back from the junction
+        // find the longest length of aligned reference bases extending back from the junction
         int minAlignedPosition = assembly.minAlignedPosition();
         int maxAlignedPosition = assembly.maxAlignedPosition();
 
@@ -83,29 +85,34 @@ public final class AssemblyUtils
 
         for(AssemblySupport support : assembly.support())
         {
-            int readJunctionIndex = support.read().getReadIndexAtReferencePosition(junctionPosition, true);
+            Read read = support.read();
+            int readJunctionIndex = read.getReadIndexAtReferencePosition(junctionPosition, true);
 
             // for positive orientations, if read length is 10, and junction index is at 4, then extends with indices 0-3 ie 4
             // for negative orientations, if read length is 10, and junction index is at 6, then extends with indices 7-9 ie 4
-            int extensionDistance = junctionIsForward ? readJunctionIndex : support.read().basesLength() - readJunctionIndex - 1;
-
-            maxDistanceFromJunction = max(maxDistanceFromJunction, extensionDistance);
+            int readExtensionDistance;
 
             if(junctionIsForward)
             {
-                minAlignedPosition = min(minAlignedPosition, support.read().unclippedStart());
+                minAlignedPosition = min(minAlignedPosition, read.alignmentStart());
+                readExtensionDistance = max(readJunctionIndex - read.leftClipLength(), 0);
             }
             else
             {
-                maxAlignedPosition = max(maxAlignedPosition, support.read().unclippedEnd());
+                maxAlignedPosition = max(maxAlignedPosition, read.alignmentEnd());
+                readExtensionDistance = max(read.basesLength() - readJunctionIndex - 1 - read.rightClipLength(), 0);
             }
 
+            assembly.checkAddRefSideSoftClip(read);
+
+            maxDistanceFromJunction = max(maxDistanceFromJunction, readExtensionDistance);
+
             if(minNmSupport == null
-            || support.read().numberOfEvents() < minNmSupport.read().numberOfEvents()
-            || (support.read().numberOfEvents() == minNmSupport.read().numberOfEvents() && extensionDistance < minNmSupportMaxDistance))
+            || read.numberOfEvents() < minNmSupport.read().numberOfEvents()
+            || (read.numberOfEvents() == minNmSupport.read().numberOfEvents() && readExtensionDistance < minNmSupportMaxDistance))
             {
                 minNmSupport = support;
-                minNmSupportMaxDistance = extensionDistance;
+                minNmSupportMaxDistance = readExtensionDistance;
             }
         }
 

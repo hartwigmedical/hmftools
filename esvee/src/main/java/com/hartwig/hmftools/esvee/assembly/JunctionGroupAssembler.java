@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
 
 import java.util.List;
@@ -140,7 +141,8 @@ public class JunctionGroupAssembler extends ThreadTask
 
         List<JunctionAssembly> junctionGroupAssemblies = Lists.newArrayList();
 
-        // now pass applicable reads to each primary assembler
+        // now pass applicable reads to each junction assembler - any read overlapping the junction
+        // due to SvPrep filtering, most reads crossing the junction will have met soft-clip criteria
         for(int i = 0; i < junctionGroup.junctions().size(); ++i)
         {
             Junction junction = junctionGroup.junctions().get(i);
@@ -150,8 +152,11 @@ public class JunctionGroupAssembler extends ThreadTask
             // FIXME: doesn't seem to be making a big difference, but this is in efficient for long-range junction groups
             // since both the junctions and reads are ordered. Could consider re-ordering by unclipped start and comparing to junction position
 
+            int junctionBoundaryStart = junction.isForward() ? junction.Position - BAM_READ_JUNCTION_BUFFER : junction.Position;
+            int junctionBoundaryEnd = junction.isForward() ? junction.Position : junction.Position + BAM_READ_JUNCTION_BUFFER;
+
             List<Read> junctionCandidateReads = junctionGroup.candidateReads().stream()
-                    .filter(x -> ReadFilters.isCandidateJunctionRead(x, junction))
+                    .filter(x -> positionsOverlap(junctionBoundaryStart, junctionBoundaryEnd, x.unclippedStart(), x.unclippedEnd()))
                     .collect(Collectors.toList());
 
             if(junctionCandidateReads.isEmpty())
