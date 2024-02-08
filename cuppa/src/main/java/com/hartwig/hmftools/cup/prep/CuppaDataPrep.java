@@ -20,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class CuppaDataPrep
 {
-    private final SampleDataWriter mSampleDataWriter;
+    public final SampleDataWriter mSampleDataWriter;
     private final PrepConfig mConfig;
 
     public CuppaDataPrep(final ConfigBuilder configBuilder)
