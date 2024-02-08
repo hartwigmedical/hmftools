@@ -29,6 +29,7 @@ public final class SvConstants
     public static final int PRIMARY_ASSEMBLY_MIN_LENGTH = 10;
     public static final int PRIMARY_ASSEMBLY_MIN_READ_SUPPORT = 2; // new
     public static final int PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL = 60; // new
+    public static final int PROXIMATE_REF_SIDE_SOFT_CLIPS = 3;
 
     // primary assembly deduplication
     public static final int PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH = 1;
@@ -40,6 +41,8 @@ public final class SvConstants
 
     // filters
     public static final int PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH = 32;
+
+    public static final double REMOTE_REGION_WEAK_SUPP_PERCENT = 0.1;
 
     // common
     public static int AVG_BASE_QUAL_THRESHOLD = 30;

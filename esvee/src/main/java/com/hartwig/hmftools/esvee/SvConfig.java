@@ -238,6 +238,17 @@ public class SvConfig
         return filename;
     }
 
+    public static String osExtension()
+    {
+        final String osName = System.getProperty("os.name");
+        if(osName.contains("Mac"))
+            return ".dylib";
+        else if(osName.contains("Win"))
+            return ".dll";
+        else
+            return ".so";
+    }
+
     public void logReadId(final SAMRecord record, final String caller)
     {
         if(mCheckLogReadIds)

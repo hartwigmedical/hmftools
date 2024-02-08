@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.old.SampleSupport;
 import com.hartwig.hmftools.esvee.old.VariantAssembly;
+import com.hartwig.hmftools.esvee.old.VariantDeduplicationCounters;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.old.ReadSupport;
 

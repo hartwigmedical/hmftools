@@ -106,11 +106,14 @@ public class JunctionProcessor
                 {
                     for(JunctionGroup junctionGroup : junctionGroups)
                     {
+                        // set ID first so any references have them set - may need or could to be done earlier once
+                        // all references between then are established
                         for(JunctionAssembly assembly : junctionGroup.junctionAssemblies())
                         {
                             assembly.setId(assemblyId++);
-                            mResultsWriter.writeAssembly(assembly);
                         }
+
+                        junctionGroup.junctionAssemblies().forEach(x -> mResultsWriter.writeAssembly(x));
                     }
                 }
             }

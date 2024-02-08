@@ -195,6 +195,13 @@ public class JunctionGroupAssembler extends ThreadTask
 
         Read read = new Read(record);
 
+        // CHECK: do in SvPrep if worthwhile
+        if(!ReadFilters.isAboveBaseQualAvgThreshold(record.getBaseQualities()) || !ReadFilters.isAboveMapQualThreshold(read))
+        {
+            ++mLowQualFilteredReads;
+            return;
+        }
+
         if(mBamReader.currentIsReferenceSample())
             read.markReference();
 

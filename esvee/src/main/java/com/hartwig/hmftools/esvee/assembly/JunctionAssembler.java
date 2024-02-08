@@ -51,7 +51,7 @@ public class JunctionAssembler
                 continue;
             }
 
-            if(!ReadFilters.isRecordAverageQualityPastJunctionAbove(read, mJunction))
+            if(!ReadFilters.isAboveBaseQualAvgPastJunctionThreshold(read, mJunction))
             {
                 mFilteredReads.add(read);
                 continue;

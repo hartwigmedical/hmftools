@@ -63,6 +63,7 @@ public class AssemblyWriter
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
+            sj.add("Id");
             sj.add("Chromosome");
             sj.add("JunctionPosition");
             sj.add("JunctionOrientation");
@@ -74,7 +75,6 @@ public class AssemblyWriter
             sj.add("SoftClipMismatches");
             sj.add("RefBaseMismatches");
             sj.add("RefBaseDominantMismatches");
-            sj.add("JunctionSequence");
 
             sj.add("AvgNmCount");
             sj.add("AvgIndelLength");
@@ -83,7 +83,6 @@ public class AssemblyWriter
             sj.add("InitialReadId");
 
             sj.add("RepeatInfo");
-            sj.add("MergedAssemblies");
 
             sj.add("RefSideSoftClips");
 
@@ -102,6 +101,11 @@ public class AssemblyWriter
 
             sj.add("PhaseGroupId");
             sj.add("PhaseGroupCount");
+            sj.add("MergedAssemblies");
+            sj.add("BranchedAssemblyIds");
+
+            sj.add("JunctionSequence");
+            sj.add("RefBaseSequence");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -124,6 +128,7 @@ public class AssemblyWriter
         {
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
+            sj.add(String.valueOf(assembly.id()));
             sj.add(assembly.junction().Chromosome);
             sj.add(String.valueOf(assembly.junction().Position));
             sj.add(String.valueOf(assembly.junction().Orientation));
@@ -170,8 +175,6 @@ public class AssemblyWriter
             sj.add(String.valueOf(refBaseMismatches));
             sj.add(String.valueOf(refBaseDominantMismatches));
 
-            sj.add(assembly.formSequence(5));
-
             // ref sequence stats purely for analysis
             ReadStats readStats = buildReadStats(assembly.support(), assembly.junction().isForward());
             sj.add(statString(readStats.NmCountTotal, assembly.supportCount()));
@@ -182,8 +185,6 @@ public class AssemblyWriter
             sj.add(assembly.initialRead().getName());
 
             sj.add(repeatsInfoStr(assembly.repeatInfo()));
-
-            sj.add(String.valueOf(assembly.mergedAssemblyCount()));
 
             sj.add(refSideSoftClipsStr(assembly.refSideSoftClips()));
 
@@ -235,6 +236,15 @@ public class AssemblyWriter
             {
                 sj.add("-1").add("0");
             }
+
+            sj.add(String.valueOf(assembly.mergedAssemblyCount()));
+
+            String branchedAssemblyIds = assembly.branchedAssemblies().stream()
+                    .map(x -> String.valueOf(x.id())).collect(Collectors.joining(";"));
+            sj.add(branchedAssemblyIds);
+
+            sj.add(assembly.formJunctionSequence());
+            sj.add(assembly.formRefBaseSequence());
 
             mWriter.write(sj.toString());
             mWriter.newLine();

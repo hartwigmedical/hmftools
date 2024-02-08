@@ -8,9 +8,12 @@ import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_BASE_MIS
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.common.RefSideSoftClip.purgeRefSideSoftClips;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_DISCORDANT_READ;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_SUPP;
+import static com.hartwig.hmftools.esvee.common.RemoteRegion.mergeRegions;
+import static com.hartwig.hmftools.esvee.common.RemoteRegion.purgeWeakSuppRegions;
 import static com.hartwig.hmftools.esvee.common.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
@@ -149,12 +152,12 @@ public class AssemblyExtender
             }
         }
 
-        // remove an dis
-
         int nonSoftClipRefPosition = isForwardJunction ? minAlignedPosition : maxAlignedPosition;
 
         // only keep possible alternative ref-base assemblies with sufficient evidence and length
-        assembly.purgeRefSideSoftClips(PRIMARY_ASSEMBLY_MIN_READ_SUPPORT, PRIMARY_ASSEMBLY_MIN_LENGTH, nonSoftClipRefPosition);
+        List<RefSideSoftClip> refSideSoftClips = assembly.refSideSoftClips();
+
+        purgeRefSideSoftClips(refSideSoftClips, PRIMARY_ASSEMBLY_MIN_READ_SUPPORT, PRIMARY_ASSEMBLY_MIN_LENGTH, nonSoftClipRefPosition);
 
         boolean hasUnmatched = assembly.refSideSoftClips().stream().anyMatch(x -> !x.matchesOriginal());
 
@@ -174,7 +177,6 @@ public class AssemblyExtender
         }
 
         // now build out any distinct, branching assemblies from ref-base soft-clips
-        List<RefSideSoftClip> refSideSoftClips = assembly.refSideSoftClips();
 
         List<Set<Read>> excludedReadsList = allocateExcludedReads(assembly, candidateNonJunctionReads);
 
@@ -202,8 +204,6 @@ public class AssemblyExtender
                     continue;
 
                 junctionAssembly = new JunctionAssembly(assembly, refSideSoftClip, excludedReads);
-                mAssemblies.add(junctionAssembly);
-
                 extensionRefPosition = refSideSoftClip.Position;
             }
 
@@ -217,9 +217,24 @@ public class AssemblyExtender
                 }
             }
 
+            // only add branched assemblies if they have sufficient support
+            if(junctionAssembly != assembly)
+            {
+                if(refBaseAssembly.supportCount() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+                    continue;
+
+                mAssemblies.add(junctionAssembly);
+            }
+
             junctionAssembly.setRefBaseAssembly(refBaseAssembly);
 
             findRemoteRegions(junctionAssembly, excludedReads, discordantReads, remoteJunctionMates, suppJunctionReads);
+        }
+
+        // set references between them - for now just for TSV output
+        for(JunctionAssembly junctionAssembly : mAssemblies)
+        {
+            mAssemblies.stream().filter(x -> x != junctionAssembly).forEach(x -> junctionAssembly.addBranchedAssembly(x));
         }
     }
 
@@ -345,10 +360,14 @@ public class AssemblyExtender
                 continue;
 
             // factor any supplementaries into remote regions
-            addOrCreateSupplementaryRemoteRegion(remoteRegions, read);
+            int scLength = assembly.isForwardJunction() ? read.rightClipLength() : read.leftClipLength();
+            addOrCreateSupplementaryRemoteRegion(remoteRegions, read, scLength);
         }
 
-        RemoteRegion.mergeRegions(remoteRegions);
+        mergeRegions(remoteRegions);
+
+        // purge regions with only weak supplementary support
+        purgeWeakSuppRegions(remoteRegions);
 
         assembly.addRemoteRegions(remoteRegions);
     }
@@ -368,35 +387,27 @@ public class AssemblyExtender
                 mateChr, read.mateAlignmentStart(), read.mateAlignmentEnd());
     }
 
-    private static void addOrCreateRemoteRegion(
+    private static RemoteRegion addOrCreateRemoteRegion(
             final List<RemoteRegion> remoteRegions, final Read read, final int readType,
             final String remoteChr, final int remotePosStart, final int remotePosEnd)
     {
-        // keep 'remote' regions local to this assembly since they may indicate short TIs, DUPs or INVs
-
-        /*
-        // ignore those in this assembly's region
-        if(mAssembly.junction().Chromosome.equals(remoteChr)
-        && positionsOverlap(remotePosStart, remotePosEnd, mAssembly.minAlignedPosition(), mAssembly.maxAlignedPosition()))
-        {
-            return;
-        }
-        */
-
         RemoteRegion matchedRegion = remoteRegions.stream()
                 .filter(x -> x.overlaps(remoteChr, remotePosStart, remotePosEnd)).findFirst().orElse(null);
 
         if(matchedRegion != null)
         {
             matchedRegion.addReadDetails(read.getName(), remotePosStart, remotePosEnd, readType);
+            return matchedRegion;
         }
         else
         {
-            remoteRegions.add(new RemoteRegion(new ChrBaseRegion(remoteChr, remotePosStart, remotePosEnd), read.getName(), readType));
+            RemoteRegion newRegion = new RemoteRegion(new ChrBaseRegion(remoteChr, remotePosStart, remotePosEnd), read.getName(), readType);
+            remoteRegions.add(newRegion);
+            return newRegion;
         }
     }
 
-    private static void addOrCreateSupplementaryRemoteRegion(final List<RemoteRegion> remoteRegions, final Read read)
+    private static void addOrCreateSupplementaryRemoteRegion(final List<RemoteRegion> remoteRegions, final Read read, int readScLength)
     {
         SupplementaryReadData suppData = read.supplementaryData();
 
@@ -410,6 +421,9 @@ public class AssemblyExtender
                 mAssembly.junction(), read.getName(), read.getFlags(), suppData);
         */
 
-        addOrCreateRemoteRegion(remoteRegions, read, REMOTE_READ_TYPE_JUNCTION_SUPP, suppData.Chromosome, suppData.Position, remotePosEnd);
+        RemoteRegion region = addOrCreateRemoteRegion(
+                remoteRegions, read, REMOTE_READ_TYPE_JUNCTION_SUPP, suppData.Chromosome, suppData.Position, remotePosEnd);
+
+        region.addSoftClipMapQual(readScLength, suppData.MapQuality);
     }
 }

@@ -24,7 +24,7 @@ import com.hartwig.hmftools.esvee.old.Alignment;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.old.VariantAssembly;
 import com.hartwig.hmftools.esvee.variant.VariantCall;
-import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
+import com.hartwig.hmftools.esvee.old.NaturalSortComparator;
 
 import org.jetbrains.annotations.Nullable;
 

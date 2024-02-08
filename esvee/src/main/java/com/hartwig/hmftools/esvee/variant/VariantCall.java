@@ -13,7 +13,7 @@ import com.hartwig.hmftools.esvee.old.VariantAssembly;
 import com.hartwig.hmftools.esvee.old.AlignedAssembly;
 import com.hartwig.hmftools.esvee.old.AssemblyClassification;
 import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
+import com.hartwig.hmftools.esvee.old.NaturalSortComparator;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
