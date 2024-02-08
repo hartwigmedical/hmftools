@@ -13,20 +13,6 @@ public final class CommonUtils
         return leftStart <= rightEnd && leftEnd >= rightStart;
     }
 
-    public static byte[] reverseBytes(final byte[] bytes)
-    {
-        if(bytes == null)
-            return null;
-
-        final byte[] reversed = new byte[bytes.length];
-        for(int i = 0; i < bytes.length; i++)
-        {
-            reversed[reversed.length - i - 1] = bytes[i];
-        }
-
-        return reversed;
-    }
-
     public static String formatNanos(final long nanoseconds)
     {
         final String[] unitNames = new String[] { "ns", "us", "ms", "sec", "min", "hr", "days" };

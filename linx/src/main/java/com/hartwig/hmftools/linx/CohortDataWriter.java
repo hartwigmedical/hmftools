@@ -235,7 +235,7 @@ public class CohortDataWriter
                     if(link != null)
                     {
                         writer.write(String.format(",%s,%d",
-                                link.first() == var ? link.second().id() : link.first().id(), link.length()));
+                                link.first() == var ? link.second().id() : link.first().id(), link.baseLength()));
                     }
                     else
                     {
@@ -424,7 +424,7 @@ public class CohortDataWriter
                         cluster.getArmCount(), metrics.OriginArms, metrics.FragmentArms, metrics.ConsistentArms,
                         metrics.ComplexArms, cluster.getAnnotations(), metrics.ValidAlleleJcnSegmentPerc));
 
-                long shortTIs = cluster.getLinkedPairs().stream().filter(x -> x.length() <= SHORT_TI_LENGTH).count();
+                long shortTIs = cluster.getLinkedPairs().stream().filter(x -> x.baseLength() <= SHORT_TI_LENGTH).count();
 
                 writer.write(String.format(",%d,%d,%d",
                         cluster.getLinkedPairs().size(), cluster.getAssemblyLinkedPairs().size(), shortTIs));
@@ -548,7 +548,7 @@ public class CohortDataWriter
                                 chainIndexStr, formatJcn(chain.jcn()), chain.jcnUncertainty()));
 
                         writer.write(String.format(",%s,%d,%d,%d,%d,%s,%d,%s",
-                                pair.isAssembled(), pair.length(),
+                                pair.isAssembled(), pair.baseLength(),
                                 pair.getNextSvDistance(), pair.getNextClusteredSvDistance(), pair.getTraversedSVCount(),
                                 pair.locationType(), pair.overlapCount(), pair.hasCopyNumberGain()));
 

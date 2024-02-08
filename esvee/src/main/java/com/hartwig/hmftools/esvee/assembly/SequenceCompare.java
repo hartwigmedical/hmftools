@@ -90,7 +90,7 @@ public final class SequenceCompare
             }
 
             // check if the mismatch is a single-base INDEL and if so skip it
-            int recoverySkipBases = checkRecoverMatch(firstBases, firstBaseQuals, firstIndex, secondBases, secondBaseQuals, secondIndex);
+            int recoverySkipBases = checkSkipShortIndel(firstBases, firstBaseQuals, firstIndex, secondBases, secondBaseQuals, secondIndex);
 
             if(recoverySkipBases != 0)
             {
@@ -104,7 +104,7 @@ public final class SequenceCompare
             }
 
             // check for a repeat diff - must be of the same type and just a different count
-            int expectedRepeatBaseDiff = expectedRepeatDifference(firstIndex, firstRepeats, secondIndex, secondRepeats);
+            int expectedRepeatBaseDiff = checkRepeatDifference(firstIndex, firstRepeats, secondIndex, secondRepeats);
 
             if(expectedRepeatBaseDiff != 0)
             {
@@ -120,7 +120,7 @@ public final class SequenceCompare
 
             ++mismatchCount;
 
-            if(mismatchCount > maxMismatches)
+            if(maxMismatches >= 0 && mismatchCount > maxMismatches)
                 return mismatchCount;
 
             ++firstIndex;
@@ -130,7 +130,7 @@ public final class SequenceCompare
         return mismatchCount;
     }
 
-    private static int expectedRepeatDifference(
+    private static int checkRepeatDifference(
             int firstIndex, final List<RepeatInfo> firstRepeats, int secondIndex, final List<RepeatInfo> secondRepeats)
     {
         // look for matching repeats, and if found return the expected difference in bases if the repeats have diff counts
@@ -167,11 +167,11 @@ public final class SequenceCompare
         return null;
     }
 
-    private static int checkRecoverMatch(
+    private static int checkSkipShortIndel(
             final byte[] firstBases, final byte[] firstBaseQuals, final int firstIndex,
             final byte[] secondBases, final byte[] secondBaseQuals, final int secondIndex)
     {
-        // test up to 2 bases on each sequence
+        // test up to 2 skipped INDEL bases on each sequence, moving ahead 1 then 2 bases on the first sequence
         for(int diff = 1; diff <= 2; ++diff)
         {
             if(canRecoverMatch(
@@ -181,6 +181,7 @@ public final class SequenceCompare
             }
         }
 
+        // then the same on the second sequence
         for(int diff = 1; diff <= 2; ++diff)
         {
             if(canRecoverMatch(

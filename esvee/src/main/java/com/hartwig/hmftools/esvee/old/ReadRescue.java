@@ -2,7 +2,6 @@ package com.hartwig.hmftools.esvee.old;
 
 import static com.hartwig.hmftools.esvee.read.ReadUtils.avgBaseQuality;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
-import static com.hartwig.hmftools.esvee.util.CommonUtils.reverseBytes;
 
 import java.util.Arrays;
 
@@ -60,6 +59,20 @@ public class ReadRescue
         return read;
     }
 
+    private static byte[] reverseBytesSimple(final byte[] bytes)
+    {
+        if(bytes == null)
+            return null;
+
+        final byte[] reversed = new byte[bytes.length];
+        for(int i = 0; i < bytes.length; i++)
+        {
+            reversed[reversed.length - i - 1] = bytes[i];
+        }
+
+        return reversed;
+    }
+
     private Read tryRescueRead(final Read read, final byte repeatBase, final int attemptIndex, final Direction direction)
     {
         @Nullable final byte[] newQuals = direction == Direction.FORWARDS
@@ -101,12 +114,12 @@ public class ReadRescue
             return null;
 
         final byte[] referenceBases = mRef.getBases(read.chromosome(), referenceStartPosition, referenceEndPosition);
-        final byte[] reversedReferenceBases = reverseBytes(referenceBases);
+        final byte[] reversedReferenceBases = reverseBytesSimple(referenceBases);
 
-        final byte[] reversedBases = reverseBytes(read.getBases());
-        final byte[] reversedQuals = reverseBytes(read.getBaseQuality());
+        final byte[] reversedBases = reverseBytesSimple(read.getBases());
+        final byte[] reversedQuals = reverseBytesSimple(read.getBaseQuality());
         final int reversedAttemptIndex = read.basesLength() - attemptIndex;
-        return reverseBytes(tryRescueRead(reversedBases, reversedQuals, reversedAttemptIndex, reversedReferenceBases, repeatBase));
+        return reverseBytesSimple(tryRescueRead(reversedBases, reversedQuals, reversedAttemptIndex, reversedReferenceBases, repeatBase));
     }
 
     private static int referencePositionFromRecordIndex(final Read read, final int desiredReadPosition)

@@ -337,14 +337,14 @@ public class SvChain {
             final LinkedPair pair = mLinkedPairs.get(i);
 
             LNX_LOGGER.debug("chain({}) {}: pair({}) {} length({}) index({})",
-                    mId, i, pair.toString(), pair.getLinkReason(), pair.length(), pair.getLinkIndex());
+                    mId, i, pair.toString(), pair.getLinkReason(), pair.baseLength(), pair.getLinkIndex());
         }
     }
 
     public long getLength(boolean closeEnds)
     {
         // defined as the sum of the TI lengths
-        long length = mLinkedPairs.stream().mapToLong(x -> abs(x.length())).sum();
+        long length = mLinkedPairs.stream().mapToLong(x -> abs(x.baseLength())).sum();
 
         if(closeEnds)
         {

@@ -6,7 +6,9 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.flipOrientation;
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findRepeats;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION;
@@ -22,6 +24,7 @@ import com.hartwig.hmftools.esvee.read.Read;
 
 public class JunctionAssembly
 {
+    private int mAssemblyId;
     private final Junction mJunction;
     private final Read mInitialRead;
 
@@ -33,6 +36,7 @@ public class JunctionAssembly
     private byte mBaseQuals[];
 
     private final List<AssemblySupport> mSupport;
+    private final List<RefSideSoftClip> mRefSideSoftClips;
 
     private final SequenceMismatches mSequenceMismatches;
     private final List<RepeatInfo> mRepeatInfo;
@@ -65,6 +69,7 @@ public class JunctionAssembly
 
         mSupport = Lists.newArrayList();
         mRepeatInfo = Lists.newArrayList();
+        mRefSideSoftClips = Lists.newArrayList();
         mRemoteRegions = Lists.newArrayList();
         mRefBaseAssembly = null;
         mMergedAssemblies = 0;
@@ -72,6 +77,9 @@ public class JunctionAssembly
 
         addInitialRead(read);
     }
+
+    public void setId(int id) { mAssemblyId = id; }
+    public int id() { return mAssemblyId; }
 
     public Read initialRead() { return mInitialRead; }
     public Junction junction() { return mJunction; }
@@ -373,7 +381,7 @@ public class JunctionAssembly
 
     public boolean hasReadSupport(final Read read)
     {
-        return  mSupport.stream().anyMatch(x -> x.read() == read);
+        return read != null && mSupport.stream().anyMatch(x -> x.read() == read);
     }
 
     public List<RepeatInfo> repeatInfo() { return mRepeatInfo; }
@@ -384,6 +392,63 @@ public class JunctionAssembly
         List<RepeatInfo> repeats = findRepeats(mBases);
         if(repeats != null)
             mRepeatInfo.addAll(repeats);
+    }
+
+    public List<RefSideSoftClip> refSideSoftClips() { return mRefSideSoftClips; }
+
+    public boolean checkAddRefSideSoftClip(final Read read)
+    {
+        int refSideSoftClipPosition = -1;
+        int refSideSoftClipLength = 0;
+
+        if(isForwardJunction())
+        {
+            if(read.leftClipLength() >= PRIMARY_ASSEMBLY_MIN_LENGTH)
+            {
+                refSideSoftClipPosition = read.alignmentStart();
+                refSideSoftClipLength = read.leftClipLength();
+            }
+        }
+        else
+        {
+            if(read.rightClipLength() >= PRIMARY_ASSEMBLY_MIN_LENGTH)
+            {
+                refSideSoftClipPosition = read.alignmentEnd();
+                refSideSoftClipLength = read.rightClipLength();
+            }
+        }
+
+        if(refSideSoftClipLength == 0)
+            return false;
+
+        int softClipPosition = refSideSoftClipPosition;
+        RefSideSoftClip existing = mRefSideSoftClips.stream().filter(x -> x.Position == softClipPosition).findFirst().orElse(null);
+
+        if(existing == null)
+        {
+            mRefSideSoftClips.add(new RefSideSoftClip(softClipPosition, flipOrientation(mJunction.Orientation), read, refSideSoftClipLength));
+        }
+        else
+        {
+            existing.addRead(read, refSideSoftClipLength);
+        }
+
+        return true;
+    }
+
+    public void purgeRefSideSoftClips(int minCount)
+    {
+        if(mRefSideSoftClips.isEmpty() || mRefSideSoftClips.stream().noneMatch(x -> x.readCount() < minCount))
+            return;
+
+        int index = 0;
+        while(index < mRefSideSoftClips.size())
+        {
+            if(mRefSideSoftClips.get(index).readCount() < minCount)
+                mRefSideSoftClips.remove (index);
+            else
+                ++index;
+        }
     }
 
     public List<RemoteRegion> remoteRegions() { return mRemoteRegions; }
@@ -447,6 +512,7 @@ public class JunctionAssembly
         mSupport = Lists.newArrayList();
         mRepeatInfo = Lists.newArrayList();
         mRemoteRegions = Lists.newArrayList();
+        mRefSideSoftClips = Lists.newArrayList();
         mMergedAssemblies = 0;
     }
 }

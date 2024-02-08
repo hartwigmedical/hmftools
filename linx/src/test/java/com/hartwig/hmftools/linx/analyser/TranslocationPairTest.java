@@ -97,7 +97,7 @@ public class TranslocationPairTest
         assertTrue(cluster.isResolved());
         assertTrue(cluster.getResolvedType() == RECIP_TRANS);
         assertEquals(2, cluster.getChains().size());
-        assertFalse(cluster.getChains().stream().anyMatch(x -> x.getLinkedPairs().stream().anyMatch(y -> y.length() > SHORT_TI_LENGTH)));
+        assertFalse(cluster.getChains().stream().anyMatch(x -> x.getLinkedPairs().stream().anyMatch(y -> y.baseLength() > SHORT_TI_LENGTH)));
     }
 
     @Test
@@ -105,7 +105,7 @@ public class TranslocationPairTest
     {
         LinxTester tester = new LinxTester();
 
-        SvVarData var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 50000, -1);
+        SvVarData var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 50001, -1);
         SvVarData var2 = createBnd(tester.nextVarId(), "1", 5000, -1, "2", 150000, 1);
 
         tester.CnDataLoader.getLohData().add(new LohEvent(var1.chromosome(false), 1, var1.position(false),
@@ -120,7 +120,7 @@ public class TranslocationPairTest
         assertTrue(cluster.getResolvedType() == DEL_TI);
 
         // and now as a RECIP_DEL_DUP
-        var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 50000, -1);
+        var1 = createBnd(tester.nextVarId(), "1", 1000, 1, "2", 50001, -1);
         var2 = createBnd(tester.nextVarId(), "1", 5000, -1, "2", 150000, 1);
 
         tester.CnDataLoader.getLohData().clear();

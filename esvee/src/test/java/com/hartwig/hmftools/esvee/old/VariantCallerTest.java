@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.variant;
+package com.hartwig.hmftools.esvee.old;
 
 import java.util.Arrays;
 import java.util.List;

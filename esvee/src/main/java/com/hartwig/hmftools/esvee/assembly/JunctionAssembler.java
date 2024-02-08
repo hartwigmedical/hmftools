@@ -49,20 +49,13 @@ public class JunctionAssembler
 
         for(Read read : rawReads)
         {
-            if(!ReadFilters.hasAcceptableMapQ(read, SvConstants.READ_FILTER_MIN_JUNCTION_MAPQ))
-            {
-                // CHECK: any use for these, eg for extension?
-                mFilteredReads.add(read);
-                continue;
-            }
-
             if(!ReadFilters.recordSoftClipsNearJunction(read, mJunction))
             {
                 mNonJunctionReads.add(read);
                 continue;
             }
 
-            if(!ReadFilters.isRecordAverageQualityPastJunctionAbove(read, mJunction, SvConstants.AVG_BASE_QUAL_THRESHOLD))
+            if(!ReadFilters.isRecordAverageQualityPastJunctionAbove(read, mJunction))
             {
                 mFilteredReads.add(read);
                 continue;
@@ -93,13 +86,6 @@ public class JunctionAssembler
         return filteredAssemblies;
     }
 
-    private String nextAssemblyName()
-    {
-        // consider naming based on initial length and support? try to make typically deterministic
-        return String.format("%s:%s%s:%s", mJunction.Chromosome, mJunction.Position,
-                mJunction.direction() == Direction.FORWARDS ? "F" : "R", mNextAssemblyNumber++);
-    }
-
     private List<JunctionAssembly> createInitialAssemblies(final List<Read> junctionReads)
     {
         JunctionAssembly junctionSequence = buildFromJunctionReads(mJunction, junctionReads, true);
@@ -115,5 +101,12 @@ public class JunctionAssembler
         junctionSequences.forEach(x -> expandReferenceBases(x));
 
         return junctionSequences;
+    }
+
+    private String nextAssemblyName()
+    {
+        // consider naming based on initial length and support? try to make typically deterministic
+        return String.format("%s:%s%s:%s", mJunction.Chromosome, mJunction.Position,
+                mJunction.direction() == Direction.FORWARDS ? "F" : "R", mNextAssemblyNumber++);
     }
 }

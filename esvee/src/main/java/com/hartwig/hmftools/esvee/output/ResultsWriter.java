@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.WriteType;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.variant.VariantCall;
 
@@ -24,6 +23,7 @@ public class ResultsWriter
     private final SvConfig mConfig;
     private final BufferedWriter mVariantWriter;
     private final AssemblyWriter mAssemblyWriter;
+    private final AssemblyReadWriter mReadWriter;
     private final BamWriter mBamWriter;
 
     public ResultsWriter(final SvConfig config)
@@ -31,6 +31,7 @@ public class ResultsWriter
         mConfig = config;
         mVariantWriter = initialiseVariantWriter();
         mAssemblyWriter = new AssemblyWriter(config);
+        mReadWriter = new AssemblyReadWriter(config);
         mBamWriter = new BamWriter(config);
     }
 
@@ -39,6 +40,7 @@ public class ResultsWriter
         closeBufferedWriter(mVariantWriter);
 
         mAssemblyWriter.close();
+        mReadWriter.close();
         mBamWriter.close();
     }
 
@@ -84,6 +86,7 @@ public class ResultsWriter
     public synchronized void writeAssembly(final JunctionAssembly assembly)
     {
         mAssemblyWriter.writeAssembly(assembly);
+        mReadWriter.writeAssemblyReads(assembly);
     }
 
     public synchronized void writeVariantAssemblyBamRecords(final List<VariantCall> variants)

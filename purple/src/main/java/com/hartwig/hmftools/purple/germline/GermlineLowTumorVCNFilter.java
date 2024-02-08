@@ -2,6 +2,8 @@ package com.hartwig.hmftools.purple.germline;
 
 import com.hartwig.hmftools.common.utils.Doubles;
 
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 
@@ -22,6 +24,8 @@ public final class GermlineLowTumorVCNFilter
             if(variant.context().getPhredScaledQual() < minQual)
             {
                 variant.filters().add(LOW_TUMOR_VCN_FILTER);
+                VariantContext newContext = new VariantContextBuilder(variant.context()).filter(LOW_TUMOR_VCN_FILTER).make();
+                variant.setContext(newContext);
             }
         }
     }

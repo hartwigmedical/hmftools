@@ -315,7 +315,7 @@ public class SvVarData
             if(otherPair.matches(link))
                 return;
 
-            if(link.length() < links.get(index).length())
+            if(link.positionDistance() < links.get(index).positionDistance())
                 break;
 
             ++index;

@@ -20,9 +20,11 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.assembly.PhaseGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
 import com.hartwig.hmftools.esvee.common.Junction;
+import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
 import com.hartwig.hmftools.esvee.common.ThreadTask;
 import com.hartwig.hmftools.esvee.output.ResultsWriter;
+import com.hartwig.hmftools.esvee.output.WriteType;
 import com.hartwig.hmftools.esvee.read.BamReader;
 import com.hartwig.hmftools.esvee.output.VcfWriter;
 
@@ -99,9 +101,18 @@ public class JunctionProcessor
             // write here to show PPG data - may move back later on
             if(mConfig.WriteTypes.contains(WriteType.ASSEMBLIES))
             {
-                mJunctionGroupMap.values().forEach(x -> x.stream()
-                        .forEach(y -> y.junctionAssemblies()
-                                .forEach(z -> mResultsWriter.writeAssembly(z))));
+                int assemblyId = 0;
+                for(List<JunctionGroup> junctionGroups : mJunctionGroupMap.values())
+                {
+                    for(JunctionGroup junctionGroup : junctionGroups)
+                    {
+                        for(JunctionAssembly assembly : junctionGroup.junctionAssemblies())
+                        {
+                            assembly.setId(assemblyId++);
+                            mResultsWriter.writeAssembly(assembly);
+                        }
+                    }
+                }
             }
 
             if(mConfig.PerfDebug || !mConfig.SpecificChrRegions.hasFilters())

@@ -52,7 +52,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.WriteType;
 import com.hartwig.hmftools.esvee.filters.FilterType;
 import com.hartwig.hmftools.esvee.old.VariantAssembly;
 import com.hartwig.hmftools.esvee.util.NaturalSortComparator;

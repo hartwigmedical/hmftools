@@ -41,7 +41,7 @@ ref_genome_version | Required | V37 or V38
 form_consensus | Optional | Form a consensus read from duplicates
 unmap_regions | Optional | Regions of high depth, repeats or otherwise problematic for mapping
 threads | Optional | Number of threads, default = 1
-sambamba | Optional | Used to merge BAMs per thread when used with 'multi_bam' option and threads > 1
+sambamba | Optional | Used to merge BAMs per thread when used with threads > 1
 samtools | Optional | Used to sort and index final output BAM
 output_dir | Optional | If not specified will write output same directory as input BAM
 output_id | Optional | Additonal file suffix
@@ -122,7 +122,7 @@ The ‘CR’ flag is added to the bam to record the number of reads contributing
 
 ## Performance and Settings
 
-When run wth multiple threads and 'multi_bam' enabled, a BAM will be written per thread and then merged and index at the end.
+When run wth multiple threads, a BAM will be written per thread and then merged and index at the end.
 Recommended settings for a standard 100x tumor BAM is 16-24 CPUs and 48GB RAM.
 Runtime on COLO829T with these settings is approximately 100mins.
 

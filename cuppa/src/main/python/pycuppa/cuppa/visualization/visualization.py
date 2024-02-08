@@ -277,6 +277,8 @@ class CuppaVisPlotter(LoggerMixin):
         self.plot_path = os.path.expanduser(plot_path)
         self._check_plot_path_extension()
 
+        self._tmp_vis_data_path = os.path.join(os.path.dirname(self.plot_path), "cuppa.vis_data.tmp.tsv")
+
         self.verbose = verbose
 
     def _check_vis_data_has_one_sample(self):
@@ -290,43 +292,43 @@ class CuppaVisPlotter(LoggerMixin):
             self.logger.error("`plot_path` must end with .pdf, .png, or .jpg")
             raise ValueError
 
-    @property
-    def tmp_vis_data_path(self):
-        return os.path.join(os.path.dirname(self.plot_path), "cuppa.vis_data.tmp.tsv")
-
     def write_tmp_vis_data(self):
         if self.verbose:
-            self.logger.debug("Writing vis data to temporary path: " + self.tmp_vis_data_path)
-        self.vis_data.to_tsv(self.tmp_vis_data_path)
+            self.logger.debug("Writing vis data to temporary path: " + self._tmp_vis_data_path)
+        self.vis_data.to_tsv(self._tmp_vis_data_path)
 
-    def remove_tmp_vis_data(self):
-        if self.verbose:
-            self.logger.debug("Removing temporary vis data at: " + self.tmp_vis_data_path)
-        os.remove(self.tmp_vis_data_path)
+    @property
+    def _rscript_command(self) -> str:
+        return f"Rscript --vanilla {RSCRIPT_PLOT_PREDICTIONS_PATH} {self._tmp_vis_data_path} {self.plot_path}"
 
-    def plot_in_r(self, vis_data_path: str, plot_path: str) -> None:
-        command = f"Rscript --vanilla {RSCRIPT_PLOT_PREDICTIONS_PATH} {vis_data_path} {plot_path}"
+    def plot_in_r(self) -> int:
 
         if self.verbose:
-            self.logger.info("Running shell command: '%s'" % command)
+            self.logger.info("Running shell command: '%s'" % self._rscript_command)
 
-        with Popen(command, shell=True, stdout=PIPE, stderr=STDOUT) as process:
+        with Popen(self._rscript_command, shell=True, stdout=PIPE, stderr=STDOUT) as process:
             for line in iter(process.stdout.readline, b''):
                 r_stderr = line.decode("utf-8").strip()
                 self.logger.error("[R process] " + r_stderr)
 
         return_code = process.poll()
-        if return_code:
-            raise CalledProcessError(return_code, command)
+
+        return return_code
+
+    def remove_tmp_vis_data(self):
+        if os.path.exists(self._tmp_vis_data_path):
+            os.remove(self._tmp_vis_data_path)
+
+            if self.verbose:
+                self.logger.debug("Removing temporary vis data at: " + self._tmp_vis_data_path)
 
     def plot(self) -> None:
         self.write_tmp_vis_data()
+        return_code = self.plot_in_r()
+        self.remove_tmp_vis_data()
 
-        try:
-            self.plot_in_r(vis_data_path=self.tmp_vis_data_path, plot_path=self.plot_path)
-            self.remove_tmp_vis_data()
-        except CalledProcessError:
-            self.remove_tmp_vis_data()
+        if return_code:
+            raise CalledProcessError(return_code, self._rscript_command)
 
     @classmethod
     def plot_from_tsv(cls, vis_data_path: str, plot_path: str, verbose: bool = True):
