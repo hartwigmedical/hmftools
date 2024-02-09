@@ -27,16 +27,42 @@ public class CuppaDataPrepTest
                 "-categories", "DNA",
                 "-ref_genome_version", "V37",
                 "-sample_data_dir", SAMPLE_DATA_DIR,
-                "-output_dir", "/Users/lnguyen/Desktop/test_output/"
+                "-output_dir", "/Users/lnguyen/Desktop/test_output/" // TODO: Change to tmp path
         };
 
         configBuilder.checkAndParseCommandLine(args);
 
         CuppaDataPrep cuppaDataPrep = new CuppaDataPrep(configBuilder);
-        cuppaDataPrep.run();
+        cuppaDataPrep.runSingleSample();
 
         File outputFile = new File(cuppaDataPrep.mSampleDataWriter.getOutputPathSingleSample());
         assertTrue(outputFile.exists());
-        //outputFile.delete();
+        outputFile.delete();
+    }
+
+    @Test
+    public void canExtractFeaturesFromManySamples()
+    {
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        PrepConfig.registerConfig(configBuilder);
+
+        String SAMPLE_DATA_DIR = Resources.getResource("pipeline_output/").getPath();
+
+        String[] args = {
+                "-sample", "prostate_sample",
+                "-categories", "DNA",
+                "-ref_genome_version", "V37",
+                "-sample_data_dir", SAMPLE_DATA_DIR,
+                "-output_dir", "/Users/lnguyen/Desktop/test_output/" // TODO: Change to tmp path
+        };
+
+        configBuilder.checkAndParseCommandLine(args);
+
+        CuppaDataPrep cuppaDataPrep = new CuppaDataPrep(configBuilder);
+        cuppaDataPrep.runMultiSample();
+
+//        File outputFile = new File(cuppaDataPrep.mSampleDataWriter.getOutputPathSingleSample());
+//        assertTrue(outputFile.exists());
+//        outputFile.delete();
     }
 }
