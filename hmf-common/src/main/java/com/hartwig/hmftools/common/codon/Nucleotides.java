@@ -4,6 +4,16 @@ public final class Nucleotides
 {
     public static final char[] DNA_BASES = {'G', 'A', 'T', 'C'};
 
+    public static final byte[] DNA_BASE_BYTES = new byte[DNA_BASES.length];
+
+    static
+    {
+        for(int i = 0; i < DNA_BASES.length; ++i)
+        {
+            DNA_BASE_BYTES[i] = (byte)DNA_BASES[i];
+        }
+    }
+
     public static char swapDnaBase(final char base)
     {
         if(base == 'A') return 'T';
