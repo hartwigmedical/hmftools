@@ -1,0 +1,15 @@
+clusterId	category	synthetic	resolvedType	clusterCount	clusterDesc
+1	SIMPLE	false	DUP	1	DUP
+2	SIMPLE	false	DUP	1	DUP
+3	SIMPLE	false	DUP	1	DUP
+4	SIMPLE	false	DEL	1	DEL
+5	SIMPLE	false	DUP	1	DUP
+6	SIMPLE	false	SGL_PAIR_DUP	2	SGL=2
+8	SIMPLE	false	DUP	1	DUP
+9	SIMPLE	false	DUP	1	DUP
+10	SIMPLE	false	DUP	1	DUP
+11	SIMPLE	false	DUP	1	DUP
+12	SIMPLE	false	DUP	1	DUP
+13	SIMPLE	false	DUP	1	DUP
+15	COMPLEX	false	COMPLEX	3	DEL=1_DUP=2
+0	ARTIFACT	false	LOW_VAF	1	BND

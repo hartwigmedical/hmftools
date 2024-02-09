@@ -1,0 +1,7 @@
+fivePrimeBreakendId	threePrimeBreakendId	name	reported	reportedType	reportableReasons	phased	likelihood	chainLength	chainLinks	chainTerminated	domainsKept	domainsLost	skippedExonsUp	skippedExonsDown	fusedExonUp	fusedExonDown	geneStart	geneContextStart	transcriptStart	geneEnd	geneContextEnd	transcriptEnd	junctionCopyNumber
+0	3	NUP210L_ADAR	false	NONE	NOT_KNOWN	INFRAME	NA	0	0	false			0	0	14	2	NUP210L	Exon 14	ENST00000368559	ADAR	Promoter Region	ENST00000368474	0.1266
+18	19	GMDS_GMDS	false	NONE	NOT_KNOWN	INFRAME	NA	0	0	false			0	0	7	5	GMDS	Exon 7	ENST00000380815	GMDS	Exon 5	ENST00000380815	1.5209
+66	62	SMARCA4_SMARCA4	false	NONE	NOT_KNOWN	INFRAME	NA	0	0	true			0	0	14	10	SMARCA4	Exon 14	ENST00000429416	SMARCA4	Exon 10	ENST00000429416	0.5876
+8	6	ROBO2_ROBO2	false	NONE	NOT_KNOWN	INFRAME	NA	0	0	false			0	0	3	3	ROBO2	Exon 3	ENST00000487694	ROBO2	Exon 3	ENST00000487694	1.0376
+29	31	ATG5_ATG5	false	NONE	NOT_KNOWN	INFRAME	NA	0	0	false			0	0	6	3	ATG5	Exon 6	ENST00000369076	ATG5	Exon 3	ENST00000369076	0.1147
+9	11	TNIK_TNIK	false	NONE	NOT_KNOWN	INFRAME	NA	0	0	false			0	0	4	3	TNIK	Exon 4	ENST00000436636	TNIK	Exon 3	ENST00000436636	0.5151

@@ -1,0 +1,3 @@
+chromosome	chromosomeBand	gene	transcript	isCanonical	driver	category	likelihoodMethod	driverLikelihood	missense	nonsense	splice	inframe	frameshift	biallelic	minCopyNumber	maxCopyNumber
+5	p14.1-p14.2	CDH10	ENST00000264463	true	DISRUPTION	TSG	DISRUPTION	0.0000	0	0	0	0	0	false	2.0100	3.1200
+19	p13.2	SMARCA4	ENST00000429416	true	DISRUPTION	TSG	DISRUPTION	0.0000	0	0	0	0	0	false	1.3860	1.9700
