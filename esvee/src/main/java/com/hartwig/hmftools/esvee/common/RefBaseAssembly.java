@@ -40,9 +40,8 @@ public class RefBaseAssembly
 
         mSupport = Lists.newArrayList();
 
-        // copy the ref bases from the junction assembly, for now ignoring mismatches even if they're dominant
-        // could also lower the qual for those, but better to sort this out prior or properly
-
+        // copy the ref bases from the junction assembly starting at the first ref base (ie the junction base itself)
+        // for now ignoring mismatches even if they're dominant could also lower the qual for those, but better to sort this out prior or properly
         mNonJunctionReadExtension = mJunction.isForward() ?
                 assembly.minAlignedPosition() - extensionRefPosition : extensionRefPosition - assembly.maxAlignedPosition();
 

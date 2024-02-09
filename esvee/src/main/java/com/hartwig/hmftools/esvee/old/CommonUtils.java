@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.util;
+package com.hartwig.hmftools.esvee.old;
 
 public final class CommonUtils
 {
@@ -25,16 +25,5 @@ public final class CommonUtils
             time /= divisors[unitIndex++];
 
         return String.format("%.2f %s", time, unitNames[unitIndex]);
-    }
-
-    public static String osExtension()
-    {
-        final String osName = System.getProperty("os.name");
-        if(osName.contains("Mac"))
-            return ".dylib";
-        else if(osName.contains("Win"))
-            return ".dll";
-        else
-            return ".so";
     }
 }

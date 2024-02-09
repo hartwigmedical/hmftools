@@ -30,7 +30,7 @@ public class TestUtils
     public static final BqrRecordMap RECALIBRATION = new BqrRecordMap(Collections.emptyList());
 
     private static final IndexedBases REF_BASES = new IndexedBases(550, 0, "TGTTTCTGTTTC".getBytes());
-    public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG.Quality, RECALIBRATION, REF_BASES);
+    public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG, RECALIBRATION, REF_BASES);
 
     public static SageConfig createSageConfig()
     {

@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
@@ -15,7 +12,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.common.Junction;
@@ -55,7 +51,7 @@ public class JunctionAssembler
                 continue;
             }
 
-            if(!ReadFilters.isRecordAverageQualityPastJunctionAbove(read, mJunction))
+            if(!ReadFilters.isAboveBaseQualAvgPastJunctionThreshold(read, mJunction))
             {
                 mFilteredReads.add(read);
                 continue;

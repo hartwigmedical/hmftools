@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.common;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -8,13 +9,13 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.flipOrientation;
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findRepeats;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -28,7 +29,7 @@ public class JunctionAssembly
     private final Junction mJunction;
     private final Read mInitialRead;
 
-    private int mJunctionSequenceIndex;
+    private int mJunctionSequenceIndex; // position of the junction in the read bases
     private int mMinAlignedPosition;
     private int mMaxAlignedPosition;
 
@@ -48,6 +49,8 @@ public class JunctionAssembly
     private RefBaseAssembly mRefBaseAssembly;
 
     private PrimaryPhaseGroup mPrimaryPhaseGroup;
+
+    private final List<JunctionAssembly> mBranchedAssemblies;
 
     public JunctionAssembly(
             final Junction initialJunction, final Read read, final int maxExtensionDistance,
@@ -71,6 +74,7 @@ public class JunctionAssembly
         mRepeatInfo = Lists.newArrayList();
         mRefSideSoftClips = Lists.newArrayList();
         mRemoteRegions = Lists.newArrayList();
+        mBranchedAssemblies = Lists.newArrayList();
         mRefBaseAssembly = null;
         mMergedAssemblies = 0;
         mPrimaryPhaseGroup = null;
@@ -403,19 +407,13 @@ public class JunctionAssembly
 
         if(isForwardJunction())
         {
-            if(read.leftClipLength() >= PRIMARY_ASSEMBLY_MIN_LENGTH)
-            {
-                refSideSoftClipPosition = read.alignmentStart();
-                refSideSoftClipLength = read.leftClipLength();
-            }
+            refSideSoftClipPosition = read.alignmentStart();
+            refSideSoftClipLength = read.leftClipLength();
         }
         else
         {
-            if(read.rightClipLength() >= PRIMARY_ASSEMBLY_MIN_LENGTH)
-            {
-                refSideSoftClipPosition = read.alignmentEnd();
-                refSideSoftClipLength = read.rightClipLength();
-            }
+            refSideSoftClipPosition = read.alignmentEnd();
+            refSideSoftClipLength = read.rightClipLength();
         }
 
         if(refSideSoftClipLength == 0)
@@ -436,21 +434,6 @@ public class JunctionAssembly
         return true;
     }
 
-    public void purgeRefSideSoftClips(int minCount)
-    {
-        if(mRefSideSoftClips.isEmpty() || mRefSideSoftClips.stream().noneMatch(x -> x.readCount() < minCount))
-            return;
-
-        int index = 0;
-        while(index < mRefSideSoftClips.size())
-        {
-            if(mRefSideSoftClips.get(index).readCount() < minCount)
-                mRefSideSoftClips.remove (index);
-            else
-                ++index;
-        }
-    }
-
     public List<RemoteRegion> remoteRegions() { return mRemoteRegions; }
     public void addRemoteRegions(final List<RemoteRegion> regions) { mRemoteRegions.addAll(regions); }
 
@@ -460,6 +443,47 @@ public class JunctionAssembly
     public PrimaryPhaseGroup primaryPhaseGroup() { return mPrimaryPhaseGroup; }
     public void setPrimaryPhaseGroup(final PrimaryPhaseGroup primaryPhaseGroup) { mPrimaryPhaseGroup = primaryPhaseGroup; }
 
+    public void addBranchedAssembly(final JunctionAssembly assembly)
+    {
+        mBranchedAssemblies.add(assembly);
+    }
+
+    public List<JunctionAssembly> branchedAssemblies() { return mBranchedAssemblies; }
+
+    public JunctionAssembly(
+            final JunctionAssembly initialAssembly, final RefSideSoftClip refSideSoftClip, final Set<Read> excludedReads)
+    {
+        mJunction = initialAssembly.junction();
+        mInitialRead = initialAssembly.initialRead(); // possible that this read isn't in the final assembly if it supports a different ref
+
+        mJunctionSequenceIndex = initialAssembly.junctionIndex();
+
+        mMinAlignedPosition = initialAssembly.minAlignedPosition();
+        mMaxAlignedPosition = initialAssembly.maxAlignedPosition();
+
+        mBases = new byte[initialAssembly.baseLength()];
+        mBaseQuals = new byte[initialAssembly.baseLength()];
+
+        mBases = copyArray(initialAssembly.bases());
+        mBaseQuals = copyArray(initialAssembly.baseQuals());
+        mSequenceMismatches = new SequenceMismatches();
+
+        mSupport = Lists.newArrayList();
+        mRepeatInfo = Lists.newArrayList();
+        mRefSideSoftClips = Lists.newArrayList(refSideSoftClip);
+        mRemoteRegions = Lists.newArrayList();
+        mBranchedAssemblies = Lists.newArrayList();
+        mRefBaseAssembly = null;
+        mMergedAssemblies = 0;
+        mPrimaryPhaseGroup = null;
+
+        for(AssemblySupport support : initialAssembly.support())
+        {
+            if(!excludedReads.contains(support.read()))
+                mSupport.add(support);
+        }
+    }
+
     public String toString()
     {
         return format("junc(%s) range(%d - %d len=%d) juncIndex(%d) support(%d) mismatches(pos=%d all=%d)",
@@ -467,25 +491,57 @@ public class JunctionAssembly
                 mSupport.size(), mSequenceMismatches.positionCount(), mSequenceMismatches.distinctBaseCount());
     }
 
-    public String formSequence(final int maxRefBaseCount)
+    public String formJunctionSequence()
+    {
+        return formJunctionSequence(0);
+    }
+
+    public String formJunctionSequence(final int includeRefBaseCount)
     {
         int seqIndexStart;
         int seqIndexEnd;
 
         if(mJunction.isForward())
         {
-            seqIndexStart = max(0, mJunctionSequenceIndex - maxRefBaseCount);
+            seqIndexStart = max(0, mJunctionSequenceIndex + 1 - includeRefBaseCount);
             seqIndexEnd = mBases.length - 1;
         }
         else
         {
             seqIndexStart = 0;
-            seqIndexEnd = min(mJunctionSequenceIndex + maxRefBaseCount, mBases.length - 1);
+            seqIndexEnd = min(mJunctionSequenceIndex - 1 + includeRefBaseCount, mBases.length - 1);
         }
 
+        return formSequence(seqIndexStart, seqIndexEnd);
+    }
+
+    public String formRefBaseSequence()
+    {
+        if(mRefBaseAssembly != null)
+            return new String(mRefBaseAssembly.bases());
+
+        int seqIndexStart;
+        int seqIndexEnd;
+
+        if(mJunction.isForward())
+        {
+            seqIndexStart = 0;
+            seqIndexEnd = mJunctionSequenceIndex;
+        }
+        else
+        {
+            seqIndexStart = mJunctionSequenceIndex;
+            seqIndexEnd = mBases.length - 1;
+        }
+
+        return formSequence(seqIndexStart, seqIndexEnd);
+    }
+
+    private String formSequence(int seqIndexStart, int seqIndexEnd)
+    {
         StringBuilder sb = new StringBuilder();
 
-        for(int index = seqIndexStart; index <= seqIndexEnd; ++index)
+        for(int index = max(seqIndexStart, 0); index <= min(seqIndexEnd, mBases.length - 1); ++index)
         {
             sb.append((char)mBases[index]);
         }
@@ -512,6 +568,7 @@ public class JunctionAssembly
         mSupport = Lists.newArrayList();
         mRepeatInfo = Lists.newArrayList();
         mRemoteRegions = Lists.newArrayList();
+        mBranchedAssemblies = Lists.newArrayList();
         mRefSideSoftClips = Lists.newArrayList();
         mMergedAssemblies = 0;
     }

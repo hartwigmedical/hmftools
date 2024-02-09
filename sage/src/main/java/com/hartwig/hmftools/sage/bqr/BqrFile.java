@@ -37,6 +37,7 @@ public final class BqrFile
         sj.add(String.valueOf((char)baf.Key.Alt));
         sj.add(String.valueOf((char)baf.Key.Ref));
         sj.add(new String(baf.Key.TrinucleotideContext));
+        sj.add(baf.Key.ReadType.toString());
         sj.add(String.valueOf(baf.Count));
         sj.add(String.valueOf(baf.Key.Quality));
         sj.add(String.format("%.2f", baf.RecalibratedQuality));
@@ -49,6 +50,7 @@ public final class BqrFile
                 .add("alt")
                 .add("ref")
                 .add("trinucleotideContext")
+                .add("readType")
                 .add("count")
                 .add("originalQual")
                 .add("recalibratedQual")
@@ -67,6 +69,8 @@ public final class BqrFile
             Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
             lines.remove(0);
 
+            Integer readTypeIndex = fieldsIndexMap.get("readType");
+
             for(String line : lines)
             {
                 String[] values = line.split(TSV_DELIM, -1);
@@ -74,11 +78,13 @@ public final class BqrFile
                 byte alt = values[fieldsIndexMap.get("alt")].getBytes()[0];
                 byte ref = values[fieldsIndexMap.get("ref")].getBytes()[0];
                 String triContext = values[fieldsIndexMap.get("trinucleotideContext")];
+                BqrReadType readType = readTypeIndex != null ? BqrReadType.valueOf(values[readTypeIndex]) : BqrReadType.NONE;
+
                 int count = Integer.parseInt(values[fieldsIndexMap.get("count")]);
                 byte origQuality = (byte)Integer.parseInt(values[fieldsIndexMap.get("originalQual")]);
                 double recalibQuality = Double.parseDouble(values[fieldsIndexMap.get("recalibratedQual")]);
 
-                BqrKey key = new BqrKey(ref, alt, triContext.getBytes(), origQuality);
+                BqrKey key = new BqrKey(ref, alt, triContext.getBytes(), origQuality, readType);
 
                 counts.add(new BqrRecord(key, count, recalibQuality));
             }

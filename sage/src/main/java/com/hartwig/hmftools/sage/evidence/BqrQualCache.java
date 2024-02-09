@@ -3,13 +3,14 @@ package com.hartwig.hmftools.sage.evidence;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.hartwig.hmftools.sage.bqr.BqrReadType;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 
 public class BqrQualCache
 {
     private final int mVariantPosition;
     private final String mVariantAlt;
-    private final Map<Byte,Double>[] mQualMapByIndex;
+    private final Map<String,Double>[] mQualMapByIndex;
 
     public BqrQualCache(final int variantPosition, final String alt)
     {
@@ -23,16 +24,17 @@ public class BqrQualCache
         }
     }
 
-    public double getQual(final byte baseQual, final int refIndex, final QualityCalculator qualityCalculator)
+    public double getQual(final byte baseQual, final BqrReadType readType, final int refIndex, final QualityCalculator qualityCalculator)
     {
-        Double bqrQual = mQualMapByIndex[refIndex].get(baseQual);
+        String key = String.valueOf(baseQual) + "_" + readType.ordinal();
+        Double bqrQual = mQualMapByIndex[refIndex].get(key);
 
         if(bqrQual != null)
             return bqrQual;
 
         byte[] trinucleotideContext = qualityCalculator.getTrinucleotideContext(mVariantPosition + refIndex);
         double bqrValue = qualityCalculator.lookupRecalibrateQuality(trinucleotideContext, (byte)mVariantAlt.charAt(refIndex), baseQual);
-        mQualMapByIndex[refIndex].put(baseQual, bqrValue);
+        mQualMapByIndex[refIndex].put(key, bqrValue);
 
         return bqrValue;
     }

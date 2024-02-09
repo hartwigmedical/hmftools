@@ -5,8 +5,12 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
+import static com.hartwig.hmftools.sage.bqr.BqrConfig.useReadType;
+import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.bqr.BqrReadType;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
@@ -18,13 +22,15 @@ public class QualityCalculator
     private final QualityConfig mConfig;
     private final BqrRecordMap mQualityRecalibrationMap;
     private final IndexedBases mRefBases;
+    private final boolean mUseReadType;
 
     private static final int MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY = 10;
 
     public QualityCalculator(
-            final QualityConfig config, final BqrRecordMap qualityRecalibrationMap, final IndexedBases refBases)
+            final SageConfig config, final BqrRecordMap qualityRecalibrationMap, final IndexedBases refBases)
     {
-        mConfig = config;
+        mConfig = config.Quality;
+        mUseReadType = useReadType(config);
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mRefBases = refBases;
     }
@@ -115,11 +121,13 @@ public class QualityCalculator
     private double recalibratedBaseQuality(
             final ReadContextCounter readContextCounter, int startReadIndex, final SAMRecord record, int length)
     {
+        BqrReadType readType = mUseReadType ? extractReadType(record) : BqrReadType.NONE;
+
         if(readContextCounter.isSnv())
         {
             // simplified version of the MNV case below
             byte rawQuality = record.getBaseQualities()[startReadIndex];
-            return readContextCounter.bqrQualCache().getQual(rawQuality, 0, this);
+            return readContextCounter.bqrQualCache().getQual(rawQuality, readType, 0, this);
         }
 
         // MNV case
@@ -132,7 +140,7 @@ public class QualityCalculator
             int readIndex = startReadIndex + i;
             byte rawQuality = record.getBaseQualities()[readIndex];
 
-            double recalibratedQual = readContextCounter.bqrQualCache().getQual(rawQuality, i, this);
+            double recalibratedQual = readContextCounter.bqrQualCache().getQual(rawQuality, readType, i, this);
             quality = min(quality, recalibratedQual);
         }
 

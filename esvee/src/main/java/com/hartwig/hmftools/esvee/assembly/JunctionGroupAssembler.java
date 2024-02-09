@@ -167,14 +167,15 @@ public class JunctionGroupAssembler extends ThreadTask
             // dedup assemblies with close junction positions, same orientation
             dedupProximateAssemblies(junctionGroupAssemblies, candidateAssemblies);
 
-            junctionGroupAssemblies.addAll(candidateAssemblies);
+            // junctionGroupAssemblies.addAll(candidateAssemblies);
 
             // extend assemblies with non-junction and discordant reads
-            // CHECK: skip likely germline reads here?
             for(JunctionAssembly assembly : candidateAssemblies)
             {
                 AssemblyExtender assemblyExtender = new AssemblyExtender(assembly);
                 assemblyExtender.extendAssembly(junctionAssembler.nonJunctionReads());
+
+                junctionGroupAssemblies.addAll(assemblyExtender.assemblies());
             }
         }
 
@@ -193,6 +194,13 @@ public class JunctionGroupAssembler extends ThreadTask
         mConfig.logReadId(record, "JunctionGroupAssembler:processRecord");
 
         Read read = new Read(record);
+
+        // CHECK: do in SvPrep if worthwhile
+        if(!ReadFilters.isAboveBaseQualAvgThreshold(record.getBaseQualities()) || !ReadFilters.isAboveMapQualThreshold(read))
+        {
+            ++mLowQualFilteredReads;
+            return;
+        }
 
         if(mBamReader.currentIsReferenceSample())
             read.markReference();

@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.esvee.variant;
+package com.hartwig.hmftools.esvee.old;
 
-import com.hartwig.hmftools.esvee.util.Counter;
+import com.hartwig.hmftools.esvee.old.Counter;
 
 public class VariantDeduplicationCounters
 {

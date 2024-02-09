@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.assembly;
+package com.hartwig.hmftools.esvee.old;
 
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 

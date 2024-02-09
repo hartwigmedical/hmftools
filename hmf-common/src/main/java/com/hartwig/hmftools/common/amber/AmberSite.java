@@ -50,10 +50,12 @@ public class AmberSite implements GenomePosition
 
     public boolean matches(final AmberSite another)
     {
-        return Chromosome.equals(another.Chromosome)
-                && Position == another.Position
-                && Ref.equals(another.Ref)
-                && Alt.equals(another.Alt);
+        return matches(another.Chromosome, another.Position, another.Ref, another.Alt);
+    }
+
+    public boolean matches(final String chromosome, final int position, final String ref, final String alt)
+    {
+        return Chromosome.equals(chromosome) && Position == position && Ref.equals(ref) && Alt.equals(alt);
     }
 
     @Override

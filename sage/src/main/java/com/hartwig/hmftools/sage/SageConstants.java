@@ -18,10 +18,10 @@ public class SageConstants
     public static final double MIN_SECOND_CANDIDATE_FULL_READS_PERC = 0.25;
 
     // base quality recalibration
-    public static final double DEFAULT_BQR_MAX_ALT_PERC = 0.05;
+    public static final double DEFAULT_BQR_MAX_ALT_PERC = 0.02;
     public static final int DEFAULT_BQR_MAX_ALT_COUNT = 3;
-    public static final int DEFAULT_BQR_SAMPLE_SIZE = 2_000_000;
-    public static final int DEFAULT_BQR_MIN_MAP_QUAL = 10;
+    public static final int BQR_SAMPLE_SIZE = 2_000_000;
+    public static final int DEFAULT_BQR_MIN_MAP_QUAL = 50;
 
     // read evidence
     public static final int MATCHING_BASE_QUALITY = 20;
@@ -76,8 +76,10 @@ public class SageConstants
     public static final double INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT = 0.1;
 
     public static final double STRAND_BIAS_CHECK_THRESHOLD = 0.15;
+    public static final double STRAND_BIAS_HOMOPOLYMER_CHECK_THRESHOLD = 0.25;
     public static final double STRAND_BIAS_REF_MIN_DEPTH = 5;
     public static final double STRAND_BIAS_REF_MIN_BIAS = 0.2;
+    public static final int STRAND_BIAS_HOMOPOLYMER_REPEAT_LENGTH = 8;
 
     public static final int JITTER_INDEL_MAX_REPEATS = 3;
     public static final double JITTER_INDEL_VAF_THRESHOLD = 0.015;

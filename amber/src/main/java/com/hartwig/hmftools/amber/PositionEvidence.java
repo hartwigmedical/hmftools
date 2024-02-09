@@ -2,6 +2,7 @@ package com.hartwig.hmftools.amber;
 
 import static java.lang.String.format;
 
+import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.BaseDepthData;
 import com.hartwig.hmftools.common.amber.ImmutableBaseDepthData;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;

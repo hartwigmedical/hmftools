@@ -52,7 +52,6 @@ import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -196,7 +195,7 @@ public class ReadContextCounter//  extends SimpleVariant
         mLpsCounts = null;
         mUmiTypeCounts = null;
         mFragmentLengthData = mConfig.WriteFragmentLengths ? new FragmentLengthData() : null;
-        mFragmentCoords = mConfig.Quality.HighBaseMode ? new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS) : null;
+        mFragmentCoords = mConfig.Quality.HighDepthMode ? new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS) : null;
     }
 
     public int id() { return mId; }
@@ -323,7 +322,7 @@ public class ReadContextCounter//  extends SimpleVariant
             return MAP_QUAL;
         }
 
-        if(mConfig.Quality.HighBaseMode && isChimericRead(record))
+        if(mConfig.Quality.HighDepthMode && isChimericRead(record))
         {
             addVariantVisRecord(record, MatchType.NONE, null, fragmentData);
             return CHIMERIC;
@@ -331,7 +330,7 @@ public class ReadContextCounter//  extends SimpleVariant
 
         RawContext rawContext = RawContext.create(mVariant, record);
 
-        if(mConfig.Quality.HighBaseMode && rawContext.ReadIndexInSoftClip)
+        if(mConfig.Quality.HighDepthMode && rawContext.ReadIndexInSoftClip)
         {
             addVariantVisRecord(record, MatchType.NONE, null, fragmentData);
             return SOFT_CLIP;
@@ -393,7 +392,7 @@ public class ReadContextCounter//  extends SimpleVariant
 
         double rawBaseQuality = mQualityCalculator.rawBaseQuality(this, readIndex, record);
 
-        if(mConfig.Quality.HighBaseMode && rawBaseQuality < mConfig.Quality.HighBaseQualLimit)
+        if(mConfig.Quality.HighDepthMode && rawBaseQuality < mConfig.Quality.HighBaseQualLimit)
         {
             if(rawContext.AltSupport)
                 countAltSupportMetrics(record, fragmentData);
@@ -584,7 +583,7 @@ public class ReadContextCounter//  extends SimpleVariant
         boolean supportsVariant = support != null
                 && (support == FULL || support == PARTIAL || support == CORE || support == REALIGNED);
 
-        if(mConfig.TrackUMIs)
+        if(mConfig.Sequencing.HasUMIs)
         {
             countUmiType(record, supportsVariant);
         }

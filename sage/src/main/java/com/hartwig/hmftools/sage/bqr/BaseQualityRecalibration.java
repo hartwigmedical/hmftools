@@ -1,7 +1,11 @@
 package com.hartwig.hmftools.sage.bqr;
 
+import static java.lang.Math.log10;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.genome.bed.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.sage.SageCommon.generateBqrFilename;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
@@ -13,11 +17,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
@@ -171,6 +177,8 @@ public class BaseQualityRecalibration
                 .filter(x -> x.getKey().Ref == x.getKey().Alt)
                 .collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue()));
 
+        Set<BqrKey> syntheticAltKeys = Sets.newHashSet();
+
         for(Map.Entry<BqrKey,Integer> entry : allQualityCounts.entrySet())
         {
             BqrKey key = entry.getKey();
@@ -186,6 +194,29 @@ public class BaseQualityRecalibration
             {
                 double recalibratedQual = key.Alt == key.Ref ? key.Quality : recalibratedQual(refCount, entry.getValue());
                 result.add(new BqrRecord(key, entry.getValue(), recalibratedQual));
+
+                double recalQualMin = recalibratedQual(refCount, 1);
+
+                // add alt entries for any which sampled no results
+                for(int i = 0; i < DNA_BASE_BYTES.length; ++i)
+                {
+                    byte alt = DNA_BASE_BYTES[i];
+
+                    if(alt == refKey.Ref)
+                        continue;
+
+                    BqrKey altKey = new BqrKey(key.Ref, alt, key.TrinucleotideContext, key.Quality);
+
+                    if(!allQualityCounts.containsKey(altKey) && !syntheticAltKeys.contains(altKey))
+                    {
+                        syntheticAltKeys.add(altKey);
+
+                        double syntheticQual = max(recalQualMin + 10 * log10(2), key.Quality);
+
+                        result.add(new BqrRecord(altKey, 0, syntheticQual));
+                    }
+
+                }
             }
         }
 
@@ -195,7 +226,7 @@ public class BaseQualityRecalibration
     public static double recalibratedQual(int refCount, int altCount)
     {
         double percent = altCount / (double) (altCount + refCount);
-        return -10 * Math.log10(percent);
+        return -10 * log10(percent);
     }
 
     private static final int END_BUFFER = 1000000;
@@ -208,6 +239,17 @@ public class BaseQualityRecalibration
 
         // form regions from 2MB per chromosome and additionally include the coding panel
         Map<Chromosome,List<BaseRegion>> panelBed = !mPanelBedFile.isEmpty() ? loadBedFileChrMap(mPanelBedFile) : null;
+
+        if(!mConfig.SpecificChrRegions.Regions.isEmpty())
+        {
+            for(ChrBaseRegion region : mConfig.SpecificChrRegions.Regions)
+            {
+                regionTasks.add(new PartitionTask(new ChrBaseRegion(
+                        region.Chromosome, region.start() - REGION_SIZE, region.end() + REGION_SIZE - 1), taskId++));
+            }
+
+            return regionTasks;
+        }
 
         for(final SAMSequenceRecord sequenceRecord : mRefGenome.getSequenceDictionary().getSequences())
         {

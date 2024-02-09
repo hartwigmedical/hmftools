@@ -3,9 +3,11 @@ package com.hartwig.hmftools.sage.bqr;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_MAX_ALT_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_MAX_ALT_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_MIN_MAP_QUAL;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_SAMPLE_SIZE;
 
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.SageConstants;
 
 public class BqrConfig
 {
@@ -64,8 +66,13 @@ public class BqrConfig
         WriteFile = false;
         MaxAltPerc = DEFAULT_BQR_MAX_ALT_PERC;
         MaxAltCount = DEFAULT_BQR_MAX_ALT_COUNT;
-        SampleSize = DEFAULT_BQR_SAMPLE_SIZE;
+        SampleSize = SageConstants.BQR_SAMPLE_SIZE;
         MinMapQuality = DEFAULT_BQR_MIN_MAP_QUAL;
+    }
+
+    public static boolean useReadType(final SageConfig config)
+    {
+        return config.Quality.HighDepthMode || config.Sequencing.HasUMIs || config.Sequencing.Type == SequencingType.ULTIMA;
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -77,7 +84,7 @@ public class BqrConfig
         configBuilder.addFlag(LOAD_BQR_FILES, "Attemps to find and load previously-written BQR files");
         configBuilder.addDecimal(BQR_MAX_ALT_PERC, "BQR maximum alt percent to be an error", DEFAULT_BQR_MAX_ALT_PERC);
         configBuilder.addInteger(BQR_MAX_ALT_COUNT, "BQR maximum alt count to be an error", DEFAULT_BQR_MAX_ALT_COUNT);
-        configBuilder.addInteger(BQR_SAMPLE_SIZE, "BQR sampling size per autosome", DEFAULT_BQR_SAMPLE_SIZE);
+        configBuilder.addInteger(BQR_SAMPLE_SIZE, "BQR sampling size per autosome", SageConstants.BQR_SAMPLE_SIZE);
         configBuilder.addInteger(BQR_MIN_MAP_QUAL, "BQR min base quality remap qual", DEFAULT_BQR_MIN_MAP_QUAL);
     }
 }

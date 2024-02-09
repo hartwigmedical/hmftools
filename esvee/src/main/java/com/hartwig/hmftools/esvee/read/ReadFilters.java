@@ -4,11 +4,11 @@ import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.SvConstants.AVG_BASE_QUAL_THRESHOLD;
-import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
+import static com.hartwig.hmftools.esvee.SvConstants.READ_FILTER_MIN_JUNCTION_MAPQ;
 import static com.hartwig.hmftools.esvee.SvConstants.READ_SOFT_CLIP_JUNCTION_BUFFER;
 
+import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.common.Junction;
 
 public final class ReadFilters
@@ -27,7 +27,24 @@ public final class ReadFilters
         return qualitySum / length;
     }
 
-    public static boolean isRecordAverageQualityPastJunctionAbove(final Read read, final Junction junction)
+    public static boolean isAboveBaseQualAvgThreshold(final byte[] baseQualities)
+    {
+        int qualitySum = 0;
+        for(int i = 0; i < baseQualities.length; i++)
+        {
+            qualitySum += baseQualities[i];
+        }
+
+        double avgBaseQual = qualitySum / (double)baseQualities.length;
+        return avgBaseQual >= AVG_BASE_QUAL_THRESHOLD;
+    }
+
+    public static boolean isAboveMapQualThreshold(final Read read)
+    {
+        return read.mappingQuality() >= READ_FILTER_MIN_JUNCTION_MAPQ;
+    }
+
+    public static boolean isAboveBaseQualAvgPastJunctionThreshold(final Read read, final Junction junction)
     {
         int startIndex;
         int endIndex;
