@@ -92,12 +92,12 @@ public class AssemblyExtender
 
             if(isForwardJunction)
             {
-                if(mateRead.unclippedEnd() >= junctionPosition)
+                if(mateRead.alignmentEnd() >= junctionPosition)
                     continue;
             }
             else
             {
-                if(mateRead.unclippedStart() <= junctionPosition)
+                if(mateRead.alignmentStart() <= junctionPosition)
                     continue;
             }
 
@@ -166,12 +166,10 @@ public class AssemblyExtender
         {
             RefBaseAssembly refBaseAssembly = new RefBaseAssembly(assembly, nonSoftClipRefPosition);
 
-            for(NonJunctionRead njRead : candidateNonJunctionReads)
-            {
-                refBaseAssembly.checkAddRead(njRead.read(), njRead.type(), ASSEMBLY_EXTENSION_BASE_MISMATCH);
-            }
+            checkAddRefAssemblySupport(refBaseAssembly, candidateNonJunctionReads, Collections.emptySet());
 
-            assembly.setRefBaseAssembly(refBaseAssembly);
+            if(refBaseAssembly.supportCount() > 0)
+                assembly.mergeRefBaseAssembly(refBaseAssembly);
 
             findRemoteRegions(assembly, Collections.emptySet(), discordantReads, remoteJunctionMates, suppJunctionReads);
             return;
@@ -210,13 +208,7 @@ public class AssemblyExtender
 
             RefBaseAssembly refBaseAssembly = new RefBaseAssembly(junctionAssembly, extensionRefPosition);
 
-            for(NonJunctionRead njRead : candidateNonJunctionReads)
-            {
-                if(!excludedReads.contains(njRead.read()))
-                {
-                    refBaseAssembly.checkAddRead(njRead.read(), njRead.type(), ASSEMBLY_EXTENSION_BASE_MISMATCH);
-                }
-            }
+            checkAddRefAssemblySupport(refBaseAssembly, candidateNonJunctionReads, excludedReads);
 
             // only add branched assemblies if they have sufficient support
             if(junctionAssembly != assembly)
@@ -224,10 +216,14 @@ public class AssemblyExtender
                 if(refBaseAssembly.supportCount() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
                     continue;
 
+                junctionAssembly.mergeRefBaseAssembly(refBaseAssembly);
                 mAssemblies.add(junctionAssembly);
             }
-
-            junctionAssembly.setRefBaseAssembly(refBaseAssembly);
+            else
+            {
+                if(refBaseAssembly.supportCount() > 0) // same criteria as above
+                    junctionAssembly.mergeRefBaseAssembly(refBaseAssembly);
+            }
 
             findRemoteRegions(junctionAssembly, excludedReads, discordantReads, remoteJunctionMates, suppJunctionReads);
         }
@@ -353,6 +349,19 @@ public class AssemblyExtender
         }
 
         return excludedReadsList;
+    }
+
+    private static void checkAddRefAssemblySupport(
+            final RefBaseAssembly refBaseAssembly, final List<NonJunctionRead> reads, final Set<Read> excludedReads)
+    {
+        for(NonJunctionRead njRead : reads)
+        {
+            if(!excludedReads.contains(njRead.read()))
+            {
+                refBaseAssembly.checkAddRead(
+                        njRead.read(), njRead.type(), ASSEMBLY_EXTENSION_BASE_MISMATCH, ASSEMBLY_EXTENSION_OVERLAP_BASES);
+            }
+        }
     }
 
     private void findRemoteRegions(

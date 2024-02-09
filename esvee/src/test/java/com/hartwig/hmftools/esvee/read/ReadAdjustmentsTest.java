@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.read;
 
-import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES;
+import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
@@ -72,19 +72,19 @@ public class ReadAdjustmentsTest
     {
         // to far from edge
         String cigar = "17M6I17M";
-        String readBases = REF_BASES.substring(0, 40);
+        String readBases = REF_BASES_RANDOM_100.substring(0, 40);
         Read read = createSamRecord(TEST_READ_ID, 100, readBases, cigar);
         assertFalse(ReadAdjustments.convertEdgeIndelsToSoftClip(read));
 
         // indel too short
         cigar = "10M5I10M";
-        readBases = REF_BASES.substring(0, 25);
+        readBases = REF_BASES_RANDOM_100.substring(0, 25);
         read = createSamRecord(TEST_READ_ID, 100, readBases, cigar);
         assertFalse(ReadAdjustments.convertEdgeIndelsToSoftClip(read));
 
         // convert a left-edge indel
         cigar = "10M6I15M";
-        readBases = REF_BASES.substring(0, 31);
+        readBases = REF_BASES_RANDOM_100.substring(0, 31);
         read = createSamRecord(TEST_READ_ID, 100, readBases, cigar);
         assertEquals(124, read.alignmentEnd());
         assertEquals(100, read.unclippedStart());
@@ -98,7 +98,7 @@ public class ReadAdjustmentsTest
 
         // right edge
         cigar = "20M6I15M";
-        readBases = REF_BASES.substring(0, 41);
+        readBases = REF_BASES_RANDOM_100.substring(0, 41);
         read = createSamRecord(TEST_READ_ID, 100, readBases, cigar);
         assertEquals(134, read.alignmentEnd());
         assertEquals(134, read.unclippedEnd());
@@ -111,7 +111,7 @@ public class ReadAdjustmentsTest
 
         // convert both at once
         cigar = "10M8D10M6I10M";
-        readBases = REF_BASES.substring(0, 36);
+        readBases = REF_BASES_RANDOM_100.substring(0, 36);
         read = createSamRecord(TEST_READ_ID, 100, readBases, cigar);
         assertEquals(137, read.alignmentEnd());
         assertEquals(137, read.unclippedEnd());

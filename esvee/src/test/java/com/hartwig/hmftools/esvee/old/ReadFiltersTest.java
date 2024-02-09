@@ -1,19 +1,7 @@
 package com.hartwig.hmftools.esvee.old;
 
-import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
-import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES;
-import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
-import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsNearJunction;
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
-import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.read.Read;
-
-import org.junit.Test;
 
 public class ReadFiltersTest
 {

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.assembly;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
+import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 
 import java.util.Collections;
 import java.util.List;
@@ -231,28 +232,14 @@ public class PhaseGroupBuilder
         // tests matching reads in both the junction reads and any extension reads (ie discordant)
         for(AssemblySupport support : first.support())
         {
-            if(hasMatchingFragmentSupport(second, support.read()))
+            if(support.type() == JUNCTION_MATE)
+                continue;
+
+            if(hasMatchingFragment(second.support(), support.read()))
                 return true;
         }
 
-        if(first.refBaseAssembly() != null)
-        {
-            for(AssemblySupport support : first.refBaseAssembly().support())
-            {
-                if(support.type() == SupportType.DISCORDANT && hasMatchingFragmentSupport(second, support.read()))
-                    return true;
-            }
-        }
-
         return false;
-    }
-
-    private static boolean hasMatchingFragmentSupport(final JunctionAssembly assembly, final Read read)
-    {
-        if(hasMatchingFragment(assembly.support(), read))
-            return true;
-
-        return assembly.refBaseAssembly() != null && hasMatchingFragment(assembly.refBaseAssembly().support(), read);
     }
 
     private boolean isFiltered(final RemoteRegion region)

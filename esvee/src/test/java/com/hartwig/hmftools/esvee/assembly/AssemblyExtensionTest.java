@@ -23,7 +23,7 @@ import htsjdk.samtools.util.StringUtil;
 public class AssemblyExtensionTest
 {
     @Test
-    public void testAssemblyExtension()
+    public void testRefBaseExtension()
     {
         // index           0         10        20        30        40         50
         // pos             30        40        50        60        70         80
@@ -45,26 +45,28 @@ public class AssemblyExtensionTest
         assertEquals("AAAAACCCCCG", refAssemblyBases);
 
         // now test adding reads to this section
+        int permittedMismatches = 1;
+        int requiredOverlap = 5;
 
         // outside the bounds of the extended region
         Read read1 = createSamRecord("READ_01", 39, refBases.substring(9, 29), "20M");
-        assertFalse(refBaseAssembly.checkAddRead(read1, JUNCTION_MATE, 1));
+        assertFalse(refBaseAssembly.checkAddRead(read1, JUNCTION_MATE, 1, 10));
 
         Read read2 = createSamRecord("READ_02", 40, refBases.substring(10, 25), "15M");
-        assertTrue(refBaseAssembly.checkAddRead(read2, JUNCTION_MATE, 1));
+        assertTrue(refBaseAssembly.checkAddRead(read2, JUNCTION_MATE, permittedMismatches, requiredOverlap));
 
         // with 1 mismatch
         Read read3 = createSamRecord(
                 "READ_03", 45, refBases.substring(15, 20) + "G" + refBases.substring(21, 30), "15M");
 
-        assertTrue(refBaseAssembly.checkAddRead(read3, JUNCTION_MATE,1));
+        assertTrue(refBaseAssembly.checkAddRead(read3, JUNCTION_MATE,permittedMismatches, requiredOverlap));
         assertEquals(1, refBaseAssembly.mismatches().positionCount());
 
         // with 2 mismatches
         Read read4 = createSamRecord(
                 "READ_04", 45, refBases.substring(15, 19) + "GG" + refBases.substring(21, 30), "15M");
 
-        assertFalse(refBaseAssembly.checkAddRead(read4, JUNCTION_MATE, 1));
+        assertFalse(refBaseAssembly.checkAddRead(read4, JUNCTION_MATE, permittedMismatches, requiredOverlap));
 
         Junction negJunction = new Junction(CHR_1, 60, NEG_ORIENT);
 
@@ -76,24 +78,24 @@ public class AssemblyExtensionTest
         refAssemblyBases = StringUtil.bytesToString(refBaseAssembly.bases(), 0, 11);
         assertEquals("GGGGGTTTTTA", refAssemblyBases);
 
-        // repeat tests for reads
+        // repeat tests for reads on the ref side of a negative junction
         read1 = createSamRecord("READ_01", 81, refBases.substring(51, 56), "5M");
-        assertFalse(refBaseAssembly.checkAddRead(read1, JUNCTION_MATE,1));
+        assertFalse(refBaseAssembly.checkAddRead(read1, JUNCTION_MATE,permittedMismatches, requiredOverlap));
 
         read2 = createSamRecord("READ_02", 65, refBases.substring(35, 50), "15M");
-        assertTrue(refBaseAssembly.checkAddRead(read2, JUNCTION_MATE,1));
+        assertTrue(refBaseAssembly.checkAddRead(read2, JUNCTION_MATE,permittedMismatches, requiredOverlap));
 
         // with 1 mismatch
         read3 = createSamRecord(
                 "READ_03", 70, refBases.substring(40, 45) + "C" + refBases.substring(46, 50), "10M");
 
-        assertTrue(refBaseAssembly.checkAddRead(read3, JUNCTION_MATE,1));
+        assertTrue(refBaseAssembly.checkAddRead(read3, JUNCTION_MATE,permittedMismatches, requiredOverlap));
         assertEquals(1, refBaseAssembly.mismatches().positionCount());
 
         // with 2 mismatches
         read4 = createSamRecord(
                 "READ_04", 70, refBases.substring(40, 44) + "CC" + refBases.substring(46, 50), "10M");
 
-        assertFalse(refBaseAssembly.checkAddRead(read4, JUNCTION_MATE,1));
+        assertFalse(refBaseAssembly.checkAddRead(read4, JUNCTION_MATE,permittedMismatches, requiredOverlap));
     }
 }

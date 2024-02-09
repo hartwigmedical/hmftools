@@ -98,7 +98,7 @@ public class AssemblyMismatchSplitter
             {
                 if(sequence.checkReadMatches(support.read(), permittedMismatches))
                 {
-                    sequence.addRead(support.read(), false);
+                    sequence.addJunctionRead(support.read(), false);
                 }
             }
         }

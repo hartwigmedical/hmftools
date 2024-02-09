@@ -88,6 +88,7 @@ public class MockRefGenome implements RefGenomeInterface
 
     public static String generateRandomBases(int length)
     {
+        // a misnomer - not random but a sequence which iterates through the nucleotides
         char[] str = new char[length];
 
         int baseIndex = 0;
@@ -106,6 +107,8 @@ public class MockRefGenome implements RefGenomeInterface
 
     public static String getNextBase(final String base) { return String.valueOf(getNextBase(base.charAt(0))); }
 
+    public static byte getNextBase(final byte base) { return (byte)getNextBase((char)base); }
+
     public static char getNextBase(final char base)
     {
         for(int i = 0; i < DNA_BASES.length; ++i)
@@ -118,5 +121,4 @@ public class MockRefGenome implements RefGenomeInterface
 
         return base;
     }
-
 }

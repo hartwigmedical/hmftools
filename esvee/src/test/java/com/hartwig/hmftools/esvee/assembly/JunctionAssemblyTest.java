@@ -3,7 +3,12 @@ package com.hartwig.hmftools.esvee.assembly;
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES;
+import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
+import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
+import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
+import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID_2;
 import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.expandReferenceBases;
@@ -12,6 +17,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.common.AssemblyUtils;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.Junction;
@@ -24,7 +31,7 @@ public class JunctionAssemblyTest
     @Test
     public void testBuildJunctionSequence()
     {
-        String refBases = REF_BASES.substring(0, 20) + "TTGGCCAATT";
+        String refBases = REF_BASES_RANDOM_100.substring(0, 20) + "TTGGCCAATT";
 
         //   pos           10        20         30
         //   pos 012345678901234567890123456789 0123456789
@@ -41,7 +48,7 @@ public class JunctionAssemblyTest
         Read read1b = cloneRead(read1, read1.getName() + "b");
 
         // read 2 has one mismatch on the first sequence and has a ref base mismatch
-        String readRefBases = REF_BASES.substring(0, 20) + "TGGGCCAATT";
+        String readRefBases = REF_BASES_RANDOM_100.substring(0, 20) + "TGGGCCAATT";
         Read read2 = createSamRecord("READ_02", 9, readRefBases.substring(9, 30) + "ACCCGG", "21M6S");
 
         // read 3 defines the second sequence
@@ -51,7 +58,7 @@ public class JunctionAssemblyTest
         Read read4 = createSamRecord("READ_04", 10, refBases.substring(10, 30) + "AATCGGA", "20M7S");
 
         // read 5 matches the second sequence and also has a ref base mismatch
-        readRefBases = REF_BASES.substring(0, 20) + "TTGCCCAATT";
+        readRefBases = REF_BASES_RANDOM_100.substring(0, 20) + "TTGCCCAATT";
         Read read5 = createSamRecord("READ_05", 10, readRefBases.substring(10, 30) + "AATCGGT", "20M7S");
 
         // has 1 mismatch against each so will support both
@@ -87,7 +94,7 @@ public class JunctionAssemblyTest
     @Test
     public void testBuildJunctionSequenceNegOrientation()
     {
-        String refBases = REF_BASES.substring(0, 20) + "TTGGCCAATT" + REF_BASES.substring(30, 50);
+        String refBases = REF_BASES_RANDOM_100.substring(0, 20) + "TTGGCCAATT" + REF_BASES_RANDOM_100.substring(30, 50);
 
         //   pos           10        20         30
         //   pos 012345678901234567890123456789 0123456789
@@ -154,7 +161,61 @@ public class JunctionAssemblyTest
 
         String secondBases = secondSequence.formJunctionSequence(5);
         assertEquals("AACCGGGG" + refBases.substring(20, 25), secondBases);
-
     }
 
+    @Test
+    public void testExactAssemblyDedup()
+    {
+        String assemblyBases = REF_BASES_200.substring(0, 50);
+
+        Junction posJunction = new Junction(CHR_1, 60, POS_ORIENT);
+
+        byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(assemblyBases.length());
+
+        JunctionAssembly assembly1 = new JunctionAssembly(
+                posJunction, assemblyBases.getBytes(), baseQuals, 40, 89);
+
+        JunctionAssembly assembly2 = new JunctionAssembly(
+                posJunction, assemblyBases.getBytes(), baseQuals, 40, 89);
+
+        JunctionAssembly assembly3 = new JunctionAssembly(
+                posJunction, assemblyBases.getBytes(), baseQuals, 40, 89);
+
+        JunctionAssembly assembly4 = new JunctionAssembly(
+                posJunction, assemblyBases.getBytes(), baseQuals, 40, 89);
+
+        JunctionAssembly assembly5 = new JunctionAssembly(
+                posJunction, assemblyBases.getBytes(), baseQuals, 40, 89);
+
+        List<JunctionAssembly> assemblies = Lists.newArrayList(assembly1, assembly2, assembly3, assembly4, assembly5);
+
+        Read sharedRead = createSamRecord(TEST_READ_ID, 40, assemblyBases.substring(0, 30), "30M");
+        Read sharedRead2 = createSamRecord(TEST_READ_ID_2, 40, assemblyBases.substring(0, 30), "30M");
+
+        assemblies.forEach(x -> x.addJunctionRead(sharedRead, false));
+        assemblies.forEach(x -> x.addJunctionRead(sharedRead2, false));
+
+        // add 2 mismatches to each of the other assemblies
+        assembly2.bases()[2] = getNextBase(assembly2.bases()[2]);
+        assembly2.bases()[30] = getNextBase(assembly2.bases()[30]);
+
+        assembly3.bases()[10] = getNextBase(assembly2.bases()[10]);
+        assembly3.bases()[20] = getNextBase(assembly2.bases()[20]);
+
+        // add 5+ to the next one
+        int index = 20;
+        assembly4.bases()[index] = getNextBase(assembly4.bases()[index]);
+        assembly4.bases()[++index] = getNextBase(assembly4.bases()[index]);
+        assembly4.bases()[++index] = getNextBase(assembly4.bases()[index]);
+        assembly4.bases()[++index] = getNextBase(assembly4.bases()[index]);
+        assembly4.bases()[++index] = getNextBase(assembly4.bases()[index]);
+
+        // only shared read with the last
+        assembly5.removeSupportRead(sharedRead2);
+
+        AssemblyDeduper.dedupJunctionAssemblies(assemblies);
+
+        assertEquals(3, assemblies.size());
+        assertEquals(2, assemblies.get(0).mergedAssemblyCount());
+    }
 }

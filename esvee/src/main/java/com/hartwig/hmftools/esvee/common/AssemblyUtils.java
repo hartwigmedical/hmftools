@@ -3,8 +3,6 @@ package com.hartwig.hmftools.esvee.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
-
 import java.util.List;
 
 import com.hartwig.hmftools.esvee.read.Read;
@@ -20,7 +18,7 @@ public final class AssemblyUtils
             if(read == junctionSequence.initialRead())
                 continue;
 
-            junctionSequence.addRead(read, checkMismatches);
+            junctionSequence.addJunctionRead(read, checkMismatches);
         }
 
         return junctionSequence;
@@ -121,7 +119,7 @@ public final class AssemblyUtils
         // order by NM to favour the ref where possible
         if(minNmSupport != null)
         {
-            assembly.extendReadSupport(minNmSupport.read(), minNmSupport);
+            assembly.extendJunctionReadSupport(minNmSupport.read(), minNmSupport);
         }
 
         for(AssemblySupport support : assembly.support())
@@ -129,7 +127,7 @@ public final class AssemblyUtils
             if(support == minNmSupport)
                 continue;
 
-            assembly.extendReadSupport(support.read(), support);
+            assembly.extendJunctionReadSupport(support.read(), support);
         }
     }
 

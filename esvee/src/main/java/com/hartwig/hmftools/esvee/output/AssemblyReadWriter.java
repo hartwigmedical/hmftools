@@ -88,58 +88,50 @@ public class AssemblyReadWriter
         {
             String assemblyInfo = format("%s", assembly.junction().toString());
 
-            for(int i = 0; i <= 1; ++i)
+            for(AssemblySupport support : assembly.support())
             {
-                if(i == 1 && assembly.refBaseAssembly() == null)
-                    continue;
+                StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-                List<AssemblySupport> supportList = (i == 0) ? assembly.support() : assembly.refBaseAssembly().support();
+                sj.add(String.valueOf(assembly.id()));
+                sj.add(assemblyInfo);
 
-                for(AssemblySupport support : supportList)
+                final Read read = support.read();
+
+                sj.add(read.getName());
+                sj.add(support.type().toString());
+                sj.add(read.chromosome());
+                sj.add(String.valueOf(read.alignmentStart()));
+                sj.add(String.valueOf(read.alignmentEnd()));
+                sj.add(read.cigarString());
+                sj.add(String.valueOf(read.insertSize()));
+
+                sj.add(read.mateChromosome());
+                sj.add(String.valueOf(read.mateAlignmentStart()));
+                sj.add(String.valueOf(read.mateAlignmentEnd()));
+
+                sj.add(String.valueOf(read.getFlags()));
+                sj.add(String.valueOf(read.firstInPair()));
+                sj.add(String.valueOf(read.negativeStrand()));
+                sj.add(String.valueOf(read.isUnmapped()));
+                sj.add(String.valueOf(read.isMateMapped()));
+                sj.add(String.valueOf(read.mateNegativeStrand()));
+
+                sj.add(String.valueOf(read.bamRecord().getSupplementaryAlignmentFlag()));
+
+                if(read.hasSupplementary())
                 {
-                    StringJoiner sj = new StringJoiner(TSV_DELIM);
-
-                    sj.add(String.valueOf(assembly.id()));
-                    sj.add(assemblyInfo);
-
-                    final Read read = support.read();
-
-                    sj.add(read.getName());
-                    sj.add(support.type().toString());
-                    sj.add(read.chromosome());
-                    sj.add(String.valueOf(read.alignmentStart()));
-                    sj.add(String.valueOf(read.alignmentEnd()));
-                    sj.add(read.cigarString());
-                    sj.add(String.valueOf(read.insertSize()));
-
-                    sj.add(read.mateChromosome());
-                    sj.add(String.valueOf(read.mateAlignmentStart()));
-                    sj.add(String.valueOf(read.mateAlignmentEnd()));
-
-                    sj.add(String.valueOf(read.getFlags()));
-                    sj.add(String.valueOf(read.firstInPair()));
-                    sj.add(String.valueOf(read.negativeStrand()));
-                    sj.add(String.valueOf(read.isUnmapped()));
-                    sj.add(String.valueOf(read.isMateMapped()));
-                    sj.add(String.valueOf(read.mateNegativeStrand()));
-
-                    sj.add(String.valueOf(read.bamRecord().getSupplementaryAlignmentFlag()));
-
-                    if(read.hasSupplementary())
-                    {
-                        sj.add(format("%s:%d:%s",
-                                read.supplementaryData().Chromosome, read.supplementaryData().Position, read.supplementaryData().Cigar));
-                    }
-                    else
-                    {
-                        sj.add("");
-                    }
-                    sj.add(String.valueOf(support.assemblyIndex()));
-                    sj.add(String.valueOf(support.mismatchCount()));
-
-                    mWriter.write(sj.toString());
-                    mWriter.newLine();
+                    sj.add(format("%s:%d:%s",
+                            read.supplementaryData().Chromosome, read.supplementaryData().Position, read.supplementaryData().Cigar));
                 }
+                else
+                {
+                    sj.add("");
+                }
+                sj.add(String.valueOf(support.assemblyIndex()));
+                sj.add(String.valueOf(support.mismatchCount()));
+
+                mWriter.write(sj.toString());
+                mWriter.newLine();
             }
         }
         catch(IOException e)

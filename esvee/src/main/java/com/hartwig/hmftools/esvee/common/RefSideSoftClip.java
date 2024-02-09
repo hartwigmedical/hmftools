@@ -4,7 +4,9 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.flipOrientation;
 import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
+import static com.hartwig.hmftools.esvee.SvConstants.READ_SOFT_CLIP_JUNCTION_BUFFER;
 
 import java.util.List;
 
@@ -42,7 +44,44 @@ public class RefSideSoftClip
         mMaxLength = max(mMaxLength, readSoftClipLength);
     }
 
-    public String toString() { return format("%d len(%d) reads(%d)", Position, mMaxLength, mReads.size()); }
+    public String toString() { return format("%d len(%d) reads(%d) %s",
+            Position, mMaxLength, mReads.size(), mMatchedOriginal ? "matchOrig" : ""); }
+
+    public static boolean checkAddRefSideSoftClip(final List<RefSideSoftClip> refSideSoftClips, final Junction junction, final Read read)
+    {
+        // add any which have soft-clips more than the junction buffer on the opposite side to the junction,
+        // and accumulated matching reads
+        int refSideSoftClipPosition;
+        int refSideSoftClipLength;
+
+        if(junction.isForward())
+        {
+            refSideSoftClipPosition = read.alignmentStart();
+            refSideSoftClipLength = read.leftClipLength();
+        }
+        else
+        {
+            refSideSoftClipPosition = read.alignmentEnd();
+            refSideSoftClipLength = read.rightClipLength();
+        }
+
+        if(refSideSoftClipLength < READ_SOFT_CLIP_JUNCTION_BUFFER)
+            return false;
+
+        int softClipPosition = refSideSoftClipPosition;
+        RefSideSoftClip existing = refSideSoftClips.stream().filter(x -> x.Position == softClipPosition).findFirst().orElse(null);
+
+        if(existing == null)
+        {
+            refSideSoftClips.add(new RefSideSoftClip(softClipPosition, flipOrientation(junction.Orientation), read, refSideSoftClipLength));
+        }
+        else
+        {
+            existing.addRead(read, refSideSoftClipLength);
+        }
+
+        return true;
+    }
 
     public static void purgeRefSideSoftClips(
             final List<RefSideSoftClip> refSideSoftClips, int minCount, int minLength, int nonSoftClipRefPosition)

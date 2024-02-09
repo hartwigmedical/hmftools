@@ -10,8 +10,6 @@ import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.cloneSamRecord;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.esvee.read.ReadUtils.addByteArray;
-import static com.hartwig.hmftools.esvee.read.ReadUtils.reverseBytes;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -29,9 +27,21 @@ import htsjdk.samtools.SAMRecord;
 
 public class TestUtils
 {
-    public static final String REF_BASES = generateRandomBases(100);
     public static final String TEST_READ_ID = "READ_01";
-    public static final String TEST_CIGAR  = "100M";
+    public static final String TEST_READ_ID_2 = "READ_02";
+
+    public static final String TEST_CIGAR_100  = "100M";
+    public static final String TEST_CIGAR_50  = "50M";
+    public static final String TEST_CIGAR_30  = "30M";
+    public static final String TEST_CIGAR_20  = "20M";
+
+    public static final String REF_BASES_RANDOM_100 = generateRandomBases(100);
+
+    public static String REF_BASES_200 =
+            "AAACCCGGGTTTACGTAACCGGTTACGTAAAAACCCCCGGGGGTTTTTACGTAACCGGTTACGTAAACCCGGGTTTAAACGTTTTTGGGGCCCCAAAAAC"
+    //       0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+    // index 0         10        20        30        40        50        60        70        80        90
+          + "GTGGCCTTAAACGTCCCAAAATTTTGGGGACGTGGGGGCCCCCAAAATTTTACGTCCGGTTAAACGTTTTCCCGGGAAAACGTAACCGGTTGGCCAAGCT";
 
     public static void loadRefGenomeBases(final MockRefGenome refGenome, final String testFilename)
     {

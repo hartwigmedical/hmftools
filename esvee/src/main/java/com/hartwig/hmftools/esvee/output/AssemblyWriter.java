@@ -64,14 +64,16 @@ public class AssemblyWriter
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
             sj.add("Id");
-            sj.add("Chromosome");
-            sj.add("JunctionPosition");
-            sj.add("JunctionOrientation");
-            sj.add("SoftClipLength");
-            sj.add("RefBasePosition");
-            sj.add("RefBaseLength");
-            sj.add("SupportCount");
-            sj.add("RefSupportCount");
+            sj.add("Chromosome").add("JunctionPosition").add("JunctionOrientation");
+
+            sj.add("SoftClipLength").add("RefBasePosition").add("RefBaseLength");
+
+            sj.add("SplitReads").add("RefSplitReads");
+            sj.add("DiscReads").add("RefDiscReads");
+
+            sj.add("JuncMates");
+            sj.add("JuncMateUnmapped");
+
             sj.add("SoftClipMismatches");
             sj.add("RefBaseMismatches");
             sj.add("RefBaseDominantMismatches");
@@ -85,13 +87,6 @@ public class AssemblyWriter
             sj.add("RepeatInfo");
 
             sj.add("RefSideSoftClips");
-
-            sj.add("RefExtDistance");
-            sj.add("RefExtJuncMates");
-            sj.add("RefExtDiscReads");
-            sj.add("RefExtMismatches");
-
-            sj.add("UnmappedJuncReads");
 
             sj.add("RemoteRegionCount");
             sj.add("RemoteRegionJuncMate");
@@ -132,28 +127,61 @@ public class AssemblyWriter
             sj.add(assembly.junction().Chromosome);
             sj.add(String.valueOf(assembly.junction().Position));
             sj.add(String.valueOf(assembly.junction().Orientation));
+
             sj.add(String.valueOf(assembly.extensionLength()));
+            sj.add(String.valueOf(assembly.isForwardJunction() ? assembly.minAlignedPosition() : assembly.maxAlignedPosition()));
+            sj.add(String.valueOf(assembly.refBaseLength()));
 
-            if(assembly.refBaseAssembly() != null)
-            {
-                sj.add(String.valueOf(assembly.refBaseAssembly().extensionRefPosition()));
-                sj.add(String.valueOf(assembly.refBaseAssembly().baseLength())); // since includes the junction base itself
-
-            }
-            else
-            {
-                sj.add(String.valueOf(assembly.isForwardJunction() ? assembly.minAlignedPosition() : assembly.maxAlignedPosition()));
-                sj.add(String.valueOf(assembly.refBaseLength()));
-            }
-
+            int juncReadsCount = 0;
+            int refSampleJuncReadsCount = 0;
+            int discReadCount = 0;
+            int refSampleDiscReadCount = 0;
+            int juncMateUnmapped = 0;
+            int juncMateCount = 0;
             int refBaseMismatches = 0;
             int softClipBaseMismatches = 0;
 
             for(AssemblySupport support : assembly.support())
             {
-                refBaseMismatches += support.referenceMismatches();
-                softClipBaseMismatches += support.junctionMismatches();
+                boolean isReference = support.read().isReference();
+
+                if(support.type() == JUNCTION)
+                {
+                    ++juncReadsCount;
+
+                    if(isReference)
+                        ++refSampleJuncReadsCount;
+
+                    softClipBaseMismatches += support.junctionMismatches();
+                    refBaseMismatches += support.referenceMismatches();
+
+                    if(support.read().isMateUnmapped())
+                        ++juncMateUnmapped;
+                }
+                else
+                {
+                    refBaseMismatches += support.mismatchCount();
+
+                    if(support.type() == DISCORDANT)
+                    {
+                        ++discReadCount;
+
+                        if(isReference)
+                            ++refSampleDiscReadCount;
+                    }
+                    else if(support.type() == JUNCTION_MATE)
+                    {
+                        ++juncMateCount;
+                    }
+                }
             }
+
+            sj.add(String.valueOf(juncReadsCount));
+            sj.add(String.valueOf(refSampleJuncReadsCount));
+            sj.add(String.valueOf(discReadCount));
+            sj.add(String.valueOf(refSampleDiscReadCount));
+            sj.add(String.valueOf(juncMateCount));
+            sj.add(String.valueOf(juncMateUnmapped));
 
             // where the mismatches on a ref base exceeds 50% of the junction read count, suggesting the wrong base was used or there are
             // valid alternatives
@@ -168,9 +196,6 @@ public class AssemblyWriter
                 }
             }
 
-            sj.add(String.valueOf(assembly.supportCount()));
-            long referenceSupportCount = assembly.support().stream().filter(x -> x.read().isReference()).count();
-            sj.add(String.valueOf(referenceSupportCount));
             sj.add(String.valueOf(softClipBaseMismatches));
             sj.add(String.valueOf(refBaseMismatches));
             sj.add(String.valueOf(refBaseDominantMismatches));
@@ -187,26 +212,6 @@ public class AssemblyWriter
             sj.add(repeatsInfoStr(assembly.repeatInfo()));
 
             sj.add(refSideSoftClipsStr(assembly.refSideSoftClips()));
-
-            RefBaseAssembly refBaseAssembly = assembly.refBaseAssembly();
-
-            if(refBaseAssembly != null)
-            {
-                sj.add(String.valueOf(refBaseAssembly.nonJunctionReadExtension()));
-
-                int juncMateCount = (int)refBaseAssembly.support().stream().filter(x -> x.type() == JUNCTION_MATE).count();
-                int discordantReadCount = (int)refBaseAssembly.support().stream().filter(x -> x.type() == DISCORDANT).count();
-                sj.add(String.valueOf(juncMateCount));
-                sj.add(String.valueOf(discordantReadCount));
-                sj.add(String.valueOf(refBaseAssembly.mismatches().readBaseCount()));
-            }
-            else
-            {
-                sj.add("0").add("0").add("0").add("0");
-            }
-
-            int unmappedJuncReads = (int)assembly.support().stream().filter(x -> x.type() == JUNCTION && x.read().isMateUnmapped()).count();
-            sj.add(String.valueOf(unmappedJuncReads));
 
             sj.add(String.valueOf(assembly.remoteRegions().size()));
 
@@ -244,7 +249,7 @@ public class AssemblyWriter
             sj.add(branchedAssemblyIds);
 
             sj.add(assembly.formJunctionSequence());
-            sj.add(assembly.formRefBaseSequence());
+            sj.add(assembly.formRefBaseSequence(200)); // long enought to show most short TIs
 
             mWriter.write(sj.toString());
             mWriter.newLine();
