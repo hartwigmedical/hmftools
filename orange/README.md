@@ -176,6 +176,7 @@ In addition to all germline SNV/Indel tumor drivers determined by [PURPLE](../pu
     1. Any hotspots that are not configured to be reported.
     2. Any hotspots that are filtered based on quality.
 - Potentially pathogenic germline deletions
+- Potentially pathogenic germline LOH events
 - Potentially pathogenic germline homozygous disruptions
 - Potentially pathogenic germline gene disruptions
 - Missed variant likelihood (MVLH) per gene, presenting the likelihood of missing a pathogenic variant in case there would have been one
@@ -230,7 +231,7 @@ investigate potential causes for QC failure.
 
 ## Version History and Download Links
 
-- Upcoming
+- [3.2.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.2.0)
     - Support germline deletions heterozygous in the tumor:
         - Included in new section "Potentially pathogenic germline LOH events" on PDF report.
         - Included in new fields `allGermlineLossOfHeterozygosities` and `reportableGermlineLossOfHeterozygosities` in the JSON.
