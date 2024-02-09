@@ -2,11 +2,9 @@ package com.hartwig.hmftools.sage.bqr;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.samtools.CigarUtils.getReadBoundaryPosition;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_MAP_QUALITY;
 
 import java.util.Collection;
 import java.util.Map;
@@ -128,7 +126,7 @@ public class BqrRegionReader implements CigarHandler
 
         for(int i = mPurgeIndex; i <= mMaxIndex; ++i)
         {
-            mapBaseQualityData(mBaseQualityData[i]);
+            buildSummaryData(mBaseQualityData[i]);
         }
 
         for(Map.Entry<BqrKey,Integer> entry : mKeyCountsMap.entrySet())
@@ -152,7 +150,7 @@ public class BqrRegionReader implements CigarHandler
         mResults.addPerfCounter(mPerfCounter);
     }
 
-    private void mapBaseQualityData(final BaseQualityData bqData)
+    private void buildSummaryData(final BaseQualityData bqData)
     {
         if(bqData == null)
             return;
@@ -175,7 +173,7 @@ public class BqrRegionReader implements CigarHandler
         if(mBamReader == null)
             return;
 
-        BamSlicer slicer = new BamSlicer(DEFAULT_MIN_MAP_QUALITY);
+        BamSlicer slicer = new BamSlicer(mConfig.QualityRecalibration.MinMapQuality);
 
         try
         {
@@ -314,7 +312,7 @@ public class BqrRegionReader implements CigarHandler
             if(bqData.Position >= currentReadStartPos - BASE_DATA_POS_BUFFER)
                 break;
 
-            mapBaseQualityData(bqData);
+            buildSummaryData(bqData);
             mBaseQualityData[mPurgeIndex] = null;
         }
     }

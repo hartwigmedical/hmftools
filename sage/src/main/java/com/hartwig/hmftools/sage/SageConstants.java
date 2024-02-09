@@ -20,8 +20,8 @@ public class SageConstants
     // base quality recalibration
     public static final double DEFAULT_BQR_MAX_ALT_PERC = 0.05;
     public static final int DEFAULT_BQR_MAX_ALT_COUNT = 3;
-    public static final int DEFAULT_BQR_SAMPLE_SIZE = 2_000_000;
-    public static final int DEFAULT_BQR_MIN_MAP_QUAL = 10;
+    public static final int BQR_SAMPLE_SIZE = 2_000_000;
+    public static final int DEFAULT_BQR_MIN_MAP_QUAL = 50;
 
     // read evidence
     public static final int MATCHING_BASE_QUALITY = 20;
