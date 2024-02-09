@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_CHECK_THRESHOLD;
+import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_HOMOPOLYMER_CHECK_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_REF_MIN_BIAS;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_REF_MIN_DEPTH;
 
@@ -15,11 +16,14 @@ import org.apache.commons.math3.distribution.BinomialDistribution;
 public class StrandBiasCalcs
 {
     private final double[] mStrandBiasValues;
+    private final double[] mStrandBiasHighValues;
     private final double mMaxStrandBiasValue;
+    private final double mMaxStrandBiasHighValue;
 
     private static final int MAX_AD_VS_PROB = 1000;
     private static final int MAX_ITERATIONS = 30;
     private static final double STRAND_BIAS_PROB = 0.0005;
+    private static final double STRAND_BIAS_PROB_HIGH = 0.02;
     private static final double STRAND_BIAS_DIFF = 0.001;
     private static final double PROB_DIFF = 0.0001;
     private static final double EXPECTED_RATE = 0.5;
@@ -28,8 +32,12 @@ public class StrandBiasCalcs
     public StrandBiasCalcs()
     {
         mStrandBiasValues = new double[MAX_AD_VS_PROB + 1];
-        buildProbabilityCache();
+        buildProbabilityCache(mStrandBiasValues, STRAND_BIAS_PROB);
         mMaxStrandBiasValue = mStrandBiasValues[mStrandBiasValues.length - 1];
+
+        mStrandBiasHighValues = new double[MAX_AD_VS_PROB + 1];
+        buildProbabilityCache(mStrandBiasHighValues, STRAND_BIAS_PROB_HIGH);
+        mMaxStrandBiasHighValue = mStrandBiasHighValues[mStrandBiasHighValues.length - 1];
     }
 
     public boolean allOneSide(final StrandBiasData strandBiasDataAlt)
@@ -41,12 +49,14 @@ public class StrandBiasCalcs
     }
 
     public boolean isDepthBelowProbability(
-            final StrandBiasData strandBiasDataAlt, final StrandBiasData strandBiasDataRef, boolean checkRef)
+            final StrandBiasData strandBiasDataAlt, final StrandBiasData strandBiasDataRef, boolean checkRef, boolean isLongHomopolymer)
     {
         double strandBias = strandBiasDataAlt.bias();
 
         double minStrandBias = min(strandBias, 1 - strandBias);
-        if(minStrandBias > STRAND_BIAS_CHECK_THRESHOLD)
+
+        double checkThreshold = isLongHomopolymer ? STRAND_BIAS_HOMOPOLYMER_CHECK_THRESHOLD : STRAND_BIAS_CHECK_THRESHOLD;
+        if(minStrandBias > checkThreshold)
             return false;
 
         if(checkRef)
@@ -64,7 +74,12 @@ public class StrandBiasCalcs
         }
 
         int depth = strandBiasDataAlt.depth();
-        double requiredStrandBias = depth < mStrandBiasValues.length ? mStrandBiasValues[depth] : mMaxStrandBiasValue;
+        double requiredStrandBias;
+
+        if(isLongHomopolymer)
+            requiredStrandBias = depth < mStrandBiasHighValues.length ? mStrandBiasHighValues[depth] : mMaxStrandBiasHighValue;
+        else
+            requiredStrandBias = depth < mStrandBiasValues.length ? mStrandBiasValues[depth] : mMaxStrandBiasValue;
 
         if(requiredStrandBias == INVALID_STRAND_BIAS)
             return false;
@@ -75,7 +90,7 @@ public class StrandBiasCalcs
     private static final int INVALID_OBSERVED = -1;
     private static final double EPSILON = 1e-6;
 
-    private void buildProbabilityCache()
+    private static void buildProbabilityCache(final double[] strandBiasValues, double probabiltyThreshold)
     {
         int currentObserved = 0;
 
@@ -83,27 +98,27 @@ public class StrandBiasCalcs
         {
             if(depth < 100)
             {
-                int observed = findMinStrandBiasVsProb(depth, currentObserved);
+                int observed = findMinStrandBiasVsProb(depth, currentObserved, probabiltyThreshold);
 
                 if(observed == INVALID_OBSERVED)
                 {
-                    mStrandBiasValues[depth] = INVALID_STRAND_BIAS;
+                    strandBiasValues[depth] = INVALID_STRAND_BIAS;
                 }
                 else
                 {
                     // the observed level is the first which exceeds the probability threshold, so set this to epsilon below
-                    mStrandBiasValues[depth] = (observed - EPSILON) / depth;
+                    strandBiasValues[depth] = (observed - EPSILON) / depth;
                     currentObserved = observed;
                 }
             }
             else
             {
-                mStrandBiasValues[depth] = calcDepthVsStrandBias(depth);
+                strandBiasValues[depth] = calcDepthVsStrandBias(depth, probabiltyThreshold);
             }
         }
     }
 
-    private static int findMinStrandBiasVsProb(int depth, int startObserved)
+    private static int findMinStrandBiasVsProb(int depth, int startObserved, double probabiltyThreshold)
     {
         BinomialDistribution distribution = new BinomialDistribution(depth, EXPECTED_RATE);
 
@@ -112,7 +127,7 @@ public class StrandBiasCalcs
         {
             double prob = distribution.cumulativeProbability(observed);
 
-            if(prob > STRAND_BIAS_PROB)
+            if(prob > probabiltyThreshold)
             {
                 if(observed == 0)
                     return INVALID_OBSERVED;
@@ -124,7 +139,7 @@ public class StrandBiasCalcs
         return maxObserved;
     }
 
-    private static double calcDepthVsStrandBias(int depth)
+    private static double calcDepthVsStrandBias(int depth, double probabiltyThreshold)
     {
         double lowerSb = 0.000;
         double upperSb = 0.5;
@@ -146,10 +161,10 @@ public class StrandBiasCalcs
 
             double prob = distribution.cumulativeProbability(observed);
 
-            if(abs(prob - STRAND_BIAS_PROB) < PROB_DIFF)
+            if(abs(prob - probabiltyThreshold) < PROB_DIFF)
                 return currentSb;
 
-            if(prob < STRAND_BIAS_PROB)
+            if(prob < probabiltyThreshold)
                 lowerSb = currentSb;
             else
                 upperSb = currentSb;
