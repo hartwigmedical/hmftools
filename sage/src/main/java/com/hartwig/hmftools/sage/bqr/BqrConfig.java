@@ -4,7 +4,9 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_MAX_ALT_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_MAX_ALT_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_MIN_MAP_QUAL;
 
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.SageConstants;
 
 public class BqrConfig
@@ -66,6 +68,11 @@ public class BqrConfig
         MaxAltCount = DEFAULT_BQR_MAX_ALT_COUNT;
         SampleSize = SageConstants.BQR_SAMPLE_SIZE;
         MinMapQuality = DEFAULT_BQR_MIN_MAP_QUAL;
+    }
+
+    public static boolean useReadType(final SageConfig config)
+    {
+        return config.Quality.HighDepthMode || config.Sequencing.HasUMIs || config.Sequencing.Type == SequencingType.ULTIMA;
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)

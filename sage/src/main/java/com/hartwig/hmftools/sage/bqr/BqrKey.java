@@ -9,13 +9,20 @@ public class BqrKey
     public final byte Alt;
     public final byte[] TrinucleotideContext;
     public final byte Quality;
+    public final BqrReadType ReadType;
 
     public BqrKey(final byte ref, final byte alt, final byte[] trinucleotideContext, final byte quality)
+    {
+        this(ref, alt, trinucleotideContext, quality, BqrReadType.NONE);
+    }
+
+    public BqrKey(final byte ref, final byte alt, final byte[] trinucleotideContext, final byte quality, final BqrReadType readType)
     {
         Ref = ref;
         Alt = alt;
         TrinucleotideContext = trinucleotideContext;
         Quality = quality;
+        ReadType = readType;
     }
 
     @Override
@@ -28,12 +35,12 @@ public class BqrKey
             return false;
 
         BqrKey otherKey = (BqrKey)other;
-        return matches(otherKey.Ref, otherKey.Alt, otherKey.Quality, otherKey.TrinucleotideContext);
+        return matches(otherKey.Ref, otherKey.Alt, otherKey.Quality, otherKey.TrinucleotideContext, otherKey.ReadType);
     }
 
-    public boolean matches(byte ref, byte alt, byte quality, byte[] trinucleotideContext)
+    public boolean matches(byte ref, byte alt, byte quality, byte[] trinucleotideContext, BqrReadType readType)
     {
-        if(Ref != ref || Alt != alt || Quality != quality)
+        if(Ref != ref || Alt != alt || Quality != quality || ReadType != readType)
             return false;
 
         return Arrays.equals(trinucleotideContext, TrinucleotideContext);
@@ -42,11 +49,11 @@ public class BqrKey
     @Override
     public int hashCode()
     {
-        int result = Objects.hash(Ref, Alt, Quality);
+        int result = Objects.hash(Ref, Alt, Quality, ReadType.ordinal());
         result = 31 * result + Arrays.hashCode(TrinucleotideContext);
         return result;
     }
 
-    public String toString() { return String.format("var(%c->%c) cxt(%s) qual(%d)",
-            (char)Ref, (char)Alt, TrinucleotideContext != null ? new String(TrinucleotideContext) : "", (int)Quality);}
+    public String toString() { return String.format("var(%c->%c) cxt(%s) qual(%d) type(%s)",
+            (char)Ref, (char)Alt, TrinucleotideContext != null ? new String(TrinucleotideContext) : "", (int)Quality, ReadType);}
 }

@@ -56,7 +56,7 @@ public class VariantFilters
     public VariantFilters(final SageConfig config)
     {
         mConfig = config.Filter;
-        mHighDepthMode = config.Quality.HighBaseMode;
+        mHighDepthMode = config.Quality.HighDepthMode;
         mReadEdgeDistanceThreshold = (int)(config.getReadLength() * MAX_READ_EDGE_DISTANCE_PERC);
         mFilterCounts = new int[HARD_FC_TUMOR_VAF+1];
     }

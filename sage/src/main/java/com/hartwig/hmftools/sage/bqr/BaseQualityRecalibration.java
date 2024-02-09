@@ -240,6 +240,17 @@ public class BaseQualityRecalibration
         // form regions from 2MB per chromosome and additionally include the coding panel
         Map<Chromosome,List<BaseRegion>> panelBed = !mPanelBedFile.isEmpty() ? loadBedFileChrMap(mPanelBedFile) : null;
 
+        if(!mConfig.SpecificChrRegions.Regions.isEmpty())
+        {
+            for(ChrBaseRegion region : mConfig.SpecificChrRegions.Regions)
+            {
+                regionTasks.add(new PartitionTask(new ChrBaseRegion(
+                        region.Chromosome, region.start() - REGION_SIZE, region.end() + REGION_SIZE - 1), taskId++));
+            }
+
+            return regionTasks;
+        }
+
         for(final SAMSequenceRecord sequenceRecord : mRefGenome.getSequenceDictionary().getSequences())
         {
             final String chromosome = sequenceRecord.getSequenceName();

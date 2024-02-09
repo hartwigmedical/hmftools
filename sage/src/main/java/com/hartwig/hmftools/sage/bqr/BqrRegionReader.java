@@ -3,8 +3,10 @@ package com.hartwig.hmftools.sage.bqr;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.extractUmiType;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.bqr.BqrConfig.useReadType;
 
 import java.util.Collection;
 import java.util.Map;
@@ -17,6 +19,7 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
@@ -50,6 +53,8 @@ public class BqrRegionReader implements CigarHandler
 
     private final PerformanceCounter mPerfCounter;
     private int mReadCounter;
+    private BqrReadType mCurrentReadType;
+    private final boolean mUseReadType;
 
     private static final CigarElement SINGLE = new CigarElement(1, CigarOperator.M);
     private static final byte N = (byte) 'N';
@@ -76,6 +81,9 @@ public class BqrRegionReader implements CigarHandler
 
         mPerfCounter = new PerformanceCounter("BaseQualBuild");
         mReadCounter = 0;
+
+        mUseReadType = useReadType(mConfig);
+        mCurrentReadType = BqrReadType.NONE;
     }
 
     public void initialise(final ChrBaseRegion region)
@@ -190,12 +198,20 @@ public class BqrRegionReader implements CigarHandler
         ++mReadCounter;
         setShortFragmentBoundaries(record);
 
+        if(mUseReadType)
+            mCurrentReadType = extractReadType(record);
+
         CigarTraversal.traverseCigar(record, this);
 
         if(mReadCounter > 0 && (mReadCounter % 1000) == 0)
         {
             purgeBaseDataList(record.getAlignmentStart());
         }
+    }
+
+    public static BqrReadType extractReadType(final SAMRecord record)
+    {
+        return BqrReadType.fromUmiType(extractUmiType(record));
     }
 
     private static final int SHORT_FRAG_BOUNDARY_NONE = -1;
@@ -259,7 +275,7 @@ public class BqrRegionReader implements CigarHandler
 
         byte ref = mIndexedBases.base(position);
         byte[] trinucleotideContext = mIndexedBases.trinucleotideContext(position);
-        BaseQualityData bqData = getOrCreateBaseQualData(position, ref, trinucleotideContext);
+        BaseQualityData bqData = getOrCreateBaseQualData(position, ref, trinucleotideContext, mCurrentReadType);
         bqData.setHasIndel();
     }
 
@@ -292,7 +308,7 @@ public class BqrRegionReader implements CigarHandler
             if(alt == N || !isValid(trinucleotideContext))
                 continue;
 
-            BaseQualityData baseQualityData = getOrCreateBaseQualData(position, ref, trinucleotideContext);
+            BaseQualityData baseQualityData = getOrCreateBaseQualData(position, ref, trinucleotideContext, mCurrentReadType);
             baseQualityData.processReadBase(alt, quality);
 
             if(mWriteReadData && ref != alt)
@@ -317,14 +333,15 @@ public class BqrRegionReader implements CigarHandler
         }
     }
 
-    protected BaseQualityData getOrCreateBaseQualData(int position, final byte ref, final byte[] trinucleotideContext)
+    protected BaseQualityData getOrCreateBaseQualData(
+            int position, final byte ref, final byte[] trinucleotideContext, final BqrReadType readType)
     {
         int posIndex = position - mRegion.start();
         BaseQualityData baseQualityData = mBaseQualityData[posIndex];
 
         if(baseQualityData == null)
         {
-            baseQualityData = new BaseQualityData(position, ref, trinucleotideContext);
+            baseQualityData = new BaseQualityData(position, ref, trinucleotideContext, readType);
             mBaseQualityData[posIndex] = baseQualityData;
             mMaxIndex = posIndex;
         }

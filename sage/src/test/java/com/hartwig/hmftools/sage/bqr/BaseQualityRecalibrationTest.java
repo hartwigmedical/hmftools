@@ -29,7 +29,7 @@ public class BaseQualityRecalibrationTest
         BqrKey key2 = createKey('A', 'A', 20, pos1);
         BqrKey key3 = createKey('A', 'G', 15, pos1); // a repeated alt
 
-        BaseQualityData bqData1 = bqrCounter.getOrCreateBaseQualData(pos1, key1.Ref, key1.TrinucleotideContext);
+        BaseQualityData bqData1 = bqrCounter.getOrCreateBaseQualData(pos1, key1.Ref, key1.TrinucleotideContext, BqrReadType.NONE);
 
         bqData1.processReadBase(key1.Alt, key1.Quality);
 
@@ -46,7 +46,7 @@ public class BaseQualityRecalibrationTest
         // repeated alt at different locations
         int pos2 = 150;
         BqrKey key4 = createKey('C', 'G', 25, pos2); // another repeated alt
-        BaseQualityData bqData2 = bqrCounter.getOrCreateBaseQualData(pos2, key4.Ref, key4.TrinucleotideContext);
+        BaseQualityData bqData2 = bqrCounter.getOrCreateBaseQualData(pos2, key4.Ref, key4.TrinucleotideContext, BqrReadType.NONE);
 
         for(int i = 0; i < 4; ++i)
         {
@@ -55,7 +55,7 @@ public class BaseQualityRecalibrationTest
 
         int pos3 = 200;
         BqrKey key5 = createKey('A', 'G', 20, pos3); // an alt but not repeated
-        BaseQualityData bqData3 = bqrCounter.getOrCreateBaseQualData(pos3, key5.Ref, key5.TrinucleotideContext);
+        BaseQualityData bqData3 = bqrCounter.getOrCreateBaseQualData(pos3, key5.Ref, key5.TrinucleotideContext, BqrReadType.NONE);
 
         bqData3.processReadBase(key5.Alt, key5.Quality);
 
