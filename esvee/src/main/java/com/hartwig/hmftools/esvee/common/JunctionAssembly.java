@@ -7,8 +7,10 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
+import static com.hartwig.hmftools.esvee.common.AssemblyUtils.findUnsetBases;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findRepeats;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
@@ -328,21 +330,29 @@ public class JunctionAssembly
         int newRefBaseCount = refBaseAssembly.validRefBaseLength();
         int existingRefBaseCount = refBaseLength();
 
-        if(newRefBaseCount <= existingRefBaseCount)
-            return;
+        if(newRefBaseCount > existingRefBaseCount)
+        {
+            if(isForwardJunction())
+                mMinAlignedPosition = refBaseAssembly.minAlignedPosition();
+            else
+                mMaxAlignedPosition = refBaseAssembly.maxAlignedPosition();
 
-        if(isForwardJunction())
-            mMinAlignedPosition = refBaseAssembly.minAlignedPosition();
-        else
-            mMaxAlignedPosition = refBaseAssembly.maxAlignedPosition();
+            int refBaseExtension = newRefBaseCount - existingRefBaseCount;
 
-        int refBaseExtension = newRefBaseCount - existingRefBaseCount;
-
-        extendBases(refBaseExtension, mMinAlignedPosition, mMaxAlignedPosition);
+            extendBases(refBaseExtension, mMinAlignedPosition, mMaxAlignedPosition);
+        }
 
         for(AssemblySupport support : refBaseAssembly.support())
         {
             addRead(support.read(), support.type(), true, null);
+        }
+
+        List<int[]> emptyBaseRanges = findUnsetBases(mBases);
+
+        if(!emptyBaseRanges.isEmpty())
+        {
+            SV_LOGGER.trace("assembly({}) refBases(existing={} new={}) empty ranges: {}",
+                    refBaseAssembly, existingRefBaseCount, newRefBaseCount, emptyBaseRanges);
         }
     }
 
@@ -459,21 +469,56 @@ public class JunctionAssembly
     public List<JunctionAssembly> branchedAssemblies() { return mBranchedAssemblies; }
 
     public JunctionAssembly(
-            final JunctionAssembly initialAssembly, final RefSideSoftClip refSideSoftClip, final Set<Read> excludedReads)
+            final JunctionAssembly initialAssembly, final RefSideSoftClip refSideSoftClip,
+            final List<AssemblySupport> initialSupport, final Set<Read> excludedReads)
     {
+        // build a junction assembly from an initial junction where the ref bases are truncated due to branching (likely short TI)
         mJunction = initialAssembly.junction();
-        mInitialRead = initialAssembly.initialRead(); // possible that this read isn't in the final assembly if it supports a different ref
 
-        mJunctionSequenceIndex = initialAssembly.junctionIndex();
+        // copy the initial assembly's extension bases and ref bases up to the ref-side soft clip
+        int extensionLength = initialAssembly.extensionLength();
+        int newBaseLength = extensionLength + abs(mJunction.Position - refSideSoftClip.Position) + 1;
+        int initialBaseLength = initialAssembly.baseLength();
 
-        mMinAlignedPosition = initialAssembly.minAlignedPosition();
-        mMaxAlignedPosition = initialAssembly.maxAlignedPosition();
+        int baseLengthDiff = initialBaseLength - newBaseLength;
 
-        mBases = new byte[initialAssembly.baseLength()];
-        mBaseQuals = new byte[initialAssembly.baseLength()];
+        mBases = new byte[newBaseLength];
+        mBaseQuals = new byte[newBaseLength];
 
-        mBases = copyArray(initialAssembly.bases());
-        mBaseQuals = copyArray(initialAssembly.baseQuals());
+        int assemblyIndexOffset = 0;
+
+        if(mJunction.isForward())
+        {
+            assemblyIndexOffset = baseLengthDiff;
+            mJunctionSequenceIndex = newBaseLength - extensionLength - 1;
+            mMinAlignedPosition = refSideSoftClip.Position;
+            mMaxAlignedPosition = initialAssembly.maxAlignedPosition();
+        }
+        else
+        {
+            mJunctionSequenceIndex = initialAssembly.junctionIndex();
+            mMinAlignedPosition = initialAssembly.minAlignedPosition();
+            mMaxAlignedPosition = refSideSoftClip.Position;
+        }
+
+        int assemblyIndex = assemblyIndexOffset;
+        for(int i = 0; i < mBases.length; ++i, ++assemblyIndex)
+        {
+            if(assemblyIndex < 0)
+            {
+                mBases[i] = 0;
+                mBaseQuals[i] = 0;
+            }
+            else
+            {
+                if(assemblyIndex >= initialAssembly.bases().length)
+                    break;
+
+                mBases[i] = initialAssembly.bases()[assemblyIndex];
+                mBaseQuals[i] = initialAssembly.baseQuals()[assemblyIndex];
+            }
+        }
+
         mSequenceMismatches = new SequenceMismatches();
 
         mSupport = Lists.newArrayList();
@@ -484,11 +529,34 @@ public class JunctionAssembly
         mMergedAssemblies = 0;
         mPrimaryPhaseGroup = null;
 
-        for(AssemblySupport support : initialAssembly.support())
+        Read initialRead = null;
+
+        for(AssemblySupport support : initialSupport)
         {
-            if(!excludedReads.contains(support.read()))
-                mSupport.add(support);
+            if(excludedReads.contains(support.read()))
+                continue;
+
+            // any reference mismatches aren't take since they were against the orginal assembly's ref bases
+            mSupport.add(new AssemblySupport(
+                    support.read(), support.type(), support.assemblyIndex(), support.junctionReadIndex(), support.readIndexRange(), support.junctionMismatches()));
+
+            if(support.read() == initialAssembly.initialRead())
+                initialRead = support.read();
         }
+
+        /*
+        int unsetBaseIndex = findUnsetBases(mBases);
+
+        if(unsetBaseIndex >= 0)
+        {
+            SV_LOGGER.debug("juncAssembly({}) has unset base from index({})", this, unsetBaseIndex);
+        }
+        */
+
+        if(initialRead == null && !mSupport.isEmpty())
+            initialRead = mSupport.get(0).read();
+
+        mInitialRead = initialRead;
     }
 
     public String toString()
@@ -497,6 +565,8 @@ public class JunctionAssembly
                 mJunction, mMinAlignedPosition, mMaxAlignedPosition, baseLength(), mJunctionSequenceIndex,
                 mSupport.size(), mSequenceMismatches.positionCount(), mSequenceMismatches.distinctBaseCount());
     }
+
+    public boolean hasUnsetBases() { return !findUnsetBases(mBases).isEmpty(); }
 
     public String formJunctionSequence()
     {

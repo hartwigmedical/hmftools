@@ -5,10 +5,12 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.common.AssemblyUtils.findUnsetBases;
 import static com.hartwig.hmftools.esvee.common.RefSideSoftClip.purgeRefSideSoftClips;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_DISCORDANT_READ;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_MATE;
@@ -176,9 +178,10 @@ public class AssemblyExtender
         }
 
         // now build out any distinct, branching assemblies from ref-base soft-clips
-
         List<Set<Read>> excludedReadsList = allocateExcludedReads(assembly, candidateNonJunctionReads);
+        List<AssemblySupport> initialSupport = Lists.newArrayList(assembly.support());
 
+        // the original assembly is handled first
         for(int i = 0; i < excludedReadsList.size(); ++i)
         {
             Set<Read> excludedReads = excludedReadsList.get(i);
@@ -193,6 +196,14 @@ public class AssemblyExtender
 
                 // first remove support from the main assembly
                 excludedReads.forEach(x -> assembly.removeSupportRead(x));
+
+                // and check if it
+                if(assembly.supportCount() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+                {
+                    mAssemblies.clear();
+                    continue;
+                }
+
                 extensionRefPosition = isForwardJunction ? minAlignedPosition : maxAlignedPosition;
             }
             else
@@ -202,7 +213,11 @@ public class AssemblyExtender
                 if(refSideSoftClip.matchesOriginal())
                     continue;
 
-                junctionAssembly = new JunctionAssembly(assembly, refSideSoftClip, excludedReads);
+                junctionAssembly = new JunctionAssembly(assembly, refSideSoftClip, initialSupport, excludedReads);
+
+                if(junctionAssembly.supportCount() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+                    continue;
+
                 extensionRefPosition = refSideSoftClip.Position;
             }
 
@@ -213,10 +228,18 @@ public class AssemblyExtender
             // only add branched assemblies if they have sufficient support
             if(junctionAssembly != assembly)
             {
-                if(refBaseAssembly.supportCount() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+                if(refBaseAssembly.supportCount() == 0)
                     continue;
 
                 junctionAssembly.mergeRefBaseAssembly(refBaseAssembly);
+
+                if(junctionAssembly.hasUnsetBases())
+                    continue;
+
+                // same criteria as above
+                if(junctionAssembly.supportCount() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+                    continue;
+
                 mAssemblies.add(junctionAssembly);
             }
             else
@@ -227,6 +250,8 @@ public class AssemblyExtender
 
             findRemoteRegions(junctionAssembly, excludedReads, discordantReads, remoteJunctionMates, suppJunctionReads);
         }
+
+        // apply filters again since read support may now be below required level
 
         // set references between them - for now just for TSV output
         for(JunctionAssembly junctionAssembly : mAssemblies)

@@ -35,8 +35,10 @@ public class RefBaseAssembly
     {
         mJunction = assembly.junction();
         mExtensionRefPosition = extensionRefPosition;
-        mMinAlignedPosition = mJunction.isForward() ? assembly.minAlignedPosition() : assembly.junction().Position;
-        mMaxAlignedPosition = mJunction.isReverse() ? assembly.maxAlignedPosition() : assembly.junction().Position;
+
+        // aligned positions will be set from supporting reads only, not assumed
+        mMinAlignedPosition = assembly.junction().Position;
+        mMaxAlignedPosition = assembly.junction().Position;
 
         int assemblyLength = abs(extensionRefPosition - mJunction.Position) + 1;
 

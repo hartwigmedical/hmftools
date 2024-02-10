@@ -207,7 +207,7 @@ public class AssemblyWriter
             sj.add(statString(readStats.BaseQualTotal, assembly.supportCount()));
             sj.add(statString(readStats.MapQualTotal, assembly.supportCount()));
 
-            sj.add(assembly.initialRead().getName());
+            sj.add(assembly.initialRead() != null ? assembly.initialRead().getName() : "NONE"); // shouldn't occur
 
             sj.add(repeatsInfoStr(assembly.repeatInfo()));
 
@@ -248,8 +248,16 @@ public class AssemblyWriter
                     .map(x -> String.valueOf(x.id())).collect(Collectors.joining(";"));
             sj.add(branchedAssemblyIds);
 
-            sj.add(assembly.formJunctionSequence());
-            sj.add(assembly.formRefBaseSequence(200)); // long enought to show most short TIs
+            if(assembly.hasUnsetBases())
+            {
+                sj.add("UNSET_BASES");
+                sj.add("UNSET_BASES");
+            }
+            else
+            {
+                sj.add(assembly.formJunctionSequence());
+                sj.add(assembly.formRefBaseSequence(200)); // long enought to show most short TIs
+            }
 
             mWriter.write(sj.toString());
             mWriter.newLine();

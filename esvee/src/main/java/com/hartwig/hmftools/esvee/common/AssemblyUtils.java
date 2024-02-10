@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public final class AssemblyUtils
@@ -163,5 +164,37 @@ public final class AssemblyUtils
             final byte first, final byte second, final byte firstQual, final byte secondQual, final int lowQualThreshold)
     {
         return first == second || firstQual < lowQualThreshold || secondQual < lowQualThreshold;
+    }
+
+    public static List<int[]> findUnsetBases(final byte[] bases)
+    {
+        List<int[]> emptyRanges = Lists.newArrayList();
+
+        int[] range = null;
+
+        for(int i = 0; i < bases.length; ++i)
+        {
+            if(bases[i] == 0)
+            {
+                if(range == null)
+                {
+                    range = new int[] {i, -1};
+                    emptyRanges.add(range);
+                }
+            }
+            else
+            {
+                if(range != null)
+                {
+                    range[1] = i - 1;
+                    range = null;
+                }
+            }
+        }
+
+        if(range != null)
+            range[1] = bases.length - 1;
+
+        return emptyRanges;
     }
 }
