@@ -16,26 +16,23 @@ import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
-import com.hartwig.hmftools.esvee.common.PrimaryPhaseGroup;
+import com.hartwig.hmftools.esvee.common.PhaseGroup;
 import com.hartwig.hmftools.esvee.common.RefSideSoftClip;
 import com.hartwig.hmftools.esvee.common.RemoteRegion;
-import com.hartwig.hmftools.esvee.common.SupportType;
-import com.hartwig.hmftools.esvee.read.Read;
 
 public class PhaseGroupBuilder
 {
     private final SvConfig mConfig;
     private final Map<String, List<JunctionGroup>> mJunctionGroupMap;
-    private final List<PrimaryPhaseGroup> mPrimaryPhaseGroups;
-    private int mMissingRemoteGroups;
+    private final List<PhaseGroup> mPhaseGroups;
 
     public PhaseGroupBuilder(final SvConfig config, final Map<String, List<JunctionGroup>> junctionGroupMap)
     {
         mConfig = config;
         mJunctionGroupMap = junctionGroupMap;
-        mPrimaryPhaseGroups = Lists.newArrayList();
-        mMissingRemoteGroups = 0;
+        mPhaseGroups = Lists.newArrayList();
 
+        // setting an index for each junction group allows easy access to an assembly's own group during look-ups
         for(List<JunctionGroup> junctionGroups : mJunctionGroupMap.values())
         {
             for(int index = 0; index < junctionGroups.size(); ++index)
@@ -63,32 +60,30 @@ public class PhaseGroupBuilder
                     if((processed % LOG_COUNT) == 0)
                     {
                         SV_LOGGER.debug("primary phasing processed {} assemblies, groups({})",
-                                processed, mPrimaryPhaseGroups.size());
+                                processed, mPhaseGroups.size());
                     }
                 }
             }
         }
 
-        for(int i = 0; i < mPrimaryPhaseGroups.size(); ++i)
+        for(int i = 0; i < mPhaseGroups.size(); ++i)
         {
-            mPrimaryPhaseGroups.get(i).setId(i);
+            mPhaseGroups.get(i).setId(i);
         }
 
-        // buildPhasedAssemblies();
+        buildPhasedAssemblies();
     }
 
-    public List<PrimaryPhaseGroup> primaryPhaseGroups() { return mPrimaryPhaseGroups; }
-    public int missingRemoteGroups() { return mMissingRemoteGroups; }
+    public List<PhaseGroup> primaryPhaseGroups() { return mPhaseGroups; }
 
     private void findLinkedAssemblies(final JunctionGroup assemblyJunctionGroup, final JunctionAssembly assembly)
     {
-        if(assembly.remoteRegions().isEmpty())
+        if(assembly.remoteRegions().isEmpty() && assembly.refSideSoftClips().isEmpty())
             return;
 
-        PrimaryPhaseGroup primaryPhaseGroup = assembly.primaryPhaseGroup(); // may have been set from an earlier assembly link
-        boolean linksWithExisting = primaryPhaseGroup != null;
-
-        Set<JunctionGroup> processedGroups = Sets.newHashSet();
+        PhaseGroup phaseGroup = assembly.phaseGroup(); // may have been set from an earlier assembly link
+        boolean linksWithExisting = phaseGroup != null;
+        boolean hasBranchedAssemblies = !assembly.branchedAssemblies().isEmpty();
 
         Set<JunctionGroup> linkedJunctionGroups = Sets.newHashSet();
 
@@ -100,10 +95,7 @@ public class PhaseGroupBuilder
             List<JunctionGroup> overlappingJunctions = findOverlappingJunctionGroups(assemblyJunctionGroup, region);
 
             if(overlappingJunctions == null)
-            {
-                ++mMissingRemoteGroups;
                 continue;
-            }
 
             linkedJunctionGroups.addAll(overlappingJunctions);
         }
@@ -118,68 +110,66 @@ public class PhaseGroupBuilder
             }
         }
 
+        if(hasBranchedAssemblies)
+            linkedJunctionGroups.add(assemblyJunctionGroup);
+
         for(JunctionGroup junctionGroup : linkedJunctionGroups)
         {
             // the matching to other assemblies for each of this assembly's remote groups is purely for informational purposes
             // but in time may be replaced by actual linking to all expected remote mate reads
-            boolean matched = false;
-
-            if(processedGroups.contains(junctionGroup))
-                continue;
-
-            processedGroups.add(junctionGroup);
 
             for(JunctionAssembly otherAssembly : junctionGroup.junctionAssemblies())
             {
                 if(assembly == otherAssembly)
                     continue;
 
-                if(primaryPhaseGroup != null && otherAssembly.primaryPhaseGroup() == primaryPhaseGroup)
+                if(phaseGroup != null && otherAssembly.phaseGroup() == phaseGroup)
                 {
                     // already linked
                     continue;
                 }
 
-                if(!assembliesShareReads(assembly, otherAssembly))
+                boolean branchedAssemblies = hasBranchedAssemblies && assembly.branchedAssemblies().contains(otherAssembly);
+
+                if(!branchedAssemblies && !assembliesShareReads(assembly, otherAssembly))
                     continue;
 
-                if(primaryPhaseGroup == null)
+                if(phaseGroup == null)
                 {
-                    if(otherAssembly.primaryPhaseGroup() != null)
+                    if(otherAssembly.phaseGroup() != null)
                     {
-                        primaryPhaseGroup = otherAssembly.primaryPhaseGroup();
-                        primaryPhaseGroup.addAssembly(assembly);
+                        phaseGroup = otherAssembly.phaseGroup();
+                        phaseGroup.addAssembly(assembly);
                         linksWithExisting = true;
                     }
                     else
                     {
-                        primaryPhaseGroup = new PrimaryPhaseGroup(assembly, otherAssembly);
+                        phaseGroup = new PhaseGroup(assembly, otherAssembly);
                     }
                 }
                 else
                 {
-                    if(otherAssembly.primaryPhaseGroup() != null)
+                    if(otherAssembly.phaseGroup() != null)
                     {
-                        if(otherAssembly.primaryPhaseGroup() != primaryPhaseGroup)
+                        if(otherAssembly.phaseGroup() != phaseGroup)
                         {
                             // transfer to the other one
-                            primaryPhaseGroup.assemblies().forEach(x -> otherAssembly.primaryPhaseGroup().addAssembly(x));
-                            primaryPhaseGroup = otherAssembly.primaryPhaseGroup();
+                            phaseGroup.assemblies().forEach(x -> otherAssembly.phaseGroup().addAssembly(x));
+                            phaseGroup = otherAssembly.phaseGroup();
                             linksWithExisting = true;
                         }
                     }
                     else
                     {
-                        primaryPhaseGroup.addAssembly(otherAssembly);
+                        phaseGroup.addAssembly(otherAssembly);
                     }
                 }
-
             }
         }
 
-        if(primaryPhaseGroup != null && !linksWithExisting)
+        if(phaseGroup != null && !linksWithExisting)
         {
-            mPrimaryPhaseGroups.add(primaryPhaseGroup);
+            mPhaseGroups.add(phaseGroup);
         }
     }
 
@@ -259,12 +249,12 @@ public class PhaseGroupBuilder
 
     private void buildPhasedAssemblies()
     {
-        for(PrimaryPhaseGroup phaseGroup : mPrimaryPhaseGroups)
+        for(PhaseGroup phaseGroup : mPhaseGroups)
         {
             // where there are more than 2 assemblies, start with the ones with the most support and overlapping junction reads
-            AssemblyOverlapper assemblyOverlapper = new AssemblyOverlapper(phaseGroup);
+            PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(phaseGroup);
 
-            assemblyOverlapper.buildPhasedAssembly();
+            phaseSetBuilder.buildPhaseSets();
         }
     }
 }

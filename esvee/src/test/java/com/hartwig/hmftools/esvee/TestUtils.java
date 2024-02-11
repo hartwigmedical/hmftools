@@ -21,6 +21,8 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.esvee.common.Junction;
+import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
 
 import htsjdk.samtools.SAMRecord;
@@ -65,6 +67,18 @@ public class TestUtils
 
             refGenome.RefGenomeMap.put(chr, bases);
         }
+    }
+
+    public static JunctionAssembly createAssembly(
+            final String chromosome, final int junctionPosition, final byte junctionOrientation,
+            final String assemblyBases, final int junctionIndex)
+    {
+        Junction junction = new Junction(chromosome, junctionPosition, junctionOrientation);
+
+        int baseLength = assemblyBases.length();
+        byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(baseLength);
+
+        return new JunctionAssembly(junction, assemblyBases.getBytes(), baseQuals, junctionIndex);
     }
 
     public static Read createSamRecord(final String readId, int readStart, final String readBases, final String cigar)

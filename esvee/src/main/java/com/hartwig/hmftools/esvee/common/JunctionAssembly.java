@@ -31,6 +31,8 @@ public class JunctionAssembly
     private final Read mInitialRead;
 
     private int mJunctionSequenceIndex; // position of the junction in the read bases
+
+    // aligned position on the extension side is an inferred position only
     private int mMinAlignedPosition;
     private int mMaxAlignedPosition;
 
@@ -45,7 +47,7 @@ public class JunctionAssembly
 
     private final List<RemoteRegion> mRemoteRegions;
 
-    private PrimaryPhaseGroup mPrimaryPhaseGroup;
+    private PhaseGroup mPhaseGroup;
 
     private final List<JunctionAssembly> mBranchedAssemblies;
 
@@ -76,7 +78,7 @@ public class JunctionAssembly
         mRemoteRegions = Lists.newArrayList();
         mBranchedAssemblies = Lists.newArrayList();
         mMergedAssemblies = 0;
-        mPrimaryPhaseGroup = null;
+        mPhaseGroup = null;
 
         addInitialRead(read);
     }
@@ -458,8 +460,8 @@ public class JunctionAssembly
     public List<RemoteRegion> remoteRegions() { return mRemoteRegions; }
     public void addRemoteRegions(final List<RemoteRegion> regions) { mRemoteRegions.addAll(regions); }
 
-    public PrimaryPhaseGroup primaryPhaseGroup() { return mPrimaryPhaseGroup; }
-    public void setPrimaryPhaseGroup(final PrimaryPhaseGroup primaryPhaseGroup) { mPrimaryPhaseGroup = primaryPhaseGroup; }
+    public PhaseGroup phaseGroup() { return mPhaseGroup; }
+    public void setPhaseGroup(final PhaseGroup phaseGroup) { mPhaseGroup = phaseGroup; }
 
     public void addBranchedAssembly(final JunctionAssembly assembly)
     {
@@ -527,7 +529,7 @@ public class JunctionAssembly
         mRemoteRegions = Lists.newArrayList();
         mBranchedAssemblies = Lists.newArrayList();
         mMergedAssemblies = 0;
-        mPrimaryPhaseGroup = null;
+        mPhaseGroup = null;
 
         Read initialRead = null;
 
@@ -543,15 +545,6 @@ public class JunctionAssembly
             if(support.read() == initialAssembly.initialRead())
                 initialRead = support.read();
         }
-
-        /*
-        int unsetBaseIndex = findUnsetBases(mBases);
-
-        if(unsetBaseIndex >= 0)
-        {
-            SV_LOGGER.debug("juncAssembly({}) has unset base from index({})", this, unsetBaseIndex);
-        }
-        */
 
         if(initialRead == null && !mSupport.isEmpty())
             initialRead = mSupport.get(0).read();
@@ -636,15 +629,25 @@ public class JunctionAssembly
 
     @VisibleForTesting
     public JunctionAssembly(
-            final Junction junction, final byte[] bases, final byte[] quals, final int minAlignedPosition, final int maxAlignedPosition)
+            final Junction junction, final byte[] bases, final byte[] quals, final int junctionIndex)
     {
         mJunction = junction;
         mInitialRead = null;
 
-        mJunctionSequenceIndex = junction.isForward() ? junction.Position - minAlignedPosition : maxAlignedPosition - junction.Position;
+        mJunctionSequenceIndex = junctionIndex;
 
-        mMinAlignedPosition = minAlignedPosition;
-        mMaxAlignedPosition = maxAlignedPosition;
+        // pos = 20, index = 10, length = 21, min align = 10, max align = 30
+
+        if(mJunction.isForward())
+        {
+            mMinAlignedPosition = mJunction.Position - junctionIndex;
+            mMaxAlignedPosition = mJunction.Position + (bases.length - junctionIndex) - 1;
+        }
+        else
+        {
+            mMinAlignedPosition = mJunction.Position - junctionIndex;
+            mMaxAlignedPosition = mJunction.Position + (bases.length - junctionIndex) - 1;
+        }
 
         mBases = copyArray(bases);
         mBaseQuals = copyArray(quals);

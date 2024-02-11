@@ -173,19 +173,19 @@ public class JunctionAssemblyTest
         byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(assemblyBases.length());
 
         JunctionAssembly assembly1 = new JunctionAssembly(
-                posJunction, assemblyBases.getBytes(), baseQuals, 40, 89);
+                posJunction, assemblyBases.getBytes(), baseQuals, 21); // was 40 - 89
 
         JunctionAssembly assembly2 = new JunctionAssembly(
-                posJunction, assemblyBases.getBytes(), baseQuals, 40, 89);
+                posJunction, assemblyBases.getBytes(), baseQuals, 21);
 
         JunctionAssembly assembly3 = new JunctionAssembly(
-                posJunction, assemblyBases.getBytes(), baseQuals, 40, 89);
+                posJunction, assemblyBases.getBytes(), baseQuals, 21);
 
         JunctionAssembly assembly4 = new JunctionAssembly(
-                posJunction, assemblyBases.getBytes(), baseQuals, 40, 89);
+                posJunction, assemblyBases.getBytes(), baseQuals, 21);
 
         JunctionAssembly assembly5 = new JunctionAssembly(
-                posJunction, assemblyBases.getBytes(), baseQuals, 40, 89);
+                posJunction, assemblyBases.getBytes(), baseQuals, 21);
 
         List<JunctionAssembly> assemblies = Lists.newArrayList(assembly1, assembly2, assembly3, assembly4, assembly5);
 

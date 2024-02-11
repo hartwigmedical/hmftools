@@ -154,7 +154,6 @@ public class SequenceTest
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats, -1);
 
         assertEquals(8, mismatches);
-
     }
 }
 

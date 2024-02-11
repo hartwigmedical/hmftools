@@ -35,8 +35,7 @@ public class AssemblyExtensionTest
         byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(refBases.length());
 
         String existingRefBases = refBases.substring(20, 41);
-        JunctionAssembly assembly = new JunctionAssembly(
-                posJunction, existingRefBases.getBytes(), baseQuals, 50, 70);
+        JunctionAssembly assembly = new JunctionAssembly(posJunction, existingRefBases.getBytes(), baseQuals, 10);
 
         RefBaseAssembly refBaseAssembly = new RefBaseAssembly(assembly, 40);
 
@@ -70,7 +69,7 @@ public class AssemblyExtensionTest
 
         Junction negJunction = new Junction(CHR_1, 60, NEG_ORIENT);
 
-        assembly = new JunctionAssembly(negJunction, existingRefBases.getBytes(), baseQuals, 50, 70);
+        assembly = new JunctionAssembly(negJunction, existingRefBases.getBytes(), baseQuals, 10); // was 50 -> 70
 
         refBaseAssembly = new RefBaseAssembly(assembly, 80);
 

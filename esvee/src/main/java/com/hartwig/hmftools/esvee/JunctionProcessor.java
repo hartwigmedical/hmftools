@@ -179,8 +179,7 @@ public class JunctionProcessor
 
         phaseGroupBuilder.buildGroups();
 
-        SV_LOGGER.info("phaseGroups count({}) missed({})",
-                phaseGroupBuilder.primaryPhaseGroups().size(), phaseGroupBuilder.missingRemoteGroups());
+        SV_LOGGER.info("phaseGroups count({})", phaseGroupBuilder.primaryPhaseGroups().size());
     }
 
     public void close()

@@ -29,7 +29,6 @@ import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.BaseMismatches;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.RefBaseAssembly;
 import com.hartwig.hmftools.esvee.common.RefSideSoftClip;
 import com.hartwig.hmftools.esvee.common.RemoteRegion;
 import com.hartwig.hmftools.esvee.common.RepeatInfo;
@@ -232,10 +231,10 @@ public class AssemblyWriter
 
             sj.add(remoteRegionInfoStr(assembly.remoteRegions()));
 
-            if(assembly.primaryPhaseGroup() != null)
+            if(assembly.phaseGroup() != null)
             {
-                sj.add(String.valueOf(assembly.primaryPhaseGroup().id()));
-                sj.add(String.valueOf(assembly.primaryPhaseGroup().assemblyCount()));
+                sj.add(String.valueOf(assembly.phaseGroup().id()));
+                sj.add(String.valueOf(assembly.phaseGroup().assemblyCount()));
             }
             else
             {
