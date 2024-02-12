@@ -13,21 +13,15 @@ public class BaseQualAdjustmentTest
     {
         double rawQual = 37;
         assertEquals(rawQual, BaseQualAdjustment.adjustBaseQual(rawQual + 1), 0.01);
-        // assertEquals(37, BaseQualAdjustment.adjustBaseQual(rawQual - 0.099));
-        // assertEquals(36, BaseQualAdjustment.adjustBaseQual(rawQual - 1));
-        assertEquals(rawQual, BaseQualAdjustment.adjustBaseQual(rawQual - 1.99), 0.01);
+        assertEquals(rawQual, BaseQualAdjustment.adjustBaseQual(rawQual - 1.49), 0.01);
 
         rawQual = 25;
         assertEquals(rawQual, BaseQualAdjustment.adjustBaseQual(rawQual + 1), 0.01);
-        // assertEquals(25, BaseQualAdjustment.adjustBaseQual(rawQual - 0.099));
-        // assertEquals(24, BaseQualAdjustment.adjustBaseQual(rawQual - 1));
-        assertEquals(rawQual, BaseQualAdjustment.adjustBaseQual(rawQual - 1.99), 0.01);
+        assertEquals(rawQual, BaseQualAdjustment.adjustBaseQual(rawQual - 1.49), 0.01);
 
         rawQual = 11;
         assertEquals(rawQual, BaseQualAdjustment.adjustBaseQual(rawQual + 1), 0.01);
-        // assertEquals(11, BaseQualAdjustment.adjustBaseQual(rawQual - 0.099));
-        // assertEquals(10, BaseQualAdjustment.adjustBaseQual(rawQual - 1));
-        assertEquals(rawQual, BaseQualAdjustment.adjustBaseQual(rawQual - 1.99), 0.01);
+        assertEquals(rawQual, BaseQualAdjustment.adjustBaseQual(rawQual - 1.49), 0.01);
 
         assertEquals(BASE_QUAL_MINIMUM, BaseQualAdjustment.adjustBaseQual(8.99));
 

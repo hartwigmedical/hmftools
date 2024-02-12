@@ -5,7 +5,7 @@ public class BaseQualAdjustment
     public static final byte BASE_QUAL_MINIMUM = 1; // zero is not handled by some downstream tools
     public static final int[] STANDARD_BASE_QUALS = { BASE_QUAL_MINIMUM, 11, 25, 37 };
 
-    public static final double BASE_QUAL_PERMITTED_DIFF_MAX = 2;
+    public static final double BASE_QUAL_PERMITTED_DIFF_MAX = 1.5;
 
     public static byte adjustBaseQual(final double baseQual) { return adjustBaseQual(STANDARD_BASE_QUALS, baseQual); }
 
