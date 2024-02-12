@@ -31,6 +31,7 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
@@ -168,9 +169,14 @@ public final class GermlineConversion
     }
 
     @NotNull
-    private static List<PurpleVariant> toSomaticVariants(@Nullable List<PurpleVariant> reportableGermlineVariants)
+    @VisibleForTesting
+    static List<PurpleVariant> toSomaticVariants(@Nullable List<PurpleVariant> reportableGermlineVariants)
     {
-        return reportableGermlineVariants != null ? reportableGermlineVariants : Lists.newArrayList();
+        return reportableGermlineVariants != null ? reportableGermlineVariants.stream()
+                .map(variant -> variant.variantCopyNumber() >= 0.5
+                        ? ImmutablePurpleVariant.builder().from(variant).subclonalLikelihood(0.0).build()
+                        : ImmutablePurpleVariant.builder().from(variant).subclonalLikelihood(1.0).build())
+                .collect(Collectors.toList()) : Lists.newArrayList();
     }
 
     @NotNull
