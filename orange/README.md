@@ -176,6 +176,7 @@ In addition to all germline SNV/Indel tumor drivers determined by [PURPLE](../pu
     1. Any hotspots that are not configured to be reported.
     2. Any hotspots that are filtered based on quality.
 - Potentially pathogenic germline deletions
+- Potentially pathogenic germline LOH events
 - Potentially pathogenic germline homozygous disruptions
 - Potentially pathogenic germline gene disruptions
 - Missed variant likelihood (MVLH) per gene, presenting the likelihood of missing a pathogenic variant in case there would have been one
@@ -231,9 +232,19 @@ investigate potential causes for QC failure.
 ## Version History and Download Links
 
 - Upcoming
+    - Clonal likelihood is set to 0 to 1 based on variant copy number when converting germline variants to somatic
+- [3.2.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.2.0)
+    - Support new ORANGE-datamodel (v2.3.0).
+    - Support germline deletions heterozygous in the tumor:
+        - Included in new section "Potentially pathogenic germline LOH events" on PDF report.
+        - Included in new fields `allGermlineLossOfHeterozygosities` and `reportableGermlineLossOfHeterozygosities` in the JSON.
+        - Converted to somatic LOH events when `convert_germline_to_somatic` parameter is provided.
+        - Changed titles of somatic LOH and germline losses on PDF report to accommodate these changes.
+    - Combine multiple germline loss calls for the same gene into one call.
+    - Merge germline and somatic losses when both exist for the same gene.
     - Bugfix: Simple clusters affecting no exons are now excluded when counting expected number of linx plots
     - Bugfix: ORANGE throws an exception in case a cancer type is resolved for isofox that does not exist in the gene distribution data.
-    - ORANGE throws an exception in case empty cuppa predictions are provided (cuppa output file is empty or is missing probabilities)  
+    - ORANGE throws an exception in case empty cuppa predictions are provided (cuppa output file is empty or is missing probabilities)
 - [3.1.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.1.0)
     - ORANGE report now shows the new CUPPA v2.0 visualization
     - New ORANGE-datamodel (v2.2.0) supports the tabular output from both CUPPA v2.0 and CUPPA v1.x
