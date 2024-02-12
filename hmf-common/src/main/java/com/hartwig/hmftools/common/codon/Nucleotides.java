@@ -2,17 +2,8 @@ package com.hartwig.hmftools.common.codon;
 
 public final class Nucleotides
 {
-    public static final char[] DNA_BASES = {'G', 'A', 'T', 'C'};
-
-    public static final byte[] DNA_BASE_BYTES = new byte[DNA_BASES.length];
-
-    static
-    {
-        for(int i = 0; i < DNA_BASES.length; ++i)
-        {
-            DNA_BASE_BYTES[i] = (byte)DNA_BASES[i];
-        }
-    }
+    public static final char[] DNA_BASES = {'A', 'C', 'G', 'T'};
+    public static final byte[] DNA_BASE_BYTES = { 65, 67, 71, 84 };
 
     public static char swapDnaBase(final char base)
     {
@@ -46,7 +37,7 @@ public final class Nucleotides
 
     public static boolean isValidDnaBase(final char base) { return base == 'G' || base == 'A' || base == 'T' || base == 'C'; }
 
-    public static String reverseStrandBases(final String bases)
+    public static String reverseComplementBases(final String bases)
     {
         // reverse and swap base pairs
         StringBuilder newBases = new StringBuilder();

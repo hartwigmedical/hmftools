@@ -22,7 +22,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 
 import java.util.List;
 
@@ -30,7 +30,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.CodingBaseData;
-import com.hartwig.hmftools.common.gene.TranscriptUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 
@@ -388,8 +387,8 @@ public class PmNeoEpitope extends NeoEpitope
 
         if(!posStrand)
         {
-            upBases = reverseStrandBases(upBases);
-            downBases = reverseStrandBases(downBases);
+            upBases = reverseComplementBases(upBases);
+            downBases = reverseComplementBases(downBases);
         }
 
         if(upOpenCodonBases > 0)

@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -17,7 +17,6 @@ import static com.hartwig.hmftools.common.codon.AminoAcidRna.STOP_SYMBOL;
 import static com.hartwig.hmftools.neo.NeoCommon.transcriptsToStr;
 
 import java.util.Set;
-import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -228,7 +227,7 @@ public abstract class NeoEpitope
             String upWildtypeBases = wildTypeUpExcerpt.Bases;
 
             if(strand(FS_UP) == NEG_STRAND)
-                upWildtypeBases = reverseStrandBases(upWildtypeBases);
+                upWildtypeBases = reverseComplementBases(upWildtypeBases);
 
             UpstreamWildTypeAcids = EpitopeUtils.getAminoAcids(trimIncompleteCodons(upWildtypeBases), true);
         }

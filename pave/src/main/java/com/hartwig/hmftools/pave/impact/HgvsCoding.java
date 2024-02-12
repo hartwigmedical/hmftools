@@ -3,7 +3,7 @@ package com.hartwig.hmftools.pave.impact;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.ENHANCER;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.NON_CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
@@ -138,7 +138,7 @@ public final class HgvsCoding
         if(codingContext.Strand == POS_STRAND)
             sb.append(bases);
         else
-            sb.append(reverseStrandBases(bases));
+            sb.append(reverseComplementBases(bases));
     }
 
     private static void formDeletion(final VariantData variant, final CodingContext codingContext, final StringBuilder sb)

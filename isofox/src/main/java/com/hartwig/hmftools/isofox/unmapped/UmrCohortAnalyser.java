@@ -584,7 +584,7 @@ public class UmrCohortAnalyser
         int posEnd = isStart ? exonBoundary + REF_EXONIC_BASE_LENGTH + 1 : exonBoundary;
         String refBases = mConfig.RefGenome.getBaseString(chromosome, posStart, posEnd);
 
-        return isStart ? Nucleotides.reverseStrandBases(refBases) : refBases;
+        return isStart ? Nucleotides.reverseComplementBases(refBases) : refBases;
     }
 
 }

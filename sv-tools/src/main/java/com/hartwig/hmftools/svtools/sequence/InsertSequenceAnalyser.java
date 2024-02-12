@@ -25,7 +25,6 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -139,7 +138,7 @@ public class InsertSequenceAnalyser
         // same orientations: the second SGL will read the insert sequence as forward compliment but in reverse order
 
         String firstSequence = sgl1.InsertSeq;
-        String secondSequence = sgl1.Orientation != sgl2.Orientation ? sgl2.InsertSeq : Nucleotides.reverseStrandBases(sgl2.InsertSeq);
+        String secondSequence = sgl1.Orientation != sgl2.Orientation ? sgl2.InsertSeq : Nucleotides.reverseComplementBases(sgl2.InsertSeq);
 
         MatchedBaseData matchData = findMatchData(firstSequence, secondSequence);
 
@@ -253,7 +252,7 @@ public class InsertSequenceAnalyser
             mWriter.write(String.format(",%s,%d,%d,%d",
                     svType, matchedBases.OverlapBases, matchedBases.Mismatches, matchedBases.MatchedIndex2));
 
-            String secondSequence = first.Orientation != next.Orientation ? next.InsertSeq : Nucleotides.reverseStrandBases(next.InsertSeq);
+            String secondSequence = first.Orientation != next.Orientation ? next.InsertSeq : Nucleotides.reverseComplementBases(next.InsertSeq);
 
             mWriter.write(String.format(",%d,%d,%s,%s,%s,%s",
                     first.InsertSeq.length(), next.InsertSeq.length(), first.RepeatType, next.RepeatType, first.InsertSeq, secondSequence));

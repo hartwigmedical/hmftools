@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.switchStream;
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.generateMappedCoords;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -103,16 +103,16 @@ public class NeoEpitopeData
         if(streamPerspective == FS_UP)
         {
             if(Orientations[FS_UP] == POS_ORIENT)
-                return Source.CodingBases[FS_UP] + reverseStrandBases(Source.CodingBases[FS_DOWN]);
+                return Source.CodingBases[FS_UP] + reverseComplementBases(Source.CodingBases[FS_DOWN]);
             else
-                return reverseStrandBases(Source.CodingBases[FS_DOWN]) + Source.CodingBases[FS_UP];
+                return reverseComplementBases(Source.CodingBases[FS_DOWN]) + Source.CodingBases[FS_UP];
         }
         else
         {
             if(Orientations[FS_DOWN] == POS_ORIENT)
-                return Source.CodingBases[FS_DOWN] + reverseStrandBases(Source.CodingBases[FS_UP]);
+                return Source.CodingBases[FS_DOWN] + reverseComplementBases(Source.CodingBases[FS_UP]);
             else
-                return reverseStrandBases(Source.CodingBases[FS_UP]) + Source.CodingBases[FS_DOWN];
+                return reverseComplementBases(Source.CodingBases[FS_UP]) + Source.CodingBases[FS_DOWN];
         }
     }
 
@@ -142,7 +142,7 @@ public class NeoEpitopeData
         }
         else
         {
-            return reverseStrandBases(Source.CodingBases[switchStream(streamPerspective)]);
+            return reverseComplementBases(Source.CodingBases[switchStream(streamPerspective)]);
         }
     }
 

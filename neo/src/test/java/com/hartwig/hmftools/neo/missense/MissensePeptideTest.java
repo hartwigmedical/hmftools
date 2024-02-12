@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.neo.missense;
 
 import static com.hartwig.hmftools.common.codon.AminoAcids.AMINO_ACID_TO_CODON_MAP;
-import static com.hartwig.hmftools.common.codon.Codons.START_CODON;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_CODON_1;
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
@@ -31,7 +30,7 @@ public class MissensePeptideTest
 
         String aminoAcids = "MACDEFGHIK";
         String codingBases = getCodingBases(aminoAcids) + STOP_CODON_1;
-        String revCodingBases = Nucleotides.reverseStrandBases(codingBases);
+        String revCodingBases = Nucleotides.reverseComplementBases(codingBases);
         String refBases = generateRandomBases(16) + revCodingBases.substring(0, 5) + generateRandomBases(9) +
                 revCodingBases.substring(5, 16) + generateRandomBases(9) + revCodingBases.substring(16, 27)
                 + generateRandomBases(9) + revCodingBases.substring(27, 33) + generateRandomBases(30);
@@ -55,15 +54,15 @@ public class MissensePeptideTest
         assertEquals(75, first.Position);
         assertEquals("CAT", first.Context);
         assertEquals('T', first.RefBase);
-        assertEquals('C', first.AltBase);
-        assertEquals("VAC", first.Peptide);
+        assertEquals('G', first.AltBase);
+        assertEquals("LAC", first.Peptide);
 
         MissensePeptide last = calcs.peptideData().get(calcs.peptideData().size() - 1);
         assertEquals(11, last.CodonIndex);
         assertEquals(16, last.Position);
         assertEquals("TTA", last.Context);
         assertEquals('T', last.RefBase);
-        assertEquals('G', last.AltBase);
+        assertEquals('A', last.AltBase);
         assertEquals("IKY", last.Peptide);
 
         for(MissensePeptide missensePeptide : calcs.peptideData())
@@ -112,10 +111,5 @@ public class MissensePeptideTest
         }
 
         return bases;
-    }
-
-    private static String getCodon(final String aminoAcid)
-    {
-        return AMINO_ACID_TO_CODON_MAP.get(aminoAcid).get(0);
     }
 }

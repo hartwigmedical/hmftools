@@ -170,13 +170,13 @@ public class TestUtils
             // keep the first read's bases in the 5' to 3' direction
             if(junctionOrientStart == POS_ORIENT)
             {
-                readBases = basesStart + Nucleotides.reverseStrandBases(basesEnd);
-                suppBases = basesEnd + Nucleotides.reverseStrandBases(basesStart);
+                readBases = basesStart + Nucleotides.reverseComplementBases(basesEnd);
+                suppBases = basesEnd + Nucleotides.reverseComplementBases(basesStart);
             }
             else
             {
-                readBases = Nucleotides.reverseStrandBases(basesEnd) + basesStart;
-                suppBases = Nucleotides.reverseStrandBases(basesStart) + basesEnd;
+                readBases = Nucleotides.reverseComplementBases(basesEnd) + basesStart;
+                suppBases = Nucleotides.reverseComplementBases(basesStart) + basesEnd;
             }
         }
 

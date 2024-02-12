@@ -3,7 +3,7 @@ package com.hartwig.hmftools.pave;
 import static com.hartwig.hmftools.common.codon.Codons.START_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.START_CODON;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_CODON_1;
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
@@ -23,6 +22,7 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOS
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_GAINED;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
+import static com.hartwig.hmftools.pave.ImpactTestUtils.generateTestBases;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.getAminoAcidCodon;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.getAminoAcidsCodons;
 import static com.hartwig.hmftools.pave.impact.ProteinUtils.getExtraBases;
@@ -56,19 +56,19 @@ public class ProteinImpactTest
         // construct an exon with specific amino acids
         int preGene = 10;
         int prePostCoding = 10;
-        String refBases = generateRandomBases(preGene);
+        String refBases = generateTestBases(preGene);
 
         // pos codons: M 20-22, A 23-25, C 26-28, D 29-31, L 32-34, L 35-37, G 38-40, H 41-43, E 44-46, stopX 47-49
         // M  A  C  D  L  L  G  H  E  X
         // ATGGCTTGTGACTTATTAGGACACGAGTAA
 
-        refBases += generateRandomBases(prePostCoding);
+        refBases += generateTestBases(prePostCoding);
         String codingBases = getAminoAcidCodon(START_AMINO_ACID);
         codingBases += getAminoAcidsCodons("ACDLLGHE", false);
         codingBases += STOP_CODON_1;
 
         refBases += codingBases;
-        refBases += generateRandomBases(preGene);
+        refBases += generateTestBases(preGene);
 
         int transStart = preGene;
         int codingStart = transStart + prePostCoding;
@@ -80,11 +80,11 @@ public class ProteinImpactTest
                 codingStart, codingEnd, false, "");
 
         int nextRand = 100 - transEnd;
-        refBases += generateRandomBases(nextRand - 1);
+        refBases += generateTestBases(nextRand - 1);
 
-        refBases += generateRandomBases(preGene);
-        refBases += reverseStrandBases(codingBases);
-        refBases += generateRandomBases(preGene);
+        refBases += generateTestBases(preGene);
+        refBases += reverseComplementBases(codingBases);
+        refBases += generateTestBases(preGene);
 
         transStart = transEnd + nextRand;
         codingStart = transStart + prePostCoding;
@@ -374,20 +374,20 @@ public class ProteinImpactTest
     {
         int preGene = 10;
         int prePostCoding = 10;
-        String refBases = generateRandomBases(preGene);
+        String refBases = generateTestBases(preGene);
 
         // codons: M 20-22, G 23-25, P 26-28, P 29-31, H 32-34, L 35-37, stopX
         // M  G  P  H  L  X
         // ATGGGACCCCACTTATAA
         // 20
 
-        refBases += generateRandomBases(prePostCoding);
+        refBases += generateTestBases(prePostCoding);
         String codingBases = getAminoAcidCodon(START_AMINO_ACID);
         codingBases += "GGACCCCCCCACTTA"; // G, P, P, H, L
         codingBases += STOP_CODON_1;
 
         refBases += codingBases;
-        refBases += generateRandomBases(preGene);
+        refBases += generateTestBases(preGene);
 
         mRefGenome.RefGenomeMap.put(CHR_2, refBases);
 
@@ -430,17 +430,17 @@ public class ProteinImpactTest
     {
         int preGene = 10;
         int prePostCoding = 10;
-        String refBases = generateRandomBases(preGene);
+        String refBases = generateTestBases(preGene);
 
         // codons: X 20-22, K 23-25, K 26-28, K 29-31, M 32-34
         // ATT TTTTTTTGC CAT
         // 20
 
-        refBases += generateRandomBases(prePostCoding);
+        refBases += generateTestBases(prePostCoding);
         String codingBases = "ATTTTTTTTTGCCAT"; // M, A, K, K, X
 
         refBases += codingBases;
-        refBases += generateRandomBases(preGene);
+        refBases += generateTestBases(preGene);
 
         mRefGenome.RefGenomeMap.put(CHR_2, refBases);
 
@@ -465,15 +465,15 @@ public class ProteinImpactTest
         // assertEquals("p.Ala5fs", impact.proteinContext().Hgvs);
 
         // test 2: inframe deletion of 2 codons leading up to exon boundary
-        refBases = generateRandomBases(preGene);
+        refBases = generateTestBases(preGene);
 
-        refBases += generateRandomBases(preGene);
-        refBases += reverseStrandBases(STOP_CODON_1);
+        refBases += generateTestBases(preGene);
+        refBases += reverseComplementBases(STOP_CODON_1);
         refBases += getAminoAcidsCodons("GHC", true);
-        refBases += generateRandomBases(preGene); // intron
+        refBases += generateTestBases(preGene); // intron
         refBases += getAminoAcidsCodons("LRD", true);
-        refBases += reverseStrandBases(START_CODON);
-        refBases += generateRandomBases(preGene);
+        refBases += reverseComplementBases(START_CODON);
+        refBases += generateTestBases(preGene);
 
         int codingLength = 8 * 3;
 
@@ -524,11 +524,11 @@ public class ProteinImpactTest
         String negAlt;
 
         if(var.isInsert())
-            negAlt = negRef + reverseStrandBases(alt.substring(1));
+            negAlt = negRef + reverseComplementBases(alt.substring(1));
         else if(var.isDeletion())
             negAlt = negRef.substring(0, 1);
         else
-            negAlt = reverseStrandBases(alt);
+            negAlt = reverseComplementBases(alt);
 
         VariantData varNeg = new VariantData(CHR_1, negPos, negRef, negAlt);
 
@@ -556,7 +556,7 @@ public class ProteinImpactTest
 
         ImpactClassifier classifier = new ImpactClassifier(refGenome);
 
-        String chr1Bases = generateRandomBases(300);
+        String chr1Bases = generateTestBases(300);
 
         // set the specific AAs for a region of this mock ref genome
         // S: TCA -> TCG - so last base of codon can change
@@ -633,18 +633,18 @@ public class ProteinImpactTest
 
         // coding starts at 250 so codons start at 250, 247, 244 etc
         // still change the AA sequence S, I then L - for the range 239-241, 242-244 and 245-247
-        String aminoAcidSeqRev = reverseStrandBases(aminoAcidSeq);
+        String aminoAcidSeqRev = reverseComplementBases(aminoAcidSeq);
         chr1Bases = chr1Bases.substring(0, 239) + aminoAcidSeqRev + chr1Bases.substring(248);
         refGenome.RefGenomeMap.put(CHR_1, chr1Bases);
 
         codonPos = 242;
         codon = chr1Bases.substring(codonPos, codonPos + 3);
-        aminoAcid = AminoAcids.findAminoAcidForCodon(reverseStrandBases(codon));
+        aminoAcid = AminoAcids.findAminoAcidForCodon(reverseComplementBases(codon));
 
         // change last base of a codon, which is the first base
         alt = "A";
         synCodon = alt + chr1Bases.substring(codonPos + 1, codonPos + 3);
-        assertTrue(aminoAcid.equals(AminoAcids.findAminoAcidForCodon(reverseStrandBases(synCodon))));
+        assertTrue(aminoAcid.equals(AminoAcids.findAminoAcidForCodon(reverseComplementBases(synCodon))));
 
         pos = 242;
         ref = chr1Bases.substring(pos, pos + 1);
@@ -665,14 +665,14 @@ public class ProteinImpactTest
         // test a MNV spanning 3 codons as before
         pos = 241;
         ref = chr1Bases.substring(pos, pos + 5);
-        alt = reverseStrandBases("G" + "ATT" + "C");
+        alt = reverseComplementBases("G" + "ATT" + "C");
         var = new VariantData(CHR_1, pos, ref, alt);
 
         impact = classifier.classifyVariant(var, transDataNeg);
         assertEquals(SYNONYMOUS, impact.topEffect());
 
         // and missense
-        alt = reverseStrandBases("G" + "AAT" + "C");
+        alt = reverseComplementBases("G" + "AAT" + "C");
         var = new VariantData(CHR_1, pos, ref, alt);
 
         impact = classifier.classifyVariant(var, transDataNeg);
@@ -684,7 +684,7 @@ public class ProteinImpactTest
     {
         final MockRefGenome refGenome = new MockRefGenome();
 
-        String chr1Bases = generateRandomBases(100);
+        String chr1Bases = generateTestBases(100);
         refGenome.RefGenomeMap.put(CHR_1, chr1Bases);
 
         int[] exonStarts = { 10, 30, 50, 70};

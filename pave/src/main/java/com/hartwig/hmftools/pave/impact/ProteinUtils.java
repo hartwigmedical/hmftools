@@ -4,7 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.codon.Codons.aminoAcidFromBases;
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
@@ -159,7 +159,7 @@ public final class ProteinUtils
         }
         else
         {
-            pc.RefAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.RefCodonBases));
+            pc.RefAminoAcids = aminoAcidFromBases(reverseComplementBases(pc.RefCodonBases));
         }
 
         pc.AltCodonBasesComplete = pc.AltCodonBases;
@@ -202,7 +202,7 @@ public final class ProteinUtils
         }
         else
         {
-            pc.AltAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.AltCodonBasesComplete));
+            pc.AltAminoAcids = aminoAcidFromBases(reverseComplementBases(pc.AltCodonBasesComplete));
         }
 
         // extend the range of up and downstream codons for INDELs to help determine the net differences in amino acids
@@ -260,8 +260,8 @@ public final class ProteinUtils
                         pc.AltCodonBases += upstreamBases;
                         pc.AltCodonBasesComplete += upstreamBases;
 
-                        pc.RefAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.RefCodonBases));
-                        pc.AltAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.AltCodonBasesComplete));
+                        pc.RefAminoAcids = aminoAcidFromBases(reverseComplementBases(pc.RefCodonBases));
+                        pc.AltAminoAcids = aminoAcidFromBases(reverseComplementBases(pc.AltCodonBasesComplete));
                     }
                 }
             }
@@ -306,8 +306,8 @@ public final class ProteinUtils
                 String refDownstreamBases = downstreamBases.substring(downstreamAltOpenCodonBases);
                 pc.RefCodonBasesExtended = refDownstreamBases + pc.RefCodonBases;
                 pc.AltCodonBasesComplete = downstreamBases + pc.AltCodonBases;
-                pc.RefAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.RefCodonBasesExtended));
-                pc.AltAminoAcids = aminoAcidFromBases(reverseStrandBases(pc.AltCodonBasesComplete));
+                pc.RefAminoAcids = aminoAcidFromBases(reverseComplementBases(pc.RefCodonBasesExtended));
+                pc.AltAminoAcids = aminoAcidFromBases(reverseComplementBases(pc.AltCodonBasesComplete));
             }
 
             if(!pc.RefAminoAcids.equals(pc.AltAminoAcids))
@@ -449,7 +449,7 @@ public final class ProteinUtils
 
         String extraAminoAcids = posStrand
                 ? aminoAcidFromBases(downstreamBases)
-                : aminoAcidFromBases(reverseStrandBases(downstreamBases));
+                : aminoAcidFromBases(reverseComplementBases(downstreamBases));
 
         String extendedRefAminoAcids = pc.RefAminoAcids.charAt(1) + extraAminoAcids;
 

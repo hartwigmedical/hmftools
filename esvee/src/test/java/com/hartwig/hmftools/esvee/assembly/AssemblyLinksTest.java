@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
@@ -108,13 +108,13 @@ public class AssemblyLinksTest
         Junction firstJunction = new Junction(CHR_1, 100, POS_ORIENT);
         Junction secondJunction = new Junction(CHR_1, 200, POS_ORIENT);
 
-        String firstExtensionBases = reverseStrandBases(secondRefBases.substring(20, 100));
+        String firstExtensionBases = reverseComplementBases(secondRefBases.substring(20, 100));
         String firstAssemblyBases = firstRefBases + firstExtensionBases;
         byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(firstAssemblyBases.length());
 
         JunctionAssembly firstAssembly = new JunctionAssembly(firstJunction, firstAssemblyBases.getBytes(), baseQuals, 99);
 
-        String secondExtensionBases = reverseStrandBases(firstRefBases.substring(20, 100));
+        String secondExtensionBases = reverseComplementBases(firstRefBases.substring(20, 100));
         String secondAssemblyBases = secondRefBases + secondExtensionBases;
 
         JunctionAssembly secondAssembly = new JunctionAssembly(secondJunction, secondAssemblyBases.getBytes(), baseQuals, 99);
@@ -139,7 +139,7 @@ public class AssemblyLinksTest
 
         firstAssembly = new JunctionAssembly(firstJunction, firstAssemblyBases.getBytes(), baseQuals, 99);
 
-        secondAssemblyBases = secondRefBases + reverseStrandBases(insertedBases) + secondExtensionBases;
+        secondAssemblyBases = secondRefBases + reverseComplementBases(insertedBases) + secondExtensionBases;
 
         secondAssembly = new JunctionAssembly(secondJunction, secondAssemblyBases.getBytes(), baseQuals, 99);
 

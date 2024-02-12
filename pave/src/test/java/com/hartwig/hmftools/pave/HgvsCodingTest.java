@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
+import static com.hartwig.hmftools.pave.ImpactTestUtils.generateTestBases;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 
 import static junit.framework.TestCase.assertEquals;
@@ -89,7 +89,7 @@ public class HgvsCodingTest
 
         MockRefGenome refGenome = new MockRefGenome();
 
-        String refBases = generateRandomBases(20) + refCodingBases1 + intronicBases + refCodingBases2 + generateRandomBases(20);
+        String refBases = generateTestBases(20) + refCodingBases1 + intronicBases + refCodingBases2 + generateTestBases(20);
         refGenome.RefGenomeMap.put(CHR_1, refBases);
         ImpactClassifier classifier = new ImpactClassifier(refGenome);
 

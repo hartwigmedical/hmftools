@@ -127,7 +127,7 @@ public final class ReadUtils
 
     public static byte[] reverseBytes(final byte[] bases)
     {
-        String reversed = Nucleotides.reverseStrandBases(new String(bases));
+        String reversed = Nucleotides.reverseComplementBases(new String(bases));
         return reversed.getBytes();
     }
 
