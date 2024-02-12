@@ -5,6 +5,9 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.extractUmiType;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractConsensusType;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.bqr.BqrConfig.useReadType;
 
@@ -53,8 +56,10 @@ public class BqrRegionReader implements CigarHandler
 
     private final PerformanceCounter mPerfCounter;
     private int mReadCounter;
+
     private BqrReadType mCurrentReadType;
     private final boolean mUseReadType;
+    private final SequencingType mSequencingType;
 
     private static final CigarElement SINGLE = new CigarElement(1, CigarOperator.M);
     private static final byte N = (byte) 'N';
@@ -73,6 +78,10 @@ public class BqrRegionReader implements CigarHandler
         mRecordWriter = recordWriter;
         mWriteReadData = mRecordWriter.enabled();
 
+        mUseReadType = useReadType(mConfig);
+        mCurrentReadType = BqrReadType.NONE;
+        mSequencingType = mConfig.Sequencing.Type;
+
         mBaseQualityData = null;
         mQualityCounts = Sets.newHashSet();
         mKeyCountsMap = Maps.newHashMap();
@@ -81,9 +90,6 @@ public class BqrRegionReader implements CigarHandler
 
         mPerfCounter = new PerformanceCounter("BaseQualBuild");
         mReadCounter = 0;
-
-        mUseReadType = useReadType(mConfig);
-        mCurrentReadType = BqrReadType.NONE;
     }
 
     public void initialise(final ChrBaseRegion region)
@@ -196,10 +202,11 @@ public class BqrRegionReader implements CigarHandler
     public void processRecord(final SAMRecord record)
     {
         ++mReadCounter;
+
         setShortFragmentBoundaries(record);
 
         if(mUseReadType)
-            mCurrentReadType = extractReadType(record);
+            mCurrentReadType = extractReadType(record, mSequencingType);
 
         CigarTraversal.traverseCigar(record, this);
 
@@ -209,9 +216,12 @@ public class BqrRegionReader implements CigarHandler
         }
     }
 
-    public static BqrReadType extractReadType(final SAMRecord record)
+    public static BqrReadType extractReadType(final SAMRecord record, final SequencingType sequencingType)
     {
-        return BqrReadType.fromUmiType(extractUmiType(record));
+        if(sequencingType == SequencingType.ILLUMINA)
+            return BqrReadType.fromUmiType(extractUmiType(record));
+        else
+            return BqrReadType.fromUltimaType(extractConsensusType(record));
     }
 
     private static final int SHORT_FRAG_BOUNDARY_NONE = -1;
@@ -303,6 +313,10 @@ public class BqrRegionReader implements CigarHandler
             byte ref = mIndexedBases.base(position);
             byte alt = record.getReadBases()[readIndex];
             byte quality = record.getBaseQualities()[readIndex];
+
+            if(mSequencingType == ULTIMA && quality != ULTIMA_MAX_QUAL)
+                continue;
+
             byte[] trinucleotideContext = mIndexedBases.trinucleotideContext(position);
 
             if(alt == N || !isValid(trinucleotideContext))

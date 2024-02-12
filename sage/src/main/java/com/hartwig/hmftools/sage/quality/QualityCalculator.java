@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.sage.bqr.BqrConfig.useReadType;
 import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.bqr.BqrReadType;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
@@ -23,6 +24,7 @@ public class QualityCalculator
     private final BqrRecordMap mQualityRecalibrationMap;
     private final IndexedBases mRefBases;
     private final boolean mUseReadType;
+    private final SequencingType mSequencingType;
 
     private static final int MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY = 10;
 
@@ -31,6 +33,7 @@ public class QualityCalculator
     {
         mConfig = config.Quality;
         mUseReadType = useReadType(config);
+        mSequencingType = config.Sequencing.Type;
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mRefBases = refBases;
     }
@@ -121,7 +124,7 @@ public class QualityCalculator
     private double recalibratedBaseQuality(
             final ReadContextCounter readContextCounter, int startReadIndex, final SAMRecord record, int length)
     {
-        BqrReadType readType = mUseReadType ? extractReadType(record) : BqrReadType.NONE;
+        BqrReadType readType = mUseReadType ? extractReadType(record, mSequencingType) : BqrReadType.NONE;
 
         if(readContextCounter.isSnv())
         {
