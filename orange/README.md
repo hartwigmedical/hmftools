@@ -231,6 +231,8 @@ investigate potential causes for QC failure.
 
 ## Version History and Download Links
 
+- Upcoming
+    - Clonal likelihood is set to 0 to 1 based on variant copy number when converting germline variants to somatic
 - [3.2.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.2.0)
     - Support new ORANGE-datamodel (v2.3.0).
     - Support germline deletions heterozygous in the tumor:
@@ -242,7 +244,7 @@ investigate potential causes for QC failure.
     - Merge germline and somatic losses when both exist for the same gene.
     - Bugfix: Simple clusters affecting no exons are now excluded when counting expected number of linx plots
     - Bugfix: ORANGE throws an exception in case a cancer type is resolved for isofox that does not exist in the gene distribution data.
-    - ORANGE throws an exception in case empty cuppa predictions are provided (cuppa output file is empty or is missing probabilities)  
+    - ORANGE throws an exception in case empty cuppa predictions are provided (cuppa output file is empty or is missing probabilities)
 - [3.1.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.1.0)
     - ORANGE report now shows the new CUPPA v2.0 visualization
     - New ORANGE-datamodel (v2.2.0) supports the tabular output from both CUPPA v2.0 and CUPPA v1.x
