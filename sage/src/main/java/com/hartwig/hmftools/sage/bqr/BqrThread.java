@@ -27,7 +27,7 @@ public class BqrThread extends Thread
 
     public BqrThread(
             final SageConfig config, final IndexedFastaSequenceFile refGenome, final String bamFile,
-            final Queue<PartitionTask> regions, final BaseQualityResults results)
+            final Queue<PartitionTask> regions, final BaseQualityResults results, final BqrRecordWriter recordWriter)
     {
         mRefGenome = refGenome;
         mConfig = config;
@@ -39,7 +39,7 @@ public class BqrThread extends Thread
                 .referenceSource(new ReferenceSource(mRefGenome))
                 .open(new File(bamFile));
 
-        mRegionCounter = new BqrRegionReader(mConfig, mBamReader, mRefGenome, mResults);
+        mRegionCounter = new BqrRegionReader(mConfig, mBamReader, mRefGenome, mResults, recordWriter);
 
         start();
     }

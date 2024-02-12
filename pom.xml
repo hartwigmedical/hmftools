@@ -70,23 +70,23 @@
         <esvee.version>1.0</esvee.version>
         <fastq-tools.version>1.0</fastq-tools.version>
         <gene-utils.version>1.1</gene-utils.version>
-        <gripss.version>2.4</gripss.version>
+        <gripss.version>3.0</gripss.version>
         <health-checker.version>3.5</health-checker.version>
         <hmf-id-generator.version>3.1</hmf-id-generator.version>
         <isofox.version>1.7.1</isofox.version>
         <lilac.version>1.6</lilac.version>
-        <linx.version>1.25</linx.version>
+        <linx.version>2.0</linx.version>
         <mark-dups.version>1.1</mark-dups.version>
         <neo.version>1.2</neo.version>
-        <orange.version>3.1.0</orange.version>
-        <orange-datamodel.version>2.2.0</orange-datamodel.version>
+        <orange.version>3.2.0</orange.version>
+        <orange-datamodel.version>2.3.0</orange-datamodel.version>
         <paddle.version>1.1</paddle.version>
         <patient-db.version>5.34</patient-db.version>
         <pave.version>1.6</pave.version>
-        <purple.version>4.0</purple.version>
-        <sage.version>3.4</sage.version>
-        <sigs.version>1.2</sigs.version>
-        <sv-prep.version>1.2.3</sv-prep.version>
+        <purple.version>4.0.1</purple.version>
+        <sage.version>3.5</sage.version>
+        <sigs.version>1.2.1</sigs.version>
+        <sv-prep.version>1.3</sv-prep.version>
         <sv-tools.version>1.0</sv-tools.version>
         <teal.version>1.2.1</teal.version>
         <virus-interpreter.version>1.4</virus-interpreter.version>

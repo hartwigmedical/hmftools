@@ -93,9 +93,9 @@ public class DoubleMinuteTest
         LinxTester tester = new LinxTester();
 
         // the main DM structure, with open breakends
-        SvVarData var1 = createTestSv(tester.nextVarId(),"1","2",1000,100,-1,1, BND,8);
+        SvVarData var1 = createTestSv(tester.nextVarId(),"1","2",1001,100,-1,1, BND,8);
         SvVarData var2 = createTestSv(tester.nextVarId(),"1","2",20000,200,1,-1, BND,8);
-        SvVarData var3 = createTestSv(tester.nextVarId(),"1","1",2000,10000,1,-1, DEL,8);
+        SvVarData var3 = createTestSv(tester.nextVarId(),"1","1",2000,10001,1,-1, DEL,8);
         SvVarData var4 = createTestSv(tester.nextVarId(),"1","1",11000,16000,1,-1, DEL,8);
 
         tester.AllVariants.addAll(Lists.newArrayList(var1, var2, var3, var4));

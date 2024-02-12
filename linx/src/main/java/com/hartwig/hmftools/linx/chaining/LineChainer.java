@@ -214,7 +214,7 @@ public class LineChainer implements CohortFileInterface
 
                     possiblePairs.add(newPair);
 
-                    if(shortestPair == null || newPair.length() < shortestPair.length())
+                    if(shortestPair == null || newPair.positionDistance() < shortestPair.positionDistance())
                         shortestPair = newPair;
                 }
 
@@ -235,7 +235,7 @@ public class LineChainer implements CohortFileInterface
 
                         possiblePairs.add(newPair);
 
-                        if(shortestPair == null || newPair.length() < shortestPair.length())
+                        if(shortestPair == null || newPair.positionDistance() < shortestPair.positionDistance())
                             shortestPair = newPair;
                     }
                 }

@@ -9,8 +9,6 @@ import java.util.Set;
 import java.util.function.BiFunction;
 
 import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.util.CommonUtils;
-import com.hartwig.hmftools.esvee.util.NaturalSortComparator;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;

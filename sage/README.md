@@ -610,7 +610,6 @@ Variant calling Improvements
 - **Relative Tumor Normal RawBQ filter** - may not be appropriate for difficult indels Eg. GIABvsSELF0004T  ​​9:139429959 TGGGAGTGGGTGG>T finds support in normal, but not raw support so we fail to filter.
 - **MNV calling near qual cutoffs** - Occasionally 2 variants may individually PASS but the combined MNV may fail filters.  Impact is very limited since we will phase anyway.   An example is COLO829v003T 13:5559855 TCA>CAT (which narrowly fails qual filtering but the component SNVs PASS).
 - **Germline INDEL with core overlapping somatic SNV/MNV may be called as somatic** - Since the CORE will not be found in the reference sequence.  The calling of the somatic SNV may also be confounded.   
-- **DEDUP one vs many** - We have only implemented DEDUP logic for 1 vs 1 variants.  We could also check against combinations in the same local phase set.
 - **Support for MT chromosome & ALT contigs** - For now we only support chromosomes 1-22, X & Y.
 - **Hard filter settings** - These should potentially be set much higher for FFPE samples to improve performance and reduce memory and file size. SAGE would ideally detect this internally and dynamically set the optimal filter.
 - **Optionally rescue based on RNA reference sample support** - If RNA is run, we should have the option of rescuing variants from minTumorQual support failure using qual from RNA.
@@ -620,11 +619,17 @@ Variant calling Improvements
 - **Event penalty** - We currently have an event penalty which reduces MAPQ by 7 for every ‘event’ in a read.   This means we have reduced sensitivity for highly clustered variants and no sensitivity where there are more than 6 events in a 150 base window.  The penalty on soft clips also decreases sensitivity near genuine SV.
 - **Complex events in key cancer genes** - Any messy read profile is likely to be something interesting if it falls within a well known cancer gene.  We should make sure not to miss any of these
 - **BQR based on read position** - some library preparations have strong positional biases.  Adjusting for this would reduce FP.
-- **BQR at long palindromicsequences** - some library preparations frequently have errors in palindromic regions.  Adjusting for this would reduce FP.
+- **BQR at long palindromic sequences** - some library preparations frequently have errors in palindromic regions.  Adjusting for this would reduce FP.
 - **Germline filtering for very long core regions** - If the core is very long we may have insufficient coverage in the germline to filter.
 - **Low VAF FP in high depth regions for samples with high C>A DNA damage** - Some samples may have severe degradation of C>A in certain mutation contexts sometimes affecting greater than 1% of all fragments.  Whilst we do adjust against this with BQR, for very high depth regions we may still call FP mutations with very low VAF
-- **Low MAPQ** - Sage penalises low MAPQ reads harshly.   No truth set is available in these regions, so it is unclear whether this behaviour is the correct decision.
+- **Low MAPQ** - Sage penalises low MAPQ reads harshly. No truth set is available in these regions, so it is unclear whether this behaviour is the correct decision.
 - **Rel Raw Base Qual Filter** - Base qual from matching soft clipped bases does not count to rel raw base qual and can lead to germline variants passing as somatic, if all supporting reads in the germline are only found in soft clipping.  We have observed this in HLA genes (where alignments are frequently soft clipped)
+- **SNV base qual downstream of long homopolymer with insert** - If a sample has a germline extension of a long homopolymer, a somatic SNV immediately downstream of the homopolymer that extends it will have different QUAL characteristics for forward and reverse stranded reads, due to the left-alignment convention for indels. Specifically, the negative strand should use a different base for variant qual.
+- **Read core consistency between strands** - Due to the left-alignment convention for indels, equivalent variants on reverse-complemented sequences do not necessarily cause equivalent cores to be produced.
+- **Better handle large novel INDELs outside microsatellites** - the existing QUAL model understates the rarity of these occurring as artefacts, and therefore we are not as sensitive calling these as we could be
+- **Better MNV handling** - we don't consider that multiple high quality SNVs in a row may imply multiple adjacent sequencing or upstream errors in our QUAL model, and so have scope to be more sensitive here
+- **Better site filtering for BQR** - reads with a high number of max qual errors, or sites with a heavily strand biased alt, are unlikely to reflect genuine sequencing errors, so excluding them should make our qual recalibration more accurate.
+- **Adding strand context to BQR** - Recalibration accuracy could be improved if we combined reverse complemented contexts into one, and had separate recalibrated quals for forward and reverse strand to reflect different sequencing idiosyncracies
 
 Phasing improvements
 - **Only first tumor sample is currently phased** - Reference and additional tumor samples are not utilised for phasing

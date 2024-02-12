@@ -30,7 +30,9 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.esvee.SvConstants.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.SvConstants.SV_PREP_JUNCTIONS_FILE_ID;
-import static com.hartwig.hmftools.esvee.WriteType.VCF;
+import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLY_BAM;
+import static com.hartwig.hmftools.esvee.output.WriteType.READS;
+import static com.hartwig.hmftools.esvee.output.WriteType.VCF;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -44,6 +46,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.output.WriteType;
 import com.hartwig.hmftools.esvee.read.Read;
 
 import org.apache.logging.log4j.LogManager;
@@ -149,13 +152,18 @@ public class SvConfig
 
             if(writeTypesStr.equals(WriteType.ALL))
             {
-                Arrays.stream(WriteType.values()).forEach(x -> WriteTypes.add(x));
+                Arrays.stream(WriteType.values()).filter(x -> x != READS).forEach(x -> WriteTypes.add(x));
             }
             else
             {
                 String[] writeTypes = writeTypesStr.split(ITEM_DELIM, -1);
                 Arrays.stream(writeTypes).forEach(x -> WriteTypes.add(WriteType.valueOf(x)));
             }
+        }
+        else
+        {
+            WriteTypes.add(VCF);
+            WriteTypes.add(ASSEMBLY_BAM);
         }
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
@@ -183,6 +191,11 @@ public class SvConfig
         VcfFile = vcfFile != null ? vcfFile : outputFilename(VCF);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
+
+        if(!SpecificChrRegions.hasFilters() && WriteTypes.contains(READS))
+        {
+            SV_LOGGER.warn("writing assembly reads to TSV without region filtering may result in large output files & impact performance");
+        }
 
         mLogReadIds = parseLogReadIds(configBuilder);
         mCheckLogReadIds = !mLogReadIds.isEmpty();
@@ -223,6 +236,17 @@ public class SvConfig
         filename += "." + writeType.fileId();
 
         return filename;
+    }
+
+    public static String osExtension()
+    {
+        final String osName = System.getProperty("os.name");
+        if(osName.contains("Mac"))
+            return ".dylib";
+        else if(osName.contains("Win"))
+            return ".dll";
+        else
+            return ".so";
     }
 
     public void logReadId(final SAMRecord record, final String caller)

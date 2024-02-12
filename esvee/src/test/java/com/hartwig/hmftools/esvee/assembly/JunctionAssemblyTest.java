@@ -142,8 +142,8 @@ public class JunctionAssemblyTest
         assertEquals(39, firstSequence.maxAlignedPosition());
         assertEquals(0, firstSequence.mismatches().positionCount());
 
-        String firstBases = firstSequence.formSequence(5);
-        assertEquals("TTTTCCTTGG" + refBases.substring(20, 26), firstBases);
+        String firstBases = firstSequence.formJunctionSequence(5);
+        assertEquals("TTTTCCTTGG" + refBases.substring(20, 25), firstBases);
 
         JunctionAssembly secondSequence = allSequences.stream().filter(x -> x.initialRead() == read1).findFirst().orElse(null);
 
@@ -152,8 +152,8 @@ public class JunctionAssemblyTest
         assertEquals(39, secondSequence.maxAlignedPosition());
         assertEquals(0, secondSequence.mismatches().positionCount());
 
-        String secondBases = secondSequence.formSequence(5);
-        assertEquals("AACCGGGG" + refBases.substring(20, 26), secondBases);
+        String secondBases = secondSequence.formJunctionSequence(5);
+        assertEquals("AACCGGGG" + refBases.substring(20, 25), secondBases);
 
     }
 

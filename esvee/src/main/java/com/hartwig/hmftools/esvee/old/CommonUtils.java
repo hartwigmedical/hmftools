@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.util;
+package com.hartwig.hmftools.esvee.old;
 
 public final class CommonUtils
 {
@@ -13,20 +13,6 @@ public final class CommonUtils
         return leftStart <= rightEnd && leftEnd >= rightStart;
     }
 
-    public static byte[] reverseBytes(final byte[] bytes)
-    {
-        if(bytes == null)
-            return null;
-
-        final byte[] reversed = new byte[bytes.length];
-        for(int i = 0; i < bytes.length; i++)
-        {
-            reversed[reversed.length - i - 1] = bytes[i];
-        }
-
-        return reversed;
-    }
-
     public static String formatNanos(final long nanoseconds)
     {
         final String[] unitNames = new String[] { "ns", "us", "ms", "sec", "min", "hr", "days" };
@@ -39,16 +25,5 @@ public final class CommonUtils
             time /= divisors[unitIndex++];
 
         return String.format("%.2f %s", time, unitNames[unitIndex]);
-    }
-
-    public static String osExtension()
-    {
-        final String osName = System.getProperty("os.name");
-        if(osName.contains("Mac"))
-            return ".dylib";
-        else if(osName.contains("Win"))
-            return ".dll";
-        else
-            return ".so";
     }
 }

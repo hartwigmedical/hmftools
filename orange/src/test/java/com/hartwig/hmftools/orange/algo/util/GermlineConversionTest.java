@@ -14,12 +14,15 @@ import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
+import com.hartwig.hmftools.datamodel.purple.PurpleLossOfHeterozygosity;
 import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
@@ -27,6 +30,8 @@ import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleGainLossFactory;
+import com.hartwig.hmftools.orange.algo.purple.TestPurpleGeneCopyNumberFactory;
+import com.hartwig.hmftools.orange.algo.purple.TestPurpleLossOfHeterozygosityFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleQCFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
@@ -38,6 +43,10 @@ import org.junit.Test;
 public class GermlineConversionTest
 {
     private static final double EPSILON = 1.0E-10;
+    private static final String TEST_GENE1 = "gene1";
+    private static final String TEST_GENE2 = "gene2";
+    private static final String TEST_TRANSCRIPT1 = "transcript1";
+    private static final String TEST_TRANSCRIPT2 = "transcript2";
 
     @Test
     public void wipesAllGermlineUponConversion()
@@ -96,14 +105,23 @@ public class GermlineConversionTest
         PurpleGainLoss somaticGainLoss = TestPurpleGainLossFactory.builder().build();
         PurpleGainLoss reportableSomaticGainLoss = TestPurpleGainLossFactory.builder().build();
         PurpleGainLoss reportableGermlineFullLoss = TestPurpleGainLossFactory.builder().build();
+        PurpleLossOfHeterozygosity reportableGermlineLOH =
+                TestPurpleLossOfHeterozygosityFactory.builder().gene(TEST_GENE1).minCopies(0.8).build();
+        PurpleGeneCopyNumber geneCopyNumberForGermlineLOH =
+                TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE1).minCopyNumber(2.0).minMinorAlleleCopyNumber(0.9).build();
+        PurpleGeneCopyNumber suspectSomaticGeneCopyNumberWithLOH = TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE2).build();
 
         PurpleDriver somaticDriver = PurpleDriverTestFactory.builder().type(PurpleDriverType.AMP).build();
         PurpleDriver germlineMutationDriver = PurpleDriverTestFactory.builder().type(PurpleDriverType.GERMLINE_MUTATION).build();
+        PurpleDriver germlineHomozygousDeletionDriver =
+                PurpleDriverTestFactory.builder().type(PurpleDriverType.GERMLINE_DELETION).build();
+        PurpleDriver germlineHeterozygousDeletionDriver =
+                PurpleDriverTestFactory.builder().type(PurpleDriverType.GERMLINE_DELETION).gene(TEST_GENE1).build();
 
         PurpleRecord purple = TestPurpleInterpretationFactory.builder()
                 .fit(createWithGermlineAberration())
                 .addSomaticDrivers(somaticDriver)
-                .addGermlineDrivers(germlineMutationDriver)
+                .addGermlineDrivers(germlineMutationDriver, germlineHomozygousDeletionDriver, germlineHeterozygousDeletionDriver)
                 .addAllSomaticVariants(somaticVariant, suspectSomaticVariant, reportableSomaticVariant)
                 .addReportableSomaticVariants(reportableSomaticVariant)
                 .addAdditionalSuspectSomaticVariants(suspectSomaticVariant)
@@ -113,15 +131,19 @@ public class GermlineConversionTest
                 .addAllSomaticGainsLosses(somaticGainLoss, reportableSomaticGainLoss)
                 .addReportableSomaticGainsLosses(reportableSomaticGainLoss)
                 .addReportableGermlineFullLosses(reportableGermlineFullLoss)
+                .addSuspectGeneCopyNumbersWithLOH(suspectSomaticGeneCopyNumberWithLOH)
+                .addReportableGermlineLossOfHeterozygosities(reportableGermlineLOH)
+                .addAllSomaticGeneCopyNumbers(geneCopyNumberForGermlineLOH)
                 .build();
 
         PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
 
         assertTrue(converted.fit().qc().germlineAberrations().isEmpty());
 
-        assertEquals(2, converted.somaticDrivers().size());
+        assertEquals(3, converted.somaticDrivers().size());
         assertNotNull(findByDriverType(converted.somaticDrivers(), PurpleDriverType.AMP));
         assertNotNull(findByDriverType(converted.somaticDrivers(), PurpleDriverType.MUTATION));
+        assertNotNull(findByDriverType(converted.somaticDrivers(), PurpleDriverType.DEL));
 
         assertEquals(4, converted.allSomaticVariants().size());
         assertTrue(converted.allSomaticVariants().contains(reportableGermlineVariant));
@@ -140,6 +162,12 @@ public class GermlineConversionTest
         assertTrue(converted.reportableSomaticGainsLosses().contains(reportableSomaticGainLoss));
         assertTrue(converted.reportableSomaticGainsLosses().contains(reportableGermlineFullLoss));
 
+        assertEquals(2, converted.suspectGeneCopyNumbersWithLOH().size());
+        assertTrue(converted.suspectGeneCopyNumbersWithLOH().contains(suspectSomaticGeneCopyNumberWithLOH));
+        PurpleGeneCopyNumber convertedReportableGermlineLOH =
+                TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE1).minCopyNumber(0.8).minMinorAlleleCopyNumber(0.).build();
+        assertTrue(converted.suspectGeneCopyNumbersWithLOH().contains(convertedReportableGermlineLOH));
+
         PurpleRecord unreliableConverted = GermlineConversion.convertPurpleGermline(false, purple);
         assertEquals(1, unreliableConverted.somaticDrivers().size());
         assertNotNull(findByDriverType(unreliableConverted.somaticDrivers(), PurpleDriverType.AMP));
@@ -149,6 +177,414 @@ public class GermlineConversionTest
 
         assertEquals(1, unreliableConverted.reportableSomaticGainsLosses().size());
         assertTrue(unreliableConverted.reportableSomaticGainsLosses().contains(reportableSomaticGainLoss));
+    }
+
+    @Test
+    public void mergesGermlineLOHIfAlreadySomaticLOH()
+    {
+        PurpleGeneCopyNumber suspectSomaticGeneCopyNumberWithLOH =
+                TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE1).minCopyNumber(0.7).minMinorAlleleCopyNumber(0.1).build();
+
+        PurpleLossOfHeterozygosity germlineLOH = TestPurpleLossOfHeterozygosityFactory.builder().gene(TEST_GENE1).minCopies(0.8).build();
+        PurpleGeneCopyNumber geneCopyNumber =
+                TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE1).minCopyNumber(2.0).minMinorAlleleCopyNumber(0.9).build();
+        PurpleDriver germlineDriver = PurpleDriverTestFactory.builder().type(PurpleDriverType.GERMLINE_DELETION).gene(TEST_GENE1).build();
+
+        PurpleRecord purple = TestPurpleInterpretationFactory.builder()
+                .fit(createWithGermlineAberration())
+                .addGermlineDrivers(germlineDriver)
+                .addReportableSomaticGainsLosses()
+                .addSuspectGeneCopyNumbersWithLOH(suspectSomaticGeneCopyNumberWithLOH)
+                .addReportableGermlineLossOfHeterozygosities(germlineLOH)
+                .addAllSomaticGeneCopyNumbers(geneCopyNumber)
+                .build();
+
+        PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
+
+        assertEquals(0, converted.somaticDrivers().size());
+
+        assertEquals(1, converted.suspectGeneCopyNumbersWithLOH().size());
+        assertEquals(0.7, converted.suspectGeneCopyNumbersWithLOH().get(0).minCopyNumber(), EPSILON);
+        assertEquals(0., converted.suspectGeneCopyNumbersWithLOH().get(0).minMinorAlleleCopyNumber(), EPSILON);
+    }
+
+    @Test
+    public void doesNotConvertGermlineLOHIfAlsoGermlineFullLoss()
+    {
+        PurpleGainLoss reportableGermlineFullLoss = TestPurpleGainLossFactory.builder().gene(TEST_GENE1).build();
+
+        PurpleLossOfHeterozygosity germlineLOH = TestPurpleLossOfHeterozygosityFactory.builder().gene(TEST_GENE1).minCopies(0.8).build();
+        PurpleGeneCopyNumber geneCopyNumber =
+                TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE1).minCopyNumber(2.0).minMinorAlleleCopyNumber(0.9).build();
+        PurpleDriver germlineDriver = PurpleDriverTestFactory.builder().type(PurpleDriverType.GERMLINE_DELETION).gene(TEST_GENE1).build();
+
+        PurpleRecord purple = TestPurpleInterpretationFactory.builder()
+                .fit(createWithGermlineAberration())
+                .addGermlineDrivers(germlineDriver)
+                .addReportableSomaticGainsLosses()
+                .addReportableGermlineFullLosses(reportableGermlineFullLoss)
+                .addReportableGermlineLossOfHeterozygosities(germlineLOH)
+                .addAllSomaticGeneCopyNumbers(geneCopyNumber)
+                .build();
+
+        PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
+
+        assertEquals(1, converted.somaticDrivers().size());
+        PurpleDriver convertedDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.DEL)
+                .gene(TEST_GENE1)
+                .likelihoodMethod(PurpleLikelihoodMethod.DEL)
+                .build();
+        assertTrue(converted.somaticDrivers().contains(convertedDriver));
+
+        assertEquals(0, converted.suspectGeneCopyNumbersWithLOH().size());
+    }
+
+    @Test
+    public void doesNotConvertGermlineLOHIfAlsoFullLossInTumor()
+    {
+        PurpleLossOfHeterozygosity germlineLOH = TestPurpleLossOfHeterozygosityFactory.builder().gene(TEST_GENE1).minCopies(0.8).build();
+        PurpleGeneCopyNumber geneCopyNumber =
+                TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE1).minCopyNumber(0.3).minMinorAlleleCopyNumber(0.).build();
+        PurpleDriver germlineDriver = PurpleDriverTestFactory.builder().type(PurpleDriverType.GERMLINE_DELETION).gene(TEST_GENE1).build();
+
+        PurpleRecord purple = TestPurpleInterpretationFactory.builder()
+                .fit(createWithGermlineAberration())
+                .addGermlineDrivers(germlineDriver)
+                .addReportableSomaticGainsLosses()
+                .addReportableGermlineLossOfHeterozygosities(germlineLOH)
+                .addAllSomaticGeneCopyNumbers(geneCopyNumber)
+                .build();
+
+        PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
+
+        assertEquals(0, converted.somaticDrivers().size());
+        assertEquals(0, converted.suspectGeneCopyNumbersWithLOH().size());
+    }
+
+    @Test
+    public void convertsMultipleHeterozygousGermlineDeletionsCorrectly()
+    {
+        PurpleLossOfHeterozygosity germlineLOH1 = TestPurpleLossOfHeterozygosityFactory.builder().gene(TEST_GENE1).minCopies(0.8).build();
+        PurpleLossOfHeterozygosity germlineLOH2 = TestPurpleLossOfHeterozygosityFactory.builder().gene(TEST_GENE1).minCopies(0.9).build();
+        PurpleGeneCopyNumber geneCopyNumber =
+                TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE1).minCopyNumber(2.0).minMinorAlleleCopyNumber(0.9).build();
+        PurpleDriver germlineDriver = PurpleDriverTestFactory.builder().type(PurpleDriverType.GERMLINE_DELETION).gene(TEST_GENE1).build();
+
+        PurpleRecord purple = TestPurpleInterpretationFactory.builder()
+                .fit(createWithGermlineAberration())
+                .addGermlineDrivers(germlineDriver)
+                .addReportableSomaticGainsLosses()
+                .addReportableGermlineLossOfHeterozygosities(germlineLOH1, germlineLOH2)
+                .addAllSomaticGeneCopyNumbers(geneCopyNumber)
+                .build();
+
+        PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
+
+        assertEquals(0, converted.somaticDrivers().size());
+
+        assertEquals(1, converted.suspectGeneCopyNumbersWithLOH().size());
+        PurpleGeneCopyNumber convertedGeneCopyNumber =
+                TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE1).minCopyNumber(0.8).minMinorAlleleCopyNumber(0.).build();
+        assertTrue(converted.suspectGeneCopyNumbersWithLOH().contains(convertedGeneCopyNumber));
+    }
+
+    @Test
+    public void mergesSomaticAndGermlinePartialLosses()
+    {
+        PurpleDriver somaticDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.DEL)
+                .likelihoodMethod(PurpleLikelihoodMethod.DEL)
+                .gene(TEST_GENE1)
+                .build();
+        PurpleGainLoss somaticLoss = TestPurpleGainLossFactory.builder()
+                .gene(TEST_GENE1)
+                .interpretation(CopyNumberInterpretation.PARTIAL_LOSS)
+                .transcript(TEST_TRANSCRIPT1)
+                .minCopies(0.1)
+                .maxCopies(1.0)
+                .build();
+
+        PurpleDriver germlineDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.GERMLINE_DELETION)
+                .likelihoodMethod(PurpleLikelihoodMethod.GERMLINE)
+                .gene(TEST_GENE1)
+                .build();
+        PurpleGainLoss germlineLoss = TestPurpleGainLossFactory.builder()
+                .gene(TEST_GENE1)
+                .interpretation(CopyNumberInterpretation.PARTIAL_LOSS)
+                .transcript(TEST_TRANSCRIPT1)
+                .minCopies(0.2)
+                .maxCopies(0.9)
+                .build();
+
+        PurpleRecord purple = TestPurpleInterpretationFactory.builder()
+                .fit(createWithGermlineAberration())
+                .addSomaticDrivers(somaticDriver)
+                .addGermlineDrivers(germlineDriver)
+                .addReportableSomaticGainsLosses(somaticLoss)
+                .addReportableGermlineFullLosses(germlineLoss)
+                .build();
+
+        PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
+
+        assertEquals(1, converted.somaticDrivers().size());
+        assertEquals(somaticDriver, converted.somaticDrivers().get(0));
+
+        assertEquals(1, converted.reportableSomaticGainsLosses().size());
+        assertEquals(0.1, converted.reportableSomaticGainsLosses().get(0).minCopies(), EPSILON);
+        assertEquals(1.0, converted.reportableSomaticGainsLosses().get(0).maxCopies(), EPSILON);
+        assertEquals(CopyNumberInterpretation.PARTIAL_LOSS, converted.reportableSomaticGainsLosses().get(0).interpretation());
+    }
+
+    @Test
+    public void mergesSomaticAndGermlineFullLosses()
+    {
+        PurpleDriver somaticDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.DEL)
+                .likelihoodMethod(PurpleLikelihoodMethod.DEL)
+                .gene(TEST_GENE1)
+                .build();
+        PurpleGainLoss somaticLoss = TestPurpleGainLossFactory.builder()
+                .gene(TEST_GENE1)
+                .interpretation(CopyNumberInterpretation.FULL_LOSS)
+                .transcript(TEST_TRANSCRIPT1)
+                .minCopies(0.1)
+                .maxCopies(0.3)
+                .build();
+
+        PurpleDriver germlineDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.GERMLINE_DELETION)
+                .likelihoodMethod(PurpleLikelihoodMethod.GERMLINE)
+                .gene(TEST_GENE1)
+                .build();
+        PurpleGainLoss germlineLoss = TestPurpleGainLossFactory.builder()
+                .gene(TEST_GENE1)
+                .interpretation(CopyNumberInterpretation.FULL_LOSS)
+                .transcript(TEST_TRANSCRIPT1)
+                .minCopies(0.2)
+                .maxCopies(0.4)
+                .build();
+
+        PurpleRecord purple = TestPurpleInterpretationFactory.builder()
+                .fit(createWithGermlineAberration())
+                .addSomaticDrivers(somaticDriver)
+                .addGermlineDrivers(germlineDriver)
+                .addReportableSomaticGainsLosses(somaticLoss)
+                .addReportableGermlineFullLosses(germlineLoss)
+                .build();
+
+        PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
+
+        assertEquals(1, converted.somaticDrivers().size());
+        assertEquals(somaticDriver, converted.somaticDrivers().get(0));
+
+        assertEquals(1, converted.reportableSomaticGainsLosses().size());
+        assertEquals(0.1, converted.reportableSomaticGainsLosses().get(0).minCopies(), EPSILON);
+        assertEquals(0.4, converted.reportableSomaticGainsLosses().get(0).maxCopies(), EPSILON);
+        assertEquals(CopyNumberInterpretation.FULL_LOSS, converted.reportableSomaticGainsLosses().get(0).interpretation());
+    }
+
+    @Test
+    public void mergesSomaticPartialAndGermlineFullLoss()
+    {
+        PurpleDriver somaticDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.DEL)
+                .likelihoodMethod(PurpleLikelihoodMethod.DEL)
+                .gene(TEST_GENE1)
+                .build();
+        PurpleGainLoss somaticLoss = TestPurpleGainLossFactory.builder()
+                .gene(TEST_GENE1)
+                .interpretation(CopyNumberInterpretation.PARTIAL_LOSS)
+                .transcript(TEST_TRANSCRIPT1)
+                .minCopies(0.1)
+                .maxCopies(1.0)
+                .build();
+
+        PurpleDriver germlineDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.GERMLINE_DELETION)
+                .likelihoodMethod(PurpleLikelihoodMethod.GERMLINE)
+                .gene(TEST_GENE1)
+                .build();
+        PurpleGainLoss germlineLoss = TestPurpleGainLossFactory.builder()
+                .gene(TEST_GENE1)
+                .interpretation(CopyNumberInterpretation.FULL_LOSS)
+                .transcript(TEST_TRANSCRIPT1)
+                .minCopies(0.2)
+                .maxCopies(0.4)
+                .build();
+
+        PurpleRecord purple = TestPurpleInterpretationFactory.builder()
+                .fit(createWithGermlineAberration())
+                .addSomaticDrivers(somaticDriver)
+                .addGermlineDrivers(germlineDriver)
+                .addReportableSomaticGainsLosses(somaticLoss)
+                .addReportableGermlineFullLosses(germlineLoss)
+                .build();
+
+        PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
+
+        assertEquals(1, converted.somaticDrivers().size());
+        assertEquals(somaticDriver, converted.somaticDrivers().get(0));
+
+        assertEquals(1, converted.reportableSomaticGainsLosses().size());
+        assertEquals(0.1, converted.reportableSomaticGainsLosses().get(0).minCopies(), EPSILON);
+        assertEquals(0.4, converted.reportableSomaticGainsLosses().get(0).maxCopies(), EPSILON);
+        assertEquals(CopyNumberInterpretation.FULL_LOSS, converted.reportableSomaticGainsLosses().get(0).interpretation());
+    }
+
+    @Test
+    public void mergesSomaticFullAndGermlinePartialLoss()
+    {
+        PurpleDriver somaticDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.DEL)
+                .likelihoodMethod(PurpleLikelihoodMethod.DEL)
+                .gene(TEST_GENE1)
+                .build();
+        PurpleGainLoss somaticLoss = TestPurpleGainLossFactory.builder()
+                .gene(TEST_GENE1)
+                .interpretation(CopyNumberInterpretation.FULL_LOSS)
+                .transcript(TEST_TRANSCRIPT1)
+                .minCopies(0.1)
+                .maxCopies(0.3)
+                .build();
+
+        PurpleDriver germlineDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.GERMLINE_DELETION)
+                .likelihoodMethod(PurpleLikelihoodMethod.GERMLINE)
+                .gene(TEST_GENE1)
+                .build();
+        PurpleGainLoss germlineLoss = TestPurpleGainLossFactory.builder()
+                .gene(TEST_GENE1)
+                .interpretation(CopyNumberInterpretation.PARTIAL_LOSS)
+                .transcript(TEST_TRANSCRIPT1)
+                .minCopies(0.2)
+                .maxCopies(1.1)
+                .build();
+
+        PurpleRecord purple = TestPurpleInterpretationFactory.builder()
+                .fit(createWithGermlineAberration())
+                .addSomaticDrivers(somaticDriver)
+                .addGermlineDrivers(germlineDriver)
+                .addReportableSomaticGainsLosses(somaticLoss)
+                .addReportableGermlineFullLosses(germlineLoss)
+                .build();
+
+        PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
+
+        assertEquals(1, converted.somaticDrivers().size());
+        assertEquals(somaticDriver, converted.somaticDrivers().get(0));
+
+        assertEquals(1, converted.reportableSomaticGainsLosses().size());
+        assertEquals(0.1, converted.reportableSomaticGainsLosses().get(0).minCopies(), EPSILON);
+        assertEquals(0.3, converted.reportableSomaticGainsLosses().get(0).maxCopies(), EPSILON);
+        assertEquals(CopyNumberInterpretation.FULL_LOSS, converted.reportableSomaticGainsLosses().get(0).interpretation());
+    }
+
+    @Test
+    public void doesNotMergeSomaticAndGermlineLossesOnDifferentTranscript()
+    {
+        PurpleDriver somaticDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.DEL)
+                .likelihoodMethod(PurpleLikelihoodMethod.DEL)
+                .gene(TEST_GENE1)
+                .transcript(TEST_TRANSCRIPT1)
+                .isCanonical(false)
+                .build();
+        PurpleGainLoss somaticLoss =
+                TestPurpleGainLossFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(0.1).maxCopies(1.0).build();
+
+        PurpleDriver germlineDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.GERMLINE_DELETION)
+                .likelihoodMethod(PurpleLikelihoodMethod.GERMLINE)
+                .gene(TEST_GENE1)
+                .transcript(TEST_TRANSCRIPT2)
+                .isCanonical(true)
+                .build();
+
+        PurpleGainLoss germlineLoss =
+                TestPurpleGainLossFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT2).minCopies(0.2).maxCopies(0.9).build();
+
+        PurpleRecord purple = TestPurpleInterpretationFactory.builder()
+                .fit(createWithGermlineAberration())
+                .addSomaticDrivers(somaticDriver)
+                .addGermlineDrivers(germlineDriver)
+                .addReportableSomaticGainsLosses(somaticLoss)
+                .addReportableGermlineFullLosses(germlineLoss)
+                .build();
+
+        PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
+
+        assertEquals(2, converted.somaticDrivers().size());
+        assertEquals(somaticDriver, converted.somaticDrivers().get(0));
+
+        assertEquals(2, converted.reportableSomaticGainsLosses().size());
+    }
+
+    @Test
+    public void doesNotMergeSomaticAmpWithGermlineLoss()
+    {
+        PurpleDriver somaticDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.AMP)
+                .likelihoodMethod(PurpleLikelihoodMethod.AMP)
+                .gene(TEST_GENE1)
+                .build();
+        PurpleGainLoss somaticAmp =
+                TestPurpleGainLossFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(20.).maxCopies(25.).build();
+
+        PurpleDriver germlineDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.GERMLINE_DELETION)
+                .likelihoodMethod(PurpleLikelihoodMethod.GERMLINE)
+                .gene(TEST_GENE1)
+                .build();
+        PurpleGainLoss germlineLoss =
+                TestPurpleGainLossFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(0.2).maxCopies(0.9).build();
+
+        PurpleRecord purple = TestPurpleInterpretationFactory.builder()
+                .fit(createWithGermlineAberration())
+                .addSomaticDrivers(somaticDriver)
+                .addGermlineDrivers(germlineDriver)
+                .addReportableSomaticGainsLosses(somaticAmp)
+                .addReportableGermlineFullLosses(germlineLoss)
+                .build();
+
+        PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
+
+        assertEquals(2, converted.somaticDrivers().size());
+        assertEquals(2, converted.reportableSomaticGainsLosses().size());
+    }
+
+    @Test
+    public void doesNotMergeSomaticPartialAmpWithGermlineLoss()
+    {
+        PurpleDriver somaticDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.PARTIAL_AMP)
+                .likelihoodMethod(PurpleLikelihoodMethod.AMP)
+                .gene(TEST_GENE1)
+                .build();
+        PurpleGainLoss somaticPartialAmp =
+                TestPurpleGainLossFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(2.0).maxCopies(25.).build();
+
+        PurpleDriver germlineDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.GERMLINE_DELETION)
+                .likelihoodMethod(PurpleLikelihoodMethod.GERMLINE)
+                .gene(TEST_GENE1)
+                .build();
+        PurpleGainLoss germlineLoss =
+                TestPurpleGainLossFactory.builder().gene(TEST_GENE1).transcript(TEST_TRANSCRIPT1).minCopies(0.2).maxCopies(0.3).build();
+
+        PurpleRecord purple = TestPurpleInterpretationFactory.builder()
+                .fit(createWithGermlineAberration())
+                .addSomaticDrivers(somaticDriver)
+                .addGermlineDrivers(germlineDriver)
+                .addReportableSomaticGainsLosses(somaticPartialAmp)
+                .addReportableGermlineFullLosses(germlineLoss)
+                .build();
+
+        PurpleRecord converted = GermlineConversion.convertPurpleGermline(true, purple);
+
+        assertEquals(2, converted.somaticDrivers().size());
+        assertEquals(2, converted.reportableSomaticGainsLosses().size());
     }
 
     @NotNull
@@ -197,15 +633,17 @@ public class GermlineConversionTest
                 .likelihoodMethod(PurpleLikelihoodMethod.GERMLINE)
                 .build();
 
-        PurpleDriver germlineDriver2 =
-                PurpleDriverTestFactory.builder()
-                        .type(PurpleDriverType.GERMLINE_MUTATION)
-                        .gene("gene 2")
-                        .transcript("transcript 1")
-                        .build();
+        PurpleDriver germlineDriver2 = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.GERMLINE_MUTATION)
+                .gene("gene 2")
+                .transcript("transcript 1")
+                .build();
 
-        List<PurpleDriver> merged = GermlineConversion.mergeGermlineDriversIntoSomatic(Lists.newArrayList(somaticDriver1, somaticDriver2),
-                Lists.newArrayList(germlineDriver1, germlineDriver2));
+        List<PurpleDriver> merged = GermlineConversion.mergeGermlineDriversIntoSomatic(
+                Lists.newArrayList(somaticDriver1, somaticDriver2),
+                Lists.newArrayList(germlineDriver1, germlineDriver2),
+                Lists.newArrayList()
+        );
 
         assertEquals(3, merged.size());
         PurpleDriver driver1 = findByGeneTranscript(merged, "gene 1", "transcript 1");
@@ -228,33 +666,36 @@ public class GermlineConversionTest
         PurpleDriver somaticDriver =
                 PurpleDriverTestFactory.builder().gene("gene 1").transcript("transcript 1").type(PurpleDriverType.DEL).build();
 
-        List<PurpleDriver> mergedNoGermline = GermlineConversion.mergeGermlineDriversIntoSomatic(Lists.newArrayList(somaticDriver), null);
+        List<PurpleDriver> mergedNoGermline =
+                GermlineConversion.mergeGermlineDriversIntoSomatic(Lists.newArrayList(somaticDriver), null, Lists.newArrayList());
         assertEquals(1, mergedNoGermline.size());
         assertTrue(mergedNoGermline.contains(somaticDriver));
 
-        PurpleDriver germlineDriver1 =
-                PurpleDriverTestFactory.builder()
-                        .gene("gene 1")
-                        .transcript("transcript 1")
-                        .type(PurpleDriverType.GERMLINE_DELETION)
-                        .build();
+        PurpleDriver germlineDriver1 = PurpleDriverTestFactory.builder()
+                .gene("gene 1")
+                .transcript("transcript 1")
+                .type(PurpleDriverType.GERMLINE_DELETION)
+                .build();
 
-        PurpleDriver germlineDriver2 =
-                PurpleDriverTestFactory.builder()
-                        .gene("gene 2")
-                        .transcript("transcript 2")
-                        .type(PurpleDriverType.GERMLINE_DELETION)
-                        .build();
+        PurpleDriver germlineDriver2 = PurpleDriverTestFactory.builder()
+                .gene("gene 2")
+                .transcript("transcript 2")
+                .type(PurpleDriverType.GERMLINE_DELETION)
+                .build();
+        PurpleGainLoss fullGermlineLossForDriver2 =
+                TestPurpleGainLossFactory.builder().gene("gene 2").interpretation(CopyNumberInterpretation.FULL_LOSS).build();
 
-        PurpleDriver germlineDriver3 =
-                PurpleDriverTestFactory.builder()
-                        .gene("gene 3")
-                        .transcript("transcript 3")
-                        .type(PurpleDriverType.GERMLINE_MUTATION)
-                        .build();
+        PurpleDriver germlineDriver3 = PurpleDriverTestFactory.builder()
+                .gene("gene 3")
+                .transcript("transcript 3")
+                .type(PurpleDriverType.GERMLINE_MUTATION)
+                .build();
 
-        List<PurpleDriver> merged = GermlineConversion.mergeGermlineDriversIntoSomatic(Lists.newArrayList(somaticDriver),
-                Lists.newArrayList(germlineDriver1, germlineDriver2, germlineDriver3));
+        List<PurpleDriver> merged = GermlineConversion.mergeGermlineDriversIntoSomatic(
+                Lists.newArrayList(somaticDriver),
+                Lists.newArrayList(germlineDriver1, germlineDriver2, germlineDriver3),
+                Lists.newArrayList(fullGermlineLossForDriver2)
+        );
 
         assertEquals(3, merged.size());
         assertTrue(mergedNoGermline.contains(somaticDriver));

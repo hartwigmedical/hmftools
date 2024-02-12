@@ -45,6 +45,7 @@ public class AssemblySupport
     public int assemblyIndex() { return mAssemblyIndex; }
     public int junctionReadIndex() { return mJunctionReadIndex; }
 
+    public int mismatchCount() { return mJunctionMismatches + mReferenceMismatches; }
     public int junctionMismatches() { return mJunctionMismatches; }
     public int referenceMismatches() { return mReferenceMismatches; }
     public void setReferenceMismatches(int mismatches) { mReferenceMismatches = mismatches; }

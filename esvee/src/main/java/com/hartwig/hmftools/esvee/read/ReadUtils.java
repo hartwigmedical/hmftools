@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
 
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.SvConstants;
 
 import htsjdk.samtools.SAMRecord;
@@ -105,6 +106,29 @@ public final class ReadUtils
         }
 
         return dest;
+    }
+
+    public static byte[] addByteArray(final byte[] first, final byte[] second)
+    {
+        byte[] combined = new byte[first.length + second.length];
+
+        for(int i = 0; i < first.length; ++i)
+        {
+            combined[i] = first[i];
+        }
+
+        for(int i = 0; i < second.length; ++i)
+        {
+            combined[first.length + i] = second[i];
+        }
+
+        return combined;
+    }
+
+    public static byte[] reverseBytes(final byte[] bases)
+    {
+        String reversed = Nucleotides.reverseStrandBases(new String(bases));
+        return reversed.getBytes();
     }
 
     /*

@@ -35,7 +35,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -277,7 +276,7 @@ public class ChainRuleSelector
 
                 if(otherSv1 == otherSv2 && otherSv1.type() == INV)
                 {
-                    newPair = pair1.length() < pair2.length() ? pair1 : pair2;
+                    newPair = pair1.positionDistance() < pair2.positionDistance() ? pair1 : pair2;
                 }
                 else
                 {
@@ -741,7 +740,7 @@ public class ChainRuleSelector
                     continue;
 
                 if(copyNumbersEqual(svConn.unlinked(breakend.usesStart()), svConn.unlinked(breakend2.usesStart()))
-                && pairs.get(i).length() > pairs.get(j).length())
+                && pairs.get(i).positionDistance() > pairs.get(j).positionDistance())
                 {
                     pairs.remove(i);
                     breakendRemoved = true;

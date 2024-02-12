@@ -1,12 +1,12 @@
-package com.hartwig.hmftools.esvee;
+package com.hartwig.hmftools.esvee.output;
 
 public enum WriteType
 {
     ASSEMBLY_BAM("assembly.bam"),
     ASSEMBLIES("assemblies.tsv"),
-    READS("reads.tsv"),
+    READS("assembly_reads.tsv"),
     VCF("esvee.vcf.gz"),
-    BREAKENDS("breakends.tsv");
+    BREAKENDS("breakends.tsv"); // not currently defined or written
 
     private final String mFileId;
 

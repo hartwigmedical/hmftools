@@ -9,14 +9,8 @@ import static com.hartwig.hmftools.esvee.common.BaseType.C;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
-public class ReadAdjustments
+public final class ReadAdjustments
 {
-
-    public ReadAdjustments()
-    {
-
-    }
-
     public static boolean convertEdgeIndelsToSoftClip(final Read read)
     {
         if(read.cigarElements().size() < 3)
@@ -96,6 +90,4 @@ public class ReadAdjustments
 
         return true;
     }
-
-
 }

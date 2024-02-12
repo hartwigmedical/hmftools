@@ -197,7 +197,7 @@ public class FragmentSyncTest
         final ReadContext readContext = createReadContext(position, 12, 10, 14, readBases, Strings.EMPTY);
 
         final IndexedBases REF_INDEXED_BASES = new IndexedBases(1, 0, REF_BASES.getBytes());
-        final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG.Quality, RECALIBRATION, REF_INDEXED_BASES);
+        final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG, RECALIBRATION, REF_INDEXED_BASES);
 
         final ReadContextCounter readContextCounter = new ReadContextCounter(
                 1, variant, readContext, VariantTier.PANEL, 100, 0,

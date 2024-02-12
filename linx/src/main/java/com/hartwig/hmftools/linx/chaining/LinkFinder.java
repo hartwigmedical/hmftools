@@ -105,7 +105,7 @@ public class LinkFinder
                     linkedPairs.add(newPair);
 
                     LNX_LOGGER.debug("cluster({}) adding assembly linked pair({}) length({})",
-                            cluster.id(), newPair.toString(), newPair.length());
+                            cluster.id(), newPair.toString(), newPair.baseLength());
                 }
             }
         }

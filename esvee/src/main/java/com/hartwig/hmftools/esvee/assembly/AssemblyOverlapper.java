@@ -116,12 +116,12 @@ public class AssemblyOverlapper
         // for the case of matching orientations, one of the assemblies bases would need reversing - confirm this
 
         // first try a simple string search to find an overlap for the 100 bases around one assembly's junction in the other
-        String firstFullSequence = first.formSequence(first.refBaseLength());
+        String firstFullSequence = first.formJunctionSequence(first.refBaseLength());
 
         int[] firstJunctionIndexRange = firstIndexRange.junctionSequenceIndexRange();
         String firstJunctionSequence = firstFullSequence.substring(firstJunctionIndexRange[0], firstJunctionIndexRange[1] + 1);
 
-        String secondFullSequence = second.formSequence(second.refBaseLength());
+        String secondFullSequence = second.formJunctionSequence(second.refBaseLength());
 
         int firstIndexInSecond = secondFullSequence.indexOf(firstJunctionSequence);
 

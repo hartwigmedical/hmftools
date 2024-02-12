@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.esvee.old;
 
-import com.hartwig.hmftools.esvee.util.Counter;
-
 public class OverallCounters
 {
     public final Counter JunctionsProcessed = new Counter("Junctions Processed");

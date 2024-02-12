@@ -96,7 +96,7 @@ public final class SamRecordTestUtils
 
         record.setReadBases(readBases.getBytes());
 
-        byte[] qualities = buildBaseQuals(readBases.length());
+        byte[] qualities = buildDefaultBaseQuals(readBases.length());
 
         for(int i = 0; i < readBases.length(); ++i)
         {
@@ -154,7 +154,7 @@ public final class SamRecordTestUtils
         else return HumanChromosome.values().length + 1;
     }
 
-    public static byte[] buildBaseQuals(int length) { return buildBaseQuals(length, DEFAULT_BASE_QUAL); }
+    public static byte[] buildDefaultBaseQuals(int length) { return buildBaseQuals(length, DEFAULT_BASE_QUAL); }
 
     public static byte[] buildBaseQuals(int length, int qualValue)
     {

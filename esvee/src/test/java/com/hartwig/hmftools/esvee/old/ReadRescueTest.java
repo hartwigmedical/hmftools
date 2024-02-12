@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.read;
+package com.hartwig.hmftools.esvee.old;
 
 public class ReadRescueTest
 {

@@ -44,6 +44,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.samtools.BamUtils;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.sage.bqr.BqrConfig;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
@@ -77,13 +78,13 @@ public class SageConfig
     public final int ReadContextFlankSize;
     public final int MaxPartitionSlices;
     public final ValidationStringency BamStringency;
+    public final SequencingConfig Sequencing;
 
     public final VisConfig Visualiser;
 
     public final String Version;
     public final int Threads;
 
-    public final boolean TrackUMIs;
     public final boolean WriteFragmentLengths;
 
     // debug
@@ -107,7 +108,6 @@ public class SageConfig
     private static final String INCLUDE_MT = "include_mt";
     private static final String READ_LENGTH = "read_length";
     private static final String NO_FRAGMENT_SYNC = "no_fragment_sync";
-    private static final String TRACK_UMIS = "track_umis";
     private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
     private static final String MAX_PARTITION_SLICES = "max_partition_slices";
 
@@ -164,7 +164,8 @@ public class SageConfig
 
         MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
 
-        TrackUMIs = configBuilder.hasFlag(TRACK_UMIS);
+        Sequencing = SequencingConfig.from(configBuilder);
+
         WriteFragmentLengths = configBuilder.hasFlag(WRITE_FRAG_LENGTHS);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
@@ -289,6 +290,8 @@ public class SageConfig
         return false;
     }
 
+    public boolean bqrRecordWritingOnly() { return QualityRecalibration.WriteReads; }
+
     public boolean logPerfStats() { return PerfWarnTime > 0; }
 
     public static void registerCommonConfig(final ConfigBuilder configBuilder)
@@ -314,13 +317,13 @@ public class SageConfig
         configBuilder.addInteger(MAX_READ_DEPTH, "Max depth to look for evidence", DEFAULT_MAX_READ_DEPTH);
         configBuilder.addInteger(MAX_READ_DEPTH_PANEL, "Max depth to look for evidence in panel", DEFAULT_MAX_READ_DEPTH_PANEL);
         configBuilder.addFlag(NO_FRAGMENT_SYNC, "Disable fragment reads sync in evidence phase");
-        configBuilder.addFlag(TRACK_UMIS, "Record counts of UMI types");
         configBuilder.addFlag(WRITE_FRAG_LENGTHS, "Write fragment lengths to file");
         addValidationStringencyOption(configBuilder);
 
         FilterConfig.registerConfig(configBuilder);
         QualityConfig.registerConfig(configBuilder);
         BqrConfig.registerConfig(configBuilder);
+        SequencingConfig.registerConfig(configBuilder);
 
         VisConfig.registerConfig(configBuilder);
 
@@ -363,7 +366,7 @@ public class SageConfig
         PerfWarnTime = 0;
         RefGenVersion = V37;
         BamStringency = ValidationStringency.DEFAULT_STRINGENCY;
-        TrackUMIs = false;
+        Sequencing = new SequencingConfig(false, SequencingType.ILLUMINA);
         WriteFragmentLengths = false;
         Visualiser = new VisConfig();
         SyncFragments = true;

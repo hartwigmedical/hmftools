@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.purple.germline.GermlineLowTumorVCNFilter.MIN
 import static com.hartwig.hmftools.purple.germline.GermlineLowTumorVCNFilter.MIN_QUAL_OTHER;
 import static com.hartwig.hmftools.purple.germline.GermlineLowTumorVCNFilter.MIN_TUMOR_VCN;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.test.VariantContextFromString;
@@ -49,10 +50,16 @@ public class GermlineLowTumorVCNFilterTest
         if(expectedFiltered)
         {
             assertTrue(variant.filters().contains(GermlineLowTumorVCNFilter.LOW_TUMOR_VCN_FILTER));
+            assertFalse(variant.isPass());
+            assertTrue(variant.context().isFiltered());
+            assertFalse(variant.decorator().isPass());
         }
         else
         {
+            assertFalse(variant.filters().contains(GermlineLowTumorVCNFilter.LOW_TUMOR_VCN_FILTER));
             assertTrue(variant.isPass());
+            assertFalse(variant.context().isFiltered());
+            assertTrue(variant.decorator().isPass());
         }
     }
 

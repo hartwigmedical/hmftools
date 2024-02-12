@@ -106,7 +106,8 @@ public class LinkedPair
 
     public final String chromosome() { return mFirstBreakend.chromosome(); }
 
-    public final int length() { return mLinkLength; }
+    public final int positionDistance() { return mLinkLength; }
+    public final int baseLength() { return mLinkLength + 1; }
 
     public void setIsAssembled() { mIsInferred = false; }
     public boolean isInferred() { return mIsInferred; }
@@ -142,9 +143,6 @@ public class LinkedPair
     public void setTraversedSVCount(int count) { mTraversedSVCount = count; }
     public int getTraversedSVCount() { return mTraversedSVCount; }
 
-    public void setIndelCount(final int count) { mIndelCount = count; }
-    public int getIndelCount() { return mIndelCount; }
-
     public void setExonMatchData(final String data) { mExonMatchData = data; }
     public final String getExonMatchData() { return mExonMatchData; }
 
@@ -179,21 +177,6 @@ public class LinkedPair
                 mFirstBreakend.usesStart() ? "start" : "end",
                 mSecondBreakend.getSV().id(), mSecondBreakend.chromosome(), mSecondBreakend.position(),
                 mSecondBreakend.usesStart() ? "start" : "end");
-    }
-
-    private static String svToString(final SvVarData var, boolean linkedOnStart)
-    {
-        if(!var.isSglBreakend())
-        {
-            return String.format("%s %s:%d:%s",
-                    var.id(), var.chrShort(linkedOnStart), var.position(linkedOnStart),
-                    linkedOnStart ? "start" : "end");
-        }
-        else
-        {
-            return String.format("%s %s:%d SGL",
-                    var.id(), var.chrShort(true), var.position(true));
-        }
     }
 
     public boolean matches(final LinkedPair other)

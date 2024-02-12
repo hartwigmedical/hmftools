@@ -625,7 +625,7 @@ public class SampleAnalyser implements Callable
                             .arm(linkArm)
                             .assembled(pair.isAssembled())
                             .traversedSVCount(pair.getTraversedSVCount())
-                            .length(pair.length())
+                            .length(pair.baseLength())
                             .junctionCopyNumber(DatabaseUtil.decimal(chain.jcn()))
                             .junctionCopyNumberUncertainty(DatabaseUtil.decimal(chain.jcnUncertainty()))
                             .pseudogeneInfo(pair.getExonMatchData())

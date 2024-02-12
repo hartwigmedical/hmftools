@@ -84,7 +84,7 @@ public class ChainMetrics
             {
                 ++metrics.InternalTIs;
 
-                if(pair.length() <= SHORT_TI_LENGTH)
+                if(pair.baseLength() <= SHORT_TI_LENGTH)
                     ++metrics.InternalShortTIs;
 
                 if(pair.hasCopyNumberGain())
@@ -94,7 +94,7 @@ public class ChainMetrics
             {
                 ++metrics.ExternalTIs;
 
-                if(pair.length() <= SHORT_TI_LENGTH)
+                if(pair.baseLength() <= SHORT_TI_LENGTH)
                     ++metrics.ExternalShortTIs;
 
                 if(pair.hasCopyNumberGain())

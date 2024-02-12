@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.common.Direction;
-import com.hartwig.hmftools.esvee.util.CommonUtils;
 
 public class RegionOfInterest extends ChrBaseRegion
 {
