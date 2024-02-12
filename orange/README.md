@@ -232,6 +232,7 @@ investigate potential causes for QC failure.
 ## Version History and Download Links
 
 - [3.2.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.2.0)
+    - Support new ORANGE-datamodel (v2.3.0).
     - Support germline deletions heterozygous in the tumor:
         - Included in new section "Potentially pathogenic germline LOH events" on PDF report.
         - Included in new fields `allGermlineLossOfHeterozygosities` and `reportableGermlineLossOfHeterozygosities` in the JSON.
