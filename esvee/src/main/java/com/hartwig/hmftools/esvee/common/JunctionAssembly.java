@@ -614,7 +614,7 @@ public class JunctionAssembly
         return formSequence(seqIndexStart, seqIndexEnd);
     }
 
-    private String formSequence(int seqIndexStart, int seqIndexEnd)
+    public String formSequence(int seqIndexStart, int seqIndexEnd)
     {
         StringBuilder sb = new StringBuilder();
 

@@ -5,9 +5,14 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.SvConstants.PHASED_ASSEMBLY_JUNCTION_OVERLAP;
 import static com.hartwig.hmftools.esvee.SvConstants.PHASED_ASSEMBLY_OVERLAP_BASES;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.common.AssemblyLink;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
@@ -21,37 +26,46 @@ public final class AssemblyLinker
             final JunctionAssembly first, final JunctionAssembly second, final AssemblySequence firstSeq, final AssemblySequence secondSeq,
             int firstIndexStart, int secondIndexStart)
     {
-        int firstJunctionOffset = first.junctionIndex() - firstIndexStart;
-        int secondJunctionOffset = second.junctionIndex() - secondIndexStart;
+        int firstJunctionOffset = firstSeq.junctionIndex() - firstIndexStart;
+        int secondJunctionOffset = secondSeq.junctionIndex() - secondIndexStart;
 
         String insertedBases = "";
         int firstJunctionIndexInSecond = -1;
+        int impliedInsertedBaseLength = 0;
 
         if(!firstSeq.Reversed && !secondSeq.Reversed)
         {
             firstJunctionIndexInSecond = secondIndexStart + firstJunctionOffset;
 
-            int impliedInsertedBaseLength = max(secondJunctionOffset - firstJunctionOffset - 1, 0);
-            if(impliedInsertedBaseLength > 0)
-            {
-                insertedBases = firstSeq.FullSequence.substring(first.junctionIndex() + 1, first.junctionIndex() + 1 + impliedInsertedBaseLength);
-            }
+            impliedInsertedBaseLength = max(secondJunctionOffset - firstJunctionOffset - 1, 0);
         }
         else if(secondSeq.Reversed)
         {
             int firstJunctionIndexInSecondReversed = secondIndexStart + firstJunctionOffset;
             firstJunctionIndexInSecond = secondSeq.indexReverted(firstJunctionIndexInSecondReversed);
 
-            int impliedInsertedBaseLength = max(firstJunctionIndexInSecond - second.junctionIndex() - 1, 0);
-            if(impliedInsertedBaseLength > 0)
-            {
-                insertedBases = firstSeq.FullSequence.substring(first.junctionIndex() + 1, first.junctionIndex() + 1 + impliedInsertedBaseLength);
-            }
+            impliedInsertedBaseLength = max(firstJunctionIndexInSecond - second.junctionIndex() - 1, 0);
         }
         else
         {
+            firstJunctionIndexInSecond = secondIndexStart + firstJunctionOffset;
 
+            impliedInsertedBaseLength = max(second.junctionIndex() - firstJunctionIndexInSecond - 1, 0);
+        }
 
+        if(impliedInsertedBaseLength > 0)
+        {
+            // inserted bases for any same-orientation break could be reverse-complemented at either breakend,
+            // go with the convention of doing that for the higher breakend?
+            if(firstSeq.Reversed)
+            {
+                insertedBases = first.formSequence(first.junctionIndex() - impliedInsertedBaseLength, first.junctionIndex() - 1);
+            }
+            else
+            {
+                insertedBases =
+                        firstSeq.FullSequence.substring(first.junctionIndex() + 1, first.junctionIndex() + 1 + impliedInsertedBaseLength);
+            }
         }
 
         return new AssemblyLink(first, second, LinkType.SPLIT, firstJunctionIndexInSecond, insertedBases);
@@ -83,16 +97,9 @@ public final class AssemblyLinker
         firstSeq = new AssemblySequence(first, firstReversed);
         secondSeq = new AssemblySequence(second, secondReversed);
 
-        // AssemblyIndexRange firstIndexRange = new AssemblyIndexRange(first);
-
         // start with a simple comparison, taken from each of their junction index positions, ie assuming no inserted bases
 
-        // first try a simple string search to find an overlap for the 100 bases around one assembly's junction in the other
-        // String firstFullSequence = first.formJunctionSequence(first.refBaseLength());
-        // int[] firstJunctionIndexRange = firstIndexRange.junctionSequenceIndexRange();
-        //String firstJunctionSequence = firstFullSequence.substring(firstJunctionIndexRange[0], firstJunctionIndexRange[1] + 1);
-        // String secondFullSequence = second.formJunctionSequence(second.refBaseLength());
-
+        // first try a simple string search to find an overlap for the +/-30 bases around one assembly's junction in the other
         String firstJunctionSequence = firstSeq.junctionSequence();
 
         int firstSeqIndexInSecond = secondSeq.FullSequence.indexOf(firstJunctionSequence);
@@ -103,11 +110,10 @@ public final class AssemblyLinker
             return formLink(first, second, firstSeq, secondSeq, firstSeq.junctionSeqStartIndex(), firstSeqIndexInSecond);
         }
 
-        /*
-        AssemblyIndexRange secondIndexRange = new AssemblyIndexRange(second);
+        // AssemblyIndexRange secondIndexRange = new AssemblyIndexRange(second);
 
         // take a smaller sections of the first sequence and try to find their start index in the second sequence
-        int subSequenceCount = firstIndexRange.totalLength() / SUBSEQUENCE_LENGTH;
+        int subSequenceCount = firstSeq.comparisonLength() / SUBSEQUENCE_LENGTH;
 
         List<int[]> alternativeIndexStarts = Lists.newArrayList();
 
@@ -116,41 +122,38 @@ public final class AssemblyLinker
             int firstSubSeqStartIndex = i * SUBSEQUENCE_LENGTH;
 
             // must be within of the bounds of what will cover the junction
-            if(firstSubSeqStartIndex < firstIndexRange.IndexStart)
+            if(firstSubSeqStartIndex < firstSeq.compareSeqStartIndex())
                 continue;
 
-            //if(firstSubSeqStartIndex > first.junctionIndex() - PHASED_ASSEMBLY_JUNCTION_OVERLAP)
-            if(firstSubSeqStartIndex > first.junctionIndex())
+            if(firstSubSeqStartIndex > firstSeq.junctionIndex())
                 break;
 
-            String firstSubSequence = firstFullSequence.substring(firstSubSeqStartIndex, firstSubSeqStartIndex + SUBSEQUENCE_LENGTH);
+            String firstSubSequence = firstSeq.FullSequence.substring(firstSubSeqStartIndex, firstSubSeqStartIndex + SUBSEQUENCE_LENGTH);
 
-            int secondSubSeqIndex = secondFullSequence.indexOf(firstSubSequence);
+            int secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence);
 
             if(secondSubSeqIndex < 0)
                 continue;
 
             // where must this match fall within the second's sequence? just need to ensure that the junction is covered in both
-            if(!positionWithin(secondSubSeqIndex, secondIndexRange.IndexStart, secondIndexRange.IndexEnd))
+            if(!positionWithin(secondSubSeqIndex, secondSeq.compareSeqStartIndex(), secondSeq.compareSeqEndIndex()))
                 continue;
 
             alternativeIndexStarts.add(new int[] {firstSubSeqStartIndex, secondSubSeqIndex});
         }
 
-        // try each of these in turn for a full match
+        // try each of these in turn for a full match - could take the one with the lowest if there are multiple?
         for(int[] indexStarts : alternativeIndexStarts)
         {
             // find a comparison range that falls within both sequence's index range around the junction
             int firstIndexStart = indexStarts[0];
             int secondIndexStart = indexStarts[1];
 
-            // int firstJuncOffset = first.junctionIndex() - firstIndexStart;
-
             if(secondIndexStart > second.junctionIndex())
             {
                 // the comparison start points are shifted to cover the junctions in both
                 int secondJuncOffset = second.junctionIndex() - secondIndexStart;
-                int shiftDistance = min(abs(secondJuncOffset), firstIndexStart - firstIndexRange.IndexStart);
+                int shiftDistance = min(abs(secondJuncOffset), firstIndexStart - firstSeq.compareSeqStartIndex());
                 firstIndexStart -= shiftDistance;
                 secondIndexStart -= shiftDistance;
             }
@@ -165,10 +168,9 @@ public final class AssemblyLinker
             if(mismatchCount <= PRIMARY_ASSEMBLY_MERGE_MISMATCH)
             {
                 // match found..
-                return formLink(first, second, firstFullSequence, firstIndexStart, secondIndexStart);
+                return formLink(first, second, firstSeq, secondSeq, firstIndexStart, secondIndexStart);
             }
         }
-        */
 
         return null;
     }
@@ -255,14 +257,15 @@ public final class AssemblyLinker
             }
             else
             {
-                mJunctionSeqIndexStart = indexReversed(juncIndexStart);
-                mJunctionSeqIndexEnd = indexReversed(juncIndexEnd);
-                mCompareSeqIndexStart = indexReversed(compIndexStart);
-                mCompareSeqIndexEnd = indexReversed(compIndexEnd);
+                // note the switches here
+                mJunctionSeqIndexStart = indexReversed(juncIndexEnd);
+                mJunctionSeqIndexEnd = indexReversed(juncIndexStart);
+                mCompareSeqIndexStart = indexReversed(compIndexEnd);
+                mCompareSeqIndexEnd = indexReversed(compIndexStart);
             }
         }
 
-        public int junctionIndex() { return !Reversed ? mJunctionIndex : BaseLength - RefBaseLength; }
+        public int junctionIndex() { return !Reversed ? mJunctionIndex : BaseLength - mJunctionIndex - 1; }
 
         public final String junctionSequence() { return FullSequence.substring(junctionSeqStartIndex(), junctionSeqEndIndex() + 1); }
 
@@ -270,6 +273,7 @@ public final class AssemblyLinker
         public int junctionSeqEndIndex() { return mJunctionSeqIndexEnd; }
         public int compareSeqStartIndex() { return mCompareSeqIndexStart; }
         public int compareSeqEndIndex() { return mCompareSeqIndexEnd; }
+        public int comparisonLength() { return mCompareSeqIndexEnd - mCompareSeqIndexStart + 1; }
 
         private int indexReversed(int index)
         {
