@@ -153,7 +153,7 @@ public final class GermlineConversion
     static List<PurpleVariant> toSomaticVariants(@Nullable List<PurpleVariant> reportableGermlineVariants)
     {
         return reportableGermlineVariants != null ? reportableGermlineVariants.stream()
-                .map(variant -> variant.variantCopyNumber() > 0.5
+                .map(variant -> variant.variantCopyNumber() >= 0.5
                         ? ImmutablePurpleVariant.builder().from(variant).subclonalLikelihood(0.0).build()
                         : ImmutablePurpleVariant.builder().from(variant).subclonalLikelihood(1.0).build())
                 .collect(Collectors.toList()) : Lists.newArrayList();

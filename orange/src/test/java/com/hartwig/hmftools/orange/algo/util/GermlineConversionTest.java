@@ -324,13 +324,14 @@ public class GermlineConversionTest
     @Test
     public void shouldAdjustClonalLikelihoodWhenConvertingVariantsToSomatic()
     {
-        PurpleVariant germlineVariant0 = TestPurpleVariantFactory.builder().variantCopyNumber(0).build();
-        PurpleVariant germlineVariant1 = TestPurpleVariantFactory.builder().variantCopyNumber(1).build();
+        PurpleVariant germlineVariant1 = TestPurpleVariantFactory.builder().variantCopyNumber(0).build();
+        final List<PurpleVariant> somaticVariants1 = GermlineConversion.toSomaticVariants(Lists.newArrayList(germlineVariant1));
+        assertEquals(1, somaticVariants1.size());
+        assertEquals(1.0, somaticVariants1.get(0).subclonalLikelihood(), EPSILON);
 
-        final List<PurpleVariant> germlineVariants = Lists.newArrayList(germlineVariant0, germlineVariant1);
-
-        final List<PurpleVariant> somaticVariants = GermlineConversion.toSomaticVariants(germlineVariants);
-        assertEquals(1.0, somaticVariants.get(0).subclonalLikelihood(), EPSILON);
-        assertEquals(0.0, somaticVariants.get(1).subclonalLikelihood(), EPSILON);
+        PurpleVariant germlineVariant2 = TestPurpleVariantFactory.builder().variantCopyNumber(1).build();
+        final List<PurpleVariant> somaticVariants2 = GermlineConversion.toSomaticVariants(Lists.newArrayList(germlineVariant2));
+        assertEquals(1, somaticVariants1.size());
+        assertEquals(0.0, somaticVariants2.get(0).subclonalLikelihood(), EPSILON);
     }
 }
