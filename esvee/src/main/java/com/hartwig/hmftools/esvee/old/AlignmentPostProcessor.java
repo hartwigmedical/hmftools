@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.alignment;
+package com.hartwig.hmftools.esvee.old;
 
 import com.hartwig.hmftools.esvee.old.AlignedAssembly;
 import com.hartwig.hmftools.esvee.old.Alignment;

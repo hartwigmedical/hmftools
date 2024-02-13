@@ -30,6 +30,7 @@ import com.hartwig.hmftools.esvee.common.AssemblyLink;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.BaseMismatches;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.common.LinkType;
 import com.hartwig.hmftools.esvee.common.PhaseGroup;
 import com.hartwig.hmftools.esvee.common.PhaseSet;
 import com.hartwig.hmftools.esvee.common.RefSideSoftClip;
@@ -102,6 +103,8 @@ public class AssemblyWriter
             sj.add("PhaseSetId");
             sj.add("PhaseSetCount");
             sj.add("LinkInfo");
+            sj.add("SvType");
+            sj.add("InsertedBases");
 
             sj.add("MergedAssemblies");
             sj.add("BranchedAssemblyIds");
@@ -256,14 +259,32 @@ public class AssemblyWriter
             if(phaseSet != null)
             {
                 sj.add(String.valueOf(phaseSet.id()));
-                sj.add(String.valueOf(phaseSet.linkCount()));
+                sj.add(String.valueOf(phaseSet.assemblies().size()));
 
                 List<AssemblyLink> assemblyLinks = phaseSet.findAssemblyLinks(assembly);
                 sj.add(assemblyLinksStr(assembly, assemblyLinks));
+
+                AssemblyLink svLink = assemblyLinks.stream().filter(x -> x.type() == LinkType.SPLIT).findFirst().orElse(null);
+
+                if(svLink != null)
+                {
+                    sj.add(svLink.svType().toString());
+                    sj.add(svLink.insertedBases());
+                }
+                else
+                {
+                    sj.add("").add("");
+                }
             }
             else
             {
-                sj.add("-1").add("0").add("");
+                sj.add("PhaseSetId");
+                sj.add("PhaseSetCount");
+                sj.add("LinkInfo");
+                sj.add("SvType");
+                sj.add("InsertedBases");
+
+                sj.add("-1").add("0").add("").add("").add("");
             }
 
             sj.add(String.valueOf(assembly.mergedAssemblyCount()));

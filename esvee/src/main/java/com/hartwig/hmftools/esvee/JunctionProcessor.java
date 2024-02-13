@@ -17,11 +17,15 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.esvee.alignment.Alignment;
+import com.hartwig.hmftools.esvee.alignment.BwaAligner;
 import com.hartwig.hmftools.esvee.assembly.PhaseGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
+import com.hartwig.hmftools.esvee.common.PhaseGroup;
+import com.hartwig.hmftools.esvee.common.PhaseSet;
 import com.hartwig.hmftools.esvee.common.ThreadTask;
 import com.hartwig.hmftools.esvee.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.output.WriteType;
@@ -37,6 +41,8 @@ public class JunctionProcessor
     private final Map<String,List<Junction>> mChrJunctionsMap;
     private final Map<String,List<JunctionGroup>> mJunctionGroupMap;
 
+    private final Alignment mAlignment;
+
     private final List<BamReader> mBamReaders;
 
     private final List<PerformanceCounter> mPerfCounters;
@@ -48,6 +54,8 @@ public class JunctionProcessor
         mChrJunctionsMap = Maps.newHashMap();
         mJunctionGroupMap = Maps.newHashMap();
         mBamReaders = Lists.newArrayList();
+
+        mAlignment = new Alignment(mConfig, new BwaAligner(mConfig));
 
         mResultsWriter = new ResultsWriter(mConfig);
         mVcfWriter = new VcfWriter(mConfig);
@@ -179,7 +187,17 @@ public class JunctionProcessor
 
         phaseGroupBuilder.buildGroups();
 
-        SV_LOGGER.info("phaseGroups count({})", phaseGroupBuilder.primaryPhaseGroups().size());
+        SV_LOGGER.info("phaseGroups count({})", phaseGroupBuilder.phaseGroups().size());
+
+        /*
+        for(PhaseGroup phaseGroup : phaseGroupBuilder.phaseGroups())
+        {
+            for(PhaseSet phaseSet : phaseGroup.phaseSets())
+            {
+                mAlignment.processPhaseSet(phaseSet);
+            }
+        }
+        */
     }
 
     public void close()

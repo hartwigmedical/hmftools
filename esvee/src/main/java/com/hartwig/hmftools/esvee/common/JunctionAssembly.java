@@ -564,6 +564,8 @@ public class JunctionAssembly
 
     public boolean hasUnsetBases() { return !findUnsetBases(mBases).isEmpty(); }
 
+    public String formFullSequence() { return formJunctionSequence(refBaseLength()); }
+
     public String formJunctionSequence()
     {
         return formJunctionSequence(0);

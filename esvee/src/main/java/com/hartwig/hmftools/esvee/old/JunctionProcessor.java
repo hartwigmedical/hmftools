@@ -4,7 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.alignment.Aligner.mergeAlignedAssemblies;
+import static com.hartwig.hmftools.esvee.old.Aligner.mergeAlignedAssemblies;
 import static com.hartwig.hmftools.esvee.old.PhasedMerger.createThreadTasks;
 import static com.hartwig.hmftools.esvee.old.PhasedMerger.mergePhasedResults;
 import static com.hartwig.hmftools.esvee.variant.VariantCaller.mergeVariantCalls;
@@ -23,7 +23,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.output.WriteType;
-import com.hartwig.hmftools.esvee.alignment.Aligner;
 import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;

@@ -74,7 +74,7 @@ public class PhaseGroupBuilder
         }
     }
 
-    public List<PhaseGroup> primaryPhaseGroups() { return mPhaseGroups; }
+    public List<PhaseGroup> phaseGroups() { return mPhaseGroups; }
 
     private void findLinkedAssemblies(final JunctionGroup assemblyJunctionGroup, final JunctionAssembly assembly)
     {
