@@ -121,6 +121,8 @@ public final class AssemblyLinker
             }
             else
             {
+                // TODO: any inserted bases should be retrievable if the junction index of one assembly has been found in the other
+                // look into more examples from of the logs
                 try
                 {
                     int insertStartIndex = first.junctionIndex() + 1;

@@ -48,6 +48,7 @@ import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.output.WriteType;
 import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -88,6 +89,8 @@ public class SvConfig
     private final boolean mCheckLogReadIds;
 
     public final int Threads;
+
+    public final String TruthsetFile;
 
     public static final String OUTPUT_VCF = "output_vcf";
     public static final String REF_GENOME_IMAGE = "ref_genome_image";
@@ -205,6 +208,8 @@ public class SvConfig
         OtherDebug = configBuilder.hasFlag(OTHER_DEBUG);
 
         Threads = parseThreads(configBuilder);
+
+        TruthsetFile = TruthsetAnnotation.filename(configBuilder);
     }
 
     public String tumorBam() { return TumorBams.get(0); }
@@ -282,6 +287,8 @@ public class SvConfig
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addDecimal(PERF_LOG_TIME, "Log performance data for routine exceeding specified time (0 = disabled)", 0);
         configBuilder.addFlag(OTHER_DEBUG, "Various other debugging");
+
+        TruthsetAnnotation.registerConfig(configBuilder);
 
         SpecificRegions.addSpecificChromosomesRegionsConfig(configBuilder);
 

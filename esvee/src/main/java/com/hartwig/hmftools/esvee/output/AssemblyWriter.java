@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.output;
 
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
@@ -38,17 +37,20 @@ import com.hartwig.hmftools.esvee.common.RemoteRegion;
 import com.hartwig.hmftools.esvee.common.RepeatInfo;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.read.ReadUtils;
+import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
 public class AssemblyWriter
 {
     private final SvConfig mConfig;
 
     private final BufferedWriter mWriter;
+    private final TruthsetAnnotation mTruthsetAnnotation;
 
     // write info about assemblies
     public AssemblyWriter(final SvConfig config)
     {
         mConfig = config;
+        mTruthsetAnnotation = new TruthsetAnnotation(mConfig.TruthsetFile);
 
         mWriter = initialiseWriter();
     }
@@ -111,6 +113,9 @@ public class AssemblyWriter
 
             sj.add("JunctionSequence");
             sj.add("RefBaseSequence");
+
+            if(mTruthsetAnnotation.enabled())
+                sj.add(TruthsetAnnotation.tsvHeader());
 
             writer.write(sj.toString());
             writer.newLine();
@@ -303,6 +308,9 @@ public class AssemblyWriter
                 sj.add(assembly.formJunctionSequence());
                 sj.add(assembly.formRefBaseSequence(200)); // long enought to show most short TIs
             }
+
+            if(mTruthsetAnnotation.enabled())
+                sj.add(mTruthsetAnnotation.findTruthsetAnnotation(assembly));
 
             mWriter.write(sj.toString());
             mWriter.newLine();
