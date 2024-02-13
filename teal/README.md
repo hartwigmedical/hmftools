@@ -298,9 +298,12 @@ details the estimated  telomeric length and content and finally a file which pre
 * A blacklist bed file is currently only provided for hg19 / grch37 assembly.  
 * TEAL represents each breakend independently, but ideally should pair up rearrangements which are supported by the same fragment and represent telomeric insertions
 * TEAL should determine a consensus sequence for each telomeric rearrangement
-* TEAL could aslo count relatve amount T-Type, C-Type, G-Type and J-Type content per sample (relevant for ALT pathway identification)
+* TEAL could aslo count relative amount T-Type, C-Type, G-Type and J-Type content per sample (relevant for ALT pathway identification)
 
 # Version History and Download Links
+- [1.2.2](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.2.2)
+  - Fix crash when processing none standard chromosome names 
+  - Fix crash when processing unpaired reads 
 - [1.2.1](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.2.1)
   - Fix backward compatability issue with cobalt v1.16
 - [1.2.0](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.2.0)
