@@ -162,7 +162,7 @@ public class PurityEstimator
             }
 
             CopyNumberProfile copyNumberProfile = null;
-            if(mConfig.PurityMethods.contains(PurityMethod.COPY_NUMBER))
+            if(!sample.IsPanel && mConfig.PurityMethods.contains(PurityMethod.COPY_NUMBER))
             {
                 copyNumberProfile = new CopyNumberProfile(mConfig, mResultsWriter, sample);
             }
@@ -253,7 +253,7 @@ public class PurityEstimator
 
             for(String sampleId : sample.CtDnaSamples)
             {
-                if(plotCopyNumber(mConfig.WriteTypes))
+                if(!sample.IsPanel && plotCopyNumber(mConfig.WriteTypes))
                 {
                     if(!CopyNumberProfile.plotCopyNumberGcRatioFit(sample.PatientId, sampleId, mConfig))
                         return;
