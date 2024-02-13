@@ -303,7 +303,7 @@ public class SomaticVariants
         for(SomaticVariant variant : chipVariants)
         {
             CT_LOGGER.debug("sample({}) chip variant({}) ad({}) vs sampleTotal({})",
-                    variant, variant.findGenotypeData(sampleId).AlleleCount, sampleTotalAD);
+                    sampleId,   variant, variant.findGenotypeData(sampleId).AlleleCount, sampleTotalAD);
 
             filteredVariants.remove(variant);
             variant.addFilterReason(CHIP);
