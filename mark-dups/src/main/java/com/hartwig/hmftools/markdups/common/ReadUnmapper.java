@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.file.FileDelimiters;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
@@ -41,7 +42,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadUnmapper
 {
-    private final Map<String, List<HighDepthRegion>> mChrLocationsMap; // keyed by chromosome start
+    private final Map<String,List<HighDepthRegion>> mChrLocationsMap; // keyed by chromosome start
     private boolean mEnabled;
     private final UnmapStats mStats;
 
@@ -81,6 +82,7 @@ public class ReadUnmapper
             - falls within a region of high depth
             - discordant - INV, BND, one read unmapped or fragment length > 1000 (only for paired reads)
             - soft-clip bases > 20
+            - non-human chromosome for now
 
            Scenarios & logic:
            - both read and mate are already unmapped, then nothing to do
@@ -289,6 +291,9 @@ public class ReadUnmapper
         if(matchType == RegionMatchType.HIGH_DEPTH)
             return true;
 
+        if(isChimericRead(read, true))
+            return true;
+
         if(read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
         {
             final String mateCigar = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
@@ -296,9 +301,6 @@ public class ReadUnmapper
             if(getSoftClipCountFromCigarStr(mateCigar) > UNMAP_MIN_SOFT_CLIP)
                 return true;
         }
-
-        if(isChimericRead(read, true))
-            return true;
 
         return false;
     }
@@ -325,18 +327,16 @@ public class ReadUnmapper
         if(alignments == null)
             return false;
 
-        int readBaseLength = read.getReadBases().length;
-
         for(SupplementaryReadData suppData : alignments)
         {
-            if(checkUnmapSupplementaryAlignment(suppData, readBaseLength))
+            if(checkUnmapSupplementaryAlignment(suppData))
                 return true;
         }
 
         return false;
     }
 
-    private boolean checkUnmapSupplementaryAlignment(final SupplementaryReadData suppData, int readBaseLength)
+    private boolean checkUnmapSupplementaryAlignment(final SupplementaryReadData suppData)
     {
         if(suppData == null)
             return false;
@@ -364,15 +364,19 @@ public class ReadUnmapper
 
     private static final int READ_END_APPROX_BUFFER = 100;
 
-    @VisibleForTesting
-    public RegionMatchType mateMaxDepthRegionOverlap(final SAMRecord read, final UnmapRegionState regionState)
+    public boolean mateInUnmapRegion(final SAMRecord read)
+    {
+        return mateMaxDepthRegionOverlap(read, null) != RegionMatchType.NONE;
+    }
+
+    public RegionMatchType mateMaxDepthRegionOverlap(final SAMRecord read, @Nullable final UnmapRegionState regionState)
     {
         // first check for a local mate vs the partition's unmapped regions
         boolean checkLocalRegions = false;
 
         List<HighDepthRegion> mateRegions;
 
-        if(read.getMateReferenceName().equals(regionState.Partition.chromosome())
+        if(regionState != null && read.getMateReferenceName().equals(regionState.Partition.chromosome())
         && regionState.Partition.containsPosition(read.getMateAlignmentStart()))
         {
             mateRegions = regionState.PartitionRegions;
@@ -380,6 +384,10 @@ public class ReadUnmapper
         }
         else
         {
+            // links to a non-human chromosome
+            if(!HumanChromosome.contains(read.getMateReferenceName()))
+                return RegionMatchType.OTHER;
+
             mateRegions = mChrLocationsMap.get(read.getMateReferenceName());
 
             if(mateRegions == null)
@@ -410,7 +418,10 @@ public class ReadUnmapper
 
     private RegionMatchType supplementaryMaxDepthRegionOverlap(final SupplementaryReadData suppReadData)
     {
-        // Returns -1 if there is no overlap.
+        // links to a non-human chromosome
+        if(!HumanChromosome.contains(suppReadData.Chromosome))
+            return RegionMatchType.OTHER;
+
         final List<HighDepthRegion> suppRegions = mChrLocationsMap.get(suppReadData.Chromosome);
 
         if(suppRegions == null)
@@ -661,7 +672,7 @@ public class ReadUnmapper
         setUnmapCoordsAttribute(read, read.getReferenceName(), read.getAlignmentStart());
     }
 
-    public static void unmapReadAlignment(final SAMRecord read, final boolean mateUnmapped, final boolean unmapRead)
+    public static void unmapReadAlignment(final SAMRecord read, final boolean mateUnmapped, final boolean unmapMate)
     {
         setUnmappedAttributes(read);
 
@@ -671,7 +682,7 @@ public class ReadUnmapper
         read.setInferredInsertSize(0);
 
         // clear reference index, reference name and alignment start
-        if(mateUnmapped || unmapRead)
+        if(mateUnmapped || unmapMate)
         {
             // set both to unknown
             read.setAlignmentStart(0);
@@ -704,9 +715,9 @@ public class ReadUnmapper
 
     private static final String UNMAPP_COORDS_DELIM = ":";
 
-    public static String[] parseUnmappedCoords(final SAMRecord read)
+    public static String[] parseUnmappedCoords(final String mateCoordsStr)
     {
-        return read.getStringAttribute(UNMAP_ATTRIBUTE).split(UNMAPP_COORDS_DELIM, 2);
+        return mateCoordsStr.split(UNMAPP_COORDS_DELIM, 2);
     }
 
     private static void setUnmapCoordsAttribute(final SAMRecord read, final String chromosome, final int position)

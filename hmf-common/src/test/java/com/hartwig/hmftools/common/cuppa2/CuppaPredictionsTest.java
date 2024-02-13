@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.common.cuppa2;
+import static org.junit.Assert.assertThrows;
+
 import com.google.common.io.Resources;
 import org.junit.Test;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,7 +29,7 @@ public class CuppaPredictionsTest
                 .PredictionEntries;
 
         List<Categories.ClfName> clfNames = predictionEntries.stream()
-                .map(CuppaPredictionEntry::getClfName)
+                .map(o -> o.ClfName)
                 .distinct()
                 .collect(Collectors.toList());
 
@@ -43,7 +46,7 @@ public class CuppaPredictionsTest
                 .PredictionEntries;
 
         List<String> cancerTypes = predictionEntries.stream()
-                .map(CuppaPredictionEntry::getCancerType)
+                .map(o -> o.CancerType)
                 .distinct().collect(Collectors.toList());
 
         assert cancerTypes.size() == 1;
@@ -67,6 +70,15 @@ public class CuppaPredictionsTest
 
         assert entry3.RankGroup == 0;
         assert entry3.Rank == 3;
+    }
+
+    @Test
+    public void crashOnEmptyPredictionEntries()
+    {
+        assertThrows(
+                IllegalStateException.class,
+                () -> { new CuppaPredictions(new ArrayList<>()); }
+        );
     }
 }
 

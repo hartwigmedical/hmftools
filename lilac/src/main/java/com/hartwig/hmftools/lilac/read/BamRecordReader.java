@@ -116,7 +116,7 @@ public class BamRecordReader implements BamReader
 
     private List<Fragment> findGeneFragments(final GeneCodingRegions geneCodingRegions)
     {
-        LL_LOGGER.debug("querying HLA gene({})", geneCodingRegions.GeneName);
+        LL_LOGGER.trace("querying HLA gene({})", geneCodingRegions.GeneName);
 
         // slice for the whole coding region rather than per exon
         ChrBaseRegion sliceRegion = new ChrBaseRegion(geneCodingRegions.Chromosome, geneCodingRegions.CodingStart, geneCodingRegions.CodingEnd);

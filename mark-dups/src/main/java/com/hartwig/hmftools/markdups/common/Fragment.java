@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UNMAP_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getFivePrimeUnclippedPosition;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.NO_COORDS;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.SUPPLEMENTARY;
@@ -61,9 +62,10 @@ public class Fragment
 
                 if(read.getMateUnmappedFlag()) // unmapped reads come through the same slice
                 {
-                    if(read.hasAttribute(UNMAP_ATTRIBUTE))
+                    String mateCoordsStr = read.getStringAttribute(UNMAP_ATTRIBUTE);
+                    if(mateCoordsStr != null)
                     {
-                        String[] mateCoords = parseUnmappedCoords(read);
+                        String[] mateCoords = parseUnmappedCoords(mateCoordsStr);
                         String mateChr = mateCoords[0];
                         int matePosition = Integer.parseInt(mateCoords[1]);
 
@@ -234,6 +236,19 @@ public class Fragment
     }
 
     public int readCount() { return mReads.size(); }
+
+    public boolean isPreciseInversion()
+    {
+        SAMRecord first = mReads.stream().filter(x -> !x.getSupplementaryAlignmentFlag() && x.getFirstOfPairFlag()).findFirst().orElse(null);
+        SAMRecord second = mReads.stream().filter(x -> !x.getSupplementaryAlignmentFlag() && x.getSecondOfPairFlag()).findFirst().orElse(null);
+
+        if(first == null || second == null)
+            return false;
+
+        return first.getReadNegativeStrandFlag() == second.getReadNegativeStrandFlag()
+                && !first.getReadUnmappedFlag() && !second.getReadUnmappedFlag()
+                && getFivePrimeUnclippedPosition(first) == getFivePrimeUnclippedPosition(second);
+    }
 
     public String toString()
     {

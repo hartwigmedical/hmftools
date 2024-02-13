@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import shutil
 from functools import cached_property
-from typing import TYPE_CHECKING, Optional, Literal, Self, Iterable
+from typing import TYPE_CHECKING, Optional, Literal, Iterable
 
 import joblib
 import numpy as np
@@ -125,12 +125,12 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         joblib.dump(self, filename=path, compress=9)
 
     @staticmethod
-    def _check_is_pickle_file(path: str):
+    def _check_is_pickle_file(path: str) -> None:
         if not path.endswith(".pickle") and not path.endswith(".pickle.gz"):
             raise ValueError("Path must end with .pickle or .pickle.gz")
 
     @classmethod
-    def from_file(cls, path: str) -> Self:
+    def from_file(cls, path: str) -> "CuppaClassifier":
         cls._check_is_pickle_file(path)
         return joblib.load(path)
 
@@ -150,7 +150,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         shutil.copy(source_path, DEFAULT_CUPPA_CLASSIFIER_PATH)
 
     @classmethod
-    def from_resources(cls, verbose: bool = True):
+    def from_resources(cls, verbose: bool = True) -> "CuppaClassifier":
         if verbose:
             cls.get_class_logger(cls).info("Loading classifier from: " + DEFAULT_CUPPA_CLASSIFIER_PATH)
         return cls.from_file(DEFAULT_CUPPA_CLASSIFIER_PATH)
@@ -270,7 +270,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         ## `classes_` is a read-only @property in sklearn.pipeline.Pipeline. Undo this so that it can be overriden
         pass
 
-    def fit_sig_quantile_transformer(self, X: pd.DataFrame, y: pd.Series):
+    def fit_sig_quantile_transformer(self, X: pd.DataFrame, y: pd.Series) -> "SigCohortQuantileTransformer":
         ## Mutational signature quantiles per class
         ## These are not used for prediction and therefore are generated outside the Pipeline.fit() call
         transformer = SigCohortQuantileTransformer(clip_upper=False)
@@ -287,7 +287,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         return transformer
 
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "CuppaClassifier":
 
         if self.verbose:
             self.logger.info("Training data: %s samples, %s features, %s classes" % (
@@ -452,7 +452,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         verbose: Optional[bool] = None,
 
         bypass_prob_cal: bool = False
-    ):
+    ) -> pd.DataFrame:
         """
         By default, gets the probabilities from the final transformer (i.e. ProbCombiner)
 
@@ -762,7 +762,7 @@ class MissingFeaturesHandler(LoggerMixin):
 
         self._check_inputs()
 
-    def _check_inputs(self):
+    def _check_inputs(self) -> None:
         if self.cuppa_classifier is None and self.required_features is None:
             self.logger.error("Either `cuppa_classifier` or `required_features` must be provided")
             raise ValueError
@@ -797,7 +797,7 @@ class MissingFeaturesHandler(LoggerMixin):
         return d
 
     @cached_property
-    def required_features_by_type(self):
+    def required_features_by_type(self) -> dict[str, pd.Index]:
 
         if self.required_features is not None:
             return self._get_required_features_by_type_from_list()

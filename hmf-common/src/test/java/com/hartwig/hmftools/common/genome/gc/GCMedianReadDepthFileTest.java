@@ -26,7 +26,7 @@ public class GCMedianReadDepthFileTest
     public void testCanLoadOldVersion() throws IOException
     {
         @SuppressWarnings("UnstableApiUsage")
-        final String GC_MEDIAN_PATH = Resources.getResource("gc/EXAMPLE.cobalt.gc.median.oldVersion").getPath();
+        final String GC_MEDIAN_PATH = Resources.getResource("gc/EXAMPLE.cobalt.gc.median.oldversion").getPath();
 
         final GCMedianReadDepth readDepth = GCMedianReadDepthFile.read(GC_MEDIAN_PATH);
         validateReadDepth(readDepth);

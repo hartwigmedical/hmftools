@@ -4,28 +4,31 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
+
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.esvee.read.Read;
 
-import org.jetbrains.annotations.NotNull;
-
-public class JunctionGroup implements Comparable<JunctionGroup>
+public class JunctionGroup extends BaseRegion
 {
     private final List<Junction> mJunctions;
-
-    private int mMinPosition;
-    private int mMaxPosition;
-
     private final List<Read> mCandidateReads;
+
+    private int mIndex; // in the full list for the chromosome
+
+    private final List<JunctionAssembly> mJunctionAssemblies;
 
     public JunctionGroup(final Junction junction)
     {
+        super(junction.Position, junction.Position);
         mJunctions = Lists.newArrayList(junction);
-        mMaxPosition = junction.Position;
-        mMinPosition = junction.Position;
         mCandidateReads = Lists.newArrayList();
+        mJunctionAssemblies = Lists.newArrayList();
+        mIndex = -1;
     }
 
     public List<Junction> junctions() { return mJunctions; }
@@ -33,15 +36,21 @@ public class JunctionGroup implements Comparable<JunctionGroup>
 
     public String chromosome() { return mJunctions.get(0).Chromosome; }
 
-    public int minPosition() { return mMinPosition; }
-    public int maxPosition() { return mMaxPosition; }
-    public int range() { return mMaxPosition - mMinPosition + 1; }
+    public int minPosition() { return start(); }
+    public int maxPosition() { return end(); }
+    public int range() { return super.baseLength(); }
+
+    public int readRangeStart() { return start() - BAM_READ_JUNCTION_BUFFER; }
+    public int readRangeEnd() { return end() + BAM_READ_JUNCTION_BUFFER; }
+
+    public void setIndex(int index) { mIndex = index; }
+    public int index() { return mIndex; }
 
     public void addJunction(final Junction junction)
     {
         mJunctions.add(junction);
-        mMaxPosition = max(mMaxPosition, junction.Position);
-        mMinPosition = min(mMinPosition, junction.Position);
+        setEnd(max(end(), junction.Position));
+        setStart(min(start(), junction.Position));
     }
 
     public List<Read> candidateReads() { return mCandidateReads; }
@@ -49,22 +58,36 @@ public class JunctionGroup implements Comparable<JunctionGroup>
     public void clearCandidateReads() { mCandidateReads.clear(); }
     public int candidateReadCount() { return mCandidateReads.size(); }
 
+    public void addJunctionAssemblies(final List<JunctionAssembly> assemblies) { mJunctionAssemblies.addAll(assemblies); }
+    public List<JunctionAssembly> junctionAssemblies() { return mJunctionAssemblies; }
+
+    public boolean overlapsRemoteRegion(final RemoteRegion region)
+    {
+        return positionsOverlap(readRangeStart(), readRangeEnd(), region.start(), region.end());
+    }
+
     public String toString()
     {
         return format("%s:%d-%d range(%d) count(%d) reads(%d)",
-            chromosome(), mMinPosition, mMaxPosition, range(), mJunctions.size(), mCandidateReads.size());
+            chromosome(), start(), end(), range(), mJunctions.size(), mCandidateReads.size());
     }
 
-    @Override
-    public int compareTo(@NotNull final JunctionGroup other)
+    public static <E extends BaseRegion> int binarySearch(int readStart, final List<E> regions)
     {
-        int firstRange = range();
-        int secondRange = other.range();
+        // Returns index of the last region in regions with start pos less than or equal to readStart
+        // If all regions have start pos larger than readStart then return zero. It is assumed that regions are sorted
+        int binarySearchIndex = Collections.binarySearch(regions, new BaseRegion(readStart, readStart));
 
-        if(firstRange == secondRange)
+        if(binarySearchIndex >= 0)
+            return binarySearchIndex; // found with exact match for start pos
+
+        // get insertion point
+        int insertionIndex = -(binarySearchIndex + 1);
+
+        if(insertionIndex == 0)
             return 0;
 
-        return firstRange > secondRange ? -1 : 1;
+        return insertionIndex - 1;
     }
 
     public static List<JunctionGroup> buildJunctionGroups(final List<Junction> junctions, final int maxDistance)

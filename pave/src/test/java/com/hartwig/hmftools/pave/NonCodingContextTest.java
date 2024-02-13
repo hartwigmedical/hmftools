@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FIVE_PRIME_UTR;
@@ -25,6 +24,7 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.THREE_PRI
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.UPSTREAM_GENE;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createSnv;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.generateAlt;
+import static com.hartwig.hmftools.pave.ImpactTestUtils.generateTestBases;
 import static com.hartwig.hmftools.pave.PaveConstants.PROMOTOR_UPSTREAM_GENE_IDS;
 
 import static junit.framework.TestCase.assertEquals;
@@ -317,7 +317,7 @@ public class NonCodingContextTest
     {
         final MockRefGenome refGenome = new MockRefGenome();
 
-        final String refBases = generateRandomBases(800);
+        final String refBases = generateTestBases(800);
 
         refGenome.RefGenomeMap.put(CHR_1, refBases);
 
@@ -383,7 +383,7 @@ public class NonCodingContextTest
     {
         final MockRefGenome refGenome = new MockRefGenome();
 
-        final String refBases = generateRandomBases(500);
+        final String refBases = generateTestBases(500);
 
         refGenome.RefGenomeMap.put(CHR_1, refBases);
 

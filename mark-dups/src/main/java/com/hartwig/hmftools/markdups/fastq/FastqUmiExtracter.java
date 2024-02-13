@@ -57,7 +57,7 @@ public class FastqUmiExtracter
         mAdapterSequence = configBuilder.getValue(ADAPTER_SEQUENCE);
 
         mAdapterUmiLength = mAdapterSequence != null ? mAdapterSequence.length() + mUmiLength : 0;
-        mAdapterSequenceReversed = mAdapterSequence != null ? Nucleotides.reverseStrandBases(mAdapterSequence) : null;
+        mAdapterSequenceReversed = mAdapterSequence != null ? Nucleotides.reverseComplementBases(mAdapterSequence) : null;
     }
 
     public void run()

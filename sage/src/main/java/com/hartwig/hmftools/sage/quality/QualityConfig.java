@@ -28,7 +28,7 @@ public class QualityConfig
     public final double ReadEventsPenalty;
     public final int ImproperPairPenalty;
     public final double MapQualityRatioFactor;
-    public final boolean HighBaseMode;
+    public final boolean HighDepthMode;
     public final int HighBaseQualLimit;
 
     private static final String JITTER_PENALTY = "jitter_penalty";
@@ -53,15 +53,15 @@ public class QualityConfig
         ReadEventsPenalty = configBuilder.getDecimal(MAP_QUAL_READ_EVENTS_PENALTY);
         ImproperPairPenalty = configBuilder.getInteger(MAP_QUAL_IMPROPER_PAIR_PENALTY);
 
-        HighBaseMode = configBuilder.hasFlag(HIGH_DEPTH_MODE);
+        HighDepthMode = configBuilder.hasFlag(HIGH_DEPTH_MODE);
 
-        FixedPenalty = HighBaseMode && !configBuilder.hasValue(MAP_QUAL_FIXED_PENALTY) ?
+        FixedPenalty = HighDepthMode && !configBuilder.hasValue(MAP_QUAL_FIXED_PENALTY) ?
                 DEFAULT_HIGH_DEPTH_MAP_QUAL_FIXED_PENALTY : configBuilder.getInteger(MAP_QUAL_FIXED_PENALTY);
 
-        MapQualityRatioFactor = HighBaseMode && !configBuilder.hasValue(MAP_QUAL_RATIO_FACTOR) ?
+        MapQualityRatioFactor = HighDepthMode && !configBuilder.hasValue(MAP_QUAL_RATIO_FACTOR) ?
                 DEFAULT_HIGH_DEPTH_MAP_QUAL_RATIO_FACTOR : configBuilder.getDecimal(MAP_QUAL_RATIO_FACTOR);
 
-        HighBaseQualLimit = HighBaseMode ? configBuilder.getInteger(HIGH_DEPTH_BASE_QUAL_LIMIT) : 0;
+        HighBaseQualLimit = HighDepthMode ? configBuilder.getInteger(HIGH_DEPTH_BASE_QUAL_LIMIT) : 0;
     }
 
     public QualityConfig(boolean highDepthMode)
@@ -76,8 +76,8 @@ public class QualityConfig
         ImproperPairPenalty = DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;
         MapQualityRatioFactor = DEFAULT_MQ_RATIO_FACTOR;
 
-        HighBaseMode = highDepthMode;
-        HighBaseQualLimit = HighBaseMode ? DEFAULT_HIGH_DEPTH_BASE_QUAL : 0;
+        HighDepthMode = highDepthMode;
+        HighBaseQualLimit = HighDepthMode ? DEFAULT_HIGH_DEPTH_BASE_QUAL : 0;
     }
 
     public boolean isHighlyPolymorphic(final GenomePosition position)

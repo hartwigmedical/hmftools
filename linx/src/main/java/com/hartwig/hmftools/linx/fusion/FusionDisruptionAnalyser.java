@@ -568,7 +568,7 @@ public class FusionDisruptionAnalyser
 
                     for(LinkedPair pair : traversedPairs)
                     {
-                        totalLinkLength += pair.length();
+                        totalLinkLength += pair.baseLength();
 
                         if(pair.isInferred())
                             allTraversalAssembled = false;

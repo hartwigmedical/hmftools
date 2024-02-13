@@ -1,570 +1,486 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_MIN_SUPPORT;
-import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_MIN_SUPPORT_FINAL;
-import static com.hartwig.hmftools.esvee.SvConstants.TASK_LOG_COUNT;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.lang.String.format;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
+import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_OVERLAP_BASES;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.common.AssemblyUtils.findUnsetBases;
+import static com.hartwig.hmftools.esvee.common.RefSideSoftClip.purgeRefSideSoftClips;
+import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_DISCORDANT_READ;
+import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_MATE;
+import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_SUPP;
+import static com.hartwig.hmftools.esvee.common.RemoteRegion.mergeRegions;
+import static com.hartwig.hmftools.esvee.common.RemoteRegion.purgeWeakSuppRegions;
+import static com.hartwig.hmftools.esvee.common.SupportType.DISCORDANT;
+import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
+import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
+
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.common.Direction;
-import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.common.JunctionGroup;
-import com.hartwig.hmftools.esvee.common.ThreadTask;
-import com.hartwig.hmftools.esvee.sequence.ExtendedAssembly;
-import com.hartwig.hmftools.esvee.sequence.PrimaryAssembly;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.esvee.common.AssemblySupport;
+import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.common.RefBaseAssembly;
+import com.hartwig.hmftools.esvee.common.RefSideSoftClip;
+import com.hartwig.hmftools.esvee.common.RemoteRegion;
+import com.hartwig.hmftools.esvee.common.SupportType;
 import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.sequence.ReadSupport;
-import com.hartwig.hmftools.esvee.sequence.SupportedAssembly;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.Nullable;
-
-public class AssemblyExtender extends ThreadTask
+public class AssemblyExtender
 {
-    private final Map<String,List<JunctionGroup>> mJunctionGroupMap;
-    private final Queue<PrimaryAssembly> mPrimaryAssemblyQueue;
-    private final int mPrimaryAssemblyCount;
-    private final SvConfig mConfig;
+    private final List<JunctionAssembly> mAssemblies;
 
-    private final List<ExtendedAssembly> mExtendedAssemblies;
-
-    private final SupportChecker mSupportChecker;
-    private final NodeFolder mNodeFolder;
-    private final AssemblyExtenderCounters mCounters;
-
-    private int mNextAssemblyNumber;
-
-    public static List<AssemblyExtender> createThreadTasks(
-            final Map<String,List<JunctionGroup>> junctionGroupMap, final List<PrimaryAssembly> primaryAssemblies,
-            final SvConfig config, final int taskCount, final List<Thread> threadTasks)
+    public AssemblyExtender(final JunctionAssembly assembly)
     {
-        List<AssemblyExtender> assemblyExtenderTasks = Lists.newArrayList();
+        mAssemblies = Lists.newArrayList(assembly);
+    }
 
-        Queue<PrimaryAssembly> primaryAssemblyQueue = new ConcurrentLinkedQueue<>();
+    public List<JunctionAssembly> assemblies() { return mAssemblies; }
 
-        // sort by reads with the most support first, assuming they may also have the most complexity
-        List<PrimaryAssembly> primaryAssembliesSorted = Lists.newArrayList(primaryAssemblies);
-        Collections.sort(primaryAssembliesSorted, Comparator.comparingInt(PrimaryAssembly::readSupportCount).reversed());
+    public void extendAssembly(final List<Read> unfilteredNonJunctionReads)
+    {
+        // first establish potential boundaries for extending the assembly on the non-junction side
+        JunctionAssembly assembly = mAssemblies.get(0);
 
-        primaryAssemblyQueue.addAll(primaryAssembliesSorted);
+        int minAlignedPosition = assembly.minAlignedPosition();
+        int maxAlignedPosition = assembly.maxAlignedPosition();
 
-        int primaryAssemblyCount = primaryAssemblies.size();
+        boolean isForwardJunction = assembly.junction().isForward();
+        int junctionPosition = assembly.junction().Position;
 
-        for(int i = 0; i < taskCount; ++i)
+        List<Read> discordantReads = unfilteredNonJunctionReads.stream()
+                .filter(x -> isDiscordantCandidate(x, isForwardJunction, junctionPosition)) // not keeping reads with unmapped mates since not sure how to incorporate their bases
+                // .filter(x -> !x.hasMateSet()) // will now be set for local INVs and DUPs, so cannot bea an excluding criteria
+                .filter(x -> !assembly.hasReadSupport(x.mateRead()))
+                .collect(Collectors.toList());
+
+        List<NonJunctionRead> candidateReads = discordantReads.stream()
+                .map(x -> new NonJunctionRead(x, DISCORDANT)).collect(Collectors.toList());
+
+        List<Read> remoteJunctionMates = Lists.newArrayList();
+        List<Read> suppJunctionReads = Lists.newArrayList();
+
+        // add any junction mates in the same window
+        for(AssemblySupport support : assembly.support())
         {
-            AssemblyExtender assemblyExtender = new AssemblyExtender(config, junctionGroupMap, primaryAssemblyQueue);
-            assemblyExtenderTasks.add(assemblyExtender);
-            threadTasks.add(assemblyExtender);
+            if(support.read().hasSupplementary())
+                suppJunctionReads.add(support.read());
+
+            if(isDiscordant(support.read()))
+            {
+                remoteJunctionMates.add(support.read());
+                continue;
+            }
+
+            // look to extend from local mates on the ref side of the junction
+            Read mateRead = support.read().mateRead();
+
+            if(mateRead == null || discordantReads.contains(mateRead) || mateRead.isUnmapped())
+                continue;
+
+            if(isForwardJunction)
+            {
+                if(mateRead.alignmentEnd() >= junctionPosition)
+                    continue;
+            }
+            else
+            {
+                if(mateRead.alignmentStart() <= junctionPosition)
+                    continue;
+            }
+
+            candidateReads.add(new NonJunctionRead(mateRead, JUNCTION_MATE));
         }
 
-        SV_LOGGER.debug("splitting {} primary assemblies across {} threads", primaryAssemblyCount, taskCount);
+        // now all possible discordant and junction mate reads have been collected, so test for overlaps with the min/max aligned position
+        // process in order of closest to furthest-out reads in the ref base direction
+        List<NonJunctionRead> sortedCandidateReads = candidateReads.stream()
+                .sorted(Comparator.comparingInt(x -> isForwardJunction ? -x.read().alignmentEnd() : x.read().alignmentStart()))
+                .collect(Collectors.toList());
 
-        return assemblyExtenderTasks;
-    }
+        List<NonJunctionRead> candidateNonJunctionReads = Lists.newArrayList();
 
-    public AssemblyExtender(
-            final SvConfig config, final Map<String,List<JunctionGroup>> junctionGroupMap, final Queue<PrimaryAssembly> primaryAssemblyQueue)
-    {
-        super("AssemblyExtender");
-        mJunctionGroupMap = junctionGroupMap;
-        mPrimaryAssemblyQueue = primaryAssemblyQueue;
-        mPrimaryAssemblyCount = primaryAssemblyQueue.size();
-        mConfig = config;
-        mSupportChecker = new SupportChecker();
-        mCounters = new AssemblyExtenderCounters();
-        mNodeFolder = new NodeFolder();
-        mExtendedAssemblies = Lists.newArrayList();
-        mNextAssemblyNumber = 1;
-    }
+        boolean hasGapped = false;
 
-    @Override
-    public void run()
-    {
-        while(true)
+        for(NonJunctionRead njRead : sortedCandidateReads)
         {
-            try
+            Read read = njRead.read();
+
+            if(isForwardJunction)
             {
-                int remainingCount = mPrimaryAssemblyQueue.size();
-                int processedCount = mPrimaryAssemblyCount - remainingCount;
-
-                PrimaryAssembly primaryAssembly = mPrimaryAssemblyQueue.remove();
-
-                mPerfCounter.start();
-                processPrimaryAssembly(primaryAssembly);
-
-                stopCheckLog(primaryAssembly.toString(), mConfig.PerfLogTime);
-
-                if(processedCount > 0 && (processedCount % TASK_LOG_COUNT) == 0)
+                if(read.alignmentEnd() < minAlignedPosition + ASSEMBLY_EXTENSION_OVERLAP_BASES)
                 {
-                    SV_LOGGER.info("processed {} primary assemblies, remaining({})", processedCount, remainingCount);
+                    hasGapped = true;
+                }
+                else
+                {
+                    minAlignedPosition = min(minAlignedPosition, read.alignmentStart());
                 }
             }
-            catch(NoSuchElementException e)
+            else
             {
-                SV_LOGGER.trace("all tasks complete");
-                break;
+                if(read.alignmentStart() > maxAlignedPosition - ASSEMBLY_EXTENSION_OVERLAP_BASES)
+                {
+                    hasGapped = true;
+                }
+                else
+                {
+                    maxAlignedPosition = max(maxAlignedPosition, read.alignmentEnd());
+                }
             }
-            catch(Exception e)
+
+            if(hasGapped)
             {
-                e.printStackTrace();
-                System.exit(1);
+                if(njRead.type() == DISCORDANT)
+                    discordantReads.remove(read);
+            }
+            else
+            {
+                assembly.checkAddRefSideSoftClip(read);
+                candidateNonJunctionReads.add(njRead);
             }
         }
-    }
 
-    public List<ExtendedAssembly> extendedAssemblies() { return mExtendedAssemblies; }
+        int nonSoftClipRefPosition = isForwardJunction ? minAlignedPosition : maxAlignedPosition;
 
-    public void processPrimaryAssembly(final PrimaryAssembly assembly)
-    {
-        JunctionGroup junctionGroup = findJunctionGroup(assembly.OriginalJunction);
+        // only keep possible alternative ref-base assemblies with sufficient evidence and length
+        List<RefSideSoftClip> refSideSoftClips = assembly.refSideSoftClips();
 
-        List<Read> discordantReads = new DiscordantPairFinder().findDiscordantReads(assembly.supportingReads(), junctionGroup.candidateReads());
+        purgeRefSideSoftClips(refSideSoftClips, PRIMARY_ASSEMBLY_MIN_READ_SUPPORT, PRIMARY_ASSEMBLY_MIN_LENGTH, nonSoftClipRefPosition);
 
-        // mCounters.DiscordantReadsFound.add(discordantReads.size());
+        boolean hasUnmatched = assembly.refSideSoftClips().stream().anyMatch(x -> !x.matchesOriginal());
 
-        List<ExtendedAssembly> leftExtended = extendLeft(assembly, discordantReads);
-
-        leftExtended = limitBasedOnSupport(AssemblyFiltering.trimAndDeduplicate(
-                mSupportChecker, leftExtended), ASSEMBLY_EXTENSION_MIN_SUPPORT);
-
-        List<ExtendedAssembly> rightExtended = leftExtended.stream()
-                .flatMap(x -> extendRight(x, discordantReads).stream()).collect(Collectors.toList());
-
-        List<ExtendedAssembly> extendedAssemblies = limitBasedOnSupport(AssemblyFiltering.trimAndDeduplicate(
-                mSupportChecker, rightExtended), ASSEMBLY_EXTENSION_MIN_SUPPORT_FINAL);
-
-        mExtendedAssemblies.addAll(extendedAssemblies);
-    }
-
-    private JunctionGroup findJunctionGroup(final Junction junction)
-    {
-        List<JunctionGroup> junctionGroups = mJunctionGroupMap.get(junction.Chromosome);
-
-        if(junctionGroups == null)
-            return null;
-
-        return junctionGroups.stream().filter(x -> x.junctions().contains(junction)).findFirst().orElse(null);
-    }
-
-    private List<ExtendedAssembly> limitBasedOnSupport(final List<ExtendedAssembly> assemblies, final int limit)
-    {
-        // If we've ended up with too many assemblies from this junction, raise the minimum support requirements to resolve.
-        while(assemblies.size() > limit)
+        if(!hasUnmatched)
         {
-            final int minSupport = assemblies.stream()
-                    .mapToInt(candidate -> candidate.getSupportReadNames().size())
-                    .min()
-                    .orElseThrow();
+            RefBaseAssembly refBaseAssembly = new RefBaseAssembly(assembly, nonSoftClipRefPosition);
 
-            assemblies.removeIf(candidate -> candidate.getSupportReadNames().size() <= minSupport);
-        }
-        return assemblies;
-    }
+            checkAddRefAssemblySupport(refBaseAssembly, candidateNonJunctionReads, Collections.emptySet());
 
-    private String nextAssemblyName(final String assemblyName)
-    {
-        return String.format("%sE%s", assemblyName, mNextAssemblyNumber++);
-    }
+            if(refBaseAssembly.supportCount() > 0)
+                assembly.mergeRefBaseAssembly(refBaseAssembly);
 
-    /*
-    private List<Pair<Read, Read>> findMates(final Collection<Read> reads)
-    {
-        return mSAMSource.streamMates(reads).collect(Collectors.toList());
-
-        as per the SAMSource interface:
-        final Stream<RegionOfInterest> mateRegionsUnmerged = records.stream()
-                .map(record -> record.isMateMapped()
-                        ? new RegionOfInterest(record.getMateChromosome(), record.getMateAlignmentStart(),
-                        record.getMateAlignmentStart() + record.getLength())
-                        : new RegionOfInterest(record.getChromosome(), record.getAlignmentStart(),
-                                record.getAlignmentStart() + record.getLength()));
-        final List<RegionOfInterest> mappedMateRegions = RegionOfInterest.tryMerge(mateRegionsUnmerged::iterator);
-
-        final Map<String, List<Record>> recordsByName = records.stream()
-                .collect(MultiMapCollector.keyed(Record::getName));
-
-        return mappedMateRegions.stream()
-                .map(mateRegion -> streamReadsContaining(mateRegion.Chromosome, mateRegion.Start, mateRegion.End)
-                        .flatMap(record -> recordsByName.getOrDefault(record.getName(), List.of()).stream()
-                                .filter(match -> match.isFirstOfPair() != record.isFirstOfPair())
-                                .map(match -> Pair.of(match, record))))
-                .reduce(Stream::concat).orElse(Stream.of());
-    }
-    */
-
-    private List<Read> findMateReads(final SupportedAssembly assembly, byte requiredOrientation)
-    {
-        List<Read> mateReads = Lists.newArrayList();
-
-        for(Read read : assembly.supportingReads())
-        {
-            if(!read.hasMateSet())
-                continue;
-
-            if(read.orientation() != requiredOrientation)
-                continue;
-
-            Read mateRead = read.mateRead();
-
-            if(assembly.containsSupport(mateRead)) // a little inefficient?
-                continue;
-
-            // CHECK: flip read if pair is an INV
-
-            mateReads.add(mateRead);
+            findRemoteRegions(assembly, Collections.emptySet(), discordantReads, remoteJunctionMates, suppJunctionReads);
+            return;
         }
 
-        if(requiredOrientation == NEG_ORIENT)
-            Collections.sort(mateReads, Comparator.comparingInt(Read::getUnclippedEnd).reversed());
+        // now build out any distinct, branching assemblies from ref-base soft-clips
+        List<Set<Read>> excludedReadsList = allocateExcludedReads(assembly, candidateNonJunctionReads);
+        List<AssemblySupport> initialSupport = Lists.newArrayList(assembly.support());
+
+        // the original assembly is handled first
+        for(int i = 0; i < excludedReadsList.size(); ++i)
+        {
+            Set<Read> excludedReads = excludedReadsList.get(i);
+
+            JunctionAssembly junctionAssembly = null;
+
+            int extensionRefPosition;
+
+            if(i == 0)
+            {
+                junctionAssembly = assembly;
+
+                // first remove support from the main assembly
+                excludedReads.forEach(x -> assembly.removeSupportRead(x));
+
+                // and check if it
+                if(assembly.supportCount() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+                {
+                    mAssemblies.clear();
+                    continue;
+                }
+
+                extensionRefPosition = isForwardJunction ? minAlignedPosition : maxAlignedPosition;
+            }
+            else
+            {
+                RefSideSoftClip refSideSoftClip = refSideSoftClips.get(i - 1);
+
+                if(refSideSoftClip.matchesOriginal())
+                    continue;
+
+                junctionAssembly = new JunctionAssembly(assembly, refSideSoftClip, initialSupport, excludedReads);
+
+                if(junctionAssembly.supportCount() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+                    continue;
+
+                extensionRefPosition = refSideSoftClip.Position;
+            }
+
+            RefBaseAssembly refBaseAssembly = new RefBaseAssembly(junctionAssembly, extensionRefPosition);
+
+            checkAddRefAssemblySupport(refBaseAssembly, candidateNonJunctionReads, excludedReads);
+
+            // only add branched assemblies if they have sufficient support
+            if(junctionAssembly != assembly)
+            {
+                if(refBaseAssembly.supportCount() == 0)
+                    continue;
+
+                junctionAssembly.mergeRefBaseAssembly(refBaseAssembly);
+
+                if(junctionAssembly.hasUnsetBases())
+                    continue;
+
+                // same criteria as above
+                if(junctionAssembly.supportCount() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+                    continue;
+
+                mAssemblies.add(junctionAssembly);
+            }
+            else
+            {
+                if(refBaseAssembly.supportCount() > 0) // same criteria as above
+                    junctionAssembly.mergeRefBaseAssembly(refBaseAssembly);
+            }
+
+            findRemoteRegions(junctionAssembly, excludedReads, discordantReads, remoteJunctionMates, suppJunctionReads);
+        }
+
+        // apply filters again since read support may now be below required level
+
+        // set references between them - for now just for TSV output
+        for(JunctionAssembly junctionAssembly : mAssemblies)
+        {
+            mAssemblies.stream().filter(x -> x != junctionAssembly).forEach(x -> junctionAssembly.addBranchedAssembly(x));
+        }
+    }
+
+    private class NonJunctionRead
+    {
+        private final Read mRead;
+        private final SupportType mType;
+
+        public NonJunctionRead(final Read read, final SupportType type)
+        {
+            mRead = read;
+            mType = type;
+        }
+
+        public Read read() { return mRead; }
+        public SupportType type() { return mType; }
+
+        public String toString()
+        {
+            return format("%s: %s", type(), mRead);
+        }
+    }
+
+    private boolean isDiscordantCandidate(final Read read, boolean isForwardJunction, int junctionPosition)
+    {
+        // cannot cross the junction since will already have considered all junction candidate reads
+        if(isForwardJunction)
+        {
+            if(read.alignmentEnd() >= junctionPosition)
+                return false;
+        }
         else
-            Collections.sort(mateReads, Comparator.comparingInt(Read::getUnclippedStart));
-
-        // CHECK: was .sorted(Comparator.comparingInt(pair -> assembly.getSupportIndex(pair.getLeft())))
-
-        return mateReads;
-    }
-
-    private List<ExtendedAssembly> extendLeft(final SupportedAssembly assembly, final List<Read> discordantReads)
-    {
-        List<Read> mateReads = findMateReads(assembly, NEG_ORIENT);
-
-        /*
-        List<Pair<Read, Read>> pairedMates = findMates(assembly.getSupportRecords().stream()
-                .filter(x -> x.negativeStrand())
-                .collect(Collectors.toList()));
-
-        // note that this method flips the right read if this pair is an INV
-        final List<Read> mates = pairedMates.stream()
-                .filter(pair -> !assembly.containsSupport(pair.getRight()))
-                .filter(pair -> AlignmentFilters.isRecordAverageQualityAbove(pair.getRight().getBaseQuality(), SvConstants.AVG_BASE_QUAL_THRESHOLD))
-                .map(pair -> pair.getLeft().positiveStrand() == pair.getRight().positiveStrand()
-                        ? ReadUtils.flipRead(pair.getRight())
-                        : pair.getRight())
-                .sorted(Comparator.comparingInt(Read::getUnclippedEnd).reversed())
-                .collect(Collectors.toList());
-        */
-
-        // mCounters.LeftMates.add(mateReads.size());
-
-        discordantReads.sort(Comparator.comparingInt(Read::getUnclippedEnd).reversed());
-
-        List<Read> applicableDiscordantReads = discordantReads.stream().filter(x -> !x.negativeStrand()).collect(Collectors.toList());
-
-        final Map<Read, Integer> checkStartIndices = new LinkedHashMap<>();
-        for(Read read : Iterables.concat(mateReads, applicableDiscordantReads))
         {
-            // Get the support index of this record or its mate
-            List<ReadSupport> readSupports = assembly.getReadSupport(read.getName());
-
-            Integer existingSupportIndex = null;
-
-            // CHECK: take the lowest index including read length - why?
-            if(readSupports != null)
-            {
-                for(ReadSupport readSupport : readSupports)
-                {
-                    int combinedLength = readSupport.Index + readSupport.Read.getLength();
-
-                    if(existingSupportIndex == null || combinedLength < existingSupportIndex)
-                        existingSupportIndex = combinedLength;
-                }
-
-            }
-
-            /*
-            Integer existingSupportIndex = assembly.getSupport(read.getName()).stream()
-                    .map(entry -> entry.getValue() + entry.getKey().getLength())
-                    .min(Comparator.naturalOrder())
-                    .orElse(null);
-            */
-
-            int minDepth = existingSupportIndex == null
-                    ? assembly.getLength() - read.getLength()
-                    : Math.max(assembly.getLength() - read.getLength(), assembly.getLength() - existingSupportIndex);
-            checkStartIndices.put(read, minDepth);
+            if(read.alignmentStart() <= junctionPosition)
+                return false;
         }
 
-        Direction assemblyReadDirection = Direction.REVERSE;
-
-        Direction mateReadDirection = Direction.REVERSE;
-
-        List<ExtendedAssembly> extended = extendAssembly(
-                assembly, assemblyReadDirection, mateReads, discordantReads,
-                checkStartIndices, mateReadDirection); // , mCounters.LeftMatesAssembled, mCounters.LeftDiscordantReadsAssembled
-
-        // mCounters.ExtendLeftAssemblies.add(extended.size());
-
-        return extended;
+        return isDiscordant(read);
     }
 
-    private List<ExtendedAssembly> extendRight(final SupportedAssembly assembly, final List<Read> discordantReads)
+    private List<Set<Read>> allocateExcludedReads(final JunctionAssembly assembly, final List<NonJunctionRead> nonJunctionReads)
     {
-        /*
-        final List<Pair<Read, Read>> pairedMates = findMates(assembly.getSupportRecords().stream()
-                .filter(record -> !record.negativeStrand())
-                .collect(Collectors.toList()));
+        // now build out any distinct, branching assemblies from ref-base soft-clips
+        List<RefSideSoftClip> refSideSoftClips = assembly.refSideSoftClips();
 
-        // CHECK: reason for flipping?
-        // CHECK: why checking avg base qual again when already checked for all reads?
-        final List<Read> mates = pairedMates.stream()
-                .filter(pair -> !assembly.containsSupport(pair.getRight()))
-                .filter(pair -> AlignmentFilters.isRecordAverageQualityAbove(pair.getRight().getBaseQuality(), SvConstants.AVG_BASE_QUAL_THRESHOLD))
-                .sorted(Comparator.comparingInt(pair -> assembly.getSupportIndex(pair.getLeft())))
-                .map(pair -> pair.getLeft().positiveStrand() == pair.getRight().positiveStrand()
-                        ? ReadUtils.flipRead(pair.getRight()) : pair.getRight())
-                .collect(Collectors.toList());
-        */
+        boolean isForwardJunction = assembly.isForwardJunction();
+        Set<Read> nscReads = Sets.newHashSet();
 
-        List<Read> mateReads = findMateReads(assembly, POS_ORIENT);
+        int maxRefSideSoftClipPosition = isForwardJunction ?
+                refSideSoftClips.stream().filter(x -> !x.matchesOriginal()).mapToInt(x -> x.Position).min().orElse(0)
+                : refSideSoftClips.stream().filter(x -> !x.matchesOriginal()).mapToInt(x -> x.Position).max().orElse(0);
 
-        // mCounters.RightMates.add(mateReads.size());
+        List<Read> allReads = assembly.support().stream().map(x -> x.read()).collect(Collectors.toList());
+        nonJunctionReads.forEach(x -> allReads.add(x.read()));
 
-        discordantReads.sort(Comparator.comparingInt(Read::getUnclippedStart));
+        Set<Read> softClippedReads = Sets.newHashSet();
+        refSideSoftClips.stream().filter(x -> !x.matchesOriginal()).forEach(x -> softClippedReads.addAll(x.reads()));
 
-        List<Read> applicableDiscordantReads = discordantReads.stream().filter(x -> x.negativeStrand()).collect(Collectors.toList());
-
-        final Map<Read, Integer> checkStartIndices = new LinkedHashMap<>();
-
-        for(Read read : Iterables.concat(mateReads, applicableDiscordantReads))
+        // find any supporting read or read mate which extends past the furthest soft-clip position
+        for(Read read : allReads)
         {
-            // Get the support index of this record or its mate
-            Integer existingSupportIndex = null;
-
-            List<ReadSupport> readSupports = assembly.getReadSupport(read.getName());
-
-            if(readSupports != null)
-            {
-                // CHECK: shouldn't be null?
-                existingSupportIndex = readSupports.stream().mapToInt(x -> x.Index).max().orElse(-1);
-            }
-
-            /*
-            Integer existingSupportIndex = assembly.getSupport(read.getName()).stream()
-                    .map(Map.Entry::getValue)
-                    .max(Comparator.naturalOrder())
-                    .orElse(null);
-             */
-
-            int minDepth = existingSupportIndex == null
-                    ? assembly.getLength() - read.getLength()
-                    : Math.max(assembly.getLength() - read.getLength(), existingSupportIndex);
-
-            checkStartIndices.put(read, minDepth);
-        }
-
-        Direction assemblyReadDirection = Direction.FORWARDS;
-
-        Direction mateReadDirection = Direction.FORWARDS;
-
-        List<ExtendedAssembly> extended = extendAssembly(
-                assembly, assemblyReadDirection, mateReads, applicableDiscordantReads, checkStartIndices, mateReadDirection);
-
-        // mCounters.ExtendRightAssemblies.add(extended.size());
-
-        return extended;
-    }
-
-    private List<ExtendedAssembly> extendAssembly(
-            final SupportedAssembly assembly, final Direction assemblyDirection,
-            final List<Read> mateAlignments,
-            final List<Read> discordantAlignments,
-            final Map<Read, Integer> alignmentMinDepth,
-            final Direction alignmentDirection)
-    {
-        if(mateAlignments.isEmpty() && discordantAlignments.isEmpty())
-        {
-            if(assembly instanceof ExtendedAssembly)
-                return List.of((ExtendedAssembly) assembly);
-
-            ExtendedAssembly newAssembly = new ExtendedAssembly(assembly.Name, assembly.Assembly, assembly);
-
-            assembly.readSupport().forEach(x -> newAssembly.addEvidenceAt(x.Read, x.Index));
-            return List.of(newAssembly);
-        }
-
-        final HeadNode existing = HeadNode.create(assembly, assemblyDirection);
-
-        final List<Read> potentialNewSupport = new ArrayList<>();
-        extendAssembly(existing, potentialNewSupport, mateAlignments, alignmentMinDepth, alignmentDirection); // mateAttachCounter
-        extendAssembly(existing, potentialNewSupport, discordantAlignments, alignmentMinDepth, alignmentDirection); // discordantAttachCounter
-
-        final Map<Read, Set<Integer>> supportStartIndices = potentialSupportIndices(existing);
-
-        return existing.flatten().stream()
-                .map(newAssembly ->
-                {
-                    final String directionCorrected = assemblyDirection == Direction.FORWARDS
-                            ? newAssembly
-                            : new StringBuilder(newAssembly).reverse().toString();
-
-                    final ExtendedAssembly newCandidate = new ExtendedAssembly(nextAssemblyName(assembly.Name), directionCorrected, assembly);
-
-                    reAddSupport(newCandidate, assembly, potentialNewSupport, supportStartIndices,
-                            assemblyDirection == Direction.FORWARDS);
-
-                    return newCandidate;
-                }).collect(Collectors.toList());
-    }
-
-    private void extendAssembly(
-            final HeadNode existing, final List<Read> potentialNewSupport, final List<Read> alignments,
-            final Map<Read, Integer> alignmentMinDepth, final Direction alignmentDirection)
-    {
-        for(Read read : alignments)
-        {
-            @Nullable
-            final Integer depth = alignmentMinDepth.get(read);
-            final HeadNode toAttach = alignmentAsGraph(read, alignmentDirection);
-
-            if(existing.attach(toAttach, SvConstants.ASSEMBLY_EXTENSION_MIN_MATCH_BASES, SvConstants.ASSEMBLY_EXTENSION_MAX_MISMATCH,
-                    Objects.requireNonNullElse(depth, 0), Integer.MAX_VALUE))
-            {
-                potentialNewSupport.add(read);
-                // attachCounter.add(1);
-            }
-        }
-    }
-
-    // Once we've built the graph, try and work out where in the flattened output different records may appear
-    private Map<Read, Set<Integer>> potentialSupportIndices(final HeadNode head)
-    {
-        final Map<Read, Set<Integer>> candidateLocations = new HashMap<>();
-        final Deque<Pair<Node, Integer>> worklist = new ArrayDeque<>();
-        final Set<Pair<Node, Integer>> seen = new HashSet<>();
-        for(Node successor : head.successors())
-            worklist.add(Pair.of(successor, 0));
-
-        while(!worklist.isEmpty())
-        {
-            final Pair<Node, Integer> pair = worklist.poll();
-            if(!seen.add(pair))
+            if(softClippedReads.contains(read) || read.hasMateSet() && softClippedReads.contains(read.mateRead()))
                 continue;
 
-            final Node node = pair.getLeft();
-            final int depth = pair.getRight();
+            boolean addRead = false;
 
-            for(Node.Support support : node.Support)
-                if(support.ReadIndex <= 2)
-                    candidateLocations.computeIfAbsent(support.Read, r -> new LinkedHashSet<>()).add(depth - support.ReadIndex);
+            if(isForwardJunction)
+            {
+                if(read.alignmentStart() < maxRefSideSoftClipPosition
+                || (read.hasMateSet() && read.mateRead().alignmentStart() < maxRefSideSoftClipPosition))
+                {
+                    addRead = true;
+                }
+            }
+            else
+            {
+                if(read.alignmentEnd() > maxRefSideSoftClipPosition
+                || (read.hasMateSet() && read.mateRead().alignmentEnd() > maxRefSideSoftClipPosition))
+                {
+                    addRead = true;
+                }
+            }
 
-            for(Node successor : node.successors())
-                worklist.add(Pair.of(successor, depth + 1));
+            if(addRead)
+            {
+                nscReads.add(read);
+
+                if(read.hasMateSet())
+                    nscReads.add(read.mateRead());
+            }
         }
 
-        return candidateLocations;
+        int finalAssemblyCount = 1 + refSideSoftClips.size();
+        List<Set<Read>> excludedReadsList = Lists.newArrayListWithCapacity(finalAssemblyCount);
+
+        // the original assembly cannot have any
+        excludedReadsList.add(softClippedReads);
+
+        for(RefSideSoftClip refSideSoftClip : refSideSoftClips)
+        {
+            Set<Read> excludedReads = Sets.newHashSet();
+
+            if(!refSideSoftClip.matchesOriginal())
+                excludedReads.addAll(nscReads);
+
+            excludedReadsList.add(excludedReads);
+
+            for(RefSideSoftClip other : refSideSoftClips)
+            {
+                if(refSideSoftClip == other)
+                    continue;
+
+                excludedReads.addAll(other.reads());
+            }
+        }
+
+        return excludedReadsList;
     }
 
-    private void reAddSupport(
-            final ExtendedAssembly assembly, final SupportedAssembly original, final List<Read> potentialSupport,
-            final Map<Read, Set<Integer>> supportStartIndices, final boolean isForwards)
+    private static void checkAddRefAssemblySupport(
+            final RefBaseAssembly refBaseAssembly, final List<NonJunctionRead> reads, final Set<Read> excludedReads)
     {
-        if(potentialSupport.size() > 1_000)
+        for(NonJunctionRead njRead : reads)
+        {
+            if(!excludedReads.contains(njRead.read()))
+            {
+                refBaseAssembly.checkAddRead(
+                        njRead.read(), njRead.type(), ASSEMBLY_EXTENSION_BASE_MISMATCH, ASSEMBLY_EXTENSION_OVERLAP_BASES);
+            }
+        }
+    }
+
+    private void findRemoteRegions(
+            final JunctionAssembly assembly, final Set<Read> excludedReads,
+            final List<Read> discordantReads, final List<Read> remoteJunctionMates, final List<Read> suppJunctionReads)
+    {
+        if(remoteJunctionMates.isEmpty() && discordantReads.isEmpty())
             return;
 
-        final int firstIndex = assembly.Assembly.indexOf(original.Assembly);
-        final int lastIndex = assembly.Assembly.indexOf(original.Assembly, firstIndex);
-        if(firstIndex == -1 || firstIndex != lastIndex)
-            addSupportNoOffset(assembly, original);
-        else
-            addSupportWithOffset(assembly, original, firstIndex);
+        List<RemoteRegion> remoteRegions = Lists.newArrayList();
 
-        for(Read read : potentialSupport)
+        discordantReads.stream()
+                .filter(x -> !excludedReads.contains(x))
+                .forEach(x -> addOrCreateMateRemoteRegion(remoteRegions, x, false));
+
+        for(Read read : remoteJunctionMates)
         {
-            if(assembly.containsSupport(read))
+            if(excludedReads.contains(read))
                 continue;
 
-            @Nullable
-            final Set<Integer> candidates = supportStartIndices.get(read);
+            // look to extend from local mates
+            addOrCreateMateRemoteRegion(remoteRegions, read, true);
+        }
 
-            if(candidates == null)
-            {
-                assembly.tryAddSupport(mSupportChecker, read);
-            }
-            else
-            {
-                for(int rawIndex : candidates)
-                {
-                    final int checkIndex = isForwards
-                            ? rawIndex
-                            : assembly.getLength() - rawIndex - read.getLength();
-                    if(mSupportChecker.WeakSupport.supportsAt(assembly, read, checkIndex))
-                    {
-                        assembly.addEvidenceAt(read, checkIndex);
-                        break;
-                    }
-                }
-            }
+        for(Read read : suppJunctionReads)
+        {
+            if(excludedReads.contains(read))
+                continue;
+
+            // factor any supplementaries into remote regions
+            int scLength = assembly.isForwardJunction() ? read.rightClipLength() : read.leftClipLength();
+            addOrCreateSupplementaryRemoteRegion(remoteRegions, read, scLength);
+        }
+
+        mergeRegions(remoteRegions);
+
+        // purge regions with only weak supplementary support
+        purgeWeakSuppRegions(remoteRegions);
+
+        assembly.addRemoteRegions(remoteRegions);
+    }
+
+    private static void addOrCreateMateRemoteRegion(final List<RemoteRegion> remoteRegions, final Read read, boolean isJunctionRead)
+    {
+        if(read.isMateUnmapped())
+            return;
+
+        String mateChr = read.mateChromosome();
+
+        if(mateChr == null || !HumanChromosome.contains(mateChr))
+            return;
+
+        addOrCreateRemoteRegion(
+                remoteRegions, read, isJunctionRead ? REMOTE_READ_TYPE_JUNCTION_MATE : REMOTE_READ_TYPE_DISCORDANT_READ,
+                mateChr, read.mateAlignmentStart(), read.mateAlignmentEnd());
+    }
+
+    private static RemoteRegion addOrCreateRemoteRegion(
+            final List<RemoteRegion> remoteRegions, final Read read, final int readType,
+            final String remoteChr, final int remotePosStart, final int remotePosEnd)
+    {
+        RemoteRegion matchedRegion = remoteRegions.stream()
+                .filter(x -> x.overlaps(remoteChr, remotePosStart, remotePosEnd)).findFirst().orElse(null);
+
+        if(matchedRegion != null)
+        {
+            matchedRegion.addReadDetails(read.getName(), remotePosStart, remotePosEnd, readType);
+            return matchedRegion;
+        }
+        else
+        {
+            RemoteRegion newRegion = new RemoteRegion(new ChrBaseRegion(remoteChr, remotePosStart, remotePosEnd), read.getName(), readType);
+            remoteRegions.add(newRegion);
+            return newRegion;
         }
     }
 
-    private void addSupportWithOffset(final ExtendedAssembly assembly, final SupportedAssembly original, final int offset)
+    private static void addOrCreateSupplementaryRemoteRegion(final List<RemoteRegion> remoteRegions, final Read read, int readScLength)
     {
-        original.readSupport().forEach(x ->
-        {
-            if(mSupportChecker.WeakSupport.supportsAt(assembly, x.Read, x.Index + offset))
-            {
-                assembly.addEvidenceAt(x.Read, x.Index + offset);
-            }
-            else
-            {
-                mSupportChecker.supportsAtIndex(original, x.Read, 20, 2, x.Index);
-                mSupportChecker.supportsAtIndex(original, x.Read, 20, 2, -32);
-            }
-        });
-    }
+        SupplementaryReadData suppData = read.supplementaryData();
 
-    private void addSupportNoOffset(final ExtendedAssembly assembly, final SupportedAssembly original)
-    {
-        original.readSupport().forEach(x -> assembly.tryAddSupport(mSupportChecker, x.Read));
-    }
+        if(suppData == null || !HumanChromosome.contains(suppData.Chromosome))
+            return;
 
-    private void simplifyGraph(final HeadNode node)
-    {
-        mNodeFolder.foldPaths(node);
-        node.pruneNodes();
-    }
+        int remotePosEnd = getMateAlignmentEnd(suppData.Position, suppData.Cigar);
 
-    private HeadNode alignmentAsGraph(final Read alignment, final Direction orientation)
-    {
-        final HeadNode root = new HeadNode();
-        Node current = root;
-        for(int i = 0; i < alignment.getLength(); i++)
-        {
-            final int index = orientation == Direction.FORWARDS ? i : alignment.getLength() - 1 - i;
-            final byte base = alignment.getBases()[index];
-            final int quality = alignment.getBaseQuality()[index];
+        /*
+        SV_LOGGER.debug("asmJunction({}) read({} flags={}) supp({})",
+                mAssembly.junction(), read.getName(), read.getFlags(), suppData);
+        */
 
-            final Node newNode = new Node((char) base);
-            newNode.MaxQuality = newNode.Quality = quality;
-            newNode.Support = new ArrayList<>();
-            newNode.Support.add(new Node.Support(alignment, i));
-            current.setNext(newNode);
-            current = newNode;
-        }
+        RemoteRegion region = addOrCreateRemoteRegion(
+                remoteRegions, read, REMOTE_READ_TYPE_JUNCTION_SUPP, suppData.Chromosome, suppData.Position, remotePosEnd);
 
-        return root;
+        region.addSoftClipMapQual(readScLength, suppData.MapQuality);
     }
 }

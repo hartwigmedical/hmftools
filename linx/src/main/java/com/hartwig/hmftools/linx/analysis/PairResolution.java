@@ -101,12 +101,12 @@ public class PairResolution
         if(!clusterChains.isEmpty())
         {
             longTiLinks.addAll(cluster.getChains().get(0).getLinkedPairs().stream()
-                    .filter(x -> x.length() > SHORT_TI_LENGTH).collect(Collectors.toList()));
+                    .filter(x -> x.baseLength() > SHORT_TI_LENGTH).collect(Collectors.toList()));
 
             if(cluster.getChains().size() == 2)
             {
                 longTiLinks.addAll(cluster.getChains().get(1).getLinkedPairs().stream()
-                        .filter(x -> x.length() > SHORT_TI_LENGTH).collect(Collectors.toList()));
+                        .filter(x -> x.baseLength() > SHORT_TI_LENGTH).collect(Collectors.toList()));
             }
 
             if(longTiLinks.size() > 1)
@@ -404,7 +404,7 @@ public class PairResolution
             }
 
             // test the overlap and DB lengths to determine whether this cluster is resolved (ie protected from clustering)
-            if(longestTiPair.length() > longDupThreshold)
+            if(longestTiPair.baseLength() > longDupThreshold)
             {
                 isResolved = false;
             }
@@ -429,7 +429,7 @@ public class PairResolution
         }
 
         LNX_LOGGER.debug("cluster({}) longestTI({}) resolvedType({}) isResolved({})",
-                cluster.id(), longestTiPair != null ? longestTiPair.length() : "none", resolvedType, isResolved);
+                cluster.id(), longestTiPair != null ? longestTiPair.baseLength() : "none", resolvedType, isResolved);
 
         if(rearrangedChains != null)
         {
@@ -602,7 +602,7 @@ public class PairResolution
         boolean isResolved = false;
 
         // test DEL and DUP lengths vs thresholds to determine whether the cluster is protected
-        long longestTiLength = cluster.getChains().get(0).getLinkedPairs().stream().mapToLong(LinkedPair::length).max().getAsLong();
+        long longestTiLength = cluster.getChains().get(0).getLinkedPairs().stream().mapToLong(LinkedPair::positionDistance).max().getAsLong();
         final SvBreakend chainStart = cluster.getChains().get(0).getOpenBreakend(true);
         final SvBreakend chainEnd = cluster.getChains().get(0).getOpenBreakend(false);
         long nonTiDistance = abs(chainStart.position() - chainEnd.position());
@@ -621,7 +621,7 @@ public class PairResolution
         }
 
         LNX_LOGGER.debug("cluster({}) longestTI({}) resolvedType({}) isResolved({})",
-                cluster.id(), longestTiPair != null ? longestTiPair.length() : "none", resolvedType, isResolved);
+                cluster.id(), longestTiPair != null ? longestTiPair.baseLength() : "none", resolvedType, isResolved);
 
         cluster.setResolved(isResolved, resolvedType);
     }

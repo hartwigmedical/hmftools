@@ -9,6 +9,9 @@ import java.util.stream.Collectors;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+
+import org.jetbrains.annotations.NotNull;
 
 public class CuppaPredictions
 {
@@ -18,13 +21,18 @@ public class CuppaPredictions
     public final List<Categories.DataType> DataTypes;
     public final Categories.ClfName MainCombinedClfName;
 
-    public CuppaPredictions(final List<CuppaPredictionEntry> predictionEntries)
+    public CuppaPredictions(final @NotNull List<CuppaPredictionEntry> predictionEntries)
     {
+        if(predictionEntries.isEmpty())
+        {
+            throw new IllegalStateException("`CuppaPredictions` must be instantiated with a non-empty list");
+        }
+
         PredictionEntries = predictionEntries;
 
-        CancerTypes = PredictionEntries.stream().map(o -> o.getCancerType()).distinct().collect(Collectors.toList());
-        ClfNames = PredictionEntries.stream().map(o -> o.getClfName()).distinct().collect(Collectors.toList());
-        DataTypes = PredictionEntries.stream().map(o -> o.getDataType()).distinct().collect(Collectors.toList());
+        CancerTypes = PredictionEntries.stream().map(o -> o.CancerType).distinct().collect(Collectors.toList());
+        ClfNames = PredictionEntries.stream().map(o -> o.ClfName).distinct().collect(Collectors.toList());
+        DataTypes = PredictionEntries.stream().map(o -> o.DataType).distinct().collect(Collectors.toList());
 
         MainCombinedClfName = hasRnaPredictions() ? Categories.ClfName.COMBINED : Categories.ClfName.DNA_COMBINED;
     }
@@ -136,7 +144,7 @@ public class CuppaPredictions
 
     public void printPredictions()
     {
-        printPredictions(10);
+        printPredictions(PredictionEntries.size());
     }
 
     public CuppaPredictionEntry get(int index)
@@ -185,7 +193,7 @@ public class CuppaPredictions
     public CuppaPredictions subsetByDataType(Categories.DataType dataType)
     {
         List<CuppaPredictionEntry> entries = PredictionEntries.stream()
-                .filter(o -> o.getDataType() == dataType)
+                .filter(o -> o.DataType == dataType)
                 .collect(Collectors.toList());
 
         return new CuppaPredictions(entries);
@@ -194,7 +202,7 @@ public class CuppaPredictions
     public CuppaPredictions subsetByClfName(Categories.ClfName clfName)
     {
         List<CuppaPredictionEntry> entries = PredictionEntries.stream()
-                .filter(o -> o.getClfName() == clfName)
+                .filter(o -> o.ClfName == clfName)
                 .collect(Collectors.toList());
 
         return new CuppaPredictions(entries);
@@ -203,7 +211,7 @@ public class CuppaPredictions
     public CuppaPredictions subsetByCancerType(String cancerType)
     {
         List<CuppaPredictionEntry> entries = PredictionEntries.stream()
-                .filter(o -> o.getCancerType().equals(cancerType))
+                .filter(o -> o.CancerType.equals(cancerType))
                 .collect(Collectors.toList());
 
         return new CuppaPredictions(entries);
@@ -212,7 +220,7 @@ public class CuppaPredictions
     public CuppaPredictions getTopPredictions(int n)
     {
         List<CuppaPredictionEntry> entries = PredictionEntries.stream()
-                .filter(o -> o.getRank() <= n)
+                .filter(o -> o.Rank <= n)
                 .collect(Collectors.toList());
 
         return new CuppaPredictions(entries);
@@ -229,6 +237,16 @@ public class CuppaPredictions
                 .collect(Collectors.toList());
 
         return new CuppaPredictions(sortPredictionEntries);
+    }
+
+    public static String generateVisDataTsvFilename(final String basePath, final String sample)
+    {
+        return checkAddDirSeparator(basePath) + sample + ".cuppa.vis_data.tsv";
+    }
+
+    public static String generateVisPlotFilename(final String basePath, final String sample)
+    {
+        return checkAddDirSeparator(basePath) + sample + ".cuppa.vis.png";
     }
 
 }

@@ -165,7 +165,7 @@ public class ClusterAnnotations
                     if(uniqueOverlaps.stream().anyMatch(x -> x.matches(otherPair)))
                         continue;
 
-                    if(!pair.chromosome().equals(otherPair.chromosome()) || pair.length() <= otherPair.length())
+                    if(!pair.chromosome().equals(otherPair.chromosome()) || pair.positionDistance() <= otherPair.positionDistance())
                         continue;
 
                     uniqueOverlaps.add(otherPair);
@@ -535,7 +535,7 @@ public class ClusterAnnotations
 
                 final String chrArm = first.getBreakend(pair.firstLinkOnStart()).getChrArm();
 
-                if(pair.length() <= SHORT_TI_LENGTH)
+                if(pair.baseLength() <= SHORT_TI_LENGTH)
                 {
                     ++shortTiCount;
 

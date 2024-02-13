@@ -5,17 +5,12 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.isStopCodon;
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
-import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
-import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingStartPositionAdjustment;
-import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcExonicCodingPhase;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindScorer.INVALID_CALC;
 
 import java.util.List;
 import java.util.Set;
@@ -129,7 +124,7 @@ public class MissenseCalcs
                 }
             }
 
-            produceMissensePeptides(geneData, transData, reverseStrandBases(codingBases), codingBasePositions);
+            produceMissensePeptides(geneData, transData, reverseComplementBases(codingBases), codingBasePositions);
         }
     }
 
@@ -174,7 +169,7 @@ public class MissenseCalcs
                             altCodon += codingBases.charAt(codonIndex * 3 + i);
                     }
 
-                    peptideData.Context = geneData.Strand == POS_ORIENT ? refCodon : reverseStrandBases(refCodon);
+                    peptideData.Context = geneData.Strand == POS_ORIENT ? refCodon : reverseComplementBases(refCodon);
                     peptideData.RefBase = geneData.Strand == POS_ORIENT ? codonRefBase : swapDnaBase(codonRefBase);
                     peptideData.AltBase = geneData.Strand == POS_ORIENT ? dnaBase : swapDnaBase(dnaBase);
 

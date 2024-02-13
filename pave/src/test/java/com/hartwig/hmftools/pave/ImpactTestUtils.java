@@ -1,15 +1,14 @@
 package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.codon.AminoAcids.AMINO_ACID_TO_CODON_MAP;
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASES;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
 
 import java.util.List;
 
@@ -23,7 +22,7 @@ public final class ImpactTestUtils
         String alt = "";
         for(int i = 0; i < ref.length(); ++i)
         {
-            alt += getNextBase(ref.charAt(i));
+            alt += getNextTestBase(ref.charAt(i));
         }
 
         return alt;
@@ -35,7 +34,7 @@ public final class ImpactTestUtils
     public static MockRefGenome createMockGenome(int requiredBases)
     {
         final MockRefGenome refGenome = new MockRefGenome();
-        String chr1Bases = generateRandomBases(requiredBases);
+        String chr1Bases = generateTestBases(requiredBases);
         refGenome.RefGenomeMap.put(CHR_1, chr1Bases);
         return refGenome;
     }
@@ -67,7 +66,7 @@ public final class ImpactTestUtils
     public static VariantData createSnv(int position, final String refBases)
     {
         String ref = refBases.substring(position, position + 1);
-        String alt = getNextBase(ref);
+        String alt = String.valueOf(getNextTestBase(ref.charAt(0)));
         return new VariantData(CHR_1, position, ref, alt);
     }
 
@@ -79,7 +78,7 @@ public final class ImpactTestUtils
         for(int i = 0; i < aminoAcids.length(); ++i)
         {
             if(reverseStrand)
-                codonBases = reverseStrandBases(getAminoAcidCodon(aminoAcids.charAt(i))) + codonBases;
+                codonBases = reverseComplementBases(getAminoAcidCodon(aminoAcids.charAt(i))) + codonBases;
             else
                 codonBases += getAminoAcidCodon(aminoAcids.charAt(i));
         }
@@ -98,4 +97,40 @@ public final class ImpactTestUtils
 
         return codons.get(index);
     }
+
+    // keep the previous ordering from Nucleotides so unit test values & results remain unch
+    public static final char[] PAVE_DNA_BASES = {'G', 'A', 'T', 'C'};
+
+    public static String generateTestBases(int length)
+    {
+        // a misnomer - not random but a sequence which iterates through the nucleotides
+        char[] str = new char[length];
+
+        int baseIndex = 0;
+        for(int i = 0; i < length; ++i)
+        {
+            str[i] = PAVE_DNA_BASES[baseIndex];
+
+            if(baseIndex == PAVE_DNA_BASES.length - 1)
+                baseIndex = 0;
+            else
+                ++baseIndex;
+        }
+
+        return String.valueOf(str);
+    }
+
+    public static char getNextTestBase(final char base)
+    {
+        for(int i = 0; i < PAVE_DNA_BASES.length; ++i)
+        {
+            if(PAVE_DNA_BASES[i] == base)
+            {
+                return i == PAVE_DNA_BASES.length - 1 ? PAVE_DNA_BASES[0] : PAVE_DNA_BASES[i + 1];
+            }
+        }
+
+        return base;
+    }
+
 }

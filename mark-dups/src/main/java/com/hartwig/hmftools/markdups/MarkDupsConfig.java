@@ -51,7 +51,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.markdups.common.FilterReadsType;
 import com.hartwig.hmftools.markdups.common.HighDepthRegion;
 import com.hartwig.hmftools.markdups.common.ReadUnmapper;
-import com.hartwig.hmftools.markdups.consensus.GroupIdGenerator;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
 import com.hartwig.hmftools.markdups.write.ReadOutput;
 
@@ -75,7 +74,6 @@ public class MarkDupsConfig
     // UMI group config
     public final UmiConfig UMIs;
     public final boolean FormConsensus;
-    public final GroupIdGenerator IdGenerator;
 
     public final ReadUnmapper UnmapRegions;
 
@@ -100,6 +98,7 @@ public class MarkDupsConfig
     public final ReadOutput LogReadType;
     public final boolean PerfDebug;
     public final boolean RunChecks;
+    public final boolean DropDuplicates;
     public final boolean LogFinalCache;
 
     private boolean mIsValid;
@@ -119,11 +118,11 @@ public class MarkDupsConfig
     private static final String FORM_CONSENSUS = "form_consensus";
     private static final String READ_LENGTH = "read_length";
 
-    private static final String MULTI_BAM = "multi_bam";
     private static final String SAMTOOLS_PATH = "samtools";
     private static final String SAMBAMBA_PATH = "sambamba";
     private static final String UNMAP_REGIONS = "unmap_regions";
     private static final String WRITE_STATS = "write_stats";
+    private static final String DROP_DUPLICATES = "drop_duplicates";
 
     // debug
     private static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
@@ -196,7 +195,6 @@ public class MarkDupsConfig
         NoMateCigar = configBuilder.hasFlag(NO_MATE_CIGAR);
         UMIs = UmiConfig.from(configBuilder);
         FormConsensus = !UMIs.Enabled && !NoMateCigar && configBuilder.hasFlag(FORM_CONSENSUS);
-        IdGenerator = new GroupIdGenerator();
 
         if(configBuilder.hasValue(UNMAP_REGIONS))
         {
@@ -229,7 +227,7 @@ public class MarkDupsConfig
         LogReadType = ReadOutput.valueOf(configBuilder.getValue(READ_OUTPUTS, NONE.toString()));
 
         WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM);
-        MultiBam = WriteBam && Threads > 1 && configBuilder.hasFlag(MULTI_BAM);
+        MultiBam = WriteBam && Threads > 1; // now on automatically
         KeepInterimBams = configBuilder.hasFlag(KEEP_INTERIM_BAMS);
 
         LogReadIds = parseLogReadIds(configBuilder);
@@ -238,6 +236,7 @@ public class MarkDupsConfig
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
         RunChecks = configBuilder.hasFlag(RUN_CHECKS);
         LogFinalCache = configBuilder.hasFlag(LOG_FINAL_CACHE);
+        DropDuplicates = configBuilder.hasFlag(DROP_DUPLICATES);
 
         if(RunChecks)
         {
@@ -285,7 +284,6 @@ public class MarkDupsConfig
         configBuilder.addPath(UNMAP_REGIONS, false, "Unmap reads within these regions");
 
         configBuilder.addFlag(NO_WRITE_BAM, "BAM not written, producing only TSV reads and/or statistics");
-        configBuilder.addFlag(MULTI_BAM, "Write temporary BAMs with multi-threading");
         configBuilder.addFlag(KEEP_INTERIM_BAMS, "Do no delete per-thread BAMs");
         configBuilder.addPath(SAMTOOLS_PATH, false, "Path to samtools for sort");
         configBuilder.addPath(SAMBAMBA_PATH, false, "Path to sambamba for merge");
@@ -293,6 +291,7 @@ public class MarkDupsConfig
         configBuilder.addFlag(FORM_CONSENSUS, "Form consensus reads from duplicate groups without UMIs");
         configBuilder.addFlag(NO_MATE_CIGAR, "Mate CIGAR not set by aligner, make no attempt to use it");
         configBuilder.addFlag(WRITE_STATS, "Write duplicate and UMI-group stats");
+        configBuilder.addFlag(DROP_DUPLICATES, "Drop duplicates from BAM");
         addValidationStringencyOption(configBuilder);
         UmiConfig.addConfig(configBuilder);
 
@@ -329,7 +328,6 @@ public class MarkDupsConfig
         UMIs = new UmiConfig(umiEnabled, duplexUmi, String.valueOf(DEFAULT_DUPLEX_UMI_DELIM), false);
         FormConsensus = formConsensus;
         NoMateCigar = false;
-        IdGenerator = new GroupIdGenerator();
 
         SpecificChrRegions = new SpecificRegions();
         SpecificRegionsFilterType = FilterReadsType.MATE_AND_SUPP;
@@ -350,5 +348,6 @@ public class MarkDupsConfig
         RunChecks = true;
         WriteStats = false;
         LogFinalCache = true;
+        DropDuplicates = false;
     }
 }

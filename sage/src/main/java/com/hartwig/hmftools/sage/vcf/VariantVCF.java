@@ -89,10 +89,10 @@ public class VariantVCF implements AutoCloseable
     public static final String MAX_READ_EDGE_DISTANCE_DESC = "Max read edge distance";
 
     public static final String FRAG_STRAND_BIAS = "SB";
-    public static final String FRAG_STRAND_BIAS_DESC = "Fragment strand bias - percentage of forward-orientation fragments";
+    public static final String FRAG_STRAND_BIAS_DESC = "Fragment strand bias - percentage of forward-orientation fragments (ref,alt)";
 
     public static final String READ_STRAND_BIAS = "RSB";
-    public static final String READ_STRAND_BIAS_DESC = "Read strand bias - percentage of forward-orientation reads";
+    public static final String READ_STRAND_BIAS_DESC = "Read strand bias - percentage of forward-orientation reads (ref,alt)";
 
     public static final String AVG_BASE_QUAL = "ABQ";
     public static final String AVG_BASE_QUAL_DESC = "Average calculated base quality";
@@ -195,8 +195,8 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 READ_CONTEXT_IMPROPER_PAIR, 1, VCFHeaderLineType.Integer, READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine(FRAG_STRAND_BIAS, 1, VCFHeaderLineType.String, FRAG_STRAND_BIAS_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_STRAND_BIAS, 1, VCFHeaderLineType.String, READ_STRAND_BIAS_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(FRAG_STRAND_BIAS, 2, VCFHeaderLineType.Float, FRAG_STRAND_BIAS_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_STRAND_BIAS, 2, VCFHeaderLineType.Float, READ_STRAND_BIAS_DESC));
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(

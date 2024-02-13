@@ -65,7 +65,7 @@ public class StructuralVariantTest
                 Lists.newArrayList(), Lists.newArrayList());
 
         var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
-        sequence = Nucleotides.reverseStrandBases(REF_BASES_CHR_2.substring(40, 47)) + insertSeq + REF_BASES_CHR_1.substring(20, 27);
+        sequence = Nucleotides.reverseComplementBases(REF_BASES_CHR_2.substring(40, 47)) + insertSeq + REF_BASES_CHR_1.substring(20, 27);
         assertEquals(sequence, var.sequence());
 
         // SGL with positive orientation

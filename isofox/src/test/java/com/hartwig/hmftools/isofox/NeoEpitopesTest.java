@@ -2,7 +2,7 @@ package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.fusionInfo;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_FUSION;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
@@ -235,7 +235,7 @@ public class NeoEpitopesTest
         rbStart = 250;
         rbEnd = 290;
         read = createReadRecord(1, CHR_1, rbStart, rbEnd,
-                reverseStrandBases(codingBases.substring(10, 19)) + codingBases.substring(250, 261) + codingBases.substring(280, 291),
+                reverseComplementBases(codingBases.substring(10, 19)) + codingBases.substring(250, 261) + codingBases.substring(280, 291),
                 createCigar(10, 11, 19, 11, 0));
 
         support = findFusionSupport(neData, FS_UP, read);
@@ -246,7 +246,7 @@ public class NeoEpitopesTest
         rbStart = 10;
         rbEnd = 50;
         read = createReadRecord(1, CHR_1, rbStart, rbEnd,
-                reverseStrandBases(codingBases.substring(250, 260)) + codingBases.substring(10, 21) + codingBases.substring(40, 51),
+                reverseComplementBases(codingBases.substring(250, 260)) + codingBases.substring(10, 21) + codingBases.substring(40, 51),
                 createCigar(10, 11, 19, 11, 0));
 
         support = findFusionSupport(neData, FS_DOWN, read);

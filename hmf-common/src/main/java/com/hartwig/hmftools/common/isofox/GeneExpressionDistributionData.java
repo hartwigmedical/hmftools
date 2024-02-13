@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.common.isofox;
 
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
@@ -11,9 +11,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.rna.RnaCommon;
+import com.google.common.collect.Sets;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,7 +42,7 @@ public class GeneExpressionDistributionData
         final List<String> lines = Files.readAllLines(Paths.get(filename));
 
         String fileDelim = inferFileDelimiter(filename);
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), fileDelim);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), fileDelim);
         lines.remove(0);
 
         int geneIdIndex = fieldsIndexMap.get(FLD_GENE_ID);
@@ -108,5 +109,15 @@ public class GeneExpressionDistributionData
         }
 
         return getPercentile(percentileMap.get(cancerType), sampleTpm);
+    }
+
+    Set<String> configuredCancerTypes()
+    {
+        Set<String> configuredCancerTypes = Sets.newHashSet();
+        for(Map<String, Double> geneMedian : mGeneMedians.values())
+        {
+            configuredCancerTypes.addAll(geneMedian.keySet());
+        }
+        return configuredCancerTypes;
     }
 }

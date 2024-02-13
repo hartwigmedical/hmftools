@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.neo.score.DataLoader.loadNeoEpitopes;
 import static com.hartwig.hmftools.neo.score.DataLoader.loadPurpleContext;
 import static com.hartwig.hmftools.neo.score.DataLoader.loadRnaNeoData;
 import static com.hartwig.hmftools.neo.score.DataLoader.loadSomaticVariants;
-import static com.hartwig.hmftools.neo.score.NeoScorerConfig.RNA_SAMPLE_APPEND_SUFFIX;
+import static com.hartwig.hmftools.neo.score.NeoScorerConfig.RNA_SAMPLE_ID_SUFFIX;
 import static com.hartwig.hmftools.neo.score.TpmCalculator.DEFAULT_PEPTIDE_LENGTH_RANGE;
 
 import java.util.List;
@@ -22,6 +22,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.isofox.TranscriptExpressionLoader;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
 import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.rna.TranscriptExpressionFile;
 import com.hartwig.hmftools.neo.bind.BindData;
 
 public class NeoScorerTask implements Callable
@@ -69,7 +70,7 @@ public class NeoScorerTask implements Callable
         }
         catch(Exception e)
         {
-            NE_LOGGER.error("sample({}) failed processing", mSamples.get(sampleIndex).Id, e.toString());
+            NE_LOGGER.error("sample({}) failed processing", mSamples.get(sampleIndex).TumorId, e.toString());
             e.printStackTrace();
             System.exit(1);
         }
@@ -84,7 +85,7 @@ public class NeoScorerTask implements Callable
 
     public void processSample(final SampleData sample)
     {
-        String sampleId = sample.Id;
+        String sampleId = sample.TumorId;
 
         List<NeoEpitopeData> neoDataList = loadNeoEpitopes(sampleId, mConfig.NeoDir);
 
@@ -112,7 +113,8 @@ public class NeoScorerTask implements Callable
 
                 try
                 {
-                    sampleTPMs.putAll(TranscriptExpressionLoader.loadTranscriptExpression(mConfig.IsofoxDir, sampleId));
+                    String tpmFileSampleId = sample.RnaSampleId != null ? sample.RnaSampleId : sample.TumorId;
+                    sampleTPMs.putAll(TranscriptExpressionLoader.loadTranscriptExpression(mConfig.IsofoxDir, tpmFileSampleId));
                 }
                 catch(Exception e)
                 {
@@ -145,9 +147,8 @@ public class NeoScorerTask implements Callable
 
         if(!mConfig.RnaSomaticVcf.isEmpty())
         {
-            String rnaSampleId = sampleId + RNA_SAMPLE_APPEND_SUFFIX;
             List<NeoEpitopeData> pointNeos = neoDataList.stream().filter(x -> x.VariantType.isPointMutation()).collect(Collectors.toList());
-            somaticVariants = loadSomaticVariants(sample, rnaSampleId, mConfig.RnaSomaticVcf, pointNeos);
+            somaticVariants = loadSomaticVariants(sample, mConfig.RnaSomaticVcf, pointNeos);
         }
 
         if(sample.HasRna && (rnaNeoDataList == null || somaticVariants == null))

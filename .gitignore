@@ -6,6 +6,9 @@
 .settings/
 .attach_pid*
 
+# ignore dependency reduced poms
+dependency-reduced-pom.xml
+
 # Ignore target directies
 target
 

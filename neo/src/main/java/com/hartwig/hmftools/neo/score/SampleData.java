@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.neo.score;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.RNA_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.IGNORE_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CANCER_TYPE;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
@@ -21,13 +24,15 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class SampleData
 {
-    public final String Id;
+    public final String TumorId;
+    public final String RnaSampleId;
     public final String CancerType;
     public final boolean HasRna;
 
-    public SampleData(final String id, final String cancerType, boolean hasRna)
+    public SampleData(final String tumorId, final String rnaSampleId, final String cancerType, boolean hasRna)
     {
-        Id = id;
+        TumorId = tumorId;
+        RnaSampleId = rnaSampleId;
         CancerType = cancerType;
         HasRna = hasRna;
     }
@@ -51,8 +56,8 @@ public class SampleData
                 Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
                 fileContents.remove(0);
 
-                int sampleIdIndex = fieldsIndexMap.get("SampleId");
-                Integer cancerTypeIndex = fieldsIndexMap.get("CancerType");
+                int sampleIdIndex = fieldsIndexMap.get(FLD_SAMPLE_ID);
+                Integer cancerTypeIndex = fieldsIndexMap.get(FLD_CANCER_TYPE);
                 Integer rnaIndex = fieldsIndexMap.get("HasRna");
 
                 for(String line : fileContents)
@@ -64,7 +69,7 @@ public class SampleData
                     String sampleId = values[sampleIdIndex];
                     String cancerType = cancerTypeIndex != null ? values[cancerTypeIndex] : "";
                     boolean hasRna = rnaIndex != null ? Boolean.parseBoolean(values[rnaIndex]) : false;
-                    samples.add(new SampleData(sampleId, cancerType, hasRna));
+                    samples.add(new SampleData(sampleId, null, cancerType, hasRna));
                 }
             }
             catch (IOException e)
@@ -75,9 +80,10 @@ public class SampleData
         else if(configBuilder.hasValue(SAMPLE))
         {
             String sampleId = configBuilder.getValue(SAMPLE);
+            String rnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
             String cancerType = configBuilder.getValue(CANCER_TYPE, "");
             boolean hasRna = configBuilder.hasValue(ISOFOX_DIR_CFG) && configBuilder.hasValue(RNA_SOMATIC_VCF);
-            samples.add(new SampleData(sampleId, cancerType, hasRna));
+            samples.add(new SampleData(sampleId, rnaSampleId, cancerType, hasRna));
         }
 
         return samples;

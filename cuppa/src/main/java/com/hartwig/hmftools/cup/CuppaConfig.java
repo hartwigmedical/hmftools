@@ -65,6 +65,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.file.CommonFields;
 import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.feature.FeatureClassifier;
 import com.hartwig.hmftools.cup.rna.AltSjClassifier;
@@ -184,8 +185,8 @@ public class CuppaConfig
     public static final Logger CUP_LOGGER = LogManager.getLogger(CuppaConfig.class);
 
     // file fields
-    public static final String FLD_SAMPLE_ID = "SampleId";
-    public static final String FLD_CANCER_TYPE = "CancerType";
+    public static final String FLD_SAMPLE_ID = CommonFields.FLD_SAMPLE_ID;
+    public static final String FLD_CANCER_TYPE = CommonFields.FLD_CANCER_TYPE;
     public static final String FLD_CANCER_SUBTYPE = "CancerSubtype";
     public static final String FLD_RNA_READ_LENGTH = "RnaReadLength";
     public static final String CANCER_SUBTYPE_OTHER = "Other";

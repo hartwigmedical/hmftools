@@ -123,9 +123,9 @@ public final class VariantContextFactory
                 .attribute(RAW_ALLELIC_BASE_QUALITY, new int[] { counter.rawRefBaseQualityTotal(), counter.rawAltBaseQualityTotal() })
                 .attribute(RAW_DEPTH, counter.rawDepth())
                 .attribute(
-                        FRAG_STRAND_BIAS, format("%.3f,%.3f", counter.fragmentStrandBiasAlt().bias(), counter.fragmentStrandBiasRef().bias()))
+                        FRAG_STRAND_BIAS, format("%.3f,%.3f", counter.fragmentStrandBiasRef().bias(), counter.fragmentStrandBiasAlt().bias()))
                 .attribute(
-                        READ_STRAND_BIAS, format("%.3f,%.3f", counter.readStrandBiasAlt().bias(), counter.readStrandBiasRef().bias()))
+                        READ_STRAND_BIAS, format("%.3f,%.3f", counter.readStrandBiasRef().bias(), counter.readStrandBiasAlt().bias()))
                 .attribute(AVG_BASE_QUAL, (int)counter.averageAltBaseQuality())
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
                 .alleles(NO_CALL);

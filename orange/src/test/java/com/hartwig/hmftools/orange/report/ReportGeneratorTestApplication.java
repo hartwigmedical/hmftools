@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.orange.report;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +48,7 @@ public class ReportGeneratorTestApplication
     private static final boolean LIMIT_JSON_OUTPUT = false;
     private static final Set<PurpleQCStatus> OVERRIDE_QC_STATUS = null;
 
-    public static void main(String[] args) throws IOException
+    public static void main(String[] args) throws Exception
     {
         Configurator.setRootLevel(Level.DEBUG);
 
@@ -70,7 +69,7 @@ public class ReportGeneratorTestApplication
     }
 
     @NotNull
-    private static OrangeRecord buildReport(@NotNull OrangeConfig config) throws IOException
+    private static OrangeRecord buildReport(@NotNull OrangeConfig config) throws Exception
     {
         if(USE_MOCK_DATA_FOR_REPORT)
         {

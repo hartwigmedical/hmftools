@@ -168,14 +168,14 @@ public class UmiStatistics
 
     private void recordUmiBaseFrequencies(final DuplicateGroup umiGroup)
     {
-        String umiId = umiGroup.id();
+        String umiId = umiGroup.umiId();
 
         if(UmiPositionBaseFrequencies == null)
             UmiPositionBaseFrequencies = new int[umiId.length()][UMI_BASE_COUNT];
 
         for(int p = 0; p < min(umiId.length(), UmiPositionBaseFrequencies.length); ++p)
         {
-            int baseIndex = getBaseIndex(umiGroup.id().charAt(p));
+            int baseIndex = getBaseIndex(umiGroup.umiId().charAt(p));
 
             if(baseIndex >= 0)
                 ++UmiPositionBaseFrequencies[p][baseIndex];
@@ -203,7 +203,7 @@ public class UmiStatistics
 
         for(String readId : umiGroup.getReadIds())
         {
-            int diff = calcUmiIdDiff(umiConfig.extractUmiId(readId), umiGroup.id());
+            int diff = calcUmiIdDiff(umiConfig.extractUmiId(readId), umiGroup.umiId());
 
             if(diff <= MAX_EDIT_DISTANCE)
                 ++umiGroupStats.EditDistanceFrequency[diff];
@@ -222,7 +222,7 @@ public class UmiStatistics
 
             for(String readId : readsGroup.getReadIds())
             {
-                int diff = calcUmiIdDiff(umiConfig.extractUmiId(readId), testGroup.id());
+                int diff = calcUmiIdDiff(umiConfig.extractUmiId(readId), testGroup.umiId());
 
                 if(diff <= MAX_EDIT_DISTANCE)
                     ++umiGroupStats.EditDistanceFrequency[diff];

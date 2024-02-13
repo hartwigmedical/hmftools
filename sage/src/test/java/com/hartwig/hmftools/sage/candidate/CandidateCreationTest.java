@@ -45,8 +45,8 @@ public class CandidateCreationTest
                 120, 150, readBases, scBases.length(), scReadIndex, refBases, false);
 
         assertNotNull(altRead);
-        assertEquals("T", altRead.Ref);
-        assertEquals("T" + insertBases, altRead.Alt);
+        assertEquals("G", altRead.Ref);
+        assertEquals("G" + insertBases, altRead.Alt);
 
         // then on the left
         scStartRefIndex = 0;
@@ -58,8 +58,8 @@ public class CandidateCreationTest
                 120, 150, readBases, scBases.length(), scReadIndex, refBases, true);
 
         assertNotNull(altRead);
-        assertEquals("C", altRead.Ref);
-        assertEquals("C" + insertBases, altRead.Alt);
+        assertEquals("T", altRead.Ref);
+        assertEquals("T" + insertBases, altRead.Alt);
     }
 
     @Test

@@ -6,10 +6,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_TRANS_AMINO_ACIDS_FILE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
-import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingStartPositionAdjustment;
-import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcExonicCodingPhase;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -175,7 +172,7 @@ public class ProteomeWriter
                 codingBases = mRefGenome.getBaseString(chromosome, exonCodingStart, exonCodingEnd) + codingBases;
             }
 
-            aminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(codingBases));
+            aminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseComplementBases(codingBases));
         }
 
         writeData(geneData.GeneId, geneData.GeneName, transData.TransName, transData.IsCanonical, aminoAcids);

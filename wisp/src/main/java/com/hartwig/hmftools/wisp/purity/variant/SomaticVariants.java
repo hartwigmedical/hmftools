@@ -191,7 +191,7 @@ public class SomaticVariants
         double subclonalLikelihood = variant.context().getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0);
         double sequenceGcRatio = NO_GC_RATIO;
 
-        if(mConfig.RefGenome != null && mSample.ApplyGcRatio)
+        if(mConfig.RefGenome != null && mSample.ApplyGcRatioLimits)
         {
             String variantRefContext = generateMutationSequence(
                     mConfig.RefGenome, DEFAULT_PROBE_LENGTH, variant.chromosome(), variant.position(), variant.ref(), variant.alt());
@@ -240,6 +240,7 @@ public class SomaticVariants
                 // override basic AD and DP if umit totals are set
                 depth = umiTypeCounts.totalCount();
                 alleleCount = umiTypeCounts.alleleCount();
+                umiTypeCounts = new UmiTypeCounts(depth, 0, 0, alleleCount, 0, 0);
             }
 
             somaticVariant.Samples.add(new GenotypeFragments(genotype.getSampleName(), alleleCount, depth, qualTotal, umiTypeCounts));

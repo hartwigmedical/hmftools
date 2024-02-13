@@ -139,7 +139,7 @@ public class InversionPairTest
         assertEquals(DUP_TI, cluster.getResolvedType());
 
         assertEquals(var1.position(false) - var2.position(false), getSyntheticLength(cluster));
-        assertEquals(var1.position(true) - var2.position(true), getSyntheticTiLength(cluster));
+        assertEquals(var1.position(true) - var2.position(true) + 1, getSyntheticTiLength(cluster));
         assertEquals(var2.position(false) - var1.position(true), getSyntheticGapLength(cluster));
 
         // no LOH then is resolved as a RECIP_INV_DUPS
@@ -155,7 +155,7 @@ public class InversionPairTest
         assertEquals(RECIP_INV_DUPS, cluster.getResolvedType());
         assertEquals(1, cluster.getChains().size());
 
-        long longTiLength = cluster.getChains().get(0).getLinkedPairs().stream().mapToLong(LinkedPair::length).max().getAsLong();
+        long longTiLength = cluster.getChains().get(0).getLinkedPairs().stream().mapToLong(LinkedPair::positionDistance).max().getAsLong();
         assertEquals(longTiLength, var1.position(false) - var2.position(true));
 
         // test another instance with short TIs mixed in
@@ -203,7 +203,7 @@ public class InversionPairTest
         assertEquals(DEL_TI, cluster.getResolvedType());
 
         assertEquals(var2.position(true) - var1.position(true), getSyntheticLength(cluster));
-        assertEquals(var1.position(false) - var2.position(false), getSyntheticTiLength(cluster));
+        assertEquals(var1.position(false) - var2.position(false) + 1, getSyntheticTiLength(cluster));
         assertEquals(var2.position(false) - var2.position(true), getSyntheticGapLength(cluster));
 
         //no LOH, then is resolved as a RECIP_INV_DEL_DUP
@@ -237,7 +237,7 @@ public class InversionPairTest
         assertTrue(!cluster.isResolved());
         assertEquals(RECIP_INV_DEL_DUP, cluster.getResolvedType());
         assertEquals(1, cluster.getChains().size());
-        long longTiLength = cluster.getChains().get(0).getLinkedPairs().stream().mapToLong(LinkedPair::length).max().getAsLong();;
+        long longTiLength = cluster.getChains().get(0).getLinkedPairs().stream().mapToLong(LinkedPair::positionDistance).max().getAsLong();;
         assertEquals(longTiLength, var4.position(true) - var1.position(true));
     }
 

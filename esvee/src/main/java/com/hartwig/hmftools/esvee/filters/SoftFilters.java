@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.common.VariantCall;
+import com.hartwig.hmftools.esvee.variant.VariantCall;
 
 public final class SoftFilters
 {

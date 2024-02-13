@@ -6,6 +6,8 @@ public enum MitochondrialChromosome implements Chromosome
 {
     MT;
 
+    public static final int MT_LENGTH = 16569;
+
     @Override
     public boolean isAutosome()
     {

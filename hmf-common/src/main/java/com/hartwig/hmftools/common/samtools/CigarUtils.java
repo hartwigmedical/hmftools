@@ -1,11 +1,17 @@
 package com.hartwig.hmftools.common.samtools;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.N;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,29 +23,42 @@ import htsjdk.samtools.SAMRecord;
 
 public final class CigarUtils
 {
-    public static Cigar cigarFromStr(final String cigarStr)
+    public static List<CigarElement> cigarElementsFromStr(final String cigarStr)
     {
-        Cigar cigar = new Cigar();
+        if(cigarStr.equals(NO_CIGAR))
+            return Collections.emptyList();
+
+        List<CigarElement> cigarElements = Lists.newArrayList();
 
         int length = 0;
-        for (int i = 0; i < cigarStr.length(); ++i)
+        for(int i = 0; i < cigarStr.length(); ++i)
         {
             char c = cigarStr.charAt(i);
             int digit = c - '0';
 
-            if (digit >= 0 && digit <= 9)
+            if(digit >= 0 && digit <= 9)
             {
                 length = length * 10 + digit;
             }
             else
             {
                 CigarOperator operator = CigarOperator.characterToEnum(c);
-                cigar.add(new CigarElement(length, operator));
+                cigarElements.add(new CigarElement(length, operator));
                 length = 0;
             }
         }
 
-        return cigar;
+        return cigarElements;
+    }
+
+    public static Cigar cigarFromStr(final String cigarStr)
+    {
+        return new Cigar(cigarElementsFromStr(cigarStr));
+    }
+
+    public static String cigarStringFromElements(final List<CigarElement> elements)
+    {
+        return elements.stream().map(x -> format("%d%s", x.getLength(), x.getOperator())).collect(Collectors.joining());
     }
 
     public static int cigarBaseLength(final Cigar cigar)
@@ -51,7 +70,7 @@ public final class CigarUtils
     {
         int baseLength = 0;
         int currentElementLength = 0;
-        for (int i = 0; i < cigarStr.length(); ++i)
+        for(int i = 0; i < cigarStr.length(); ++i)
         {
             char c = cigarStr.charAt(i);
             boolean isAddItem = (c == 'D' || c == 'M');
@@ -63,7 +82,7 @@ public final class CigarUtils
                 continue;
             }
             int digit = c - '0';
-            if (digit >= 0 && digit <= 9)
+            if(digit >= 0 && digit <= 9)
             {
                 currentElementLength = currentElementLength * 10 + digit;
             }

@@ -91,7 +91,7 @@ public class UmiGroupBuilder
 
                 for(DuplicateGroup existing : cluster)
                 {
-                    if(existing.fragmentCount() >= second.fragmentCount() && !exceedsUmiIdDiff(existing.id(), second.id(), config.PermittedBaseDiff))
+                    if(existing.fragmentCount() >= second.fragmentCount() && !exceedsUmiIdDiff(existing.umiId(), second.umiId(), config.PermittedBaseDiff))
                     {
                         merged = true;
                         break;
@@ -133,7 +133,7 @@ public class UmiGroupBuilder
                 {
                     DuplicateGroup second = orderedGroups.get(j);
 
-                    if(!exceedsUmiIdDiff(first.id(), second.id(), config.PermittedBaseDiff + 1))
+                    if(!exceedsUmiIdDiff(first.umiId(), second.umiId(), config.PermittedBaseDiff + 1))
                     {
                         first.fragments().addAll(second.fragments());
                         orderedGroups.remove(j);
@@ -166,7 +166,7 @@ public class UmiGroupBuilder
                     double maxCountRatio = first.fragmentCount() >= second.fragmentCount() ?
                             first.fragmentCount() / (double)second.fragmentCount() : second.fragmentCount() / (double)first.fragmentCount();
 
-                    if(maxCountRatio >= MAX_IMBALANCED_UMI_COUNT && !exceedsUmiIdDiff(first.id(), second.id(), MAX_IMBALANCED_UMI_BASE_DIFF))
+                    if(maxCountRatio >= MAX_IMBALANCED_UMI_COUNT && !exceedsUmiIdDiff(first.umiId(), second.umiId(), MAX_IMBALANCED_UMI_BASE_DIFF))
                     {
                         first.fragments().addAll(second.fragments());
                         orderedGroups.remove(j);
@@ -413,7 +413,7 @@ public class UmiGroupBuilder
             if(first instanceof DuplicateGroup)
             {
                 firstGroup = (DuplicateGroup) first;
-                firstUmi = firstGroup.id();
+                firstUmi = firstGroup.umiId();
             }
             else
             {
@@ -432,7 +432,7 @@ public class UmiGroupBuilder
                 if(second instanceof DuplicateGroup)
                 {
                     secondGroup = (DuplicateGroup) second;
-                    secondUmi = secondGroup.id();
+                    secondUmi = secondGroup.umiId();
                 }
                 else
                 {

@@ -5,7 +5,6 @@ public final class SvConstants
     public static final String APP_NAME = "Esvee";
 
     // file related
-    public static final String ASSEMBLY_BAM_FILE_ID = ".assembly.bam";
     public static final String SV_PREP_JUNCTIONS_FILE_ID = ".sv_prep.junctions.tsv";
     public static final String DEFAULT_HTML_SUMMARY_DIR = "html";
     public static final String REF_GENOME_IMAGE_EXTENSION = ".img";
@@ -16,36 +15,74 @@ public final class SvConstants
     // BAM reading
     public static final int BAM_READ_JUNCTION_BUFFER = 1000;
 
-
-    // variant calling
-    public static final int MAX_DUP_LENGTH = 6; // then classified as an INS
+    // read adjustments
+    public static final int POLY_G_TRIM_LENGTH = 4;
+    public static final int INDEL_TO_SC_MIN_SIZE_SOFTCLIP = 6;
+    public static final int INDEL_TO_SC_MAX_EDGE_DISTANCE = 16;
 
     // primary assembly
     public static final int READ_SOFT_CLIP_JUNCTION_BUFFER = 2;
 
     public static final int READ_FILTER_MIN_JUNCTION_MAPQ = 20;
-    public static final int READ_FILTER_MIN_ALIGNED_BASES = 30; // new (ie previously hard-coded)
+    public static final int READ_FILTER_MIN_ALIGNED_BASES = 30;
+
+    public static final int PRIMARY_ASSEMBLY_MIN_LENGTH = 10;
+    public static final int PRIMARY_ASSEMBLY_MIN_READ_SUPPORT = 2; // new
+    public static final int PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL = 60; // new
+    public static final int PROXIMATE_REF_SIDE_SOFT_CLIPS = 3;
+
+    // primary assembly deduplication
+    public static final int PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH = 1;
+    public static final int PRIMARY_ASSEMBLY_MERGE_MISMATCH = 3;
+    public static final int PRIMARY_ASSEMBLY_MERGE_READ_OVERLAP = 2;
+
+    public static final int PROXIMATE_JUNCTION_DISTANCE = 10;
+    public static final int PROXIMATE_JUNCTION_OVERLAP = 100;
+
+    // filters
+    public static final int PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH = 32;
+
+    public static final double REMOTE_REGION_WEAK_SUPP_PERCENT = 0.1;
+
+    // common
+    public static int AVG_BASE_QUAL_THRESHOLD = 30;
+    public static int LOW_BASE_QUAL_THRESHOLD = 26;
+
+    // assembly extension
+    public static final int ASSEMBLY_EXTENSION_OVERLAP_BASES = 20;
+    public static final int ASSEMBLY_EXTENSION_BASE_MISMATCH = 2;
+
+    // phased assembly overlaps
+    public static final int PHASED_ASSEMBLY_OVERLAP_BASES = 100;
+    public static final int PHASED_ASSEMBLY_JUNCTION_OVERLAP = 30;
+    public static final int PHASED_ASSEMBLY_OVERLAP_BASE_MISMATCH = 2;
+    public static final int PHASED_ASSEMBLY_MAX_TI = 1000;
 
 
-    // read support
-    public static final int PRIMARY_ASSEMBLY_WEAK_SUPPORT_MIN_BASES = 3; // new
 
     public static final int SUPPORT_MAX_MISMATCH_STRONG = 1;
     public static final int SUPPORT_MAX_MISMATCH_WEAK = 4;
     public static final int SUPPORT_MAX_MISMATCH_DEDUPING_ASSEMBLIES = 5;
 
 
+    // variant calling
+    public static final int MAX_DUP_LENGTH = 6; // then classified as an INS
+
+
+    // OLD CODE - may still be used
+    // read support
+    public static final int PRIMARY_ASSEMBLY_WEAK_SUPPORT_MIN_BASES = 3; // new
+
+
     // UNCLASSIFIED
 
 
     // When a base is considered in the context of a single read, at what quality level do we start to see this base as low-quality"
-    public static int LOW_BASE_QUAL_THRESHOLD = 26; // lowQualBaseThreshold
 
     // When a base has more than 1 piece of supporting evidence, what is the cumulative total below which the base is low quality anyway")
     public static int LOW_BASE_QUAL_CUMULATIVE_THRESHOLD = 39; // was lowBaseQualCumulativeThreshold
 
     // The average base qual below which we consider the entire read (or section of a read) to be low quality
-    public static int AVG_BASE_QUAL_THRESHOLD = 30; // averageQualityThreshold
 
 
 
@@ -77,12 +114,6 @@ public final class SvConstants
     public static final int MIN_READS_SUPPORT_ASSEMBLY = 2;
 
 
-    // When trimming polgG/C, how many Gs/Cs must appear on the edge of a read to be trimmed
-    public static final int NORMALISE_POLY_G_LENGTH = 4;
-
-    // Indels this size or larger near the edge of a read will be converted to soft-clips
-    public static final int NORMALISE_INDEL_MIN_SIZE_SOFTCLIP = 6;
-    public static final int NORMALISE_INDEL_MAX_EDGE_DISTANCE = 16;
 
     // Not a MapQ. Ignore any alignments during extension that come from BWA with a score less than this
     public static final int ALIGNER_MIN_SCORE = 20;
@@ -103,19 +134,10 @@ public final class SvConstants
     public static final int LOW_OVERHANG_THRESHOLD = 30;
 
     // The threshold below which a LOW_QUALITY filter will be applied to the VCF
-    // FIXME: make config
     public static final int LOW_QUALITY_THRESHOLD = 40;
-
 
     public static final boolean EXTEND_PRIMARIES = false;
 
     // performance and logging related
     public static final int TASK_LOG_COUNT = 100;
-
-    // Whether individual operations are timed to prevent slow processing
-    public static final boolean TIMEOUTS_ENABLED = false;
-    public static final int PRIMARY_TIMEOUT = 5000;
-    public static final int EXTENSION_TIMEOUT = 5000;
-
-
 }

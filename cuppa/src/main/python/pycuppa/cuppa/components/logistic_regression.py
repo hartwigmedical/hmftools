@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import numpy as np
 import pandas as pd
 import sklearn.linear_model._logistic
 from sklearn.utils.validation import check_is_fitted
-from typing import Iterable, Self
+from typing import Iterable
 from sklearn.exceptions import ConvergenceWarning
 
 import warnings
@@ -61,7 +63,7 @@ class LogisticRegression(sklearn.linear_model._logistic.LogisticRegression):
             l1_ratio = l1_ratio
         )
 
-    def fit(self, X: pd.DataFrame, y: pd.Series, sample_weight: Iterable[float] = None) -> Self:
+    def fit(self, X: pd.DataFrame, y: pd.Series, sample_weight: Iterable[float] = None) -> "LogisticRegression":
         """
         Fit model
 
@@ -257,5 +259,5 @@ class LogisticRegression(sklearn.linear_model._logistic.LogisticRegression):
 
         return contribs
 
-    def set_output(self, transform: str = None) -> Self:
+    def set_output(self, transform: str = None) -> "LogisticRegression":
         return self

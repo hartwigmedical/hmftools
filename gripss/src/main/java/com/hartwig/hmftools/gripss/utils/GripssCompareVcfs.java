@@ -619,7 +619,7 @@ public class GripssCompareVcfs
         ConfigBuilder configBuilder = new ConfigBuilder();
 
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
-        configBuilder.addConfigItem(REFERENCE, true, REFERENCE_DESC);
+        configBuilder.addConfigItem(REFERENCE, false, REFERENCE_DESC);
         configBuilder.addPath(ORIGINAL_VCF, true, "Optional, name of the reference sample");
         configBuilder.addPath(NEW_VCF, true, "Path to the GRIDSS structural variant VCF file");
         configBuilder.addFlag(IGNORE_PON_DIFF, "Ignore diffs if just PON filter");

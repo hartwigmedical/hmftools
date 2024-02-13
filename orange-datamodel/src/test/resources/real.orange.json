@@ -967,6 +967,15 @@
     "hrdType": "none"
   },
   "cuppa": {
+    "bestPrediction": {
+      "cancerType": "Melanoma",
+      "likelihood": 0.996,
+      "snvPairwiseClassifier": 0.979,
+      "genomicPositionClassifier": 0.99,
+      "featureClassifier": 0.972,
+      "altSjCohortClassifier": null,
+      "expressionPairwiseClassifier": null
+    },
     "predictions": [
       {
         "cancerType": "Melanoma",

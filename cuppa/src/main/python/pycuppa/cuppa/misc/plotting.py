@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import matplotlib
 import matplotlib.pyplot as plt
@@ -18,7 +20,7 @@ class PlotnineFigExporter(LoggerMixin):
         self.dpi = dpi
         self.verbose = verbose
 
-    def _check_input(self, fig: matplotlib.figure.Figure):
+    def _check_input(self, fig: matplotlib.figure.Figure) -> matplotlib.figure.Figure:
 
         if isinstance(fig, matplotlib.figure.Figure):
             return fig
@@ -26,7 +28,7 @@ class PlotnineFigExporter(LoggerMixin):
         self.logger.error("`fig` must be of class `matplotlib.figure.Figure`")
         raise TypeError
 
-    def _check_path(self, path: str):
+    def _check_path(self, path: str) -> str:
         if path is None:
             path = os.path.expanduser('~/Desktop/plot.pdf')
             self.logger.warning("No path was specified. Using: " + path)
@@ -37,7 +39,7 @@ class PlotnineFigExporter(LoggerMixin):
         self,
         fig: matplotlib.figure.Figure,
         path: Optional[str]
-    ):
+    ) -> None:
         path = self._check_path(path)
 
         fig = self._check_input(fig)

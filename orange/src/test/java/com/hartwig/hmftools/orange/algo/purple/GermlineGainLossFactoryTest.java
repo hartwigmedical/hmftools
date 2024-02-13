@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
@@ -30,24 +32,29 @@ public class GermlineGainLossFactoryTest
         GermlineGainLossFactory factory = createTestFactory();
 
         GermlineDeletion reportableHet = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION);
-        assertTrue(factory.mapDeletions(Lists.newArrayList(reportableHet), Lists.newArrayList()).isEmpty());
+        assertTrue(factory.getReportabilityMap(Lists.newArrayList(reportableHet), Lists.newArrayList()).isEmpty());
     }
 
     @Test
-    public void canTransformHomDeletionToPartial()
+    public void canTransformReportableHomDeletionsToPartial()
     {
         GermlineGainLossFactory factory = createTestFactory();
 
         // Gene runs from 150 to 950
-        GermlineDeletion reportablePartialHom =
-                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 400, 500);
-        GeneCopyNumber partialLoss = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(0D).maxCopyNumber(4D).build();
+        // Exons are 250-350, 450-550 and 600-900
+        GermlineDeletion reportablePartialHom1 =
+                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 400, 700);
+        GermlineDeletion reportablePartialHom2 =
+                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 800, 1000);
+        List<GermlineDeletion> deletions = Lists.newArrayList(reportablePartialHom1, reportablePartialHom2);
 
-        Map<PurpleGainLoss, GermlineDeletion> map =
-                factory.mapDeletions(Lists.newArrayList(reportablePartialHom), Lists.newArrayList(partialLoss));
+        GeneCopyNumber partialLoss = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(1D).maxCopyNumber(4D).build();
+
+        Map<PurpleGainLoss, Boolean> map = factory.getReportabilityMap(deletions, Lists.newArrayList(partialLoss));
         PurpleGainLoss gainLoss = map.keySet().iterator().next();
 
-        assertEquals(reportablePartialHom, map.get(gainLoss));
+        assertEquals(1, map.keySet().size());
+        assertTrue(map.get(gainLoss));
         assertEquals(CopyNumberInterpretation.PARTIAL_LOSS, gainLoss.interpretation());
         assertEquals(TEST_GENE, gainLoss.gene());
         assertEquals(0, gainLoss.minCopies(), EPSILON);
@@ -55,24 +62,55 @@ public class GermlineGainLossFactoryTest
     }
 
     @Test
-    public void canTransformHomDeletionToFull()
+    public void canTransformNonReportableHomDeletionToFull()
     {
         GermlineGainLossFactory factory = createTestFactory();
 
         // Gene runs from 150 to 950
         GermlineDeletion reportableFullHom =
-                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 100, 1200);
-        GeneCopyNumber fullLoss = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(0D).maxCopyNumber(0D).build();
+                GermlineDeletionTestFactory.create(TEST_GENE, false, GermlineStatus.HOM_DELETION, 0D, 100, 1200);
+        GeneCopyNumber fullLoss = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(1D).maxCopyNumber(1D).build();
 
-        Map<PurpleGainLoss, GermlineDeletion> map =
-                factory.mapDeletions(Lists.newArrayList(reportableFullHom), Lists.newArrayList(fullLoss));
+        Map<PurpleGainLoss, Boolean> map = factory.getReportabilityMap(Lists.newArrayList(reportableFullHom), Lists.newArrayList(fullLoss));
         PurpleGainLoss gainLoss = map.keySet().iterator().next();
 
-        assertEquals(reportableFullHom, map.get(gainLoss));
+        assertEquals(1, map.keySet().size());
+        assertFalse(map.get(gainLoss));
         assertEquals(CopyNumberInterpretation.FULL_LOSS, gainLoss.interpretation());
         assertEquals(TEST_GENE, gainLoss.gene());
         assertEquals(0, gainLoss.minCopies(), EPSILON);
         assertEquals(0, gainLoss.maxCopies(), EPSILON);
+    }
+
+    @Test
+    public void canTransformReportablePartialHomDeletionsToFullGeneLoss()
+    {
+        GermlineGainLossFactory factory = createTestFactory();
+
+        // Gene runs from 150 to 950
+        // Exons are 250-350, 450-550 and 600-900
+        GermlineDeletion reportablePartial1 =
+                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.1D, 200, 300);
+        GermlineDeletion reportablePartial2 =
+                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 300, 500);
+        GermlineDeletion reportablePartial3 =
+                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0D, 500, 800);
+        GermlineDeletion reportablePartial4 =
+                GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 0.2D, 700, 2000);
+        List<GermlineDeletion> deletions =
+                Lists.newArrayList(reportablePartial1, reportablePartial2, reportablePartial3, reportablePartial4);
+
+        GeneCopyNumber partialLoss = GeneCopyNumberTestFactory.builder().geneName(TEST_GENE).minCopyNumber(1D).maxCopyNumber(4D).build();
+
+        Map<PurpleGainLoss, Boolean> map = factory.getReportabilityMap(deletions, Lists.newArrayList(partialLoss));
+        PurpleGainLoss gainLoss = map.keySet().iterator().next();
+
+        assertEquals(1, map.keySet().size());
+        assertTrue(map.get(gainLoss));
+        assertEquals(CopyNumberInterpretation.FULL_LOSS, gainLoss.interpretation());
+        assertEquals(TEST_GENE, gainLoss.gene());
+        assertEquals(0, gainLoss.minCopies(), EPSILON);
+        assertEquals(0.2, gainLoss.maxCopies(), EPSILON);
     }
 
     @NotNull

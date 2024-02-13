@@ -6,23 +6,33 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAMS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_IDS_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAMS_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_IDS_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
-import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_BAM_FILE_ID;
 import static com.hartwig.hmftools.esvee.SvConstants.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.SvConstants.SV_PREP_JUNCTIONS_FILE_ID;
-import static com.hartwig.hmftools.esvee.WriteType.BREAKEND_TSV;
+import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLY_BAM;
+import static com.hartwig.hmftools.esvee.output.WriteType.READS;
+import static com.hartwig.hmftools.esvee.output.WriteType.VCF;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -34,17 +44,25 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.output.WriteType;
+import com.hartwig.hmftools.esvee.read.Read;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.ValidationStringency;
 
 public class SvConfig
 {
-    public final List<String> SampleNames;
-    public final List<String> BamFiles;
+    public final List<String> TumorIds;
+    public final List<String> ReferenceIds;
+
+    public final List<String> TumorBams;
+    public final List<String> ReferenceBams;
+
     public final List<String> JunctionFiles;
 
     public final RefGenomeVersion RefGenVersion;
@@ -59,10 +77,15 @@ public class SvConfig
     public final List<WriteType> WriteTypes;
 
     public final String OutputDir;
+    public final String OutputId;
+
+    public final SpecificRegions SpecificChrRegions;
 
     public final boolean PerfDebug;
     public final double PerfLogTime;
     public final boolean OtherDebug;
+    private final List<String> mLogReadIds;
+    private final boolean mCheckLogReadIds;
 
     public final int Threads;
 
@@ -72,7 +95,11 @@ public class SvConfig
 
     // alternative to specifically load a tumor and/or ref sample and BAM
     public static final String SAMPLE_IDS = "samples";
+    public static final String TUMOR_IDS = "samples";
+    public static final String REFERENCE_IDS = "samples";
     public static final String SAMPLE_BAMS = "bam_files";
+    public static final String TUMOR_BAMS = "bam_files";
+    public static final String REFERENCE_BAMS = "bam_files";
 
     public static final String WRITE_TYPES = "write_types";
     public static final String HTML_SUMMARY_DIR = "html_dir";
@@ -84,12 +111,15 @@ public class SvConfig
 
     public SvConfig(final ConfigBuilder configBuilder)
     {
-        SampleNames = Arrays.stream(configBuilder.getValue(SAMPLE_IDS).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
-        BamFiles = Arrays.stream(configBuilder.getValue(SAMPLE_BAMS).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+        TumorIds = Arrays.stream(configBuilder.getValue(TUMOR).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+        ReferenceIds = Arrays.stream(configBuilder.getValue(REFERENCE).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
 
-        if(SampleNames.isEmpty() || SampleNames.size() != BamFiles.size())
+        TumorBams = Arrays.stream(configBuilder.getValue(TUMOR_BAM).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+        ReferenceBams = Arrays.stream(configBuilder.getValue(REFERENCE_BAM).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+
+        if(TumorIds.isEmpty() || TumorIds.size() != TumorBams.size() || ReferenceIds.size() != ReferenceBams.size())
         {
-            SV_LOGGER.error("sample IDs must match bam files");
+            SV_LOGGER.error("tumor and reference IDs must match BAM files");
             System.exit(1);
         }
 
@@ -101,9 +131,11 @@ public class SvConfig
         }
         else
         {
-            String bamPath = pathFromFile(BamFiles.get(0));
+            String bamPath = pathFromFile(TumorBams.get(0));
+            List<String> combinedSampleIds = Lists.newArrayList(TumorIds);
+            combinedSampleIds.addAll(ReferenceIds);
 
-            for(String sampleId : SampleNames)
+            for(String sampleId : combinedSampleIds)
             {
                 String junctionFile = bamPath + sampleId + SV_PREP_JUNCTIONS_FILE_ID;
 
@@ -120,13 +152,18 @@ public class SvConfig
 
             if(writeTypesStr.equals(WriteType.ALL))
             {
-                Arrays.stream(WriteType.values()).forEach(x -> WriteTypes.add(x));
+                Arrays.stream(WriteType.values()).filter(x -> x != READS).forEach(x -> WriteTypes.add(x));
             }
             else
             {
                 String[] writeTypes = writeTypesStr.split(ITEM_DELIM, -1);
                 Arrays.stream(writeTypes).forEach(x -> WriteTypes.add(WriteType.valueOf(x)));
             }
+        }
+        else
+        {
+            WriteTypes.add(VCF);
+            WriteTypes.add(ASSEMBLY_BAM);
         }
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
@@ -141,16 +178,27 @@ public class SvConfig
 
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
-        VcfFile = configBuilder.getValue(OUTPUT_VCF);
+        if(!configBuilder.hasValue(OUTPUT_VCF) && !configBuilder.hasValue(OUTPUT_DIR))
+        {
+            SV_LOGGER.error("VCF output file or output directory required config");
+            System.exit(1);
+        }
 
-        if(configBuilder.hasValue(OUTPUT_DIR))
+        String vcfFile = configBuilder.getValue(OUTPUT_VCF);
+        OutputDir = configBuilder.hasValue(OUTPUT_DIR) ? parseOutputDir(configBuilder) : pathFromFile(vcfFile);
+        OutputId = configBuilder.getValue(OUTPUT_ID);
+
+        VcfFile = vcfFile != null ? vcfFile : outputFilename(VCF);
+
+        SpecificChrRegions = SpecificRegions.from(configBuilder);
+
+        if(!SpecificChrRegions.hasFilters() && WriteTypes.contains(READS))
         {
-            OutputDir = parseOutputDir(configBuilder);
+            SV_LOGGER.warn("writing assembly reads to TSV without region filtering may result in large output files & impact performance");
         }
-        else
-        {
-            OutputDir = pathFromFile(VcfFile);
-        }
+
+        mLogReadIds = parseLogReadIds(configBuilder);
+        mCheckLogReadIds = !mLogReadIds.isEmpty();
 
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
@@ -159,40 +207,76 @@ public class SvConfig
         Threads = parseThreads(configBuilder);
     }
 
-    public String primaryBam() { return BamFiles.get(0); }
+    public String tumorBam() { return TumorBams.get(0); }
+    public String referenceBam() { return !ReferenceBams.isEmpty() ? ReferenceBams.get(1) : null; }
 
-    // FIXME: decide on how represented
-    public String tumorBam() { return BamFiles.get(0); }
-    public String referenceBam() { return BamFiles.size() > 1 ? BamFiles.get(1) : null; }
+    public List<String> combinedSampleIds()
+    {
+        List<String> combinedSampleIds = Lists.newArrayList(TumorIds);
+        combinedSampleIds.addAll(ReferenceIds);
+        return combinedSampleIds;
+    }
+
+    public List<String> combinedBamFiles()
+    {
+        List<String> combinedSampleIds = Lists.newArrayList(TumorBams);
+        combinedSampleIds.addAll(ReferenceBams);
+        return combinedSampleIds;
+    }
 
     public String outputFilename(final WriteType writeType)
     {
         String filename = OutputDir;
 
-        filename += SampleNames.get(0);
+        filename += TumorIds.get(0);
 
-        switch(writeType)
-        {
-            case ASSEMBLY_BAM:
-                filename += ASSEMBLY_BAM_FILE_ID;
-                break;
+        if(OutputId != null)
+            filename += "." + OutputId;
 
-            case BREAKEND_TSV:
-                filename += BREAKEND_TSV;
-                break;
-        }
+        filename += "." + writeType.fileId();
 
         return filename;
     }
 
+    public static String osExtension()
+    {
+        final String osName = System.getProperty("os.name");
+        if(osName.contains("Mac"))
+            return ".dylib";
+        else if(osName.contains("Win"))
+            return ".dll";
+        else
+            return ".so";
+    }
+
+    public void logReadId(final SAMRecord record, final String caller)
+    {
+        if(mCheckLogReadIds)
+            logReadId(record.getReadName(), caller);
+    }
+
+    public void logReadId(final Read read, final String caller)
+    {
+        if(mCheckLogReadIds)
+            logReadId(read.getName(), caller);
+    }
+
+    private void logReadId(final String readId, final String caller)
+    {
+        // debugging only
+        if(mLogReadIds.contains(readId))
+            SV_LOGGER.debug("caller({}) specific readId({})", caller, readId);
+    }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPath(TUMOR_BAM, false, TUMOR_BAM_DESC);
-        configBuilder.addPath(REFERENCE_BAM, false, REFERENCE_BAM_DESC);
-        configBuilder.addConfigItem(SAMPLE_IDS, true, "List of sample IDs, separated by ','");
-        configBuilder.addConfigItem(SAMPLE_BAMS, false, "List of sample BAMs, separated by ','");
-        configBuilder.addConfigItem(OUTPUT_VCF, true, "Output VCF filename");
+        configBuilder.addConfigItem(TUMOR, true, TUMOR_IDS_DESC);
+        configBuilder.addConfigItem(TUMOR_BAM, true, TUMOR_BAMS_DESC);
+
+        configBuilder.addConfigItem(REFERENCE, false, REFERENCE_IDS_DESC);
+        configBuilder.addConfigItem(REFERENCE_BAM, false, REFERENCE_BAMS_DESC);
+
+        configBuilder.addConfigItem(OUTPUT_VCF, false, "Output VCF filename");
 
         configBuilder.addPaths(
                 JUNCTION_FILES, false, "List of SvPrep junction files, separated by ',', default is to match by sample name");
@@ -205,13 +289,15 @@ public class SvConfig
         String writeTypes = Arrays.stream(WriteType.values()).map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM));
         configBuilder.addConfigItem(WRITE_TYPES, false, "Write types from list: " + writeTypes);
 
+        configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addDecimal(PERF_LOG_TIME, "Log performance data for routine exceeding specified time (0 = disabled)", 0);
         configBuilder.addFlag(OTHER_DEBUG, "Various other debugging");
+
+        SpecificRegions.addSpecificChromosomesRegionsConfig(configBuilder);
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
     }
-
 }

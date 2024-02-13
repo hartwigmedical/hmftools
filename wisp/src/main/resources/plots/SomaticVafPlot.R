@@ -54,7 +54,7 @@ format_purity<-function(purity)
     }
 }
 
-if(nrow(sampleSummary) == 1 & nrow(variantVafRatios) > 0 & clonalMethod!='NONE')
+if(nrow(sampleSummary) == 1 & nrow(variantVafRatios) > 0 & clonalMethod != 'NONE')
 {
     # no further filters to apppy
 

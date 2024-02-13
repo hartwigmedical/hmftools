@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.swapDnaToRna;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.swapRnaToDna;
 
@@ -38,10 +38,10 @@ public class NeoEpitopeUtilsTest
         Assert.assertTrue(dnaBases.equals(swapRnaToDna(rnaBases)));
 
         dnaBases = "AGCTTCGACT";
-        String reverseStrandDna = reverseStrandBases(dnaBases);
+        String reverseStrandDna = reverseComplementBases(dnaBases);
         Assert.assertTrue(reverseStrandDna.equals("AGTCGAAGCT"));
 
-        Assert.assertTrue(dnaBases.equals(reverseStrandBases(reverseStrandDna)));
+        Assert.assertTrue(dnaBases.equals(reverseComplementBases(reverseStrandDna)));
     }
 
     @Test

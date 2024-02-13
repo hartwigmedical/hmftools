@@ -4,8 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
-import static com.hartwig.hmftools.esvee.read.ReadCache.CACHE_QUERY_BUFFER;
-import static com.hartwig.hmftools.esvee.read.ReadCache.MAX_CACHE_SIZE;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,19 +27,22 @@ public class BamReader implements AutoCloseable
 
     private final List<SamReader> mSamReaders;
     private final BamSlicer mBamSlicer;
-
-    private final ReadCache mReadCache;
+    private boolean mCurrentIsReferenceSample;
 
     public BamReader(final SvConfig config)
     {
         mConfig = config;
 
         mSamReaders = Lists.newArrayList();
+        mCurrentIsReferenceSample = false;
 
-        for(int i = 0; i < config.SampleNames.size(); ++i)
+        List<String> combinedBamFiles = mConfig.combinedBamFiles();
+        List<String> combinedSampleId = mConfig.combinedSampleIds();
+
+        for(int i = 0; i < combinedSampleId.size(); ++i)
         {
-            String sampleId = config.SampleNames.get(i);
-            String bamFile = config.BamFiles.get(i);
+            String sampleId = combinedSampleId.get(i);
+            String bamFile = combinedBamFiles.get(i);
 
             SamReader samReader = SamReaderFactory.makeDefault()
                             .validationStringency(mConfig.BamStringency)
@@ -53,25 +54,6 @@ public class BamReader implements AutoCloseable
         }
 
         mBamSlicer = createBamSlicer();
-
-        mReadCache = new ReadCache(MAX_CACHE_SIZE, new ReadCache.CacheLoader()
-        {
-            @Override
-            public ReadCache.CachedReadKey determineCacheRange(final String chromosome, final int positionStart, final int positionEnd)
-            {
-                final int adjustedStart = Math.max(1, positionStart - CACHE_QUERY_BUFFER);
-                final int adjustedEnd = positionEnd + CACHE_QUERY_BUFFER;
-
-                return new ReadCache.CachedReadKey(chromosome, adjustedStart, adjustedEnd);
-            }
-
-            @Override
-            public ReadCache.CachedReadValue load(final ReadCache.CachedReadKey key)
-            {
-                List<Read> alignments = doSliceBam(key.Chromosome, key.PositionStart, key.PositionEnd);
-                return new ReadCache.CachedReadValue(alignments);
-            }
-        });
     }
 
     public void sliceBam(final String chromosome, int positionStart, int positionEnd, final Consumer<SAMRecord> consumer)
@@ -84,65 +66,13 @@ public class BamReader implements AutoCloseable
 
         for(SamReader reader : mSamReaders)
         {
+            String fileSampleId = reader.getFileHeader().getAttribute(BAM_HEADER_SAMPLE_ID_TAG);
+            mCurrentIsReferenceSample = mConfig.ReferenceIds.contains(fileSampleId);
             mBamSlicer.slice(reader, new ChrBaseRegion(chromosome, positionStart, positionEnd), consumer);
         }
     }
 
-    public List<Read> sliceBam(final String chromosome, int positionStart, int positionEnd)
-    {
-        int bamPosStart = max(positionStart, 1);
-        int bamPosEnd = min(positionEnd, mConfig.RefGenomeCoords.length(chromosome));
-
-        if(bamPosStart > bamPosEnd)
-            return Collections.emptyList();
-
-        try
-        {
-            return mReadCache.read(chromosome, bamPosStart, bamPosEnd).collect(Collectors.toList());
-        }
-        finally
-        {
-            /* FIXME: decide how to log and measure effectiveness
-            int hits = mReadCache.CacheHits.get();
-            int misses = mReadCache.CacheMisses.get();
-
-            if((hits + misses) % 10_000 == 0)
-            {
-                SV_LOGGER.info("read cache: cache hits({}) misses({}) hitRate({}%)",
-                        hits, misses, String.format("%.2f", (100.0f * hits) / (hits + misses)));
-            }
-            */
-        }
-    }
-
-    private List<Read> doSliceBam(final String chromosome, int bamPosStart, int bamPosEnd)
-    {
-        ChrBaseRegion sliceRegion = new ChrBaseRegion(chromosome, bamPosStart, bamPosEnd);
-
-        List<Read> reads = Lists.newArrayList();
-
-        for(SamReader reader : mSamReaders)
-        {
-            // FIXME: consumer or accumulator
-            final Consumer<SAMRecord> consumer = record ->
-            {
-                reads.add(createAndCheckRecord(record));
-            };
-
-            mBamSlicer.slice(reader, sliceRegion, consumer);
-        }
-
-        return reads;
-    }
-
-    private Read createAndCheckRecord(final SAMRecord record)
-    {
-        // mReadRescue::rescueRead) // CHECK: not required
-
-        // mNormaliser::normalise() on each record
-
-        return new Read(record);
-    }
+    public boolean currentIsReferenceSample() { return mCurrentIsReferenceSample; }
 
     private BamSlicer createBamSlicer()
     {
@@ -165,5 +95,4 @@ public class BamReader implements AutoCloseable
         }
         catch(IOException e) {}
     }
-
 }

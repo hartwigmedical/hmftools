@@ -35,9 +35,9 @@ public class CodonsTest
     public void testAminoAcidToCodon()
     {
         // there are multiple solutions here and the choice depends on the order of the DNA_BASES array
-        assertEquals("TAT", Codons.aminoAcidToCodon('Y'));
-        assertEquals("TAT", Codons.aminoAcidsToCodons("Y"));
-        assertEquals("TATTGA", Codons.aminoAcidsToCodons("YX"));
+        assertEquals("TAC", Codons.aminoAcidToCodon('Y'));
+        assertEquals("TAC", Codons.aminoAcidsToCodons("Y"));
+        assertEquals("TACTAA", Codons.aminoAcidsToCodons("YX"));
     }
 
     @Test

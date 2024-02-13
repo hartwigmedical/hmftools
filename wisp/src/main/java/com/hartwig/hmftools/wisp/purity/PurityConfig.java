@@ -61,6 +61,7 @@ public class PurityConfig
     public final double NoiseReadsPerMillion;
     public final double NoiseReadsPerMillionDualStrand;
     public final double GcRatioMin;
+    public final boolean SummaryMethodOnlyOutput;
     public final int Threads;
 
     private static final String PATIENT_ID = "patient_id";
@@ -74,6 +75,7 @@ public class PurityConfig
     private static final String NOISE_READS_PER_MILLION_DUAL = "noise_per_mill_dual";
     private static final String GC_RATIO_MIN = "gc_ratio_min";
     private static final String WRITE_TYPES = "write_types";
+    private static final String SUMMARY_METHOD_ONLY = "summary_method_only";
     private static final String PROBE_VARIANTS_FILE = "probe_variants_file";
 
     public PurityConfig(final ConfigBuilder configBuilder)
@@ -114,6 +116,8 @@ public class PurityConfig
 
         NoiseReadsPerMillion = configBuilder.getDecimal(NOISE_READS_PER_MILLION);
         NoiseReadsPerMillionDualStrand = configBuilder.getDecimal(NOISE_READS_PER_MILLION_DUAL);
+
+        SummaryMethodOnlyOutput = configBuilder.hasFlag(SUMMARY_METHOD_ONLY);
 
         WriteTypes = Sets.newHashSet();
 
@@ -229,6 +233,8 @@ public class PurityConfig
                 "Expected reads-per-million from noise for dual-strand reads", DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND);
 
         configBuilder.addRequiredDecimal(GC_RATIO_MIN,"GC ratio minimum permitted");
+
+        configBuilder.addFlag(SUMMARY_METHOD_ONLY, "Only write summary data for configured purity methods");
 
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);

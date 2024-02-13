@@ -371,7 +371,7 @@ public class VafPeakModel extends ClonalityModel
     private boolean canUseVariant(final SomaticVariant variant, final GenotypeFragments sampleFragData, int depthThreshold)
     {
         return useVariant(variant, sampleFragData)
-            && sampleFragData.UmiCounts.totalCount() >= depthThreshold
-            && sampleFragData.UmiCounts.alleleCount() >= 1;
+            && sampleFragData.Depth >= depthThreshold
+            && sampleFragData.AlleleCount >= 1;
     }
 }

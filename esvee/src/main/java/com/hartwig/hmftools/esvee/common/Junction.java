@@ -21,6 +21,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.SpecificRegions;
 
 public class Junction implements Comparable<Junction>
 {
@@ -53,11 +54,16 @@ public class Junction implements Comparable<Junction>
     public String chromosome() { return Chromosome; }
     public int position() { return Position; }
     public Direction direction() { return Orientation == POS_STRAND ? Direction.FORWARDS : Direction.REVERSE; }
+    public boolean isForward() { return Orientation == POS_STRAND; }
+    public boolean isReverse() { return Orientation == NEG_STRAND; }
 
     public String toString()
     {
         return format("%s:%d:%d", Chromosome, Position, Orientation);
     }
+
+    // for display and logging
+    public String coords() { return format("%s:%d:%d", Chromosome, Position, Orientation); }
 
     public boolean isLocalMatch(final Junction other)
     {
@@ -94,7 +100,7 @@ public class Junction implements Comparable<Junction>
         return Position < other.Position ? -1 : 1;
     }
 
-    public static Map<String,List<Junction>> loadJunctions(final String filename)
+    public static Map<String,List<Junction>> loadJunctions(final String filename, final SpecificRegions specificRegions)
     {
         if(filename == null || filename.isEmpty())
             return null;
@@ -124,6 +130,12 @@ public class Junction implements Comparable<Junction>
                 String chromosome = values[chrIndex];
                 int position = Integer.parseInt(values[posIndex]);
                 byte orientation = Byte.parseByte(values[orientIndex]);
+
+                if(!specificRegions.includeChromosome(chromosome))
+                    continue;
+
+                if(!specificRegions.includePosition(chromosome, position))
+                    continue;
 
                 if(!currentChromosome.equals(chromosome))
                 {

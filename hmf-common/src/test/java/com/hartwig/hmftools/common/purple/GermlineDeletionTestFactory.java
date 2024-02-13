@@ -12,6 +12,13 @@ public final class GermlineDeletionTestFactory
     }
 
     @NotNull
+    public static GermlineDeletion create(@NotNull String geneName, boolean reported, @NotNull String chromosome,
+            @NotNull String chromosomeBand)
+    {
+        return create(geneName, reported, GermlineStatus.HET_DELETION, 0D, 0, 0, chromosome, chromosomeBand);
+    }
+
+    @NotNull
     public static GermlineDeletion create(@NotNull String geneName, boolean reported, @NotNull GermlineStatus tumorStatus)
     {
         return create(geneName, reported, tumorStatus, 0D, 0, 0);
@@ -28,9 +35,16 @@ public final class GermlineDeletionTestFactory
     public static GermlineDeletion create(@NotNull String geneName, boolean reported, @NotNull GermlineStatus tumorStatus,
             double tumorCopyNumber, int regionStart, int regionEnd)
     {
+        return create(geneName, reported, tumorStatus, tumorCopyNumber, regionStart, regionEnd, Strings.EMPTY, Strings.EMPTY);
+    }
+
+    @NotNull
+    public static GermlineDeletion create(@NotNull String geneName, boolean reported, @NotNull GermlineStatus tumorStatus,
+            double tumorCopyNumber, int regionStart, int regionEnd, @NotNull String chromosome, @NotNull String chromosomeBand)
+    {
         return new GermlineDeletion(geneName,
-                Strings.EMPTY,
-                Strings.EMPTY,
+                chromosome,
+                chromosomeBand,
                 regionStart,
                 regionEnd,
                 0,

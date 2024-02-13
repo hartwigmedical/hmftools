@@ -182,7 +182,7 @@ public class DoubleMinuteData
 
             for(LinkedPair pair : chain.getLinkedPairs())
             {
-                ClosedSegmentLength += pair.length();
+                ClosedSegmentLength += pair.baseLength();
 
                 if(!simpleDels.contains(pair.first()))
                 {

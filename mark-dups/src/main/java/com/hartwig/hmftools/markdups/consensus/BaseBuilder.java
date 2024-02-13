@@ -3,6 +3,8 @@ package com.hartwig.hmftools.markdups.consensus;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.BASE_QUAL_MINIMUM;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -224,7 +226,7 @@ public class BaseBuilder
             differingQual = firstBaseAndQual[1];
         }
 
-        byte qual = (byte) max(0, refQual - differingQual);
+        byte qual = (byte) max(BASE_QUAL_MINIMUM, refQual - differingQual);
         return new byte[] { refBase, qual };
     }
 
@@ -312,7 +314,7 @@ public class BaseBuilder
                 differingQual += qualTotals.get(i);
         }
 
-        double calcQual = (double)maxQual * max(0.0, maxQualTotal - differingQual) / maxQualTotal;
+        double calcQual = (double)maxQual * max(BASE_QUAL_MINIMUM, maxQualTotal - differingQual) / maxQualTotal;
 
         return new byte[] { maxBase, (byte)round(calcQual) };
     }

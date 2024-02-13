@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.sage.dedup.DedupIndelOld.dedupIndelsOld;
 import static com.hartwig.hmftools.sage.dedup.IndelDeduper.buildAltBasesString;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER_OLD;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -157,7 +156,7 @@ public class IndelDedupTest
 
         // initially filtered but still considered
         var1.filters().add(SoftFilter.MIN_TUMOR_QUAL.filterName());
-        del2.filters().add(SoftFilter.STRAND_BIAS.filterName());
+        del2.filters().add(SoftFilter.FRAGMENT_STRAND_BIAS.filterName());
 
         // variants not part of the solution
         SageVariant var3 = createSageVariant(
@@ -205,7 +204,7 @@ public class IndelDedupTest
                 CHR_1_REF_BASES.substring(38, 39), "A", 1);
 
         // initially filtered but still considered
-        del2.filters().add(SoftFilter.STRAND_BIAS.filterName());
+        del2.filters().add(SoftFilter.FRAGMENT_STRAND_BIAS.filterName());
         var4.filters().add(SoftFilter.MIN_TUMOR_QUAL.filterName());
         var5.filters().add(SoftFilter.MIN_TUMOR_VAF.filterName());
 

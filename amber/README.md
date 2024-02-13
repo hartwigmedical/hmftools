@@ -36,8 +36,7 @@ This is the default and recommended mode.
 | loci          | Path to vcf file containing likely heterozygous sites (see below). Gz files supported.     |
 | ref_genome_version | One of `37` or `38`. Required only when using CRAM files.                             |
 
-The vcf file used by HMF (GermlineHetPon.37.vcf.gz) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
-The sites for hg37 were chosen by running the GATK HaplotypeCaller over 1700 germline samples and then selecting all SNP sites which are heterozygous in 800 to 900 of the samples.  The 1.3 million sites provided in this file typically result in 450k+ BAF points.  For hg38 we use GNOMAD v3 SNP sites from chr1-chrX with only a single ALT at that location and with populationAF > 0.05 and < 0.95.   This yields 7.25M sites.
+The loci file used by HMF for both 37 and 38 reference genomes is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). These loci are generated using GNOMAD v3 SNP sites (lifted over for GRCH37 version) from chr1-chrX with only a single ALT at that location and with populationAF > 0.05 and < 0.95.  These sites are further filtered to remove loci with frequently unclear zygosity in a set of 60 HMF samples, yielding around 6.3M sites overall.  
 
 Approximately 1000 sites scattered evenly through the VCF have been tagged with a SNPCHECK flag. 
 The allelic frequency of these sites in the reference bam are written to the `REFERENCE.amber.snp.vcf.gz` file without any filtering to be used downstream for sample matching. 
@@ -49,8 +48,9 @@ AMBER supports both BAM and CRAM file formats.
 | Argument              | Default | Description                                                                                       |
 |-----------------------|---------|---------------------------------------------------------------------------------------------------|
 | threads               | 1       | Number of threads to use                                                                          |
-| min_mapping_quality   | 1       | Minimum mapping quality for an alignment to be used                                               |
+| min_mapping_quality   | 50       | Minimum mapping quality for an alignment to be used                                               |
 | min_base_quality      | 13      | Minimum quality for a base to be considered                                                       |
+| tumor_min_depth      | 8      | Min tumor depth for a site to be considered |
 | min_depth_percent     | 0.5     | Only include reference sites with read depth within min percentage of median reference read depth |
 | max_depth_percent     | 1.5     | Only include reference sites with read depth within max percentage of median reference read depth |
 | min_het_af_percent    | 0.4     | Minimum allelic frequency in reference sample to be considered heterozygous                                           |
@@ -77,6 +77,7 @@ If no reference BAM is supplied, AMBER will be put into tumor only mode.  In tum
 - snp check vcf is not produced
 - normalBAF and count fields are set to -1 in amber.baf.tsv
 - a set of blacklisted regions (with variable germline copy number) are ignored
+- default tumor_min_depth is raised to 25
 
 ### Mandatory Arguments
 
@@ -87,17 +88,12 @@ If no reference BAM is supplied, AMBER will be put into tumor only mode.  In tum
 | output_dir | Path to the output directory. This directory will be created if it does not already exist. |
 | loci       | Path to vcf file containing likely heterozygous sites (see below). Gz files supported.     |
 
-### Optional Arguments
+### Tumor-only specific optional Arguments
 
 | Argument          | Default | Description                                                                   |
 |-------------------|---------|-------------------------------------------------------------------------------|
-| threads           | 1       | Number of threads to use                                                      |
-| min_mapping_quality | 1       | Minimum mapping quality for an alignment to be used                           |
-| min_base_quality  | 13      | Minimum quality for a base to be considered                                   |
 | tumor_only_min_vaf | 0.05    | Min VAF in ref and alt in tumor only mode                                     |
-| tumor_only_min_support | 2       | Min support in ref and alt in tumor only mode                                 |
-| tumor_min_depth   | 8/25    | Min tumor depth, default = 25 for tumor/normal, 8 for tumor-only mode         |
-| ref_genome        | NA      | Path to the reference genome fasta file. Required only when using CRAM files. |
+| tumor_only_min_support | 2 | Min support in ref and alt in tumor only mode                                 |
 
 ### Example Usage
 
@@ -118,13 +114,12 @@ If the tumor / tumor bam are not specified then Amber will be run in germline on
 
 ## Targeted Mode
 
-AMBER may be run on targeted data.   For more information on how to run hmftools in targeted mode please see [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md)
+AMBER may be run on targeted data.   The differences in behaviour in Amber in targeted mode are documented here: [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md#amber).  
 
 ## Multiple Reference / Donor mode
 The `reference` and `reference_bam` arguments supports multiple arguments separated by commas. 
 When run in this mode the heterozygous baf points are taken as the intersection of each of the reference bams. 
 No change is made to the SNPCheck or contamination output. These will be run on the first reference bam in the list. 
-
 
 ## Algorithm 
 
@@ -139,7 +134,6 @@ The Bioconductor copy number package is then used to generate pcf segments from 
 ```
 TO DO
 ```
-
 
 ### Regions of Homozygosity
 Amber outputs a file which contains continuous regions of homozygous sites.  The sex chromosomes are excluded from consideration, as are the short arms of chr 13,14,15,21 & 22 as well as regions within 1M bases of centromeric gaps and large regions of heterochromatin (ie for chr 1,chr9, chr 16).
@@ -214,38 +208,15 @@ ORDER BY sampleCount desc;
 | REFERENCE.amber.snp.vcf.gz           | Entry at each SNP location in the reference.                                             |
 | REFERENCE.amber.homozygousregion.tsv | Regions of homozygosity found in the reference.                                          |
 
-## Performance Characteristics
-Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
-Elapsed time is measured in minutes. 
-CPU time is minutes spent in user mode. 
-Peak memory is measure in gigabytes.
-
-
-| Threads | Elapsed Time | CPU Time | Peak Mem |
-|---------|--------------|----------|----------|
-| 1       | 144          | 230      | 15.04    |
-| 8       | 22           | 164      | 18.40    |
-| 16      | 12           | 164      | 21.00    |
-| 32      | 8            | 170      | 21.60    |
-| 48      | 7            | 199      | 21.43    |
-| 64      | 6            | 221      | 21.78    |
+# Known issues / future improvements
+- **Population based phasing**: Could significantly increase resolution of subclonal/low tumor fraction BAF segmentation.
 
  
 # Version History and Download Links
+- [4.0](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v4.0rc)
 - [3.9](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.9)
-  - Added germline only mode support. 
-  - Added `tumor_only_min_depth` argument.
-  - Make `ref_genome_version` argument mandatory.
-  - Added excluded SNP regions (values are hard coded) in tumor only mode.
-  - Fixed a rounding issue in the classification of zygosity.
-  - Removed <sample id>.amber.baf.vcf.gz output.
-  - compressed baf TSV output with gzip.
 - [3.8](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.8)
-  - Added workaround for a bug in R copy_number module pcf function 
-  - Fixed `NullPointerException` in tumor only mode
-  - Change QC file UniparentalDisomy prints NONE instead of null
 - [3.7](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.7)
-  - Fixed `NullPointerException` when no `-ref_genome` argument is provided
 - [3.6](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.6)
 - [3.5](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.5)
 - [3.4](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.4)
@@ -253,6 +224,3 @@ Peak memory is measure in gigabytes.
 - [3.2](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.2)
 - [3.1](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.1)
 - [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.0)
-- [2.5](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v2.5)
-- [2.4](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v2.4)
-- [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v2.3)

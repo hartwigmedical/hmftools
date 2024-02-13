@@ -12,9 +12,9 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_D
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.IGNORE_SAMPLE_ID;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_COLUMN;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
@@ -87,7 +87,7 @@ public class NormalisationConfig
 
             Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
 
-            int sampleIndex = fieldsIndexMap.get(SAMPLE_ID_COLUMN);
+            int sampleIndex = fieldsIndexMap.get(FLD_SAMPLE_ID);
             Integer wgsSampleIndex = fieldsIndexMap.get(WGS_SAMPLE_ID);
             Integer genderIndex = fieldsIndexMap.get(GENDER);
 

@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.isofox.cohort;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.IGNORE_SAMPLE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CANCER_TYPE;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
@@ -43,9 +45,7 @@ public class SampleDataCache
     private static final int COL_SAMPLE_ID = 0;
 
     // optional fields
-    private static final String COL_CANCER_TYPE = "CancerType";
     private static final String COL_COHORT_NAME = "CohortName";
-    private static final String COL_GENE_ID = "GeneId";
 
     public int sampleCountInCohort(final List<String> sampleIds, final String cohortName)
     {
@@ -84,9 +84,9 @@ public class SampleDataCache
             final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(items.get(0), DELIMITER);
             items.remove(0);
 
-            Integer cancerTypeIndex = fieldIndexMap.get(COL_CANCER_TYPE);
+            Integer cancerTypeIndex = fieldIndexMap.get(FLD_CANCER_TYPE);
             Integer cohortNameIndex = fieldIndexMap.get(COL_COHORT_NAME);
-            Integer geneIdIndex = fieldIndexMap.get(COL_GENE_ID);
+            Integer geneIdIndex = fieldIndexMap.get(FLD_GENE_ID);
 
             for(String item : items)
             {

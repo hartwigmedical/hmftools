@@ -253,7 +253,7 @@ public class StructuralVariant extends Variant
             else
             {
                 basesEnd = refGenome.getBaseString(chrEnd, positionEnd - endBaseLength + 1, positionEnd);
-                basesEnd = Nucleotides.reverseStrandBases(basesEnd);
+                basesEnd = Nucleotides.reverseComplementBases(basesEnd);
             }
         }
         else
@@ -271,7 +271,7 @@ public class StructuralVariant extends Variant
             {
                 // -1/-1 - start with the reversed bases from the end breakend
                 basesStart = refGenome.getBaseString(chrEnd, positionEnd, positionEnd + halfNonInsSeqLength - 1);
-                basesStart = Nucleotides.reverseStrandBases(basesStart);
+                basesStart = Nucleotides.reverseComplementBases(basesStart);
 
                 int endBaseLength = probeLength - basesStart.length() - insSeqLength;
                 basesEnd = refGenome.getBaseString(chrStart, positionStart, positionStart + endBaseLength - 1);

@@ -7,10 +7,11 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.IGNORE_SAMPLE_ID;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_COLUMN;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadGeneIdsFile;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CANCER_TYPE;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
@@ -43,8 +44,6 @@ public class DataLoaderConfig
     public static final String GENE_DIST_FILE = "gene_distribution_file";
     public static final String GENE_DIST_FILE_DESC = "Gene distribution for medians and percentile data";
     public static final String ALT_SJ_COHORT_FILE = "alt_sj_cohort_file";
-
-    public static final String FLD_CANCER_TYPE = "CancerType";
 
     public static final String LOAD_TYPES = "load_types";
 
@@ -147,13 +146,13 @@ public class DataLoaderConfig
             Map<String,Integer> fieldsIndexMap = FileReaderUtils.createFieldsIndexMap(lines.get(0), DELIMITER);
             lines.remove(0);
 
-            if(!fieldsIndexMap.containsKey(SAMPLE_ID_COLUMN))
+            if(!fieldsIndexMap.containsKey(FLD_SAMPLE_ID))
             {
                 ISF_LOGGER.error("sample ID file missing 'SampleId'");
                 return;
             }
 
-            int sampleIdIndex = fieldsIndexMap.get(SAMPLE_ID_COLUMN);
+            int sampleIdIndex = fieldsIndexMap.get(FLD_SAMPLE_ID);
             Integer cancerTypeIndex = fieldsIndexMap.get(FLD_CANCER_TYPE);
 
             for(String line : lines)

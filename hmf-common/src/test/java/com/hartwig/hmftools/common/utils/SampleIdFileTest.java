@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.utils;
 
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_COLUMN;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 
 import static org.junit.Assert.assertEquals;
@@ -20,26 +20,26 @@ public class SampleIdFileTest
     @Test
     public void testSampleIdFileLoading()
     {
-        List<String> sampleIds = loadDelimitedIdFile(loadSampleFile("sample_id_01.csv"), SAMPLE_ID_COLUMN, CSV_DELIM);
+        List<String> sampleIds = loadDelimitedIdFile(loadSampleFile("sample_id_01.csv"), FLD_SAMPLE_ID, CSV_DELIM);
         assertEquals(3, sampleIds.size());
         assertEquals("SAMPLE_ID_01", sampleIds.get(0));
         assertEquals("SAMPLE_ID_03", sampleIds.get(2));
 
-        sampleIds = loadDelimitedIdFile(loadSampleFile("sample_id_02.csv"), SAMPLE_ID_COLUMN, CSV_DELIM);
+        sampleIds = loadDelimitedIdFile(loadSampleFile("sample_id_02.csv"), FLD_SAMPLE_ID, CSV_DELIM);
         assertEquals(3, sampleIds.size());
         assertEquals("SAMPLE_ID_01", sampleIds.get(0));
         assertEquals("SAMPLE_ID_03", sampleIds.get(2));
 
-        sampleIds = loadDelimitedIdFile(loadSampleFile("sample_id_03.csv"), SAMPLE_ID_COLUMN, CSV_DELIM);
+        sampleIds = loadDelimitedIdFile(loadSampleFile("sample_id_03.csv"), FLD_SAMPLE_ID, CSV_DELIM);
         assertEquals(3, sampleIds.size());
         assertEquals("SAMPLE_ID_01", sampleIds.get(0));
         assertEquals("SAMPLE_ID_03", sampleIds.get(2));
 
         // fails since headers are missing or incorrect
-        sampleIds = loadDelimitedIdFile(loadSampleFile("sample_id_04.csv"), SAMPLE_ID_COLUMN, CSV_DELIM);
+        sampleIds = loadDelimitedIdFile(loadSampleFile("sample_id_04.csv"), FLD_SAMPLE_ID, CSV_DELIM);
         assertTrue(sampleIds.isEmpty());
 
-        sampleIds = loadDelimitedIdFile(loadSampleFile("sample_id_05.csv"), SAMPLE_ID_COLUMN, CSV_DELIM);
+        sampleIds = loadDelimitedIdFile(loadSampleFile("sample_id_05.csv"), FLD_SAMPLE_ID, CSV_DELIM);
         assertTrue(sampleIds.isEmpty());
     }
 

@@ -47,7 +47,7 @@ public class PseudoGeneFinder
 
             for(final LinkedPair pair : cluster.getLinkedPairs())
             {
-                if(pair.length() > SHORT_TI_LENGTH * 8)
+                if(pair.baseLength() > SHORT_TI_LENGTH * 8)
                     continue;
 
                 final SvBreakend lower = pair.getBreakend(true);

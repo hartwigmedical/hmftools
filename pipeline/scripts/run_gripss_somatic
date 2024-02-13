@@ -46,8 +46,7 @@ args="${args} -ref_genome ${ref_genome} \
   -output_dir ${output_dir}"
 
 if [ "${run_mode}" == "PANEL" ]; then
-  args="${args} -target_regions_bed ${target_regions_bed} \
-    -hard_min_tumor_qual 200 -min_qual_break_point 1000 -min_qual_break_end 1000"
+  args="${args} -target_regions_bed ${target_regions_bed}"
 fi
 
 if [ ! "${reference_id}" == "" ]; then

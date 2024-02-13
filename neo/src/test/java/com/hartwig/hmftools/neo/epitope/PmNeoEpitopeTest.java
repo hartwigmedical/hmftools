@@ -20,7 +20,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 
 import static org.junit.Assert.assertEquals;
 
@@ -184,13 +184,13 @@ public class PmNeoEpitopeTest
 
         neData.setCodingBases(refGenome, 3);
 
-        upBases = reverseStrandBases(chr1Bases.substring(60, 66));
+        upBases = reverseComplementBases(chr1Bases.substring(60, 66));
         assertEquals(upBases, neData.CodingBases[FS_UP]);
 
-        novelBases = reverseStrandBases(chr1Bases.substring(48, 49) + pmData.Alt + chr1Bases.substring(50, 51));
+        novelBases = reverseComplementBases(chr1Bases.substring(48, 49) + pmData.Alt + chr1Bases.substring(50, 51));
         assertEquals(novelBases, neData.NovelCodonBases);
 
-        downBases = reverseStrandBases(chr1Bases.substring(30, 31) + chr1Bases.substring(40, 48));
+        downBases = reverseComplementBases(chr1Bases.substring(30, 31) + chr1Bases.substring(40, 48));
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
 
         // point mutation on last base of exon
@@ -210,13 +210,13 @@ public class PmNeoEpitopeTest
 
         neData.setCodingBases(refGenome, 3);
 
-        upBases = reverseStrandBases(chr1Bases.substring(42, 51));
+        upBases = reverseComplementBases(chr1Bases.substring(42, 51));
         assertEquals(upBases, neData.CodingBases[FS_UP]);
 
-        novelBases = reverseStrandBases(chr1Bases.substring(30, 31) + pmData.Alt + chr1Bases.substring(41, 42));
+        novelBases = reverseComplementBases(chr1Bases.substring(30, 31) + pmData.Alt + chr1Bases.substring(41, 42));
         assertEquals(novelBases, neData.NovelCodonBases);
 
-        downBases = reverseStrandBases(chr1Bases.substring(25, 30));
+        downBases = reverseComplementBases(chr1Bases.substring(25, 30));
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
     }
 
@@ -626,12 +626,12 @@ public class PmNeoEpitopeTest
 
         neData.setCodingBases(refGenome, 3);
 
-        upBases = reverseStrandBases(chr1Bases.substring(45, 51) + chr1Bases.substring(60, 63));
+        upBases = reverseComplementBases(chr1Bases.substring(45, 51) + chr1Bases.substring(60, 63));
         assertEquals(upBases, neData.CodingBases[FS_UP]);
 
         assertEquals("", neData.NovelCodonBases);
 
-        downBases = reverseStrandBases(chr1Bases.substring(25, 31) + chr1Bases.substring(40, 42));
+        downBases = reverseComplementBases(chr1Bases.substring(25, 31) + chr1Bases.substring(40, 42));
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
 
         // 3 base DEL - crossing a codon boundary
@@ -652,18 +652,18 @@ public class PmNeoEpitopeTest
 
         neData.setCodingBases(refGenome, 3);
 
-        upBases = reverseStrandBases(chr1Bases.substring(48, 51) + chr1Bases.substring(60, 66));
+        upBases = reverseComplementBases(chr1Bases.substring(48, 51) + chr1Bases.substring(60, 66));
         assertEquals(upBases, neData.CodingBases[FS_UP]);
 
-        novelBases = reverseStrandBases(chr1Bases.substring(42, 43) + chr1Bases.substring(46, 48));
+        novelBases = reverseComplementBases(chr1Bases.substring(42, 43) + chr1Bases.substring(46, 48));
         assertEquals(novelBases, neData.NovelCodonBases);
 
-        downBases = reverseStrandBases(chr1Bases.substring(25, 31) + chr1Bases.substring(40, 42));
+        downBases = reverseComplementBases(chr1Bases.substring(25, 31) + chr1Bases.substring(40, 42));
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
 
         neData.setAminoAcids(refGenome, 3);
         upWildtypeBases = chr1Bases.substring(30, 31) + chr1Bases.substring(40, 51) + chr1Bases.substring(60, 66);
-        upWildAAs = EpitopeUtils.getAminoAcids(reverseStrandBases(upWildtypeBases), true);
+        upWildAAs = EpitopeUtils.getAminoAcids(reverseComplementBases(upWildtypeBases), true);
         assertEquals(upWildAAs, neData.UpstreamWildTypeAcids);
 
         // again but a base up
@@ -684,13 +684,13 @@ public class PmNeoEpitopeTest
 
         neData.setCodingBases(refGenome, 3);
 
-        upBases = reverseStrandBases(chr1Bases.substring(48, 51) + chr1Bases.substring(60, 66));
+        upBases = reverseComplementBases(chr1Bases.substring(48, 51) + chr1Bases.substring(60, 66));
         assertEquals(upBases, neData.CodingBases[FS_UP]);
 
-        novelBases = reverseStrandBases(chr1Bases.substring(42, 44) + chr1Bases.substring(47, 48));
+        novelBases = reverseComplementBases(chr1Bases.substring(42, 44) + chr1Bases.substring(47, 48));
         assertEquals(novelBases, neData.NovelCodonBases);
 
-        downBases = reverseStrandBases(chr1Bases.substring(25, 31) + chr1Bases.substring(40, 42));
+        downBases = reverseComplementBases(chr1Bases.substring(25, 31) + chr1Bases.substring(40, 42));
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
     }
 
@@ -823,13 +823,13 @@ public class PmNeoEpitopeTest
 
         neData.setCodingBases(refGenome, 3);
 
-        upBases = reverseStrandBases(chr1Bases.substring(45, 51) + chr1Bases.substring(60, 63));
+        upBases = reverseComplementBases(chr1Bases.substring(45, 51) + chr1Bases.substring(60, 63));
         assertEquals(upBases, neData.CodingBases[FS_UP]);
 
-        novelBases = reverseStrandBases(chr1Bases.substring(42, 43) + pmData.Alt + chr1Bases.substring(44, 45));
+        novelBases = reverseComplementBases(chr1Bases.substring(42, 43) + pmData.Alt + chr1Bases.substring(44, 45));
         assertEquals(novelBases, neData.NovelCodonBases);
 
-        downBases = reverseStrandBases(chr1Bases.substring(25, 31) + chr1Bases.substring(40, 42));
+        downBases = reverseComplementBases(chr1Bases.substring(25, 31) + chr1Bases.substring(40, 42));
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
 
         // insert of 3 bases, in phase, with inserted bases forming the new codon
@@ -849,13 +849,13 @@ public class PmNeoEpitopeTest
 
         neData.setCodingBases(refGenome, 3);
 
-        upBases = reverseStrandBases(chr1Bases.substring(45, 51) + chr1Bases.substring(60, 63));
+        upBases = reverseComplementBases(chr1Bases.substring(45, 51) + chr1Bases.substring(60, 63));
         assertEquals(upBases, neData.CodingBases[FS_UP]);
 
-        novelBases = reverseStrandBases(chr1Bases.substring(42, 44) + pmData.Alt);
+        novelBases = reverseComplementBases(chr1Bases.substring(42, 44) + pmData.Alt);
         assertEquals(novelBases, neData.NovelCodonBases);
 
-        downBases = reverseStrandBases(chr1Bases.substring(25, 31) + chr1Bases.substring(40, 42));
+        downBases = reverseComplementBases(chr1Bases.substring(25, 31) + chr1Bases.substring(40, 42));
         assertEquals(downBases, neData.CodingBases[FS_DOWN]);
     }
 

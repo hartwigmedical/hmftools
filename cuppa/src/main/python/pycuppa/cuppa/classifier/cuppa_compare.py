@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 import pandas as pd
 from typing import Literal
@@ -42,7 +44,7 @@ class CuppaCompare(LoggerMixin):
     def __repr__(self) -> str:
         return pformat(vars(self))
 
-    def _check_actual_class_column_exists(self):
+    def _check_actual_class_column_exists(self) -> None:
         error_msg = "`actual_class` column is required but absent from `%s`"
 
         if not self.pred_summ_old._has_actual_class_column:
@@ -54,7 +56,7 @@ class CuppaCompare(LoggerMixin):
             raise KeyError
 
     @staticmethod
-    def from_pred_summ_files(path_old: str, path_new: str):
+    def from_pred_summ_files(path_old: str, path_new: str) -> "CuppaCompare":
         return CuppaCompare(
             pred_summ_old = CuppaPredSummary.from_tsv(path_old),
             pred_summ_new = CuppaPredSummary.from_tsv(path_new)
@@ -107,7 +109,7 @@ class CuppaCompare(LoggerMixin):
         return df1, df2
 
     @staticmethod
-    def _move_index_to_columns(df: pd.DataFrame):
+    def _move_index_to_columns(df: pd.DataFrame) -> pd.DataFrame:
         df.index.names = pd.MultiIndex.from_arrays([
             ["info"] * len(df.index.names),
             df.index.names
@@ -116,7 +118,7 @@ class CuppaCompare(LoggerMixin):
         return df
 
     @cached_property
-    def prediction_comparison(self) -> pd.DataFrame:
+    def _prediction_comparison(self) -> pd.DataFrame:
 
         new = self.pred_summ_new.copy()
         old = self.pred_summ_old.copy()
@@ -176,19 +178,7 @@ class CuppaCompare(LoggerMixin):
         return comparison
 
     @cached_property
-    def correct_type_stats(self) -> pd.DataFrame:
-        comparison = self.prediction_comparison
-
-        stats = comparison["info"]\
-            .groupby("clf_name")\
-            ["correct_type"]\
-            .value_counts(dropna=False)\
-            .reset_index()
-
-        return stats
-
-    @cached_property
-    def performance_comparison(self) -> pd.DataFrame:
+    def _performance_comparison(self) -> pd.DataFrame:
         new = self.pred_summ_new.performance()
         old = self.pred_summ_old.performance()
 
@@ -210,6 +200,23 @@ class CuppaCompare(LoggerMixin):
         comparison = self._move_index_to_columns(comparison)
 
         return comparison
+
+    def compare_predictions(self):
+        return self._prediction_comparison
+
+    def compare_performance(self):
+        return self._performance_comparison
+
+    def compare_n_correct(self) -> pd.DataFrame:
+        comparison = self._prediction_comparison
+
+        stats = comparison["info"]\
+            .groupby("clf_name")\
+            ["correct_type"]\
+            .value_counts(dropna=False)\
+            .reset_index()
+
+        return stats
 
 
 

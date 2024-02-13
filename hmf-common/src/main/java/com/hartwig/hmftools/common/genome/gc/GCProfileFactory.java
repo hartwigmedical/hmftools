@@ -36,11 +36,6 @@ public final class GCProfileFactory
         configBuilder.addPath(GC_PROFILE, required, GC_PROFILE_DESC);
     }
 
-    public static void addGcProfilePath(final Options options)
-    {
-        options.addOption(GC_PROFILE, true, GC_PROFILE_DESC);
-    }
-
     public static Multimap<Chromosome, GCProfile> loadGCContent(final String fileName) throws IOException
     {
         return loadGCContent(WINDOW_SIZE, Files.readAllLines(new File(fileName).toPath()));

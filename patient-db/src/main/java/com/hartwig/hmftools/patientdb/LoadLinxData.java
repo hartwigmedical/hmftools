@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -66,6 +68,7 @@ public class LoadLinxData
 
         String sampleId = configBuilder.getValue(SAMPLE);
         String linxDir = configBuilder.getValue(LINX_DIR_CFG);
+        String linxGermlineDir = configBuilder.hasValue(LINX_GERMLINE_DIR_CFG) ? configBuilder.getValue(LINX_GERMLINE_DIR_CFG) : linxDir;
 
         boolean loadGermline = !configBuilder.hasFlag(SOMATIC_ONLY);
         boolean loadSomatic = !configBuilder.hasFlag(GERMLINE_ONLY);
@@ -76,7 +79,7 @@ public class LoadLinxData
                 loadSomaticData(dbAccess, sampleId, linxDir);
 
             if(loadGermline)
-                loadGermlineData(dbAccess, sampleId, linxDir);
+                loadGermlineData(dbAccess, sampleId, linxGermlineDir);
         });
 
         LOGGER.info("Linx data loading complete");
@@ -174,6 +177,7 @@ public class LoadLinxData
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addConfigItem(LINX_DIR_CFG, true, LINX_DIR_DESC);
+        configBuilder.addConfigItem(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
         configBuilder.addFlag(SOMATIC_ONLY, "Only load somatic data");
         configBuilder.addFlag(GERMLINE_ONLY, "Only load germline data");
         addDatabaseCmdLineArgs(configBuilder, true);

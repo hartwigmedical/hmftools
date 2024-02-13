@@ -29,7 +29,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.STOP_SYMBOL;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.convertDnaCodonToAminoAcid;
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 
 import java.util.List;
 import java.util.Set;
@@ -519,7 +519,7 @@ public class EpitopeUtils
         for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
             if(neData.strand(fs) == NEG_STRAND)
-                neData.CodingBases[fs] = reverseStrandBases(neData.RawCodingBases[fs]);
+                neData.CodingBases[fs] = reverseComplementBases(neData.RawCodingBases[fs]);
             else
                 neData.CodingBases[fs] = neData.RawCodingBases[fs];
         }

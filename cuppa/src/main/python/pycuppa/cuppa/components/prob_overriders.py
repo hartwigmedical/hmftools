@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from functools import cached_property
-from typing import Self, Collection, Iterable, Optional
+from typing import Collection, Iterable, Optional
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
@@ -109,9 +111,11 @@ class FusionProbOverrider(BaseEstimator, LoggerMixin):
         return pd.Series(feat_names.sort_values().unique())
 
     def _get_existing_sample_fusions(self) -> pd.DataFrame:
+
         df = self.sample_fusions \
             .reindex(self._overrides_fusions, axis=1) \
-            .stack().reset_index()
+            .stack()\
+            .reset_index()
         df.columns = ["sample_id", "feat_name", "bool"]
 
         df = df[df["bool"] > 0]
@@ -120,17 +124,32 @@ class FusionProbOverrider(BaseEstimator, LoggerMixin):
         return df
 
     ## Main ================================
-    def transform(self, X: pd.DataFrame, y: Optional[pd.Series] = None) -> pd.DataFrame:
+    def transform(
+        self,
+        X: pd.DataFrame,
+        y: Optional[pd.Series] = None,
+        debug: bool = False,
+        verbose: bool = False
+    ) -> pd.DataFrame | dict:
         # X = probs
 
         ## Init --------------------------------
-        if self.overrides is None or self.sample_fusions is None or self.bypass:
+        if self.bypass:
+            self.logger.info("Skipping fusion override: `bypass` is True")
+            return X
+
+        if self.overrides is None:
+            self.logger.warning("Skipping fusion override: No overrides provided")
+            return X
+
+        if self.sample_fusions is None:
+            self.logger.warning("Skipping fusion override: No sample fusions provided")
             return X
 
         self._check_missing_pred_classes(X)
 
         existing_sample_fusions = self._get_existing_sample_fusions()
-        if len(existing_sample_fusions)==0:
+        if len(existing_sample_fusions) == 0:
             return X
 
         ## Get which samples and pred classes to override
@@ -153,12 +172,18 @@ class FusionProbOverrider(BaseEstimator, LoggerMixin):
             X_trans.index = X_trans.index.get_level_values("sample_id")
 
         ## Create mask array for each sample and multiply by the sample's feature array (i.e. row)
-        sample_ids = override_info["sample_id"].unique()
-        for sample_id in sample_ids:
+        sample_ids_to_override = override_info["sample_id"].unique()
+        sample_ids_with_overriden_probs = []
+
+        for sample_id in sample_ids_to_override:
             arr_mask = arr_template.copy()
             sample_target_classes = override_info.loc[override_info["sample_id"] == sample_id, "target_class"]
             arr_mask[sample_target_classes] = 1.0
+
             X_trans.loc[sample_id, :] *= arr_mask
+
+            if any(X.loc[sample_id,:] != X_trans.loc[sample_id,:]):
+                sample_ids_with_overriden_probs.append(sample_id)
 
         ## Make probs per sample sum to 1
         row_sums = X_trans.sum(axis=1, min_count=1)
@@ -167,18 +192,35 @@ class FusionProbOverrider(BaseEstimator, LoggerMixin):
         ## Restore original (multi)-index
         X_trans.index = X.index
 
+        ## Output --------------------------------
+        if verbose:
+            self.logger.info(
+                "%i sample(s) target fusions. %i had their probs overriden" % (
+                    len(sample_ids_to_override),
+                    len(sample_ids_with_overriden_probs)
+                )
+            )
+
+        if debug:
+            return dict(
+                X = X,
+                X_trans = X_trans,
+                sample_ids_to_override = sample_ids_to_override,
+                sample_ids_with_overriden_probs = sample_ids_with_overriden_probs
+            )
+
         return X_trans
 
     ## Required sklearn estimator methods ================================
-    def fit(self, X: Optional[pd.DataFrame], y = None) -> Self:
+    def fit(self, X: Optional[pd.DataFrame], y = None) -> "FusionProbOverrider":
         self._is_fitted = True
         return self
 
-    def fit_transform(self, X: pd.DataFrame, y = None) -> Self:
+    def fit_transform(self, X: pd.DataFrame, y = None) -> pd.DataFrame:
         self._is_fitted = True
         return self.transform(X)
 
-    def set_output(self, transform: None) -> Self:
+    def set_output(self, transform: None) -> "FusionProbOverrider":
         return self
 
 
@@ -220,11 +262,11 @@ class SexProbFilter(BaseEstimator, LoggerMixin):
         self.show_warnings = show_warnings
 
     ## Checks ================================
-    def _check_sample_sexes_empty(self):
+    def _check_sample_sexes_empty(self) -> None:
         if self.sample_sexes is None and self.show_warnings:
             self.logger.debug("`sample_sexes` is None. Probs will not be overriden")
 
-    def _check_sample_sexes_is_bool_series(self):
+    def _check_sample_sexes_is_bool_series(self) -> None:
         #print(self.sample_sexes)
         if self.sample_sexes is None:
             return None
@@ -299,7 +341,7 @@ class SexProbFilter(BaseEstimator, LoggerMixin):
 
         return X_trans
 
-    def transform(self, X: pd.DataFrame, y = None):
+    def transform(self, X: pd.DataFrame, y = None) -> pd.DataFrame:
 
         sample_sexes_reindexed = self._align_sample_sexes(X)
 
@@ -319,13 +361,13 @@ class SexProbFilter(BaseEstimator, LoggerMixin):
         return X_trans
 
     ## Required sklearn estimator methods ================================
-    def fit(self, X: None, y: None) -> Self:
+    def fit(self, X: None, y: None) -> "SexProbFilter":
         return self
 
-    def fit_transform(self, X: pd.DataFrame, y = None) -> Self:
+    def fit_transform(self, X: pd.DataFrame, y = None) -> pd.DataFrame:
         return self.transform(X)
 
-    def set_output(self, transform: None) -> Self:
+    def set_output(self, transform: None) -> "SexProbFilter":
         return self
 
 

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.pave;
 import static com.hartwig.hmftools.common.codon.Codons.START_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.START_CODON;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_CODON_1;
-import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
+import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
@@ -13,12 +13,12 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INTRONIC;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_ACCEPTOR;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createMockGenome;
+import static com.hartwig.hmftools.pave.ImpactTestUtils.generateTestBases;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.getAminoAcidCodon;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.getAminoAcidsCodons;
 import static com.hartwig.hmftools.pave.impact.PaveUtils.findVariantImpacts;
@@ -127,15 +127,15 @@ public class HomologyRealignTest
 
         int preGene = 10;
         int prePostCoding = 10;
-        String refBases = generateRandomBases(preGene);
+        String refBases = generateTestBases(preGene);
 
-        refBases += generateRandomBases(prePostCoding);
-        refBases += reverseStrandBases(STOP_CODON_1);
+        refBases += generateTestBases(prePostCoding);
+        refBases += reverseComplementBases(STOP_CODON_1);
         refBases += "ATACCTGCT"; // Y-R-S going up, X (20-22), Y (23-25), R (26-28), S (29-31)
         refBases += "CTATAGAGCG"; // intron 32-41
         refBases += "CTTCTCCCT"; // K (42-44), E (45-47), R (48-50)
-        refBases += reverseStrandBases(START_CODON); // M (51-52)
-        refBases += generateRandomBases(preGene);
+        refBases += reverseComplementBases(START_CODON); // M (51-52)
+        refBases += generateTestBases(preGene);
 
         // post gene  3'UTR        X  Y  R  S intron       K  E  M 5'UTR
         // GATCGATCGA GATCGATCGA TTAATACCTGCT CTATAGAGCG CTTCTCCAT GATCGATCGA
@@ -186,9 +186,9 @@ public class HomologyRealignTest
 
         int prePostGene = 10;
         int prePostCoding = 10;
-        String refBases = generateRandomBases(prePostGene);
+        String refBases = generateTestBases(prePostGene);
 
-        refBases += generateRandomBases(prePostCoding);
+        refBases += generateTestBases(prePostCoding);
 
         String codingBases = getAminoAcidCodon(START_AMINO_ACID);
         codingBases += getAminoAcidsCodons("CFR", false);
@@ -197,11 +197,11 @@ public class HomologyRealignTest
         codingBases += STOP_CODON_1;
 
         refBases += codingBases.substring(0, 10);
-        refBases += generateRandomBases(17) + "CAG"; // intron ending in splice acceptor motif with 'G'
+        refBases += generateTestBases(17) + "CAG"; // intron ending in splice acceptor motif with 'G'
         refBases += codingBases.substring(10);
 
-        refBases += generateRandomBases(prePostCoding);
-        refBases += generateRandomBases(prePostGene);
+        refBases += generateTestBases(prePostCoding);
+        refBases += generateTestBases(prePostGene);
 
         // pre gene   5'UTR      M  C  F  R  intron               G  D  X  3'UTR
         // GATCGATCGA GATCGATCGA ATGTGTTTCA  GATCGATCGATCGATCGCAG GGGGGGACTAA GATCGATCGA GATCGATCGA

@@ -547,7 +547,7 @@ public class SvCluster
             // any pair of remote SVs which don't form a short TI are fair game
             for(final LinkedPair pair : chain.getLinkedPairs())
             {
-                if(pair.first().isCrossArm() && pair.second().isCrossArm() && pair.length() <= SHORT_TI_LENGTH)
+                if(pair.first().isCrossArm() && pair.second().isCrossArm() && pair.baseLength() <= SHORT_TI_LENGTH)
                 {
                     if(!mShortTIRemoteSVs.contains(pair.first()))
                         mShortTIRemoteSVs.add(pair.first());

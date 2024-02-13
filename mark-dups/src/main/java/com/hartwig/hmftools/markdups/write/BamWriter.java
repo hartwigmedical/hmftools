@@ -81,15 +81,15 @@ public abstract class BamWriter
                 writeRecord(read);
                 mConsensusReadCount.incrementAndGet();
 
-                mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), 0, group.id());
+                mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), 0, group.umiId());
 
                 continue;
             }
 
             if(mConfig.UMIs.Enabled)
-                read.setAttribute(UMI_ATTRIBUTE, group.id());
+                read.setAttribute(UMI_ATTRIBUTE, group.umiId());
 
-            writeRead(read, DUPLICATE, group.coordinatesKey(), 0, group.id());
+            writeRead(read, DUPLICATE, group.coordinatesKey(), 0, group.umiId());
         }
     }
 
@@ -97,9 +97,9 @@ public abstract class BamWriter
 
     public abstract void close();
 
-    private void doWriteFragment(final Fragment fragment, boolean excludeUmis)
+    private void doWriteFragment(final Fragment fragment, boolean excludeDuplicates)
     {
-        if(excludeUmis && fragment.umi() != null) // reads in UMI groups are only written as a complete group
+        if(excludeDuplicates && fragment.umi() != null) // reads in duplicate groups are only written as a complete group
             return;
 
         if(fragment.readsWritten())
@@ -129,7 +129,13 @@ public abstract class BamWriter
 
         mReadDataWriter.writeReadData(read, fragmentStatus, fragmentCoordinates, avgBaseQual, umiId);
 
-        read.setDuplicateReadFlag(fragmentStatus == DUPLICATE); // overwrite any existing status
+        if(fragmentStatus == DUPLICATE)
+        {
+            if(mConfig.DropDuplicates)
+                return;
+
+            read.setDuplicateReadFlag(true); // overwrite any existing status
+        }
 
         writeRecord(read);
     }

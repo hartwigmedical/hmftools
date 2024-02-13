@@ -48,11 +48,11 @@ public class SpecificRegions
 
     public void addRegion(final ChrBaseRegion newRegion)
     {
+        if(!Chromosomes.contains(newRegion.Chromosome))
+            Chromosomes.add(newRegion.Chromosome);
+
         for(ChrBaseRegion existingRegion : Regions)
         {
-            if(!Chromosomes.contains(newRegion.Chromosome))
-                Chromosomes.add(newRegion.Chromosome);
-
             if(existingRegion.overlaps(newRegion))
             {
                 existingRegion.setStart(min(existingRegion.start(), newRegion.start()));
@@ -106,12 +106,6 @@ public class SpecificRegions
     {
         configBuilder.addConfigItem(SPECIFIC_CHROMOSOMES, SPECIFIC_CHROMOSOMES_DESC);
         configBuilder.addConfigItem(SPECIFIC_REGIONS, SPECIFIC_REGIONS_DESC);
-    }
-
-    public static void addSpecificChromosomesRegionsConfig(final Options options)
-    {
-        options.addOption(SPECIFIC_CHROMOSOMES, true, SPECIFIC_CHROMOSOMES_DESC);
-        options.addOption(SPECIFIC_REGIONS, true, SPECIFIC_REGIONS_DESC);
     }
 
     public static SpecificRegions from(final ConfigBuilder configBuilder)

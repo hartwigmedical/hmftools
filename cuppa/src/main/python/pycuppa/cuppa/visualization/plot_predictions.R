@@ -1,4 +1,5 @@
 options(max.print=500)
+options(stringsAsFactors=FALSE)
 
 library(ggplot2)
 library(ggh4x)
@@ -10,11 +11,6 @@ args <- commandArgs(trailingOnly = TRUE)
 
 VIS_DATA_PATH <- args[1]
 PLOT_PATH <- args[2]
-
-if(FALSE){
-   VIS_DATA_PATH <- "~/Desktop/cuppa_vis_data.tsv"
-   PLOT_PATH <- "~/Desktop/cuppa_vis.png"
-}
 
 ## Load data ================================
 VIS_DATA <- read.delim(VIS_DATA_PATH)
@@ -61,6 +57,10 @@ CANCER_TYPE_METADATA <- get_cancer_type_metadata(VIS_DATA)
 
 VIS_DATA$cancer_supertype <- CANCER_TYPE_METADATA[VIS_DATA$cancer_type, "supertype"]
 
+SNV_COUNT <- subset(VIS_DATA,  str_ends(feat_name, "snv_count"), feat_value)[1,1]
+if(is.na(SNV_COUNT)){
+   stop("`snv_count` was not found as a feature in `VIS_DATA`")
+}
 
 ## Heatmap of probs ================================
 get_plot_data_probs <- function(VIS_DATA, data_value_rounding = 2){
@@ -132,7 +132,7 @@ get_plot_data_probs <- function(VIS_DATA, data_value_rounding = 2){
       NA,
       "darkgrey"
    )
-
+   
    return(plot_data)
 }
 
@@ -336,7 +336,14 @@ plot_heatmap <- function(
 
 plot_probs <- function(VIS_DATA){
    plot_data <- get_plot_data_probs(VIS_DATA)
-
+   
+   LOW_SNV_COUNT_THRES <- 50
+   if(SNV_COUNT < LOW_SNV_COUNT_THRES){
+      warning_string <- sprintf(" | WARNING: Sample has <%s SNVs. Predictions may be unreliable", LOW_SNV_COUNT_THRES)
+   } else {
+      warning_string <- ""
+   }
+   
    plot_heatmap(
       plot_data,
       show_first_row_hline = TRUE,
@@ -348,7 +355,7 @@ plot_probs <- function(VIS_DATA){
       guide=guide_colorbar(frame.colour="black", ticks.colour="black", barheight=3.5)
    ) +
    labs(
-      title="Probabilities by classifier",
+      title=paste0("Probabilities by classifier", warning_string),
       subtitle="Cancer group (strips) and subtype (label)",
       fill="Probability",
    )
@@ -424,12 +431,10 @@ plot_signatures <- function(
    plot_data$data_label <- round(plot_data$data_value, data_value_rounding)
 
    ## Make row labels --------------------------------
-   snv_count <- subset(VIS_DATA,  str_ends(feat_name, "snv_count"), feat_value)[1,1]
-
    plot_data$row_label <- with(plot_data, {
 
       perc <- round(
-         (feat_value / snv_count) * 100,
+         (feat_value / SNV_COUNT) * 100,
          feat_perc_signif
       )
 
@@ -465,19 +470,7 @@ plot_signatures <- function(
    labs(fill="Quantile in subtype cohort", title="SNV96: Mutational signatures")
 }
 
-plot_feat_contrib <- function(
-   VIS_DATA,
-   feat_value_rounding = 2,
-   small_data_value_rounding = 1,
-   large_data_value_rounding = 0,
-   large_data_value_thres = 100
-){
-   if(FALSE){
-      feat_value_rounding = 2
-      small_data_value_rounding = 1
-      large_data_value_rounding = 0
-      large_data_value_thres = 100
-   }
+plot_feat_contrib <- function(VIS_DATA){
 
    plot_data <- subset(VIS_DATA, data_type=="feat_contrib")
 
@@ -492,25 +485,42 @@ plot_feat_contrib <- function(
    plot_data$row_group <- affixes$feat_type
 
    ## Odds
-   plot_data$data_label <-  with(plot_data, {
-      data_label <- round(data_value, small_data_value_rounding)
-      data_label[data_label==1] <- ""
-
-      is_large_value <- data_value >= large_data_value_thres
-      data_label[is_large_value] <- round(data_value, large_data_value_rounding)[is_large_value]
-
-      return(data_label)
+   rounding_params <- list(
+      list(lower=10000, upper=Inf,   func=function(x) formatC(x, format="e", digits=1)),
+      list(lower=10,    upper=10000, func=function(x) round(x, digits=0)),
+      list(lower=1,     upper=10,    func=function(x) round(x, digits=1)),
+      list(lower=0.01,  upper=1,     func=function(x) signif(x, digits=1)),
+      list(lower=-Inf,  upper=0.01,  func=function(x) formatC(x, format="e", digits=0))
+   )
+   
+   data_labels <- sapply(plot_data$data_value, function(value){
+      for(params in rounding_params){
+         if(value >= params$lower & value < params$upper){
+            return(params$func(value))
+         }
+      }
+      
+      return(value)
    })
+   data_labels[data_labels==1] <- "" ## odds of 1 == log(odds) of 0 -> unimportant, thus hide
+   data_labels <- sub("[-]0", "-", data_labels)
+   data_labels <- sub("[+]0", "", data_labels)
+
+   plot_data$data_label <- data_labels
 
    ## Row values
    plot_data$row_label <- with(plot_data, {
 
-      feat_value_label <- round(feat_value, feat_value_rounding)
+      feat_value_label <- round(feat_value, digits=1)
       feat_value_label[feat_value==0] <- "0"
       feat_value_label[feat_value==1] <- "1"
 
       paste0(affixes$feat_basename, " = ", feat_value_label)
    })
+   
+   ## Legend breaks --------------------------------
+   exponent_range <- log10(max(plot_data$data_value)) - log10(min(plot_data$data_value))
+   legend_breaks <- 10^seq(from=-10, to=10, by=if(exponent_range < 5) 1 else 2)
 
    ## Plot --------------------------------
    plot_heatmap(
@@ -520,7 +530,7 @@ plot_feat_contrib <- function(
    ) +
    scale_fill_gradient2(
       low="indianred", high="mediumseagreen", trans="log",
-      breaks=10^(-4:4),
+      breaks=legend_breaks,
       labels = function(x) sprintf("%g", x),
       guide=guide_colorbar(frame.colour="black", ticks.colour="black", barheight=5)
    ) +

@@ -275,7 +275,7 @@ public class UmrFinder
         int scBaseLength = scLength + exonBoundaryDistance;
 
         String scBases = scSide == SE_START ?
-                Nucleotides.reverseStrandBases(read.ReadBases.substring(0, scBaseLength)) : read.ReadBases.substring(read.ReadBases.length() - scBaseLength);
+                Nucleotides.reverseComplementBases(read.ReadBases.substring(0, scBaseLength)) : read.ReadBases.substring(read.ReadBases.length() - scBaseLength);
 
         byte[] scBaseQuals = new byte[scBaseLength];
 

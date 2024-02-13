@@ -31,7 +31,7 @@ public class GenotypeFragments
 
     public double vaf() { return Depth > 0 ? AlleleCount / (double)Depth : 0; }
 
-    public boolean isLowQual() { return UmiCounts.alleleCount() > 0 && qualPerAlleleFragment() <= PurityConstants.MIN_QUAL_PER_AD; }
+    public boolean isLowQual() { return AlleleCount > 0 && qualPerAlleleFragment() <= PurityConstants.MIN_QUAL_PER_AD; }
 
     public String toString()
     {

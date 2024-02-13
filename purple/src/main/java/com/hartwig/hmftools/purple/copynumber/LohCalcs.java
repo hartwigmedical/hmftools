@@ -24,14 +24,15 @@ public final class LohCalcs
 
         for(Map.Entry<String,List<PurpleCopyNumber>> entry : chrCopyNumberMap.entrySet())
         {
-            totalLohData.add(calcLohSegments(entry.getKey(), entry.getValue(), LOH_SHORT_INSERT_LENGTH, true));
+            totalLohData.add(calcLohSegments(entry.getKey(), entry.getValue(), LOH_SHORT_INSERT_LENGTH, false, true));
         }
 
         return totalLohData;
     }
 
     public static LohCalcData calcLohSegments(
-            final String chromosomeStr, final List<PurpleCopyNumber> copyNumbers, double minLohLength, boolean allowWholeArm)
+            final String chromosomeStr, final List<PurpleCopyNumber> copyNumbers, double minLohLength, boolean allowWholeArm,
+            boolean countByArm)
     {
         HumanChromosome chromosome = HumanChromosome.fromString(chromosomeStr);
 
@@ -81,7 +82,7 @@ public final class LohCalcs
             }
 
             boolean endOfArm = copyNumber.segmentEndSupport() == SegmentSupport.TELOMERE
-                    || copyNumber.segmentEndSupport() == SegmentSupport.CENTROMERE;
+                    || (countByArm && copyNumber.segmentEndSupport() == SegmentSupport.CENTROMERE);
 
             boolean checkLohEnd = false;
 
@@ -102,11 +103,10 @@ public final class LohCalcs
 
             if(checkLohEnd)
             {
-                // int endPosition = endOfArm ? copyNumber.end() : copyNumber.start();
                 int endPosition = copyNumber.end();
-                int segmentLength = endPosition - lohSegmentStart - 1;
+                int segmentLength = endPosition - lohSegmentStart + 1;
 
-                if(segmentLength >= minLohLength)
+                if(segmentLength > minLohLength)
                 {
                     /*
                     PPL_LOGGER.trace("LOH segment({}:{}-{}) length({})",
@@ -121,6 +121,20 @@ public final class LohCalcs
             }
         }
 
-        return (hasNonLohSegment || allowWholeArm) ? new LohCalcData(lohBaseCount, totalBaseCount, lohCount) : LOH_NONE;
+        if(allowWholeArm)
+        {
+            if(lohCount == 0)
+                return LOH_NONE;
+
+            if(!hasNonLohSegment)
+                lohCount = 1; // convert an LOH across both arms to just a single LOH
+
+            return new LohCalcData(lohBaseCount, totalBaseCount, lohCount);
+        }
+        else
+        {
+            return hasNonLohSegment ? new LohCalcData(lohBaseCount, totalBaseCount, lohCount) : LOH_NONE;
+
+        }
     }
 }

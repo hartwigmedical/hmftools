@@ -1,11 +1,24 @@
 package com.hartwig.hmftools.esvee.read;
 
+import static java.lang.Math.abs;
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
 
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.SvConstants;
+
+import htsjdk.samtools.SAMRecord;
 
 public final class ReadUtils
 {
+    public static String readToString(final SAMRecord read)
+    {
+        return format("id(%s) coords(%s:%d-%d) cigar(%s) mate(%s:%d) flags(%d)",
+                read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
+                read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
+    }
+
     public static boolean isDiscordant(final Read read)
     {
         return isDiscordant(read, SvConstants.DISCORDANT_FRAGMENT_LENGTH);
@@ -13,36 +26,109 @@ public final class ReadUtils
 
     public static boolean isDiscordant(final Read read, final int discordantPairFragmentLength)
     {
-        if(!read.isMateMapped())
+        if(read.isMateUnmapped())
             return false;
 
-        if(!read.getChromosome().equals(read.mateChromosome()))
+        if(!read.chromosome().equals(read.mateChromosome()))
             return true;
 
         if(read.positiveStrand() == read.matePositiveStrand())
             return true;
 
-        int fragmentSize = read.insertSize();
+        int fragmentSize = abs(read.insertSize());
 
         return fragmentSize == 0 || fragmentSize >= discordantPairFragmentLength;
     }
 
-    public static int getAvgBaseQuality(final Read read, final int startPosition, final int length)
+    public static double avgBaseQuality(final Read read)
     {
-        final byte[] baseQualities = read.getBaseQuality();
-        final int startIndex = startPosition - 1;
-        final int endIndex = Math.min(startIndex + length, baseQualities.length);
+        byte[] baseQualities = read.getBaseQuality();
+
+        int qualitySum = 0;
+        for(int i = 0; i < baseQualities.length; i++)
+        {
+            qualitySum += baseQualities[i];
+        }
+
+        return qualitySum / (double)baseQualities.length;
+    }
+
+    public static int avgBaseQuality(final Read read, final int startPosition, final int length)
+    {
+        byte[] baseQualities = read.getBaseQuality();
+        int startIndex = startPosition - 1;
+        int endIndex = Math.min(startIndex + length, baseQualities.length);
 
         int qualitySum = 0;
         for(int i = startIndex; i < endIndex; i++)
+        {
             qualitySum += baseQualities[i];
+        }
+
         return qualitySum / length;
     }
 
+    @Deprecated
     public static int getReadPositionAtReferencePosition(final Read read, final int position)
     {
         // CHECK: is this the same implementation as below? obviously needs to adjust for any changes to cigar
         return read.bamRecord().getReadPositionAtReferencePosition(position);
+    }
+
+    public static void copyArray(final byte[] source, final byte[] dest, final int sourceIndexStart, final int destIndexStart)
+    {
+        int d = destIndexStart;
+        for(int s = sourceIndexStart; s < source.length && d < dest.length; ++s, ++d)
+        {
+            dest[d] = source[s];
+        }
+    }
+
+    public static byte[] copyArray(final byte[] source)
+    {
+        byte[] dest = new byte[source.length];
+
+        for(int i = 0; i < source.length; ++i)
+        {
+            dest[i] = source[i];
+        }
+
+        return dest;
+    }
+
+    public static int[] copyArray(final int[] source)
+    {
+        int[] dest = new int[source.length];
+
+        for(int i = 0; i < source.length; ++i)
+        {
+            dest[i] = source[i];
+        }
+
+        return dest;
+    }
+
+    public static byte[] addByteArray(final byte[] first, final byte[] second)
+    {
+        byte[] combined = new byte[first.length + second.length];
+
+        for(int i = 0; i < first.length; ++i)
+        {
+            combined[i] = first[i];
+        }
+
+        for(int i = 0; i < second.length; ++i)
+        {
+            combined[first.length + i] = second[i];
+        }
+
+        return combined;
+    }
+
+    public static byte[] reverseBytes(final byte[] bases)
+    {
+        String reversed = Nucleotides.reverseComplementBases(new String(bases));
+        return reversed.getBytes();
     }
 
     /*

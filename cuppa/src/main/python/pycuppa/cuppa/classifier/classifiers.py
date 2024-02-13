@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 import pandas as pd
 from sklearn.compose import make_column_selector
 
@@ -20,8 +18,9 @@ from cuppa.compose.pipeline import Pipeline
 This module has the classes containing the sub-classifiers and meta-classifiers of CUPPA (as sklearn Pipeline-like
 objects), as well the these classifiers combined into classifier layers (as sklearn ColumnTransformer-like objects). 
 
-Methods are used to return the classifiers. This enforces new classifier objects to be instantiated to avoid their
-parameters from being overwritten if they were class attributes and where `fit()` would be called more than once.
+Methods are used to return the classifiers to force new classifier objects to always be instantiated. One-time
+instantiation would result in parameters being overwritten e.g. if `fit()` would be called more than once, which is
+unwanted behavior.
 """
 
 class SubClassifiers:
@@ -57,6 +56,7 @@ class SubClassifiers:
             ("logistic_regression", cls.DnaLogisticRegression()),
         ])
 
+    ## TODO: add option to whitelist certain features (e.g. event.tmb.snv_count) by Chi2FeatureSelector in EventClassifier
     @classmethod
     def EventClassifier(cls) -> Pipeline:
         return Pipeline([
@@ -111,11 +111,11 @@ class MetaClassifiers:
         )
 
     @staticmethod
-    def ProbCalibrator():
+    def ProbCalibrator() -> RollingAvgCalibration:
         return RollingAvgCalibration(kernel="gaussian", window_size="variable", min_true_samples=10)
 
     @classmethod
-    def DnaCombinedClassifier(cls, fusion_overrides_path: Optional[str] = None):
+    def DnaCombinedClassifier(cls, fusion_overrides_path: str | None = None) -> Pipeline:
         fusion_overrides = None
         if fusion_overrides_path is not None:
             fusion_overrides = pd.read_table(fusion_overrides_path)
@@ -128,7 +128,7 @@ class MetaClassifiers:
         ])
 
     @classmethod
-    def RnaCombinedClassifier(cls):
+    def RnaCombinedClassifier(cls) -> Pipeline:
 
         column_pattern = f"{SUB_CLF_NAMES.GENE_EXP}|{SUB_CLF_NAMES.ALT_SJ}"
 
@@ -184,7 +184,7 @@ class ClassifierLayers:
     @classmethod
     def MetaClassifierLayer(
         cls,
-        fusion_overrides_path: Optional[str] = None,
+        fusion_overrides_path: str | None = None,
         n_jobs: int = 1,
         verbose: bool = False
     ) -> ColumnTransformer:

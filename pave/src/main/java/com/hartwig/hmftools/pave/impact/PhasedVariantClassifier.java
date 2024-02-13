@@ -9,10 +9,8 @@ import static com.hartwig.hmftools.common.codon.Codons.CODON_LENGTH;
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_MISSENSE;
@@ -21,7 +19,6 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_AC
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_DONOR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.pave.impact.ImpactClassifier.checkStopStartCodons;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.impact.ProteinUtils.trimAminoAcids;
@@ -404,8 +401,8 @@ public class PhasedVariantClassifier
         }
         else
         {
-            combinedPc.RefAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(combinedRefCodons));
-            combinedPc.AltAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseStrandBases(combinedAltCodons));
+            combinedPc.RefAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseComplementBases(combinedRefCodons));
+            combinedPc.AltAminoAcids = Codons.aminoAcidFromBases(Nucleotides.reverseComplementBases(combinedAltCodons));
         }
 
         trimAminoAcids(combinedPc, true, true, false);

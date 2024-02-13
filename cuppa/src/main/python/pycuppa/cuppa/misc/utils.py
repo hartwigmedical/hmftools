@@ -1,12 +1,14 @@
+from __future__ import annotations
+
 import pandas as pd
 import numpy as np
 from numpy._typing import NDArray
-from typing import Iterable
+from typing import Iterable, Optional
 import logging
 logger = logging.getLogger(__name__)
 
 
-def max_col(X):
+def max_col(X: pd.DataFrame | NDArray) -> NDArray:
     max_col_index = np.argmax(X, axis=1)
     if not isinstance(X, pd.DataFrame):
         return max_col_index
@@ -15,7 +17,7 @@ def max_col(X):
 
 def get_top_cols(
     array_2d: pd.DataFrame | NDArray,
-    top_n: int | None = None
+    top_n: Optional[int] = None
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
 
     ## Detect input data type
@@ -174,5 +176,5 @@ def check_required_columns(
         raise KeyError("Missing required columns: " + ", ".join(missing_columns))
 
 
-def as_categorical(series: pd.Series):
+def as_categorical(series: pd.Series) -> pd.Categorical:
     return pd.Categorical(series, categories=series.unique())

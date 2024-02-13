@@ -1,7 +1,5 @@
 import numpy as np
 import pandas as pd
-from typing import Self
-from scipy.optimize import nnls
 from sklearn.base import BaseEstimator
 from sklearn.preprocessing import QuantileTransformer
 from sklearn.utils.validation import check_is_fitted
@@ -41,7 +39,7 @@ class SigCohortQuantileTransformer(BaseEstimator, LoggerMixin):
             self.logger.error("`X` must be a pandas DataFrame")
             raise TypeError
 
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> Self:
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "SigCohortQuantileTransformer":
         self._check_X(X)
 
         transformers = {}
@@ -83,17 +81,12 @@ class SigCohortQuantileTransformer(BaseEstimator, LoggerMixin):
         ## Main
         X_trans = {}
         for class_i, transformer in self.transformers_.items():
-            #class_i="Adrenal gland"
-            #transformer = self.transformers_[class_i]
 
             X_trans_i = transformer.transform(X)
 
             if not clip_upper:
                 q_max = transformer.quantiles_[-1]
                 X_trans_i = np.where(X>q_max, X/q_max, X_trans_i)
-
-                # q_min = transformer.quantiles_[0]
-                # X_trans_i = np.where(X<q_min, -q_min/X, X_trans_i)
 
             X_trans_i = pd.DataFrame(X_trans_i, columns=self.feature_names_in_, index=X.index)
             X_trans[class_i] = X_trans_i
@@ -120,91 +113,5 @@ class SigCohortQuantileTransformer(BaseEstimator, LoggerMixin):
         self.fit(X,y)
         return self.transform(X)
 
-    def set_output(self, transform: str = None) -> Self:
+    def set_output(self, transform: str = None) -> "SigCohortQuantileTransformer":
         return self
-
-
-def fit_to_signatures(X, profiles, rescale=True, show_residual=False):
-    """
-    Fit to signature profiles using non-negative linear least squares (NNLS) fitting
-
-    Parameters
-    ----------
-    X: pandas DataFrame of shape (n_samples, n_contexts)
-        Mutation counts for each sample
-
-    profiles: pandas DataFrame of shape (n_contexts, n_signatures)
-        Signature profiles
-
-    rescale: bool
-        Rescale the signature contributions for each sample so that total number of mutations in the output is the same
-        as in `X`
-
-    show_residual: bool
-        Show the residual (i.e. error) of the fit as column ('_residual')
-
-    Returns
-    -------
-    pandas DataFrame of shape (n_samples, n_signatures)
-        Mutational signature contributions for each sample
-
-    """
-
-    ## Checks --------------------------------
-    if not isinstance(X, pd.DataFrame):
-        raise ValueError("`X` must be a pandas dataframe")
-
-    if not isinstance(profiles, pd.DataFrame):
-        raise ValueError("`profiles` must be a pandas dataframe")
-
-    missing_contexts = profiles.index[~profiles.index.isin(X.columns)]
-    if len(missing_contexts)>0:
-        raise KeyError("The following names were missing from `X.columns`: %s" % (
-            ", ".join(missing_contexts)
-        ))
-
-    ## Align contexts
-    X = X[profiles.index]
-
-    ## Fit --------------------------------
-    def _nnls(profiles, array):
-        result = nnls(profiles, array)
-        return np.append(
-            result[0],  ## Contributions
-            result[1]  ## Unallocated counts
-        )
-
-    result = np.apply_along_axis(
-        lambda sample_array: _nnls(profiles, sample_array),
-        arr=X, axis=1
-    )
-
-    result = pd.DataFrame(
-        result,
-        index=X.index,
-        columns=list(profiles.columns) + ["_residual"]
-    )
-
-    # result.sum(axis=1)
-    # result.drop("_residual", axis=1).sum(axis=1)
-    # X.sum(axis=1)
-
-    contribs = result.drop("_residual", axis=1)
-    residual = result["_residual"]
-
-    ## Post process --------------------------------
-    if rescale:
-        scale_factors = np.sum(X, axis=1) / np.sum(contribs, axis=1)
-        scale_factors[np.isnan(scale_factors)] = 0 ## Fix divide by zero
-        scale_factors = np.array(scale_factors).reshape(-1,1)
-        contribs = contribs * scale_factors
-
-    if show_residual:
-        contribs["_residual"] = residual
-
-    return contribs
-
-
-
-
-

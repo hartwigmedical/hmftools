@@ -76,6 +76,12 @@ public class SageApplication implements AutoCloseable
         if(!baseQualityRecalibration.isValid())
             System.exit(1);
 
+        if(mConfig.Common.bqrRecordWritingOnly())
+        {
+            SG_LOGGER.info("exiting after BQR read writing");
+            return;
+        }
+
         final Map<String, BqrRecordMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
 
         final SAMSequenceDictionary dictionary = dictionary();

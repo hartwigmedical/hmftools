@@ -13,7 +13,6 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
 
 import org.jetbrains.annotations.Nullable;
@@ -65,7 +64,7 @@ public class FileWriterCache
         return createBamWriter(fileId, false, true);
     }
 
-    public BamWriter getFullyUnmappedReadsBamWriter()
+    public BamWriter getUnsortedBamWriter()
     {
         if(!mConfig.MultiBam)
             return mSharedUnsortedWriter;
@@ -233,6 +232,7 @@ public class FileWriterCache
         if(!sortingOk && mConfig.Threads > 1)
         {
             // try again with a single thread
+            MD_LOGGER.debug("reattempting sort with single thread");
             sortBamTask = new SortBamTask(unsortedBamFilename, finalBamFilename, 1);
             sortBamTask.call();
             sortingOk = sortBamTask.success();
@@ -373,8 +373,8 @@ public class FileWriterCache
             }
 
             // default memory per thread according to samtools doco is 768MB, could configure as a function of max heap used by MarkDups
-            commandArgs.add("-m");
-            commandArgs.add("4G");
+            // commandArgs.add("-m");
+            // commandArgs.add("1G");
 
             commandArgs.add("-T");
             commandArgs.add("tmp");

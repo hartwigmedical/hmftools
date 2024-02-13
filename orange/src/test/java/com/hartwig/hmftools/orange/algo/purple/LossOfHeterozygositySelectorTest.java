@@ -42,32 +42,24 @@ public class LossOfHeterozygositySelectorTest
         List<GeneCopyNumber> allGeneCopyNumbers =
                 Lists.newArrayList(hrdGeneWithLOH, hrdGeneWithoutLOH, msiGeneWithLOH, msiGeneWithoutLOH, otherGeneWithLOH);
 
-        List<GeneCopyNumber> all = LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(allGeneCopyNumbers,
-                null,
-                MicrosatelliteStatus.MSI,
-                ChordStatus.HR_DEFICIENT);
+        List<GeneCopyNumber> all =
+                LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(allGeneCopyNumbers, null, MicrosatelliteStatus.MSI, ChordStatus.HR_DEFICIENT);
         assertEquals(2, all.size());
         assertTrue(all.contains(hrdGeneWithLOH));
         assertTrue(all.contains(msiGeneWithLOH));
 
-        List<GeneCopyNumber> msiOnly = LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(allGeneCopyNumbers,
-                null,
-                MicrosatelliteStatus.MSI,
-                ChordStatus.HR_PROFICIENT);
+        List<GeneCopyNumber> msiOnly =
+                LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(allGeneCopyNumbers, null, MicrosatelliteStatus.MSI, ChordStatus.HR_PROFICIENT);
         assertEquals(1, msiOnly.size());
         assertTrue(msiOnly.contains(msiGeneWithLOH));
 
-        List<GeneCopyNumber> hrdOnly = LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(allGeneCopyNumbers,
-                null,
-                MicrosatelliteStatus.MSS,
-                ChordStatus.HR_DEFICIENT);
+        List<GeneCopyNumber> hrdOnly =
+                LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(allGeneCopyNumbers, null, MicrosatelliteStatus.MSS, ChordStatus.HR_DEFICIENT);
         assertEquals(1, hrdOnly.size());
         assertTrue(hrdOnly.contains(hrdGeneWithLOH));
 
-        List<GeneCopyNumber> none = LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(allGeneCopyNumbers,
-                null,
-                MicrosatelliteStatus.MSS,
-                ChordStatus.HR_PROFICIENT);
+        List<GeneCopyNumber> none =
+                LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(allGeneCopyNumbers, null, MicrosatelliteStatus.MSS, ChordStatus.HR_PROFICIENT);
         assertEquals(0, none.size());
 
         List<GeneCopyNumber> nullable =
@@ -81,7 +73,7 @@ public class LossOfHeterozygositySelectorTest
         String gene = LossOfHeterozygositySelector.HRD_GENES.iterator().next();
         GeneCopyNumber hrdGene = GeneCopyNumberTestFactory.builder().geneName(gene).minMinorAlleleCopyNumber(1D).minCopyNumber(2D).build();
 
-        GermlineDeletion hetDeletion = GermlineDeletionTestFactory.create(gene, true, GermlineStatus.HET_DELETION);
+        GermlineDeletion hetDeletion = GermlineDeletionTestFactory.create(gene, true, GermlineStatus.HET_DELETION, 1);
         List<GeneCopyNumber> lohList = runWithHRDOneGeneOneGermlineDeletion(hrdGene, hetDeletion);
         assertEquals(1, lohList.size());
 
@@ -97,9 +89,11 @@ public class LossOfHeterozygositySelectorTest
     private static List<GeneCopyNumber> runWithHRDOneGeneOneGermlineDeletion(@NotNull GeneCopyNumber geneCopyNumber,
             @NotNull GermlineDeletion germlineDeletion)
     {
-        return LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(Lists.newArrayList(geneCopyNumber),
+        return LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(
+                Lists.newArrayList(geneCopyNumber),
                 Lists.newArrayList(germlineDeletion),
                 MicrosatelliteStatus.MSS,
-                ChordStatus.HR_DEFICIENT);
+                ChordStatus.HR_DEFICIENT
+        );
     }
 }
