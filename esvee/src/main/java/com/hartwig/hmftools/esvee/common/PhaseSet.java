@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.common;
 import static java.lang.String.format;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
@@ -22,9 +23,32 @@ public class PhaseSet
 
     public int linkCount() { return mAssemblyLinks.size(); }
 
-    public void addAssemblyLink(final AssemblyLink link, int index)
+    public void addAssemblyStart(final AssemblyLink link) { addAssemblyLink(link, 0); }
+    public void addAssemblyEnd(final AssemblyLink link) { addAssemblyLink(link, mAssemblyLinks.size()); }
+
+    private void addAssemblyLink(final AssemblyLink link, int index)
     {
         mAssemblyLinks.add(index, link);
+    }
+
+    public List<AssemblyLink> findAssemblyLinks(final JunctionAssembly assembly)
+    {
+        return mAssemblyLinks.stream().filter(x -> x.hasAssembly(assembly)).collect(Collectors.toList());
+    }
+
+    public boolean hasAssembly(final JunctionAssembly assembly)
+    {
+        return mAssemblyLinks.stream().anyMatch(x -> x.hasAssembly(assembly));
+    }
+
+    public boolean hasMatchingAssemblyLink(final AssemblyLink link)
+    {
+        return mAssemblyLinks.stream().anyMatch(x -> x.matches(link));
+    }
+
+    public boolean hasMatchingAssembly(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
+    {
+        return mAssemblyLinks.stream().anyMatch(x -> x.matches(assembly1, assembly2));
     }
 
     public List<AssemblyLink> assemblyLinks() { return mAssemblyLinks; }

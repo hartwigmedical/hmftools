@@ -31,9 +31,12 @@ public class AssemblyLink
         mInsertedBases = insertedBases;
     }
 
+    public LinkType type() { return mType; }
     public JunctionAssembly first() { return mFirst; }
     public JunctionAssembly second() { return mSecond; }
     public int firstJunctionIndexInSecond() { return mFirstJunctionIndexInSecond; }
+
+    public JunctionAssembly other(final JunctionAssembly assembly) { return mFirst == assembly ? mSecond : mFirst; }
 
     public StructuralVariantType svType()
     {
@@ -55,17 +58,28 @@ public class AssemblyLink
         }
     }
 
+    public boolean matches(final AssemblyLink other) { return matches(other.first(), other.second()); }
+
+    public boolean matches(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
+    {
+        return (mFirst.equals(assembly1) && mSecond.equals(assembly2)) || (mFirst.equals(assembly2) && mSecond.equals(assembly1));
+    }
+
+    public boolean hasAssembly(final JunctionAssembly assembly) { return mFirst.equals(assembly) || mSecond.equals(assembly); }
+
     public int length()
     {
+        if(mType == LinkType.FACING)
+            return abs(mFirst.junction().Position - mSecond.junction().Position) + 1;
+
         return mFirst.junction().Chromosome.equals(mSecond.junction().Chromosome) ?
                 abs(mFirst.junction().Position - mSecond.junction().Position) : 0;
     }
 
     public String toString()
     {
-        return format("%s: %s:%d:%d - %s:%d:%d len(%d) %s",
-                mType, mFirst.junction().Chromosome, mFirst.junction().Position, mFirst.junction().Orientation,
-                mSecond.junction().Chromosome, mFirst.junction().Position, mSecond.junction().Orientation, length(),
+        return format("%s: %s - %s len(%d) %s",
+                mType, mFirst.junction().coords(), mSecond.junction().coords(), length(),
                 !mInsertedBases.isEmpty() ? format("insert(%d: %s)", mInsertedBases.length(), mInsertedBases) : "");
     }
 

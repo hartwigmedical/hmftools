@@ -56,6 +56,7 @@ public final class SvConstants
     public static final int PHASED_ASSEMBLY_OVERLAP_BASES = 100;
     public static final int PHASED_ASSEMBLY_JUNCTION_OVERLAP = 30;
     public static final int PHASED_ASSEMBLY_OVERLAP_BASE_MISMATCH = 2;
+    public static final int PHASED_ASSEMBLY_MAX_TI = 1000;
 
 
 

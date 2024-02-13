@@ -440,6 +440,8 @@ public class JunctionAssembly
         return read != null && mSupport.stream().anyMatch(x -> x.read() == read);
     }
 
+    // caching repeat info needs careful consideration since any extension of ref bases invalidates the values,
+    // at least for +ve orientation assemblies
     public List<RepeatInfo> repeatInfo() { return mRepeatInfo; }
 
     public void buildRepeatInfo()
@@ -469,6 +471,7 @@ public class JunctionAssembly
     }
 
     public List<JunctionAssembly> branchedAssemblies() { return mBranchedAssemblies; }
+    public boolean hasBranchedAssembly(final JunctionAssembly other) { return mBranchedAssemblies.contains(other); }
 
     public JunctionAssembly(
             final JunctionAssembly initialAssembly, final RefSideSoftClip refSideSoftClip,

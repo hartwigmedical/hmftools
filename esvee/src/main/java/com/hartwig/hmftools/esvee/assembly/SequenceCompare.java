@@ -78,6 +78,8 @@ public final class SequenceCompare
         int firstIndex = firstIndexStart;
         int secondIndex = secondIndexStart;
 
+        int lastRepeatSkipBases = 0;
+
         while(firstIndex <= firstIndexEnd && secondIndex <= secondIndexEnd)
         {
             if(basesMatch(
@@ -99,6 +101,20 @@ public final class SequenceCompare
                 else
                     secondIndex += -recoverySkipBases;
 
+                if(lastRepeatSkipBases == 0)
+                {
+                    if((recoverySkipBases == 1 && matchesRepeatStart(secondIndex, secondRepeats))
+                    || (recoverySkipBases == -1 && matchesRepeatStart(firstIndex, firstRepeats)))
+                    {
+                        lastRepeatSkipBases = recoverySkipBases;
+                    }
+                }
+                else if(lastRepeatSkipBases + recoverySkipBases == 0)
+                {
+                    lastRepeatSkipBases = 0;
+                    continue;
+                }
+
                 ++mismatchCount;
                 continue; // check the next base again
             }
@@ -108,6 +124,8 @@ public final class SequenceCompare
 
             if(expectedRepeatBaseDiff != 0)
             {
+                lastRepeatSkipBases = 0;
+
                 // positive means the first's repeat was longer so move it ahead
                 if(expectedRepeatBaseDiff > 0)
                     firstIndex += expectedRepeatBaseDiff;
@@ -165,6 +183,12 @@ public final class SequenceCompare
         }
 
         return null;
+    }
+
+    private static boolean matchesRepeatStart(int currentIndex, final List<RepeatInfo> repeats)
+    {
+        // find any repeat which starts at the current index or next
+        return repeats.stream().anyMatch(x -> x.Index == currentIndex || x.Index == currentIndex + 1);
     }
 
     private static int checkSkipShortIndel(

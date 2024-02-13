@@ -126,6 +126,23 @@ public class SequenceTest
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats, -1);
 
         assertEquals(4, mismatches);
+
+        // a single SNV at the start of a start of a homopolymer can look like two 1-based INDELs or a repeat count diff
+        // but only count this as one mismatch if it can be explained by a single SNV
+        firstBases =  "AACGTTTTTAGCTGA";
+        secondBases = "AACTTTTTTAGCTGA";
+
+        firstRepeats = findRepeats(secondBases.getBytes());
+        secondRepeats = findRepeats(secondBases.getBytes());
+
+        firstBaseQuals = buildDefaultBaseQuals(secondBases.length());
+        secondBaseQuals = firstBaseQuals;
+
+        mismatches = SequenceCompare.compareSequences(
+                firstBases.getBytes(), firstBaseQuals, 0, firstBaseQuals.length - 1, firstRepeats,
+                secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats, -1);
+
+        assertEquals(1, mismatches);
     }
 
     @Test

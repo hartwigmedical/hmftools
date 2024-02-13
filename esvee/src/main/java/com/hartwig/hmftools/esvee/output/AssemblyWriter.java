@@ -26,9 +26,12 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.SvConfig;
+import com.hartwig.hmftools.esvee.common.AssemblyLink;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.BaseMismatches;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.common.PhaseGroup;
+import com.hartwig.hmftools.esvee.common.PhaseSet;
 import com.hartwig.hmftools.esvee.common.RefSideSoftClip;
 import com.hartwig.hmftools.esvee.common.RemoteRegion;
 import com.hartwig.hmftools.esvee.common.RepeatInfo;
@@ -95,6 +98,11 @@ public class AssemblyWriter
 
             sj.add("PhaseGroupId");
             sj.add("PhaseGroupCount");
+
+            sj.add("PhaseSetId");
+            sj.add("PhaseSetCount");
+            sj.add("LinkInfo");
+
             sj.add("MergedAssemblies");
             sj.add("BranchedAssemblyIds");
 
@@ -231,14 +239,31 @@ public class AssemblyWriter
 
             sj.add(remoteRegionInfoStr(assembly.remoteRegions()));
 
-            if(assembly.phaseGroup() != null)
+            PhaseGroup phaseGroup = assembly.phaseGroup();
+
+            if(phaseGroup != null)
             {
-                sj.add(String.valueOf(assembly.phaseGroup().id()));
-                sj.add(String.valueOf(assembly.phaseGroup().assemblyCount()));
+                sj.add(String.valueOf(phaseGroup.id()));
+                sj.add(String.valueOf(phaseGroup.assemblyCount()));
             }
             else
             {
                 sj.add("-1").add("0");
+            }
+
+            PhaseSet phaseSet = phaseGroup != null ? phaseGroup.findPhaseSet(assembly) : null;
+
+            if(phaseSet != null)
+            {
+                sj.add(String.valueOf(phaseSet.id()));
+                sj.add(String.valueOf(phaseSet.linkCount()));
+
+                List<AssemblyLink> assemblyLinks = phaseSet.findAssemblyLinks(assembly);
+                sj.add(assemblyLinksStr(assembly, assemblyLinks));
+            }
+            else
+            {
+                sj.add("-1").add("0").add("");
             }
 
             sj.add(String.valueOf(assembly.mergedAssemblyCount()));
@@ -312,6 +337,21 @@ public class AssemblyWriter
 
         StringJoiner sj = new StringJoiner(ITEM_DELIM);
         refSideSoftClips.forEach(x -> sj.add(format("%d:%d=%d", x.Position, x.maxLength(), x.readCount())));
+        return sj.toString();
+    }
+
+    private static String assemblyLinksStr(final JunctionAssembly assembly, final List<AssemblyLink> assemblyLinks)
+    {
+        if(assemblyLinks.isEmpty())
+            return "";
+
+        StringJoiner sj = new StringJoiner(ITEM_DELIM);
+
+        for(AssemblyLink link : assemblyLinks)
+        {
+            JunctionAssembly otherAssembly = link.other(assembly);
+            sj.add(format("%s=%s", link.type(), otherAssembly.junction().coords()));
+        }
         return sj.toString();
     }
 

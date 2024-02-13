@@ -66,12 +66,12 @@ public class PhaseGroupBuilder
             }
         }
 
+        buildPhasedAssemblies();
+
         for(int i = 0; i < mPhaseGroups.size(); ++i)
         {
             mPhaseGroups.get(i).setId(i);
         }
-
-        buildPhasedAssemblies();
     }
 
     public List<PhaseGroup> primaryPhaseGroups() { return mPhaseGroups; }
@@ -129,7 +129,7 @@ public class PhaseGroupBuilder
                     continue;
                 }
 
-                boolean branchedAssemblies = hasBranchedAssemblies && assembly.branchedAssemblies().contains(otherAssembly);
+                boolean branchedAssemblies = hasBranchedAssemblies && assembly.hasBranchedAssembly(otherAssembly);
 
                 if(!branchedAssemblies && !assembliesShareReads(assembly, otherAssembly))
                     continue;

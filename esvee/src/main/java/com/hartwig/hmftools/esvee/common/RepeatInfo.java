@@ -35,8 +35,6 @@ public class RepeatInfo
     {
         // types of repeats, single, dual, triples (ATCATC) and dual x2 (AATTAATT)
         // favour longer repeat types
-        String currentStr = "";
-        int count = 0;
         List<RepeatInfo> repeats = null;
 
         int index = 0;

@@ -78,7 +78,6 @@ public class AssemblyLinksTest
         assertEquals(secondAssembly, link.second());
         assertEquals(DUP, link.svType());
 
-
         // now with a mismatch in the overlapping bases in the second assembly - has to be close to the junction point
         String mismatchSecondExtensionBases = secondExtensionBases.substring(0, 60)
                 + MockRefGenome.getNextBase(secondExtensionBases.substring(60, 61)) + secondExtensionBases.substring(61, extensionLength);

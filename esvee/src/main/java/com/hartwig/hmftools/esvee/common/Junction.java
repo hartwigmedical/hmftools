@@ -62,6 +62,9 @@ public class Junction implements Comparable<Junction>
         return format("%s:%d:%d", Chromosome, Position, Orientation);
     }
 
+    // for display and logging
+    public String coords() { return format("%s:%d:%d", Chromosome, Position, Orientation); }
+
     public boolean isLocalMatch(final Junction other)
     {
         return Position == other.Position && Orientation == other.Orientation;
