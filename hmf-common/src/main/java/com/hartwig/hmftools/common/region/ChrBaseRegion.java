@@ -178,10 +178,11 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
         int rank1 = HumanChromosome.chromosomeRank(Chromosome);
         int rank2 = HumanChromosome.chromosomeRank(other.Chromosome);
 
-        if(rank1 == -1 && rank2 == -1)
+        if(rank1 == rank2)
         {
-            // NOTE: the chromosome are NOT the same
+            // NOTE: the chromosomes are NOT the same
             // use string compare
+            // this makes sure we are consistent with the equal method
             return Chromosome.compareTo(other.Chromosome);
         }
 
