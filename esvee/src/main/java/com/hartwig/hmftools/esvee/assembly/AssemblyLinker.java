@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.PHASED_ASSEMBLY_JUNCTION_OVERLAP;
 import static com.hartwig.hmftools.esvee.SvConstants.PHASED_ASSEMBLY_MAX_TI;
 import static com.hartwig.hmftools.esvee.SvConstants.PHASED_ASSEMBLY_OVERLAP_BASES;
@@ -115,12 +116,27 @@ public final class AssemblyLinker
             // go with the convention of doing that for the higher breakend?
             if(firstSeq.Reversed)
             {
-                insertedBases = first.formSequence(first.junctionIndex() - impliedInsertedBaseLength, first.junctionIndex() - 1);
+                insertedBases = first.formSequence(
+                        first.junctionIndex() - impliedInsertedBaseLength, first.junctionIndex() - 1);
             }
             else
             {
-                insertedBases =
-                        firstSeq.FullSequence.substring(first.junctionIndex() + 1, first.junctionIndex() + 1 + impliedInsertedBaseLength);
+                try
+                {
+                    int insertStartIndex = first.junctionIndex() + 1;
+                    int insertEndIndex = min(insertStartIndex + impliedInsertedBaseLength, firstSeq.FullSequence.length());
+
+                    if(insertEndIndex > insertStartIndex)
+                    {
+                        insertedBases = firstSeq.FullSequence.substring(insertStartIndex, insertEndIndex);
+                    }
+                }
+                catch(Exception e)
+                {
+                    SV_LOGGER.debug("assembly({}) failed to form insert bases({}-{} len={}) firstJuncIndexInSec({}) from firstSeq({}) secondSeq({})",
+                            first, first.junctionIndex() + 1, first.junctionIndex() + 1 + impliedInsertedBaseLength,
+                            impliedInsertedBaseLength, firstJunctionIndexInSecond, firstSeq, secondSeq);
+                }
             }
         }
 
