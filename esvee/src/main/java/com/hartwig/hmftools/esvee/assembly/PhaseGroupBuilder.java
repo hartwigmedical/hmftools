@@ -66,8 +66,6 @@ public class PhaseGroupBuilder
             }
         }
 
-        buildPhasedAssemblies();
-
         for(int i = 0; i < mPhaseGroups.size(); ++i)
         {
             mPhaseGroups.get(i).setId(i);
@@ -247,6 +245,7 @@ public class PhaseGroupBuilder
         return mConfig.SpecificChrRegions.Regions.stream().noneMatch(x -> x.overlaps(region));
     }
 
+    /*
     private static final int PHASE_GROUP_LOG_COUNT = 1000;
 
     private void buildPhasedAssemblies()
@@ -269,4 +268,5 @@ public class PhaseGroupBuilder
             }
         }
     }
+    */
 }

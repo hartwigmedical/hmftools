@@ -29,18 +29,7 @@ public class PhaseGroup
         mPhaseSets = Collections.emptyList();
     }
 
-    public void setId(int id)
-    {
-        mId = id;
-
-        // also set phase set IDs
-        int phaseSetId = 0;
-        for(PhaseSet phaseSet : mPhaseSets)
-        {
-            phaseSet.setId(phaseSetId++);
-        }
-    }
-
+    public void setId(int id) { mId = id; }
     public int id() { return mId; }
 
     public List<PhaseSet> phaseSets() { return mPhaseSets; }

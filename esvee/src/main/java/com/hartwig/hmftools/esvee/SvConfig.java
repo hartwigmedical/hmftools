@@ -28,6 +28,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
+import static com.hartwig.hmftools.esvee.SvConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
 import static com.hartwig.hmftools.esvee.SvConstants.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.SvConstants.SV_PREP_JUNCTIONS_FILE_ID;
 import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLY_BAM;
@@ -88,6 +89,8 @@ public class SvConfig
     private final List<String> mLogReadIds;
     private final boolean mCheckLogReadIds;
 
+    public final int AssemblyRefBaseWriteMax;
+
     public final int Threads;
 
     public final String TruthsetFile;
@@ -96,19 +99,13 @@ public class SvConfig
     public static final String REF_GENOME_IMAGE = "ref_genome_image";
     public static final String JUNCTION_FILES = "junction_files";
 
-    // alternative to specifically load a tumor and/or ref sample and BAM
-    public static final String SAMPLE_IDS = "samples";
-    public static final String TUMOR_IDS = "samples";
-    public static final String REFERENCE_IDS = "samples";
-    public static final String SAMPLE_BAMS = "bam_files";
-    public static final String TUMOR_BAMS = "bam_files";
-    public static final String REFERENCE_BAMS = "bam_files";
-
     public static final String WRITE_TYPES = "write_types";
     public static final String HTML_SUMMARY_DIR = "html_dir";
     public static final String PLOT_DIAGRAMS = "plot_diagrams";
     public static final String OTHER_DEBUG = "other_debug";
     public static final String PERF_LOG_TIME = "perf_log_time";
+
+    public static final String ASSEMBLY_REF_BASE_WRITE_MAX = "asm_ref_base_write_max";
 
     public static final Logger SV_LOGGER = LogManager.getLogger(SvConfig.class);
 
@@ -207,6 +204,8 @@ public class SvConfig
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
         OtherDebug = configBuilder.hasFlag(OTHER_DEBUG);
 
+        AssemblyRefBaseWriteMax = configBuilder.getInteger(ASSEMBLY_REF_BASE_WRITE_MAX);
+
         Threads = parseThreads(configBuilder);
 
         TruthsetFile = TruthsetAnnotation.filename(configBuilder);
@@ -287,6 +286,10 @@ public class SvConfig
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addDecimal(PERF_LOG_TIME, "Log performance data for routine exceeding specified time (0 = disabled)", 0);
         configBuilder.addFlag(OTHER_DEBUG, "Various other debugging");
+
+        configBuilder.addInteger(
+                ASSEMBLY_REF_BASE_WRITE_MAX, "Cap assembly ref bases in TSV and VCF, use zero to write all",
+                DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX);
 
         TruthsetAnnotation.registerConfig(configBuilder);
 

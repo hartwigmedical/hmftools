@@ -283,12 +283,6 @@ public class AssemblyWriter
             }
             else
             {
-                sj.add("PhaseSetId");
-                sj.add("PhaseSetCount");
-                sj.add("LinkInfo");
-                sj.add("SvType");
-                sj.add("InsertedBases");
-
                 sj.add("-1").add("0").add("").add("").add("");
             }
 
@@ -306,7 +300,9 @@ public class AssemblyWriter
             else
             {
                 sj.add(assembly.formJunctionSequence());
-                sj.add(assembly.formRefBaseSequence(200)); // long enought to show most short TIs
+
+                int refBaseLength = mConfig.AssemblyRefBaseWriteMax == 0 ? assembly.refBaseLength() : mConfig.AssemblyRefBaseWriteMax;
+                sj.add(assembly.formRefBaseSequence(refBaseLength)); // long enough to show most short TIs
             }
 
             if(mTruthsetAnnotation.enabled())

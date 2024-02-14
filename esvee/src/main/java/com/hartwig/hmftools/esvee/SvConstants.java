@@ -59,7 +59,6 @@ public final class SvConstants
     public static final int PHASED_ASSEMBLY_MAX_TI = 1000;
 
 
-
     public static final int SUPPORT_MAX_MISMATCH_STRONG = 1;
     public static final int SUPPORT_MAX_MISMATCH_WEAK = 4;
     public static final int SUPPORT_MAX_MISMATCH_DEDUPING_ASSEMBLIES = 5;
@@ -67,6 +66,9 @@ public final class SvConstants
 
     // variant calling
     public static final int MAX_DUP_LENGTH = 6; // then classified as an INS
+
+
+    public static final int DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX = 200; // for TSV and VCF output, no function impact
 
 
     // OLD CODE - may still be used

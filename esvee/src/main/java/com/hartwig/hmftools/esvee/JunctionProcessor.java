@@ -21,11 +21,10 @@ import com.hartwig.hmftools.esvee.alignment.Alignment;
 import com.hartwig.hmftools.esvee.alignment.BwaAligner;
 import com.hartwig.hmftools.esvee.assembly.PhaseGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
+import com.hartwig.hmftools.esvee.assembly.PhaseSetTask;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
-import com.hartwig.hmftools.esvee.common.PhaseGroup;
-import com.hartwig.hmftools.esvee.common.PhaseSet;
 import com.hartwig.hmftools.esvee.common.ThreadTask;
 import com.hartwig.hmftools.esvee.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.output.WriteType;
@@ -104,11 +103,15 @@ public class JunctionProcessor
 
             runPrimaryAssembly();
 
-            formPrimaryPhaseGroups();
+            formPhaseGroups();
+
+            alignPhaseSets();
 
             // write here to show PPG data - may move back later on
             if(mConfig.WriteTypes.contains(WriteType.ASSEMBLIES))
             {
+                SV_LOGGER.debug("writing assembly data");
+
                 int assemblyId = 0;
                 for(List<JunctionGroup> junctionGroups : mJunctionGroupMap.values())
                 {
@@ -181,14 +184,28 @@ public class JunctionProcessor
                 totalCachedReads, junctionGroups.size(), totalLowQualFilteredReads);
     }
 
-    private void formPrimaryPhaseGroups()
+    private void formPhaseGroups()
     {
         PhaseGroupBuilder phaseGroupBuilder = new PhaseGroupBuilder(mConfig, mJunctionGroupMap);
 
         phaseGroupBuilder.buildGroups();
 
-        SV_LOGGER.info("phaseGroups count({})", phaseGroupBuilder.phaseGroups().size());
+        SV_LOGGER.info("building phase sets from {} phase groups", phaseGroupBuilder.phaseGroups().size());
 
+        List<Thread> threadTasks = new ArrayList<>();
+
+        List<PhaseSetTask> phaseSetTasks = PhaseSetTask.createThreadTasks(mConfig, phaseGroupBuilder.phaseGroups(), mConfig.Threads, threadTasks);
+
+        if(!runThreadTasks(threadTasks))
+            System.exit(1);
+
+        mPerfCounters.add(ThreadTask.mergePerfCounters(phaseSetTasks.stream().collect(Collectors.toList())));
+
+        SV_LOGGER.info("created {} phase sets", phaseGroupBuilder.phaseGroups().stream().mapToInt(x -> x.phaseSets().size()).sum());
+    }
+
+    private void alignPhaseSets()
+    {
         /*
         for(PhaseGroup phaseGroup : phaseGroupBuilder.phaseGroups())
         {
@@ -198,6 +215,7 @@ public class JunctionProcessor
             }
         }
         */
+
     }
 
     public void close()
