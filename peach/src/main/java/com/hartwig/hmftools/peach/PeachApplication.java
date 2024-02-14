@@ -43,10 +43,10 @@ public class PeachApplication
             PCH_LOGGER.info("creating output directory");
             createOutputDirectory();
 
-            PCH_LOGGER.info("read haplotypes TSV");
+            PCH_LOGGER.info("load haplotype config");
             HaplotypePanel haplotypePanel = PanelLoader.loadHaplotypePanel(config.haplotypesFile);
 
-            PCH_LOGGER.info("read events");
+            PCH_LOGGER.info("load events");
             Map<String, Integer> eventIdToCount = HaplotypeEventLoader.loadRelevantVariantHaplotypeEvents(
                     config.vcfFile, config.sampleName, haplotypePanel.getRelevantVariantPositions()
             );

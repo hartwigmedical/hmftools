@@ -41,11 +41,13 @@ public class AllHaplotypeCombinationsFile
         return lines;
     }
 
+    @NotNull
     private static String header()
     {
         return new StringJoiner(TSV_DELIMITER).add("gene").add("combination").add("nonWildTypeCount").toString();
     }
 
+    @NotNull
     private static List<String> toLines(String gene, HaplotypeAnalysis analysis)
     {
         String wildTypeName = analysis.getWildTypeHaplotypeName();
@@ -59,6 +61,7 @@ public class AllHaplotypeCombinationsFile
                 .collect(Collectors.toList());
     }
 
+    @NotNull
     private static String toLine(String gene, HaplotypeCombination combination, String wildTypeHaplotypeName)
     {
         return new StringJoiner(TSV_DELIMITER).add(gene)

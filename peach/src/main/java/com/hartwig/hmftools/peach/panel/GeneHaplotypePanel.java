@@ -34,6 +34,7 @@ public class GeneHaplotypePanel
         this.wildTypeHaplotypeName = wildTypeHaplotypeName;
     }
 
+    @NotNull
     public Map<Chromosome, Set<Integer>> getRelevantVariantPositions()
     {
         Map<Chromosome, Set<Integer>> chromosomeToRelevantVariantPositions = new HashMap<>();
@@ -64,6 +65,7 @@ public class GeneHaplotypePanel
         return nonDefaultHaplotypes.size() + 1;
     }
 
+    @NotNull
     private List<VariantHaplotypeEvent> getNonDefaultVariantHaplotypeEvents()
     {
         return nonDefaultHaplotypes.stream()

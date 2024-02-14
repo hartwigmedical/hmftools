@@ -25,6 +25,7 @@ public class HaplotypePanel
         this.geneToGeneHaplotypePanel = geneToGeneHaplotypePanel;
     }
 
+    @NotNull
     public Map<Chromosome, Set<Integer>> getRelevantVariantPositions()
     {
         Map<Chromosome, Set<Integer>> chromosomeToRelevantPositions = new HashMap<>();
@@ -57,21 +58,25 @@ public class HaplotypePanel
         return geneToGeneHaplotypePanel.get(gene).isRelevantFor(event);
     }
 
+    @NotNull
     public List<NonDefaultHaplotype> getNonDefaultHaplotypes(String gene)
     {
         return geneToGeneHaplotypePanel.get(gene).nonDefaultHaplotypes;
     }
 
+    @NotNull
     public DefaultHaplotype getDefaultHaplotype(String gene)
     {
         return geneToGeneHaplotypePanel.get(gene).defaultHaplotype;
     }
 
+    @NotNull
     public String getWildTypeHaplotypeName(String gene)
     {
         return geneToGeneHaplotypePanel.get(gene).wildTypeHaplotypeName;
     }
 
+    @NotNull
     public Set<String> getGenes()
     {
         return Sets.newHashSet(geneToGeneHaplotypePanel.keySet());

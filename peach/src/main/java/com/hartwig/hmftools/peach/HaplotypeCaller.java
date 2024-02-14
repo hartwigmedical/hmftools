@@ -28,6 +28,7 @@ public class HaplotypeCaller
         this.haplotypePanel = haplotypePanel;
     }
 
+    @NotNull
     public Map<String, HaplotypeAnalysis> getGeneToHaplotypeAnalysis(@NotNull Map<String, Integer> eventIdToCount)
     {
         Optional<String> nonPositiveCountEvent =
@@ -44,6 +45,7 @@ public class HaplotypeCaller
         return haplotypePanel.getGenes().stream().collect(Collectors.toMap(g -> g, g -> getHaplotypeAnalysis(eventIdToCount, g)));
     }
 
+    @NotNull
     private HaplotypeAnalysis getHaplotypeAnalysis(Map<String, Integer> eventIdToCount, String gene)
     {
         PCH_LOGGER.info("handle gene: {}", gene);
@@ -61,6 +63,7 @@ public class HaplotypeCaller
                 .getName(), haplotypePanel.getWildTypeHaplotypeName(gene));
     }
 
+    @NotNull
     private List<List<NonDefaultHaplotype>> getPossibleNonDefaultHaplotypes(Map<String, Integer> eventIdToUnexplainedCount,
             List<NonDefaultHaplotype> candidateHaplotypes)
     {
@@ -107,6 +110,7 @@ public class HaplotypeCaller
                 .allMatch(e -> eventIdToUnexplainedCount.getOrDefault(e, 0) >= haplotypeToTry.getMatchingCount(e));
     }
 
+    @NotNull
     private HaplotypeCombination getCombination(List<NonDefaultHaplotype> nonDefaultHaplotypes, DefaultHaplotype defaultHaplotype)
     {
         Map<String, Integer> haplotypeNameToCount =

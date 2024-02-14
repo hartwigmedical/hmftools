@@ -40,11 +40,13 @@ public class BestHaplotypeCombinationsFile
         return lines;
     }
 
+    @NotNull
     private static String header()
     {
         return new StringJoiner(TSV_DELIMITER).add("gene").add("allele").add("count").toString();
     }
 
+    @NotNull
     private static List<String> toLines(String gene, HaplotypeAnalysis analysis)
     {
         StringJoiner joiner = new StringJoiner(TSV_DELIMITER);
@@ -66,6 +68,7 @@ public class BestHaplotypeCombinationsFile
         }
     }
 
+    @NotNull
     private static String toLine(String gene, String haplotypeName, int count)
     {
         return new StringJoiner(TSV_DELIMITER).add(gene).add(haplotypeName).add(Integer.toString(count)).toString();

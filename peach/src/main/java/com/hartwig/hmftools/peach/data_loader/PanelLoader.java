@@ -28,6 +28,7 @@ import static com.hartwig.hmftools.peach.PeachUtils.PCH_LOGGER;
 
 public class PanelLoader
 {
+    @NotNull
     public static HaplotypePanel loadHaplotypePanel(String filename)
     {
         try
@@ -93,6 +94,7 @@ public class PanelLoader
         return new HaplotypePanel(geneToGeneHaplotypePanel);
     }
 
+    @NotNull
     private static Map<String, GeneHaplotypePanel> createGeneToGeneHaplotypePanel(
             Map<String, List<DefaultHaplotype>> geneToDefaultHaplotypes, Map<String, List<NonDefaultHaplotype>> geneToNonDefaultHaplotypes)
     {
@@ -123,6 +125,7 @@ public class PanelLoader
         return geneToGeneHaplotypePanel;
     }
 
+    @NotNull
     private static String getWildTypeHaplotypeName(DefaultHaplotype defaultHaplotype, List<NonDefaultHaplotype> nonDefaultHaplotypes,
             String gene)
     {
@@ -152,6 +155,7 @@ public class PanelLoader
         return wildTypeHaplotypeName;
     }
 
+    @NotNull
     private static ImmutableList<HaplotypeEvent> getHaplotypeEvents(String haplotypeEventsString)
     {
         if(haplotypeEventsString.isEmpty())

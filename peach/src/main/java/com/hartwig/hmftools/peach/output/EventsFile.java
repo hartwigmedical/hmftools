@@ -28,11 +28,13 @@ public class EventsFile
         return lines;
     }
 
+    @NotNull
     private static String header()
     {
         return new StringJoiner(TSV_DELIMITER).add("event").add("count").toString();
     }
 
+    @NotNull
     private static String toLine(String eventId, int count)
     {
         return new StringJoiner(TSV_DELIMITER).add(eventId).add(Integer.toString(count)).toString();

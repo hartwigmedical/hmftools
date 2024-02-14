@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class HaplotypeCallerTest
@@ -373,6 +374,7 @@ public class HaplotypeCallerTest
         );
     }
 
+    @NotNull
     private static Map<String, HaplotypeAnalysis> determineGeneToHaplotypeAnalysis(HaplotypePanel haplotypePanel,
             Map<String, Integer> eventIdToCount)
     {

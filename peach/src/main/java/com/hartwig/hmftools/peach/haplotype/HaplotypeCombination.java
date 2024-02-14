@@ -44,11 +44,13 @@ public class HaplotypeCombination
         return haplotypeNameToCount.equals(((HaplotypeCombination) other).haplotypeNameToCount);
     }
 
+    @NotNull
     public String toString()
     {
         return String.format("HaplotypeCombination(%s)", haplotypeNameToCount);
     }
 
+    @NotNull
     public Map<String, Integer> getHaplotypeNameToCount()
     {
         return new HashMap<>(haplotypeNameToCount);

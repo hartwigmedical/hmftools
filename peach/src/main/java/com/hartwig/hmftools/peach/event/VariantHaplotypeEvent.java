@@ -35,6 +35,7 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
         this.alt = alt;
     }
 
+    @NotNull
     public static VariantHaplotypeEvent fromId(@NotNull String eventId)
     {
         if(!eventId.startsWith(EVENT_TYPE_STRING))
@@ -66,6 +67,7 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
         return event;
     }
 
+    @NotNull
     public static VariantHaplotypeEvent fromVariantContext(VariantContext variantContext)
     {
         Chromosome chromosome = HumanChromosome.fromString(variantContext.getContig());
@@ -81,6 +83,7 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
         return new VariantHaplotypeEvent(chromosome, position, ref, alt);
     }
 
+    @NotNull
     public String toString()
     {
         return id();
@@ -97,6 +100,7 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
                 .toString();
     }
 
+    @NotNull
     public Set<Integer> getCoveredPositions()
     {
         return IntStream.range(position, position + ref.length()).boxed().collect(Collectors.toSet());

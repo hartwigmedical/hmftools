@@ -37,16 +37,19 @@ public class EventsPerGeneFile
         return lines;
     }
 
+    @NotNull
     private static String header()
     {
         return new StringJoiner(TSV_DELIMITER).add("gene").add("event").add("count").toString();
     }
 
+    @NotNull
     private static List<String> toLines(String gene, HaplotypeAnalysis analysis)
     {
         return analysis.getEventIds().stream().map(e -> toLine(gene, e, analysis.getEventCount(e))).collect(Collectors.toList());
     }
 
+    @NotNull
     private static String toLine(String gene, String eventId, int count)
     {
         return new StringJoiner(TSV_DELIMITER).add(gene).add(eventId).add(Integer.toString(count)).toString();

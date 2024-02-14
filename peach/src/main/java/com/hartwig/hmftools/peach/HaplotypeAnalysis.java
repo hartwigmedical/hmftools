@@ -34,17 +34,20 @@ public class HaplotypeAnalysis
     }
 
     @Override
+    @NotNull
     public String toString()
     {
         return "HaplotypeAnalysis(" + "eventIdToCount=" + eventIdToCount + ", haplotypeCombinations=" + haplotypeCombinations
                 + ", defaultHaplotypeName=" + defaultHaplotypeName + ')';
     }
 
+    @NotNull
     public Set<String> getEventIds()
     {
         return new HashSet<>(eventIdToCount.keySet());
     }
 
+    @NotNull
     public List<HaplotypeCombination> getHaplotypeCombinations()
     {
         return new ArrayList<>(haplotypeCombinations);
@@ -62,6 +65,7 @@ public class HaplotypeAnalysis
         return defaultHaplotypeName;
     }
 
+    @NotNull
     public PeachQCStatus getAnalysisStatus()
     {
         List<HaplotypeCombination> minimumCombinations = getMinimumCombinations();
@@ -99,6 +103,7 @@ public class HaplotypeAnalysis
         }
     }
 
+    @NotNull
     public HaplotypeCombination getBestHaplotypeCombination()
     {
         if(!hasBestHaplotypeCombination())

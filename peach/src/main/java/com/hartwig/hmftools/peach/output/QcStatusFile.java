@@ -34,11 +34,13 @@ public class QcStatusFile
         return lines;
     }
 
+    @NotNull
     private static String header()
     {
         return new StringJoiner(TSV_DELIMITER).add("gene").add("status").toString();
     }
 
+    @NotNull
     private static String toLine(String gene, HaplotypeAnalysis analysis)
     {
         return new StringJoiner(TSV_DELIMITER).add(gene).add(analysis.getAnalysisStatus().toString()).toString();

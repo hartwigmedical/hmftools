@@ -18,8 +18,11 @@ import java.util.Set;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
+import org.jetbrains.annotations.NotNull;
+
 public class HaplotypeEventLoader
 {
+    @NotNull
     public static Map<String, Integer> loadRelevantVariantHaplotypeEvents(String vcf, String sampleName,
             Map<Chromosome, Set<Integer>> relevantVariantPositions)
     {

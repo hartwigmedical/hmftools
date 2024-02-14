@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
+import org.jetbrains.annotations.NotNull;
+
 public class PeachConfig
 {
     public final String vcfFile;
@@ -47,26 +49,31 @@ public class PeachConfig
         addLoggingOptions(configBuilder);
     }
 
+    @NotNull
     public String getEventsOutputPath()
     {
         return outputDir + sampleName + ".peach.events.tsv";
     }
 
+    @NotNull
     public String getEventsPerGeneOutputPath()
     {
         return outputDir + sampleName + ".peach.gene.events.tsv";
     }
 
+    @NotNull
     public String getAllHaplotypeCombinationsOutputPath()
     {
         return outputDir + sampleName + ".peach.haplotypes.all.tsv";
     }
 
+    @NotNull
     public String getBestHaplotypeCombinationsOutputPath()
     {
         return outputDir + sampleName + ".peach.haplotypes.best.tsv";
     }
 
+    @NotNull
     public String getQcStatusOutputPath()
     {
         return outputDir + sampleName + ".peach.qc.tsv";
