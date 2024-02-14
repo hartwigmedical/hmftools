@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_BANDWIDTH_MAX;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_BANDWIDTH_MIN;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_DEPTH_PERC;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_FRAG_VARIANTS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_PEAK_VARIANTS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_PEAK_VARIANTS_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_VARIANTS;
@@ -30,6 +31,7 @@ import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.VAF_PEAK;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.security.interfaces.RSAMultiPrimePrivateCrtKey;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -49,6 +51,17 @@ public class VafPeakModel extends ClonalityModel
             final PurityConfig config, final ResultsWriter resultsWriter, final SampleData sample, final List<SomaticVariant> variants)
     {
         super(config, resultsWriter, sample,  variants);
+    }
+
+    public static boolean canUseModel(final FragmentTotals fragmentTotals)
+    {
+        if(fragmentTotals.sampleTwoPlusCount() < SOMATIC_PEAK_MIN_FRAG_VARIANTS)
+            return false;
+
+        if(fragmentTotals.sampleTwoPlusCount() <= fragmentTotals.sampleOneFragmentCount())
+            return false;
+
+        return fragmentTotals.weightedSampleDepth() > SOMATIC_PEAK_MIN_AVG_DEPTH;
     }
 
     @Override
