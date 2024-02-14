@@ -46,9 +46,9 @@ public class DrugInfoLoader
             String[] splitLine = line.split(PeachUtils.TSV_DELIMITER);
             DrugInfo drugInfo = ImmutableDrugInfo.builder()
                     .drugName(splitLine[fieldsIndexMap.get("DrugName")])
-                    .gene(splitLine[fieldsIndexMap.get("Gene")])
-                    .urlGeneralInfo(splitLine[fieldsIndexMap.get("UrlGeneral")])
-                    .urlPrescriptionInfo(splitLine[fieldsIndexMap.get("UrlPrescriptionInfo")])
+                    .geneName(splitLine[fieldsIndexMap.get("Gene")])
+                    .generalInfoUrl(splitLine[fieldsIndexMap.get("UrlGeneral")])
+                    .prescriptionInfoUrl(splitLine[fieldsIndexMap.get("UrlPrescriptionInfo")])
                     .build();
             drugInfos.add(drugInfo);
         }

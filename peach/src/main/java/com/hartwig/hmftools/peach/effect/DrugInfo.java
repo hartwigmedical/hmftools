@@ -10,10 +10,13 @@ public abstract class DrugInfo
 {
     @NotNull
     public abstract String drugName();
+
     @NotNull
-    public abstract String gene();
+    public abstract String geneName();
+
     @NotNull
-    public abstract String urlGeneralInfo();
+    public abstract String generalInfoUrl();
+
     @NotNull
-    public abstract String urlPrescriptionInfo();
+    public abstract String prescriptionInfoUrl();
 }

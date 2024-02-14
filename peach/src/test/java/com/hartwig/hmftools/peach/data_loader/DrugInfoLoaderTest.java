@@ -23,33 +23,33 @@ public class DrugInfoLoaderTest
 
         DrugInfo expectedDrugInfo0 = ImmutableDrugInfo.builder()
             .drugName("5-Fluorouracil")
-            .gene("DPYD")
-            .urlGeneralInfo("https://www.pharmgkb.org/chemical/PA128406956")
-            .urlPrescriptionInfo("https://www.pharmgkb.org/guidelineAnnotation/PA166104939")
+            .geneName("DPYD")
+            .generalInfoUrl("https://www.pharmgkb.org/chemical/PA128406956")
+            .prescriptionInfoUrl("https://www.pharmgkb.org/guidelineAnnotation/PA166104939")
             .build();
         assertEquals(expectedDrugInfo0, drugInfos.get(0));
 
         DrugInfo expectedDrugInfo1 = ImmutableDrugInfo.builder()
                 .drugName("Capecitabine")
-                .gene("DPYD")
-                .urlGeneralInfo("https://www.pharmgkb.org/chemical/PA448771")
-                .urlPrescriptionInfo("https://www.pharmgkb.org/guidelineAnnotation/PA166104963")
+                .geneName("DPYD")
+                .generalInfoUrl("https://www.pharmgkb.org/chemical/PA448771")
+                .prescriptionInfoUrl("https://www.pharmgkb.org/guidelineAnnotation/PA166104963")
                 .build();
         assertEquals(expectedDrugInfo1, drugInfos.get(1));
 
         DrugInfo expectedDrugInfo2 = ImmutableDrugInfo.builder()
                 .drugName("Tegafur")
-                .gene("DPYD")
-                .urlGeneralInfo("https://www.pharmgkb.org/chemical/PA452620")
-                .urlPrescriptionInfo("https://www.pharmgkb.org/guidelineAnnotation/PA166104944")
+                .geneName("DPYD")
+                .generalInfoUrl("https://www.pharmgkb.org/chemical/PA452620")
+                .prescriptionInfoUrl("https://www.pharmgkb.org/guidelineAnnotation/PA166104944")
                 .build();
         assertEquals(expectedDrugInfo2, drugInfos.get(2));
 
         DrugInfo expectedDrugInfo3 = ImmutableDrugInfo.builder()
                 .drugName("Irinotecan")
-                .gene("UGT1A1")
-                .urlGeneralInfo("https://www.pharmgkb.org/chemical/PA450085")
-                .urlPrescriptionInfo("https://www.pharmgkb.org/guidelineAnnotation/PA166104951")
+                .geneName("UGT1A1")
+                .generalInfoUrl("https://www.pharmgkb.org/chemical/PA450085")
+                .prescriptionInfoUrl("https://www.pharmgkb.org/guidelineAnnotation/PA166104951")
                 .build();
         assertEquals(expectedDrugInfo3, drugInfos.get(3));
     }
