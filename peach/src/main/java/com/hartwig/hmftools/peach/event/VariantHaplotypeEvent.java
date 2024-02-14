@@ -26,8 +26,8 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
     @NotNull
     public final String alt;
 
-    public VariantHaplotypeEvent(@NotNull final Chromosome chromosome, final int position, @NotNull final String ref,
-            @NotNull final String alt)
+    public VariantHaplotypeEvent(@NotNull Chromosome chromosome, int position, @NotNull String ref,
+            @NotNull String alt)
     {
         this.chromosome = chromosome;
         this.position = position;

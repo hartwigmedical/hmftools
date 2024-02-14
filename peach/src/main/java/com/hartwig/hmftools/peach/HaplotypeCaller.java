@@ -103,7 +103,7 @@ public class HaplotypeCaller
     }
 
     private static boolean haplotypeIsPossible(@NotNull Map<String, Integer> eventIdToUnexplainedCount,
-            final NonDefaultHaplotype haplotypeToTry)
+            @NotNull NonDefaultHaplotype haplotypeToTry)
     {
         return haplotypeToTry.events.stream()
                 .map(HaplotypeEvent::id)
