@@ -99,7 +99,9 @@ public class BamMetrics
 
             for(int i = 0; i < min(allRegions.size(), mConfig.Threads); ++i)
             {
-                workers.add(new PartitionThread(mConfig, partitions, combinedStats));
+                PartitionThread partitionThread = new PartitionThread(mConfig, partitions, combinedStats);
+                partitionThread.start();
+                workers.add(partitionThread);
             }
 
             if(!runThreadTasks(workers))

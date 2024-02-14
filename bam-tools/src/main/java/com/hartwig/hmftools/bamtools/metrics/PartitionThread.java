@@ -35,8 +35,6 @@ public class PartitionThread extends Thread
 
         mBamSlicer = new BamSlicer(0, true, true, true);
         mBamSlicer.setKeepUnmapped();
-
-        start();
     }
 
     @Override

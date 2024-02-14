@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.extractUmiType;
 import static com.hartwig.hmftools.common.samtools.UmiReadType.DUAL;
 
@@ -85,6 +84,8 @@ public class BamReader
         mPerfCounter.start(mConfig.PerfDebug ? mRegion.toString() : null);
         mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
         mPerfCounter.stop();
+
+        // BT_LOGGER.debug("completed region({})", mRegion);
 
         postSliceProcess();
     }
