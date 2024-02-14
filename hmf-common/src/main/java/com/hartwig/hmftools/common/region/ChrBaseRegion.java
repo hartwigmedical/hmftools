@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.region;
 
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.INVALID_CHR_RANK;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
@@ -180,9 +181,7 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
 
         if(rank1 == rank2)
         {
-            // NOTE: the chromosomes are NOT the same
-            // use string compare
-            // this makes sure we are consistent with the equal method
+            // will occur for non-standard contigs, in which case revert to standard string comparison
             return Chromosome.compareTo(other.Chromosome);
         }
 
