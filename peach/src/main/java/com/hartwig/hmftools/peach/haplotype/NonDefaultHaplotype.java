@@ -37,12 +37,12 @@ public class NonDefaultHaplotype implements Haplotype
         return isWildType;
     }
 
-    public boolean isRelevantFor(HaplotypeEvent event)
+    public boolean isRelevantFor(@NotNull HaplotypeEvent event)
     {
         return events.stream().anyMatch(event::isRelevantFor);
     }
 
-    public int getMatchingCount(String eventId)
+    public int getMatchingCount(@NotNull String eventId)
     {
         return Math.toIntExact(events.stream().filter(e -> e.id().equals(eventId)).count());
     }

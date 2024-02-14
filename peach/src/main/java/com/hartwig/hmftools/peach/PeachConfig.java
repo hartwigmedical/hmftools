@@ -22,7 +22,7 @@ public class PeachConfig
     private static final String DRUGS_FILE = "drugs_file";
     private static final String FUNCTIONALITY_FILE = "functionality_file";
 
-    public PeachConfig(final ConfigBuilder configBuilder)
+    public PeachConfig(@NotNull ConfigBuilder configBuilder)
     {
         vcfFile = configBuilder.getValue(VCF_FILE);
         haplotypesFile = configBuilder.getValue(HAPLOTYPES_FILE);
@@ -38,7 +38,7 @@ public class PeachConfig
         return vcfFile != null && sampleName != null && haplotypesFile != null && outputDir != null;
     }
 
-    public static void addOptions(final ConfigBuilder configBuilder)
+    public static void addOptions(@NotNull ConfigBuilder configBuilder)
     {
         configBuilder.addPath(VCF_FILE, true, "VCF input file");
         configBuilder.addPath(HAPLOTYPES_FILE, true, "Haplotype config file");

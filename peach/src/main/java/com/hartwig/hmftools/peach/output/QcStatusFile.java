@@ -22,7 +22,7 @@ public class QcStatusFile
     }
 
     @NotNull
-    public static List<String> toLines(Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis)
+    public static List<String> toLines(@NotNull Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis)
     {
         List<String> lines = new ArrayList<>();
         lines.add(header());
@@ -41,7 +41,7 @@ public class QcStatusFile
     }
 
     @NotNull
-    private static String toLine(String gene, HaplotypeAnalysis analysis)
+    private static String toLine(@NotNull String gene, @NotNull HaplotypeAnalysis analysis)
     {
         return new StringJoiner(TSV_DELIMITER).add(gene).add(analysis.getAnalysisStatus().toString()).toString();
     }

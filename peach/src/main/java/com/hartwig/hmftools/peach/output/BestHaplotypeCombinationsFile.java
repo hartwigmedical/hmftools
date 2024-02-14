@@ -27,7 +27,7 @@ public class BestHaplotypeCombinationsFile
     }
 
     @NotNull
-    public static List<String> toLines(Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis)
+    public static List<String> toLines(@NotNull Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis)
     {
         List<String> lines = new ArrayList<>();
         lines.add(header());
@@ -47,7 +47,7 @@ public class BestHaplotypeCombinationsFile
     }
 
     @NotNull
-    private static List<String> toLines(String gene, HaplotypeAnalysis analysis)
+    private static List<String> toLines(@NotNull String gene, @NotNull HaplotypeAnalysis analysis)
     {
         StringJoiner joiner = new StringJoiner(TSV_DELIMITER);
         if(analysis.hasBestHaplotypeCombination())
@@ -69,7 +69,7 @@ public class BestHaplotypeCombinationsFile
     }
 
     @NotNull
-    private static String toLine(String gene, String haplotypeName, int count)
+    private static String toLine(@NotNull String gene, @NotNull String haplotypeName, int count)
     {
         return new StringJoiner(TSV_DELIMITER).add(gene).add(haplotypeName).add(Integer.toString(count)).toString();
     }

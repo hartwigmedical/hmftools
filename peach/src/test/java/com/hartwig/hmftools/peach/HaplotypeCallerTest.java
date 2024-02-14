@@ -303,10 +303,7 @@ public class HaplotypeCallerTest
 
         assertEqualHaplotypeAnalysis(expectedHaplotypeAnalysis, geneToHaplotypeAnalysis.get("FAKE1"));
         assertTrue(expectedHaplotypeAnalysis.hasBestHaplotypeCombination());
-        assertEquals(
-                new HaplotypeCombination(Map.of("*2", 1, "*3", 1)),
-                expectedHaplotypeAnalysis.getBestHaplotypeCombination()
-        );
+        assertEquals(new HaplotypeCombination(Map.of("*2", 1, "*3", 1)), expectedHaplotypeAnalysis.getBestHaplotypeCombination());
     }
 
     @Test
@@ -368,21 +365,18 @@ public class HaplotypeCallerTest
 
         assertEqualHaplotypeAnalysis(expectedHaplotypeAnalysis, geneToHaplotypeAnalysis.get("FAKE1"));
         assertTrue(expectedHaplotypeAnalysis.hasBestHaplotypeCombination());
-        assertEquals(
-                new HaplotypeCombination(Map.of("*2", 1, "*1", 1)),
-                expectedHaplotypeAnalysis.getBestHaplotypeCombination()
-        );
+        assertEquals(new HaplotypeCombination(Map.of("*2", 1, "*1", 1)), expectedHaplotypeAnalysis.getBestHaplotypeCombination());
     }
 
     @NotNull
-    private static Map<String, HaplotypeAnalysis> determineGeneToHaplotypeAnalysis(HaplotypePanel haplotypePanel,
-            Map<String, Integer> eventIdToCount)
+    private static Map<String, HaplotypeAnalysis> determineGeneToHaplotypeAnalysis(@NotNull HaplotypePanel haplotypePanel,
+            @NotNull Map<String, Integer> eventIdToCount)
     {
         HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
         return caller.getGeneToHaplotypeAnalysis(eventIdToCount);
     }
 
-    private void assertEqualHaplotypeAnalysis(HaplotypeAnalysis expected, HaplotypeAnalysis actual)
+    private void assertEqualHaplotypeAnalysis(@NotNull HaplotypeAnalysis expected, @NotNull HaplotypeAnalysis actual)
     {
         assertEquals(expected.getDefaultHaplotypeName(), actual.getDefaultHaplotypeName());
         assertEquals(expected.getWildTypeHaplotypeName(), actual.getWildTypeHaplotypeName());
@@ -390,28 +384,19 @@ public class HaplotypeCallerTest
         assertEquals(expected.getEventIds(), actual.getEventIds());
         for(String eventId : expected.getEventIds())
         {
-            assertEquals(
-                    String.format("Compare event counts of %s", eventId),
-                    expected.getEventCount(eventId),
-                    actual.getEventCount(eventId)
-            );
+            assertEquals(String.format("Compare event counts of %s", eventId), expected.getEventCount(eventId), actual.getEventCount(eventId));
         }
         assertEqualHaplotypeCombinations(expected.getHaplotypeCombinations(), actual.getHaplotypeCombinations());
     }
 
-    private void assertEqualHaplotypeCombinations(List<HaplotypeCombination> expected, List<HaplotypeCombination> actual)
+    private void assertEqualHaplotypeCombinations(@NotNull List<HaplotypeCombination> expected, @NotNull List<HaplotypeCombination> actual)
     {
         assertEquals(expected.size(), actual.size());
         for(HaplotypeCombination expectedCombination : expected)
         {
-            List<HaplotypeCombination> matchingActualCombinations = actual.stream()
-                    .filter(expectedCombination::equals)
-                    .collect(Collectors.toList());
-            assertEquals(
-                    String.format("Check exactly one combination matches %s", expectedCombination),
-                    1,
-                    matchingActualCombinations.size()
-            );
+            List<HaplotypeCombination> matchingActualCombinations =
+                    actual.stream().filter(expectedCombination::equals).collect(Collectors.toList());
+            assertEquals(String.format("Check exactly one combination matches %s", expectedCombination), 1, matchingActualCombinations.size());
         }
     }
 }

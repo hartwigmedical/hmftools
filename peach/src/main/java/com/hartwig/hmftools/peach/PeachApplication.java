@@ -25,7 +25,7 @@ public class PeachApplication
     @NotNull
     private final PeachConfig config;
 
-    public PeachApplication(@NotNull final ConfigBuilder configBuilder)
+    public PeachApplication(@NotNull ConfigBuilder configBuilder)
     {
         this.config = new PeachConfig(configBuilder);
     }
@@ -77,7 +77,8 @@ public class PeachApplication
         }
     }
 
-    private void writeOutputFiles(Map<String, Integer> eventIdToCount, Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis)
+    private void writeOutputFiles(@NotNull Map<String, Integer> eventIdToCount,
+            @NotNull Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis)
     {
         try
         {
@@ -98,7 +99,7 @@ public class PeachApplication
         }
     }
 
-    public static void main(String[] args)
+    public static void main(@NotNull String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder("Peach");
 

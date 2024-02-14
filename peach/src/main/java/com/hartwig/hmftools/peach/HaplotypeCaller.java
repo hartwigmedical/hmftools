@@ -46,7 +46,7 @@ public class HaplotypeCaller
     }
 
     @NotNull
-    private HaplotypeAnalysis getHaplotypeAnalysis(Map<String, Integer> eventIdToCount, String gene)
+    private HaplotypeAnalysis getHaplotypeAnalysis(@NotNull Map<String, Integer> eventIdToCount, @NotNull String gene)
     {
         PCH_LOGGER.info("handle gene: {}", gene);
         Map<String, Integer> relevantEventIdToCount = eventIdToCount.entrySet()
@@ -64,8 +64,8 @@ public class HaplotypeCaller
     }
 
     @NotNull
-    private List<List<NonDefaultHaplotype>> getPossibleNonDefaultHaplotypes(Map<String, Integer> eventIdToUnexplainedCount,
-            List<NonDefaultHaplotype> candidateHaplotypes)
+    private List<List<NonDefaultHaplotype>> getPossibleNonDefaultHaplotypes(@NotNull Map<String, Integer> eventIdToUnexplainedCount,
+            @NotNull List<NonDefaultHaplotype> candidateHaplotypes)
     {
         // Use recursive descent to efficiently go through all possibilities
         if(eventIdToUnexplainedCount.values().stream().anyMatch(c -> c < 0))
@@ -102,7 +102,7 @@ public class HaplotypeCaller
         return results;
     }
 
-    private static boolean haplotypeIsPossible(final Map<String, Integer> eventIdToUnexplainedCount,
+    private static boolean haplotypeIsPossible(@NotNull Map<String, Integer> eventIdToUnexplainedCount,
             final NonDefaultHaplotype haplotypeToTry)
     {
         return haplotypeToTry.events.stream()
@@ -111,7 +111,8 @@ public class HaplotypeCaller
     }
 
     @NotNull
-    private HaplotypeCombination getCombination(List<NonDefaultHaplotype> nonDefaultHaplotypes, DefaultHaplotype defaultHaplotype)
+    private HaplotypeCombination getCombination(@NotNull List<NonDefaultHaplotype> nonDefaultHaplotypes,
+            @NotNull DefaultHaplotype defaultHaplotype)
     {
         Map<String, Integer> haplotypeNameToCount =
                 nonDefaultHaplotypes.stream().collect(Collectors.groupingBy(NonDefaultHaplotype::getName, Collectors.summingInt(h -> 1)));

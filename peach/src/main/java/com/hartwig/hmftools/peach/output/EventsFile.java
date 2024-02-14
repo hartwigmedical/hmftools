@@ -20,7 +20,7 @@ public class EventsFile
     }
 
     @NotNull
-    public static List<String> toLines(Map<String, Integer> eventIdToCount)
+    public static List<String> toLines(@NotNull Map<String, Integer> eventIdToCount)
     {
         List<String> lines = new ArrayList<>();
         lines.add(header());
@@ -35,7 +35,7 @@ public class EventsFile
     }
 
     @NotNull
-    private static String toLine(String eventId, int count)
+    private static String toLine(@NotNull String eventId, int count)
     {
         return new StringJoiner(TSV_DELIMITER).add(eventId).add(Integer.toString(count)).toString();
     }

@@ -29,7 +29,7 @@ import static com.hartwig.hmftools.peach.PeachUtils.PCH_LOGGER;
 public class PanelLoader
 {
     @NotNull
-    public static HaplotypePanel loadHaplotypePanel(String filename)
+    public static HaplotypePanel loadHaplotypePanel(@NotNull String filename)
     {
         try
         {
@@ -46,7 +46,7 @@ public class PanelLoader
     }
 
     @NotNull
-    private static HaplotypePanel loadHaplotypePanel(List<String> lines)
+    private static HaplotypePanel loadHaplotypePanel(@NotNull List<String> lines)
     {
         Map<String, List<DefaultHaplotype>> geneToDefaultHaplotypes = new HashMap<>();
         Map<String, List<NonDefaultHaplotype>> geneToNonDefaultHaplotypes = new HashMap<>();
@@ -96,7 +96,8 @@ public class PanelLoader
 
     @NotNull
     private static Map<String, GeneHaplotypePanel> createGeneToGeneHaplotypePanel(
-            Map<String, List<DefaultHaplotype>> geneToDefaultHaplotypes, Map<String, List<NonDefaultHaplotype>> geneToNonDefaultHaplotypes)
+            @NotNull Map<String, List<DefaultHaplotype>> geneToDefaultHaplotypes,
+            @NotNull Map<String, List<NonDefaultHaplotype>> geneToNonDefaultHaplotypes)
     {
         Map<String, GeneHaplotypePanel> geneToGeneHaplotypePanel = new HashMap<>();
         Set<String> genes = Streams.concat(geneToDefaultHaplotypes.keySet().stream(), geneToNonDefaultHaplotypes.keySet().stream())
@@ -126,8 +127,8 @@ public class PanelLoader
     }
 
     @NotNull
-    private static String getWildTypeHaplotypeName(DefaultHaplotype defaultHaplotype, List<NonDefaultHaplotype> nonDefaultHaplotypes,
-            String gene)
+    private static String getWildTypeHaplotypeName(@NotNull DefaultHaplotype defaultHaplotype,
+            @NotNull List<NonDefaultHaplotype> nonDefaultHaplotypes, @NotNull String gene)
     {
         List<String> wildTypeHaplotypeNames = nonDefaultHaplotypes.stream()
                 .filter(NonDefaultHaplotype::isWildType)
@@ -156,7 +157,7 @@ public class PanelLoader
     }
 
     @NotNull
-    private static ImmutableList<HaplotypeEvent> getHaplotypeEvents(String haplotypeEventsString)
+    private static ImmutableList<HaplotypeEvent> getHaplotypeEvents(@NotNull String haplotypeEventsString)
     {
         if(haplotypeEventsString.isEmpty())
         {

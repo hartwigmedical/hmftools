@@ -48,30 +48,30 @@ public class HaplotypePanel
         return chromosomeToRelevantPositions;
     }
 
-    public boolean isRelevantFor(String eventId, String gene)
+    public boolean isRelevantFor(@NotNull String eventId, String gene)
     {
         return isRelevantFor(HaplotypeEventFactory.fromId(eventId), gene);
     }
 
-    public boolean isRelevantFor(HaplotypeEvent event, String gene)
+    public boolean isRelevantFor(@NotNull HaplotypeEvent event, String gene)
     {
         return geneToGeneHaplotypePanel.get(gene).isRelevantFor(event);
     }
 
     @NotNull
-    public List<NonDefaultHaplotype> getNonDefaultHaplotypes(String gene)
+    public List<NonDefaultHaplotype> getNonDefaultHaplotypes(@NotNull String gene)
     {
         return geneToGeneHaplotypePanel.get(gene).nonDefaultHaplotypes;
     }
 
     @NotNull
-    public DefaultHaplotype getDefaultHaplotype(String gene)
+    public DefaultHaplotype getDefaultHaplotype(@NotNull String gene)
     {
         return geneToGeneHaplotypePanel.get(gene).defaultHaplotype;
     }
 
     @NotNull
-    public String getWildTypeHaplotypeName(String gene)
+    public String getWildTypeHaplotypeName(@NotNull String gene)
     {
         return geneToGeneHaplotypePanel.get(gene).wildTypeHaplotypeName;
     }

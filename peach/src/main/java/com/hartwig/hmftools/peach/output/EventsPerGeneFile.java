@@ -24,7 +24,7 @@ public class EventsPerGeneFile
     }
 
     @NotNull
-    public static List<String> toLines(Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis)
+    public static List<String> toLines(@NotNull Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis)
     {
         List<String> lines = new ArrayList<>();
         lines.add(header());
@@ -44,13 +44,13 @@ public class EventsPerGeneFile
     }
 
     @NotNull
-    private static List<String> toLines(String gene, HaplotypeAnalysis analysis)
+    private static List<String> toLines(@NotNull String gene, @NotNull HaplotypeAnalysis analysis)
     {
         return analysis.getEventIds().stream().map(e -> toLine(gene, e, analysis.getEventCount(e))).collect(Collectors.toList());
     }
 
     @NotNull
-    private static String toLine(String gene, String eventId, int count)
+    private static String toLine(@NotNull String gene, @NotNull String eventId, int count)
     {
         return new StringJoiner(TSV_DELIMITER).add(gene).add(eventId).add(Integer.toString(count)).toString();
     }

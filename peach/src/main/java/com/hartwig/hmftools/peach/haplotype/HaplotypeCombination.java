@@ -22,14 +22,15 @@ public class HaplotypeCombination
         else if(haplotypeNameToCount.values().stream().mapToInt(i -> i).sum() < GERMLINE_TOTAL_COPY_NUMBER)
         {
             String error_msg = String.format(
-                    "Less than %d haplotype calls in combination is not allowed: %s", GERMLINE_TOTAL_COPY_NUMBER, haplotypeNameToCount
+                    "Less than %d haplotype calls in combination is not allowed: %s",
+                    GERMLINE_TOTAL_COPY_NUMBER, haplotypeNameToCount
             );
             throw new RuntimeException(error_msg);
         }
         this.haplotypeNameToCount = haplotypeNameToCount;
     }
 
-    public boolean equals(final Object other)
+    public boolean equals(@NotNull Object other)
     {
         if(this == other)
         {
@@ -61,7 +62,7 @@ public class HaplotypeCombination
         return haplotypeNameToCount.values().stream().mapToInt(c -> c).sum();
     }
 
-    public int getHaplotypeCountWithout(String ignoredHaplotypeName)
+    public int getHaplotypeCountWithout(@NotNull String ignoredHaplotypeName)
     {
         return haplotypeNameToCount.entrySet()
                 .stream()

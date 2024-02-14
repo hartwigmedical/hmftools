@@ -28,7 +28,7 @@ public class AllHaplotypeCombinationsFile
     }
 
     @NotNull
-    public static List<String> toLines(Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis)
+    public static List<String> toLines(@NotNull Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis)
     {
         List<String> lines = new ArrayList<>();
         lines.add(header());
@@ -48,7 +48,7 @@ public class AllHaplotypeCombinationsFile
     }
 
     @NotNull
-    private static List<String> toLines(String gene, HaplotypeAnalysis analysis)
+    private static List<String> toLines(@NotNull String gene, @NotNull HaplotypeAnalysis analysis)
     {
         String wildTypeName = analysis.getWildTypeHaplotypeName();
         Comparator<HaplotypeCombination> combinationComparator =
@@ -62,7 +62,7 @@ public class AllHaplotypeCombinationsFile
     }
 
     @NotNull
-    private static String toLine(String gene, HaplotypeCombination combination, String wildTypeHaplotypeName)
+    private static String toLine(@NotNull String gene, @NotNull HaplotypeCombination combination, @NotNull String wildTypeHaplotypeName)
     {
         return new StringJoiner(TSV_DELIMITER).add(gene)
                 .add(getHaplotypeCombinationString(combination))
@@ -71,7 +71,7 @@ public class AllHaplotypeCombinationsFile
     }
 
     @NotNull
-    private static String getHaplotypeCombinationString(HaplotypeCombination combination)
+    private static String getHaplotypeCombinationString(@NotNull HaplotypeCombination combination)
     {
         return combination.getHaplotypeNameToCount()
                 .entrySet()

@@ -81,7 +81,7 @@ public class PeachConfigTest
     }
 
     @NotNull
-    private static PeachConfig constructPeachConfigFromArgs(final String[] args)
+    private static PeachConfig constructPeachConfigFromArgs(@NotNull String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder("Peach");
         PeachConfig.addOptions(configBuilder);

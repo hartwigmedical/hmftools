@@ -68,7 +68,7 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
     }
 
     @NotNull
-    public static VariantHaplotypeEvent fromVariantContext(VariantContext variantContext)
+    public static VariantHaplotypeEvent fromVariantContext(@NotNull VariantContext variantContext)
     {
         Chromosome chromosome = HumanChromosome.fromString(variantContext.getContig());
         int position = variantContext.getStart();
@@ -106,7 +106,7 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
         return IntStream.range(position, position + ref.length()).boxed().collect(Collectors.toSet());
     }
 
-    public boolean isRelevantFor(HaplotypeEvent event)
+    public boolean isRelevantFor(@NotNull HaplotypeEvent event)
     {
         if(!(event instanceof VariantHaplotypeEvent))
         {

@@ -54,7 +54,7 @@ public class GeneHaplotypePanel
         return chromosomeToRelevantVariantPositions;
     }
 
-    public boolean isRelevantFor(HaplotypeEvent event)
+    public boolean isRelevantFor(@NotNull HaplotypeEvent event)
     {
         boolean isEventToIgnore = defaultHaplotype.eventsToIgnore.stream().map(HaplotypeEvent::id).anyMatch(e -> e.equals(event.id()));
         return !isEventToIgnore && nonDefaultHaplotypes.stream().anyMatch(h -> h.isRelevantFor(event));

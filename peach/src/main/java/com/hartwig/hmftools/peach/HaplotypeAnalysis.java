@@ -129,7 +129,7 @@ public class HaplotypeAnalysis
                 .collect(Collectors.toList());
     }
 
-    public int getEventCount(String eventId)
+    public int getEventCount(@NotNull String eventId)
     {
         return eventIdToCount.get(eventId);
     }
