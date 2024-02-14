@@ -10,16 +10,16 @@ public class PeachConfig
 {
     public final String vcfFile;
     public final String sampleName;
-    public final String haplotypesTsv;
+    public final String haplotypesFile;
     public final String outputDir;
     private static final String VCF_FILE = "vcf_file";
     private static final String SAMPLE_NAME = "sample_name";
-    private static final String HAPLOTYPES_TSV = "haplotypes_tsv";
+    private static final String HAPLOTYPES_FILE = "haplotypes_file";
 
     public PeachConfig(final ConfigBuilder configBuilder)
     {
         vcfFile = configBuilder.getValue(VCF_FILE);
-        haplotypesTsv = configBuilder.getValue(HAPLOTYPES_TSV);
+        haplotypesFile = configBuilder.getValue(HAPLOTYPES_FILE);
         sampleName = configBuilder.getValue(SAMPLE_NAME);
 
         outputDir = parseOutputDir(configBuilder);
@@ -27,13 +27,13 @@ public class PeachConfig
 
     public boolean isValid()
     {
-        return vcfFile != null && sampleName != null && haplotypesTsv != null && outputDir != null;
+        return vcfFile != null && sampleName != null && haplotypesFile != null && outputDir != null;
     }
 
     public static void addOptions(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(VCF_FILE, true, "VCF input file");
-        configBuilder.addPath(HAPLOTYPES_TSV, true, "Haplotype config file");
+        configBuilder.addPath(HAPLOTYPES_FILE, true, "Haplotype config file");
         configBuilder.addConfigItem(SAMPLE_NAME, true, "Name of sample in VCF to call haplotypes for");
 
         addOutputDir(configBuilder);

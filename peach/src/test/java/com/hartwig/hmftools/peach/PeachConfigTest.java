@@ -15,14 +15,14 @@ public class PeachConfigTest
     public void testCommandLineArguments()
     {
         String vcfFile = getTestResourcePath("variants.vcf.gz");
-        String haplotypesTsv = getTestResourcePath("haplotypes.complicated.37.tsv");
+        String haplotypesFile = getTestResourcePath("haplotypes.complicated.37.tsv");
         String sampleName = "FAKENAME";
         String outputDir = "/path/to/output";
         ConfigBuilder configBuilder = new ConfigBuilder("Peach");
         PeachConfig.addOptions(configBuilder);
         String[] args = {
                 "-vcf_file", vcfFile, 
-                "-haplotypes_tsv", haplotypesTsv,
+                "-haplotypes_file", haplotypesFile,
                 "-sample_name", sampleName, 
                 "-output_dir", outputDir
         };
@@ -30,7 +30,7 @@ public class PeachConfigTest
         PeachConfig config = new PeachConfig(configBuilder);
         
         assertEquals(vcfFile, config.vcfFile);
-        assertEquals(haplotypesTsv, config.haplotypesTsv);
+        assertEquals(haplotypesFile, config.haplotypesFile);
         assertEquals(sampleName, config.sampleName);
         assertEquals("/path/to/output/", config.outputDir);
         
