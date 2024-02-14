@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.peach.output;
 
 import com.hartwig.hmftools.peach.HaplotypeAnalysis;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -30,7 +31,8 @@ public class BestHaplotypeCombinationsFile
     {
         List<String> lines = new ArrayList<>();
         lines.add(header());
-        geneToHaplotypeAnalysis.entrySet().stream()
+        geneToHaplotypeAnalysis.entrySet()
+                .stream()
                 .sorted(Map.Entry.comparingByKey())
                 .map(e -> toLines(e.getKey(), e.getValue()))
                 .flatMap(Collection::stream)
@@ -40,40 +42,32 @@ public class BestHaplotypeCombinationsFile
 
     private static String header()
     {
-        return new StringJoiner(TSV_DELIMITER)
-                .add("gene")
-                .add("allele")
-                .add("count")
-                .toString();
+        return new StringJoiner(TSV_DELIMITER).add("gene").add("allele").add("count").toString();
     }
 
     private static List<String> toLines(String gene, HaplotypeAnalysis analysis)
     {
         StringJoiner joiner = new StringJoiner(TSV_DELIMITER);
-        if (analysis.hasBestHaplotypeCombination())
+        if(analysis.hasBestHaplotypeCombination())
         {
-            return analysis.getBestHaplotypeCombination().getHaplotypeNameToCount().entrySet().stream()
+            return analysis.getBestHaplotypeCombination()
+                    .getHaplotypeNameToCount()
+                    .entrySet()
+                    .stream()
                     .sorted(Map.Entry.comparingByKey())
                     .map(e -> toLine(gene, e.getKey(), e.getValue()))
                     .collect(Collectors.toList());
         }
         else
         {
-            String unknownAlleleString = joiner
-                    .add(gene)
-                    .add(UNKNOWN_ALLELE_STRING)
-                    .add(Integer.toString(GERMLINE_TOTAL_COPY_NUMBER))
-                    .toString();
+            String unknownAlleleString =
+                    joiner.add(gene).add(UNKNOWN_ALLELE_STRING).add(Integer.toString(GERMLINE_TOTAL_COPY_NUMBER)).toString();
             return List.of(unknownAlleleString);
         }
     }
 
     private static String toLine(String gene, String haplotypeName, int count)
     {
-        return new StringJoiner(TSV_DELIMITER)
-                .add(gene)
-                .add(haplotypeName)
-                .add(Integer.toString(count))
-                .toString();
+        return new StringJoiner(TSV_DELIMITER).add(gene).add(haplotypeName).add(Integer.toString(count)).toString();
     }
 }

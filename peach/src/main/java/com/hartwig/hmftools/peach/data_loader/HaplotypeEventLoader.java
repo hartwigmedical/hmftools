@@ -3,6 +3,7 @@ package com.hartwig.hmftools.peach.data_loader;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.peach.event.VariantHaplotypeEvent;
+
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.GenotypeType;
@@ -19,14 +20,10 @@ import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 public class HaplotypeEventLoader
 {
-    public static Map<String, Integer> loadRelevantVariantHaplotypeEvents(
-            String vcf, String sampleName, Map<Chromosome, Set<Integer>> relevantVariantPositions
-    )
+    public static Map<String, Integer> loadRelevantVariantHaplotypeEvents(String vcf, String sampleName,
+            Map<Chromosome, Set<Integer>> relevantVariantPositions)
     {
-        try(
-                AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(
-                        vcf, new VCFCodec(), false)
-        )
+        try(AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcf, new VCFCodec(), false))
         {
             Map<String, Integer> eventIdToCount = new HashMap<>();
             for(VariantContext variantContext : reader.iterator())
@@ -41,60 +38,43 @@ public class HaplotypeEventLoader
         }
     }
 
-    private static void handleVariantContext(
-            VariantContext variantContext,
-            String sampleName,
-            Map<Chromosome, Set<Integer>> relevantVariantPositions,
-            Map<String, Integer> eventIdToCount
-    )
+    private static void handleVariantContext(VariantContext variantContext, String sampleName,
+            Map<Chromosome, Set<Integer>> relevantVariantPositions, Map<String, Integer> eventIdToCount)
     {
-        Set<Integer> relevantPositionsInChromosome = relevantVariantPositions.getOrDefault(
-                HumanChromosome.fromString(variantContext.getContig()),
-                Collections.emptySet()
-        );
+        Set<Integer> relevantPositionsInChromosome =
+                relevantVariantPositions.getOrDefault(HumanChromosome.fromString(variantContext.getContig()), Collections.emptySet());
         VariantHaplotypeEvent event = VariantHaplotypeEvent.fromVariantContext(variantContext);
-        Integer count = getEventCount(variantContext.getGenotype(sampleName).getType(), event.id());
+        int count = getEventCount(variantContext.getGenotype(sampleName).getType(), event.id());
 
-        boolean isRelevantEvent =
-                !variantContext.isFiltered()
-                        && count != 0
-                        && event.getCoveredPositions().stream().anyMatch(relevantPositionsInChromosome::contains);
+        boolean isRelevantEvent = !variantContext.isFiltered() && count != 0 && event.getCoveredPositions()
+                .stream()
+                .anyMatch(relevantPositionsInChromosome::contains);
 
         if(isRelevantEvent)
         {
-            if (eventIdToCount.containsKey(event.id()))
+            if(eventIdToCount.containsKey(event.id()))
             {
-                throw new IllegalStateException(
-                        String.format("encountered event with ID '%s' more than once in input VCF", event.id())
-                );
+                throw new IllegalStateException(String.format("encountered event with ID '%s' more than once in input VCF", event.id()));
             }
             eventIdToCount.put(event.id(), count);
         }
     }
 
-    private static Integer getEventCount(GenotypeType genotypeType, String eventId)
+    private static int getEventCount(GenotypeType genotypeType, String eventId)
     {
-        Integer count = null;
         switch(genotypeType)
         {
             case NO_CALL:
             case HOM_REF:
-                count = 0;
-                break;
+                return 0;
             case HET:
-                count = 1;
-                break;
+                return 1;
             case HOM_VAR:
-                count = 2;
-                break;
+                return 2;
             default:
-                String error_msg = String.format(
-                        "cannot get occurrence count for event with ID '%s' and genotypeType '%s'",
-                        eventId,
-                        genotypeType
-                );
+                String error_msg =
+                        String.format("cannot get occurrence count for event with ID '%s' and genotypeType '%s'", eventId, genotypeType);
                 throw new IllegalStateException(error_msg);
         }
-        return count;
     }
 }

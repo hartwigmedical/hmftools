@@ -7,7 +7,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class PeachConfigTest
@@ -80,7 +79,6 @@ public class PeachConfigTest
         assertEquals("/path/to/output/FAKENAME.peach.qc.tsv", config.getQcStatusOutputPath());
     }
 
-    @NotNull
     private static PeachConfig constructPeachConfigFromArgs(final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder("Peach");

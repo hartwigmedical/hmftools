@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.peach.output;
 
 import com.hartwig.hmftools.peach.HaplotypeAnalysis;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -27,7 +28,8 @@ public class EventsPerGeneFile
     {
         List<String> lines = new ArrayList<>();
         lines.add(header());
-        geneToHaplotypeAnalysis.entrySet().stream()
+        geneToHaplotypeAnalysis.entrySet()
+                .stream()
                 .map(e -> toLines(e.getKey(), e.getValue()))
                 .flatMap(Collection::stream)
                 .sorted()
@@ -37,26 +39,16 @@ public class EventsPerGeneFile
 
     private static String header()
     {
-        return new StringJoiner(TSV_DELIMITER)
-                .add("gene")
-                .add("event")
-                .add("count")
-                .toString();
+        return new StringJoiner(TSV_DELIMITER).add("gene").add("event").add("count").toString();
     }
 
     private static List<String> toLines(String gene, HaplotypeAnalysis analysis)
     {
-        return analysis.getEventIds().stream()
-                .map(e -> toLine(gene, e, analysis.getEventCount(e)))
-                .collect(Collectors.toList());
+        return analysis.getEventIds().stream().map(e -> toLine(gene, e, analysis.getEventCount(e))).collect(Collectors.toList());
     }
 
     private static String toLine(String gene, String eventId, int count)
     {
-        return new StringJoiner(TSV_DELIMITER)
-                .add(gene)
-                .add(eventId)
-                .add(Integer.toString(count))
-                .toString();
+        return new StringJoiner(TSV_DELIMITER).add(gene).add(eventId).add(Integer.toString(count)).toString();
     }
 }

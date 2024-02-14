@@ -68,7 +68,7 @@ public class HaplotypeEventLoaderTest
         String vcfPath = getTestResourcePath("variants.vcf");
         String sampleName = "FAKER";
         HaplotypePanel panel = loadTestHaplotypePanel("haplotypes.complicated.37.tsv");
-        
+
         Map<String, Integer> haplotypeEventsToCount = HaplotypeEventLoader.loadRelevantVariantHaplotypeEvents(
                 vcfPath, sampleName, panel.getRelevantVariantPositions()
         );

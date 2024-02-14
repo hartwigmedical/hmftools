@@ -30,17 +30,11 @@ public class EventsFile
 
     private static String header()
     {
-        return new StringJoiner(TSV_DELIMITER)
-                .add("event")
-                .add("count")
-                .toString();
+        return new StringJoiner(TSV_DELIMITER).add("event").add("count").toString();
     }
 
     private static String toLine(String eventId, int count)
     {
-        return new StringJoiner(TSV_DELIMITER)
-                .add(eventId)
-                .add(Integer.toString(count))
-                .toString();
+        return new StringJoiner(TSV_DELIMITER).add(eventId).add(Integer.toString(count)).toString();
     }
 }

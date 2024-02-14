@@ -6,13 +6,14 @@ import com.hartwig.hmftools.peach.event.HaplotypeEvent;
 import com.hartwig.hmftools.peach.event.HaplotypeEventFactory;
 import com.hartwig.hmftools.peach.haplotype.NonDefaultHaplotype;
 import com.hartwig.hmftools.peach.haplotype.DefaultHaplotype;
+
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class HaplotypePanel
 {
@@ -26,15 +27,24 @@ public class HaplotypePanel
 
     public Map<Chromosome, Set<Integer>> getRelevantVariantPositions()
     {
-        return geneToGeneHaplotypePanel.values().stream()
-                .map(GeneHaplotypePanel::getRelevantVariantPositions)
-                .flatMap(m -> m.entrySet().stream())
-                .collect(
-                        Collectors.groupingBy(
-                                Map.Entry::getKey,
-                                Collectors.mapping(Map.Entry::getValue, Collectors.flatMapping(Collection::stream, Collectors.toSet()))
-                        )
-                );
+        Map<Chromosome, Set<Integer>> chromosomeToRelevantPositions = new HashMap<>();
+        for(GeneHaplotypePanel panel : geneToGeneHaplotypePanel.values())
+        {
+            for(Map.Entry<Chromosome, Set<Integer>> entry : panel.getRelevantVariantPositions().entrySet())
+            {
+                Chromosome chromosome = entry.getKey();
+                Set<Integer> relevantPositions = entry.getValue();
+                if(chromosomeToRelevantPositions.containsKey(chromosome))
+                {
+                    chromosomeToRelevantPositions.get(chromosome).addAll(relevantPositions);
+                }
+                else
+                {
+                    chromosomeToRelevantPositions.put(chromosome, new HashSet<>(relevantPositions));
+                }
+            }
+        }
+        return chromosomeToRelevantPositions;
     }
 
     public boolean isRelevantFor(String eventId, String gene)
@@ -51,6 +61,7 @@ public class HaplotypePanel
     {
         return geneToGeneHaplotypePanel.get(gene).nonDefaultHaplotypes;
     }
+
     public DefaultHaplotype getDefaultHaplotype(String gene)
     {
         return geneToGeneHaplotypePanel.get(gene).defaultHaplotype;
@@ -68,8 +79,6 @@ public class HaplotypePanel
 
     public int getHaplotypeCount()
     {
-        return geneToGeneHaplotypePanel.values().stream()
-                .mapToInt(GeneHaplotypePanel::getHaplotypeCount)
-                .sum();
+        return geneToGeneHaplotypePanel.values().stream().mapToInt(GeneHaplotypePanel::getHaplotypeCount).sum();
     }
 }

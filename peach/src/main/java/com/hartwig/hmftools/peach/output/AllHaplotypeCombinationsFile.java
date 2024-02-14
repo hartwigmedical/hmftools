@@ -2,6 +2,7 @@ package com.hartwig.hmftools.peach.output;
 
 import com.hartwig.hmftools.peach.HaplotypeAnalysis;
 import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -20,6 +21,7 @@ import static com.hartwig.hmftools.peach.PeachUtils.TSV_DELIMITER;
 public class AllHaplotypeCombinationsFile
 {
     public final static String COMBINATION_SEPARATOR = ";";
+
     public static void write(@NotNull String filePath, @NotNull Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis) throws IOException
     {
         Files.write(new File(filePath).toPath(), toLines(geneToHaplotypeAnalysis));
@@ -30,7 +32,8 @@ public class AllHaplotypeCombinationsFile
     {
         List<String> lines = new ArrayList<>();
         lines.add(header());
-        geneToHaplotypeAnalysis.entrySet().stream()
+        geneToHaplotypeAnalysis.entrySet()
+                .stream()
                 .sorted(Map.Entry.comparingByKey())
                 .map(e -> toLines(e.getKey(), e.getValue()))
                 .flatMap(Collection::stream)
@@ -40,22 +43,17 @@ public class AllHaplotypeCombinationsFile
 
     private static String header()
     {
-        return new StringJoiner(TSV_DELIMITER)
-                .add("gene")
-                .add("combination")
-                .add("nonWildTypeCount")
-                .toString();
+        return new StringJoiner(TSV_DELIMITER).add("gene").add("combination").add("nonWildTypeCount").toString();
     }
 
     private static List<String> toLines(String gene, HaplotypeAnalysis analysis)
     {
         String wildTypeName = analysis.getWildTypeHaplotypeName();
-        Comparator<HaplotypeCombination> combinationComparator = Comparator.comparingInt(
-                (HaplotypeCombination c) -> c.getHaplotypeCountWithout(wildTypeName)
-        ).thenComparing(
-                AllHaplotypeCombinationsFile::getHaplotypeCombinationString
-        );
-        return analysis.getHaplotypeCombinations().stream()
+        Comparator<HaplotypeCombination> combinationComparator =
+                Comparator.comparingInt((HaplotypeCombination c) -> c.getHaplotypeCountWithout(wildTypeName))
+                        .thenComparing(AllHaplotypeCombinationsFile::getHaplotypeCombinationString);
+        return analysis.getHaplotypeCombinations()
+                .stream()
                 .sorted(combinationComparator)
                 .map(c -> toLine(gene, c, analysis.getWildTypeHaplotypeName()))
                 .collect(Collectors.toList());
@@ -63,8 +61,7 @@ public class AllHaplotypeCombinationsFile
 
     private static String toLine(String gene, HaplotypeCombination combination, String wildTypeHaplotypeName)
     {
-        return new StringJoiner(TSV_DELIMITER)
-                .add(gene)
+        return new StringJoiner(TSV_DELIMITER).add(gene)
                 .add(getHaplotypeCombinationString(combination))
                 .add(Integer.toString(combination.getHaplotypeCountWithout(wildTypeHaplotypeName)))
                 .toString();
@@ -73,7 +70,9 @@ public class AllHaplotypeCombinationsFile
     @NotNull
     private static String getHaplotypeCombinationString(HaplotypeCombination combination)
     {
-        return combination.getHaplotypeNameToCount().entrySet().stream()
+        return combination.getHaplotypeNameToCount()
+                .entrySet()
+                .stream()
                 .map(e -> String.format("(%s, %s)", e.getKey(), e.getValue()))
                 .sorted()
                 .collect(Collectors.joining(COMBINATION_SEPARATOR));

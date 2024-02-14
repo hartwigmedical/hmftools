@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.peach.output;
 
 import com.hartwig.hmftools.peach.HaplotypeAnalysis;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -25,7 +26,8 @@ public class QcStatusFile
     {
         List<String> lines = new ArrayList<>();
         lines.add(header());
-        geneToHaplotypeAnalysis.entrySet().stream()
+        geneToHaplotypeAnalysis.entrySet()
+                .stream()
                 .sorted(Map.Entry.comparingByKey())
                 .map(e -> toLine(e.getKey(), e.getValue()))
                 .forEach(lines::add);
@@ -34,17 +36,11 @@ public class QcStatusFile
 
     private static String header()
     {
-        return new StringJoiner(TSV_DELIMITER)
-                .add("gene")
-                .add("status")
-                .toString();
+        return new StringJoiner(TSV_DELIMITER).add("gene").add("status").toString();
     }
 
     private static String toLine(String gene, HaplotypeAnalysis analysis)
     {
-        return new StringJoiner(TSV_DELIMITER)
-                .add(gene)
-                .add(analysis.getAnalysisStatus().toString())
-                .toString();
+        return new StringJoiner(TSV_DELIMITER).add(gene).add(analysis.getAnalysisStatus().toString()).toString();
     }
 }

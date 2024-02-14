@@ -2,8 +2,10 @@ package com.hartwig.hmftools.peach.event;
 
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -24,12 +26,8 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
     @NotNull
     public final String alt;
 
-    public VariantHaplotypeEvent(
-            @NotNull final Chromosome chromosome,
-            final int position,
-            @NotNull final String ref,
-            @NotNull final String alt
-    )
+    public VariantHaplotypeEvent(@NotNull final Chromosome chromosome, final int position, @NotNull final String ref,
+            @NotNull final String alt)
     {
         this.chromosome = chromosome;
         this.position = position;
@@ -39,14 +37,14 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
 
     public static VariantHaplotypeEvent fromId(@NotNull String eventId)
     {
-        if (!eventId.startsWith(EVENT_TYPE_STRING))
+        if(!eventId.startsWith(EVENT_TYPE_STRING))
         {
             String error_msg = String.format("Invalid ID for VariantHaplotypeEvent: %s", eventId);
             throw new java.lang.IllegalArgumentException(error_msg);
         }
 
         String[] splitEventId = eventId.split(HaplotypeEvent.EVENT_ID_DELIMITER);
-        if (splitEventId.length != VariantHaplotypeEvent.ID_FIELD_COUNT)
+        if(splitEventId.length != VariantHaplotypeEvent.ID_FIELD_COUNT)
         {
             String error_msg = String.format(
                     "ID '%s' of VariantHaplotypeEvent has incorrect field count: %s instead of %s",
@@ -59,12 +57,10 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
         String ref = splitEventId[3];
         String alt = splitEventId[4];
         VariantHaplotypeEvent event = new VariantHaplotypeEvent(chromosome, position, ref, alt);
-        
-        if (!event.id().equals(eventId))
+
+        if(!event.id().equals(eventId))
         {
-            String error_msg = String.format(
-                    "VariantHaplotypeEvent derived from event ID '%s' has different ID '%s'",  eventId, event.id()
-            );
+            String error_msg = String.format("VariantHaplotypeEvent derived from event ID '%s' has different ID '%s'", eventId, event.id());
             throw new java.lang.IllegalArgumentException(error_msg);
         }
         return event;
@@ -78,25 +74,22 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
         List<Allele> alts = variantContext.getAlternateAlleles();
         if(alts.size() > 1)
         {
-            String error_msg = String.format(
-                    "Cannot handle variant with multiple alts: '%s:%s%s>...'",
-                    chromosome, position, ref
-            );
+            String error_msg = String.format("Cannot handle variant with multiple alts: '%s:%s%s>...'", chromosome, position, ref);
             throw new IllegalArgumentException(error_msg);
         }
         String alt = variantContext.getAlternateAlleles().get(0).toString();
         return new VariantHaplotypeEvent(chromosome, position, ref, alt);
     }
 
-    public String toString(){
+    public String toString()
+    {
         return id();
     }
 
     @NotNull
     public String id()
     {
-        return new StringJoiner(HaplotypeEvent.EVENT_ID_DELIMITER)
-                .add(EVENT_TYPE_STRING)
+        return new StringJoiner(HaplotypeEvent.EVENT_ID_DELIMITER).add(EVENT_TYPE_STRING)
                 .add(String.format("chr%s", chromosome))
                 .add(Integer.toString(position))
                 .add(ref)
@@ -111,12 +104,16 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
 
     public boolean isRelevantFor(HaplotypeEvent event)
     {
-        if (!(event instanceof VariantHaplotypeEvent))
+        if(!(event instanceof VariantHaplotypeEvent))
+        {
             return false;
+        }
 
         VariantHaplotypeEvent castEvent = (VariantHaplotypeEvent) event;
-        if (castEvent.chromosome != chromosome)
+        if(castEvent.chromosome != chromosome)
+        {
             return false;
+        }
 
         // Checks for overlap of positions. position + ref.length() is position after last reference base
         return position < castEvent.position + castEvent.ref.length() && castEvent.position < position + ref.length();

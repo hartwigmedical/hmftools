@@ -11,11 +11,11 @@ import org.junit.Test;
 public class EventsFileTest
 {
     private static final String EXPECTED_HEADER = "event\tcount";
-    
+
     @Test
     public void testEmpty()
     {
-        assertEquals(List.of(EXPECTED_HEADER),  EventsFile.toLines(new HashMap<>()));
+        assertEquals(List.of(EXPECTED_HEADER), EventsFile.toLines(new HashMap<>()));
     }
 
     @Test

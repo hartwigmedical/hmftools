@@ -2,6 +2,7 @@ package com.hartwig.hmftools.peach.haplotype;
 
 import com.google.common.collect.ImmutableList;
 import com.hartwig.hmftools.peach.event.HaplotypeEvent;
+
 import org.jetbrains.annotations.NotNull;
 
 public class DefaultHaplotype implements Haplotype

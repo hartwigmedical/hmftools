@@ -34,7 +34,7 @@ public class PeachApplication
     {
         try
         {
-            if (!config.isValid())
+            if(!config.isValid())
             {
                 throw new IllegalArgumentException("invalid config");
             }
@@ -56,7 +56,8 @@ public class PeachApplication
             Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = caller.getGeneToHaplotypeAnalysis(eventIdToCount);
 
             writeOutputFiles(eventIdToCount, geneToHaplotypeAnalysis);
-        } catch (Exception e)
+        }
+        catch(Exception e)
         {
             PCH_LOGGER.error("unrecoverable error encountered", e);
             System.exit(1);
@@ -70,7 +71,7 @@ public class PeachApplication
         // Output directory cannot be null in valid config
         assert config.outputDir != null;
         File outputDirectory = new File(config.outputDir);
-        if (!outputDirectory.exists() && !outputDirectory.mkdirs())
+        if(!outputDirectory.exists() && !outputDirectory.mkdirs())
         {
             throw new RuntimeException(String.format("could not create output directory: %s", config.outputDir));
         }
@@ -91,7 +92,7 @@ public class PeachApplication
             PCH_LOGGER.info("write qc status output file");
             QcStatusFile.write(config.getQcStatusOutputPath(), geneToHaplotypeAnalysis);
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             throw new RuntimeException("failed to create all output files", e);
         }

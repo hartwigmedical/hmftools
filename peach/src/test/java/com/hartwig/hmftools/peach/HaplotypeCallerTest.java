@@ -3,6 +3,7 @@ package com.hartwig.hmftools.peach;
 import static com.hartwig.hmftools.peach.TestUtils.loadTestHaplotypePanel;
 
 import static junit.framework.TestCase.assertEquals;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -23,8 +24,7 @@ public class HaplotypeCallerTest
     public void testNoPanelOrEvents()
     {
         HaplotypePanel haplotypePanel = new HaplotypePanel(new HashMap<>());
-        HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
-        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = caller.getGeneToHaplotypeAnalysis(new HashMap<>());
+        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, new HashMap<>());
         assertEquals(0, geneToHaplotypeAnalysis.size());
     }
 
@@ -32,9 +32,8 @@ public class HaplotypeCallerTest
     public void testNoEvents()
     {
         HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.complicated.37.tsv");
-        HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
-        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = caller.getGeneToHaplotypeAnalysis(new HashMap<>());
-        
+        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, new HashMap<>());
+
         HaplotypeAnalysis expectedDpydHaplotypeAnalysis = new HaplotypeAnalysis(
                 new HashMap<>(),
                 List.of(new HaplotypeCombination(Map.of("*9A", 2))),
@@ -50,7 +49,7 @@ public class HaplotypeCallerTest
         assertEquals(2, geneToHaplotypeAnalysis.size());
         assertTrue(geneToHaplotypeAnalysis.containsKey("DPYD"));
         assertTrue(geneToHaplotypeAnalysis.containsKey("UGT1A1"));
-        
+
         assertEqualHaplotypeAnalysis(expectedDpydHaplotypeAnalysis, geneToHaplotypeAnalysis.get("DPYD"));
         assertEqualHaplotypeAnalysis(expectedUgt1A1HaplotypeAnalysis, geneToHaplotypeAnalysis.get("UGT1A1"));
     }
@@ -59,9 +58,8 @@ public class HaplotypeCallerTest
     public void testWildTypes()
     {
         HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.complicated.37.tsv");
-        HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
         Map<String, Integer> eventIdToCount = Map.of("VAR_chr1_98348885_G_A", 2);
-        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = caller.getGeneToHaplotypeAnalysis(eventIdToCount);
+        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, eventIdToCount);
 
         HaplotypeAnalysis expectedDpydHaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of("VAR_chr1_98348885_G_A", 2),
@@ -87,7 +85,6 @@ public class HaplotypeCallerTest
     public void testHeterozygousNonWildType()
     {
         HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.complicated.37.tsv");
-        HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
         Map<String, Integer> eventIdToCount = Map.of(
                 "VAR_chr1_98348885_G_A", 2,
                 "VAR_chr1_98205966_GATGA_G", 1,
@@ -96,7 +93,7 @@ public class HaplotypeCallerTest
                 "VAR_chr2_234668879_C_CAT", 1,
                 "VAR_chr2_234668879_CAT_C", 1
         );
-        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = caller.getGeneToHaplotypeAnalysis(eventIdToCount);
+        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, eventIdToCount);
 
         HaplotypeAnalysis expectedDpydHaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of(
@@ -110,7 +107,7 @@ public class HaplotypeCallerTest
                 "*1"
         );
         HaplotypeAnalysis expectedUgt1A1HaplotypeAnalysis = new HaplotypeAnalysis(
-                Map.of(                
+                Map.of(
                         "VAR_chr2_234668879_C_CAT", 1,
                         "VAR_chr2_234668879_CAT_C", 1
                 ),
@@ -130,12 +127,11 @@ public class HaplotypeCallerTest
     public void testHeterozygousWildType()
     {
         HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.complicated.37.tsv");
-        HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
         Map<String, Integer> eventIdToCount = Map.of(
                 "VAR_chr1_98348885_G_A", 1,
                 "VAR_chr2_234669144_G_A", 1
         );
-        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = caller.getGeneToHaplotypeAnalysis(eventIdToCount);
+        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, eventIdToCount);
 
         HaplotypeAnalysis expectedDpydHaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of(
@@ -165,13 +161,12 @@ public class HaplotypeCallerTest
     public void testHeterozygousDefaultHaplotype()
     {
         HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.complicated.37.tsv");
-        HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
         Map<String, Integer> eventIdToCount = Map.of(
                 "VAR_chr1_98348885_G_A", 1,
                 "VAR_chr1_97915614_C_T", 1,
                 "VAR_chr2_234668879_C_CATAT", 1
         );
-        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = caller.getGeneToHaplotypeAnalysis(eventIdToCount);
+        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, eventIdToCount);
 
         HaplotypeAnalysis expectedDpydHaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of(
@@ -202,13 +197,12 @@ public class HaplotypeCallerTest
     public void testHomozygousNonWildType()
     {
         HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.complicated.37.tsv");
-        HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
         Map<String, Integer> eventIdToCount = Map.of(
                 "VAR_chr1_97981343_A_C", 2,
                 "VAR_chr1_98348885_G_A", 2,
                 "VAR_chr2_234668879_C_CAT", 2
         );
-        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = caller.getGeneToHaplotypeAnalysis(eventIdToCount);
+        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, eventIdToCount);
 
         HaplotypeAnalysis expectedDpydHaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of(
@@ -239,12 +233,11 @@ public class HaplotypeCallerTest
     public void testOverlappingGenes()
     {
         HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.overlap.tsv");
-        HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
         Map<String, Integer> eventIdToCount = Map.of(
                 "VAR_chr3_1234567_CAT_C", 1,
                 "VAR_chr3_1234567_C_CAT", 1
         );
-        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = caller.getGeneToHaplotypeAnalysis(eventIdToCount);
+        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, eventIdToCount);
 
         HaplotypeAnalysis expectedFake1HaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of(
@@ -281,17 +274,16 @@ public class HaplotypeCallerTest
         assertEqualHaplotypeAnalysis(expectedFake2HaplotypeAnalysis, geneToHaplotypeAnalysis.get("FAKE2"));
         assertEqualHaplotypeAnalysis(expectedFake3HaplotypeAnalysis, geneToHaplotypeAnalysis.get("FAKE3"));
     }
-    
+
     @Test
     public void testAmbiguousCallingPreferFewerHaplotypes()
     {
         HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.ambiguous.tsv");
-        HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
         Map<String, Integer> eventIdToCount = Map.of(
                 "VAR_chr3_1234567_C_CAT", 2,
                 "VAR_chr3_1234765_G_C", 1
         );
-        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = caller.getGeneToHaplotypeAnalysis(eventIdToCount);
+        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, eventIdToCount);
 
         HaplotypeAnalysis expectedHaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of(
@@ -320,13 +312,12 @@ public class HaplotypeCallerTest
     public void testAmbiguousCallingNoBestHaplotype()
     {
         HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.ambiguous.tsv");
-        HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
         Map<String, Integer> eventIdToCount = Map.of(
                 "VAR_chr3_1234567_C_CAT", 1,
                 "VAR_chr3_1234765_G_C", 1,
                 "VAR_chr3_1234777_AA_T", 1
         );
-        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = caller.getGeneToHaplotypeAnalysis(eventIdToCount);
+        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, eventIdToCount);
 
         HaplotypeAnalysis expectedHaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of(
@@ -348,17 +339,16 @@ public class HaplotypeCallerTest
         assertEqualHaplotypeAnalysis(expectedHaplotypeAnalysis, geneToHaplotypeAnalysis.get("FAKE1"));
         assertFalse(expectedHaplotypeAnalysis.hasBestHaplotypeCombination());
     }
-    
+
     @Test
     public void testAmbiguousCallingPreferWildType()
     {
         HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.ambiguous.tsv");
-        HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
         Map<String, Integer> eventIdToCount = Map.of(
                 "VAR_chr3_1234567_C_CAT", 1,
                 "VAR_chr3_1234765_G_C", 1
         );
-        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = caller.getGeneToHaplotypeAnalysis(eventIdToCount);
+        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, eventIdToCount);
 
         HaplotypeAnalysis expectedHaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of(
@@ -382,35 +372,42 @@ public class HaplotypeCallerTest
                 expectedHaplotypeAnalysis.getBestHaplotypeCombination()
         );
     }
-    
+
+    private static Map<String, HaplotypeAnalysis> determineGeneToHaplotypeAnalysis(HaplotypePanel haplotypePanel,
+            Map<String, Integer> eventIdToCount)
+    {
+        HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
+        return caller.getGeneToHaplotypeAnalysis(eventIdToCount);
+    }
+
     private void assertEqualHaplotypeAnalysis(HaplotypeAnalysis expected, HaplotypeAnalysis actual)
     {
         assertEquals(expected.getDefaultHaplotypeName(), actual.getDefaultHaplotypeName());
         assertEquals(expected.getWildTypeHaplotypeName(), actual.getWildTypeHaplotypeName());
-        
+
         assertEquals(expected.getEventIds(), actual.getEventIds());
-        for (String eventId : expected.getEventIds())
+        for(String eventId : expected.getEventIds())
         {
             assertEquals(
-                    String.format("Compare event counts of %s", eventId), 
-                    expected.getEventCount(eventId), 
+                    String.format("Compare event counts of %s", eventId),
+                    expected.getEventCount(eventId),
                     actual.getEventCount(eventId)
             );
         }
         assertEqualHaplotypeCombinations(expected.getHaplotypeCombinations(), actual.getHaplotypeCombinations());
     }
-    
+
     private void assertEqualHaplotypeCombinations(List<HaplotypeCombination> expected, List<HaplotypeCombination> actual)
     {
         assertEquals(expected.size(), actual.size());
-        for (HaplotypeCombination expectedCombination : expected)
+        for(HaplotypeCombination expectedCombination : expected)
         {
             List<HaplotypeCombination> matchingActualCombinations = actual.stream()
                     .filter(expectedCombination::equals)
                     .collect(Collectors.toList());
             assertEquals(
                     String.format("Check exactly one combination matches %s", expectedCombination),
-                    1, 
+                    1,
                     matchingActualCombinations.size()
             );
         }

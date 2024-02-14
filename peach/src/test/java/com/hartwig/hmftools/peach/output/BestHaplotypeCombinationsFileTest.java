@@ -14,20 +14,20 @@ import org.junit.Test;
 public class BestHaplotypeCombinationsFileTest
 {
     private static final String EXPECTED_HEADER = "gene\tallele\tcount";
-    
+
     @Test
     public void testEmpty()
     {
-        assertEquals(List.of(EXPECTED_HEADER),  BestHaplotypeCombinationsFile.toLines(new HashMap<>()));
+        assertEquals(List.of(EXPECTED_HEADER), BestHaplotypeCombinationsFile.toLines(new HashMap<>()));
     }
 
     @Test
     public void testNonEmpty()
     {
         HaplotypeAnalysis fake1HaplotypeAnalysis = new HaplotypeAnalysis(
-                new HashMap<>(), 
-                List.of(new HaplotypeCombination(Map.of("*1", 2))), 
-                "*1", 
+                new HashMap<>(),
+                List.of(new HaplotypeCombination(Map.of("*1", 2))),
+                "*1",
                 "*1"
         );
         HaplotypeAnalysis fake2HaplotypeAnalysis = new HaplotypeAnalysis(
