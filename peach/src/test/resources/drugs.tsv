@@ -1,0 +1,5 @@
+Gene	DrugName	UrlGeneral	UrlPrescriptionInfo
+DPYD	5-Fluorouracil	https://www.pharmgkb.org/chemical/PA128406956	https://www.pharmgkb.org/guidelineAnnotation/PA166104939
+DPYD	Capecitabine	https://www.pharmgkb.org/chemical/PA448771	https://www.pharmgkb.org/guidelineAnnotation/PA166104963
+DPYD	Tegafur	https://www.pharmgkb.org/chemical/PA452620	https://www.pharmgkb.org/guidelineAnnotation/PA166104944
+UGT1A1	Irinotecan	https://www.pharmgkb.org/chemical/PA450085	https://www.pharmgkb.org/guidelineAnnotation/PA166104951
