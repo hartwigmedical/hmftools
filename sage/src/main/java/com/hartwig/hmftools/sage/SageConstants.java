@@ -18,8 +18,17 @@ public class SageConstants
     public static final double MIN_SECOND_CANDIDATE_FULL_READS_PERC = 0.25;
 
     // base quality recalibration
-    public static final double DEFAULT_BQR_MAX_ALT_PERC = 0.02;
-    public static final int DEFAULT_BQR_MAX_ALT_COUNT = 3;
+    public static final double BQR_DUAL_AF_LOW = 0.01;
+    public static final double BQR_DUAL_AF_HIGH = 0.075;
+    public static final int BQR_DUAL_AD = 2;
+
+    public static final double BQR_NON_DUAL_AF_LOW = 0.05;
+    public static final double BQR_NON_DUAL_AF_HIGH = 0.125;
+    public static final int BQR_NON_DUAL_AD = 3;
+
+    // dual (illumina)/balanced (ultima): sites where [(AF<1% or AD<3) and AF <7.5%]
+    // other: sites where [(AF<5% or AD<4) and AF <12.5%]
+
     public static final int BQR_SAMPLE_SIZE = 2_000_000;
     public static final int DEFAULT_BQR_MIN_MAP_QUAL = 50;
 

@@ -5,11 +5,17 @@ import com.hartwig.hmftools.common.sequencing.UltimaConsensusType;
 
 public enum BqrReadType
 {
-    NONE,
-    SINGLE,
-    DUAL,
-    ULT_BALANCED,
-    ULT_STANDARD;
+    NONE(false),
+    SINGLE(false),
+    DUAL(true),
+    ULT_BALANCED(true),
+    ULT_STANDARD(false);
+
+    private final boolean mIsHighQuality;
+
+    BqrReadType(boolean isHighQuality) { mIsHighQuality = isHighQuality; }
+
+    public boolean isHighQuality() { return mIsHighQuality; }
 
     public static BqrReadType fromUmiType(final UmiReadType umiReadType)
     {

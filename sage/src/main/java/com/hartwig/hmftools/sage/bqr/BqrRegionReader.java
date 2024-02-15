@@ -172,8 +172,7 @@ public class BqrRegionReader implements CigarHandler
         if(bqData.hasIndel())
             return;
 
-        Map<BqrKey,Integer> keyCounts = bqData.formKeyCounts(
-                mConfig.QualityRecalibration.MaxAltCount, mConfig.QualityRecalibration.MaxAltPerc);
+        Map<BqrKey,Integer> keyCounts = bqData.formKeyCounts();
 
         for(Map.Entry<BqrKey,Integer> entry : keyCounts.entrySet())
         {

@@ -59,6 +59,11 @@ public class BaseQualityRecalibrationTest
 
         bqData3.processReadBase(key5.Alt, key5.Quality);
 
+        for(int i = 0; i < 9; ++i)
+        {
+            bqData3.processReadBase(key2.Ref, key2.Quality); // AF of 10% but count of 1 is permitted
+        }
+
         bqrCounter.run();
 
         Collection<BqrKeyCounter> qualityCounts = bqrCounter.getQualityCounts();
@@ -68,7 +73,7 @@ public class BaseQualityRecalibrationTest
 
         qc = qualityCounts.stream().filter(x -> x.Key.equals(key2)).findFirst().orElse(null);
         assertTrue(qc != null);
-        assertEquals(10, qc.count());
+        assertEquals(19, qc.count());
 
         qc = qualityCounts.stream().filter(x -> x.Key.equals(key3)).findFirst().orElse(null);
         assertTrue(qc == null);

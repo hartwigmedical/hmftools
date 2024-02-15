@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.sage.bqr;
 
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_MAX_ALT_COUNT;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_MAX_ALT_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_MIN_MAP_QUAL;
 
 import com.hartwig.hmftools.common.sequencing.SequencingType;
@@ -16,8 +14,6 @@ public class BqrConfig
     public final boolean WriteFile;
     public final boolean WritePlot;
     public final boolean WriteReads;
-    public final double MaxAltPerc;
-    public final int MaxAltCount;
     public final int SampleSize;
     public final int MinMapQuality;
 
@@ -28,8 +24,6 @@ public class BqrConfig
     private static final String WRITE_BQR_READS = "write_bqr_reads";
 
     private static final String BQR_SAMPLE_SIZE = "bqr_sample_size";
-    private static final String BQR_MAX_ALT_PERC = "bqr_max_alt_perc";
-    private static final String BQR_MAX_ALT_COUNT = "bqr_max_alt_count";
     private static final String BQR_MIN_MAP_QUAL = "bqr_min_map_qual";
 
     public BqrConfig(final ConfigBuilder configBuilder)
@@ -51,8 +45,6 @@ public class BqrConfig
             WriteReads = configBuilder.hasFlag(WRITE_BQR_READS);
         }
 
-        MaxAltPerc = configBuilder.getDecimal(BQR_MAX_ALT_PERC);
-        MaxAltCount = configBuilder.getInteger(BQR_MAX_ALT_COUNT);
         SampleSize = configBuilder.getInteger(BQR_SAMPLE_SIZE);
         MinMapQuality = configBuilder.getInteger(BQR_MIN_MAP_QUAL);
     }
@@ -64,8 +56,6 @@ public class BqrConfig
         WriteReads = false;
         LoadBqrFiles = false;
         WriteFile = false;
-        MaxAltPerc = DEFAULT_BQR_MAX_ALT_PERC;
-        MaxAltCount = DEFAULT_BQR_MAX_ALT_COUNT;
         SampleSize = SageConstants.BQR_SAMPLE_SIZE;
         MinMapQuality = DEFAULT_BQR_MIN_MAP_QUAL;
     }
@@ -82,8 +72,6 @@ public class BqrConfig
         configBuilder.addFlag(WRITE_BQR_PLOT, "Generate BQR plot");
         configBuilder.addFlag(WRITE_BQR_READS, "Write detailed read data as contributes to BQR");
         configBuilder.addFlag(LOAD_BQR_FILES, "Attemps to find and load previously-written BQR files");
-        configBuilder.addDecimal(BQR_MAX_ALT_PERC, "BQR maximum alt percent to be an error", DEFAULT_BQR_MAX_ALT_PERC);
-        configBuilder.addInteger(BQR_MAX_ALT_COUNT, "BQR maximum alt count to be an error", DEFAULT_BQR_MAX_ALT_COUNT);
         configBuilder.addInteger(BQR_SAMPLE_SIZE, "BQR sampling size per autosome", SageConstants.BQR_SAMPLE_SIZE);
         configBuilder.addInteger(BQR_MIN_MAP_QUAL, "BQR min base quality remap qual", DEFAULT_BQR_MIN_MAP_QUAL);
     }
