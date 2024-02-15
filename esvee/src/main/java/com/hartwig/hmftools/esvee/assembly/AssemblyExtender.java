@@ -208,7 +208,7 @@ public class AssemblyExtender
             {
                 RefSideSoftClip refSideSoftClip = refSideSoftClips.get(i - 1);
 
-                if(refSideSoftClip.matchesOriginal())
+                if(refSideSoftClip.matchesOriginal() || refSideSoftClip.hasProximateMatch(assembly.refBasePosition()))
                     continue;
 
                 junctionAssembly = new JunctionAssembly(assembly, refSideSoftClip, initialSupport, excludedReads);
@@ -243,7 +243,9 @@ public class AssemblyExtender
             else
             {
                 if(refBaseAssembly.supportCount() > 0) // same criteria as above
+                {
                     junctionAssembly.mergeRefBaseAssembly(refBaseAssembly);
+                }
             }
 
             findRemoteRegions(junctionAssembly, excludedReads, discordantReads, remoteJunctionMates, suppJunctionReads);

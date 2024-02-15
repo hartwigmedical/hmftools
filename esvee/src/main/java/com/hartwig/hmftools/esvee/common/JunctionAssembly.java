@@ -108,6 +108,7 @@ public class JunctionAssembly
     // reference side doesn't take into account any INDELs
     public int minAlignedPosition() { return mMinAlignedPosition; }
     public int maxAlignedPosition() { return mMaxAlignedPosition; }
+    public int refBasePosition() { return mJunction.isForward() ? mMinAlignedPosition : mMaxAlignedPosition; }
     public int baseLength() { return mBases.length; }
 
     public byte[] bases() { return mBases; }

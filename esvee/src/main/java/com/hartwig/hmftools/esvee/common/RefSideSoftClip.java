@@ -83,6 +83,11 @@ public class RefSideSoftClip
         return true;
     }
 
+    public boolean hasProximateMatch(int otherRefPosition)
+    {
+        return abs(Position - otherRefPosition) <= PROXIMATE_REF_SIDE_SOFT_CLIPS;
+    }
+
     public static void purgeRefSideSoftClips(
             final List<RefSideSoftClip> refSideSoftClips, int minCount, int minLength, int nonSoftClipRefPosition)
     {
@@ -98,7 +103,7 @@ public class RefSideSoftClip
         {
             RefSideSoftClip refSideSoftClip = refSideSoftClips.get(index);
 
-            boolean isPositionMatchOrClose = abs(refSideSoftClip.Position - nonSoftClipRefPosition) <= PROXIMATE_REF_SIDE_SOFT_CLIPS;
+            boolean isPositionMatchOrClose = refSideSoftClip.hasProximateMatch(nonSoftClipRefPosition);
 
             if(refSideSoftClip.readCount() < minCount || refSideSoftClip.maxLength() < minLength || isPositionMatchOrClose)
             {
