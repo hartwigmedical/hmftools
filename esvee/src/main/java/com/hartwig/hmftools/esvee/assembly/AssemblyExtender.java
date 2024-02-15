@@ -5,18 +5,16 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
-import static com.hartwig.hmftools.esvee.common.AssemblyUtils.findUnsetBases;
 import static com.hartwig.hmftools.esvee.common.RefSideSoftClip.purgeRefSideSoftClips;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_DISCORDANT_READ;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_SUPP;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.mergeRegions;
-import static com.hartwig.hmftools.esvee.common.RemoteRegion.purgeWeakSuppRegions;
+import static com.hartwig.hmftools.esvee.common.RemoteRegion.purgeWeakSupplementaryRegions;
 import static com.hartwig.hmftools.esvee.common.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
@@ -393,7 +391,7 @@ public class AssemblyExtender
             final JunctionAssembly assembly, final Set<Read> excludedReads,
             final List<Read> discordantReads, final List<Read> remoteJunctionMates, final List<Read> suppJunctionReads)
     {
-        if(remoteJunctionMates.isEmpty() && discordantReads.isEmpty())
+        if(remoteJunctionMates.isEmpty() && discordantReads.isEmpty() && suppJunctionReads.isEmpty())
             return;
 
         List<RemoteRegion> remoteRegions = Lists.newArrayList();
@@ -424,7 +422,7 @@ public class AssemblyExtender
         mergeRegions(remoteRegions);
 
         // purge regions with only weak supplementary support
-        purgeWeakSuppRegions(remoteRegions);
+        purgeWeakSupplementaryRegions(remoteRegions);
 
         assembly.addRemoteRegions(remoteRegions);
     }

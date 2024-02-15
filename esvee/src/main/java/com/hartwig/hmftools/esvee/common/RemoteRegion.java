@@ -100,7 +100,7 @@ public class RemoteRegion extends ChrBaseRegion
         }
     }
 
-    public static void purgeWeakSuppRegions(final List<RemoteRegion> regions)
+    public static void purgeWeakSupplementaryRegions(final List<RemoteRegion> regions)
     {
         int nonSuppSupport = 0;
         int maxSoftClipMapQual = 0;
@@ -121,16 +121,17 @@ public class RemoteRegion extends ChrBaseRegion
         {
             RemoteRegion region = regions.get(index);
 
-            if(region.isSuppOnlyRegion()
-            && (region.softClipMapQualTotal() < REMOTE_REGION_WEAK_SUPP_PERCENT * maxSoftClipMapQual
-            || region.readCount() < REMOTE_REGION_WEAK_SUPP_PERCENT * nonSuppSupport))
+            if(region.isSuppOnlyRegion())
             {
-                regions.remove(index);
+                if(region.softClipMapQualTotal() < REMOTE_REGION_WEAK_SUPP_PERCENT * maxSoftClipMapQual
+                || region.readCount() < REMOTE_REGION_WEAK_SUPP_PERCENT * nonSuppSupport)
+                {
+                    regions.remove(index);
+                    continue;
+                }
             }
-            else
-            {
-                ++index;
-            }
+
+            ++index;
         }
     }
 }
