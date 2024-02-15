@@ -8,12 +8,10 @@ import static com.hartwig.hmftools.wisp.purity.WriteType.plotCopyNumber;
 import static com.hartwig.hmftools.wisp.purity.WriteType.plotSomatics;
 
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.FittedPurityScore;
@@ -33,7 +31,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.wisp.purity.cn.CnPurityResult;
 import com.hartwig.hmftools.wisp.purity.cn.CopyNumberProfile;
-import com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod;
 import com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult;
 import com.hartwig.hmftools.wisp.purity.variant.SomaticVariants;
 
@@ -154,7 +151,7 @@ public class PurityEstimator
 
             SomaticVariants somaticVariants = null;
 
-            if(mConfig.PurityMethods.contains(PurityMethod.SOMATIC))
+            if(mConfig.PurityMethods.contains(PurityMethod.SOMATIC_VARIANT))
             {
                 somaticVariants = new SomaticVariants(mConfig, mResultsWriter, sample);
                 if(!somaticVariants.loadVariants())

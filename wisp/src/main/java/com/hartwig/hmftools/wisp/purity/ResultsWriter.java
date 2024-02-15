@@ -85,7 +85,7 @@ public class ResultsWriter
 
             sj.add("TumorPurity").add("TumorPloidy");
 
-            if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.SOMATIC))
+            if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.SOMATIC_VARIANT))
                 sj.add(SomaticPurityResult.header());
 
             if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.COPY_NUMBER))
@@ -115,7 +115,7 @@ public class ResultsWriter
             sj.add(format("%.2f", purityContext.bestFit().purity()));
             sj.add(format("%.2f", purityContext.bestFit().ploidy()));
 
-            if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.SOMATIC))
+            if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.SOMATIC_VARIANT))
                 sj.add(format("%s", somaticPurityResult.toTsv()));
 
             if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.COPY_NUMBER))
