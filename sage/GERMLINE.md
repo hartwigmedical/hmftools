@@ -35,8 +35,8 @@ To run SAGE in germline mode we use the following parameters:
 -panel_min_tumor_qual 75
 -ref_sample_count 0
 -panel_only
--panel_bed /opt/resources/sage/37/ActionableCodingPanel.germline.37.bed.gz
--coverage_bed /opt/resources/sage/37/CoverageCodingPanel.germline.37.bed.gz 
+-panel_bed /opt/resources/sage/37/ActionableCodingPanel.37.bed.gz
+-coverage_bed /opt/resources/sage/37/CoverageCodingPanel.37.bed.gz 
 -high_confidence_bed /opt/resources/giab_high_conf/37/HighConfidence.37.bed.gz 
 -hotspots /opt/resources/sage/37/KnownHotspots.germline.37.vcf.gz 
 -ref_genome_version 37 
