@@ -283,13 +283,20 @@ public class AssemblyExtender
     private boolean isDiscordantCandidate(final Read read, boolean isForwardJunction, int junctionPosition)
     {
         // cannot cross the junction since will already have considered all junction candidate reads
+        // and must read in the direction of the junction
         if(isForwardJunction)
         {
+            if(read.negativeStrand())
+                return false;
+
             if(read.alignmentEnd() >= junctionPosition)
                 return false;
         }
         else
         {
+            if(read.positiveStrand())
+                return false;
+
             if(read.alignmentStart() <= junctionPosition)
                 return false;
         }
