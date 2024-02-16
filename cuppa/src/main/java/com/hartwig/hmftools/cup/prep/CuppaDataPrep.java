@@ -15,11 +15,11 @@ import static com.hartwig.hmftools.cup.prep.DataItem.FLD_SOURCE;
 import static com.hartwig.hmftools.cup.prep.DataItem.FLD_VALUE;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
@@ -38,7 +38,9 @@ public class CuppaDataPrep
 {
     public final PrepConfig mConfig;
     public final List<CategoryPrep> mDataPreparers;
+
     private static final String DELIMITER = TSV_DELIM;
+    private static final String NULL_VALUE_STRING = "0";
 
     public CuppaDataPrep(final ConfigBuilder configBuilder)
     {
@@ -129,9 +131,9 @@ public class CuppaDataPrep
             for(DataItem dataItem : dataItems)
             {
                 joiner = new StringJoiner(DELIMITER);
-                joiner.add(dataItem.Source.toString());
-                joiner.add(dataItem.Type.toString());
-                joiner.add(dataItem.Key);
+                joiner.add(dataItem.Index.Source.toString());
+                joiner.add(dataItem.Index.Type.toString());
+                joiner.add(dataItem.Index.Key);
                 joiner.add(dataItem.Value);
 
                 writer.write(joiner.toString());
@@ -149,101 +151,35 @@ public class CuppaDataPrep
 
     public DataItemMatrix getDataOneCategoryMultiSample(CategoryPrep categoryPrep)
     {
-        String currentSampleId = null;
-
-        // Extract features from first sample to:
-        // - Determine the number of features (= rows)
-        // - Get feature names/metadata
         String[] sampleIds = mConfig.SampleIds.toArray(String[]::new);
-        currentSampleId = sampleIds[0];
-        List<DataItem> dataItemsFirstSample = categoryPrep.extractSampleData(currentSampleId);
-
         int nSamples = sampleIds.length;
-        int nFeatures = dataItemsFirstSample.size();
 
-        DataSource[] sources = new DataSource[nFeatures];
-        ItemType[] types = new ItemType[nFeatures];
-        String[] keys = new String[nFeatures];
-        for(int featureIndex = 0; featureIndex < nFeatures; featureIndex++)
-        {
-            DataItem dataItem = dataItemsFirstSample.get(featureIndex);
-            sources[featureIndex] = dataItem.Source;
-            types[featureIndex] = dataItem.Type;
-            keys[featureIndex] = dataItem.Key;
-        }
+        ConcurrentHashMap<DataItemIndex, String[]> featureBySampleMatrix = new ConcurrentHashMap<>();
 
-        String[][] featureBySampleMatrix = new String[nFeatures][nSamples];
         for(int sampleIndex = 0; sampleIndex < nSamples; sampleIndex++)
         {
-            currentSampleId = sampleIds[sampleIndex];
+            String sampleId = sampleIds[sampleIndex];
 
             if(sampleIndex % 100 == 0 | sampleIndex == 1)
             {
-                CUP_LOGGER.info("  sampleId({}): {}/{}", currentSampleId, sampleIndex+1, nSamples);
+                CUP_LOGGER.info("  sampleId({}): {}/{}", sampleId, sampleIndex+1, nSamples);
             }
 
-            List<DataItem> dataItems = (sampleIndex == 0) ? dataItemsFirstSample : categoryPrep.extractSampleData(currentSampleId);
-            for (int featureIndex = 0; featureIndex < nFeatures; featureIndex++)
+            List<DataItem> dataItems = categoryPrep.extractSampleData(sampleId);
+
+            for(DataItem dataItem : dataItems)
             {
-                featureBySampleMatrix[featureIndex][sampleIndex] = dataItems.get(featureIndex).Value;
+                DataItemIndex featureIndex = dataItem.Index;
+
+                if(featureBySampleMatrix.get(featureIndex) == null)
+                    featureBySampleMatrix.put(featureIndex, new String[nSamples]);
+
+                featureBySampleMatrix.get(featureIndex)[sampleIndex] = dataItem.Value;
             }
         }
 
-        return new DataItemMatrix(sampleIds, sources, types, keys, featureBySampleMatrix);
+        return new DataItemMatrix(sampleIds, featureBySampleMatrix);
     }
-
-//    public DataItemMatrix getDataOneCategoryMultiSample(CategoryPrep categoryPrep)
-//    {
-//        String currentSampleId = null;
-//
-////        try
-////        {
-//            // Extract features from first sample to:
-//            // - Determine the number of features (= rows)
-//            // - Get feature names/metadata
-//            String[] sampleIds = mConfig.SampleIds.toArray(String[]::new);
-//            currentSampleId = sampleIds[0];
-//            List<DataItem> dataItemsFirstSample = categoryPrep.extractSampleData(currentSampleId);
-//
-//            int nSamples = sampleIds.length;
-//            int nFeatures = dataItemsFirstSample.size();
-//
-//            DataSource[] sources = new DataSource[nFeatures];
-//            ItemType[] types = new ItemType[nFeatures];
-//            String[] keys = new String[nFeatures];
-//            for(int featureIndex = 0; featureIndex < nFeatures; featureIndex++)
-//            {
-//                DataItem dataItem = dataItemsFirstSample.get(featureIndex);
-//                sources[featureIndex] = dataItem.Source;
-//                types[featureIndex] = dataItem.Type;
-//                keys[featureIndex] = dataItem.Key;
-//            }
-//
-//            String[][] featureBySampleMatrix = new String[nFeatures][nSamples];
-//            for(int sampleIndex = 0; sampleIndex < nSamples; sampleIndex++)
-//            {
-//                currentSampleId = sampleIds[sampleIndex];
-//
-//                if(sampleIndex % 100 == 0 | sampleIndex == 1)
-//                {
-//                    CUP_LOGGER.info("  sampleId({}): {}/{}", currentSampleId, sampleIndex+1, nSamples);
-//                }
-//
-//                List<DataItem> dataItems = (sampleIndex == 0) ? dataItemsFirstSample : categoryPrep.extractSampleData(currentSampleId);
-//                for (int featureIndex = 0; featureIndex < nFeatures; featureIndex++)
-//                {
-//                    featureBySampleMatrix[featureIndex][sampleIndex] = dataItems.get(featureIndex).Value;
-//                }
-//            }
-//
-//            return new DataItemMatrix(sampleIds, sources, types, keys, featureBySampleMatrix);
-////        }
-////        catch(Exception e)
-////        {
-////            CUP_LOGGER.error("Feature extraction failed for sample({}), category({})", currentSampleId, categoryPrep.categoryType());
-////            System.exit(1);
-////        }
-//    }
 
     public synchronized static void writeDataMultiSample(DataItemMatrix dataItemMatrix, String path, boolean append)
     {
@@ -268,17 +204,21 @@ public class CuppaDataPrep
                 writer.newLine();
             }
 
-            for(int featureIndex = 0; featureIndex < dataItemMatrix.getNFeatures(); featureIndex++)
+            for(DataItemIndex index : dataItemMatrix.getFeatureIndexes())
             {
                 joiner = new StringJoiner(DELIMITER);
 
-                joiner.add(dataItemMatrix.Sources[featureIndex].toString());
-                joiner.add(dataItemMatrix.Types[featureIndex].toString());
-                joiner.add(dataItemMatrix.Keys[featureIndex]);
+                joiner.add(index.Source.toString());
+                joiner.add(index.Type.toString());
+                joiner.add(index.Key);
 
-                for(int sampleIndex = 0; sampleIndex < dataItemMatrix.getNSamples(); sampleIndex++)
+                for(int sampleIndex = 0; sampleIndex < dataItemMatrix.nSamples(); sampleIndex++)
                 {
-                    joiner.add(dataItemMatrix.FeatureBySampleMatrix[featureIndex][sampleIndex]);
+                    String value = dataItemMatrix.get(index)[sampleIndex];
+                    if(value == null)
+                        value = NULL_VALUE_STRING;
+
+                    joiner.add(value);
                 }
 
                 writer.write(joiner.toString());
@@ -332,19 +272,16 @@ public class CuppaDataPrep
                 CategoryPrep categoryPrep = mDataPreparers.get(i);
                 DataItemMatrix dataItemMatrix = getDataOneCategoryMultiSample(categoryPrep);
 
-                String path = getOutputPath(categoryPrep);
-                writeDataMultiSample(dataItemMatrix, path, false);
-
-//                if(mConfig.WriteByCategory){
-//                    String path = getOutputPath(categoryPrep);
-//                    writeDataMultiSample(dataItemMatrix, path, false);
-//                }
-//                else
-//                {
-//                    String path = getOutputPath(null);
-//                    boolean append = (i != 0);
-//                    writeDataMultiSample(dataItemMatrix, path, append);
-//                }
+                if(mConfig.WriteByCategory){
+                    String path = getOutputPath(categoryPrep);
+                    writeDataMultiSample(dataItemMatrix, path, false);
+                }
+                else
+                {
+                    String path = getOutputPath(null);
+                    boolean append = (i != 0);
+                    writeDataMultiSample(dataItemMatrix, path, append);
+                }
             }
         }
 

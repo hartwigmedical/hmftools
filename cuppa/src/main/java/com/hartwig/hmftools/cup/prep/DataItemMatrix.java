@@ -1,56 +1,42 @@
 package com.hartwig.hmftools.cup.prep;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 public class DataItemMatrix
 {
     public final String[] SampleIds;
-    public final DataSource[] Sources;
-    public final ItemType[] Types;
-    public final String[] Keys;
-    public final String[][] FeatureBySampleMatrix;
+    public final ConcurrentHashMap<DataItemIndex, String[]> FeatureBySampleMatrix;
 
     public DataItemMatrix(
             final String[] sampleIds,
-            final DataSource[] sources,
-            final ItemType[] types,
-            final String[] keys,
-            final String[][] featureBySampleMatrix
+            final ConcurrentHashMap<DataItemIndex, String[]> featureBySampleMatrix
     ){
         SampleIds = sampleIds;
-
-        Sources = sources;
-        Types = types;
-        Keys = keys;
-
         FeatureBySampleMatrix = featureBySampleMatrix;
-
-        checkRows();
     }
 
-    public int getNFeatures()
+    public String[] get(DataItemIndex index)
     {
-        return FeatureBySampleMatrix.length;
+        return FeatureBySampleMatrix.get(index);
     }
 
-    public int getNSamples()
+    public void put(DataItemIndex index, String[] values)
     {
-        return FeatureBySampleMatrix[0].length;
+        FeatureBySampleMatrix.put(index, values);
     }
 
-    private void checkRows()
+    public DataItemIndex[] getFeatureIndexes()
     {
-        int expectedLength = getNFeatures();
+        return FeatureBySampleMatrix.keySet().toArray(DataItemIndex[]::new);
+    }
 
-        int[] arrayLengths = {
-                Sources.length,
-                Types.length,
-                Keys.length,
-                FeatureBySampleMatrix.length
-        };
+    public int nFeatures()
+    {
+        return FeatureBySampleMatrix.size();
+    }
 
-        for(int arrayLength : arrayLengths)
-        {
-            if(arrayLength != expectedLength)
-                throw new IllegalStateException("All input arrays must have the same size");
-        }
+    public int nSamples()
+    {
+        return SampleIds.length;
     }
 }
