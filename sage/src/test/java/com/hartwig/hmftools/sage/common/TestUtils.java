@@ -189,16 +189,19 @@ public class TestUtils
         return record;
     }
 
-    public static SAMRecord buildSamRecord(
-            final int alignmentStart, @NotNull final String cigar, @NotNull final String readString,
-            @NotNull final String qualities)
+    public static SAMRecord buildSamRecord(final int alignmentStart, final String cigar, final String readString, final String qualities)
+    {
+        return buildSamRecord(alignmentStart, cigar, readString, qualities.getBytes());
+    }
+
+    public static SAMRecord buildSamRecord(final int alignmentStart, final String cigar, final String readString, final byte[] qualities)
     {
         final SAMRecord record = new SAMRecord(null);
         record.setAlignmentStart(alignmentStart);
         record.setCigarString(cigar);
         record.setReadString(readString);
         record.setReadNegativeStrandFlag(false);
-        record.setBaseQualityString(qualities);
+        record.setBaseQualities(qualities);
         record.setMappingQuality(20);
         record.setDuplicateReadFlag(false);
         record.setReadUnmappedFlag(false);
