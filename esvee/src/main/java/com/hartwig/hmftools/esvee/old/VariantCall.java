@@ -1,19 +1,13 @@
-package com.hartwig.hmftools.esvee.variant;
+package com.hartwig.hmftools.esvee.old;
 
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.esvee.old.SampleSupport;
-import com.hartwig.hmftools.esvee.old.VariantAssembly;
-import com.hartwig.hmftools.esvee.old.AlignedAssembly;
-import com.hartwig.hmftools.esvee.old.AssemblyClassification;
 import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.old.NaturalSortComparator;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -21,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 // refactored class will just be called Variant
 public class VariantCall
 {
+    /*
     @Nullable
     public final String LeftChromosome;
     public final int LeftPosition;
@@ -35,6 +30,7 @@ public class VariantCall
     public final Set<Integer> PhaseSets;
     public final int LeftMappingQuality;
     public final int RightMappingQuality;
+
     public final AssemblyClassification Classification;
 
     private final Set<VariantAssembly> mAssociatedAssemblies;
@@ -213,24 +209,11 @@ public class VariantCall
     public int germlineSupport()
     {
         return supportCount();
-
-        /*
-        return mSampleSupport.stream()
-                .filter(SampleSupport::isGermline)
-                .mapToInt(SampleSupport::totalSupportFragmentCount)
-                .sum();
-        */
     }
 
     public int somaticSupport()
     {
         return supportCount();
-        /*
-        return mSampleSupport.stream()
-                .filter(sampleSupport -> !sampleSupport.isGermline())
-                .mapToInt(SampleSupport::totalSupportFragmentCount)
-                .sum();
-        */
     }
 
     public Set<String> supportingFragments()
@@ -300,5 +283,5 @@ public class VariantCall
                 + "\"RightDescriptor\": \"" + RightDescriptor + "\",\n\t"
                 + "\"Support\": " + supportingFragments().size() + "\n}";
     }
-
+    */
 }

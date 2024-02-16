@@ -18,6 +18,7 @@ import htsjdk.samtools.CigarOperator;
 // Builds the anchor cigar for a variant
 public class AnchorCigarFactory
 {
+    /*
     public AnchorCigarFactory()
     {
     }
@@ -114,4 +115,5 @@ public class AnchorCigarFactory
         final Cigar cigar = new Cigar(elements);
         return Pair.of(cigar, Cigar.getReadLength(elements));
     }
+    */
 }

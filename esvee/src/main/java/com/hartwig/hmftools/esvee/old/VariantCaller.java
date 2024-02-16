@@ -1,50 +1,9 @@
-package com.hartwig.hmftools.esvee.variant;
+package com.hartwig.hmftools.esvee.old;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.SvConstants.MAX_DUP_LENGTH;
-import static com.hartwig.hmftools.esvee.SvConstants.TASK_LOG_COUNT;
-import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.old.AnchorCigarFactory;
-import com.hartwig.hmftools.esvee.old.SampleSupport;
-import com.hartwig.hmftools.esvee.common.ThreadTask;
-import com.hartwig.hmftools.esvee.old.VariantAssembly;
-import com.hartwig.hmftools.esvee.old.AlignedAssembly;
-import com.hartwig.hmftools.esvee.old.Alignment;
-import com.hartwig.hmftools.esvee.old.AssemblyClassification;
-import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.old.ReadSupport;
-import com.hartwig.hmftools.esvee.old.SupportedAssembly;
-
-import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.Nullable;
-
-import htsjdk.samtools.util.SequenceUtil;
-
-public class VariantCaller extends ThreadTask
+public class VariantCaller // extends ThreadTask
 {
+    /*
     private final Queue<AlignedAssembly> mAlignedAssemblyQueue;
     private final int mAlignedAssemblyCount;
     private final SvConfig mConfig;
@@ -703,4 +662,5 @@ public class VariantCaller extends ThreadTask
             DiscordantSupport = discordantSupport;
         }
     }
+     */
 }

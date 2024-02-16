@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.variant.VariantCall;
+import com.hartwig.hmftools.esvee.old.VariantCall;
 
 public final class SoftFilters
 {
@@ -12,6 +12,7 @@ public final class SoftFilters
     {
         final Set<String> filters = new HashSet<>();
 
+        /*
         if(variantCall.overhang() < SvConstants.LOW_OVERHANG_THRESHOLD)
             filters.add(FilterType.MIN_OVERHANG.filterName());
 
@@ -25,6 +26,7 @@ public final class SoftFilters
             filters.add(FilterType.MIN_SUPPORT.filterName());
 
         // final boolean isLikelyFalse = isLowSupport || (isLowOverhang && call.discordantSupport() == 0) || isLowQuality;
+        */
 
         return filters;
     }

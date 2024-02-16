@@ -1,11 +1,9 @@
-package com.hartwig.hmftools.esvee.variant;
+package com.hartwig.hmftools.esvee.old;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.esvee.old.AlignedAssembly;
-import com.hartwig.hmftools.esvee.old.Alignment;
 
 /** This slides everything left for deduplication purposes, we will slide it back to the center in a later step */
 public class HomologySlider
@@ -83,9 +81,12 @@ public class HomologySlider
         return alignments;
     }
 
+    /*
     public AlignedAssembly slideHomology(final AlignedAssembly assembly)
     {
         final AlignedAssembly aligned = new AlignedAssembly(assembly.Source, slideHomology(assembly.getAlignmentBlocks()));
         return aligned;
     }
+
+     */
 }

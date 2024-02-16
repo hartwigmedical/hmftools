@@ -7,6 +7,8 @@ import java.util.Objects;
 
 public final class StringCache
 {
+    // TODO - check this implementation against the one already in HMF common
+
     private static final String[] INTEGERS = new String[1000];
     private static SoftReference<Map<String, String>> mStrings = new SoftReference<>(new HashMap<>());
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.variant;
+package com.hartwig.hmftools.esvee.old;
 
 import static java.lang.String.format;
 
@@ -14,16 +14,12 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.esvee.old.SampleSupport;
-import com.hartwig.hmftools.esvee.old.VariantAssembly;
-import com.hartwig.hmftools.esvee.old.VariantDeduplicationCounters;
-import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.old.ReadSupport;
 
 import org.apache.commons.lang3.tuple.Pair;
 
 public class VariantDeduplication
 {
+    /*
     private final VariantDeduplicationCounters mCounters;
 
     public VariantDeduplication()
@@ -204,4 +200,6 @@ public class VariantDeduplication
         // FIXME: This
         return variants;
     }
+
+     */
 }

@@ -19,12 +19,9 @@ import java.util.stream.Stream;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.old.AlignedAssembly;
 import com.hartwig.hmftools.esvee.old.Alignment;
 import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.old.VariantAssembly;
-import com.hartwig.hmftools.esvee.variant.VariantCall;
-import com.hartwig.hmftools.esvee.old.NaturalSortComparator;
+import com.hartwig.hmftools.esvee.old.VariantCall;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -59,7 +56,7 @@ public class BamWriter
         RefGenomeSource refGenomeFile = (RefGenomeSource)config.RefGenome;
 
         refGenomeFile.refGenomeFile().getSequenceDictionary().getSequences().stream()
-                .sorted(NaturalSortComparator.of(SAMSequenceRecord::getSequenceName))
+                // .sorted(NaturalSortComparator.of(SAMSequenceRecord::getSequenceName))
                 .map(seq -> new SAMSequenceRecord(seq.getSequenceName(), seq.getSequenceLength()))
                 .forEach(mHeader::addSequence);
 
@@ -88,6 +85,7 @@ public class BamWriter
             mWriter.finish(true);
     }
 
+    /*
     public void writeVariantAssemblyBamRecords(final List<VariantCall> variants)
     {
         if(mWriter == null)
@@ -109,14 +107,7 @@ public class BamWriter
                 {
                     final List<VariantBAMRecord> records = new ArrayList<>();
 
-                    /*
-                    final Set<String> junctions = assembly.getAllErrata(JunctionMetrics.class).stream()
-                            .map(junction -> junction.JunctionChromosome + ":" + junction.JunctionPosition
-                                    + junction.JunctionDirection.toShortString())
-                            .collect(Collectors.toCollection(() -> new TreeSet<>(NaturalSortComparator.INSTANCE)));
-                    */
-
-                    Set<String> junctions = Sets.newHashSet();
+                      Set<String> junctions = Sets.newHashSet();
 
                     final Set<String> fragments = new HashSet<>();
 
@@ -365,4 +356,6 @@ public class BamWriter
             Cigar = cigar;
         }
     }
+    */
+
 }

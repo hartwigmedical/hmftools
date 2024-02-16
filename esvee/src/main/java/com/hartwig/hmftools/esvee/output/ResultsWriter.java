@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.variant.VariantCall;
+import com.hartwig.hmftools.esvee.old.VariantCall;
 
 public class ResultsWriter
 {
@@ -91,7 +91,7 @@ public class ResultsWriter
 
     public synchronized void writeVariantAssemblyBamRecords(final List<VariantCall> variants)
     {
-        mBamWriter.writeVariantAssemblyBamRecords(variants);
+        // mBamWriter.writeVariantAssemblyBamRecords(variants);
     }
 
     public synchronized void writeVariant(final VariantCall variant)
@@ -99,6 +99,7 @@ public class ResultsWriter
         if(mVariantWriter == null)
             return;
 
+        /*
         try
         {
             StringJoiner sj = new StringJoiner(TSV_DELIM);
@@ -136,8 +137,11 @@ public class ResultsWriter
         {
             SV_LOGGER.error("failed to initialise variant writer: {}", e.toString());
         }
+
+         */
     }
 
+    /*
     private String buildFilters(final VariantCall variant)
     {
         boolean isLowOverhang = variant.overhang() < SvConstants.LOW_OVERHANG_THRESHOLD;
@@ -167,4 +171,5 @@ public class ResultsWriter
 
         return String.join(ITEM_DELIM, filters);
     }
+    */
 }

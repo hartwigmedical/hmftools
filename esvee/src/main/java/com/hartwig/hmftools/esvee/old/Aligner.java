@@ -1,39 +1,9 @@
 package com.hartwig.hmftools.esvee.old;
 
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.SvConstants.TASK_LOG_COUNT;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.stream.Collectors;
-
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.samtools.CigarUtils;
-import com.hartwig.hmftools.esvee.variant.HomologySlider;
-import com.hartwig.hmftools.esvee.common.Direction;
-import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.common.ThreadTask;
-
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
-import org.jetbrains.annotations.Nullable;
-
-import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.SAMFlag;
-
 // @ThreadSafe
-public class Aligner extends ThreadTask implements AutoCloseable
+public class Aligner // extends ThreadTask implements AutoCloseable
 {
+    /*
     private final Queue<GappedAssembly> mSecondaryAssemblyQueue;
     private final int mSecondaryAssemblyCount;
 
@@ -503,4 +473,5 @@ public class Aligner extends ThreadTask implements AutoCloseable
 
         return counts;
     }
+     */
 }

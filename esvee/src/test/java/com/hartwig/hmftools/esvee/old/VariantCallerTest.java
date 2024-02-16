@@ -4,13 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.hartwig.hmftools.esvee.old.AlignedAssembly;
-import com.hartwig.hmftools.esvee.old.Alignment;
-import com.hartwig.hmftools.esvee.old.ExtendedAssembly;
-import com.hartwig.hmftools.esvee.old.GappedAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.old.SupportedAssembly;
-import com.hartwig.hmftools.esvee.variant.VariantCaller;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMReadGroupRecord;
@@ -35,32 +29,6 @@ public class VariantCallerTest
         final SAMReadGroupRecord somaticReadGroup = new SAMReadGroupRecord("dummy");
         somaticReadGroup.setSample("somatic");
         SOMATIC.addReadGroup(somaticReadGroup);
-    }
-
-    private static AlignedAssembly createAssembly(final Alignment... alignments)
-    {
-        return createAssembly(Arrays.asList(alignments));
-    }
-
-    private static AlignedAssembly createAssembly(final List<Alignment> alignments)
-    {
-        final int sequenceLength = alignments.stream()
-                .mapToInt(a -> a.SequenceStartPosition + a.Length - 1)
-                .max()
-                .orElseThrow();
-        final String bases = SEQUENCE.substring(0, sequenceLength);
-
-        return createAssembly(bases, alignments);
-    }
-
-    private static AlignedAssembly createAssembly(final String bases, final List<Alignment> alignments)
-    {
-        final ExtendedAssembly dummy = new ExtendedAssembly("Dummy", bases, new SupportedAssembly("Dummy", bases));
-        final var supported = new GappedAssembly("Dummy", List.of(dummy));
-        supported.addEvidenceAt(createRecord(bases, GERMLINE), 0);
-        supported.addEvidenceAt(createRecord(bases, SOMATIC), 0);
-
-        return new AlignedAssembly(supported, alignments);
     }
 
     private static Read createRecord(final String assembly, final SAMFileHeader header)
