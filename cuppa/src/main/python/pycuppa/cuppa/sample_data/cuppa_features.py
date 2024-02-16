@@ -186,8 +186,9 @@ class CuppaFeatures(pd.DataFrame, LoggerMixin):
 
 class FeatureLoaderNew(LoggerMixin):
 
-    def __init__(self, path: str, verbose: bool = False):
+    def __init__(self, path: str, sample_id: str = None, verbose: bool = False):
         self.path = path
+        self.sample_id = sample_id
         self.verbose = verbose
 
     ## Loading ================================
@@ -354,8 +355,12 @@ class FeatureLoaderNew(LoggerMixin):
         ]
         df = df.transpose()
 
-        ## Make dummy sample ids
-        df.index = "sample_" + pd.Series(range(1, len(df)+1)).astype(str)
+        if self.sample_id is not None:
+            sample_id = self.sample_id
+        else:
+            sample_id = "sample_1"
+            self.logger.warning("No `sample_id` provided. Using `sample_id`=" + sample_id)
+        df.index = pd.Series(sample_id)
 
         return CuppaFeatures(df)
 

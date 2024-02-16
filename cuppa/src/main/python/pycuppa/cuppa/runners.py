@@ -546,7 +546,7 @@ class PredictionRunner(LoggerMixin):
 
             X = loader.load_features()
         else:
-            loader = FeatureLoaderNew(self.features_path)
+            loader = FeatureLoaderNew(self.features_path, sample_id=self.sample_id)
             X = loader.load()
 
         X = self.cuppa_classifier.fill_missing_cols(X)
