@@ -186,8 +186,9 @@ class CuppaFeatures(pd.DataFrame, LoggerMixin):
 
 class FeatureLoaderNew(LoggerMixin):
 
-    def __init__(self, path: str, verbose: bool = False):
+    def __init__(self, path: str, sample_id: str = None, verbose: bool = False):
         self.path = path
+        self.sample_id = sample_id
         self.verbose = verbose
 
     ## Loading ================================
@@ -236,7 +237,6 @@ class FeatureLoaderNew(LoggerMixin):
 
         feat_info["category_renamed"] = feat_info["category"].replace(mappings)
 
-
     def _rename_keys(self, feat_info: pd.DataFrame) -> None:
 
         if self.verbose:
@@ -262,6 +262,9 @@ class FeatureLoaderNew(LoggerMixin):
 
         mappings = mappings_sigs | mappings_traits
         feat_info["key_renamed"] = feat_info["key"].replace(mappings)
+
+        ## Replace e.g. "BRAF.mutation" with "BRAF.mut"
+        feat_info["key_renamed"] = feat_info["key_renamed"].replace("[.]mutation$", ".mut", regex=True)
 
     def _make_final_feat_names(self, feat_info: pd.DataFrame) -> None:
 
@@ -354,8 +357,12 @@ class FeatureLoaderNew(LoggerMixin):
         ]
         df = df.transpose()
 
-        ## Make dummy sample ids
-        df.index = "sample_" + pd.Series(range(1, len(df)+1)).astype(str)
+        if self.sample_id is not None:
+            sample_id = self.sample_id
+        else:
+            sample_id = "sample_1"
+            self.logger.warning("No `sample_id` provided. Using `sample_id`=" + sample_id)
+        df.index = pd.Series(sample_id)
 
         return CuppaFeatures(df)
 
