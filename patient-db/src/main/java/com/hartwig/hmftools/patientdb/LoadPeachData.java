@@ -47,20 +47,26 @@ public class LoadPeachData
             System.exit(1);
         }
 
-        DatabaseAccess dbWriter = databaseAccess(cmd);
+        try (DatabaseAccess dbWriter = databaseAccess(cmd))
+        {
+            LOGGER.info("Reading PEACH genotypes from {}", peachGenotypeTxt);
+            List<PeachGenotype> peachGenotype = PeachGenotypeFile.read(peachGenotypeTxt);
+            LOGGER.info(" Read {} PEACH genotypes", peachGenotype.size());
 
-        LOGGER.info("Reading PEACH genotypes from {}", peachGenotypeTxt);
-        List<PeachGenotype> peachGenotype = PeachGenotypeFile.read(peachGenotypeTxt);
-        LOGGER.info(" Read {} PEACH genotypes", peachGenotype.size());
+            LOGGER.info("Reading PEACH calls from {}", peachCallsTxt);
+            List<PeachCalls> peachCalls = PeachCallsFile.read(peachCallsTxt);
+            LOGGER.info(" Read {} PEACH calls", peachCalls.size());
 
-        LOGGER.info("Reading PEACH calls from {}", peachCallsTxt);
-        List<PeachCalls> peachCalls = PeachCallsFile.read(peachCallsTxt);
-        LOGGER.info(" Read {} PEACH calls", peachCalls.size());
+            LOGGER.info("Writing PEACH into database for {}", sample);
+            dbWriter.writePeach(sample, peachGenotype, peachCalls);
 
-        LOGGER.info("Writing PEACH into database for {}", sample);
-        dbWriter.writePeach(sample, peachGenotype, peachCalls);
-
-        LOGGER.info("Complete");
+            LOGGER.info("Complete");
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("Failed to load PEACH data", e);
+            System.exit(1);
+        }
     }
 
     @NotNull

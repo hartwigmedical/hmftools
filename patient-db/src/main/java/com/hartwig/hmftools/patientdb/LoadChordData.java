@@ -37,31 +37,40 @@ public class LoadChordData
 
         if(CommonUtils.anyNull(predictionFile, sample))
         {
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Patient-DB - Load Chord Data", options);
-            System.exit(1);
+            exitWithHelp(options);
         }
 
         File fileObject = new File(predictionFile);
         if(fileObject.isFile())
         {
-            DatabaseAccess dbWriter = databaseAccess(cmd);
+            try (DatabaseAccess dbWriter = databaseAccess(cmd))
+            {
+                LOGGER.info("Extracting and writing chord for {}", predictionFile);
+                ChordData chordData = ChordDataFile.read(predictionFile);
+                dbWriter.writeChord(sample, chordData);
 
-            LOGGER.info("Extracting and writing chord for {}", predictionFile);
-            ChordData chordData = ChordDataFile.read(predictionFile);
-            dbWriter.writeChord(sample, chordData);
-
-            LOGGER.info("Complete");
+                LOGGER.info("Complete");
+            }
+            catch (Exception e)
+            {
+                LOGGER.error("Failed to load Chord data", e);
+                System.exit(1);
+            }
         }
         else
         {
             if(!fileObject.exists())
             {
-                LOGGER.warn("file '{}' does not exist.", predictionFile);
+                LOGGER.warn("File '{}' does not exist.", predictionFile);
             }
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db - load chord data", options);
+            exitWithHelp(options);
         }
+    }
+
+    private static void exitWithHelp(Options options) {
+        HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("Patient-DB - Load Chord Data", options);
+        System.exit(1);
     }
 
     @NotNull

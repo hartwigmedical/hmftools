@@ -67,8 +67,7 @@ public class LoadCiderData
         }
         catch(Exception e)
         {
-            LOGGER.error("failed to load Cider data: {}", e.toString());
-            e.printStackTrace();
+            LOGGER.error("Failed to load Cider data", e);
             System.exit(1);
         }
     }

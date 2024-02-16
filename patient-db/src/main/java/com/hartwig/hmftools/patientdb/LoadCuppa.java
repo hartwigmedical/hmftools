@@ -44,20 +44,26 @@ public class LoadCuppa
             System.exit(1);
         }
 
-        DatabaseAccess dbWriter = databaseAccess(cmd);
+        try(DatabaseAccess dbWriter = databaseAccess(cmd))
+        {
+            LOGGER.info("Loading CUPPA from {}", new File(cuppaResultsCsv).getParent());
+            List<CuppaDataFile> cuppaEntries = CuppaDataFile.read(cuppaResultsCsv);
+            LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), cuppaResultsCsv);
 
-        LOGGER.info("Loading CUPPA from {}", new File(cuppaResultsCsv).getParent());
-        List<CuppaDataFile> cuppaEntries = CuppaDataFile.read(cuppaResultsCsv);
-        LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), cuppaResultsCsv);
+            List<CuppaPrediction> predictions = CuppaPredictionFactory.create(cuppaEntries);
+            CuppaPrediction best = predictions.get(0);
+            LOGGER.info(" Predicted cancer type '{}' with likelihood {}", best.cancerType(), best.likelihood());
 
-        List<CuppaPrediction> predictions = CuppaPredictionFactory.create(cuppaEntries);
-        CuppaPrediction best = predictions.get(0);
-        LOGGER.info(" Predicted cancer type '{}' with likelihood {}", best.cancerType(), best.likelihood());
+            LOGGER.info("Writing CUPPA into database for {}", sample);
+            dbWriter.writeCuppa(sample, best.cancerType(), best.likelihood());
 
-        LOGGER.info("Writing CUPPA into database for {}", sample);
-        dbWriter.writeCuppa(sample, best.cancerType(), best.likelihood());
-
-        LOGGER.info("Complete");
+            LOGGER.info("Complete");
+        }
+        catch(Exception e)
+        {
+            LOGGER.error("Failed to load CUPPA", e);
+            System.exit(1);
+        }
     }
 
     @NotNull

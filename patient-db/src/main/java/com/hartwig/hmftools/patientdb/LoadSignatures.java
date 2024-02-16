@@ -27,22 +27,29 @@ public class LoadSignatures
     {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
-        DatabaseAccess dbAccess = createDatabaseAccess(cmd);
 
         logVersion();
 
-        if(dbAccess == null) {
+        try (DatabaseAccess dbAccess = createDatabaseAccess(cmd))
+        {
+            if(dbAccess == null)
+            {
+                LOGGER.error("Failed to create DB connection");
+                System.exit(1);
+            }
 
-            LOGGER.error("Failed to create DB connection");
+            String sampleId = cmd.getOptionValue(SAMPLE);
+            String sampleDir = cmd.getOptionValue(SAMPLE_DIR);
+
+            loadSignatureData(dbAccess, sampleId, sampleDir);
+
+            LOGGER.info("signature allocation loading complete");
+        }
+        catch(Exception e)
+        {
+            LOGGER.error("Failed to load signature allocations", e);
             System.exit(1);
         }
-
-        String sampleId = cmd.getOptionValue(SAMPLE);
-        String sampleDir = cmd.getOptionValue(SAMPLE_DIR);
-
-        loadSignatureData(dbAccess, sampleId, sampleDir);
-
-        LOGGER.info("signature allocation loading complete");
     }
 
     private static void loadSignatureData(final DatabaseAccess dbAccess, final String sampleId, final String sampleDir)

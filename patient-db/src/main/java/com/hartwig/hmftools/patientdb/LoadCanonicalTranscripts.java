@@ -31,17 +31,24 @@ public class LoadCanonicalTranscripts
     {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
-        DatabaseAccess dbAccess = databaseAccess(cmd);
 
-        logVersion();
+        try(DatabaseAccess dbAccess = databaseAccess(cmd))
+        {
+            logVersion();
 
-        final String ensemblRootDir = cmd.getOptionValue(ENSEMBL_DATA_CACHE_ROOT_DIR);
+            final String ensemblRootDir = cmd.getOptionValue(ENSEMBL_DATA_CACHE_ROOT_DIR);
 
-        LOGGER.info("Persisting transcripts to database");
-        loadCanonicalTranscripts(dbAccess, ensemblRootDir, RefGenomeVersion.V37);
-        loadCanonicalTranscripts(dbAccess, ensemblRootDir, RefGenomeVersion.V38);
+            LOGGER.info("Persisting transcripts to database");
+            loadCanonicalTranscripts(dbAccess, ensemblRootDir, RefGenomeVersion.V37);
+            loadCanonicalTranscripts(dbAccess, ensemblRootDir, RefGenomeVersion.V38);
 
-        LOGGER.info("Complete");
+            LOGGER.info("Complete");
+        }
+        catch(Exception e)
+        {
+            LOGGER.error("Failed to load canonical transcripts", e);
+            System.exit(1);
+        }
     }
 
     private static void loadCanonicalTranscripts(final DatabaseAccess dbAccess, final String ensemblRootDir, final RefGenomeVersion refGenomeVersion)

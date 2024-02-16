@@ -43,18 +43,24 @@ public class LoadFlagstatData
             System.exit(1);
         }
 
-        DatabaseAccess dbWriter = databaseAccess(cmd);
+        try (DatabaseAccess dbWriter = databaseAccess(cmd))
+        {
+            LOGGER.info("Extracting and writing flagstats for {}", sample);
 
-        LOGGER.info("Extracting and writing flagstats for {}", sample);
+            Flagstat refFlagstat = FlagstatFile.read(refFlagstatFile);
+            LOGGER.info(" Read reference sample flagstats from {}", refFlagstatFile);
+            Flagstat tumorFlagstat = FlagstatFile.read(tumorFlagstatFile);
+            LOGGER.info(" Read tumor sample flagstats from {}", tumorFlagstatFile);
 
-        Flagstat refFlagstat = FlagstatFile.read(refFlagstatFile);
-        LOGGER.info(" Read reference sample flagstats from {}", refFlagstatFile);
-        Flagstat tumorFlagstat = FlagstatFile.read(tumorFlagstatFile);
-        LOGGER.info(" Read tumor sample flagstats from {}", tumorFlagstatFile);
+            dbWriter.writeFlagstats(sample, refFlagstat, tumorFlagstat);
 
-        dbWriter.writeFlagstats(sample, refFlagstat, tumorFlagstat);
-
-        LOGGER.info("Complete");
+            LOGGER.info("Complete");
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("Failed to load flagstats", e);
+            System.exit(1);
+        }
     }
 
     @NotNull
