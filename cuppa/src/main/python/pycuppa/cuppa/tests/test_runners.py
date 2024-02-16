@@ -60,13 +60,24 @@ class TestPredictionRunner:
 
         runner.run()
 
-        combined_prediction = runner.pred_summ.query("clf_name=='combined'")
-        assert combined_prediction["pred_prob_1"].round(4).iloc[0] == 0.9968
-        assert combined_prediction["pred_class_1"].iloc[0] == "Prostate"
+        pred_summ = runner.pred_summ
 
-        rna_combined_prediction = runner.pred_summ.query("clf_name=='rna_combined'")
-        assert rna_combined_prediction["pred_prob_1"].round(4).iloc[0] == 0.9953
-        assert rna_combined_prediction["pred_class_1"].iloc[0] == "Prostate"
+        pred_class_1 = pred_summ["pred_class_1"].tolist()
+        assert pred_class_1 == ["Prostate"] * 8
+
+        pred_prob_1 = pd.Series(pred_summ["pred_prob_1"].values, index=pred_summ["clf_name"])
+        pred_prob_1 = pred_prob_1.round(4)
+        pred_prob_1_expected = pd.Series(dict(
+            combined = 0.9968,
+            dna_combined = 1,
+            rna_combined = 0.9953,
+            gen_pos = 0.9992,
+            snv96 = 0.6434,
+            event = 0.9971,
+            gene_exp = 0.9988,
+            alt_sj = 0.9976,
+        ))
+        assert all(pred_prob_1 == pred_prob_1_expected)
 
         assert os.path.exists(runner.plot_path)
         assert os.path.exists(runner.vis_data_path)
