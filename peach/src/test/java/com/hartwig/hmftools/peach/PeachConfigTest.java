@@ -49,7 +49,7 @@ public class PeachConfigTest
         String vcfFile = getTestResourcePath("variants.vcf.gz");
         String haplotypesFile = getTestResourcePath("haplotypes.complicated.37.tsv");
         String drugsFile = getTestResourcePath("drugs.tsv");
-        String functionalityFile = getTestResourcePath("functionality.tsv");
+        String functionFile = getTestResourcePath("function.tsv");
         String sampleName = "FAKENAME";
         String outputDir = "/path/to/output";
 
@@ -59,7 +59,7 @@ public class PeachConfigTest
                 "-sample_name", sampleName,
                 "-output_dir", outputDir,
                 "-drugs_file", drugsFile,
-                "-functionality_file", functionalityFile
+                "-function_file", functionFile
         };
 
         PeachConfig config = constructPeachConfigFromArgs(args);
@@ -69,7 +69,7 @@ public class PeachConfigTest
         assertEquals(sampleName, config.sampleName);
         assertEquals(outputDir + "/", config.outputDir);
         assertEquals(drugsFile, config.drugsFile);
-        assertEquals(functionalityFile, config.functionalityFile);
+        assertEquals(functionFile, config.functionFile);
 
         assertTrue(config.isValid());
 

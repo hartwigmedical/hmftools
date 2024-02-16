@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class HaplotypeFunctionality
+public abstract class HaplotypeFunction
 {
     @NotNull
     public abstract String geneName();
@@ -15,5 +15,5 @@ public abstract class HaplotypeFunctionality
     public abstract String haplotypeName();
 
     @NotNull
-    public abstract String functionality();
+    public abstract String function();
 }

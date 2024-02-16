@@ -10,23 +10,23 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.peach.PeachUtils;
-import com.hartwig.hmftools.peach.effect.HaplotypeFunctionality;
-import com.hartwig.hmftools.peach.effect.ImmutableHaplotypeFunctionality;
+import com.hartwig.hmftools.peach.effect.HaplotypeFunction;
+import com.hartwig.hmftools.peach.effect.ImmutableHaplotypeFunction;
 
 import org.jetbrains.annotations.NotNull;
 
-public class HaplotypeFunctionalityLoader
+public class HaplotypeFunctionLoader
 {
     @NotNull
-    public static List<HaplotypeFunctionality> loadFunctionalities(@NotNull String filename)
+    public static List<HaplotypeFunction> loadFunctions(@NotNull String filename)
     {
         try
         {
             List<String> lines = Files.readAllLines(Paths.get(filename));
-            List<HaplotypeFunctionality> functionalities = fromLines(lines);
+            List<HaplotypeFunction> functions = fromLines(lines);
 
-            PCH_LOGGER.info("loaded {} lines of haplotype functionality from file ({})", functionalities.size(), filename);
-            return functionalities;
+            PCH_LOGGER.info("loaded {} lines of haplotype functions from file ({})", functions.size(), filename);
+            return functions;
         }
         catch(Exception e)
         {
@@ -35,22 +35,22 @@ public class HaplotypeFunctionalityLoader
     }
 
     @NotNull
-    private static List<HaplotypeFunctionality> fromLines(@NotNull List<String> lines)
+    private static List<HaplotypeFunction> fromLines(@NotNull List<String> lines)
     {
         String header = lines.get(0);
         Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, PeachUtils.TSV_DELIMITER);
 
-        List<HaplotypeFunctionality> functionalities = new ArrayList<>();
+        List<HaplotypeFunction> functions = new ArrayList<>();
         for(String line : lines.subList(1, lines.size()))
         {
             String[] splitLine = line.split(PeachUtils.TSV_DELIMITER);
-            HaplotypeFunctionality functionality = ImmutableHaplotypeFunctionality.builder()
+            HaplotypeFunction function = ImmutableHaplotypeFunction.builder()
                     .geneName(splitLine[fieldsIndexMap.get("Gene")])
                     .haplotypeName(splitLine[fieldsIndexMap.get("Haplotype")])
-                    .functionality(splitLine[fieldsIndexMap.get("Functionality")])
+                    .function(splitLine[fieldsIndexMap.get("Function")])
                     .build();
-            functionalities.add(functionality);
+            functions.add(function);
         }
-        return functionalities;
+        return functions;
     }
 }
