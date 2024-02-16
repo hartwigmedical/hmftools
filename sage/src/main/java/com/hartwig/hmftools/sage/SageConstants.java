@@ -76,10 +76,8 @@ public class SageConstants
     public static final double INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT = 0.1;
 
     public static final double STRAND_BIAS_CHECK_THRESHOLD = 0.15;
-    public static final double STRAND_BIAS_HOMOPOLYMER_CHECK_THRESHOLD = 0.25;
     public static final double STRAND_BIAS_REF_MIN_DEPTH = 5;
     public static final double STRAND_BIAS_REF_MIN_BIAS = 0.2;
-    public static final int STRAND_BIAS_HOMOPOLYMER_REPEAT_LENGTH = 8;
 
     public static final int JITTER_INDEL_MAX_REPEATS = 3;
     public static final double JITTER_INDEL_VAF_THRESHOLD = 0.015;

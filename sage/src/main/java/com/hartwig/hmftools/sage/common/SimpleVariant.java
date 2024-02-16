@@ -45,6 +45,17 @@ public class SimpleVariant implements GenomePosition
     @Override
     public int position() { return Position; }
 
+    public int positionEnd()
+    {
+        // the right-aligned positional end of the variant
+        if(isSNV())
+            return position();
+        else if(isInsert())
+            return position() + 1;
+        else // deletes and MNVs
+            return position() + Ref.length() - 1;
+    }
+
     // convenience
     public String ref() { return Ref; }
     public String alt() { return Alt; }

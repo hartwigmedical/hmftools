@@ -18,7 +18,6 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUAL_ALT_VS_REF;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PROB;
 import static com.hartwig.hmftools.sage.SageConstants.NORMAL_RAW_ALT_BQ_MAX;
-import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_HOMOPOLYMER_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD_HOTSPOT;
 
@@ -30,7 +29,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.SageConfig;
@@ -188,14 +186,13 @@ public class VariantFilters
             }
 
             if(mStrandBiasCalcs.isDepthBelowProbability(
-                    primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasRef(), true, false))
+                    primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasRef(), true))
             {
                 filters.add(SoftFilter.FRAGMENT_STRAND_BIAS.filterName());
             }
 
-            boolean hasLongHomopolymer = withinLongHomoploymerRange(primaryTumor);
-            boolean checkRef = !hasLongHomopolymer;
-            if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBiasAlt(), primaryTumor.readStrandBiasRef(), checkRef, hasLongHomopolymer)
+            boolean checkRef = true;
+            if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBiasAlt(), primaryTumor.readStrandBiasRef(), checkRef)
             || (primaryTumor.isIndel() && mStrandBiasCalcs.allOneSide(primaryTumor.readStrandBiasAlt())))
             {
                 filters.add(SoftFilter.READ_STRAND_BIAS.filterName());
@@ -213,55 +210,6 @@ public class VariantFilters
         }
     }
 
-    private static boolean withinLongHomoploymerRange(final ReadContextCounter readContextCounter)
-    {
-        // check for any single-base repeat of 8+ bases not covering the variant
-        final IndexedBases indexedBases = readContextCounter.readContext().indexedBases();
-        String flankAndBases = indexedBases.fullString();
-
-        int varIndexStart = indexedBases.Index - indexedBases.LeftFlankIndex;
-
-        int varIndexEnd = readContextCounter.variant().isDelete() ?
-                varIndexStart + 1 : varIndexStart + readContextCounter.variant().alt().length() - 1;
-
-        if(hasLongRepeat(flankAndBases, 0, varIndexStart - 1))
-            return true;
-
-        if(hasLongRepeat(flankAndBases, varIndexEnd + 1, flankAndBases.length() - 1))
-            return true;
-
-        return false;
-    }
-
-    private static boolean hasLongRepeat(final String bases, int startIndex, int endIndex)
-    {
-        if(startIndex < 0 || endIndex >= bases.length())
-            return false;
-
-        if(endIndex - startIndex + 1 < STRAND_BIAS_HOMOPOLYMER_REPEAT_LENGTH)
-            return false;
-
-        int repeatCount = 1;
-        char lastChar = bases.charAt(startIndex);
-        for(int i = startIndex + 1; i <= endIndex; ++i)
-        {
-            char nextChar = bases.charAt(i);
-            if(lastChar == nextChar)
-            {
-                ++repeatCount;
-
-                if(repeatCount >= STRAND_BIAS_HOMOPOLYMER_REPEAT_LENGTH)
-                    return true;
-            }
-            else
-            {
-                lastChar = nextChar;
-                repeatCount = 1;
-            }
-        }
-
-        return false;
-    }
 
     private boolean skipMinTumorQualTest(final VariantTier tier, final ReadContextCounter primaryTumor)
     {
