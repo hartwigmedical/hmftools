@@ -237,7 +237,6 @@ class FeatureLoaderNew(LoggerMixin):
 
         feat_info["category_renamed"] = feat_info["category"].replace(mappings)
 
-
     def _rename_keys(self, feat_info: pd.DataFrame) -> None:
 
         if self.verbose:
@@ -263,6 +262,9 @@ class FeatureLoaderNew(LoggerMixin):
 
         mappings = mappings_sigs | mappings_traits
         feat_info["key_renamed"] = feat_info["key"].replace(mappings)
+
+        ## Replace e.g. "BRAF.mutation" with "BRAF.mut"
+        feat_info["key_renamed"] = feat_info["key_renamed"].replace("[.]mutation$", ".mut", regex=True)
 
     def _make_final_feat_names(self, feat_info: pd.DataFrame) -> None:
 
