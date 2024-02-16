@@ -24,11 +24,19 @@ class CuppaVisDataBuilder(LoggerMixin):
         predictions: CuppaPrediction,
         sample_id: Optional[str | int] = None,
         require_all_feat_types: bool = True,
+
+        min_driver_likelihood: Optional[float] = 0.2, ## LINX driver likelihood
+        min_driver_contrib: Optional[float] = 0.2, ## log(odds)
+
         verbose: bool = True
     ):
         self.predictions = predictions
         self.sample_id = sample_id
         self.require_all_feat_types = require_all_feat_types
+
+        self.min_driver_likelihood = min_driver_likelihood
+        self.min_driver_contrib = min_driver_contrib
+
         self.verbose = verbose
 
         self._get_predictions_one_sample()
@@ -97,19 +105,15 @@ class CuppaVisDataBuilder(LoggerMixin):
 
         return feat_contrib
 
-    def _get_top_drivers(
-        self,
-        min_driver_contrib: Optional[float] = 0.2,
-        min_driver_likelihood: Optional[float] = 0.2,
-    ) -> CuppaPrediction | None:
+    def _get_top_drivers(self,) -> CuppaPrediction | None:
         feat_contrib = self._subset_feat_contrib_by_feat_pattern("driver")
 
         if feat_contrib is None:
             return None
 
         index = feat_contrib.index.to_frame(index=False)
-        row_maxes = (feat_contrib.max(axis=1) >= min_driver_contrib).values
-        selected_rows = (row_maxes >= min_driver_contrib) | (index["feat_value"] >= min_driver_likelihood)
+        row_maxes = (feat_contrib.max(axis=1) >= self.min_driver_contrib).values
+        selected_rows = (row_maxes >= self.min_driver_contrib) | (index["feat_value"] >= self.min_driver_likelihood)
 
         return feat_contrib[selected_rows.values]
 
@@ -129,11 +133,7 @@ class CuppaVisDataBuilder(LoggerMixin):
     def _get_existing_viruses(self) -> CuppaPrediction | None:
         return self._get_existing_features("virus")
 
-    def get_top_feat_contrib(
-        self,
-        min_driver_contrib: Optional[float] = 0.2,
-        min_driver_likelihood: Optional[float] = 0.2,
-    ) -> pd.DataFrame:
+    def get_top_feat_contrib(self) -> pd.DataFrame:
 
         if self.verbose:
             self.logger.debug("Getting top event features")
@@ -141,15 +141,9 @@ class CuppaVisDataBuilder(LoggerMixin):
         wide = self.predictions.__class__.concat([  ## Indirect call to CuppaPrediction.concat() to avoid circular import
             self._subset_feat_contrib_by_feat_pattern("tmb"),
             self._subset_feat_contrib_by_feat_pattern("trait"),
-
             self._get_existing_fusions(),
             self._get_existing_viruses(),
-
-            self._get_top_drivers(
-                min_driver_contrib=min_driver_contrib,
-                min_driver_likelihood=min_driver_likelihood
-            ),
-
+            self._get_top_drivers(),
             self._subset_feat_contrib_by_feat_pattern("sv")
         ])
 
