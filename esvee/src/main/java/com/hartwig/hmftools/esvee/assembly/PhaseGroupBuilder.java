@@ -100,6 +100,8 @@ public class PhaseGroupBuilder
 
         if(!assembly.refSideSoftClips().isEmpty())
         {
+            // if the assembly has candidate facing TI links, then add its own junction group - they will often share reads which are
+            // discordant in one and a junction read in the other
             RefSideSoftClip refSideSoftClip = assembly.refSideSoftClips().get(0);
 
             if(positionWithin(refSideSoftClip.Position, assemblyJunctionGroup.minPosition(), assemblyJunctionGroup.maxPosition()))

@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.SvConstants;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
@@ -173,7 +172,7 @@ public class JunctionGroupAssembler extends ThreadTask
             for(JunctionAssembly assembly : candidateAssemblies)
             {
                 AssemblyExtender assemblyExtender = new AssemblyExtender(assembly);
-                assemblyExtender.extendAssembly(junctionAssembler.nonJunctionReads());
+                assemblyExtender.findAssemblyExtensions(junctionAssembler.nonJunctionReads());
 
                 junctionGroupAssemblies.addAll(assemblyExtender.assemblies());
             }
@@ -268,18 +267,7 @@ public class JunctionGroupAssembler extends ThreadTask
                 {
                     Read second = mReads.get(j);
 
-                    if(first.bamRecord().getSupplementaryAlignmentFlag() != second.bamRecord().getSupplementaryAlignmentFlag()
-                    && first.firstInPair() == second.firstInPair())
-                    {
-                        first.setSupplementaryRead(second);
-                        second.setSupplementaryRead(first);
-                    }
-                    else if(first.bamRecord().getSupplementaryAlignmentFlag() == second.bamRecord().getSupplementaryAlignmentFlag()
-                    && first.firstInPair() != second.firstInPair())
-                    {
-                        first.setMateRead(second);
-                        second.setMateRead(first);
-                    }
+                    first.makeReadLinks(second);
                 }
             }
         }

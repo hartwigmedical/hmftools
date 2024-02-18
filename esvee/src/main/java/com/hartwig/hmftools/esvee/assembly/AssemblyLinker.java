@@ -25,6 +25,7 @@ import com.hartwig.hmftools.esvee.common.RepeatInfo;
 
 public final class AssemblyLinker
 {
+    /*
     public AssemblyLink tryAssemblyLink(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
         if(assembly1.hasBranchedAssembly(assembly2))
@@ -37,6 +38,7 @@ public final class AssemblyLinker
 
         return tryAssemblyOverlap(assembly1, assembly2);
     }
+    */
 
     public static AssemblyLink tryAssemblyFacing(final JunctionAssembly first, final JunctionAssembly second)
     {

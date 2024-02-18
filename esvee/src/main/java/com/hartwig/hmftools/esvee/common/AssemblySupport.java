@@ -52,7 +52,12 @@ public class AssemblySupport
 
     public static boolean hasMatchingFragment(final List<AssemblySupport> support, final Read read)
     {
-        return support.stream().anyMatch(x -> x.read().getName().equals(read.getName()));
+        return support.stream().anyMatch(x -> x.read().matchesFragment(read));
+    }
+
+    public static AssemblySupport findMatchingFragmentSupport(final List<AssemblySupport> support, final Read read)
+    {
+        return support.stream().filter(x -> x.read().matchesFragment(read)).findFirst().orElse(null);
     }
 
     public String toString()

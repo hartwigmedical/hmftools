@@ -2,18 +2,27 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyExtender.extendRefBases;
+import static com.hartwig.hmftools.esvee.common.AssemblySupport.findMatchingFragmentSupport;
 import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.common.AssemblyLink;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.PhaseGroup;
 import com.hartwig.hmftools.esvee.common.PhaseSet;
+import com.hartwig.hmftools.esvee.common.RefBaseAssembly;
+import com.hartwig.hmftools.esvee.common.RefSideSoftClip;
 
 public class PhaseSetBuilder
 {
@@ -31,12 +40,40 @@ public class PhaseSetBuilder
 
     public void buildPhaseSets()
     {
+        formSplitLinks();
+
+        for(JunctionAssembly assembly : mPhaseGroup.assemblies())
+        {
+            for(JunctionAssembly branchedAssembly : assembly.branchedAssemblies())
+            {
+                mPhaseGroup.addAssembly(branchedAssembly);
+
+                // replicate the links? or model how?
+            }
+        }
+
+        formFacingLinks();
+    }
+
+    private void formFacingLinks()
+    {
+        List<JunctionAssembly> assemblies = mPhaseGroup.assemblies();
+
+        if(assemblies.size() <= 2)
+            return;
+
+        // support will have changed now, so reassess candidates for facing links
+
+    }
+
+    private void formSplitLinks()
+    {
         List<JunctionAssembly> assemblies = mPhaseGroup.assemblies();
 
         if(assemblies.size() == 2)
         {
             // no need to re-test shared read support since they must be to be in a group
-            AssemblyLink assemblyLink = mAssemblyLinker.tryAssemblyLink(assemblies.get(0), assemblies.get(1));
+            AssemblyLink assemblyLink = checkSplitLink(assemblies.get(0), assemblies.get(1));
 
             if(assemblyLink != null)
             {
@@ -72,6 +109,28 @@ public class PhaseSetBuilder
 
         Collections.sort(assemblySupportPairs, Comparator.comparingInt(x -> -x.SharedSupport));
 
+        // build any split links and only allow an assembly to be used once
+        Set<JunctionAssembly> linkedAssemblies = Sets.newHashSet();
+
+        while(!assemblySupportPairs.isEmpty())
+        {
+            SharedAssemblySupport sharedReadPair = assemblySupportPairs.get(0);
+            assemblySupportPairs.remove(0);
+
+            if(linkedAssemblies.contains(sharedReadPair.Assembly1) || linkedAssemblies.contains(sharedReadPair.Assembly2))
+                continue;
+
+            // test if a link can be made
+            AssemblyLink splitLink = checkSplitLink(sharedReadPair.Assembly1, sharedReadPair.Assembly2);
+
+            if(splitLink == null)
+                continue;
+
+            linkedAssemblies.add(sharedReadPair.Assembly1);
+            linkedAssemblies.add(sharedReadPair.Assembly2);
+        }
+
+        /*
         while(!assemblySupportPairs.isEmpty())
         {
             SharedAssemblySupport sharedReadPair = assemblySupportPairs.get(0);
@@ -82,7 +141,7 @@ public class PhaseSetBuilder
                 continue;
 
             // test if a link can be made
-            AssemblyLink sharedReadLink = mAssemblyLinker.tryAssemblyLink(sharedReadPair.Assembly1, sharedReadPair.Assembly2);
+            AssemblyLink sharedReadLink = checkSplitLink(sharedReadPair.Assembly1, sharedReadPair.Assembly2);
 
             boolean addedToPhased = false;
 
@@ -131,8 +190,64 @@ public class PhaseSetBuilder
                 mPhaseSets.add(phaseSet);
             }
         }
+        */
+    }
 
-        // TODO - merge any phase sets which can be and which share links? or no need?
+    private AssemblyLink checkSplitLink(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
+    {
+        AssemblyLink assemblyLink = mAssemblyLinker.tryAssemblyOverlap(assembly1, assembly2);
+
+        if(assemblyLink == null)
+            return null;
+
+        // FIXME: make links between junction reads
+
+        // look for shared reads between the assemblies, and factor in discordant reads which were only considered candidates until now
+        List<AssemblySupport> matchedCandidates1 = Lists.newArrayList();
+        List<AssemblySupport> matchedCandidates2 = Lists.newArrayList();
+
+        // list is copied since matched candidates will be removed from repeated matching
+        List<AssemblySupport> candidateSupport2 = Lists.newArrayList(assembly2.candidateSupport());
+
+        checkMatchingCandidateSupport(assembly2, assembly1.candidateSupport(), candidateSupport2, matchedCandidates1, matchedCandidates2);
+        checkMatchingCandidateSupport(assembly1, candidateSupport2, Collections.emptyList(), matchedCandidates2, matchedCandidates1);
+
+        // build out ref-base assembly support from this non-junction reads
+        extendRefBases(assembly1, matchedCandidates1);
+        extendRefBases(assembly1, matchedCandidates2);
+
+        return assemblyLink;
+    }
+
+    private static void checkMatchingCandidateSupport(
+            final JunctionAssembly otherAssembly,
+            final List<AssemblySupport> candidateSupport, final List<AssemblySupport> otherCandidateSupport,
+            final List<AssemblySupport> matchedCandidates, final List<AssemblySupport> otherMatchedCandidates)
+    {
+        // TODO: at this point reads could be linked to each other - any reason not to do this?
+        //  could make fragment count determination more efficient
+        for(AssemblySupport support : candidateSupport)
+        {
+            AssemblySupport matchedSupport = findMatchingFragmentSupport(otherAssembly.support(), support.read());
+
+            if(matchedSupport == null)
+            {
+                matchedSupport = findMatchingFragmentSupport(otherCandidateSupport, support.read());
+
+                if(matchedSupport != null)
+                {
+                    // remove from other's candidates to avoid checking again
+                    otherMatchedCandidates.add(matchedSupport);
+                    otherCandidateSupport.remove(matchedSupport);
+                }
+            }
+
+            if(matchedSupport != null)
+            {
+                matchedCandidates.add(support);
+                support.read().makeReadLinks(matchedSupport.read());
+            }
+        }
     }
 
     private AssemblyLink checkCanLinkWithPhaseSet(final PhaseSet phaseSet, final SharedAssemblySupport sharedAssemblySupport)
@@ -156,7 +271,7 @@ public class PhaseSetBuilder
                     if(phaseSet.hasMatchingAssembly(newAssembly, existingAssembly))
                         return null;
 
-                    AssemblyLink phasedLink = mAssemblyLinker.tryAssemblyLink(newAssembly, existingAssembly);
+                    AssemblyLink phasedLink = checkSplitLink(newAssembly, existingAssembly);
 
                     if(phasedLink != null)
                         return phasedLink;

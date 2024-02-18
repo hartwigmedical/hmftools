@@ -21,6 +21,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.esvee.common.AssemblySupport;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -187,6 +188,22 @@ public class Read
     public void setSupplementaryRead(final Read mate) { mSupplementaryRead = mate; }
     public Read supplementaryRead() { return mSupplementaryRead; }
 
+    public void makeReadLinks(final Read other)
+    {
+        if(mRecord.getSupplementaryAlignmentFlag() != other.bamRecord().getSupplementaryAlignmentFlag()
+        && firstInPair() == other.firstInPair())
+        {
+            mSupplementaryRead = other;
+            other.setSupplementaryRead(this);
+        }
+        else if(mRecord.getSupplementaryAlignmentFlag() == other.bamRecord().getSupplementaryAlignmentFlag()
+            && firstInPair() != other.firstInPair())
+        {
+            mMateRead = other;
+            other.setMateRead(this);
+        }
+    }
+
     public SupplementaryReadData supplementaryData()
     {
         if(!mSuppDataExtracted)
@@ -275,6 +292,8 @@ public class Read
         mNumberOfEvents = numOfEvents != null ? (int)numOfEvents : 0;
         return mNumberOfEvents;
     }
+
+    public boolean matchesFragment(final Read other) { return this == other || getName().equals(other.getName()); }
 
     public String toString()
     {
@@ -378,29 +397,4 @@ public class Read
         updateCigarString();
         setBoundaries(newReadStart);
     }
-
-    // public boolean isMateOnTheLeft() { return negativeStrand(); }
-
-    /*
-    public int impliedFragmentLength()
-    {
-        if(isMateMapped())
-        {
-            if(isMateOnTheLeft())
-            {
-                return getUnclippedEnd() - mRecord.getMateAlignmentStart();
-            }
-            else
-            {
-                final int mateEnd = mRecord.getMateAlignmentStart() + getLength();
-                return mateEnd - getUnclippedStart();
-            }
-        }
-        else
-        {
-            return getUnclippedEnd() - getUnclippedStart();
-        }
-    }
-
-    */
 }

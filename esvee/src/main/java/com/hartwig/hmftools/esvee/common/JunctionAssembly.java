@@ -12,9 +12,12 @@ import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.findUnsetBases;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findRepeats;
+import static com.hartwig.hmftools.esvee.common.SupportType.CANDIDATE_DISCORDANT;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION;
+import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -40,6 +43,7 @@ public class JunctionAssembly
     private byte mBaseQuals[];
 
     private final List<AssemblySupport> mSupport;
+    private final List<AssemblySupport> mCandidateSupport;
     private final List<RefSideSoftClip> mRefSideSoftClips;
 
     private final SequenceMismatches mSequenceMismatches;
@@ -73,6 +77,7 @@ public class JunctionAssembly
         mSequenceMismatches = new SequenceMismatches();
 
         mSupport = Lists.newArrayList();
+        mCandidateSupport = Lists.newArrayList();
         mRepeatInfo = Lists.newArrayList();
         mRefSideSoftClips = Lists.newArrayList();
         mRemoteRegions = Lists.newArrayList();
@@ -528,6 +533,8 @@ public class JunctionAssembly
         mSequenceMismatches = new SequenceMismatches();
 
         mSupport = Lists.newArrayList();
+        mCandidateSupport = Lists.newArrayList();
+
         mRepeatInfo = Lists.newArrayList();
         mRefSideSoftClips = Lists.newArrayList(refSideSoftClip);
         mRemoteRegions = Lists.newArrayList();
@@ -555,6 +562,14 @@ public class JunctionAssembly
 
         mInitialRead = initialRead;
     }
+
+    public void addCandidateSupport(final Read read, final SupportType type)
+    {
+        mCandidateSupport.add(new AssemblySupport(read, type, 0, 0, new int[] {0, 0}, 0));
+    }
+
+    public List<AssemblySupport> candidateSupport() { return mCandidateSupport; }
+    public void clearCandidateSupport() { mCandidateSupport.clear(); }
 
     public String toString()
     {
@@ -659,6 +674,7 @@ public class JunctionAssembly
         mBaseQuals = copyArray(quals);
         mSequenceMismatches = new SequenceMismatches();
         mSupport = Lists.newArrayList();
+        mCandidateSupport = Lists.newArrayList();
         mRepeatInfo = Lists.newArrayList();
         mRemoteRegions = Lists.newArrayList();
         mBranchedAssemblies = Lists.newArrayList();

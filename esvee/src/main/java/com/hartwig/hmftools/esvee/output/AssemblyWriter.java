@@ -104,7 +104,8 @@ public class AssemblyWriter
 
             sj.add("PhaseSetId");
             sj.add("PhaseSetCount");
-            sj.add("LinkInfo");
+            sj.add("SplitLinks");
+            sj.add("FacingLinks");
             sj.add("SvType");
             sj.add("InsertedBases");
 
@@ -267,12 +268,15 @@ public class AssemblyWriter
                 sj.add(String.valueOf(phaseSet.assemblies().size()));
 
                 List<AssemblyLink> assemblyLinks = phaseSet.findAssemblyLinks(assembly);
-                sj.add(assemblyLinksStr(assembly, assemblyLinks));
 
-                AssemblyLink svLink = assemblyLinks.stream().filter(x -> x.type() == LinkType.SPLIT).findFirst().orElse(null);
+                List<AssemblyLink> splitLinks = assemblyLinks.stream().filter(x -> x.type() == LinkType.SPLIT).collect(Collectors.toList());
+                List<AssemblyLink> facingLinks = assemblyLinks.stream().filter(x -> x.type() == LinkType.FACING).collect(Collectors.toList());
+                sj.add(assemblyLinksStr(assembly, splitLinks));
+                sj.add(assemblyLinksStr(assembly, facingLinks));
 
-                if(svLink != null)
+                if(!splitLinks.isEmpty())
                 {
+                    AssemblyLink svLink = splitLinks.get(0);
                     sj.add(svLink.svType().toString());
                     sj.add(svLink.insertedBases());
                 }
