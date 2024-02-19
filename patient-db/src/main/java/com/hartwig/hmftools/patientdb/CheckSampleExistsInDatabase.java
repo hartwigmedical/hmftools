@@ -41,7 +41,7 @@ public class CheckSampleExistsInDatabase
         }
         catch(Exception e)
         {
-            LOGGER.error("Failed to delete sample", e);
+            LOGGER.error("Failed to check whether sample '{}' exists in database", sample, e);
             System.exit(1);
         }
     }
