@@ -48,24 +48,26 @@ public class ArtefactContext
         String flankAndBases = indexedBases.fullString();
 
         int indexInBases = indexedBases.Index - indexedBases.LeftFlankIndex;
-        int varIndexStart = indexInBases - 1;
+        int varIndexStart = variant.isIndel() ? indexInBases : indexInBases - 1; // move 1 down for an SNV/MNV
         int altLength = variant.variant().alt().length();
         int varIndexEnd = indexInBases + altLength;
 
         byte homopolymerBaseOnLeft = findHomopolymerBase(flankAndBases, varIndexStart, true);
         byte homopolymerBaseOnRight = findHomopolymerBase(flankAndBases, varIndexEnd, false);
 
-        boolean useRightAlignment = false;
+        int rightAlignmentCount = 0;
         if(homopolymerBaseOnRight == NO_BASE && variant.variant().isDelete())
         {
-            char deletedBase = variant.ref().charAt(variant.ref().length() - 1);
-            while(deletedBase == flankAndBases.charAt(varIndexEnd))
+            String deletedBases = variant.ref().substring(1);
+            int delBaseLength = deletedBases.length();
+            int delStartIndex = indexInBases + 1;
+            while(deletedBases.equals(flankAndBases.substring(delStartIndex, delStartIndex + delBaseLength)))
             {
-                ++varIndexEnd;
+                delStartIndex += deletedBases.length();
+                rightAlignmentCount += deletedBases.length();
             }
 
-            homopolymerBaseOnRight = findHomopolymerBase(flankAndBases, varIndexEnd, false);
-            useRightAlignment = (homopolymerBaseOnRight != NO_BASE);
+            homopolymerBaseOnRight = findHomopolymerBase(flankAndBases, delStartIndex, false);
         }
 
         if(homopolymerBaseOnLeft == NO_BASE && homopolymerBaseOnRight == NO_BASE)
@@ -80,10 +82,12 @@ public class ArtefactContext
 
         if(homopolymerBaseOnRight != NO_BASE)
         {
+            /*
             if(useRightAlignment)
                 skipCountRight = 0;
             else
-                skipCountRight = findSkipCount(flankAndBases, varIndexStart, homopolymerBaseOnRight, true);
+            */
+            skipCountRight = findSkipCount(flankAndBases, varIndexStart + rightAlignmentCount, homopolymerBaseOnRight, true);
         }
 
         // calculate bases to get from the start of the variant to the first upstream ref base
