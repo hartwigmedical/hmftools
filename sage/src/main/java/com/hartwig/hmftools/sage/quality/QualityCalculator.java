@@ -150,6 +150,7 @@ public class QualityCalculator
         return quality;
     }
 
+    /*
     private double lookupRecalibrateQuality(final ReadContextCounter readContextCounter, int refPosition, int refAltPos, byte rawQuality)
     {
         if(rawQuality == 0)
@@ -161,17 +162,18 @@ public class QualityCalculator
         byte[] trinucleotideContext = mRefBases.trinucleotideContext(refPosition);
 
         return mQualityRecalibrationMap.getQualityAdjustment(
-                (byte) readContextCounter.ref().charAt(refAltPos),
-                (byte) readContextCounter.alt().charAt(refAltPos),
+                (byte)readContextCounter.ref().charAt(refAltPos),
+                (byte)readContextCounter.alt().charAt(refAltPos),
                 trinucleotideContext, rawQuality);
     }
+    */
 
     public byte[] getTrinucleotideContext(int refPosition)
     {
         return mRefBases.containsPosition(refPosition) ? mRefBases.trinucleotideContext(refPosition) : null;
     }
 
-    public double lookupRecalibrateQuality(final byte[] trinucleotideContext, byte altBase, byte rawQuality)
+    public double lookupRecalibrateQuality(final byte[] trinucleotideContext, byte altBase, byte rawQuality, final BqrReadType readType)
     {
         if(rawQuality == 0)
             return 0; // never adjust a zero qual up
@@ -179,7 +181,7 @@ public class QualityCalculator
         if(mQualityRecalibrationMap == null)
             return rawQuality;
 
-        return mQualityRecalibrationMap.getQualityAdjustment(trinucleotideContext[1], altBase, trinucleotideContext, rawQuality);
+        return mQualityRecalibrationMap.getQualityAdjustment(trinucleotideContext[1], altBase, trinucleotideContext, rawQuality, readType);
     }
 
     private int readDistanceFromEdge(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)

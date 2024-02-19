@@ -89,7 +89,7 @@ public class BaseQualityRecalibrationTest
     private BqrKey createKey(char ref, char alt, int qual, int pos)
     {
         byte[] context = new byte[] { 65,  (byte)ref, 65};
-        return new BqrKey((byte)ref, (byte)alt, context, (byte)qual);
+        return new BqrKey((byte)ref, (byte)alt, context, (byte)qual, BqrReadType.NONE);
     }
 
     @Test

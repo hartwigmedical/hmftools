@@ -11,11 +11,6 @@ public class BqrKey
     public final byte Quality;
     public final BqrReadType ReadType;
 
-    public BqrKey(final byte ref, final byte alt, final byte[] trinucleotideContext, final byte quality)
-    {
-        this(ref, alt, trinucleotideContext, quality, BqrReadType.NONE);
-    }
-
     public BqrKey(final byte ref, final byte alt, final byte[] trinucleotideContext, final byte quality, final BqrReadType readType)
     {
         Ref = ref;
