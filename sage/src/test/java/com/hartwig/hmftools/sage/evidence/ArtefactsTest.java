@@ -29,17 +29,19 @@ import htsjdk.samtools.SAMTestUtil;
 public class ArtefactsTest
 {
     private static final String FLANK_BASES = "AAAAAGGGGG";
+    private static final String HOMOPOLYMER_SEQ = "TTTTTTTT";
 
-    private static final String REF_BASES = FLANK_BASES
-            //         10        20        30
-            //         012345678901234567890123
-            + "ACGTTGCATTTTTTTTACGTTGCA" + FLANK_BASES;
+    private static final String REF_BASES = FLANK_BASES + "ACGTTGCA" + HOMOPOLYMER_SEQ + "ACGTTGCA" + FLANK_BASES;
+    //            10         20         30
+    // 0123456789 01234567 89012345 67890123
+    // AAAAAGGGGG ACGTTGCA TTTTTTTT ACGTTGCA AAAAAGGGGG
 
     @Test
     public void testHomopolymerArtefacts()
     {
         int pos = 100;
 
+        // A>T where SNV is immediately next to (left of) upstream homopolymer (HP)
         SimpleVariant variant = new SimpleVariant(CHR_1, pos, "A", "T");
 
         int varIndex = 17;
@@ -110,7 +112,12 @@ public class ArtefactsTest
         varIndex = 15;
         //             0123456 7890
         // ACGTTTGG -> ACGTTTG TTTT
-        readContextBases = REF_BASES.substring(0, 10) + "ACGTTTG" + REF_BASES.substring(18);
+
+        //            10             20         30
+        // 0123456789 012345     678901234 567890123
+        // AAAAAGGGGG ACGTTT [G] GTTTTTTTT ACGTTGCA AAAAAGGGGG
+        // low-qual               X
+        readContextBases = FLANK_BASES + "ACGTTTG" + REF_BASES.substring(18);
 
         indexBases = new IndexedBases(
                 pos, varIndex, varIndex - 2, 27, 10, readContextBases.getBytes());
@@ -125,7 +132,38 @@ public class ArtefactsTest
         assertNotNull(artefactContext);
 
         readQualities = buildDefaultBaseQuals(readLength);
-        readQualities[varIndex + 2] = lowQualBase;
+        readQualities[17] = lowQualBase;
+        record = buildSamRecord(20, cigar, readContextBases, new String(readQualities));
+        record.setReadNegativeStrandFlag(true);
+
+        adjustedBaseQual = artefactContext.findApplicableBaseQual(rcCounter, record, varIndex);
+        assertEquals(lowQualBase, adjustedBaseQual);
+
+
+        // similar to above but the delete is 2-bases left-aligned, so not immediately left of the HP
+        //            10              20         30
+        // 0123456789 01234567      89012345 67890123
+        // AAAAAGGGGG AACGTAGT [GT] TTTTTTTT ACGTTGCA AAAAAGGGGG
+        // low-qual                 X
+        variant = new SimpleVariant(CHR_1, pos, "AGT", "A");
+
+        varIndex = 15;
+        readContextBases = FLANK_BASES + "AACGTAGT" + HOMOPOLYMER_SEQ + REF_BASES.substring(26);
+
+        indexBases = new IndexedBases(
+                pos, varIndex, varIndex - 2, 27, 10, readContextBases.getBytes());
+
+        readContext = new ReadContext(pos, "", 0, "", indexBases, false);
+
+        rcCounter = new ReadContextCounter(
+                1, variant, readContext, VariantTier.PANEL, 100, 0,
+                TEST_CONFIG, QUALITY_CALCULATOR, null);
+
+        artefactContext = ArtefactContext.buildContext(rcCounter);
+        assertNotNull(artefactContext);
+
+        readQualities = buildDefaultBaseQuals(readLength);
+        readQualities[18] = lowQualBase;
         record = buildSamRecord(20, cigar, readContextBases, new String(readQualities));
         record.setReadNegativeStrandFlag(true);
 
