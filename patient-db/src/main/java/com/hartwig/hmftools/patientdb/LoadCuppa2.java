@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
 import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -25,6 +26,7 @@ public class LoadCuppa2
         Options options = new Options();
 
         options.addOption(CUPPA_VIS_DATA_TSV, true, "Path to the CUPPA vis data file");
+        options.addOption(SAMPLE, true, "Sample for which we are going to load the CUPPA results");
 
         addDatabaseCmdLineArgs(options);
 
@@ -50,7 +52,7 @@ public class LoadCuppa2
         {
             LOGGER.info("Loading CUPPA from {}", new File(cuppaVisDataTsv).getParent());
             CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(cuppaVisDataTsv);
-            String sample = cuppaPredictions.get(0).SampleId;
+            String sample = cmd.getOptionValue(SAMPLE);
             LOGGER.info("Loaded {} entries from {} for sample {}", cuppaPredictions.size(), cuppaVisDataTsv, sample);
 
             int TOP_N_PROBS = 3;
