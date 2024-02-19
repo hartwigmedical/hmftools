@@ -3,8 +3,12 @@ package com.hartwig.hmftools.peach;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.peach.data_loader.DrugInfoLoader;
 import com.hartwig.hmftools.peach.data_loader.HaplotypeEventLoader;
+import com.hartwig.hmftools.peach.data_loader.HaplotypeFunctionLoader;
 import com.hartwig.hmftools.peach.data_loader.PanelLoader;
+import com.hartwig.hmftools.peach.effect.DrugInfoStore;
+import com.hartwig.hmftools.peach.effect.HaplotypeFunction;
 import com.hartwig.hmftools.peach.output.AllHaplotypeCombinationsFile;
 import com.hartwig.hmftools.peach.output.BestHaplotypeCombinationsFile;
 import com.hartwig.hmftools.peach.output.EventsFile;
@@ -16,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import static com.hartwig.hmftools.peach.PeachUtils.PCH_LOGGER;
@@ -50,6 +55,26 @@ public class PeachApplication
             Map<String, Integer> eventIdToCount = HaplotypeEventLoader.loadRelevantVariantHaplotypeEvents(
                     config.vcfFile, config.sampleName, haplotypePanel.getRelevantVariantPositions()
             );
+            DrugInfoStore drugInfoStore;
+            if(config.drugsFile == null)
+            {
+                PCH_LOGGER.info("skip loading drugs since input file not provided");
+                drugInfoStore = null;
+            }
+            else
+            {
+                PCH_LOGGER.info("load drugs");
+                drugInfoStore = new DrugInfoStore(DrugInfoLoader.loadDrugInfos(config.drugsFile));
+            }
+            if(config.functionFile != null)
+            {
+                PCH_LOGGER.info("load haplotype functions");
+                List<HaplotypeFunction> haplotypeFunctions = HaplotypeFunctionLoader.loadFunctions(config.functionFile);
+            }
+            else
+            {
+                PCH_LOGGER.info("skip loading haplotype functions since input file not provided");
+            }
 
             PCH_LOGGER.info("call haplotypes");
             HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
