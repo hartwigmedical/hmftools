@@ -31,7 +31,7 @@ public class FeaturePrep implements CategoryPrep
     public CategoryType categoryType() { return FEATURE; }
 
     private static final String AMP_TYPE = ".amp";
-    private static final String MUTATION_TYPE = ".mutation";
+    private static final String MUTATION_TYPE = ".mut";
     private static final String INDEL_TYPE = ".indel";
 
     @Override
@@ -82,7 +82,7 @@ public class FeaturePrep implements CategoryPrep
                     case INDEL:
                     {
                         dataItems.add(new DataItem(
-                                DNA, ItemType.DRIVER, featureData.Name + INDEL_TYPE, String.valueOf(featureData.Likelihood)));
+                                DNA, ItemType.DRIVER, featureData.Name.replace("INDEL_", "") + INDEL_TYPE, String.valueOf(featureData.Likelihood)));
                         break;
                     }
 
