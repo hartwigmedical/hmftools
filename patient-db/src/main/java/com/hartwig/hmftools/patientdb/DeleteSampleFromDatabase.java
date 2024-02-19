@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
@@ -19,8 +20,6 @@ public class DeleteSampleFromDatabase
 {
 
     private static final Logger LOGGER = LogManager.getLogger(DeleteSampleFromDatabase.class);
-
-    private static final String SAMPLE = "sample";
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException
     {
