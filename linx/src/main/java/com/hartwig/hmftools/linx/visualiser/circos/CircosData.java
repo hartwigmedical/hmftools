@@ -39,7 +39,7 @@ public class CircosData
     private final List<Connector> connectors;
 
     private final List<VisSvData> unadjustedLinks;
-    private final List<VisCopyNumber> unadjustedAlterations;
+    private final List<VisCopyNumber> unadjustedCopyNumbers;
 
     private final Set<GenomePosition> contigLengths;
 
@@ -58,13 +58,13 @@ public class CircosData
 
     public CircosData(
             boolean showSimpleSvSegments, final CircosConfig config, final List<VisSegment> unadjustedSegments,
-            final List<VisSvData> unadjustedLinks, final List<VisCopyNumber> unadjustedAlterations,
+            final List<VisSvData> unadjustedLinks, final List<VisCopyNumber> unadjustedCopyNumbers,
             final List<VisGeneExon> unadjustedExons, final List<VisFusion> fusions)
     {
         this.upstreamGenes = fusions.stream().map(x -> x.GeneNameUp).collect(toSet());
         this.downstreamGenes = fusions.stream().map(x -> x.GeneNameDown).collect(toSet());
         this.unadjustedLinks = unadjustedLinks;
-        this.unadjustedAlterations = unadjustedAlterations;
+        this.unadjustedCopyNumbers = unadjustedCopyNumbers;
         this.config = config;
 
         final List<GenomeRegion> unadjustedDisruptedGeneRegions = DisruptedExons.disruptedGeneRegions(fusions, unadjustedExons);
@@ -78,8 +78,8 @@ public class CircosData
         positionsToScale.addAll(VisLinks.allPositions(unadjustedLinks));
         positionsToScale.addAll(Span.allPositions(unadjustedSegments));
         positionsToScale.addAll(config.InterpolateCopyNumberPositions
-                ? Span.minMaxPositions(unadjustedAlterations)
-                : Span.allPositions(unadjustedAlterations));
+                ? Span.minMaxPositions(unadjustedCopyNumbers)
+                : Span.allPositions(unadjustedCopyNumbers));
         if(!config.InterpolateExonPositions)
         {
             positionsToScale.addAll(Span.allPositions(unadjustedGeneExonRegions));
@@ -95,7 +95,7 @@ public class CircosData
         contigLengths = scalePosition.contigLengths();
         segments = scalePosition.scaleSegments(unadjustedSegments);
         links = scalePosition.scaleLinks(unadjustedLinks);
-        copyNumbers = scalePosition.interpolateCopyNumbers(unadjustedAlterations);
+        copyNumbers = scalePosition.interpolateCopyNumbers(unadjustedCopyNumbers);
         fragileSites = scalePosition.interpolateRegions(unadjustedFragileSites);
         lineElements = scalePosition.interpolateRegions(unadjustedLineElements);
         genes = scalePosition.interpolateGene(unadjustedGenes);
@@ -176,7 +176,7 @@ public class CircosData
 
     public List<Gene> genes() { return genes; }
     public List<VisSvData> unadjustedLinks() { return unadjustedLinks; }
-    public List<VisCopyNumber> unadjustedAlterations() { return unadjustedAlterations; }
+    public List<VisCopyNumber> unadjustedAlterations() { return unadjustedCopyNumbers; }
     public List<VisSegment> segments() { return segments; }
     public List<VisSvData> links() { return links; }
     public List<VisCopyNumber> copyNumbers() { return copyNumbers; }

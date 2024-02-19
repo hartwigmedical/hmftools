@@ -79,7 +79,8 @@ public class SampleData
         final String fusionFile = mConfig.UseCohortFiles ?
                 mConfig.SampleDataDir + COHORT_VIS_FUSIONS_FILE : VisFusion.generateFilename(mConfig.SampleDataDir, mConfig.Sample, isGermline);
 
-        List<VisSvData> svData = VisSvData.read(svDataFile).stream().filter(x -> x.SampleId.equals(mConfig.Sample)).collect(toList());
+        List<VisSvData> svData = VisSvData.read(svDataFile).stream().filter(x -> matchOnSampleId(x.SampleId)).collect(toList());
+
         boolean svDataFiltered = false;
 
         if(!mConfig.SpecificRegions.isEmpty())
@@ -116,12 +117,11 @@ public class SampleData
 
         SvData = svData;
 
-        Fusions = loadFusions(fusionFile).stream().filter(x -> x.SampleId.equals(mConfig.Sample)).collect(toList());
-        Exons = VisExons.readExons(geneExonFile).stream().filter(x -> x.SampleId.equals(mConfig.Sample)).collect(toList());
-        Segments = VisSegments.readSegments(linksFile).stream().filter(x -> x.SampleId.equals(mConfig.Sample)).collect(toList());
+        Fusions = loadFusions(fusionFile).stream().filter(x -> matchOnSampleId(x.SampleId)).collect(toList());
+        Exons = VisExons.readExons(geneExonFile).stream().filter(x -> matchOnSampleId(x.SampleId)).collect(toList());
+        Segments = VisSegments.readSegments(linksFile).stream().filter(x -> matchOnSampleId(x.SampleId)).collect(toList());
 
-        CopyNumbers = VisCopyNumbers.read(cnaFile)
-                .stream().filter(x -> x.SampleId.equals(mConfig.Sample)).collect(toList());
+        CopyNumbers = VisCopyNumbers.read(cnaFile).stream().filter(x -> matchOnSampleId(x.SampleId)).collect(toList());
 
         ProteinDomains = VisProteinDomains.readProteinDomains(proteinFile, Fusions).stream()
                 .filter(x -> x.SampleId.equals(mConfig.Sample)).collect(toList());
@@ -200,6 +200,11 @@ public class SampleData
         }
 
         Exons.addAll(additionalExons(mConfig, mConfig.Genes, Exons, mConfig.ClusterIds));
+    }
+
+    private boolean matchOnSampleId(final String sampleId)
+    {
+        return mConfig.UseCohortFiles ? mConfig.Sample.equals(sampleId) : true;
     }
 
     private void addClusterId(final int clusterId)

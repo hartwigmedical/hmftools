@@ -189,7 +189,7 @@ public class SvVisualiser implements AutoCloseable
 
     private void submitCluster(final List<Integer> clusterIds, final List<Integer> chainIds, boolean skipSingles)
     {
-        final List<VisSvData> clusterLinks = mSampleData.SvData.stream()
+        final List<VisSvData> clusterSvs = mSampleData.SvData.stream()
                 .filter(x -> clusterIds.contains(x.ClusterId))
                 .filter(x -> chainIds.isEmpty() || chainIds.contains(x.ChainId))
                 .collect(toList());
@@ -206,19 +206,19 @@ public class SvVisualiser implements AutoCloseable
         clusterIds.forEach(x -> clustersSj.add(String.valueOf(x)));
         String clusterIdsStr = clustersSj.toString();
 
-        if(clusterLinks.isEmpty())
+        if(clusterSvs.isEmpty())
         {
             VIS_LOGGER.warn("cluster {} not present in file", clusterIdsStr);
             return;
         }
 
-        if(clusterLinks.size() == 1 && skipSingles && clusterExons.isEmpty())
+        if(clusterSvs.size() == 1 && skipSingles && clusterExons.isEmpty())
         {
             VIS_LOGGER.debug("skipping simple cluster {}", clusterIdsStr);
             return;
         }
 
-        final Set<Integer> linkChainIds = clusterLinks.stream().map(x -> x.ChainId).collect(Collectors.toSet());
+        final Set<Integer> linkChainIds = clusterSvs.stream().map(x -> x.ChainId).collect(Collectors.toSet());
         final Set<Integer> segmentChainIds = clusterSegments.stream().map(x -> x.ChainId).collect(Collectors.toSet());
         segmentChainIds.removeAll(linkChainIds);
         if(!segmentChainIds.isEmpty())
@@ -244,12 +244,12 @@ public class SvVisualiser implements AutoCloseable
 
             if(mConfig.ClusterIds.size() == 1)
             {
-                final String resolvedTypeString = clusterLinks.get(0).ClusterResolvedType.toString();
+                final String resolvedTypeString = clusterSvs.get(0).ClusterResolvedType.toString();
                 fileId += "." + resolvedTypeString;
             }
         }
 
-        fileId += ".sv" + clusterLinks.size();
+        fileId += ".sv" + clusterSvs.size();
 
         if(mConfig.Debug)
             fileId += ".debug";
@@ -260,7 +260,7 @@ public class SvVisualiser implements AutoCloseable
         final List<VisFusion> clusterFusions = mSampleData.Fusions.stream().filter(x -> clusterIds.contains(x.ClusterId)).collect(toList());
 
         submitFiltered(clusterIds.size() == 1 ? ColorPicker::chainColors : ColorPicker::clusterColors,
-                fileId, clusterLinks, clusterSegments, clusterExons, clusterProteinDomains, clusterFusions, true);
+                fileId, clusterSvs, clusterSegments, clusterExons, clusterProteinDomains, clusterFusions, true);
     }
 
     private void submitFiltered(final ColorPickerFactory colorPickerFactory,
@@ -279,9 +279,8 @@ public class SvVisualiser implements AutoCloseable
         positionsToCover.addAll(Span.allPositions(filteredExons));
 
         // Limit copy numbers to within segments, links and exons (plus a little extra)
-        final List<VisCopyNumber> alterations =
-                VisCopyNumbers.copyNumbers(mSampleData.CopyNumbers, Span.spanPositions(positionsToCover));
-        positionsToCover.addAll(Span.allPositions(alterations));
+        final List<VisCopyNumber> copyNumbers = VisCopyNumbers.copyNumbers(mSampleData.CopyNumbers, Span.spanPositions(positionsToCover));
+        positionsToCover.addAll(Span.allPositions(copyNumbers));
 
         // Need to extend terminal segments past any current segments, links and exons and copy numbers
         final List<VisSegment> segments = VisSegments.extendTerminals(
@@ -291,8 +290,9 @@ public class SvVisualiser implements AutoCloseable
 
         final ColorPicker color = colorPickerFactory.create(links);
 
-        final CircosData circosData =
-                new CircosData(showSimpleSvSegments, mCircosConfig, segments, links, alterations, filteredExons, filteredFusions);
+        final CircosData circosData = new CircosData(
+                showSimpleSvSegments, mCircosConfig, segments, links, copyNumbers, filteredExons, filteredFusions);
+
         final CircosConfigWriter confWrite = new CircosConfigWriter(sample, mConfig.OutputConfPath, circosData, mCircosConfig);
         final FusionDataWriter fusionDataWriter = new FusionDataWriter(filteredFusions, filteredExons, filteredProteinDomains);
 

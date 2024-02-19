@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
 import static com.hartwig.hmftools.common.immune.ImmuneRegions.getIgRegion;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -85,27 +87,34 @@ public class VisDataWriter
     {
         try
         {
+            String sampleIdColumn = FLD_SAMPLE_ID + TSV_DELIM;
             mSvFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_SVS_FILE, false);
+            mSvFileWriter.write(sampleIdColumn);
             mSvFileWriter.write(VisSvData.header());
             mSvFileWriter.newLine();
 
             mSegmentFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_LINKS_FILE, false);
+            mSegmentFileWriter.write(sampleIdColumn);
             mSegmentFileWriter.write(VisSegment.header());
             mSegmentFileWriter.newLine();
 
             mCnFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_COPY_NUMBER_FILE, false);
+            mCnFileWriter.write(sampleIdColumn);
             mCnFileWriter.write(VisCopyNumber.header());
             mCnFileWriter.newLine();
 
             mGeneFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_GENE_EXONS_FILE, false);
+            mGeneFileWriter.write(sampleIdColumn);
             mGeneFileWriter.write(VisGeneExon.header());
             mGeneFileWriter.newLine();
 
             mProteinDomainFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_PROTEIN_FILE, false);
+            mProteinDomainFileWriter.write(sampleIdColumn);
             mProteinDomainFileWriter.write(VisProteinDomain.header());
             mProteinDomainFileWriter.newLine();
 
             mFusionFileWriter = createBufferedWriter(mOutputDir + COHORT_VIS_FUSIONS_FILE, false);
+            mFusionFileWriter.write(sampleIdColumn);
             mFusionFileWriter.write(VisFusion.header());
             mFusionFileWriter.newLine();
 
@@ -179,6 +188,7 @@ public class VisDataWriter
             {
                 for(final VisSvData data : svDataList)
                 {
+                    mSvFileWriter.write(sampleData.sampleId() + TSV_DELIM);
                     mSvFileWriter.write(VisSvData.toString(data));
                     mSvFileWriter.newLine();
                 }
@@ -315,6 +325,7 @@ public class VisDataWriter
             {
                 for(final VisSegment data : segments)
                 {
+                    mSegmentFileWriter.write(sampleData.sampleId() + TSV_DELIM);
                     mSegmentFileWriter.write(VisSegment.toString(data));
                     mSegmentFileWriter.newLine();
                 }
@@ -453,12 +464,14 @@ public class VisDataWriter
             {
                 for(final VisGeneExon data : geneExonList)
                 {
+                    mGeneFileWriter.write(sampleData.sampleId() + TSV_DELIM);
                     mGeneFileWriter.write(VisGeneExon.toString(data));
                     mGeneFileWriter.newLine();
                 }
 
                 for(final VisProteinDomain data : proteinList)
                 {
+                    mProteinDomainFileWriter.write(sampleData.sampleId() + TSV_DELIM);
                     mProteinDomainFileWriter.write(VisProteinDomain.toString(data));
                     mProteinDomainFileWriter.newLine();
                 }
@@ -513,6 +526,7 @@ public class VisDataWriter
             {
                 for(final VisCopyNumber data : cnDataList)
                 {
+                    mCnFileWriter.write(sampleData.sampleId() + TSV_DELIM);
                     mCnFileWriter.write(VisCopyNumber.toString(data));
                     mCnFileWriter.newLine();
                 }
@@ -536,6 +550,7 @@ public class VisDataWriter
             {
                 for(final VisFusion visFusion : sampleData.getFusions())
                 {
+                    mFusionFileWriter.write(sampleData.sampleId() + TSV_DELIM);
                     mFusionFileWriter.write(VisFusion.toString(visFusion));
                     mFusionFileWriter.newLine();
                 }

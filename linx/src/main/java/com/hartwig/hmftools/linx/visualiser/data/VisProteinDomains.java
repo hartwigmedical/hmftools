@@ -22,7 +22,7 @@ public class VisProteinDomains
 {
     public static List<VisProteinDomain> readProteinDomains(final String fileName, final List<VisFusion> fusions) throws IOException
     {
-        final List<VisProteinDomain> all = VisProteinDomain.read(fileName);
+        List<VisProteinDomain> all = VisProteinDomain.read(fileName);
         return proteinDomainsInFusionGenes(fusions, all);
     }
 

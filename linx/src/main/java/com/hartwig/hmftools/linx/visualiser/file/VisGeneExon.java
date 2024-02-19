@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
@@ -93,7 +94,7 @@ public class VisGeneExon implements GenomeRegion
             String[] values = line.split(TSV_DELIM);
 
             data.add(new VisGeneExon(
-                    getValue(fieldsIndexMap, "SampleId", "", values),
+                    getValue(fieldsIndexMap, FLD_SAMPLE_ID, "", values),
                     getIntValue(fieldsIndexMap, "ClusterId", 0, values),
                     getValue(fieldsIndexMap, "Gene", "", values),
                     getValue(fieldsIndexMap, "Transcript", "", values),
@@ -110,7 +111,6 @@ public class VisGeneExon implements GenomeRegion
     public static String header()
     {
         return new StringJoiner(TSV_DELIM)
-                .add("SampleId")
                 .add("ClusterId")
                 .add("Gene")
                 .add("Transcript")
@@ -125,7 +125,6 @@ public class VisGeneExon implements GenomeRegion
     public static String toString(final VisGeneExon geData)
     {
         return new StringJoiner(TSV_DELIM)
-                .add(String.valueOf(geData.SampleId))
                 .add(String.valueOf(geData.ClusterId))
                 .add(String.valueOf(geData.Gene))
                 .add(String.valueOf(geData.Transcript))

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getDoubleValue;
@@ -98,8 +100,8 @@ public class VisCopyNumber implements GenomeRegion
             String[] values = line.split(TSV_DELIM);
 
             data.add(new VisCopyNumber(
-                    getValue(fieldsIndexMap, "SampleId", "", values),
-                    getValue(fieldsIndexMap, "Chromosome", "", values),
+                    getValue(fieldsIndexMap, FLD_SAMPLE_ID, "", values),
+                    getValue(fieldsIndexMap, FLD_CHROMOSOME, "", values),
                     getIntValue(fieldsIndexMap, "Start", 0, values),
                     getIntValue(fieldsIndexMap, "End", 0, values),
                     getDoubleValue(fieldsIndexMap, "CopyNumber", 0, values),
@@ -112,8 +114,7 @@ public class VisCopyNumber implements GenomeRegion
     public static String header()
     {
         return new StringJoiner(TSV_DELIM)
-                .add("SampleId")
-                .add("Chromosome")
+                .add(FLD_CHROMOSOME)
                 .add("Start")
                 .add("End")
                 .add("CopyNumber")
@@ -124,7 +125,6 @@ public class VisCopyNumber implements GenomeRegion
     public static String toString(final VisCopyNumber cnData)
     {
         return new StringJoiner(TSV_DELIM)
-                .add(String.valueOf(cnData.SampleId))
                 .add(String.valueOf(cnData.Chromosome))
                 .add(String.valueOf(cnData.Start))
                 .add(String.valueOf(cnData.End))
