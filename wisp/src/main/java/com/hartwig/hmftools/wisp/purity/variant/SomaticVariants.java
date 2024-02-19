@@ -235,9 +235,9 @@ public class SomaticVariants
                 }
             }
 
-            if(umiTypeCounts != NO_UMI_COUNTS)
+            if(umiTypeCounts == NO_UMI_COUNTS)
             {
-                // override basic AD and DP if umit totals are set
+                // override basic AD and DP if UMI counts are set
                 depth = umiTypeCounts.totalCount();
                 alleleCount = umiTypeCounts.alleleCount();
                 umiTypeCounts = new UmiTypeCounts(depth, 0, 0, alleleCount, 0, 0);
