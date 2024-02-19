@@ -237,7 +237,7 @@ For each sample CUPPA outputs a visualization of the predictions (PNG file), as 
 TSV file. Please see later sections for more info on the [features](#features) and [classifiers](#classifier-structure) 
 shown in the visualization.
 
-![](src/main/python/pycuppa/doc/visualization/cuppa_vis.png)
+![](src/main/python/pycuppa/doc/visualization/COLO829v003T.cuppa.vis.png)
 
 ### Probabilities by classifier
 The CUPPA visualization is split into 4 panels. The first panel shows the probabilities for each cancer subtype 
