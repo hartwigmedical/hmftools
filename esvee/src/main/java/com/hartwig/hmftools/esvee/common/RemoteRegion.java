@@ -16,6 +16,8 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class RemoteRegion extends ChrBaseRegion
 {
+    private final byte Orientation;
+
     private final Set<String> mReadIds; // used to link with remote assemblies
 
     public static final int REMOTE_READ_TYPE_JUNCTION_MATE = 0;
@@ -25,9 +27,10 @@ public class RemoteRegion extends ChrBaseRegion
     private final int[] mReadTypeCount;
     private int mSoftClipMapQualTotal; // from reads with supplementaries
 
-    public RemoteRegion(final ChrBaseRegion region, final String readId, final int readType)
+    public RemoteRegion(final ChrBaseRegion region, final byte orientation, final String readId, final int readType)
     {
         super(region.Chromosome, region.start(), region.end());
+        Orientation = orientation;
         mReadIds = Sets.newHashSet(readId);
         mReadTypeCount = new int[REMOTE_READ_TYPE_DISCORDANT_READ+1];
         ++mReadTypeCount[readType];
@@ -78,7 +81,7 @@ public class RemoteRegion extends ChrBaseRegion
             {
                 RemoteRegion nextRegion = regions.get(nextIndex);
 
-                if(region.overlaps(nextRegion))
+                if(region.overlaps(nextRegion) && region.Orientation == nextRegion.Orientation)
                 {
                     regions.remove(nextIndex);
                     region.setEnd(max(region.end(), nextRegion.end()));

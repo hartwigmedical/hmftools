@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_S
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.findRemoteRegions;
 import static com.hartwig.hmftools.esvee.common.RefSideSoftClip.purgeRefSideSoftClips;
 import static com.hartwig.hmftools.esvee.common.SupportType.CANDIDATE_DISCORDANT;
+import static com.hartwig.hmftools.esvee.common.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.RefBaseAssembly;
@@ -201,11 +203,10 @@ public class AssemblyExtender
         return isDiscordant(read);
     }
 
-    public static void extendRefBases(final JunctionAssembly assembly, final List<AssemblySupport> nonJunctionSupport)
+    public static void extendRefBases(
+            final JunctionAssembly assembly, final List<AssemblySupport> nonJunctionSupport, final RefGenomeInterface refGenome)
     {
         // find the maximal ref base extension point and make note of any recurrent soft-clip points including possible branched assemblies
-        List<NonJunctionRead> candidateNonJunctionReads = Lists.newArrayList();
-
         int minAlignedPosition = assembly.minAlignedPosition();
         int maxAlignedPosition = assembly.maxAlignedPosition();
 
@@ -214,8 +215,7 @@ public class AssemblyExtender
         Collections.sort(nonJunctionSupport,
                 Comparator.comparingInt(x -> isForwardJunction ? -x.read().alignmentEnd() : x.read().alignmentStart()));
 
-        boolean hasGapped = false;
-        List<AssemblySupport> nonGappedSupport = Lists.newArrayList();
+        boolean hasGapped = false; // currently unused since gaps are filled in with ref bases
 
         List<RefSideSoftClip> refSideSoftClips = assembly.refSideSoftClips();
         refSideSoftClips.clear(); // will be re-established
@@ -226,32 +226,16 @@ public class AssemblyExtender
 
             if(isForwardJunction)
             {
-                if(read.alignmentEnd() < minAlignedPosition + ASSEMBLY_EXTENSION_OVERLAP_BASES)
-                {
-                    hasGapped = true;
-                }
-                else
-                {
-                    minAlignedPosition = min(minAlignedPosition, read.alignmentStart());
-                }
+                hasGapped |= read.alignmentEnd() < minAlignedPosition;
+                minAlignedPosition = min(minAlignedPosition, read.alignmentStart());
             }
             else
             {
-                if(read.alignmentStart() > maxAlignedPosition - ASSEMBLY_EXTENSION_OVERLAP_BASES)
-                {
-                    hasGapped = true;
-                }
-                else
-                {
-                    maxAlignedPosition = max(maxAlignedPosition, read.alignmentEnd());
-                }
+                hasGapped |= read.alignmentStart() > maxAlignedPosition;
+                maxAlignedPosition = max(maxAlignedPosition, read.alignmentEnd());
             }
 
-            if(!hasGapped)
-            {
-                RefSideSoftClip.checkAddRefSideSoftClip(refSideSoftClips, assembly.junction(), read);
-                nonGappedSupport.add(support);
-            }
+            RefSideSoftClip.checkAddRefSideSoftClip(refSideSoftClips, assembly.junction(), read);
         }
 
         int nonSoftClipRefPosition = isForwardJunction ? minAlignedPosition : maxAlignedPosition;
@@ -261,9 +245,9 @@ public class AssemblyExtender
 
         if(!hasUnmatched)
         {
-            RefBaseAssembly refBaseAssembly = new RefBaseAssembly(assembly, nonSoftClipRefPosition);
+            RefBaseAssembly refBaseAssembly = new RefBaseAssembly(assembly, nonSoftClipRefPosition, refGenome);
 
-            checkAddRefAssemblySupport(refBaseAssembly, candidateNonJunctionReads, Collections.emptySet());
+            checkAddRefAssemblySupport(refBaseAssembly, nonJunctionSupport, Collections.emptySet());
 
             if(refBaseAssembly.supportCount() > 0)
                 assembly.mergeRefBaseAssembly(refBaseAssembly);
@@ -272,7 +256,7 @@ public class AssemblyExtender
         }
 
         // now build out any distinct, branching assemblies from ref-base soft-clips
-        List<Set<Read>> excludedReadsList = allocateExcludedReads(assembly, candidateNonJunctionReads);
+        List<Set<Read>> excludedReadsList = allocateExcludedReads(assembly, nonJunctionSupport);
         List<AssemblySupport> initialSupport = Lists.newArrayList(assembly.support());
 
         List<JunctionAssembly> branchedAssemblies = Lists.newArrayList(assembly);
@@ -319,9 +303,9 @@ public class AssemblyExtender
                 extensionRefPosition = refSideSoftClip.Position;
             }
 
-            RefBaseAssembly refBaseAssembly = new RefBaseAssembly(junctionAssembly, extensionRefPosition);
+            RefBaseAssembly refBaseAssembly = new RefBaseAssembly(junctionAssembly, extensionRefPosition, refGenome);
 
-            checkAddRefAssemblySupport(refBaseAssembly, candidateNonJunctionReads, excludedReads);
+            checkAddRefAssemblySupport(refBaseAssembly, nonJunctionSupport, excludedReads);
 
             // only add branched assemblies if they have sufficient support
             if(junctionAssembly != assembly)
@@ -356,7 +340,7 @@ public class AssemblyExtender
         }
     }
 
-    private static List<Set<Read>> allocateExcludedReads(final JunctionAssembly assembly, final List<NonJunctionRead> nonJunctionReads)
+    private static List<Set<Read>> allocateExcludedReads(final JunctionAssembly assembly, final List<AssemblySupport> nonJunctionReads)
     {
         // now build out any distinct, branching assemblies from ref-base soft-clips
         List<RefSideSoftClip> refSideSoftClips = assembly.refSideSoftClips();
@@ -436,14 +420,14 @@ public class AssemblyExtender
     }
 
     private static void checkAddRefAssemblySupport(
-            final RefBaseAssembly refBaseAssembly, final List<NonJunctionRead> reads, final Set<Read> excludedReads)
+            final RefBaseAssembly refBaseAssembly, final List<AssemblySupport> nonJunctionReads, final Set<Read> excludedReads)
     {
-        for(NonJunctionRead njRead : reads)
+        for(AssemblySupport support : nonJunctionReads)
         {
-            if(!excludedReads.contains(njRead.read()))
+            if(!excludedReads.contains(support.read()))
             {
-                refBaseAssembly.checkAddRead(
-                        njRead.read(), njRead.type(), ASSEMBLY_EXTENSION_BASE_MISMATCH, ASSEMBLY_EXTENSION_OVERLAP_BASES);
+                SupportType type = support.type() == CANDIDATE_DISCORDANT ? DISCORDANT : support.type();
+                refBaseAssembly.checkAddRead(support.read(), type, ASSEMBLY_EXTENSION_BASE_MISMATCH, ASSEMBLY_EXTENSION_OVERLAP_BASES);
             }
         }
     }

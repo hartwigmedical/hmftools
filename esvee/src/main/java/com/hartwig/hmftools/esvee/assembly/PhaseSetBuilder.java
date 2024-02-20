@@ -16,6 +16,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.common.AssemblyLink;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
@@ -28,13 +29,15 @@ public class PhaseSetBuilder
 {
     private final AssemblyLinker mAssemblyLinker;
     private final PhaseGroup mPhaseGroup;
+    private final RefGenomeInterface mRefGenome;
 
     private final List<PhaseSet> mPhaseSets;
 
-    public PhaseSetBuilder(final PhaseGroup phaseGroup)
+    public PhaseSetBuilder(final RefGenomeInterface refGenome, final PhaseGroup phaseGroup)
     {
-        mAssemblyLinker = new AssemblyLinker();
+        mRefGenome = refGenome;
         mPhaseGroup = phaseGroup;
+        mAssemblyLinker = new AssemblyLinker();
         mPhaseSets = mPhaseGroup.phaseSets();
     }
 
@@ -102,6 +105,13 @@ public class PhaseSetBuilder
                         ++sharedCount;
                 }
 
+                // also check candidate reads
+                for(AssemblySupport support : assembly1.candidateSupport())
+                {
+                    if(hasMatchingFragment(assembly2.support(), support.read()))
+                        ++sharedCount;
+                }
+
                 if(sharedCount > 1)
                     assemblySupportPairs.add(new SharedAssemblySupport(assembly1, assembly2, sharedCount));
             }
@@ -129,8 +139,118 @@ public class PhaseSetBuilder
             linkedAssemblies.add(sharedReadPair.Assembly1);
             linkedAssemblies.add(sharedReadPair.Assembly2);
         }
+    }
 
-        /*
+    private AssemblyLink checkSplitLink(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
+    {
+        AssemblyLink assemblyLink = mAssemblyLinker.tryAssemblyOverlap(assembly1, assembly2);
+
+        if(assemblyLink == null)
+            return null;
+
+        // look for shared reads between the assemblies, and factor in discordant reads which were only considered candidates until now
+        List<AssemblySupport> matchedCandidates1 = Lists.newArrayList();
+        List<AssemblySupport> matchedCandidates2 = Lists.newArrayList();
+
+        // list is copied since matched candidates will be removed from repeated matching
+        List<AssemblySupport> candidateSupport2 = Lists.newArrayList(assembly2.candidateSupport());
+
+        // find matching reads, and link reads to each other where possible
+        checkMatchingCandidateSupport(assembly2, assembly1.candidateSupport(), candidateSupport2, matchedCandidates1, matchedCandidates2);
+        checkMatchingCandidateSupport(assembly1, candidateSupport2, Collections.emptyList(), matchedCandidates2, matchedCandidates1);
+
+        // build out ref-base assembly support from this non-junction reads
+        extendRefBases(assembly1, matchedCandidates1, mRefGenome);
+        extendRefBases(assembly2, matchedCandidates2, mRefGenome);
+
+        return assemblyLink;
+    }
+
+    private static void checkMatchingCandidateSupport(
+            final JunctionAssembly otherAssembly,
+            final List<AssemblySupport> candidateSupport, final List<AssemblySupport> otherCandidateSupport,
+            final List<AssemblySupport> matchedCandidates, final List<AssemblySupport> otherMatchedCandidates)
+    {
+        for(AssemblySupport support : candidateSupport)
+        {
+            AssemblySupport matchedSupport = findMatchingFragmentSupport(otherAssembly.support(), support.read());
+
+            if(matchedSupport == null)
+            {
+                matchedSupport = findMatchingFragmentSupport(otherCandidateSupport, support.read());
+
+                if(matchedSupport != null)
+                {
+                    // remove from other's candidates to avoid checking again
+                    otherMatchedCandidates.add(matchedSupport);
+                    otherCandidateSupport.remove(matchedSupport);
+                }
+            }
+
+            if(matchedSupport != null)
+            {
+                matchedCandidates.add(support);
+                support.read().makeReadLinks(matchedSupport.read());
+            }
+        }
+    }
+
+    private class SharedAssemblySupport
+    {
+        public final JunctionAssembly Assembly1;
+        public final JunctionAssembly Assembly2;
+        public final int SharedSupport;
+
+        public SharedAssemblySupport(final JunctionAssembly assembly1, final JunctionAssembly assembly2, final int sharedSupport)
+        {
+            Assembly1 = assembly1;
+            Assembly2 = assembly2;
+            SharedSupport = sharedSupport;
+        }
+
+        public String toString()
+        {
+            return format("%s + %s shared(%d)", Assembly1.junction().coords(), Assembly2.junction().coords(), SharedSupport);
+        }
+    }
+
+    private AssemblyLink checkCanLinkWithPhaseSet(final PhaseSet phaseSet, final SharedAssemblySupport sharedAssemblySupport)
+    {
+        // have already checked that no phase sets have this precise link, so now check if either of the new link's
+        // assemblies can link with an existing assembly in this phase set
+        for(AssemblyLink assemblyLink : phaseSet.assemblyLinks())
+        {
+            for(int n = 0; n <= 1; ++n)
+            {
+                JunctionAssembly newAssembly = (n == 0) ? sharedAssemblySupport.Assembly1 : sharedAssemblySupport.Assembly2;
+                JunctionAssembly otherNewAssembly = (n == 0) ? sharedAssemblySupport.Assembly2 : sharedAssemblySupport.Assembly1;
+
+                for(int e = 0; e <= 1; ++e)
+                {
+                    JunctionAssembly existingAssembly = (e == 0) ? assemblyLink.first() : assemblyLink.second();
+
+                    if(existingAssembly == otherNewAssembly)
+                        continue;
+
+                    if(phaseSet.hasMatchingAssembly(newAssembly, existingAssembly))
+                        return null;
+
+                    AssemblyLink phasedLink = checkSplitLink(newAssembly, existingAssembly);
+
+                    if(phasedLink != null)
+                        return phasedLink;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private boolean assemblyLinkExists(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
+    {
+        return mPhaseSets.stream().anyMatch(x -> x.hasMatchingAssembly(assembly1, assembly2));
+    }
+            /*
         while(!assemblySupportPairs.isEmpty())
         {
             SharedAssemblySupport sharedReadPair = assemblySupportPairs.get(0);
@@ -191,119 +311,5 @@ public class PhaseSetBuilder
             }
         }
         */
-    }
-
-    private AssemblyLink checkSplitLink(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
-    {
-        AssemblyLink assemblyLink = mAssemblyLinker.tryAssemblyOverlap(assembly1, assembly2);
-
-        if(assemblyLink == null)
-            return null;
-
-        // FIXME: make links between junction reads
-
-        // look for shared reads between the assemblies, and factor in discordant reads which were only considered candidates until now
-        List<AssemblySupport> matchedCandidates1 = Lists.newArrayList();
-        List<AssemblySupport> matchedCandidates2 = Lists.newArrayList();
-
-        // list is copied since matched candidates will be removed from repeated matching
-        List<AssemblySupport> candidateSupport2 = Lists.newArrayList(assembly2.candidateSupport());
-
-        checkMatchingCandidateSupport(assembly2, assembly1.candidateSupport(), candidateSupport2, matchedCandidates1, matchedCandidates2);
-        checkMatchingCandidateSupport(assembly1, candidateSupport2, Collections.emptyList(), matchedCandidates2, matchedCandidates1);
-
-        // build out ref-base assembly support from this non-junction reads
-        extendRefBases(assembly1, matchedCandidates1);
-        extendRefBases(assembly1, matchedCandidates2);
-
-        return assemblyLink;
-    }
-
-    private static void checkMatchingCandidateSupport(
-            final JunctionAssembly otherAssembly,
-            final List<AssemblySupport> candidateSupport, final List<AssemblySupport> otherCandidateSupport,
-            final List<AssemblySupport> matchedCandidates, final List<AssemblySupport> otherMatchedCandidates)
-    {
-        // TODO: at this point reads could be linked to each other - any reason not to do this?
-        //  could make fragment count determination more efficient
-        for(AssemblySupport support : candidateSupport)
-        {
-            AssemblySupport matchedSupport = findMatchingFragmentSupport(otherAssembly.support(), support.read());
-
-            if(matchedSupport == null)
-            {
-                matchedSupport = findMatchingFragmentSupport(otherCandidateSupport, support.read());
-
-                if(matchedSupport != null)
-                {
-                    // remove from other's candidates to avoid checking again
-                    otherMatchedCandidates.add(matchedSupport);
-                    otherCandidateSupport.remove(matchedSupport);
-                }
-            }
-
-            if(matchedSupport != null)
-            {
-                matchedCandidates.add(support);
-                support.read().makeReadLinks(matchedSupport.read());
-            }
-        }
-    }
-
-    private AssemblyLink checkCanLinkWithPhaseSet(final PhaseSet phaseSet, final SharedAssemblySupport sharedAssemblySupport)
-    {
-        // have already checked that no phase sets have this precise link, so now check if either of the new link's
-        // assemblies can link with an existing assembly in this phase set
-        for(AssemblyLink assemblyLink : phaseSet.assemblyLinks())
-        {
-            for(int n = 0; n <= 1; ++n)
-            {
-                JunctionAssembly newAssembly = (n == 0) ? sharedAssemblySupport.Assembly1 : sharedAssemblySupport.Assembly2;
-                JunctionAssembly otherNewAssembly = (n == 0) ? sharedAssemblySupport.Assembly2 : sharedAssemblySupport.Assembly1;
-
-                for(int e = 0; e <= 1; ++e)
-                {
-                    JunctionAssembly existingAssembly = (e == 0) ? assemblyLink.first() : assemblyLink.second();
-
-                    if(existingAssembly == otherNewAssembly)
-                        continue;
-
-                    if(phaseSet.hasMatchingAssembly(newAssembly, existingAssembly))
-                        return null;
-
-                    AssemblyLink phasedLink = checkSplitLink(newAssembly, existingAssembly);
-
-                    if(phasedLink != null)
-                        return phasedLink;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private boolean assemblyLinkExists(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
-    {
-        return mPhaseSets.stream().anyMatch(x -> x.hasMatchingAssembly(assembly1, assembly2));
-    }
-
-    private class SharedAssemblySupport
-    {
-        public final JunctionAssembly Assembly1;
-        public final JunctionAssembly Assembly2;
-        public final int SharedSupport;
-
-        public SharedAssemblySupport(final JunctionAssembly assembly1, final JunctionAssembly assembly2, final int sharedSupport)
-        {
-            Assembly1 = assembly1;
-            Assembly2 = assembly2;
-            SharedSupport = sharedSupport;
-        }
-
-        public String toString()
-        {
-            return format("%s + %s shared(%d)", Assembly1.junction().coords(), Assembly2.junction().coords(), SharedSupport);
-        }
-    }
 
 }

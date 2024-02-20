@@ -37,7 +37,8 @@ public class AssemblyExtensionTest
         String existingRefBases = refBases.substring(20, 41);
         JunctionAssembly assembly = new JunctionAssembly(posJunction, existingRefBases.getBytes(), baseQuals, 10);
 
-        RefBaseAssembly refBaseAssembly = new RefBaseAssembly(assembly, 40);
+        // FIXME: provide mock ref genome
+        RefBaseAssembly refBaseAssembly = new RefBaseAssembly(assembly, 40, null);
 
         assertEquals(21, refBaseAssembly.baseLength());
         String refAssemblyBases = StringUtil.bytesToString(refBaseAssembly.bases(), 10, 11);
@@ -71,7 +72,7 @@ public class AssemblyExtensionTest
 
         assembly = new JunctionAssembly(negJunction, existingRefBases.getBytes(), baseQuals, 10); // was 50 -> 70
 
-        refBaseAssembly = new RefBaseAssembly(assembly, 80);
+        refBaseAssembly = new RefBaseAssembly(assembly, 80, null);
 
         assertEquals(21, refBaseAssembly.baseLength());
         refAssemblyBases = StringUtil.bytesToString(refBaseAssembly.bases(), 0, 11);

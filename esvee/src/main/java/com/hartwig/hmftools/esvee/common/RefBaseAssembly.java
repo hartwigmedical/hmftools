@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public class RefBaseAssembly
@@ -21,7 +22,6 @@ public class RefBaseAssembly
     private final int mExtensionRefPosition;
     private int mMinAlignedPosition; // set from supporting reads
     private int mMaxAlignedPosition;
-    private final int mNonJunctionReadExtension;
     private int mJunctionSequenceIndex;
 
     private byte mBases[];
@@ -31,7 +31,7 @@ public class RefBaseAssembly
 
     private final SequenceMismatches mSequenceMismatches;
 
-    public RefBaseAssembly(final JunctionAssembly assembly, final int extensionRefPosition)
+    public RefBaseAssembly(final JunctionAssembly assembly, final int extensionRefPosition, final RefGenomeInterface refGenome)
     {
         mJunction = assembly.junction();
         mExtensionRefPosition = extensionRefPosition;
@@ -51,31 +51,39 @@ public class RefBaseAssembly
 
         // copy the ref bases from the junction assembly starting at the first ref base (ie the junction base itself)
         // for now ignoring mismatches even if they're dominant could also lower the qual for those, but better to sort this out prior or properly
-        mNonJunctionReadExtension = mJunction.isForward() ?
+        int nonJunctionReadExtension = mJunction.isForward() ?
                 assembly.minAlignedPosition() - extensionRefPosition : extensionRefPosition - assembly.maxAlignedPosition();
 
-        int copyIndexStart;
-        int copyIndexEnd;
+        int copyJuncIndexStart, copyJuncIndexEnd;
         int assemblyIndex;
+        int refBaseStart, refBaseEnd;
 
         if(mJunction.isForward())
         {
-            copyIndexStart = mNonJunctionReadExtension;
-            copyIndexEnd = assemblyLength - 1;
+            copyJuncIndexStart = nonJunctionReadExtension;
+            copyJuncIndexEnd = assemblyLength - 1;
+            refBaseStart = extensionRefPosition;
+            refBaseEnd = assembly.minAlignedPosition() - 1;
             assemblyIndex = 0;
             mJunctionSequenceIndex = assemblyLength - 1;
         }
         else
         {
-            copyIndexStart = 0;
-            copyIndexEnd = assembly.maxAlignedPosition() - mJunction.Position + 1;
+            copyJuncIndexStart = 0;
+            copyJuncIndexEnd = assembly.maxAlignedPosition() - mJunction.Position + 1;
+            refBaseStart = assembly.maxAlignedPosition() + 1;
+            refBaseEnd = extensionRefPosition;
             assemblyIndex = assembly.junctionIndex();
             mJunctionSequenceIndex = 0;
         }
 
+        int refBaseLength = refBaseEnd - refBaseStart + 1;
+        byte[] refBases = refGenome != null ? refGenome.getBases(mJunction.Chromosome, refBaseStart, refBaseEnd): new byte[refBaseLength];
+        int refBaseIndex = 0;
+
         for(int i = 0; i < mBases.length; ++i)
         {
-            if(i >= copyIndexStart && i <= copyIndexEnd && assemblyIndex < assembly.bases().length)
+            if(i >= copyJuncIndexStart && i <= copyJuncIndexEnd && assemblyIndex < assembly.bases().length)
             {
                 mBases[i] = assembly.bases()[assemblyIndex];
                 mBaseQuals[i] = assembly.baseQuals()[assemblyIndex];
@@ -83,7 +91,7 @@ public class RefBaseAssembly
             }
             else
             {
-                mBases[i] = 0;
+                mBases[i] = refBases[refBaseIndex++];
                 mBaseQuals[i] = 0;
             }
         }
@@ -91,8 +99,6 @@ public class RefBaseAssembly
 
     public int minAlignedPosition() { return mMinAlignedPosition; }
     public int maxAlignedPosition() { return mMaxAlignedPosition; }
-
-    public int nonJunctionReadExtension() { return mNonJunctionReadExtension; }
 
     public byte[] bases() { return mBases; }
     public byte[] baseQuals() { return mBaseQuals; }
@@ -258,8 +264,8 @@ public class RefBaseAssembly
 
     public String toString()
     {
-        return format("junc(%s) aligned(%d - %d) initExtension(pos=%d dist=%d) length(%d) support(%d) mismatches(pos=%d all=%d)",
-                mJunction, mMinAlignedPosition, mMaxAlignedPosition, mExtensionRefPosition, mNonJunctionReadExtension, baseLength(),
+        return format("junc(%s) aligned(%d - %d) extensionRefPos(%d) length(%d) support(%d) mismatches(pos=%d all=%d)",
+                mJunction, mMinAlignedPosition, mMaxAlignedPosition, mExtensionRefPosition, baseLength(),
                 mSupport.size(), mSequenceMismatches.positionCount(), mSequenceMismatches.distinctBaseCount());
     }
 }

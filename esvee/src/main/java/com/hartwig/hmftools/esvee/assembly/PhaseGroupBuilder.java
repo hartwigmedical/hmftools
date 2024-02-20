@@ -81,7 +81,6 @@ public class PhaseGroupBuilder
 
         PhaseGroup phaseGroup = assembly.phaseGroup(); // may have been set from an earlier assembly link
         boolean linksWithExisting = phaseGroup != null;
-        boolean hasBranchedAssemblies = !assembly.branchedAssemblies().isEmpty();
 
         Set<JunctionGroup> linkedJunctionGroups = Sets.newHashSet();
 
@@ -110,9 +109,6 @@ public class PhaseGroupBuilder
             }
         }
 
-        if(hasBranchedAssemblies)
-            linkedJunctionGroups.add(assemblyJunctionGroup);
-
         for(JunctionGroup junctionGroup : linkedJunctionGroups)
         {
             // the matching to other assemblies for each of this assembly's remote groups is purely for informational purposes
@@ -129,9 +125,7 @@ public class PhaseGroupBuilder
                     continue;
                 }
 
-                boolean branchedAssemblies = hasBranchedAssemblies && assembly.hasBranchedAssembly(otherAssembly);
-
-                if(!branchedAssemblies && !assembliesShareReads(assembly, otherAssembly))
+                if(!assembliesShareReads(assembly, otherAssembly))
                     continue;
 
                 if(phaseGroup == null)

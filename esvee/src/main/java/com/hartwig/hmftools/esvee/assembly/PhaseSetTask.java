@@ -65,7 +65,7 @@ public class PhaseSetTask extends ThreadTask
                 mPerfCounter.start();
 
                 // where there are more than 2 assemblies, start with the ones with the most support and overlapping junction reads
-                PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(phaseGroup);
+                PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(mConfig.RefGenome, phaseGroup);
 
                 phaseSetBuilder.buildPhaseSets();
 
