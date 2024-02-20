@@ -14,19 +14,6 @@ class TestCuppaFeaturesPaths:
         pass
 
 
-def assert_features_dataframe_has_all_feature_types(features):
-    assert features.columns.str.match("^gen_pos").any()
-    assert features.columns.str.match("^snv96").any()
-    assert features.columns.str.match("^event[.]sv").any()
-    assert features.columns.str.match("^event[.]fusion").any()
-    assert features.columns.str.match("^event[.]trait[.]is_male").any()
-    assert features.columns.str.match("^event[.]trait[.]whole_genome_duplication").any()
-    assert features.columns.str.match("^event[.]tmb").any()
-    assert features.columns.str.match("^sig").any()
-    assert features.columns.str.match("^gene_exp").any()
-    assert features.columns.str.match("^alt_sj").any()
-
-
 class TestFeatureLoaderOld:
 
     def test_can_load_dna_features(self):
@@ -45,8 +32,17 @@ class TestFeatureLoaderOld:
         paths = CuppaFeaturesPaths.from_dir(MockInputData.dir_old_format, basenames_mode="old")
         loader = FeatureLoaderOld(paths)
         features = loader.load_features()
-        assert_features_dataframe_has_all_feature_types(features)
-        assert True
+
+        assert features.columns.str.match("^gen_pos").any()
+        assert features.columns.str.match("^snv96").any()
+        assert features.columns.str.match("^event[.]sv").any()
+        assert features.columns.str.match("^event[.]fusion").any()
+        assert features.columns.str.match("^event[.]trait[.]is_male").any()
+        assert features.columns.str.match("^event[.]trait[.]whole_genome_duplication").any()
+        assert features.columns.str.match("^event[.]tmb").any()
+        assert features.columns.str.match("^sig").any()
+        assert features.columns.str.match("^gene_exp").any()
+        assert features.columns.str.match("^alt_sj").any()
 
 
 class TestFeatureLoaderNew:
@@ -80,12 +76,3 @@ class TestFeatureLoaderNew:
 
         assert features_series.index.str.startswith("gene_exp").sum() == 0
         assert features_series.index.str.startswith("alt_sj").sum() == 0
-
-
-class TestCuppaFeatures:
-    def _test_can_load_from_tsv_files(self):
-        ## TODO: Update test when data is available
-        directory = "/"
-        files = CuppaFeaturesPaths.from_dir(directory, basenames_mode="new")
-        features = CuppaFeatures.from_tsv_files(files)
-        assert True
