@@ -16,10 +16,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class CheckSampleExistsInDatabase
+public class CheckSampleAbsentFromDatabase
 {
 
-    private static final Logger LOGGER = LogManager.getLogger(CheckSampleExistsInDatabase.class);
+    private static final Logger LOGGER = LogManager.getLogger(CheckSampleAbsentFromDatabase.class);
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException
     {
@@ -29,19 +29,19 @@ public class CheckSampleExistsInDatabase
 
         try(DatabaseAccess dbAccess = databaseAccess(cmd))
         {
-            if(dbAccess.readPurpleSampleList().contains(sample))
+            if(!dbAccess.readPurpleSampleList().contains(sample))
             {
-                LOGGER.info("Sample '{}' exists in the database", sample);
+                LOGGER.info("Sample '{}' is absent from the database", sample);
             }
             else
             {
-                LOGGER.info("Sample '{}' does not exist in the database", sample);
+                LOGGER.warn("Sample '{}' is not absent from the database", sample);
                 System.exit(2);
             }
         }
         catch(Exception e)
         {
-            LOGGER.error("Failed to check whether sample '{}' exists in database", sample, e);
+            LOGGER.error("Failed to check whether sample '{}' is absent from the database", sample, e);
             System.exit(1);
         }
     }
