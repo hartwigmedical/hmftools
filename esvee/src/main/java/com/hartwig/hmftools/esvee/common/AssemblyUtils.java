@@ -3,6 +3,9 @@ package com.hartwig.hmftools.esvee.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
+import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -164,6 +167,21 @@ public final class AssemblyUtils
             final byte first, final byte second, final byte firstQual, final byte secondQual, final int lowQualThreshold)
     {
         return first == second || firstQual < lowQualThreshold || secondQual < lowQualThreshold;
+    }
+
+    public static boolean assembliesShareReads(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        // tests matching reads in both the junction reads and any extension reads (ie discordant)
+        for(AssemblySupport support : first.support())
+        {
+            if(support.type() == JUNCTION_MATE)
+                continue;
+
+            if(hasMatchingFragment(second.support(), support.read()))
+                return true;
+        }
+
+        return false;
     }
 
     public static List<int[]> findUnsetBases(final byte[] bases)

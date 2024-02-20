@@ -6,8 +6,10 @@ import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyExtender.extendRefBases;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.tryAssemblyFacing;
 import static com.hartwig.hmftools.esvee.common.AssemblySupport.findMatchingFragmentSupport;
 import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
+import static com.hartwig.hmftools.esvee.common.AssemblyUtils.assembliesShareReads;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -31,6 +33,9 @@ public class PhaseSetBuilder
     private final PhaseGroup mPhaseGroup;
     private final RefGenomeInterface mRefGenome;
 
+    private final List<JunctionAssembly> mAssemblies;
+    private final List<AssemblyLink> mSplitLinks;
+    private final List<AssemblyLink> mFacingLinks;
     private final List<PhaseSet> mPhaseSets;
 
     public PhaseSetBuilder(final RefGenomeInterface refGenome, final PhaseGroup phaseGroup)
@@ -39,6 +44,10 @@ public class PhaseSetBuilder
         mPhaseGroup = phaseGroup;
         mAssemblyLinker = new AssemblyLinker();
         mPhaseSets = mPhaseGroup.phaseSets();
+        mAssemblies = mPhaseGroup.assemblies();
+
+        mSplitLinks = Lists.newArrayList();
+        mFacingLinks = Lists.newArrayList();
     }
 
     public void buildPhaseSets()
@@ -50,8 +59,6 @@ public class PhaseSetBuilder
             for(JunctionAssembly branchedAssembly : assembly.branchedAssemblies())
             {
                 mPhaseGroup.addAssembly(branchedAssembly);
-
-                // replicate the links? or model how?
             }
         }
 
@@ -60,23 +67,50 @@ public class PhaseSetBuilder
 
     private void formFacingLinks()
     {
-        List<JunctionAssembly> assemblies = mPhaseGroup.assemblies();
-
-        if(assemblies.size() <= 2)
+        if(mAssemblies.size() <= 2)
             return;
 
         // support will have changed now, so reassess candidates for facing links
 
+        // for each assembly in a split link, look for a facing link (whether linked or not)
+        //Set<JunctionAssembly> linkedAssemblies;
+        Set<JunctionAssembly> facingAssemblies = Sets.newHashSet();
+
+        for(AssemblyLink splitLink : mSplitLinks)
+        {
+            for(JunctionAssembly assembly : mAssemblies)
+            {
+                if(splitLink.hasAssembly(assembly) || facingAssemblies.contains(assembly))
+                    continue;
+
+                for(int i = 0; i <= 1; ++i)
+                {
+                    JunctionAssembly facingAssembly = (i == 0) ? splitLink.first() : splitLink.second();
+                    JunctionAssembly splitAssembly = (i == 0) ? splitLink.second() : splitLink.first();
+
+                    AssemblyLink facingLink = tryAssemblyFacing(facingAssembly, assembly);
+
+                    if(facingLink == null)
+                        continue;
+
+                    // compelling evidence is a read from the new assembly which overlaps with the linked junction's reads
+                    if(assembliesShareReads(assembly, splitAssembly))
+                    {
+                        mFacingLinks.add(facingLink);
+                        facingAssemblies.add(facingAssembly);
+                        facingAssemblies.add(assembly);
+                    }
+                }
+            }
+        }
     }
 
     private void formSplitLinks()
     {
-        List<JunctionAssembly> assemblies = mPhaseGroup.assemblies();
-
-        if(assemblies.size() == 2)
+        if(mAssemblies.size() == 2)
         {
             // no need to re-test shared read support since they must be to be in a group
-            AssemblyLink assemblyLink = checkSplitLink(assemblies.get(0), assemblies.get(1));
+            AssemblyLink assemblyLink = checkSplitLink(mAssemblies.get(0), mAssemblies.get(1));
 
             if(assemblyLink != null)
             {
@@ -89,13 +123,13 @@ public class PhaseSetBuilder
         // where there are more than 2 assemblies, start with the ones with the most support and overlapping junction reads
         List<SharedAssemblySupport> assemblySupportPairs = Lists.newArrayList();
 
-        for(int i = 0; i < assemblies.size() - 1; ++i)
+        for(int i = 0; i < mAssemblies.size() - 1; ++i)
         {
-            JunctionAssembly assembly1 = assemblies.get(i);
+            JunctionAssembly assembly1 = mAssemblies.get(i);
 
-            for(int j = i + 1; j < assemblies.size(); ++j)
+            for(int j = i + 1; j < mAssemblies.size(); ++j)
             {
-                JunctionAssembly assembly2 = assemblies.get(j);
+                JunctionAssembly assembly2 = mAssemblies.get(j);
 
                 int sharedCount = 0;
 
@@ -135,6 +169,8 @@ public class PhaseSetBuilder
 
             if(splitLink == null)
                 continue;
+
+            mSplitLinks.add(splitLink);
 
             linkedAssemblies.add(sharedReadPair.Assembly1);
             linkedAssemblies.add(sharedReadPair.Assembly2);

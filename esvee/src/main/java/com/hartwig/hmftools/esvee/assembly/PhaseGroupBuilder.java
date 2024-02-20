@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.assembly;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
+import static com.hartwig.hmftools.esvee.common.AssemblyUtils.assembliesShareReads;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 
 import java.util.Collections;
@@ -209,21 +210,6 @@ public class PhaseGroupBuilder
         }
 
         return overlapGroups;
-    }
-
-    private static boolean assembliesShareReads(final JunctionAssembly first, final JunctionAssembly second)
-    {
-        // tests matching reads in both the junction reads and any extension reads (ie discordant)
-        for(AssemblySupport support : first.support())
-        {
-            if(support.type() == JUNCTION_MATE)
-                continue;
-
-            if(hasMatchingFragment(second.support(), support.read()))
-                return true;
-        }
-
-        return false;
     }
 
     private boolean isFiltered(final RemoteRegion region)
