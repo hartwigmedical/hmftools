@@ -52,7 +52,7 @@ class TestPredictionRunner:
 
         runner = PredictionRunner(
             features_path=MockInputData.path_tsv_new_format,
-            sample_id="TEST_SAMPLE",
+            sample_id="COLO829",
             classifier_path=DEFAULT_CUPPA_CLASSIFIER_PATH,
             output_dir=output_dir,
             using_old_features_format=False
