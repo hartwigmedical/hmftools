@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
 import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
@@ -77,11 +76,8 @@ public class LoadPurpleData
         setLogLevel(configBuilder);
         logVersion();
 
-        try
+        try(DatabaseAccess dbAccess = databaseAccess(configBuilder))
         {
-
-            DatabaseAccess dbAccess = databaseAccess(configBuilder);
-
             String sampleId = configBuilder.getValue(SAMPLE);
             String referenceId = configBuilder.getValue(REFERENCE);
             String rnaId = configBuilder.getValue(RNA_SAMPLE);
@@ -128,8 +124,7 @@ public class LoadPurpleData
         }
         catch(Exception e)
         {
-            LOGGER.error("failed to load Purple data: {}", e.toString());
-            e.printStackTrace();
+            LOGGER.error("Failed to load Purple data", e);
             System.exit(1);
         }
     }

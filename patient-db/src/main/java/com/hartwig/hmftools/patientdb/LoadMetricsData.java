@@ -45,19 +45,25 @@ public class LoadMetricsData
             System.exit(1);
         }
 
-        DatabaseAccess dbWriter = databaseAccess(cmd);
+        try (DatabaseAccess dbWriter = databaseAccess(cmd))
+        {
+            LOGGER.info("Extracting and writing metrics for {}", sample);
 
-        LOGGER.info("Extracting and writing metrics for {}", sample);
+            WGSMetrics refMetrics = WGSMetricsFile.read(refMetricsFile);
+            LOGGER.info(" Read reference sample metrics from {}", refMetricsFile);
+            WGSMetrics tumorMetrics = WGSMetricsFile.read(tumorMetricsFile);
+            LOGGER.info(" Read tumor sample metrics from {}", tumorMetricsFile);
 
-        WGSMetrics refMetrics = WGSMetricsFile.read(refMetricsFile);
-        LOGGER.info(" Read reference sample metrics from {}", refMetricsFile);
-        WGSMetrics tumorMetrics = WGSMetricsFile.read(tumorMetricsFile);
-        LOGGER.info(" Read tumor sample metrics from {}", tumorMetricsFile);
+            WGSMetricWithQC wgsMetricWithQC = WGSMetricQC.buildWithQCMetric(refMetrics, tumorMetrics);
+            dbWriter.writeMetrics(sample, wgsMetricWithQC);
 
-        WGSMetricWithQC wgsMetricWithQC = WGSMetricQC.buildWithQCMetric(refMetrics, tumorMetrics);
-        dbWriter.writeMetrics(sample, wgsMetricWithQC);
-
-        LOGGER.info("Complete");
+            LOGGER.info("Complete");
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("Failed to load metrics", e);
+            System.exit(1);
+        }
     }
 
     @NotNull

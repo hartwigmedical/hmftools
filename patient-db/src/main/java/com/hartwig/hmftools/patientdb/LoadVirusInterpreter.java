@@ -42,16 +42,22 @@ public class LoadVirusInterpreter
             System.exit(1);
         }
 
-        DatabaseAccess dbWriter = databaseAccess(cmd);
+        try (DatabaseAccess dbWriter = databaseAccess(cmd))
+        {
+            LOGGER.info("Reading virus annotation TSV {}", virusAnnotationTsv);
+            List<AnnotatedVirus> virusAnnotations = AnnotatedVirusFile.read(virusAnnotationTsv);
+            LOGGER.info(" Read {} virus annotation", virusAnnotations.size());
 
-        LOGGER.info("Reading virus annotation TSV {}", virusAnnotationTsv);
-        List<AnnotatedVirus> virusAnnotations = AnnotatedVirusFile.read(virusAnnotationTsv);
-        LOGGER.info(" Read {} virus annotation", virusAnnotations.size());
+            LOGGER.info("Writing virus annotations into database for {}", sample);
+            dbWriter.writeVirusInterpreter(sample, virusAnnotations);
 
-        LOGGER.info("Writing virus annotations into database for {}", sample);
-        dbWriter.writeVirusInterpreter(sample, virusAnnotations);
-
-        LOGGER.info("Complete");
+            LOGGER.info("Complete");
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("Failed to load virus annotations", e);
+            System.exit(1);
+        }
     }
 
     @NotNull

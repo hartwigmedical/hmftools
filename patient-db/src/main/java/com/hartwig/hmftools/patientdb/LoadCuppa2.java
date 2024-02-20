@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
 import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -25,6 +26,7 @@ public class LoadCuppa2
         Options options = new Options();
 
         options.addOption(CUPPA_VIS_DATA_TSV, true, "Path to the CUPPA vis data file");
+        options.addOption(SAMPLE, true, "Sample for which we are going to load the CUPPA results");
 
         addDatabaseCmdLineArgs(options);
 
@@ -46,15 +48,26 @@ public class LoadCuppa2
 
         logVersion();
 
-        LOGGER.info("Loading CUPPA from {}", new File(cuppaVisDataTsv).getParent());
-        CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(cuppaVisDataTsv);
-        String sample = cuppaPredictions.get(0).SampleId;
-        LOGGER.info("Loaded {} entries from {} for sample {}", cuppaPredictions.size(), cuppaVisDataTsv, sample);
+        try
+        {
+            LOGGER.info("Loading CUPPA from {}", new File(cuppaVisDataTsv).getParent());
+            CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(cuppaVisDataTsv);
+            String sample = cmd.getOptionValue(SAMPLE);
+            LOGGER.info("Loaded {} entries from {} for sample {}", cuppaPredictions.size(), cuppaVisDataTsv, sample);
 
-        int TOP_N_PROBS = 3;
-        LOGGER.info("Writing top {} probabilities from all classifiers to database", TOP_N_PROBS);
-        DatabaseAccess dbWriter = databaseAccess(cmd);
-        dbWriter.writeCuppa2(sample, cuppaPredictions, TOP_N_PROBS);
-        LOGGER.info("Complete");
+            int TOP_N_PROBS = 3;
+            LOGGER.info("Writing top {} probabilities from all classifiers to database", TOP_N_PROBS);
+
+            try (DatabaseAccess dbWriter = databaseAccess(cmd))
+            {
+                dbWriter.writeCuppa2(sample, cuppaPredictions, TOP_N_PROBS);
+                LOGGER.info("Complete");
+            }
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("Failed to load CUPPA data", e);
+            System.exit(1);
+        }
     }
 }
