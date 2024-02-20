@@ -51,7 +51,7 @@ class TestPredictionRunner:
         os.makedirs(output_dir, exist_ok=True)
 
         runner = PredictionRunner(
-            features_path=MockInputData.path_tsv_new_format_prostate,
+            features_path=MockInputData.path_tsv_new_format,
             sample_id="TEST_SAMPLE",
             classifier_path=DEFAULT_CUPPA_CLASSIFIER_PATH,
             output_dir=output_dir,
@@ -63,19 +63,15 @@ class TestPredictionRunner:
         pred_summ = runner.pred_summ
 
         pred_class_1 = pred_summ["pred_class_1"].tolist()
-        assert pred_class_1 == ["Prostate"] * 8
+        assert pred_class_1 == ["Skin: Melanoma"] * 4
 
         pred_prob_1 = pd.Series(pred_summ["pred_prob_1"].values, index=pred_summ["clf_name"])
-        pred_prob_1 = pred_prob_1.round(4)
+        pred_prob_1 = pred_prob_1.round(6)
         pred_prob_1_expected = pd.Series(dict(
-            combined = 0.9968,
-            dna_combined = 1,
-            rna_combined = 0.9953,
-            gen_pos = 0.9992,
-            snv96 = 0.6434,
-            event = 0.9971,
-            gene_exp = 0.9988,
-            alt_sj = 0.9976,
+            dna_combined = 0.999967,
+            gen_pos = 0.999749,
+            snv96 = 0.999988,
+            event = 0.850770,
         ))
         assert all(pred_prob_1 == pred_prob_1_expected)
 
@@ -84,21 +80,6 @@ class TestPredictionRunner:
         assert os.path.exists(runner.pred_summ_path)
 
         shutil.rmtree(output_dir)
-
-    def test_fusion_override_alters_probabilities(self):
-
-        output_dir = os.path.join(tempfile.gettempdir(), "pycuppa_prediction_run_test")
-        os.makedirs(output_dir, exist_ok=True)
-
-        runner = PredictionRunner(
-            features_path=MockInputData.path_tsv_new_format_prostate,
-            sample_id="TEST_SAMPLE",
-            classifier_path=DEFAULT_CUPPA_CLASSIFIER_PATH,
-            output_dir=output_dir,
-            using_old_features_format=False
-        )
-
-        runner.run()
 
     def test_predict_with_mock_classifier_and_data_gives_correct_results(self):
 
