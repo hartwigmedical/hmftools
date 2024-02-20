@@ -9,6 +9,12 @@ logging.getLogger('matplotlib.font_manager').disabled = True
 logging.getLogger('matplotlib.pyplot').disabled = True
 logging.getLogger('matplotlib.backends.backend_pdf').disabled = True
 
+logging.addLevelName(logging.CRITICAL,  "[CRIT ]")
+logging.addLevelName(logging.ERROR,     "[ERROR]")
+logging.addLevelName(logging.WARNING,   "[WARN ]")
+logging.addLevelName(logging.INFO,      "[INFO ]")
+logging.addLevelName(logging.DEBUG,     "[DEBUG]")
+logging.addLevelName(logging.NOTSET,    "[NOTSET]")
 
 def reset_logging_basic_config(
     filename: Optional[str] = None,
