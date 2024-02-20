@@ -10,6 +10,7 @@ import pandas as pd
 from cuppa.components.preprocessing import NaRowFilter
 from cuppa.logger import LoggerMixin
 from cuppa.constants import RESOURCES_DIR
+from cuppa.misc.utils import check_required_columns
 
 
 class CuppaFeaturesPaths(pd.Series, LoggerMixin):
@@ -186,185 +187,139 @@ class CuppaFeatures(pd.DataFrame, LoggerMixin):
 
 class FeatureLoaderNew(LoggerMixin):
 
-    def __init__(self, path: str, sample_id: str = None, verbose: bool = False):
+    def __init__(
+        self,
+        path: str,
+        sample_id: str | None = None,
+        excl_chroms: Iterable[str] | None = ["ChrY", "Y"],
+        verbose: bool = True
+    ):
         self.path = path
         self.sample_id = sample_id
+        self.excl_chroms = excl_chroms
         self.verbose = verbose
 
-    ## Loading ================================
-    FEAT_INFO_COLS = dict(
-        Source = "source",
-        Category = "category",
-        Key = "key"
-    )
+    REQUIRED_COLS = ["Source","Category","Key","Value"]
 
-    def load_feat_info(self, path: str) -> pd.DataFrame:
+    def load_file(self) -> pd.DataFrame:
+        df = pd.read_table(self.path)
+        check_required_columns(df, self.REQUIRED_COLS)
 
         if self.verbose:
-            self.logger.debug("Loading features info")
-
-        df = pd.read_table(
-            path,
-            index_col=False,
-            usecols=list(self.FEAT_INFO_COLS.keys())
-        )
-
-        df.columns = self.FEAT_INFO_COLS.values()
+            self.logger.info("Loaded file from: " + self.path)
 
         return df
 
-    ## Helper methods to parse feature names ================================
-    def _rename_categories(self, feat_info: pd.DataFrame) -> None:
+    def add_sample_ids(self, df: pd.DataFrame) -> pd.DataFrame:
+
+        if "SampleId" in df.columns:
+            return df
+
+        if self.sample_id is not None:
+            df["SampleId"] = self.sample_id
+            return df
+
+        df["SampleId"] = "SAMPLE_1"
+        self.logger.warning("No `sample_id` provided. Using `sample_id`='SAMPLE_1'")
+        return df
+
+    def filter_gen_pos_chroms(self, df: pd.DataFrame) -> pd.DataFrame:
+
+        if self.excl_chroms is None:
+            return df
+
+        regex = "^(" + "|".join(self.excl_chroms) + ")"
+        is_excluded_feature = (df["Category"] == "gen_pos") & df["Key"].str.match(regex)
 
         if self.verbose:
-            self.logger.debug("Renaming `Category` values")
+            df_excluded = df[is_excluded_feature]
+            if len(df_excluded) > 0:
+                self.logger.info(
+                    "Removed %i gen_pos bin(s) in %i sample(s) with the regex '%s'",
+                    len(df_excluded["Key"].unique()),
+                    len(df_excluded["SampleId"].unique()),
+                    regex
+                )
 
-        mappings = dict(
-            GEN_POS="gen_pos",
-            SNV96="snv96",
-            SV_COUNT="event.sv",
-            FUSION="event.fusion",
-            SAMPLE_TRAIT="event.trait",
-            SIGNATURE="sig",
+        return df[~is_excluded_feature]
 
-            EXPRESSION="gene_exp",
-            ALT_SJ="alt_sj",
+    def dedup_drivers(self, df: pd.DataFrame) -> pd.DataFrame:
+        df = df.sort_values(by="Value", ascending=False)
 
-            ## TODO: below mappings are subject to change
-            DRIVER="event.driver",
-            VIRUS="virus",
-        )
+        columns_orig = df.columns
 
-        feat_info["category_renamed"] = feat_info["category"].replace(mappings)
+        sample_feature_keys = pd.Series(df[["SampleId","Category","Key"]].itertuples(index=False))
+        df.loc[:,"is_dup_feature"] = sample_feature_keys.duplicated().values
+        df.loc[:,"is_driver"] = df["Category"] == "event.driver"
 
-    def _rename_keys(self, feat_info: pd.DataFrame) -> None:
+        df_dup = df.query("is_dup_feature & is_driver")
+        if len(df_dup) > 0:
+            self.logger.warning(
+                "Removed %i duplicate driver(s) from %i sample(s) (kept highest impact driver)",
+                len(df_dup), len(df_dup["SampleId"].unique())
+            )
 
-        if self.verbose:
-            self.logger.debug("Renaming `Key` values")
+        is_excluded_feature = df["is_dup_feature"] & df["is_driver"]
+        df = df[~is_excluded_feature]
 
-        mappings_sigs = dict(
-            SIG_1 = "Age (SBS1)",
-            SIG_2_13_AID_APOBEC = "AID/APOBEC (SBS2/13)",
-            SIG_4_SMOKING = "Smoking (SBS4)",
-            SIG_6_MMR = "MMRD (SBS6)",
-            SIG_7_UV = "UV (SBS7)",
-            SIG_10_POLE = "POLE (SBS10)",
-            SIG_11 = "Temozolomide (SBS11)",
-            SIG_17 = "ROS/5FU (SBS17)",
-        )
+        df = df.sort_index()
+        return df[columns_orig]
 
-        mappings_traits = dict(
-            IS_MALE = "is_male",
-            SNV_COUNT="tmb.snv_count",
-            MS_INDELS_TMB = "tmb.indels_per_mb",
-            WGD = "whole_genome_duplication",
-        )
+    MAPPINGS_SIGS = dict(
+        SIG_1="Age (SBS1)",
+        SIG_2_13_AID_APOBEC="AID/APOBEC (SBS2/13)",
+        SIG_4_SMOKING="Smoking (SBS4)",
+        SIG_6_MMR="MMRD (SBS6)",
+        SIG_7_UV="UV (SBS7)",
+        SIG_10_POLE="POLE (SBS10)",
+        SIG_11="Temozolomide (SBS11)",
+        SIG_17="ROS/5FU (SBS17)",
+    )
 
-        mappings = mappings_sigs | mappings_traits
-        feat_info["key_renamed"] = feat_info["key"].replace(mappings)
-
-        ## Replace e.g. "BRAF.mutation" with "BRAF.mut"
-        feat_info["key_renamed"] = feat_info["key_renamed"].replace("[.]mutation$", ".mut", regex=True)
-
-    def _make_final_feat_names(self, feat_info: pd.DataFrame) -> None:
-
-        if self.verbose:
-            self.logger.debug("Renaming `feat_name` values")
-
-        mappings = {
-            "event.trait.tmb.snv_count": "event.tmb.snv_count",
-            "event.trait.tmb.indels_per_mb": "event.tmb.indels_per_mb"
-        }
-
-        feat_names = feat_info["category_renamed"] + "." + feat_info["key_renamed"]
-        feat_names.replace(mappings, inplace=True)
-
-        feat_info["feat_name"] = feat_names
-
-    def _get_feat_types(self, feat_info: pd.DataFrame, sep=".") -> None:
-        affixes = feat_info["feat_name"].str.split(sep, regex=False, n=1)
-        prefixes = affixes.map(lambda x: x[0])
-        feat_info["feat_type"] = prefixes
-
-    EXCLUDED_FEATURES = (
+    EXCLUDED_SIGS = (
         "Age (SBS1)",
         "POLE (SBS10)",
         "Temozolomide (SBS11)"
     )
 
-    def _mark_excluded_features(self, feat_info: pd.DataFrame) -> None:
+    def parse_signatures(self, df: pd.DataFrame) -> pd.DataFrame:
+        df["Key"] = df["Key"].replace(self.MAPPINGS_SIGS)
+        df = df[~df["Key"].isin(self.EXCLUDED_SIGS)]
+        return df
+
+    def reshape_long_to_wide(self, df: pd.DataFrame):
+
+        df["FeatureNames"] = df["Category"] + "." + df["Key"]
+
+        df_wide = df.pivot_table(index="SampleId", columns="FeatureNames", values="Value")
+        df_wide = df_wide[df["FeatureNames"].unique()] ## Preserve original feature order
+
+        df_wide.index.name = "sample_id"
+        df_wide.columns.name = None
+
+        df_wide = df_wide.fillna(0)
+
+        return df_wide
+
+    def load(self) -> pd.DataFrame:
+        df = self.load_file()
+        df = self.add_sample_ids(df)
+
+        df = self.filter_gen_pos_chroms(df)
+        df = self.dedup_drivers(df)
+        df = self.parse_signatures(df)
+
+        features = self.reshape_long_to_wide(df)
+
+        n_samples = len(df["SampleId"].unique())
+        n_features = features.shape[1]
         if self.verbose:
-            self.logger.debug("Excluding %i features: %s" % (
-                len(self.EXCLUDED_FEATURES),
-                ", ".join(self.EXCLUDED_FEATURES)
-            ))
+            if n_samples == 0:
+                self.logger.info("Loaded %i features from sample_id: %s" % (n_features, df["SampleId"][0]))
+            else:
+                self.logger.info("Loaded %i features from %i samples" % (n_features, n_samples))
 
-        feat_info["is_excluded"] = feat_info["key_renamed"]\
-            .isin(self.EXCLUDED_FEATURES)\
-            .values
-
-    def _mark_duplicate_features(self, feat_info: pd.DataFrame) -> None:
-
-        feat_info["is_duplicated"] = feat_info["key_renamed"].duplicated()
-        duplicate_features = feat_info.query("is_duplicated")["feat_name"]
-
-        if self.verbose and len(duplicate_features)>0:
-            self.logger.warning("Removing %i duplicate features: %s" % (
-                len(duplicate_features),
-                ", ".join(duplicate_features)
-            ))
-
-    ## Main ================================
-    def parse_feature_names(self) -> pd.DataFrame:
-
-        if self.verbose:
-            self.logger.info("Parsing feature names")
-
-        feat_info = self.load_feat_info(self.path)
-
-        self._rename_categories(feat_info)
-        self._rename_keys(feat_info)
-        self._make_final_feat_names(feat_info)
-        self._get_feat_types(feat_info)
-        self._mark_excluded_features(feat_info)
-        self._mark_duplicate_features(feat_info)
-
-        return feat_info
-
-    def load_feature_values(self) -> pd.DataFrame:
-        header = pd.read_table(self.path, nrows=0).columns
-        sample_cols = header[~header.isin(self.FEAT_INFO_COLS.keys())]
-
-        return pd.read_table(
-            self.path,
-            index_col=False,
-            usecols=sample_cols,
-            dtype="float32",
-            engine='c'
-        )
-
-    def load(self) -> "CuppaFeatures":
-        df = self.load_feature_values()
-
-        ## Assign feature names
-        feat_info = self.parse_feature_names()
-        df.index = feat_info["feat_name"].values
-
-        ## Remove some features
-        df = df.loc[
-            ~feat_info["is_excluded"].values &
-            ~feat_info["is_duplicated"].values
-        ]
-        df = df.transpose()
-
-        if self.sample_id is not None:
-            sample_id = self.sample_id
-        else:
-            sample_id = "sample_1"
-            self.logger.warning("No `sample_id` provided. Using `sample_id`=" + sample_id)
-        df.index = pd.Series(sample_id)
-
-        return CuppaFeatures(df)
+        return CuppaFeatures(features)
 
 
 class FeatureLoaderOld(LoggerMixin):
@@ -480,7 +435,7 @@ class FeatureLoaderOld(LoggerMixin):
 
         ## Select max likelihood feature
         df = df.sort_values(["Name", "SampleId", "Likelihood"])
-        df["sample_feature_id"] = df["SampleId"] + "_" + df["Name"]
+        df["sample_feature_id"] = df["SampleId"] + "_" + df["Name"] + "_" + df["sub_type"]
         df = df.drop_duplicates("sample_feature_id", keep="last")
 
         ## Wide format

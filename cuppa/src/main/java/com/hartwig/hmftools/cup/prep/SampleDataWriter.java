@@ -3,7 +3,6 @@ package com.hartwig.hmftools.cup.prep;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_ZIP_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -132,7 +131,7 @@ public class SampleDataWriter
 
                 for(DataItem dataItem : dataItems)
                 {
-                    mWriter.write(format("%s\t%s\t%s\t%s\t", sourceStr, dataItem.Type, dataItem.Key, dataItem.Value));
+                    mWriter.write(format("%s\t%s\t%s\t%s", sourceStr, dataItem.Type.getAlias(), dataItem.Key, dataItem.Value));
                     mWriter.newLine();
                 }
             }
