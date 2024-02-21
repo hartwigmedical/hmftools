@@ -1,6 +1,12 @@
 package com.hartwig.hmftools.peach;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.peach.PeachUtils.PCH_LOGGER;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.peach.data_loader.DrugInfoLoader;
@@ -19,13 +25,6 @@ import com.hartwig.hmftools.peach.panel.HaplotypePanel;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
-import static com.hartwig.hmftools.peach.PeachUtils.PCH_LOGGER;
 
 public class PeachApplication
 {
@@ -90,14 +89,10 @@ public class PeachApplication
             PCH_LOGGER.info("write all haplotype combinations output file");
             AllHaplotypeCombinationsFile.write(config.getAllHaplotypeCombinationsOutputPath(), geneToHaplotypeAnalysis);
             PCH_LOGGER.info("write best haplotype combination output file");
-            BestHaplotypeCombinationsFile.write(config.getBestHaplotypeCombinationsOutputPath(), geneToHaplotypeAnalysis);
+            BestHaplotypeCombinationsFile.write(config.getBestHaplotypeCombinationsOutputPath(), geneToHaplotypeAnalysis,
+                    drugInfoStore, haplotypeFunctionStore);
             PCH_LOGGER.info("write qc status output file");
             QcStatusFile.write(config.getQcStatusOutputPath(), geneToHaplotypeAnalysis);
-
-//            if(drugInfoStore != null || haplotypeFunctionStore != null)
-//            {
-//                DrugFunctionFile.write(config.getDrugFunctionsOutputPath(), geneToHaplotypeAnalysis, drugInfoStore, haplotypeFunctionStore);
-//            }
         }
         catch(IOException e)
         {

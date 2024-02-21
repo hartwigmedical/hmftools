@@ -29,13 +29,13 @@ public class HaplotypeFunctionStore
         List<HaplotypeFunction> matchingFunctions = haplotypeFunctions.stream()
                 .filter(i -> i.geneName().equals(geneName) && i.haplotypeName().equals(haplotypeName))
                 .collect(Collectors.toList());
-        if(haplotypeFunctions.isEmpty())
+        if(matchingFunctions.isEmpty())
         {
             return null;
         }
-        else if(haplotypeFunctions.size() == 1)
+        else if(matchingFunctions.size() == 1)
         {
-            return haplotypeFunctions.get(0);
+            return matchingFunctions.get(0);
         }
         else
         {
