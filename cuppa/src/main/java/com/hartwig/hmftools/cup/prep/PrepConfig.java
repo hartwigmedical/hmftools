@@ -121,4 +121,33 @@ public class PrepConfig
         addLoggingOptions(configBuilder);
         addOutputOptions(configBuilder);
     }
+
+    public PrepConfig(
+            final List<String> sampleIds,
+            final List<CategoryType> categories,
+            final RefGenomeVersion refGenVersion,
+            final String outputDir,
+            final String outputId,
+            final boolean writeByCategory,
+            final String linxDir,
+            final String purpleDir,
+            final String virusDir,
+            final String isofoxDir,
+            final String altSpliceJunctionSites
+    )
+    {
+        SampleIds = sampleIds;
+        Categories = categories;
+        RefGenVersion = refGenVersion;
+        OutputDir = outputDir;
+        OutputId = outputId;
+        WriteByCategory = writeByCategory;
+        LinxDir = linxDir;
+        PurpleDir = purpleDir;
+        VirusDir = virusDir;
+        IsofoxDir = isofoxDir;
+        AltSpliceJunctionSites = altSpliceJunctionSites;
+    }
+
+//    public static class Builder()
 }
