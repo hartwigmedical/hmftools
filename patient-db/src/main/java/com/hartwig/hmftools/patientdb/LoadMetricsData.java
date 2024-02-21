@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.patientdb;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.patientdb.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
-import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
@@ -13,12 +14,9 @@ import com.hartwig.hmftools.common.metrics.WGSMetricQC;
 import com.hartwig.hmftools.common.metrics.WGSMetricWithQC;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,23 +27,21 @@ public class LoadMetricsData
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException
     {
-        Options options = createOptions();
-        CommandLine cmd = new DefaultParser().parse(options, args);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        logVersion();
+        configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
+        addDatabaseCmdLineArgs(configBuilder, true);
+        configBuilder.addPath(REF_METRICS_FILE, true, "Path towards the metrics file holding the ref sample metrics");
+        configBuilder.addPath(TUMOR_METRICS_FILE, true, "Path towards the metrics file holding the tumor sample metrics");
 
-        String sample = cmd.getOptionValue(SAMPLE);
-        String refMetricsFile = cmd.getOptionValue(REF_METRICS_FILE);
-        String tumorMetricsFile = cmd.getOptionValue(TUMOR_METRICS_FILE);
+        configBuilder.checkAndParseCommandLine(args);
 
-        if (CommonUtils.anyNull(sample, refMetricsFile, tumorMetricsFile))
-        {
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Patient-DB - Load Metrics Data", options);
-            System.exit(1);
-        }
+        String sample = configBuilder.getValue(SAMPLE);
 
-        try (DatabaseAccess dbWriter = databaseAccess(cmd))
+        String refMetricsFile = configBuilder.getValue(REF_METRICS_FILE);
+        String tumorMetricsFile = configBuilder.getValue(TUMOR_METRICS_FILE);
+
+        try (DatabaseAccess dbWriter = databaseAccess(configBuilder))
         {
             LOGGER.info("Extracting and writing metrics for {}", sample);
 
@@ -64,18 +60,5 @@ public class LoadMetricsData
             LOGGER.error("Failed to load metrics", e);
             System.exit(1);
         }
-    }
-
-    @NotNull
-    private static Options createOptions()
-    {
-        Options options = new Options();
-        options.addOption(SAMPLE, true, "Sample for which we are going to load the metrics");
-        options.addOption(REF_METRICS_FILE, true, "Path towards the metrics file holding the ref sample metrics");
-        options.addOption(TUMOR_METRICS_FILE, true, "Path towards the metrics file holding the tumor sample metrics");
-
-        addDatabaseCmdLineArgs(options);
-
-        return options;
     }
 }

@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.patientdb;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.patientdb.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
-import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
@@ -14,12 +15,9 @@ import java.util.List;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPrediction;
 import com.hartwig.hmftools.common.cuppa.interpretation.CuppaPredictionFactory;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,22 +27,18 @@ public class LoadCuppa
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException
     {
-        Options options = createOptions();
-        CommandLine cmd = new DefaultParser().parse(options, args);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        logVersion();
+        configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
+        addDatabaseCmdLineArgs(configBuilder, true);
+        configBuilder.addPath(CUPPA_RESULTS_CSV, true, "Path to the *.cup.data.csv file");
 
-        String sample = cmd.getOptionValue(SAMPLE);
-        String cuppaResultsCsv = cmd.getOptionValue(CUPPA_RESULTS_CSV);
+        configBuilder.checkAndParseCommandLine(args);
 
-        if(CommonUtils.anyNull(sample, cuppaResultsCsv))
-        {
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Patient-DB - Load CUPPA Data", options);
-            System.exit(1);
-        }
+        String sample = configBuilder.getValue(SAMPLE);
+        String cuppaResultsCsv = configBuilder.getValue(CUPPA_RESULTS_CSV);
 
-        try(DatabaseAccess dbWriter = databaseAccess(cmd))
+        try(DatabaseAccess dbWriter = databaseAccess(configBuilder))
         {
             LOGGER.info("Loading CUPPA from {}", new File(cuppaResultsCsv).getParent());
             List<CuppaDataFile> cuppaEntries = CuppaDataFile.read(cuppaResultsCsv);
@@ -64,18 +58,5 @@ public class LoadCuppa
             LOGGER.error("Failed to load CUPPA", e);
             System.exit(1);
         }
-    }
-
-    @NotNull
-    private static Options createOptions()
-    {
-        Options options = new Options();
-
-        options.addOption(SAMPLE, true, "Sample for which we are going to load the CUPPA results");
-        options.addOption(CUPPA_RESULTS_CSV, true, "Path to the *.cup.data.csv file");
-
-        addDatabaseCmdLineArgs(options);
-
-        return options;
     }
 }

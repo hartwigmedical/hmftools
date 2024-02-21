@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.patientdb;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.patientdb.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
 import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -14,12 +16,9 @@ import com.hartwig.hmftools.common.peach.PeachCalls;
 import com.hartwig.hmftools.common.peach.PeachCallsFile;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,24 +29,21 @@ public class LoadPeachData
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException
     {
-        Options options = createOptions();
-        CommandLine cmd = new DefaultParser().parse(options, args);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        logVersion();
+        configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
+        addDatabaseCmdLineArgs(configBuilder, true);
+        configBuilder.addPath(PEACH_GENOTYPE_TXT, true, "Path towards the PEACH genotype txt file");
+        configBuilder.addPath(PEACH_CALLS_TXT, true, "Path towards the PEACH calls txt file");
 
-        String sample = cmd.getOptionValue(SAMPLE);
+        configBuilder.checkAndParseCommandLine(args);
 
-        String peachGenotypeTxt = cmd.getOptionValue(PEACH_GENOTYPE_TXT);
-        String peachCallsTxt = cmd.getOptionValue(PEACH_CALLS_TXT);
+        String sample = configBuilder.getValue(SAMPLE);
 
-        if(CommonUtils.anyNull(sample, peachCallsTxt, peachGenotypeTxt))
-        {
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Patient-DB - Load PEACH Data", options);
-            System.exit(1);
-        }
+        String peachGenotypeTxt = configBuilder.getValue(PEACH_GENOTYPE_TXT);
+        String peachCallsTxt = configBuilder.getValue(PEACH_CALLS_TXT);
 
-        try (DatabaseAccess dbWriter = databaseAccess(cmd))
+        try(DatabaseAccess dbWriter = databaseAccess(configBuilder))
         {
             LOGGER.info("Reading PEACH genotypes from {}", peachGenotypeTxt);
             List<PeachGenotype> peachGenotype = PeachGenotypeFile.read(peachGenotypeTxt);
@@ -67,20 +63,5 @@ public class LoadPeachData
             LOGGER.error("Failed to load PEACH data", e);
             System.exit(1);
         }
-    }
-
-    @NotNull
-    private static Options createOptions()
-    {
-        Options options = new Options();
-
-        options.addOption(SAMPLE, true, "Sample for which we are going to load the PEACH data");
-
-        options.addOption(PEACH_GENOTYPE_TXT, true, "Path towards the PEACH genotype txt file");
-        options.addOption(PEACH_CALLS_TXT, true, "Path towards the PEACH calls txt file");
-
-        addDatabaseCmdLineArgs(options);
-
-        return options;
     }
 }

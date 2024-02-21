@@ -7,45 +7,42 @@ import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
-import java.io.IOException;
 import java.sql.SQLException;
 
-import com.hartwig.hmftools.common.chord.ChordData;
-import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-public class LoadChordData
+public class CheckSampleAbsent
 {
-    private static final String PREDICTION_FILE = "prediction_file";
-
-    public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException
+    public static void main(@NotNull String[] args) throws ParseException, SQLException
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
         addDatabaseCmdLineArgs(configBuilder, true);
-        configBuilder.addPath(PREDICTION_FILE, true, "Path towards the chord prediction file.");
 
         configBuilder.checkAndParseCommandLine(args);
 
         String sample = configBuilder.getValue(SAMPLE);
-        String predictionFile = configBuilder.getValue(PREDICTION_FILE);
 
-        try (DatabaseAccess dbWriter = databaseAccess(configBuilder))
+        try(DatabaseAccess dbAccess = databaseAccess(configBuilder))
         {
-            LOGGER.info("Extracting and writing chord for {}", predictionFile);
-            ChordData chordData = ChordDataFile.read(predictionFile);
-            dbWriter.writeChord(sample, chordData);
-
-            LOGGER.info("Complete");
+            if(!dbAccess.readPurpleSampleList().contains(sample))
+            {
+                LOGGER.info("sample({}) is absent from the database", sample);
+            }
+            else
+            {
+                LOGGER.warn("sample({}) is not absent from the database", sample);
+                System.exit(2);
+            }
         }
-        catch (Exception e)
+        catch(Exception e)
         {
-            LOGGER.error("Failed to load Chord data", e);
+            LOGGER.error("failed to check whether sample({}) is absent from the database: {}", sample, e);
             System.exit(1);
         }
     }

@@ -28,7 +28,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public class CreateShallowSeqDB {
+public class CreateShallowSeqDB
+{
 
     private static final Logger LOGGER = LogManager.getLogger(CreateShallowSeqDB.class);
 
@@ -43,11 +44,13 @@ public class CreateShallowSeqDB {
     private static final String PURPLE_DIR = "purple";
     private static final String DELIMITER = "\t";
 
-    public static void main(@NotNull String[] args) throws ParseException, IOException {
+    public static void main(@NotNull String[] args) throws ParseException, IOException
+    {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
 
-        if (!checkInputs(cmd)) {
+        if(!checkInputs(cmd))
+        {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-DB - Create Shallow Seq DB ", options);
             throw new IllegalArgumentException("Unexpected error, check inputs");
@@ -72,20 +75,25 @@ public class CreateShallowSeqDB {
     @NotNull
     private static List<LimsShallowSeqData> extractNewEntriesForShallowDbFromRunContexts(@NotNull List<RunContext> runContexts,
             @NotNull String shallowSeqTsv, @NotNull String runDirsPath, @NotNull String purpleQCFile, @NotNull String purplePurityExtP4,
-            @NotNull String purplePurityExtP5, @NotNull String pipelineVersionExt) throws IOException {
+            @NotNull String purplePurityExtP5, @NotNull String pipelineVersionExt) throws IOException
+    {
         List<LimsShallowSeqData> currentShallowSeqData = read(shallowSeqTsv);
 
         List<LimsShallowSeqData> shallowSeqDataToAppend = Lists.newArrayList();
 
-        for (RunContext runInfo : runContexts) {
+        for(RunContext runInfo : runContexts)
+        {
             String tumorSample = runInfo.tumorSample();
             String setPath = runDirsPath + File.separator + runInfo.setName();
             String sampleBarcode = runInfo.tumorBarcodeSample();
 
             String purplePurityTsvExt;
-            if (new File(setPath + File.separator + pipelineVersionExt).exists()) {
+            if(new File(setPath + File.separator + pipelineVersionExt).exists())
+            {
                 purplePurityTsvExt = purplePurityExtP5;
-            } else {
+            }
+            else
+            {
                 purplePurityTsvExt = purplePurityExtP4;
             }
             String fullPurplePurityTsvPath = setPath + File.separator + PURPLE_DIR + File.separator + tumorSample + purplePurityTsvExt;
@@ -99,14 +107,17 @@ public class CreateShallowSeqDB {
             String purity = new DecimalFormat("0.00").format(purityContext.bestFit().purity());
 
             boolean inFile = false;
-            for (LimsShallowSeqData sample : currentShallowSeqData) {
-                if (sample.sampleBarcode().equals(sampleBarcode)) {
+            for(LimsShallowSeqData sample : currentShallowSeqData)
+            {
+                if(sample.sampleBarcode().equals(sampleBarcode))
+                {
                     LOGGER.warn("Sample barcode is already present in file. Skipping set: {} with sample barcode: {} for"
                             + " writing to shallow seq db!", setPath, sampleBarcode);
                     inFile = true;
                 }
             }
-            if (!inFile && !sampleBarcode.equals(Strings.EMPTY)) {
+            if(!inFile && !sampleBarcode.equals(Strings.EMPTY))
+            {
                 shallowSeqDataToAppend.add(ImmutableLimsShallowSeqData.builder()
                         .sampleBarcode(sampleBarcode)
                         .sampleId(tumorSample)
@@ -121,10 +132,12 @@ public class CreateShallowSeqDB {
     }
 
     @NotNull
-    private static List<LimsShallowSeqData> read(@NotNull String shallowSeqTsv) throws IOException {
+    private static List<LimsShallowSeqData> read(@NotNull String shallowSeqTsv) throws IOException
+    {
         List<String> linesShallowDB = Files.readAllLines(new File(shallowSeqTsv).toPath());
         List<LimsShallowSeqData> shallowSeqDataList = Lists.newArrayList();
-        for (String line : linesShallowDB.subList(1, linesShallowDB.size())) {
+        for(String line : linesShallowDB.subList(1, linesShallowDB.size()))
+        {
             String[] values = line.split(DELIMITER);
 
             shallowSeqDataList.add(ImmutableLimsShallowSeqData.builder()
@@ -139,7 +152,8 @@ public class CreateShallowSeqDB {
     }
 
     @NotNull
-    private static List<RunContext> loadRunContexts(@NotNull String runsDirectory, @NotNull String pipelineVersionFile) throws IOException {
+    private static List<RunContext> loadRunContexts(@NotNull String runsDirectory, @NotNull String pipelineVersionFile) throws IOException
+    {
         List<RunContext> runContexts = RunsFolderReader.extractRunContexts(new File(runsDirectory), pipelineVersionFile);
         LOGGER.info(" Loaded run contexts from {} ({} sets)", runsDirectory, runContexts.size());
 
@@ -147,9 +161,11 @@ public class CreateShallowSeqDB {
     }
 
     private static void appendToCsv(@NotNull String shallowSeqCsv, @NotNull List<LimsShallowSeqData> shallowSeqDataToAppend)
-            throws IOException {
+            throws IOException
+    {
         BufferedWriter writer = new BufferedWriter(new FileWriter(shallowSeqCsv, true));
-        for (LimsShallowSeqData dataToAppend : shallowSeqDataToAppend) {
+        for(LimsShallowSeqData dataToAppend : shallowSeqDataToAppend)
+        {
             String outputStringForFile =
                     dataToAppend.sampleBarcode() + DELIMITER + dataToAppend.sampleId() + DELIMITER + dataToAppend.purityShallowSeq()
                             + DELIMITER + dataToAppend.hasReliableQuality() + DELIMITER + dataToAppend.hasReliablePurity() + "\n";
@@ -160,7 +176,8 @@ public class CreateShallowSeqDB {
         writer.close();
     }
 
-    private static boolean checkInputs(@NotNull CommandLine cmd) {
+    private static boolean checkInputs(@NotNull CommandLine cmd)
+    {
         String runsDirectory = cmd.getOptionValue(RUNS_DIRECTORY);
 
         boolean allParamsPresent = !CommonUtils.anyNull(runsDirectory,
@@ -171,10 +188,12 @@ public class CreateShallowSeqDB {
                 cmd.getOptionValue(PIPELINE_VERSION_FILE));
 
         boolean validRunDirectories = true;
-        if (allParamsPresent) {
+        if(allParamsPresent)
+        {
             File runDirectoryDb = new File(runsDirectory);
 
-            if (!runDirectoryDb.exists() || !runDirectoryDb.isDirectory()) {
+            if(!runDirectoryDb.exists() || !runDirectoryDb.isDirectory())
+            {
                 validRunDirectories = false;
                 LOGGER.warn("Shallow seq dir {} does not exist or is not a directory", runDirectoryDb);
             }
@@ -184,7 +203,8 @@ public class CreateShallowSeqDB {
     }
 
     @NotNull
-    private static Options createOptions() {
+    private static Options createOptions()
+    {
         Options options = new Options();
 
         options.addOption(RUNS_DIRECTORY, true, "Path towards the folder containing all shallow seq runs .");
