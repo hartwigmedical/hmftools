@@ -12,7 +12,7 @@
 ## Overview
 
 The recommended way to run **hartwigmedical/hmftools** workflows or components is with
-[oncoanalyser](https://github.com/umccr/oncoanalyser), a Nextflow implementation of the HMF pipeline.
+[oncoanalyser](https://github.com/nf-core/oncoanalyser), a Nextflow implementation of the HMF pipeline.
 
 A principal aim of oncoanalyser is provide the HMF pipeline in a highly accessible form that is usable with a minimal
 set of inputs. This is achieved through flexible prefined configuration for individual tools, prebuilt Docker images
@@ -162,7 +162,7 @@ and the desired workflow. When running the targeted sequencing workflow the appl
 #### WGTS workflow command
 
 ```
-nextflow run umccr/oncoanalyser \
+nextflow run nf-core/oncoanalyser \
   -profile docker \
   -revision v0.2.1 \
   --mode wgts \
@@ -174,7 +174,7 @@ nextflow run umccr/oncoanalyser \
 #### Targeted sequencing workflow command
 
 ```
-nextflow run umccr/oncoanalyser \
+nextflow run nf-core/oncoanalyser \
   -profile docker \
   -revision v0.2.1 \
   --mode targeted \
