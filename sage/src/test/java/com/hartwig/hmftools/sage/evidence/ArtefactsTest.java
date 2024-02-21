@@ -24,7 +24,6 @@ import com.hartwig.hmftools.sage.common.VariantTier;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMTestUtil;
 
 public class ArtefactsTest
 {
@@ -169,6 +168,44 @@ public class ArtefactsTest
 
         adjustedBaseQual = artefactContext.findApplicableBaseQual(rcCounter, record, varIndex);
         assertEquals(lowQualBase, adjustedBaseQual);
+
+
+        // with germline insertion which needs to be ignored when looking for the ref base
+        // AAAAAGGGGG ACGTTGC insT [T] TTTTTTTT ACGTTGCA AAAAAGGGGG   - read
+        // AAAAAGGGGG ACGTTGC      [A] TTTTTTTT ACGTTGCA AAAAAGGGGG   - ref
+
+        /*
+        // an SNV which follows a germline T insertion, which should be ignored when finding the first ref base
+        //            10                20         30
+        // 0123456789 0123456    7  8  9  01234567 890123
+        // AAAAAGGGGG AACGTAG insT [T] TTTTTTTT ACGTTGCA AAAAAGGGGG
+        // low-qual                  X
+        variant = new SimpleVariant(CHR_1, pos, "A", "T");
+
+        varIndex = 18;
+        readContextBases = FLANK_BASES + "AACGTAG" + "T" + "T" + HOMOPOLYMER_SEQ + REF_BASES.substring(26);
+
+        indexBases = new IndexedBases(
+                pos, varIndex, 15, 27, 10, readContextBases.getBytes());
+
+        readContext = new ReadContext(pos, "", 0, "", indexBases, false);
+
+        rcCounter = new ReadContextCounter(
+                1, variant, readContext, VariantTier.PANEL, 100, 0,
+                TEST_CONFIG, QUALITY_CALCULATOR, null);
+
+        artefactContext = ArtefactContext.buildContext(rcCounter);
+        assertNotNull(artefactContext);
+
+        readQualities = buildDefaultBaseQuals(readLength);
+        readQualities[18] = lowQualBase;
+        cigar = "17M1I27M";
+        record = buildSamRecord(20, cigar, readContextBases, new String(readQualities));
+        record.setReadNegativeStrandFlag(true);
+
+        adjustedBaseQual = artefactContext.findApplicableBaseQual(rcCounter, record, varIndex);
+        assertEquals(lowQualBase, adjustedBaseQual);
+        */
     }
 
     @Test
