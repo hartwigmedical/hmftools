@@ -2,9 +2,7 @@ package com.hartwig.hmftools.cup.prep;
 
 public class DataItem
 {
-    public final DataSource Source;
-    public final ItemType Type;
-    public final String Key;
+    public final DataItemIndex Index;
     public final String Value;
 
     public static final String FLD_SOURCE = "Source";
@@ -14,9 +12,7 @@ public class DataItem
 
     public DataItem(final DataSource source, final ItemType type, final String key, final String value)
     {
-        Source = source;
-        Type = type;
-        Key = key;
+        Index = new DataItemIndex(source, type, key);
         Value = value;
     }
 }
