@@ -9,6 +9,7 @@ import com.hartwig.hmftools.peach.data_loader.HaplotypeFunctionLoader;
 import com.hartwig.hmftools.peach.data_loader.PanelLoader;
 import com.hartwig.hmftools.peach.effect.DrugInfoStore;
 import com.hartwig.hmftools.peach.effect.HaplotypeFunction;
+import com.hartwig.hmftools.peach.effect.HaplotypeFunctionStore;
 import com.hartwig.hmftools.peach.output.AllHaplotypeCombinationsFile;
 import com.hartwig.hmftools.peach.output.BestHaplotypeCombinationsFile;
 import com.hartwig.hmftools.peach.output.EventsFile;
@@ -66,14 +67,17 @@ public class PeachApplication
                 PCH_LOGGER.info("load drugs");
                 drugInfoStore = new DrugInfoStore(DrugInfoLoader.loadDrugInfos(config.drugsFile));
             }
-            if(config.functionFile != null)
+            HaplotypeFunctionStore haplotypeFunctionStore;
+            if(config.functionFile == null)
             {
-                PCH_LOGGER.info("load haplotype functions");
-                List<HaplotypeFunction> haplotypeFunctions = HaplotypeFunctionLoader.loadFunctions(config.functionFile);
+                PCH_LOGGER.info("skip loading haplotype functions since input file not provided");
+                haplotypeFunctionStore = null;
             }
             else
             {
-                PCH_LOGGER.info("skip loading haplotype functions since input file not provided");
+                PCH_LOGGER.info("load haplotype functions");
+                List<HaplotypeFunction> haplotypeFunctions = HaplotypeFunctionLoader.loadFunctions(config.functionFile);
+                haplotypeFunctionStore = new HaplotypeFunctionStore(haplotypeFunctions);
             }
 
             PCH_LOGGER.info("call haplotypes");
