@@ -31,7 +31,7 @@ public class FeaturePrep implements CategoryPrep
     public CategoryType categoryType() { return FEATURE; }
 
     private static final String AMP_TYPE = ".amp";
-    private static final String MUTATION_TYPE = ".mutation";
+    private static final String MUTATION_TYPE = ".mut";
     private static final String INDEL_TYPE = ".indel";
 
     @Override
@@ -64,37 +64,37 @@ public class FeaturePrep implements CategoryPrep
 
             for(SampleFeatureData featureData : sampleFeaturesMap.get(sampleId))
             {
+                String likelihood = String.valueOf(featureData.Likelihood);
+
                 switch(featureData.Type)
                 {
                     case DRIVER:
                     {
-                        dataItems.add(new DataItem(DNA, ItemType.DRIVER, featureData.Name + MUTATION_TYPE, BOOL_STR_TRUE));
+                        dataItems.add(new DataItem(DNA, ItemType.DRIVER, featureData.Name + MUTATION_TYPE, likelihood));
                         break;
                     }
 
                     case AMP:
                     {
-                        dataItems.add(new DataItem(
-                                DNA, ItemType.DRIVER, featureData.Name + AMP_TYPE, String.valueOf(featureData.Likelihood)));
+                        dataItems.add(new DataItem(DNA, ItemType.DRIVER, featureData.Name + AMP_TYPE, likelihood));
                         break;
                     }
 
                     case INDEL:
                     {
-                        dataItems.add(new DataItem(
-                                DNA, ItemType.DRIVER, featureData.Name + INDEL_TYPE, String.valueOf(featureData.Likelihood)));
+                        dataItems.add(new DataItem(DNA, ItemType.DRIVER, featureData.Name.replace("INDEL_", "") + INDEL_TYPE, likelihood));
                         break;
                     }
 
                     case FUSION:
                     {
-                        dataItems.add(new DataItem(DNA, ItemType.FUSION, featureData.Name, BOOL_STR_TRUE));
+                        dataItems.add(new DataItem(DNA, ItemType.FUSION, featureData.Name, likelihood));
                         break;
                     }
 
                     case VIRUS:
                     {
-                        dataItems.add(new DataItem(DNA, ItemType.VIRUS, featureData.Name, BOOL_STR_TRUE));
+                        dataItems.add(new DataItem(DNA, ItemType.VIRUS, featureData.Name, likelihood));
                         break;
                     }
                 }

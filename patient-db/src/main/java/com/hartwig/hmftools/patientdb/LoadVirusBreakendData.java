@@ -42,16 +42,22 @@ public class LoadVirusBreakendData
             System.exit(1);
         }
 
-        DatabaseAccess dbWriter = databaseAccess(cmd);
+        try (DatabaseAccess dbWriter = databaseAccess(cmd))
+        {
+            LOGGER.info("Reading virus breakend TSV {}", virusBreakendTsv);
+            List<VirusBreakend> virusBreakends = VirusBreakendFile.read(virusBreakendTsv);
+            LOGGER.info(" Read {} virus breakends", virusBreakends.size());
 
-        LOGGER.info("Reading virus breakend TSV {}", virusBreakendTsv);
-        List<VirusBreakend> virusBreakends = VirusBreakendFile.read(virusBreakendTsv);
-        LOGGER.info(" Read {} virus breakends", virusBreakends.size());
+            LOGGER.info("Writing virus breakends into database for {}", sample);
+            dbWriter.writeVirusBreakend(sample, virusBreakends);
 
-        LOGGER.info("Writing virus breakends into database for {}", sample);
-        dbWriter.writeVirusBreakend(sample, virusBreakends);
-
-        LOGGER.info("Complete");
+            LOGGER.info("Complete");
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("Failed to load virus breakends", e);
+            System.exit(1);
+        }
     }
 
     @NotNull

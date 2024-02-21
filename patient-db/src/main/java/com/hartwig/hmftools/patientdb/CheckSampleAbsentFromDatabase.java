@@ -16,26 +16,32 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class DeleteSampleFromDatabase
+public class CheckSampleAbsentFromDatabase
 {
 
-    private static final Logger LOGGER = LogManager.getLogger(DeleteSampleFromDatabase.class);
+    private static final Logger LOGGER = LogManager.getLogger(CheckSampleAbsentFromDatabase.class);
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException
     {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
+        String sample = cmd.getOptionValue(SAMPLE);
+
         try(DatabaseAccess dbAccess = databaseAccess(cmd))
         {
-            String sample = cmd.getOptionValue(SAMPLE);
-
-            LOGGER.info("Removing sample '{}' from database", sample);
-            dbAccess.deletePipelineDataForSample(sample);
-            LOGGER.info("Complete");
+            if(!dbAccess.readPurpleSampleList().contains(sample))
+            {
+                LOGGER.info("Sample '{}' is absent from the database", sample);
+            }
+            else
+            {
+                LOGGER.warn("Sample '{}' is not absent from the database", sample);
+                System.exit(2);
+            }
         }
         catch(Exception e)
         {
-            LOGGER.error("Failed to delete sample", e);
+            LOGGER.error("Failed to check whether sample '{}' is absent from the database", sample, e);
             System.exit(1);
         }
     }
@@ -44,7 +50,7 @@ public class DeleteSampleFromDatabase
     private static Options createOptions()
     {
         Options options = new Options();
-        options.addOption(SAMPLE, true, "Tumor sample to delete.");
+        options.addOption(SAMPLE, true, "Tumor sample to check for in the database");
         addDatabaseCmdLineArgs(options);
         return options;
     }

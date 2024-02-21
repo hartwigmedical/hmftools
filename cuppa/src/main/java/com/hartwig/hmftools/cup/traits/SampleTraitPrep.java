@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
-import com.hartwig.hmftools.cup.common.CupCalcs;
 import com.hartwig.hmftools.cup.prep.CategoryPrep;
 import com.hartwig.hmftools.cup.prep.DataItem;
 import com.hartwig.hmftools.cup.prep.ItemType;
@@ -32,8 +31,6 @@ public class SampleTraitPrep implements CategoryPrep
     @Override
     public CategoryType categoryType() { return CategoryType.SAMPLE_TRAIT; }
 
-    private static final String GENDER_IS_MALE = "IS_MALE";
-
     @Override
     public List<DataItem> extractSampleData(final String sampleId)
     {
@@ -45,11 +42,11 @@ public class SampleTraitPrep implements CategoryPrep
         {
             final PurityContext purityContext = PurityContextFile.read(purpleDataDir, sampleId);
 
-            dataItems.add(new DataItem(DNA, ItemType.SAMPLE_TRAIT, GENDER_IS_MALE, boolToIntString(purityContext.gender() == Gender.MALE)));
+            dataItems.add(new DataItem(DNA, ItemType.SAMPLE_TRAIT, GENDER.getAlias(), boolToIntString(purityContext.gender() == Gender.MALE)));
 
-            dataItems.add(new DataItem(DNA, ItemType.SAMPLE_TRAIT, MS_INDELS_TMB.toString(), String.valueOf(purityContext.microsatelliteIndelsPerMb())));
+            dataItems.add(new DataItem(DNA, ItemType.TUMOR_MUTATIONAL_BURDEN, MS_INDELS_TMB.getAlias(), String.valueOf(purityContext.microsatelliteIndelsPerMb())));
 
-            dataItems.add(new DataItem(DNA, ItemType.SAMPLE_TRAIT, WGD.toString(), boolToIntString(purityContext.wholeGenomeDuplication())));
+            dataItems.add(new DataItem(DNA, ItemType.SAMPLE_TRAIT, WGD.getAlias(), boolToIntString(purityContext.wholeGenomeDuplication())));
 
             return dataItems;
         }

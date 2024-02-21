@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelCon
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
 import static com.hartwig.hmftools.patientdb.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
-import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
 import java.io.IOException;
@@ -34,8 +33,15 @@ public class LoadDriverGenePanel
 
         LOGGER.info("Loading {} driver genes to database", driverGenes.size());
 
-        DatabaseAccess dbAccess = databaseAccess(configBuilder, true);
-        dbAccess.writeGenePanel(driverGenes);
-        LOGGER.info("Complete");
+        try (DatabaseAccess dbAccess = databaseAccess(configBuilder, true))
+        {
+            dbAccess.writeGenePanel(driverGenes);
+            LOGGER.info("Complete");
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("Failed to load driver genes", e);
+            System.exit(1);
+        }
     }
 }
