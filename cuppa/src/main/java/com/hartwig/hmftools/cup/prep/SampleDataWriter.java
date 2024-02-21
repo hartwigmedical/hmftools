@@ -131,7 +131,7 @@ public class SampleDataWriter
 
                 for(DataItem dataItem : dataItems)
                 {
-                    mWriter.write(format("%s\t%s\t%s\t%s", sourceStr, dataItem.Type.getAlias(), dataItem.Key, dataItem.Value));
+                    mWriter.write(format("%s\t%s\t%s\t%s", sourceStr, dataItem.Index.Type.getAlias(), dataItem.Index.Key, dataItem.Value));
                     mWriter.newLine();
                 }
             }
