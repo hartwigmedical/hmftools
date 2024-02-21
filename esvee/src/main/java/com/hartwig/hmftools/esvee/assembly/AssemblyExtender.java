@@ -211,6 +211,7 @@ public class AssemblyExtender
         int maxAlignedPosition = assembly.maxAlignedPosition();
 
         boolean isForwardJunction = assembly.junction().isForward();
+        int initialRefPosition = isForwardJunction ? minAlignedPosition : maxAlignedPosition;
 
         Collections.sort(nonJunctionSupport,
                 Comparator.comparingInt(x -> isForwardJunction ? -x.read().alignmentEnd() : x.read().alignmentStart()));
@@ -245,12 +246,16 @@ public class AssemblyExtender
 
         if(!hasUnmatched)
         {
-            RefBaseAssembly refBaseAssembly = new RefBaseAssembly(assembly, nonSoftClipRefPosition, refGenome);
+            if(nonSoftClipRefPosition != initialRefPosition && !nonJunctionSupport.isEmpty())
+            {
+                RefBaseAssembly refBaseAssembly = new RefBaseAssembly(assembly, nonSoftClipRefPosition, refGenome);
 
-            checkAddRefAssemblySupport(refBaseAssembly, nonJunctionSupport, Collections.emptySet());
+                checkAddRefAssemblySupport(refBaseAssembly, nonJunctionSupport, Collections.emptySet());
 
-            if(refBaseAssembly.supportCount() > 0)
-                assembly.mergeRefBaseAssembly(refBaseAssembly);
+                if(refBaseAssembly.supportCount() > 0)
+                    assembly.mergeRefBaseAssembly(refBaseAssembly);
+
+            }
 
             return;
         }

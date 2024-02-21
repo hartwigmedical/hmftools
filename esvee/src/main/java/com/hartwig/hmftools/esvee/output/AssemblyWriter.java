@@ -94,10 +94,14 @@ public class AssemblyWriter
             sj.add("RefSideSoftClips");
 
             sj.add("RemoteRegionCount");
+            sj.add("RemoteRegionInfo");
             sj.add("RemoteRegionJuncMate");
             sj.add("RemoteRegionJuncSupps");
             sj.add("RemoteRegionDiscordant");
-            sj.add("RemoteRegionInfo");
+
+            sj.add("JuncUnlinkedMates");
+            sj.add("JuncUnlinkedSupps");
+            sj.add("DiscUnlinkedMates");
 
             sj.add("PhaseGroupId");
             sj.add("PhaseGroupCount");
@@ -157,9 +161,15 @@ public class AssemblyWriter
             int refBaseMismatches = 0;
             int softClipBaseMismatches = 0;
 
+            int juncUnlinkedMates = 0;
+            int juncUnlinkedSupps = 0;
+            int discUnlinkedMates = 0;
+
+
             for(AssemblySupport support : assembly.support())
             {
                 boolean isReference = support.read().isReference();
+                Read read = support.read();
 
                 if(support.type() == JUNCTION)
                 {
@@ -171,8 +181,14 @@ public class AssemblyWriter
                     softClipBaseMismatches += support.junctionMismatches();
                     refBaseMismatches += support.referenceMismatches();
 
-                    if(support.read().isMateUnmapped())
+                    if(read.isMateUnmapped())
                         ++juncMateUnmapped;
+
+                    if(read.isMateMapped() && !read.isSupplementary() && !read.hasMateSet())
+                        ++juncUnlinkedMates;
+
+                    if(read.hasSupplementary() && read.supplementaryRead() == null)
+                        ++juncUnlinkedSupps;
                 }
                 else
                 {
@@ -184,6 +200,9 @@ public class AssemblyWriter
 
                         if(isReference)
                             ++refSampleDiscReadCount;
+
+                        if(!read.isSupplementary() && !read.hasMateSet())
+                            ++discUnlinkedMates;
                     }
                     else if(support.type() == JUNCTION_MATE)
                     {
@@ -217,7 +236,7 @@ public class AssemblyWriter
             sj.add(String.valueOf(refBaseDominantMismatches));
 
             // ref sequence stats purely for analysis
-            ReadStats readStats = buildReadStats(assembly.support(), assembly.junction().isForward());
+            ReadStats readStats = buildReadStats(assembly.support());
             sj.add(statString(readStats.NmCountTotal, assembly.supportCount()));
             sj.add(statString(readStats.IndelLengthTotal, assembly.supportCount()));
             sj.add(statString(readStats.BaseQualTotal, assembly.supportCount()));
@@ -230,6 +249,7 @@ public class AssemblyWriter
             sj.add(refSideSoftClipsStr(assembly.refSideSoftClips()));
 
             sj.add(String.valueOf(assembly.remoteRegions().size()));
+            sj.add(remoteRegionInfoStr(assembly.remoteRegions()));
 
             int remoteJunctSupp = 0;
             int remoteJunctMate = 0;
@@ -246,7 +266,9 @@ public class AssemblyWriter
             sj.add(String.valueOf(remoteJunctSupp));
             sj.add(String.valueOf(remoteDiscordant));
 
-            sj.add(remoteRegionInfoStr(assembly.remoteRegions()));
+            sj.add(String.valueOf(juncUnlinkedMates));
+            sj.add(String.valueOf(juncUnlinkedSupps));
+            sj.add(String.valueOf(discUnlinkedMates));
 
             PhaseGroup phaseGroup = assembly.phaseGroup();
 
@@ -287,7 +309,7 @@ public class AssemblyWriter
             }
             else
             {
-                sj.add("-1").add("0").add("").add("").add("");
+                sj.add("-1").add("0").add("").add("").add("").add("");
             }
 
             sj.add(String.valueOf(assembly.mergedAssemblyCount()));
@@ -343,7 +365,7 @@ public class AssemblyWriter
         }
     }
 
-    private ReadStats buildReadStats(final List<AssemblySupport> supportReads, boolean isForwardJunction)
+    private ReadStats buildReadStats(final List<AssemblySupport> supportReads)
     {
         ReadStats readStats = new ReadStats();
 

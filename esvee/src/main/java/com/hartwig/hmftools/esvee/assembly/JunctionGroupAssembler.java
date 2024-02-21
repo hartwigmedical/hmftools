@@ -135,8 +135,12 @@ public class JunctionGroupAssembler extends ThreadTask
 
         mBamReader.sliceBam(junctionGroup.chromosome(), sliceStart, sliceEnd, this::processRecord);
 
-        SV_LOGGER.trace("junctionGroup({}:{}-{} count={}) slice complete, readCount({})",
-                junctionGroup.chromosome(), sliceStart, sliceEnd, junctionGroup.count(), junctionGroup.candidateReadCount());
+        SV_LOGGER.trace("junctionGroup({}:{}-{} count={}) slice complete, readCount({}) readGroups({})",
+                junctionGroup.chromosome(), sliceStart, sliceEnd, junctionGroup.count(), junctionGroup.candidateReadCount(),
+                mReadGroupMap.size());
+
+        mReadGroupMap.values().forEach(x -> x.formReadLinks());
+        mReadGroupMap.clear();
 
         List<JunctionAssembly> junctionGroupAssemblies = Lists.newArrayList();
 
@@ -183,9 +187,6 @@ public class JunctionGroupAssembler extends ThreadTask
         // junctionGroupAssemblies.forEach(x -> mResultsWriter.writeAssembly(x));
 
         mCurrentJunctionGroup = null;
-
-        mReadGroupMap.values().forEach(x -> x.formReadLinks());
-        mReadGroupMap.clear();
     }
 
     private void processRecord(final SAMRecord record)

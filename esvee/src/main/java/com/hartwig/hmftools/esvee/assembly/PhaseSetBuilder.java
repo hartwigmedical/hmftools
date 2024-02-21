@@ -26,6 +26,7 @@ import com.hartwig.hmftools.esvee.common.PhaseGroup;
 import com.hartwig.hmftools.esvee.common.PhaseSet;
 import com.hartwig.hmftools.esvee.common.RefBaseAssembly;
 import com.hartwig.hmftools.esvee.common.RefSideSoftClip;
+import com.hartwig.hmftools.esvee.common.SupportType;
 
 public class PhaseSetBuilder
 {
@@ -54,13 +55,10 @@ public class PhaseSetBuilder
     {
         formSplitLinks();
 
-        for(JunctionAssembly assembly : mPhaseGroup.assemblies())
-        {
-            for(JunctionAssembly branchedAssembly : assembly.branchedAssemblies())
-            {
-                mPhaseGroup.addAssembly(branchedAssembly);
-            }
-        }
+        // add any branched assemblies to the phase group
+        List<JunctionAssembly> branchedAssemblies = Lists.newArrayList();
+        mPhaseGroup.assemblies().forEach(x -> branchedAssemblies.addAll(x.branchedAssemblies()));
+        branchedAssemblies.forEach(x -> mPhaseGroup.addAssembly(x));
 
         formFacingLinks();
     }
@@ -184,6 +182,8 @@ public class PhaseSetBuilder
         if(assemblyLink == null)
             return null;
 
+        linkExistingSupport(assembly1, assembly2);
+
         // look for shared reads between the assemblies, and factor in discordant reads which were only considered candidates until now
         List<AssemblySupport> matchedCandidates1 = Lists.newArrayList();
         List<AssemblySupport> matchedCandidates2 = Lists.newArrayList();
@@ -195,7 +195,7 @@ public class PhaseSetBuilder
         checkMatchingCandidateSupport(assembly2, assembly1.candidateSupport(), candidateSupport2, matchedCandidates1, matchedCandidates2);
         checkMatchingCandidateSupport(assembly1, candidateSupport2, Collections.emptyList(), matchedCandidates2, matchedCandidates1);
 
-        // build out ref-base assembly support from this non-junction reads
+        // build out ref-base assembly support from these non-junction reads - both matched discordant and junction mates
         extendRefBases(assembly1, matchedCandidates1, mRefGenome);
         extendRefBases(assembly2, matchedCandidates2, mRefGenome);
 
@@ -209,6 +209,13 @@ public class PhaseSetBuilder
     {
         for(AssemblySupport support : candidateSupport)
         {
+            // add any junction mate reads local to the assembly
+            if(support.type() == SupportType.JUNCTION_MATE)
+            {
+                matchedCandidates.add(support);
+                continue;
+            }
+
             AssemblySupport matchedSupport = findMatchingFragmentSupport(otherAssembly.support(), support.read());
 
             if(matchedSupport == null)
@@ -226,6 +233,19 @@ public class PhaseSetBuilder
             if(matchedSupport != null)
             {
                 matchedCandidates.add(support);
+                support.read().makeReadLinks(matchedSupport.read());
+            }
+        }
+    }
+
+    private static void linkExistingSupport(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        for(AssemblySupport support : first.support())
+        {
+            AssemblySupport matchedSupport = findMatchingFragmentSupport(second.support(), support.read());
+
+            if(matchedSupport != null)
+            {
                 support.read().makeReadLinks(matchedSupport.read());
             }
         }

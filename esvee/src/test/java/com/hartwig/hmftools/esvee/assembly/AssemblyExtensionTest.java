@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.esvee.common.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 
 import static org.junit.Assert.assertEquals;
@@ -59,14 +60,14 @@ public class AssemblyExtensionTest
         Read read3 = createSamRecord(
                 "READ_03", 45, refBases.substring(15, 20) + "G" + refBases.substring(21, 30), "15M");
 
-        assertTrue(refBaseAssembly.checkAddRead(read3, JUNCTION_MATE,permittedMismatches, requiredOverlap));
+        assertTrue(refBaseAssembly.checkAddRead(read3, DISCORDANT,permittedMismatches, requiredOverlap));
         assertEquals(1, refBaseAssembly.mismatches().positionCount());
 
         // with 2 mismatches
         Read read4 = createSamRecord(
                 "READ_04", 45, refBases.substring(15, 19) + "GG" + refBases.substring(21, 30), "15M");
 
-        assertFalse(refBaseAssembly.checkAddRead(read4, JUNCTION_MATE, permittedMismatches, requiredOverlap));
+        assertFalse(refBaseAssembly.checkAddRead(read4, DISCORDANT, permittedMismatches, requiredOverlap));
 
         Junction negJunction = new Junction(CHR_1, 60, NEG_ORIENT);
 
@@ -80,22 +81,22 @@ public class AssemblyExtensionTest
 
         // repeat tests for reads on the ref side of a negative junction
         read1 = createSamRecord("READ_01", 81, refBases.substring(51, 56), "5M");
-        assertFalse(refBaseAssembly.checkAddRead(read1, JUNCTION_MATE,permittedMismatches, requiredOverlap));
+        assertFalse(refBaseAssembly.checkAddRead(read1, DISCORDANT,permittedMismatches, requiredOverlap));
 
         read2 = createSamRecord("READ_02", 65, refBases.substring(35, 50), "15M");
-        assertTrue(refBaseAssembly.checkAddRead(read2, JUNCTION_MATE,permittedMismatches, requiredOverlap));
+        assertTrue(refBaseAssembly.checkAddRead(read2, DISCORDANT,permittedMismatches, requiredOverlap));
 
         // with 1 mismatch
         read3 = createSamRecord(
                 "READ_03", 70, refBases.substring(40, 45) + "C" + refBases.substring(46, 50), "10M");
 
-        assertTrue(refBaseAssembly.checkAddRead(read3, JUNCTION_MATE,permittedMismatches, requiredOverlap));
+        assertTrue(refBaseAssembly.checkAddRead(read3, DISCORDANT, permittedMismatches, requiredOverlap));
         assertEquals(1, refBaseAssembly.mismatches().positionCount());
 
         // with 2 mismatches
         read4 = createSamRecord(
                 "READ_04", 70, refBases.substring(40, 44) + "CC" + refBases.substring(46, 50), "10M");
 
-        assertFalse(refBaseAssembly.checkAddRead(read4, JUNCTION_MATE,permittedMismatches, requiredOverlap));
+        assertFalse(refBaseAssembly.checkAddRead(read4, DISCORDANT, permittedMismatches, requiredOverlap));
     }
 }

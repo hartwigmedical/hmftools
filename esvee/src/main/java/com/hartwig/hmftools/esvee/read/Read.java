@@ -184,7 +184,7 @@ public class Read
     public boolean mateNegativeStrand() { return mRecord.getMateNegativeStrandFlag(); }
 
     public boolean hasSupplementary() { return supplementaryData() != null; }
-
+    public boolean isSupplementary() { return mRecord.getSupplementaryAlignmentFlag(); }
     public void setSupplementaryRead(final Read mate) { mSupplementaryRead = mate; }
     public Read supplementaryRead() { return mSupplementaryRead; }
 

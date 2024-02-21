@@ -101,6 +101,9 @@ public class JunctionGroup extends BaseRegion
         {
             Junction junction = junctions.get(i);
 
+            if(junction.DiscordantOnly)
+                continue;
+
             if(junction.Position - currentGroup.maxPosition() <= maxDistance)
             {
                 currentGroup.addJunction(junction);

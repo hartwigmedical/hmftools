@@ -29,6 +29,8 @@ public class Junction implements Comparable<Junction>
     public final int Position;
     public final byte Orientation;
 
+    public final boolean DiscordantOnly;
+
     /*
     public final int junctionFragments();
     public final int supportFragments();
@@ -45,9 +47,15 @@ public class Junction implements Comparable<Junction>
 
     public Junction(final String chromosome, final int position, final byte orientation)
     {
+        this(chromosome, position, orientation, false);
+    }
+
+    public Junction(final String chromosome, final int position, final byte orientation, final boolean discordantOnly)
+    {
         Chromosome = chromosome;
         Position = position;
         Orientation = orientation;
+        DiscordantOnly = discordantOnly;
     }
 
     // convenience and poossible temporary
@@ -117,6 +125,8 @@ public class Junction implements Comparable<Junction>
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
             int posIndex = fieldsIndexMap.get(FLD_POSITION);
             int orientIndex = fieldsIndexMap.get(FLD_ORIENTATION);
+            Integer juncFragsIndex = fieldsIndexMap.get("JunctionFrags");
+            Integer discFragsIndex = fieldsIndexMap.get("DiscordantFrags");
 
             List<Junction> junctionDataList = null;
             String currentChromosome = "";
@@ -144,7 +154,11 @@ public class Junction implements Comparable<Junction>
                     chrJunctionsMap.put(chromosome, junctionDataList);
                 }
 
-                junctionDataList.add(new Junction(chromosome, position, orientation));
+                int junctionFrags = juncFragsIndex != null ? Integer.parseInt(values[juncFragsIndex]) : 0;
+                int discordantFrags = discFragsIndex != null ? Integer.parseInt(values[discFragsIndex]) : 0;
+                boolean discordantOnly = junctionFrags == 0 && discordantFrags > 0;
+
+                junctionDataList.add(new Junction(chromosome, position, orientation, discordantOnly));
                 ++junctionCount;
             }
 

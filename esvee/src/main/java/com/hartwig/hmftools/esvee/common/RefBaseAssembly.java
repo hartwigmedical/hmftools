@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
+import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 
 import java.util.List;
 
@@ -91,7 +92,11 @@ public class RefBaseAssembly
             }
             else
             {
-                mBases[i] = refBases[refBaseIndex++];
+                if(refBaseIndex < refBases.length)
+                    mBases[i] = refBases[refBaseIndex++];
+                else
+                    mBases[i] = 0;
+
                 mBaseQuals[i] = 0;
             }
         }
@@ -138,7 +143,7 @@ public class RefBaseAssembly
             {
                 ++mismatchCount;
 
-                if(mismatchCount > permittedMismatches)
+                if(mismatchCount > permittedMismatches && supportType != JUNCTION_MATE)
                     return false;
             }
         }
