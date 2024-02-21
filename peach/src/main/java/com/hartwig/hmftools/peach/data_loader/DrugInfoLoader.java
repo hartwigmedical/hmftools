@@ -47,7 +47,6 @@ public class DrugInfoLoader
             DrugInfo drugInfo = ImmutableDrugInfo.builder()
                     .drugName(splitLine[fieldsIndexMap.get("DrugName")])
                     .geneName(splitLine[fieldsIndexMap.get("Gene")])
-                    .generalInfoUrl(splitLine[fieldsIndexMap.get("UrlGeneral")])
                     .prescriptionInfoUrl(splitLine[fieldsIndexMap.get("UrlPrescriptionInfo")])
                     .build();
             drugInfos.add(drugInfo);

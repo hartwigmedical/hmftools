@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class HaplotypeFunctionStore
 {
@@ -16,6 +17,7 @@ public class HaplotypeFunctionStore
         this.haplotypeFunctions = haplotypeFunctions;
     }
 
+    @Nullable
     public String getFunction(@NotNull String geneName, @NotNull String haplotypeName)
     {
         Set<String> configuredFunctions = haplotypeFunctions.stream()
@@ -32,7 +34,7 @@ public class HaplotypeFunctionStore
         }
         else
         {
-            final String errorMessage =
+            String errorMessage =
                     String.format("Multiple different haplotype functions configured for haplotype %s of gene %s", haplotypeName, geneName);
             throw new IllegalStateException(errorMessage);
         }

@@ -18,6 +18,7 @@ import com.hartwig.hmftools.peach.output.QcStatusFile;
 import com.hartwig.hmftools.peach.panel.HaplotypePanel;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,42 +50,23 @@ public class PeachApplication
             PCH_LOGGER.info("creating output directory");
             createOutputDirectory();
 
+            PCH_LOGGER.info("load config files");
+
             PCH_LOGGER.info("load haplotype config");
             HaplotypePanel haplotypePanel = PanelLoader.loadHaplotypePanel(config.haplotypesFile);
 
+            DrugInfoStore drugInfoStore = loadDrugInfoStore();
+            HaplotypeFunctionStore haplotypeFunctionStore = loadHaplotypeFunctionStore();
+
             PCH_LOGGER.info("load events");
-            Map<String, Integer> eventIdToCount = HaplotypeEventLoader.loadRelevantVariantHaplotypeEvents(
-                    config.vcfFile, config.sampleName, haplotypePanel.getRelevantVariantPositions()
-            );
-            DrugInfoStore drugInfoStore;
-            if(config.drugsFile == null)
-            {
-                PCH_LOGGER.info("skip loading drugs since input file not provided");
-                drugInfoStore = null;
-            }
-            else
-            {
-                PCH_LOGGER.info("load drugs");
-                drugInfoStore = new DrugInfoStore(DrugInfoLoader.loadDrugInfos(config.drugsFile));
-            }
-            HaplotypeFunctionStore haplotypeFunctionStore;
-            if(config.functionFile == null)
-            {
-                PCH_LOGGER.info("skip loading haplotype functions since input file not provided");
-                haplotypeFunctionStore = null;
-            }
-            else
-            {
-                PCH_LOGGER.info("load haplotype functions");
-                List<HaplotypeFunction> haplotypeFunctions = HaplotypeFunctionLoader.loadFunctions(config.functionFile);
-                haplotypeFunctionStore = new HaplotypeFunctionStore(haplotypeFunctions);
-            }
+            Map<String, Integer> eventIdToCount =
+                    HaplotypeEventLoader.loadRelevantVariantHaplotypeEvents(config.vcfFile, config.sampleName, haplotypePanel.getRelevantVariantPositions());
 
             PCH_LOGGER.info("call haplotypes");
             HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
             Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = caller.getGeneToHaplotypeAnalysis(eventIdToCount);
 
-            writeOutputFiles(eventIdToCount, geneToHaplotypeAnalysis);
+            writeOutputFiles(eventIdToCount, geneToHaplotypeAnalysis, drugInfoStore, haplotypeFunctionStore);
         }
         catch(Exception e)
         {
@@ -95,19 +77,9 @@ public class PeachApplication
         PCH_LOGGER.info("finished running PEACH");
     }
 
-    private void createOutputDirectory()
-    {
-        // Output directory cannot be null in valid config
-        assert config.outputDir != null;
-        File outputDirectory = new File(config.outputDir);
-        if(!outputDirectory.exists() && !outputDirectory.mkdirs())
-        {
-            throw new RuntimeException(String.format("could not create output directory: %s", config.outputDir));
-        }
-    }
-
     private void writeOutputFiles(@NotNull Map<String, Integer> eventIdToCount,
-            @NotNull Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis)
+            @NotNull Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis, @Nullable DrugInfoStore drugInfoStore,
+            @Nullable HaplotypeFunctionStore haplotypeFunctionStore)
     {
         try
         {
@@ -121,10 +93,57 @@ public class PeachApplication
             BestHaplotypeCombinationsFile.write(config.getBestHaplotypeCombinationsOutputPath(), geneToHaplotypeAnalysis);
             PCH_LOGGER.info("write qc status output file");
             QcStatusFile.write(config.getQcStatusOutputPath(), geneToHaplotypeAnalysis);
+
+//            if(drugInfoStore != null || haplotypeFunctionStore != null)
+//            {
+//                DrugFunctionFile.write(config.getDrugFunctionsOutputPath(), geneToHaplotypeAnalysis, drugInfoStore, haplotypeFunctionStore);
+//            }
         }
         catch(IOException e)
         {
             throw new RuntimeException("failed to create all output files", e);
+        }
+    }
+
+    @Nullable
+    private DrugInfoStore loadDrugInfoStore()
+    {
+        if(config.drugsFile == null)
+        {
+            PCH_LOGGER.info("skip loading drugs since input file not provided");
+            return null;
+        }
+        else
+        {
+            PCH_LOGGER.info("load drugs");
+            return new DrugInfoStore(DrugInfoLoader.loadDrugInfos(config.drugsFile));
+        }
+    }
+
+    @Nullable
+    private HaplotypeFunctionStore loadHaplotypeFunctionStore()
+    {
+        if(config.functionFile == null)
+        {
+            PCH_LOGGER.info("skip loading haplotype functions since input file not provided");
+            return null;
+        }
+        else
+        {
+            PCH_LOGGER.info("load haplotype functions");
+            List<HaplotypeFunction> haplotypeFunctions = HaplotypeFunctionLoader.loadFunctions(config.functionFile);
+            return new HaplotypeFunctionStore(haplotypeFunctions);
+        }
+    }
+
+    private void createOutputDirectory()
+    {
+        // Output directory cannot be null in valid config
+        assert config.outputDir != null;
+        File outputDirectory = new File(config.outputDir);
+        if(!outputDirectory.exists() && !outputDirectory.mkdirs())
+        {
+            throw new RuntimeException(String.format("could not create output directory: %s", config.outputDir));
         }
     }
 

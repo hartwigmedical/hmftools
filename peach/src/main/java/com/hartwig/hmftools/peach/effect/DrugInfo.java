@@ -15,8 +15,5 @@ public abstract class DrugInfo
     public abstract String geneName();
 
     @NotNull
-    public abstract String generalInfoUrl();
-
-    @NotNull
     public abstract String prescriptionInfoUrl();
 }

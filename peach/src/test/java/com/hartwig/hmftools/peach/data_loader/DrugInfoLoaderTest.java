@@ -24,7 +24,6 @@ public class DrugInfoLoaderTest
         DrugInfo expectedDrugInfo0 = ImmutableDrugInfo.builder()
             .drugName("5-Fluorouracil")
             .geneName("DPYD")
-            .generalInfoUrl("https://www.pharmgkb.org/chemical/PA128406956")
             .prescriptionInfoUrl("https://www.pharmgkb.org/guidelineAnnotation/PA166104939")
             .build();
         assertEquals(expectedDrugInfo0, drugInfos.get(0));
@@ -32,7 +31,6 @@ public class DrugInfoLoaderTest
         DrugInfo expectedDrugInfo1 = ImmutableDrugInfo.builder()
                 .drugName("Capecitabine")
                 .geneName("DPYD")
-                .generalInfoUrl("https://www.pharmgkb.org/chemical/PA448771")
                 .prescriptionInfoUrl("https://www.pharmgkb.org/guidelineAnnotation/PA166104963")
                 .build();
         assertEquals(expectedDrugInfo1, drugInfos.get(1));
@@ -40,7 +38,6 @@ public class DrugInfoLoaderTest
         DrugInfo expectedDrugInfo2 = ImmutableDrugInfo.builder()
                 .drugName("Tegafur")
                 .geneName("DPYD")
-                .generalInfoUrl("https://www.pharmgkb.org/chemical/PA452620")
                 .prescriptionInfoUrl("https://www.pharmgkb.org/guidelineAnnotation/PA166104944")
                 .build();
         assertEquals(expectedDrugInfo2, drugInfos.get(2));
@@ -48,7 +45,6 @@ public class DrugInfoLoaderTest
         DrugInfo expectedDrugInfo3 = ImmutableDrugInfo.builder()
                 .drugName("Irinotecan")
                 .geneName("UGT1A1")
-                .generalInfoUrl("https://www.pharmgkb.org/chemical/PA450085")
                 .prescriptionInfoUrl("https://www.pharmgkb.org/guidelineAnnotation/PA166104951")
                 .build();
         assertEquals(expectedDrugInfo3, drugInfos.get(3));

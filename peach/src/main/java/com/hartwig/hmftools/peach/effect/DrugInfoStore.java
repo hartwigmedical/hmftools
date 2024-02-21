@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class DrugInfoStore
 {
@@ -21,19 +22,30 @@ public class DrugInfoStore
         return drugInfos.stream().filter(i -> i.geneName().equals(geneName)).map(DrugInfo::drugName).collect(Collectors.toSet());
     }
 
-    public Set<String> getGeneralInfoUrls(@NotNull String geneName, @NotNull String drugName)
+    @Nullable
+    public String getPrescriptionInfoUrl(@NotNull String geneName, @NotNull String drugName)
     {
-        return drugInfos.stream()
-                .filter(i -> i.geneName().equals(geneName) && i.drugName().equals(drugName))
-                .map(DrugInfo::generalInfoUrl)
-                .collect(Collectors.toSet());
+        DrugInfo matchingDrugInfo = getMatchingDrugInfo(geneName, drugName);
+        return matchingDrugInfo == null ? null : matchingDrugInfo.prescriptionInfoUrl();
     }
 
-    public Set<String> getPrescriptionInfoUrls(@NotNull String geneName, @NotNull String drugName)
+    @Nullable
+    private DrugInfo getMatchingDrugInfo(@NotNull String geneName, @NotNull String drugName)
     {
-        return drugInfos.stream()
-                .filter(i -> i.geneName().equals(geneName) && i.drugName().equals(drugName))
-                .map(DrugInfo::prescriptionInfoUrl)
-                .collect(Collectors.toSet());
+        List<DrugInfo> matchingDrugInfos =
+                drugInfos.stream().filter(i -> i.geneName().equals(geneName) && i.drugName().equals(drugName)).collect(Collectors.toList());
+        if(matchingDrugInfos.isEmpty())
+        {
+            return null;
+        }
+        else if(matchingDrugInfos.size() == 1)
+        {
+            return matchingDrugInfos.get(0);
+        }
+        else
+        {
+            String errorMessage = String.format("Multiple urls configured for drug %s with gene %s", drugName, geneName);
+            throw new IllegalStateException(errorMessage);
+        }
     }
 }
