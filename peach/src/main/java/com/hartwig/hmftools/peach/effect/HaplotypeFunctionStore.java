@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.peach.effect;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
@@ -20,22 +19,27 @@ public class HaplotypeFunctionStore
     @Nullable
     public String getFunction(@NotNull String geneName, @NotNull String haplotypeName)
     {
-        Set<String> configuredFunctions = haplotypeFunctions.stream()
+        HaplotypeFunction matchingHaplotypeFunction = getMatchingHaplotypeFunctions(geneName, haplotypeName);
+        return matchingHaplotypeFunction == null ? null : matchingHaplotypeFunction.function();
+    }
+
+    @Nullable
+    private HaplotypeFunction getMatchingHaplotypeFunctions(@NotNull String geneName, @NotNull String haplotypeName)
+    {
+        List<HaplotypeFunction> matchingFunctions = haplotypeFunctions.stream()
                 .filter(i -> i.geneName().equals(geneName) && i.haplotypeName().equals(haplotypeName))
-                .map(HaplotypeFunction::function)
-                .collect(Collectors.toSet());
-        if(configuredFunctions.isEmpty())
+                .collect(Collectors.toList());
+        if(haplotypeFunctions.isEmpty())
         {
             return null;
         }
-        else if(configuredFunctions.size() == 1)
+        else if(haplotypeFunctions.size() == 1)
         {
-            return configuredFunctions.iterator().next();
+            return haplotypeFunctions.get(0);
         }
         else
         {
-            String errorMessage =
-                    String.format("Multiple different haplotype functions configured for haplotype %s of gene %s", haplotypeName, geneName);
+            String errorMessage = String.format("Multiple functions configured for haplotype %s for gene %s", haplotypeName, geneName);
             throw new IllegalStateException(errorMessage);
         }
     }
