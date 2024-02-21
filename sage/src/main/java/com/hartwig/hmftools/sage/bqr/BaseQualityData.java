@@ -15,7 +15,6 @@ import com.google.common.collect.Maps;
 
 public class BaseQualityData
 {
-    public final int Position;
     public final byte Ref;
     public final byte[] TrinucleotideContext;
     public final BqrReadType ReadType;
@@ -23,9 +22,8 @@ public class BaseQualityData
     private final List<AltQualityCount> mAltQualityCounts;
     private boolean mHasIndel;
 
-    public BaseQualityData(final int position, final byte ref, final byte[] trinucleotideContext, final BqrReadType readType)
+    public BaseQualityData(final byte ref, final byte[] trinucleotideContext, final BqrReadType readType)
     {
-        Position = position;
         Ref = ref;
         TrinucleotideContext = trinucleotideContext;
         ReadType = readType;
@@ -96,8 +94,8 @@ public class BaseQualityData
 
     public String toString()
     {
-        return String.format("%d: ref(%s) context(%s) readType(%s) alts(%d)",
-                Position, (char)Ref, new String(TrinucleotideContext), ReadType, mAltQualityCounts.size());
+        return String.format("ref(%s) context(%s) readType(%s) alts(%d)",
+                (char)Ref, new String(TrinucleotideContext), ReadType, mAltQualityCounts.size());
     }
 
     private class AltQualityCount
