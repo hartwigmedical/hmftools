@@ -101,7 +101,7 @@ An example samplesheet for the WGTS workflow is shown:
 ```
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
 COLO829_example,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
-COLO829_example,COLO829,COLO829R,tumor,rna,bam,/path/to/COLO829T.rna.bam
+COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,/path/to/COLO829T.rna.bam
 COLO829_example,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
 ```
 
@@ -115,7 +115,7 @@ Multiple groups can also be provided in a single sample sheet:
 ```
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
 COLO829_example,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
-COLO829_example,COLO829,COLO829R,tumor,rna,bam,/path/to/COLO829T.rna.bam
+COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,/path/to/COLO829T.rna.bam
 COLO829_example,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
 SEQC_example,SEQC,SEQCT,tumor,dna,bam,/path/to/SEQCT.dna.bam
 ```
