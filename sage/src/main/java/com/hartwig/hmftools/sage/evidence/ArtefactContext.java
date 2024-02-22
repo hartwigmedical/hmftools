@@ -1,163 +1,125 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 
 import htsjdk.samtools.SAMRecord;
 
 public class ArtefactContext
 {
-    /*
-    if a variant is adjacent (factoring in left-alignment for INDELs) to an immediately upstream homopolymer of length >= 8,
-    cap per-read base qual to homopolymerRefBaseQual
+    // if a variant is adjacent (factoring in left-alignment for INDELs) to an immediately upstream homopolymer of length >= 8,
+    // cap per-read base qual to the lowest base qual from the first N bases of the homopolymer
+    // Allow for right-alignment of DELs in the search for the start of the homopolymer
 
-    if the variant extends the homopolymer (specifically, deletes the first base downstream of the homopolymer, or an SNV with the homopolymer base as ALT),
-    let N be the number of ref bases downstream of the deleted/SNV'd base(s) before a non-homopolymer base is encountered. then homopolymerRefBaseQual is
-    the BQ of the (N+1)th last base of the homopolymer
-
-    if the above applies, and there is a variant affecting the first homopolymer immediately upstream of the 8+ len homopolymer, or a variant extending
-    or contracting the long homopolymer itself, cap its qual at the same homopolymerRefBaseQual
-    */
-
-    private final int mVariantSpan;
-    private final byte[] mHomopolymerBases;
-    private final int[] mSkipCounts; // 'N' in the notes above
+    private final int[] mHomopolymerStartOffset;
     private final boolean mRequiresCheck;
 
     public static final byte NOT_APPLICABLE_BASE_QUAL = -1;
     public static final byte NO_BASE = 0;
 
+    private static final int NO_INDEX = -1;
+    private static final int HOMOPOLYMER_BASE_SEARCH = 3;
     private static final int HOMOPOLYMER_REPEAT_LENGTH = 8;
 
-    public ArtefactContext(final int variantSpan, final byte[] homopolymerBases, final int[] skipCounts)
+    public ArtefactContext(final int[] homopolymerStartOffset)
     {
-        mVariantSpan = variantSpan;
-        mHomopolymerBases = homopolymerBases;
-        mSkipCounts = skipCounts;
-        mRequiresCheck = mHomopolymerBases[SE_START] != NO_BASE || mHomopolymerBases[SE_END] != NO_BASE;
+        mHomopolymerStartOffset = homopolymerStartOffset;
+        mRequiresCheck = mHomopolymerStartOffset[SE_START] != NO_BASE || mHomopolymerStartOffset[SE_END] != NO_BASE;
     }
 
-    public static ArtefactContext buildContext(final ReadContextCounter variant)
+    public static ArtefactContext buildContext(final SimpleVariant variant, final IndexedBases indexedBases)
     {
         // check for any single-base repeat of 8+ bases not covering the variant
-        final IndexedBases indexedBases = variant.readContext().indexedBases();
         String flankAndBases = indexedBases.fullString();
 
         int indexInBases = indexedBases.Index - indexedBases.LeftFlankIndex;
-        int varIndexStart = variant.isIndel() ? indexInBases : indexInBases - 1; // move 1 down for an SNV/MNV
-        int altLength = variant.variant().alt().length();
-        int varIndexEnd = indexInBases + altLength;
 
-        byte homopolymerBaseOnLeft = findHomopolymerBase(flankAndBases, varIndexStart, true);
-        byte homopolymerBaseOnRight = findHomopolymerBase(flankAndBases, varIndexEnd, false);
+        // for SNVs and MNVs, restrict the search to within the variant bases
+        int hpStartOffset = NO_INDEX;
+        int hpEndOffset = NO_INDEX;
 
-        int rightAlignmentCount = 0;
-        if(homopolymerBaseOnRight == NO_BASE && variant.variant().isDelete())
+        int altLength = variant.alt().length();
+
+        for(int varIndex = indexInBases; varIndex < indexInBases + altLength; ++varIndex)
         {
-            String deletedBases = variant.ref().substring(1);
-            int delBaseLength = deletedBases.length();
-            int delStartIndex = indexInBases + 1;
-            while(deletedBases.equals(flankAndBases.substring(delStartIndex, delStartIndex + delBaseLength)))
+            if(hasHomopolymerRepeat(flankAndBases, varIndex, true))
             {
-                delStartIndex += deletedBases.length();
-                rightAlignmentCount += deletedBases.length();
+                hpStartOffset = indexInBases - varIndex;
             }
 
-            homopolymerBaseOnRight = findHomopolymerBase(flankAndBases, delStartIndex, false);
+            if(hpEndOffset != NO_INDEX)
+                break;
+
+            if(hasHomopolymerRepeat(flankAndBases, varIndex, false))
+            {
+                hpEndOffset = varIndex - indexInBases;
+            }
+            else if(variant.isDelete())
+            {
+                String deletedBases = variant.ref().substring(1);
+                int delBaseLength = deletedBases.length();
+                int delStartIndex = indexInBases + 1;
+
+                while(delStartIndex + delBaseLength < flankAndBases.length()
+                && deletedBases.equals(flankAndBases.substring(delStartIndex, delStartIndex + delBaseLength)))
+                {
+                    delStartIndex += deletedBases.length();
+                }
+
+                if(hasHomopolymerRepeat(flankAndBases, delStartIndex, false))
+                {
+                    hpEndOffset = delStartIndex - indexInBases;
+                }
+            }
         }
 
-        if(homopolymerBaseOnLeft == NO_BASE && homopolymerBaseOnRight == NO_BASE)
+        if(hpStartOffset == NO_INDEX && hpEndOffset == NO_INDEX)
             return null;
 
-        int skipCountLeft = 0;
-        int skipCountRight = 0;
-        if(homopolymerBaseOnLeft != NO_BASE)
-        {
-            skipCountLeft = findSkipCount(flankAndBases, varIndexEnd, homopolymerBaseOnLeft, false);
-        }
-
-        if(homopolymerBaseOnRight != NO_BASE)
-        {
-            /*
-            if(useRightAlignment)
-                skipCountRight = 0;
-            else
-            */
-            skipCountRight = findSkipCount(flankAndBases, varIndexStart + rightAlignmentCount, homopolymerBaseOnRight, true);
-        }
-
-        // calculate bases to get from the start of the variant to the first upstream ref base
-        int variantSpan = variant.variant().isDelete() ? 2 : altLength;
-
-        return new ArtefactContext(
-                variantSpan, new byte[] { homopolymerBaseOnLeft, homopolymerBaseOnRight}, new int[] { skipCountLeft, skipCountRight} );
+        return new ArtefactContext(new int[] { hpStartOffset, hpEndOffset} );
     }
 
     public boolean requiresCheck() { return mRequiresCheck; }
-    public byte[] homopolymerBases() { return mHomopolymerBases; }
-    public int[] skipCounts() { return mSkipCounts; }
+    public int homopolymerOffset(int seIndex) { return mHomopolymerStartOffset[seIndex]; }
+    public boolean hasHomopolymerOffset(int seIndex) { return mHomopolymerStartOffset[seIndex] != NO_INDEX; }
 
-    private static int findSkipCount(final String bases, final int startIndex, final byte homopolymerBase, boolean searchDown)
-    {
-        int skipCount = 0;
-
-        int i = startIndex;
-
-        while(i >= 0 && i < bases.length())
-        {
-            if((byte)bases.charAt(i) == homopolymerBase)
-                ++skipCount;
-            else
-                break;
-
-            if(searchDown)
-                --i;
-            else
-                ++i;
-        }
-
-        return skipCount;
-    }
-
-    public byte findApplicableBaseQual(final ReadContextCounter variant, final SAMRecord record, int varReadIndex)
+    public byte findApplicableBaseQual(final SAMRecord record, int varReadIndex)
     {
         int homopolSide = record.getReadNegativeStrandFlag() ? SE_END : SE_START;
 
-        if(mHomopolymerBases[homopolSide] == NO_BASE)
+        if(mHomopolymerStartOffset[homopolSide] == NO_INDEX)
             return NOT_APPLICABLE_BASE_QUAL;
 
         return findHomopolymerBaseQual(
-                record, varReadIndex, mHomopolymerBases[homopolSide], mSkipCounts[homopolSide], homopolSide == SE_END);
+                record, varReadIndex, mHomopolymerStartOffset[homopolSide], homopolSide == SE_START);
     }
 
-    private byte findHomopolymerBaseQual(final SAMRecord record, int varReadIndex, byte homopolymerBase, int skipCount, boolean searchDown)
+    private byte findHomopolymerBaseQual(final SAMRecord record, int varReadIndex, int hpOffset, boolean searchDown)
     {
-        int baseIndex = searchDown ? varReadIndex + mVariantSpan : varReadIndex - 1;
+        int hpStartIndex = searchDown ? varReadIndex - hpOffset : varReadIndex + hpOffset;
 
-        while(baseIndex >= 0 && baseIndex < record.getReadBases().length)
+        int minBaseQual = 0;
+
+        for(int i = 0; i < HOMOPOLYMER_BASE_SEARCH; ++i)
         {
-            byte base = record.getReadBases()[baseIndex];
+            int hpIndex = hpStartIndex + (searchDown ? -i : i);
 
-            if(base != homopolymerBase)
-                break;
-
-            if(searchDown)
-                --baseIndex;
+            if(i == 0)
+                minBaseQual = record.getBaseQualities()[hpIndex];
             else
-                ++baseIndex;
+                minBaseQual = min(minBaseQual, record.getBaseQualities()[hpIndex]);
         }
 
-        int nBase = searchDown ? skipCount + 1 : -(skipCount + 1);
-
-        int homopolymerBaseIndex = baseIndex + nBase;
-        return record.getBaseQualities()[homopolymerBaseIndex];
+        return (byte)minBaseQual;
     }
 
-    private static byte findHomopolymerBase(final String bases, int startIndex, boolean searchDown)
+    private static boolean hasHomopolymerRepeat(final String bases, int startIndex, boolean searchDown)
     {
         int repeatCount = 1;
         char lastChar = bases.charAt(startIndex);
@@ -172,11 +134,11 @@ public class ArtefactContext
                 ++repeatCount;
 
                 if(repeatCount >= HOMOPOLYMER_REPEAT_LENGTH)
-                    return (byte)lastChar;
+                    return true;
             }
             else
             {
-                return NO_BASE;
+                return false;
             }
 
             if(searchDown)
@@ -185,33 +147,11 @@ public class ArtefactContext
                 ++i;
         }
 
-        return NO_BASE;
+        return false;
     }
 
     public String toString()
     {
-        return format("bases(%d - %d) skip(%d - %d)", mHomopolymerBases[0], mHomopolymerBases[1], mSkipCounts[0], mSkipCounts[1]);
+        return format("hpOffsets start(%d) end(%d)", mHomopolymerStartOffset[0], mHomopolymerStartOffset[1]);
     }
-
-    /*
-    private static boolean withinLongHomoploymerRange(final ReadContextCounter readContextCounter)
-    {
-        // check for any single-base repeat of 8+ bases not covering the variant
-        final IndexedBases indexedBases = readContextCounter.readContext().indexedBases();
-        String flankAndBases = indexedBases.fullString();
-
-        int varIndexStart = indexedBases.Index - indexedBases.LeftFlankIndex;
-
-        int varIndexEnd = readContextCounter.variant().isDelete() ?
-                varIndexStart + 1 : varIndexStart + readContextCounter.variant().alt().length() - 1;
-
-        if(hasLongRepeat(flankAndBases, 0, varIndexStart - 1))
-            return true;
-
-        if(hasLongRepeat(flankAndBases, varIndexEnd + 1, flankAndBases.length() - 1))
-            return true;
-
-        return false;
-    }
-    */
 }

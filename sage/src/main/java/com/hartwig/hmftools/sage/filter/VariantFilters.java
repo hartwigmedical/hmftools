@@ -210,7 +210,6 @@ public class VariantFilters
         }
     }
 
-
     private boolean skipMinTumorQualTest(final VariantTier tier, final ReadContextCounter primaryTumor)
     {
         return tier == VariantTier.HOTSPOT

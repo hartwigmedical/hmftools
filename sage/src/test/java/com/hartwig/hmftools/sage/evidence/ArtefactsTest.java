@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.sage.evidence.ArtefactContext.NOT_APPLICABLE_
 import static com.hartwig.hmftools.sage.evidence.ArtefactContext.NO_BASE;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import com.hartwig.hmftools.sage.common.IndexedBases;
@@ -55,11 +56,11 @@ public class ArtefactsTest
                 1, variant, readContext, VariantTier.PANEL, 100, 0,
                 TEST_CONFIG, QUALITY_CALCULATOR, null);
 
-        ArtefactContext artefactContext = ArtefactContext.buildContext(rcCounter);
+        ArtefactContext artefactContext = ArtefactContext.buildContext(variant, indexBases);
         assertNotNull(artefactContext);
-        assertEquals(NO_BASE, artefactContext.homopolymerBases()[SE_START]);
-        assertEquals((byte)'T', artefactContext.homopolymerBases()[SE_END]);
-        assertEquals(0, artefactContext.skipCounts()[SE_START]);
+
+        assertFalse(artefactContext.hasHomopolymerOffset(SE_START));
+        assertEquals(0, artefactContext.homopolymerOffset(SE_END));
 
         int readLength = readContextBases.length();
         String cigar = format("%dM", readLength);
@@ -69,13 +70,13 @@ public class ArtefactsTest
         readQualities[varIndex] = lowQualBase;
         SAMRecord record = buildSamRecord(90, cigar, readContextBases, new String(readQualities));
 
-        byte adjustedBaseQual = artefactContext.findApplicableBaseQual(rcCounter, record, varIndex);
+        byte adjustedBaseQual = artefactContext.findApplicableBaseQual(record, varIndex);
 
         assertEquals(adjustedBaseQual, NOT_APPLICABLE_BASE_QUAL);
 
         record.setReadNegativeStrandFlag(true);
 
-        adjustedBaseQual = artefactContext.findApplicableBaseQual(rcCounter, record, varIndex);
+        adjustedBaseQual = artefactContext.findApplicableBaseQual(record, varIndex);
 
         assertEquals(lowQualBase, adjustedBaseQual);
 
@@ -94,15 +95,16 @@ public class ArtefactsTest
                 1, variant, readContext, VariantTier.PANEL, 100, 0,
                 TEST_CONFIG, QUALITY_CALCULATOR, null);
 
-        artefactContext = ArtefactContext.buildContext(rcCounter);
+        artefactContext = ArtefactContext.buildContext(variant, indexBases);
         assertNotNull(artefactContext);
+        assertEquals(1, artefactContext.homopolymerOffset(SE_END));
 
         readQualities = buildDefaultBaseQuals(readLength);
         readQualities[varIndex + 1] = lowQualBase;
         record = buildSamRecord(20, cigar, readContextBases, new String(readQualities));
         record.setReadNegativeStrandFlag(true);
 
-        adjustedBaseQual = artefactContext.findApplicableBaseQual(rcCounter, record, varIndex);
+        adjustedBaseQual = artefactContext.findApplicableBaseQual(record, varIndex);
         assertEquals(lowQualBase, adjustedBaseQual);
 
         // similar before but where the variant is left aligned so not immediately next to the HP
@@ -127,17 +129,17 @@ public class ArtefactsTest
                 1, variant, readContext, VariantTier.PANEL, 100, 0,
                 TEST_CONFIG, QUALITY_CALCULATOR, null);
 
-        artefactContext = ArtefactContext.buildContext(rcCounter);
+        artefactContext = ArtefactContext.buildContext(variant, indexBases);
         assertNotNull(artefactContext);
+        assertEquals(2, artefactContext.homopolymerOffset(SE_END));
 
         readQualities = buildDefaultBaseQuals(readLength);
         readQualities[17] = lowQualBase;
         record = buildSamRecord(20, cigar, readContextBases, new String(readQualities));
         record.setReadNegativeStrandFlag(true);
 
-        adjustedBaseQual = artefactContext.findApplicableBaseQual(rcCounter, record, varIndex);
+        adjustedBaseQual = artefactContext.findApplicableBaseQual(record, varIndex);
         assertEquals(lowQualBase, adjustedBaseQual);
-
 
         // similar to above but the delete is 2-bases left-aligned, so not immediately left of the HP
         //            10              20         30
@@ -158,15 +160,16 @@ public class ArtefactsTest
                 1, variant, readContext, VariantTier.PANEL, 100, 0,
                 TEST_CONFIG, QUALITY_CALCULATOR, null);
 
-        artefactContext = ArtefactContext.buildContext(rcCounter);
+        artefactContext = ArtefactContext.buildContext(variant, indexBases);
         assertNotNull(artefactContext);
+        assertEquals(3, artefactContext.homopolymerOffset(SE_END));
 
         readQualities = buildDefaultBaseQuals(readLength);
         readQualities[18] = lowQualBase;
         record = buildSamRecord(20, cigar, readContextBases, new String(readQualities));
         record.setReadNegativeStrandFlag(true);
 
-        adjustedBaseQual = artefactContext.findApplicableBaseQual(rcCounter, record, varIndex);
+        adjustedBaseQual = artefactContext.findApplicableBaseQual(record, varIndex);
         assertEquals(lowQualBase, adjustedBaseQual);
 
 
@@ -174,12 +177,11 @@ public class ArtefactsTest
         // AAAAAGGGGG ACGTTGC insT [T] TTTTTTTT ACGTTGCA AAAAAGGGGG   - read
         // AAAAAGGGGG ACGTTGC      [A] TTTTTTTT ACGTTGCA AAAAAGGGGG   - ref
 
-        /*
         // an SNV which follows a germline T insertion, which should be ignored when finding the first ref base
         //            10                20         30
         // 0123456789 0123456    7  8  9  01234567 890123
         // AAAAAGGGGG AACGTAG insT [T] TTTTTTTT ACGTTGCA AAAAAGGGGG
-        // low-qual                  X
+        // low-qual                 X
         variant = new SimpleVariant(CHR_1, pos, "A", "T");
 
         varIndex = 18;
@@ -194,8 +196,9 @@ public class ArtefactsTest
                 1, variant, readContext, VariantTier.PANEL, 100, 0,
                 TEST_CONFIG, QUALITY_CALCULATOR, null);
 
-        artefactContext = ArtefactContext.buildContext(rcCounter);
+        artefactContext = ArtefactContext.buildContext(variant, indexBases);
         assertNotNull(artefactContext);
+        assertEquals(0, artefactContext.homopolymerOffset(SE_END));
 
         readQualities = buildDefaultBaseQuals(readLength);
         readQualities[18] = lowQualBase;
@@ -203,9 +206,8 @@ public class ArtefactsTest
         record = buildSamRecord(20, cigar, readContextBases, new String(readQualities));
         record.setReadNegativeStrandFlag(true);
 
-        adjustedBaseQual = artefactContext.findApplicableBaseQual(rcCounter, record, varIndex);
+        adjustedBaseQual = artefactContext.findApplicableBaseQual(record, varIndex);
         assertEquals(lowQualBase, adjustedBaseQual);
-        */
     }
 
     @Test
@@ -227,11 +229,10 @@ public class ArtefactsTest
                 1, variant, readContext, VariantTier.PANEL, 100, 0,
                 TEST_CONFIG, QUALITY_CALCULATOR, null);
 
-        ArtefactContext artefactContext = ArtefactContext.buildContext(rcCounter);
+        ArtefactContext artefactContext = ArtefactContext.buildContext(variant, indexBases);
         assertNotNull(artefactContext);
-        assertEquals(NO_BASE, artefactContext.homopolymerBases()[SE_END]);
-        assertEquals((byte)'T', artefactContext.homopolymerBases()[SE_START]);
-        assertEquals(0, artefactContext.skipCounts()[SE_END]);
+        assertFalse(artefactContext.hasHomopolymerOffset(SE_END));
+        assertEquals(0, artefactContext.homopolymerOffset(SE_START));
 
         int readLength = readContextBases.length();
         String cigar = format("%dM", readLength);
@@ -241,16 +242,15 @@ public class ArtefactsTest
         readQualities[varIndex] = lowQualBase;
         SAMRecord record = buildSamRecord(20, cigar, readContextBases, new String(readQualities));
 
-        byte adjustedBaseQual = artefactContext.findApplicableBaseQual(rcCounter, record, varIndex);
+        byte adjustedBaseQual = artefactContext.findApplicableBaseQual(record, varIndex);
 
         assertEquals(lowQualBase, adjustedBaseQual);
 
         // ignore -ve strand for downstream HPs
         record.setReadNegativeStrandFlag(true);
-        adjustedBaseQual = artefactContext.findApplicableBaseQual(rcCounter, record, varIndex);
+        adjustedBaseQual = artefactContext.findApplicableBaseQual(record, varIndex);
         assertEquals(NOT_APPLICABLE_BASE_QUAL, adjustedBaseQual);
 
-        /*
         // single base DEL on left of HP
         variant = new SimpleVariant(CHR_1, pos, "CA", "C");
 
@@ -266,16 +266,16 @@ public class ArtefactsTest
                 1, variant, readContext, VariantTier.PANEL, 100, 0,
                 TEST_CONFIG, QUALITY_CALCULATOR, null);
 
-        artefactContext = ArtefactContext.buildContext(rcCounter);
+        artefactContext = ArtefactContext.buildContext(variant, indexBases);
         assertNotNull(artefactContext);
+        assertEquals(1, artefactContext.homopolymerOffset(SE_END));
 
         readQualities = buildDefaultBaseQuals(readLength);
         readQualities[varIndex + 1] = lowQualBase;
         record = buildSamRecord(20, cigar, readContextBases, new String(readQualities));
         record.setReadNegativeStrandFlag(true);
 
-        adjustedBaseQual = artefactContext.findApplicableBaseQual(rcCounter, record, varIndex);
+        adjustedBaseQual = artefactContext.findApplicableBaseQual(record, varIndex);
         assertEquals(lowQualBase, adjustedBaseQual);
-        */
     }
 }
