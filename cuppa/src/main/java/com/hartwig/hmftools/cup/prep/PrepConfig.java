@@ -44,6 +44,7 @@ public class PrepConfig
     public final boolean WriteByCategory;
 
     // pipeline directories, accepting wildcards
+    public final String SampleDataDir;
     public final String LinxDir;
     public final String PurpleDir;
     public final String VirusDir;
@@ -70,12 +71,12 @@ public class PrepConfig
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        String sampleDataDir = configBuilder.getValue(SAMPLE_DATA_DIR_CFG, "");
+        SampleDataDir = configBuilder.getValue(SAMPLE_DATA_DIR_CFG, "");
+        LinxDir = configBuilder.getValue(LINX_DIR_CFG, SampleDataDir);
+        PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG, SampleDataDir);
+        VirusDir = configBuilder.getValue(VIRUS_DIR_CFG, SampleDataDir);
+        IsofoxDir = configBuilder.getValue(ISOFOX_DIR_CFG, SampleDataDir);
 
-        LinxDir = configBuilder.getValue(LINX_DIR_CFG, sampleDataDir);
-        PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG, sampleDataDir);
-        VirusDir = configBuilder.getValue(VIRUS_DIR_CFG, sampleDataDir);
-        IsofoxDir = configBuilder.getValue(ISOFOX_DIR_CFG, sampleDataDir);
         AltSpliceJunctionSites = configBuilder.getValue(REF_ALT_SJ_SITES);
 
         OutputDir = parseOutputDir(configBuilder);
@@ -101,7 +102,7 @@ public class PrepConfig
     {
         configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
-        configBuilder.addPath(VIRUS_DIR_CFG, false, PURPLE_DIR_DESC);
+        configBuilder.addPath(VIRUS_DIR_CFG, false, VIRUS_DIR_CFG);
         configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
     }
 
@@ -129,6 +130,7 @@ public class PrepConfig
             final String outputDir,
             final String outputId,
             final boolean writeByCategory,
+            final String sampleDataDir,
             final String linxDir,
             final String purpleDir,
             final String virusDir,
@@ -142,12 +144,11 @@ public class PrepConfig
         OutputDir = outputDir;
         OutputId = outputId;
         WriteByCategory = writeByCategory;
+        SampleDataDir = sampleDataDir;
         LinxDir = linxDir;
         PurpleDir = purpleDir;
         VirusDir = virusDir;
         IsofoxDir = isofoxDir;
         AltSpliceJunctionSites = altSpliceJunctionSites;
     }
-
-//    public static class Builder()
 }
