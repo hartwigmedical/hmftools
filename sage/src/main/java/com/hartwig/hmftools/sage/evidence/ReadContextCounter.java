@@ -108,6 +108,7 @@ public class ReadContextCounter//  extends SimpleVariant
 
     private final JitterData mJitterData;
     private int mImproperPairCount;
+    private final ArtefactContext mArtefactContext;
 
     private int mRawDepth;
     private int mRawAltSupport;
@@ -167,6 +168,7 @@ public class ReadContextCounter//  extends SimpleVariant
         mCounts = new ReadSupportCounts();
 
         mJitterData = new JitterData();
+        mArtefactContext = ArtefactContext.buildContext(variant, readContext.indexedBases());
 
         mAltFragmentStrandBias = new StrandBiasData(true);
         mRefFragmentStrandBias = new StrandBiasData(false);
@@ -234,6 +236,7 @@ public class ReadContextCounter//  extends SimpleVariant
     {
         return mJitterData.summary();
     }
+    public ArtefactContext artefactContext() { return mArtefactContext; }
 
     public StrandBiasData fragmentStrandBiasAlt() { return mAltFragmentStrandBias; }
     public StrandBiasData fragmentStrandBiasRef() { return mRefFragmentStrandBias; }

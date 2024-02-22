@@ -7,6 +7,7 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.bqr.BqrConfig.useReadType;
 import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
+import static com.hartwig.hmftools.sage.evidence.ArtefactContext.NOT_APPLICABLE_BASE_QUAL;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
@@ -77,8 +78,16 @@ public class QualityCalculator
     public QualityScores calculateQualityScores(
             final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, double numberOfEvents, double rawBaseQuality)
     {
-        double baseQuality = readContextCounter.isIndel() ?
-                rawBaseQuality : recalibratedBaseQuality(readContextCounter, readBaseIndex, record, readContextCounter.variant().ref().length());
+        double baseQuality;
+
+        if(readContextCounter.artefactContext() != null || readContextCounter.isIndel())
+        {
+            baseQuality = rawBaseQuality;
+        }
+        else
+        {
+            baseQuality = recalibratedBaseQuality(readContextCounter, readBaseIndex, record, readContextCounter.variant().ref().length());
+        }
 
         int mapQuality = record.getMappingQuality();
         boolean isImproperPair = isImproperPair(record);
@@ -103,6 +112,13 @@ public class QualityCalculator
 
     public static double rawBaseQuality(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
+        if(readContextCounter.artefactContext() != null)
+        {
+            byte adjustBaseQual = readContextCounter.artefactContext().findApplicableBaseQual(record, readIndex);
+            if(adjustBaseQual != NOT_APPLICABLE_BASE_QUAL)
+                return adjustBaseQual;
+        }
+
         if(readContextCounter.isIndel())
             return readContextCounter.readContext().avgCentreQuality(readIndex, record);
 
