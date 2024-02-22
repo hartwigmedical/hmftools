@@ -32,7 +32,6 @@ import com.hartwig.hmftools.cup.svs.StructuralVariantPrep;
 import com.hartwig.hmftools.cup.traits.SampleTraitPrep;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class CuppaDataPrep
 {
@@ -51,7 +50,7 @@ public class CuppaDataPrep
         mConfig = prepConfig;
     }
 
-    private List<CategoryPrep> buildDataPreparers()
+    public static List<CategoryPrep> buildDataPreparers(PrepConfig mConfig)
     {
         List<CategoryPrep> preparers = Lists.newArrayList();
 
@@ -88,167 +87,194 @@ public class CuppaDataPrep
         return preparers;
     }
 
-    public List<DataItem> getDataSingleSample()
+    public class SingleSamplePrep
     {
-        List<DataItem> dataItems = new ArrayList<>();
-        String sampleId = mConfig.SampleIds.get(0);
-
-        List<CategoryPrep> dataPreparers = buildDataPreparers();
-
-        for(CategoryPrep categoryPrep : dataPreparers)
+        public List<DataItem> getData(List<CategoryPrep> dataPreparers, String sampleId)
         {
-            List<DataItem> categoryDataItems = null;
-            try {
-                CUP_LOGGER.info("  category({})", categoryPrep.categoryType());
-                categoryDataItems = categoryPrep.extractSampleData(sampleId);
-            } catch(Exception e) {
-                CUP_LOGGER.error("Feature extraction failed for category({})", categoryPrep.categoryType());
-                System.exit(1);
+            List<DataItem> dataItems = new ArrayList<>();
+
+            for(CategoryPrep categoryPrep : dataPreparers)
+            {
+                List<DataItem> categoryDataItems = null;
+                try {
+                    CUP_LOGGER.info("  category({})", categoryPrep.categoryType());
+                    categoryDataItems = categoryPrep.extractSampleData(sampleId);
+                } catch(Exception e) {
+                    CUP_LOGGER.error("Feature extraction failed for category({})", categoryPrep.categoryType());
+                    System.exit(1);
+                }
+
+                assert categoryDataItems != null;
+                dataItems.addAll(categoryDataItems);
             }
 
-            assert categoryDataItems != null;
-            dataItems.addAll(categoryDataItems);
+            return dataItems;
         }
 
-        return dataItems;
-    }
-
-    public static void writeDataSingleSample(List<DataItem> dataItems, String path)
-    {
-        try
+        public void writeData(List<DataItem> dataItems, String path)
         {
-            CUP_LOGGER.info("Writing data to: " + path);
-
-            BufferedWriter writer = createBufferedWriter(path, false);
-            StringJoiner joiner = new StringJoiner(DELIMITER);
-
-            joiner.add(FLD_SOURCE).add(FLD_CATEGORY).add(FLD_KEY).add(FLD_VALUE);
-            String header = joiner.toString();
-            writer.write(header);
-            writer.newLine();
-
-            for(DataItem dataItem : dataItems)
+            try
             {
-                joiner = new StringJoiner(DELIMITER);
-                joiner.add(dataItem.Index.Source.toString());
-                joiner.add(dataItem.Index.Type.getAlias());
-                joiner.add(dataItem.Index.Key);
-                joiner.add(dataItem.Value);
+                CUP_LOGGER.info("Writing data to: " + path);
 
-                writer.write(joiner.toString());
-                writer.newLine();
-            }
+                BufferedWriter writer = createBufferedWriter(path, false);
+                StringJoiner joiner = new StringJoiner(DELIMITER);
 
-            closeBufferedWriter(writer);
-        }
-        catch(IOException e)
-        {
-            CUP_LOGGER.error("Failed to write features");
-            System.exit(1);
-        }
-    }
-
-    public DataItemMatrix getDataOneCategoryMultiSample(CategoryPrep categoryPrep)
-    {
-        String[] sampleIds = mConfig.SampleIds.toArray(String[]::new);
-        int nSamples = sampleIds.length;
-
-        ConcurrentHashMap<DataItemIndex, String[]> featureBySampleMatrix = new ConcurrentHashMap<>();
-
-        for(int sampleIndex = 0; sampleIndex < nSamples; sampleIndex++)
-        {
-            String sampleId = sampleIds[sampleIndex];
-
-            if(sampleIndex % 100 == 0 | sampleIndex == 1)
-            {
-                CUP_LOGGER.info("  sampleId({}): {}/{}", sampleId, sampleIndex+1, nSamples);
-            }
-
-            List<DataItem> dataItems = categoryPrep.extractSampleData(sampleId);
-
-            for(DataItem dataItem : dataItems)
-            {
-                DataItemIndex featureIndex = dataItem.Index;
-
-                if(featureBySampleMatrix.get(featureIndex) == null)
-                    featureBySampleMatrix.put(featureIndex, new String[nSamples]);
-
-                featureBySampleMatrix.get(featureIndex)[sampleIndex] = dataItem.Value;
-            }
-        }
-
-        return new DataItemMatrix(sampleIds, featureBySampleMatrix);
-    }
-
-    public synchronized static void writeDataMultiSampleOneCategory(DataItemMatrix dataItemMatrix, String path, boolean append)
-    {
-        try
-        {
-            CUP_LOGGER.info("Writing data to: " + path);
-
-            StringJoiner joiner = new StringJoiner(DELIMITER);
-            BufferedWriter writer = createBufferedWriter(path, append);
-
-            if(!append)
-            {
-                // TODO delete old file if not append and file exists
-
-                joiner.add(FLD_SOURCE).add(FLD_CATEGORY).add(FLD_KEY);
-
-                for(String sampleId : dataItemMatrix.SampleIds)
-                    joiner.add(sampleId);
-
+                joiner.add(FLD_SOURCE).add(FLD_CATEGORY).add(FLD_KEY).add(FLD_VALUE);
                 String header = joiner.toString();
                 writer.write(header);
                 writer.newLine();
-            }
 
-            for(DataItemIndex index : dataItemMatrix.getFeatureIndexes())
-            {
-                joiner = new StringJoiner(DELIMITER);
-
-                joiner.add(index.Source.toString());
-                joiner.add(index.Type.getAlias());
-                joiner.add(index.Key);
-
-                for(int sampleIndex = 0; sampleIndex < dataItemMatrix.nSamples(); sampleIndex++)
+                for(DataItem dataItem : dataItems)
                 {
-                    String value = dataItemMatrix.get(index)[sampleIndex];
-                    if(value == null)
-                        value = NULL_VALUE_STRING;
+                    joiner = new StringJoiner(DELIMITER);
+                    joiner.add(dataItem.Index.Source.toString());
+                    joiner.add(dataItem.Index.Type.getAlias());
+                    joiner.add(dataItem.Index.Key);
+                    joiner.add(dataItem.Value);
 
-                    joiner.add(value);
+                    writer.write(joiner.toString());
+                    writer.newLine();
                 }
 
-                writer.write(joiner.toString());
-                writer.newLine();
+                closeBufferedWriter(writer);
             }
-
-            closeBufferedWriter(writer);
+            catch(IOException e)
+            {
+                CUP_LOGGER.error("Failed to write features");
+                System.exit(1);
+            }
         }
-        catch(Exception e)
+
+        public void run()
         {
-            CUP_LOGGER.error("Failed to write multi-sample feature matrix");
-            System.exit(1);
+            CUP_LOGGER.info("Extracting CUPPA features in single sample mode for sample({})", mConfig.SampleIds.get(0));
+
+            String sampleId = mConfig.SampleIds.get(0);
+
+            List<CategoryPrep> dataPreparers = buildDataPreparers(mConfig);
+            List<DataItem> dataItems = getData(dataPreparers, sampleId);
+
+            String outputPath = mConfig.OutputDir + "/" + sampleId + ".cuppa_data" + TSV_ZIP_EXTENSION;
+            writeData(dataItems, outputPath);
         }
     }
 
-    public String getOutputPath(@Nullable final CategoryPrep categoryPrep)
+    public class MultiSamplePrep
     {
-        String path = mConfig.OutputDir + "cuppa_data";
+        public DataItemMatrix getDataOneCategory(CategoryPrep categoryPrep, String[] sampleIds)
+        {
+            int nSamples = sampleIds.length;
 
-        if(mConfig.isMultiSample())
-            path += ".cohort";
+            ConcurrentHashMap<DataItemIndex, String[]> featureBySampleMatrix = new ConcurrentHashMap<>();
 
-        if(mConfig.OutputId != null)
-            path += "." + mConfig.OutputId;
+            for(int sampleIndex = 0; sampleIndex < nSamples; sampleIndex++)
+            {
+                String sampleId = sampleIds[sampleIndex];
 
-        if(categoryPrep != null)
-            path += "." + categoryPrep.categoryType().toString().toLowerCase();
+                if(sampleIndex % 100 == 0 | sampleIndex == 1)
+                {
+                    CUP_LOGGER.info("  sampleId({}): {}/{}", sampleId, sampleIndex + 1, nSamples);
+                }
 
-        path += TSV_ZIP_EXTENSION;
+                List<DataItem> dataItems = categoryPrep.extractSampleData(sampleId);
 
-        return path;
+                for(DataItem dataItem : dataItems)
+                {
+                    DataItemIndex featureIndex = dataItem.Index;
+
+                    if(featureBySampleMatrix.get(featureIndex) == null)
+                        featureBySampleMatrix.put(featureIndex, new String[nSamples]);
+
+                    featureBySampleMatrix.get(featureIndex)[sampleIndex] = dataItem.Value;
+                }
+            }
+
+            return new DataItemMatrix(sampleIds, featureBySampleMatrix);
+        }
+
+        public synchronized void writeDataOneCategory(DataItemMatrix dataItemMatrix, String path, boolean append)
+        {
+            try
+            {
+                CUP_LOGGER.info("Writing data to: " + path);
+
+                StringJoiner joiner = new StringJoiner(DELIMITER);
+                BufferedWriter writer = createBufferedWriter(path, append);
+
+                if(!append)
+                {
+                    // TODO delete old file if not append and file exists
+
+                    joiner.add(FLD_SOURCE).add(FLD_CATEGORY).add(FLD_KEY);
+
+                    for(String sampleId : dataItemMatrix.SampleIds)
+                        joiner.add(sampleId);
+
+                    String header = joiner.toString();
+                    writer.write(header);
+                    writer.newLine();
+                }
+
+                for(DataItemIndex index : dataItemMatrix.getFeatureIndexes())
+                {
+                    joiner = new StringJoiner(DELIMITER);
+
+                    joiner.add(index.Source.toString());
+                    joiner.add(index.Type.getAlias());
+                    joiner.add(index.Key);
+
+                    for(int sampleIndex = 0; sampleIndex < dataItemMatrix.nSamples(); sampleIndex++)
+                    {
+                        String value = dataItemMatrix.get(index)[sampleIndex];
+                        if(value == null)
+                            value = NULL_VALUE_STRING;
+
+                        joiner.add(value);
+                    }
+
+                    writer.write(joiner.toString());
+                    writer.newLine();
+                }
+
+                closeBufferedWriter(writer);
+            }
+            catch(Exception e)
+            {
+                CUP_LOGGER.error("Failed to write multi-sample feature matrix");
+                System.exit(1);
+            }
+        }
+
+        public void run()
+        {
+            CUP_LOGGER.info("Extracting CUPPA features in multi sample mode for {} samples", mConfig.SampleIds.size());
+
+            List<CategoryPrep> dataPreparers = buildDataPreparers(mConfig);
+            String[] sampleIds = mConfig.SampleIds.toArray(String[]::new);
+
+            String outPathPrefix = mConfig.OutputDir + "/cuppa_data.cohort.";
+            if(mConfig.OutputId != null)
+                outPathPrefix += "." + mConfig.OutputId;
+
+            for(int i = 0; i < dataPreparers.size(); i++)
+            {
+                CategoryPrep categoryPrep = dataPreparers.get(i);
+                DataItemMatrix dataItemMatrix = getDataOneCategory(categoryPrep, sampleIds);
+
+                if(mConfig.WriteByCategory)
+                {
+                    String outputPath = outPathPrefix + categoryPrep.categoryType().toString().toLowerCase() + TSV_ZIP_EXTENSION;
+                    writeDataOneCategory(dataItemMatrix, outputPath, false);
+                }
+                else
+                {
+                    String outputPath = outPathPrefix + TSV_ZIP_EXTENSION;
+                    boolean append = (i != 0);
+                    writeDataOneCategory(dataItemMatrix, outputPath, append);
+                }
+            }
+        }
     }
 
     public void run()
@@ -263,33 +289,9 @@ public class CuppaDataPrep
 
         if(mConfig.isSingleSample())
         {
-            CUP_LOGGER.info("Extracting CUPPA features in single sample mode for sample({})", mConfig.SampleIds.get(0));
-
-            List<DataItem> dataItems = getDataSingleSample();
-            writeDataSingleSample(dataItems, getOutputPath(null));
-        }
-        else
-        {
-            CUP_LOGGER.info("Extracting CUPPA features in multi sample mode for {} samples", mConfig.SampleIds.size());
-
-            List<CategoryPrep> dataPreparers = buildDataPreparers();
-
-            for(int i = 0; i < dataPreparers.size(); i++)
-            {
-                CategoryPrep categoryPrep = dataPreparers.get(i);
-                DataItemMatrix dataItemMatrix = getDataOneCategoryMultiSample(categoryPrep);
-
-                if(mConfig.WriteByCategory){
-                    String path = getOutputPath(categoryPrep);
-                    writeDataMultiSampleOneCategory(dataItemMatrix, path, false);
-                }
-                else
-                {
-                    String path = getOutputPath(null);
-                    boolean append = (i != 0);
-                    writeDataMultiSampleOneCategory(dataItemMatrix, path, append);
-                }
-            }
+            new SingleSamplePrep().run();
+        } else {
+            new MultiSamplePrep().run();
         }
 
         CUP_LOGGER.info("Cuppa data extraction complete, mins({})", runTimeMinsStr(startTimeMs));
