@@ -1,82 +1,76 @@
 package com.hartwig.hmftools.cup.prep;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.cup.CuppaConfig.DNA_CATEGORIES;
-import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
-import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.cuppa.CategoryType;
 
 import org.junit.Test;
 
 public class CuppaDataPrepTest
 {
+    File TMP_DIR = new File(System.getProperty("java.io.tmpdir") + "/CuppaDataPrepTest/");
 
-    @Test
-    public void canExtractFeaturesSingleSample()
+    private void deleteTmpDir()
     {
-        String sampleDataDir = Resources.getResource("pipeline_output/SKINMERKEL01T/").getPath();
+        for(File file : TMP_DIR.listFiles())
+            file.delete();
 
-        String[] args = {
-                // "-sample", "PROSTATE01T",
-                "-sample", "SKINMERKEL01T",
-                "-categories", "DNA",
-                "-ref_genome_version", "V37",
-                "-sample_data_dir", sampleDataDir,
-                "-output_dir", "/Users/lnguyen/Desktop/test_output/" // TODO: Change to tmp path
-        };
-        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-        PrepConfig.registerConfig(configBuilder);
-        configBuilder.checkAndParseCommandLine(args);
-
-        CuppaDataPrep cuppaDataPrep = new CuppaDataPrep(configBuilder);
-        List<DataItem> dataItems = cuppaDataPrep.getDataSingleSample();
-        CuppaDataPrep.writeDataSingleSample(dataItems, cuppaDataPrep.mConfig.OutputDir + "features.tsv.gz");
-
-//        File outputFile = new File(cuppaDataPrep.mSampleDataWriter.getOutputPathSingleSample());
-//        assertTrue(outputFile.exists());
-//        outputFile.delete();
+        TMP_DIR.delete();
     }
 
     @Test
-    public void canGetDataItemMatrix() throws IOException
+    public void canRunSingleSamplePrep()
     {
-        String sampleDataDir = Resources.getResource("pipeline_output/").getPath();
-        String sampleIdFile = Resources.getResource("pipeline_output/sample_ids.csv").getPath();
-        // String refAltSjSites = Resources.getResource("alt_sj.selected_loci.minimal.tsv").getPath();
+        TMP_DIR.mkdir();
 
-        String[] args = {
-                // "-sample", sample,
-                "-sample_id_file", sampleIdFile,
-                "-categories", DNA_CATEGORIES,
-                "-ref_genome_version", "V37",
+        String selectedSampleId = "PROSTATE01T";
 
-                "-sample_data_dir", sampleDataDir + "*", // Wild-cards are required to get subdirs correctly
-                "-output_dir",  "/Users/lnguyen/Desktop/test_output/",
-                // "-isofox_dir", dummyValidPath,
-                // "-ref_alt_sj_sites", refAltSjSites,
+        PrepConfig prepConfig = new TestPrepConfigBuilder()
+                .sampleIds(List.of(selectedSampleId))
+                .categories(CategoryType.getDnaCategories())
+                .refGenomeVersion("V37")
+                .sampleDataDir(TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*")
+                .outputDir(TMP_DIR.toString())
+                .build();
 
-                // "-write_by_category"
-        };
+        assertTrue(prepConfig.isSingleSample());
 
-        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-        PrepConfig.registerConfig(configBuilder);
-        configBuilder.checkAndParseCommandLine(args);
+        CuppaDataPrep cuppaDataPrep = new CuppaDataPrep(prepConfig);
+        cuppaDataPrep.run();
 
-        CuppaDataPrep cuppaDataPrep = new CuppaDataPrep(configBuilder);
-//        cuppaDataPrep.run();
+        File outputPath = new File(CuppaDataPrep.SingleSample.getOutputPath(prepConfig));
+        assertTrue(outputPath.exists());
 
-//        System.out.println(cuppaDataPrep.mDataPreparers.get(3).toString());
-        DataItemMatrix dataItemMatrix = cuppaDataPrep.getDataOneCategoryMultiSample(
-                cuppaDataPrep.mDataPreparers.get(3)
-        );
+        deleteTmpDir();
+    }
 
-        CuppaDataPrep.writeDataMultiSample(dataItemMatrix, "/Users/lnguyen/Desktop/test_output/features.tsv.gz", false);
+    @Test
+    public void canRunMultiSamplePrep() throws IOException
+    {
+        TMP_DIR.mkdir();
+
+        PrepConfig prepConfig = new TestPrepConfigBuilder()
+                .sampleIds(Arrays.asList("PROSTATE01T", "SKINMERKEL01T"))
+                .categories(CategoryType.getDnaCategories())
+                .refGenomeVersion("V37")
+                .sampleDataDir(TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*")
+                .outputDir(TMP_DIR.toString())
+                .build();
+
+        CuppaDataPrep cuppaDataPrep = new CuppaDataPrep(prepConfig);
+        cuppaDataPrep.run();
+
+        for(CategoryType categoryType : CategoryType.getDnaCategories())
+        {
+            File outputFile = new File(CuppaDataPrep.MultiSample.getOutputPath(prepConfig, categoryType));
+            assertTrue(outputFile.exists());
+        }
+
+        deleteTmpDir();
     }
 }
