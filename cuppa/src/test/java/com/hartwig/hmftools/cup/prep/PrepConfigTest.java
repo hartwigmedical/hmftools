@@ -1,69 +1,93 @@
 package com.hartwig.hmftools.cup.prep;
 
-import static com.hartwig.hmftools.cup.CuppaConfig.DNA_CATEGORIES;
-import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
-
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import java.util.Arrays;
+
+import com.hartwig.hmftools.common.cuppa.CategoryType;
 
 import org.junit.Test;
 
 public class PrepConfigTest
 {
-    @Test
-    public void canParseArgsMultiSample()
-    {
-        String sampleDataDir = Resources.getResource("pipeline_output/").getPath();
-        String sampleIdFile = Resources.getResource("pipeline_output/sample_ids.csv").getPath();
-        String refAltSjSites = Resources.getResource("alt_sj.selected_loci.minimal.tsv").getPath();
-        String dummyValidPath = "/tmp/";
+    private final String selectedSampleId = "SKINMERKEL01T";
 
+    @Test
+    public void canParseCommandLineArgsMultiSample()
+    {
         String[] args = {
                 // "-sample", sample,
-                "-sample_id_file", sampleIdFile,
-                "-categories", DNA_CATEGORIES,
+                "-sample_id_file", TestPrepConfigBuilder.TEST_SAMPLE_ID_FILE,
+                "-categories", "DNA",
                 "-ref_genome_version", "V37",
 
                 // Wild-cards are required to get subdirs correctly
-                "-sample_data_dir", sampleDataDir + "*",
-                "-linx_dir", sampleDataDir + "*/linx/",
-                "-purple_dir", sampleDataDir + "*/purple/",
-                //"-virus_dir", sampleDataDir + "*/virus_interpreter/",
+                "-sample_data_dir", TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*",
+                "-purple_dir", TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*/purple/",
+                "-linx_dir", TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*/linx/",
+                "-virus_dir", TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*/virus_interpreter/",
 
-                "-output_dir", dummyValidPath,
-                "-isofox_dir", dummyValidPath,
-                "-ref_alt_sj_sites", refAltSjSites,
+                "-output_dir", "/tmp/",
+                "-isofox_dir", "/tmp/",
+                "-ref_alt_sj_sites", TestPrepConfigBuilder.TEST_ALT_SPLICE_JUNCTION_SITES,
 
                 "-write_by_category"
         };
 
-        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-        PrepConfig.registerConfig(configBuilder);
-        configBuilder.checkAndParseCommandLine(args);
-        PrepConfig prepConfig = new PrepConfig(configBuilder);
+        PrepConfig prepConfig = TestPrepConfigBuilder.fromArgs(args);
 
         assertEquals(2, prepConfig.SampleIds.size());
         assertEquals("V37", prepConfig.RefGenVersion.toString());
-        assertEquals(true, prepConfig.WriteByCategory);
-        assertEquals(refAltSjSites, prepConfig.AltSpliceJunctionSites);
+        assertTrue(prepConfig.WriteByCategory);
+        assertEquals(TestPrepConfigBuilder.TEST_ALT_SPLICE_JUNCTION_SITES, prepConfig.AltSpliceJunctionSites);
 
-        String selectedSampleId = "SKINMERKEL01T";
-        assertEquals(
-                sampleDataDir + selectedSampleId + "/linx/",
-                prepConfig.getLinxDataDir(selectedSampleId)
-        );
+        String expectedPurpleDir = TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + selectedSampleId + "/purple/";
+        String actualPurpleDir = prepConfig.getPurpleDataDir(selectedSampleId);
+        assertEquals(expectedPurpleDir, actualPurpleDir);
 
-        assertEquals(
-                sampleDataDir + selectedSampleId + "/purple/",
-                prepConfig.getPurpleDataDir(selectedSampleId)
-        );
+        String expectedLinxDir = TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + selectedSampleId + "/linx/";
+        String actualLinxDir = prepConfig.getLinxDataDir(selectedSampleId);
+        assertEquals(expectedLinxDir, actualLinxDir);
 
-        // When "-{tool_name}_dir" is not specified, the sample dir is used
-        assertEquals(
-                sampleDataDir + selectedSampleId,
-                prepConfig.getVirusDataDir(selectedSampleId)
-        );
+        String expectedVirusDir = TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + selectedSampleId + "/virus_interpreter/";
+        String actualVirusDir = prepConfig.getVirusDataDir(selectedSampleId);
+        assertEquals(expectedVirusDir, actualVirusDir);
+    }
+
+    @Test
+    public void sampleDirUsedWhenToolDirNotSpecified()
+    {
+        String[] args = {
+                "-sample_id_file", TestPrepConfigBuilder.TEST_SAMPLE_ID_FILE,
+                "-sample_data_dir", TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*",
+        };
+
+        PrepConfig prepConfig = TestPrepConfigBuilder.fromArgs(args);
+
+        String expectedPurpleDir = TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + selectedSampleId;
+        String actualPurpleDir = prepConfig.getPurpleDataDir(selectedSampleId);
+        assertEquals(expectedPurpleDir, actualPurpleDir);
+    }
+
+    @Test
+    public void canBuildFromTestPrepConfigBuilder()
+    {
+        PrepConfig prepConfig = new TestPrepConfigBuilder()
+                .sampleIds(Arrays.asList("PROSTATE01T", "SKINMERKEL01T"))
+                .categories(CategoryType.getDnaCategories())
+                .refGenomeVersion("V37")
+                .sampleDataDir(TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*")
+                .linxDir(TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*/linx/")
+                .outputDir("/Users/lnguyen/Desktop/test_output/")
+                .build();
+
+        String expectedPurpleDir = TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + selectedSampleId;
+        String actualPurpleDir = prepConfig.getPurpleDataDir(selectedSampleId);
+        assertEquals(expectedPurpleDir, actualPurpleDir);
+
+        String expectedLinxDir = TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + selectedSampleId + "/linx/";
+        String actualLinxDir = prepConfig.getLinxDataDir(selectedSampleId);
+        assertEquals(expectedLinxDir, actualLinxDir);
     }
 }
