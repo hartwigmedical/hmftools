@@ -37,7 +37,6 @@ import org.jetbrains.annotations.Nullable;
 public class CuppaDataPrep
 {
     public final PrepConfig mConfig;
-    public final List<CategoryPrep> mDataPreparers;
 
     private static final String DELIMITER = TSV_DELIM;
     private static final String NULL_VALUE_STRING = "0";
@@ -45,13 +44,11 @@ public class CuppaDataPrep
     public CuppaDataPrep(final ConfigBuilder configBuilder)
     {
         mConfig = new PrepConfig(configBuilder);
-        mDataPreparers = buildDataPreparers();
+    }
 
-        if(mConfig.SampleIds.isEmpty())
-        {
-            CUP_LOGGER.error("No sample ID(s) loaded");
-            System.exit(1);
-        }
+    public CuppaDataPrep(final PrepConfig prepConfig)
+    {
+        mConfig = prepConfig;
     }
 
     private List<CategoryPrep> buildDataPreparers()
@@ -96,7 +93,9 @@ public class CuppaDataPrep
         List<DataItem> dataItems = new ArrayList<>();
         String sampleId = mConfig.SampleIds.get(0);
 
-        for(CategoryPrep categoryPrep : mDataPreparers)
+        List<CategoryPrep> dataPreparers = buildDataPreparers();
+
+        for(CategoryPrep categoryPrep : dataPreparers)
         {
             List<DataItem> categoryDataItems = null;
             try {
@@ -181,7 +180,7 @@ public class CuppaDataPrep
         return new DataItemMatrix(sampleIds, featureBySampleMatrix);
     }
 
-    public synchronized static void writeDataMultiSample(DataItemMatrix dataItemMatrix, String path, boolean append)
+    public synchronized static void writeDataMultiSampleOneCategory(DataItemMatrix dataItemMatrix, String path, boolean append)
     {
         try
         {
@@ -254,6 +253,12 @@ public class CuppaDataPrep
 
     public void run()
     {
+        if(mConfig.SampleIds.isEmpty())
+        {
+            CUP_LOGGER.error("No sample ID(s) loaded");
+            System.exit(1);
+        }
+
         long startTimeMs = System.currentTimeMillis();
 
         if(mConfig.isSingleSample())
@@ -267,20 +272,22 @@ public class CuppaDataPrep
         {
             CUP_LOGGER.info("Extracting CUPPA features in multi sample mode for {} samples", mConfig.SampleIds.size());
 
-            for(int i = 0; i < mDataPreparers.size(); i++)
+            List<CategoryPrep> dataPreparers = buildDataPreparers();
+
+            for(int i = 0; i < dataPreparers.size(); i++)
             {
-                CategoryPrep categoryPrep = mDataPreparers.get(i);
+                CategoryPrep categoryPrep = dataPreparers.get(i);
                 DataItemMatrix dataItemMatrix = getDataOneCategoryMultiSample(categoryPrep);
 
                 if(mConfig.WriteByCategory){
                     String path = getOutputPath(categoryPrep);
-                    writeDataMultiSample(dataItemMatrix, path, false);
+                    writeDataMultiSampleOneCategory(dataItemMatrix, path, false);
                 }
                 else
                 {
                     String path = getOutputPath(null);
                     boolean append = (i != 0);
-                    writeDataMultiSample(dataItemMatrix, path, append);
+                    writeDataMultiSampleOneCategory(dataItemMatrix, path, append);
                 }
             }
         }
