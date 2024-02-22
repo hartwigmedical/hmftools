@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.cup.prep;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_ZIP_EXTENSION;
@@ -172,7 +170,7 @@ public class CuppaDataPrep
         {
             int nSamples = sampleIds.length;
 
-            ConcurrentHashMap<DataItemIndex, String[]> featureBySampleMatrix = new ConcurrentHashMap<>();
+            ConcurrentHashMap<DataItem.Index, String[]> featureBySampleMatrix = new ConcurrentHashMap<>();
 
             for(int sampleIndex = 0; sampleIndex < nSamples; sampleIndex++)
             {
@@ -187,7 +185,7 @@ public class CuppaDataPrep
 
                 for(DataItem dataItem : dataItems)
                 {
-                    DataItemIndex featureIndex = dataItem.Index;
+                    DataItem.Index featureIndex = dataItem.Index;
 
                     if(featureBySampleMatrix.get(featureIndex) == null)
                         featureBySampleMatrix.put(featureIndex, new String[nSamples]);
@@ -222,7 +220,7 @@ public class CuppaDataPrep
                     writer.newLine();
                 }
 
-                for(DataItemIndex index : dataItemMatrix.getFeatureIndexes())
+                for(DataItem.Index index : dataItemMatrix.getFeatureIndexes())
                 {
                     joiner = new StringJoiner(DELIMITER);
 

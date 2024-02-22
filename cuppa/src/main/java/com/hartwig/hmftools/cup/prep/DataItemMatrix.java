@@ -5,29 +5,29 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DataItemMatrix
 {
     public final String[] SampleIds;
-    public final ConcurrentHashMap<DataItemIndex, String[]> FeatureBySampleMatrix;
+    public final ConcurrentHashMap<DataItem.Index, String[]> FeatureBySampleMatrix;
 
     public DataItemMatrix(
             final String[] sampleIds,
-            final ConcurrentHashMap<DataItemIndex, String[]> featureBySampleMatrix
+            final ConcurrentHashMap<DataItem.Index, String[]> featureBySampleMatrix
     ){
         SampleIds = sampleIds;
         FeatureBySampleMatrix = featureBySampleMatrix;
     }
 
-    public String[] get(DataItemIndex index)
+    public String[] get(DataItem.Index index)
     {
         return FeatureBySampleMatrix.get(index);
     }
 
-    public void put(DataItemIndex index, String[] values)
+    public void put(DataItem.Index index, String[] values)
     {
         FeatureBySampleMatrix.put(index, values);
     }
 
-    public DataItemIndex[] getFeatureIndexes()
+    public DataItem.Index[] getFeatureIndexes()
     {
-        return FeatureBySampleMatrix.keySet().toArray(DataItemIndex[]::new);
+        return FeatureBySampleMatrix.keySet().toArray(DataItem.Index[]::new);
     }
 
     public int nFeatures()
