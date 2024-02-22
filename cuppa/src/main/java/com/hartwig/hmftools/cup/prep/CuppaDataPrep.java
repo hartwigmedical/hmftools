@@ -32,6 +32,7 @@ import com.hartwig.hmftools.cup.svs.StructuralVariantPrep;
 import com.hartwig.hmftools.cup.traits.SampleTraitPrep;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class CuppaDataPrep
 {
@@ -87,9 +88,9 @@ public class CuppaDataPrep
         return preparers;
     }
 
-    public class SingleSamplePrep
+    public static class SingleSample
     {
-        public List<DataItem> getData(List<CategoryPrep> dataPreparers, String sampleId)
+        public static List<DataItem> getData(List<CategoryPrep> dataPreparers, String sampleId)
         {
             List<DataItem> dataItems = new ArrayList<>();
 
@@ -111,7 +112,7 @@ public class CuppaDataPrep
             return dataItems;
         }
 
-        public void writeData(List<DataItem> dataItems, String path)
+        public static void writeData(List<DataItem> dataItems, String path)
         {
             try
             {
@@ -146,23 +147,28 @@ public class CuppaDataPrep
             }
         }
 
-        public void run()
+        public static String getOutputPath(PrepConfig mConfig)
         {
-            CUP_LOGGER.info("Extracting CUPPA features in single sample mode for sample({})", mConfig.SampleIds.get(0));
+            return mConfig.OutputDir + "/" + mConfig.SampleIds.get(0) + ".cuppa_data" + TSV_ZIP_EXTENSION;
+        }
 
+        public static void run(PrepConfig mConfig)
+        {
             String sampleId = mConfig.SampleIds.get(0);
+
+            CUP_LOGGER.info("Extracting CUPPA features in single sample mode for sample({})", sampleId);
 
             List<CategoryPrep> dataPreparers = buildDataPreparers(mConfig);
             List<DataItem> dataItems = getData(dataPreparers, sampleId);
 
-            String outputPath = mConfig.OutputDir + "/" + sampleId + ".cuppa_data" + TSV_ZIP_EXTENSION;
+            String outputPath = getOutputPath(mConfig);
             writeData(dataItems, outputPath);
         }
     }
 
-    public class MultiSamplePrep
+    public static class MultiSample
     {
-        public DataItemMatrix getDataOneCategory(CategoryPrep categoryPrep, String[] sampleIds)
+        public static DataItemMatrix getDataOneCategory(CategoryPrep categoryPrep, String[] sampleIds)
         {
             int nSamples = sampleIds.length;
 
@@ -193,7 +199,7 @@ public class CuppaDataPrep
             return new DataItemMatrix(sampleIds, featureBySampleMatrix);
         }
 
-        public synchronized void writeDataOneCategory(DataItemMatrix dataItemMatrix, String path, boolean append)
+        public static synchronized void writeDataOneCategory(DataItemMatrix dataItemMatrix, String path, boolean append)
         {
             try
             {
@@ -246,16 +252,28 @@ public class CuppaDataPrep
             }
         }
 
-        public void run()
+        public static String getOutputPath(PrepConfig mConfig, @Nullable CategoryType categoryType)
         {
-            CUP_LOGGER.info("Extracting CUPPA features in multi sample mode for {} samples", mConfig.SampleIds.size());
+            String path = mConfig.OutputDir + "/cuppa_data.cohort";
 
-            List<CategoryPrep> dataPreparers = buildDataPreparers(mConfig);
+            if(categoryType != null)
+                path += "." + categoryType.toString().toLowerCase();
+
+            if(mConfig.OutputId != null)
+                path += "." + mConfig.OutputId;
+
+            path += TSV_ZIP_EXTENSION;
+
+            return path;
+        }
+
+        public static void run(PrepConfig mConfig)
+        {
             String[] sampleIds = mConfig.SampleIds.toArray(String[]::new);
 
-            String outPathPrefix = mConfig.OutputDir + "/cuppa_data.cohort.";
-            if(mConfig.OutputId != null)
-                outPathPrefix += "." + mConfig.OutputId;
+            CUP_LOGGER.info("Extracting CUPPA features in multi sample mode for {} samples", sampleIds.length);
+
+            List<CategoryPrep> dataPreparers = buildDataPreparers(mConfig);
 
             for(int i = 0; i < dataPreparers.size(); i++)
             {
@@ -264,12 +282,12 @@ public class CuppaDataPrep
 
                 if(mConfig.WriteByCategory)
                 {
-                    String outputPath = outPathPrefix + categoryPrep.categoryType().toString().toLowerCase() + TSV_ZIP_EXTENSION;
+                    String outputPath = getOutputPath(mConfig, categoryPrep.categoryType());
                     writeDataOneCategory(dataItemMatrix, outputPath, false);
                 }
                 else
                 {
-                    String outputPath = outPathPrefix + TSV_ZIP_EXTENSION;
+                    String outputPath = getOutputPath(mConfig, null);
                     boolean append = (i != 0);
                     writeDataOneCategory(dataItemMatrix, outputPath, append);
                 }
@@ -289,9 +307,9 @@ public class CuppaDataPrep
 
         if(mConfig.isSingleSample())
         {
-            new SingleSamplePrep().run();
+            SingleSample.run(mConfig);
         } else {
-            new MultiSamplePrep().run();
+            MultiSample.run(mConfig);
         }
 
         CUP_LOGGER.info("Cuppa data extraction complete, mins({})", runTimeMinsStr(startTimeMs));
