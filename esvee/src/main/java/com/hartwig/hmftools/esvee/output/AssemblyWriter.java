@@ -102,6 +102,7 @@ public class AssemblyWriter
             sj.add("JuncUnlinkedMates");
             sj.add("JuncUnlinkedSupps");
             sj.add("DiscUnlinkedMates");
+            sj.add("InitRefBaseCandidates");
 
             sj.add("PhaseGroupId");
             sj.add("PhaseGroupCount");
@@ -269,6 +270,7 @@ public class AssemblyWriter
             sj.add(String.valueOf(juncUnlinkedMates));
             sj.add(String.valueOf(juncUnlinkedSupps));
             sj.add(String.valueOf(discUnlinkedMates));
+            sj.add(String.valueOf(assembly.candidateSupport().size()));
 
             PhaseGroup phaseGroup = assembly.phaseGroup();
 
