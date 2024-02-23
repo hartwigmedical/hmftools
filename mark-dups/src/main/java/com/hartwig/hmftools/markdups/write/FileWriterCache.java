@@ -21,6 +21,7 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
@@ -157,7 +158,11 @@ public class FileWriterCache
                 SamReader nextReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
                         .open(new File(mConfig.BamFiles.get(i)));
 
-                nextReader.getFileHeader().getReadGroups().forEach(x -> fileHeader.addReadGroup(x));
+                for(SAMReadGroupRecord readGroupRecord : nextReader.getFileHeader().getReadGroups())
+                {
+                    if(!fileHeader.getReadGroups().contains(readGroupRecord))
+                        fileHeader.addReadGroup(readGroupRecord);
+                }
 
                 final SAMProgramRecord nextProgramRecord = nextReader.getFileHeader().getProgramRecords().get(0);
                 String newProgramId = String.format("%s.%d", nextProgramRecord.getId(), i);
