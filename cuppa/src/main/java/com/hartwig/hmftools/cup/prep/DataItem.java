@@ -13,7 +13,7 @@ public class DataItem
     public static final String FLD_KEY = "Key";
     public static final String FLD_VALUE = "Value";
 
-    public class Index
+    public static class Index
     {
         public final DataSource Source;
         public final ItemType Type;
@@ -30,13 +30,11 @@ public class DataItem
         public boolean equals(final Object o)
         {
             if(this == o)
-            {
                 return true;
-            }
+
             if(o == null || getClass() != o.getClass())
-            {
                 return false;
-            }
+
             final Index index = (Index) o;
             return Source == index.Source && Type == index.Type && Key.equals(index.Key);
         }
@@ -51,9 +49,9 @@ public class DataItem
         {
             return String.format(
                     "%s=%s, %s=%s, %s=%s",
-                    FLD_SOURCE, Index.Source,
-                    FLD_CATEGORY, Index.Type,
-                    FLD_KEY, Index.Key
+                    FLD_SOURCE, Source,
+                    FLD_CATEGORY, Type,
+                    FLD_KEY, Key
             );
         }
     }
