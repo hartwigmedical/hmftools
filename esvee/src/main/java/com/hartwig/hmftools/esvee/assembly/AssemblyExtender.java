@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_BASE_MIS
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensions;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.findRemoteRegions;
 import static com.hartwig.hmftools.esvee.common.RefSideSoftClip.purgeRefSideSoftClips;
 import static com.hartwig.hmftools.esvee.common.SupportType.CANDIDATE_DISCORDANT;
@@ -46,6 +47,13 @@ public class AssemblyExtender
     {
         // first establish potential boundaries for extending the assembly on the non-junction side
         JunctionAssembly assembly = mAssemblies.get(0);
+
+        if(assembly.indel())
+        {
+            // add junction mates only, could consider add reads
+            findIndelExtensions(assembly, unfilteredNonJunctionReads);
+            return;
+        }
 
         int minAlignedPosition = assembly.minAlignedPosition();
         int maxAlignedPosition = assembly.maxAlignedPosition();

@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.esvee.SvConstants.PHASED_ASSEMBLY_MAX_TI;
 import static com.hartwig.hmftools.esvee.SvConstants.PHASED_ASSEMBLY_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findInsertedBases;
+import static com.hartwig.hmftools.esvee.common.LinkType.INDEL;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,6 +24,7 @@ import com.hartwig.hmftools.esvee.common.AssemblyLink;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.LinkType;
 import com.hartwig.hmftools.esvee.common.RepeatInfo;
+import com.hartwig.hmftools.esvee.read.Read;
 
 public final class AssemblyLinker
 {
@@ -134,6 +137,26 @@ public final class AssemblyLinker
 
     private static final int SUBSEQUENCE_LENGTH = 10;
 
+    public AssemblyLink tryAssemblyIndel(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
+    {
+        if(!assembly1.indel() || !assembly2.indel())
+            return null;
+
+        // have already confirmed they share reads, so now just check the indel coords match
+        if(!assembly1.initialRead().indelCoords().matches(assembly2.initialRead().indelCoords()))
+            return null;
+
+        String insertedBases = "";
+        Read indelRead = assembly1.initialRead();
+
+        if(indelRead.indelCoords().isInsert())
+        {
+            insertedBases = findInsertedBases(indelRead);
+        }
+
+        return new AssemblyLink(assembly1, assembly2, INDEL, 0, insertedBases);
+    }
+
     public AssemblyLink tryAssemblyOverlap(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
         JunctionAssembly first, second;
@@ -175,9 +198,9 @@ public final class AssemblyLinker
 
         // AssemblyIndexRange secondIndexRange = new AssemblyIndexRange(second);
 
-        // take a smaller sections of the first sequence and try to find their start index in the second sequence
-        int subSequenceCount = firstSeq.comparisonLength() / SUBSEQUENCE_LENGTH;
+        // int subSequenceCount = firstSeq.comparisonLength() / SUBSEQUENCE_LENGTH;
 
+        // take a smaller sections of the first sequence and try to find their start index in the second sequence
         List<int[]> alternativeIndexStarts = Lists.newArrayList();
 
         for(int firstSubSeqStartIndex = firstSeq.compareSeqStartIndex(); firstSubSeqStartIndex <= firstSeq.junctionIndex();

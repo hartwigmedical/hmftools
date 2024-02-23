@@ -4,5 +4,6 @@ public enum LinkType
 {
     SPLIT,
     FACING,
+    INDEL,
     UNCLEAR;
 }

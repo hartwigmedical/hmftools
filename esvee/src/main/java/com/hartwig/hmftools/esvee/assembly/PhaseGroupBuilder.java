@@ -77,7 +77,7 @@ public class PhaseGroupBuilder
 
     private void findLinkedAssemblies(final JunctionGroup assemblyJunctionGroup, final JunctionAssembly assembly)
     {
-        if(assembly.remoteRegions().isEmpty() && assembly.refSideSoftClips().isEmpty())
+        if(assembly.remoteRegions().isEmpty() && assembly.refSideSoftClips().isEmpty() && !assembly.indel())
             return;
 
         PhaseGroup phaseGroup = assembly.phaseGroup(); // may have been set from an earlier assembly link
@@ -109,6 +109,9 @@ public class PhaseGroupBuilder
                 linkedJunctionGroups.add(assemblyJunctionGroup);
             }
         }
+
+        if(assembly.indel())
+            linkedJunctionGroups.add(assemblyJunctionGroup);
 
         for(JunctionGroup junctionGroup : linkedJunctionGroups)
         {

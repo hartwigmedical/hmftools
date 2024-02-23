@@ -118,7 +118,7 @@ public final class AssemblyUtils
             }
         }
 
-        assembly.extendBases(maxDistanceFromJunction, minAlignedPosition, maxAlignedPosition);
+        assembly.extendBases(maxDistanceFromJunction, minAlignedPosition, maxAlignedPosition, null);
 
         // order by NM to favour the ref where possible
         if(minNmSupport != null)
@@ -135,7 +135,7 @@ public final class AssemblyUtils
         }
     }
 
-    protected static int readQualFromJunction(final Read read, final Junction junction)
+    public static int readQualFromJunction(final Read read, final Junction junction)
     {
         int readJunctionIndex = read.getReadIndexAtReferencePosition(junction.Position, true);
 

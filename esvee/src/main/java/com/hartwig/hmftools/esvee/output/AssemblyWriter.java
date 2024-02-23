@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_DI
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_SUPP;
 import static com.hartwig.hmftools.esvee.common.SupportType.DISCORDANT;
+import static com.hartwig.hmftools.esvee.common.SupportType.INDEL;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 
@@ -71,7 +72,7 @@ public class AssemblyWriter
             sj.add("Id");
             sj.add("Chromosome").add("JunctionPosition").add("JunctionOrientation");
 
-            sj.add("SoftClipLength").add("RefBasePosition").add("RefBaseLength");
+            sj.add("ExtBaseLength").add("RefBasePosition").add("RefBaseLength");
 
             sj.add("SplitReads").add("RefSplitReads");
             sj.add("DiscReads").add("RefDiscReads");
@@ -112,6 +113,7 @@ public class AssemblyWriter
             sj.add("SplitLinks");
             sj.add("FacingLinks");
             sj.add("SvType");
+            sj.add("SvLength");
             sj.add("InsertedBases");
 
             sj.add("MergedAssemblies");
@@ -172,7 +174,7 @@ public class AssemblyWriter
                 boolean isReference = support.read().isReference();
                 Read read = support.read();
 
-                if(support.type() == JUNCTION)
+                if(support.type() == JUNCTION || support.type() == INDEL)
                 {
                     ++juncReadsCount;
 
@@ -293,7 +295,9 @@ public class AssemblyWriter
 
                 List<AssemblyLink> assemblyLinks = phaseSet.findAssemblyLinks(assembly);
 
-                List<AssemblyLink> splitLinks = assemblyLinks.stream().filter(x -> x.type() == LinkType.SPLIT).collect(Collectors.toList());
+                List<AssemblyLink> splitLinks = assemblyLinks.stream()
+                        .filter(x -> x.type() == LinkType.SPLIT || x.type() == LinkType.INDEL).collect(Collectors.toList());
+
                 List<AssemblyLink> facingLinks = assemblyLinks.stream().filter(x -> x.type() == LinkType.FACING).collect(Collectors.toList());
                 sj.add(assemblyLinksStr(assembly, splitLinks));
                 sj.add(assemblyLinksStr(assembly, facingLinks));
@@ -302,6 +306,7 @@ public class AssemblyWriter
                 {
                     AssemblyLink svLink = splitLinks.get(0);
                     sj.add(svLink.svType().toString());
+                    sj.add(String.valueOf(svLink.length()));
                     sj.add(svLink.insertedBases());
                 }
                 else

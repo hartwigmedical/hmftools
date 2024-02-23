@@ -177,7 +177,11 @@ public class PhaseSetBuilder
 
     private AssemblyLink checkSplitLink(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
-        AssemblyLink assemblyLink = mAssemblyLinker.tryAssemblyOverlap(assembly1, assembly2);
+        // handle local INDELs here since the following logic currently applies to them
+        AssemblyLink assemblyLink = mAssemblyLinker.tryAssemblyIndel(assembly1, assembly2);
+
+        if(assemblyLink == null)
+            assemblyLink = mAssemblyLinker.tryAssemblyOverlap(assembly1, assembly2);
 
         if(assemblyLink == null)
             return null;

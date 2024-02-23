@@ -5,13 +5,17 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarElementsFromStr;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarStringFromElements;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.maxIndelLength;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.extractAlignment;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
+import static com.hartwig.hmftools.esvee.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 
 import static htsjdk.samtools.CigarOperator.S;
@@ -20,8 +24,10 @@ import static htsjdk.samtools.util.StringUtil.bytesToString;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.samtools.CigarUtils;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
+import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -50,6 +56,9 @@ public class Read
     private boolean mSuppDataExtracted;
     private SupplementaryReadData mSupplementaryData;
 
+    private boolean mCheckedIndelCoords;
+    private IndelCoords mIndelCoords;
+
     private boolean mIsReference;
 
     public Read(final SAMRecord record)
@@ -69,6 +78,8 @@ public class Read
         mSupplementaryRead = null;
         mSuppDataExtracted = false;
         mSupplementaryData = null;
+        mCheckedIndelCoords = false;
+        mIndelCoords = null;
     }
 
     private void setBoundaries(int newReadStart)
@@ -291,6 +302,21 @@ public class Read
 
         mNumberOfEvents = numOfEvents != null ? (int)numOfEvents : 0;
         return mNumberOfEvents;
+    }
+
+    public IndelCoords indelCoords()
+    {
+        if(!mCheckedIndelCoords)
+        {
+            mCheckedIndelCoords = true;
+
+            int[] indelCoords = CigarUtils.findIndelCoords(mAlignmentStart, mCigarElements, MIN_INDEL_SUPPORT_LENGTH);
+
+            if(indelCoords != null)
+                mIndelCoords = new IndelCoords(indelCoords[SE_START], indelCoords[SE_END], maxIndelLength(mCigarElements));
+        }
+
+        return mIndelCoords;
     }
 
     public boolean matchesFragment(final Read other) { return this == other || getName().equals(other.getName()); }

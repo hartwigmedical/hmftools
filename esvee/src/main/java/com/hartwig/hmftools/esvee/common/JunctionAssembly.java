@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.findUnsetBases;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findRepeats;
 import static com.hartwig.hmftools.esvee.common.SupportType.CANDIDATE_DISCORDANT;
+import static com.hartwig.hmftools.esvee.common.SupportType.INDEL;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
@@ -32,6 +33,7 @@ public class JunctionAssembly
     private int mAssemblyId;
     private final Junction mJunction;
     private final Read mInitialRead;
+    private boolean mIndel;
 
     private int mJunctionSequenceIndex; // position of the junction in the read bases
 
@@ -64,6 +66,7 @@ public class JunctionAssembly
     {
         mJunction = initialJunction;
         mInitialRead = read;
+        mIndel = false;
 
         mJunctionSequenceIndex = initialJunction.isForward() ? 0 : maxExtensionDistance;
 
@@ -94,6 +97,9 @@ public class JunctionAssembly
     public Read initialRead() { return mInitialRead; }
     public Junction junction() { return mJunction; }
     public boolean isForwardJunction() { return mJunction.isForward(); }
+
+    public boolean indel() { return mIndel; }
+    public void markIndel() { mIndel = true; }
 
     public int mergedAssemblyCount() { return mMergedAssemblies; }
     public void addMergedAssembly() { ++mMergedAssemblies; }
@@ -132,7 +138,7 @@ public class JunctionAssembly
             mBaseQuals[i] = 0;
         }
 
-        addJunctionRead(read, false);
+        addReadSupport(read, mJunction.IndelBased ? INDEL : JUNCTION, false);
     }
 
     public boolean checkReadMatches(final Read read, int permittedMismatches)
@@ -170,10 +176,12 @@ public class JunctionAssembly
         return true;
    }
 
-    public void addJunctionRead(final Read read, boolean registerMismatches)
+    public void addReadSupport(final Read read, final SupportType type, boolean registerMismatches)
     {
-        addRead(read, JUNCTION, registerMismatches, null);
+        addRead(read, type, registerMismatches, null);
     }
+
+    public void addJunctionRead(final Read read, boolean registerMismatches) { addReadSupport(read, JUNCTION, registerMismatches); }
 
     public void extendJunctionReadSupport(final Read read, final AssemblySupport existingSupport)
     {
@@ -189,7 +197,7 @@ public class JunctionAssembly
 
         boolean byReference = existingSupport != null;
 
-        if(type == JUNCTION)
+        if(type == JUNCTION || type == INDEL)
         {
             if(existingSupport == null)
             {
@@ -277,7 +285,8 @@ public class JunctionAssembly
         }
     }
 
-    public void extendBases(int refBaseExtensionDistance, int newMinAlignedPosition, int newMaxAlignedPosition)
+    public void extendBases(
+            int refBaseExtensionDistance, int newMinAlignedPosition, int newMaxAlignedPosition, final RefBaseAssembly refBaseAssembly)
     {
         // copy existing bases and quals
         byte[] existingBases = copyArray(mBases);
@@ -291,6 +300,11 @@ public class JunctionAssembly
             mJunctionSequenceIndex += refBaseExtensionDistance;
 
         int baseOffset = isForwardJunction ? refBaseExtensionDistance : 0;
+
+        int refBaseOffset = 0;
+
+        if(refBaseAssembly != null)
+            refBaseOffset = isForwardJunction ? 0 : extensionLength();
 
         mBases = new byte[newBaseLength];
         mBaseQuals = new byte[newBaseLength];
@@ -307,7 +321,11 @@ public class JunctionAssembly
             {
                 if(i < baseOffset)
                 {
-                    mBases[i] = 0;
+                    if(refBaseAssembly != null && i + refBaseOffset < refBaseAssembly.bases().length)
+                        mBases[i] = refBaseAssembly.bases()[i + refBaseOffset];
+                    else
+                        mBases[i] = 0;
+
                     mBaseQuals[i] = 0;
                 }
                 else
@@ -325,7 +343,11 @@ public class JunctionAssembly
                 }
                 else
                 {
-                    mBases[i] = 0;
+                    if(refBaseAssembly != null && i + refBaseOffset < refBaseAssembly.bases().length)
+                        mBases[i] = refBaseAssembly.bases()[i + refBaseOffset];
+                    else
+                        mBases[i] = 0;
+
                     mBaseQuals[i] = 0;
                 }
             }
@@ -347,13 +369,15 @@ public class JunctionAssembly
 
             int refBaseExtension = newRefBaseCount - existingRefBaseCount;
 
-            extendBases(refBaseExtension, mMinAlignedPosition, mMaxAlignedPosition);
+            extendBases(refBaseExtension, mMinAlignedPosition, mMaxAlignedPosition, refBaseAssembly);
         }
 
         for(AssemblySupport support : refBaseAssembly.support())
         {
             addRead(support.read(), support.type(), true, null);
         }
+
+        // use the ref assembly to fill in any missing bases
 
         List<int[]> emptyBaseRanges = findUnsetBases(mBases);
 
