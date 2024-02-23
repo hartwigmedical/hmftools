@@ -117,6 +117,9 @@ public class ArtefactContext
         {
             int hpIndex = hpStartIndex + (searchDown ? -i : i);
 
+            if(hpIndex < 0 || hpIndex >= record.getBaseQualities().length)
+                break;
+
             if(i == 0)
                 minBaseQual = record.getBaseQualities()[hpIndex];
             else
