@@ -11,8 +11,8 @@ public class NucleotideFragmentFactoryTest
     @Test
     public void testCreateNucleotidesFromAminoAcid()
     {
-        assertEquals(Lists.newArrayList("T", "G", "A"), NucleotideFragmentFactory.createNucleotidesFromAminoAcid("X"));
+        assertEquals(Lists.newArrayList("T", "A", "A"), NucleotideFragmentFactory.createNucleotidesFromAminoAcid("X"));
         assertEquals(Lists.newArrayList(".", ".", "."), NucleotideFragmentFactory.createNucleotidesFromAminoAcid("."));
-        assertEquals(Lists.newArrayList("A", "G", "TTGA"), NucleotideFragmentFactory.createNucleotidesFromAminoAcid("SX"));
+        assertEquals(Lists.newArrayList("A", "G", "CTAA"), NucleotideFragmentFactory.createNucleotidesFromAminoAcid("SX"));
     }
 }

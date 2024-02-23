@@ -12,7 +12,7 @@
 ## Overview
 
 The recommended way to run **hartwigmedical/hmftools** workflows or components is with
-[oncoanalyser](https://github.com/umccr/oncoanalyser), a Nextflow implementation of the HMF pipeline.
+[oncoanalyser](https://github.com/nf-core/oncoanalyser), a Nextflow implementation of the HMF pipeline.
 
 A principal aim of oncoanalyser is provide the HMF pipeline in a highly accessible form that is usable with a minimal
 set of inputs. This is achieved through flexible prefined configuration for individual tools, prebuilt Docker images
@@ -101,7 +101,7 @@ An example samplesheet for the WGTS workflow is shown:
 ```
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
 COLO829_example,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
-COLO829_example,COLO829,COLO829R,tumor,rna,bam,/path/to/COLO829T.rna.bam
+COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,/path/to/COLO829T.rna.bam
 COLO829_example,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
 ```
 
@@ -115,7 +115,7 @@ Multiple groups can also be provided in a single sample sheet:
 ```
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
 COLO829_example,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
-COLO829_example,COLO829,COLO829R,tumor,rna,bam,/path/to/COLO829T.rna.bam
+COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,/path/to/COLO829T.rna.bam
 COLO829_example,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
 SEQC_example,SEQC,SEQCT,tumor,dna,bam,/path/to/SEQCT.dna.bam
 ```
@@ -162,9 +162,9 @@ and the desired workflow. When running the targeted sequencing workflow the appl
 #### WGTS workflow command
 
 ```
-nextflow run umccr/oncoanalyser \
+nextflow run nf-core/oncoanalyser \
   -profile docker \
-  -revision v0.2.1 \
+  -revision v0.3.0 \
   --mode wgts \
   --genome GRCh38_hmf \
   --input samplesheet.csv \
@@ -174,9 +174,9 @@ nextflow run umccr/oncoanalyser \
 #### Targeted sequencing workflow command
 
 ```
-nextflow run umccr/oncoanalyser \
+nextflow run nf-core/oncoanalyser \
   -profile docker \
-  -revision v0.2.1 \
+  -revision v0.3.0 \
   --mode targeted \
   --panel tso500 \
   --genome GRCh38_hmf \
