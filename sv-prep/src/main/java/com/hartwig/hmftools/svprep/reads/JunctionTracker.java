@@ -343,13 +343,8 @@ public class JunctionTracker
                     readGroup.addJunctionPosition(junctionData);
                 }
             }
-            else if(!mConfig.AppendMode)
-            {
-                mRemoteCandidateReadGroups.add(readGroup);
-            }
 
-            if(!hasBlacklistedRead && !mConfig.AppendMode
-            && isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMin(), mFilterConfig.fragmentLengthMax()))
+            if(!hasBlacklistedRead && isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMin(), mFilterConfig.fragmentLengthMax()))
             {
                 mCandidateDiscordantGroups.add(readGroup);
             }
@@ -360,7 +355,7 @@ public class JunctionTracker
 
     public void findDiscordantGroups()
     {
-        if(mConfig.UnpairedReads || mConfig.AppendMode)
+        if(mConfig.UnpairedReads)
             return;
 
         perfCounterStart(PerfCounters.DiscordantGroups);
@@ -1049,21 +1044,6 @@ public class JunctionTracker
 
     private boolean junctionHasSupport(final JunctionData junctionData)
     {
-        if(mConfig.AppendMode) // only keep those previously identified or within the permitted buffer of one
-        {
-            if(junctionData.isExisting())
-                return true;
-
-            if(mJunctions.stream()
-                    .filter(x -> x.isExisting() && x.Orientation == junctionData.Orientation)
-                    .anyMatch(x -> abs(x.Position - junctionData.Position) <= JUNCTION_DISTANCE_BUFFER))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
         // first deal with junctions loaded from another sample - keep these if they've found any possible support
         if(junctionData.isExisting())
             return junctionData.totalFragmentCount() > 0;
