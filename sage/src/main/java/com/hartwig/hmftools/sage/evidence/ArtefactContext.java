@@ -23,7 +23,7 @@ public class ArtefactContext
     public static final byte NOT_APPLICABLE_BASE_QUAL = -1;
     public static final byte NO_BASE = 0;
 
-    private static final int NO_INDEX = -1;
+    private static final int NO_INDEX = -10; // beyond the permitted range
     private static final int HOMOPOLYMER_BASE_SEARCH = 3;
     private static final int HOMOPOLYMER_REPEAT_LENGTH = 8;
 
@@ -51,6 +51,10 @@ public class ArtefactContext
             if(hasHomopolymerRepeat(flankAndBases, varIndex, true))
             {
                 hpStartOffset = indexInBases - varIndex;
+
+                // check for a single homopolymer base downstream of the variant eg from an insert
+                if(flankAndBases.charAt(varIndex + 1) == flankAndBases.charAt(varIndex))
+                    --hpStartOffset;
             }
 
             if(hpEndOffset != NO_INDEX)
@@ -59,6 +63,9 @@ public class ArtefactContext
             if(hasHomopolymerRepeat(flankAndBases, varIndex, false))
             {
                 hpEndOffset = varIndex - indexInBases;
+
+                if(flankAndBases.charAt(varIndex - 1) == flankAndBases.charAt(varIndex))
+                    --hpEndOffset;
             }
             else if(variant.isDelete())
             {

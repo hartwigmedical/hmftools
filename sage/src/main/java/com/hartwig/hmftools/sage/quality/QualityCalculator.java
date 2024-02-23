@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.evidence.ArtefactContext.NOT_APPLICABLE_BASE_QUAL;
 
@@ -107,7 +108,11 @@ public class QualityCalculator
         {
             byte adjustBaseQual = readContextCounter.artefactContext().findApplicableBaseQual(record, readIndex);
             if(adjustBaseQual != NOT_APPLICABLE_BASE_QUAL)
+            {
+                // SG_LOGGER.trace("var({}) read({}) artefactQual({})",
+                //        readContextCounter.variant(), record.getReadName(), adjustBaseQual);
                 return adjustBaseQual;
+            }
         }
 
         if(readContextCounter.isIndel())
