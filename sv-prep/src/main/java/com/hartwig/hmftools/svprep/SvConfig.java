@@ -91,7 +91,6 @@ public class SvConfig
     public final boolean PerfDebug;
 
     // throttling and down-sampling - off by default
-    public final int JunctionFragmentCap;
     public final int MaxPartitionReads;
     public final boolean CaptureDepth;
     public final boolean NoCleanUp;
@@ -116,7 +115,6 @@ public class SvConfig
     private static final String NO_CACHE_BAM = "no_cache_bam";
     private static final String NO_CLEAN_UP = "no_clean_up";
     private static final String NO_TRIM_READ_ID = "no_trim_read_id";
-    private static final String JUNCTION_FRAGS_CAP = "junction_frags_cap";
     private static final String UNPAIRED_READS = "unpaired_reads";
 
     public SvConfig(final ConfigBuilder configBuilder)
@@ -190,7 +188,6 @@ public class SvConfig
         UnpairedReads = configBuilder.hasFlag(UNPAIRED_READS);
         UseCacheBam = !configBuilder.hasFlag(NO_CACHE_BAM) && !SpecificChrRegions.hasFilters();
         MaxPartitionReads = configBuilder.getInteger(MAX_PARTITION_READS);
-        JunctionFragmentCap = configBuilder.getInteger(JUNCTION_FRAGS_CAP);
         CaptureDepth = configBuilder.hasFlag(CAPTURE_DEPTH);
         TrackRemotes = configBuilder.hasFlag(TRACK_REMOTES);
         NoCleanUp = configBuilder.hasFlag(NO_CLEAN_UP);
@@ -275,7 +272,6 @@ public class SvConfig
         TrimReadId = false;
         UnpairedReads = false;
         NoCleanUp = false;
-        JunctionFragmentCap = 0;
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)
@@ -300,7 +296,6 @@ public class SvConfig
         configBuilder.addFlag(NO_TRIM_READ_ID, "Disable use of a shortened readId internally");
         configBuilder.addFlag(NO_CLEAN_UP, "Keep candidate cache BAM files");
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
-        configBuilder.addInteger(JUNCTION_FRAGS_CAP, "Limit to supporting reads added to a junction", 0);
         addValidationStringencyOption(configBuilder);
         ReadFilterConfig.addConfig(configBuilder);
         addThreadOptions(configBuilder);

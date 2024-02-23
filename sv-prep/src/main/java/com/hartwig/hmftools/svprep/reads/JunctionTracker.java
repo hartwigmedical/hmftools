@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.maxIndelLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -16,11 +17,9 @@ import static com.hartwig.hmftools.svprep.SvConstants.LOW_BASE_QUALITY;
 import static com.hartwig.hmftools.svprep.SvConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_EXACT_BASE_PERC;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
-import static com.hartwig.hmftools.svprep.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_LINE_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.svprep.SvConstants.UNPAIRED_READ_JUNCTION_DISTANCE;
-import static com.hartwig.hmftools.svprep.append.AppendConstants.JUNCTION_DISTANCE_BUFFER;
 import static com.hartwig.hmftools.svprep.reads.DiscordantGroups.formDiscordantJunctions;
 import static com.hartwig.hmftools.svprep.reads.DiscordantGroups.isDiscordantGroup;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
@@ -28,7 +27,6 @@ import static com.hartwig.hmftools.svprep.reads.ReadFilterType.POLY_G_SC;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.reads.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.svprep.reads.ReadGroup.addUniqueReadGroups;
-import static com.hartwig.hmftools.svprep.reads.ReadRecord.findIndelCoords;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.EXACT_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.EXPECTED;
@@ -397,7 +395,7 @@ public class JunctionTracker
             if(read.readType() != JUNCTION)
                 continue;
 
-            final int[] indelCoords = findIndelCoords(read, mFilterConfig.MinIndelLength);
+            final int[] indelCoords = read.indelCoords();
 
             if(indelCoords != null)
                 handleIndelJunction(readGroup, read, indelCoords);
@@ -424,7 +422,7 @@ public class JunctionTracker
                 JunctionData junctionData = getOrCreateJunction(read, orientation);
                 junctionData.addReadType(read, JUNCTION);
 
-                if(!reachedFragmentCap(junctionData.junctionFragmentCount()) && !junctions.contains(junctionData))
+                if(!junctions.contains(junctionData))
                     junctions.add(junctionData);
             }
         }
@@ -474,15 +472,16 @@ public class JunctionTracker
 
     private void handleIndelJunction(final ReadGroup readGroup, final ReadRecord read, final int[] indelCoords)
     {
+        // TODO: make IndelCoords class to be shared with Esvee to save recomputing
+        if(maxIndelLength(read.cigar().getCigarElements()) < mFilterConfig.MinIndelLength)
+            return;
+
         if(positionInBlacklist(indelCoords[SE_START]) || positionInBlacklist(indelCoords[SE_END]))
             return;
 
         // a bit inefficient to search twice, but there won't be too many of these long indel reads
         JunctionData junctionStart = getOrCreateJunction(read, indelCoords[SE_START], POS_ORIENT);
         JunctionData junctionEnd = getOrCreateJunction(read, indelCoords[SE_END], NEG_ORIENT);
-
-        if(reachedFragmentCap(junctionStart.junctionFragmentCount()) || reachedFragmentCap(junctionEnd.junctionFragmentCount()))
-            return;
 
         junctionStart.markInternalIndel();
         junctionStart.JunctionGroups.add(readGroup);
@@ -497,7 +496,7 @@ public class JunctionTracker
 
     private void checkIndelSupport(final ReadRecord read, final Map<JunctionData,ReadType> supportedJunctions)
     {
-        final int[] indelCoords = findIndelCoords(read, MIN_INDEL_SUPPORT_LENGTH);
+        final int[] indelCoords = read.indelCoords();
 
         if(indelCoords == null)
             return;
@@ -510,9 +509,6 @@ public class JunctionTracker
 
             if(junctionData.Position > read.end())
                 break;
-
-            if(reachedFragmentCap(junctionData.supportingFragmentCount()))
-                continue;
 
             if(supportedJunctions.containsKey(junctionData))
                 continue;
@@ -673,9 +669,6 @@ public class JunctionTracker
             final ReadGroup readGroup, final ReadRecord read, final JunctionData junctionData,
             final Map<JunctionData,ReadType> supportedJunctions)
     {
-        if(reachedFragmentCap(junctionData.supportingFragmentCount())) // to limit processing
-            return;
-
         if(readGroup.hasJunctionPosition(junctionData))
             return;
 
@@ -695,11 +688,6 @@ public class JunctionTracker
             read.setReadType(SUPPORT, true);
             supportedJunctions.put(junctionData, SUPPORT);
         }
-    }
-
-    private boolean reachedFragmentCap(final int fragments)
-    {
-        return mConfig.JunctionFragmentCap > 0 && fragments >= mConfig.JunctionFragmentCap;
     }
 
     private void setLastJunctionIndex(int index)

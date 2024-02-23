@@ -11,12 +11,10 @@ public class JunctionsConfig
     public final boolean TrackRemotes;
     public final boolean CaptureDepth;
     public final boolean PerfDebug;
-    public final int JunctionFragmentCap;
 
     public JunctionsConfig(
             final ReadFilters readFiltering, final int readLength, final boolean trimReadId,
-            final boolean unpairedReads, final boolean trackRemotes, final boolean captureDepth, final int junctionFragmentCap,
-            final boolean perfDebug)
+            final boolean unpairedReads, final boolean trackRemotes, final boolean captureDepth, final boolean perfDebug)
     {
         ReadFiltering = readFiltering;
         ReadLength = readLength;
@@ -25,13 +23,12 @@ public class JunctionsConfig
         TrackRemotes = trackRemotes;
         CaptureDepth = captureDepth;
         PerfDebug = perfDebug;
-        JunctionFragmentCap = junctionFragmentCap;
     }
 
     public static JunctionsConfig from(final SvConfig svConfig)
     {
         return new JunctionsConfig(
                 svConfig.ReadFiltering, svConfig.ReadLength, svConfig.TrimReadId, svConfig.UnpairedReads,
-                svConfig.TrackRemotes, svConfig.CaptureDepth, svConfig.JunctionFragmentCap, svConfig.PerfDebug);
+                svConfig.TrackRemotes, svConfig.CaptureDepth, svConfig.PerfDebug);
     }
 }

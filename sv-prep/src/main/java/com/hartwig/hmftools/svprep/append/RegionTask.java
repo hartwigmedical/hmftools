@@ -60,7 +60,7 @@ public class RegionTask implements Callable
 
         JunctionsConfig jtConfig = new JunctionsConfig(
                 mConfig.ReadFiltering, DEFAULT_READ_LENGTH, false, false,
-                false, true, 0, false);
+                false, true, false);
 
         mBreakendTracker = new JunctionTracker(mRegion, jtConfig, new HotspotCache(null), new BlacklistLocations(null));
 

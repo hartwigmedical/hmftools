@@ -5,6 +5,8 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
 
 import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.N;
 
 import java.util.Collections;
@@ -196,4 +198,58 @@ public final class CigarUtils
         // always pointing to the start of the next element, so need to move back a base
         return currentPosition - 1;
     }
+
+    public static int maxIndelLength(final List<CigarElement> cigarElements)
+    {
+        return cigarElements.stream()
+                .filter(x -> x.getOperator() == CigarOperator.D || x.getOperator() == CigarOperator.I)
+                .mapToInt(x -> x.getLength()).max().orElse(0);
+    }
+
+    public static int[] findIndelCoords(final int readStart, final List<CigarElement> cigarElements, int minIndelLength)
+    {
+        int maxIndelLength = maxIndelLength(cigarElements);
+
+        if(maxIndelLength < minIndelLength)
+            return null;
+
+        // find the location of the internal delete or insert matching the max indel length
+        int indelStartPos = readStart - 1;
+        int indelEndPos = 0;
+        for(CigarElement element : cigarElements)
+        {
+            if(element.getOperator() == M)
+            {
+                indelStartPos += element.getLength();
+            }
+            else if(element.getOperator() == D)
+            {
+                if(element.getLength() == maxIndelLength)
+                {
+                    indelEndPos = indelStartPos + element.getLength() + 1;
+                    break;
+                }
+
+                indelStartPos += element.getLength();
+            }
+            else if(element.getOperator() == I)
+            {
+                if(element.getLength() == maxIndelLength)
+                {
+                    indelEndPos = indelStartPos + 1;
+                    break;
+                }
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        if(indelEndPos <= indelStartPos)
+            return null;
+
+        return new int[] { indelStartPos, indelEndPos };
+    }
+
 }
