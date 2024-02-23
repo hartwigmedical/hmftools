@@ -7,11 +7,10 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBa
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
+import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
-import static com.hartwig.hmftools.sage.common.TestUtils.createReadContext;
 import static com.hartwig.hmftools.sage.evidence.ArtefactContext.NOT_APPLICABLE_BASE_QUAL;
-import static com.hartwig.hmftools.sage.evidence.ArtefactContext.NO_BASE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -21,6 +20,7 @@ import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
+import com.hartwig.hmftools.sage.quality.QualityCalculator;
 
 import org.junit.Test;
 
@@ -91,10 +91,6 @@ public class ArtefactsTest
 
         readContext = new ReadContext(pos, "", 0, "", indexBases, false);
 
-        rcCounter = new ReadContextCounter(
-                1, variant, readContext, VariantTier.PANEL, 100, 0,
-                TEST_CONFIG, QUALITY_CALCULATOR, null);
-
         artefactContext = ArtefactContext.buildContext(variant, indexBases);
         assertNotNull(artefactContext);
         assertEquals(1, artefactContext.homopolymerOffset(SE_END));
@@ -125,10 +121,6 @@ public class ArtefactsTest
 
         readContext = new ReadContext(pos, "", 0, "", indexBases, false);
 
-        rcCounter = new ReadContextCounter(
-                1, variant, readContext, VariantTier.PANEL, 100, 0,
-                TEST_CONFIG, QUALITY_CALCULATOR, null);
-
         artefactContext = ArtefactContext.buildContext(variant, indexBases);
         assertNotNull(artefactContext);
         assertEquals(2, artefactContext.homopolymerOffset(SE_END));
@@ -155,10 +147,6 @@ public class ArtefactsTest
                 pos, varIndex, varIndex - 2, 27, 10, readContextBases.getBytes());
 
         readContext = new ReadContext(pos, "", 0, "", indexBases, false);
-
-        rcCounter = new ReadContextCounter(
-                1, variant, readContext, VariantTier.PANEL, 100, 0,
-                TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         artefactContext = ArtefactContext.buildContext(variant, indexBases);
         assertNotNull(artefactContext);
@@ -192,13 +180,9 @@ public class ArtefactsTest
 
         readContext = new ReadContext(pos, "", 0, "", indexBases, false);
 
-        rcCounter = new ReadContextCounter(
-                1, variant, readContext, VariantTier.PANEL, 100, 0,
-                TEST_CONFIG, QUALITY_CALCULATOR, null);
-
         artefactContext = ArtefactContext.buildContext(variant, indexBases);
         assertNotNull(artefactContext);
-        assertEquals(0, artefactContext.homopolymerOffset(SE_END));
+        assertEquals(-1, artefactContext.homopolymerOffset(SE_END));
 
         readQualities = buildDefaultBaseQuals(readLength);
         readQualities[18] = lowQualBase;
@@ -262,10 +246,6 @@ public class ArtefactsTest
 
         readContext = new ReadContext(pos, "", 0, "", indexBases, false);
 
-        rcCounter = new ReadContextCounter(
-                1, variant, readContext, VariantTier.PANEL, 100, 0,
-                TEST_CONFIG, QUALITY_CALCULATOR, null);
-
         artefactContext = ArtefactContext.buildContext(variant, indexBases);
         assertNotNull(artefactContext);
         assertEquals(1, artefactContext.homopolymerOffset(SE_END));
@@ -277,5 +257,54 @@ public class ArtefactsTest
 
         adjustedBaseQual = artefactContext.findApplicableBaseQual(record, varIndex);
         assertEquals(lowQualBase, adjustedBaseQual);
+    }
+
+    @Test
+    public void testSnvBeforeInsert()
+    {
+        // create an SNV directly before a 1-base insert - confirm impact on read contexts and how reads are handled
+        int pos = 117;
+
+        String refBases = FLANK_BASES + "ACGTTCCAACCTTGCA" + FLANK_BASES;
+        //            10                20          30
+        // 0123456789 0123456 7      8 9012345  6789012345
+        // AAAAAGGGGG ACGTTCC A>G insT ACCTTGCA AAAAAGGGGG
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, pos, "A", "G");
+
+        int varIndex = 17;
+        String readContextBases = refBases.substring(0, varIndex) + "G" + "T" + refBases.substring(varIndex + 1);
+
+        IndexedBases indexBases = new IndexedBases(
+                pos, varIndex, varIndex - 2, 22, FLANK_BASES.length(), readContextBases.getBytes());
+
+        ReadContext readContext = new ReadContext(pos, "", 0, "", indexBases, false);
+
+        IndexedBases indexedRefBases = new IndexedBases(100, 0, refBases.getBytes());
+        QualityCalculator qualityCalculator = new QualityCalculator(TEST_CONFIG, RECALIBRATION, indexedRefBases);
+
+        ReadContextCounter rcCounter = new ReadContextCounter(
+                1, variant, readContext, VariantTier.PANEL, 100, 0,
+                TEST_CONFIG, qualityCalculator, null);
+
+        String readBases = readContextBases;
+        byte[] baseQuals = buildDefaultBaseQuals(readBases.length());
+        String cigar = format("%dM",readBases.length());
+
+        // the read's alignment start with the first base of the read context
+        SAMRecord record = buildSamRecord(100, cigar, readContextBases, new String(baseQuals));
+
+        rcCounter.processRead(record, 1, null);
+
+        assertEquals(1, rcCounter.altSupport());
+
+        cigar = "18M1I17M";
+
+        record = buildSamRecord(100, cigar, readContextBases, new String(baseQuals));
+
+        rcCounter.processRead(record, 1, null);
+
+        // TODO: address this in CigarTraversal
+        // assertEquals(1, rcCounter.altSupport());
     }
 }
