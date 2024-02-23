@@ -95,7 +95,14 @@ public class DataItem
                 Integer pos1 = Integer.parseInt(key1[1]);
                 Integer pos2 = Integer.parseInt(key2[1]);
 
-                return Integer.signum(pos1 - pos2);
+                return pos1 - pos2;
+            }
+
+            if(index1.Type == ItemType.SIGNATURE)
+            {
+                int sigNum1 = Integer.parseInt(index1.Key.split("_")[1]);
+                int sigNum2 = Integer.parseInt(index2.Key.split("_")[1]);
+                return sigNum1 - sigNum2;
             }
 
             return index1.Key.compareTo(index2.Key);
