@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
@@ -53,7 +54,15 @@ public class PhaseSetBuilder
 
     public void buildPhaseSets()
     {
-        formSplitLinks();
+        try
+        {
+            formSplitLinks();
+        }
+        catch(Exception e)
+        {
+            SV_LOGGER.error("phaseGroup({}) error: {}", mPhaseGroup, e.toString());
+            e.printStackTrace();
+        }
 
         // add any branched assemblies to the phase group
         List<JunctionAssembly> branchedAssemblies = Lists.newArrayList();

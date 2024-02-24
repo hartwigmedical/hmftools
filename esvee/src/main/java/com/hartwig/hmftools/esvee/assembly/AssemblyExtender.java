@@ -187,7 +187,7 @@ public class AssemblyExtender
         }
     }
 
-    private boolean isDiscordantCandidate(final Read read, boolean isForwardJunction, int junctionPosition)
+    public static boolean isValidSupportCoordsVsJunction(final Read read, boolean isForwardJunction, int junctionPosition)
     {
         // cannot cross the junction since will already have considered all junction candidate reads
         // and must read in the direction of the junction
@@ -208,7 +208,12 @@ public class AssemblyExtender
                 return false;
         }
 
-        return isDiscordant(read);
+        return true;
+    }
+
+    private boolean isDiscordantCandidate(final Read read, boolean isForwardJunction, int junctionPosition)
+    {
+        return isValidSupportCoordsVsJunction(read, isForwardJunction, junctionPosition) && isDiscordant(read);
     }
 
     public static void extendRefBases(
@@ -262,7 +267,6 @@ public class AssemblyExtender
 
                 if(refBaseAssembly.supportCount() > 0)
                     assembly.mergeRefBaseAssembly(refBaseAssembly);
-
             }
 
             return;

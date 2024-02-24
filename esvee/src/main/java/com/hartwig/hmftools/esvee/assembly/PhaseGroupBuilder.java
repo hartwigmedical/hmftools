@@ -151,8 +151,9 @@ public class PhaseGroupBuilder
                     {
                         if(otherAssembly.phaseGroup() != phaseGroup)
                         {
-                            // transfer to the other one
-                            phaseGroup.assemblies().forEach(x -> otherAssembly.phaseGroup().addAssembly(x));
+                            // transfer to the other one, and do this for assemblies in this group
+                            otherAssembly.phaseGroup().transferAssemblies(phaseGroup);
+                            mPhaseGroups.remove(phaseGroup);
                             phaseGroup = otherAssembly.phaseGroup();
                             linksWithExisting = true;
                         }

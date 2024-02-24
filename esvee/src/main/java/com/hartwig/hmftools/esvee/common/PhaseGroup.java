@@ -2,6 +2,8 @@ package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -42,9 +44,25 @@ public class PhaseGroup
     public boolean isSolo() { return mAssemblies.size() == 1; }
     public int assemblyCount() { return mAssemblies.size(); }
 
+    public void transferAssemblies(final PhaseGroup other)
+    {
+        for(JunctionAssembly assembly : other.assemblies())
+        {
+            mAssemblies.add(assembly);
+            assembly.setPhaseGroup(this);
+        }
+    }
+
     public void addAssembly(final JunctionAssembly assembly)
     {
         mAssemblies.add(assembly);
+
+        if(assembly.phaseGroup() != null)
+        {
+            SV_LOGGER.error("assembly({}) setting phase group again", this::toString);
+            System.exit(1);
+        }
+
         assembly.setPhaseGroup(this);
     }
 

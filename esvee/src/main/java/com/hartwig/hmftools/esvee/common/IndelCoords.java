@@ -25,10 +25,13 @@ public class IndelCoords
         return orientation == POS_ORIENT ? PosStart == position : PosEnd == position;
     }
 
-    public boolean matches(final IndelCoords other) { return PosStart == other.PosStart && PosEnd == other.PosEnd; }
+    public boolean matches(final IndelCoords other)
+    {
+        return PosStart == other.PosStart && PosEnd == other.PosEnd && Length == other.Length;
+    }
 
     public String toString()
     {
-        return isDelete() ? format("delete(%d - %d) len(%d)", PosStart, PosEnd, Length) : format("insert(%d - %d)", PosStart, PosEnd);
+        return format("%s(%d - %d) len(%d)", isDelete() ? "delete" : "insert", PosStart, PosEnd, Length);
     }
 }

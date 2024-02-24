@@ -311,12 +311,12 @@ public class AssemblyWriter
                 }
                 else
                 {
-                    sj.add("").add("");
+                    sj.add("").add("0").add("");
                 }
             }
             else
             {
-                sj.add("-1").add("0").add("").add("").add("").add("");
+                sj.add("-1").add("0").add("").add("").add("").add("0").add("");
             }
 
             sj.add(String.valueOf(assembly.mergedAssemblyCount()));

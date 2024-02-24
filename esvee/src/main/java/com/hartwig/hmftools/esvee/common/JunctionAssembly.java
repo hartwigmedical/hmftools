@@ -98,8 +98,7 @@ public class JunctionAssembly
     public Junction junction() { return mJunction; }
     public boolean isForwardJunction() { return mJunction.isForward(); }
 
-    public boolean indel() { return mIndel; }
-    public void markIndel() { mIndel = true; }
+    public boolean indel() { return mJunction.IndelBased; }
 
     public int mergedAssemblyCount() { return mMergedAssemblies; }
     public void addMergedAssembly() { ++mMergedAssemblies; }
@@ -301,10 +300,7 @@ public class JunctionAssembly
 
         int baseOffset = isForwardJunction ? refBaseExtensionDistance : 0;
 
-        int refBaseOffset = 0;
-
-        if(refBaseAssembly != null)
-            refBaseOffset = isForwardJunction ? 0 : extensionLength();
+        int refBaseOffset = refBaseAssembly != null && isForwardJunction ? 0 : extensionLength();
 
         mBases = new byte[newBaseLength];
         mBaseQuals = new byte[newBaseLength];
@@ -321,8 +317,8 @@ public class JunctionAssembly
             {
                 if(i < baseOffset)
                 {
-                    if(refBaseAssembly != null && i + refBaseOffset < refBaseAssembly.bases().length)
-                        mBases[i] = refBaseAssembly.bases()[i + refBaseOffset];
+                    if(refBaseAssembly != null && i < refBaseAssembly.bases().length)
+                        mBases[i] = refBaseAssembly.bases()[i];
                     else
                         mBases[i] = 0;
 
@@ -343,8 +339,9 @@ public class JunctionAssembly
                 }
                 else
                 {
-                    if(refBaseAssembly != null && i + refBaseOffset < refBaseAssembly.bases().length)
-                        mBases[i] = refBaseAssembly.bases()[i + refBaseOffset];
+                    int refBaseIndex = i - refBaseOffset;
+                    if(refBaseAssembly != null && refBaseIndex < refBaseAssembly.bases().length)
+                        mBases[i] = refBaseAssembly.bases()[refBaseIndex];
                     else
                         mBases[i] = 0;
 
@@ -597,8 +594,8 @@ public class JunctionAssembly
 
     public String toString()
     {
-        return format("junc(%s) range(%d - %d len=%d) juncIndex(%d) support(%d) mismatches(pos=%d all=%d)",
-                mJunction, mMinAlignedPosition, mMaxAlignedPosition, baseLength(), mJunctionSequenceIndex,
+        return format("junc(%s) coords(extLen=%d refBasePos=%d len=%d) juncIndex(%d) support(%d) mismatches(pos=%d all=%d)",
+                mJunction, extensionLength(), refBasePosition(), baseLength(), mJunctionSequenceIndex,
                 mSupport.size(), mSequenceMismatches.positionCount(), mSequenceMismatches.distinctBaseCount());
     }
 
