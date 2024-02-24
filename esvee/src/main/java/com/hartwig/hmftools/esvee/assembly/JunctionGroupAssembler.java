@@ -27,13 +27,13 @@ import com.hartwig.hmftools.esvee.read.BamReader;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.read.ReadAdjustments;
 import com.hartwig.hmftools.esvee.read.ReadFilters;
+import com.hartwig.hmftools.esvee.read.ReadStats;
 
 import htsjdk.samtools.SAMRecord;
 
 public class JunctionGroupAssembler extends ThreadTask
 {
     private final SvConfig mConfig;
-    private final ResultsWriter mResultsWriter;
 
     private final Queue<JunctionGroup> mJunctionGroups;
     private final int mJunctionCount;
@@ -42,26 +42,25 @@ public class JunctionGroupAssembler extends ThreadTask
     private final BamReader mBamReader;
 
     private final Map<String,ReadGroup> mReadGroupMap;
-    private int mLowQualFilteredReads;
+    private final ReadStats mReadStats;
 
     public JunctionGroupAssembler(
-            final SvConfig config, final BamReader bamReader, final Queue<JunctionGroup> junctionGroups, final ResultsWriter resultsWriter)
+            final SvConfig config, final BamReader bamReader, final Queue<JunctionGroup> junctionGroups)
     {
         super("PrimaryAssembly");
         mConfig = config;
-        mResultsWriter = resultsWriter;
         mBamReader = bamReader;
         mJunctionGroups = junctionGroups;
         mJunctionCount = junctionGroups.size();
 
         mReadGroupMap = Maps.newHashMap();
         mCurrentJunctionGroup = null;
-        mLowQualFilteredReads = 0;
+        mReadStats = new ReadStats();
     }
 
     public static List<JunctionGroupAssembler> createThreadTasks(
             final List<JunctionGroup> junctionGroups, final List<BamReader> bamReaders, final SvConfig config,
-            final ResultsWriter resultsWriter, final int taskCount, final List<Thread> threadTasks)
+            final int taskCount, final List<Thread> threadTasks)
     {
         List<JunctionGroupAssembler> primaryAssemblyTasks = Lists.newArrayList();
 
@@ -74,7 +73,7 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             BamReader bamReader = bamReaders.get(i);
 
-            JunctionGroupAssembler junctionGroupAssembler = new JunctionGroupAssembler(config, bamReader, junctionGroupQueue, resultsWriter);
+            JunctionGroupAssembler junctionGroupAssembler = new JunctionGroupAssembler(config, bamReader, junctionGroupQueue);
             primaryAssemblyTasks.add(junctionGroupAssembler);
             threadTasks.add(junctionGroupAssembler);
         }
@@ -121,7 +120,7 @@ public class JunctionGroupAssembler extends ThreadTask
         }
     }
 
-    public int lowQualFilteredReads() { return mLowQualFilteredReads; }
+    public ReadStats readStats() { return mReadStats; }
 
     private void processJunctionGroup(final JunctionGroup junctionGroup)
     {
@@ -184,8 +183,6 @@ public class JunctionGroupAssembler extends ThreadTask
 
         junctionGroup.addJunctionAssemblies(junctionGroupAssemblies);
 
-        // junctionGroupAssemblies.forEach(x -> mResultsWriter.writeAssembly(x));
-
         mCurrentJunctionGroup = null;
     }
 
@@ -195,10 +192,17 @@ public class JunctionGroupAssembler extends ThreadTask
 
         Read read = new Read(record);
 
+        ++mReadStats.TotalReads;
+
         // CHECK: do in SvPrep if worthwhile
-        if(!ReadFilters.isAboveBaseQualAvgThreshold(record.getBaseQualities()) || !ReadFilters.isAboveMapQualThreshold(read))
+        if(!ReadFilters.isAboveBaseQualAvgThreshold(record.getBaseQualities()))
         {
-            ++mLowQualFilteredReads;
+            ++mReadStats.FilteredBaseQual;
+            return;
+        }
+        else if(!ReadFilters.isAboveBaseQualAvgThreshold(record.getBaseQualities()) || !ReadFilters.isAboveMapQualThreshold(read))
+        {
+            ++mReadStats.FilteredMapQual;
             return;
         }
 
@@ -206,8 +210,11 @@ public class JunctionGroupAssembler extends ThreadTask
             read.markReference();
 
         // CHECK: could track for stats
-        ReadAdjustments.trimPolyGSequences(read);
-        ReadAdjustments.convertEdgeIndelsToSoftClip(read);
+        if(ReadAdjustments.trimPolyGSequences(read))
+            ++mReadStats.PolyGTrimmed;
+
+        if(ReadAdjustments.convertEdgeIndelsToSoftClip(read))
+            ++mReadStats.IndelSoftClipConverted;
 
         mCurrentJunctionGroup.addCandidateRead(read);
 

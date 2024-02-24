@@ -30,6 +30,7 @@ import com.hartwig.hmftools.esvee.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.output.WriteType;
 import com.hartwig.hmftools.esvee.read.BamReader;
 import com.hartwig.hmftools.esvee.output.VcfWriter;
+import com.hartwig.hmftools.esvee.read.ReadStats;
 
 public class JunctionProcessor
 {
@@ -119,6 +120,10 @@ public class JunctionProcessor
                     {
                         // set ID first so any references have them set - may need or could to be done earlier once
                         // all references between then are established
+
+                        // NOTE: is there a cleaner place to do this? eg prior to alignment after phasing is done?
+                        junctionGroup.addBranchedAssemblies();
+
                         for(JunctionAssembly assembly : junctionGroup.junctionAssemblies())
                         {
                             assembly.setId(assemblyId++);
@@ -165,14 +170,15 @@ public class JunctionProcessor
 
         // Primary Junction Assembly
         List<JunctionGroupAssembler> primaryAssemblyTasks = JunctionGroupAssembler.createThreadTasks(
-                junctionGroups, mBamReaders, mConfig, mResultsWriter, taskCount, threadTasks);
+                junctionGroups, mBamReaders, mConfig, taskCount, threadTasks);
 
         if(!runThreadTasks(threadTasks))
             System.exit(1);
 
         int totalJunctionAssemblies = junctionGroups.stream().mapToInt(x -> x.junctionAssemblies().size()).sum();
 
-        int totalLowQualFilteredReads = primaryAssemblyTasks.stream().mapToInt(x -> x.lowQualFilteredReads()).sum();
+        ReadStats combinedReadStats = new ReadStats();
+        primaryAssemblyTasks.forEach(x -> combinedReadStats.merge(x.readStats()));
 
         SV_LOGGER.info("created {} junction assemblies", totalJunctionAssemblies);
 
@@ -180,8 +186,8 @@ public class JunctionProcessor
 
         int totalCachedReads = junctionGroups.stream().mapToInt(x -> x.candidateReadCount()).sum();
 
-        SV_LOGGER.info("cached read count({}) from {} junction groups, lowQualFiltered({})",
-                totalCachedReads, junctionGroups.size(), totalLowQualFilteredReads);
+        SV_LOGGER.info("cached read count({}) from {} junction groups, stats: {}",
+                totalCachedReads, junctionGroups.size(), combinedReadStats);
     }
 
     private void formPhaseGroups()
