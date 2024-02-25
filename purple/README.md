@@ -2,11 +2,7 @@
 
 # PURPLE
 
-PURPLE is a **pur**ity **pl**oidy **e**stimator for whole genome sequenced (WGS) data. 
-
-It combines B-allele frequency (BAF) from [AMBER](../amber), read depth ratios from [COBALT](../cobalt), somatic variants and structural variants to estimate the purity and copy number profile of a tumor sample.
-
-PURPLE supports both grch 37 and 38 reference assemblies. 
+PURPLE is a **pur**ity **pl**oidy **e**stimator primarily designed for whole genome sequenced (WGS) data. It combines B-allele frequency (BAF) from [AMBER](../amber), read depth ratios from [COBALT](../cobalt), somatic variants and structural variants to estimate the purity and copy number profile of a tumor sample.   PURPLE supports both grch 37 and 38 reference assemblies. 
 
 PURPLE may also be run on targeted data. For more info please see [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md)
 
