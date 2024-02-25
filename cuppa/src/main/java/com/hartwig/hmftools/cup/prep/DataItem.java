@@ -45,6 +45,7 @@ public class DataItem
             return Objects.hash(Source, Type, Key);
         }
 
+        @Override
         public String toString()
         {
             return String.format(
@@ -60,6 +61,28 @@ public class DataItem
     {
         Index = new Index(source, type, key);
         Value = value;
+    }
+
+    @Override
+    public boolean equals(final Object o)
+    {
+        if(this == o)
+            return true;
+
+        if(o == null || getClass() != o.getClass())
+            return false;
+
+        final DataItem dataItem = (DataItem) o;
+        return Index.Source == dataItem.Index.Source
+                && Index.Type == dataItem.Index.Type
+                && Index.Key.equals(dataItem.Index.Key)
+                && Value.equals(dataItem.Value);
+    }
+
+    @Override
+    public String toString()
+    {
+        return Index.toString() + ", Value=" + Value;
     }
 
     public static class IndexComparator implements Comparator<Index>
