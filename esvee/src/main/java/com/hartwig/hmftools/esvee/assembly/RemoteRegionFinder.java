@@ -19,7 +19,6 @@ import com.hartwig.hmftools.esvee.read.Read;
 
 public final class RemoteRegionFinder
 {
-
     public static void findRemoteRegions(
             final JunctionAssembly assembly, final List<Read> discordantReads, final List<Read> remoteJunctionMates,
             final List<Read> suppJunctionReads)

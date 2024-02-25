@@ -149,6 +149,10 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             Junction junction = junctionGroup.junctions().get(i);
 
+            // FIXME: decide how to model these - for now their reads are captured but not used explicitly used
+            if(junction.DiscordantOnly)
+                continue;
+
             JunctionAssembler junctionAssembler = new JunctionAssembler(mConfig, junction);
 
             // FIXME: doesn't seem to be making a big difference, but this is in efficient for long-range junction groups
@@ -195,15 +199,18 @@ public class JunctionGroupAssembler extends ThreadTask
         ++mReadStats.TotalReads;
 
         // CHECK: do in SvPrep if worthwhile
-        if(!ReadFilters.isAboveBaseQualAvgThreshold(record.getBaseQualities()))
+        if(!mConfig.NoReadFilters)
         {
-            ++mReadStats.FilteredBaseQual;
-            return;
-        }
-        else if(!ReadFilters.isAboveBaseQualAvgThreshold(record.getBaseQualities()) || !ReadFilters.isAboveMapQualThreshold(read))
-        {
-            ++mReadStats.FilteredMapQual;
-            return;
+            if(!ReadFilters.isAboveBaseQualAvgThreshold(record.getBaseQualities()))
+            {
+                ++mReadStats.FilteredBaseQual;
+                return;
+            }
+            else if(!ReadFilters.isAboveBaseQualAvgThreshold(record.getBaseQualities()) || !ReadFilters.isAboveMapQualThreshold(read))
+            {
+                ++mReadStats.FilteredMapQual;
+                return;
+            }
         }
 
         if(mBamReader.currentIsReferenceSample())

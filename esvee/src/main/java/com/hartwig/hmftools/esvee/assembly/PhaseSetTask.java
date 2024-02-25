@@ -85,7 +85,7 @@ public class PhaseSetTask extends ThreadTask
             }
             catch(NoSuchElementException e)
             {
-                SV_LOGGER.trace("all tasks complete");
+                SV_LOGGER.trace("all phase tasks complete");
                 break;
             }
             catch(Exception e)

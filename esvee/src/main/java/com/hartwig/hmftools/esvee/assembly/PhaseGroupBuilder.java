@@ -230,29 +230,4 @@ public class PhaseGroupBuilder
 
         return mConfig.SpecificChrRegions.Regions.stream().noneMatch(x -> x.overlaps(region));
     }
-
-    /*
-    private static final int PHASE_GROUP_LOG_COUNT = 1000;
-
-    private void buildPhasedAssemblies()
-    {
-        SV_LOGGER.info("building phase sets from {} phase groups", mPhaseGroups.size());
-
-        int processed = 0;
-        for(PhaseGroup phaseGroup : mPhaseGroups)
-        {
-            // where there are more than 2 assemblies, start with the ones with the most support and overlapping junction reads
-            PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(phaseGroup);
-
-            phaseSetBuilder.buildPhaseSets();
-
-            ++processed;
-
-            if((processed % PHASE_GROUP_LOG_COUNT) == 0)
-            {
-                SV_LOGGER.debug("processed {} phase groups", processed);
-            }
-        }
-    }
-    */
 }

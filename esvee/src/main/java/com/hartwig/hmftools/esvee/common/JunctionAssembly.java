@@ -380,7 +380,7 @@ public class JunctionAssembly
 
         if(!emptyBaseRanges.isEmpty())
         {
-            SV_LOGGER.trace("assembly({}) refBases(existing={} new={}) empty ranges: {}",
+            SV_LOGGER.debug("assembly({}) refBases(existing={} new={}) empty ranges: {}",
                     refBaseAssembly, existingRefBaseCount, newRefBaseCount, emptyBaseRanges);
         }
     }

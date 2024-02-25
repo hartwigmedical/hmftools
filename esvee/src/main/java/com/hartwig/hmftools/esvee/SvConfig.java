@@ -74,6 +74,7 @@ public class SvConfig
     public final String RefGenomeImageFile;
 
     public final ValidationStringency BamStringency;
+    public final boolean NoReadFilters;
 
     public final String VcfFile;
     public final List<WriteType> WriteTypes;
@@ -98,6 +99,7 @@ public class SvConfig
     public static final String OUTPUT_VCF = "output_vcf";
     public static final String REF_GENOME_IMAGE = "ref_genome_image";
     public static final String JUNCTION_FILES = "junction_files";
+    public static final String NO_READ_FILTERS = "no_read_filters";
 
     public static final String WRITE_TYPES = "write_types";
     public static final String HTML_SUMMARY_DIR = "html_dir";
@@ -175,6 +177,7 @@ public class SvConfig
                 configBuilder.getValue(REF_GENOME_IMAGE) : RefGenomeFile + REF_GENOME_IMAGE_EXTENSION;
 
         BamStringency = ValidationStringency.STRICT;
+        NoReadFilters = configBuilder.hasFlag(NO_READ_FILTERS);
 
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
@@ -273,6 +276,8 @@ public class SvConfig
 
         configBuilder.addPaths(
                 JUNCTION_FILES, false, "List of SvPrep junction files, separated by ',', default is to match by sample name");
+
+        configBuilder.addFlag(NO_READ_FILTERS, "Filter reads by base and map qual");
 
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(REF_GENOME_IMAGE, false, REFERENCE_BAM_DESC);

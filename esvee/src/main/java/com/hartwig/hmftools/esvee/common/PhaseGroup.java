@@ -59,7 +59,7 @@ public class PhaseGroup
 
         if(assembly.phaseGroup() != null)
         {
-            SV_LOGGER.error("assembly({}) setting phase group again", this::toString);
+            SV_LOGGER.error("assembly({}) adding to additional phase group", assembly);
             System.exit(1);
         }
 
