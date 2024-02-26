@@ -27,7 +27,7 @@ public class CuppaDataFactoryTest
             Resources.getResource("test_run/cuppa/tumor_sample.cuppa.vis_data.tsv").getPath();
 
     @Test
-    public void canExtractPredictionsFromCuppaV2IncludingRna() throws Exception
+    public void canExtractPredictionsFromCuppaIncludingRna() throws Exception
     {
         CuppaPrediction expectedPredictionMelanoma = ImmutableCuppaPrediction.builder()
                 .cancerType("Skin: Melanoma")
@@ -66,7 +66,7 @@ public class CuppaDataFactoryTest
     }
 
     @Test
-    public void canExtractPredictionsFromCuppaV2ExcludingRna() throws Exception
+    public void canExtractPredictionsFromCuppaExcludingRna() throws Exception
     {
         CuppaPrediction expectedPredictionMelanoma = ImmutableCuppaPrediction.builder()
                 .cancerType("Skin: Melanoma")
@@ -119,8 +119,7 @@ public class CuppaDataFactoryTest
     private static void assertCuppaPredictions(@NotNull String inputFileName,
             @NotNull Map<String, CuppaPrediction> expectedPredictionsByCancerType) throws Exception
     {
-        CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(inputFileName);
-        CuppaData cuppaData = CuppaDataFactory.create(cuppaPredictions);
+        CuppaData cuppaData = CuppaDataFactory.create(inputFileName);
         List<CuppaPrediction> predictionEntries = cuppaData.predictions();
 
         assertEquals(40, predictionEntries.size());

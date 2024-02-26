@@ -19,7 +19,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
-import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidNode;
@@ -62,6 +61,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRnaConfig;
+import com.hartwig.hmftools.orange.OrangeWGSRefConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
@@ -569,21 +569,18 @@ public class OrangeAlgo
     @Nullable
     private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws Exception
     {
-        if(config.wgsRefConfig() == null)
+        OrangeWGSRefConfig orangeWGSRefConfig = config.wgsRefConfig();
+        if(orangeWGSRefConfig == null)
         {
             return null;
         }
 
-        CuppaPredictions cuppaPredictions = null;
-        String cuppaVisDataTsv = config.wgsRefConfig().cuppaVisDataTsv();
-        if(cuppaVisDataTsv != null)
-        {
-            LOGGER.info("Loading CUPPA predictions from {}", new File(cuppaVisDataTsv).getParent());
-            cuppaPredictions = CuppaPredictions.fromTsv(cuppaVisDataTsv);
-            LOGGER.info(" Loaded {} CUPPA prediction entries from {}", cuppaPredictions.PredictionEntries.size(), cuppaVisDataTsv);
-        }
+        String cuppaVisDataTsv = orangeWGSRefConfig.cuppaVisDataTsv();
+        LOGGER.info("Loading CUPPA predictions from {}", new File(cuppaVisDataTsv).getParent());
+        CuppaData cuppaData = CuppaDataFactory.create(cuppaVisDataTsv);
+        LOGGER.info(" Loaded {} CUPPA predictions from {}", cuppaData.predictions().size(), cuppaVisDataTsv);
 
-        return CuppaDataFactory.create(cuppaPredictions);
+        return CuppaDataFactory.create(cuppaVisDataTsv);
     }
 
     @Nullable
