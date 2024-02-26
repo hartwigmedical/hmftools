@@ -326,7 +326,7 @@ public class PurpleApplication
 
             somaticStream.processAndWrite(purityAdjuster);
 
-            sampleData.SvCache.write(purityAdjuster, copyNumbers, mConfig.tumorOnlyMode());
+            sampleData.SvCache.write(purityAdjuster, copyNumbers, mConfig.tumorOnlyMode(), amberGender);
 
             reportedGenes.addAll(somaticStream.reportedGenes());
 
