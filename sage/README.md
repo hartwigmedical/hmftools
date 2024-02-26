@@ -179,7 +179,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.append.SageAppendAppl
 
 
 # Variant Visualisations
-Sage can produce HTML visualisations for specific variants of interest, showing the type of support from each overlapping read.
+Sage can produce interactive HTML visualisations for specific variants of interest, showing the type of support from each overlapping read.
 
 To enable this output, set one or more of the following arguments:
 
@@ -190,9 +190,9 @@ vis_pass_only | Generate output for all passing variants
 vis_max_support_reads | Max reads per type to display, default is 40
 vis_output_dir | Output directory for HTML files, defaults to 'vis' if not specified
 
-A guide to the visualistions is shown below:
+A guide to the visualisations is shown below. A link to the HTML file for this variant is available [here.](http://htmlpreview.github.io/?https://github.com/hartwigmedical/hmftools/blob/master/sage/docs/COLO829v003T.sage.chr7_152079940_G_T.html)
 
-![image](https://github.com/hartwigmedical/hmftools/assets/18154939/1195a228-0fc1-4e6d-b28b-6a9b8ddf10d5)
+![image](docs/COLO829v003T.annotated_sage_vis.png)
 
 
 
@@ -324,7 +324,7 @@ These files are written into the same directory as the output file.
 
 A typical example of the chart is shown below. Note that each bar represents the amount that will be added to the sequencer Phred score: 
 
-![Base Quality Adjustment](src/main/resources/readme/COLO829v003T.bqr.png)
+![Base Quality Adjustment](docs/COLO829v003T.bqr.png)
 
 Base quality recalibration is enabled by default but can be disabled by supplying including the`-disable_bqr` argument.
 

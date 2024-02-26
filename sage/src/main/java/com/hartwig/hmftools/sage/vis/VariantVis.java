@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_INFO
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getOrientationString;
@@ -21,6 +20,7 @@ import static com.hartwig.hmftools.common.utils.Doubles.round;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.read.NumberEvents.rawNM;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_NM_COUNT;
@@ -79,11 +79,13 @@ import java.util.stream.Stream;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
@@ -125,6 +127,8 @@ public class VariantVis
     private final EnumMap<ReadContextCounter.MatchType, Integer> mReadCountByType;
     private final String mVariantKey;
     private final String mIndexedBasesKey;
+    private final RefGenomeSource mRefGenome;
+    private final RefGenomeCoordinates mRefGenCoords;
 
     private int mReadCount;
 
@@ -167,12 +171,12 @@ public class VariantVis
                                 new SvgRender.BoxBorder(SvgRender.BorderLocation.RIGHT, DARK_BLUE)))
         );
 
-        RefGenomeCoordinates refGenCoords = config.RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
-        int chromosomeLength = refGenCoords.length(mVariant.chromosome());
+        mRefGenCoords = config.RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+        int chromosomeLength = mRefGenCoords.length(mVariant.chromosome());
         int refPosStart = max(1, mViewRegion.start());
         int refPosEnd = min(chromosomeLength, mViewRegion.end());
-        RefGenomeInterface refGen = loadRefGenome(config.RefGenomeFile);
-        String refBases = refGen.getBaseString(mVariant.chromosome(), refPosStart, refPosEnd);
+        mRefGenome = loadRefGenome(config.RefGenomeFile);
+        String refBases = mRefGenome.getBaseString(mVariant.chromosome(), refPosStart, refPosEnd);
         mRefViewModel = BaseSeqViewModel.fromStr(refBases, refPosStart);
         mContextViewModel = BaseSeqViewModel.fromVariant(indexedBases, mVariant.ref(), mVariant.alt());
 
@@ -591,6 +595,15 @@ public class VariantVis
         return renderBases(mContextViewModel, false, true);
     }
 
+    private int getReadNM(final SAMRecord read)
+    {
+        String chromosome = read.getReferenceName();
+        int chromosomeLength = mRefGenCoords.length(chromosome);
+        ChrBaseRegion chrRegion = new ChrBaseRegion(chromosome, 1, chromosomeLength);
+        RefSequence refSequence = new RefSequence(chrRegion, mRefGenome);
+        return rawNM(read, refSequence);
+    }
+
     private DomContent renderReadInfoTable(final SAMRecord firstRead, @Nullable final SAMRecord secondRead)
     {
         CssBuilder baseDivStyle = CssBuilder.EMPTY.padding(CssSize.ZERO).margin(CssSize.ZERO);
@@ -628,10 +641,8 @@ public class VariantVis
         String mapQStr = secondRead == null ? firstMapQStr : firstMapQStr + ", " + secondMapQStr;
         readInfoRows.add(tr(td("MapQ:"), td(mapQStr)));
 
-        Integer firstNumMutations = firstRead.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
-        String firstNumMutationsStr = firstNumMutations == null ? "" : String.valueOf(firstNumMutations);
-        Integer secondNumMutations = secondRead == null ? null : secondRead.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
-        String secondNumMutationsStr = secondNumMutations == null ? "" : String.valueOf(secondNumMutations);
+        String firstNumMutationsStr = String.valueOf(getReadNM(firstRead));
+        String secondNumMutationsStr = secondRead == null ? "" : String.valueOf(getReadNM(secondRead));
         String numMutationsStr = secondRead == null ? firstNumMutationsStr : firstNumMutationsStr + ", " + secondNumMutationsStr;
         readInfoRows.add(tr(td("NM:"), td(numMutationsStr)));
 
