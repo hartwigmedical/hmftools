@@ -580,7 +580,7 @@ public class OrangeAlgo
         CuppaData cuppaData = CuppaDataFactory.create(cuppaVisDataTsv);
         LOGGER.info(" Loaded {} CUPPA predictions from {}", cuppaData.predictions().size(), cuppaVisDataTsv);
 
-        return CuppaDataFactory.create(cuppaVisDataTsv);
+        return cuppaData;
     }
 
     @Nullable
