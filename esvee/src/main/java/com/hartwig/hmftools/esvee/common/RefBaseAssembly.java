@@ -210,8 +210,6 @@ public class RefBaseAssembly
         }
     }
 
-    private static final int INVALID_INDEX = -1;
-
     private void addRead(final Read read, final SupportType supportType, int readStartIndex, int assemblyStartIndex)
     {
         int mismatchCount = 0;

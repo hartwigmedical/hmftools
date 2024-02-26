@@ -16,6 +16,7 @@ public class PhaseGroup
 {
     private int mId;
     private final List<JunctionAssembly> mAssemblies;
+    private final List<DiscordantGroup> mDiscordantGroups;
     private final List<PhaseSet> mPhaseSets;
     private final List<AssemblyLink> mSecondarySplitLinks;
 
@@ -25,6 +26,7 @@ public class PhaseGroup
         mAssemblies = Lists.newArrayList(first);
         mPhaseSets = Lists.newArrayList();
         mSecondarySplitLinks = Lists.newArrayList();
+        mDiscordantGroups = Lists.newArrayList();
 
         first.setPhaseGroup(this);
 
@@ -74,6 +76,19 @@ public class PhaseGroup
         }
 
         assembly.setPhaseGroup(this);
+    }
+
+    public void addDiscordantGroup(final DiscordantGroup discordantGroup)
+    {
+        mDiscordantGroups.add(discordantGroup);
+
+        if(discordantGroup.phaseGroup() != null)
+        {
+            // not sure yet whether this matters
+            SV_LOGGER.warn("discGroup({}) adding to additional phase group", discordantGroup);
+        }
+
+        discordantGroup.setPhaseGroup(this);
     }
 
     public List<JunctionAssembly> assemblies() { return mAssemblies; }

@@ -149,10 +149,6 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             Junction junction = junctionGroup.junctions().get(i);
 
-            // FIXME: decide how to model these - for now their reads are captured but not used explicitly used
-            if(junction.DiscordantOnly)
-                continue;
-
             JunctionAssembler junctionAssembler = new JunctionAssembler(mConfig, junction);
 
             // FIXME: doesn't seem to be making a big difference, but this is in efficient for long-range junction groups
@@ -161,19 +157,23 @@ public class JunctionGroupAssembler extends ThreadTask
             int junctionBoundaryStart = junction.isForward() ? junction.Position - BAM_READ_JUNCTION_BUFFER : junction.Position;
             int junctionBoundaryEnd = junction.isForward() ? junction.Position : junction.Position + BAM_READ_JUNCTION_BUFFER;
 
-            List<Read> junctionCandidateReads = junctionGroup.candidateReads().stream()
+            List<Read> candidateReads = junctionGroup.candidateReads().stream()
                     .filter(x -> positionsOverlap(junctionBoundaryStart, junctionBoundaryEnd, x.unclippedStart(), x.unclippedEnd()))
                     .collect(Collectors.toList());
 
-            if(junctionCandidateReads.isEmpty())
+            if(candidateReads.isEmpty())
                 continue;
 
-            List<JunctionAssembly> candidateAssemblies = junctionAssembler.processJunction(junctionCandidateReads);
+            if(junction.DiscordantOnly)
+            {
+                junctionGroup.addDiscordantGroups(DiscordantReads.buildFromDiscordantReads(junction, candidateReads));
+                continue;
+            }
+
+            List<JunctionAssembly> candidateAssemblies = junctionAssembler.processJunction(candidateReads);
 
             // dedup assemblies with close junction positions, same orientation
             dedupProximateAssemblies(junctionGroupAssemblies, candidateAssemblies);
-
-            // junctionGroupAssemblies.addAll(candidateAssemblies);
 
             // extend assemblies with non-junction and discordant reads
             for(JunctionAssembly assembly : candidateAssemblies)

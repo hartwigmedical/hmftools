@@ -33,7 +33,6 @@ public class JunctionAssembly
     private int mAssemblyId;
     private final Junction mJunction;
     private final Read mInitialRead;
-    private boolean mIndel;
 
     private int mJunctionSequenceIndex; // position of the junction in the read bases
 
@@ -61,14 +60,13 @@ public class JunctionAssembly
     private int mMergedAssemblies;
 
     public JunctionAssembly(
-            final Junction initialJunction, final Read read, final int maxExtensionDistance,
+            final Junction junction, final Read read, final int maxExtensionDistance,
             final int minAlignedPosition, final int maxAlignedPosition)
     {
-        mJunction = initialJunction;
+        mJunction = junction;
         mInitialRead = read;
-        mIndel = false;
 
-        mJunctionSequenceIndex = initialJunction.isForward() ? 0 : maxExtensionDistance;
+        mJunctionSequenceIndex = junction.isForward() ? 0 : maxExtensionDistance;
 
         mMinAlignedPosition = minAlignedPosition;
         mMaxAlignedPosition = maxAlignedPosition;

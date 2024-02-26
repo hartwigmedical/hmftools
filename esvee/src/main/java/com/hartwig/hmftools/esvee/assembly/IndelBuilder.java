@@ -6,16 +6,13 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyExtender.isValidSupportCoordsVsJunction;
-import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.readQualFromJunction;
 import static com.hartwig.hmftools.esvee.common.SupportType.CANDIDATE_DISCORDANT;
 import static com.hartwig.hmftools.esvee.common.SupportType.INDEL;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
-import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
-import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.List;
 import java.util.Map;

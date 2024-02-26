@@ -2,9 +2,7 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.assembliesShareReads;
-import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,7 +12,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.common.AssemblySupport;
+import com.hartwig.hmftools.esvee.common.DiscordantGroup;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
 import com.hartwig.hmftools.esvee.common.PhaseGroup;
@@ -77,6 +75,8 @@ public class PhaseGroupBuilder
 
     private void findLinkedAssemblies(final JunctionGroup assemblyJunctionGroup, final JunctionAssembly assembly)
     {
+        // for the given assembly, looks in all overlapping other junction groups (based on remote regions, ref-side soft-clips, and
+        // the local junction group for indels) for other assemblies with shared reads
         if(assembly.remoteRegions().isEmpty() && assembly.refSideSoftClips().isEmpty() && !assembly.indel())
             return;
 
@@ -123,11 +123,19 @@ public class PhaseGroupBuilder
                 if(assembly == otherAssembly)
                     continue;
 
+                // for assemblies sharing read, the phase group scenarios are:
+                // - assemblies are already in the same phase group
+                // - no phase group exists for either so make a new one
+                // - the other assembly already has an existing phase group and this one doesn't so just add it
+                // - the other assembly already has an existing phase group, so does this one and so transfer this to the other
                 if(phaseGroup != null && otherAssembly.phaseGroup() == phaseGroup)
                 {
                     // already linked
                     continue;
                 }
+
+                // FIXME: could first of all check the regions overlap, since for large junction groups there's a high chance they won't
+                // and then all reads need to be checked in each
 
                 if(!assembliesShareReads(assembly, otherAssembly))
                     continue;
@@ -149,20 +157,35 @@ public class PhaseGroupBuilder
                 {
                     if(otherAssembly.phaseGroup() != null)
                     {
-                        if(otherAssembly.phaseGroup() != phaseGroup)
-                        {
-                            // transfer to the other one, and do this for assemblies in this group
-                            otherAssembly.phaseGroup().transferAssemblies(phaseGroup);
-                            mPhaseGroups.remove(phaseGroup);
-                            phaseGroup = otherAssembly.phaseGroup();
-                            linksWithExisting = true;
-                        }
+                        // transfer to the other one, and do this for assemblies in this group
+                        otherAssembly.phaseGroup().transferAssemblies(phaseGroup);
+                        mPhaseGroups.remove(phaseGroup);
+                        phaseGroup = otherAssembly.phaseGroup();
+                        linksWithExisting = true;
                     }
                     else
                     {
                         phaseGroup.addAssembly(otherAssembly);
                     }
                 }
+            }
+        }
+
+        for(JunctionGroup junctionGroup : linkedJunctionGroups)
+        {
+            for(DiscordantGroup discordantGroup : junctionGroup.discordantGroups())
+            {
+                // as above, check that remote regions overlap before checking reads
+                if(assembly.remoteRegions().stream().noneMatch(x -> x.overlaps(discordantGroup.remoteRegion())))
+                    continue;
+
+                if(assembly.support().stream().noneMatch(x -> discordantGroup.hasRead(x.read())))
+                    continue;
+
+                if(phaseGroup == null)
+                    phaseGroup = new PhaseGroup(assembly, null);
+
+                phaseGroup.addDiscordantGroup(discordantGroup);
             }
         }
 

@@ -176,11 +176,12 @@ public class JunctionProcessor
             System.exit(1);
 
         int totalJunctionAssemblies = junctionGroups.stream().mapToInt(x -> x.junctionAssemblies().size()).sum();
+        int totalDiscordantGroups = junctionGroups.stream().mapToInt(x -> x.discordantGroups().size()).sum();
 
         ReadStats combinedReadStats = new ReadStats();
         primaryAssemblyTasks.forEach(x -> combinedReadStats.merge(x.readStats()));
 
-        SV_LOGGER.info("created {} junction assemblies", totalJunctionAssemblies);
+        SV_LOGGER.info("created {} junction assemblies, {} discordant groups", totalJunctionAssemblies, totalDiscordantGroups);
 
         mPerfCounters.add(ThreadTask.mergePerfCounters(primaryAssemblyTasks.stream().collect(Collectors.toList())));
 
