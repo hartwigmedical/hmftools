@@ -256,6 +256,22 @@ public class UnmapReadsTest
     }
 
     @Test
+    public void testSupplementaryNotUnmappedChimeric2()
+    {
+        SupplementaryReadData suppReadData = new SupplementaryReadData(CHR_5, 10000, SUPP_POS_STRAND, READ_CIGAR, 60);
+
+        SAMRecord read = SamRecordTestUtils.createSamRecord(
+                READ_ID, CHR_2, 100, READ_BASES, READ_CIGAR, CHR_2, 200, false, true,
+                suppReadData, true, READ_BASES);
+
+        assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+        assertFalse(checkTransformRead(read, CHR_2));
+        assertFalse(read.getReadUnmappedFlag());
+        assertFalse(read.getMateUnmappedFlag());
+        assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+    }
+
+    @Test
     public void testUnmapSupplementaryWhenPrimaryIsUnmappedChimeric()
     {
         // Note that the suppReadData for a supplementary read refers to the associated primary read.
@@ -562,7 +578,8 @@ public class UnmapReadsTest
         // Note that the suppReadData for a supplementary read refers to the associated primary read.
         SupplementaryReadData suppReadData = new SupplementaryReadData(CHR_3, 550, SUPP_POS_STRAND, READ_CIGAR, 60);
 
-        SAMRecord read = SamRecordTestUtils.createSamRecordUnpaired(READ_ID, CHR_2, 100, READ_BASES, READ_CIGAR, false, true, suppReadData);
+        SAMRecord read = SamRecordTestUtils.createSamRecordUnpaired(
+                READ_ID, CHR_2, 100, READ_BASES, READ_CIGAR, false, true, suppReadData);
 
         // Note that when we are unmapping a supplementary we do not bother unsetting all of its properties, because we will drop an unmapped
         // supplementary read immediately.
