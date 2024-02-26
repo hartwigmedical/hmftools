@@ -31,30 +31,30 @@ public class CuppaDataFactoryTest
     {
         CuppaPrediction expectedPredictionMelanoma = ImmutableCuppaPrediction.builder()
                 .cancerType("Skin: Melanoma")
-                .likelihood(0.9968)
-                .genomicPositionClassifier(0.9966)
-                .snvPairwiseClassifier(0.8176)
-                .featureClassifier(0.9077)
-                .expressionPairwiseClassifier(1.0)
-                .altSjCohortClassifier(0.9999)
+                .likelihood(0.9843)
+                .genomicPositionClassifier(0.9643)
+                .snvPairwiseClassifier(0.9632)
+                .featureClassifier(0.9962)
+                .expressionPairwiseClassifier(0.983)
+                .altSjCohortClassifier(0.9691)
                 .build();
         CuppaPrediction expectedPredictionSkinOther = ImmutableCuppaPrediction.builder()
                 .cancerType("Skin: Other")
-                .likelihood(1.005E-4)
-                .genomicPositionClassifier(4.215E-4)
-                .snvPairwiseClassifier(0.1806)
-                .featureClassifier(6.333E-5)
-                .expressionPairwiseClassifier(8.853E-6)
-                .altSjCohortClassifier(1.505E-7)
+                .likelihood(0.0413136)
+                .genomicPositionClassifier(0.0309102)
+                .snvPairwiseClassifier(0.0040984)
+                .featureClassifier(0.0377109)
+                .expressionPairwiseClassifier(0.0106618)
+                .altSjCohortClassifier(0.0291157)
                 .build();
         CuppaPrediction expectedPredictionProstate = ImmutableCuppaPrediction.builder()
                 .cancerType("Prostate")
-                .likelihood(1.005E-4)
-                .genomicPositionClassifier(9.123E-5)
-                .snvPairwiseClassifier(5.793E-12)
-                .featureClassifier(2.02E-4)
-                .expressionPairwiseClassifier(7.483E-7)
-                .altSjCohortClassifier(9.09E-7)
+                .likelihood(0.0325366)
+                .genomicPositionClassifier(0.0229236)
+                .snvPairwiseClassifier(0.0008691)
+                .featureClassifier(0.0169241)
+                .expressionPairwiseClassifier(0.041203)
+                .altSjCohortClassifier(3.4526e-07)
                 .build();
 
         Map<String, CuppaPrediction> expectedPredictionsByCancerType = new HashMap<>();
@@ -103,7 +103,7 @@ public class CuppaDataFactoryTest
     {
         CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_WITH_RNA_TSV);
         int featureValue = CuppaDataFactory.getSvFeatureValue(cuppaPredictions, "sv.MAX_COMPLEX_SIZE");
-        int expectedFeatureValue = 751;
+        int expectedFeatureValue = 1000;
         assertEquals(expectedFeatureValue, featureValue);
     }
 
