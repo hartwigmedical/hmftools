@@ -6,6 +6,9 @@ import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 
@@ -14,31 +17,38 @@ public class PhaseGroup
     private int mId;
     private final List<JunctionAssembly> mAssemblies;
     private final List<PhaseSet> mPhaseSets;
+    private final List<AssemblyLink> mSecondarySplitLinks;
 
-    public PhaseGroup(final JunctionAssembly first, final JunctionAssembly second)
+    public PhaseGroup(final JunctionAssembly first, @Nullable final JunctionAssembly second)
     {
         mId = -1;
-        mAssemblies = Lists.newArrayList(first, second);
+        mAssemblies = Lists.newArrayList(first);
         mPhaseSets = Lists.newArrayList();
-        first.setPhaseGroup(this);
-        second.setPhaseGroup(this);
-    }
+        mSecondarySplitLinks = Lists.newArrayList();
 
-    public PhaseGroup(final JunctionAssembly assembly)
-    {
-        mId = -1;
-        mAssemblies = List.of(assembly);
-        mPhaseSets = Collections.emptyList();
+        first.setPhaseGroup(this);
+
+        if(second != null)
+        {
+            mAssemblies.add(second);
+            second.setPhaseGroup(this);
+        }
     }
 
     public void setId(int id) { mId = id; }
     public int id() { return mId; }
 
     public List<PhaseSet> phaseSets() { return mPhaseSets; }
+    public List<AssemblyLink> secondaryLinks() { return mSecondarySplitLinks; }
 
     public PhaseSet findPhaseSet(final JunctionAssembly assembly)
     {
         return mPhaseSets.stream().filter(x -> x.hasAssembly(assembly)).findFirst().orElse(null);
+    }
+
+    public List<AssemblyLink> findSecondarySplitLinks(final JunctionAssembly assembly)
+    {
+        return mSecondarySplitLinks.stream().filter(x -> x.hasAssembly(assembly)).collect(Collectors.toList());
     }
 
     public boolean isSolo() { return mAssemblies.size() == 1; }

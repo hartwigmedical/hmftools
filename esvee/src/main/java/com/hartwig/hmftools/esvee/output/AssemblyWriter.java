@@ -115,6 +115,7 @@ public class AssemblyWriter
             sj.add("SvType");
             sj.add("SvLength");
             sj.add("InsertedBases");
+            sj.add("SecondaryLinks");
 
             sj.add("MergedAssemblies");
             sj.add("BranchedAssemblyIds");
@@ -318,6 +319,9 @@ public class AssemblyWriter
             {
                 sj.add("-1").add("0").add("").add("").add("").add("0").add("");
             }
+
+            List<AssemblyLink> secondarySplitLinks = phaseGroup != null ? phaseGroup.findSecondarySplitLinks(assembly) : Collections.emptyList();
+            sj.add(assemblyLinksStr(assembly, secondarySplitLinks));
 
             sj.add(String.valueOf(assembly.mergedAssemblyCount()));
 

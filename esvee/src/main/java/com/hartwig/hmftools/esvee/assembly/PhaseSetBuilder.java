@@ -39,7 +39,6 @@ public class PhaseSetBuilder
     private final List<AssemblyLink> mSplitLinks;
     private final List<AssemblyLink> mFacingLinks;
     private final List<AssemblyLink> mSecondarySplitLinks;
-    private final List<SharedAssemblySupport> mAssemblySupportPairs;
 
     public PhaseSetBuilder(final RefGenomeInterface refGenome, final PhaseGroup phaseGroup)
     {
@@ -48,11 +47,10 @@ public class PhaseSetBuilder
         mAssemblyLinker = new AssemblyLinker();
         mPhaseSets = mPhaseGroup.phaseSets();
         mAssemblies = mPhaseGroup.assemblies();
+        mSecondarySplitLinks = mPhaseGroup.secondaryLinks();
 
         mSplitLinks = Lists.newArrayList();
-        mSecondarySplitLinks = Lists.newArrayList();
         mFacingLinks = Lists.newArrayList();
-        mAssemblySupportPairs = Lists.newArrayList();
     }
 
     public void buildPhaseSets()
@@ -87,6 +85,8 @@ public class PhaseSetBuilder
     private void formSplitLinks()
     {
         // where there are more than 2 assemblies, start with the ones with the most support and overlapping junction reads
+        List<SharedAssemblySupport> assemblySupportPairs = Lists.newArrayList();
+
         for(int i = 0; i < mAssemblies.size() - 1; ++i)
         {
             JunctionAssembly assembly1 = mAssemblies.get(i);
@@ -111,19 +111,19 @@ public class PhaseSetBuilder
                 }
 
                 if(sharedCount > 1)
-                    mAssemblySupportPairs.add(new SharedAssemblySupport(assembly1, assembly2, sharedCount));
+                    assemblySupportPairs.add(new SharedAssemblySupport(assembly1, assembly2, sharedCount));
             }
         }
 
-        Collections.sort(mAssemblySupportPairs, Comparator.comparingInt(x -> -x.SharedSupport));
+        Collections.sort(assemblySupportPairs, Comparator.comparingInt(x -> -x.SharedSupport));
 
         // build any split links and only allow an assembly to be used once
 
         Set<JunctionAssembly> linkedAssemblies = Sets.newHashSet();
 
-        while(!mAssemblySupportPairs.isEmpty())
+        while(!assemblySupportPairs.isEmpty())
         {
-            SharedAssemblySupport sharedReadPair = mAssemblySupportPairs.remove(0);
+            SharedAssemblySupport sharedReadPair = assemblySupportPairs.remove(0);
 
             JunctionAssembly assembly1 = sharedReadPair.Assembly1;
             JunctionAssembly assembly2 = sharedReadPair.Assembly2;
