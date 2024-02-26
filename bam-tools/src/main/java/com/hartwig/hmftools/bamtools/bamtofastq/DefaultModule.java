@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromos
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -22,7 +24,6 @@ import com.google.inject.util.Providers;
 import com.hartwig.hmftools.bamtools.bamtofastq.BindingAnnotations.Fastq1;
 import com.hartwig.hmftools.bamtools.bamtofastq.BindingAnnotations.Fastq2;
 import com.hartwig.hmftools.bamtools.bamtofastq.BindingAnnotations.TotalRegionCount;
-import com.hartwig.hmftools.bamtools.bamtofastq.collection.AtomicPStack;
 import com.hartwig.hmftools.bamtools.bamtofastq.readcache.ConcurrentPartitionedReadCache;
 import com.hartwig.hmftools.bamtools.bamtofastq.readcache.LockableReadCache;
 import com.hartwig.hmftools.bamtools.bamtofastq.readcache.ReadCache;
@@ -46,7 +47,7 @@ import htsjdk.samtools.SamReaderFactory;
 public class DefaultModule extends AbstractModule
 {
     private final BamToFastqConfig mConfig;
-    private final AtomicPStack<RegionTask> mRegionTasks;
+    private final Queue<RegionTask> mRegionTasks;
     private final int mTotalRegionTaskCount;
 
     public DefaultModule(final BamToFastqConfig config)
@@ -56,15 +57,15 @@ public class DefaultModule extends AbstractModule
         mTotalRegionTaskCount = mRegionTasks.size();
     }
 
-    private static AtomicPStack<RegionTask> getRegionTasks(final BamToFastqConfig config)
+    private static Queue<RegionTask> getRegionTasks(final BamToFastqConfig config)
     {
-        AtomicPStack<RegionTask> regionTasks = new AtomicPStack<>();
-        regionTasks.push(RegionTask.UNMAPPED_READS);
+        Queue<RegionTask> regionTasks = new ConcurrentLinkedQueue<>();
+        regionTasks.add(RegionTask.UNMAPPED_READS);
         for(SAMSequenceRecord refSequence : config.RefGenome.refGenomeFile().getSequenceDictionary().getSequences())
         {
             for(ChrBaseRegion partition : partitionChromosome(refSequence, config.PartitionSize))
             {
-                regionTasks.push(RegionTask.createChrRegion(partition));
+                regionTasks.add(RegionTask.createChrRegion(partition));
             }
         }
 
@@ -104,7 +105,7 @@ public class DefaultModule extends AbstractModule
     public void configure()
     {
         bind(BamToFastqConfig.class).toInstance(mConfig);
-        bind(new TypeLiteral<AtomicPStack<RegionTask>>() {}).toInstance(mRegionTasks);
+        bind(new TypeLiteral<Queue<RegionTask>>() {}).toInstance(mRegionTasks);
         bind(new TypeLiteral<Supplier<SamReader>>() {}).toInstance(
                 () -> SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)));
         bind(AtomicInteger.class).toInstance(new AtomicInteger());

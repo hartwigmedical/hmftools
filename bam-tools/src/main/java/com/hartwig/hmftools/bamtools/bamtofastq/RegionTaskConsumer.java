@@ -4,12 +4,12 @@ import static com.hartwig.hmftools.bamtools.bamtofastq.BamToFastqConfig.BFQ_LOGG
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 
 import java.io.IOException;
+import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.bamtools.bamtofastq.collection.AtomicPStack;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 
 import htsjdk.samtools.SAMRecord;
@@ -20,7 +20,7 @@ public class RegionTaskConsumer extends Thread
     private final BamToFastqConfig mConfig;
     private final Supplier<SamReader> mSamReaderSupplier;
     private final Consumer<SAMRecord> mReadCache;
-    private final AtomicPStack<RegionTask> mRegionTasks;
+    private final Queue<RegionTask> mRegionTasks;
     private final AtomicInteger mTotalRegionsProcessedCount;
 
     private RegionTask mCurrentRegionTask;
@@ -28,7 +28,7 @@ public class RegionTaskConsumer extends Thread
     private long mReadsProcessedCount;
 
     public RegionTaskConsumer(final BamToFastqConfig config, final Supplier<SamReader> samReaderSupplier,
-            final Consumer<SAMRecord> readCache, final AtomicPStack<RegionTask> regionTasks, final AtomicInteger totalRegionsProcessedCount)
+            final Consumer<SAMRecord> readCache, final Queue<RegionTask> regionTasks, final AtomicInteger totalRegionsProcessedCount)
     {
         mConfig = config;
         mSamReaderSupplier = samReaderSupplier;
@@ -59,7 +59,7 @@ public class RegionTaskConsumer extends Thread
         {
             BamSlicer bamSlicer = new BamSlicer(0, true, false, false);
             bamSlicer.setKeepUnmapped();
-            while((mCurrentRegionTask = mRegionTasks.pop()) != null)
+            while((mCurrentRegionTask = mRegionTasks.poll()) != null)
             {
                 mCurrentRegionTask.slice(samReader, bamSlicer, this::processRead);
                 mTotalRegionsProcessedCount.getAndIncrement();

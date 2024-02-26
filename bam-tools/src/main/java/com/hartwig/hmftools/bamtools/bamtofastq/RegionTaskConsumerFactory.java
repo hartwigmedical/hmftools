@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.bamtools.bamtofastq;
 
+import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import com.google.inject.Inject;
-import com.hartwig.hmftools.bamtools.bamtofastq.collection.AtomicPStack;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -15,12 +15,12 @@ public class RegionTaskConsumerFactory
     private final BamToFastqConfig mConfig;
     private final Supplier<SamReader> mSamReaderSupplier;
     private final Consumer<SAMRecord> mReadCache;
-    private final AtomicPStack<RegionTask> mRegionTasks;
+    private final Queue<RegionTask> mRegionTasks;
     private final AtomicInteger mTotalRegionCount;
 
     @Inject
     public RegionTaskConsumerFactory(final BamToFastqConfig config, final Supplier<SamReader> samReaderSupplier,
-            final Consumer<SAMRecord> readCache, final AtomicPStack<RegionTask> regionTasks,
+            final Consumer<SAMRecord> readCache, final Queue<RegionTask> regionTasks,
             final AtomicInteger totalRegionCount)
     {
         mConfig = config;

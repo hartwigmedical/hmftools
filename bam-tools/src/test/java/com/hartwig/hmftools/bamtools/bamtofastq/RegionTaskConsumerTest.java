@@ -13,6 +13,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
+import com.google.common.collect.Queues;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -27,7 +29,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.Stage;
 import com.google.inject.TypeLiteral;
-import com.hartwig.hmftools.bamtools.bamtofastq.collection.AtomicPStack;
 import com.hartwig.hmftools.bamtools.bamtofastq.util.MockSamReader;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -87,14 +88,10 @@ public class RegionTaskConsumerTest
         {
             bind(BamToFastqConfig.class).toInstance(mConfig);
             bind(AtomicInteger.class).toInstance(new AtomicInteger());
-            bind(new TypeLiteral<AtomicPStack<RegionTask>>()
-            {
-            }).toInstance(new AtomicPStack<>(REGION_TASKS));
+            bind(new TypeLiteral<Queue<RegionTask>>() {}).toInstance(Queues.newArrayDeque(REGION_TASKS));
 
             bind(MockReadCache.class).in(Singleton.class);
-            bind(new TypeLiteral<Consumer<SAMRecord>>()
-            {
-            }).to(MockReadCache.class).in(Singleton.class);
+            bind(new TypeLiteral<Consumer<SAMRecord>>() {}).to(MockReadCache.class).in(Singleton.class);
 
             bind(RegionTaskConsumerFactory.class).in(Singleton.class);
         }
