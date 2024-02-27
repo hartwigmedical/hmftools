@@ -60,11 +60,8 @@ class TestCuppaVisPlotter:
     def test_can_plot_one_sample(self):
         plot_path = os.path.join(tempfile.gettempdir(), "cuppa_vis.png")
 
-        builder = CuppaVisDataBuilder(MockVisData.predictions, sample_id=1)
-        vis_data = builder.build()
-
         plotter = CuppaVisPlotter(
-            vis_data=vis_data,
+            vis_data=MockVisData.vis_data,
             plot_path=plot_path,
         )
         plotter.plot()
