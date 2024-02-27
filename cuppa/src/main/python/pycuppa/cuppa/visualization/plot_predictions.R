@@ -67,7 +67,9 @@ get_plot_data_probs <- function(VIS_DATA, data_value_rounding = 2){
 
    plot_data <- subset(VIS_DATA, data_type=="prob")
 
-   plot_data$row_label <- toupper(plot_data$clf_name)
+   plot_data$row_label <- toupper(gsub("_"," ", plot_data$clf_name))
+   plot_data$row_label[plot_data$row_label == "GENE EXP"] <- "GENE EXPRESSION"
+   plot_data$row_label[plot_data$row_label == "GEN POS"] <- "GENOMIC POSITION"
    plot_data$row_group <- toupper(plot_data$clf_group)
 
    ## Data label --------------------------------
@@ -366,7 +368,7 @@ plot_probs <- function(VIS_DATA){
 plot_cv_performance <- function(VIS_DATA, data_value_rounding = 2){
    plot_data <- subset(VIS_DATA, data_type=="cv_performance")
 
-   plot_data$row_group <- "training_set"
+   plot_data$row_group <- "training set"
    plot_data$row_label <- plot_data$feat_name
 
    ## Data label --------------------------------
@@ -408,7 +410,7 @@ plot_cv_performance <- function(VIS_DATA, data_value_rounding = 2){
       guide=guide_colorbar(frame.colour="black", ticks.colour="black", barheight=3.5)
    ) +
    #guides(fill=FALSE) +
-   labs(title="DNA_COMBINED: Training set performance", fill="Metric value") +
+   labs(title="DNA COMBINED: Training set performance", fill="Metric value") +
    theme(legend.justification=c("left", "bottom"))
 }
 
@@ -440,7 +442,7 @@ plot_signatures <- function(
 
       feat_value <- round(feat_value, feat_value_rounding)
 
-      paste0(feat_name, " = ", feat_value, " (", perc, "%)")
+      paste0(gsub("_", " ", feat_name), " = ", feat_value, " (", perc, "%)")
    })
 
    ## Discretize quantiles --------------------------------
@@ -477,9 +479,10 @@ plot_feat_contrib <- function(VIS_DATA){
    ## Parse feature names --------------------------------
    affixes <- as.data.frame(do.call(
       rbind,
-      str_split(plot_data$feat_name, '[.]', n=2)
+      str_split(gsub("_", " ", plot_data$feat_name), '[.]', n=2)
    ))
    colnames(affixes) <- c("feat_type", "feat_basename")
+   affixes$feat_type[affixes$feat_type == "driver"] <- "driver (DL)"
 
    ## Format labels --------------------------------
    plot_data$row_group <- affixes$feat_type
@@ -515,7 +518,7 @@ plot_feat_contrib <- function(VIS_DATA){
       feat_value_label[feat_value==0] <- "0"
       feat_value_label[feat_value==1] <- "1"
 
-      paste0(affixes$feat_basename, " = ", feat_value_label)
+      paste0(ifelse(grepl("\\.", affixes$feat_basename), paste(gsub("\\.", " ", affixes$feat_basename), " (", feat_value_label, ")", sep = ""), paste(affixes$feat_basename, "=", feat_value_label, sep = " ")))
    })
    
    ## Legend breaks --------------------------------
