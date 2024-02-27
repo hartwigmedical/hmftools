@@ -69,8 +69,8 @@ import com.hartwig.hmftools.sage.filter.StrandBiasData;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.read.SplitReadUtils;
-import com.hartwig.hmftools.sage.vis.VariantVis;
 import com.hartwig.hmftools.sage.sync.FragmentData;
+import com.hartwig.hmftools.sage.vis.VariantVis;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -505,7 +505,8 @@ public class ReadContextCounter//  extends SimpleVariant
         registerRawSupport(rawContext, qualityScores.RecalibratedBaseQuality);
 
         // switch back to the old method to test for jitter
-        RealignedContext jitterRealign = Realignment.realignedAroundIndex(mReadContext, readIndex, record.getReadBases(), getMaxRealignDistance(record));
+        RealignedContext jitterRealign =
+                Realignment.realignedAroundIndex(mReadContext, readIndex, record.getReadBases(), record.getBaseQualities(), getMaxRealignDistance(record));
 
         if(rawContext.ReadIndexInSoftClip && !rawContext.AltSupport)
         {

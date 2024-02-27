@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.evidence.RealignedContext.NONE;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
@@ -16,7 +17,7 @@ public class Realignment
     private static final Repeat NO_REPEAT = new Repeat(0, 0);
 
     public static RealignedContext realignedAroundIndex(
-            final ReadContext readContext, final int otherBaseIndex, final byte[] otherBases, int maxSize)
+            final ReadContext readContext, final int otherBaseIndex, final byte[] otherBases, final byte[] otherBaseQuals, int maxSize)
     {
         int baseStartIndex = readContext.readBasesLeftFlankIndex();
         int baseEndIndex = readContext.readBasesRightFlankIndex();
@@ -24,15 +25,16 @@ public class Realignment
         int leftOffset = readContext.readBasesPositionIndex() - baseStartIndex;
         int otherStartIndex = otherBaseIndex - leftOffset;
 
-        return realigned(baseStartIndex, baseEndIndex, readContext.readBases(), otherStartIndex, otherBases, maxSize);
+        return realigned(baseStartIndex, baseEndIndex, readContext.readBases(), otherStartIndex, otherBases, otherBaseQuals, maxSize);
     }
 
     public static RealignedContext realigned(
-            int baseStartIndex, int baseEndIndex, final byte[] bases, final int otherBaseIndex, final byte[] otherBases, int maxDistance)
+            int baseStartIndex, int baseEndIndex, final byte[] bases, final int otherBaseIndex, final byte[] otherBases,
+            final byte[] otherBaseQuals, int maxDistance)
     {
         if(otherBaseIndex >= 0)
         {
-            final RealignedContext context = realigned(baseStartIndex, baseEndIndex, bases, otherBaseIndex, otherBases);
+            final RealignedContext context = realigned(baseStartIndex, baseEndIndex, bases, otherBaseIndex, otherBases, otherBaseQuals);
 
             if(context.Type != RealignedType.NONE)
                 return context;
@@ -44,7 +46,8 @@ public class Realignment
             int otherBaseIndexWithOffset = otherBaseIndex + i;
             if(i != 0 && otherBaseIndexWithOffset >= 0)
             {
-                final RealignedContext context = realigned(baseStartIndex, baseEndIndex, bases, otherBaseIndexWithOffset, otherBases);
+                final RealignedContext context =
+                        realigned(baseStartIndex, baseEndIndex, bases, otherBaseIndexWithOffset, otherBases, otherBaseQuals);
                 if(context.Type != RealignedType.NONE)
                 {
                     if(context.Type == RealignedType.EXACT)
@@ -58,11 +61,12 @@ public class Realignment
         return result;
     }
 
-    public static RealignedContext realigned(int baseStartIndex, int baseEndIndex, final byte[] bases, int otherIndex, byte[] otherBases)
+    public static RealignedContext realigned(int baseStartIndex, int baseEndIndex, final byte[] bases, int otherIndex, byte[] otherBases,
+            final byte[] otherBaseQuals)
     {
         int exactLength = baseEndIndex - baseStartIndex + 1;
 
-        int matchingBases = matchingBasesFromLeft(baseStartIndex, baseEndIndex, bases, otherIndex, otherBases);
+        int matchingBases = matchingBasesFromLeft(baseStartIndex, baseEndIndex, bases, otherIndex, otherBases, otherBaseQuals);
 
         if(matchingBases == exactLength)
         {
@@ -81,14 +85,16 @@ public class Realignment
         if(repeatLength == 0)
             return NONE;
 
-        int matchingBasesShortened = matchingBasesFromLeft(baseNextIndex + repeatLength, baseEndIndex, bases, otherNextIndex, otherBases);
+        int matchingBasesShortened =
+                matchingBasesFromLeft(baseNextIndex + repeatLength, baseEndIndex, bases, otherNextIndex, otherBases, otherBaseQuals);
         if(matchingBasesShortened > 0 && matchingBases + matchingBasesShortened == exactLength - repeatLength)
         {
             return new RealignedContext(
                     SHORTENED, matchingBasesShortened, otherNextIndex, repeat.RepeatCount, repeatLength, otherIndex, matchingBases);
         }
 
-        int matchingBasesLengthened = matchingBasesFromLeft(baseNextIndex - repeatLength, baseEndIndex, bases, otherNextIndex, otherBases);
+        int matchingBasesLengthened =
+                matchingBasesFromLeft(baseNextIndex - repeatLength, baseEndIndex, bases, otherNextIndex, otherBases, otherBaseQuals);
         if(matchingBasesLengthened > 0 && matchingBases + matchingBasesLengthened == exactLength + repeatLength)
         {
             return new RealignedContext(
@@ -98,7 +104,8 @@ public class Realignment
         return NONE;
     }
 
-    private static int matchingBasesFromLeft(int startIndex, int endIndex, byte[] bases, int otherStartIndex, byte[] otherBases)
+    private static int matchingBasesFromLeft(int startIndex, int endIndex, byte[] bases, int otherStartIndex, byte[] otherBases,
+            byte[] otherBaseQuals)
     {
         if(startIndex < 0)
             return 0;
@@ -108,10 +115,32 @@ public class Realignment
         for(int i = 0; i < maxLength; i++)
         {
             if(bases[startIndex + i] != otherBases[otherStartIndex + i])
+            {
+                if(isLowBaseQual(otherBaseQuals, otherStartIndex + i))
+                {
+                    continue;
+                }
+
                 return i;
+            }
         }
 
         return maxLength;
+    }
+
+    private static boolean isLowBaseQual(final byte[] baseQualities, int bqIndex)
+    {
+        if(baseQualities == null)
+        {
+            return false;
+        }
+
+        if(bqIndex < 0 || bqIndex >= baseQualities.length)
+        {
+            return false;
+        }
+
+        return baseQualities[bqIndex] < MATCHING_BASE_QUALITY;
     }
 
     private static Repeat repeatCount(int index, byte[] bases)
