@@ -518,7 +518,7 @@ plot_feat_contrib <- function(VIS_DATA){
       feat_value_label[feat_value==0] <- "0"
       feat_value_label[feat_value==1] <- "1"
 
-      paste0(ifelse(grepl("\\.", affixes$feat_basename), paste(gsub("\\.", " ", affixes$feat_basename), " (", feat_value_label, ")", sep = ""), paste(affixes$feat_basename, "=", feat_value_label, sep = " ")))
+      paste0(ifelse(grepl("\\.", affixes$feat_basename), paste(gsub("\\.", " ", affixes$feat_basename), " (", feat_value_label, ")", sep = ""), ifelse((affixes$feat_basename == "is male") | (affixes$feat_basename == "whole genome duplication"), paste(affixes$feat_basename, "=", feat_value_label, sep = " "), paste(affixes$feat_basename, "=", feat_value_label, sep = " "))))
    })
    
    ## Legend breaks --------------------------------
