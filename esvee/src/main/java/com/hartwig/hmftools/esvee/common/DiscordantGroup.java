@@ -144,6 +144,6 @@ public class DiscordantGroup
 
     public String toString()
     {
-        return format("reads(%d) remote(%s)", mReads.size(), mRemoteRegion);
+        return format("junc(%s) reads(%d) remote(%s)", mJunction.coords(), mReads.size(), mRemoteRegion);
     }
 }

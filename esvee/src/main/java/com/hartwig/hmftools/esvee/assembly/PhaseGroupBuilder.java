@@ -2,7 +2,9 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.common.AssemblyUtils.assembliesShareReads;
+import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
+import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
+import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 
 import java.util.Collections;
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.SvConfig;
+import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.DiscordantGroup;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
@@ -134,11 +137,21 @@ public class PhaseGroupBuilder
                     continue;
                 }
 
-                // FIXME: could first of all check the regions overlap, since for large junction groups there's a high chance they won't
-                // and then all reads need to be checked in each
-
                 if(!assembliesShareReads(assembly, otherAssembly))
                     continue;
+
+                // IDEA: first of all check the regions overlap, since for large junction groups there's a high chance they won't
+                // and then all reads need to be checked in each
+                // finds too many examples where they do share reads, maybe the 1K distance buffer is too small or they are sharing
+                // supplementaries whose remote regions were purged
+
+                /*
+                boolean assemblyRegionsOverlap = assemblyJunctionGroup == junctionGroup || assembliesOverlap(assembly, otherAssembly);
+                if(!assemblyRegionsOverlap)
+                {
+                    SV_LOGGER.debug("asm({}) and asm({}) share reads without any overlaps", assembly, otherAssembly);
+                }
+                */
 
                 if(phaseGroup == null)
                 {
@@ -193,6 +206,50 @@ public class PhaseGroupBuilder
         {
             mPhaseGroups.add(phaseGroup);
         }
+    }
+
+    private static boolean assembliesOverlap(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        for(RemoteRegion region : first.remoteRegions())
+        {
+            int regionStart = region.start() - BAM_READ_JUNCTION_BUFFER;
+            int regionEnd = region.start() - BAM_READ_JUNCTION_BUFFER;
+
+            if(positionWithin(second.junction().Position, regionStart, regionEnd))
+                return true;
+        }
+
+        for(RemoteRegion region : second.remoteRegions())
+        {
+            int regionStart = region.start() - BAM_READ_JUNCTION_BUFFER;
+            int regionEnd = region.start() - BAM_READ_JUNCTION_BUFFER;
+
+            if(positionWithin(first.junction().Position, regionStart, regionEnd))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static boolean assembliesShareReads(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        // tests matching reads in both the junction reads and any extension reads (ie discordant)
+        for(AssemblySupport support : first.support())
+        {
+            if(support.type() == JUNCTION_MATE)
+                continue;
+
+            if(hasMatchingFragment(second.support(), support.read()))
+                return true;
+        }
+
+        for(AssemblySupport support : first.candidateSupport())
+        {
+            if(hasMatchingFragment(second.support(), support.read()))
+                return true;
+        }
+
+        return false;
     }
 
     private List<JunctionGroup> findOverlappingJunctionGroups(final JunctionGroup assemblyJunctionGroup, final RemoteRegion region)

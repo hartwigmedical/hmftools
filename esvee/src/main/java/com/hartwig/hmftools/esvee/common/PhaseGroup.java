@@ -82,6 +82,7 @@ public class PhaseGroup
     {
         mDiscordantGroups.add(discordantGroup);
 
+        /*
         if(discordantGroup.phaseGroup() != null)
         {
             // not sure yet whether this matters
@@ -89,9 +90,10 @@ public class PhaseGroup
         }
 
         discordantGroup.setPhaseGroup(this);
+        */
     }
 
     public List<JunctionAssembly> assemblies() { return mAssemblies; }
 
-    public String toString() { return format("id(%d) assemblies(%d)", mId, mAssemblies.size()); }
+    public String toString() { return format("id(%d) assemblies(%d) discGroups(%d)", mId, mAssemblies.size(), mDiscordantGroups.size()); }
 }
