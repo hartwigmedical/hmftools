@@ -180,9 +180,9 @@ public class RealignmentTest
         int startIndex = 0;
         int endIndex = sequence.length() - 1;
 
-        assertRealigned(EXACT, realigned(startIndex, endIndex, sequence.getBytes(), startIndex, sequence.getBytes(), null, 0));
-        assertRealigned(NONE, realigned(startIndex, endIndex, sequence.getBytes(), startIndex, truncatedAtEnd.getBytes(), null, 0));
-        assertRealigned(NONE, realigned(startIndex, endIndex, sequence.getBytes(), -2, truncatedAtStart.getBytes(), null, 0));
+        assertRealigned(EXACT, realigned(null, startIndex, endIndex, sequence.getBytes(), startIndex, sequence.getBytes(), null, 0));
+        assertRealigned(NONE, realigned(null, startIndex, endIndex, sequence.getBytes(), startIndex, truncatedAtEnd.getBytes(), null, 0));
+        assertRealigned(NONE, realigned(null, startIndex, endIndex, sequence.getBytes(), -2, truncatedAtStart.getBytes(), null, 0));
     }
 
     @Test
@@ -192,18 +192,18 @@ public class RealignmentTest
         int startIndex = 3;
         int endIndex = startIndex + 55;
 
-        assertRealigned(EXACT, realigned(startIndex, endIndex, sequence.getBytes(), startIndex, sequence.getBytes(), null, 0));
+        assertRealigned(EXACT, realigned(null, startIndex, endIndex, sequence.getBytes(), startIndex, sequence.getBytes(), null, 0));
 
-        assertRealigned(NONE, realigned(startIndex, endIndex, sequence.getBytes(), startIndex - 1, sequence.getBytes(), null, 0));
-        assertRealigned(NONE, realigned(startIndex, endIndex, sequence.getBytes(), startIndex + 1, sequence.getBytes(), null, 0));
+        assertRealigned(NONE, realigned(null, startIndex, endIndex, sequence.getBytes(), startIndex - 1, sequence.getBytes(), null, 0));
+        assertRealigned(NONE, realigned(null, startIndex, endIndex, sequence.getBytes(), startIndex + 1, sequence.getBytes(), null, 0));
 
-        assertRealigned(NONE, realigned(startIndex, endIndex, sequence.getBytes(), startIndex - 2, sequence.getBytes(), null, 1));
-        assertRealigned(EXACT, realigned(startIndex, endIndex, sequence.getBytes(), startIndex - 1, sequence.getBytes(), null, 1));
-        assertRealigned(EXACT, realigned(startIndex, endIndex, sequence.getBytes(), startIndex + 1, sequence.getBytes(), null, 1));
-        assertRealigned(NONE, realigned(startIndex, endIndex, sequence.getBytes(), startIndex + 2, sequence.getBytes(), null, 1));
+        assertRealigned(NONE, realigned(null, startIndex, endIndex, sequence.getBytes(), startIndex - 2, sequence.getBytes(), null, 1));
+        assertRealigned(EXACT, realigned(null, startIndex, endIndex, sequence.getBytes(), startIndex - 1, sequence.getBytes(), null, 1));
+        assertRealigned(EXACT, realigned(null, startIndex, endIndex, sequence.getBytes(), startIndex + 1, sequence.getBytes(), null, 1));
+        assertRealigned(NONE, realigned(null, startIndex, endIndex, sequence.getBytes(), startIndex + 2, sequence.getBytes(), null, 1));
 
-        assertRealigned(EXACT, realigned(startIndex, endIndex, sequence.getBytes(), startIndex - 2, sequence.getBytes(), null, 2));
-        assertRealigned(EXACT, realigned(startIndex, endIndex, sequence.getBytes(), startIndex + 2, sequence.getBytes(), null, 2));
+        assertRealigned(EXACT, realigned(null, startIndex, endIndex, sequence.getBytes(), startIndex - 2, sequence.getBytes(), null, 2));
+        assertRealigned(EXACT, realigned(null, startIndex, endIndex, sequence.getBytes(), startIndex + 2, sequence.getBytes(), null, 2));
     }
 
     @Test
@@ -216,9 +216,9 @@ public class RealignmentTest
         int startIndex = 0;
         int endIndex = ref.length() - 1;
 
-        assertRealigned(EXACT, realigned(startIndex, endIndex, ref.getBytes(), startIndex, ref.getBytes(), null, 10));
-        assertRealigned(SHORTENED, 9, realigned(startIndex, endIndex, ref.getBytes(), startIndex, shorter.getBytes(), null, 10));
-        assertRealigned(LENGTHENED, 11, realigned(startIndex, endIndex, ref.getBytes(), startIndex, longer.getBytes(), null, 10));
+        assertRealigned(EXACT, realigned(null, startIndex, endIndex, ref.getBytes(), startIndex, ref.getBytes(), null, 10));
+        assertRealigned(SHORTENED, 9, realigned(null, startIndex, endIndex, ref.getBytes(), startIndex, shorter.getBytes(), null, 10));
+        assertRealigned(LENGTHENED, 11, realigned(null, startIndex, endIndex, ref.getBytes(), startIndex, longer.getBytes(), null, 10));
     }
 
     @Test
@@ -231,9 +231,9 @@ public class RealignmentTest
         int startIndex = 0;
         int endIndex = ref.length() - 1;
 
-        assertRealigned(EXACT, realigned(startIndex, endIndex, ref.getBytes(), startIndex, ref.getBytes(), null, 10));
-        assertRealigned(SHORTENED, 4, realigned(startIndex, endIndex, ref.getBytes(), startIndex, shorter.getBytes(), null, 10));
-        assertRealigned(LENGTHENED, 6, realigned(startIndex, endIndex, ref.getBytes(), startIndex, longer.getBytes(), null, 10));
+        assertRealigned(EXACT, realigned(null, startIndex, endIndex, ref.getBytes(), startIndex, ref.getBytes(), null, 10));
+        assertRealigned(SHORTENED, 4, realigned(null, startIndex, endIndex, ref.getBytes(), startIndex, shorter.getBytes(), null, 10));
+        assertRealigned(LENGTHENED, 6, realigned(null, startIndex, endIndex, ref.getBytes(), startIndex, longer.getBytes(), null, 10));
     }
 
     private static void assertRealigned(RealignedType expectedType, int expectedCount, RealignedContext context)
