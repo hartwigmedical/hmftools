@@ -1,17 +1,13 @@
 package com.hartwig.hmftools.orange.algo;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -41,7 +37,6 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
 import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.common.sage.GeneDepthFile;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
@@ -63,6 +58,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRnaConfig;
+import com.hartwig.hmftools.orange.OrangeWGSRefConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
@@ -77,6 +73,7 @@ import com.hartwig.hmftools.orange.algo.purple.PurpleData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariantFactory;
+import com.hartwig.hmftools.orange.algo.sage.GermlineMVLHFactory;
 import com.hartwig.hmftools.orange.algo.util.GermlineConversion;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
@@ -372,69 +369,18 @@ public class OrangeAlgo
     private static Map<String, Double> loadGermlineMVLHPerGene(@NotNull OrangeConfig config, @NotNull List<DriverGene> driverGenes)
             throws IOException
     {
-        String sageGermlineGeneCoverageTsv = config.wgsRefConfig() != null ? config.wgsRefConfig().sageGermlineGeneCoverageTsv() : null;
+        OrangeWGSRefConfig orangeWGSRefConfig = config.wgsRefConfig();
+        String sageGermlineGeneCoverageTsv = orangeWGSRefConfig != null ? orangeWGSRefConfig.sageGermlineGeneCoverageTsv() : null;
         if(sageGermlineGeneCoverageTsv == null)
         {
             LOGGER.info("Skipping loading of germline MVLH as no germline gene coverage has been provided");
             return null;
         }
 
-        List<String> lines = Files.readAllLines(new File(sageGermlineGeneCoverageTsv).toPath());
-
-        Map<String, Double> mvlhPerGene = parseMVLHPerGene(lines, driverGenes);
-
+        Map<String, Double> mvlhPerGene = GermlineMVLHFactory.loadGermlineMVLHPerGene(sageGermlineGeneCoverageTsv, driverGenes);
         LOGGER.info("Loaded MVLH data for {} genes", mvlhPerGene.keySet().size());
+
         return mvlhPerGene;
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static Map<String, Double> parseMVLHPerGene(@NotNull List<String> lines, @NotNull List<DriverGene> driverGenes)
-    {
-        String header = lines.get(0);
-
-        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
-        int geneIndex = fieldsIndexMap.get(GeneDepthFile.COL_GENE);
-        int mvlhIndex = fieldsIndexMap.get(GeneDepthFile.COL_MV_LIKELIHOOD);
-
-        Map<String, Double> mvlhPerGene = Maps.newTreeMap();
-        for(String line : lines.subList(1, lines.size()))
-        {
-            String[] values = line.split(TSV_DELIM);
-            String gene = values[geneIndex];
-            Double mvlh = Double.parseDouble(values[mvlhIndex]);
-
-            DriverGene matchingDriverGene = findMatchingDriverGene(gene, driverGenes);
-            if(matchingDriverGene != null && hasReliableMVLH(matchingDriverGene))
-            {
-                mvlhPerGene.put(gene, mvlh);
-            }
-        }
-        return mvlhPerGene;
-    }
-
-    @Nullable
-    private static DriverGene findMatchingDriverGene(@NotNull String geneName, @NotNull List<DriverGene> driverGenes)
-    {
-        List<DriverGene> matchingDriverGenes = driverGenes.stream().filter(d -> d.gene().equals(geneName)).collect(Collectors.toList());
-        if(matchingDriverGenes.size() == 1)
-        {
-            return matchingDriverGenes.get(0);
-        }
-        else if(matchingDriverGenes.isEmpty())
-        {
-            return null;
-        }
-        else
-        {
-            throw new IllegalStateException("More than one driver gene found with name " + geneName);
-        }
-    }
-
-    private static boolean hasReliableMVLH(@NotNull DriverGene driverGene)
-    {
-        // Note: fix this when SAGE germline starts running genome wide
-        return driverGene.reportSomatic() || driverGene.reportGermline() || driverGene.reportPGX();
     }
 
     @NotNull
