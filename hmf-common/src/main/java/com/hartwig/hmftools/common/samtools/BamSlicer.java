@@ -3,11 +3,24 @@ package com.hartwig.hmftools.common.samtools;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SAM_LOGGER;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.firstInPair;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+
+import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.QueryInterval;
@@ -15,6 +28,7 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 
 public class BamSlicer
 {
@@ -262,9 +276,91 @@ public class BamSlicer
         if(record.getSupplementaryAlignmentFlag() && !mKeepSupplementaries)
             return false;
 
-        if(record.getDuplicateReadFlag() && !mKeepDuplicates)
-            return false;
+        return !record.getDuplicateReadFlag() || mKeepDuplicates;
+    }
 
-        return true;
+    // farm out the asynchronous query tasks into the ExecutorService.
+    // \returns a CompletableFuture<Void> object, which the user can wait on.
+    // usage:
+    //    Collection<ChrBaseRegion> partitions = ...
+    //
+    //    BamSlicer bamSlicer = new BamSlicer(config.MinMappingQuality, false, false, false);
+    //    CompletableFuture<Void> bamSliceTasks = bamSlicer.queryAsync(new File(config.BamPath), readerFactory, partitions,
+    //            false, executorService, this::processRead, this::regionComplete);
+    //
+    //    //wait for all tasks to complete
+    //    bamSliceTasks.get();
+    //
+    public CompletableFuture<Void> queryAsync(final File bamFile, final SamReaderFactory readerFactory, Collection<ChrBaseRegion> regions,
+            boolean queryUnmapped, final ExecutorService executorService, final BiConsumer<SAMRecord, ChrBaseRegion> samRecordConsumer,
+            @Nullable final Consumer<ChrBaseRegion> regionCompleteNotify)
+    {
+        SAM_LOGGER.info("queryAsync of {} bam regions from {}", regions.size(), bamFile.getPath());
+
+        List<SamReader> samReaderList = Collections.synchronizedList(new ArrayList<>());
+
+        // create one bam reader per thread
+        final ThreadLocal<SamReader> threadBamReader = ThreadLocal.withInitial(() -> {
+            SamReader samReader = readerFactory.open(bamFile);
+            samReaderList.add(samReader);
+            return samReader;
+        });
+
+        final List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+        if(queryUnmapped)
+        {
+            if(!mKeepUnmapped)
+            {
+                SAM_LOGGER.warn("queryAsync on BamSlicer with keepUnmapped=false");
+            }
+            Runnable task = () -> {
+                SAM_LOGGER.info("queryAsync unmapped");
+                queryUnmapped(threadBamReader.get(), samRecord -> samRecordConsumer.accept(samRecord, null));
+            };
+            futures.add(CompletableFuture.runAsync(task, executorService));
+        }
+
+        for(ChrBaseRegion region : regions)
+        {
+            Runnable task = () -> {
+                SAM_LOGGER.printf(Level.INFO, "queryAsync region(%s:%,d-%,d)", region.chromosome(), region.start(), region.end());
+                slice(threadBamReader.get(), region, samRecord -> samRecordConsumer.accept(samRecord, region));
+                if(regionCompleteNotify != null)
+                {
+                    regionCompleteNotify.accept(region);
+                }
+            };
+            futures.add(CompletableFuture.runAsync(task, executorService));
+        }
+
+        CompletableFuture<Void> future = CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
+
+        // add a task that clean up all the bam readers after all the bam reading tasks are completed
+        future = future.thenRun(() -> {
+            // close all sam readers
+            for(SamReader samReader : samReaderList)
+            {
+                SAM_LOGGER.info("cleaning up");
+                try
+                {
+                    samReader.close();
+                }
+                catch(IOException e)
+                {
+                    throw new UncheckedIOException(e);
+                }
+            }
+            SAM_LOGGER.info("queryAsync of {} partitions complete", regions.size());
+        });
+
+        return future;
+    }
+
+    // overload for users who do not need the region complete consumer
+    public CompletableFuture<Void> queryAsync(final File bamFile, final SamReaderFactory readerFactory, Collection<ChrBaseRegion> regions,
+            boolean queryUnmapped, final ExecutorService executorService, final BiConsumer<SAMRecord, ChrBaseRegion> samRecordConsumer)
+    {
+        return queryAsync(bamFile, readerFactory, regions, queryUnmapped, executorService, samRecordConsumer, null);
     }
 }
