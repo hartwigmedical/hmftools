@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.quality;
 
-public enum UltimaVariantModel
+public enum UltimaModelType
 {
     HOMOPOLYMER_ADJUSTMENT,
     HOMOPOLYMER_DELETION,

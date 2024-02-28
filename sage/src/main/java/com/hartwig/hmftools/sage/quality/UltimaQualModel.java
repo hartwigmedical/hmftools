@@ -4,14 +4,14 @@ import htsjdk.samtools.SAMRecord;
 
 public abstract class UltimaQualModel
 {
-    private final UltimaVariantModel mType;
+    private final UltimaModelType mType;
 
-    public UltimaQualModel(final UltimaVariantModel type)
+    public UltimaQualModel(final UltimaModelType type)
     {
         mType = type;
     }
 
-    public UltimaVariantModel type() { return mType; }
+    public UltimaModelType type() { return mType; }
 
     public abstract byte calculateQual(final SAMRecord record, int varReadIndex);
 }
