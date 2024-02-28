@@ -45,7 +45,7 @@ public class SampleOneCategoryTask implements Callable
     {
         try
         {
-            if(mSampleIndex % 100 == 0 | mSampleIndex == 1)
+            if(mConfig.isMultiSample() & (mSampleIndex % 100 == 0 | mSampleIndex == 1))
             {
                 CUP_LOGGER.info("  sampleId({}): {}/{}", getSampleId(), mSampleIndex + 1, mConfig.SampleIds.size());
             }
