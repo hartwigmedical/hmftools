@@ -112,7 +112,7 @@ public class CuppaDataPrep
         return path;
     }
 
-    public class SingleSample
+    private class SingleSample
     {
         public List<DataItem> getData(HashMap<CategoryType, CategoryPrep> dataPreparers)
         {
@@ -176,7 +176,7 @@ public class CuppaDataPrep
         }
     }
 
-    public class MultiSample
+    private class MultiSample
     {
         public DataItemMatrix getDataOneCategory(CategoryPrep categoryPrep)
         {
