@@ -1,2 +1,2 @@
 id	svId	isStart	gene	transcriptId	canonical	geneOrientation	disruptive	reportedDisruption	undisruptedCopyNumber	regionType	codingType	biotype	exonicBasePhase	nextSpliceExonRank	nextSpliceExonPhase	nextSpliceDistance	totalExonCount	type	chromosome	orientation	strand	chrBand	exonUp	exonDown	junctionCopyNumber
-0	16	false	CASP8	ENST00000358485	true	Upstream	true	false	3.0200	INTRONIC	CODING	protein_coding	1	7	1	1851	9	INV	2	1	1	q33.1	7	8	1.9500
+0	17	false	CASP8	ENST00000358485	true	Upstream	true	false	3.0300	INTRONIC	CODING	protein_coding	1	7	1	1851	9	INV	2	1	1	q33.1	7	8	0.7860

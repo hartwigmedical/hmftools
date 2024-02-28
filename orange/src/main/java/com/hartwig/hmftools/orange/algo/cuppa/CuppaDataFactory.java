@@ -19,7 +19,14 @@ import org.jetbrains.annotations.NotNull;
 public final class CuppaDataFactory
 {
     @NotNull
-    public static CuppaData create(@NotNull CuppaPredictions cuppaPredictions) throws Exception
+    public static CuppaData create(@NotNull String cuppaVisDataTsv) throws Exception
+    {
+        CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(cuppaVisDataTsv);
+        return CuppaDataFactory.createFromPredictions(cuppaPredictions);
+    }
+
+    @NotNull
+    private static CuppaData createFromPredictions(@NotNull CuppaPredictions cuppaPredictions) throws Exception
     {
         List<CuppaPrediction> predictions = extractSortedProbabilities(cuppaPredictions);
 
@@ -45,7 +52,7 @@ public final class CuppaDataFactory
     }
 
     @NotNull
-    public static List<CuppaPrediction> extractSortedProbabilities(@NotNull CuppaPredictions cuppaPredictions)
+    private static List<CuppaPrediction> extractSortedProbabilities(@NotNull CuppaPredictions cuppaPredictions)
     {
         CuppaPredictions probabilitiesAllClassifiers = cuppaPredictions
                 .subsetByDataType(Categories.DataType.PROB)

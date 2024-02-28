@@ -23,11 +23,6 @@ import org.jetbrains.annotations.Nullable;
 
 public final class GermlineLossOfHeterozygosityTable
 {
-
-    private GermlineLossOfHeterozygosityTable()
-    {
-    }
-
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<PurpleLossOfHeterozygosity> lossOfHeterozygosities,
             @Nullable IsofoxRecord isofox, @NotNull ReportResources reportResources)
