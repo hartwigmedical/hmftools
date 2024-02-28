@@ -197,6 +197,7 @@ public class TestUtils
     public static SAMRecord buildSamRecord(final int alignmentStart, final String cigar, final String readString, final byte[] qualities)
     {
         final SAMRecord record = new SAMRecord(null);
+        record.setReferenceName(CHR_1);
         record.setAlignmentStart(alignmentStart);
         record.setCigarString(cigar);
         record.setReadString(readString);
