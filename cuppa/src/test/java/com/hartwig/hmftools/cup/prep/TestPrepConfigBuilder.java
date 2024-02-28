@@ -18,6 +18,7 @@ public class TestPrepConfigBuilder
     public static final List<CategoryType> TEST_CATEGORIES = CategoryType.getDnaCategories();
     public static final String TEST_OUTPUT_DIR = "";
     public static final String TEST_OUTPUT_ID = null;
+    public static final int TEST_THREADS = 1;
     public static final boolean TEST_WRITE_BY_CATEGORY = true;
     public static final String TEST_ALT_SPLICE_JUNCTION_SITES = Resources.getResource("alt_sj.selected_loci.minimal.tsv").getPath();
     public static final String TEST_SAMPLE_DATA_DIR = Resources.getResource("pipeline_output/").getPath();
@@ -27,6 +28,7 @@ public class TestPrepConfigBuilder
     public List<CategoryType> Categories = TEST_CATEGORIES;
     private String OutputDir = TEST_OUTPUT_DIR;
     private String OutputId = TEST_OUTPUT_ID; // for multi-sample mode
+    private int Threads = TEST_THREADS;
     private boolean WriteByCategory = TEST_WRITE_BY_CATEGORY;
 
     private String SampleDataDir = "";
@@ -65,6 +67,12 @@ public class TestPrepConfigBuilder
     public TestPrepConfigBuilder outputDir(String outputDir)
     {
         OutputDir = outputDir;
+        return this;
+    }
+
+    public TestPrepConfigBuilder threads(int threads)
+    {
+        Threads = threads;
         return this;
     }
 
@@ -127,6 +135,7 @@ public class TestPrepConfigBuilder
                 RefGenVersion,
                 OutputDir,
                 OutputId,
+                Threads,
                 WriteByCategory,
                 SampleDataDir,
                 LinxDir,

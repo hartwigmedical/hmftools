@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cup.prep;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
@@ -41,6 +42,7 @@ public class PrepConfig
 
     public final String OutputDir;
     public final String OutputId; // for multi-sample mode
+    public final int Threads;
     public final boolean WriteByCategory;
 
     // pipeline directories, accepting wildcards
@@ -81,6 +83,7 @@ public class PrepConfig
 
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
+        Threads = parseThreads(configBuilder);
 
         WriteByCategory = SampleIds.size() > 1 && configBuilder.hasFlag(WRITE_FILE_BY_CATEGORY);
     }
@@ -129,6 +132,7 @@ public class PrepConfig
             final RefGenomeVersion refGenVersion,
             final String outputDir,
             final String outputId,
+            final int threads,
             final boolean writeByCategory,
             final String sampleDataDir,
             final String linxDir,
@@ -143,6 +147,7 @@ public class PrepConfig
         RefGenVersion = refGenVersion;
         OutputDir = outputDir;
         OutputId = outputId;
+        Threads = threads;
         WriteByCategory = writeByCategory;
         SampleDataDir = sampleDataDir;
         LinxDir = linxDir;
