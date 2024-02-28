@@ -82,14 +82,13 @@ public class DataItem
     @Override
     public String toString()
     {
-        return Index.toString() + ", Value=" + Value;
+        return Index + ", Value=" + Value;
     }
 
     public static class IndexComparator implements Comparator<Index>
     {
         private String padChrom(String chrom)
         {
-//            chrom = chrom.replace("chr", "");
             char padChar = (Character.isDigit(chrom.charAt(0))) ? '0' : 'a';
             return String.format("%2s", chrom).replace(' ', padChar);
         }
