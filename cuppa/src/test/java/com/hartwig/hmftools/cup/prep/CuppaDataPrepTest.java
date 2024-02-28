@@ -43,14 +43,14 @@ public class CuppaDataPrepTest
         CuppaDataPrep cuppaDataPrep = new CuppaDataPrep(prepConfig);
         cuppaDataPrep.run();
 
-        File outputPath = new File(CuppaDataPrep.SingleSample.getOutputPath(prepConfig));
+        File outputPath = new File(cuppaDataPrep.getOutputPath(null));
         assertTrue(outputPath.exists());
 
         deleteTmpDir();
     }
 
     @Test
-    public void canRunMultiSamplePrep() throws IOException
+    public void canRunMultiSamplePrep()
     {
         TMP_DIR.mkdir();
 
@@ -60,6 +60,7 @@ public class CuppaDataPrepTest
                 .refGenomeVersion("V37")
                 .sampleDataDir(TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*")
                 .outputDir(TMP_DIR.toString())
+                .threads(4)
                 .build();
 
         CuppaDataPrep cuppaDataPrep = new CuppaDataPrep(prepConfig);
@@ -67,7 +68,7 @@ public class CuppaDataPrepTest
 
         for(CategoryType categoryType : CategoryType.getDnaCategories())
         {
-            File outputFile = new File(CuppaDataPrep.MultiSample.getOutputPath(prepConfig, categoryType));
+            File outputFile = new File(cuppaDataPrep.getOutputPath(categoryType));
             assertTrue(outputFile.exists());
         }
 
