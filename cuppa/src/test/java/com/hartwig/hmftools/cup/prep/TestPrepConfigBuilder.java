@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.cup.prep;
 
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
 import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
 
 import java.util.Arrays;
@@ -16,7 +13,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 public class TestPrepConfigBuilder
 {
     public static final String TEST_SAMPLE_ID_FILE = Resources.getResource("pipeline_output/sample_ids.csv").getPath();
-    public static final List<String> TEST_SAMPLE_IDS = Arrays.asList("PROSTATE01T", "SKINMERKEL01T");
+    public static final List<String> TEST_SAMPLE_IDS = Arrays.asList("COLO829v003T");
     public static final RefGenomeVersion TEST_REF_GENOME_VERSION = RefGenomeVersion.V37;
     public static final List<CategoryType> TEST_CATEGORIES = CategoryType.getDnaCategories();
     public static final String TEST_OUTPUT_DIR = "";
