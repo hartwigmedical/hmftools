@@ -18,10 +18,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.feature.FeaturePrep;
 import com.hartwig.hmftools.cup.rna.AltSpliceJunctionPrep;
@@ -87,32 +89,47 @@ public class CuppaDataPrep
         return dataPreparers;
     }
 
-    public static class SingleSample
+    public String getOutputPath(@Nullable CategoryType categoryType)
     {
-        public static List<DataItem> getData(HashMap<CategoryType, CategoryPrep> dataPreparers, String sampleId)
+        String path = mConfig.OutputDir + "/";
+
+        if(mConfig.isSingleSample())
+        {
+            path += mConfig.SampleIds.get(0) + ".cuppa_data" + TSV_ZIP_EXTENSION;
+            return path;
+        }
+
+        path += "cuppa_data.cohort";
+
+        if(categoryType != null)
+            path += "." + categoryType.toString().toLowerCase();
+
+        if(mConfig.OutputId != null)
+            path += "." + mConfig.OutputId;
+
+        path += TSV_ZIP_EXTENSION;
+
+        return path;
+    }
+
+    public class SingleSample
+    {
+        public List<DataItem> getData(HashMap<CategoryType, CategoryPrep> dataPreparers)
         {
             List<DataItem> dataItems = new ArrayList<>();
 
             for(CategoryType categoryType : dataPreparers.keySet())
             {
                 CategoryPrep categoryPrep = dataPreparers.get(categoryType);
-                List<DataItem> categoryDataItems = null;
-                try {
-                    CUP_LOGGER.info("  category({})", categoryPrep.categoryType());
-                    categoryDataItems = categoryPrep.extractSampleData(sampleId);
-                } catch(Exception e) {
-                    CUP_LOGGER.error("Feature extraction failed for category({})", categoryPrep.categoryType());
-                    System.exit(1);
-                }
-
-                assert categoryDataItems != null;
-                dataItems.addAll(categoryDataItems);
+                SampleOneCategoryTask sampleTask = new SampleOneCategoryTask(0, mConfig, categoryPrep, null);
+                sampleTask.run();
+                dataItems.addAll(sampleTask.getDataItems());
             }
 
             return dataItems;
         }
 
-        public static void writeData(List<DataItem> dataItems, String path)
+        public void writeData(List<DataItem> dataItems, String path)
         {
             try
             {
@@ -147,54 +164,33 @@ public class CuppaDataPrep
             }
         }
 
-        public static String getOutputPath(PrepConfig mConfig)
+        public void run()
         {
-            return mConfig.OutputDir + "/" + mConfig.SampleIds.get(0) + ".cuppa_data" + TSV_ZIP_EXTENSION;
-        }
-
-        public static void run(PrepConfig mConfig)
-        {
-            String sampleId = mConfig.SampleIds.get(0);
-
-            CUP_LOGGER.info("Extracting CUPPA features in single sample mode for sample({})", sampleId);
+            CUP_LOGGER.info("Extracting CUPPA features in single sample mode for sample({})", mConfig.SampleIds.get(0));
 
             HashMap<CategoryType, CategoryPrep> dataPreparers = buildDataPreparers(mConfig);
-            List<DataItem> dataItems = getData(dataPreparers, sampleId);
+            List<DataItem> dataItems = getData(dataPreparers);
 
-            String outputPath = getOutputPath(mConfig);
+            String outputPath = getOutputPath(null);
             writeData(dataItems, outputPath);
         }
     }
 
-    public static class MultiSample
+    public class MultiSample
     {
-        public static DataItemMatrix getDataOneCategory(CategoryPrep categoryPrep, String[] sampleIds)
+        public DataItemMatrix getDataOneCategory(CategoryPrep categoryPrep)
         {
-            int nSamples = sampleIds.length;
-
+            String[] sampleIds =  mConfig.SampleIds.toArray(String[]::new);
             ConcurrentHashMap<DataItem.Index, String[]> featureBySampleMatrix = new ConcurrentHashMap<>();
 
-            for(int sampleIndex = 0; sampleIndex < nSamples; sampleIndex++)
+            List<SampleOneCategoryTask> sampleTasks = new ArrayList<>();
+            for(int sampleIndex = 0; sampleIndex < mConfig.SampleIds.size(); ++sampleIndex)
             {
-                String sampleId = sampleIds[sampleIndex];
-
-                if(sampleIndex % 100 == 0 | sampleIndex == 1)
-                {
-                    CUP_LOGGER.info("  sampleId({}): {}/{}", sampleId, sampleIndex + 1, nSamples);
-                }
-
-                List<DataItem> dataItems = categoryPrep.extractSampleData(sampleId);
-
-                for(DataItem dataItem : dataItems)
-                {
-                    DataItem.Index featureIndex = dataItem.Index;
-
-                    if(featureBySampleMatrix.get(featureIndex) == null)
-                        featureBySampleMatrix.put(featureIndex, new String[nSamples]);
-
-                    featureBySampleMatrix.get(featureIndex)[sampleIndex] = dataItem.Value;
-                }
+                sampleTasks.add(new SampleOneCategoryTask(sampleIndex, mConfig, categoryPrep, featureBySampleMatrix));
             }
+
+            List<Callable> callableTasks = sampleTasks.stream().collect(Collectors.toList());
+            TaskExecutor.executeTasks(callableTasks, mConfig.Threads);
 
             DataItemMatrix matrix = new DataItemMatrix(sampleIds, featureBySampleMatrix);
             matrix.sortIndexes();
@@ -202,7 +198,7 @@ public class CuppaDataPrep
             return matrix;
         }
 
-        public static synchronized void writeDataOneCategory(DataItemMatrix dataItemMatrix, String path, boolean append)
+        public void writeDataOneCategory(DataItemMatrix dataItemMatrix, String path, boolean append)
         {
             try
             {
@@ -213,8 +209,6 @@ public class CuppaDataPrep
 
                 if(!append)
                 {
-                    // TODO delete old file if not append and file exists
-
                     joiner.add(FLD_SOURCE).add(FLD_CATEGORY).add(FLD_KEY);
 
                     for(String sampleId : dataItemMatrix.SampleIds)
@@ -255,26 +249,10 @@ public class CuppaDataPrep
             }
         }
 
-        public static String getOutputPath(PrepConfig mConfig, @Nullable CategoryType categoryType)
+        public void run()
         {
-            String path = mConfig.OutputDir + "/cuppa_data.cohort";
-
-            if(categoryType != null)
-                path += "." + categoryType.toString().toLowerCase();
-
-            if(mConfig.OutputId != null)
-                path += "." + mConfig.OutputId;
-
-            path += TSV_ZIP_EXTENSION;
-
-            return path;
-        }
-
-        public static void run(PrepConfig mConfig)
-        {
-            String[] sampleIds = mConfig.SampleIds.toArray(String[]::new);
-
-            CUP_LOGGER.info("Extracting CUPPA features in multi sample mode for {} samples", sampleIds.length);
+            CUP_LOGGER.info("Extracting CUPPA features in multi sample mode: {} samples, {} threads",
+                    mConfig.SampleIds.size(), mConfig.Threads);
 
             HashMap<CategoryType, CategoryPrep> dataPreparers = buildDataPreparers(mConfig);
 
@@ -282,16 +260,16 @@ public class CuppaDataPrep
             for(CategoryType categoryType : dataPreparers.keySet())
             {
                 CategoryPrep categoryPrep = dataPreparers.get(categoryType);
-                DataItemMatrix dataItemMatrix = getDataOneCategory(categoryPrep, sampleIds);
+                DataItemMatrix dataItemMatrix = getDataOneCategory(categoryPrep);
 
                 if(mConfig.WriteByCategory)
                 {
-                    String outputPath = getOutputPath(mConfig, categoryPrep.categoryType());
+                    String outputPath = getOutputPath(categoryPrep.categoryType());
                     writeDataOneCategory(dataItemMatrix, outputPath, false);
                 }
                 else
                 {
-                    String outputPath = getOutputPath(mConfig, null);
+                    String outputPath = getOutputPath(null);
                     boolean append = (i != 0);
                     writeDataOneCategory(dataItemMatrix, outputPath, append);
                 }
@@ -312,9 +290,9 @@ public class CuppaDataPrep
 
         if(mConfig.isSingleSample())
         {
-            SingleSample.run(mConfig);
+            new SingleSample().run();
         } else {
-            MultiSample.run(mConfig);
+            new MultiSample().run();
         }
 
         CUP_LOGGER.info("Cuppa data extraction complete, mins({})", runTimeMinsStr(startTimeMs));
