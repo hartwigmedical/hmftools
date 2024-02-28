@@ -61,12 +61,10 @@ public class DataItemTest
 
         DataItemMatrix dataItemMatrix = new DataItemMatrix(sampleIds, featureBySampleMatrix);
 
-        int nKeys = dataItemMatrix.FeatureBySampleMatrix.keySet()
+        int nKeys = (int) dataItemMatrix.FeatureBySampleMatrix.keySet()
                 .stream()
                 .distinct()
-                .collect(Collectors.toList())
-                .size();
-
+                .count();
 
         assertEquals(3, nKeys);
 
