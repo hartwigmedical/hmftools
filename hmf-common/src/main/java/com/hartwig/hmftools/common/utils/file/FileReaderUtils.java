@@ -87,6 +87,20 @@ public class FileReaderUtils
         return Double.parseDouble(values[fieldsIndexMap.get(field)]);
     }
 
+    public static byte getByteValue(final Map<String,Integer> fieldsIndexMap, final String field, final String[] values)
+    {
+        return getByteValue(fieldsIndexMap, field, (byte)0, values);
+    }
+
+    public static byte getByteValue(
+            final Map<String,Integer> fieldsIndexMap, final String field, final byte defaultValue, final String[] values)
+    {
+        if(!fieldsIndexMap.containsKey(field))
+            return defaultValue;
+
+        return Byte.parseByte(values[fieldsIndexMap.get(field)]);
+    }
+
     public static String getValue(final List<String> lines, final String field, final String defaultValue, final String delimiter)
     {
         for(String line : lines)

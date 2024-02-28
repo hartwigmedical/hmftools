@@ -26,15 +26,16 @@ public class SampleData
     public final String TumorId;
     public final List<String> CtDnaSamples;
     public final String VcfTag;
-    public final boolean ApplyGcRatioLimits;
+    public final boolean IsPanel;
 
-    public SampleData(final String patientId, final String tumorId, final List<String> ctDnaSamples, final String vcfTag, final boolean applyGcRatioLimits)
+    public SampleData(
+            final String patientId, final String tumorId, final List<String> ctDnaSamples, final String vcfTag, final boolean isPanel)
     {
         PatientId = patientId;
         TumorId = tumorId;
         CtDnaSamples = ctDnaSamples;
         VcfTag = vcfTag;
-        ApplyGcRatioLimits = applyGcRatioLimits;
+        IsPanel = isPanel;
     }
 
     public boolean isBatchControl() { return VcfTag != null && VcfTag.contains(BATCH_CONTROL_TAG); }
@@ -67,7 +68,7 @@ public class SampleData
             int tumorIndex = fieldsIndexMap.get("TumorId");
             int ctdnaIndex = fieldsIndexMap.get("CtDnaSampleIds");
             Integer vcfIndex = fieldsIndexMap.get("VcfTag");
-            Integer applyGcRatioIndex = fieldsIndexMap.get("ApplyGcRatio");
+            Integer isPanelIndex = fieldsIndexMap.get("IsPanel");
 
             for(String line : fileContents)
             {
@@ -77,11 +78,11 @@ public class SampleData
                 String[] values = line.split(CSV_DELIM, -1);
                 String vcfTag = vcfIndex != null && vcfIndex < values.length ? values[vcfIndex] : "";
 
-                boolean applyGcRatio = applyGcRatioIndex != null && applyGcRatioIndex < values.length ?
-                        Boolean.parseBoolean(values[applyGcRatioIndex]) : false;
+                boolean isPanel = isPanelIndex != null && isPanelIndex < values.length ?
+                        Boolean.parseBoolean(values[isPanelIndex]) : false;
 
                 samples.add(new SampleData(
-                        values[patientIndex], values[tumorIndex], ctDnaSamplesFromStr(values[ctdnaIndex]), vcfTag, applyGcRatio));
+                        values[patientIndex], values[tumorIndex], ctDnaSamplesFromStr(values[ctdnaIndex]), vcfTag, isPanel));
             }
         }
         catch (IOException e)

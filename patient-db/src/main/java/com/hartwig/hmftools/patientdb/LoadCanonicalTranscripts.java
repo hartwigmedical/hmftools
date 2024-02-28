@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.patientdb.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
 import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -15,11 +16,9 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,19 +28,28 @@ public class LoadCanonicalTranscripts
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException
     {
-        Options options = createOptions();
-        CommandLine cmd = new DefaultParser().parse(options, args);
-        DatabaseAccess dbAccess = databaseAccess(cmd);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        logVersion();
+        addDatabaseCmdLineArgs(configBuilder, true);
+        configBuilder.addPath(ENSEMBL_DATA_CACHE_ROOT_DIR, true, "HMF common resources Ensembl data cache root directory");
 
-        final String ensemblRootDir = cmd.getOptionValue(ENSEMBL_DATA_CACHE_ROOT_DIR);
+        configBuilder.checkAndParseCommandLine(args);
 
-        LOGGER.info("Persisting transcripts to database");
-        loadCanonicalTranscripts(dbAccess, ensemblRootDir, RefGenomeVersion.V37);
-        loadCanonicalTranscripts(dbAccess, ensemblRootDir, RefGenomeVersion.V38);
+        try(DatabaseAccess dbAccess = databaseAccess(configBuilder))
+        {
+            final String ensemblRootDir = configBuilder.getValue(ENSEMBL_DATA_CACHE_ROOT_DIR);
 
-        LOGGER.info("Complete");
+            LOGGER.info("Persisting transcripts to database");
+            loadCanonicalTranscripts(dbAccess, ensemblRootDir, RefGenomeVersion.V37);
+            loadCanonicalTranscripts(dbAccess, ensemblRootDir, RefGenomeVersion.V38);
+
+            LOGGER.info("Complete");
+        }
+        catch(Exception e)
+        {
+            LOGGER.error("Failed to load canonical transcripts", e);
+            System.exit(1);
+        }
     }
 
     private static void loadCanonicalTranscripts(final DatabaseAccess dbAccess, final String ensemblRootDir, final RefGenomeVersion refGenomeVersion)
@@ -70,12 +78,4 @@ public class LoadCanonicalTranscripts
         dbAccess.writeCanonicalTranscripts(refGenomeStr, geneDataList, transDataList);
     }
 
-    @NotNull
-    private static Options createOptions()
-    {
-        Options options = new Options();
-        addDatabaseCmdLineArgs(options);
-        options.addOption(ENSEMBL_DATA_CACHE_ROOT_DIR, true, "HMF common resources Ensembl data cache root directory");
-        return options;
-    }
 }

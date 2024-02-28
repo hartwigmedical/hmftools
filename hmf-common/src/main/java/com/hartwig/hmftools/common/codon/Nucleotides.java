@@ -14,6 +14,8 @@ public final class Nucleotides
         return base;
     }
 
+    public static byte swapDnaBase(final byte base) { return (byte)swapDnaBase((char)base); }
+
     public static int baseIndex(final char base)
     {
         if(base == 'G')

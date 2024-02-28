@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.region;
 
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.INVALID_CHR_RANK;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
@@ -18,7 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -175,11 +175,15 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
             return 1;
         }
 
+        // we use chromosome rank such that chr1 is sorted before chr2
         int rank1 = HumanChromosome.chromosomeRank(Chromosome);
         int rank2 = HumanChromosome.chromosomeRank(other.Chromosome);
 
         if(rank1 == rank2)
-            return 0;
+        {
+            // will occur for non-standard contigs, in which case revert to standard string comparison
+            return Chromosome.compareTo(other.Chromosome);
+        }
 
         return rank1 < rank2 ? -1 : 1;
     }
@@ -214,11 +218,9 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
         if(filename == null)
             return chrRegionsMap;
 
-        try
+        // accepts zipped / non-zipped, with and without headers, Chromosome/chromosome,PosStart/PositionStart etc
+        try(BufferedReader fileReader = createBufferedReader(filename))
         {
-            // accepts zipped / non-zipped, with and without headers, Chromosome/chromosome,PosStart/PositionStart etc
-            BufferedReader fileReader = createBufferedReader(filename);
-
             String delim = FileDelimiters.inferFileDelimiter(filename);
 
             int chrIndex = 0;

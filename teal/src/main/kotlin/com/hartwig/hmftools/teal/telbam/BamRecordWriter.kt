@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.teal.telbam
 
+import com.hartwig.hmftools.common.samtools.SamRecordUtils
 import com.hartwig.hmftools.teal.ReadGroup
 import com.hartwig.hmftools.teal.TealUtils.hasTelomericContent
 import com.hartwig.hmftools.teal.TealUtils.openSamReader
@@ -203,9 +204,9 @@ class BamRecordWriter(config: TelbamParams,
         row.setBoolean("hasTeloContent", hasTelomericContent(record.readString))
         row.setString("cigar", record.cigarString)
         row.setInt("insertSize", record.inferredInsertSize)
-        row.setBoolean("firstInPair", record.firstOfPairFlag)
+        row.setBoolean("firstInPair", SamRecordUtils.firstInPair(record))
         row.setBoolean("unmapped", record.readUnmappedFlag)
-        row.setBoolean("mateUnmapped", record.mateUnmappedFlag)
+        row.setBoolean("mateUnmapped", SamRecordUtils.mateUnmapped(record))
         row.setBoolean("isSupplementary", record.supplementaryAlignmentFlag)
         row.setInt("flags", record.flags)
         row.setString("suppData", record.getStringAttribute(SAMTag.SA.name) ?: "")

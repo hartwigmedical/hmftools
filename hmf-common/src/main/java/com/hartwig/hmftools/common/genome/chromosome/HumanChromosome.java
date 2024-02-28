@@ -123,6 +123,8 @@ public enum HumanChromosome implements Chromosome
         return chromosomeRank(chr) < chromosomeRank(otherChr);
     }
 
+    public static final int INVALID_CHR_RANK = 26;
+
     public static int chromosomeRank(final String chromosome)
     {
         String chrTrimmed = RefGenomeFunctions.stripChrPrefix(chromosome);
@@ -147,7 +149,7 @@ public enum HumanChromosome implements Chromosome
             }
             catch(NumberFormatException e)
             {
-                return -1;
+                return INVALID_CHR_RANK;
             }
         }
     }

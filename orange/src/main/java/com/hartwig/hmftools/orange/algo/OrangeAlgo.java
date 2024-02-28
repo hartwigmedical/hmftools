@@ -1,12 +1,9 @@
 package com.hartwig.hmftools.orange.algo;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +16,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
-import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidNode;
@@ -40,7 +36,6 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
 import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.common.sage.GeneDepthFile;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
@@ -62,6 +57,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRnaConfig;
+import com.hartwig.hmftools.orange.OrangeWGSRefConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
@@ -76,6 +72,7 @@ import com.hartwig.hmftools.orange.algo.purple.PurpleData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariantFactory;
+import com.hartwig.hmftools.orange.algo.sage.GermlineMVLHFactory;
 import com.hartwig.hmftools.orange.algo.util.GermlineConversion;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
@@ -179,7 +176,7 @@ public class OrangeAlgo
 
         PurpleData purpleData = loadPurpleData(config);
         LinxData linxData = loadLinxData(config);
-        Map<String, Double> mvlhPerGene = loadGermlineMVLHPerGene(config);
+        Map<String, Double> mvlhPerGene = loadGermlineMVLHPerGene(config, driverGenes);
         ChordData chord = loadChordAnalysis(config);
         LilacSummaryData lilac = loadLilacData(config);
         VirusInterpreterData virusInterpreter = loadVirusInterpreterData(config);
@@ -368,35 +365,20 @@ public class OrangeAlgo
     }
 
     @Nullable
-    private static Map<String, Double> loadGermlineMVLHPerGene(@NotNull OrangeConfig config) throws IOException
+    private static Map<String, Double> loadGermlineMVLHPerGene(@NotNull OrangeConfig config, @NotNull List<DriverGene> driverGenes)
+            throws IOException
     {
-        String sageGermlineGeneCoverageTsv =
-                config.wgsRefConfig() != null ? config.wgsRefConfig().sageGermlineGeneCoverageTsv() : null;
+        OrangeWGSRefConfig orangeWGSRefConfig = config.wgsRefConfig();
+        String sageGermlineGeneCoverageTsv = orangeWGSRefConfig != null ? orangeWGSRefConfig.sageGermlineGeneCoverageTsv() : null;
         if(sageGermlineGeneCoverageTsv == null)
         {
             LOGGER.info("Skipping loading of germline MVLH as no germline gene coverage has been provided");
             return null;
         }
 
-        Map<String, Double> mvlhPerGene = Maps.newTreeMap();
-
-        List<String> lines = Files.readAllLines(new File(sageGermlineGeneCoverageTsv).toPath());
-        String header = lines.get(0);
-
-        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
-        int geneIndex = fieldsIndexMap.get(GeneDepthFile.COL_GENE);
-        int mvlhIndex = fieldsIndexMap.get(GeneDepthFile.COL_MV_LIKELIHOOD);
-
-        for(String line : lines.subList(1, lines.size()))
-        {
-            String[] values = line.split(TSV_DELIM);
-            String gene = values[geneIndex];
-            String mvlhString = values[mvlhIndex].substring(0, values[mvlhIndex].length() - 1);
-            double missedVariantLikelihood = Double.parseDouble(mvlhString) / 100D;
-            mvlhPerGene.put(gene, missedVariantLikelihood);
-        }
-
+        Map<String, Double> mvlhPerGene = GermlineMVLHFactory.loadGermlineMVLHPerGene(sageGermlineGeneCoverageTsv, driverGenes);
         LOGGER.info("Loaded MVLH data for {} genes", mvlhPerGene.keySet().size());
+
         return mvlhPerGene;
     }
 
@@ -569,21 +551,18 @@ public class OrangeAlgo
     @Nullable
     private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws Exception
     {
-        if(config.wgsRefConfig() == null)
+        OrangeWGSRefConfig orangeWGSRefConfig = config.wgsRefConfig();
+        if(orangeWGSRefConfig == null)
         {
             return null;
         }
 
-        CuppaPredictions cuppaPredictions = null;
-        String cuppaVisDataTsv = config.wgsRefConfig().cuppaVisDataTsv();
-        if(cuppaVisDataTsv != null)
-        {
-            LOGGER.info("Loading CUPPA predictions from {}", new File(cuppaVisDataTsv).getParent());
-            cuppaPredictions = CuppaPredictions.fromTsv(cuppaVisDataTsv);
-            LOGGER.info(" Loaded {} CUPPA prediction entries from {}", cuppaPredictions.PredictionEntries.size(), cuppaVisDataTsv);
-        }
+        String cuppaVisDataTsv = orangeWGSRefConfig.cuppaVisDataTsv();
+        LOGGER.info("Loading CUPPA predictions from {}", new File(cuppaVisDataTsv).getParent());
+        CuppaData cuppaData = CuppaDataFactory.create(cuppaVisDataTsv);
+        LOGGER.info(" Loaded {} CUPPA predictions from {}", cuppaData.predictions().size(), cuppaVisDataTsv);
 
-        return CuppaDataFactory.create(cuppaPredictions);
+        return cuppaData;
     }
 
     @Nullable

@@ -6,11 +6,14 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.PHASED_ASSEMBLY_JUNCTION_OVERLAP;
 import static com.hartwig.hmftools.esvee.SvConstants.PHASED_ASSEMBLY_MAX_TI;
 import static com.hartwig.hmftools.esvee.SvConstants.PHASED_ASSEMBLY_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findInsertedBases;
+import static com.hartwig.hmftools.esvee.common.LinkType.INDEL;
 
 import java.util.Collections;
 import java.util.List;
@@ -21,22 +24,10 @@ import com.hartwig.hmftools.esvee.common.AssemblyLink;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.LinkType;
 import com.hartwig.hmftools.esvee.common.RepeatInfo;
+import com.hartwig.hmftools.esvee.read.Read;
 
 public final class AssemblyLinker
 {
-    public AssemblyLink tryAssemblyLink(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
-    {
-        if(assembly1.hasBranchedAssembly(assembly2))
-            return null;
-
-        AssemblyLink link = tryAssemblyFacing(assembly1, assembly2);
-
-        if(link != null)
-            return link;
-
-        return tryAssemblyOverlap(assembly1, assembly2);
-    }
-
     public static AssemblyLink tryAssemblyFacing(final JunctionAssembly first, final JunctionAssembly second)
     {
         if(first.refSideSoftClips().isEmpty() || second.refSideSoftClips().isEmpty())
@@ -115,12 +106,29 @@ public final class AssemblyLinker
             // go with the convention of doing that for the higher breakend?
             if(firstSeq.Reversed)
             {
-                insertedBases = first.formSequence(first.junctionIndex() - impliedInsertedBaseLength, first.junctionIndex() - 1);
+                insertedBases = first.formSequence(
+                        first.junctionIndex() - impliedInsertedBaseLength, first.junctionIndex() - 1);
             }
             else
             {
-                insertedBases =
-                        firstSeq.FullSequence.substring(first.junctionIndex() + 1, first.junctionIndex() + 1 + impliedInsertedBaseLength);
+                // TODO: any inserted bases should be retrievable if the junction index of one assembly has been found in the other
+                // look into more examples from of the logs
+                try
+                {
+                    int insertStartIndex = first.junctionIndex() + 1;
+                    int insertEndIndex = min(insertStartIndex + impliedInsertedBaseLength, firstSeq.FullSequence.length());
+
+                    if(insertEndIndex > insertStartIndex)
+                    {
+                        insertedBases = firstSeq.FullSequence.substring(insertStartIndex, insertEndIndex);
+                    }
+                }
+                catch(Exception e)
+                {
+                    SV_LOGGER.debug("assembly({}) failed to form insert bases({}-{} len={}) firstJuncIndexInSec({}) from firstSeq({}) secondSeq({})",
+                            first, first.junctionIndex() + 1, first.junctionIndex() + 1 + impliedInsertedBaseLength,
+                            impliedInsertedBaseLength, firstJunctionIndexInSecond, firstSeq, secondSeq);
+                }
             }
         }
 
@@ -128,6 +136,26 @@ public final class AssemblyLinker
     }
 
     private static final int SUBSEQUENCE_LENGTH = 10;
+
+    public AssemblyLink tryAssemblyIndel(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
+    {
+        if(!assembly1.indel() || !assembly2.indel())
+            return null;
+
+        // have already confirmed they share reads, so now just check the indel coords match
+        if(!assembly1.initialRead().indelCoords().matches(assembly2.initialRead().indelCoords()))
+            return null;
+
+        String insertedBases = "";
+        Read indelRead = assembly1.initialRead();
+
+        if(indelRead.indelCoords().isInsert())
+        {
+            insertedBases = findInsertedBases(indelRead);
+        }
+
+        return new AssemblyLink(assembly1, assembly2, INDEL, 0, insertedBases);
+    }
 
     public AssemblyLink tryAssemblyOverlap(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
@@ -170,9 +198,9 @@ public final class AssemblyLinker
 
         // AssemblyIndexRange secondIndexRange = new AssemblyIndexRange(second);
 
-        // take a smaller sections of the first sequence and try to find their start index in the second sequence
-        int subSequenceCount = firstSeq.comparisonLength() / SUBSEQUENCE_LENGTH;
+        // int subSequenceCount = firstSeq.comparisonLength() / SUBSEQUENCE_LENGTH;
 
+        // take a smaller sections of the first sequence and try to find their start index in the second sequence
         List<int[]> alternativeIndexStarts = Lists.newArrayList();
 
         for(int firstSubSeqStartIndex = firstSeq.compareSeqStartIndex(); firstSubSeqStartIndex <= firstSeq.junctionIndex();

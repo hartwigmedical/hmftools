@@ -18,8 +18,17 @@ public class SageConstants
     public static final double MIN_SECOND_CANDIDATE_FULL_READS_PERC = 0.25;
 
     // base quality recalibration
-    public static final double DEFAULT_BQR_MAX_ALT_PERC = 0.02;
-    public static final int DEFAULT_BQR_MAX_ALT_COUNT = 3;
+    public static final double BQR_DUAL_AF_LOW = 0.01;
+    public static final double BQR_DUAL_AF_HIGH = 0.075;
+    public static final int BQR_DUAL_AD = 2;
+
+    public static final double BQR_NON_DUAL_AF_LOW = 0.05;
+    public static final double BQR_NON_DUAL_AF_HIGH = 0.125;
+    public static final int BQR_NON_DUAL_AD = 3;
+
+    // dual (illumina)/balanced (ultima): sites where [(AF<1% or AD<3) and AF <7.5%]
+    // other: sites where [(AF<5% or AD<4) and AF <12.5%]
+
     public static final int BQR_SAMPLE_SIZE = 2_000_000;
     public static final int DEFAULT_BQR_MIN_MAP_QUAL = 50;
 
@@ -76,10 +85,8 @@ public class SageConstants
     public static final double INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT = 0.1;
 
     public static final double STRAND_BIAS_CHECK_THRESHOLD = 0.15;
-    public static final double STRAND_BIAS_HOMOPOLYMER_CHECK_THRESHOLD = 0.25;
     public static final double STRAND_BIAS_REF_MIN_DEPTH = 5;
     public static final double STRAND_BIAS_REF_MIN_BIAS = 0.2;
-    public static final int STRAND_BIAS_HOMOPOLYMER_REPEAT_LENGTH = 8;
 
     public static final int JITTER_INDEL_MAX_REPEATS = 3;
     public static final double JITTER_INDEL_VAF_THRESHOLD = 0.015;

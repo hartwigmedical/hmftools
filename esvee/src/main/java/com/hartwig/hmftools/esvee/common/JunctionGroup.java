@@ -21,6 +21,7 @@ public class JunctionGroup extends BaseRegion
     private int mIndex; // in the full list for the chromosome
 
     private final List<JunctionAssembly> mJunctionAssemblies;
+    private final List<DiscordantGroup> mDiscordantGroups;
 
     public JunctionGroup(final Junction junction)
     {
@@ -28,6 +29,7 @@ public class JunctionGroup extends BaseRegion
         mJunctions = Lists.newArrayList(junction);
         mCandidateReads = Lists.newArrayList();
         mJunctionAssemblies = Lists.newArrayList();
+        mDiscordantGroups = Lists.newArrayList();
         mIndex = -1;
     }
 
@@ -60,6 +62,16 @@ public class JunctionGroup extends BaseRegion
 
     public void addJunctionAssemblies(final List<JunctionAssembly> assemblies) { mJunctionAssemblies.addAll(assemblies); }
     public List<JunctionAssembly> junctionAssemblies() { return mJunctionAssemblies; }
+
+    public void addDiscordantGroups(final List<DiscordantGroup> groups) { mDiscordantGroups.addAll(groups); }
+    public List<DiscordantGroup> discordantGroups() { return mDiscordantGroups; }
+
+    public void addBranchedAssemblies()
+    {
+        List<JunctionAssembly> branchedAssemblies = Lists.newArrayList();
+        mJunctionAssemblies.forEach(x -> branchedAssemblies.addAll(x.branchedAssemblies()));
+        mJunctionAssemblies.addAll(branchedAssemblies);
+    }
 
     public boolean overlapsRemoteRegion(final RemoteRegion region)
     {

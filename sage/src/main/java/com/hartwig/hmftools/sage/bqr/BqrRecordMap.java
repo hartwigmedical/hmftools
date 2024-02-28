@@ -30,9 +30,9 @@ public class BqrRecordMap
         }
     }
 
-    public double getQualityAdjustment(byte ref, byte alt, byte[] trinucleotideContext, byte qual)
+    public double getQualityAdjustment(byte ref, byte alt, byte[] trinucleotideContext, byte qual, BqrReadType readType)
     {
-        final BqrKey key = new BqrKey(ref, alt, trinucleotideContext, qual);
+        final BqrKey key = new BqrKey(ref, alt, trinucleotideContext, qual, readType);
 
         BqrRecord record = mMap.get(key);
         return record != null ? record.RecalibratedQuality : qual;

@@ -118,7 +118,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -ref_genome_version 37 \
     -ref_genome /path/to/refGenome.fasta \
     -hotspots /path/to/KnownHotspots.37.vcf.gz \
-    -panel_bed /path/to/ActionableCodingPanel.somatic.37.bed.gz \
+    -panel_bed /path/to/ActionableCodingPanel.37.bed.gz \
     -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
     -ensembl_data_dir /path_to_ensembl_cache/ \
     -output_vcf /path/to/COLO829v003.sage.vcf.gz
@@ -134,7 +134,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -ref_genome_version 37 \
     -ref_genome /path/to/refGenome.fasta \
     -hotspots /path/to/KnownHotspots.37.vcf.gz \
-    -panel_bed /path/to/ActionableCodingPanel.somatic.37.bed.gz \
+    -panel_bed /path/to/ActionableCodingPanel.37.bed.gz \
     -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
     -ensembl_data_dir /path_to_ensembl_cache/ \
     -output_vcf /path/to/COLO829v003.sage.vcf.gz
@@ -179,7 +179,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.append.SageAppendAppl
 
 
 # Variant Visualisations
-Sage can produce HTML visualisations for specific variants of interest, showing the type of support from each overlapping read.
+Sage can produce interactive HTML visualisations for specific variants of interest, showing the type of support from each overlapping read.
 
 To enable this output, set one or more of the following arguments:
 
@@ -189,6 +189,10 @@ vis_variants | List of variants for which to generate output, format 'chromosome
 vis_pass_only | Generate output for all passing variants
 vis_max_support_reads | Max reads per type to display, default is 40
 vis_output_dir | Output directory for HTML files, defaults to 'vis' if not specified
+
+A guide to the visualisations is shown below. A link to the HTML file for this variant is available [here.](http://htmlpreview.github.io/?https://github.com/hartwigmedical/hmftools/blob/master/sage/docs/COLO829v003T.sage.chr7_152079940_G_T.html)
+
+![image](docs/COLO829v003T.annotated_sage_vis.png)
 
 
 
@@ -320,7 +324,7 @@ These files are written into the same directory as the output file.
 
 A typical example of the chart is shown below. Note that each bar represents the amount that will be added to the sequencer Phred score: 
 
-![Base Quality Adjustment](src/main/resources/readme/COLO829v003T.bqr.png)
+![Base Quality Adjustment](docs/COLO829v003T.bqr.png)
 
 Base quality recalibration is enabled by default but can be disabled by supplying including the`-disable_bqr` argument.
 

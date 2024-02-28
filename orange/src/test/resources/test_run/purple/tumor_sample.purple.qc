@@ -9,3 +9,4 @@ DeletedGenes	4
 Contamination	0.0
 GermlineAberrations	NONE
 AmberMeanDepth	111
+LohPercent	0.1930

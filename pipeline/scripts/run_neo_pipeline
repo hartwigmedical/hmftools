@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # example command:
-# ./pipeline/scripts/run_neo_pipeline /ref_data_dir/ /tools_dir/ /purple_dir/ /isofox_dir/ /lilac_dir/ /output_dir/ COLO829T Skin V37 10 16
+# ./pipeline/scripts/run_neo_pipeline /ref_data_dir/ /tools_dir/ /purple_dir/ /isofox_dir/ /lilac_dir/ /output_dir/ COLO829T COLO829_RNA COLO829_RNA.bam Skin V37 10 16
 
 # required arguments
 ref_data_dir=$1 && shift
@@ -11,6 +11,8 @@ isofox_dir=$1 && shift
 lilac_dir=$1 && shift
 output_dir=$1 && shift
 sample_id=$1 && shift
+rna_sample_id=$1 && shift
+sample_rna_bam=$1 && shift
 cancer_type=$1 && shift
 ref_genome_version=$1 && shift
 threads=$1 && shift
@@ -55,10 +57,7 @@ fi
 # cancer_type=${sample_array[1]}
 
 
-# assume RNA BAM names match sample_id
-sample_rna_bam=${isofox_dir}/${sample_id}.rna.bam
-
-echo "Running HMF neoepitope pipeline for ${sample_id}"
+echo "Running HMF neoepitope pipeline for ${sample_id}, RNA sample ${rna_sample_id}"
 
 echo "Configuration:"
 echo "  reference data dir: ${ref_data_dir}"
@@ -76,7 +75,7 @@ echo "  memory: ${max_memory}"
 
 purple_somatic_vcf=${purple_dir}/${sample_id}.purple.somatic.vcf.gz
 purple_sv_vcf=${purple_dir}/${sample_id}.purple.sv.vcf.gz
-isofox_transcript_data=${isofox_dir}/${sample_id}.isf.transcript_data.csv
+isofox_transcript_data=${isofox_dir}/${rna_sample_id}.isf.transcript_data.csv
 lilac_coverage=${lilac_dir}/${sample_id}.lilac.tsv
 
 if [[ ! -f "${purple_somatic_vcf}" ]]; then
@@ -90,12 +89,12 @@ if [[ ! -f "${purple_sv_vcf}" ]]; then
 fi
 
 if [[ ! -f "${isofox_transcript_data}" ]]; then
-  echo "Missing Isofox transcript expression, exiting"
+  echo "Missing Isofox transcript expression: ${isofox_transcript_data}, exiting"
   exit
 fi
 
 if [[ ! -f "${lilac_coverage}" ]]; then
-  echo "Missing Lilac allele coverage, exiting"
+  echo "Missing Lilac allele coverage: ${lilac_coverage}, exiting"
   exit
 fi
 
@@ -105,7 +104,6 @@ ensembl_dir=${ref_data_dir}/common/ensembl_data/
 known_fusion_file=${ref_data_dir}/common/known_fusion_data.csv
 
 binding_dir=${ref_data_dir}/binding
-binding_ref_version=cmb_02
 
 cohort_tpm_medians=${ref_data_dir}/tpm_cohort/hmf_tpm_medians.csv
 
@@ -140,8 +138,9 @@ args="-sample ${sample_id} \
   -purple_dir ${purple_dir} \
   -ref_genome_version ${ref_genome_version} \
   -ensembl_data_dir ${ensembl_dir} \
-  -check_fusions -known_fusion_file ${known_fusion_file} \
+  -known_fusion_file ${known_fusion_file} \
   -write_neo_epitopes \
+  -no_vis_files \
   -output_dir ${output_dir}"
 
 echo "Running Linx neoepitopes with args: ${args}"
@@ -151,7 +150,7 @@ java -jar ${linx_jar} ${args}
 
 # Run Neo to find neoepitopes
 
-linx_neo_tsv=${output_dir}/${sample_id}.linx.neo_epitope.tsv
+linx_neo_tsv=${output_dir}/${sample_id}.linx.neoepitope.tsv
 
 if [[ ! -f "${linx_neo_tsv}" ]]; then
   echo "Failed to run Linx, exiting"
@@ -164,7 +163,6 @@ args="-sample ${sample_id} \
     -ref_genome ${ref_genome} \
     -ref_genome_version ${ref_genome_version} \
     -ensembl_data_dir ${ensembl_dir} \
-    -req_amino_acids 15 \
     -output_dir ${output_dir} \
     -log_debug"
 
@@ -184,7 +182,7 @@ fi
 
 args="-sample ${sample_id} \
     -functions NEO_EPITOPES \
-    -neoepitope_file ${neo_data_tsv} \
+    -neo_dir ${output_dir} \
     -bam_file ${sample_rna_bam} \
     -ref_genome ${ref_genome} \
     -ref_genome_version ${ref_genome_version} \
@@ -197,9 +195,9 @@ echo "Running Isofox RNA fusion annotation with args: ${args}"
 java -jar ${isofox_jar} ${args}
 
 
-isofox_neo_csv=${output_dir}/${sample_id}.isf.neoepitope.csv
+isofox_neo_tsv=${isofox_dir}/${sample_id}.isf.neoepitope.tsv
 
-if [[ ! -f "${isofox_neo_csv}" ]]; then
+if [[ ! -f "${isofox_neo_tsv}" ]]; then
   echo "Failed to run Isofox, exiting"
   exit
 fi
@@ -212,17 +210,15 @@ sage_rna_vcf=${output_dir}/${sample_id}.purple.somatic.rna.vcf.gz
 if [[ -f "${sage_rna_vcf}" ]]; then
   echo "Skipping Sage Append RNA since ${sage_rna_vcf} exists"
 
-
 else
 
-  args="-reference ${sample_id}_RNA \
+  args="-reference ${rna_sample_id} \
     -reference_bam ${sample_rna_bam} \
     -input_vcf ${purple_somatic_vcf} \
     -ref_genome ${ref_genome} \
     -ref_genome_version ${ref_genome_version} \
-    -bqr_enabled true \
     -max_read_depth 100000 \
-    -out ${sage_rna_vcf} \
+    -output_vcf ${sage_rna_vcf} \
     -threads ${threads} \
     -log_debug"
 
@@ -243,6 +239,7 @@ fi
 # Finally Neo-Scorer
 
 args="-sample ${sample_id} \
+    -rna_sample ${rna_sample_id} \
     -cancer_type ${cancer_type} \
     -neo_dir ${output_dir} \
     -isofox_dir ${isofox_dir} \
@@ -251,19 +248,17 @@ args="-sample ${sample_id} \
     -rna_somatic_vcf ${sage_rna_vcf} \
     -ensembl_data_dir ${ensembl_dir} \
     -score_file_dir ${binding_dir} \
-    -score_file_id ${binding_ref_version} \
     -cancer_tpm_medians_file ${cohort_tpm_medians} \
+    -rank_threshold 0 \
+    -write_types ALLELE_PEPTIDE;NEOEPITOPE \
     -output_dir ${output_dir} \
     -log_debug"
 
 
 echo "Running Neo-Scorer with args: ${args}"
 
-java -cp ${neo_jar} com.hartwig.hmftools.neo.scorer.NeoScorer ${args}
+java -cp ${neo_jar} com.hartwig.hmftools.neo.score.NeoScorer ${args}
 
 
 echo "Neo pipeline complete"
-
-
-
 

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getBoolValue;
@@ -141,7 +142,7 @@ public class VisSvData
             String[] values = line.split(TSV_DELIM);
 
             data.add(new VisSvData(
-                    getValue(fieldsIndexMap, "SampleId", "", values),
+                    getValue(fieldsIndexMap, FLD_SAMPLE_ID, "", values),
                     getIntValue(fieldsIndexMap, "ClusterId", 0, values),
                     getIntValue(fieldsIndexMap, "ChainId", 0, values),
                     getIntValue(fieldsIndexMap, "SvId", 0, values),
@@ -166,7 +167,6 @@ public class VisSvData
     public static String header()
     {
         return new StringJoiner(TSV_DELIM)
-                .add("SampleId")
                 .add("ClusterId")
                 .add("ChainId")
                 .add("SvId")
@@ -189,7 +189,6 @@ public class VisSvData
     public static String toString(final VisSvData svData)
     {
         return new StringJoiner(TSV_DELIM)
-                .add(String.valueOf(svData.SampleId))
                 .add(String.valueOf(svData.ClusterId))
                 .add(String.valueOf(svData.ChainId))
                 .add(String.valueOf(svData.SvId))

@@ -33,7 +33,10 @@ public class BqrQualCache
             return bqrQual;
 
         byte[] trinucleotideContext = qualityCalculator.getTrinucleotideContext(mVariantPosition + refIndex);
-        double bqrValue = qualityCalculator.lookupRecalibrateQuality(trinucleotideContext, (byte)mVariantAlt.charAt(refIndex), baseQual);
+
+        double bqrValue = qualityCalculator.lookupRecalibrateQuality(
+                trinucleotideContext, (byte)mVariantAlt.charAt(refIndex), baseQual, readType);
+
         mQualMapByIndex[refIndex].put(key, bqrValue);
 
         return bqrValue;

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 
@@ -14,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
+import com.hartwig.hmftools.esvee.common.DiscordantGroup;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
 import com.hartwig.hmftools.esvee.common.PhaseGroup;
@@ -59,14 +61,12 @@ public class PhaseGroupBuilder
 
                     if((processed % LOG_COUNT) == 0)
                     {
-                        SV_LOGGER.debug("primary phasing processed {} assemblies, groups({})",
+                        SV_LOGGER.debug("processed {} assemblies into {} phase groups",
                                 processed, mPhaseGroups.size());
                     }
                 }
             }
         }
-
-        buildPhasedAssemblies();
 
         for(int i = 0; i < mPhaseGroups.size(); ++i)
         {
@@ -74,16 +74,17 @@ public class PhaseGroupBuilder
         }
     }
 
-    public List<PhaseGroup> primaryPhaseGroups() { return mPhaseGroups; }
+    public List<PhaseGroup> phaseGroups() { return mPhaseGroups; }
 
     private void findLinkedAssemblies(final JunctionGroup assemblyJunctionGroup, final JunctionAssembly assembly)
     {
-        if(assembly.remoteRegions().isEmpty() && assembly.refSideSoftClips().isEmpty())
+        // for the given assembly, looks in all overlapping other junction groups (based on remote regions, ref-side soft-clips, and
+        // the local junction group for indels) for other assemblies with shared reads
+        if(assembly.remoteRegions().isEmpty() && assembly.refSideSoftClips().isEmpty() && !assembly.indel())
             return;
 
         PhaseGroup phaseGroup = assembly.phaseGroup(); // may have been set from an earlier assembly link
         boolean linksWithExisting = phaseGroup != null;
-        boolean hasBranchedAssemblies = !assembly.branchedAssemblies().isEmpty();
 
         Set<JunctionGroup> linkedJunctionGroups = Sets.newHashSet();
 
@@ -102,6 +103,8 @@ public class PhaseGroupBuilder
 
         if(!assembly.refSideSoftClips().isEmpty())
         {
+            // if the assembly has candidate facing TI links, then add its own junction group - they will often share reads which are
+            // discordant in one and a junction read in the other
             RefSideSoftClip refSideSoftClip = assembly.refSideSoftClips().get(0);
 
             if(positionWithin(refSideSoftClip.Position, assemblyJunctionGroup.minPosition(), assemblyJunctionGroup.maxPosition()))
@@ -110,7 +113,7 @@ public class PhaseGroupBuilder
             }
         }
 
-        if(hasBranchedAssemblies)
+        if(assembly.indel())
             linkedJunctionGroups.add(assemblyJunctionGroup);
 
         for(JunctionGroup junctionGroup : linkedJunctionGroups)
@@ -123,16 +126,32 @@ public class PhaseGroupBuilder
                 if(assembly == otherAssembly)
                     continue;
 
+                // for assemblies sharing read, the phase group scenarios are:
+                // - assemblies are already in the same phase group
+                // - no phase group exists for either so make a new one
+                // - the other assembly already has an existing phase group and this one doesn't so just add it
+                // - the other assembly already has an existing phase group, so does this one and so transfer this to the other
                 if(phaseGroup != null && otherAssembly.phaseGroup() == phaseGroup)
                 {
                     // already linked
                     continue;
                 }
 
-                boolean branchedAssemblies = hasBranchedAssemblies && assembly.hasBranchedAssembly(otherAssembly);
-
-                if(!branchedAssemblies && !assembliesShareReads(assembly, otherAssembly))
+                if(!assembliesShareReads(assembly, otherAssembly))
                     continue;
+
+                // IDEA: first of all check the regions overlap, since for large junction groups there's a high chance they won't
+                // and then all reads need to be checked in each
+                // finds too many examples where they do share reads, maybe the 1K distance buffer is too small or they are sharing
+                // supplementaries whose remote regions were purged
+
+                /*
+                boolean assemblyRegionsOverlap = assemblyJunctionGroup == junctionGroup || assembliesOverlap(assembly, otherAssembly);
+                if(!assemblyRegionsOverlap)
+                {
+                    SV_LOGGER.debug("asm({}) and asm({}) share reads without any overlaps", assembly, otherAssembly);
+                }
+                */
 
                 if(phaseGroup == null)
                 {
@@ -151,13 +170,11 @@ public class PhaseGroupBuilder
                 {
                     if(otherAssembly.phaseGroup() != null)
                     {
-                        if(otherAssembly.phaseGroup() != phaseGroup)
-                        {
-                            // transfer to the other one
-                            phaseGroup.assemblies().forEach(x -> otherAssembly.phaseGroup().addAssembly(x));
-                            phaseGroup = otherAssembly.phaseGroup();
-                            linksWithExisting = true;
-                        }
+                        // transfer to the other one, and do this for assemblies in this group
+                        otherAssembly.phaseGroup().transferAssemblies(phaseGroup);
+                        mPhaseGroups.remove(phaseGroup);
+                        phaseGroup = otherAssembly.phaseGroup();
+                        linksWithExisting = true;
                     }
                     else
                     {
@@ -167,10 +184,72 @@ public class PhaseGroupBuilder
             }
         }
 
+        for(JunctionGroup junctionGroup : linkedJunctionGroups)
+        {
+            for(DiscordantGroup discordantGroup : junctionGroup.discordantGroups())
+            {
+                // as above, check that remote regions overlap before checking reads
+                if(assembly.remoteRegions().stream().noneMatch(x -> x.overlaps(discordantGroup.remoteRegion())))
+                    continue;
+
+                if(assembly.support().stream().noneMatch(x -> discordantGroup.hasRead(x.read())))
+                    continue;
+
+                if(phaseGroup == null)
+                    phaseGroup = new PhaseGroup(assembly, null);
+
+                phaseGroup.addDiscordantGroup(discordantGroup);
+            }
+        }
+
         if(phaseGroup != null && !linksWithExisting)
         {
             mPhaseGroups.add(phaseGroup);
         }
+    }
+
+    private static boolean assembliesOverlap(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        for(RemoteRegion region : first.remoteRegions())
+        {
+            int regionStart = region.start() - BAM_READ_JUNCTION_BUFFER;
+            int regionEnd = region.start() - BAM_READ_JUNCTION_BUFFER;
+
+            if(positionWithin(second.junction().Position, regionStart, regionEnd))
+                return true;
+        }
+
+        for(RemoteRegion region : second.remoteRegions())
+        {
+            int regionStart = region.start() - BAM_READ_JUNCTION_BUFFER;
+            int regionEnd = region.start() - BAM_READ_JUNCTION_BUFFER;
+
+            if(positionWithin(first.junction().Position, regionStart, regionEnd))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static boolean assembliesShareReads(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        // tests matching reads in both the junction reads and any extension reads (ie discordant)
+        for(AssemblySupport support : first.support())
+        {
+            if(support.type() == JUNCTION_MATE)
+                continue;
+
+            if(hasMatchingFragment(second.support(), support.read()))
+                return true;
+        }
+
+        for(AssemblySupport support : first.candidateSupport())
+        {
+            if(hasMatchingFragment(second.support(), support.read()))
+                return true;
+        }
+
+        return false;
     }
 
     private List<JunctionGroup> findOverlappingJunctionGroups(final JunctionGroup assemblyJunctionGroup, final RemoteRegion region)
@@ -217,21 +296,6 @@ public class PhaseGroupBuilder
         return overlapGroups;
     }
 
-    private static boolean assembliesShareReads(final JunctionAssembly first, final JunctionAssembly second)
-    {
-        // tests matching reads in both the junction reads and any extension reads (ie discordant)
-        for(AssemblySupport support : first.support())
-        {
-            if(support.type() == JUNCTION_MATE)
-                continue;
-
-            if(hasMatchingFragment(second.support(), support.read()))
-                return true;
-        }
-
-        return false;
-    }
-
     private boolean isFiltered(final RemoteRegion region)
     {
         // ignore any remote region filtered out by config
@@ -245,16 +309,5 @@ public class PhaseGroupBuilder
             return false;
 
         return mConfig.SpecificChrRegions.Regions.stream().noneMatch(x -> x.overlaps(region));
-    }
-
-    private void buildPhasedAssemblies()
-    {
-        for(PhaseGroup phaseGroup : mPhaseGroups)
-        {
-            // where there are more than 2 assemblies, start with the ones with the most support and overlapping junction reads
-            PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(phaseGroup);
-
-            phaseSetBuilder.buildPhaseSets();
-        }
     }
 }

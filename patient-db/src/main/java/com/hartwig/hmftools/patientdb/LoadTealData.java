@@ -65,8 +65,7 @@ public class LoadTealData
         }
         catch(Exception e)
         {
-            LOGGER.error("failed to load Teal data: {}", e.toString());
-            e.printStackTrace();
+            LOGGER.error("Failed to load Teal data", e);
             System.exit(1);
         }
     }

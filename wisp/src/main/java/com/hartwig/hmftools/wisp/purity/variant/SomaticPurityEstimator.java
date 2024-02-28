@@ -1,17 +1,16 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
-import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_COUNT_MODEL_MIN_AVG_DEPTH;
-import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_COUNT_MODEL_MIN_FRAG_VARIANTS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SYNTHETIC_TUMOR_VAF;
-import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_AVG_DEPTH;
-import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_FRAG_VARIANTS;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.isRecomputed;
+import static com.hartwig.hmftools.wisp.purity.variant.LowCountModel.filterVariants;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.calcLimitOfDetection;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.estimatedProbability;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.estimatedPurity;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult.INVALID_RESULT;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.wisp.purity.SampleData;
@@ -79,19 +78,20 @@ public class SomaticPurityEstimator
 
         purityCalcData.PurityEstimate = purityCalcData.RawPurityEstimate;
 
-        double weightedAvgDepth = fragmentTotals.weightedSampleDepth();
-
         ClonalityModel model = null;
 
-        if(fragmentTotals.sampleTwoPlusCount() >= SOMATIC_PEAK_MIN_FRAG_VARIANTS
-        && weightedAvgDepth > SOMATIC_PEAK_MIN_AVG_DEPTH)
+        if(VafPeakModel.canUseModel(fragmentTotals))
         {
             model = new VafPeakModel(mConfig, mResultsWriter, mSample, variants);
         }
-        else if(fragmentTotals.sampleOneFragmentCount() + fragmentTotals.sampleTwoPlusCount() >= LOW_COUNT_MODEL_MIN_FRAG_VARIANTS
-        && weightedAvgDepth < LOW_COUNT_MODEL_MIN_AVG_DEPTH)
+        else
         {
-            model = new LowCountModel(mConfig, mResultsWriter, mSample, variants);
+            double medianVcn = medianVcn(variants);
+
+            List<SomaticVariant> lowCountFilteredVariants = filterVariants(sampleId, fragmentTotals, variants, medianVcn);
+
+            if(LowCountModel.canUseModel(sampleId, fragmentTotals, lowCountFilteredVariants))
+                model = new LowCountModel(mConfig, mResultsWriter, mSample, lowCountFilteredVariants);
         }
 
         if(model != null)
@@ -122,5 +122,14 @@ public class SomaticPurityEstimator
         //        mSample.PatientId, sampleId, sampleDepthTotal, allFragsNoise, lodFragsResult.EstimatedPurity));
 
         return new SomaticPurityResult(true, totalVariantCount, chipVariants, fragmentTotals, umiTypeCounts, purityCalcData);
+    }
+
+    private static double medianVcn(final List<SomaticVariant> variants)
+    {
+        List<Double> variantCopyNumbers = variants.stream().map(x -> new Double(x.variantCopyNumber())).collect(Collectors.toList());
+        Collections.sort(variantCopyNumbers);
+
+        int medIndex = variantCopyNumbers.size() / 2;
+        return variantCopyNumbers.get(medIndex);
     }
 }

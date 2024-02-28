@@ -1,14 +1,11 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
-import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentageOneDecimal;
-
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
@@ -30,17 +27,16 @@ import com.hartwig.hmftools.orange.report.tables.GainLossTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineLossOfHeterozygosityTable;
 import com.hartwig.hmftools.orange.report.tables.GermlineVariantTable;
 import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
+import com.hartwig.hmftools.orange.report.tables.MissedVariantLikelihoodTable;
 import com.hartwig.hmftools.orange.report.tables.PharmacogeneticsTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class GermlineFindingsChapter implements ReportChapter
@@ -162,46 +158,13 @@ public class GermlineFindingsChapter implements ReportChapter
         Map<String, Double> germlineMVLHPerGene = report.germlineMVLHPerGene();
         if(germlineMVLHPerGene != null)
         {
-            Cells cells = new Cells(reportResources);
-            Table table = Tables.createContent(contentWidth(), new float[] { 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1 }, new Cell[] {
-                    cells.createHeader("Gene"), cells.createHeader("MVLH"), cells.createHeader(Strings.EMPTY), cells.createHeader("Gene"),
-                    cells.createHeader("MVLH"), cells.createHeader(Strings.EMPTY), cells.createHeader("Gene"), cells.createHeader("MVLH"),
-                    cells.createHeader(Strings.EMPTY), cells.createHeader("Gene"), cells.createHeader("MVLH"),
-                    cells.createHeader(Strings.EMPTY) });
+            Map<String, Double> significantGermlineMVLHPerGene = germlineMVLHPerGene.entrySet()
+                    .stream()
+                    .filter(e -> e.getValue() > 0.01)
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-            int count = 0;
-            Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-            genes.addAll(germlineMVLHPerGene.keySet());
-            for(String gene : genes)
-            {
-                double mvlh = germlineMVLHPerGene.get(gene);
-                if(mvlh > 0.01)
-                {
-                    count++;
-                    table.addCell(cells.createContent(gene));
-                    table.addCell(cells.createContent(formatPercentageOneDecimal(mvlh)));
-                    table.addCell(cells.createContent(Strings.EMPTY));
-                }
-            }
-
-            // Make sure all rows are properly filled in case table is sparse.
-            if(count % 4 != 0)
-            {
-                for(int i = 0; i < 12 - 3 * (count % 4); i++)
-                {
-                    table.addCell(cells.createContent(Strings.EMPTY));
-                }
-            }
-
-            String title = "Genes with missed variant likelihood > 1% (" + count + ")";
-            if(count == 0)
-            {
-                document.add(new Tables(reportResources).createEmpty(title, contentWidth()));
-            }
-            else
-            {
-                document.add(new Tables(reportResources).createWrapping(table, title));
-            }
+            String title = "Genes with missed variant likelihood > 1% (" + significantGermlineMVLHPerGene.size() + ")";
+            document.add(MissedVariantLikelihoodTable.build(title, contentWidth(), significantGermlineMVLHPerGene, reportResources));
         }
     }
 

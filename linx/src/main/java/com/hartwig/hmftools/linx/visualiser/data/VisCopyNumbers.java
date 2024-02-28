@@ -12,20 +12,18 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.linx.visualiser.file.VisCopyNumber;
 
-import org.jetbrains.annotations.NotNull;
-
 public class VisCopyNumbers
 {
     private static final int MAX_EXTRA_DISTANCE = 1000;
     private static final double MIN_EXTRA_DISTANCE_PERCENT = 0.1;
     
-    public static List<VisCopyNumber> copyNumbers(final List<VisCopyNumber> alterations, final List<GenomeRegion> span)
+    public static List<VisCopyNumber> copyNumbers(final List<VisCopyNumber> copyNumbers, final List<GenomeRegion> span)
     {
         final List<VisCopyNumber> results = Lists.newArrayList();
 
-        for(int i = 0; i < alterations.size(); i++)
+        for(int i = 0; i < copyNumbers.size(); i++)
         {
-            VisCopyNumber alteration = alterations.get(i);
+            VisCopyNumber alteration = copyNumbers.get(i);
             final String contig = alteration.chromosome();
             final List<GenomeRegion> chromosomeSegments =
                     span.stream().filter(x -> x.chromosome().equals(contig)).collect(Collectors.toList());
@@ -40,10 +38,10 @@ public class VisCopyNumbers
 
                 if(alteration.end() >= minTrackPosition && alteration.start() <= maxTrackPosition)
                 {
-                    boolean isStartDecreasing = i > 0 && lessThan(alteration, alterations.get(i - 1));
+                    boolean isStartDecreasing = i > 0 && lessThan(alteration, copyNumbers.get(i - 1));
                     int startPosition = isStartDecreasing ? alteration.start() - 1 : alteration.start();
 
-                    boolean isEndIncreasing = i < alterations.size() - 1 && lessThan(alteration, alterations.get(i + 1));
+                    boolean isEndIncreasing = i < copyNumbers.size() - 1 && lessThan(alteration, copyNumbers.get(i + 1));
                     int endPosition = isEndIncreasing ? alteration.end() + 1 : alteration.end();
 
                     VisCopyNumber newCn = VisCopyNumber.from(alteration);
@@ -64,7 +62,6 @@ public class VisCopyNumbers
         return first.chromosome().equals(second.chromosome()) && Doubles.lessThan(first.CopyNumber, second.CopyNumber);
     }
 
-    @NotNull
     public static List<VisCopyNumber> read(final String fileName) throws IOException
     {
         return VisCopyNumber.read(fileName);

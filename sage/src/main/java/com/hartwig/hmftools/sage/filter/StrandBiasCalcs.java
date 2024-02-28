@@ -5,7 +5,6 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_CHECK_THRESHOLD;
-import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_HOMOPOLYMER_CHECK_THRESHOLD;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_REF_MIN_BIAS;
 import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_REF_MIN_DEPTH;
 
@@ -16,14 +15,11 @@ import org.apache.commons.math3.distribution.BinomialDistribution;
 public class StrandBiasCalcs
 {
     private final double[] mStrandBiasValues;
-    private final double[] mStrandBiasHighValues;
     private final double mMaxStrandBiasValue;
-    private final double mMaxStrandBiasHighValue;
 
     private static final int MAX_AD_VS_PROB = 1000;
     private static final int MAX_ITERATIONS = 30;
     private static final double STRAND_BIAS_PROB = 0.0005;
-    private static final double STRAND_BIAS_PROB_HIGH = 0.02;
     private static final double STRAND_BIAS_DIFF = 0.001;
     private static final double PROB_DIFF = 0.0001;
     private static final double EXPECTED_RATE = 0.5;
@@ -34,10 +30,6 @@ public class StrandBiasCalcs
         mStrandBiasValues = new double[MAX_AD_VS_PROB + 1];
         buildProbabilityCache(mStrandBiasValues, STRAND_BIAS_PROB);
         mMaxStrandBiasValue = mStrandBiasValues[mStrandBiasValues.length - 1];
-
-        mStrandBiasHighValues = new double[MAX_AD_VS_PROB + 1];
-        buildProbabilityCache(mStrandBiasHighValues, STRAND_BIAS_PROB_HIGH);
-        mMaxStrandBiasHighValue = mStrandBiasHighValues[mStrandBiasHighValues.length - 1];
     }
 
     public boolean allOneSide(final StrandBiasData strandBiasDataAlt)
@@ -48,15 +40,13 @@ public class StrandBiasCalcs
         return strandBiasDataAlt.forward() == 0 || strandBiasDataAlt.reverse() == 0;
     }
 
-    public boolean isDepthBelowProbability(
-            final StrandBiasData strandBiasDataAlt, final StrandBiasData strandBiasDataRef, boolean checkRef, boolean isLongHomopolymer)
+    public boolean isDepthBelowProbability(final StrandBiasData strandBiasDataAlt, final StrandBiasData strandBiasDataRef, boolean checkRef)
     {
         double strandBias = strandBiasDataAlt.bias();
 
         double minStrandBias = min(strandBias, 1 - strandBias);
 
-        double checkThreshold = isLongHomopolymer ? STRAND_BIAS_HOMOPOLYMER_CHECK_THRESHOLD : STRAND_BIAS_CHECK_THRESHOLD;
-        if(minStrandBias > checkThreshold)
+        if(minStrandBias > STRAND_BIAS_CHECK_THRESHOLD)
             return false;
 
         if(checkRef)
@@ -74,12 +64,7 @@ public class StrandBiasCalcs
         }
 
         int depth = strandBiasDataAlt.depth();
-        double requiredStrandBias;
-
-        if(isLongHomopolymer)
-            requiredStrandBias = depth < mStrandBiasHighValues.length ? mStrandBiasHighValues[depth] : mMaxStrandBiasHighValue;
-        else
-            requiredStrandBias = depth < mStrandBiasValues.length ? mStrandBiasValues[depth] : mMaxStrandBiasValue;
+        double requiredStrandBias = depth < mStrandBiasValues.length ? mStrandBiasValues[depth] : mMaxStrandBiasValue;
 
         if(requiredStrandBias == INVALID_STRAND_BIAS)
             return false;

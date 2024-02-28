@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -28,6 +29,12 @@ public class Junction implements Comparable<Junction>
     public final String Chromosome;
     public final int Position;
     public final byte Orientation;
+
+    public final boolean DiscordantOnly;
+    public final boolean IndelBased;
+    public final boolean Hotspot;
+
+    public final String mDetails;
 
     /*
     public final int junctionFragments();
@@ -45,9 +52,36 @@ public class Junction implements Comparable<Junction>
 
     public Junction(final String chromosome, final int position, final byte orientation)
     {
+        this(chromosome, position, orientation, false, false, false);
+    }
+
+    public Junction(
+            final String chromosome, final int position, final byte orientation, final boolean discordantOnly,
+            final boolean indelBased, final boolean hotspot)
+    {
         Chromosome = chromosome;
         Position = position;
         Orientation = orientation;
+        DiscordantOnly = discordantOnly;
+        IndelBased = indelBased;
+        Hotspot = hotspot;
+
+        if(DiscordantOnly || IndelBased || Hotspot)
+        {
+            StringJoiner sj = new StringJoiner("/");
+            if(DiscordantOnly)
+                sj.add("disc-only");
+            if(IndelBased)
+                sj.add("indel");
+            if(Hotspot)
+                sj.add("hotspot");
+
+            mDetails = sj.toString();
+        }
+        else
+        {
+            mDetails = "";
+        }
     }
 
     // convenience and poossible temporary
@@ -59,6 +93,11 @@ public class Junction implements Comparable<Junction>
 
     public String toString()
     {
+        if(DiscordantOnly || IndelBased || Hotspot)
+        {
+            return format("%s:%d:%d %s",Chromosome, Position, Orientation, mDetails);
+        }
+
         return format("%s:%d:%d", Chromosome, Position, Orientation);
     }
 
@@ -117,6 +156,10 @@ public class Junction implements Comparable<Junction>
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
             int posIndex = fieldsIndexMap.get(FLD_POSITION);
             int orientIndex = fieldsIndexMap.get(FLD_ORIENTATION);
+            Integer juncFragsIndex = fieldsIndexMap.get("JunctionFrags");
+            Integer discFragsIndex = fieldsIndexMap.get("DiscordantFrags");
+            Integer indelIndex = fieldsIndexMap.get("Indel");
+            Integer hotspotIndex = fieldsIndexMap.get("Hotspot");
 
             List<Junction> junctionDataList = null;
             String currentChromosome = "";
@@ -144,7 +187,13 @@ public class Junction implements Comparable<Junction>
                     chrJunctionsMap.put(chromosome, junctionDataList);
                 }
 
-                junctionDataList.add(new Junction(chromosome, position, orientation));
+                int junctionFrags = juncFragsIndex != null ? Integer.parseInt(values[juncFragsIndex]) : 0;
+                int discordantFrags = discFragsIndex != null ? Integer.parseInt(values[discFragsIndex]) : 0;
+                boolean discordantOnly = junctionFrags == 0 && discordantFrags > 0;
+                boolean indel = indelIndex != null && Boolean.parseBoolean(values[indelIndex]);
+                boolean hotspot = hotspotIndex != null && Boolean.parseBoolean(values[hotspotIndex]);
+
+                junctionDataList.add(new Junction(chromosome, position, orientation, discordantOnly, indel, hotspot));
                 ++junctionCount;
             }
 

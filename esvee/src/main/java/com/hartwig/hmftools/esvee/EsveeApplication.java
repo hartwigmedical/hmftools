@@ -3,10 +3,7 @@ package com.hartwig.hmftools.esvee;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.SvConfig.osExtension;
 import static com.hartwig.hmftools.esvee.SvConstants.APP_NAME;
-
-import java.io.File;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -33,22 +30,10 @@ public class EsveeApplication
             System.exit(1);
         }
 
-        loadAlignerLibrary();
-
         junctionProcessor.run();
         junctionProcessor.close();
 
         SV_LOGGER.info("Esvee complete, mins({})", runTimeMinsStr(startTimeMs));
-    }
-
-    private void loadAlignerLibrary()
-    {
-
-        final var props = System.getProperties();
-        final String candidateBWAPath = "libbwa." + props.getProperty("os.arch") + osExtension();
-
-        if(System.getProperty("LIBBWA_PATH") == null && new File(candidateBWAPath).exists())
-            System.setProperty("LIBBWA_PATH", new File(candidateBWAPath).getAbsolutePath());
     }
 
     public static void main(final String[] args)

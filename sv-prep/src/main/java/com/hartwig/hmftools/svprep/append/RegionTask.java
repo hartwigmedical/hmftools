@@ -59,8 +59,8 @@ public class RegionTask implements Callable
         mBamSlicer = createBamSlicer();
 
         JunctionsConfig jtConfig = new JunctionsConfig(
-                true, mConfig.ReadFiltering, DEFAULT_READ_LENGTH, false, false,
-                false, true, 0, false);
+                mConfig.ReadFiltering, DEFAULT_READ_LENGTH, false, false,
+                false, true, false);
 
         mBreakendTracker = new JunctionTracker(mRegion, jtConfig, new HotspotCache(null), new BlacklistLocations(null));
 

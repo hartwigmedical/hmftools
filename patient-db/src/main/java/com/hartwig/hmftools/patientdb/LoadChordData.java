@@ -1,23 +1,20 @@
 package com.hartwig.hmftools.patientdb;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.patientdb.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
-import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,50 +24,29 @@ public class LoadChordData
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException
     {
-        Options options = createOptions();
-        CommandLine cmd = new DefaultParser().parse(options, args);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        logVersion();
+        configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
+        addDatabaseCmdLineArgs(configBuilder, true);
+        configBuilder.addPath(PREDICTION_FILE, true, "Path towards the chord prediction file.");
 
-        String sample = cmd.getOptionValue(SAMPLE);
-        String predictionFile = cmd.getOptionValue(PREDICTION_FILE);
+        configBuilder.checkAndParseCommandLine(args);
 
-        if(CommonUtils.anyNull(predictionFile, sample))
+        String sample = configBuilder.getValue(SAMPLE);
+        String predictionFile = configBuilder.getValue(PREDICTION_FILE);
+
+        try (DatabaseAccess dbWriter = databaseAccess(configBuilder))
         {
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Patient-DB - Load Chord Data", options);
-            System.exit(1);
-        }
-
-        File fileObject = new File(predictionFile);
-        if(fileObject.isFile())
-        {
-            DatabaseAccess dbWriter = databaseAccess(cmd);
-
             LOGGER.info("Extracting and writing chord for {}", predictionFile);
             ChordData chordData = ChordDataFile.read(predictionFile);
             dbWriter.writeChord(sample, chordData);
 
             LOGGER.info("Complete");
         }
-        else
+        catch (Exception e)
         {
-            if(!fileObject.exists())
-            {
-                LOGGER.warn("file '{}' does not exist.", predictionFile);
-            }
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("patient-db - load chord data", options);
+            LOGGER.error("Failed to load Chord data", e);
+            System.exit(1);
         }
-    }
-
-    @NotNull
-    private static Options createOptions()
-    {
-        Options options = new Options();
-        options.addOption(SAMPLE, true, "The tumor sample.");
-        options.addOption(PREDICTION_FILE, true, "Path towards the chord prediction file.");
-        addDatabaseCmdLineArgs(options);
-        return options;
     }
 }

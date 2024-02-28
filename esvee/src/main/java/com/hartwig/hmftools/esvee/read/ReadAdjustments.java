@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.read;
 
 import static com.hartwig.hmftools.esvee.SvConstants.INDEL_TO_SC_MAX_EDGE_DISTANCE;
 import static com.hartwig.hmftools.esvee.SvConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
+import static com.hartwig.hmftools.esvee.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.POLY_G_TRIM_LENGTH;
 import static com.hartwig.hmftools.esvee.common.BaseType.G;
 import static com.hartwig.hmftools.esvee.common.BaseType.C;
@@ -49,7 +50,7 @@ public final class ReadAdjustments
         if(next.getOperator() != CigarOperator.M)
             return 0;
 
-        if(inside.getLength() < INDEL_TO_SC_MIN_SIZE_SOFTCLIP)
+        if(inside.getLength() < INDEL_TO_SC_MIN_SIZE_SOFTCLIP || inside.getLength() >= MIN_INDEL_SUPPORT_LENGTH)
             return 0;
 
         return inside.getOperator() != CigarOperator.D ? edge.getLength() + inside.getLength() : edge.getLength();

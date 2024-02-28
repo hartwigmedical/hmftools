@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.patientdb;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.patientdb.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
-import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
@@ -11,11 +12,9 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,24 +24,34 @@ public class LoadSignatures
 
     public static void main(@NotNull String[] args) throws ParseException
     {
-        Options options = createOptions();
-        CommandLine cmd = new DefaultParser().parse(options, args);
-        DatabaseAccess dbAccess = createDatabaseAccess(cmd);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        logVersion();
+        configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
+        addDatabaseCmdLineArgs(configBuilder, true);
+        configBuilder.addPath(SAMPLE_DIR, true, "Directory to read signature data from");
 
-        if(dbAccess == null) {
+        configBuilder.checkAndParseCommandLine(args);
 
-            LOGGER.error("Failed to create DB connection");
+        String sample = configBuilder.getValue(SAMPLE);
+        String sampleDir = configBuilder.getValue(SAMPLE_DIR);
+
+        try(DatabaseAccess dbAccess = createDatabaseAccess(configBuilder))
+        {
+            if(dbAccess == null)
+            {
+                LOGGER.error("Failed to create DB connection");
+                System.exit(1);
+            }
+
+            loadSignatureData(dbAccess, sample, sampleDir);
+
+            LOGGER.info("signature allocation loading complete");
+        }
+        catch(Exception e)
+        {
+            LOGGER.error("Failed to load signature allocations", e);
             System.exit(1);
         }
-
-        String sampleId = cmd.getOptionValue(SAMPLE);
-        String sampleDir = cmd.getOptionValue(SAMPLE_DIR);
-
-        loadSignatureData(dbAccess, sampleId, sampleDir);
-
-        LOGGER.info("signature allocation loading complete");
     }
 
     private static void loadSignatureData(final DatabaseAccess dbAccess, final String sampleId, final String sampleDir)
@@ -66,16 +75,5 @@ public class LoadSignatures
         {
             LOGGER.error("failed to load sample({}) allocations: {}", sampleId, e.toString());
         }
-    }
-
-    @NotNull
-    private static Options createOptions()
-    {
-        Options options = new Options();
-        addDatabaseCmdLineArgs(options);
-        options.addOption(SAMPLE, true, "Name of the tumor sample");
-        options.addOption(SAMPLE_DIR, true, "Directory to read signature data from");
-
-        return options;
     }
 }

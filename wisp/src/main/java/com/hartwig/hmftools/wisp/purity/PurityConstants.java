@@ -32,6 +32,10 @@ public class PurityConstants
 
     public static final int LOW_COUNT_MODEL_MIN_FRAG_VARIANTS = 5;
     public static final int LOW_COUNT_MODEL_MIN_AVG_DEPTH = 50;
+
+    public static final int LOW_COUNT_MODEL_MIN_2_PLUS_FRAGS = 2;
+    public static final double LOW_COUNT_MODEL_MIN_2_PLUS_FRAG_PERC = 0.002;
+
     public static final double DROPOUT_RATE_INCREMENT = 0.1;
 
     public static final double SYNTHETIC_TUMOR_VAF = 0.5;

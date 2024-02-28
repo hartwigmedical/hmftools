@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
@@ -101,7 +102,7 @@ public class VisProteinDomain implements GenomeRegion
             String[] values = line.split(TSV_DELIM);
 
             data.add(new VisProteinDomain(
-                    getValue(fieldsIndexMap, "SampleId", "", values),
+                    getValue(fieldsIndexMap, FLD_SAMPLE_ID, "", values),
                     getIntValue(fieldsIndexMap, "ClusterId", 0, values),
                     getValue(fieldsIndexMap, "Transcript", "", values),
                     getValue(fieldsIndexMap, "Chromosome", "", values),
@@ -116,7 +117,6 @@ public class VisProteinDomain implements GenomeRegion
     public static String header()
     {
         return new StringJoiner(TSV_DELIM)
-                .add("SampleId")
                 .add("ClusterId")
                 .add("Transcript")
                 .add("Chromosome")
@@ -129,7 +129,6 @@ public class VisProteinDomain implements GenomeRegion
     public static String toString(final VisProteinDomain proteinData)
     {
         return new StringJoiner(TSV_DELIM)
-                .add(String.valueOf(proteinData.SampleId))
                 .add(String.valueOf(proteinData.ClusterId))
                 .add(String.valueOf(proteinData.Transcript))
                 .add(String.valueOf(proteinData.Chromosome))

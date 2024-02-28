@@ -116,20 +116,20 @@ Features can also be extracted for multiple samples. This is useful when trainin
 ## Classification (Python component)
 
 ### Installation
-The core classification component of CUPPA is a python package (`pycuppa`) can be installed via `pip` using the below bash commands.
+The core classification component of CUPPA is a python package (`pycuppa`) and can be installed using the below bash commands:
 
-```commandline
-## Download CUPPA
-git clone https://github.com/hartwigmedical/hmftools/tree/master/cuppa/src/main/resources/pycuppa/ $HOME
+```shell
+## Clone the `hmftools` git repository
+git clone https://github.com/hartwigmedical/hmftools/
 
-## Create python virtual environment
-python3 -m venv $HOME/pycuppa_env
+## Create a python virtual environment
+python3 -m venv pycuppa_env
 
-## Activate environment
-source $HOME/pycuppa/bin/activate
+## Activate the environment
+source pycuppa_env/bin/activate
 
-## Install CUPPA python package. This will also install required python packages.
-pip install $HOME/pycuppa
+## Install `pycuppa` using `pip`. This will also install required python packages
+pip install hmftools/cuppa/src/main/python/pycuppa
 ```
 
 ### Running CUPPA within python
@@ -139,25 +139,31 @@ for example code at [doc/notebooks/](src/main/python/pycuppa/doc/notebooks/). Th
 - [train_example.ipynb](src/main/python/pycuppa/doc/notebooks/train_example.ipynb): view on [nbviewer.org](https://nbviewer.org/github/hartwigmedical/hmftools/blob/master/cuppa/src/main/python/pycuppa/doc/notebooks/train_example.ipynb)
 
 ### Command line interface
-CUPPA can also be called from the command line (which internally calls the `PredictionRunner` and `TrainingRunner` 
-classes). 
+CUPPA can also be called from the command line (which internally calls the `PredictionRunner` and `TrainingRunner` classes). 
 
 To predict on a single sample, the below example commands can be used.  This produces the outputs as specified in 
 section: [Classifier output](#classifier-output).
 
-```commandline
-source ~/pycuppa/bin/activate ## Activate the virtual environment
+```shell
+## Activate the previously created virtual environment (see above)
+source pycuppa_env/bin/activate
 
+## Create output dir
+mkdir predict_output/
+
+## Call the module `pycuppa/cuppa/predict.py`
 python3 -m cuppa.predict \
---features_path=~/pycuppa/resources/mock_data/input_data/prostate_sample.cuppa_data.tsv.gz \
---classifier_path=~/pycuppa/resources/cuppa_classifier.pickle.gz \
---output_dir=~/predict_output/ 
+--features_path=hmftools/cuppa/src/main/python/pycuppa/cuppa/resources/mock_data/input_data/new_format/COLO829v003T.cuppa_data.tsv.gz \
+--classifier_path=hmftools/cuppa/src/main/python/pycuppa/cuppa/resources/cuppa_classifier.pickle.gz \
+--output_dir=predict_output/ 
 ```
 
 To train a new model, the following example commands can be used.
-```commandline
-source ~/pycuppa/bin/activate ## Activate the virtual environment
+```shell
+## Activate the previously created virtual environment (see above)
+source pycuppa_env/bin/activate
 
+## Call the module `pycuppa/cuppa/train.py`
 python3 -m cuppa.train \
 --features_path=/path/to/features/ \
 --metadata_path=/path/to/metadata/ \
@@ -237,7 +243,7 @@ For each sample CUPPA outputs a visualization of the predictions (PNG file), as 
 TSV file. Please see later sections for more info on the [features](#features) and [classifiers](#classifier-structure) 
 shown in the visualization.
 
-![](src/main/python/pycuppa/doc/visualization/cuppa_vis.png)
+![](src/main/python/pycuppa/doc/visualization/COLO829v003T.cuppa.vis.png)
 
 ### Probabilities by classifier
 The CUPPA visualization is split into 4 panels. The first panel shows the probabilities for each cancer subtype 

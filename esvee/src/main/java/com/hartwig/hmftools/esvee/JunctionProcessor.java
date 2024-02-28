@@ -17,8 +17,11 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.esvee.alignment.Alignment;
+import com.hartwig.hmftools.esvee.alignment.BwaAligner;
 import com.hartwig.hmftools.esvee.assembly.PhaseGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
+import com.hartwig.hmftools.esvee.assembly.PhaseSetTask;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
@@ -27,6 +30,7 @@ import com.hartwig.hmftools.esvee.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.output.WriteType;
 import com.hartwig.hmftools.esvee.read.BamReader;
 import com.hartwig.hmftools.esvee.output.VcfWriter;
+import com.hartwig.hmftools.esvee.read.ReadStats;
 
 public class JunctionProcessor
 {
@@ -36,6 +40,8 @@ public class JunctionProcessor
 
     private final Map<String,List<Junction>> mChrJunctionsMap;
     private final Map<String,List<JunctionGroup>> mJunctionGroupMap;
+
+    private final Alignment mAlignment;
 
     private final List<BamReader> mBamReaders;
 
@@ -48,6 +54,8 @@ public class JunctionProcessor
         mChrJunctionsMap = Maps.newHashMap();
         mJunctionGroupMap = Maps.newHashMap();
         mBamReaders = Lists.newArrayList();
+
+        mAlignment = new Alignment(mConfig, new BwaAligner(mConfig));
 
         mResultsWriter = new ResultsWriter(mConfig);
         mVcfWriter = new VcfWriter(mConfig);
@@ -96,11 +104,15 @@ public class JunctionProcessor
 
             runPrimaryAssembly();
 
-            formPrimaryPhaseGroups();
+            formPhaseGroups();
+
+            alignPhaseSets();
 
             // write here to show PPG data - may move back later on
             if(mConfig.WriteTypes.contains(WriteType.ASSEMBLIES))
             {
+                SV_LOGGER.debug("writing assembly data");
+
                 int assemblyId = 0;
                 for(List<JunctionGroup> junctionGroups : mJunctionGroupMap.values())
                 {
@@ -108,6 +120,10 @@ public class JunctionProcessor
                     {
                         // set ID first so any references have them set - may need or could to be done earlier once
                         // all references between then are established
+
+                        // NOTE: is there a cleaner place to do this? eg prior to alignment after phasing is done?
+                        junctionGroup.addBranchedAssemblies();
+
                         for(JunctionAssembly assembly : junctionGroup.junctionAssemblies())
                         {
                             assembly.setId(assemblyId++);
@@ -154,32 +170,59 @@ public class JunctionProcessor
 
         // Primary Junction Assembly
         List<JunctionGroupAssembler> primaryAssemblyTasks = JunctionGroupAssembler.createThreadTasks(
-                junctionGroups, mBamReaders, mConfig, mResultsWriter, taskCount, threadTasks);
+                junctionGroups, mBamReaders, mConfig, taskCount, threadTasks);
 
         if(!runThreadTasks(threadTasks))
             System.exit(1);
 
         int totalJunctionAssemblies = junctionGroups.stream().mapToInt(x -> x.junctionAssemblies().size()).sum();
+        int totalDiscordantGroups = junctionGroups.stream().mapToInt(x -> x.discordantGroups().size()).sum();
 
-        int totalLowQualFilteredReads = primaryAssemblyTasks.stream().mapToInt(x -> x.lowQualFilteredReads()).sum();
+        ReadStats combinedReadStats = new ReadStats();
+        primaryAssemblyTasks.forEach(x -> combinedReadStats.merge(x.readStats()));
 
-        SV_LOGGER.info("created {} junction assemblies", totalJunctionAssemblies);
+        SV_LOGGER.info("created {} junction assemblies, {} discordant groups", totalJunctionAssemblies, totalDiscordantGroups);
 
         mPerfCounters.add(ThreadTask.mergePerfCounters(primaryAssemblyTasks.stream().collect(Collectors.toList())));
 
         int totalCachedReads = junctionGroups.stream().mapToInt(x -> x.candidateReadCount()).sum();
 
-        SV_LOGGER.info("cached read count({}) from {} junction groups, lowQualFiltered({})",
-                totalCachedReads, junctionGroups.size(), totalLowQualFilteredReads);
+        SV_LOGGER.info("cached read count({}) from {} junction groups, stats: {}",
+                totalCachedReads, junctionGroups.size(), combinedReadStats);
     }
 
-    private void formPrimaryPhaseGroups()
+    private void formPhaseGroups()
     {
         PhaseGroupBuilder phaseGroupBuilder = new PhaseGroupBuilder(mConfig, mJunctionGroupMap);
 
         phaseGroupBuilder.buildGroups();
 
-        SV_LOGGER.info("phaseGroups count({})", phaseGroupBuilder.primaryPhaseGroups().size());
+        SV_LOGGER.info("building phase sets from {} phase groups", phaseGroupBuilder.phaseGroups().size());
+
+        List<Thread> threadTasks = new ArrayList<>();
+
+        List<PhaseSetTask> phaseSetTasks = PhaseSetTask.createThreadTasks(mConfig, phaseGroupBuilder.phaseGroups(), mConfig.Threads, threadTasks);
+
+        if(!runThreadTasks(threadTasks))
+            System.exit(1);
+
+        mPerfCounters.add(ThreadTask.mergePerfCounters(phaseSetTasks.stream().collect(Collectors.toList())));
+
+        SV_LOGGER.info("created {} phase sets", phaseGroupBuilder.phaseGroups().stream().mapToInt(x -> x.phaseSets().size()).sum());
+    }
+
+    private void alignPhaseSets()
+    {
+        /*
+        for(PhaseGroup phaseGroup : phaseGroupBuilder.phaseGroups())
+        {
+            for(PhaseSet phaseSet : phaseGroup.phaseSets())
+            {
+                mAlignment.processPhaseSet(phaseSet);
+            }
+        }
+        */
+
     }
 
     public void close()

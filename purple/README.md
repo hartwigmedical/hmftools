@@ -2,11 +2,7 @@
 
 # PURPLE
 
-PURPLE is a **pur**ity **pl**oidy **e**stimator for whole genome sequenced (WGS) data. 
-
-It combines B-allele frequency (BAF) from [AMBER](../amber), read depth ratios from [COBALT](../cobalt), somatic variants and structural variants to estimate the purity and copy number profile of a tumor sample.
-
-PURPLE supports both grch 37 and 38 reference assemblies. 
+PURPLE is a **pur**ity **pl**oidy **e**stimator primarily designed for whole genome sequenced (WGS) data. It combines B-allele frequency (BAF) from [AMBER](../amber), read depth ratios from [COBALT](../cobalt), somatic variants and structural variants to estimate the purity and copy number profile of a tumor sample.   PURPLE supports both grch 37 and 38 reference assemblies. 
 
 PURPLE may also be run on targeted data. For more info please see [here](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md)
 
@@ -344,7 +340,7 @@ If the segments identified by the PCF algorithm are not contiguous, then there r
 
 Once the segments have been established we map our observations to them.  In each segment we take the median BAF of the tumor sample and the median read ratio of both the tumor and reference samples.  We also record the number of BAF points within the segment as the BAFCount and the number of tumor read depth windows within the segment as the depth window count.
 
-A reference sample copy number status is determined at this this stage based on the observed copy number ratio in the reference sample, either ‘DIPLOID’ (0.85<= read depth ratio<=1.15), ‘HETEROZYGOUS_DELETION’ (0.1<=ratio<0.85), ‘HOMOZYGOUS_DELETION’ (ratio<0.1),’AMPLIFICATION’(1.15<ratio<=2.2) or ‘NOISE’ (ratio>2.2). The 'diploid normalised' copy number ratio is used for this annotation. However,  if a continuous region of >5MB has diploisedNormalisedRatio / rawRatio < 0.7 or >1.3 (aside from the following noisy regions chr1:1-50M, chr9:135M-end, chr17:75M-end, chr19:1-20M), then this likely indicates a (rare) large copy number event the raw ratio is used instead.    Regions within 2MB of a centromere and in the IG and TCR regions are further masked.   The purity fitting and smoothing steps below use only the DIPLOID germline segments. 
+A reference sample copy number status is determined at this stage based on the observed mean read depth ratio in the reference sample, either ‘DIPLOID’ (0.85 <= ratio <= 1.15), ‘HETEROZYGOUS_DELETION’ (0.1 <= ratio < 0.85), ‘HOMOZYGOUS_DELETION’ (ratio < 0.1), ‘AMPLIFICATION’ (1.15 < ratio <= 2.2) or ‘NOISE’ (ratio > 2.2). The 'diploid normalised' mean read depth ratio is used for this annotation. However,  if a continuous region of >5MB has diploidNormalisedRatio / rawRatio < 0.7 or >1.3 (aside from the following noisy regions chr1:1-50M, chr9:135M-end, chr17:75M-end, chr19:1-20M), then this likely indicates a (rare) large copy number event the raw ratio is used instead.    Regions within 2MB of a centromere and in the IG and TCR regions are further masked.   The purity fitting and smoothing steps below use only the DIPLOID germline segments. 
 
 ### 3. Sample Purity and Ploidy
 

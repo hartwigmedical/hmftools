@@ -191,7 +191,7 @@ public class SomaticVariants
         double subclonalLikelihood = variant.context().getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0);
         double sequenceGcRatio = NO_GC_RATIO;
 
-        if(mConfig.RefGenome != null && mSample.ApplyGcRatioLimits)
+        if(mConfig.RefGenome != null && mSample.IsPanel)
         {
             String variantRefContext = generateMutationSequence(
                     mConfig.RefGenome, DEFAULT_PROBE_LENGTH, variant.chromosome(), variant.position(), variant.ref(), variant.alt());
@@ -235,9 +235,9 @@ public class SomaticVariants
                 }
             }
 
-            if(umiTypeCounts != NO_UMI_COUNTS)
+            if(umiTypeCounts == NO_UMI_COUNTS)
             {
-                // override basic AD and DP if umit totals are set
+                // override basic AD and DP if UMI counts are set
                 depth = umiTypeCounts.totalCount();
                 alleleCount = umiTypeCounts.alleleCount();
                 umiTypeCounts = new UmiTypeCounts(depth, 0, 0, alleleCount, 0, 0);
@@ -261,26 +261,19 @@ public class SomaticVariants
             if(sampleFragData == null || tumorFragData == null)
                 continue;
 
-            List<FilterReason> filterReasons = Lists.newArrayList(variant.filterReasons());
-
             boolean useForTotals = false;
 
-            if(filterReasons.isEmpty())
+            if(variant.filterReasons().isEmpty())
             {
                 // only include variants which satisfy the min avg qual check in the ctDNA sample
                 if(sampleFragData.isLowQual())
                 {
-                    filterReasons.add(LOW_QUAL_PER_AD);
+                    variant.addFilterReason(LOW_QUAL_PER_AD);
                 }
                 else
                 {
                     useForTotals = true;
                 }
-            }
-
-            if(mConfig.writeType(WriteType.SOMATIC_DATA))
-            {
-                writeVariant(mSomaticWriter, mConfig, mSample, sampleId, variant, sampleFragData, tumorFragData, filterReasons);
             }
 
             if(!useForTotals)
@@ -303,11 +296,26 @@ public class SomaticVariants
         for(SomaticVariant variant : chipVariants)
         {
             CT_LOGGER.debug("sample({}) chip variant({}) ad({}) vs sampleTotal({})",
-                    variant, variant.findGenotypeData(sampleId).AlleleCount, sampleTotalAD);
+                    sampleId,   variant, variant.findGenotypeData(sampleId).AlleleCount, sampleTotalAD);
 
             filteredVariants.remove(variant);
             variant.addFilterReason(CHIP);
         }
+
+        if(mConfig.writeType(WriteType.SOMATIC_DATA))
+        {
+            for(SomaticVariant variant : mVariants)
+            {
+                GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
+                GenotypeFragments tumorFragData = variant.findGenotypeData(mSample.TumorId);
+
+                if(sampleFragData != null && tumorFragData != null)
+                {
+                    writeVariant(mSomaticWriter, mConfig, mSample, sampleId, variant, sampleFragData, tumorFragData);
+                }
+            }
+        }
+
 
         return mEstimator.calculatePurity(sampleId, purityContext, filteredVariants, mVariants.size(), chipVariants.size());
     }
@@ -381,7 +389,7 @@ public class SomaticVariants
     private static synchronized void writeVariant(
             final BufferedWriter writer, final PurityConfig config,
             final SampleData sampleData, final String sampleId, final SomaticVariant variant,
-            final GenotypeFragments sampleFragData, final GenotypeFragments tumorData, final List<FilterReason> filterReasons)
+            final GenotypeFragments sampleFragData, final GenotypeFragments tumorData)
     {
         if(writer == null)
             return;
@@ -398,7 +406,7 @@ public class SomaticVariants
             sj.add(variant.Chromosome).add(String.valueOf(variant.Position)).add(variant.Ref).add(variant.Alt);
             sj.add(String.valueOf(variant.isProbeVariant()));
 
-            String filtersStr = filterReasons.stream().map(x -> x.toString()).collect(Collectors.joining(";"));
+            String filtersStr = variant.filterReasons().stream().map(x -> x.toString()).collect(Collectors.joining(";"));
 
             if(filtersStr.isEmpty())
                 filtersStr = PASS;

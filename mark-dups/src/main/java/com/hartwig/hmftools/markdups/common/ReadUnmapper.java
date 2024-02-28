@@ -307,14 +307,28 @@ public class ReadUnmapper
 
     private boolean checkUnmapSupplementaryRead(final SAMRecord read)
     {
-        if(checkUnmapSupplementaryAlignments(read))
-            return true;
+        // a supplementary should be dropped if its primary satisfies the unmapping criteria
+        List<SupplementaryReadData> alignments = SupplementaryReadData.extractAlignments(read);
 
-        // We don't want to drop supplementaries based on chimeric read criteria, since this is a criteria for a primary read and its
-        // primary mate. However, when checking if we are unmapping a supplementary based on whether its primary is unmapped, we do check
-        // the chimeric read criteria.
-        if(read.getReadPairedFlag() && isSupplementaryChimericRead(read))
-            return true;
+        if(alignments == null)
+            return false;
+
+        for(SupplementaryReadData suppData : alignments)
+        {
+            RegionMatchType matchType = supplementaryMaxDepthRegionOverlap(suppData);
+
+            if(matchType == RegionMatchType.NONE)
+                continue;
+
+            if(matchType == RegionMatchType.HIGH_DEPTH)
+                return true;
+
+            if(getSoftClipCountFromCigarStr(suppData.Cigar) >= UNMAP_MIN_SOFT_CLIP)
+                return true;
+
+            if(isSupplementaryChimericRead(read, suppData))
+                return true;
+        }
 
         return false;
     }
@@ -631,19 +645,8 @@ public class ReadUnmapper
         return false;
     }
 
-    private static boolean isSupplementaryChimericRead(final SAMRecord record)
+    private static boolean isSupplementaryChimericRead(final SAMRecord record, SupplementaryReadData suppReadData)
     {
-        // check whether the primary read (detailed in the supp attribute) is chimeric with the mate - note the primary is always mapped
-        SupplementaryReadData suppReadData = SupplementaryReadData.extractAlignment(record);
-
-        // rarely supplementary read data is missing
-        if(suppReadData == null)
-        {
-            return false;
-        }
-
-        // insert size is not populated for supplementaries
-
         if(record.getMateUnmappedFlag())
             return true;
 

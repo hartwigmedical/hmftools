@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.svprep.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.svprep.reads.ReadType.NO_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.rank;
 
@@ -19,6 +20,8 @@ import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.samtools.CigarUtils;
+import com.hartwig.hmftools.common.samtools.SamRecordUtils;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
 import htsjdk.samtools.Cigar;
@@ -38,6 +41,9 @@ public class ReadRecord
     private final SAMRecord mRecord;
     private int mFragmentInsertSize;
     private final SupplementaryReadData mSupplementaryAlignment;
+
+    private boolean mCheckedIndelCoords;
+    private int[] mIndelCoords;
 
     private int mFilters;
     private ReadType mReadType;
@@ -75,6 +81,10 @@ public class ReadRecord
 
         mFragmentInsertSize = abs(record.getInferredInsertSize());
         mSupplementaryAlignment = SupplementaryReadData.extractAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
+
+        mCheckedIndelCoords = false;
+        mIndelCoords = null;
+
         mFilters = 0;
         mReadType = NO_SUPPORT;
         mWritten = false;
@@ -126,6 +136,17 @@ public class ReadRecord
 
     public int fragmentInsertSize() { return mFragmentInsertSize; }
 
+    public int[] indelCoords()
+    {
+        if(!mCheckedIndelCoords)
+        {
+            mIndelCoords = CigarUtils.findIndelCoords(start(), cigar().getCigarElements(), MIN_INDEL_SUPPORT_LENGTH);
+            mCheckedIndelCoords = true;
+        }
+
+        return mIndelCoords;
+    }
+
     public String toString()
     {
         return format("coords(%s:%d-%d) cigar(%s) mate(%s:%d) id(%s) flags(first=%s supp=%s reversed=%s) hasSupp(%s) type(%s)",
@@ -133,12 +154,7 @@ public class ReadRecord
                 isFirstOfPair(), isSupplementaryAlignment(), isReadReversed(), mSupplementaryAlignment != null, mReadType);
     }
 
-    public static int maxIndelLength(final Cigar cigar)
-    {
-        return cigar.getCigarElements().stream()
-                .filter(x -> x.getOperator() == CigarOperator.D || x.getOperator() == CigarOperator.I)
-                .mapToInt(x -> x.getLength()).max().orElse(0);
-    }
+    public static int maxIndelLength(final Cigar cigar) { return CigarUtils.maxIndelLength(cigar.getCigarElements()); }
 
     public static String getSoftClippedBases(final SAMRecord record, final boolean isClippedLeft)
     {
@@ -156,49 +172,10 @@ public class ReadRecord
         return isMobileLineElement(orientation, scBases);
     }
 
+    /*
     public static int[] findIndelCoords(final ReadRecord read, int minIndelLength)
     {
-        int maxIndelLength = maxIndelLength(read.cigar());
-
-        if(maxIndelLength < minIndelLength)
-            return null;
-
-        // find the location of the internal delete or insert
-        int indelStartPos = read.start() - 1;
-        int indelEndPos = 0;
-        for(CigarElement element : read.cigar())
-        {
-            if(element.getOperator() == M)
-            {
-                indelStartPos += element.getLength();
-            }
-            else if(element.getOperator() == D)
-            {
-                if(element.getLength() == maxIndelLength)
-                {
-                    indelEndPos = indelStartPos + element.getLength() + 1;
-                    break;
-                }
-
-                indelStartPos += element.getLength();
-            }
-            else if(element.getOperator() == I)
-            {
-                if(element.getLength() == maxIndelLength)
-                {
-                    indelEndPos = indelStartPos + 1;
-                    break;
-                }
-            }
-            else
-            {
-                continue;
-            }
-        }
-
-        if(indelEndPos <= indelStartPos)
-            return null;
-
-        return new int[] { indelStartPos, indelEndPos };
+        return CigarUtils.findIndelCoords(read.start(), read.cigar().getCigarElements(), minIndelLength);
     }
+    */
 }

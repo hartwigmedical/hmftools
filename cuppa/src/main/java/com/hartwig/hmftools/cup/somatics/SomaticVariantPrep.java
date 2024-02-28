@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getPositionFr
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.common.CupConstants.DATA_TYPE_SNV_COUNT;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_BUCKET_SIZE;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
@@ -29,6 +28,7 @@ import com.hartwig.hmftools.cup.prep.CategoryPrep;
 import com.hartwig.hmftools.cup.prep.DataItem;
 import com.hartwig.hmftools.cup.prep.ItemType;
 import com.hartwig.hmftools.cup.prep.PrepConfig;
+import com.hartwig.hmftools.cup.traits.SampleTraitType;
 
 public class SomaticVariantPrep implements CategoryPrep
 {
@@ -90,7 +90,7 @@ public class SomaticVariantPrep implements CategoryPrep
                 dataItems.add(new DataItem(DNA, ItemType.SNV96, bucketName, String.valueOf(count)));
             }
 
-            dataItems.add(new DataItem(DNA, ItemType.SAMPLE_TRAIT, DATA_TYPE_SNV_COUNT, String.valueOf(totalSnvCount)));
+            dataItems.add(new DataItem(DNA, ItemType.TUMOR_MUTATIONAL_BURDEN, SampleTraitType.SNV_COUNT.getAlias(), String.valueOf(totalSnvCount)));
 
             // build genomic position counts
             AidApobecStatus aidApobecStatus = AidApobecStatus.FALSE_ONLY;

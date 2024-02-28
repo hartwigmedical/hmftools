@@ -61,6 +61,12 @@ public final class SequenceCompare
             secondIndexStart = secondIndexEnd - minDistanceFromJunction;
         }
 
+        firstIndexEnd = min(firstIndexEnd, first.bases().length - 1);
+        secondIndexEnd = min(secondIndexEnd, second.bases().length - 1);
+
+        if(firstIndexEnd <= firstIndexStart || secondIndexEnd <= secondIndexStart)
+            return false;
+
         int mismatchCount = SequenceCompare.compareSequences(
                 first.bases(), first.baseQuals(), firstIndexStart, firstIndexEnd, first.repeatInfo(),
                 second.bases(), second.baseQuals(), secondIndexStart, secondIndexEnd, second.repeatInfo(), PRIMARY_ASSEMBLY_MERGE_MISMATCH);

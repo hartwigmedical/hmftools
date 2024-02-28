@@ -53,9 +53,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.filters.FilterType;
-import com.hartwig.hmftools.esvee.old.VariantAssembly;
-import com.hartwig.hmftools.esvee.old.NaturalSortComparator;
-import com.hartwig.hmftools.esvee.variant.VariantCall;
+import com.hartwig.hmftools.esvee.old.VariantCall;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.variant.variantcontext.Genotype;
@@ -150,6 +148,7 @@ public class VcfWriter implements AutoCloseable
 
     public void append(final VariantCall call)
     {
+        /*
         if(!call.isSingleSided())
         {
             final VariantContextBuilder left = variant(call, 1, true);
@@ -167,6 +166,7 @@ public class VcfWriter implements AutoCloseable
             final VariantContextBuilder left = variant(call, 0, true);
             mVariants.add(left.make());
         }
+        */
     }
 
     @Override
@@ -175,13 +175,16 @@ public class VcfWriter implements AutoCloseable
         if(mWriter == null)
             return;
 
-        mVariants.sort(NaturalSortComparator.of(VariantContext::getContig).thenComparingInt(VariantContext::getStart));
+        // FIXME: ensure standard ordering
+        // mVariants.sort(NaturalSortComparator.of(VariantContext::getContig).thenComparingInt(VariantContext::getStart));
+
         mVariants.forEach(mWriter::add);
         mWriter.close();
     }
 
     private VariantContextBuilder variant(final VariantCall variantCall, final int index, final boolean left)
     {
+        /*
         final String callID = variantCall.compactName();
         final String chromosome = left ? variantCall.LeftChromosome : variantCall.RightChromosome;
         final int position = left ? variantCall.LeftPosition : variantCall.RightPosition;
@@ -261,6 +264,9 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(ASSEMBLY, assemblies);
 
         return builder;
+         */
+
+        return null;
     }
 
     /*

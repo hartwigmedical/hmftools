@@ -46,23 +46,6 @@ public class VisSegments
         segment.setTerminalEnd(SegmentTerminal.TELOMERE);
 
         return segment;
-
-        /*
-        return ImmutableSegment.builder()
-                .sampleId(sampleId)
-                .clusterId(-1)
-                .chainId(-1)
-                .chromosome(chromosome)
-                .start(1)
-                .end(refGenCoords.length(chromosome))
-                .track(0)
-                .startTerminal(SegmentTerminal.TELOMERE)
-                .endTerminal(SegmentTerminal.TELOMERE)
-                .ploidy(0)
-                .inDoubleMinute(false)
-                .frame(0)
-                .build();
-        */
     }
 
     private static VisSegment centromere(final String sampleId, final String chromosome, final RefGenomeCoordinates refGenCoords)
@@ -76,23 +59,6 @@ public class VisSegments
         segment.setTerminalEnd(SegmentTerminal.CENTROMERE);
 
         return segment;
-
-        /*
-        return ImmutableSegment.builder()
-                .sampleId(sampleId)
-                .clusterId(-1)
-                .chainId(-1)
-                .chromosome(chromosome)
-                .start(position)
-                .end(position)
-                .track(0)
-                .startTerminal(SegmentTerminal.CENTROMERE)
-                .endTerminal(SegmentTerminal.CENTROMERE)
-                .ploidy(0)
-                .inDoubleMinute(false)
-                .frame(0)
-                .build();
-        */
     }
 
     public static List<VisSegment> readSegments(final String fileName) throws IOException
@@ -124,8 +90,6 @@ public class VisSegments
 
                 segment = VisSegment.from(segment);
                 segment.setStart(startPosition);
-
-                // segment = ImmutableSegment.builder().from(segment).start(startPosition).build();
             }
 
             if(segment.endTerminal() != SegmentTerminal.NONE)
@@ -137,8 +101,6 @@ public class VisSegments
 
                 segment = VisSegment.from(segment);
                 segment.setEnd(endPosition);
-
-                // segment = ImmutableSegment.builder().from(segment).end(endPosition).build();
             }
 
             results.add(segment);

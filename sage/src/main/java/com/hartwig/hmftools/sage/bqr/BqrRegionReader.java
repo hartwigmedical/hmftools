@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletionException;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Nucleotides;
@@ -52,7 +53,7 @@ public class BqrRegionReader implements CigarHandler
     private int mPurgeIndex;
     private int mMaxIndex;
 
-    private BaseQualityData[] mBaseQualityData; // base-qual data by position for this region
+    private BaseQualityDataCollection[] mBaseQualityData; // base-qual data by position for this region
 
     private final PerformanceCounter mPerfCounter;
     private int mReadCounter;
@@ -109,7 +110,7 @@ public class BqrRegionReader implements CigarHandler
         if(mBaseQualityData == null || mBaseQualityData.length != region.baseLength())
         {
             int regionPositionCount = region.baseLength();
-            mBaseQualityData = new BaseQualityData[regionPositionCount];
+            mBaseQualityData = new BaseQualityDataCollection[regionPositionCount];
         }
         else
         {
@@ -138,17 +139,7 @@ public class BqrRegionReader implements CigarHandler
 
         readBam();
 
-        for(int i = mPurgeIndex; i <= mMaxIndex; ++i)
-        {
-            buildSummaryData(mBaseQualityData[i]);
-        }
-
-        for(Map.Entry<BqrKey,Integer> entry : mKeyCountsMap.entrySet())
-        {
-            BqrKeyCounter counter = new BqrKeyCounter(entry.getKey());
-            counter.increment(entry.getValue());
-            mQualityCounts.add(counter);
-        }
+        buildQualityCounts();
 
         mKeyCountsMap.clear();
 
@@ -164,6 +155,29 @@ public class BqrRegionReader implements CigarHandler
         mResults.addPerfCounter(mPerfCounter);
     }
 
+    @VisibleForTesting
+    protected void buildQualityCounts()
+    {
+        for(int i = mPurgeIndex; i <= mMaxIndex; ++i)
+        {
+            buildSummaryData(mBaseQualityData[i]);
+        }
+
+        for(Map.Entry<BqrKey,Integer> entry : mKeyCountsMap.entrySet())
+        {
+            BqrKeyCounter counter = new BqrKeyCounter(entry.getKey());
+            counter.increment(entry.getValue());
+            mQualityCounts.add(counter);
+        }
+
+    }
+
+    private void buildSummaryData(final BaseQualityDataCollection bqDataCollection)
+    {
+        if(bqDataCollection != null)
+            bqDataCollection.DataMap.values().forEach(x -> buildSummaryData(x));
+    }
+
     private void buildSummaryData(final BaseQualityData bqData)
     {
         if(bqData == null)
@@ -172,8 +186,7 @@ public class BqrRegionReader implements CigarHandler
         if(bqData.hasIndel())
             return;
 
-        Map<BqrKey,Integer> keyCounts = bqData.formKeyCounts(
-                mConfig.QualityRecalibration.MaxAltCount, mConfig.QualityRecalibration.MaxAltPerc);
+        Map<BqrKey,Integer> keyCounts = bqData.formKeyCounts();
 
         for(Map.Entry<BqrKey,Integer> entry : keyCounts.entrySet())
         {
@@ -334,7 +347,7 @@ public class BqrRegionReader implements CigarHandler
     {
         for(; mPurgeIndex <= mMaxIndex; ++mPurgeIndex)
         {
-            BaseQualityData bqData = mBaseQualityData[mPurgeIndex];
+            BaseQualityDataCollection bqData = mBaseQualityData[mPurgeIndex];
 
             if(bqData == null)
                 continue;
@@ -351,16 +364,24 @@ public class BqrRegionReader implements CigarHandler
             int position, final byte ref, final byte[] trinucleotideContext, final BqrReadType readType)
     {
         int posIndex = position - mRegion.start();
-        BaseQualityData baseQualityData = mBaseQualityData[posIndex];
+        BaseQualityDataCollection bqDataCollection = mBaseQualityData[posIndex];
 
-        if(baseQualityData == null)
+        if(bqDataCollection == null)
         {
-            baseQualityData = new BaseQualityData(position, ref, trinucleotideContext, readType);
-            mBaseQualityData[posIndex] = baseQualityData;
+            bqDataCollection = new BaseQualityDataCollection(position);
+            mBaseQualityData[posIndex] = bqDataCollection;
             mMaxIndex = posIndex;
         }
 
-        return baseQualityData;
+        BaseQualityData bqData = bqDataCollection.DataMap.get(readType);
+
+        if(bqData == null)
+        {
+            bqData = new BaseQualityData(ref, trinucleotideContext, readType);
+            bqDataCollection.DataMap.put(readType, bqData);
+        }
+
+        return bqData;
     }
 
     private static boolean isValid(final byte[] trinucleotideContext)
@@ -372,5 +393,17 @@ public class BqrRegionReader implements CigarHandler
         }
 
         return trinucleotideContext.length == 3;
+    }
+
+    private class BaseQualityDataCollection
+    {
+        public final int Position;
+        public final Map<BqrReadType,BaseQualityData> DataMap;
+
+        public BaseQualityDataCollection(final int position)
+        {
+            Position = position;
+            DataMap = Maps.newHashMap();
+        }
     }
 }

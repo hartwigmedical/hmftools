@@ -1,5 +1,12 @@
 package com.hartwig.hmftools.sage.bqr;
 
+import static com.hartwig.hmftools.sage.SageConstants.BQR_DUAL_AD;
+import static com.hartwig.hmftools.sage.SageConstants.BQR_DUAL_AF_HIGH;
+import static com.hartwig.hmftools.sage.SageConstants.BQR_DUAL_AF_LOW;
+import static com.hartwig.hmftools.sage.SageConstants.BQR_NON_DUAL_AD;
+import static com.hartwig.hmftools.sage.SageConstants.BQR_NON_DUAL_AF_HIGH;
+import static com.hartwig.hmftools.sage.SageConstants.BQR_NON_DUAL_AF_LOW;
+
 import java.util.List;
 import java.util.Map;
 
@@ -8,7 +15,6 @@ import com.google.common.collect.Maps;
 
 public class BaseQualityData
 {
-    public final int Position;
     public final byte Ref;
     public final byte[] TrinucleotideContext;
     public final BqrReadType ReadType;
@@ -16,9 +22,8 @@ public class BaseQualityData
     private final List<AltQualityCount> mAltQualityCounts;
     private boolean mHasIndel;
 
-    public BaseQualityData(final int position, final byte ref, final byte[] trinucleotideContext, final BqrReadType readType)
+    public BaseQualityData(final byte ref, final byte[] trinucleotideContext, final BqrReadType readType)
     {
-        Position = position;
         Ref = ref;
         TrinucleotideContext = trinucleotideContext;
         ReadType = readType;
@@ -44,7 +49,7 @@ public class BaseQualityData
     public void setHasIndel() { mHasIndel = true; }
     public boolean hasIndel() { return mHasIndel; }
 
-    public Map<BqrKey,Integer> formKeyCounts(int maxAltCount, double maxAltPerc)
+    public Map<BqrKey,Integer> formKeyCounts()
     {
         Map<BqrKey,Integer> keyCounts = Maps.newHashMap();
 
@@ -63,13 +68,21 @@ public class BaseQualityData
             altCounts.put(aqCount.Alt, altCount != null ? altCount + aqCount.Count : aqCount.Count);
         }
 
+        double lowAfLimit = ReadType.isHighQuality() ? BQR_DUAL_AF_LOW : BQR_NON_DUAL_AF_LOW;
+        double highAfLimit = ReadType.isHighQuality() ? BQR_DUAL_AF_HIGH : BQR_NON_DUAL_AF_HIGH;
+        int adLimit = ReadType.isHighQuality() ? BQR_DUAL_AD : BQR_NON_DUAL_AD;
+
         for(AltQualityCount aqCount : mAltQualityCounts)
         {
             if(altCounts.containsKey(aqCount.Alt))
             {
                 int altCount = altCounts.get(aqCount.Alt);
                 double altVaf = altCount / (double)totalCount;
-                if(altVaf > maxAltPerc && altCount > maxAltCount)
+
+                // for the dual condition it means: use a site if (AF<1% | AD<3) & AF <7.5%, or equivalently, AF<1% | (AD<3 & AF<7.5%)
+                boolean includeAlt = altVaf < lowAfLimit || (altVaf < highAfLimit && altCount <= adLimit);
+
+                if(!includeAlt)
                     continue;
             }
 
@@ -81,8 +94,8 @@ public class BaseQualityData
 
     public String toString()
     {
-        return String.format("%d: ref(%s) context(%s) readType(%s) alts(%d)",
-                Position, (char)Ref, new String(TrinucleotideContext), ReadType, mAltQualityCounts.size());
+        return String.format("ref(%s) context(%s) readType(%s) alts(%d)",
+                (char)Ref, new String(TrinucleotideContext), ReadType, mAltQualityCounts.size());
     }
 
     private class AltQualityCount

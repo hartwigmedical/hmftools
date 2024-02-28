@@ -19,7 +19,7 @@ public class AnchorCigarFactoryTest
                 sequencePosition += alignment.Length;
 
         final AnchorCigarFactory factory = new AnchorCigarFactory();
-        return factory.anchorCigar(alignments, alignments.get(leftIndex), alignments.get(rightIndex));
+        return null; //factory.anchorCigar(alignments, alignments.get(leftIndex), alignments.get(rightIndex));
     }
 
     /* CHASHA FIXME

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
@@ -107,7 +108,7 @@ public class VisFusion
             String[] values = line.split(TSV_DELIM);
 
             data.add(new VisFusion(
-                    getValue(fieldsIndexMap, "SampleId", "", values),
+                    getValue(fieldsIndexMap, FLD_SAMPLE_ID, "", values),
                     getIntValue(fieldsIndexMap, "ClusterId", 0, values),
                     Boolean.parseBoolean(values[fieldsIndexMap.get("Reportable")]),
                     getValue(fieldsIndexMap, "GeneNameUp", "", values),
@@ -132,7 +133,6 @@ public class VisFusion
     public static String header()
     {
         return new StringJoiner(TSV_DELIM)
-                .add("SampleId")
                 .add("ClusterId")
                 .add("Reportable")
                 .add("GeneNameUp")
@@ -155,7 +155,6 @@ public class VisFusion
     public static String toString(final VisFusion data)
     {
         return new StringJoiner(TSV_DELIM)
-                .add(String.valueOf(data.SampleId))
                 .add(String.valueOf(data.ClusterId))
                 .add(String.valueOf(data.Reportable))
                 .add(String.valueOf(data.GeneNameUp))

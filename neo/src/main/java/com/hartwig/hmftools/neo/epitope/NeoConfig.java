@@ -92,8 +92,7 @@ public class NeoConfig
         configBuilder.addPath(SOMATIC_VCF, true, "Purple somatic VCF (use '*') as required");
         configBuilder.addFlag(WRITE_TRANS_DATA, "Write transcript data for each neo-epitope");
 
-        configBuilder.addConfigItem(
-                REQ_AMINO_ACIDS, false, format("Number of amino acids in neo-epitopes", DEFAULT_AMINO_ACID_REF_COUNT));
+        configBuilder.addInteger(REQ_AMINO_ACIDS, "Number of amino acids in neo-epitopes", DEFAULT_AMINO_ACID_REF_COUNT);
 
         configBuilder.addPath(GENE_ID_FILE, false, GENE_ID_FILE_DESC);
 

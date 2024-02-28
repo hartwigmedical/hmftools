@@ -502,16 +502,7 @@ public class IndelDeduper
         }
 
         public int position() { return Variant.position(); }
-
-        public int positionEnd()
-        {
-            if(Variant.isSnv())
-                return position();
-            else if(Variant.isInsert())
-                return position() + 1;
-            else // deletes and MNVs
-                return position() + Variant.ref().length() - 1;
-        }
+        public int positionEnd() { return Variant.variant().positionEnd(); }
 
         public boolean unfiltered() // diff name so a to be clear whether takes old DEDUP into consideration
         {

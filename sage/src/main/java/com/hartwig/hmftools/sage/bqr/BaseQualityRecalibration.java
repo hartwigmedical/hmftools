@@ -186,7 +186,7 @@ public class BaseQualityRecalibration
             if(key.Quality == 0)
                 continue;
 
-            BqrKey refKey = new BqrKey(key.Ref, key.Ref, key.TrinucleotideContext, key.Quality);
+            BqrKey refKey = new BqrKey(key.Ref, key.Ref, key.TrinucleotideContext, key.Quality, key.ReadType);
 
             int refCount = refCountMap.getOrDefault(refKey, 0);
 
@@ -205,7 +205,7 @@ public class BaseQualityRecalibration
                     if(alt == refKey.Ref)
                         continue;
 
-                    BqrKey altKey = new BqrKey(key.Ref, alt, key.TrinucleotideContext, key.Quality);
+                    BqrKey altKey = new BqrKey(key.Ref, alt, key.TrinucleotideContext, key.Quality, key.ReadType);
 
                     if(!allQualityCounts.containsKey(altKey) && !syntheticAltKeys.contains(altKey))
                     {

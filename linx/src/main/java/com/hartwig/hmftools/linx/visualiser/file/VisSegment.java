@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getBoolValue;
@@ -132,7 +133,7 @@ public class VisSegment implements GenomeRegion
             String[] values = line.split(TSV_DELIM);
 
             data.add(new VisSegment(
-                    getValue(fieldsIndexMap, "SampleId", "", values),
+                    getValue(fieldsIndexMap, FLD_SAMPLE_ID, "", values),
                     getIntValue(fieldsIndexMap, "ClusterId", 0, values),
                     getIntValue(fieldsIndexMap, "ChainId", 0, values),
                     getValue(fieldsIndexMap, "Chromosome", "", values),
@@ -149,7 +150,6 @@ public class VisSegment implements GenomeRegion
     public static String header()
     {
         return new StringJoiner(TSV_DELIM)
-                .add("SampleId")
                 .add("ClusterId")
                 .add("ChainId")
                 .add("Chromosome")
@@ -163,7 +163,6 @@ public class VisSegment implements GenomeRegion
     public static String toString(final VisSegment segment)
     {
         return new StringJoiner(TSV_DELIM)
-                .add(String.valueOf(segment.SampleId))
                 .add(String.valueOf(segment.ClusterId))
                 .add(String.valueOf(segment.ChainId))
                 .add(String.valueOf(segment.Chromosome))
