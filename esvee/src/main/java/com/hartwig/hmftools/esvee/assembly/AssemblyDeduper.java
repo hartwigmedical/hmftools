@@ -94,11 +94,13 @@ public class AssemblyDeduper
                     continue;
                 }
 
+                /* no longer checked since proximate distances ought to ensure this
                 if(!haveOverlapDistance(assembly, newAssembly) || !haveOverlappingReads(assembly, newAssembly))
                 {
                     ++newIndex;
                     continue;
                 }
+                */
 
                 if(!SequenceCompare.matchedAssemblySequences(assembly, newAssembly))
                 {

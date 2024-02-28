@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.esvee.read;
 
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
+import static com.hartwig.hmftools.esvee.TestUtils.TEST_CIGAR_100;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
@@ -9,6 +11,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.SvConstants;
 
 import org.junit.Test;
@@ -65,6 +68,40 @@ public class ReadAdjustmentsTest
         assertEquals(103 + otherBases.length() - 1, read.alignmentEnd());
         assertEquals(otherBases, read.getBasesString());
         assertEquals(makeCigarString(otherBases, 0, 0), read.cigarString());
+    }
+
+    @Test
+    public void testLowBaseQualTrimming()
+    {
+        // wrong end
+        String readBases = REF_BASES_RANDOM_100;
+
+        byte[] baseQualities = buildDefaultBaseQuals(readBases.length());
+
+        int trimLength = 8;
+        byte lowQualBase = 10;
+        for(int i = 0; i < trimLength; ++i)
+        {
+            baseQualities[i] = lowQualBase;
+            baseQualities[baseQualities.length - i - 1] = lowQualBase;
+        }
+
+        Read read = createSamRecord(TEST_READ_ID, 100, readBases, TEST_CIGAR_100);
+        read.bamRecord().setBaseQualities(baseQualities);
+
+        assertTrue(ReadAdjustments.trimLowQualBases(read));
+        assertEquals(100, read.alignmentStart());
+        assertEquals(191, read.alignmentEnd());
+        assertEquals("92M", read.cigarString());
+
+        read = createSamRecord(TEST_READ_ID, 100, readBases, TEST_CIGAR_100);
+        read.bamRecord().setReadNegativeStrandFlag(true);
+        read.bamRecord().setBaseQualities(baseQualities);
+
+        assertTrue(ReadAdjustments.trimLowQualBases(read));
+        assertEquals(108, read.alignmentStart());
+        assertEquals(199, read.alignmentEnd());
+        assertEquals("92M", read.cigarString());
     }
 
     @Test

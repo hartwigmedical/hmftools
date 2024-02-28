@@ -198,20 +198,19 @@ public class JunctionGroupAssembler extends ThreadTask
 
         ++mReadStats.TotalReads;
 
-        // CHECK: do in SvPrep if worthwhile
-        if(!mConfig.NoReadFilters)
+        // CHECK: read modifications such as filtering and trimming could be moved into SvPrep
+        /*
+        if(!ReadFilters.isAboveBaseQualAvgThreshold(record.getBaseQualities()))
         {
-            if(!ReadFilters.isAboveBaseQualAvgThreshold(record.getBaseQualities()))
-            {
-                ++mReadStats.FilteredBaseQual;
-                return;
-            }
-            else if(!ReadFilters.isAboveBaseQualAvgThreshold(record.getBaseQualities()) || !ReadFilters.isAboveMapQualThreshold(read))
-            {
-                ++mReadStats.FilteredMapQual;
-                return;
-            }
+            ++mReadStats.FilteredBaseQual;
+            return;
         }
+        else if(!ReadFilters.isAboveBaseQualAvgThreshold(record.getBaseQualities()) || !ReadFilters.isAboveMapQualThreshold(read))
+        {
+            ++mReadStats.FilteredMapQual;
+            return;
+        }
+        */
 
         if(mBamReader.currentIsReferenceSample())
             read.markReference();
@@ -219,6 +218,9 @@ public class JunctionGroupAssembler extends ThreadTask
         // CHECK: could track for stats
         if(ReadAdjustments.trimPolyGSequences(read))
             ++mReadStats.PolyGTrimmed;
+
+        if(ReadAdjustments.trimLowQualBases(read))
+            ++mReadStats.LowBaseQualTrimmed;
 
         if(ReadAdjustments.convertEdgeIndelsToSoftClip(read))
             ++mReadStats.IndelSoftClipConverted;
