@@ -15,8 +15,8 @@ public class HaplotypeEventFactory
         }
         else
         {
-            String error_msg = String.format("Cannot construct HaplotypeEvent from id: %s", eventId);
-            throw new java.lang.IllegalArgumentException(error_msg);
+            String errorMsg = String.format("Cannot construct HaplotypeEvent from id: %s", eventId);
+            throw new java.lang.IllegalArgumentException(errorMsg);
         }
     }
 }

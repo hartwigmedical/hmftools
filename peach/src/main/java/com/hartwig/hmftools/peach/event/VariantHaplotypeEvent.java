@@ -40,18 +40,18 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
     {
         if(!eventId.startsWith(EVENT_TYPE_STRING))
         {
-            String error_msg = String.format("Invalid ID for VariantHaplotypeEvent: %s", eventId);
-            throw new java.lang.IllegalArgumentException(error_msg);
+            String errorMsg = String.format("Invalid ID for VariantHaplotypeEvent: %s", eventId);
+            throw new java.lang.IllegalArgumentException(errorMsg);
         }
 
         String[] splitEventId = eventId.split(HaplotypeEvent.EVENT_ID_DELIMITER);
         if(splitEventId.length != VariantHaplotypeEvent.ID_FIELD_COUNT)
         {
-            String error_msg = String.format(
+            String errorMsg = String.format(
                     "ID '%s' of VariantHaplotypeEvent has incorrect field count: %s instead of %s",
                     eventId, splitEventId.length, VariantHaplotypeEvent.ID_FIELD_COUNT
             );
-            throw new java.lang.IllegalArgumentException(error_msg);
+            throw new java.lang.IllegalArgumentException(errorMsg);
         }
         Chromosome chromosome = HumanChromosome.fromString(splitEventId[1]);
         int position = Integer.parseInt(splitEventId[2]);
@@ -61,8 +61,8 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
 
         if(!event.id().equals(eventId))
         {
-            String error_msg = String.format("VariantHaplotypeEvent derived from event ID '%s' has different ID '%s'", eventId, event.id());
-            throw new java.lang.IllegalArgumentException(error_msg);
+            String errorMsg = String.format("VariantHaplotypeEvent derived from event ID '%s' has different ID '%s'", eventId, event.id());
+            throw new java.lang.IllegalArgumentException(errorMsg);
         }
         return event;
     }
@@ -76,8 +76,8 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
         List<Allele> alts = variantContext.getAlternateAlleles();
         if(alts.size() > 1)
         {
-            String error_msg = String.format("Cannot handle variant with multiple alts: '%s:%s%s>...'", chromosome, position, ref);
-            throw new IllegalArgumentException(error_msg);
+            String errorMsg = String.format("Cannot handle variant with multiple alts: '%s:%s%s>...'", chromosome, position, ref);
+            throw new IllegalArgumentException(errorMsg);
         }
         String alt = variantContext.getAlternateAlleles().get(0).toString();
         return new VariantHaplotypeEvent(chromosome, position, ref, alt);

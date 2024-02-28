@@ -28,6 +28,8 @@ import static com.hartwig.hmftools.peach.PeachUtils.PCH_LOGGER;
 
 public class PanelLoader
 {
+    public static final String HAPLOTYPE_EVENT_DELIMITER = ";";
+
     @NotNull
     public static HaplotypePanel loadHaplotypePanel(@NotNull String filename)
     {
@@ -165,7 +167,7 @@ public class PanelLoader
         }
         else
         {
-            return Arrays.stream(haplotypeEventsString.split(PeachUtils.HAPLOTYPE_EVENT_DELIMITER))
+            return Arrays.stream(haplotypeEventsString.split(HAPLOTYPE_EVENT_DELIMITER))
                     .map(HaplotypeEventFactory::fromId)
                     .collect(ImmutableList.toImmutableList());
         }

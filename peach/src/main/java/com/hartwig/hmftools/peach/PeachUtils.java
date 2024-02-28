@@ -9,5 +9,4 @@ public class PeachUtils
 
     public static final int GERMLINE_TOTAL_COPY_NUMBER = 2;
     public static final String TSV_DELIMITER = "\t";
-    public static final String HAPLOTYPE_EVENT_DELIMITER = ";";
 }

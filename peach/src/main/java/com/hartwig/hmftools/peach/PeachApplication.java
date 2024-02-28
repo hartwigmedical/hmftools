@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.peach.PeachUtils.PCH_LOGGER;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -14,7 +13,6 @@ import com.hartwig.hmftools.peach.data_loader.HaplotypeEventLoader;
 import com.hartwig.hmftools.peach.data_loader.HaplotypeFunctionLoader;
 import com.hartwig.hmftools.peach.data_loader.PanelLoader;
 import com.hartwig.hmftools.peach.effect.DrugInfoStore;
-import com.hartwig.hmftools.peach.effect.HaplotypeFunction;
 import com.hartwig.hmftools.peach.effect.HaplotypeFunctionStore;
 import com.hartwig.hmftools.peach.output.AllHaplotypeCombinationsFile;
 import com.hartwig.hmftools.peach.output.BestHaplotypeCombinationsFile;
@@ -126,8 +124,7 @@ public class PeachApplication
         else
         {
             PCH_LOGGER.info("load haplotype functions");
-            List<HaplotypeFunction> haplotypeFunctions = HaplotypeFunctionLoader.loadFunctions(config.functionFile);
-            return new HaplotypeFunctionStore(haplotypeFunctions);
+            return new HaplotypeFunctionStore(HaplotypeFunctionLoader.loadFunctions(config.functionFile));
         }
     }
 

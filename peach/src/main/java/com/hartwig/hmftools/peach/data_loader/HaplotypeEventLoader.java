@@ -75,9 +75,9 @@ public class HaplotypeEventLoader
             case HOM_VAR:
                 return 2;
             default:
-                String error_msg =
+                String errorMsg =
                         String.format("cannot get occurrence count for event with ID '%s' and genotypeType '%s'", eventId, genotypeType);
-                throw new IllegalStateException(error_msg);
+                throw new IllegalStateException(errorMsg);
         }
     }
 }

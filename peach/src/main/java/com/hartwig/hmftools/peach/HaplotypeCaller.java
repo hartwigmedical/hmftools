@@ -9,7 +9,6 @@ import com.hartwig.hmftools.peach.panel.HaplotypePanel;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -68,17 +67,16 @@ public class HaplotypeCaller
             @NotNull List<NonDefaultHaplotype> candidateHaplotypes)
     {
         // Use recursive descent to efficiently go through all possibilities
-        if(eventIdToUnexplainedCount.values().stream().anyMatch(c -> c < 0))
+        if(eventIdToUnexplainedCount.values().stream().allMatch(c -> c == 0))
         {
-            return Collections.emptyList();
-        }
-        else if(eventIdToUnexplainedCount.values().stream().allMatch(c -> c == 0))
-        {
-            // return list containing only an empty list
-            return new ArrayList<>(List.of(new ArrayList<>()));
+            List<List<NonDefaultHaplotype>> possibleHaplotypeCombinations = new ArrayList<>();
+            possibleHaplotypeCombinations.add(new ArrayList<>());
+            return possibleHaplotypeCombinations;
         }
 
-        List<List<NonDefaultHaplotype>> results = new ArrayList<>();
+        assertNoNegativeEventCounts(eventIdToUnexplainedCount, candidateHaplotypes);
+
+        List<List<NonDefaultHaplotype>> possibleHaplotypeCombinations = new ArrayList<>();
         for(int i = 0; i < candidateHaplotypes.size(); i++)
         {
             NonDefaultHaplotype haplotypeToTry = candidateHaplotypes.get(i);
@@ -96,10 +94,25 @@ public class HaplotypeCaller
                         getPossibleNonDefaultHaplotypes(eventIdToUnexplainedCountAfterTry, candidateHaplotypesAfterTry);
                 List<List<NonDefaultHaplotype>> fullCombinations =
                         subCombinations.stream().peek(l -> l.add(haplotypeToTry)).collect(Collectors.toList());
-                results.addAll(fullCombinations);
+                possibleHaplotypeCombinations.addAll(fullCombinations);
             }
         }
-        return results;
+        return possibleHaplotypeCombinations;
+    }
+
+    private static void assertNoNegativeEventCounts(@NotNull Map<String, Integer> eventIdToUnexplainedCount,
+            @NotNull List<NonDefaultHaplotype> candidateHaplotypes)
+    {
+        Optional<String> eventIdWithNegativeCount =
+                eventIdToUnexplainedCount.entrySet().stream().filter(e -> e.getValue() < 0).map(Map.Entry::getKey).findFirst();
+        if(eventIdWithNegativeCount.isPresent())
+        {
+            String candidateHaplotypesString =
+                    candidateHaplotypes.stream().map(NonDefaultHaplotype::getName).collect(Collectors.joining(", "));
+            throw new IllegalStateException(
+                    "Negative count encountered for event '" + eventIdWithNegativeCount.get() + "' for candidate haplotypes ("
+                            + candidateHaplotypesString + ")");
+        }
     }
 
     private static boolean haplotypeIsPossible(@NotNull Map<String, Integer> eventIdToUnexplainedCount,
