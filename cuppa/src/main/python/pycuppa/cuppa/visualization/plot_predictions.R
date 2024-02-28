@@ -5,6 +5,7 @@ library(ggplot2)
 library(ggh4x)
 library(stringr)
 library(patchwork)
+library(plyr)
 
 ## Args ================================
 args <- commandArgs(trailingOnly = TRUE)
@@ -62,14 +63,19 @@ if(is.na(SNV_COUNT)){
    stop("`snv_count` was not found as a feature in `VIS_DATA`")
 }
 
+## Define mapping ================================
+MAPPINGS_CLASSIFIER_NAMES = c(
+  "GENE EXP"="GENE EXPRESSION",
+  "GEN POS"="GENOMIC POSITION"
+)
+
 ## Heatmap of probs ================================
 get_plot_data_probs <- function(VIS_DATA, data_value_rounding = 2){
 
    plot_data <- subset(VIS_DATA, data_type=="prob")
 
    plot_data$row_label <- toupper(gsub("_"," ", plot_data$clf_name))
-   plot_data$row_label[plot_data$row_label == "GENE EXP"] <- "GENE EXPRESSION"
-   plot_data$row_label[plot_data$row_label == "GEN POS"] <- "GENOMIC POSITION"
+   plot_data$row_label <- plyr::revalue(plot_data$row_label, replace=MAPPINGS_CLASSIFIER_NAMES, warn_missing=FALSE)
    plot_data$row_group <- toupper(plot_data$clf_group)
 
    ## Data label --------------------------------
