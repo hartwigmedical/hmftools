@@ -123,7 +123,7 @@ public class UltimaQualModelTest
     public void testHomopolymerDeletion()
     {
         //                                    0123456789
-        String refBases = BUFFER_REF_BASES + "ATTTTCGCAGT" + BUFFER_REF_BASES;
+        String refBases = BUFFER_REF_BASES + "ATTTTCGACGT" + BUFFER_REF_BASES;
         setRefBases(refBases);
 
         // the whole HP must be deleted
@@ -150,13 +150,13 @@ public class UltimaQualModelTest
         assertEquals(30, calcQual);
 
         // test out of cycle deletions
-        variant = new SimpleVariant(CHR_1, 16, "GC", "G");
+        variant = new SimpleVariant(CHR_1, 16, "GA", "G");
 
         model = mModelBuilder.buildContext(variant);
         assertNotNull(model);
         assertEquals(HOMOPOLYMER_DELETION, model.type());
 
-        readBases = BUFFER_REF_BASES + "ATTTTCGAGT";
+        readBases = BUFFER_REF_BASES + "ATTTTCGCGT";
         baseQualities = buildDefaultBaseQuals(readBases.length());
         t0Values = buildDefaultBaseQuals(readBases.length());
         tpValues = new short[readBases.length()];
@@ -231,6 +231,71 @@ public class UltimaQualModelTest
 
         calcQual = model.calculateQual(read, 11);
         assertEquals(27, calcQual);
+    }
+
+    @Test
+    public void testSNVs()
+    {
+        // variant has both straddling bases matching ref or alt, so revert to qual 40
+        // AGA > AAA or CCC > CGC
+
+
+        // HP on left partially deleted -> left matches ref, insert on right
+        // AG CCG AGA > AG CTG AGA
+
+        // HP on right partially deleted -> right matches ref, insert on left
+        // AG GCC AGA > AG GTC AGA
+
+        // HP on at var position fully deleted -> right matches alt, like a HP expansion on right
+        // AG GCT AGA > AG GTT AGA
+
+        // HP at var position fully deleted -> left matches alt, like a HP expansion on left
+        // AG TCG AGA > AG TTG AGA
+
+
+        // variant has one straddling base matching ref or alt
+        // AG CCG AGA > AG CTG AGA
+        // delete of C on left,  insert of T
+
+
+        // variant has one straddling base matching ref or alt
+        // TC TCG GC > TC TTG GC
+        // full delete of C, insert of additional T on left
+
+        /*
+
+        //                                    01234567890
+        String refBases = BUFFER_REF_BASES + "ATTTTAAAAAG" + BUFFER_REF_BASES;
+        setRefBases(refBases);
+
+        // a deletion which crosses 2 HPs
+        SimpleVariant variant = new SimpleVariant(CHR_1, 12, "TTTAA", "T");
+
+        UltimaQualModel model = mModelBuilder.buildContext(variant);
+        assertNotNull(model);
+        assertEquals(HOMOPOLYMER_TRANSITION, model.type());
+
+        //                                     0123456
+        String readBases = BUFFER_REF_BASES + "ATTAAAG";
+        byte[] baseQualities = buildDefaultBaseQuals(readBases.length());
+        byte[] t0Values = buildDefaultBaseQuals(readBases.length());
+        short[] tpValues = new short[readBases.length()];
+
+        tpValues[11] = 2;
+        tpValues[12] = 2;
+        baseQualities[11] = 30;
+        baseQualities[2] = 30;
+
+        tpValues[13] = 2;
+        tpValues[15] = 2;
+        baseQualities[13] = 25;
+        baseQualities[15] = 25;
+
+        SAMRecord read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
+
+        byte calcQual = model.calculateQual(read, 12);
+        assertEquals(17, calcQual);
+        */
     }
 
     private static SAMRecord buildUltimaRead(

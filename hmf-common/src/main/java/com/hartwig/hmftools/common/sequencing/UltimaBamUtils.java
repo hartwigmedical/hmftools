@@ -23,7 +23,7 @@ public final class UltimaBamUtils
     private static final double PPM_STRAND_BALANCED_LOW = 0.27;
     private static final double PPM_STRAND_BALANCED_HIGH = 1 - PPM_STRAND_BALANCED_LOW;
 
-    private static final byte[] CYCLE_BASES = new byte[] { (byte)'T', (byte)'C', (byte)'G', (byte)'A' };
+    private static final byte[] CYCLE_BASES = new byte[] { (byte)'T', (byte)'G', (byte)'C', (byte)'A' };
 
     public static short[] extractTpValues(final SAMRecord record)
     {

@@ -19,7 +19,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class UltimaQualCalculator
 {
-
     private static final int MAX_HOMOPOLYMER = 8;
 
     private final RefGenomeInterface mRefGenome;
@@ -34,8 +33,9 @@ public class UltimaQualCalculator
         int maxHomopolymerLength = Math.max(variant.ref().length(), MAX_HOMOPOLYMER);
         int refBaseEnd = variant.Position + maxHomopolymerLength + 1;
 
-        // extract sufficient ref bases to set the context for each scenario
+        // extract sufficient ref bases to set the context for most scenarios (only not for homopolymer transition)
         final byte[] refBases = mRefGenome.getBases(variant.Chromosome, variant.Position - 1, refBaseEnd);
+        int refVarIndex = 1;
 
         if(variant.isIndel())
         {
@@ -54,27 +54,17 @@ public class UltimaQualCalculator
                 int upperRefBaseEnd = upperHpStart + MAX_HOMOPOLYMER;
                 final byte[] lowerRefBases = mRefGenome.getBases(variant.Chromosome, lowerRefBaseStart, lowerHpEnd);
                 final byte[] upperRefBases = mRefGenome.getBases(variant.Chromosome, upperHpStart, upperRefBaseEnd);
-                int lowerHomopolymerLength = findHomopolymerLength(lowerRefBases, lowerRefBases.length - 1, false);
-                int upperHomopolymerLength = findHomopolymerLength(upperRefBases, 0, true);
+                int lowerHpLength = findHomopolymerLength(lowerRefBases, lowerRefBases.length - 1, false);
+                int upperHpLength = findHomopolymerLength(upperRefBases, 0, true);
 
-                if(lowerHomopolymerLength > 2 && upperHomopolymerLength > 2)
+                if(lowerHpLength > 2 && upperHpLength > 2)
                 {
-                    int delLength = abs(variant.indelLength());
-                    int lowerDelLength = homopolymerTransitionIndex - 1;
-                    int upperDelLength = delLength - lowerDelLength;
-
-                    // the ref base always matches the lower HP base, and the ref + 1 base the upper HP base
-                    int lowerHpIndexEnd = 0;
-                    int lowerHpIndexStart = lowerHpIndexEnd - lowerHomopolymerLength + 1 + lowerDelLength;
-                    int upperHpIndexStart = lowerHpIndexEnd + 1;
-                    int upperHpIndexEnd = upperHpIndexStart + upperHomopolymerLength - 1 - upperDelLength;
-
-                    return new HomopolymerTransitionDeletion(
-                            lowerHpIndexStart, lowerHpIndexEnd, lowerDelLength, upperHpIndexEnd, upperDelLength);
+                    return new HomopolymerTransitionDeletion(variant, homopolymerTransitionIndex, lowerHpLength, upperHpLength);
                 }
             }
 
-            int homopolymerLength = findHomopolymerLength(refBases);
+            // the HP search start 1 base after the variant's ref position
+            int homopolymerLength = findHomopolymerLength(refBases, refVarIndex + 1, true);
 
             if(homopolymerLength <= MAX_HOMOPOLYMER)
             {
@@ -92,41 +82,10 @@ public class UltimaQualCalculator
         }
         else if(variant.isSNV())
         {
-            // SNVs and MNVs
-            int homopolymerStartIndex = 0;
-            int homopolymerEndIndex = 0;
-            int refAdjustCount = 0;
-
-            if(refBases[0] == refBases[2])
-            {
-                // ref and alt match, no need to check for HP adjustment
-            }
-            else if(refBases[0] == refBases[1] || refBases[1] == refBases[2])
-            {
-                // like a 1-base insertion of a base on the lower side with a 1-base deletion on the upper, or vice versa
-                if(refBases[0] == refBases[1])
-                {
-                    // search down
-                    int lowerRefBaseStart = variant.Position - MAX_HOMOPOLYMER;
-                    final byte[] lowerRefBases = mRefGenome.getBases(variant.Chromosome, lowerRefBaseStart, variant.Position);
-                    int lowerHomopolymerLength = findHomopolymerLength(lowerRefBases, lowerRefBases.length - 1, false);
-                    homopolymerEndIndex = 0;
-                    homopolymerStartIndex = homopolymerEndIndex - lowerHomopolymerLength + 1;
-                }
-                else
-                {
-                    int upperHomopolymerLength = findHomopolymerLength(refBases, 1, true);
-                    homopolymerStartIndex = 0;
-                    homopolymerEndIndex = homopolymerStartIndex + upperHomopolymerLength - 1;
-                }
-            }
-
-            return new SnvMnv(variant, refBases, homopolymerStartIndex, homopolymerEndIndex, refAdjustCount);
+            return new SnvMnv(variant, refBases, refVarIndex, mRefGenome);
         }
-        else
-        {
-            return null;
-        }
+
+        return null;
     }
 
     private static int findHomopolymerTransitionCandidate(final SimpleVariant variant)
@@ -165,8 +124,6 @@ public class UltimaQualCalculator
 
         return true;
     }
-
-    private static int findHomopolymerLength(final byte[] refBases) { return findHomopolymerLength(refBases, 2, true); }
 
     private static int findHomopolymerLength(final byte[] refBases, int startIndex, boolean searchUp)
     {
@@ -268,16 +225,22 @@ public class UltimaQualCalculator
         private final int mUpperRefAdjustCount;
 
         public HomopolymerTransitionDeletion(
-                final int lowerHpStartIndex, final int lowerHpEndIndex, final int lowerRefAdjustCount,
-                final int upperHpEndIndex, final int upperRefAdjustCount)
+                final SimpleVariant variant, final int homopolymerTransitionIndex, final int lowerHpLength, final int upperHpLength)
         {
             super(UltimaModelType.HOMOPOLYMER_TRANSITION);
-            mLowerHpStartIndex = lowerHpStartIndex;
-            mLowerHpEndIndex = lowerHpEndIndex;
-            mLowerRefAdjustCount = lowerRefAdjustCount;
-            mUpperHpStartIndex = lowerHpEndIndex + 1;
-            mUpperHpEndIndex = upperHpEndIndex;
-            mUpperRefAdjustCount = upperRefAdjustCount;
+
+            int delLength = abs(variant.indelLength());
+            int lowerDelLength = homopolymerTransitionIndex - 1;
+            int upperDelLength = delLength - lowerDelLength;
+
+            // the ref base always matches the lower HP base, and the ref + 1 base the upper HP base
+            mLowerHpEndIndex = 0;
+            mLowerHpStartIndex = mLowerHpEndIndex - lowerHpLength + 1 + lowerDelLength;
+            mLowerRefAdjustCount = lowerDelLength;
+
+            mUpperHpStartIndex = mLowerHpEndIndex + 1;
+            mUpperHpEndIndex = mUpperHpStartIndex + upperHpLength - 1 - upperDelLength;
+            mUpperRefAdjustCount = upperDelLength;
         }
 
         public byte calculateQual(final SAMRecord record, int varReadIndex)
@@ -310,16 +273,68 @@ public class UltimaQualCalculator
         private final int mRefAdjustCount;
 
         public SnvMnv(
-                final SimpleVariant variant, final byte[] refBases,
-                final int homopolymerStartIndex, final int homopolymerEndIndex, final int refAdjustCount)
+                final SimpleVariant variant, final byte[] refBases, final int refVarIndex, final RefGenomeInterface refGenome)
         {
             super(UltimaModelType.SNV);
+
+            // scenarios
+
+            // SNVs and MNVs
+            int homopolymerStartIndex = 0;
+            int homopolymerEndIndex = 0;
+            int refAdjustCount = 0;
+
+            if(refBases[refVarIndex - 1] == refBases[refVarIndex + 1])
+            {
+                // ref and alt match, no need to check for HP adjustment
+
+            }
+            else if(refBases[refVarIndex - 1] == refBases[refVarIndex])
+            {
+                // contraction or full deletion of the HP base to the left, insert of a base on the right (HP expansion)
+
+                int lowerRefBaseStart = variant.Position - MAX_HOMOPOLYMER;
+                final byte[] lowerRefBases = mRefGenome.getBases(variant.Chromosome, lowerRefBaseStart, variant.Position);
+                int lowerHomopolymerLength = findHomopolymerLength(lowerRefBases, refVarIndex, false);
+
+                homopolymerEndIndex = 0;
+                homopolymerStartIndex = homopolymerEndIndex - lowerHomopolymerLength + 1;
+                refAdjustCount = 1; // since treating this like a 1-base delete
+            }
+            else if(refBases[refVarIndex] == refBases[refVarIndex + 1])
+            {
+                // contraction of the HP base to the right, insert of a base on the left
+                int upperHomopolymerLength = findHomopolymerLength(refBases, refVarIndex, true);
+                homopolymerStartIndex = 0;
+                homopolymerEndIndex = homopolymerStartIndex + upperHomopolymerLength - 1;
+                refAdjustCount = 1; // since treating this like a 1-base delete
+            }
+            else
+            {
+
+
+            }
+
+
+
+
+
             mHomopolymerStartIndex = homopolymerStartIndex;
             mHomopolymerEndIndex = homopolymerEndIndex;
             mRefAdjustCount = refAdjustCount;
         }
 
-        public byte calculateQual(final SAMRecord record, int varReadIndex) { return 0; }
+        public byte calculateQual(final SAMRecord record, int varReadIndex)
+        {
+            if(mRefAdjustCount == 0)
+                return ULTIMA_MAX_QUAL;
+
+
+
+
+
+            return 0;
+        }
 
     }
 }
