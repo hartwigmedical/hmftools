@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.read;
 
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_BASE_QUAL;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_CIGAR_100;
@@ -89,19 +90,43 @@ public class ReadAdjustmentsTest
         Read read = createSamRecord(TEST_READ_ID, 100, readBases, TEST_CIGAR_100);
         read.bamRecord().setBaseQualities(baseQualities);
 
-        assertTrue(ReadAdjustments.trimLowQualBases(read));
-        assertEquals(100, read.alignmentStart());
-        assertEquals(191, read.alignmentEnd());
-        assertEquals("92M", read.cigarString());
+        assertFalse(ReadAdjustments.trimLowQualBases(read)); // nothing without soft-clips
 
-        read = createSamRecord(TEST_READ_ID, 100, readBases, TEST_CIGAR_100);
+        read = createSamRecord(TEST_READ_ID, 110, readBases, makeCigarString(readBases, 10, 10));
+        read.bamRecord().setBaseQualities(baseQualities);
+
+        assertTrue(ReadAdjustments.trimLowQualBases(read));
+        assertEquals(110, read.alignmentStart());
+        assertEquals(189, read.alignmentEnd());
+        assertEquals(191, read.unclippedEnd());
+        assertEquals("10S80M2S", read.cigarString());
+
+        // hits > 30% at index 5 but not again
+        read = createSamRecord(TEST_READ_ID, 110, readBases, makeCigarString(readBases, 10, 10));
+
+        for(int i = 90; i < baseQualities.length; ++i)
+        {
+            baseQualities[i] = DEFAULT_BASE_QUAL;
+        }
+
+        baseQualities[95] = lowQualBase;
+        baseQualities[98] = lowQualBase;
+        read.bamRecord().setBaseQualities(baseQualities);
+
+        assertTrue(ReadAdjustments.trimLowQualBases(read));
+        assertEquals(110, read.alignmentStart());
+        assertEquals(189, read.alignmentEnd());
+        assertEquals(194, read.unclippedEnd());
+        assertEquals("10S80M5S", read.cigarString());
+
+        read = createSamRecord(TEST_READ_ID, 110, readBases, makeCigarString(readBases, 10, 10));
         read.bamRecord().setReadNegativeStrandFlag(true);
         read.bamRecord().setBaseQualities(baseQualities);
 
         assertTrue(ReadAdjustments.trimLowQualBases(read));
-        assertEquals(108, read.alignmentStart());
-        assertEquals(199, read.alignmentEnd());
-        assertEquals("92M", read.cigarString());
+        assertEquals(110, read.alignmentStart());
+        assertEquals(108, read.unclippedStart());
+        assertEquals("2S80M10S", read.cigarString());
     }
 
     @Test

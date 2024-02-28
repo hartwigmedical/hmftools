@@ -20,7 +20,7 @@ public final class SvConstants
     public static final int POLY_G_TRIM_LENGTH = 4;
     public static final int INDEL_TO_SC_MIN_SIZE_SOFTCLIP = 6;
     public static final int INDEL_TO_SC_MAX_EDGE_DISTANCE = 16;
-    public static final int LOW_BASE_TRIM_LENGTH = 5;
+    public static final double LOW_BASE_TRIM_PERC = 0.3;
 
     // primary assembly
     public static final int READ_SOFT_CLIP_JUNCTION_BUFFER = 2;
