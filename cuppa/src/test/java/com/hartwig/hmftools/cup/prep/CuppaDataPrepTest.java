@@ -28,7 +28,7 @@ public class CuppaDataPrepTest
     {
         TMP_DIR.mkdir();
 
-        String selectedSampleId = "PROSTATE01T";
+        String selectedSampleId = "COLO829v003T";
 
         PrepConfig prepConfig = new TestPrepConfigBuilder()
                 .sampleIds(List.of(selectedSampleId))
@@ -55,7 +55,7 @@ public class CuppaDataPrepTest
         TMP_DIR.mkdir();
 
         PrepConfig prepConfig = new TestPrepConfigBuilder()
-                .sampleIds(Arrays.asList("PROSTATE01T", "SKINMERKEL01T"))
+                .sampleIds(Arrays.asList("COLO829v003T", "COLO829v003T_modified"))
                 .categories(CategoryType.getDnaCategories())
                 .refGenomeVersion("V37")
                 .sampleDataDir(TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*")
