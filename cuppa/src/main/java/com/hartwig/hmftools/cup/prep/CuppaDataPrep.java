@@ -112,7 +112,7 @@ public class CuppaDataPrep
         return path;
     }
 
-    private class SingleSample
+    private class SingleSampleTask
     {
         public List<DataItem> getData(HashMap<CategoryType, CategoryPrep> dataPreparers)
         {
@@ -176,7 +176,7 @@ public class CuppaDataPrep
         }
     }
 
-    private class MultiSample
+    private class MultiSampleTask
     {
         public DataItemMatrix getDataOneCategory(CategoryPrep categoryPrep)
         {
@@ -290,9 +290,9 @@ public class CuppaDataPrep
 
         if(mConfig.isSingleSample())
         {
-            new SingleSample().run();
+            new SingleSampleTask().run();
         } else {
-            new MultiSample().run();
+            new MultiSampleTask().run();
         }
 
         CUP_LOGGER.info("Cuppa data extraction complete, mins({})", runTimeMinsStr(startTimeMs));
