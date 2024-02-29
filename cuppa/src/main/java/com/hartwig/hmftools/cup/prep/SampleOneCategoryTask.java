@@ -30,6 +30,7 @@ public class SampleOneCategoryTask implements Callable
         if(mConfig.isMultiSample() & featureBySampleMatrix == null)
         {
             CUP_LOGGER.error("`featureBySampleMatrix` must not be null in multi sample mode");
+            System.exit(1);
         }
 
         FeatureBySampleMatrix = featureBySampleMatrix;
@@ -65,7 +66,7 @@ public class SampleOneCategoryTask implements Callable
         return mDataItems;
     }
 
-    public void addDataItemsToMatrix()
+    public synchronized void addDataItemsToMatrix()
     {
         int nSamples = mConfig.SampleIds.size();
         int sampleIndex = mConfig.SampleIds.indexOf(getSampleId());
@@ -79,7 +80,7 @@ public class SampleOneCategoryTask implements Callable
         }
     }
 
-    public synchronized void run()
+    public void run()
     {
         processSample();
 
@@ -93,6 +94,6 @@ public class SampleOneCategoryTask implements Callable
     public Long call() throws Exception
     {
         run();
-        return (long)0;
+        return (long) 0;
     }
 }
