@@ -34,7 +34,6 @@ public class SampleOneCategoryTask implements Callable
         }
 
         FeatureBySampleMatrix = featureBySampleMatrix;
-
     }
 
     public String getSampleId()
@@ -69,14 +68,13 @@ public class SampleOneCategoryTask implements Callable
     public synchronized void addDataItemsToMatrix()
     {
         int nSamples = mConfig.SampleIds.size();
-        int sampleIndex = mConfig.SampleIds.indexOf(getSampleId());
 
         for(DataItem dataItem : mDataItems)
         {
             DataItem.Index featureIndex = dataItem.Index;
 
             FeatureBySampleMatrix.computeIfAbsent(featureIndex, k -> new String[nSamples]);
-            FeatureBySampleMatrix.get(featureIndex)[sampleIndex] = dataItem.Value;
+            FeatureBySampleMatrix.get(featureIndex)[mSampleIndex] = dataItem.Value;
         }
     }
 
