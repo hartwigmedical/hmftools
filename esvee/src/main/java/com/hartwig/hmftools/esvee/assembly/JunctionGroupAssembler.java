@@ -22,11 +22,9 @@ import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
 import com.hartwig.hmftools.esvee.common.ThreadTask;
-import com.hartwig.hmftools.esvee.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.read.BamReader;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.read.ReadAdjustments;
-import com.hartwig.hmftools.esvee.read.ReadFilters;
 import com.hartwig.hmftools.esvee.read.ReadStats;
 
 import htsjdk.samtools.SAMRecord;
@@ -143,6 +141,9 @@ public class JunctionGroupAssembler extends ThreadTask
 
         List<JunctionAssembly> junctionGroupAssemblies = Lists.newArrayList();
 
+        RefBaseExtender refBaseExtender = new RefBaseExtender();
+        DiscordantReads discordantReads = new DiscordantReads();
+
         // now pass applicable reads to each junction assembler - any read overlapping the junction
         // due to SvPrep filtering, most reads crossing the junction will have met soft-clip criteria
         for(int i = 0; i < junctionGroup.junctions().size(); ++i)
@@ -166,7 +167,7 @@ public class JunctionGroupAssembler extends ThreadTask
 
             if(junction.DiscordantOnly)
             {
-                junctionGroup.addDiscordantGroups(DiscordantReads.buildFromDiscordantReads(junction, candidateReads));
+                discordantReads.processReads(junction, candidateReads);
                 continue;
             }
 
@@ -178,11 +179,15 @@ public class JunctionGroupAssembler extends ThreadTask
             // extend assemblies with non-junction and discordant reads
             for(JunctionAssembly assembly : candidateAssemblies)
             {
-                AssemblyExtender assemblyExtender = new AssemblyExtender(assembly);
-                assemblyExtender.findAssemblyExtensions(junctionAssembler.nonJunctionReads());
-
-                junctionGroupAssemblies.addAll(assemblyExtender.assemblies());
+                refBaseExtender.findAssemblyCandidateExtensions(assembly, junctionAssembler.nonJunctionReads());
+                junctionGroupAssemblies.add(assembly);
             }
+        }
+
+        if(!discordantReads.groups().isEmpty())
+        {
+            discordantReads.mergeGroups();
+            junctionGroup.addDiscordantGroups(discordantReads.groups());
         }
 
         junctionGroup.addJunctionAssemblies(junctionGroupAssemblies);

@@ -67,7 +67,8 @@ public class JunctionProcessor
     {
         for(String junctionFile : mConfig.JunctionFiles)
         {
-            Map<String,List<Junction>> newJunctionsMap = Junction.loadJunctions(junctionFile, mConfig.SpecificChrRegions);
+            Map<String,List<Junction>> newJunctionsMap = Junction.loadJunctions(
+                    junctionFile, mConfig.SpecificChrRegions, mConfig.SkipDiscordant);
 
             if(newJunctionsMap == null)
                 return false;

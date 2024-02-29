@@ -186,13 +186,36 @@ public class PhaseGroupBuilder
 
         for(JunctionGroup junctionGroup : linkedJunctionGroups)
         {
+            // the linked junction group may have discordant read groups which are required by this assembly
             for(DiscordantGroup discordantGroup : junctionGroup.discordantGroups())
             {
-                // as above, check that remote regions overlap before checking reads
-                if(assembly.remoteRegions().stream().noneMatch(x -> x.overlaps(discordantGroup.remoteRegion())))
+                // ignore any discordant group which actually shares the same reads
+                if(discordantGroup.reads().stream().anyMatch(x -> assembly.hasReadSupport(x)))
                     continue;
 
-                if(assembly.support().stream().noneMatch(x -> discordantGroup.hasRead(x.read())))
+                // as above, check that remote regions overlap before checking reads
+                boolean matched = false;
+
+                for(RemoteRegion remoteRegion : assembly.remoteRegions())
+                {
+                    if(remoteRegion.isSuppOnlyRegion())
+                        continue;
+
+                    if(!remoteRegion.overlaps(
+                            discordantGroup.chromosome(), discordantGroup.minAlignedPosition(), discordantGroup.maxAlignedPosition(),
+                            discordantGroup.orientation()))
+                    {
+                        continue;
+                    }
+
+                    if(remoteRegion.readIds().stream().anyMatch(x -> discordantGroup.hasFragment(x)))
+                    {
+                        matched = true;
+                        break;
+                    }
+                }
+
+                if(!matched)
                     continue;
 
                 if(phaseGroup == null)

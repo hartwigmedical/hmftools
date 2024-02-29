@@ -63,15 +63,15 @@ public final class RemoteRegionFinder
 
         addOrCreateRemoteRegion(
                 remoteRegions, read, isJunctionRead ? REMOTE_READ_TYPE_JUNCTION_MATE : REMOTE_READ_TYPE_DISCORDANT_READ,
-                mateChr, read.mateAlignmentStart(), read.mateAlignmentEnd());
+                mateChr, read.mateAlignmentStart(), read.mateAlignmentEnd(), read.mateOrientation());
     }
 
     private static RemoteRegion addOrCreateRemoteRegion(
             final List<RemoteRegion> remoteRegions, final Read read, final int readType,
-            final String remoteChr, final int remotePosStart, final int remotePosEnd)
+            final String remoteChr, final int remotePosStart, final int remotePosEnd, final byte remoteOrientation)
     {
         RemoteRegion matchedRegion = remoteRegions.stream()
-                .filter(x -> x.overlaps(remoteChr, remotePosStart, remotePosEnd)).findFirst().orElse(null);
+                .filter(x -> x.overlaps(remoteChr, remotePosStart, remotePosEnd, remoteOrientation)).findFirst().orElse(null);
 
         if(matchedRegion != null)
         {
@@ -102,7 +102,8 @@ public final class RemoteRegionFinder
         */
 
         RemoteRegion region = addOrCreateRemoteRegion(
-                remoteRegions, read, REMOTE_READ_TYPE_JUNCTION_SUPP, suppData.Chromosome, suppData.Position, remotePosEnd);
+                remoteRegions, read, REMOTE_READ_TYPE_JUNCTION_SUPP, suppData.Chromosome, suppData.Position,
+                remotePosEnd, suppData.orientation());
 
         region.addSoftClipMapQual(readScLength, suppData.MapQuality);
     }

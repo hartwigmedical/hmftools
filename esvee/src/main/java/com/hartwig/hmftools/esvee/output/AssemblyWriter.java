@@ -88,6 +88,7 @@ public class AssemblyWriter
             sj.add("AvgIndelLength");
             sj.add("AvgBaseQual");
             sj.add("AvgMapQual");
+            sj.add("AvgTrimCount");
             sj.add("InitialReadId");
 
             sj.add("RepeatInfo");
@@ -245,6 +246,7 @@ public class AssemblyWriter
             sj.add(statString(readStats.IndelLengthTotal, assembly.supportCount()));
             sj.add(statString(readStats.BaseQualTotal, assembly.supportCount()));
             sj.add(statString(readStats.MapQualTotal, assembly.supportCount()));
+            sj.add(statString(readStats.BaseTrimCountTotal, assembly.supportCount()));
 
             sj.add(assembly.initialRead() != null ? assembly.initialRead().getName() : "NONE"); // shouldn't occur
 
@@ -366,6 +368,7 @@ public class AssemblyWriter
         public int IndelLengthTotal;
         public int BaseQualTotal;
         public int MapQualTotal;
+        public int BaseTrimCountTotal;
 
         public ReadStats()
         {
@@ -373,6 +376,7 @@ public class AssemblyWriter
             IndelLengthTotal = 0;
             BaseQualTotal = 0;
             MapQualTotal = 0;
+            BaseTrimCountTotal = 0;
         }
     }
 
@@ -387,6 +391,7 @@ public class AssemblyWriter
             readStats.MapQualTotal += read.mappingQuality();
             readStats.BaseQualTotal += ReadUtils.avgBaseQuality(read);
             readStats.IndelLengthTotal += read.cigarElements().stream().filter(x -> x.getOperator().isIndel()).mapToInt(x -> x.getLength()).sum();
+            readStats.BaseTrimCountTotal += read.baseTrimCount();
         }
 
         return readStats;

@@ -139,7 +139,8 @@ public class Junction implements Comparable<Junction>
         return Position < other.Position ? -1 : 1;
     }
 
-    public static Map<String,List<Junction>> loadJunctions(final String filename, final SpecificRegions specificRegions)
+    public static Map<String,List<Junction>> loadJunctions(
+            final String filename, final SpecificRegions specificRegions, final boolean skipDiscordantGroups)
     {
         if(filename == null || filename.isEmpty())
             return null;
@@ -190,6 +191,10 @@ public class Junction implements Comparable<Junction>
                 int junctionFrags = juncFragsIndex != null ? Integer.parseInt(values[juncFragsIndex]) : 0;
                 int discordantFrags = discFragsIndex != null ? Integer.parseInt(values[discFragsIndex]) : 0;
                 boolean discordantOnly = junctionFrags == 0 && discordantFrags > 0;
+
+                if(discordantOnly && skipDiscordantGroups)
+                    continue;
+
                 boolean indel = indelIndex != null && Boolean.parseBoolean(values[indelIndex]);
                 boolean hotspot = hotspotIndex != null && Boolean.parseBoolean(values[hotspotIndex]);
 

@@ -1,53 +1,82 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.esvee.SvConstants.READ_SOFT_CLIP_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.common.DiscordantGroup;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.read.Read;
 
-public final class DiscordantReads
+public class DiscordantReads
 {
-    public static List<DiscordantGroup> buildFromDiscordantReads(final Junction junction, final List<Read> rawReads)
+    private List<DiscordantGroup> mGroups;
+
+    public DiscordantReads()
     {
-        List<DiscordantGroup> groups = Lists.newArrayList();
+        mGroups = Lists.newArrayList();
+    }
+
+    public List<DiscordantGroup> groups() { return mGroups; }
+
+    public void processReads(final Junction junction, final List<Read> rawReads)
+    {
+        DiscordantGroup currentGroup = null;
 
         for(Read read : rawReads)
         {
-            if(!isDiscordant(read))
+            if(read.isUnmapped() || !read.isPairedRead() || read.isMateUnmapped() || !isDiscordant(read))
                 continue;
 
-            if(read.orientation() != junction.Orientation)
-                continue;
-
-            if(junction.isForward())
+            // search amongst existing groups and match on orientation and remote region
+            if(currentGroup != null && currentGroup.matches(read))
             {
-                if(read.alignmentEnd() > junction.position() + READ_SOFT_CLIP_JUNCTION_BUFFER)
-                    continue;
+                currentGroup.addRead(read);
+                continue;
+            }
+
+            currentGroup = mGroups.stream().filter(x -> x.matches(read)).findFirst().orElse(null);
+
+            if(currentGroup != null)
+            {
+                currentGroup.addRead(read);
             }
             else
             {
-                if(read.alignmentStart() < junction.position() - READ_SOFT_CLIP_JUNCTION_BUFFER)
-                    continue;
-            }
-
-            DiscordantGroup matchedGroup = groups.stream().filter(x -> x.matches(read)).findFirst().orElse(null);
-
-            if(matchedGroup != null)
-            {
-                matchedGroup.addRead(read);
-            }
-            else
-            {
-                groups.add(new DiscordantGroup(junction, read));
+                currentGroup = new DiscordantGroup(junction, read);
+                mGroups.add(currentGroup);
             }
         }
+    }
 
-        return groups;
+    public void mergeGroups()
+    {
+        int index = 0;
+        while(index < mGroups.size() - 1)
+        {
+            DiscordantGroup first = mGroups.get(index);
+            boolean foundMerge = false;
+
+            int nextIndex = index + 1;
+            while(nextIndex < mGroups.size())
+            {
+                DiscordantGroup next = mGroups.get(nextIndex);
+
+                if(first.matches(next))
+                {
+                    mGroups.remove(nextIndex);
+                    next.reads().stream().filter( x -> !first.hasRead(x)).forEach(x -> first.addRead(x));
+                    foundMerge = true;
+                }
+                else
+                {
+                    ++nextIndex;
+                }
+            }
+
+            if(!foundMerge)
+                ++index;
+        }
     }
 }

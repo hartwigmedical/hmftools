@@ -32,22 +32,13 @@ import com.hartwig.hmftools.esvee.common.RefSideSoftClip;
 import com.hartwig.hmftools.esvee.common.SupportType;
 import com.hartwig.hmftools.esvee.read.Read;
 
-public class AssemblyExtender
+public class RefBaseExtender
 {
-    private final List<JunctionAssembly> mAssemblies;
+    public RefBaseExtender() { }
 
-    public AssemblyExtender(final JunctionAssembly assembly)
-    {
-        mAssemblies = Lists.newArrayList(assembly);
-    }
-
-    public List<JunctionAssembly> assemblies() { return mAssemblies; }
-
-    public void findAssemblyExtensions(final List<Read> unfilteredNonJunctionReads)
+    public void findAssemblyCandidateExtensions(final JunctionAssembly assembly, final List<Read> unfilteredNonJunctionReads)
     {
         // first establish potential boundaries for extending the assembly on the non-junction side
-        JunctionAssembly assembly = mAssemblies.get(0);
-
         if(assembly.indel())
         {
             // add junction mates only, could consider add reads
