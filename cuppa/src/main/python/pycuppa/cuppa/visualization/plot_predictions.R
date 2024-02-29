@@ -75,7 +75,7 @@ get_plot_data_probs <- function(VIS_DATA, data_value_rounding = 2){
    plot_data <- subset(VIS_DATA, data_type=="prob")
 
    plot_data$row_label <- toupper(gsub("_"," ", plot_data$clf_name))
-   plot_data$row_label <- plyr::revalue(plot_data$row_label, replace=MAPPINGS_CLASSIFIER_NAMES, warn_missing=FALSE)
+   plot_data$row_label <- revalue(plot_data$row_label, replace=MAPPINGS_CLASSIFIER_NAMES, warn_missing=FALSE)
    plot_data$row_group <- toupper(plot_data$clf_group)
 
    ## Data label --------------------------------
@@ -488,7 +488,7 @@ plot_feat_contrib <- function(VIS_DATA){
       str_split(gsub("_", " ", plot_data$feat_name), '[.]', n=2)
    ))
    colnames(affixes) <- c("feat_type", "feat_basename")
-   affixes$feat_type[affixes$feat_type == "driver"] <- "driver (DL)"
+   affixes$feat_type <- revalue(affixes$feat_type, replace=c(driver="driver (DL)"))
 
    ## Format labels --------------------------------
    plot_data$row_group <- affixes$feat_type
@@ -524,7 +524,11 @@ plot_feat_contrib <- function(VIS_DATA){
       feat_value_label[feat_value==0] <- "0"
       feat_value_label[feat_value==1] <- "1"
 
-      paste0(ifelse(grepl("\\.", affixes$feat_basename), paste(gsub("\\.", " ", affixes$feat_basename), " (", feat_value_label, ")", sep = ""), ifelse((affixes$feat_basename == "is male") | (affixes$feat_basename == "whole genome duplication"), paste(affixes$feat_basename, "=", feat_value_label, sep = " "), paste(affixes$feat_basename, "=", feat_value_label, sep = " "))))
+      driver_feat_value_label <- paste0(gsub("\\.", " ", affixes$feat_basename), " (", feat_value_label, ")")
+      trait_feat_value_label <- paste(affixes$feat_basename, "=", feat_value_label==1, sep = " ")
+      tmb_or_sv_feat_value_label <- paste(affixes$feat_basename, "=", feat_value_label, sep = " ")
+      non_driver_feat_value_label <- ifelse(affixes$feat_basename %in% c("is male", "whole genome duplication"), trait_feat_value_label, tmb_or_sv_feat_value_label)
+      paste0(ifelse(grepl("\\.", affixes$feat_basename), driver_feat_value_label, non_driver_feat_value_label))
    })
    
    ## Legend breaks --------------------------------
