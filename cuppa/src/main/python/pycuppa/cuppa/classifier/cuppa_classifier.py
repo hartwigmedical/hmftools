@@ -226,13 +226,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
     def reset_sample_fusions(self) -> None:
         self.fusion_prob_overrider.sample_fusions = None
 
-    def set_fusion_prob_overrider_bypass(self, bypass_value: bool) -> None:
-        if not isinstance(bypass_value, bool):
-            self.logger.error("`bypass_value` must be a bool")
-            raise TypeError
-
-        self.fusion_prob_overrider.bypass = bypass_value
-
     ## Calibrators --------------------------------
     @property
     def prob_calibrators(self) -> dict[str, RollingAvgCalibration]:
@@ -254,16 +247,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         return cal_curves
 
-    def enable_prob_cal_bypass(self):
-        calibrators = self.prob_calibrators
-        for calibrator in calibrators.values():
-            calibrator.bypass = True
-
-    def disable_prob_cal_bypass(self):
-        calibrators = self.prob_calibrators
-        for calibrator in calibrators.values():
-            calibrator.bypass = False
-
     ## Training ================================
     def classes_(self) -> None:
         ## `classes_` is a read-only @property in sklearn.pipeline.Pipeline. Undo this so that it can be overriden
@@ -274,7 +257,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         ## These are not used for prediction and therefore are generated outside the Pipeline.fit() call
         transformer = SigCohortQuantileTransformer(clip_upper=False)
 
-        transformer = super().fit_cached(
+        transformer = cuppa.Pipeline.fit_cached(
             estimator=transformer,
             X=X[make_column_selector("^sig")],
             y=y,
@@ -350,12 +333,9 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         self,
         X: pd.DataFrame,
         y = None,
-
         until_step: Optional[str] = None,
         keep_steps: Optional[str | list[str]] = None,
-        verbose: Optional[bool] = None,
-
-        bypass_prob_cal: bool = False
+        verbose: Optional[bool] = None
     ) -> pd.DataFrame:
         """
         By default, gets the probabilities from the final transformer (i.e. ProbCombiner)
@@ -379,10 +359,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         verbose: bool
             Show progress messages?
-
-        bypass_prob_cal: bool
-            Skip probability calibration?
-
         """
 
         self._check_is_fitted()
@@ -390,8 +366,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         self.set_sample_sexes(X)
         self.set_sample_fusions(X)
-        if bypass_prob_cal:
-            self.enable_prob_cal_bypass()
 
         X_trans = super().transform(
             X=X,
@@ -403,8 +377,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         self.reset_sample_sexes()
         self.reset_sample_fusions()
-        if bypass_prob_cal:
-            self.disable_prob_cal_bypass()
 
         return X_trans
 
@@ -412,7 +384,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         self,
         X: pd.DataFrame,
         y: pd.Series | None = None,
-        bypass_prob_cal: bool = False,
         verbose: bool = False
     ) -> pd.DataFrame:
         """
@@ -423,9 +394,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         y: None
             Not used. Argument only exists for compatibility
-
-        bypass_prob_cal: bool
-            If True, will return raw probabilities, else calibrated probabilities
 
         Returns
         -------
@@ -448,7 +416,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         probs = self.transform(
             X, y,
             keep_steps=keep_steps,
-            bypass_prob_cal=bypass_prob_cal,
             verbose=verbose
         )
 
