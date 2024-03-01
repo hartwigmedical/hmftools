@@ -20,7 +20,7 @@ from cuppa.components.mutational_signatures import SigCohortQuantileTransformer
 from cuppa.components.prob_overriders import FusionProbOverrider, SexProbFilter
 from cuppa.compose.column_transformer import DEFAULT_FEATURE_PREFIX_SEPERATOR
 from cuppa.constants import DEFAULT_FUSION_OVERRIDES_PATH, SEX_FEATURE_NAME
-from cuppa.classifier.cuppa_classifier_utils import MissingFeaturesHandler
+from cuppa.classifier.cuppa_classifier_utils import MissingFeaturesHandler, BypassedClassifierBuilder
 
 if TYPE_CHECKING:
     from cuppa.performance.performance_stats import PerformanceStats
@@ -257,7 +257,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         ## These are not used for prediction and therefore are generated outside the Pipeline.fit() call
         transformer = SigCohortQuantileTransformer(clip_upper=False)
 
-        transformer = cuppa.Pipeline.fit_cached(
+        transformer = cuppa.compose.pipeline.Pipeline.fit_cached(
             estimator=transformer,
             X=X[make_column_selector("^sig")],
             y=y,
@@ -557,6 +557,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         y: None = None,
         probs_only: bool = False,
         rm_all_zero_rows: bool = False,
+        bypass_steps: str | list[str] | None = None,
         verbose: bool = False
     ) -> CuppaPrediction:
         """
@@ -595,10 +596,16 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         """
 
-        self._check_is_fitted()
+        if bypass_steps is None:
+            cuppa_classifier = self
+        else:
+            builder = BypassedClassifierBuilder(self, bypass_steps=bypass_steps, verbose=True)
+            cuppa_classifier = builder.build()
+
+        cuppa_classifier._check_is_fitted()
 
         builder = CuppaPredictionBuilder(
-            cuppa_classifier = self,
+            cuppa_classifier = cuppa_classifier,
             X = X,
             probs_only = probs_only,
             rm_all_zero_rows = rm_all_zero_rows,
