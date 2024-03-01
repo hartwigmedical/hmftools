@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 from cuppa.tests.mock_data import MockTrainingData, MockCuppaClassifier
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
@@ -65,3 +66,18 @@ class TestMissingFeaturesHandler:
         handler = MissingFeaturesHandler(X, required_features=required_features)
         X_filled = handler.fill_missing()
         assert X_filled[required_rna_features].isna().iloc[0].all()
+
+    def test_can_fill_missing_cols_from_classifier(self):
+        X = MockTrainingData.X
+        y = MockTrainingData.y
+
+        classifier = CuppaClassifier(fusion_overrides_path=None)
+        classifier.fit(X, y)
+
+        X_incomplete = X.iloc[:,1:10]
+
+        with pytest.raises(LookupError):
+            classifier._check_features(X_incomplete)
+
+        X_filled = classifier.fill_missing_cols(X_incomplete, fill_value=0)
+        assert X_filled.shape[1] > X_incomplete.shape[1]
