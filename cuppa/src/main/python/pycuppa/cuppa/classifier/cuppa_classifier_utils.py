@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from functools import cached_property
 from typing import Iterable, TYPE_CHECKING
 
@@ -7,6 +8,7 @@ import numpy as np
 import pandas as pd
 from sklearn.compose import make_column_selector
 
+from cuppa.components.passthrough import PassthroughTransformer
 from cuppa.components.preprocessing import NaRowFilter
 from cuppa.constants import SUB_CLF_NAMES
 from cuppa.logger import LoggerMixin
@@ -164,3 +166,79 @@ class MissingFeaturesHandler(LoggerMixin):
             ))
 
         return X_new
+
+
+class BypassedClassifierBuilder(LoggerMixin):
+    def __init__(
+        self,
+        cuppa_classifier: CuppaClassifier,
+        bypass_steps: str | list[str],
+        inplace: bool = False,
+        verbose: bool = True
+    ):
+        self.cuppa_classifier = cuppa_classifier
+
+        self.bypass_steps = bypass_steps
+        self._check_bypass_steps()
+
+        self.inplace = inplace
+        self.verbose = verbose
+
+    def _check_bypass_steps(self) -> None:
+        valid_bypass_steps = ["calibrator", "fusion_overrider", "sex_filter"]
+
+        if self.bypass_steps == "all":
+            self.bypass_steps = valid_bypass_steps
+
+        if ~pd.Series(self.bypass_steps).isin(valid_bypass_steps).all():
+            self.logger.error("Valid `bypass_steps` are: " + ", ".join(valid_bypass_steps) + ", or all")
+            raise ValueError
+
+    def _bypass_step(self, pipeline, step: str) -> None:
+        step_names = [step_i for step_i, transformer in pipeline.steps]
+        if step not in step_names:
+            self.logger.error("'%s' not found" % step)
+            raise LookupError
+
+        step_index = step_names.index(step)
+        pipeline.steps[step_index] = (step, PassthroughTransformer())
+
+    def bypass_prob_calibration(self, cuppa_classifier: CuppaClassifier) -> None:
+        if self.verbose:
+            self.logger.info("Removing probability calibrators")
+
+        self._bypass_step(cuppa_classifier.dna_combined_clf, "calibrator")
+        self._bypass_step(cuppa_classifier.rna_combined_clf, "calibrator")
+
+    def bypass_fusion_overrider(self, cuppa_classifier: CuppaClassifier) -> None:
+        if self.verbose:
+            self.logger.info("Removing fusion overrider")
+
+        self._bypass_step(cuppa_classifier.dna_combined_clf, "fusion_overrider")
+
+    def bypass_sex_filters(self, cuppa_classifier: CuppaClassifier) -> None:
+        if self.verbose:
+            self.logger.info("Removing sex filter")
+
+        self._bypass_step(cuppa_classifier.dna_combined_clf, "sex_filter")
+        self._bypass_step(cuppa_classifier.rna_combined_clf, "sex_filter")
+
+    def build(self):
+
+        if self.inplace:
+            if self.verbose:
+                self.logger.info("Modifying CuppaClassifier in place")
+            cuppa_classifier = self.cuppa_classifier
+        else:
+            cuppa_classifier = copy.deepcopy(self.cuppa_classifier)
+
+        if "calibrator" in self.bypass_steps:
+            self.bypass_prob_calibration(cuppa_classifier)
+
+        if "fusion_overrider" in self.bypass_steps:
+            self.bypass_fusion_overrider(cuppa_classifier)
+
+        if "sex_filter" in self.bypass_steps:
+            self.bypass_sex_filters(cuppa_classifier)
+
+        return cuppa_classifier
