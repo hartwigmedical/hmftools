@@ -449,7 +449,7 @@ class TrainingRunner(LoggerMixin):
         if self.cv_performance is not None:
             self.cuppa_classifier.cv_performance = self.cv_performance
         else:
-            self.logger.warning("Could add CV performance stats to CuppaClassifier")
+            self.logger.warning("Could not add CV performance stats to CuppaClassifier")
 
     def export_final_model(self) -> None:
         path = os.path.join(self.output_dir, "cuppa_classifier.pickle.gz")
