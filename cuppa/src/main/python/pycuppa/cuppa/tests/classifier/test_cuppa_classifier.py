@@ -2,7 +2,7 @@ import pandas as pd
 
 from cuppa.tests.mock_data import MockTrainingData, MockCuppaClassifier
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
-from cuppa.classifier.missing_features_handler import MissingFeaturesHandler
+from cuppa.classifier.cuppa_classifier_utils import MissingFeaturesHandler
 
 
 class TestCuppaClassifier:
