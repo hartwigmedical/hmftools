@@ -20,7 +20,7 @@ from cuppa.components.mutational_signatures import SigCohortQuantileTransformer
 from cuppa.components.prob_overriders import FusionProbOverrider, SexProbFilter
 from cuppa.compose.column_transformer import DEFAULT_FEATURE_PREFIX_SEPERATOR
 from cuppa.constants import DEFAULT_FUSION_OVERRIDES_PATH, SEX_FEATURE_NAME
-from cuppa.classifier.missing_features_handler import MissingFeaturesHandler
+from cuppa.classifier.cuppa_classifier_utils import MissingFeaturesHandler
 
 if TYPE_CHECKING:
     from cuppa.performance.performance_stats import PerformanceStats
@@ -323,20 +323,8 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
     ## Features ================================
     def _check_features(self, X: pd.DataFrame) -> None:
-
         handler = MissingFeaturesHandler(X=X, cuppa_classifier=self)
-
-        required_features = handler.required_features_all
-
-        missing_features = required_features[~required_features.isin(X.columns)]
-        n_missing = len(missing_features)
-
-        if n_missing == 0:
-            return None
-
-        self.logger.error("`X` is missing %i feature columns" % n_missing)
-        self.logger.error("Please use " + self.__class__.__name__ + ".fill_missing_cols() to ensure `X` has the required columns")
-        raise LookupError
+        handler.check_features()
 
     def fill_missing_cols(
         self,

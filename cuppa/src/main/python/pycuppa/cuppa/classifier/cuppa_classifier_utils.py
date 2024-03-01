@@ -105,9 +105,9 @@ class MissingFeaturesHandler(LoggerMixin):
         type_count_string = ", ".join(pd.Series(types) + "=" + pd.Series(counts).astype(str))
         return type_count_string
 
-    def _check_features(self, X: pd.DataFrame) -> None:
+    def check_features(self) -> None:
 
-        missing = self.required_features[~self.required_features.isin(X.columns)]
+        missing = self.required_features_all[ ~self.required_features_all.isin(self.X.columns) ]
         n_missing = len(missing)
 
         if n_missing == 0:
@@ -117,8 +117,7 @@ class MissingFeaturesHandler(LoggerMixin):
             n_missing,
             self._get_feat_type_counts_string(missing)
         ))
-        self.logger.error(
-            "Please use " + self.__class__.__name__ + ".fill_missing_cols() to ensure `X` has the required columns")
+        self.logger.error("Please use " + self.__class__.__name__ + ".fill_missing_cols() to ensure `X` has the required columns")
         raise LookupError
 
     def fill_missing(self) -> pd.DataFrame:
