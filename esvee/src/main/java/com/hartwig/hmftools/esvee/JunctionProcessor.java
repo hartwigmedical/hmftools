@@ -109,7 +109,6 @@ public class JunctionProcessor
 
             alignPhaseSets();
 
-            // write here to show PPG data - may move back later on
             if(mConfig.WriteTypes.contains(WriteType.ASSEMBLIES))
             {
                 SV_LOGGER.debug("writing assembly data");
