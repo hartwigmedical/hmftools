@@ -89,11 +89,11 @@ public class ResultsWriter
             if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.SOMATIC_VARIANT))
                 sj.add(SomaticPurityResult.header());
 
-            if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.COPY_NUMBER))
-                sj.add(CnPurityResult.header());
-
             if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.AMBER_LOH))
                 sj.add(AmberLohResult.header());
+
+            if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.COPY_NUMBER))
+                sj.add(CnPurityResult.header());
 
             writer.write(sj.toString());
             writer.newLine();
@@ -122,11 +122,11 @@ public class ResultsWriter
             if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.SOMATIC_VARIANT))
                 sj.add(format("%s", somaticPurityResult.toTsv()));
 
-            if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.COPY_NUMBER))
-                sj.add(format("%s", cnPurityResult.toTsv()));
-
             if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.AMBER_LOH))
                 sj.add(format("%s", amberLohResult.toTsv()));
+
+            if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.COPY_NUMBER))
+                sj.add(format("%s", cnPurityResult.toTsv()));
 
             mSampleSummaryWriter.write(sj.toString());
             mSampleSummaryWriter.newLine();

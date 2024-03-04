@@ -2,6 +2,7 @@ package com.hartwig.hmftools.wisp.purity.cn;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.GENOME_LENGTH_V38;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatPurityValue;
 
@@ -31,24 +32,22 @@ public class AmberLohResult
     public static String header()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
+        sj.add("LohEstimatedPurity");
         sj.add("LohSiteCount");
-        sj.add("LohMb");
+        sj.add("LohPercent");
         sj.add("LohAvgCopyNumber");
         sj.add("LohAvgAF");
-        sj.add("LohEstimatedPurity");
         return sj.toString();
     }
-
-    private static final double LOH_MB = 1_000_000;
 
     public String toTsv()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
+        sj.add(formatPurityValue(EstimtedPurity));
         sj.add(String.valueOf(SiteCount));
-        sj.add(format("%.1f", LohDistance / LOH_MB));
+        sj.add(format("%.3f", LohDistance / GENOME_LENGTH_V38));
         sj.add(format("%.2f", AvgCopyNumber));
         sj.add(format("%.4f", AvgAF));
-        sj.add(formatPurityValue(EstimtedPurity));
 
         return sj.toString();
     }
