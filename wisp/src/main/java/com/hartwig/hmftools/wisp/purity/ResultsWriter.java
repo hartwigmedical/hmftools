@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.wisp.purity.cn.AmberLohResult;
 import com.hartwig.hmftools.wisp.purity.cn.CnPurityResult;
 import com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult;
 
@@ -91,6 +92,9 @@ public class ResultsWriter
             if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.COPY_NUMBER))
                 sj.add(CnPurityResult.header());
 
+            if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.AMBER_LOH))
+                sj.add(AmberLohResult.header());
+
             writer.write(sj.toString());
             writer.newLine();
 
@@ -105,7 +109,7 @@ public class ResultsWriter
 
     public synchronized void writeSampleSummary(
             final SampleData sampleData, final String sampleId, final PurityContext purityContext, final CnPurityResult cnPurityResult,
-            final SomaticPurityResult somaticPurityResult)
+            final SomaticPurityResult somaticPurityResult, final AmberLohResult amberLohResult)
     {
         try
         {
@@ -120,6 +124,9 @@ public class ResultsWriter
 
             if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.COPY_NUMBER))
                 sj.add(format("%s", cnPurityResult.toTsv()));
+
+            if(!mConfig.SummaryMethodOnlyOutput || mConfig.PurityMethods.contains(PurityMethod.AMBER_LOH))
+                sj.add(format("%s", amberLohResult.toTsv()));
 
             mSampleSummaryWriter.write(sj.toString());
             mSampleSummaryWriter.newLine();

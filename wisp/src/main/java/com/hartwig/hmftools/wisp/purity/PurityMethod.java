@@ -4,5 +4,6 @@ public enum PurityMethod
 {
     SOMATIC_VARIANT,
     COPY_NUMBER,
-    SV;
+    SV,
+    AMBER_LOH;
 }

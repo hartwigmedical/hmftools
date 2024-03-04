@@ -5,6 +5,8 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
@@ -49,6 +51,7 @@ public class PurityConfig
     public final String SomaticDir; // if different from sample data dir and not specifying a VCF path
     public final String SampleDataDir;
     public final String PurpleDir;
+    public final String AmberDir;
     public final String CobaltDir;
 
     public final ProbeVariantCache ProbeVariants;
@@ -102,6 +105,7 @@ public class PurityConfig
         SomaticVcf = configBuilder.getValue(SOMATIC_VCF);
         SomaticDir = checkAddDirSeparator(configBuilder.getValue(SOMATIC_DIR, SampleDataDir));
         PurpleDir = checkAddDirSeparator(configBuilder.getValue(PURPLE_DIR_CFG, SampleDataDir));
+        AmberDir = checkAddDirSeparator(configBuilder.getValue(AMBER_DIR_CFG, SampleDataDir));
         CobaltDir = checkAddDirSeparator(configBuilder.getValue(COBALT_DIR_CFG, SampleDataDir));
         OutputDir = checkAddDirSeparator(configBuilder.getValue(OUTPUT_DIR, SampleDataDir));
         OutputId = configBuilder.getValue(OUTPUT_ID);
@@ -141,6 +145,7 @@ public class PurityConfig
     public boolean hasBatchControls() { return Samples.stream().anyMatch(x -> x.isBatchControl()); }
 
     public String getPurpleDir(final String sampleId) { return convertWildcardSamplePath(PurpleDir, sampleId); }
+    public String getAmberDir(final String sampleId) { return convertWildcardSamplePath(AmberDir, sampleId); }
     public String getSomaticVcf(final String sampleId) { return convertWildcardSamplePath(SomaticVcf, sampleId); }
     public String getCobaltDir(final String sampleId) { return convertWildcardSamplePath(CobaltDir, sampleId); }
 
@@ -215,6 +220,7 @@ public class PurityConfig
         configBuilder.addConfigItem(SOMATIC_DIR, false, "Somatic VCF directory");
         configBuilder.addConfigItem(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
         configBuilder.addConfigItem(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
+        configBuilder.addConfigItem(AMBER_DIR_CFG, false, AMBER_DIR_DESC);
         configBuilder.addConfigItem(COBALT_DIR_CFG, false, COBALT_DIR_DESC);
         configBuilder.addConfigItem(PLOT_DIR, false, "Plot output directory, defaults to sample or output dir");
 
