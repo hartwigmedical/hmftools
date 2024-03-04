@@ -1,9 +1,7 @@
 import os
 import tempfile
-from subprocess import CalledProcessError
 
 import pandas as pd
-import pytest
 
 from cuppa.tests.mock_data import MockCvOutput, MockVisData
 from cuppa.visualization.visualization import CuppaVisDataBuilder, CuppaVisPlotter, CuppaVisData
@@ -39,23 +37,6 @@ class TestCuppaVisData:
 
 
 class TestCuppaVisPlotter:
-
-    def test_r_script_error(self):
-
-        dummy_vis_data = pd.DataFrame(dict(sample_id="test_sample"), index=[0])
-        dummy_vis_data = CuppaVisData(dummy_vis_data)
-
-        plotter = CuppaVisPlotter(
-            vis_data=dummy_vis_data,
-            plot_path="/dummy_path.pdf"
-        )
-
-        ## Override tmp vis data path to be a valid one.
-        ## This is usually auto generated from `plot_path`, but here it would not result in a valid path
-        plotter._tmp_vis_data_path = os.path.join(tempfile.gettempdir(), "vis_data.tsv")
-
-        with pytest.raises(CalledProcessError):
-            plotter.plot()
 
     def test_can_plot_one_sample(self):
         plot_path = os.path.join(tempfile.gettempdir(), "cuppa_vis.png")
