@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import shutil
 from functools import cached_property
-from typing import TYPE_CHECKING, Optional, Literal, Iterable
+from typing import TYPE_CHECKING, Optional, Literal
 
 import joblib
 import numpy as np
@@ -18,10 +18,9 @@ from cuppa.classifier.feature_importance import FeatureImportance
 from cuppa.components.calibration import RollingAvgCalibration
 from cuppa.components.mutational_signatures import SigCohortQuantileTransformer
 from cuppa.components.prob_overriders import FusionProbOverrider, SexProbFilter
-from cuppa.components.preprocessing import NaRowFilter
 from cuppa.compose.column_transformer import DEFAULT_FEATURE_PREFIX_SEPERATOR
 from cuppa.constants import DEFAULT_FUSION_OVERRIDES_PATH, SEX_FEATURE_NAME
-from cuppa.logger import LoggerMixin
+from cuppa.classifier.cuppa_classifier_utils import MissingFeaturesHandler, BypassedClassifierBuilder
 
 if TYPE_CHECKING:
     from cuppa.performance.performance_stats import PerformanceStats
@@ -227,13 +226,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
     def reset_sample_fusions(self) -> None:
         self.fusion_prob_overrider.sample_fusions = None
 
-    def set_fusion_prob_overrider_bypass(self, bypass_value: bool) -> None:
-        if not isinstance(bypass_value, bool):
-            self.logger.error("`bypass_value` must be a bool")
-            raise TypeError
-
-        self.fusion_prob_overrider.bypass = bypass_value
-
     ## Calibrators --------------------------------
     @property
     def prob_calibrators(self) -> dict[str, RollingAvgCalibration]:
@@ -255,16 +247,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         return cal_curves
 
-    def enable_prob_cal_bypass(self):
-        calibrators = self.prob_calibrators
-        for calibrator in calibrators.values():
-            calibrator.bypass = True
-
-    def disable_prob_cal_bypass(self):
-        calibrators = self.prob_calibrators
-        for calibrator in calibrators.values():
-            calibrator.bypass = False
-
     ## Training ================================
     def classes_(self) -> None:
         ## `classes_` is a read-only @property in sklearn.pipeline.Pipeline. Undo this so that it can be overriden
@@ -275,7 +257,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         ## These are not used for prediction and therefore are generated outside the Pipeline.fit() call
         transformer = SigCohortQuantileTransformer(clip_upper=False)
 
-        transformer = super().fit_cached(
+        transformer = cuppa.compose.pipeline.Pipeline.fit_cached(
             estimator=transformer,
             X=X[make_column_selector("^sig")],
             y=y,
@@ -323,120 +305,25 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
 
     ## Features ================================
-    @cached_property
-    def required_features_by_type(self) -> dict[str, pd.Index]:
-        self._check_is_fitted()
-        return dict(
-            gen_pos = self.gen_pos_clf["cos_sim"].profiles_.index,
-            snv96 = pd.Index(self.snv96_clf["logistic_regression"].feature_names_in_),
-            event = pd.Index(self.event_clf["logistic_regression"].feature_names_in_),
-
-            sig = self.sig_quantile_transformer.feature_names_in_,
-
-            gene_exp = pd.Index(self.gene_exp_clf["chi2"].selected_features),
-            alt_sj = pd.Index(self.alt_sj_clf["chi2"].selected_features)
-        )
-
-    @property
-    def required_dna_features(self) -> pd.Index:
-
-        features = [
-            self.required_features_by_type[feat_type]
-            for feat_type in ("gen_pos", "snv96", "event", "sig")
-        ]
-
-        return pd.Index(np.concatenate(features))
-
-    @property
-    def required_rna_features(self) -> pd.Index:
-
-        features = [
-            self.required_features_by_type[feat_type]
-            for feat_type in ("gene_exp", "alt_sj")
-        ]
-
-        return pd.Index(np.concatenate(features))
-
-    @property
-    def required_features(self) -> pd.Index:
-
-        features = [
-            self.required_features_by_type[feat_type]
-            for feat_type in self.required_features_by_type.keys()
-        ]
-
-        return pd.Index(np.concatenate(features))
-
-    @staticmethod
-    def _get_feat_type_counts_string(feat_names: pd.Index) -> str:
-        feature_types = feat_names.str.extract("(^\w+)", expand=True)
-
-        types, counts = np.unique(feature_types, return_counts=True)
-        type_count_string = ", ".join(pd.Series(types) + "=" + pd.Series(counts).astype(str))
-        return type_count_string
-
     def _check_features(self, X: pd.DataFrame) -> None:
-
-        missing = self.required_features[~self.required_features.isin(X.columns)]
-        n_missing = len(missing)
-
-        if n_missing == 0:
-            return None
-
-        self.logger.error("`X` is missing %i feature columns: %s" % (
-            n_missing,
-            self._get_feat_type_counts_string(missing)
-        ))
-        self.logger.error("Please use " + self.__class__.__name__ + ".fill_missing_cols() to ensure `X` has the required columns")
-        raise LookupError
+        handler = MissingFeaturesHandler(X=X, cuppa_classifier=self)
+        handler.check_features()
 
     def fill_missing_cols(
         self,
         X: pd.DataFrame,
         fill_value: int | float = 0,
         verbose: bool = True
-    ) -> pd.DataFrame:
+    ):
 
-        ## DNA --------------------------------
-        X_dna = X.reindex(columns=self.required_dna_features, fill_value=fill_value)
+        handler = MissingFeaturesHandler(
+            X = X,
+            cuppa_classifier=self,
+            fill_value = fill_value,
+            verbose = verbose
+        )
 
-        ## RNA --------------------------------
-        pattern_rna_features = f"^{SUB_CLF_NAMES.GENE_EXP}|{SUB_CLF_NAMES.ALT_SJ}"
-        X_rna = X[make_column_selector(pattern_rna_features)]
-
-        if X_rna.shape[1]==0:
-            ## If RNA columns are entirely missing, create the RNA matrix of NAs
-            X_rna = pd.DataFrame(
-                np.full((X.shape[0], len(self.required_rna_features)), np.nan),
-                index=X.index,
-                columns=self.required_rna_features
-            )
-        else:
-            ## Samples without RNA data either have no RNA columns
-            ## We don't want to fill these rows with 0 because this would produce an unwanted probability
-            is_missing_rna_data = NaRowFilter.detect_na_rows(X_rna, use_first_col=True)
-            X_rna = X_rna\
-                .loc[~is_missing_rna_data]\
-                .reindex(columns=self.required_rna_features, fill_value=fill_value)
-
-        X_new = pd.concat([X_dna, X_rna], axis=1)
-        del X_dna, X_rna
-
-        ## Print info --------------------------------
-        removed_features = X.columns[~X.columns.isin(X_new.columns)]
-        if verbose and len(removed_features) > 0:
-            self.logger.info("Removed %i features that were not required: %s" % (
-                len(removed_features),
-                self._get_feat_type_counts_string(removed_features)
-            ))
-
-        added_features = X_new.columns[~X_new.columns.isin(X.columns)]
-        if verbose and len(added_features) > 0:
-            self.logger.info("Filled in %i features missing with value=%s: %s" % (
-                len(added_features),
-                fill_value,
-                self._get_feat_type_counts_string(added_features)
-            ))
+        X_new = handler.fill_missing()
 
         return X_new
 
@@ -446,12 +333,9 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         self,
         X: pd.DataFrame,
         y = None,
-
         until_step: Optional[str] = None,
         keep_steps: Optional[str | list[str]] = None,
-        verbose: Optional[bool] = None,
-
-        bypass_prob_cal: bool = False
+        verbose: Optional[bool] = None
     ) -> pd.DataFrame:
         """
         By default, gets the probabilities from the final transformer (i.e. ProbCombiner)
@@ -475,10 +359,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         verbose: bool
             Show progress messages?
-
-        bypass_prob_cal: bool
-            Skip probability calibration?
-
         """
 
         self._check_is_fitted()
@@ -486,8 +366,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         self.set_sample_sexes(X)
         self.set_sample_fusions(X)
-        if bypass_prob_cal:
-            self.enable_prob_cal_bypass()
 
         X_trans = super().transform(
             X=X,
@@ -499,8 +377,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         self.reset_sample_sexes()
         self.reset_sample_fusions()
-        if bypass_prob_cal:
-            self.disable_prob_cal_bypass()
 
         return X_trans
 
@@ -508,7 +384,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         self,
         X: pd.DataFrame,
         y: pd.Series | None = None,
-        bypass_prob_cal: bool = False,
         verbose: bool = False
     ) -> pd.DataFrame:
         """
@@ -519,9 +394,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         y: None
             Not used. Argument only exists for compatibility
-
-        bypass_prob_cal: bool
-            If True, will return raw probabilities, else calibrated probabilities
 
         Returns
         -------
@@ -544,7 +416,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         probs = self.transform(
             X, y,
             keep_steps=keep_steps,
-            bypass_prob_cal=bypass_prob_cal,
             verbose=verbose
         )
 
@@ -680,13 +551,13 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         return feat_contribs
 
-
     def predict(
         self,
         X: pd.DataFrame,
         y: None = None,
         probs_only: bool = False,
         rm_all_zero_rows: bool = False,
+        bypass_steps: str | list[str] | None = None,
         verbose: bool = False
     ) -> CuppaPrediction:
         """
@@ -725,10 +596,16 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         """
 
-        self._check_is_fitted()
+        if bypass_steps is None:
+            cuppa_classifier = self
+        else:
+            builder = BypassedClassifierBuilder(self, bypass_steps=bypass_steps, verbose=True)
+            cuppa_classifier = builder.build()
+
+        cuppa_classifier._check_is_fitted()
 
         builder = CuppaPredictionBuilder(
-            cuppa_classifier = self,
+            cuppa_classifier = cuppa_classifier,
             X = X,
             probs_only = probs_only,
             rm_all_zero_rows = rm_all_zero_rows,
@@ -738,158 +615,3 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         predictions = builder.build()
 
         return predictions
-
-
-class MissingFeaturesHandler(LoggerMixin):
-
-    def __init__(
-        self,
-        X: pd.DataFrame,
-        cuppa_classifier: CuppaClassifier | None = None,
-        required_features: Iterable | None = None,
-        fill_value: int | float = 0,
-        verbose: bool = True
-    ):
-        self.X = X
-        self.fill_value = fill_value
-        self.verbose = verbose
-
-        self.cuppa_classifier = cuppa_classifier
-        if cuppa_classifier is not None:
-            self.required_features = self._get_required_features_by_type_from_classifier()
-        else:
-            self.required_features = pd.Series(required_features)
-
-        self._check_inputs()
-
-    def _check_inputs(self) -> None:
-        if self.cuppa_classifier is None and self.required_features is None:
-            self.logger.error("Either `cuppa_classifier` or `required_features` must be provided")
-            raise ValueError
-
-    FEAT_TYPES_DNA = ("gen_pos", "snv96", "event", "sig")
-    FEAT_TYPES_RNA = ("gene_exp", "alt_sj")
-    FEAT_TYPES = FEAT_TYPES_DNA + FEAT_TYPES_RNA
-
-    @staticmethod
-    def _get_required_features_by_type_from_classifier(cuppa_classifier: CuppaClassifier) -> dict[str, pd.Index]:
-
-        cuppa_classifier._check_is_fitted()
-        return dict(
-            gen_pos=cuppa_classifier.gen_pos_clf["cos_sim"].profiles_.index,
-            snv96=pd.Index(cuppa_classifier.snv96_clf["logistic_regression"].feature_names_in_),
-            event=pd.Index(cuppa_classifier.event_clf["logistic_regression"].feature_names_in_),
-
-            sig=cuppa_classifier.sig_quantile_transformer.feature_names_in_,
-
-            gene_exp=pd.Index(cuppa_classifier.gene_exp_clf["chi2"].selected_features),
-            alt_sj=pd.Index(cuppa_classifier.alt_sj_clf["chi2"].selected_features)
-        )
-
-    ## This method is only used for testing
-    def _get_required_features_by_type_from_list(self) -> dict[str, pd.Index]:
-        required_features = pd.Series(self.required_features)
-
-        d = dict()
-        for feat_type in self.FEAT_TYPES:
-            d[feat_type] = required_features[required_features.str.startswith(f"{feat_type}.")]
-
-        return d
-
-    @cached_property
-    def required_features_by_type(self) -> dict[str, pd.Index]:
-
-        if self.required_features is not None:
-            return self._get_required_features_by_type_from_list()
-
-        if self.cuppa_classifier is not None:
-            return self._get_required_features_by_type_from_classifier()
-
-    @property
-    def required_dna_features(self) -> pd.Index:
-
-        features = [
-            self.required_features_by_type[feat_type]
-            for feat_type in ("gen_pos", "snv96", "event", "sig")
-        ]
-
-        return pd.Index(np.concatenate(features))
-
-    @property
-    def required_rna_features(self) -> pd.Index:
-
-        features = [
-            self.required_features_by_type[feat_type]
-            for feat_type in ("gene_exp", "alt_sj")
-        ]
-
-        return pd.Index(np.concatenate(features))
-
-    @staticmethod
-    def _get_feat_type_counts_string(feat_names: pd.Index) -> str:
-        feature_types = feat_names.str.extract("(^\w+)", expand=True)
-
-        types, counts = np.unique(feature_types, return_counts=True)
-        type_count_string = ", ".join(pd.Series(types) + "=" + pd.Series(counts).astype(str))
-        return type_count_string
-
-    def _check_features(self, X: pd.DataFrame) -> None:
-
-        missing = self.required_features[~self.required_features.isin(X.columns)]
-        n_missing = len(missing)
-
-        if n_missing == 0:
-            return None
-
-        self.logger.error("`X` is missing %i feature columns: %s" % (
-            n_missing,
-            self._get_feat_type_counts_string(missing)
-        ))
-        self.logger.error(
-            "Please use " + self.__class__.__name__ + ".fill_missing_cols() to ensure `X` has the required columns")
-        raise LookupError
-
-    def fill_missing(self) -> pd.DataFrame:
-
-        ## DNA --------------------------------
-        X_dna = self.X.reindex(columns=self.required_dna_features, fill_value=self.fill_value)
-
-        ## RNA --------------------------------
-        pattern_rna_features = f"^{SUB_CLF_NAMES.GENE_EXP}|{SUB_CLF_NAMES.ALT_SJ}"
-        X_rna = self.X[make_column_selector(pattern_rna_features)]
-
-        if X_rna.shape[1] == 0:
-            ## If RNA columns are entirely missing, create the RNA matrix of NAs
-            X_rna = pd.DataFrame(
-                np.full((self.X.shape[0], len(self.required_rna_features)), np.nan),
-                index=self.X.index,
-                columns=self.required_rna_features
-            )
-        else:
-            ## Samples without RNA data either have no RNA columns
-            ## We don't want to fill these rows with 0 because this would produce an unwanted probability
-            is_missing_rna_data = NaRowFilter.detect_na_rows(X_rna, use_first_col=True)
-            X_rna = X_rna \
-                .loc[~is_missing_rna_data] \
-                .reindex(columns=self.required_rna_features, fill_value=self.fill_value)
-
-        X_new = pd.concat([X_dna, X_rna], axis=1)
-        del X_dna, X_rna
-
-        ## Print info --------------------------------
-        removed_features = self.X.columns[~self.X.columns.isin(X_new.columns)]
-        if self.verbose and len(removed_features) > 0:
-            self.logger.info("Removed %i features that were not required: %s" % (
-                len(removed_features),
-                self._get_feat_type_counts_string(removed_features)
-            ))
-
-        added_features = X_new.columns[~X_new.columns.isin(self.X.columns)]
-        if self.verbose and len(added_features) > 0:
-            self.logger.info("Filled in %i features missing with value=%s: %s" % (
-                len(added_features),
-                self.fill_value,
-                self._get_feat_type_counts_string(added_features)
-            ))
-
-        return X_new
