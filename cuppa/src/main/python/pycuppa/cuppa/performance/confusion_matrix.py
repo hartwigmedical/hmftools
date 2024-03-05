@@ -132,8 +132,8 @@ class ConfusionMatrix(LoggerMixin):
     def plot(
         self,
         plot_path: str,
-        width: int = 14, ## inches
-        height: int = 10, ## inches
+        width: int = None, ## inches
+        height: int = None, ## inches
     ) -> None:
 
         tmp_pred_summ_path = os.path.join(os.path.dirname(plot_path), "cuppa.pred_summ.tmp.tsv.gz")
@@ -147,8 +147,8 @@ class ConfusionMatrix(LoggerMixin):
                 tmp_pred_summ_path,
                 self.clf_name,
                 plot_path,
-                str(width),
-                str(height)
+                str(width) if width is not None else "",
+                str(height) if height is not None else ""
             ],
             ignore_error=True
         )
