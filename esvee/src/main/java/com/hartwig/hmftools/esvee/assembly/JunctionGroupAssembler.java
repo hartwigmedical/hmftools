@@ -23,6 +23,7 @@ import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
 import com.hartwig.hmftools.esvee.common.ThreadTask;
+import com.hartwig.hmftools.esvee.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.read.BamReader;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.read.ReadAdjustments;
@@ -44,7 +45,8 @@ public class JunctionGroupAssembler extends ThreadTask
     private final Map<String,ReadGroup> mReadGroupMap;
     private final ReadStats mReadStats;
 
-    public JunctionGroupAssembler(final SvConfig config, final BamReader bamReader, final Queue<JunctionGroup> junctionGroups)
+    public JunctionGroupAssembler(
+            final SvConfig config, final BamReader bamReader, final Queue<JunctionGroup> junctionGroups, final ResultsWriter resultsWriter)
     {
         super("PrimaryAssembly");
         mConfig = config;
@@ -52,7 +54,7 @@ public class JunctionGroupAssembler extends ThreadTask
         mJunctionGroups = junctionGroups;
         mJunctionCount = junctionGroups.size();
 
-        mDecoyChecker = new DecoyChecker(mConfig.DecoyGenome);
+        mDecoyChecker = new DecoyChecker(mConfig.DecoyGenome, resultsWriter.decoyMatchWriter());
 
         mReadGroupMap = Maps.newHashMap();
         mCurrentJunctionGroup = null;
@@ -61,7 +63,7 @@ public class JunctionGroupAssembler extends ThreadTask
 
     public static List<JunctionGroupAssembler> createThreadTasks(
             final List<JunctionGroup> junctionGroups, final List<BamReader> bamReaders, final SvConfig config,
-            final int taskCount, final List<Thread> threadTasks)
+            final ResultsWriter resultsWriter, final int taskCount, final List<Thread> threadTasks)
     {
         List<JunctionGroupAssembler> primaryAssemblyTasks = Lists.newArrayList();
 
@@ -74,7 +76,7 @@ public class JunctionGroupAssembler extends ThreadTask
         {
             BamReader bamReader = bamReaders.get(i);
 
-            JunctionGroupAssembler junctionGroupAssembler = new JunctionGroupAssembler(config, bamReader, junctionGroupQueue);
+            JunctionGroupAssembler junctionGroupAssembler = new JunctionGroupAssembler(config, bamReader, junctionGroupQueue, resultsWriter);
             primaryAssemblyTasks.add(junctionGroupAssembler);
             threadTasks.add(junctionGroupAssembler);
         }
@@ -184,7 +186,7 @@ public class JunctionGroupAssembler extends ThreadTask
             {
                 if(mDecoyChecker.enabled())
                 {
-                    if(mDecoyChecker.matchesDecoy(assembly.formFullSequence()))
+                    if(mDecoyChecker.matchesDecoy(assembly))
                     {
                         SV_LOGGER.trace("assembly({}) matches decoy, excluding", assembly);
                         ++mReadStats.DecoySequences;
@@ -216,24 +218,9 @@ public class JunctionGroupAssembler extends ThreadTask
 
         ++mReadStats.TotalReads;
 
-        // CHECK: read modifications such as filtering and trimming could be moved into SvPrep
-        /*
-        if(!ReadFilters.isAboveBaseQualAvgThreshold(record.getBaseQualities()))
-        {
-            ++mReadStats.FilteredBaseQual;
-            return;
-        }
-        else if(!ReadFilters.isAboveBaseQualAvgThreshold(record.getBaseQualities()) || !ReadFilters.isAboveMapQualThreshold(read))
-        {
-            ++mReadStats.FilteredMapQual;
-            return;
-        }
-        */
-
         if(mBamReader.currentIsReferenceSample())
             read.markReference();
 
-        // CHECK: could track for stats
         if(ReadAdjustments.trimPolyGSequences(read))
             ++mReadStats.PolyGTrimmed;
 

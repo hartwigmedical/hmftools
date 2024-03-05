@@ -6,6 +6,7 @@ public enum WriteType
     ASSEMBLIES("assemblies.tsv"),
     READS("assembly_reads.tsv"),
     VCF("esvee.vcf.gz"),
+    DECOY_MATCHES("decoy_matches.tsv"),
     BREAKENDS("breakends.tsv"); // not currently defined or written
 
     private final String mFileId;

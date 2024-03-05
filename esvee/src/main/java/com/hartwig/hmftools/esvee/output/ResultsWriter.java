@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.output;
 
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -8,13 +7,11 @@ import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.SvConstants;
+import com.hartwig.hmftools.esvee.alignment.DecoyChecker;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.old.VariantCall;
 
@@ -22,6 +19,7 @@ public class ResultsWriter
 {
     private final SvConfig mConfig;
     private final BufferedWriter mVariantWriter;
+    private final BufferedWriter mDecoyMatchWriter;
     private final AssemblyWriter mAssemblyWriter;
     private final AssemblyReadWriter mReadWriter;
     private final BamWriter mBamWriter;
@@ -33,7 +31,10 @@ public class ResultsWriter
         mAssemblyWriter = new AssemblyWriter(config);
         mReadWriter = new AssemblyReadWriter(config);
         mBamWriter = new BamWriter(config);
+        mDecoyMatchWriter = DecoyChecker.initialiseWriter(config);
     }
+
+    public BufferedWriter decoyMatchWriter() { return mDecoyMatchWriter; }
 
     public void close()
     {
@@ -42,6 +43,7 @@ public class ResultsWriter
         mAssemblyWriter.close();
         mReadWriter.close();
         mBamWriter.close();
+        closeBufferedWriter(mDecoyMatchWriter);
     }
 
     private BufferedWriter initialiseVariantWriter()
