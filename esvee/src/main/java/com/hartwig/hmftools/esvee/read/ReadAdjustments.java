@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.esvee.read;
 
 import static com.hartwig.hmftools.esvee.SvConstants.INDEL_TO_SC_MAX_EDGE_DISTANCE;
+import static com.hartwig.hmftools.esvee.SvConstants.INDEL_TO_SC_MAX_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.SvConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_TRIM_PERC;
-import static com.hartwig.hmftools.esvee.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.POLY_G_TRIM_LENGTH;
 import static com.hartwig.hmftools.esvee.common.BaseType.G;
 import static com.hartwig.hmftools.esvee.common.BaseType.C;
@@ -16,11 +16,16 @@ public final class ReadAdjustments
 {
     public static boolean convertEdgeIndelsToSoftClip(final Read read)
     {
+        return convertEdgeIndelsToSoftClip(read, INDEL_TO_SC_MAX_SIZE_SOFTCLIP, INDEL_TO_SC_MAX_EDGE_DISTANCE);
+    }
+
+    public static boolean convertEdgeIndelsToSoftClip(final Read read, final int maxIndelLength, final int maxReadEdgeDistance)
+    {
         if(read.cigarElements().size() < 3)
             return false;
 
         int leftSoftClipLength = calcIndelToSoftClipLength(
-                read.cigarElements().get(0), read.cigarElements().get(1), read.cigarElements().get(2));
+                read.cigarElements().get(0), read.cigarElements().get(1), read.cigarElements().get(2), maxIndelLength, maxReadEdgeDistance);
 
         int rightSoftClipLength = 0;
 
@@ -29,7 +34,8 @@ public final class ReadAdjustments
             int lastIndex = read.cigarElements().size() - 1;
 
             rightSoftClipLength = calcIndelToSoftClipLength(
-                    read.cigarElements().get(lastIndex), read.cigarElements().get(lastIndex - 1), read.cigarElements().get(lastIndex - 2));
+                    read.cigarElements().get(lastIndex), read.cigarElements().get(lastIndex - 1), read.cigarElements().get(lastIndex - 2),
+                    maxIndelLength, maxReadEdgeDistance);
         }
 
         if(leftSoftClipLength > 0 || rightSoftClipLength > 0)
@@ -41,9 +47,11 @@ public final class ReadAdjustments
         return false;
     }
 
-    private static int calcIndelToSoftClipLength(final CigarElement edge, final CigarElement inside, final CigarElement next)
+    private static int calcIndelToSoftClipLength(
+            final CigarElement edge, final CigarElement inside, final CigarElement next,
+            final int maxIndelLength, final int maxReadEdgeDistance)
     {
-        if(edge.getOperator() != CigarOperator.M || edge.getLength() >= INDEL_TO_SC_MAX_EDGE_DISTANCE)
+        if(edge.getOperator() != CigarOperator.M || edge.getLength() >= maxReadEdgeDistance)
             return 0;
 
         if(!inside.getOperator().isIndel())
@@ -52,7 +60,7 @@ public final class ReadAdjustments
         if(next.getOperator() != CigarOperator.M)
             return 0;
 
-        if(inside.getLength() < INDEL_TO_SC_MIN_SIZE_SOFTCLIP || inside.getLength() >= MIN_INDEL_SUPPORT_LENGTH)
+        if(inside.getLength() < INDEL_TO_SC_MIN_SIZE_SOFTCLIP || inside.getLength() > maxIndelLength)
             return 0;
 
         return inside.getOperator() != CigarOperator.D ? edge.getLength() + inside.getLength() : edge.getLength();
