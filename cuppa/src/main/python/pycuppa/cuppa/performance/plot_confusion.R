@@ -41,8 +41,10 @@ if(!(CLF_NAME %in% pred_summ$clf_name)){
 get_confusion <- function(pred_summ){
    df <- subset(pred_summ, clf_name==CLF_NAME)
    
-   df$pred_class_1 <- factor(df$pred_class_1, c(".All", sort(unique(df$pred_class_1))))
-   df$actual_class <- factor(df$actual_class, c(".All", sort(unique(df$actual_class))))
+   unique_classes <- sort(unique(c(".All", df$pred_class_1, df$actual_class)))
+   
+   df$pred_class_1 <- factor(df$pred_class_1, unique_classes)
+   df$actual_class <- factor(df$actual_class, unique_classes)
    
    confusion <- unclass(table(
       pred_class = df$pred_class_1, 
