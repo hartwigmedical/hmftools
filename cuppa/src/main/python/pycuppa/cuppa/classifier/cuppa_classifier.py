@@ -11,7 +11,8 @@ import pandas as pd
 from sklearn.compose import make_column_selector
 
 import cuppa.compose.pipeline
-from cuppa.constants import SUB_CLF_NAMES, META_CLF_NAMES, LAYER_NAMES, CLF_GROUPS, DEFAULT_CUPPA_CLASSIFIER_PATH
+from cuppa.constants import SUB_CLF_NAMES, META_CLF_NAMES, LAYER_NAMES, CLF_GROUPS, DEFAULT_CUPPA_CLASSIFIER_PATH, \
+    NA_FILL_VALUE
 from cuppa.classifier.classifiers import ClassifierLayers, SubClassifiers, MetaClassifiers
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredictionBuilder
 from cuppa.classifier.feature_importance import FeatureImportance
@@ -312,7 +313,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
     def fill_missing_cols(
         self,
         X: pd.DataFrame,
-        fill_value: int | float = 0,
+        fill_value: int | float = NA_FILL_VALUE,
         verbose: bool = True
     ):
 

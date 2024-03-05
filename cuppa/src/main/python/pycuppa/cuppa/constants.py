@@ -68,3 +68,5 @@ SEX_FEATURE_NAME = "event.trait.is_male"
 
 PAN_CANCER_CLASS_NAME = ".All"
 
+NA_FILL_VALUE = -0.00000001
+
