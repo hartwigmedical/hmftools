@@ -26,7 +26,10 @@ public final class SvConstants
     // primary assembly
     public static final int READ_SOFT_CLIP_JUNCTION_BUFFER = 2;
 
-    public static final int READ_FILTER_MIN_JUNCTION_MAPQ = 20;
+    public static final int PROXIMATE_DEL_LENGTH = 1000;
+    public static final int PROXIMATE_DUP_LENGTH = 500;
+
+    public static final int DECOY_MAX_MISMATCHES = 3;
 
     public static final int PRIMARY_ASSEMBLY_MIN_LENGTH = 10;
     public static final int PRIMARY_ASSEMBLY_MIN_READ_SUPPORT = 2; // new

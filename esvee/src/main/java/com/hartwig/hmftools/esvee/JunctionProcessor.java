@@ -19,6 +19,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.alignment.Alignment;
 import com.hartwig.hmftools.esvee.alignment.BwaAligner;
+import com.hartwig.hmftools.esvee.alignment.DecoyChecker;
 import com.hartwig.hmftools.esvee.assembly.PhaseGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
 import com.hartwig.hmftools.esvee.assembly.PhaseSetTask;
@@ -168,7 +169,6 @@ public class JunctionProcessor
 
         List<Thread> threadTasks = new ArrayList<>();
 
-        // Primary Junction Assembly
         List<JunctionGroupAssembler> primaryAssemblyTasks = JunctionGroupAssembler.createThreadTasks(
                 junctionGroups, mBamReaders, mConfig, taskCount, threadTasks);
 

@@ -72,6 +72,7 @@ public class SvConfig
     public final String RefGenomeFile;
     public final RefGenomeInterface RefGenome;
     public final String RefGenomeImageFile;
+    public final String DecoyGenome;
 
     public final ValidationStringency BamStringency;
 
@@ -98,6 +99,7 @@ public class SvConfig
 
     public static final String OUTPUT_VCF = "output_vcf";
     public static final String REF_GENOME_IMAGE = "ref_genome_image";
+    public static final String DECOY_GENOME = "decoy_genome";
     public static final String JUNCTION_FILES = "junction_files";
 
     public static final String WRITE_TYPES = "write_types";
@@ -174,6 +176,8 @@ public class SvConfig
 
         RefGenomeImageFile = configBuilder.hasValue(REF_GENOME_IMAGE) ?
                 configBuilder.getValue(REF_GENOME_IMAGE) : RefGenomeFile + REF_GENOME_IMAGE_EXTENSION;
+
+        DecoyGenome = configBuilder.getValue(DECOY_GENOME);
 
         BamStringency = ValidationStringency.STRICT;
 
@@ -279,6 +283,7 @@ public class SvConfig
 
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(REF_GENOME_IMAGE, false, REFERENCE_BAM_DESC);
+        configBuilder.addPath(DECOY_GENOME, false, "Decoy genome image file");
 
         String writeTypes = Arrays.stream(WriteType.values()).map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM));
         configBuilder.addConfigItem(WRITE_TYPES, false, "Write types from list: " + writeTypes);

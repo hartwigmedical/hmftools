@@ -1,10 +1,15 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
+import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_DEL_LENGTH;
+import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
+import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import java.util.Collections;
 import java.util.List;
@@ -16,11 +21,13 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.DiscordantGroup;
+import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
 import com.hartwig.hmftools.esvee.common.PhaseGroup;
 import com.hartwig.hmftools.esvee.common.RefSideSoftClip;
 import com.hartwig.hmftools.esvee.common.RemoteRegion;
+import com.hartwig.hmftools.esvee.read.Read;
 
 public class PhaseGroupBuilder
 {
@@ -137,7 +144,9 @@ public class PhaseGroupBuilder
                     continue;
                 }
 
-                if(!assembliesShareReads(assembly, otherAssembly))
+                boolean isLocalCandidateLink = (assemblyJunctionGroup == junctionGroup && isLocalAssemblyCandidate(assembly, otherAssembly));
+
+                if(!isLocalCandidateLink && !assembliesShareReads(assembly, otherAssembly))
                     continue;
 
                 // IDEA: first of all check the regions overlap, since for large junction groups there's a high chance they won't
@@ -252,6 +261,48 @@ public class PhaseGroupBuilder
         }
 
         return false;
+    }
+
+    public static boolean isLocalAssemblyCandidate(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        if(!first.junction().chromosome().equals(second.junction().chromosome()))
+            return false;
+
+        // assemblies must have DEL or DUP orientations, be within threshold distances of each other
+        if(first.isForwardJunction() == second.isForwardJunction())
+            return false;
+
+        boolean firstIsLower = first.junction().Position <= second.junction().Position;
+        boolean isDelType = firstIsLower == first.isForwardJunction();
+        int junctionDistance = abs(first.junction().Position - second.junction().Position);
+
+        if((isDelType && junctionDistance > PROXIMATE_DEL_LENGTH) || (!isDelType && junctionDistance > PROXIMATE_DUP_LENGTH))
+            return false;
+
+        // must have concordant reads with mates crossing the other junction
+        JunctionAssembly lowerAssembly = firstIsLower ? first : second;
+        JunctionAssembly upperAssembly = !firstIsLower ? first : second;
+        Junction lowerJunction = firstIsLower ? first.junction() : second.junction();
+        Junction upperJunction = !firstIsLower ? first.junction() : second.junction();
+
+        if(lowerAssembly.support().stream().noneMatch(x -> isCrossingConcordantRead(x.read(), upperJunction, false)))
+            return false;
+
+        if(upperAssembly.support().stream().noneMatch(x -> isCrossingConcordantRead(x.read(), lowerJunction, true)))
+            return false;
+
+        return true;
+    }
+
+    private static boolean isCrossingConcordantRead(final Read read, final Junction junction, boolean requireLower)
+    {
+        if(isDiscordant(read) || read.isMateUnmapped() || !read.isPairedRead())
+            return false;
+
+        if(requireLower)
+            return read.mateAlignmentEnd() < junction.Position;
+        else
+            return read.mateAlignmentStart() > junction.Position;
     }
 
     private static boolean assembliesShareReads(final JunctionAssembly first, final JunctionAssembly second)

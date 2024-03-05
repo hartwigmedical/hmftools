@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.esvee.assembly.PhaseGroupBuilder.isLocalAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.extendRefBases;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.tryAssemblyFacing;
 import static com.hartwig.hmftools.esvee.common.AssemblySupport.findMatchingFragmentSupport;
@@ -114,12 +115,14 @@ public class PhaseSetBuilder
                         ++sharedCount;
                 }
 
+                boolean isLocalLink = isLocalAssemblyCandidate(assembly1, assembly2);
+
                 if(sharedCount > 1)
-                    assemblySupportPairs.add(new SharedAssemblySupport(assembly1, assembly2, sharedCount));
+                    assemblySupportPairs.add(new SharedAssemblySupport(assembly1, assembly2, sharedCount, isLocalLink));
             }
         }
 
-        Collections.sort(assemblySupportPairs, Comparator.comparingInt(x -> -x.SharedSupport));
+        Collections.sort(assemblySupportPairs);
 
         // build any split links and only allow an assembly to be used once
         Set<JunctionAssembly> linkedAssemblies = Sets.newHashSet();
@@ -236,22 +239,38 @@ public class PhaseSetBuilder
         }
     }
 
-    private class SharedAssemblySupport
+    private class SharedAssemblySupport implements Comparable<SharedAssemblySupport>
     {
         public final JunctionAssembly Assembly1;
         public final JunctionAssembly Assembly2;
         public final int SharedSupport;
+        public final boolean IsLocalDelDup;
 
-        public SharedAssemblySupport(final JunctionAssembly assembly1, final JunctionAssembly assembly2, final int sharedSupport)
+        public SharedAssemblySupport(
+                final JunctionAssembly assembly1, final JunctionAssembly assembly2, final int sharedSupport, final boolean localDelDup)
         {
             Assembly1 = assembly1;
             Assembly2 = assembly2;
             SharedSupport = sharedSupport;
+            IsLocalDelDup = localDelDup;
+        }
+
+        @Override
+        public int compareTo(final SharedAssemblySupport other)
+        {
+            if(other.IsLocalDelDup != IsLocalDelDup)
+                return IsLocalDelDup ? -1 : 1;
+
+            if(SharedSupport != other.SharedSupport)
+                return SharedSupport > other.SharedSupport ? -1 : 1;
+
+            return 0;
         }
 
         public String toString()
         {
-            return format("%s + %s shared(%d)", Assembly1.junction().coords(), Assembly2.junction().coords(), SharedSupport);
+            return format("%s + %s shared(%d) %s",
+                    Assembly1.junction().coords(), Assembly2.junction().coords(), SharedSupport, IsLocalDelDup ? "localDelDup" : "");
         }
     }
 

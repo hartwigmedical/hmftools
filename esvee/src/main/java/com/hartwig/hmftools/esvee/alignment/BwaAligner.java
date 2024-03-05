@@ -13,7 +13,6 @@ import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
 
 public class BwaAligner implements Aligner
 {
-    private final BwaMemIndex mIndex;
     private final BwaMemAligner mAligner;
 
     public BwaAligner(final SvConfig config)
@@ -22,12 +21,11 @@ public class BwaAligner implements Aligner
         {
             loadAlignerLibrary();
 
-            mIndex = new BwaMemIndex(config.RefGenomeImageFile);
-            mAligner = new BwaMemAligner(mIndex);
+            BwaMemIndex index = new BwaMemIndex(config.RefGenomeImageFile);
+            mAligner = new BwaMemAligner(index);
         }
         else
         {
-            mIndex = null;
             mAligner = null;
         }
     }

@@ -8,6 +8,7 @@ public class ReadStats
     public int PolyGTrimmed;
     public int LowBaseQualTrimmed;
     public int IndelSoftClipConverted;
+    public int DecoySequences;
 
     public ReadStats()
     {
@@ -15,7 +16,7 @@ public class ReadStats
         PolyGTrimmed = 0;
         LowBaseQualTrimmed = 0;
         IndelSoftClipConverted = 0;
-
+        DecoySequences = 0;
     }
 
     public void merge(final ReadStats other)
@@ -24,11 +25,12 @@ public class ReadStats
         PolyGTrimmed += other.PolyGTrimmed;
         LowBaseQualTrimmed += other.LowBaseQualTrimmed;
         IndelSoftClipConverted += other.IndelSoftClipConverted;
+        DecoySequences += other.DecoySequences;
     }
 
     public String toString()
     {
-        return format("reads(%d) trim(polyG=%d lowBase=%d) indelSoftClip(%d)",
-                TotalReads, PolyGTrimmed, LowBaseQualTrimmed, IndelSoftClipConverted);
+        return format("reads(%d) trim(polyG=%d lowBase=%d) indelSoftClip(%d) decoySequences(%d)",
+                TotalReads, PolyGTrimmed, LowBaseQualTrimmed, IndelSoftClipConverted, DecoySequences);
     }
 }

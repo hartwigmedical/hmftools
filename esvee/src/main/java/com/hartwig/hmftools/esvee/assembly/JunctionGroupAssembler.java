@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.SvConfig;
+import com.hartwig.hmftools.esvee.alignment.DecoyChecker;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
@@ -38,18 +39,20 @@ public class JunctionGroupAssembler extends ThreadTask
 
     private JunctionGroup mCurrentJunctionGroup;
     private final BamReader mBamReader;
+    private final DecoyChecker mDecoyChecker;
 
     private final Map<String,ReadGroup> mReadGroupMap;
     private final ReadStats mReadStats;
 
-    public JunctionGroupAssembler(
-            final SvConfig config, final BamReader bamReader, final Queue<JunctionGroup> junctionGroups)
+    public JunctionGroupAssembler(final SvConfig config, final BamReader bamReader, final Queue<JunctionGroup> junctionGroups)
     {
         super("PrimaryAssembly");
         mConfig = config;
         mBamReader = bamReader;
         mJunctionGroups = junctionGroups;
         mJunctionCount = junctionGroups.size();
+
+        mDecoyChecker = new DecoyChecker(mConfig.DecoyGenome);
 
         mReadGroupMap = Maps.newHashMap();
         mCurrentJunctionGroup = null;
@@ -152,7 +155,7 @@ public class JunctionGroupAssembler extends ThreadTask
 
             JunctionAssembler junctionAssembler = new JunctionAssembler(mConfig, junction);
 
-            // FIXME: doesn't seem to be making a big difference, but this is in efficient for long-range junction groups
+            // FIXME: doesn't seem to be making a big difference, but this is inefficient for long-range junction groups
             // since both the junctions and reads are ordered. Could consider re-ordering by unclipped start and comparing to junction position
 
             int junctionBoundaryStart = junction.isForward() ? junction.Position - BAM_READ_JUNCTION_BUFFER : junction.Position;
@@ -179,6 +182,16 @@ public class JunctionGroupAssembler extends ThreadTask
             // extend assemblies with non-junction and discordant reads
             for(JunctionAssembly assembly : candidateAssemblies)
             {
+                if(mDecoyChecker.enabled())
+                {
+                    if(mDecoyChecker.matchesDecoy(assembly.formFullSequence()))
+                    {
+                        SV_LOGGER.trace("assembly({}) matches decoy, excluding", assembly);
+                        ++mReadStats.DecoySequences;
+                        continue;
+                    }
+                }
+
                 refBaseExtender.findAssemblyCandidateExtensions(assembly, junctionAssembler.nonJunctionReads());
                 junctionGroupAssemblies.add(assembly);
             }
