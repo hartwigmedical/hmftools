@@ -501,14 +501,14 @@ plot_feat_contrib <- function(VIS_DATA){
       list(lower=0.01,  upper=1,     func=function(x) signif(x, digits=1)),
       list(lower=-Inf,  upper=0.01,  func=function(x) formatC(x, format="e", digits=0))
    )
-   
+
    data_labels <- sapply(plot_data$data_value, function(value){
       for(params in rounding_params){
          if(value >= params$lower & value < params$upper){
             return(params$func(value))
          }
       }
-      
+
       return(value)
    })
    data_labels[data_labels==1] <- "" ## odds of 1 == log(odds) of 0 -> unimportant, thus hide
@@ -522,6 +522,7 @@ plot_feat_contrib <- function(VIS_DATA){
 
       feat_value_label <- round(feat_value, digits=1)
       feat_value_label[feat_value==0] <- "0"
+      feat_value_label[feat_value==-0.00000001] <- "absent"
       feat_value_label[feat_value==1] <- "1"
 
       driver_feat_value_label <- paste0(gsub("\\.", " ", affixes$feat_basename), " (", feat_value_label, ")")
@@ -530,7 +531,7 @@ plot_feat_contrib <- function(VIS_DATA){
       non_driver_feat_value_label <- ifelse(affixes$feat_basename %in% c("is male", "whole genome duplication"), trait_feat_value_label, tmb_or_sv_feat_value_label)
       paste0(ifelse(grepl("\\.", affixes$feat_basename), driver_feat_value_label, non_driver_feat_value_label))
    })
-   
+
    ## Legend breaks --------------------------------
    exponent_range <- log10(max(plot_data$data_value)) - log10(min(plot_data$data_value))
    legend_breaks <- 10^seq(from=-10, to=10, by=if(exponent_range < 5) 1 else 2)
