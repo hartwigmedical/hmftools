@@ -7,7 +7,7 @@ import pandas as pd
 
 from cuppa.tests.mock_data import MockTrainingData, MockCuppaClassifier, MockInputData, MockCvOutput
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
-from cuppa.constants import DEFAULT_CUPPA_CLASSIFIER_PATH
+from cuppa.constants import DEFAULT_CUPPA_CLASSIFIER_PATH, NA_FILL_VALUE
 from cuppa.runners import PredictionRunner, TrainingRunner, RunnerArgParser
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredSummary
 
@@ -59,6 +59,8 @@ class TestPredictionRunner:
         )
 
         runner.run()
+
+        assert runner.X.iloc[0]["event.driver.TP53.mut"] == NA_FILL_VALUE
 
         pred_summ = runner.pred_summ
 

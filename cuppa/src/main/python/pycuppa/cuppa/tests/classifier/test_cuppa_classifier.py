@@ -1,6 +1,7 @@
 import pandas as pd
 import pytest
 
+from cuppa.constants import NA_FILL_VALUE
 from cuppa.tests.mock_data import MockTrainingData, MockCuppaClassifier
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.classifier.cuppa_classifier_utils import MissingFeaturesHandler, BypassedClassifierBuilder
@@ -28,7 +29,7 @@ class TestCuppaClassifier:
 
 class TestMissingFeaturesHandler:
 
-    def test_missing_rna_features_are_filled_with_zeroes(self):
+    def test_missing_rna_features_are_filled_with_small_negative_number(self):
         X = pd.DataFrame(
             [[1, 1, 1, 1]],
             columns=["gen_pos.feat_1", "snv96.feat_1", "event.feat_1", "sig.feat_1"],
@@ -43,7 +44,7 @@ class TestMissingFeaturesHandler:
         handler = MissingFeaturesHandler(X, required_features=required_features)
         X_filled = handler.fill_missing()
 
-        assert all(X_filled[missing_features].iloc[0] == 0)
+        assert all(X_filled[missing_features].iloc[0] == NA_FILL_VALUE)
 
     def test_missing_rna_features_are_filled_with_na(self):
         X = pd.DataFrame(
