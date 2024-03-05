@@ -81,6 +81,15 @@ class RunnerArgParser:
                  "If not provided, the default classifier path will be used (pycuppa/resources/cuppa_classifier.pickle.gz)"
         )
 
+    def add_cv_predictions_path(self) -> None:
+        self.parser.add_argument(
+            "--cv_predictions_path",
+            type=str, required=True,
+            help="Path to a CuppaPrediction tsv file containing the cross-validation predictions."
+                 "If provided, sample ids found in this file will have their predictions returned from this file"
+                 "instead of being computed"
+        )
+
     def add_sample_id(self) -> None:
         self.parser.add_argument(
             "--sample_id",
@@ -179,6 +188,7 @@ class RunnerArgParser:
         self.add_compress_tsv_files()
 
         self.add_classifier_path()
+        self.add_cv_predictions_path()
 
         self.add_using_old_features_format()
         self.add_genome_version()
@@ -484,6 +494,8 @@ class PredictionRunner(LoggerMixin):
         using_old_features_format: bool = DEFAULT_RUNNER_ARGS.using_old_features_format,
         genome_version: int = DEFAULT_RUNNER_ARGS.genome_version,
         excl_chroms: str | list[str] = DEFAULT_RUNNER_ARGS.excl_chroms,
+        cv_predictions_path: str = None,
+        cv_predictions: CuppaPrediction = None,
         log_to_file: bool = DEFAULT_RUNNER_ARGS.log_to_file,
         log_path: Optional[str] = DEFAULT_RUNNER_ARGS.log_path
     ):
@@ -499,11 +511,15 @@ class PredictionRunner(LoggerMixin):
         self.genome_version = genome_version
         self.excl_chroms = excl_chroms
 
+        self.cv_predictions_path = cv_predictions_path
+        self.cv_predictions = cv_predictions
+
         self.log_to_file = log_to_file
         self.log_path = log_path
         self.set_log_path()
 
         ## Attributes assigned at run time --------------------------------
+        self.X: CuppaFeatures = None
         self.predictions: CuppaPrediction = None
         self.pred_summ: CuppaPredSummary = None
         self.vis_data: CuppaVisData = None
@@ -554,13 +570,37 @@ class PredictionRunner(LoggerMixin):
         self.X = X
 
     def get_predictions(self) -> None:
-        self.predictions = self.cuppa_classifier.predict(self.X)
+
+        if self.cv_predictions_path is not None:
+            self.cv_predictions = CuppaPrediction.from_tsv(self.cv_predictions_path)
+
+        if self.cv_predictions is None:
+            self.logger.info("Computing predictions for %i samples" % len(self.X))
+            self.predictions = self.cuppa_classifier.predict(self.X)
+            return None
+
+        is_cv_sample = self.X.index.isin(self.cv_predictions.sample_ids)
+        sample_ids_new = self.X.index[~is_cv_sample]
+        sample_ids_cv = self.X.index[is_cv_sample]
+
+        predictions = []
+
+        if len(sample_ids_new) > 0:
+            self.logger.info("Computing predictions for %i / %i samples" % (len(sample_ids_new), len(self.X)))
+            X_new = self.X.loc[sample_ids_new]
+            predictions.append(self.cuppa_classifier.predict(X_new))
+
+        if len(sample_ids_cv) > 0:
+            predictions.append(self.cv_predictions.loc[sample_ids_cv])
+            self.logger.info("Found cross-validation predictions for %i / %i samples" % (len(sample_ids_cv), len(self.X)))
+
+        predictions = CuppaPrediction.concat(predictions)
+        predictions = predictions.loc[self.X.index]
+
+        self.predictions = predictions
 
     def get_pred_summ(self) -> None:
         self.pred_summ = self.predictions.summarize(show_extra_info=True, verbose=True)
-
-        ## TODO: add method to get actual class labels to use as input for `pred_summ`. Required for independent test samples
-        #self.pred_summ = self.predictions.summarize(actual_classes=self.y, show_top_features=True, verbose=True)
 
     def get_vis_data(self) -> None:
         self.vis_data = self.predictions.get_vis_data()

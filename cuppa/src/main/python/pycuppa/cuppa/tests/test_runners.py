@@ -109,6 +109,38 @@ class TestPredictionRunner:
         assert sample_prediction["pred_prob_1"].round(3).iloc[0] == 0.857
         assert sample_prediction["pred_class_1"].iloc[0] == "Lung"
 
+    def test_can_look_up_cross_validation_predictions(self):
+
+        runner = PredictionRunner(
+            features_path="/PLACEHOLDER/PATH/",
+            output_dir="/PLACEHOLDER/PATH/",
+            classifier_path=MockCuppaClassifier.path_classifier,
+        )
+        runner.X = MockTrainingData.X
+
+        cv_samples = pd.Series(["0_Breast", "1_Breast"])
+        cv_predictions = MockCvOutput.predictions.loc[cv_samples]
+
+        non_cv_samples = runner.X.index[~runner.X.index.isin(cv_samples)]
+
+        ## Predict without providing CV predictions
+        runner.get_predictions()
+        predictions_all = runner.predictions.copy()
+
+        ## Predict, providing CV predictions
+        runner.cv_predictions = cv_predictions
+        runner.get_predictions()
+        predictions_with_lookup = runner.predictions.copy()
+
+        assert \
+            predictions_with_lookup.loc[non_cv_samples]\
+            .equals(predictions_all.loc[non_cv_samples])
+
+        assert \
+            predictions_with_lookup.loc[cv_samples]\
+            .equals(cv_predictions.loc[cv_samples])\
+            .__invert__()
+
 
 class TestTrainingRunner:
 
