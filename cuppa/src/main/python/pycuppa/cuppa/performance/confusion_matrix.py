@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 import os
+import tempfile
 from functools import cached_property
 from typing import Optional
 
 import numpy as np
 import pandas as pd
-import plotnine as p9
 
 from cuppa.classifier.cuppa_prediction import CuppaPredSummary
-from cuppa.constants import PAN_CANCER_CLASS_NAME
+from cuppa.constants import PAN_CANCER_CLASS_NAME, RSCRIPT_PLOT_CONFUSION_PATH
 from cuppa.logger import LoggerMixin
-from cuppa.misc.plotting import PlotnineFigExporter
+from cuppa.misc.executors import RscriptExecutor
 from cuppa.performance.performance_stats import PerformanceStats
 
 
@@ -54,6 +54,7 @@ class ConfusionMatrix(LoggerMixin):
         n_clfs = self.pred_summ.clf_names.__len__()
 
         if n_clfs == 1:
+            self.clf_name = self.pred_summ["clf_name"][0]
             return None
 
         if self.clf_name is None and n_clfs > 1:
@@ -65,6 +66,7 @@ class ConfusionMatrix(LoggerMixin):
             raise ValueError
 
         self.pred_summ = self.pred_summ[self.pred_summ["clf_name"] == self.clf_name]
+
 
     @cached_property
     def _performance(self) -> PerformanceStats:
@@ -129,66 +131,28 @@ class ConfusionMatrix(LoggerMixin):
 
     def plot(
         self,
-        path: Optional[str] = None,
-        width: int = 14,
-        height: int = 10,
-        dpi: int = 300,
-        verbose: bool = False
+        plot_path: str,
+        width: int = 14, ## inches
+        height: int = 10, ## inches
     ) -> None:
 
-        if path is None:
-            path = os.path.expanduser('~/Desktop/plot.pdf')
+        tmp_pred_summ_path = os.path.join(os.path.dirname(plot_path), "cuppa.pred_summ.tmp.tsv.gz")
 
-        if verbose:
-            self.logger.info("Plotting confusion matrix to path: " + path)
+        self.logger.debug("Writing pred summ to temporary path: " + tmp_pred_summ_path)
+        self.pred_summ.to_tsv(tmp_pred_summ_path)
 
-        ## Plot data --------------------------------
-        cell_values = self.props_matrix
-        cell_labels = self.counts_matrix.astype(str).replace("<NA>", "")
+        executor = RscriptExecutor(
+            args=[
+                RSCRIPT_PLOT_CONFUSION_PATH,
+                tmp_pred_summ_path,
+                self.clf_name,
+                plot_path,
+                str(width),
+                str(height)
+            ],
+            ignore_error=True
+        )
+        executor.run()
 
-        ## Add summary stats
-        perf = self._performance.set_index("class")[["precision","recall"]].transpose()
-        perf.index = [".Precision", ".Recall"]
-
-        cell_values = pd.concat([cell_values, perf])
-
-        cell_labels = pd.concat([
-            cell_labels,
-            perf.round(2).astype(str)
-        ])
-
-        ## To long form
-        plot_data = pd.concat([
-            cell_values.stack()._set_name("value"),
-            cell_labels.stack()._set_name("label")
-        ], axis=1)
-
-        plot_data.index.names = ["row", "col"]
-        plot_data.reset_index(inplace=True)
-
-        ## Force order of rows and columns
-        plot_data["row"] = pd.Categorical(plot_data["row"], np.flip(cell_values.index))
-        plot_data["col"] = pd.Categorical(plot_data["col"], cell_values.columns)
-
-        ## Plot --------------------------------
-        FILL_COLORS = ['#225EA8', '#1D91C0', '#41B6C4', '#7FCDBB', '#C7E9B4', '#EDF8B1', '#FFFFD9']
-
-        fig = (
-            p9.ggplot(plot_data, p9.aes(y="row", x="col"))
-            + p9.geom_tile(p9.aes(fill="value"), color="black")
-            + p9.geom_text(p9.aes(label="label"), size=7)
-            + p9.scale_fill_gradientn(colors=FILL_COLORS, limits=[0, 1])
-            + p9.scale_x_discrete(expand=(0, 0.5), name="Actual class")
-            + p9.scale_y_discrete(expand=(0, 0.5), name="Predicted class")
-            + p9.theme_bw()
-            + p9.theme(
-                panel_grid=p9.element_blank(),
-                axis_text_x=p9.element_text(angle=270, vjust=1),
-                legend_position="none"
-            )
-        ).draw(show=False, return_ggplot=False)
-
-        ## Export
-        fig_exporter = PlotnineFigExporter(width=width, height=height, dpi=dpi)
-        fig_exporter.export(fig, path)
-
+        os.remove(tmp_pred_summ_path)
+        executor.raise_if_error()
