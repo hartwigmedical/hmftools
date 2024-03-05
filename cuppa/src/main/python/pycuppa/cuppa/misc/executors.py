@@ -41,7 +41,7 @@ class RscriptExecutor(LoggerMixin):
         with Popen(self.shell_command, shell=True, stdout=PIPE, stderr=STDOUT) as process:
             for line in iter(process.stdout.readline, b''):
                 stderr = line.decode("utf-8").strip()
-                self.logger.error("[R process] " + stderr)
+                self.logger.info("[R process] " + stderr)
 
                 self.stderrs.append(stderr)
 
