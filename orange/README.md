@@ -231,7 +231,7 @@ investigate potential causes for QC failure.
 
 ## Version History and Download Links
 
-- Upcoming
+- [3.3.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.3.0)
     - Clonal likelihood is set to 0 to 1 based on variant copy number when converting germline variants to somatic
     - Bugfix: Fix bug in germline MVLH parsing that caused them to be underestimated by a factor 100.
     - Restrict germline MVLH table on PDF and related field in JSON to genes handled by SAGE germline.  
