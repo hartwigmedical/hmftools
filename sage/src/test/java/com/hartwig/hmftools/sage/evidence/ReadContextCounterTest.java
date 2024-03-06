@@ -1,8 +1,12 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
+import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.createReadContext;
@@ -13,12 +17,14 @@ import static org.junit.Assert.assertEquals;
 import static htsjdk.samtools.SAMUtils.phredToFastq;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.VariantTier;
+import com.hartwig.hmftools.sage.quality.QualityCalculator;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -289,6 +295,57 @@ public class ReadContextCounterTest
 
         TestCase.assertEquals(3, var6.tumorReadCounters().get(0).readSupportCounts().Full);
         TestCase.assertEquals(0, var6.tumorReadCounters().get(0).readSupportCounts().Partial);
+    }
+
+    @Test
+    public void testSnvBeforeInsert()
+    {
+        // create an SNV directly before a 1-base insert - confirm impact on read contexts and how reads are handled
+        int pos = 117;
+
+        String flankBases = "AAAAAGGGGG";
+
+        String refBases = flankBases + "ACGTTCCAACCTTGCA" + flankBases;
+        //            10                20          30
+        // 0123456789 0123456 7      8 9012345  6789012345
+        // AAAAAGGGGG ACGTTCC A>G insT ACCTTGCA AAAAAGGGGG
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, pos, "A", "G");
+
+        int varIndex = 17;
+        String readContextBases = refBases.substring(0, varIndex) + "G" + "T" + refBases.substring(varIndex + 1);
+
+        IndexedBases indexBases = new IndexedBases(
+                pos, varIndex, varIndex - 2, 22, flankBases.length(), readContextBases.getBytes());
+
+        ReadContext readContext = new ReadContext(pos, "", 0, "", indexBases, false);
+
+        IndexedBases indexedRefBases = new IndexedBases(100, 0, refBases.getBytes());
+        QualityCalculator qualityCalculator = new QualityCalculator(TEST_CONFIG, RECALIBRATION, indexedRefBases);
+
+        ReadContextCounter rcCounter = new ReadContextCounter(
+                1, variant, readContext, VariantTier.PANEL, 100, 0,
+                TEST_CONFIG, qualityCalculator, null);
+
+        String readBases = readContextBases;
+        byte[] baseQuals = buildDefaultBaseQuals(readBases.length());
+        String cigar = format("%dM",readBases.length());
+
+        // the read's alignment start with the first base of the read context
+        SAMRecord record = buildSamRecord(100, cigar, readContextBases, new String(baseQuals));
+
+        rcCounter.processRead(record, 1, null);
+
+        assertEquals(1, rcCounter.altSupport());
+
+        cigar = "18M1I17M";
+
+        record = buildSamRecord(100, cigar, readContextBases, new String(baseQuals));
+
+        rcCounter.processRead(record, 1, null);
+
+        // TODO: address this in CigarTraversal
+        // assertEquals(1, rcCounter.altSupport());
     }
 
 }
