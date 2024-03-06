@@ -42,7 +42,7 @@ public class BamReader
     private final List<TargetRegionStats> mTargetRegions;
 
     private final PerformanceCounter mPerfCounter;
-    private boolean mLogReadIds;
+    private final boolean mLogReadIds;
 
     public BamReader(
             final ChrBaseRegion region, final MetricsConfig config, final SamReader samReader, final BamSlicer bamSlicer,
@@ -111,42 +111,58 @@ public class BamReader
         if(!mRegion.containsPosition(readStart))
             return;
 
-        boolean isDualStrand = false;
-
-        if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
-        {
-            isDualStrand = isDualStrand(read);
-
-            // lower the duplicate count to reflect the use of consensus reads
-            --mReadCounts.Duplicates;
-
-            mFlagStats.registerConsensusRead(read);
-
-            if(isDualStrand)
-                ++mReadCounts.DualStrand;
-
-            checkTargetRegions(read, true, isDualStrand);
-            return;
-        }
-
-        ++mReadCounts.TotalReads;
-
         if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName()))
         {
             BT_LOGGER.debug("specific readId({}) unmapped({})", read.getReadName(), read.getReadUnmappedFlag());
         }
 
-        mFlagStats.processRead(read);
+        processReadForFlagstats(read);
+        processReadForFragmentLengths(read);
+        processReadForReadCounts(read);
+        processReadForTargetRegions(read);
+        processReadForBaseCoverage(read);
+    }
 
+    private void processReadForFlagstats(final SAMRecord read)
+    {
+        if(isConsensus(read))
+        {
+            mFlagStats.registerConsensusRead(read);
+        }
+        else
+        {
+            mFlagStats.processRead(read);
+        }
+    }
+
+    private void processReadForFragmentLengths(final SAMRecord read)
+    {
+        if(!isConsensus(read) && !read.isSecondaryAlignment())
+        {
+            mFragmentLengths.processRead(read);
+        }
+    }
+
+    private void processReadForReadCounts(final SAMRecord read)
+    {
+        addReadToReadCounts(read, mReadCounts);
+    }
+
+    private void processReadForTargetRegions(final SAMRecord read)
+    {
+        for(TargetRegionStats targetRegion : mTargetRegions)
+        {
+            if(positionsOverlap(read.getAlignmentStart(), read.getAlignmentEnd(), targetRegion.Region.start(), targetRegion.Region.end()))
+            {
+                addReadToReadCounts(read, targetRegion.Counts);
+            }
+        }
+    }
+
+    private void processReadForBaseCoverage(final SAMRecord read)
+    {
         if(read.isSecondaryAlignment())
             return;
-
-        checkTargetRegions(read, false, isDualStrand);
-
-        if(read.getDuplicateReadFlag())
-            ++mReadCounts.Duplicates;
-
-        mFragmentLengths.processRead(read);
 
         // cache if the mate read overlaps
         ReadGroup readGroup = mReadGroupMap.get(read.getReadName());
@@ -175,48 +191,38 @@ public class BamReader
         mBaseCoverage.processRead(read, null);
     }
 
+    private static void addReadToReadCounts(final SAMRecord read, final ReadCounts readCounts)
+    {
+        if(isConsensus(read))
+        {
+            // lower the duplicate count to reflect the use of consensus reads
+            --readCounts.Duplicates;
+            if(isDualStrand(read))
+            {
+                ++readCounts.DualStrand;
+            }
+        }
+        else
+        {
+            ++readCounts.TotalReads;
+            if(read.getDuplicateReadFlag())
+            {
+                ++readCounts.Duplicates;
+            }
+        }
+    }
+
+    private static boolean isConsensus(final SAMRecord read)
+    {
+        return read.hasAttribute(CONSENSUS_READ_ATTRIBUTE);
+    }
+
     private static boolean isDualStrand(final SAMRecord read)
     {
         if(read.getDuplicateReadFlag())
             return false;
 
         return extractUmiType(read) == DUAL;
-    }
-
-    private void checkTargetRegions(final SAMRecord read, boolean isConsensus, boolean isDualStrand)
-    {
-        int readEnd = read.getAlignmentEnd();
-
-        for(TargetRegionStats targetRegion : mTargetRegions)
-        {
-            if(positionsOverlap(read.getAlignmentStart(), readEnd, targetRegion.Region.start(), targetRegion.Region.end()))
-            {
-                if(isConsensus)
-                {
-                    --targetRegion.Counts.Duplicates;
-                }
-                else
-                {
-                    ++targetRegion.Counts.TotalReads;
-                }
-
-                if(read.getDuplicateReadFlag())
-                {
-                    ++targetRegion.Counts.Duplicates;
-                }
-                else
-                {
-                    if(isDualStrand)
-                       ++targetRegion.Counts.DualStrand;
-
-                    /*
-                    BT_LOGGER.trace("read({}) coords({}:{}) primary consensus({}) stats({} prim={})",
-                            read.getReadName(), read.getReferenceName(), read.getAlignmentStart(), isConsensus,
-                            targetRegion.Counts, targetRegion.Counts.TotalReads - targetRegion.Counts.Duplicates);
-                    */
-                }
-            }
-        }
     }
 
     private boolean readHasOverlaps(final SAMRecord read)
