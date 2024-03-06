@@ -45,5 +45,8 @@ class TestConfusionMatrix:
         confusion = ConfusionMatrix(pred_summ, clf_name="dna_combined")
 
         plot_path = os.path.join(tempfile.gettempdir(), "plot.pdf")
-        confusion.plot(path=plot_path)
+        confusion.plot(plot_path)
+
+        assert os.path.exists(plot_path)
+
         os.remove(plot_path)

@@ -62,6 +62,9 @@ public class PhaseSetTask extends ThreadTask
 
                 PhaseGroup phaseGroup = mPhaseGroups.remove();
 
+                if(mConfig.PhaseProcessingLimit > 0 && phaseGroup.assemblyCount() > mConfig.PhaseProcessingLimit)
+                    continue;
+
                 mPerfCounter.start();
 
                 // where there are more than 2 assemblies, start with the ones with the most support and overlapping junction reads

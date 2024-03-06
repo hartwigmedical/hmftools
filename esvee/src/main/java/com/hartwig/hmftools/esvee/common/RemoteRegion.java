@@ -60,10 +60,17 @@ public class RemoteRegion extends ChrBaseRegion
     public int softClipMapQualTotal() { return mSoftClipMapQualTotal; }
     public void addSoftClipMapQual(int softClipLength, int mapQual) { mSoftClipMapQualTotal += softClipLength * mapQual; }
 
+    public boolean matches(final RemoteRegion other) { return Orientation == other.Orientation && overlaps(other); }
+
+    public boolean overlaps(final String otherChr, final int otherPosStart, final int otherPosEnd, final byte otherOrientation)
+    {
+        return Orientation == otherOrientation && overlaps(otherChr, otherPosStart, otherPosEnd);
+    }
+
     public String toString()
     {
-        return format("%s reads(%d) counts(mate=%d supp=%d disc=%d) softClipMapQual(%d)",
-                super.toString(), mReadIds.size(), mReadTypeCount[REMOTE_READ_TYPE_JUNCTION_MATE],
+        return format("%s orient(%d) reads(%d) counts(mate=%d supp=%d disc=%d) softClipMapQual(%d)",
+                super.toString(), Orientation, mReadIds.size(), mReadTypeCount[REMOTE_READ_TYPE_JUNCTION_MATE],
                 mReadTypeCount[REMOTE_READ_TYPE_JUNCTION_SUPP], mReadTypeCount[REMOTE_READ_TYPE_DISCORDANT_READ], mSoftClipMapQualTotal);
     }
 

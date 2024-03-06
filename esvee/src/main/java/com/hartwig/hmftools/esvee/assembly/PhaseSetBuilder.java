@@ -4,7 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyExtender.extendRefBases;
+import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.extendRefBases;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.tryAssemblyFacing;
 import static com.hartwig.hmftools.esvee.common.AssemblySupport.findMatchingFragmentSupport;
 import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
@@ -20,6 +20,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.common.AssemblyLink;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
+import com.hartwig.hmftools.esvee.common.DiscordantGroup;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.PhaseGroup;
 import com.hartwig.hmftools.esvee.common.PhaseSet;
@@ -27,9 +28,10 @@ import com.hartwig.hmftools.esvee.common.SupportType;
 
 public class PhaseSetBuilder
 {
-    private final AssemblyLinker mAssemblyLinker;
     private final PhaseGroup mPhaseGroup;
     private final RefGenomeInterface mRefGenome;
+
+    private final AssemblyLinker mAssemblyLinker;
 
     // references from phase group
     private final List<JunctionAssembly> mAssemblies;
@@ -79,6 +81,8 @@ public class PhaseSetBuilder
 
         formFacingLinks();
 
+        // extendJunctions();
+
         formPhaseSets();
     }
 
@@ -118,7 +122,6 @@ public class PhaseSetBuilder
         Collections.sort(assemblySupportPairs, Comparator.comparingInt(x -> -x.SharedSupport));
 
         // build any split links and only allow an assembly to be used once
-
         Set<JunctionAssembly> linkedAssemblies = Sets.newHashSet();
 
         while(!assemblySupportPairs.isEmpty())
@@ -288,6 +291,29 @@ public class PhaseSetBuilder
                     }
                 }
             }
+        }
+    }
+
+    private void extendJunctions()
+    {
+        // attempt to extend any assembly in a split link with unmapped mates, unlinked assemblies and discordant read groups
+        List<JunctionAssembly> linkedAssemblies = Lists.newArrayList();
+        List<JunctionAssembly> unlinkedAssemblies = Lists.newArrayList();
+
+        for(JunctionAssembly assembly : mAssemblies)
+        {
+            if(mSplitLinks.stream().anyMatch(x -> x.hasAssembly(assembly)))
+                linkedAssemblies.add(assembly);
+            else
+                unlinkedAssemblies.add(assembly);
+        }
+
+        List<DiscordantGroup> discordantGroups = mPhaseGroup.discordantGroups();
+
+        for(JunctionAssembly assembly : linkedAssemblies)
+        {
+            JunctionExtender junctionExtender = new JunctionExtender(assembly, unlinkedAssemblies, discordantGroups);
+            junctionExtender.extendAssembly();
         }
     }
 

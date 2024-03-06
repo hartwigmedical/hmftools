@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.samtools;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.List;
 import java.util.Objects;
@@ -45,6 +47,8 @@ public class SupplementaryReadData
     {
         this(chromosome, position, strand, cigar, mapQuality, 0);
     }
+
+    public byte orientation() { return Strand == SUPP_POS_STRAND ? POS_ORIENT : NEG_ORIENT; }
 
     @Nullable
     @VisibleForTesting

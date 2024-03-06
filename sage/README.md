@@ -634,6 +634,8 @@ Variant calling Improvements
 - **Better MNV handling** - we don't consider that multiple high quality SNVs in a row may imply multiple adjacent sequencing or upstream errors in our QUAL model, and so have scope to be more sensitive here
 - **Better site filtering for BQR** - reads with a high number of max qual errors, or sites with a heavily strand biased alt, are unlikely to reflect genuine sequencing errors, so excluding them should make our qual recalibration more accurate.
 - **Adding strand context to BQR** - Recalibration accuracy could be improved if we combined reverse complemented contexts into one, and had separate recalibrated quals for forward and reverse strand to reflect different sequencing idiosyncracies
+- **Improve readEvents calculation for synced fragments** - we normally transform a read's raw NM by applying only 1 edit count per INDEL element and ignoring the edit count for the variant itself, when applying event penalty. However, doing this with synced fragments (which use the first read's NM attribute but a 'superset' CIGAR) can result in unexpected behaviour.
+- **Looking in correct direction for homopolymer in synced fragment** - we suppress calling specific known NovaSeqX artefacts by looking for long homopolymers upstream of a candidate variant. For synced fragments, we will sometimes look the wrong way and so assign the wrong base qual to that read. Most relevant for targeted panel sequencing on NovaSeqX
 
 Phasing improvements
 - **Only first tumor sample is currently phased** - Reference and additional tumor samples are not utilised for phasing

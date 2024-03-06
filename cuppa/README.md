@@ -103,7 +103,10 @@ In `sample_data_dir`, the required pipeline files are described below:
 | Tool              | Filename suffix          | File details                                     |
 |-------------------|--------------------------|--------------------------------------------------|
 | PURPLE            | .purple.somatic.vcf.gz   | SNVs; used for the GEN_POS and SNV96 features    |
+| PURPLE            | .purple.sv.vcf.gz        | Structural variants                              |
 | PURPLE            | .purple.purity.tsv       | Sample sex and WGD presence (amongst other data) |
+| PURPLE            | .purple.qc               | WGS quality control stats                        |
+| LINX              | .linx.clusters.tsv       | Structural variant clusters                      |
 | LINX              | .linx.driver.catalog.tsv | Driver mutations                                 |
 | LINX              | .linx.fusion.tsv         | Gene fusions                                     |
 | Virus Interpreter | .virus.annotated.tsv     | Viral sequence insertions                        |
@@ -588,6 +591,8 @@ Perform the following steps:
 
 This approach results in more granular y-values, which improves the isotonic regression fit.
 
+After calibrating the probabilities, they are normalized to sum to 1.
+
 #### FusionProbOverrider
 Certain gene fusions are highly characteristic of certain cancer types, e.g. RUNX1-RUNX1T1 for acute myeloid leukemia 
 (AML), but were not prevalent enough in the training set (i.e. too few training samples) to be picked up as dominant 
@@ -615,6 +620,8 @@ probs = probs / sum(probs)
 In total, there are 64 pathognomic fusion-cancer type mappings for which we apply a fusion override. These mappings are 
 provided to the `overrides` argument of FusionProbFilter as a dataframe in the format shown in section
 [Fusion overrides file](#fusion-overrides-file)
+
+After overriding the probabilities, they are normalized to sum to 1.
 
 #### SexProbFilter
 It is possible for e.g. a female sample to have a non-zero probability of Prostate, since the logistic regressions do 

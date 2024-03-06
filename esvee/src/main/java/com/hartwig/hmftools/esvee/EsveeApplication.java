@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
@@ -20,7 +22,8 @@ public class EsveeApplication
     {
         long startTimeMs = System.currentTimeMillis();
 
-        SV_LOGGER.info("writing output to VCF({}) directory({})", filenamePart(mConfig.VcfFile), mConfig.OutputDir);
+        SV_LOGGER.info("writing to output directory({})",
+                mConfig.OutputDir, mConfig.OutputId != null ? format(", output-id(%s)", mConfig.OutputId) : "");
 
         JunctionProcessor junctionProcessor = new JunctionProcessor(mConfig);
 

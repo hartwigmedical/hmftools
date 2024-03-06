@@ -54,7 +54,9 @@ RESOURCES_DIR = impresources.files("cuppa")/"resources"
 DEFAULT_CUPPA_CLASSIFIER_PATH = str(RESOURCES_DIR/"cuppa_classifier.pickle.gz")
 DEFAULT_FUSION_OVERRIDES_PATH = str(RESOURCES_DIR/"feature_overrides/20230731-fusion_overrides.split_adenoid_salivary.txt")
 MOCK_DATA_DIR = str(RESOURCES_DIR/"mock_data")
+
 RSCRIPT_PLOT_PREDICTIONS_PATH = str(impresources.files("cuppa")/"visualization/plot_predictions.R")
+RSCRIPT_PLOT_CONFUSION_PATH = str(impresources.files("cuppa")/"performance/plot_confusion.R")
 
 
 ## Misc ================================
@@ -65,4 +67,6 @@ DEFAULT_KEYWORDS_FEMALE_CLASSES = ("ovary","fallopian","ovarian","uterus","uteri
 SEX_FEATURE_NAME = "event.trait.is_male"
 
 PAN_CANCER_CLASS_NAME = ".All"
+
+NA_FILL_VALUE = -0.00000001
 

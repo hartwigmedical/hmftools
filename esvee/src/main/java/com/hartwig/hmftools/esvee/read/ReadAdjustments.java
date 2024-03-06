@@ -2,6 +2,8 @@ package com.hartwig.hmftools.esvee.read;
 
 import static com.hartwig.hmftools.esvee.SvConstants.INDEL_TO_SC_MAX_EDGE_DISTANCE;
 import static com.hartwig.hmftools.esvee.SvConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
+import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_TRIM_PERC;
 import static com.hartwig.hmftools.esvee.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.POLY_G_TRIM_LENGTH;
 import static com.hartwig.hmftools.esvee.common.BaseType.G;
@@ -88,6 +90,43 @@ public final class ReadAdjustments
             return false;
 
         read.trimBases(trailingGCount, read.negativeStrand());
+
+        return true;
+    }
+
+    public static boolean trimLowQualBases(final Read read)
+    {
+        boolean fromStart = read.negativeStrand();
+        int scBaseCount = fromStart ? read.leftClipLength() : read.rightClipLength();
+
+        if(scBaseCount == 0)
+            return false;
+
+        int baseIndex = fromStart ? 0 : read.basesLength() - 1;
+
+        int lowQualCount = 0;
+        int lastLowQualPercIndex = 0;
+
+        for(int i = 1; i <= scBaseCount; ++i)
+        {
+            if(read.getBaseQuality()[baseIndex] < LOW_BASE_QUAL_THRESHOLD)
+            {
+                lowQualCount++;
+
+                if(lowQualCount / (double)i >= LOW_BASE_TRIM_PERC)
+                    lastLowQualPercIndex = i;
+            }
+
+            if(fromStart)
+                ++baseIndex;
+            else
+                --baseIndex;
+        }
+
+        if(lastLowQualPercIndex == 0)
+            return false;
+
+        read.trimBases(lastLowQualPercIndex, read.negativeStrand());
 
         return true;
     }

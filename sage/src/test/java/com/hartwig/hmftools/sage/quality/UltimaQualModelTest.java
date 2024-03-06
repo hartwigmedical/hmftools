@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_ADJUSTMENT;
 import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_DELETION;
 import static com.hartwig.hmftools.sage.quality.UltimaModelType.HOMOPOLYMER_TRANSITION;
+import static com.hartwig.hmftools.sage.quality.UltimaModelType.SNV;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -43,7 +44,8 @@ public class UltimaQualModelTest
     @Test
     public void testHomopolymerAdjustment()
     {
-        String refBases = BUFFER_REF_BASES + "ATTTTCGTCGT";
+        //                                    0123456789
+        String refBases = BUFFER_REF_BASES + "ATTTTCGTCGT" + BUFFER_REF_BASES;
         setRefBases(refBases);
 
         // delete of 1 base
@@ -117,13 +119,33 @@ public class UltimaQualModelTest
 
         calcQual = model.calculateQual(read, 9);
         assertEquals(27, calcQual);
+
+        // C>CA in TT C GTC, insert of base which doesn't match the existing context
+        variant = new SimpleVariant(CHR_1, 15, "C", "CA");
+
+        model = mModelBuilder.buildContext(variant);
+        assertEquals(HOMOPOLYMER_ADJUSTMENT, model.type());
+
+        readBases = BUFFER_REF_BASES + "ATTTTCAGTCGT" + BUFFER_REF_BASES;
+
+        baseQualities = buildDefaultBaseQuals(readBases.length());
+        t0Values = buildDefaultBaseQuals(readBases.length());
+        tpValues = new short[readBases.length()];
+
+        tpValues[16] = -1;
+        baseQualities[16] = 32;
+
+        read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
+
+        calcQual = model.calculateQual(read, 15);
+        assertEquals(32, calcQual);
     }
 
     @Test
     public void testHomopolymerDeletion()
     {
         //                                    0123456789
-        String refBases = BUFFER_REF_BASES + "ATTTTCGCAGT" + BUFFER_REF_BASES;
+        String refBases = BUFFER_REF_BASES + "ATTTTCGACGT" + BUFFER_REF_BASES;
         setRefBases(refBases);
 
         // the whole HP must be deleted
@@ -150,13 +172,13 @@ public class UltimaQualModelTest
         assertEquals(30, calcQual);
 
         // test out of cycle deletions
-        variant = new SimpleVariant(CHR_1, 16, "GC", "G");
+        variant = new SimpleVariant(CHR_1, 16, "GA", "G");
 
         model = mModelBuilder.buildContext(variant);
         assertNotNull(model);
         assertEquals(HOMOPOLYMER_DELETION, model.type());
 
-        readBases = BUFFER_REF_BASES + "ATTTTCGAGT";
+        readBases = BUFFER_REF_BASES + "ATTTTCGCGT";
         baseQualities = buildDefaultBaseQuals(readBases.length());
         t0Values = buildDefaultBaseQuals(readBases.length());
         tpValues = new short[readBases.length()];
@@ -231,6 +253,188 @@ public class UltimaQualModelTest
 
         calcQual = model.calculateQual(read, 11);
         assertEquals(27, calcQual);
+    }
+
+    @Test
+    public void testSNVs()
+    {
+        //                                    01     234     56
+        String refBases = BUFFER_REF_BASES + "AG" + "ACA" + "AG" + BUFFER_REF_BASES;
+        setRefBases(refBases);
+
+        // C>T in ACA > ATA, matches neither side's ref so reverts to max qual
+        SimpleVariant variant = new SimpleVariant(CHR_1, 13, "C", "T");
+
+        UltimaQualModel model = mModelBuilder.buildContext(variant);
+        assertNotNull(model);
+        assertEquals(SNV, model.type());
+
+        String readBases = BUFFER_REF_BASES + "AGATAAG";
+        byte[] baseQualities = buildDefaultBaseQuals(readBases.length());
+        byte[] t0Values = buildDefaultBaseQuals(readBases.length());
+        short[] tpValues = new short[readBases.length()];
+
+        SAMRecord read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
+
+        byte calcQual = model.calculateQual(read, 13);
+        assertEquals(ULTIMA_MAX_QUAL, calcQual);
+
+        //                             01     234     56
+        refBases = BUFFER_REF_BASES + "AG" + "CCG" + "AG" + BUFFER_REF_BASES;
+        setRefBases(refBases);
+
+        // C>T in CCG > CTG, left contraction, right insertion/expansion
+        variant = new SimpleVariant(CHR_1, 13, "C", "T");
+
+        model = mModelBuilder.buildContext(variant);
+
+        readBases = BUFFER_REF_BASES + "AGCTGAG";
+
+        baseQualities = buildDefaultBaseQuals(readBases.length());
+        t0Values = buildDefaultBaseQuals(readBases.length());
+        tpValues = new short[readBases.length()];
+
+        // the deleted base qual
+        tpValues[12] = 1;
+        baseQualities[12] = 16;
+
+        tpValues[13] = -1;
+        baseQualities[13] = 21;
+
+        read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
+
+        calcQual = model.calculateQual(read, 13);
+        assertEquals(37, calcQual);
+
+        // C>T GCT > GTT, left full delete, right insertion/expansion
+        //                             01     234     56
+        refBases = BUFFER_REF_BASES + "AG" + "GCT" + "AG" + BUFFER_REF_BASES;
+        setRefBases(refBases);
+
+        model = mModelBuilder.buildContext(variant);
+
+        //                              0123456
+        readBases = BUFFER_REF_BASES + "AGGTTAG" + BUFFER_REF_BASES;
+
+        baseQualities = buildDefaultBaseQuals(readBases.length());
+        t0Values = buildDefaultBaseQuals(readBases.length());
+        tpValues = new short[readBases.length()];
+
+        // the deleted base qual
+        t0Values[12] = 10;
+        t0Values[13] = 15;
+
+        tpValues[13] = -1;
+        baseQualities[13] = 21;
+
+        read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
+
+        calcQual = model.calculateQual(read, 13);
+        assertEquals(36, calcQual);
+
+
+        // C>T in TCG > TTG, left 1-base ins/expansion, right full delete
+        //                             01     234     56
+        refBases = BUFFER_REF_BASES + "AG" + "TCG" + "AG" + BUFFER_REF_BASES;
+        setRefBases(refBases);
+
+        model = mModelBuilder.buildContext(variant);
+
+        //                              0123456
+        readBases = BUFFER_REF_BASES + "AGTTGAG" + BUFFER_REF_BASES;
+
+        baseQualities = buildDefaultBaseQuals(readBases.length());
+        t0Values = buildDefaultBaseQuals(readBases.length());
+        tpValues = new short[readBases.length()];
+
+        // the deleted base qual
+        t0Values[13] = 15;
+        t0Values[14] = 10;
+
+        tpValues[12] = tpValues[13] = -1;
+        baseQualities[12] = baseQualities[13] = 20;
+
+        read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
+
+        calcQual = model.calculateQual(read, 13);
+        assertEquals(40, calcQual);
+
+
+        // C>T in GCC > GTC, left contraction, right insertion/expansion
+        //                             01     234     56
+        refBases = BUFFER_REF_BASES + "AG" + "GCC" + "AG" + BUFFER_REF_BASES;
+        setRefBases(refBases);
+
+        model = mModelBuilder.buildContext(variant);
+
+        readBases = BUFFER_REF_BASES + "AGGTCAG";
+
+        baseQualities = buildDefaultBaseQuals(readBases.length());
+        t0Values = buildDefaultBaseQuals(readBases.length());
+        tpValues = new short[readBases.length()];
+
+        // the delete base qual
+        tpValues[14] = 1;
+        baseQualities[14] = 16;
+
+        tpValues[13] = -1;
+        baseQualities[13] = 21;
+
+        read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
+
+        calcQual = model.calculateQual(read, 13);
+        assertEquals(37, calcQual);
+
+
+        // contraction on the C side, expansion on the T side
+        // C>T in TTT TCC CCC > TTT TTC CCC
+
+        variant = new SimpleVariant(CHR_1, 14, "C", "T");
+
+        //                             012     345     678
+        refBases = BUFFER_REF_BASES + "TTT" + "TCC" + "CCC" + BUFFER_REF_BASES;
+        setRefBases(refBases);
+
+        model = mModelBuilder.buildContext(variant);
+
+        //                              012345678
+        readBases = BUFFER_REF_BASES + "TTTTTCCCC" + BUFFER_REF_BASES;
+
+        baseQualities = buildDefaultBaseQuals(readBases.length());
+        t0Values = buildDefaultBaseQuals(readBases.length());
+        tpValues = new short[readBases.length()];
+
+        // the HP insert base quals
+        tpValues[10] = tpValues[14] = -1;
+        baseQualities[10] = baseQualities[14] = 16;
+
+        // the HP delete quals
+        tpValues[15] = tpValues[18] = 1;
+        baseQualities[15] = baseQualities[18] = 21;
+
+        read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
+
+        calcQual = model.calculateQual(read, 14);
+        assertEquals(31, calcQual);
+
+        // HP on right partially deleted -> right matches ref, insert on left
+        // AG GCC AGA > AG GTC AGA
+
+        // HP on at var position fully deleted -> right matches alt, like a HP expansion on right
+        // AG GCT AGA > AG GTT AGA
+
+        // HP at var position fully deleted -> left matches alt, like a HP expansion on left
+        // AG TCG AGA > AG TTG AGA
+
+
+        // variant has one straddling base matching ref or alt
+        // AG CCG AGA > AG CTG AGA
+        // delete of C on left,  insert of T
+
+
+        // variant has one straddling base matching ref or alt
+        // TC TCG GC > TC TTG GC
+        // full delete of C, insert of additional T on left
     }
 
     private static SAMRecord buildUltimaRead(

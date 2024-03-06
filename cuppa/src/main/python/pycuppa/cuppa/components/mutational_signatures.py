@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Iterable
+
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
@@ -65,7 +69,12 @@ class SigCohortQuantileTransformer(BaseEstimator, LoggerMixin):
 
         return self
 
-    def transform(self, X: pd.DataFrame, clip_upper: bool = None, include_feat_values: bool = None) -> pd.DataFrame:
+    def transform(
+        self,
+        X: pd.DataFrame,
+        clip_upper: bool = None,
+        include_feat_values: bool = None
+    ) -> pd.DataFrame:
 
         ## Checks
         check_is_fitted(self, "transformers_")
@@ -115,3 +124,49 @@ class SigCohortQuantileTransformer(BaseEstimator, LoggerMixin):
 
     def set_output(self, transform: str = None) -> "SigCohortQuantileTransformer":
         return self
+
+    def get_quantiles(self, as_dict: bool = False) -> pd.DataFrame | dict[str, pd.DataFrame]:
+
+        quantiles_per_class = {}
+
+        for cancer_type, transformer in self.transformers_.items():
+            quantiles = pd.DataFrame(
+                transformer.quantiles_,
+                columns=transformer.feature_names_in_
+            )
+
+            quantiles_per_class[cancer_type] = quantiles
+
+        if as_dict:
+            return quantiles_per_class
+
+        quantiles_per_class = pd.concat(quantiles_per_class)
+        quantiles_per_class.index.names = ["class", "quantile"]
+
+        return quantiles_per_class
+
+    def get_percentiles(
+        self,
+        percentages: Iterable[float] = range(0, 101),
+        as_dict: bool = False
+    ) -> pd.DataFrame | dict[str, pd.DataFrame]:
+
+        quantiles_per_class = self.get_quantiles(as_dict=True)
+        percentiles_per_class = {}
+
+        for cancer_type, quantiles in quantiles_per_class.items():
+            percentiles = {}
+
+            for signature, quantile_values in quantiles.items():
+                percentiles[signature] = np.percentile(quantile_values, percentages)
+
+            percentiles = pd.DataFrame(percentiles)
+            percentiles_per_class[cancer_type] = percentiles
+
+        if as_dict:
+            return percentiles_per_class
+
+        percentiles_per_class = pd.concat(percentiles_per_class)
+        percentiles_per_class.index.names = ["class", "percentile"]
+
+        return percentiles_per_class

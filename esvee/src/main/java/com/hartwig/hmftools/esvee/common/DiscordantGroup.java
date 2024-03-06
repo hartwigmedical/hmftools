@@ -4,60 +4,74 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
-import static com.hartwig.hmftools.esvee.common.SupportType.DISCORDANT;
-import static com.hartwig.hmftools.esvee.common.SupportType.INDEL;
-import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.read.ReadUtils;
 
 public class DiscordantGroup
 {
-    private final Junction mJunction;
+    private final String mChromosome;
+    private final Set<Integer> mJunctionPositions; // for info sake only
+    private final byte mOrientation;
     private final List<Read> mReads;
+
     private final ChrBaseRegion mRemoteRegion;
+    private final byte mRemoteOrientation;
 
     private int mMinAlignedPosition;
     private int mMaxAlignedPosition;
-
-    private byte mBases[];
-    private byte mBaseQuals[];
 
     private PhaseGroup mPhaseGroup;
 
     public DiscordantGroup(final Junction junction, final Read read)
     {
-        mJunction = junction;
+        mJunctionPositions = Sets.newHashSet(junction.Position);
+        mChromosome = junction.Chromosome;
+        mOrientation = junction.Orientation;
+
         mReads = Lists.newArrayList(read);
         mRemoteRegion = new ChrBaseRegion(read.mateChromosome(), read.mateAlignmentStart(), read.mateAlignmentEnd());
+        mRemoteOrientation = read.matePositiveStrand() ? POS_ORIENT : NEG_ORIENT;
 
-        mMinAlignedPosition = 0;
-        mMaxAlignedPosition = 0;
-        mBases = null;
-        mBaseQuals = null;
-
+        mMinAlignedPosition = read.alignmentStart();
+        mMaxAlignedPosition = read.alignmentEnd();
         mPhaseGroup = null;
     }
 
-    public Junction junction() { return mJunction; }
     public List<Read> reads() { return mReads; }
-    public ChrBaseRegion remoteRegion() { return mRemoteRegion; }
+
+    public String chromosome() { return mChromosome; }
+    public byte orientation() { return mOrientation; }
 
     public int minAlignedPosition() { return mMinAlignedPosition; }
     public int maxAlignedPosition() { return mMaxAlignedPosition; }
+
+    public ChrBaseRegion remoteRegion() { return mRemoteRegion; }
+    public byte remoteOrientation() { return mRemoteOrientation; }
 
     public PhaseGroup phaseGroup() { return mPhaseGroup; }
     public void setPhaseGroup(final PhaseGroup phaseGroup) { mPhaseGroup = phaseGroup; }
 
     public boolean matches(final Read read)
     {
+        if(read.orientation() != mOrientation)
+            return false;
+
+        if(read.matePositiveStrand() != (mRemoteOrientation == POS_ORIENT))
+            return false;
+
+        // no buffer applied since will rely on a final merge for this
+        if(!positionsOverlap(mMinAlignedPosition, mMaxAlignedPosition, read.alignmentStart(), read.alignmentEnd()))
+            return false;
+
         return mRemoteRegion.overlaps(read.mateChromosome(), read.mateAlignmentStart(), read.mateAlignmentEnd());
     }
 
@@ -65,85 +79,38 @@ public class DiscordantGroup
     {
         mReads.add(read);
 
+        mMinAlignedPosition = min(mMinAlignedPosition, read.alignmentStart());
+        mMaxAlignedPosition = max(mMaxAlignedPosition, read.alignmentEnd());
+
         mRemoteRegion.setStart(min(mRemoteRegion.start(), read.mateAlignmentStart()));
         mRemoteRegion.setEnd(max(mRemoteRegion.end(), read.mateAlignmentEnd()));
     }
 
-    public boolean hasRead(final Read read)
+    public boolean hasRead(final Read read) { return mReads.stream().anyMatch(x -> x == read); }
+    public boolean hasFragment(final String readId)
     {
-        return read != null && mReads.stream().anyMatch(x -> x.matchesFragment(read));
+        return mReads.stream().anyMatch(x -> x.getName().equals(readId));
     }
 
-    public void buildAssembly()
+    public boolean matches(final DiscordantGroup other)
     {
-        // establish the boundaries from the reads but for now don't bother building a sequence
-        // if were to, would be very similar to how RefBaseAssembly is done
-        int minAlignedPosition = mJunction.Position;
-        int maxAlignedPosition = mJunction.Position;
+        if(other.orientation() != mOrientation)
+            return false;
 
-        for(Read read : mReads)
-        {
-            if(mJunction.isForward())
-            {
-                maxAlignedPosition = max(maxAlignedPosition, read.unclippedEnd());
-            }
-            else
-            {
-                minAlignedPosition = min(minAlignedPosition, read.unclippedStart());
-            }
-        }
-
-        mMinAlignedPosition = minAlignedPosition;
-        mMaxAlignedPosition = maxAlignedPosition;
+        if(other.remoteOrientation() != mRemoteOrientation)
+            return false;
 
 
-        /*
-        Read maxBaseQualRead = null;
-        double maxAvgBaseQual = 0;
+        if(!positionsOverlap(mMinAlignedPosition, mMaxAlignedPosition, other.minAlignedPosition(), other.maxAlignedPosition()))
+            return false;
 
-        int maxDistanceFromJunction = 0;
-
-        // could sort and build from reads without gaps, but depends on how used in linking - likely not required
-        for(Read read : mReads)
-        {
-            int readJunctionIndex = read.getReadIndexAtReferencePosition(mJunction.Position, true);
-
-            int readJunctionDistance;
-
-            if(mJunction.isForward())
-            {
-                maxAlignedPosition = max(maxAlignedPosition, read.unclippedEnd());
-                readJunctionDistance = readJunctionIndex;
-            }
-            else
-            {
-                minAlignedPosition = min(minAlignedPosition, read.unclippedStart());
-                readJunctionDistance = read.basesLength() - readJunctionIndex;
-            }
-
-            maxDistanceFromJunction = max(maxDistanceFromJunction, readJunctionDistance);
-
-            double avgBaseQual = ReadUtils.avgBaseQuality(read);
-
-            if(avgBaseQual > maxAvgBaseQual)
-            {
-                maxAvgBaseQual = avgBaseQual;
-                maxBaseQualRead = read;
-            }
-        }
-
-        for(Read read : mReads)
-        {
-
-
-        }
-
-        // buildRepeatInfo();
-        */
+        return mRemoteRegion.overlaps(remoteRegion());
     }
+
 
     public String toString()
     {
-        return format("junc(%s) reads(%d) remote(%s)", mJunction.coords(), mReads.size(), mRemoteRegion);
+        return format("range(%s:%d-%d) orient(%d) reads(%d) remote(%s orient=%d)",
+                mChromosome, mMinAlignedPosition, mMaxAlignedPosition, mOrientation, mReads.size(), mRemoteRegion, mRemoteOrientation);
     }
 }

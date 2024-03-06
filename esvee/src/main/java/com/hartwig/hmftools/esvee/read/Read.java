@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarElementsFromS
 import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarStringFromElements;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.maxIndelLength;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.extractAlignment;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -26,7 +25,6 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.samtools.CigarUtils;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
-import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import htsjdk.samtools.Cigar;
@@ -60,6 +58,7 @@ public class Read
     private IndelCoords mIndelCoords;
 
     private boolean mIsReference;
+    private int mTrimCount;
 
     public Read(final SAMRecord record)
     {
@@ -80,6 +79,7 @@ public class Read
         mSupplementaryData = null;
         mCheckedIndelCoords = false;
         mIndelCoords = null;
+        mTrimCount = 0;
     }
 
     private void setBoundaries(int newReadStart)
@@ -191,8 +191,15 @@ public class Read
     public boolean isMateMapped() { return mRecord.getReadPairedFlag() && !mRecord.getMateUnmappedFlag(); }
     public boolean isMateUnmapped() { return mRecord.getReadPairedFlag() && mRecord.getMateUnmappedFlag(); }
 
-    public boolean matePositiveStrand() { return !mRecord.getMateNegativeStrandFlag(); }
-    public boolean mateNegativeStrand() { return mRecord.getMateNegativeStrandFlag(); }
+    public boolean matePositiveStrand() { return mateOrientation() == POS_ORIENT; }
+    public boolean mateNegativeStrand() { return mateOrientation() == NEG_ORIENT; }
+
+    public byte mateOrientation()
+    {
+        if(!mRecord.getReadPairedFlag())
+            return 0;
+
+        return mRecord.getMateNegativeStrandFlag() ? NEG_ORIENT : POS_ORIENT; }
 
     public boolean hasSupplementary() { return supplementaryData() != null; }
     public boolean isSupplementary() { return mRecord.getSupplementaryAlignmentFlag(); }
@@ -397,10 +404,13 @@ public class Read
 
         mBases = newBases;
         mBaseQuals = newBaseQuals;
+        mTrimCount = count;
 
         updateCigarString();
         setBoundaries(newReadStart);
     }
+
+    public int baseTrimCount() { return mTrimCount; }
 
     public void convertEdgeIndelToSoftClip(int leftSoftClipBases, int rightSoftClipBases)
     {

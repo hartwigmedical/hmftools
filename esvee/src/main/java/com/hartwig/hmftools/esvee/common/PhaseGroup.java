@@ -40,7 +40,10 @@ public class PhaseGroup
     public void setId(int id) { mId = id; }
     public int id() { return mId; }
 
+    public List<JunctionAssembly> assemblies() { return mAssemblies; }
+    public List<DiscordantGroup> discordantGroups() { return mDiscordantGroups; }
     public List<PhaseSet> phaseSets() { return mPhaseSets; }
+
     public List<AssemblyLink> secondaryLinks() { return mSecondarySplitLinks; }
 
     public PhaseSet findPhaseSet(final JunctionAssembly assembly)
@@ -92,8 +95,6 @@ public class PhaseGroup
         discordantGroup.setPhaseGroup(this);
         */
     }
-
-    public List<JunctionAssembly> assemblies() { return mAssemblies; }
 
     public String toString() { return format("id(%d) assemblies(%d) discGroups(%d)", mId, mAssemblies.size(), mDiscordantGroups.size()); }
 }

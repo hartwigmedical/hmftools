@@ -67,7 +67,7 @@
         <cobalt.version>1.16</cobalt.version>
         <compar.version>1.2</compar.version>
         <crest.version>1.0.0</crest.version>
-        <cuppa.version>2.0.1</cuppa.version>
+        <cuppa.version>2.1.0</cuppa.version>
         <esvee.version>1.0</esvee.version>
         <fastq-tools.version>1.0</fastq-tools.version>
         <gene-utils.version>1.1</gene-utils.version>
@@ -79,7 +79,7 @@
         <linx.version>2.0</linx.version>
         <mark-dups.version>1.1</mark-dups.version>
         <neo.version>1.2</neo.version>
-        <orange.version>3.2.0</orange.version>
+        <orange.version>3.3.0</orange.version>
         <orange-datamodel.version>2.3.0</orange-datamodel.version>
         <paddle.version>1.1</paddle.version>
         <patient-db.version>5.35</patient-db.version>

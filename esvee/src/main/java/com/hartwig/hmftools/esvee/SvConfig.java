@@ -74,7 +74,6 @@ public class SvConfig
     public final String RefGenomeImageFile;
 
     public final ValidationStringency BamStringency;
-    public final boolean NoReadFilters;
 
     public final String VcfFile;
     public final List<WriteType> WriteTypes;
@@ -86,11 +85,12 @@ public class SvConfig
 
     public final boolean PerfDebug;
     public final double PerfLogTime;
-    public final boolean OtherDebug;
     private final List<String> mLogReadIds;
     private final boolean mCheckLogReadIds;
 
     public final int AssemblyRefBaseWriteMax;
+    public final boolean SkipDiscordant;
+    public final int PhaseProcessingLimit;
 
     public final int Threads;
 
@@ -99,13 +99,12 @@ public class SvConfig
     public static final String OUTPUT_VCF = "output_vcf";
     public static final String REF_GENOME_IMAGE = "ref_genome_image";
     public static final String JUNCTION_FILES = "junction_files";
-    public static final String NO_READ_FILTERS = "no_read_filters";
 
     public static final String WRITE_TYPES = "write_types";
-    public static final String HTML_SUMMARY_DIR = "html_dir";
-    public static final String PLOT_DIAGRAMS = "plot_diagrams";
-    public static final String OTHER_DEBUG = "other_debug";
     public static final String PERF_LOG_TIME = "perf_log_time";
+
+    public static final String SKIP_DISCORDANT = "skip_discordant";
+    public static final String PHASE_PROCESSING_LIMIT = "phase_process_limit";
 
     public static final String ASSEMBLY_REF_BASE_WRITE_MAX = "asm_ref_base_write_max";
 
@@ -177,7 +176,6 @@ public class SvConfig
                 configBuilder.getValue(REF_GENOME_IMAGE) : RefGenomeFile + REF_GENOME_IMAGE_EXTENSION;
 
         BamStringency = ValidationStringency.STRICT;
-        NoReadFilters = configBuilder.hasFlag(NO_READ_FILTERS);
 
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
@@ -203,9 +201,11 @@ public class SvConfig
         mLogReadIds = parseLogReadIds(configBuilder);
         mCheckLogReadIds = !mLogReadIds.isEmpty();
 
+        SkipDiscordant = configBuilder.hasFlag(SKIP_DISCORDANT);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
-        OtherDebug = configBuilder.hasFlag(OTHER_DEBUG);
+
+        PhaseProcessingLimit = configBuilder.getInteger(PHASE_PROCESSING_LIMIT);
 
         AssemblyRefBaseWriteMax = configBuilder.getInteger(ASSEMBLY_REF_BASE_WRITE_MAX);
 
@@ -277,12 +277,8 @@ public class SvConfig
         configBuilder.addPaths(
                 JUNCTION_FILES, false, "List of SvPrep junction files, separated by ',', default is to match by sample name");
 
-        configBuilder.addFlag(NO_READ_FILTERS, "Filter reads by base and map qual");
-
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(REF_GENOME_IMAGE, false, REFERENCE_BAM_DESC);
-        configBuilder.addConfigItem(HTML_SUMMARY_DIR, false, "Directory for HTML summaries, default 'html'");
-        configBuilder.addFlag(PLOT_DIAGRAMS, "Create HTML files containing SVGs");
 
         String writeTypes = Arrays.stream(WriteType.values()).map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM));
         configBuilder.addConfigItem(WRITE_TYPES, false, "Write types from list: " + writeTypes);
@@ -290,11 +286,14 @@ public class SvConfig
         configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addDecimal(PERF_LOG_TIME, "Log performance data for routine exceeding specified time (0 = disabled)", 0);
-        configBuilder.addFlag(OTHER_DEBUG, "Various other debugging");
+        configBuilder.addFlag(SKIP_DISCORDANT, "Skip processing discordant-only groups");
 
         configBuilder.addInteger(
                 ASSEMBLY_REF_BASE_WRITE_MAX, "Cap assembly ref bases in TSV and VCF, use zero to write all",
                 DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX);
+
+        configBuilder.addInteger(
+                PHASE_PROCESSING_LIMIT, "Exclude phase groups above this size from extension and phase sets", 0);
 
         TruthsetAnnotation.registerConfig(configBuilder);
 

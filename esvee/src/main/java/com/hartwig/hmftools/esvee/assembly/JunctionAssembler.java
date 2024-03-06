@@ -27,7 +27,6 @@ public class JunctionAssembler
     private final Junction mJunction;
 
     private final List<Read> mNonJunctionReads;
-    private final List<Read> mFilteredReads;
 
     private int mNextAssemblyNumber = 1;
 
@@ -35,7 +34,6 @@ public class JunctionAssembler
     {
         mConfig = config;
         mJunction = junction;
-        mFilteredReads = Lists.newArrayList();
         mNonJunctionReads = Lists.newArrayList();
     }
 
@@ -53,12 +51,6 @@ public class JunctionAssembler
             if(!ReadFilters.recordSoftClipsNearJunction(read, mJunction))
             {
                 mNonJunctionReads.add(read);
-                continue;
-            }
-
-            if(!ReadFilters.isAboveBaseQualAvgPastJunctionThreshold(read, mJunction))
-            {
-                mFilteredReads.add(read);
                 continue;
             }
 
@@ -131,12 +123,6 @@ public class JunctionAssembler
                 if(!ReadFilters.recordSoftClipsNearJunction(read, mJunction))
                 {
                     mNonJunctionReads.add(read);
-                    continue;
-                }
-
-                if(!ReadFilters.isAboveBaseQualAvgPastJunctionThreshold(read, mJunction))
-                {
-                    mFilteredReads.add(read);
                     continue;
                 }
 
