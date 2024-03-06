@@ -260,6 +260,39 @@ public class ArtefactsTest
     }
 
     @Test
+    public void testSnvWithAdjacentInsert()
+    {
+        int pos = 115;
+        String leftFlank = "AAAATCAGGA";
+        String rightFlank = "AAAGGCAGAA";
+
+        SimpleVariant variant = new SimpleVariant(CHR_1, pos, "G", "T");
+
+        int varIndex = 15;
+        String readContextBases = leftFlank + "CTGTTTTTTTTTTTTTTTTTTA" + rightFlank;
+
+        IndexedBases indexBases = new IndexedBases(
+                pos, varIndex, leftFlank.length(),
+                readContextBases.length() - rightFlank.length() - 1, rightFlank.length(), readContextBases.getBytes());
+
+        ArtefactContext artefactContext = ArtefactContext.buildContext(variant, indexBases);
+        assertNotNull(artefactContext);
+
+        int readLength = readContextBases.length();
+        String cigar = format("%dM", readLength);
+        byte[] readQualities = buildDefaultBaseQuals(readLength);
+
+        byte lowQualBase = 10;
+        readQualities[varIndex-1] = lowQualBase;
+        SAMRecord record = buildSamRecord(20, cigar, readContextBases, new String(readQualities));
+        record.setReadNegativeStrandFlag(true);
+
+        byte adjustedBaseQual = artefactContext.findApplicableBaseQual(record, varIndex);
+
+        assertEquals(lowQualBase, adjustedBaseQual);
+    }
+
+    @Test
     public void testSnvBeforeInsert()
     {
         // create an SNV directly before a 1-base insert - confirm impact on read contexts and how reads are handled
@@ -281,7 +314,7 @@ public class ArtefactsTest
         ReadContext readContext = new ReadContext(pos, "", 0, "", indexBases, false);
 
         IndexedBases indexedRefBases = new IndexedBases(100, 0, refBases.getBytes());
-        QualityCalculator qualityCalculator = new QualityCalculator(TEST_CONFIG, RECALIBRATION, indexedRefBases);
+        QualityCalculator qualityCalculator = new QualityCalculator(TEST_CONFIG.Quality, RECALIBRATION, indexedRefBases);
 
         ReadContextCounter rcCounter = new ReadContextCounter(
                 1, variant, readContext, VariantTier.PANEL, 100, 0,
