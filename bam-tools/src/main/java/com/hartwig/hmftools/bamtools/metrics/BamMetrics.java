@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.buildPartitionQueueFromRegions;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
@@ -13,7 +14,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.PartitionTask;
@@ -76,13 +76,7 @@ public class BamMetrics
             Collections.sort(allRegions);
         }
 
-        Queue<PartitionTask> partitions = new ConcurrentLinkedQueue<>();
-
-        int taskId = 0;
-        for(int i = 0; i < allRegions.size(); ++i)
-        {
-            partitions.add(new PartitionTask(allRegions.get(i), taskId++));
-        }
+        Queue<PartitionTask> partitions = buildPartitionQueueFromRegions(allRegions);
 
         CombinedStats combinedStats = new CombinedStats(mConfig.MaxCoverage);
 

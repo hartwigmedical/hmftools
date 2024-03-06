@@ -36,7 +36,7 @@ public class MetricsTest
         CombinedStats combinedStats = new CombinedStats(mConfig.MaxCoverage);
 
         BamReader bamReader = new BamReader(new ChrBaseRegion(
-                CHR_1, 1, 1000), mConfig, null, null, combinedStats);
+                CHR_1, 1, 1000), mConfig, null, null, combinedStats, null);
 
         SAMRecord read = getTestRead(false);
 
@@ -74,7 +74,7 @@ public class MetricsTest
         CombinedStats combinedStats = new CombinedStats(mConfig.MaxCoverage);
 
         BamReader bamReader = new BamReader(new ChrBaseRegion(
-                CHR_1, 1, 1000), mConfig, null, null, combinedStats);
+                CHR_1, 1, 1000), mConfig, null, null, combinedStats, null);
 
         // supplementary with a duplicate
         SAMRecord read = getTestRead(true);
@@ -110,7 +110,7 @@ public class MetricsTest
         CombinedStats combinedStats = new CombinedStats(mConfig.MaxCoverage);
 
         BamReader bamReader = new BamReader(new ChrBaseRegion(
-                CHR_1, 1, 1000), mConfig, null, null, combinedStats);
+                CHR_1, 1, 1000), mConfig, null, null, combinedStats, null);
 
         // secondary with a duplicate
         SAMRecord read = getTestRead(false);
@@ -151,7 +151,7 @@ public class MetricsTest
         CombinedStats combinedStats = new CombinedStats(mConfig.MaxCoverage);
 
         BamReader bamReader = new BamReader(new ChrBaseRegion(
-                CHR_1, 1, 1000), mConfig, null, null, combinedStats);
+                CHR_1, 1, 1000), mConfig, null, null, combinedStats, null);
 
         SAMRecord read = getTestRead(false);
         read.setDuplicateReadFlag(true);
@@ -190,7 +190,7 @@ public class MetricsTest
         CombinedStats combinedStats = new CombinedStats(mConfig.MaxCoverage);
 
         BamReader bamReader = new BamReader(new ChrBaseRegion(
-                CHR_1, 1, 1000), mConfig, null, null, combinedStats);
+                CHR_1, 1, 1000), mConfig, null, null, combinedStats, null);
 
         byte[] lowBaseQualities = new byte[10];
         Arrays.fill(lowBaseQualities, (byte) 5);
@@ -224,6 +224,60 @@ public class MetricsTest
         assertEquals(0, combinedStats.coverageMetrics().FilterTypeCounts[FilterType.UNFILTERED.ordinal()]);
         assertEquals(10, combinedStats.coverageMetrics().FilterTypeCounts[FilterType.DUPLICATE.ordinal()]);
         assertEquals(10, combinedStats.coverageMetrics().FilterTypeCounts[FilterType.LOW_BASE_QUAL.ordinal()]);
+    }
+
+    @Test
+    public void testPartialOverlappingReadWithoutPreviousRegion()
+    {
+        CombinedStats combinedStats = new CombinedStats(mConfig.MaxCoverage);
+        BamReader bamReader = new BamReader(new ChrBaseRegion(
+                CHR_1, 25, 50), mConfig, null, null, combinedStats, null);
+
+        SAMRecord read = getTestRead(false);
+
+        bamReader.processRead(read);
+
+        bamReader.postSliceProcess();
+        assertEquals(1, combinedStats.readCounts().TotalReads);
+        assertEquals(0, combinedStats.readCounts().Duplicates);
+        assertEquals(0, combinedStats.readCounts().DualStrand);
+        assertEquals(1, combinedStats.flagStats().passCount(FlagStatType.PRIMARY));
+        assertEquals(0, combinedStats.flagStats().passCount(FlagStatType.DUPLICATE));
+        assertEquals(0, combinedStats.flagStats().passCount(FlagStatType.PRIMARY_DUPLICATE));
+        assertEquals(0, combinedStats.flagStats().passCount(FlagStatType.SUPPLEMENTARY));
+        assertEquals(5, combinedStats.coverageMetrics().FilterTypeCounts[FilterType.UNFILTERED.ordinal()]);
+        assertEquals(0, combinedStats.coverageMetrics().FilterTypeCounts[FilterType.DUPLICATE.ordinal()]);
+        assertEquals(0, combinedStats.coverageMetrics().FilterTypeCounts[FilterType.LOW_BASE_QUAL.ordinal()]);
+    }
+
+    @Test
+    public void testPartialOverlappingReadWithPreviousRegion()
+    {
+        CombinedStats combinedStatsWithoutPreviousRegion = new CombinedStats(mConfig.MaxCoverage);
+        BamReader bamReaderWithoutPreviousRegion = new BamReader(
+                new ChrBaseRegion(CHR_1, 25, 50),
+                mConfig,
+                null,
+                null,
+                combinedStatsWithoutPreviousRegion,
+                new ChrBaseRegion(CHR_1, 1, 24)
+                );
+
+        SAMRecord read = getTestRead(false);
+
+        bamReaderWithoutPreviousRegion.processRead(read);
+
+        bamReaderWithoutPreviousRegion.postSliceProcess();
+        assertEquals(0, combinedStatsWithoutPreviousRegion.readCounts().TotalReads);
+        assertEquals(0, combinedStatsWithoutPreviousRegion.readCounts().Duplicates);
+        assertEquals(0, combinedStatsWithoutPreviousRegion.readCounts().DualStrand);
+        assertEquals(0, combinedStatsWithoutPreviousRegion.flagStats().passCount(FlagStatType.PRIMARY));
+        assertEquals(0, combinedStatsWithoutPreviousRegion.flagStats().passCount(FlagStatType.DUPLICATE));
+        assertEquals(0, combinedStatsWithoutPreviousRegion.flagStats().passCount(FlagStatType.PRIMARY_DUPLICATE));
+        assertEquals(0, combinedStatsWithoutPreviousRegion.flagStats().passCount(FlagStatType.SUPPLEMENTARY));
+        assertEquals(0, combinedStatsWithoutPreviousRegion.coverageMetrics().FilterTypeCounts[FilterType.UNFILTERED.ordinal()]);
+        assertEquals(0, combinedStatsWithoutPreviousRegion.coverageMetrics().FilterTypeCounts[FilterType.DUPLICATE.ordinal()]);
+        assertEquals(0, combinedStatsWithoutPreviousRegion.coverageMetrics().FilterTypeCounts[FilterType.LOW_BASE_QUAL.ordinal()]);
     }
 
     @NotNull

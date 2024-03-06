@@ -20,6 +20,8 @@ import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -43,13 +45,16 @@ public class BamReader
 
     private final PerformanceCounter mPerfCounter;
     private final boolean mLogReadIds;
+    @Nullable
+    private final ChrBaseRegion mPreviousRegion;
 
     public BamReader(
             final ChrBaseRegion region, final MetricsConfig config, final SamReader samReader, final BamSlicer bamSlicer,
-            final CombinedStats combinedStats)
+            final CombinedStats combinedStats, @Nullable final ChrBaseRegion previousRegion)
     {
         mConfig = config;
         mRegion = region;
+        mPreviousRegion = previousRegion;
         mCombinedStats = combinedStats;
 
         mSamReader = samReader;
@@ -106,9 +111,7 @@ public class BamReader
 
     private void processSamRecord(final SAMRecord read)
     {
-        int readStart = read.getAlignmentStart();
-
-        if(!mRegion.containsPosition(readStart))
+        if(!shouldHandleRead(read))
             return;
 
         if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName()))
@@ -121,6 +124,15 @@ public class BamReader
         processReadForReadCounts(read);
         processReadForTargetRegions(read);
         processReadForBaseCoverage(read);
+    }
+
+    private boolean shouldHandleRead(final SAMRecord read)
+    {
+        if(mRegion.containsPosition(read.getAlignmentStart()))
+            return true;
+
+        boolean inPreviousRegion = mPreviousRegion != null && mPreviousRegion.containsPosition(read.getAlignmentStart());
+        return !inPreviousRegion && mRegion.overlaps(read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd());
     }
 
     private void processReadForFlagstats(final SAMRecord read)
