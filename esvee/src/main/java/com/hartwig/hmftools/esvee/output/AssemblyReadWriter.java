@@ -47,10 +47,12 @@ public class AssemblyReadWriter
 
             sj.add("ReadId");
             sj.add("SupportType");
+            sj.add("IsRef");
             sj.add("Chromosome");
             sj.add("PosStart");
             sj.add("PosEnd");
             sj.add("Cigar");
+            sj.add("OrigCigar");
             sj.add("InsertSize");
             sj.add("MateChr");
             sj.add("MatePosStart");
@@ -100,10 +102,12 @@ public class AssemblyReadWriter
 
                 sj.add(read.getName());
                 sj.add(support.type().toString());
+                sj.add(String.valueOf(read.isReference()));
                 sj.add(read.chromosome());
                 sj.add(String.valueOf(read.alignmentStart()));
                 sj.add(String.valueOf(read.alignmentEnd()));
                 sj.add(read.cigarString());
+                sj.add(read.originalCigarString());
                 sj.add(String.valueOf(read.insertSize()));
 
                 sj.add(read.mateChromosome());

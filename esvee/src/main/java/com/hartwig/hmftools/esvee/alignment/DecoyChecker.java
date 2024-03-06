@@ -65,6 +65,10 @@ public class DecoyChecker
             return false;
 
         BwaMemAlignment topAlignment = alignmentResults.get(0);
+
+        if(topAlignment.getAlignerScore() == 0 || topAlignment.getCigar().isEmpty())
+            return false;
+
         BwaMemAlignment nextAlignment = alignmentResults.size() > 1 ? alignmentResults.get(1) : null;
 
         Cigar cigar = CigarUtils.cigarFromStr(topAlignment.getCigar());

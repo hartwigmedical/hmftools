@@ -117,7 +117,7 @@ public class PhaseSetBuilder
 
                 boolean isLocalLink = isLocalAssemblyCandidate(assembly1, assembly2);
 
-                if(sharedCount > 1)
+                if(sharedCount > 1 || isLocalLink)
                     assemblySupportPairs.add(new SharedAssemblySupport(assembly1, assembly2, sharedCount, isLocalLink));
             }
         }

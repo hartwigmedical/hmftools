@@ -48,7 +48,7 @@ public class JunctionAssembler
 
         for(Read read : rawReads)
         {
-            if(!ReadFilters.recordSoftClipsNearJunction(read, mJunction))
+            if(!ReadFilters.recordSoftClipsAndCrossesJunction(read, mJunction))
             {
                 mNonJunctionReads.add(read);
                 continue;
@@ -120,7 +120,7 @@ public class JunctionAssembler
             }
             else
             {
-                if(!ReadFilters.recordSoftClipsNearJunction(read, mJunction))
+                if(!ReadFilters.recordSoftClipsAndCrossesJunction(read, mJunction))
                 {
                     mNonJunctionReads.add(read);
                     continue;

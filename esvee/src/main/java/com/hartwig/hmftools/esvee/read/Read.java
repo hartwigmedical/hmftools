@@ -36,6 +36,7 @@ public class Read
     private final SAMRecord mRecord;
 
     // cached state and adjusted properties of the read
+    private final String mOrigCigarString;
     private String mCigarString;
     private List<CigarElement> mCigarElements;
 
@@ -64,8 +65,9 @@ public class Read
     {
         mRecord = record;
 
-        mCigarString = record.getCigarString();
-        mCigarElements = cigarElementsFromStr(mCigarString);
+        mOrigCigarString = record.getCigarString();
+        mCigarString = null;
+        mCigarElements = cigarElementsFromStr(mOrigCigarString);
 
         setBoundaries(mRecord.getAlignmentStart());
         mNumberOfEvents = null;
@@ -132,7 +134,8 @@ public class Read
     public String chromosome() { return mRecord.getReferenceName(); }
 
     public List<CigarElement> cigarElements() { return mCigarElements; }
-    public String cigarString() { return mCigarString; }
+    public String cigarString() { return mCigarString != null ? mCigarString : mOrigCigarString; }
+    public String originalCigarString() { return mOrigCigarString; }
     private void updateCigarString() { mCigarString = cigarStringFromElements(mCigarElements); }
 
     @Deprecated
@@ -331,7 +334,7 @@ public class Read
     public String toString()
     {
         return format("id(%s) coords(%s:%d-%d) cigar(%s) mate(%s:%d) flags(%d)",
-                getName(), chromosome(), mAlignmentStart, mAlignmentEnd, mCigarString,
+                getName(), chromosome(), mAlignmentStart, mAlignmentEnd, cigarString(),
                 mateChromosome(), mateAlignmentStart(), mRecord.getFlags());
     }
 
