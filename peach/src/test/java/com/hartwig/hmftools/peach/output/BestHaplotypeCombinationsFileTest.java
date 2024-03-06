@@ -42,7 +42,7 @@ public class BestHaplotypeCombinationsFileTest
         Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = createTestFakeGeneToHaplotypeAnalysis();
         List<String> outputLines = BestHaplotypeCombinationsFile.toLines(geneToHaplotypeAnalysis, null, null);
         List<String> expectedLines =
-                List.of(EXPECTED_HEADER, "FAKE1\t*1\t2\t\t\t", "FAKE2\tUNRESOLVED\t2\t\t\t", "FAKE3\t*3\t1\t\t\t", "FAKE3\t*4\t1\t\t\t");
+                List.of(EXPECTED_HEADER, "FAKE1\t*1\t2\t\t\t", "FAKE2\tUnresolved Haplotype\t2\t\t\t", "FAKE3\t*3\t1\t\t\t", "FAKE3\t*4\t1\t\t\t");
         assertEquals(expectedLines, outputLines);
     }
 
@@ -55,7 +55,7 @@ public class BestHaplotypeCombinationsFileTest
         Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = createTestFakeGeneToHaplotypeAnalysis();
         List<String> outputLines = BestHaplotypeCombinationsFile.toLines(geneToHaplotypeAnalysis, drugInfoStore, haplotypeFunctionStore);
         List<String> expectedLines =
-                List.of(EXPECTED_HEADER, "FAKE1\t*1\t2\t\t\t", "FAKE2\tUNRESOLVED\t2\t\t\t", "FAKE3\t*3\t1\t\t\t", "FAKE3\t*4\t1\t\t\t");
+                List.of(EXPECTED_HEADER, "FAKE1\t*1\t2\t\t\t", "FAKE2\tUnresolved Haplotype\t2\t\t\t", "FAKE3\t*3\t1\t\t\t", "FAKE3\t*4\t1\t\t\t");
         assertEquals(expectedLines, outputLines);
     }
 
@@ -90,7 +90,7 @@ public class BestHaplotypeCombinationsFileTest
                 EXPECTED_HEADER,
                 "DPYD\t*2A\t2\tNo Function\t5-Fluorouracil;Capecitabine;Tegafur\thttps://www.pharmgkb.org/guidelineAnnotation/PA166104939;https://www.pharmgkb.org/guidelineAnnotation/PA166104963;https://www.pharmgkb.org/guidelineAnnotation/PA166104944",
                 "FAKE1\t*1\t2\t\t\t",
-                "FAKE2\tUNRESOLVED\t2\t\t\t",
+                "FAKE2\tUnresolved Haplotype\t2\t\t\t",
                 "FAKE3\t*3\t1\t\t\t",
                 "FAKE3\t*4\t1\t\t\t",
                 "UGT1A1\t*1\t1\tNormal Function\tIrinotecan\thttps://www.pharmgkb.org/guidelineAnnotation/PA166104951",

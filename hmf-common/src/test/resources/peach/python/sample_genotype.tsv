@@ -1,0 +1,4 @@
+gene	haplotype	function	linked_drugs	url_prescription_info	panel_version	repo_version	haplotype_only	zygosity_only
+GENE	*1_HET	Reduced Function	Capecitabine;otherDrug	link;otherLink	panel	pilot	*1	HET
+GENE2	*3_HOM	Normal Function	Capecitabine	link	panel	pilot	*3	HOM
+GENE3	Unresolved Haplotype	Unknown Function	Capecitabine	link	panel	pilot	Unresolved Haplotype	N/A

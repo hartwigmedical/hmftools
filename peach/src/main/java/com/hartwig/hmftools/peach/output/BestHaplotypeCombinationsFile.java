@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.peach.output;
 
+import com.hartwig.hmftools.common.peach.ImmutablePeachGenotype;
+import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.peach.HaplotypeAnalysis;
 import com.hartwig.hmftools.peach.effect.DrugInfoStore;
 import com.hartwig.hmftools.peach.effect.HaplotypeFunctionStore;
@@ -19,12 +21,12 @@ import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import static com.hartwig.hmftools.common.peach.PeachUtil.UNKNOWN_ALLELE_STRING;
 import static com.hartwig.hmftools.peach.PeachUtils.GERMLINE_TOTAL_COPY_NUMBER;
 import static com.hartwig.hmftools.peach.PeachUtils.TSV_DELIMITER;
 
 public class BestHaplotypeCombinationsFile
 {
-    private static final String UNKNOWN_ALLELE_STRING = "UNRESOLVED";
     private static final String DRUG_SEPARATOR = ";";
 
     public static void write(@NotNull String filePath, @NotNull Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis,
@@ -37,14 +39,16 @@ public class BestHaplotypeCombinationsFile
     public static List<String> toLines(@NotNull Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis,
             @Nullable DrugInfoStore drugInfoStore, @Nullable HaplotypeFunctionStore haplotypeFunctionStore)
     {
-        List<String> lines = new ArrayList<>();
-        lines.add(header());
-        geneToHaplotypeAnalysis.entrySet()
+        List<PeachGenotype> genotypes = geneToHaplotypeAnalysis.entrySet()
                 .stream()
                 .sorted(Map.Entry.comparingByKey())
-                .map(e -> toLines(e.getKey(), e.getValue(), drugInfoStore, haplotypeFunctionStore))
+                .map(e -> extractPeachGenotypesForGene(e.getKey(), e.getValue(), drugInfoStore, haplotypeFunctionStore))
                 .flatMap(Collection::stream)
-                .forEach(lines::add);
+                .collect(Collectors.toList());
+
+        List<String> lines = new ArrayList<>();
+        lines.add(header());
+        lines.addAll(toLines(genotypes));
         return lines;
     }
 
@@ -61,8 +65,14 @@ public class BestHaplotypeCombinationsFile
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull String gene, @NotNull HaplotypeAnalysis analysis, @Nullable DrugInfoStore drugInfoStore,
-            @Nullable HaplotypeFunctionStore haplotypeFunctionStore)
+    private static List<String> toLines(@NotNull List<PeachGenotype> genotypes)
+    {
+        return genotypes.stream().map(BestHaplotypeCombinationsFile::toLine).collect(Collectors.toList());
+    }
+
+    @NotNull
+    private static List<PeachGenotype> extractPeachGenotypesForGene(@NotNull String gene, @NotNull HaplotypeAnalysis analysis,
+            @Nullable DrugInfoStore drugInfoStore, @Nullable HaplotypeFunctionStore haplotypeFunctionStore)
     {
         if(analysis.hasBestHaplotypeCombination())
         {
@@ -71,29 +81,45 @@ public class BestHaplotypeCombinationsFile
                     .entrySet()
                     .stream()
                     .sorted(Map.Entry.comparingByKey())
-                    .map(e -> toLine(gene, e.getKey(), e.getValue(), drugInfoStore, haplotypeFunctionStore))
+                    .map(e -> convertToPeachGenotype(gene, e.getKey(), e.getValue(), drugInfoStore, haplotypeFunctionStore))
                     .collect(Collectors.toList());
         }
         else
         {
-            return List.of(toLine(gene, UNKNOWN_ALLELE_STRING, GERMLINE_TOTAL_COPY_NUMBER, drugInfoStore, haplotypeFunctionStore));
+            return List.of(convertToPeachGenotype(gene, UNKNOWN_ALLELE_STRING, GERMLINE_TOTAL_COPY_NUMBER, drugInfoStore, haplotypeFunctionStore));
         }
     }
 
     @NotNull
-    private static String toLine(@NotNull String gene, @NotNull String haplotypeName, int count, @Nullable DrugInfoStore drugInfoStore,
-            @Nullable HaplotypeFunctionStore haplotypeFunctionStore)
+    private static String toLine(PeachGenotype genotype)
+    {
+        return new StringJoiner(TSV_DELIMITER).add(genotype.gene())
+                .add(genotype.allele())
+                .add(Integer.toString(genotype.alleleCount()))
+                .add(genotype.function())
+                .add(genotype.linkedDrugs())
+                .add(genotype.urlPrescriptionInfo())
+                .toString();
+    }
+
+    @NotNull
+    private static PeachGenotype convertToPeachGenotype(@NotNull String gene, @NotNull String haplotypeName, int count,
+            @Nullable DrugInfoStore drugInfoStore, @Nullable HaplotypeFunctionStore haplotypeFunctionStore)
     {
         String printableHaplotypeFunction = getPrintableHaplotypeFunction(gene, haplotypeName, haplotypeFunctionStore);
         String printableDrugNamesString = getPrintableDrugNamesString(gene, drugInfoStore);
         String printablePresciptionUrlsString = getPrintablePresciptionUrlsString(gene, drugInfoStore);
-        return new StringJoiner(TSV_DELIMITER).add(gene)
-                .add(haplotypeName)
-                .add(Integer.toString(count))
-                .add(printableHaplotypeFunction)
-                .add(printableDrugNamesString)
-                .add(printablePresciptionUrlsString)
-                .toString();
+
+        return ImmutablePeachGenotype.builder()
+                .gene(gene)
+                .allele(haplotypeName)
+                .alleleCount(count)
+                .function(printableHaplotypeFunction)
+                .linkedDrugs(printableDrugNamesString)
+                .urlPrescriptionInfo(printablePresciptionUrlsString)
+                .panelVersion(null)
+                .repoVersion(null)
+                .build();
     }
 
     @NotNull
