@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.cup.feature.FeaturePrep;
+import com.hartwig.hmftools.cup.rna.AltSpliceJunctionPrep;
 import com.hartwig.hmftools.cup.rna.GeneExpressionPrep;
 import com.hartwig.hmftools.cup.somatics.SomaticVariantPrep;
 import com.hartwig.hmftools.cup.svs.StructuralVariantPrep;
@@ -23,6 +25,7 @@ public class CategoryPrepTest
             .categories(CategoryType.getAllCategories())
             .refGenomeVersion("V37")
             .sampleDataDir(TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*")
+            .altSpliceJunctionSites(TestPrepConfigBuilder.TEST_ALT_SPLICE_JUNCTION_SITES)
             .outputDir("/tmp/")
             .build();
 
@@ -92,5 +95,17 @@ public class CategoryPrepTest
         assertEquals(2, dataItems.size());
         assertEquals(dataItems.get(0), new DataItem(DataSource.RNA, ItemType.EXPRESSION, "BRAF", "3.434e+00"));
         assertEquals(dataItems.get(1), new DataItem(DataSource.RNA, ItemType.EXPRESSION, "TP53", "3.870e+00"));
+    }
+
+    @Test
+    public void canExtractAltSjFeatures()
+    {
+        AltSpliceJunctionPrep prep = new AltSpliceJunctionPrep(prepConfig);
+        List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
+
+        assertEquals(3, dataItems.size());
+        assertEquals(dataItems.get(0), new DataItem(DataSource.RNA, ItemType.ALT_SJ, "7;140426316;140439612", "2"));
+        assertEquals(dataItems.get(1), new DataItem(DataSource.RNA, ItemType.ALT_SJ, "10;89623836;89623905", "1"));
+        assertEquals(dataItems.get(2), new DataItem(DataSource.RNA, ItemType.ALT_SJ, "13;32901736;32901958", "1"));
     }
 }
