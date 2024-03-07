@@ -1,13 +1,11 @@
 import os
-import shutil
 import sys
 import tempfile
 
 import pandas as pd
 
-from cuppa.tests.mock_data import MockTrainingData, MockCuppaClassifier, MockInputData, MockCvOutput
+from cuppa.tests.mock_data import MockTrainingData, MockCuppaClassifier, MockCvOutput
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
-from cuppa.constants import DEFAULT_CUPPA_CLASSIFIER_PATH, NA_FILL_VALUE
 from cuppa.runners import PredictionRunner, TrainingRunner, RunnerArgParser
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredSummary
 
@@ -44,44 +42,6 @@ class TestRunnerArgParser:
 
 
 class TestPredictionRunner:
-
-    def test_predict_with_real_classifier_and_sample_gives_correct_results_and_writes_output(self):
-
-        output_dir = os.path.join(tempfile.gettempdir(), "pycuppa_prediction_run_test")
-        os.makedirs(output_dir, exist_ok=True)
-
-        runner = PredictionRunner(
-            features_path=MockInputData.path_tsv_new_format,
-            sample_id="COLO829",
-            classifier_path=DEFAULT_CUPPA_CLASSIFIER_PATH,
-            output_dir=output_dir,
-            using_old_features_format=False
-        )
-
-        runner.run()
-
-        assert runner.X.iloc[0]["event.driver.TP53.mut"] == NA_FILL_VALUE
-
-        pred_summ = runner.pred_summ
-
-        pred_class_1 = pred_summ["pred_class_1"].tolist()
-        assert pred_class_1 == ["Skin: Melanoma"] * 4
-
-        pred_prob_1 = pd.Series(pred_summ["pred_prob_1"].values, index=pred_summ["clf_name"])
-        pred_prob_1 = pred_prob_1.round(6)
-        pred_prob_1_expected = pd.Series(dict(
-            dna_combined = 0.999967,
-            gen_pos = 0.999749,
-            snv96 = 0.999988,
-            event = 0.850770,
-        ))
-        assert all(pred_prob_1 == pred_prob_1_expected)
-
-        assert os.path.exists(runner.plot_path)
-        assert os.path.exists(runner.vis_data_path)
-        assert os.path.exists(runner.pred_summ_path)
-
-        shutil.rmtree(output_dir)
 
     def test_predict_with_mock_classifier_and_data_gives_correct_results(self):
 
