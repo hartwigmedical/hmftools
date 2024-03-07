@@ -94,6 +94,7 @@ public class TestPrepConfigBuilder
         PurpleDir = sampleDataDir;
         LinxDir = sampleDataDir;
         VirusDir = sampleDataDir;
+        IsofoxDir = sampleDataDir;
         return this;
     }
 
