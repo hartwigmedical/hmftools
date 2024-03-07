@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.cup.feature.FeaturePrep;
+import com.hartwig.hmftools.cup.rna.GeneExpressionPrep;
 import com.hartwig.hmftools.cup.somatics.SomaticVariantPrep;
 import com.hartwig.hmftools.cup.svs.StructuralVariantPrep;
 import com.hartwig.hmftools.cup.traits.SampleTraitPrep;
@@ -19,7 +20,7 @@ public class CategoryPrepTest
 
     public final PrepConfig prepConfig = new TestPrepConfigBuilder()
             .sampleIds(List.of(selectedSampleId))
-            .categories(CategoryType.getDnaCategories())
+            .categories(CategoryType.getAllCategories())
             .refGenomeVersion("V37")
             .sampleDataDir(TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*")
             .outputDir("/tmp/")
@@ -80,5 +81,16 @@ public class CategoryPrepTest
 
         assertEquals(9, dataItems.size());
         assertEquals(dataItems.get(1), new DataItem(DataSource.DNA, ItemType.DRIVER, "BRAF.mut", "1.0"));
+    }
+
+    @Test
+    public void canExtractGeneExpFeatures()
+    {
+        GeneExpressionPrep prep = new GeneExpressionPrep(prepConfig);
+        List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
+
+        assertEquals(2, dataItems.size());
+        assertEquals(dataItems.get(0), new DataItem(DataSource.RNA, ItemType.EXPRESSION, "BRAF", "3.434e+00"));
+        assertEquals(dataItems.get(1), new DataItem(DataSource.RNA, ItemType.EXPRESSION, "TP53", "3.870e+00"));
     }
 }
