@@ -538,7 +538,7 @@ modifiedMapQuality = MAPQ - fixedPenalty (-15) - improperPairPenalty - distanceF
 </pre>
 and then multiply final variant QUAL by a mapping quality ratio:
 <pre>
-MQRatio = min(1, (AMQ[AD] + MQ_RATIO_SMOOTHING (3)) / (AMQ[DP] + MQ_RATIO_SMOOTHING)) ^ MQ_RATIO_FACTOR (2.5)
+MQRatio = min(1, (AMQ[1] + MQ_RATIO_SMOOTHING (3)) / (AMQ[0] + MQ_RATIO_SMOOTHING)) ^ MQ_RATIO_FACTOR (2.5)
 </pre>
 We also recommend setting `hotspot_min_tumor_vaf` to 0.015 and `panel_min_tumor_qual` to 150 for targeted sequencing.
 
