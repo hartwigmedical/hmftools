@@ -32,4 +32,9 @@ public enum CategoryType
     {
         return Arrays.asList(GENE_EXP, ALT_SJ);
     }
+
+    public static List<CategoryType> getAllCategories()
+    {
+        return Arrays.asList(SNV, SV, SAMPLE_TRAIT, FEATURE, GENE_EXP, ALT_SJ);
+    }
 }
