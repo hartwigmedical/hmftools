@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import sys
 from functools import cached_property
 from pprint import pformat
 from typing import Any, Optional
@@ -13,7 +12,7 @@ from sklearn.model_selection import StratifiedKFold
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredSummary
 from cuppa.compose.pipeline import PipelineCrossValidator
-from cuppa.constants import DEFAULT_FUSION_OVERRIDES_PATH, DEFAULT_CUPPA_CLASSIFIER_PATH
+from cuppa.constants import DEFAULT_FUSION_OVERRIDES_PATH
 from cuppa.logger import LoggerMixin, reset_logging_basic_config
 from cuppa.performance.confusion_matrix import ConfusionMatrix
 from cuppa.sample_data.cuppa_features import CuppaFeaturesPaths, FeatureLoaderOld, FeatureLoaderNew, CuppaFeatures
@@ -23,7 +22,6 @@ from cuppa.visualization.visualization import CuppaVisData, CuppaVisPlotter
 
 
 class DEFAULT_RUNNER_ARGS:
-    classifier_path: str = DEFAULT_CUPPA_CLASSIFIER_PATH
 
     output_prefix: str = None
     compress_tsv_files: bool = False
@@ -84,7 +82,6 @@ class RunnerArgParser:
     def add_cv_predictions_path(self) -> None:
         self.parser.add_argument(
             "--cv_predictions_path",
-            type=str, required=True,
             help="Path to a CuppaPrediction tsv file containing the cross-validation predictions."
                  "If provided, sample ids found in this file will have their predictions returned from this file"
                  "instead of being computed"
@@ -486,11 +483,11 @@ class TrainingRunner(LoggerMixin):
 class PredictionRunner(LoggerMixin):
     def __init__(
         self,
+        classifier_path: str,
         features_path: str,
         output_dir: str,
         sample_id: Optional[str] = None,
         compress_tsv_files: bool = False,
-        classifier_path: Optional[str] = None,
         using_old_features_format: bool = DEFAULT_RUNNER_ARGS.using_old_features_format,
         genome_version: int = DEFAULT_RUNNER_ARGS.genome_version,
         excl_chroms: str | list[str] = DEFAULT_RUNNER_ARGS.excl_chroms,
@@ -504,7 +501,7 @@ class PredictionRunner(LoggerMixin):
         self.output_dir = output_dir
         self.sample_id = sample_id
         self.compress_tsv_files = compress_tsv_files
-        self.classifier_path = DEFAULT_RUNNER_ARGS.classifier_path if classifier_path is None else classifier_path
+        self.classifier_path = classifier_path
 
         self.using_old_features_format = using_old_features_format
 
@@ -539,14 +536,6 @@ class PredictionRunner(LoggerMixin):
 
     @cached_property
     def cuppa_classifier(self) -> CuppaClassifier:
-
-        if self.classifier_path == DEFAULT_RUNNER_ARGS.classifier_path:
-            msg = "Loading default classifier from pycuppa resources: " + str(self.classifier_path)
-        else:
-            msg = "Loading classifier from: " + str(self.classifier_path)
-
-        self.logger.info(msg)
-
         return CuppaClassifier.from_file(self.classifier_path)
 
     def get_X(self) -> None:
