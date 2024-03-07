@@ -18,6 +18,7 @@ class TestRunnerArgParser:
             "--features_path=/path/to/features/",
             "--output_dir=/path/to/output/",
             "--classifier_path=/path/to/cuppa_classifier.pickle.gz"
+            "--cv_predictions_path=/path/to/cv_predictions.tsv.gz"
         ]
 
         arg_parser = RunnerArgParser()
