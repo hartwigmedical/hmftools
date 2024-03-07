@@ -133,7 +133,7 @@ public class CoverageTest
         CombinedStats combinedStats = new CombinedStats(mConfig.MaxCoverage);
 
         BamReader bamReader = new BamReader(
-                new ChrBaseRegion(CHR_1, 1, 500), mConfig, null, null, combinedStats);
+                new ChrBaseRegion(CHR_1, 1, 500), mConfig, null, null, combinedStats, null);
 
         SAMRecord read1 = SamRecordTestUtils.createSamRecord(
                 mReadIdGen.nextId(), CHR_1, 20, TEST_READ_BASES, TEST_CIGAR, CHR_1, 25,

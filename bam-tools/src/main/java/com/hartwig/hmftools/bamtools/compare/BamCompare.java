@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.buildPartitionQueueFromRegions;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
@@ -11,7 +12,6 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.PartitionTask;
@@ -58,13 +58,7 @@ public class BamCompare
 
         BT_LOGGER.info("splitting {} regions across {} threads", allRegions.size(), mConfig.Threads);
 
-        Queue<PartitionTask> partitions = new ConcurrentLinkedQueue<>();
-
-        int taskId = 0;
-        for(int i = 0; i < allRegions.size(); ++i)
-        {
-            partitions.add(new PartitionTask(allRegions.get(i), taskId++));
-        }
+        Queue<PartitionTask> partitions = buildPartitionQueueFromRegions(allRegions);
 
         List<PartitionThread> partitionTasks = Lists.newArrayList();
         List<Thread> workers = new ArrayList<>();

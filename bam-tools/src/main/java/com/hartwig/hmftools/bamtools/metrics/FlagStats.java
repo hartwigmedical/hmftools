@@ -135,10 +135,11 @@ public class FlagStats
     {
         final boolean passesQC = !read.getReadFailsVendorQualityCheckFlag();
         final boolean isSupp = read.getSupplementaryAlignmentFlag();
+        final boolean isSecondary = read.isSecondaryAlignment();
 
         decrement(FlagStatType.DUPLICATE, passesQC);
 
-        if(!isSupp)
+        if(!isSupp && !isSecondary)
         {
             decrement(FlagStatType.PRIMARY_DUPLICATE, passesQC);
         }

@@ -49,7 +49,7 @@ public class PartitionThread extends Thread
             {
                 PartitionTask partition = mPartitions.remove();
 
-                BamReader slicer = new BamReader(partition.Region, mConfig, mSamReader, mBamSlicer, mCombinedStats);
+                BamReader slicer = new BamReader(partition.Region, mConfig, mSamReader, mBamSlicer, mCombinedStats, partition.PreviousRegion);
 
                 if(partition.TaskId > 0 && (partition.TaskId % 10) == 0)
                 {

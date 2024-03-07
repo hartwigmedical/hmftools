@@ -2,6 +2,7 @@ package com.hartwig.hmftools.bamtools.metrics;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
@@ -19,7 +20,7 @@ public class BaseCoverage
 {
     private final MetricsConfig mConfig;
     private final int mRegionSize;
-    private int mRegionStart;
+    private final int mRegionStart;
     private final List<ChrBaseRegion> mUnmappableRegions;
 
     private final int[] mBaseDepth;
@@ -40,15 +41,23 @@ public class BaseCoverage
         // some filters exclude all matched bases
         int alignedBases = read.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
 
+        boolean isConsensus = read.hasAttribute(CONSENSUS_READ_ATTRIBUTE);
         // the order in which the filters are applied matters and matches Picard CollectWgsMetrics
 
         if(read.getMappingQuality() < mConfig.MapQualityThreshold)
         {
-            mFilterTypeCounts[FilterType.LOW_MAP_QUAL.ordinal()] += alignedBases;
+            if(!isConsensus)
+            {
+                mFilterTypeCounts[FilterType.LOW_MAP_QUAL.ordinal()] += alignedBases;
+            }
             return;
         }
 
-        if(read.getDuplicateReadFlag())
+        if(isConsensus)
+        {
+            mFilterTypeCounts[FilterType.DUPLICATE.ordinal()] -= alignedBases;
+        }
+        else if(read.getDuplicateReadFlag())
         {
             mFilterTypeCounts[FilterType.DUPLICATE.ordinal()] += alignedBases;
             return;

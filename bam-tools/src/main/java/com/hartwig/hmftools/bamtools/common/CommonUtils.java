@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.hartwig.hmftools.bamtools.metrics.MetricsConfig;
 import com.hartwig.hmftools.common.genome.bed.BedFileReader;
@@ -95,5 +97,19 @@ public final class CommonUtils
         }
 
         return true;
+    }
+
+    public static Queue<PartitionTask> buildPartitionQueueFromRegions(List<ChrBaseRegion> regions)
+    {
+        Queue<PartitionTask> partitionQueue = new ConcurrentLinkedQueue<>();
+        int taskId = 0;
+        for(int i = 0; i < regions.size(); ++i)
+        {
+            ChrBaseRegion region = regions.get(i);
+            ChrBaseRegion previousRegion =
+                    i != 0 && region.Chromosome.equals(regions.get(i - 1).Chromosome) ? regions.get(i - 1) : null;
+            partitionQueue.add(new PartitionTask(region, previousRegion, taskId++));
+        }
+        return partitionQueue;
     }
 }
