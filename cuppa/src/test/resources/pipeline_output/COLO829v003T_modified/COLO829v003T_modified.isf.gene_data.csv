@@ -1,0 +1,2 @@
+GeneId,GeneName,Chromosome,GeneLength,IntronicLength,TranscriptCount,GeneSetId,SplicedFragments,UnsplicedFragments,AdjTPM,RawTPM,FitResiduals,LowMapQualFrags
+ENSG00000171862,PTEN,10,108817,98779,5,10_681,1086,10724,6.746e+01,1.856e+01,1219.7,254.8
