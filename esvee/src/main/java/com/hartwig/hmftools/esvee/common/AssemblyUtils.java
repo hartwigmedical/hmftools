@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
+import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAtJunction;
 
 import java.util.List;
 
@@ -16,6 +17,9 @@ public final class AssemblyUtils
     public static JunctionAssembly buildFromJunctionReads(final Junction junction, final List<Read> reads, boolean checkMismatches)
     {
         JunctionAssembly junctionSequence = buildFromJunction(junction, reads);
+
+        if(junctionSequence == null)
+            return null;
 
         for(Read read : reads)
         {
@@ -59,14 +63,21 @@ public final class AssemblyUtils
                 minAlignedPosition = min(minAlignedPosition, read.unclippedStart());
             }
 
-            int junctionBaseQualTotal = readQualFromJunction(read, junction);
-
-            if(junctionBaseQualTotal > maxJunctionBaseQualTotal)
+            // require the search for highest quality reads to match the junction
+            if(recordSoftClipsAtJunction(read, junction))
             {
-                maxJunctionBaseQualTotal = junctionBaseQualTotal;
-                maxJunctionBaseQualRead = read;
+                int junctionBaseQualTotal = readQualFromJunction(read, junction);
+
+                if(junctionBaseQualTotal > maxJunctionBaseQualTotal)
+                {
+                    maxJunctionBaseQualTotal = junctionBaseQualTotal;
+                    maxJunctionBaseQualRead = read;
+                }
             }
         }
+
+        if(maxJunctionBaseQualRead == null)
+            return null;
 
         return new JunctionAssembly(junction, maxJunctionBaseQualRead, maxDistanceFromJunction, minAlignedPosition,  maxAlignedPosition);
     }

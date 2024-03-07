@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragm
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.assembliesShareReads;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -366,7 +365,7 @@ public class PhaseSetBuilder
                         phaseSet.addAssemblyEnd(newLink);
 
                     findSplit = !findSplit;
-                    linkingAssembly = newLink.other(linkingAssembly);
+                    linkingAssembly = newLink.otherAssembly(linkingAssembly);
                 }
             }
         }

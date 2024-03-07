@@ -50,4 +50,17 @@ public final class ReadFilters
             return read.isLeftClipped() && read.unclippedStart() < junction.Position;
         }
     }
+
+    public static boolean recordSoftClipsAtJunction(final Read read, final Junction junction)
+    {
+        if(junction.isForward())
+        {
+            return read.isRightClipped() && read.alignmentEnd() == junction.Position;
+        }
+        else
+        {
+            return read.isLeftClipped() && read.alignmentStart() == junction.Position;
+        }
+    }
+
 }

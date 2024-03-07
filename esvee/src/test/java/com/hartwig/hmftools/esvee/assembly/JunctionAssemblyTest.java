@@ -109,8 +109,8 @@ public class JunctionAssemblyTest
         // read 1 defines the first sequence
         Read read1 = createSamRecord("READ_01", 20, "AACCGGGG" + refBases.substring(20, 32), "8S12M");
 
-        // read 2 supports the first sequence but soft-clips one base earlier
-        Read read2 = createSamRecord("READ_02", 21, "ACCGGGGT" + refBases.substring(21, 40), "8S19M");
+        // read 2 supports the first sequence
+        Read read2 = createSamRecord("READ_02", 20, "ACCGGGGT" + refBases.substring(21, 40), "7S20M");
 
         // read 3 defines the second sequence
         Read read3 = createSamRecord("READ_03", 20, "TTTTCCTTGG" + refBases.substring(20, 35), "10S15M");
@@ -210,12 +210,9 @@ public class JunctionAssemblyTest
         assembly4.bases()[++index] = getNextBase(assembly4.bases()[index]);
         assembly4.bases()[++index] = getNextBase(assembly4.bases()[index]);
 
-        // only shared read with the last
-        assembly5.removeSupportRead(sharedRead2);
-
         AssemblyDeduper.dedupJunctionAssemblies(assemblies);
 
-        assertEquals(3, assemblies.size());
-        assertEquals(2, assemblies.get(0).mergedAssemblyCount());
+        assertEquals(2, assemblies.size());
+        assertEquals(3, assemblies.get(0).mergedAssemblyCount());
     }
 }

@@ -57,7 +57,7 @@ public final class AssemblyLinker
         if(!refSideSoftClipMatchesJunction(upper, lower.junction().Position))
             return null;
 
-        return new AssemblyLink(lower, upper, LinkType.FACING, 0, "");
+        return new AssemblyLink(lower, upper, LinkType.FACING, 0, "", "");
     }
 
     private static boolean refSideSoftClipMatchesJunction(final JunctionAssembly assembly, int otherJunctionPosition)
@@ -77,6 +77,7 @@ public final class AssemblyLinker
         int secondJunctionOffset = secondSeq.junctionIndex() - secondIndexStart;
 
         String insertedBases = "";
+        String overlapBases = "";
         int firstJunctionIndexInSecond = -1;
         int impliedInsertedBaseLength = 0;
 
@@ -132,7 +133,7 @@ public final class AssemblyLinker
             }
         }
 
-        return new AssemblyLink(first, second, LinkType.SPLIT, firstJunctionIndexInSecond, insertedBases);
+        return new AssemblyLink(first, second, LinkType.SPLIT, firstJunctionIndexInSecond, insertedBases, overlapBases);
     }
 
     private static final int SUBSEQUENCE_LENGTH = 10;
@@ -154,7 +155,7 @@ public final class AssemblyLinker
             insertedBases = findInsertedBases(indelRead);
         }
 
-        return new AssemblyLink(assembly1, assembly2, INDEL, 0, insertedBases);
+        return new AssemblyLink(assembly1, assembly2, INDEL, 0, insertedBases, "");
     }
 
     public AssemblyLink tryAssemblyOverlap(final JunctionAssembly assembly1, final JunctionAssembly assembly2)

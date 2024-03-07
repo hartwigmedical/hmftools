@@ -32,12 +32,6 @@ public class AssemblyDeduper
             {
                 JunctionAssembly second = assemblies.get(nextIndex);
 
-                if(!haveOverlappingReads(first, second))
-                {
-                    ++nextIndex;
-                    continue;
-                }
-
                 if(!SequenceCompare.matchedAssemblySequences(first, second))
                 {
                     ++nextIndex;
@@ -93,14 +87,6 @@ public class AssemblyDeduper
                     ++newIndex;
                     continue;
                 }
-
-                /* no longer checked since proximate distances ought to ensure this
-                if(!haveOverlapDistance(assembly, newAssembly) || !haveOverlappingReads(assembly, newAssembly))
-                {
-                    ++newIndex;
-                    continue;
-                }
-                */
 
                 if(!SequenceCompare.matchedAssemblySequences(assembly, newAssembly))
                 {

@@ -22,8 +22,8 @@ public class EsveeApplication
     {
         long startTimeMs = System.currentTimeMillis();
 
-        SV_LOGGER.info("writing to output directory({})",
-                mConfig.OutputDir, mConfig.OutputId != null ? format(", output-id(%s)", mConfig.OutputId) : "");
+        SV_LOGGER.info("writing to output directory({}){}",
+                mConfig.OutputDir, mConfig.OutputId != null ? format(" outputId(%s)", mConfig.OutputId) : "");
 
         JunctionProcessor junctionProcessor = new JunctionProcessor(mConfig);
 

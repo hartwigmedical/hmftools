@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMAT
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.buildFromJunctionReads;
+import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAtJunction;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -27,11 +28,11 @@ import com.hartwig.hmftools.esvee.read.Read;
 
 public class AssemblyMismatchSplitter
 {
-    private final JunctionAssembly mSequence;
+    private final JunctionAssembly mAssembly;
 
-    public AssemblyMismatchSplitter(final JunctionAssembly sequence)
+    public AssemblyMismatchSplitter(final JunctionAssembly assembly)
     {
-        mSequence = sequence;
+        mAssembly = assembly;
     }
 
     public List<JunctionAssembly> splitOnMismatches(int minSequenceLength)
@@ -44,7 +45,7 @@ public class AssemblyMismatchSplitter
         List<Read> noMismatchReads = Lists.newArrayList();
         Set<Read> longMismatchReads = Sets.newHashSet();
 
-        for(AssemblySupport support : mSequence.support())
+        for(AssemblySupport support : mAssembly.support())
         {
             if(support.junctionMismatches() == 0)
             {
@@ -52,7 +53,7 @@ public class AssemblyMismatchSplitter
             }
             else
             {
-                if(support.readRangeLength() >= minSequenceLength)
+                if(support.readRangeLength() >= minSequenceLength && recordSoftClipsAtJunction(support.read(), mAssembly.junction()))
                     longMismatchReads.add(support.read());
             }
         }
@@ -65,9 +66,13 @@ public class AssemblyMismatchSplitter
         if(noMismatchReads.size() >= minReadSupport)
         {
             // add the 'initial' sequence from reads without mismatches
-            JunctionAssembly initialSequence = buildFromJunctionReads(mSequence.junction(), noMismatchReads, false);
-            processedReads.addAll(noMismatchReads);
-            finalSequences.add(initialSequence);
+            JunctionAssembly initialSequence = buildFromJunctionReads(mAssembly.junction(), noMismatchReads, false);
+
+            if(initialSequence != null)
+            {
+                processedReads.addAll(noMismatchReads);
+                finalSequences.add(initialSequence);
+            }
         }
 
         // and then add each unique mismatched sequence
@@ -81,15 +86,17 @@ public class AssemblyMismatchSplitter
 
             processedReads.addAll(candidateReads);
 
-            JunctionAssembly mismatchSequence = buildFromJunctionReads(mSequence.junction(), candidateReads, false);
-            finalSequences.add(mismatchSequence);
+            JunctionAssembly mismatchSequence = buildFromJunctionReads(mAssembly.junction(), candidateReads, false);
+
+            if(mismatchSequence != null)
+                finalSequences.add(mismatchSequence);
         }
 
         // remove any sequences which are contained by a longer sequence
         dedupByAssemblyContainsAnother(finalSequences);
 
         // test each read not already used to define the unique sequence against each final sequence
-        for(AssemblySupport support : mSequence.support())
+        for(AssemblySupport support : mAssembly.support())
         {
             if(processedReads.contains(support.read()))
                 continue;
@@ -118,7 +125,7 @@ public class AssemblyMismatchSplitter
         // find all mismatches by read
         Map<Read,SequenceMismatches> readSequenceMismatches = Maps.newHashMap();
 
-        for(Map.Entry<Integer, BaseMismatches> entry : mSequence.mismatches().indexedBaseMismatches().entrySet())
+        for(Map.Entry<Integer, BaseMismatches> entry : mAssembly.mismatches().indexedBaseMismatches().entrySet())
         {
             BaseMismatches baseMismatches = entry.getValue();
             int assemblyIndex = entry.getKey();

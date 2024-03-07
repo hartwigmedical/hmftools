@@ -116,6 +116,7 @@ public class AssemblyWriter
             sj.add("SvType");
             sj.add("SvLength");
             sj.add("InsertedBases");
+            sj.add("OverlapBases");
             sj.add("SecondaryLinks");
 
             sj.add("MergedAssemblies");
@@ -311,15 +312,16 @@ public class AssemblyWriter
                     sj.add(svLink.svType().toString());
                     sj.add(String.valueOf(svLink.length()));
                     sj.add(svLink.insertedBases());
+                    sj.add(svLink.overlapBases());
                 }
                 else
                 {
-                    sj.add("").add("0").add("");
+                    sj.add("").add("0").add("").add("");
                 }
             }
             else
             {
-                sj.add("-1").add("0").add("").add("").add("").add("0").add("");
+                sj.add("-1").add("0").add("").add("").add("").add("0").add("").add("");
             }
 
             List<AssemblyLink> secondarySplitLinks = phaseGroup != null ? phaseGroup.findSecondarySplitLinks(assembly) : Collections.emptyList();
@@ -416,7 +418,7 @@ public class AssemblyWriter
 
         for(AssemblyLink link : assemblyLinks)
         {
-            JunctionAssembly otherAssembly = link.other(assembly);
+            JunctionAssembly otherAssembly = link.otherAssembly(assembly);
             sj.add(format("%s=%s", link.type(), otherAssembly.junction().coords()));
         }
         return sj.toString();

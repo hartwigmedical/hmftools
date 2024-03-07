@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_S
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.buildFromJunctionReads;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.expandReferenceBases;
+import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAtJunction;
 
 import java.util.Collections;
 import java.util.List;
@@ -45,6 +46,7 @@ public class JunctionAssembler
             return processIndelJunction(rawReads);
 
         List<Read> junctionReads = Lists.newArrayList();
+        List<Read> preciseJunctionReads = Lists.newArrayList();
 
         for(Read read : rawReads)
         {
@@ -54,12 +56,15 @@ public class JunctionAssembler
                 continue;
             }
 
+            if(recordSoftClipsAtJunction(read, mJunction))
+                preciseJunctionReads.add(read);
+
             junctionReads.add(read);
         }
 
         // CHECK: is read realignment to the specific junction required?
 
-        if(junctionReads.size() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+        if(preciseJunctionReads.isEmpty() || junctionReads.size() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
             return List.of();
 
         List<JunctionAssembly> initialAssemblies = createInitialAssemblies(junctionReads);
@@ -84,7 +89,7 @@ public class JunctionAssembler
         JunctionAssembly junctionSequence = buildFromJunctionReads(mJunction, junctionReads, true);
 
         // CHECK: why keep these if less than the 32 soft-clip length, since will be dropped anyway
-        if(junctionSequence.baseLength() < PRIMARY_ASSEMBLY_MIN_LENGTH)
+        if(junctionSequence == null || junctionSequence.baseLength() < PRIMARY_ASSEMBLY_MIN_LENGTH)
             return Collections.emptyList();
 
         // no filtering of the initial sequence and instead rely on the sequence splitting to do this with all initial mismatches preserved

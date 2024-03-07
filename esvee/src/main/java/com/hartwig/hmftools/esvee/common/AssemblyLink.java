@@ -19,16 +19,18 @@ public class AssemblyLink
 
     private final int mFirstJunctionIndexInSecond; // the index in the second assembly of the first assembly's junction position/index
     private final String mInsertedBases;
+    private final String mOverlapBases;
 
     public AssemblyLink(
             final JunctionAssembly first, final JunctionAssembly second, final LinkType type,
-            int firstJunctionIndexInSecond, final String insertedBases)
+            int firstJunctionIndexInSecond, final String insertedBases, final String overlapBases)
     {
         mFirst = first;
         mSecond = second;
         mType = type;
         mFirstJunctionIndexInSecond = firstJunctionIndexInSecond;
         mInsertedBases = insertedBases;
+        mOverlapBases = overlapBases;
     }
 
     public LinkType type() { return mType; }
@@ -36,7 +38,10 @@ public class AssemblyLink
     public JunctionAssembly second() { return mSecond; }
     public int firstJunctionIndexInSecond() { return mFirstJunctionIndexInSecond; }
 
-    public JunctionAssembly other(final JunctionAssembly assembly) { return mFirst == assembly ? mSecond : mFirst; }
+    public JunctionAssembly otherAssembly(final JunctionAssembly assembly) { return mFirst == assembly ? mSecond : mFirst; }
+
+    public String insertedBases() { return mInsertedBases; }
+    public String overlapBases() { return mOverlapBases; }
 
     public StructuralVariantType svType()
     {
@@ -78,10 +83,8 @@ public class AssemblyLink
 
     public String toString()
     {
-        return format("%s: %s - %s len(%d) %s",
+        return format("%s: %s - %s len(%d) extras(overlap=%d insert=%d)",
                 mType, mFirst.junction().coords(), mSecond.junction().coords(), length(),
-                !mInsertedBases.isEmpty() ? format("insert(%d: %s)", mInsertedBases.length(), mInsertedBases) : "");
+                mOverlapBases.length(), mInsertedBases.length());
     }
-
-    public String insertedBases() { return mInsertedBases; }
 }

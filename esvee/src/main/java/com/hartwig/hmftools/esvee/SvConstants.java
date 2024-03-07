@@ -42,7 +42,7 @@ public final class SvConstants
     public static final int PRIMARY_ASSEMBLY_MERGE_MISMATCH = 3;
     public static final int PRIMARY_ASSEMBLY_MERGE_READ_OVERLAP = 2;
 
-    public static final int PROXIMATE_JUNCTION_DISTANCE = 10;
+    public static final int PROXIMATE_JUNCTION_DISTANCE = 50;
     public static final int PROXIMATE_JUNCTION_OVERLAP = 100;
 
     // filters
