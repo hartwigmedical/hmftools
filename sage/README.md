@@ -532,8 +532,14 @@ For targeted sequencing, the `high_depth_mode` flag should be provided. This all
 * Variants must have at least 3 supporting fragments with unique start and end coordinates, or get soft filtered with `minFragmentCoords`
 * INDEL variants in or near microsatellite repeats must meet a minimum VAF dependent upon the repeat context, or get soft filtered with `jitter`
 * SNV variants with VAF < 1% and inside a microsatellite repeat of length > 5 get soft filtered with `jitter`
-* `modifiedMapQuality` is calculated in a different way, using the ratio of average Ref and Alt raw MAPQ
-
+* Mapping quality is used in a different way. Specifically, we use a different fixed penalty for `modifiedMapQuality`:
+<pre>
+modifiedMapQuality = MAPQ - fixedPenalty (-15) - improperPairPenalty - distanceFromReferencePenalty - softClipPenalty 
+</pre>
+and then multiply final variant QUAL by a mapping quality ratio:
+<pre>
+MQRatio = min(1, (AMQ[AD] + MQ_RATIO_SMOOTHING (3)) / (AMQ[DP] + MQ_RATIO_SMOOTHING)) ^ MQ_RATIO_FACTOR (2.5)
+</pre>
 We also recommend setting `hotspot_min_tumor_vaf` to 0.015 and `panel_min_tumor_qual` to 150 for targeted sequencing.
 
 ## 6. Phasing
