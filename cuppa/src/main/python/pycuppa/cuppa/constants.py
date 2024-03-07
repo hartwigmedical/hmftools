@@ -51,7 +51,6 @@ CUPPA_PREDICTION_INDEX_NAMES = ["sample_id", "data_type", "clf_group", "clf_name
 ## Paths ================================
 RESOURCES_DIR = impresources.files("cuppa")/"resources"
 
-DEFAULT_CUPPA_CLASSIFIER_PATH = str(RESOURCES_DIR/"cuppa_classifier.pickle.gz")
 DEFAULT_FUSION_OVERRIDES_PATH = str(RESOURCES_DIR/"feature_overrides/20230731-fusion_overrides.split_adenoid_salivary.txt")
 MOCK_DATA_DIR = str(RESOURCES_DIR/"mock_data")
 
