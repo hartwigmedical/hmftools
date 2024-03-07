@@ -492,7 +492,7 @@ class PredictionRunner(LoggerMixin):
         genome_version: int = DEFAULT_RUNNER_ARGS.genome_version,
         excl_chroms: str | list[str] = DEFAULT_RUNNER_ARGS.excl_chroms,
         cv_predictions_path: str = None,
-        cv_predictions: CuppaPrediction = None,
+        cv_predictions: CuppaPrediction | None = None,
         log_to_file: bool = DEFAULT_RUNNER_ARGS.log_to_file,
         log_path: Optional[str] = DEFAULT_RUNNER_ARGS.log_path
     ):
@@ -561,6 +561,7 @@ class PredictionRunner(LoggerMixin):
     def get_predictions(self) -> None:
 
         if self.cv_predictions_path is not None:
+            self.logger.info("Loading cross-validation predictions from: " + self.cv_predictions_path)
             self.cv_predictions = CuppaPrediction.from_tsv(self.cv_predictions_path)
 
         if self.cv_predictions is None:
