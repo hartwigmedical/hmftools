@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class PrepConfigTest
 {
-    private final String selectedSampleId = "SKINMERKEL01T";
+    private final String selectedSampleId = "sample_1";
 
     @Test
     public void canParseCommandLineArgsMultiSample()
@@ -31,6 +31,7 @@ public class PrepConfigTest
                 "-output_dir", "/tmp/",
                 "-isofox_dir", "/tmp/",
                 "-ref_alt_sj_sites", TestPrepConfigBuilder.TEST_ALT_SPLICE_JUNCTION_SITES,
+                "-threads", TestPrepConfigBuilder.TEST_THREADS.toString(),
 
                 "-write_by_category"
         };
@@ -40,6 +41,8 @@ public class PrepConfigTest
         assertEquals(2, prepConfig.SampleIds.size());
         assertEquals("V37", prepConfig.RefGenVersion.toString());
         assertTrue(prepConfig.WriteByCategory);
+        assertEquals((int) TestPrepConfigBuilder.TEST_THREADS, prepConfig.Threads);
+
         assertEquals(TestPrepConfigBuilder.TEST_ALT_SPLICE_JUNCTION_SITES, prepConfig.AltSpliceJunctionSites);
 
         String expectedPurpleDir = TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + selectedSampleId + "/purple/";
@@ -74,7 +77,7 @@ public class PrepConfigTest
     public void canBuildFromTestPrepConfigBuilder()
     {
         PrepConfig prepConfig = new TestPrepConfigBuilder()
-                .sampleIds(Arrays.asList("PROSTATE01T", "SKINMERKEL01T"))
+                .sampleIds(Arrays.asList("sample_1", "sample_2"))
                 .categories(CategoryType.getDnaCategories())
                 .refGenomeVersion("V37")
                 .sampleDataDir(TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*")
