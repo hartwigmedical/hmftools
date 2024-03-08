@@ -31,7 +31,7 @@ public class CuppaDataPrepTest
 
         PrepConfig prepConfig = new TestPrepConfigBuilder()
                 .sampleIds(List.of(selectedSampleId))
-                .categories(CategoryType.getDnaCategories())
+                .categories(CategoryType.getAllCategories())
                 .refGenomeVersion("V37")
                 .sampleDataDir(TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*")
                 .outputDir(TMP_DIR.toString())
@@ -55,7 +55,7 @@ public class CuppaDataPrepTest
 
         PrepConfig prepConfig = new TestPrepConfigBuilder()
                 .sampleIds(Arrays.asList("COLO829v003T", "COLO829v003T_modified"))
-                .categories(CategoryType.getDnaCategories())
+                .categories(CategoryType.getAllCategories())
                 .refGenomeVersion("V37")
                 .sampleDataDir(TestPrepConfigBuilder.TEST_SAMPLE_DATA_DIR + "*")
                 .outputDir(TMP_DIR.toString())
