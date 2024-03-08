@@ -135,8 +135,27 @@ public class PurityConfig
                 Arrays.stream(writeTypes.split(ITEM_DELIM, -1)).forEach(x -> WriteTypes.add(WriteType.valueOf(x)));
         }
 
+        if(PurityMethods.contains(PurityMethod.AMBER_LOH) && AmberDir == null)
+        {
+            CT_LOGGER.error("Amber LOH method requires Amber directory");
+            System.exit(1);
+        }
+
+        if(PurityMethods.contains(PurityMethod.COPY_NUMBER) && CobaltDir == null)
+        {
+            CT_LOGGER.error("Copy Number method requires Cobalt directory");
+            System.exit(1);
+        }
+
+        if(PurityMethods.contains(PurityMethod.SOMATIC_VARIANT) && SomaticDir == null && SomaticVcf == null)
+        {
+            CT_LOGGER.error("Somatic Variants method requires VCF file or directory");
+            System.exit(1);
+        }
+
         Threads = parseThreads(configBuilder);
     }
+
 
     public boolean writeType(final WriteType writeType) { return WriteTypes.contains(writeType); }
     public boolean hasSyntheticTumor() { return PurpleDir == null || PurpleDir.isEmpty(); }
@@ -219,7 +238,7 @@ public class PurityConfig
         configBuilder.addConfigItem(SOMATIC_VCF, false, "Somatic VCF files, separated by ','", "");
         configBuilder.addConfigItem(SOMATIC_DIR, false, "Somatic VCF directory");
         configBuilder.addConfigItem(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
-        configBuilder.addConfigItem(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
+        configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
         configBuilder.addConfigItem(AMBER_DIR_CFG, false, AMBER_DIR_DESC);
         configBuilder.addConfigItem(COBALT_DIR_CFG, false, COBALT_DIR_DESC);
         configBuilder.addConfigItem(PLOT_DIR, false, "Plot output directory, defaults to sample or output dir");
