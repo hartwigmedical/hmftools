@@ -142,31 +142,28 @@ public final class AssemblyLinker
             {
                 // TODO: any inserted bases should be retrievable if the junction index of one assembly has been found in the other
                 // look into more examples from of the logs
-                try
+                int insertStartIndex, insertEndIndex;
+
+                if(junctionOffsetDiff > 0)
                 {
-                    int insertStartIndex, insertEndIndex;
-
-                    if(junctionOffsetDiff > 0)
-                    {
-                        insertStartIndex = first.junctionIndex() + 1;
-                        insertEndIndex = min(insertStartIndex + junctionOffsetDiff, firstSeq.FullSequence.length());
-                    }
-                    else
-                    {
-                        insertStartIndex = first.junctionIndex() + junctionOffsetDiff + 1;
-                        insertEndIndex = first.junctionIndex() + 1;
-                    }
-
-                    if(insertEndIndex > insertStartIndex)
-                    {
-                        extraBases = firstSeq.FullSequence.substring(insertStartIndex, insertEndIndex);
-                    }
+                    insertStartIndex = first.junctionIndex() + 1;
+                    insertEndIndex = min(insertStartIndex + junctionOffsetDiff, firstSeq.FullSequence.length());
                 }
-                catch(Exception e)
+                else
                 {
-                    SV_LOGGER.debug("assembly({}) failed to form insert bases({}-{} len={}) firstJuncIndexInSec({}) from firstSeq({}) secondSeq({})",
-                            first, first.junctionIndex() + 1, first.junctionIndex() + 1 + junctionOffsetDiff,
-                            junctionOffsetDiff, firstJunctionIndexInSecond, firstSeq, secondSeq);
+                    insertStartIndex = first.junctionIndex() + junctionOffsetDiff + 1;
+                    insertEndIndex = first.junctionIndex() + 1;
+                }
+
+                if(insertStartIndex >= 0 && insertEndIndex > insertStartIndex && insertEndIndex < firstSeq.BaseLength)
+                {
+                    extraBases = firstSeq.FullSequence.substring(insertStartIndex, insertEndIndex);
+                }
+                else
+                {
+                    SV_LOGGER.debug("asm({} & {}) invalid insert/overlap indexRange({} -> {} junctOffsetDiff={} firstIndex={} secIndex={}) on firstSeq({}) secSeq({})",
+                            first.junction().coords(), second.junction().coords(),
+                            insertStartIndex, insertEndIndex, junctionOffsetDiff, firstIndexStart, secondIndexStart, firstSeq, secondSeq);
                 }
             }
         }
@@ -227,16 +224,21 @@ public final class AssemblyLinker
 
         // start with a simple comparison looking for the first sequence around its junction in the second
         String firstJunctionSequence = firstSeq.junctionSequence();
+        int firstJunctionSeqLength = firstJunctionSequence.length();
 
         int firstSeqIndexInSecond = secondSeq.FullSequence.indexOf(firstJunctionSequence);
 
         if(firstSeqIndexInSecond >= 0)
         {
-            // easy match, so can form a link at these 2 locations
-            return formLink(first, second, firstSeq, secondSeq, firstSeq.junctionSeqStartIndex(), firstSeqIndexInSecond);
-        }
+            // check that this match covers the second's junction
+            int secondMatchIndexEnd = firstSeqIndexInSecond + firstJunctionSeqLength - 1;
 
-        int firstJunctionSeqLength = firstJunctionSequence.length();
+            if(positionWithin(secondSeq.junctionIndex(), firstSeqIndexInSecond, secondMatchIndexEnd))
+            {
+                // easy match, so can form a link at these 2 locations
+                return formLink(first, second, firstSeq, secondSeq, firstSeq.junctionSeqStartIndex(), firstSeqIndexInSecond);
+            }
+        }
 
         // take a smaller sections of the first's junction sequence and try to find their start index in the second sequence
         int juncSeqStartIndex = 0;

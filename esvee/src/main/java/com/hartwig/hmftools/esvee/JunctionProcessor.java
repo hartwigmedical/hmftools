@@ -27,6 +27,7 @@ import com.hartwig.hmftools.esvee.assembly.PhaseSetTask;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
+import com.hartwig.hmftools.esvee.common.PhaseGroup;
 import com.hartwig.hmftools.esvee.common.ThreadTask;
 import com.hartwig.hmftools.esvee.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.output.WriteType;
@@ -67,6 +68,23 @@ public class JunctionProcessor
 
     public boolean loadJunctionFiles()
     {
+        if(!mConfig.SpecificJunctions.isEmpty())
+        {
+            for(Junction junction : mConfig.SpecificJunctions)
+            {
+                List<Junction> chrJunctions = mChrJunctionsMap.get(junction.Chromosome);
+                if(chrJunctions == null)
+                {
+                    chrJunctions = Lists.newArrayList();
+                    mChrJunctionsMap.put(junction.Chromosome, chrJunctions);
+                }
+
+                chrJunctions.add(junction);
+            }
+
+            return true;
+        }
+
         for(String junctionFile : mConfig.JunctionFiles)
         {
             Map<String,List<Junction>> newJunctionsMap = Junction.loadJunctions(
@@ -199,7 +217,12 @@ public class JunctionProcessor
 
         phaseGroupBuilder.buildGroups();
 
-        SV_LOGGER.info("building phase sets from {} phase groups", phaseGroupBuilder.phaseGroups().size());
+        List<PhaseGroup> phaseGroups = phaseGroupBuilder.phaseGroups();
+
+        if(phaseGroups.isEmpty())
+            return;
+
+        SV_LOGGER.info("building phase sets from {} phase groups", phaseGroups.size());
 
         List<Thread> threadTasks = new ArrayList<>();
 
@@ -210,7 +233,7 @@ public class JunctionProcessor
 
         mPerfCounters.add(ThreadTask.mergePerfCounters(phaseSetTasks.stream().collect(Collectors.toList())));
 
-        SV_LOGGER.info("created {} phase sets", phaseGroupBuilder.phaseGroups().stream().mapToInt(x -> x.phaseSets().size()).sum());
+        SV_LOGGER.info("created {} phase sets", phaseGroups.stream().mapToInt(x -> x.phaseSets().size()).sum());
     }
 
     private void alignPhaseSets()

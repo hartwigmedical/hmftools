@@ -82,6 +82,9 @@ public class JunctionAssembler
         // dedup assemblies for this junction based on overlapping read support
         AssemblyDeduper.dedupJunctionAssemblies(filteredAssemblies);
 
+        if(filteredAssemblies.size() > 1)
+            filteredAssemblies.forEach(x -> x.setOutcome(DUP_SPLIT));
+
         return filteredAssemblies;
     }
 
@@ -96,9 +99,6 @@ public class JunctionAssembler
         // no filtering of the initial sequence and instead rely on the sequence splitting to do this with all initial mismatches preserved
         AssemblyMismatchSplitter splitter = new AssemblyMismatchSplitter(junctionSequence);
         List<JunctionAssembly> junctionSequences = splitter.splitOnMismatches(PRIMARY_ASSEMBLY_MIN_LENGTH);
-
-        if(junctionSequences.size() > 1)
-            junctionSequences.forEach(x -> x.setOutcome(DUP_SPLIT));
 
         // extend these sequences in the direction away from the junction
         junctionSequences.forEach(x -> expandReferenceBases(x));

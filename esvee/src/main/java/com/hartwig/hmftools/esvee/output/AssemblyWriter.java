@@ -82,7 +82,6 @@ public class AssemblyWriter
 
             sj.add("SoftClipMismatches");
             sj.add("RefBaseMismatches");
-            sj.add("RefBaseDominantMismatches");
 
             sj.add("AvgNmCount");
             sj.add("AvgIndelLength");
@@ -225,6 +224,7 @@ public class AssemblyWriter
             sj.add(String.valueOf(juncMateCount));
             sj.add(String.valueOf(juncMateUnmapped));
 
+            /*
             // where the mismatches on a ref base exceeds 50% of the junction read count, suggesting the wrong base was used or there are
             // valid alternatives
             int refBaseDominantMismatches = 0;
@@ -237,10 +237,11 @@ public class AssemblyWriter
                         ++refBaseDominantMismatches;
                 }
             }
+            */
 
             sj.add(String.valueOf(softClipBaseMismatches));
             sj.add(String.valueOf(refBaseMismatches));
-            sj.add(String.valueOf(refBaseDominantMismatches));
+            // sj.add(String.valueOf(refBaseDominantMismatches));
 
             // ref sequence stats purely for analysis
             ReadStats readStats = buildReadStats(assembly.support());

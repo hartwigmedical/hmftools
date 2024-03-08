@@ -43,7 +43,10 @@ public class PhaseSetTask extends ThreadTask
             threadTasks.add(phaseSetTask);
         }
 
-        SV_LOGGER.debug("splitting {} phase groups across {} threads", phaseGroups.size(), taskCount);
+        if(taskCount > 1)
+        {
+            SV_LOGGER.debug("splitting {} phase groups across {} threads", phaseGroups.size(), taskCount);
+        }
 
         return phaseSetTasks;
     }

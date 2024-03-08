@@ -209,7 +209,8 @@ public class RefBaseExtender
     }
 
     public static void extendRefBases(
-            final JunctionAssembly assembly, final List<AssemblySupport> nonJunctionSupport, final RefGenomeInterface refGenome)
+            final JunctionAssembly assembly, final List<AssemblySupport> nonJunctionSupport, final RefGenomeInterface refGenome,
+            boolean allowBranching)
     {
         // find the maximal ref base extension point and make note of any recurrent soft-clip points including possible branched assemblies
         int minAlignedPosition = assembly.minAlignedPosition();
@@ -249,7 +250,7 @@ public class RefBaseExtender
 
         boolean hasUnmatched = assembly.refSideSoftClips().stream().anyMatch(x -> !x.matchesOriginal());
 
-        if(!hasUnmatched)
+        if(!hasUnmatched || !allowBranching)
         {
             if(nonSoftClipRefPosition != initialRefPosition && !nonJunctionSupport.isEmpty())
             {

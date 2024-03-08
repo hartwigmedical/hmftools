@@ -215,6 +215,30 @@ public class Junction implements Comparable<Junction>
         }
     }
 
+    public static Junction fromConfigStr(final String configStr)
+    {
+        String[] values = configStr.split(":", -1);
+        if(values.length < 3)
+            return null;
+
+        String chromosome = values[0];
+        int position = Integer.parseInt(values[1]);
+        byte orientation = Byte.parseByte(values[2]);
+
+        boolean discordantOnly = false;
+        boolean indelBased = false;
+
+        if(values.length >= 4)
+        {
+            if(values[3].equals("D"))
+                discordantOnly = true;
+            else if(values[3].equals("I"))
+                indelBased = true;
+        }
+
+        return new Junction(chromosome, position, orientation, discordantOnly, indelBased, false);
+    }
+
     public static void mergeJunctions(final Map<String,List<Junction>> existingMap, final Map<String,List<Junction>> newMap)
     {
         if(existingMap.isEmpty())

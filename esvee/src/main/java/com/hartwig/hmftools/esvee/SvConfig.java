@@ -47,6 +47,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.output.WriteType;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
@@ -83,6 +84,7 @@ public class SvConfig
     public final String OutputId;
 
     public final SpecificRegions SpecificChrRegions;
+    public final List<Junction> SpecificJunctions;
 
     public final boolean PerfDebug;
     public final double PerfLogTime;
@@ -101,6 +103,7 @@ public class SvConfig
     public static final String REF_GENOME_IMAGE = "ref_genome_image";
     public static final String DECOY_GENOME = "decoy_genome";
     public static final String JUNCTION_FILES = "junction_files";
+    public static final String SPECIFIC_JUNCTIONS = "specific_junctions";
 
     public static final String WRITE_TYPES = "write_types";
     public static final String PERF_LOG_TIME = "perf_log_time";
@@ -202,6 +205,20 @@ public class SvConfig
             SV_LOGGER.warn("writing assembly reads to TSV without region filtering may result in large output files & impact performance");
         }
 
+        SpecificJunctions = Lists.newArrayList();
+        if(configBuilder.hasValue(SPECIFIC_JUNCTIONS))
+        {
+            String[] specificJunctionsStr = configBuilder.getValue(SPECIFIC_JUNCTIONS).split(ITEM_DELIM);
+
+            for(String specificJuncStr : specificJunctionsStr)
+            {
+                Junction junction = Junction.fromConfigStr(specificJuncStr);
+
+                if(junction != null)
+                    SpecificJunctions.add(junction);
+            }
+        }
+
         mLogReadIds = parseLogReadIds(configBuilder);
         mCheckLogReadIds = !mLogReadIds.isEmpty();
 
@@ -289,6 +306,10 @@ public class SvConfig
         configBuilder.addConfigItem(WRITE_TYPES, false, "Write types from list: " + writeTypes);
 
         configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);
+        configBuilder.addConfigItem(
+                SPECIFIC_JUNCTIONS, false,
+                "Specific junctions: format: Chromosome:Position:Orientation:Type (I, D or none), separated by ';'");
+
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addDecimal(PERF_LOG_TIME, "Log performance data for routine exceeding specified time (0 = disabled)", 0);
         configBuilder.addFlag(SKIP_DISCORDANT, "Skip processing discordant-only groups");

@@ -30,6 +30,8 @@ import com.hartwig.hmftools.esvee.common.PhaseGroup;
 import com.hartwig.hmftools.esvee.common.PhaseSet;
 import com.hartwig.hmftools.esvee.common.SupportType;
 
+import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.BOBYQAOptimizer;
+
 public class PhaseSetBuilder
 {
     private final PhaseGroup mPhaseGroup;
@@ -69,7 +71,7 @@ public class PhaseSetBuilder
 
             if(assemblyLink != null)
             {
-                buildSplitLink(mAssemblies.get(0), mAssemblies.get(1));
+                buildSplitLink(mAssemblies.get(0), mAssemblies.get(1), false);
                 mPhaseSets.add(new PhaseSet(assemblyLink));
             }
 
@@ -156,7 +158,7 @@ public class PhaseSetBuilder
                 mSplitLinks.add(assemblyLink);
                 linkedAssemblies.add(assembly1);
                 linkedAssemblies.add(assembly2);
-                buildSplitLink(assembly1, assembly2);
+                buildSplitLink(assembly1, assembly2, true);
                 continue;
             }
 
@@ -185,7 +187,7 @@ public class PhaseSetBuilder
         return mAssemblyLinker.tryAssemblyOverlap(assembly1, assembly2);
     }
 
-    private void buildSplitLink(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
+    private void buildSplitLink(final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean allowBranching)
     {
         linkExistingSupport(assembly1, assembly2);
 
@@ -204,8 +206,8 @@ public class PhaseSetBuilder
         checkMatchingCandidateSupport(assembly1, candidateSupport2, Collections.emptyList(), matchedCandidates2, matchedCandidates1);
 
         // build out ref-base assembly support from these non-junction reads - both matched discordant and junction mates
-        extendRefBases(assembly1, matchedCandidates1, mRefGenome);
-        extendRefBases(assembly2, matchedCandidates2, mRefGenome);
+        extendRefBases(assembly1, matchedCandidates1, mRefGenome, allowBranching);
+        extendRefBases(assembly2, matchedCandidates2, mRefGenome, allowBranching);
 
         // add any branched assemblies to the phase group - these will be cleaned up if not used
         assembly1.branchedAssemblies().forEach(x -> mPhaseGroup.addAssembly(x));
@@ -389,6 +391,11 @@ public class PhaseSetBuilder
                     linkingAssembly = newLink.otherAssembly(linkingAssembly);
                 }
             }
+        }
+
+        for(PhaseSet phaseSet : mPhaseSets)
+        {
+            phaseSet.assemblies().forEach(x -> x.setOutcome(LINKED));
         }
     }
 

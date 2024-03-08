@@ -218,7 +218,12 @@ public final class AssemblyUtils
         }
 
         if(assembly.remoteRegions().stream().allMatch(x -> x.isSuppOnlyRegion()))
+        {
             assembly.setOutcome(SUPP_ONLY);
+            return;
+        }
+
+        assembly.setOutcome(NO_LINK);
     }
 
     public static List<int[]> findUnsetBases(final byte[] bases)
