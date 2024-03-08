@@ -3,13 +3,19 @@ package com.hartwig.hmftools.esvee.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.LINKED;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.NO_LINK;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.SECONDARY;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.SUPP_ONLY;
 import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAtJunction;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.esvee.assembly.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public final class AssemblyUtils
@@ -193,6 +199,29 @@ public final class AssemblyUtils
         }
 
         return false;
+    }
+
+    public static void setAssemblyOutcome(final JunctionAssembly assembly)
+    {
+        if(assembly.outcome() != AssemblyOutcome.UNSET)
+            return;
+
+        if(assembly.phaseGroup() == null)
+        {
+            assembly.setOutcome(NO_LINK);
+            return;
+        }
+
+        List<AssemblyLink> secondarySplitLinks = assembly.phaseGroup().findSecondarySplitLinks(assembly);
+
+        if(!secondarySplitLinks.isEmpty())
+        {
+            assembly.setOutcome(SECONDARY);
+            return;
+        }
+
+        if(assembly.remoteRegions().stream().allMatch(x -> x.isSuppOnlyRegion()))
+            assembly.setOutcome(SUPP_ONLY);
     }
 
     public static List<int[]> findUnsetBases(final byte[] bases)

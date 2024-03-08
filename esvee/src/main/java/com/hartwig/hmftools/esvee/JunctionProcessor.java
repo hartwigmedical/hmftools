@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
+import static com.hartwig.hmftools.esvee.common.AssemblyUtils.setAssemblyOutcome;
 import static com.hartwig.hmftools.esvee.common.JunctionGroup.buildJunctionGroups;
 
 import java.util.ArrayList;
@@ -128,6 +129,7 @@ public class JunctionProcessor
                         for(JunctionAssembly assembly : junctionGroup.junctionAssemblies())
                         {
                             assembly.setId(assemblyId++);
+                            setAssemblyOutcome(assembly);
                         }
 
                         junctionGroup.junctionAssemblies().forEach(x -> mResultsWriter.writeAssembly(x));

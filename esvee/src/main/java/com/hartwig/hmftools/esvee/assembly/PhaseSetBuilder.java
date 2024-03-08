@@ -4,6 +4,8 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.DUP_SPLIT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.LINKED;
 import static com.hartwig.hmftools.esvee.assembly.PhaseGroupBuilder.isLocalAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.extendRefBases;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.tryAssemblyFacing;
@@ -99,6 +101,9 @@ public class PhaseSetBuilder
             {
                 JunctionAssembly assembly2 = mAssemblies.get(j);
 
+                if(assembly1.indel() != assembly2.indel())
+                    continue;
+
                 int sharedCount = 0;
 
                 for(AssemblySupport support : assembly1.support())
@@ -135,6 +140,12 @@ public class PhaseSetBuilder
 
             boolean alreadyLinked = linkedAssemblies.contains(assembly1) || linkedAssemblies.contains(assembly2);
 
+            /*
+            boolean hasLinkedDuplicate =
+                    (assembly1.outcome().isDuplicate() && linkedAssemblies.stream().anyMatch(x -> x.junction() == assembly1.junction()))
+                    || (assembly2.outcome().isDuplicate() && linkedAssemblies.stream().anyMatch(x -> x.junction() == assembly2.junction()));
+            */
+
             // test if a link can be made
             if(!alreadyLinked)
             {
@@ -147,19 +158,25 @@ public class PhaseSetBuilder
                 linkedAssemblies.add(assembly1);
                 linkedAssemblies.add(assembly2);
                 buildSplitLink(assembly1, assembly2);
+                continue;
             }
-            else
-            {
-                AssemblyLink assemblyLink = mAssemblyLinker.tryAssemblyOverlap(assembly1, assembly2);
 
-                if(assemblyLink != null)
-                    mSecondarySplitLinks.add(assemblyLink);
-            }
+            // form secondaries for any assemblies which aren't duplicates of another
+            if(assembly1.outcome().isDuplicate() || assembly2.outcome().isDuplicate())
+                continue;
+
+            AssemblyLink assemblyLink = mAssemblyLinker.tryAssemblyOverlap(assembly1, assembly2);
+
+            if(assemblyLink != null)
+                mSecondarySplitLinks.add(assemblyLink);
         }
     }
 
     private AssemblyLink checkSplitLink(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
+        if(assembly1.junction() == assembly2.junction()) // ignore duplicates
+            return null;
+
         // handle local INDELs here since the following logic currently applies to them
         AssemblyLink assemblyLink = mAssemblyLinker.tryAssemblyIndel(assembly1, assembly2);
 
@@ -172,6 +189,9 @@ public class PhaseSetBuilder
     private void buildSplitLink(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
         linkExistingSupport(assembly1, assembly2);
+
+        assembly1.setOutcome(LINKED);
+        assembly2.setOutcome(LINKED);
 
         // look for shared reads between the assemblies, and factor in discordant reads which were only considered candidates until now
         List<AssemblySupport> matchedCandidates1 = Lists.newArrayList();

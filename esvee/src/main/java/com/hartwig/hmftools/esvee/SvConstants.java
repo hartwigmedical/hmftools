@@ -57,7 +57,7 @@ public final class SvConstants
 
     // phased assembly overlaps
     public static final int PHASED_ASSEMBLY_OVERLAP_BASES = 100;
-    public static final int PHASED_ASSEMBLY_JUNCTION_OVERLAP = 30;
+    public static final int PHASED_ASSEMBLY_JUNCTION_OVERLAP = 50;
     public static final int PHASED_ASSEMBLY_MAX_TI = 1000;
 
     // CHECK: share with SvPrep, possibly shorten

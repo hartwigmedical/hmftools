@@ -17,8 +17,10 @@ import static com.hartwig.hmftools.esvee.common.LinkType.INDEL;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.common.AssemblyLink;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
@@ -76,39 +78,41 @@ public final class AssemblyLinker
         int firstJunctionOffset = firstSeq.junctionIndex() - firstIndexStart;
         int secondJunctionOffset = secondSeq.junctionIndex() - secondIndexStart;
 
-        String insertedBases = "";
-        String overlapBases = "";
         int firstJunctionIndexInSecond = -1;
-        int impliedInsertedBaseLength = 0;
+
+        int junctionOffsetDiff = 0;
 
         if(!firstSeq.Reversed && !secondSeq.Reversed)
         {
             firstJunctionIndexInSecond = secondIndexStart + firstJunctionOffset;
 
-            impliedInsertedBaseLength = max(secondJunctionOffset - firstJunctionOffset - 1, 0);
+            junctionOffsetDiff = secondJunctionOffset - firstJunctionOffset - 1;
+
         }
         else if(secondSeq.Reversed)
         {
             int firstJunctionIndexInSecondReversed = secondIndexStart + firstJunctionOffset;
             firstJunctionIndexInSecond = secondSeq.indexReverted(firstJunctionIndexInSecondReversed);
 
-            impliedInsertedBaseLength = max(firstJunctionIndexInSecond - second.junctionIndex() - 1, 0);
+            junctionOffsetDiff = firstJunctionIndexInSecond - second.junctionIndex() - 1;
         }
         else
         {
             firstJunctionIndexInSecond = secondIndexStart + firstJunctionOffset;
 
-            impliedInsertedBaseLength = max(second.junctionIndex() - firstJunctionIndexInSecond - 1, 0);
+            junctionOffsetDiff = second.junctionIndex() - firstJunctionIndexInSecond - 1;
         }
 
-        if(impliedInsertedBaseLength > 0)
+        String extraBases = "";
+
+        if(junctionOffsetDiff != 0)
         {
             // inserted bases for any same-orientation break could be reverse-complemented at either breakend,
             // go with the convention of doing that for the higher breakend?
             if(firstSeq.Reversed)
             {
-                insertedBases = first.formSequence(
-                        first.junctionIndex() - impliedInsertedBaseLength, first.junctionIndex() - 1);
+                extraBases = first.formSequence(
+                        first.junctionIndex() - (junctionOffsetDiff), first.junctionIndex() - 1);
             }
             else
             {
@@ -116,22 +120,35 @@ public final class AssemblyLinker
                 // look into more examples from of the logs
                 try
                 {
-                    int insertStartIndex = first.junctionIndex() + 1;
-                    int insertEndIndex = min(insertStartIndex + impliedInsertedBaseLength, firstSeq.FullSequence.length());
+                    int insertStartIndex, insertEndIndex;
+
+                    if(junctionOffsetDiff > 0)
+                    {
+                        insertStartIndex = first.junctionIndex() + 1;
+                        insertEndIndex = min(insertStartIndex + junctionOffsetDiff, firstSeq.FullSequence.length());
+                    }
+                    else
+                    {
+                        insertStartIndex = first.junctionIndex() + junctionOffsetDiff + 1;
+                        insertEndIndex = first.junctionIndex() + 1;
+                    }
 
                     if(insertEndIndex > insertStartIndex)
                     {
-                        insertedBases = firstSeq.FullSequence.substring(insertStartIndex, insertEndIndex);
+                        extraBases = firstSeq.FullSequence.substring(insertStartIndex, insertEndIndex);
                     }
                 }
                 catch(Exception e)
                 {
                     SV_LOGGER.debug("assembly({}) failed to form insert bases({}-{} len={}) firstJuncIndexInSec({}) from firstSeq({}) secondSeq({})",
-                            first, first.junctionIndex() + 1, first.junctionIndex() + 1 + impliedInsertedBaseLength,
-                            impliedInsertedBaseLength, firstJunctionIndexInSecond, firstSeq, secondSeq);
+                            first, first.junctionIndex() + 1, first.junctionIndex() + 1 + junctionOffsetDiff,
+                            junctionOffsetDiff, firstJunctionIndexInSecond, firstSeq, secondSeq);
                 }
             }
         }
+
+        String insertedBases = junctionOffsetDiff > 0 ? extraBases : "";
+        String overlapBases = junctionOffsetDiff < 0 ? extraBases : "";
 
         return new AssemblyLink(first, second, LinkType.SPLIT, firstJunctionIndexInSecond, insertedBases, overlapBases);
     }
@@ -197,51 +214,74 @@ public final class AssemblyLinker
             return formLink(first, second, firstSeq, secondSeq, firstSeq.junctionSeqStartIndex(), firstSeqIndexInSecond);
         }
 
-        // AssemblyIndexRange secondIndexRange = new AssemblyIndexRange(second);
+        int firstJunctionSeqLength = firstJunctionSequence.length();
 
-        // int subSequenceCount = firstSeq.comparisonLength() / SUBSEQUENCE_LENGTH;
-
-        // take a smaller sections of the first sequence and try to find their start index in the second sequence
+        // take a smaller sections of the first's junction sequence and try to find their start index in the second sequence
+        int juncSeqStartIndex = 0;
         List<int[]> alternativeIndexStarts = Lists.newArrayList();
-
-        for(int firstSubSeqStartIndex = firstSeq.compareSeqStartIndex(); firstSubSeqStartIndex <= firstSeq.junctionIndex();
-                firstSubSeqStartIndex += SUBSEQUENCE_LENGTH)
+        for(int i = 0; i < 10; ++i) // being the total junction sequence length (ie 100) divided by the subsequence length
         {
-            String firstSubSequence = firstSeq.FullSequence.substring(firstSubSeqStartIndex, firstSubSeqStartIndex + SUBSEQUENCE_LENGTH);
+            juncSeqStartIndex = i * SUBSEQUENCE_LENGTH;
+            int juncSeqEndIndex = juncSeqStartIndex + SUBSEQUENCE_LENGTH;
+
+            if(juncSeqEndIndex >= firstJunctionSeqLength)
+                break;
+
+            String firstSubSequence = firstJunctionSequence.substring(juncSeqStartIndex, juncSeqStartIndex + SUBSEQUENCE_LENGTH);
 
             int secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence);
 
             if(secondSubSeqIndex < 0)
                 continue;
 
-            // where must this match fall within the second's sequence? just need to ensure that the junction is covered in both
-            if(!positionWithin(secondSubSeqIndex, secondSeq.compareSeqStartIndex(), secondSeq.compareSeqEndIndex()))
-                continue;
+            alternativeIndexStarts.add(new int[] {juncSeqStartIndex, secondSubSeqIndex});
 
-            alternativeIndexStarts.add(new int[] {firstSubSeqStartIndex, secondSubSeqIndex});
+            secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence, secondSubSeqIndex + SUBSEQUENCE_LENGTH);
+
+            while(secondSubSeqIndex >= 0)
+            {
+                alternativeIndexStarts.add(new int[] {juncSeqStartIndex, secondSubSeqIndex});
+                secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence, secondSubSeqIndex + SUBSEQUENCE_LENGTH);
+            }
         }
 
-        // try each of these in turn for a full match - could take the one with the lowest if there are multiple?
+        // now perform a full junction sequence search in the second using the sequence matching logic
+        Set<Integer> testedOffsets = Sets.newHashSet();
+
         for(int[] indexStarts : alternativeIndexStarts)
         {
             // find a comparison range that falls within both sequence's index range around the junction
-            int firstIndexStart = indexStarts[0];
-            int secondIndexStart = indexStarts[1];
+            int firstJuncSeqMatchIndex = indexStarts[0];
+            int secondMatchIndex = indexStarts[1];
 
-            if(secondIndexStart > second.junctionIndex())
+            int matchOffset = secondMatchIndex - firstJuncSeqMatchIndex;
+
+            if(testedOffsets.contains(matchOffset))
+                continue;
+
+            testedOffsets.add(matchOffset);
+
+            int secondIndexStart = secondMatchIndex - firstJuncSeqMatchIndex;
+            int secondIndexEnd = secondIndexStart + firstJunctionSeqLength - 1;
+
+            // the second match indices must cover its junction index
+
+            int firstJuncIndexStart = 0;
+            int firstJuncIndexEnd = firstJunctionSeqLength - 1;
+
+            if(secondIndexStart < 0)
             {
-                // the comparison start points are shifted to cover the junctions in both
-                int secondJuncOffset = second.junctionIndex() - secondIndexStart;
-                int shiftDistance = min(abs(secondJuncOffset), firstIndexStart - firstSeq.compareSeqStartIndex());
-                firstIndexStart -= shiftDistance;
-                secondIndexStart -= shiftDistance;
+                firstJuncIndexStart += -(secondIndexStart);
+                secondIndexStart = 0;
             }
 
-            int firstIndexEnd = firstIndexStart + PHASED_ASSEMBLY_OVERLAP_BASES - 1;
-            int secondIndexEnd = secondIndexStart + PHASED_ASSEMBLY_OVERLAP_BASES - 1;
+            secondIndexEnd = min(secondIndexEnd, secondSeq.BaseLength - 1);
 
-            if(firstIndexEnd >= first.baseLength() || secondIndexEnd >= second.baseLength())
+            if(!positionWithin(secondSeq.junctionIndex(), secondIndexStart, secondIndexEnd))
                 continue;
+
+            int firstIndexStart = firstJuncIndexStart + firstSeq.junctionSeqStartIndex();
+            int firstIndexEnd = min(firstJuncIndexEnd + firstSeq.junctionSeqStartIndex(), firstSeq.BaseLength - 1);
 
             int mismatchCount = SequenceCompare.compareSequences(
                     firstSeq.bases(), firstSeq.baseQuals(), firstIndexStart, firstIndexEnd, firstSeq.repeatInfo(),
@@ -258,7 +298,6 @@ public final class AssemblyLinker
         return null;
     }
 
-    private static final int REF_BASE_LENGTH_CAP = 100; // can't see why this would need to be any longer
     private static final int COMPARISON_RANGE = PHASED_ASSEMBLY_OVERLAP_BASES - PHASED_ASSEMBLY_JUNCTION_OVERLAP;
 
     private class AssemblySequence
@@ -274,7 +313,7 @@ public final class AssemblyLinker
 
         private final int mJunctionIndex;
 
-        // indices for the min-overlap around the junction (eg +/- 30 bases)
+        // indices for the min-overlap around the junction (eg +/- 50 bases)
         private final int mJunctionSeqIndexStart;
         private final int mJunctionSeqIndexEnd;
 
@@ -369,7 +408,6 @@ public final class AssemblyLinker
         public int junctionSeqEndIndex() { return mJunctionSeqIndexEnd; }
         public int compareSeqStartIndex() { return mCompareSeqIndexStart; }
         public int compareSeqEndIndex() { return mCompareSeqIndexEnd; }
-        public int comparisonLength() { return mCompareSeqIndexEnd - mCompareSeqIndexStart + 1; }
 
         public byte[] bases()
         {
@@ -428,9 +466,65 @@ public final class AssemblyLinker
 
         public String toString()
         {
-            return format("len(%d ref=%d ext=%d juncIndex=%d) %s juncSeq(%d - %d) compSeq(%d - %d)",
+            return format("len(%d ref=%d ext=%d juncIndex=%d) %s juncSeq(%d - %d)",
                     BaseLength, RefBaseLength, ExtensionLength, mJunctionIndex, Reversed ? "rev" : "fwd",
-                    junctionSeqStartIndex(), junctionSeqEndIndex(), compareSeqStartIndex(), compareSeqEndIndex());
+                    junctionSeqStartIndex(), junctionSeqEndIndex());
         }
     }
+
+        /* OLD subsequence logic
+        // take a smaller sections of the first sequence and try to find their start index in the second sequence
+        List<int[]> alternativeIndexStarts = Lists.newArrayList();
+
+        for(int firstSubSeqStartIndex = firstSeq.compareSeqStartIndex(); firstSubSeqStartIndex <= firstSeq.junctionIndex();
+                firstSubSeqStartIndex += SUBSEQUENCE_LENGTH)
+        {
+            String firstSubSequence = firstSeq.FullSequence.substring(firstSubSeqStartIndex, firstSubSeqStartIndex + SUBSEQUENCE_LENGTH);
+
+            int secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence);
+
+            if(secondSubSeqIndex < 0)
+                continue;
+
+            // where must this match fall within the second's sequence? just need to ensure that the junction is covered in both
+            if(!positionWithin(secondSubSeqIndex, secondSeq.compareSeqStartIndex(), secondSeq.compareSeqEndIndex()))
+                continue;
+
+            alternativeIndexStarts.add(new int[] {firstSubSeqStartIndex, secondSubSeqIndex});
+        }
+
+        // try each of these in turn for a full match - could take the one with the lowest if there are multiple?
+        for(int[] indexStarts : alternativeIndexStarts)
+        {
+            // find a comparison range that falls within both sequence's index range around the junction
+            int firstIndexStart = indexStarts[0];
+            int secondIndexStart = indexStarts[1];
+
+            if(secondIndexStart > second.junctionIndex())
+            {
+                // the comparison start points are shifted to cover the junctions in both
+                int secondJuncOffset = second.junctionIndex() - secondIndexStart;
+                int shiftDistance = min(abs(secondJuncOffset), firstIndexStart - firstSeq.compareSeqStartIndex());
+                firstIndexStart -= shiftDistance;
+                secondIndexStart -= shiftDistance;
+            }
+
+            int firstIndexEnd = firstIndexStart + PHASED_ASSEMBLY_OVERLAP_BASES - 1;
+            int secondIndexEnd = secondIndexStart + PHASED_ASSEMBLY_OVERLAP_BASES - 1;
+
+            if(firstIndexEnd >= first.baseLength() || secondIndexEnd >= second.baseLength())
+                continue;
+
+            int mismatchCount = SequenceCompare.compareSequences(
+                    firstSeq.bases(), firstSeq.baseQuals(), firstIndexStart, firstIndexEnd, firstSeq.repeatInfo(),
+                    secondSeq.bases(), secondSeq.baseQuals(), secondIndexStart, secondIndexEnd, secondSeq.repeatInfo(),
+                    PRIMARY_ASSEMBLY_MERGE_MISMATCH);
+
+            if(mismatchCount <= PRIMARY_ASSEMBLY_MERGE_MISMATCH)
+            {
+                // could hold out for a better match if there was more than one, but seem unlikely?
+                return formLink(first, second, firstSeq, secondSeq, firstIndexStart, secondIndexStart);
+            }
+        }
+        */
 }

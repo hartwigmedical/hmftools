@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.NO_LINK;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.findUnsetBases;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findRepeats;
@@ -26,6 +28,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.esvee.assembly.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public class JunctionAssembly
@@ -53,6 +56,7 @@ public class JunctionAssembly
     private final List<RemoteRegion> mRemoteRegions;
 
     private PhaseGroup mPhaseGroup;
+    private AssemblyOutcome mOutcome;
 
     private final List<JunctionAssembly> mBranchedAssemblies;
 
@@ -85,6 +89,7 @@ public class JunctionAssembly
         mBranchedAssemblies = Lists.newArrayList();
         mMergedAssemblies = 0;
         mPhaseGroup = null;
+        mOutcome = UNSET;
 
         addInitialRead(read);
     }
@@ -490,6 +495,9 @@ public class JunctionAssembly
     public PhaseGroup phaseGroup() { return mPhaseGroup; }
     public void setPhaseGroup(final PhaseGroup phaseGroup) { mPhaseGroup = phaseGroup; }
 
+    public AssemblyOutcome outcome() { return mOutcome; }
+    public void setOutcome(final AssemblyOutcome outcome) { mOutcome = outcome; }
+
     public void addBranchedAssembly(final JunctionAssembly assembly)
     {
         mBranchedAssemblies.add(assembly);
@@ -580,6 +588,7 @@ public class JunctionAssembly
             initialRead = mSupport.get(0).read();
 
         mInitialRead = initialRead;
+        mOutcome = initialAssembly.outcome();
     }
 
     public void addCandidateSupport(final Read read, final SupportType type)
@@ -699,5 +708,6 @@ public class JunctionAssembly
         mBranchedAssemblies = Lists.newArrayList();
         mRefSideSoftClips = Lists.newArrayList();
         mMergedAssemblies = 0;
+        mOutcome = UNSET;
     }
 }

@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_BASE_MIS
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.DUP_BRANCHED;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensions;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.findRemoteRegions;
 import static com.hartwig.hmftools.esvee.common.RefSideSoftClip.purgeRefSideSoftClips;
@@ -345,6 +346,8 @@ public class RefBaseExtender
         for(JunctionAssembly junctionAssembly : branchedAssemblies)
         {
             branchedAssemblies.stream().filter(x -> x != junctionAssembly).forEach(x -> junctionAssembly.addBranchedAssembly(x));
+
+            junctionAssembly.setOutcome(DUP_BRANCHED);
         }
     }
 

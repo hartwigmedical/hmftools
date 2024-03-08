@@ -9,6 +9,10 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.LINKED;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.NO_LINK;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.SECONDARY;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.SUPP_ONLY;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_DISCORDANT_READ;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_SUPP;
@@ -26,6 +30,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.SvConfig;
+import com.hartwig.hmftools.esvee.assembly.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.common.AssemblyLink;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.BaseMismatches;
@@ -106,6 +111,8 @@ public class AssemblyWriter
             sj.add("DiscUnlinkedMates");
             sj.add("InitRefBaseCandidates");
 
+            sj.add("Outcome");
+
             sj.add("PhaseGroupId");
             sj.add("PhaseGroupCount");
 
@@ -119,11 +126,11 @@ public class AssemblyWriter
             sj.add("OverlapBases");
             sj.add("SecondaryLinks");
 
-            sj.add("MergedAssemblies");
-            sj.add("BranchedAssemblyIds");
-
             sj.add("JunctionSequence");
             sj.add("RefBaseSequence");
+
+            sj.add("MergedAssemblies");
+            sj.add("BranchedAssemblyIds");
 
             if(mTruthsetAnnotation.enabled())
                 sj.add(TruthsetAnnotation.tsvHeader());
@@ -170,7 +177,6 @@ public class AssemblyWriter
             int juncUnlinkedMates = 0;
             int juncUnlinkedSupps = 0;
             int discUnlinkedMates = 0;
-
 
             for(AssemblySupport support : assembly.support())
             {
@@ -278,6 +284,8 @@ public class AssemblyWriter
             sj.add(String.valueOf(discUnlinkedMates));
             sj.add(String.valueOf(assembly.candidateSupport().size()));
 
+            sj.add(String.valueOf(assembly.outcome()));
+
             PhaseGroup phaseGroup = assembly.phaseGroup();
 
             if(phaseGroup != null)
@@ -327,12 +335,6 @@ public class AssemblyWriter
             List<AssemblyLink> secondarySplitLinks = phaseGroup != null ? phaseGroup.findSecondarySplitLinks(assembly) : Collections.emptyList();
             sj.add(assemblyLinksStr(assembly, secondarySplitLinks));
 
-            sj.add(String.valueOf(assembly.mergedAssemblyCount()));
-
-            String branchedAssemblyIds = assembly.branchedAssemblies().stream()
-                    .map(x -> String.valueOf(x.id())).collect(Collectors.joining(";"));
-            sj.add(branchedAssemblyIds);
-
             if(assembly.hasUnsetBases())
             {
                 sj.add("UNSET_BASES");
@@ -345,6 +347,12 @@ public class AssemblyWriter
                 int refBaseLength = mConfig.AssemblyRefBaseWriteMax == 0 ? assembly.refBaseLength() : mConfig.AssemblyRefBaseWriteMax;
                 sj.add(assembly.formRefBaseSequence(refBaseLength)); // long enough to show most short TIs
             }
+
+            sj.add(String.valueOf(assembly.mergedAssemblyCount()));
+
+            String branchedAssemblyIds = assembly.branchedAssemblies().stream()
+                    .map(x -> String.valueOf(x.id())).collect(Collectors.joining(";"));
+            sj.add(branchedAssemblyIds);
 
             if(mTruthsetAnnotation.enabled())
                 sj.add(mTruthsetAnnotation.findTruthsetAnnotation(assembly));

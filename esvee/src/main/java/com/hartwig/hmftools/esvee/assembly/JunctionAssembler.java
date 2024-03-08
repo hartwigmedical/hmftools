@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.esvee.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.DUP_SPLIT;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.buildFromJunctionReads;
 import static com.hartwig.hmftools.esvee.common.AssemblyUtils.expandReferenceBases;
 import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAtJunction;
@@ -95,6 +96,9 @@ public class JunctionAssembler
         // no filtering of the initial sequence and instead rely on the sequence splitting to do this with all initial mismatches preserved
         AssemblyMismatchSplitter splitter = new AssemblyMismatchSplitter(junctionSequence);
         List<JunctionAssembly> junctionSequences = splitter.splitOnMismatches(PRIMARY_ASSEMBLY_MIN_LENGTH);
+
+        if(junctionSequences.size() > 1)
+            junctionSequences.forEach(x -> x.setOutcome(DUP_SPLIT));
 
         // extend these sequences in the direction away from the junction
         junctionSequences.forEach(x -> expandReferenceBases(x));
