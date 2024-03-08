@@ -392,6 +392,44 @@ public class PhaseSetBuilder
         }
     }
 
+    private AssemblyLink findLinkedAssembly(final JunctionAssembly assembly, boolean findSplit)
+    {
+        // find a link using one assembly of a particular type, then remove it from future consideration
+        List<AssemblyLink> searchLinks = findSplit ? mSplitLinks : mFacingLinks;
+
+        int index = 0;
+        while(index < searchLinks.size())
+        {
+            AssemblyLink link = searchLinks.get(index);
+
+            if(link.hasAssembly(assembly))
+            {
+                searchLinks.remove(index);
+
+                if(!findSplit)
+                {
+                    // remove any other facing links which use this assembly
+                    JunctionAssembly otherAssembly = link.otherAssembly(assembly);
+
+                    int otherIndex = 0;
+                    while(otherIndex < mFacingLinks.size())
+                    {
+                        AssemblyLink otherLink = searchLinks.get(otherIndex);
+                        if(otherLink.hasAssembly(assembly) || otherLink.hasAssembly(otherAssembly))
+                            searchLinks.remove(otherLink);
+                        else
+                            ++otherIndex;
+                    }
+                }
+
+                return link;
+            }
+
+            ++index;
+        }
+
+        return null;
+    }
     private void cleanupBranchedAssemblies()
     {
         // finally remove any branched assemblies which did not form a facing link
@@ -413,28 +451,10 @@ public class PhaseSetBuilder
             }
 
             if(!phaseLinked)
-                mAssemblies.remove(branchedAssembly);
-        }
-    }
-
-    private AssemblyLink findLinkedAssembly(final JunctionAssembly assembly, boolean findSplit)
-    {
-        List<AssemblyLink> searchLinks = findSplit ? mSplitLinks : mFacingLinks;
-
-        int index = 0;
-        while(index < searchLinks.size())
-        {
-            AssemblyLink link = searchLinks.get(index);
-
-            if(link.hasAssembly(assembly))
             {
-                searchLinks.remove(index);
-                return link;
+                branchedAssembly.branchedAssemblies().forEach(x -> x.branchedAssemblies().remove(branchedAssembly));
+                mAssemblies.remove(branchedAssembly);
             }
-
-            ++index;
         }
-
-        return null;
     }
 }

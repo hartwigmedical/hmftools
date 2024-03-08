@@ -130,7 +130,6 @@ public class FlagStats
         }
     }
 
-
     public void registerConsensusRead(final SAMRecord read)
     {
         final boolean passesQC = !read.getReadFailsVendorQualityCheckFlag();
