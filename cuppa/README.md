@@ -103,7 +103,10 @@ In `sample_data_dir`, the required pipeline files are described below:
 | Tool              | Filename suffix          | File details                                     |
 |-------------------|--------------------------|--------------------------------------------------|
 | PURPLE            | .purple.somatic.vcf.gz   | SNVs; used for the GEN_POS and SNV96 features    |
+| PURPLE            | .purple.sv.vcf.gz        | Structural variants                              |
 | PURPLE            | .purple.purity.tsv       | Sample sex and WGD presence (amongst other data) |
+| PURPLE            | .purple.qc               | WGS quality control stats                        |
+| LINX              | .linx.clusters.tsv       | Structural variant clusters                      |
 | LINX              | .linx.driver.catalog.tsv | Driver mutations                                 |
 | LINX              | .linx.fusion.tsv         | Gene fusions                                     |
 | Virus Interpreter | .virus.annotated.tsv     | Viral sequence insertions                        |

@@ -1,6 +1,6 @@
 sample_id	data_type	clf_group	clf_name	feat_name	feat_value	cancer_type	data_value	rank	rank_group
 tumor_sample	prob	dna	dna_combined			Anogenital	0.0	3	0
-tumor_sample	prob	dna	dna_combined			Bone/Soft tissue: Cartilaginous neoplasm	3.2894029290134886e-05	2	0
+tumor_sample	prob	dna	dna_combined			Bone/Soft tissue: Cartilaginous neoplasm	3.289402919513386e-05	2	0
 tumor_sample	prob	dna	dna_combined			Bone/Soft tissue: GIST	0.0	4	0
 tumor_sample	prob	dna	dna_combined			Bone/Soft tissue: Leiomyosarcoma	0.0	5	0
 tumor_sample	prob	dna	dna_combined			Bone/Soft tissue: Liposarcoma	0.0	6	0
@@ -35,130 +35,130 @@ tumor_sample	prob	dna	dna_combined			NET: Colorectum/Small intestine	0.0	34	0
 tumor_sample	prob	dna	dna_combined			NET: Lung	0.0	35	0
 tumor_sample	prob	dna	dna_combined			NET: Pancreas	0.0	36	0
 tumor_sample	prob	dna	dna_combined			Prostate	0.0	37	0
-tumor_sample	prob	dna	dna_combined			Skin: Melanoma	0.9999671059707099	1	0
+tumor_sample	prob	dna	dna_combined			Skin: Melanoma	0.999967105970805	1	0
 tumor_sample	prob	dna	dna_combined			Skin: Other	0.0	38	0
 tumor_sample	prob	dna	dna_combined			Thyroid gland	0.0	39	0
 tumor_sample	prob	dna	dna_combined			Urothelial tract	0.0	40	0
 tumor_sample	prob	dna	gen_pos			Anogenital	1.2359767029327873e-06	23	1
 tumor_sample	prob	dna	gen_pos			Bone/Soft tissue: Cartilaginous neoplasm	4.107161442240924e-10	40	1
-tumor_sample	prob	dna	gen_pos			Bone/Soft tissue: GIST	1.859752450137193e-06	21	1
-tumor_sample	prob	dna	gen_pos			Bone/Soft tissue: Leiomyosarcoma	1.5459416917780182e-05	6	1
-tumor_sample	prob	dna	gen_pos			Bone/Soft tissue: Liposarcoma	2.18733058938986e-06	16	1
+tumor_sample	prob	dna	gen_pos			Bone/Soft tissue: GIST	1.8597524501371796e-06	21	1
+tumor_sample	prob	dna	gen_pos			Bone/Soft tissue: Leiomyosarcoma	1.5459416917780073e-05	6	1
+tumor_sample	prob	dna	gen_pos			Bone/Soft tissue: Liposarcoma	2.187330589389845e-06	16	1
 tumor_sample	prob	dna	gen_pos			Bone/Soft tissue: Osteosarcoma	1.7194510022122722e-05	5	1
 tumor_sample	prob	dna	gen_pos			Bone/Soft tissue: Undiff. sarcoma	1.9339798665244923e-05	4	1
-tumor_sample	prob	dna	gen_pos			Bone/Soft tissue: Other	9.699511173850158e-05	2	1
-tumor_sample	prob	dna	gen_pos			Breast: Triple negative	2.136427214512049e-06	17	1
-tumor_sample	prob	dna	gen_pos			Breast: Other	1.103786031764639e-06	24	1
-tumor_sample	prob	dna	gen_pos			CNS: Glioma	7.120928810462339e-06	8	1
-tumor_sample	prob	dna	gen_pos			CNS: Medulloblastoma	2.18962947160843e-06	15	1
-tumor_sample	prob	dna	gen_pos			CNS: Pilocytic astrocytoma	6.442842709295198e-06	9	1
-tumor_sample	prob	dna	gen_pos			Colorectum/Small intestine/Appendix	1.0957370325588063e-06	25	1
-tumor_sample	prob	dna	gen_pos			Esophagus/Stomach	1.5139312268679737e-06	22	1
-tumor_sample	prob	dna	gen_pos			Gynecologic: Endometrium	9.54834107354778e-07	27	1
-tumor_sample	prob	dna	gen_pos			Gynecologic: Ovary/Fallopian tube	3.910183815945104e-06	11	1
+tumor_sample	prob	dna	gen_pos			Bone/Soft tissue: Other	9.699511173850296e-05	2	1
+tumor_sample	prob	dna	gen_pos			Breast: Triple negative	2.1364272145122913e-06	17	1
+tumor_sample	prob	dna	gen_pos			Breast: Other	1.103786031764686e-06	24	1
+tumor_sample	prob	dna	gen_pos			CNS: Glioma	7.120928810462389e-06	8	1
+tumor_sample	prob	dna	gen_pos			CNS: Medulloblastoma	2.189629471608415e-06	15	1
+tumor_sample	prob	dna	gen_pos			CNS: Pilocytic astrocytoma	6.442842709295199e-06	9	1
+tumor_sample	prob	dna	gen_pos			Colorectum/Small intestine/Appendix	1.095737032558822e-06	25	1
+tumor_sample	prob	dna	gen_pos			Esophagus/Stomach	1.5139312268680275e-06	22	1
+tumor_sample	prob	dna	gen_pos			Gynecologic: Endometrium	9.548341073547644e-07	27	1
+tumor_sample	prob	dna	gen_pos			Gynecologic: Ovary/Fallopian tube	3.910183815945103e-06	11	1
 tumor_sample	prob	dna	gen_pos			HPB: Bile duct/Gallbladder	2.5401592055703797e-06	14	1
-tumor_sample	prob	dna	gen_pos			HPB: Liver	6.795699225337473e-07	30	1
-tumor_sample	prob	dna	gen_pos			HPB: Pancreas	9.625548712465859e-07	26	1
+tumor_sample	prob	dna	gen_pos			HPB: Liver	6.795699225337618e-07	30	1
+tumor_sample	prob	dna	gen_pos			HPB: Pancreas	9.625548712466132e-07	26	1
 tumor_sample	prob	dna	gen_pos			Head and neck: Adenoid cystic	2.244559136431098e-09	39	1
-tumor_sample	prob	dna	gen_pos			Head and neck: Salivary gland	1.0318617577297119e-05	7	1
-tumor_sample	prob	dna	gen_pos			Head and neck: Other	1.9252999220201123e-06	20	1
+tumor_sample	prob	dna	gen_pos			Head and neck: Salivary gland	1.0318617577297046e-05	7	1
+tumor_sample	prob	dna	gen_pos			Head and neck: Other	1.9252999220201263e-06	20	1
 tumor_sample	prob	dna	gen_pos			Kidney: Chromophobe	2.4385781969448135e-07	36	1
-tumor_sample	prob	dna	gen_pos			Kidney: Other	3.960850632541706e-07	34	1
-tumor_sample	prob	dna	gen_pos			Lung: Non-small cell: LUAD	1.9504741500147903e-06	18	1
-tumor_sample	prob	dna	gen_pos			Lung: Non-small cell: LUSC	4.089013188656626e-07	33	1
-tumor_sample	prob	dna	gen_pos			Lung: Small cell	5.024812415514166e-07	32	1
-tumor_sample	prob	dna	gen_pos			Lymphoid tissue	5.922672383430477e-09	38	1
-tumor_sample	prob	dna	gen_pos			Mesothelium	7.896428297993196e-07	28	1
-tumor_sample	prob	dna	gen_pos			Myeloid: Acute myeloid leukemia	2.1479793108172336e-08	37	1
-tumor_sample	prob	dna	gen_pos			Myeloid: Myeloproliferative neoplasm	3.504016180120641e-07	35	1
+tumor_sample	prob	dna	gen_pos			Kidney: Other	3.9608506325416217e-07	34	1
+tumor_sample	prob	dna	gen_pos			Lung: Non-small cell: LUAD	1.9504741500148182e-06	18	1
+tumor_sample	prob	dna	gen_pos			Lung: Non-small cell: LUSC	4.0890131886567427e-07	33	1
+tumor_sample	prob	dna	gen_pos			Lung: Small cell	5.024812415514167e-07	32	1
+tumor_sample	prob	dna	gen_pos			Lymphoid tissue	5.9226723834300984e-09	38	1
+tumor_sample	prob	dna	gen_pos			Mesothelium	7.896428297993253e-07	28	1
+tumor_sample	prob	dna	gen_pos			Myeloid: Acute myeloid leukemia	2.1479793108172332e-08	37	1
+tumor_sample	prob	dna	gen_pos			Myeloid: Myeloproliferative neoplasm	3.504016180120666e-07	35	1
 tumor_sample	prob	dna	gen_pos			NET: Colorectum/Small intestine	6.799587258987057e-07	29	1
 tumor_sample	prob	dna	gen_pos			NET: Lung	6.614917593264422e-07	31	1
-tumor_sample	prob	dna	gen_pos			NET: Pancreas	4.000435703887606e-06	10	1
+tumor_sample	prob	dna	gen_pos			NET: Pancreas	4.00043570388755e-06	10	1
 tumor_sample	prob	dna	gen_pos			Prostate	3.1091986550511897e-06	12	1
 tumor_sample	prob	dna	gen_pos			Skin: Melanoma	0.9997492462021321	1	1
-tumor_sample	prob	dna	gen_pos			Skin: Other	3.579993902723518e-05	3	1
-tumor_sample	prob	dna	gen_pos			Thyroid gland	2.7318048130768554e-06	13	1
-tumor_sample	prob	dna	gen_pos			Urothelial tract	1.9326683961720585e-06	19	1
-tumor_sample	prob	dna	snv96			Anogenital	3.6668884924994933e-07	5	2
-tumor_sample	prob	dna	snv96			Bone/Soft tissue: Cartilaginous neoplasm	4.4149471686455473e-16	37	2
-tumor_sample	prob	dna	snv96			Bone/Soft tissue: GIST	1.6734107379273002e-14	31	2
-tumor_sample	prob	dna	snv96			Bone/Soft tissue: Leiomyosarcoma	2.4142203046786228e-12	25	2
-tumor_sample	prob	dna	snv96			Bone/Soft tissue: Liposarcoma	1.0857897682322344e-14	32	2
-tumor_sample	prob	dna	snv96			Bone/Soft tissue: Osteosarcoma	5.189032496294288e-12	21	2
-tumor_sample	prob	dna	snv96			Bone/Soft tissue: Undiff. sarcoma	2.713778664159583e-09	10	2
-tumor_sample	prob	dna	snv96			Bone/Soft tissue: Other	9.816288651835988e-08	6	2
-tumor_sample	prob	dna	snv96			Breast: Triple negative	3.0638441288084914e-11	17	2
-tumor_sample	prob	dna	snv96			Breast: Other	1.016554652913998e-09	12	2
+tumor_sample	prob	dna	gen_pos			Skin: Other	3.579993902723519e-05	3	1
+tumor_sample	prob	dna	gen_pos			Thyroid gland	2.7318048130770883e-06	13	1
+tumor_sample	prob	dna	gen_pos			Urothelial tract	1.932668396172361e-06	19	1
+tumor_sample	prob	dna	snv96			Anogenital	3.666888492499506e-07	5	2
+tumor_sample	prob	dna	snv96			Bone/Soft tissue: Cartilaginous neoplasm	4.414947168645547e-16	37	2
+tumor_sample	prob	dna	snv96			Bone/Soft tissue: GIST	1.6734107379273122e-14	31	2
+tumor_sample	prob	dna	snv96			Bone/Soft tissue: Leiomyosarcoma	2.4142203046786397e-12	25	2
+tumor_sample	prob	dna	snv96			Bone/Soft tissue: Liposarcoma	1.0857897682322421e-14	32	2
+tumor_sample	prob	dna	snv96			Bone/Soft tissue: Osteosarcoma	5.1890324962943245e-12	21	2
+tumor_sample	prob	dna	snv96			Bone/Soft tissue: Undiff. sarcoma	2.713778664159602e-09	10	2
+tumor_sample	prob	dna	snv96			Bone/Soft tissue: Other	9.816288651836024e-08	6	2
+tumor_sample	prob	dna	snv96			Breast: Triple negative	3.0638441288085024e-11	17	2
+tumor_sample	prob	dna	snv96			Breast: Other	1.0165546529140088e-09	12	2
 tumor_sample	prob	dna	snv96			CNS: Glioma	6.0549350990658954e-15	33	2
 tumor_sample	prob	dna	snv96			CNS: Medulloblastoma	9.45382378694596e-19	40	2
 tumor_sample	prob	dna	snv96			CNS: Pilocytic astrocytoma	8.12700987275367e-18	38	2
-tumor_sample	prob	dna	snv96			Colorectum/Small intestine/Appendix	1.1358186079341036e-13	30	2
+tumor_sample	prob	dna	snv96			Colorectum/Small intestine/Appendix	1.1358186079341116e-13	30	2
 tumor_sample	prob	dna	snv96			Esophagus/Stomach	1.5648401300326665e-09	11	2
-tumor_sample	prob	dna	snv96			Gynecologic: Endometrium	7.681938162188476e-12	20	2
-tumor_sample	prob	dna	snv96			Gynecologic: Ovary/Fallopian tube	5.210682850979301e-13	28	2
-tumor_sample	prob	dna	snv96			HPB: Bile duct/Gallbladder	1.735047624409765e-08	8	2
-tumor_sample	prob	dna	snv96			HPB: Liver	2.7254126838596823e-13	29	2
-tumor_sample	prob	dna	snv96			HPB: Pancreas	1.2749574513961831e-12	27	2
-tumor_sample	prob	dna	snv96			Head and neck: Adenoid cystic	4.673860695770083e-10	14	2
-tumor_sample	prob	dna	snv96			Head and neck: Salivary gland	2.45039601413482e-06	3	2
-tumor_sample	prob	dna	snv96			Head and neck: Other	4.432347837126086e-07	4	2
+tumor_sample	prob	dna	snv96			Gynecologic: Endometrium	7.681938162188531e-12	20	2
+tumor_sample	prob	dna	snv96			Gynecologic: Ovary/Fallopian tube	5.210682850979339e-13	28	2
+tumor_sample	prob	dna	snv96			HPB: Bile duct/Gallbladder	1.7350476244097772e-08	8	2
+tumor_sample	prob	dna	snv96			HPB: Liver	2.725412683859692e-13	29	2
+tumor_sample	prob	dna	snv96			HPB: Pancreas	1.2749574513961878e-12	27	2
+tumor_sample	prob	dna	snv96			Head and neck: Adenoid cystic	4.673860695770034e-10	14	2
+tumor_sample	prob	dna	snv96			Head and neck: Salivary gland	2.4503960141348244e-06	3	2
+tumor_sample	prob	dna	snv96			Head and neck: Other	4.43234783712611e-07	4	2
 tumor_sample	prob	dna	snv96			Kidney: Chromophobe	5.1774688311439275e-15	35	2
-tumor_sample	prob	dna	snv96			Kidney: Other	9.102028056959966e-10	13	2
-tumor_sample	prob	dna	snv96			Lung: Non-small cell: LUAD	4.36681511564441e-12	22	2
-tumor_sample	prob	dna	snv96			Lung: Non-small cell: LUSC	9.327576286640438e-11	16	2
-tumor_sample	prob	dna	snv96			Lung: Small cell	2.499126049749197e-12	24	2
-tumor_sample	prob	dna	snv96			Lymphoid tissue	1.4988176373471018e-11	18	2
-tumor_sample	prob	dna	snv96			Mesothelium	2.9103951689494414e-12	23	2
-tumor_sample	prob	dna	snv96			Myeloid: Acute myeloid leukemia	5.831658903881863e-15	34	2
-tumor_sample	prob	dna	snv96			Myeloid: Myeloproliferative neoplasm	1.2095916223141094e-18	39	2
-tumor_sample	prob	dna	snv96			NET: Colorectum/Small intestine	1.5001577911789212e-12	26	2
-tumor_sample	prob	dna	snv96			NET: Lung	1.3488300403273672e-11	19	2
-tumor_sample	prob	dna	snv96			NET: Pancreas	1.143650826760418e-10	15	2
+tumor_sample	prob	dna	snv96			Kidney: Other	9.10202805696003e-10	13	2
+tumor_sample	prob	dna	snv96			Lung: Non-small cell: LUAD	4.366815115644441e-12	22	2
+tumor_sample	prob	dna	snv96			Lung: Non-small cell: LUSC	9.327576286640537e-11	16	2
+tumor_sample	prob	dna	snv96			Lung: Small cell	2.4991260497492058e-12	24	2
+tumor_sample	prob	dna	snv96			Lymphoid tissue	1.4988176373471124e-11	18	2
+tumor_sample	prob	dna	snv96			Mesothelium	2.910395168949462e-12	23	2
+tumor_sample	prob	dna	snv96			Myeloid: Acute myeloid leukemia	5.831658903881904e-15	34	2
+tumor_sample	prob	dna	snv96			Myeloid: Myeloproliferative neoplasm	1.209591622314118e-18	39	2
+tumor_sample	prob	dna	snv96			NET: Colorectum/Small intestine	1.5001577911789319e-12	26	2
+tumor_sample	prob	dna	snv96			NET: Lung	1.3488300403273769e-11	19	2
+tumor_sample	prob	dna	snv96			NET: Pancreas	1.143650826760426e-10	15	2
 tumor_sample	prob	dna	snv96			Prostate	9.922426122823756e-16	36	2
 tumor_sample	prob	dna	snv96			Skin: Melanoma	0.9999879275632831	1	2
-tumor_sample	prob	dna	snv96			Skin: Other	8.659757942846464e-06	2	2
-tumor_sample	prob	dna	snv96			Thyroid gland	1.1383061746205263e-08	9	2
-tumor_sample	prob	dna	snv96			Urothelial tract	1.8494394261482548e-08	7	2
-tumor_sample	prob	dna	event			Anogenital	0.0002689822351707764	14	3
-tumor_sample	prob	dna	event			Bone/Soft tissue: Cartilaginous neoplasm	1.412501969303285e-09	40	3
-tumor_sample	prob	dna	event			Bone/Soft tissue: GIST	5.481894207279017e-05	20	3
-tumor_sample	prob	dna	event			Bone/Soft tissue: Leiomyosarcoma	7.13118719969612e-05	19	3
-tumor_sample	prob	dna	event			Bone/Soft tissue: Liposarcoma	7.770432648468264e-07	35	3
-tumor_sample	prob	dna	event			Bone/Soft tissue: Osteosarcoma	4.244579446337305e-05	22	3
-tumor_sample	prob	dna	event			Bone/Soft tissue: Undiff. sarcoma	0.000108723812400278	18	3
-tumor_sample	prob	dna	event			Bone/Soft tissue: Other	0.0013446246329249364	9	3
-tumor_sample	prob	dna	event			Breast: Triple negative	2.24279813155962e-07	38	3
-tumor_sample	prob	dna	event			Breast: Other	5.288436104562298e-06	31	3
-tumor_sample	prob	dna	event			CNS: Glioma	0.0018591604972170602	5	3
-tumor_sample	prob	dna	event			CNS: Medulloblastoma	2.523320847292259e-07	37	3
-tumor_sample	prob	dna	event			CNS: Pilocytic astrocytoma	4.3063434872780097e-07	36	3
-tumor_sample	prob	dna	event			Colorectum/Small intestine/Appendix	4.165177712759028e-05	23	3
-tumor_sample	prob	dna	event			Esophagus/Stomach	2.3273911346634292e-05	25	3
-tumor_sample	prob	dna	event			Gynecologic: Endometrium	1.545340999038185e-06	33	3
-tumor_sample	prob	dna	event			Gynecologic: Ovary/Fallopian tube	5.699206258949753e-06	29	3
-tumor_sample	prob	dna	event			HPB: Bile duct/Gallbladder	0.01638118979589187	3	3
-tumor_sample	prob	dna	event			HPB: Liver	0.11879972760907338	2	3
-tumor_sample	prob	dna	event			HPB: Pancreas	4.1028599850017796e-05	24	3
-tumor_sample	prob	dna	event			Head and neck: Adenoid cystic	5.35513598015193e-06	30	3
-tumor_sample	prob	dna	event			Head and neck: Salivary gland	0.0009795312492302084	10	3
-tumor_sample	prob	dna	event			Head and neck: Other	0.0003860037796535613	13	3
-tumor_sample	prob	dna	event			Kidney: Chromophobe	1.0886573459547081e-05	27	3
-tumor_sample	prob	dna	event			Kidney: Other	0.0013945364587261424	8	3
-tumor_sample	prob	dna	event			Lung: Non-small cell: LUAD	0.0015119187581117326	7	3
-tumor_sample	prob	dna	event			Lung: Non-small cell: LUSC	1.4318493940500285e-05	26	3
-tumor_sample	prob	dna	event			Lung: Small cell	1.3724700744848625e-06	34	3
-tumor_sample	prob	dna	event			Lymphoid tissue	4.3375965616777656e-05	21	3
-tumor_sample	prob	dna	event			Mesothelium	0.0001385720628924742	15	3
-tumor_sample	prob	dna	event			Myeloid: Acute myeloid leukemia	4.145175939181047e-06	32	3
-tumor_sample	prob	dna	event			Myeloid: Myeloproliferative neoplasm	1.471786254850378e-08	39	3
-tumor_sample	prob	dna	event			NET: Colorectum/Small intestine	7.424167324165162e-06	28	3
-tumor_sample	prob	dna	event			NET: Lung	0.0005642316609706916	12	3
-tumor_sample	prob	dna	event			NET: Pancreas	0.00012116560097404978	17	3
-tumor_sample	prob	dna	event			Prostate	0.0001238559647132041	16	3
-tumor_sample	prob	dna	event			Skin: Melanoma	0.8507700198967394	1	3
-tumor_sample	prob	dna	event			Skin: Other	0.001662394830480488	6	3
-tumor_sample	prob	dna	event			Thyroid gland	0.0007995961032504247	11	3
-tumor_sample	prob	dna	event			Urothelial tract	0.002410122769148647	4	3
+tumor_sample	prob	dna	snv96			Skin: Other	8.659757942846448e-06	2	2
+tumor_sample	prob	dna	snv96			Thyroid gland	1.1383061746205303e-08	9	2
+tumor_sample	prob	dna	snv96			Urothelial tract	1.849439426148268e-08	7	2
+tumor_sample	prob	dna	event			Anogenital	0.0002689821830476709	14	3
+tumor_sample	prob	dna	event			Bone/Soft tissue: Cartilaginous neoplasm	1.4125023004735242e-09	40	3
+tumor_sample	prob	dna	event			Bone/Soft tissue: GIST	5.48189422898019e-05	20	3
+tumor_sample	prob	dna	event			Bone/Soft tissue: Leiomyosarcoma	7.13118733120476e-05	19	3
+tumor_sample	prob	dna	event			Bone/Soft tissue: Liposarcoma	7.770431973517799e-07	35	3
+tumor_sample	prob	dna	event			Bone/Soft tissue: Osteosarcoma	4.244579028356508e-05	22	3
+tumor_sample	prob	dna	event			Bone/Soft tissue: Undiff. sarcoma	0.00010872378016077757	18	3
+tumor_sample	prob	dna	event			Bone/Soft tissue: Other	0.0013446243276870088	9	3
+tumor_sample	prob	dna	event			Breast: Triple negative	2.2427975324851772e-07	38	3
+tumor_sample	prob	dna	event			Breast: Other	5.2884349762167116e-06	31	3
+tumor_sample	prob	dna	event			CNS: Glioma	0.001859160227703123	5	3
+tumor_sample	prob	dna	event			CNS: Medulloblastoma	2.523320705048407e-07	37	3
+tumor_sample	prob	dna	event			CNS: Pilocytic astrocytoma	4.3063436126308947e-07	36	3
+tumor_sample	prob	dna	event			Colorectum/Small intestine/Appendix	4.16517770194943e-05	23	3
+tumor_sample	prob	dna	event			Esophagus/Stomach	2.327390870025543e-05	25	3
+tumor_sample	prob	dna	event			Gynecologic: Endometrium	1.545340612411498e-06	33	3
+tumor_sample	prob	dna	event			Gynecologic: Ovary/Fallopian tube	5.699206453870683e-06	29	3
+tumor_sample	prob	dna	event			HPB: Bile duct/Gallbladder	0.01638118321384976	3	3
+tumor_sample	prob	dna	event			HPB: Liver	0.11879973620809639	2	3
+tumor_sample	prob	dna	event			HPB: Pancreas	4.102860222916434e-05	24	3
+tumor_sample	prob	dna	event			Head and neck: Adenoid cystic	5.355135368796433e-06	30	3
+tumor_sample	prob	dna	event			Head and neck: Salivary gland	0.0009795309800937322	10	3
+tumor_sample	prob	dna	event			Head and neck: Other	0.0003860036688492292	13	3
+tumor_sample	prob	dna	event			Kidney: Chromophobe	1.08865745973233e-05	27	3
+tumor_sample	prob	dna	event			Kidney: Other	0.0013945364913027372	8	3
+tumor_sample	prob	dna	event			Lung: Non-small cell: LUAD	0.0015119184796082074	7	3
+tumor_sample	prob	dna	event			Lung: Non-small cell: LUSC	1.4318491330210215e-05	26	3
+tumor_sample	prob	dna	event			Lung: Small cell	1.372470103234201e-06	34	3
+tumor_sample	prob	dna	event			Lymphoid tissue	4.337595567850992e-05	21	3
+tumor_sample	prob	dna	event			Mesothelium	0.0001385720618335418	15	3
+tumor_sample	prob	dna	event			Myeloid: Acute myeloid leukemia	4.14517542025284e-06	32	3
+tumor_sample	prob	dna	event			Myeloid: Myeloproliferative neoplasm	1.4717862261469723e-08	39	3
+tumor_sample	prob	dna	event			NET: Colorectum/Small intestine	7.424167364554202e-06	28	3
+tumor_sample	prob	dna	event			NET: Lung	0.0005642316817644228	12	3
+tumor_sample	prob	dna	event			NET: Pancreas	0.0001211655818806122	17	3
+tumor_sample	prob	dna	event			Prostate	0.00012385594573787126	16	3
+tumor_sample	prob	dna	event			Skin: Melanoma	0.8507700206082773	1	3
+tumor_sample	prob	dna	event			Skin: Other	0.0016623945660413253	6	3
+tumor_sample	prob	dna	event			Thyroid gland	0.0007995957918250728	11	3
+tumor_sample	prob	dna	event			Urothelial tract	0.002410121936754762	4	3
 tumor_sample	sig_quantile			AID/APOBEC (SBS2/13)	3847.5	Anogenital	0.5394750656167979	37	4
 tumor_sample	sig_quantile			AID/APOBEC (SBS2/13)	3847.5	Bone/Soft tissue: Cartilaginous neoplasm	229.01785714285714	2	4
 tumor_sample	sig_quantile			AID/APOBEC (SBS2/13)	3847.5	Bone/Soft tissue: GIST	3.3410038207711015	11	4
@@ -360,44 +360,44 @@ tumor_sample	sig_quantile			ROS/5FU (SBS17)	1121.3	Skin: Other	0.963556633585147
 tumor_sample	sig_quantile			ROS/5FU (SBS17)	1121.3	Thyroid gland	0.9865740918865077	19	8
 tumor_sample	sig_quantile			ROS/5FU (SBS17)	1121.3	Urothelial tract	0.917099118652986	36	8
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Anogenital	0.9999980064566867	25	9
-tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Bone/Soft tissue: Cartilaginous neoplasm	0.21969819924702552	37	9
+tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Bone/Soft tissue: Cartilaginous neoplasm	0.2196981992470252	37	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Bone/Soft tissue: GIST	1.0	15	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Bone/Soft tissue: Leiomyosarcoma	1.0	16	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Bone/Soft tissue: Liposarcoma	0.9998828109366381	30	9
-tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Bone/Soft tissue: Osteosarcoma	0.21274718901907208	38	9
+tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Bone/Soft tissue: Osteosarcoma	0.21274718901907178	38	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Bone/Soft tissue: Undiff. sarcoma	0.999926549707176	29	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Bone/Soft tissue: Other	1.0103482072019636	11	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Breast: Triple negative	0.9999913960268915	28	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Breast: Other	1.0914482481751195	10	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	CNS: Glioma	0.9999949809510588	26	9
-tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	CNS: Medulloblastoma	0.15573497386636953	39	9
-tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	CNS: Pilocytic astrocytoma	0.05925545972016083	40	9
+tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	CNS: Medulloblastoma	0.15573497386636923	39	9
+tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	CNS: Pilocytic astrocytoma	0.05925545972016064	40	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Colorectum/Small intestine/Appendix	1.0000570543950191	13	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Esophagus/Stomach	1.0	17	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Gynecologic: Endometrium	1.0	18	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Gynecologic: Ovary/Fallopian tube	1.0	19	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	HPB: Bile duct/Gallbladder	0.9999920848780989	27	9
-tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	HPB: Liver	1.8743689332087363	8	9
+tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	HPB: Liver	1.8743689332087377	8	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	HPB: Pancreas	1.0	20	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Head and neck: Adenoid cystic	1.0	21	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Head and neck: Salivary gland	0.9997260430430107	31	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Head and neck: Other	1.000105528674398	12	9
-tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Kidney: Chromophobe	0.38819631745905125	35	9
-tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Kidney: Other	1.379965419645591	9	9
-tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Lung: Non-small cell: LUAD	4.967057725054225	4	9
-tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Lung: Non-small cell: LUSC	3.95329513109877	5	9
-tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Lung: Small cell	11.604385161346714	1	9
+tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Kidney: Chromophobe	0.3881963174590509	35	9
+tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Kidney: Other	1.3799654196455915	9	9
+tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Lung: Non-small cell: LUAD	4.967057725054233	4	9
+tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Lung: Non-small cell: LUSC	3.953295131098775	5	9
+tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Lung: Small cell	11.604385161346745	1	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Lymphoid tissue	1.0	22	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Mesothelium	1.0	23	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Myeloid: Acute myeloid leukemia	0.9098728564359649	33	9
-tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Myeloid: Myeloproliferative neoplasm	0.360486478408324	36	9
-tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	NET: Colorectum/Small intestine	3.0054198970318953	6	9
-tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	NET: Lung	2.186626030167465	7	9
-tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	NET: Pancreas	0.9304480824497965	32	9
+tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Myeloid: Myeloproliferative neoplasm	0.3604864784083236	36	9
+tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	NET: Colorectum/Small intestine	3.0054198970318984	6	9
+tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	NET: Lung	2.1866260301674667	7	9
+tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	NET: Pancreas	0.9304480824497964	32	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Prostate	1.0	24	9
-tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Skin: Melanoma	6.742261032956644	2	9
-tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Skin: Other	5.406572849095718	3	9
-tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Thyroid gland	0.6796972363189823	34	9
+tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Skin: Melanoma	6.742261032956658	2	9
+tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Skin: Other	5.406572849095728	3	9
+tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Thyroid gland	0.679697236318982	34	9
 tumor_sample	feat_contrib	dna	event	tmb.snv_count	37660.0	Urothelial tract	1.0000041039288823	14	9
 tumor_sample	feat_contrib	dna	event	tmb.indels_per_mb	0.1207	Anogenital	1.0	3	10
 tumor_sample	feat_contrib	dna	event	tmb.indels_per_mb	0.1207	Bone/Soft tissue: Cartilaginous neoplasm	1.0	4	10
@@ -409,11 +409,11 @@ tumor_sample	feat_contrib	dna	event	tmb.indels_per_mb	0.1207	Bone/Soft tissue: U
 tumor_sample	feat_contrib	dna	event	tmb.indels_per_mb	0.1207	Bone/Soft tissue: Other	1.0	10	10
 tumor_sample	feat_contrib	dna	event	tmb.indels_per_mb	0.1207	Breast: Triple negative	1.0	11	10
 tumor_sample	feat_contrib	dna	event	tmb.indels_per_mb	0.1207	Breast: Other	1.0	12	10
-tumor_sample	feat_contrib	dna	event	tmb.indels_per_mb	0.1207	CNS: Glioma	0.9026182322360674	40	10
+tumor_sample	feat_contrib	dna	event	tmb.indels_per_mb	0.1207	CNS: Glioma	0.9026182322360675	40	10
 tumor_sample	feat_contrib	dna	event	tmb.indels_per_mb	0.1207	CNS: Medulloblastoma	1.0	13	10
 tumor_sample	feat_contrib	dna	event	tmb.indels_per_mb	0.1207	CNS: Pilocytic astrocytoma	1.0	14	10
 tumor_sample	feat_contrib	dna	event	tmb.indels_per_mb	0.1207	Colorectum/Small intestine/Appendix	0.9272226945906294	39	10
-tumor_sample	feat_contrib	dna	event	tmb.indels_per_mb	0.1207	Esophagus/Stomach	0.9578314405227668	36	10
+tumor_sample	feat_contrib	dna	event	tmb.indels_per_mb	0.1207	Esophagus/Stomach	0.9578314405227667	36	10
 tumor_sample	feat_contrib	dna	event	tmb.indels_per_mb	0.1207	Gynecologic: Endometrium	0.9343438726894701	38	10
 tumor_sample	feat_contrib	dna	event	tmb.indels_per_mb	0.1207	Gynecologic: Ovary/Fallopian tube	1.0	15	10
 tumor_sample	feat_contrib	dna	event	tmb.indels_per_mb	0.1207	HPB: Bile duct/Gallbladder	0.9451868728016709	37	10
@@ -441,17 +441,17 @@ tumor_sample	feat_contrib	dna	event	tmb.indels_per_mb	0.1207	Thyroid gland	1.0	3
 tumor_sample	feat_contrib	dna	event	tmb.indels_per_mb	0.1207	Urothelial tract	1.0	35	10
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Anogenital	0.38857192868774093	36	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Bone/Soft tissue: Cartilaginous neoplasm	1.9337566406504194	2	11
-tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Bone/Soft tissue: GIST	0.8495498967338335	25	11
+tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Bone/Soft tissue: GIST	0.8495498967338336	25	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Bone/Soft tissue: Leiomyosarcoma	0.553950726491205	35	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Bone/Soft tissue: Liposarcoma	1.5516934924710972	6	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Bone/Soft tissue: Osteosarcoma	0.8185116685478486	26	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Bone/Soft tissue: Undiff. sarcoma	1.1306797611134365	13	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Bone/Soft tissue: Other	0.8054241439838782	29	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Breast: Triple negative	0.06312136568320269	40	11
-tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Breast: Other	0.14265715150436614	37	11
-tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	CNS: Glioma	0.9317697914663157	23	11
+tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Breast: Other	0.14265715150436617	37	11
+tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	CNS: Glioma	0.9317697914663158	23	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	CNS: Medulloblastoma	1.006993235463676	19	11
-tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	CNS: Pilocytic astrocytoma	0.8181758061241453	27	11
+tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	CNS: Pilocytic astrocytoma	0.8181758061241454	27	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Colorectum/Small intestine/Appendix	0.7074258504172861	32	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Esophagus/Stomach	1.4328607569714773	8	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Gynecologic: Endometrium	0.09531286522749866	38	11
@@ -470,55 +470,55 @@ tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Lung: Small cell	0.9457261
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Lymphoid tissue	1.0683044958970256	17	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Mesothelium	1.2924462960923422	11	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Myeloid: Acute myeloid leukemia	1.1311576705966866	12	11
-tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Myeloid: Myeloproliferative neoplasm	1.6201311487287915	5	11
+tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Myeloid: Myeloproliferative neoplasm	1.6201311487287917	5	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	NET: Colorectum/Small intestine	1.304012007475124	10	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	NET: Lung	0.7392660112447081	31	11
-tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	NET: Pancreas	1.0570821546860494	18	11
+tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	NET: Pancreas	1.0570821546860496	18	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Prostate	6.438092218438105	1	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Skin: Melanoma	0.8672085139459241	24	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Skin: Other	1.088903794965187	16	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Thyroid gland	0.5950434154292816	34	11
 tumor_sample	feat_contrib	dna	event	trait.is_male	1.0	Urothelial tract	1.000002717883777	20	11
-tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Anogenital	1.3211923851734302	5	12
-tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Bone/Soft tissue: Cartilaginous neoplasm	0.14315871244255618	40	12
+tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Anogenital	1.3211923851734304	5	12
+tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Bone/Soft tissue: Cartilaginous neoplasm	0.1431587124425562	40	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Bone/Soft tissue: GIST	0.7193590211647958	32	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Bone/Soft tissue: Leiomyosarcoma	0.8610167119689868	30	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Bone/Soft tissue: Liposarcoma	0.5935894012119772	37	12
-tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Bone/Soft tissue: Osteosarcoma	1.1519604872270448	11	12
+tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Bone/Soft tissue: Osteosarcoma	1.151960487227045	11	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Bone/Soft tissue: Undiff. sarcoma	0.9974049358076956	24	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Bone/Soft tissue: Other	1.1826240729090858	9	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Breast: Triple negative	1.521502847568258	3	12
-tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Breast: Other	1.1671884546962756	10	12
+tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Breast: Other	1.1671884546962759	10	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	CNS: Glioma	0.42503998536358545	39	12
-tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	CNS: Medulloblastoma	1.0376408957760417	17	12
+tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	CNS: Medulloblastoma	1.037640895776042	17	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	CNS: Pilocytic astrocytoma	0.9224469132384558	28	12
-tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Colorectum/Small intestine/Appendix	1.1407851079340812	12	12
-tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Esophagus/Stomach	0.9987553301322571	23	12
-tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Gynecologic: Endometrium	1.082113977842218	13	12
+tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Colorectum/Small intestine/Appendix	1.1407851079340814	12	12
+tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Esophagus/Stomach	0.998755330132257	23	12
+tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Gynecologic: Endometrium	1.0821139778422182	13	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Gynecologic: Ovary/Fallopian tube	1.2842779974800906	6	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	HPB: Bile duct/Gallbladder	1.2150540404058006	8	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	HPB: Liver	0.968590504183099	26	12
-tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	HPB: Pancreas	1.0594737422676153	14	12
+tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	HPB: Pancreas	1.0594737422676155	14	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Head and neck: Adenoid cystic	0.9429987951820603	27	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Head and neck: Salivary gland	0.668252061711287	34	12
-tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Head and neck: Other	0.9953308526355792	25	12
+tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Head and neck: Other	0.9953308526355791	25	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Kidney: Chromophobe	1.0002019023438107	18	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Kidney: Other	1.0	19	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Lung: Non-small cell: LUAD	1.6002317947182811	2	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Lung: Non-small cell: LUSC	1.0398767378203082	16	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Lung: Small cell	0.9998660275990505	22	12
-tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Lymphoid tissue	0.5355635767050001	38	12
+tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Lymphoid tissue	0.5355635767050002	38	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Mesothelium	1.0	20	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Myeloid: Acute myeloid leukemia	2.744097981488383	1	12
-tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Myeloid: Myeloproliferative neoplasm	0.6088958030588839	36	12
+tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Myeloid: Myeloproliferative neoplasm	0.608895803058884	36	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	NET: Colorectum/Small intestine	0.7162424457129124	33	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	NET: Lung	1.2433680493822634	7	12
-tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	NET: Pancreas	1.3979649813928878	4	12
+tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	NET: Pancreas	1.397964981392888	4	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Prostate	0.897062644496814	29	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Skin: Melanoma	1.0	21	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Skin: Other	0.6479564685297445	35	12
 tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Thyroid gland	0.8398419687433336	31	12
-tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Urothelial tract	1.0553997237045927	15	12
+tumor_sample	feat_contrib	dna	event	trait.whole_genome_duplication	1.0	Urothelial tract	1.055399723704593	15	12
 tumor_sample	feat_contrib	dna	event	driver.ALB.indel	1.0	Anogenital	1.0	4	13
 tumor_sample	feat_contrib	dna	event	driver.ALB.indel	1.0	Bone/Soft tissue: Cartilaginous neoplasm	1.0	5	13
 tumor_sample	feat_contrib	dna	event	driver.ALB.indel	1.0	Bone/Soft tissue: GIST	1.0	6	13
@@ -559,59 +559,59 @@ tumor_sample	feat_contrib	dna	event	driver.ALB.indel	1.0	Skin: Melanoma	1.0	37	1
 tumor_sample	feat_contrib	dna	event	driver.ALB.indel	1.0	Skin: Other	1.0	38	13
 tumor_sample	feat_contrib	dna	event	driver.ALB.indel	1.0	Thyroid gland	1.0	39	13
 tumor_sample	feat_contrib	dna	event	driver.ALB.indel	1.0	Urothelial tract	1.0	40	13
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Anogenital	0.8701531146446538	39	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Bone/Soft tissue: Cartilaginous neoplasm	1.0	8	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Bone/Soft tissue: GIST	1.0	9	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Bone/Soft tissue: Leiomyosarcoma	1.0	10	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Bone/Soft tissue: Liposarcoma	1.0	11	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Bone/Soft tissue: Osteosarcoma	1.0	12	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Bone/Soft tissue: Undiff. sarcoma	1.0	13	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Bone/Soft tissue: Other	1.0	14	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Breast: Triple negative	1.0	15	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Breast: Other	1.0	16	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	CNS: Glioma	1.0	17	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	CNS: Medulloblastoma	1.0	18	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	CNS: Pilocytic astrocytoma	1.0	19	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Colorectum/Small intestine/Appendix	0.583988375995649	40	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Esophagus/Stomach	0.8766480696523644	38	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Gynecologic: Endometrium	1.086339882666113	4	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Gynecologic: Ovary/Fallopian tube	1.0542382965406487	6	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	HPB: Bile duct/Gallbladder	0.9169341847578848	37	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	HPB: Liver	0.9773387814509009	32	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	HPB: Pancreas	0.9827356839369854	31	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Head and neck: Adenoid cystic	1.0	20	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Head and neck: Salivary gland	1.1096458798288973	3	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Head and neck: Other	1.1222427045049168	2	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Kidney: Chromophobe	1.046431781526985	7	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Kidney: Other	1.0	21	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Lung: Non-small cell: LUAD	1.0	22	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Lung: Non-small cell: LUSC	0.9931359202831073	30	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Lung: Small cell	1.2466861251347479	1	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Lymphoid tissue	1.0	23	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Mesothelium	1.0	24	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Myeloid: Acute myeloid leukemia	1.0	25	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Myeloid: Myeloproliferative neoplasm	1.0	26	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	NET: Colorectum/Small intestine	1.0	27	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	NET: Lung	1.0573551584195147	5	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	NET: Pancreas	0.9381237138292903	36	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Prostate	0.9727711038756859	33	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Skin: Melanoma	0.9627321670752567	34	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Skin: Other	1.0	28	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Thyroid gland	0.9499009855466094	35	14
-tumor_sample	feat_contrib	dna	event	driver.APC.mut	0.0	Urothelial tract	1.0	29	14
-tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Anogenital	1.4601222410023833	13	15
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Anogenital	0.8701531046058589	39	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Bone/Soft tissue: Cartilaginous neoplasm	1.0	8	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Bone/Soft tissue: GIST	1.0	9	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Bone/Soft tissue: Leiomyosarcoma	1.0	10	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Bone/Soft tissue: Liposarcoma	1.0	11	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Bone/Soft tissue: Osteosarcoma	1.0	12	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Bone/Soft tissue: Undiff. sarcoma	1.0	13	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Bone/Soft tissue: Other	1.0	14	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Breast: Triple negative	1.0	15	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Breast: Other	1.0	16	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	CNS: Glioma	1.0	17	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	CNS: Medulloblastoma	1.0	18	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	CNS: Pilocytic astrocytoma	1.0	19	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Colorectum/Small intestine/Appendix	0.5839883499408866	40	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Esophagus/Stomach	0.876648060079383	38	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Gynecologic: Endometrium	1.0863398901284085	4	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Gynecologic: Ovary/Fallopian tube	1.0542383011594276	6	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	HPB: Bile duct/Gallbladder	0.9169341781622357	37	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	HPB: Liver	0.9773387795926749	32	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	HPB: Pancreas	0.9827356825173904	31	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Head and neck: Adenoid cystic	1.0	20	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Head and neck: Salivary gland	1.1096458894050456	3	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Head and neck: Other	1.1222427152405559	2	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Kidney: Chromophobe	1.0464317854664367	7	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Kidney: Other	1.0	21	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Lung: Non-small cell: LUAD	1.0	22	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Lung: Non-small cell: LUSC	0.9931359197157089	30	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Lung: Small cell	1.2466861479353406	1	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Lymphoid tissue	1.0	23	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Mesothelium	1.0	24	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Myeloid: Acute myeloid leukemia	1.0	25	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Myeloid: Myeloproliferative neoplasm	1.0	26	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	NET: Colorectum/Small intestine	1.0	27	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	NET: Lung	1.0573551633108662	5	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	NET: Pancreas	0.9381237088589893	36	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Prostate	0.9727711016481546	33	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Skin: Melanoma	0.9627321640423223	34	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Skin: Other	1.0	28	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Thyroid gland	0.9499009814969103	35	14
+tumor_sample	feat_contrib	dna	event	driver.APC.mut	-1e-08	Urothelial tract	1.0	29	14
+tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Anogenital	1.460122241002383	13	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Bone/Soft tissue: Cartilaginous neoplasm	1.0	15	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Bone/Soft tissue: GIST	1.0	16	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Bone/Soft tissue: Leiomyosarcoma	1.0	17	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Bone/Soft tissue: Liposarcoma	1.0	18	15
-tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Bone/Soft tissue: Osteosarcoma	0.8704654553874112	33	15
+tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Bone/Soft tissue: Osteosarcoma	0.8704654553874113	33	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Bone/Soft tissue: Undiff. sarcoma	0.9998920257674639	31	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Bone/Soft tissue: Other	1.0	19	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Breast: Triple negative	0.5545892029675995	39	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Breast: Other	1.0	20	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	CNS: Glioma	0.6060420246260098	36	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	CNS: Medulloblastoma	0.5704403050886543	38	15
-tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	CNS: Pilocytic astrocytoma	11.06181155016134	4	15
+tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	CNS: Pilocytic astrocytoma	11.061811550161341	4	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Colorectum/Small intestine/Appendix	8.62602375542869	5	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Esophagus/Stomach	1.0	21	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Gynecologic: Endometrium	1.0	22	15
@@ -624,22 +624,22 @@ tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Head and neck: Salivary 
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Head and neck: Other	0.5807760243622324	37	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Kidney: Chromophobe	0.8514801193698001	34	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Kidney: Other	1.0	24	15
-tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Lung: Non-small cell: LUAD	5.3723835983029815	6	15
+tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Lung: Non-small cell: LUAD	5.372383598302982	6	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Lung: Non-small cell: LUSC	0.6398464531821283	35	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Lung: Small cell	1.0894904317468648	14	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Lymphoid tissue	3.703854457237668	9	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Mesothelium	1.0	25	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Myeloid: Acute myeloid leukemia	1.0	26	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Myeloid: Myeloproliferative neoplasm	1.0	27	15
-tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	NET: Colorectum/Small intestine	0.9999188953075615	30	15
+tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	NET: Colorectum/Small intestine	0.9999188953075614	30	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	NET: Lung	3.425768901489323	10	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	NET: Pancreas	1.0	28	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Prostate	1.0	29	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Skin: Melanoma	47.90877144811814	1	15
-tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Skin: Other	0.4440153688738805	40	15
+tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Skin: Other	0.44401536887388054	40	15
 tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Thyroid gland	23.658696753008876	2	15
-tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Urothelial tract	1.599080054417778	12	15
-tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Anogenital	0.9999551401448856	26	16
+tumor_sample	feat_contrib	dna	event	driver.BRAF.mut	1.0	Urothelial tract	1.5990800544177781	12	15
+tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Anogenital	0.9999551401448855	26	16
 tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Bone/Soft tissue: Cartilaginous neoplasm	0.5884640367074688	30	16
 tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Bone/Soft tissue: GIST	0.9863239041456205	27	16
 tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Bone/Soft tissue: Leiomyosarcoma	1.652661876914241	8	16
@@ -658,14 +658,14 @@ tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Gynecologic: Endometri
 tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Gynecologic: Ovary/Fallopian tube	0.5173532734065512	33	16
 tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	HPB: Bile duct/Gallbladder	2.4549449903880345	3	16
 tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	HPB: Liver	0.5749776914597554	31	16
-tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	HPB: Pancreas	2.1371051183348295	5	16
+tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	HPB: Pancreas	2.13710511833483	5	16
 tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Head and neck: Adenoid cystic	0.8588019905491309	28	16
 tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Head and neck: Salivary gland	1.0003500103601852	18	16
-tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Head and neck: Other	1.2215840147492238	15	16
+tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Head and neck: Other	1.221584014749224	15	16
 tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Kidney: Chromophobe	0.12116765510630963	40	16
-tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Kidney: Other	1.4477979271750319	10	16
+tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Kidney: Other	1.4477979271750316	10	16
 tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Lung: Non-small cell: LUAD	1.240059264183232	12	16
-tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Lung: Non-small cell: LUSC	1.222430436801846	14	16
+tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Lung: Non-small cell: LUSC	1.2224304368018462	14	16
 tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Lung: Small cell	0.49123963922884695	34	16
 tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Lymphoid tissue	0.35532922037398557	35	16
 tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Mesothelium	2.396256083849869	4	16
@@ -678,10 +678,10 @@ tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Prostate	0.26054742789
 tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Skin: Melanoma	1.2372767929043302	13	16
 tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Skin: Other	1.0045778313137077	17	16
 tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Thyroid gland	0.9999831006992933	25	16
-tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Urothelial tract	1.8385931717919404	6	16
+tumor_sample	feat_contrib	dna	event	driver.CDKN2A.mut	1.0	Urothelial tract	1.8385931717919406	6	16
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Anogenital	1.5307038049008093	12	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Bone/Soft tissue: Cartilaginous neoplasm	0.6336096862112391	35	17
-tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Bone/Soft tissue: GIST	2.760709496394315	7	17
+tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Bone/Soft tissue: GIST	2.7607094963943153	7	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Bone/Soft tissue: Leiomyosarcoma	1.9726215573463237	8	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Bone/Soft tissue: Liposarcoma	0.16584664669980964	40	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Bone/Soft tissue: Osteosarcoma	2.91076528478642	4	17
@@ -696,17 +696,17 @@ tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Colorectum/Small intesti
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Esophagus/Stomach	1.0	20	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Gynecologic: Endometrium	5.869304674763272	1	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Gynecologic: Ovary/Fallopian tube	1.0	21	17
-tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	HPB: Bile duct/Gallbladder	0.8498555584353914	29	17
+tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	HPB: Bile duct/Gallbladder	0.8498555584353915	29	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	HPB: Liver	0.9364323216795628	27	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	HPB: Pancreas	0.7480582899828205	32	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Head and neck: Adenoid cystic	1.0	22	17
-tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Head and neck: Salivary gland	1.8141139039693748	9	17
+tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Head and neck: Salivary gland	1.814113903969375	9	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Head and neck: Other	0.7397083145564164	33	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Kidney: Chromophobe	1.2248360974131935	15	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Kidney: Other	1.0	23	17
-tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Lung: Non-small cell: LUAD	0.7717459050044058	30	17
+tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Lung: Non-small cell: LUAD	0.7717459050044059	30	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Lung: Non-small cell: LUSC	1.6753849806569	11	17
-tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Lung: Small cell	0.6340251460624378	34	17
+tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Lung: Small cell	0.6340251460624379	34	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Lymphoid tissue	0.3881687579311355	36	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Mesothelium	0.3381828311629083	37	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Myeloid: Acute myeloid leukemia	1.0	24	17
@@ -715,7 +715,7 @@ tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	NET: Colorectum/Small in
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	NET: Lung	1.713491573161504	10	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	NET: Pancreas	0.923059829286402	28	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Prostate	4.455688994818121	3	17
-tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Skin: Melanoma	1.3923852005979713	13	17
+tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Skin: Melanoma	1.3923852005979716	13	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Skin: Other	1.29334855810286	14	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Thyroid gland	0.18099546224924012	39	17
 tumor_sample	feat_contrib	dna	event	driver.PTEN.mut	1.0	Urothelial tract	1.0	26	17
@@ -752,7 +752,7 @@ tumor_sample	feat_contrib	dna	event	driver.SF3B1.mut	0.146	Mesothelium	1.0	32	18
 tumor_sample	feat_contrib	dna	event	driver.SF3B1.mut	0.146	Myeloid: Acute myeloid leukemia	1.0	33	18
 tumor_sample	feat_contrib	dna	event	driver.SF3B1.mut	0.146	Myeloid: Myeloproliferative neoplasm	1.0	34	18
 tumor_sample	feat_contrib	dna	event	driver.SF3B1.mut	0.146	NET: Colorectum/Small intestine	1.0	35	18
-tumor_sample	feat_contrib	dna	event	driver.SF3B1.mut	0.146	NET: Lung	1.3211476148483439	1	18
+tumor_sample	feat_contrib	dna	event	driver.SF3B1.mut	0.146	NET: Lung	1.321147614848344	1	18
 tumor_sample	feat_contrib	dna	event	driver.SF3B1.mut	0.146	NET: Pancreas	0.9748411281680176	40	18
 tumor_sample	feat_contrib	dna	event	driver.SF3B1.mut	0.146	Prostate	1.0	36	18
 tumor_sample	feat_contrib	dna	event	driver.SF3B1.mut	0.146	Skin: Melanoma	1.2826204197275957	2	18
@@ -762,7 +762,7 @@ tumor_sample	feat_contrib	dna	event	driver.SF3B1.mut	0.146	Urothelial tract	1.0	
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Anogenital	5.533581976639495	6	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Bone/Soft tissue: Cartilaginous neoplasm	1.0	15	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Bone/Soft tissue: GIST	1.0	16	19
-tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Bone/Soft tissue: Leiomyosarcoma	0.644236897341809	33	19
+tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Bone/Soft tissue: Leiomyosarcoma	0.6442368973418091	33	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Bone/Soft tissue: Liposarcoma	1.0	17	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Bone/Soft tissue: Osteosarcoma	1.0	18	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Bone/Soft tissue: Undiff. sarcoma	0.6491805338402818	32	19
@@ -773,10 +773,10 @@ tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	CNS: Glioma	49.542637362
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	CNS: Medulloblastoma	3.692762382332533	8	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	CNS: Pilocytic astrocytoma	1.0	21	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Colorectum/Small intestine/Appendix	1.0	22	19
-tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Esophagus/Stomach	0.3305949679421592	37	19
+tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Esophagus/Stomach	0.33059496794215926	37	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Gynecologic: Endometrium	1.4835388126926958	12	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Gynecologic: Ovary/Fallopian tube	1.0	23	19
-tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	HPB: Bile duct/Gallbladder	1.1426500098401273	13	19
+tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	HPB: Bile duct/Gallbladder	1.1426500098401275	13	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	HPB: Liver	3.999405686713082	7	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	HPB: Pancreas	0.39203277751838883	35	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Head and neck: Adenoid cystic	1.0	24	19
@@ -784,90 +784,90 @@ tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Head and neck: Salivary 
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Head and neck: Other	3.069435915696828	10	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Kidney: Chromophobe	2.341103124408491	11	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Kidney: Other	3.3107265223389764	9	19
-tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Lung: Non-small cell: LUAD	0.6877788653850992	31	19
-tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Lung: Non-small cell: LUSC	0.06114839066416659	40	19
-tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Lung: Small cell	0.06588517385376595	39	19
+tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Lung: Non-small cell: LUAD	0.6877788653850994	31	19
+tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Lung: Non-small cell: LUSC	0.06114839066416658	40	19
+tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Lung: Small cell	0.06588517385376597	39	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Lymphoid tissue	1.0	26	19
-tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Mesothelium	1.0349099792861443	14	19
+tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Mesothelium	1.0349099792861445	14	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Myeloid: Acute myeloid leukemia	1.0	27	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Myeloid: Myeloproliferative neoplasm	1.0	28	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	NET: Colorectum/Small intestine	0.25966431765520254	38	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	NET: Lung	0.44615632880367306	34	19
-tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	NET: Pancreas	0.8868009648333842	30	19
+tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	NET: Pancreas	0.8868009648333843	30	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Prostate	1.0	29	19
-tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Skin: Melanoma	14.067406460781356	4	19
+tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Skin: Melanoma	14.067406460781358	4	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Skin: Other	12.817384940062768	5	19
 tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Thyroid gland	21.044173233494917	3	19
-tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Urothelial tract	31.989700365626646	2	19
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Anogenital	1.0	20	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Bone/Soft tissue: Cartilaginous neoplasm	1.2742550157741668	12	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Bone/Soft tissue: GIST	1.9122808211604096	5	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Bone/Soft tissue: Leiomyosarcoma	0.727017039585073	31	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Bone/Soft tissue: Liposarcoma	0.9988581564109152	24	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Bone/Soft tissue: Osteosarcoma	0.6478925897929663	35	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Bone/Soft tissue: Undiff. sarcoma	1.264437243074546	13	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Bone/Soft tissue: Other	1.3555890506263815	10	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Breast: Triple negative	0.3812504742188491	39	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Breast: Other	0.9999209054555506	23	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	CNS: Glioma	0.7017055622406484	33	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	CNS: Medulloblastoma	1.8228217783213452	7	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	CNS: Pilocytic astrocytoma	1.0	21	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Colorectum/Small intestine/Appendix	0.7583129207854037	29	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Esophagus/Stomach	0.933822648713753	25	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Gynecologic: Endometrium	0.7296836754726155	30	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Gynecologic: Ovary/Fallopian tube	0.5411756464933251	37	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	HPB: Bile duct/Gallbladder	1.1264426322938283	14	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	HPB: Liver	1.054332529732155	16	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	HPB: Pancreas	0.5453749576872515	36	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Head and neck: Adenoid cystic	3.4822947827281863	2	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Head and neck: Salivary gland	0.49907542295648444	38	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Head and neck: Other	1.0130338875425282	18	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Kidney: Chromophobe	0.877072205740181	27	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Kidney: Other	1.8285315746086102	6	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Lung: Non-small cell: LUAD	1.001352484204365	19	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Lung: Non-small cell: LUSC	0.7223588649659559	32	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Lung: Small cell	0.3641746383896297	40	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Lymphoid tissue	1.0	22	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Mesothelium	2.5766706258206264	4	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Myeloid: Acute myeloid leukemia	1.0752016849116424	15	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Myeloid: Myeloproliferative neoplasm	1.018718600418198	17	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	NET: Colorectum/Small intestine	1.498445986432079	8	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	NET: Lung	4.640787215448465	1	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	NET: Pancreas	1.3922839831211768	9	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Prostate	1.3190752352918274	11	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Skin: Melanoma	2.649052481636933	3	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Skin: Other	0.6670313344118819	34	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Thyroid gland	0.858365038178873	28	20
-tumor_sample	feat_contrib	dna	event	driver.TP53.mut	0.0	Urothelial tract	0.8886211470584202	26	20
-tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Anogenital	0.5849062772085354	35	21
+tumor_sample	feat_contrib	dna	event	driver.TERT.mut	1.0	Urothelial tract	31.989700365626643	2	19
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Anogenital	1.0	20	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Bone/Soft tissue: Cartilaginous neoplasm	1.2742550221916094	12	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Bone/Soft tissue: GIST	1.9122808469216692	5	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Bone/Soft tissue: Leiomyosarcoma	0.7270170347687919	31	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Bone/Soft tissue: Liposarcoma	0.9988581563872014	24	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Bone/Soft tissue: Osteosarcoma	0.6478925839495782	35	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Bone/Soft tissue: Undiff. sarcoma	1.2644372492393203	13	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Bone/Soft tissue: Other	1.3555890591963733	10	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Breast: Triple negative	0.38125046657937267	39	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Breast: Other	0.999920905453907	23	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	CNS: Glioma	0.7017055570753449	33	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	CNS: Medulloblastoma	1.8228218010626929	7	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	CNS: Pilocytic astrocytoma	1.0	21	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Colorectum/Small intestine/Appendix	0.7583129164259194	29	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Esophagus/Stomach	0.9338226473851403	25	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Gynecologic: Endometrium	0.7296836706941824	30	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Gynecologic: Ovary/Fallopian tube	0.5411756395884427	37	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	HPB: Bile duct/Gallbladder	1.1264426350808041	14	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	HPB: Liver	1.0543325308913052	16	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	HPB: Pancreas	0.5453749508163885	36	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Head and neck: Adenoid cystic	3.4822948730129313	2	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Head and neck: Salivary gland	0.49907541574887265	38	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Head and neck: Other	1.0130338878151273	18	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Kidney: Chromophobe	0.8770722033496295	27	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Kidney: Other	1.8285315975400267	6	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Lung: Non-small cell: LUAD	1.0013524842324883	19	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Lung: Non-small cell: LUSC	0.7223588600840486	32	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Lung: Small cell	0.36417463074555295	40	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Lymphoid tissue	1.0	22	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Mesothelium	2.576670676498722	4	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Myeloid: Acute myeloid leukemia	1.0752016865316576	15	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Myeloid: Myeloproliferative neoplasm	1.0187186008107851	17	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	NET: Colorectum/Small intestine	1.4984459990249435	8	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	NET: Lung	4.640787363464528	1	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	NET: Pancreas	1.3922839926958952	9	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Prostate	1.3190752428825414	11	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Skin: Melanoma	2.649052535263651	3	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Skin: Other	0.6670313287993966	34	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Thyroid gland	0.858365035454754	28	20
+tumor_sample	feat_contrib	dna	event	driver.TP53.mut	-1e-08	Urothelial tract	0.8886211448779489	26	20
+tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Anogenital	0.5849062772085355	35	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Bone/Soft tissue: Cartilaginous neoplasm	1.0	17	21
-tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Bone/Soft tissue: GIST	1.9265248880024435	2	21
-tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Bone/Soft tissue: Leiomyosarcoma	1.3713104847980015	6	21
+tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Bone/Soft tissue: GIST	1.9265248880024433	2	21
+tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Bone/Soft tissue: Leiomyosarcoma	1.3713104847980018	6	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Bone/Soft tissue: Liposarcoma	1.0000397957362053	15	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Bone/Soft tissue: Osteosarcoma	1.1137448192750024	11	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Bone/Soft tissue: Undiff. sarcoma	1.1356856428508832	10	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Bone/Soft tissue: Other	1.0361314487090862	14	21
-tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Breast: Triple negative	1.1933192226235085	9	21
-tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Breast: Other	0.9989584618653531	25	21
+tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Breast: Triple negative	1.1933192226235088	9	21
+tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Breast: Other	0.998958461865353	25	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	CNS: Glioma	1.5817299756621226	3	21
-tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	CNS: Medulloblastoma	1.0824891794137932	12	21
+tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	CNS: Medulloblastoma	1.0824891794137934	12	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	CNS: Pilocytic astrocytoma	1.0	18	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Colorectum/Small intestine/Appendix	0.5292759350823641	38	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Esophagus/Stomach	0.45352282704662245	40	21
-tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Gynecologic: Endometrium	0.8516985762105206	30	21
-tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Gynecologic: Ovary/Fallopian tube	0.7809429434803731	31	21
+tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Gynecologic: Endometrium	0.8516985762105207	30	21
+tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Gynecologic: Ovary/Fallopian tube	0.7809429434803732	31	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	HPB: Bile duct/Gallbladder	0.9667427012541036	27	21
-tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	HPB: Liver	1.0481800818041294	13	21
+tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	HPB: Liver	1.0481800818041296	13	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	HPB: Pancreas	0.8619013476217406	29	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Head and neck: Adenoid cystic	1.0	19	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Head and neck: Salivary gland	0.999960769054575	24	21
-tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Head and neck: Other	0.5282890478848306	39	21
+tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Head and neck: Other	0.5282890478848307	39	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Kidney: Chromophobe	0.7567473174662446	32	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Kidney: Other	1.0	20	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Lung: Non-small cell: LUAD	0.9988539559005456	26	21
-tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Lung: Non-small cell: LUSC	0.5328958223257613	37	21
+tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Lung: Non-small cell: LUSC	0.5328958223257614	37	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Lung: Small cell	1.0000008510165221	16	21
-tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Lymphoid tissue	1.4337085097988786	4	21
+tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Lymphoid tissue	1.4337085097988784	4	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Mesothelium	1.3133120923534258	8	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Myeloid: Acute myeloid leukemia	1.0	21	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Myeloid: Myeloproliferative neoplasm	2.68036809058353	1	21
@@ -875,7 +875,7 @@ tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	NET: Colorectum/Small intestine	
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	NET: Lung	1.0	22	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	NET: Pancreas	0.9223260052262028	28	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Prostate	0.6220824710874387	34	21
-tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Skin: Melanoma	1.365598045224231	7	21
+tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Skin: Melanoma	1.3655980452242311	7	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Skin: Other	0.693358972632424	33	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Thyroid gland	1.0	23	21
 tumor_sample	feat_contrib	dna	event	sv.LINE	3.0	Urothelial tract	0.543833246489793	36	21
@@ -900,27 +900,27 @@ tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	HPB: Bile duct/G
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	HPB: Liver	1.0000000621524996	16	22
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	HPB: Pancreas	1.0	20	22
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Head and neck: Adenoid cystic	1.0	21	22
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Head and neck: Salivary gland	0.9992495864303121	26	22
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Head and neck: Other	1.1732613228830993	8	22
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Head and neck: Salivary gland	0.999249586430312	26	22
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Head and neck: Other	1.1732613228830995	8	22
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Kidney: Chromophobe	1.0	22	22
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Kidney: Other	0.7341994984255588	31	22
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Lung: Non-small cell: LUAD	0.8225283310418052	30	22
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Lung: Non-small cell: LUSC	1.000852776789801	15	22
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Lung: Small cell	0.5690974303040002	34	22
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Lymphoid tissue	1.5761465578359337	1	22
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Lymphoid tissue	1.576146557835934	1	22
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Mesothelium	1.5574331770486731	2	22
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Myeloid: Acute myeloid leukemia	0.4361269490319054	38	22
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Myeloid: Acute myeloid leukemia	0.43612694903190546	38	22
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Myeloid: Myeloproliferative neoplasm	0.3427206025432531	39	22
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	NET: Colorectum/Small intestine	0.5033601166793159	37	22
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	NET: Lung	0.6143617935764734	33	22
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	NET: Lung	0.6143617935764735	33	22
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	NET: Pancreas	0.69171674556262	32	22
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Prostate	1.0	23	22
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Skin: Melanoma	1.0	24	22
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Skin: Other	0.8428901652805691	29	22
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Skin: Other	0.8428901652805693	29	22
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Thyroid gland	0.5668557877343019	35	22
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DEL_20KB_1MB	20.0	Urothelial tract	1.0595931391178581	12	22
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Anogenital	0.9160703771991453	37	23
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Bone/Soft tissue: Cartilaginous neoplasm	0.9675056606623433	33	23
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Bone/Soft tissue: Cartilaginous neoplasm	0.9675056606623432	33	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Bone/Soft tissue: GIST	1.0	15	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Bone/Soft tissue: Leiomyosarcoma	1.1092822536940434	3	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Bone/Soft tissue: Liposarcoma	1.0959534500808823	4	23
@@ -934,20 +934,20 @@ tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	CNS: Medulloblast
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	CNS: Pilocytic astrocytoma	1.0	17	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Colorectum/Small intestine/Appendix	1.0235853810986724	10	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Esophagus/Stomach	1.0	18	23
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Gynecologic: Endometrium	0.9866007181888622	32	23
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Gynecologic: Endometrium	0.9866007181888621	32	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Gynecologic: Ovary/Fallopian tube	0.942667033377544	36	23
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	HPB: Bile duct/Gallbladder	0.9999987112011356	28	23
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	HPB: Bile duct/Gallbladder	0.9999987112011355	28	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	HPB: Liver	1.0	19	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	HPB: Pancreas	1.0	20	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Head and neck: Adenoid cystic	1.0	21	23
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Head and neck: Salivary gland	1.0538420123505208	7	23
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Head and neck: Salivary gland	1.053842012350521	7	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Head and neck: Other	0.9999526297079956	29	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Kidney: Chromophobe	1.232540712804971	2	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Kidney: Other	1.3150291774113554	1	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Lung: Non-small cell: LUAD	1.0	22	23
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Lung: Non-small cell: LUSC	0.9996654721485627	31	23
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Lung: Non-small cell: LUSC	0.9996654721485626	31	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Lung: Small cell	1.0	23	23
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Lymphoid tissue	0.910711498436127	39	23
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Lymphoid tissue	0.9107114984361271	39	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Mesothelium	0.9156478325048442	38	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Myeloid: Acute myeloid leukemia	1.0	24	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Myeloid: Myeloproliferative neoplasm	0.88804226664669	40	23
@@ -957,25 +957,25 @@ tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	NET: Pancreas	1.0
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Prostate	1.0	26	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Skin: Melanoma	1.074844562671839	6	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Skin: Other	1.0	27	23
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Thyroid gland	1.07804963959403	5	23
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Thyroid gland	1.0780496395940302	5	23
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_32B_200B	3.0	Urothelial tract	0.9999254318631506	30	23
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Anogenital	1.0563973850865682	11	24
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Anogenital	1.0563973850865684	11	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Bone/Soft tissue: Cartilaginous neoplasm	3.154805524388517	1	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Bone/Soft tissue: GIST	1.0	18	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Bone/Soft tissue: Leiomyosarcoma	1.2694212881340352	5	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Bone/Soft tissue: Liposarcoma	0.6428061760959987	36	24
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Bone/Soft tissue: Osteosarcoma	0.9735989573255388	25	24
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Bone/Soft tissue: Undiff. sarcoma	0.9227756201263344	28	24
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Bone/Soft tissue: Osteosarcoma	0.9735989573255387	25	24
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Bone/Soft tissue: Undiff. sarcoma	0.9227756201263345	28	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Bone/Soft tissue: Other	0.9431075602090753	26	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Breast: Triple negative	0.5595326226528269	38	24
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Breast: Other	0.7108343885974111	34	24
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Breast: Other	0.710834388597411	34	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	CNS: Glioma	0.8895357508828181	30	24
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	CNS: Medulloblastoma	0.4536820992565638	40	24
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	CNS: Medulloblastoma	0.45368209925656383	40	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	CNS: Pilocytic astrocytoma	1.0	19	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Colorectum/Small intestine/Appendix	1.106737822551897	10	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Esophagus/Stomach	0.906325328729768	29	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Gynecologic: Endometrium	0.4806268403155909	39	24
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Gynecologic: Ovary/Fallopian tube	0.6326950952776694	37	24
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Gynecologic: Ovary/Fallopian tube	0.6326950952776695	37	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	HPB: Bile duct/Gallbladder	0.7480496708606077	32	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	HPB: Liver	1.0	20	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	HPB: Pancreas	1.0309475722990207	14	24
@@ -985,7 +985,7 @@ tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Head and neck: O
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Kidney: Chromophobe	2.166902023247829	2	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Kidney: Other	1.0044529467536198	15	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Lung: Non-small cell: LUAD	1.0	21	24
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Lung: Non-small cell: LUSC	1.0374309465162235	12	24
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Lung: Non-small cell: LUSC	1.0374309465162237	12	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Lung: Small cell	1.0000084109466831	16	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Lymphoid tissue	1.8509843170513687	3	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Mesothelium	1.0	22	24
@@ -996,58 +996,58 @@ tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	NET: Lung	1.2511
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	NET: Pancreas	1.1670221465720978	9	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Prostate	0.7048052209924844	35	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Skin: Melanoma	0.7798002509430944	31	24
-tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Skin: Other	1.179336001407877	8	24
+tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Skin: Other	1.1793360014078773	8	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Thyroid gland	1.0	24	24
 tumor_sample	feat_contrib	dna	event	sv.SIMPLE_DUP_100KB_5MB	2.0	Urothelial tract	0.9408961678457595	27	24
 tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Anogenital	0.919495912264701	30	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Bone/Soft tissue: Cartilaginous neoplasm	0.2991873039575678	40	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Bone/Soft tissue: Cartilaginous neoplasm	0.299187303957568	40	25
 tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Bone/Soft tissue: GIST	1.122638091364365	10	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Bone/Soft tissue: Leiomyosarcoma	0.9997334071348952	24	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Bone/Soft tissue: Liposarcoma	0.6971991657384957	38	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Bone/Soft tissue: Leiomyosarcoma	0.9997334071348951	24	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Bone/Soft tissue: Liposarcoma	0.6971991657384958	38	25
 tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Bone/Soft tissue: Osteosarcoma	0.7312163899135027	37	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Bone/Soft tissue: Undiff. sarcoma	0.7869625049449301	34	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Bone/Soft tissue: Undiff. sarcoma	0.7869625049449303	34	25
 tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Bone/Soft tissue: Other	0.9586580817272502	27	25
 tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Breast: Triple negative	1.0	14	25
 tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Breast: Other	0.7528505250769153	35	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	CNS: Glioma	0.9990173440969891	25	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	CNS: Glioma	0.999017344096989	25	25
 tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	CNS: Medulloblastoma	1.0	15	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	CNS: Pilocytic astrocytoma	1.6579324313836512	2	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	CNS: Pilocytic astrocytoma	1.6579324313836508	2	25
 tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Colorectum/Small intestine/Appendix	1.009423736877593	13	25
 tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Esophagus/Stomach	1.0	16	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Gynecologic: Endometrium	1.5659370371019816	5	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Gynecologic: Ovary/Fallopian tube	1.5829146975585506	4	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Gynecologic: Endometrium	1.5659370371019814	5	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Gynecologic: Ovary/Fallopian tube	1.5829146975585504	4	25
 tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	HPB: Bile duct/Gallbladder	0.9483502226419513	28	25
 tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	HPB: Liver	1.0	17	25
 tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	HPB: Pancreas	1.0	18	25
 tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Head and neck: Adenoid cystic	1.0	19	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Head and neck: Salivary gland	0.9997928283548078	22	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Head and neck: Salivary gland	0.9997928283548077	22	25
 tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Head and neck: Other	1.045704499726856	12	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Kidney: Chromophobe	1.5165259585464779	6	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Kidney: Chromophobe	1.5165259585464776	6	25
 tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Kidney: Other	1.0	20	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Lung: Non-small cell: LUAD	0.8200642581098431	33	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Lung: Non-small cell: LUSC	0.9997701744069291	23	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Lung: Small cell	0.9945009355583366	26	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Lymphoid tissue	1.3351790751391508	7	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Mesothelium	0.8402535372530834	32	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Myeloid: Acute myeloid leukemia	2.599185855405347	1	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Myeloid: Myeloproliferative neoplasm	1.623425835141138	3	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Lung: Non-small cell: LUAD	0.8200642581098432	33	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Lung: Non-small cell: LUSC	0.999770174406929	23	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Lung: Small cell	0.9945009355583365	26	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Lymphoid tissue	1.3351790751391506	7	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Mesothelium	0.8402535372530835	32	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Myeloid: Acute myeloid leukemia	2.599185855405346	1	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Myeloid: Myeloproliferative neoplasm	1.6234258351411377	3	25
 tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	NET: Colorectum/Small intestine	1.1475901932369519	8	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	NET: Lung	0.5347887664237819	39	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	NET: Lung	0.5347887664237821	39	25
 tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	NET: Pancreas	1.0705101330217859	11	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Prostate	0.908873645779635	31	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Skin: Melanoma	0.7462063334951619	36	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Skin: Other	0.999965681114443	21	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Prostate	0.9088736457796351	31	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Skin: Melanoma	0.746206333495162	36	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Skin: Other	0.9999656811144428	21	25
 tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Thyroid gland	1.1371614987292278	9	25
-tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Urothelial tract	0.9479255097893142	29	25
+tumor_sample	feat_contrib	dna	event	sv.MAX_COMPLEX_SIZE	8.0	Urothelial tract	0.9479255097893143	29	25
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Anogenital	0.9392392954427643	33	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Bone/Soft tissue: Cartilaginous neoplasm	1.0	7	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Bone/Soft tissue: GIST	1.0	8	26
-tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Bone/Soft tissue: Leiomyosarcoma	0.7257792420323668	40	26
+tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Bone/Soft tissue: Leiomyosarcoma	0.7257792420323667	40	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Bone/Soft tissue: Liposarcoma	0.8577582707323037	35	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Bone/Soft tissue: Osteosarcoma	0.8364714240540808	38	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Bone/Soft tissue: Undiff. sarcoma	0.7418734153070216	39	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Bone/Soft tissue: Other	0.8401012699153451	37	26
-tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Breast: Triple negative	1.1539750641964195	2	26
+tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Breast: Triple negative	1.1539750641964197	2	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Breast: Other	1.0	9	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	CNS: Glioma	0.9999950161749531	28	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	CNS: Medulloblastoma	1.0	10	26
@@ -1064,18 +1064,18 @@ tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Head and neck: Salivary
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Head and neck: Other	1.0666717277389473	4	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Kidney: Chromophobe	0.9206023346619283	34	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Kidney: Other	1.0	17	26
-tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Lung: Non-small cell: LUAD	0.9648317149069935	32	26
+tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Lung: Non-small cell: LUAD	0.9648317149069934	32	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Lung: Non-small cell: LUSC	1.0	18	26
-tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Lung: Small cell	1.1655875769463881	1	26
+tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Lung: Small cell	1.1655875769463884	1	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Lymphoid tissue	1.0	19	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Mesothelium	1.0	20	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Myeloid: Acute myeloid leukemia	1.0	21	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Myeloid: Myeloproliferative neoplasm	1.0	22	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	NET: Colorectum/Small intestine	1.0	23	26
-tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	NET: Lung	0.9999942790708486	29	26
+tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	NET: Lung	0.9999942790708485	29	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	NET: Pancreas	0.995017995643996	31	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Prostate	1.0	24	26
-tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Skin: Melanoma	0.8477144063206594	36	26
+tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Skin: Melanoma	0.8477144063206595	36	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Skin: Other	1.0	25	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Thyroid gland	1.0	26	26
 tumor_sample	feat_contrib	dna	event	sv.TELOMERIC_SGL	0.0	Urothelial tract	1.0	27	26

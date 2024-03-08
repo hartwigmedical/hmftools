@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-from subprocess import Popen, PIPE, STDOUT, CalledProcessError
 
 import numpy as np
 import pandas as pd
@@ -9,6 +8,7 @@ from functools import cached_property
 
 from cuppa.constants import RSCRIPT_PLOT_PREDICTIONS_PATH
 from cuppa.logger import LoggerMixin
+from cuppa.misc.executors import RscriptExecutor
 from cuppa.misc.utils import check_required_columns
 
 from typing import TYPE_CHECKING, Optional
@@ -291,24 +291,6 @@ class CuppaVisPlotter(LoggerMixin):
             self.logger.debug("Writing vis data to temporary path: " + self._tmp_vis_data_path)
         self.vis_data.to_tsv(self._tmp_vis_data_path)
 
-    @property
-    def _rscript_command(self) -> str:
-        return f"Rscript --vanilla {RSCRIPT_PLOT_PREDICTIONS_PATH} {self._tmp_vis_data_path} {self.plot_path}"
-
-    def plot_in_r(self) -> int:
-
-        if self.verbose:
-            self.logger.info("Running shell command: '%s'" % self._rscript_command)
-
-        with Popen(self._rscript_command, shell=True, stdout=PIPE, stderr=STDOUT) as process:
-            for line in iter(process.stdout.readline, b''):
-                r_stderr = line.decode("utf-8").strip()
-                self.logger.error("[R process] " + r_stderr)
-
-        return_code = process.poll()
-
-        return return_code
-
     def remove_tmp_vis_data(self):
         if os.path.exists(self._tmp_vis_data_path):
             os.remove(self._tmp_vis_data_path)
@@ -318,11 +300,20 @@ class CuppaVisPlotter(LoggerMixin):
 
     def plot(self) -> None:
         self.write_tmp_vis_data()
-        return_code = self.plot_in_r()
+
+        executor = RscriptExecutor(
+            args = [
+                RSCRIPT_PLOT_PREDICTIONS_PATH,
+                self._tmp_vis_data_path,
+                self.plot_path
+            ],
+            ignore_error=True
+        )
+        executor.run()
+
         self.remove_tmp_vis_data()
 
-        if return_code:
-            raise CalledProcessError(return_code, self._rscript_command)
+        executor.raise_if_error()
 
     @classmethod
     def plot_from_tsv(cls, vis_data_path: str, plot_path: str, verbose: bool = True):

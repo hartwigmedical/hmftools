@@ -9,7 +9,7 @@ import pandas as pd
 
 from cuppa.components.preprocessing import NaRowFilter
 from cuppa.logger import LoggerMixin
-from cuppa.constants import RESOURCES_DIR
+from cuppa.constants import RESOURCES_DIR, NA_FILL_VALUE
 from cuppa.misc.utils import check_required_columns
 
 
@@ -192,10 +192,12 @@ class FeatureLoaderNew(LoggerMixin):
         path: str,
         sample_id: str | None = None,
         excl_chroms: Iterable[str] | None = ["ChrY", "Y"],
+        fill_value: int | float = NA_FILL_VALUE,
         verbose: bool = True
     ):
         self.path = path
         self.sample_id = sample_id
+        self.fill_value = fill_value
         self.excl_chroms = excl_chroms
         self.verbose = verbose
 
@@ -297,7 +299,7 @@ class FeatureLoaderNew(LoggerMixin):
         df_wide.index.name = "sample_id"
         df_wide.columns.name = None
 
-        df_wide = df_wide.fillna(0)
+        df_wide = df_wide.fillna(self.fill_value)
 
         return df_wide
 

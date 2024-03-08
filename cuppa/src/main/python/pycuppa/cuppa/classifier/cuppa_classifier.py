@@ -11,7 +11,7 @@ import pandas as pd
 from sklearn.compose import make_column_selector
 
 import cuppa.compose.pipeline
-from cuppa.constants import SUB_CLF_NAMES, META_CLF_NAMES, LAYER_NAMES, CLF_GROUPS, DEFAULT_CUPPA_CLASSIFIER_PATH
+from cuppa.constants import SUB_CLF_NAMES, META_CLF_NAMES, LAYER_NAMES, CLF_GROUPS, NA_FILL_VALUE
 from cuppa.classifier.classifiers import ClassifierLayers, SubClassifiers, MetaClassifiers
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredictionBuilder
 from cuppa.classifier.feature_importance import FeatureImportance
@@ -118,8 +118,8 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         return f"{self.__class__.__name__}(steps={self.steps.__repr__()})"
 
     ## I/O ================================
-    def to_file(self, path: str, verbose: bool = True) -> None:
-        if verbose:
+    def to_file(self, path: str) -> None:
+        if self.verbose:
             self.logger.info("Exporting classifier to: " + path)
         joblib.dump(self, filename=path, compress=9)
 
@@ -130,29 +130,9 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
     @classmethod
     def from_file(cls, path: str) -> "CuppaClassifier":
+        cls.get_class_logger(cls).info("Loading classifier from: " + str(path))
         cls._check_is_pickle_file(path)
         return joblib.load(path)
-
-    @classmethod
-    def copy_model_to_resources(cls, source_path: str, verbose: bool = True) -> None:
-        cls._check_is_pickle_file(source_path)
-
-        try:
-            cls.from_file(source_path)
-        except:
-            cls.get_class_logger(cls).info("Could test load classifier. The pickled object is likely not a CuppaClassifier")
-            raise IOError
-
-        if verbose:
-            cls.get_class_logger(cls).info("Copying classifier to: " + DEFAULT_CUPPA_CLASSIFIER_PATH)
-
-        shutil.copy(source_path, DEFAULT_CUPPA_CLASSIFIER_PATH)
-
-    @classmethod
-    def from_resources(cls, verbose: bool = True) -> "CuppaClassifier":
-        if verbose:
-            cls.get_class_logger(cls).info("Loading classifier from: " + DEFAULT_CUPPA_CLASSIFIER_PATH)
-        return cls.from_file(DEFAULT_CUPPA_CLASSIFIER_PATH)
 
     ## Classifier accessors ================================
     @property
@@ -312,7 +292,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
     def fill_missing_cols(
         self,
         X: pd.DataFrame,
-        fill_value: int | float = 0,
+        fill_value: int | float = NA_FILL_VALUE,
         verbose: bool = True
     ):
 
