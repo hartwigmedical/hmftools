@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cup.prep;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.THREADS;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_DESC;
@@ -118,6 +119,7 @@ public class PrepConfig
         configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
         configBuilder.addPath(REF_ALT_SJ_SITES, false, "RNA required alternative splice junction sites");
         configBuilder.addFlag(WRITE_FILE_BY_CATEGORY, "Cohort mode - write files by category");
+        configBuilder.addConfigItem(THREADS, false, "Number of threads to use in multi sample mode", "1");
 
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
         addPipelineDirectories(configBuilder);
