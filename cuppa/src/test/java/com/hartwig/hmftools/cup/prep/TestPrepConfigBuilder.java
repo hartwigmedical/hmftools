@@ -18,7 +18,7 @@ public class TestPrepConfigBuilder
     public static final List<CategoryType> TEST_CATEGORIES = CategoryType.getDnaCategories();
     public static final String TEST_OUTPUT_DIR = "";
     public static final String TEST_OUTPUT_ID = null;
-    public static final int TEST_THREADS = 1;
+    public static final Integer TEST_THREADS = 1;
     public static final boolean TEST_WRITE_BY_CATEGORY = true;
     public static final String TEST_ALT_SPLICE_JUNCTION_SITES = Resources.getResource("alt_sj.selected_loci.minimal.tsv").getPath();
     public static final String TEST_SAMPLE_DATA_DIR = Resources.getResource("pipeline_output/").getPath();
