@@ -61,6 +61,9 @@ public final class SequenceCompare
             secondIndexStart = secondIndexEnd - minDistanceFromJunction;
         }
 
+        if(firstIndexStart < 0 || secondIndexStart < 0)
+            return false;
+
         firstIndexEnd = min(firstIndexEnd, first.bases().length - 1);
         secondIndexEnd = min(secondIndexEnd, second.bases().length - 1);
 

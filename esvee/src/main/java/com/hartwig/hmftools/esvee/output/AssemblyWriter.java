@@ -9,10 +9,6 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.LINKED;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.NO_LINK;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.SECONDARY;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.SUPP_ONLY;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_DISCORDANT_READ;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_SUPP;
@@ -30,7 +26,6 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.assembly.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.common.AssemblyLink;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.BaseMismatches;

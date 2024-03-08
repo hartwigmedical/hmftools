@@ -3,19 +3,16 @@ package com.hartwig.hmftools.esvee.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.LINKED;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.NO_LINK;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.SECONDARY;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.SUPP_ONLY;
+import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.NO_LINK;
+import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.SECONDARY;
+import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.SUPP_ONLY;
 import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAtJunction;
 
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.assembly.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public final class AssemblyUtils

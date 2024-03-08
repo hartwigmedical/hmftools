@@ -4,8 +4,8 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.DUP_SPLIT;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyOutcome.LINKED;
+import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.DUP_BRANCHED;
+import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.LINKED;
 import static com.hartwig.hmftools.esvee.assembly.PhaseGroupBuilder.isLocalAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.extendRefBases;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.tryAssemblyFacing;
@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.esvee.common.AssemblyUtils.assembliesShareRea
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -24,6 +25,7 @@ import com.hartwig.hmftools.esvee.common.AssemblyLink;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.DiscordantGroup;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.common.LinkType;
 import com.hartwig.hmftools.esvee.common.PhaseGroup;
 import com.hartwig.hmftools.esvee.common.PhaseSet;
 import com.hartwig.hmftools.esvee.common.SupportType;
@@ -76,16 +78,13 @@ public class PhaseSetBuilder
 
         formSplitLinks();
 
-        // add any branched assemblies to the phase group
-        List<JunctionAssembly> branchedAssemblies = Lists.newArrayList();
-        mPhaseGroup.assemblies().forEach(x -> branchedAssemblies.addAll(x.branchedAssemblies()));
-        branchedAssemblies.forEach(x -> mPhaseGroup.addAssembly(x));
-
         formFacingLinks();
 
         // extendJunctions();
 
         formPhaseSets();
+
+        cleanupBranchedAssemblies();
     }
 
     private void formSplitLinks()
@@ -207,6 +206,10 @@ public class PhaseSetBuilder
         // build out ref-base assembly support from these non-junction reads - both matched discordant and junction mates
         extendRefBases(assembly1, matchedCandidates1, mRefGenome);
         extendRefBases(assembly2, matchedCandidates2, mRefGenome);
+
+        // add any branched assemblies to the phase group - these will be cleaned up if not used
+        assembly1.branchedAssemblies().forEach(x -> mPhaseGroup.addAssembly(x));
+        assembly2.branchedAssemblies().forEach(x -> mPhaseGroup.addAssembly(x));
     }
 
     private static void checkMatchingCandidateSupport(
@@ -298,8 +301,6 @@ public class PhaseSetBuilder
         if(mAssemblies.size() <= 2)
             return;
 
-        // support will have changed now, so reassess candidates for facing links
-
         // for each assembly in a split link, look for a facing link (whether linked or not)
         Set<JunctionAssembly> facingAssemblies = Sets.newHashSet();
 
@@ -388,6 +389,31 @@ public class PhaseSetBuilder
                     linkingAssembly = newLink.otherAssembly(linkingAssembly);
                 }
             }
+        }
+    }
+
+    private void cleanupBranchedAssemblies()
+    {
+        // finally remove any branched assemblies which did not form a facing link
+        List<JunctionAssembly> branchedAssemblies = mAssemblies.stream()
+                .filter(x -> x.outcome() == DUP_BRANCHED)
+                .collect(Collectors.toList());
+
+        for(JunctionAssembly branchedAssembly : branchedAssemblies)
+        {
+            boolean phaseLinked = false;
+
+            for(PhaseSet phaseSet : mPhaseSets)
+            {
+                if(phaseSet.assemblyLinks().stream().filter(x -> x.type() == LinkType.FACING).anyMatch(x -> x.hasAssembly(branchedAssembly)))
+                {
+                    phaseLinked = true;
+                    break;
+                }
+            }
+
+            if(!phaseLinked)
+                mAssemblies.remove(branchedAssembly);
         }
     }
 
