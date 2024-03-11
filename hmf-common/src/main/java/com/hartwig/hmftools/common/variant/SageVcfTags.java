@@ -31,15 +31,15 @@ public final class SageVcfTags
     private static final String REPEAT_FLAG_DESCRIPTION = "Repeat sequence";
 
     public static final String READ_CONTEXT_COUNT = "RC_CNT";
-    public static final String READ_CONTEXT_COUNT_DESCRIPTION =
+    public static final String READ_CONTEXT_COUNT_DESC =
             "Read context counts [Full, Partial, Core, Realigned, Alt, Reference, Total]";
 
     public static final String READ_CONTEXT_QUALITY = "RC_QUAL";
-    public static final String READ_CONTEXT_QUALITY_DESCRIPTION =
+    public static final String READ_CONTEXT_QUALITY_DESC =
             "Read context quality [Full, Partial, Core, Realigned, Alt, Reference, Total]";
 
     public static final String UMI_TYPE_COUNTS = "UMI_CNT";
-    public static final String UMI_TYPE_COUNTS_DESCRIPTION =
+    public static final String UMI_TYPE_COUNTS_DESC =
             "UMI type counts [TotalNone,TotalSingle,TotalDualStrand,AltNone,AltSingle,AltDualStrand]";
     public static final int UMI_TYPE_COUNT = 6;
 

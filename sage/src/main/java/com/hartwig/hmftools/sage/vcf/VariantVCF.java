@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_NM_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_NM_COUNT_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_INDEL_FILTER;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_INDEL_FILTER_OLD;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_MATCH;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_MIXED_GERMLINE_SOMATIC_FILTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_MNV_FILTER;
@@ -28,7 +27,6 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.OLD_INDEL_DEDUP_FLAG;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_BASE_QUALITY;
@@ -205,7 +203,6 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_MNV_FILTER, "Filter duplicate MNV"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_SNV_MNV_FILTER, "Variant duplicate MNV vs SNV"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_INDEL_FILTER, "Variant duplicate SNV/MNV vs INDEL"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_INDEL_FILTER_OLD, "Variant duplicate SNV/MNV vs INDEL old version"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_MIXED_GERMLINE_SOMATIC_FILTER, "Variant duplicate mixed somatic/germline"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_MATCH, "Variant duplicate with different read contexts"));
 
@@ -215,9 +212,6 @@ public class VariantVCF implements AutoCloseable
         }
 
         header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
-
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                OLD_INDEL_DEDUP_FLAG, 0, VCFHeaderLineType.Flag, "Temp marking of old-routine INDEL deduping"));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Integer, MAX_READ_EDGE_DISTANCE_DESC));
 

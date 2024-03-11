@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.LOCAL_PHASE_SET_READ_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.OLD_INDEL_DEDUP_FLAG;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_DEPTH;
@@ -84,11 +83,6 @@ public final class VariantContextFactory
             builder.attribute(MIXED_SOMATIC_GERMLINE, variant.mixedGermlineImpact());
         }
 
-        if(variant.dedupIndelDiff())
-        {
-            builder.attribute(OLD_INDEL_DEDUP_FLAG, true);
-        }
-
         ReadContextCounter primaryRcCounter = variant.tumorReadCounters().get(0);
 
         builder.attribute(MAX_READ_EDGE_DISTANCE, primaryRcCounter.readEdgeDistance().maxAltDistanceFromUnclippedEdge());
@@ -146,7 +140,7 @@ public final class VariantContextFactory
 
         if(counter.ultimaQualModel() != null)
         {
-            builder.attribute(TOTAL_RAW_BASE_QUAL, counter.rawNonModelBaseQualityTotal());
+            builder.attribute(TOTAL_RAW_BASE_QUAL, counter.rawContextAltBaseQualityTotal());
         }
 
         return builder.make();

@@ -14,9 +14,6 @@ public final class VcfTags
     public static final String DEDUP_INDEL_FILTER = "dedupIndel";
     public static final String DEDUP_MATCH = "dedupMatch";
 
-    public static final String DEDUP_INDEL_FILTER_OLD = "dedupIndelOld";
-    public static final String OLD_INDEL_DEDUP_FLAG = "DEDUP_INDEL_OLD";
-
     public static final String READ_CONTEXT_JITTER = "RC_JIT";
     public static final String READ_CONTEXT_JITTER_DESC = "Read context jitter [Shortened, Lengthened, QualityPenalty]";
 

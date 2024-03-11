@@ -58,7 +58,6 @@ import javax.annotation.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.UmiReadType;
-import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.ReadContext;
@@ -68,7 +67,6 @@ import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.filter.FragmentCoords;
 import com.hartwig.hmftools.sage.filter.StrandBiasData;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
-import com.hartwig.hmftools.sage.quality.UltimaQualCalculator;
 import com.hartwig.hmftools.sage.quality.UltimaQualModel;
 import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.read.SplitReadUtils;
@@ -119,7 +117,7 @@ public class ReadContextCounter//  extends SimpleVariant
     private int mRawRefSupport;
     private int mRawAltBaseQualityTotal;
     private int mRawRefBaseQualityTotal;
-    private int mNonModelAltBaseQualityTotal;
+    private int mRawContextAltBaseQualityTotal;
     private int mRecalibratedBaseQualityTotal;
     private double mSupportAltBaseQualityTotal;
 
@@ -190,7 +188,7 @@ public class ReadContextCounter//  extends SimpleVariant
         mRawAltBaseQualityTotal = 0;
         mRawRefBaseQualityTotal = 0;
         mRecalibratedBaseQualityTotal = 0;
-        mNonModelAltBaseQualityTotal = 0;
+        mRawContextAltBaseQualityTotal = 0;
         mSupportAltBaseQualityTotal = 0;
         mSoftClipInsertSupport = 0;
         mMaxCandidateDeleteLength = 0;
@@ -257,7 +255,7 @@ public class ReadContextCounter//  extends SimpleVariant
     public int rawAltSupport() { return mRawAltSupport; }
     public int rawRefSupport() { return mRawRefSupport; }
     public int rawAltBaseQualityTotal() { return mRawAltBaseQualityTotal; }
-    public int rawNonModelBaseQualityTotal() { return mNonModelAltBaseQualityTotal; }
+    public int rawContextAltBaseQualityTotal() { return mRawContextAltBaseQualityTotal; }
     public int rawRefBaseQualityTotal() { return mRawRefBaseQualityTotal; }
     public int recalibratedBaseQualityTotal() { return mRecalibratedBaseQualityTotal; }
 
@@ -456,7 +454,7 @@ public class ReadContextCounter//  extends SimpleVariant
                 mAltNmCountTotal += numberOfEvents;
 
                 mSupportAltBaseQualityTotal += rawBaseQuality;
-                mNonModelAltBaseQualityTotal += rawContext.BaseQuality;
+                mRawContextAltBaseQualityTotal += rawContext.BaseQuality;
 
                 registerRawSupport(rawContext, qualityScores.RecalibratedBaseQuality);
 
