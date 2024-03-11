@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.read.Read;
 
@@ -55,9 +56,9 @@ public class AssemblySupport
         return support.stream().anyMatch(x -> x.read().matchesFragment(read));
     }
 
-    public static AssemblySupport findMatchingFragmentSupport(final List<AssemblySupport> support, final Read read)
+    public static List<AssemblySupport> findMatchingFragmentSupport(final List<AssemblySupport> support, final Read read)
     {
-        return support.stream().filter(x -> x.read().matchesFragment(read)).findFirst().orElse(null);
+        return support.stream().filter(x -> x.read().matchesFragment(read)).collect(Collectors.toList());
     }
 
     public String toString()

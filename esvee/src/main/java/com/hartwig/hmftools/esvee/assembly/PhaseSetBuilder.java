@@ -228,6 +228,21 @@ public class PhaseSetBuilder
                 continue;
             }
 
+            List<AssemblySupport> matchedSupport = findMatchingFragmentSupport(otherAssembly.support(), support.read());
+            matchedCandidates.addAll(matchedSupport);
+
+            List<AssemblySupport> matchedCandidateSupport = findMatchingFragmentSupport(otherCandidateSupport, support.read());
+
+            // remove from other's candidates to avoid checking again
+            matchedCandidateSupport.forEach(x -> otherCandidateSupport.remove(x));
+            otherMatchedCandidates.addAll(matchedCandidateSupport);
+
+            for(AssemblySupport matched : matchedSupport)
+            {
+                support.read().makeReadLinks(matched.read());
+            }
+
+            /*
             AssemblySupport matchedSupport = findMatchingFragmentSupport(otherAssembly.support(), support.read());
 
             if(matchedSupport == null)
@@ -247,6 +262,7 @@ public class PhaseSetBuilder
                 matchedCandidates.add(support);
                 support.read().makeReadLinks(matchedSupport.read());
             }
+            */
         }
     }
 
@@ -254,12 +270,8 @@ public class PhaseSetBuilder
     {
         for(AssemblySupport support : first.support())
         {
-            AssemblySupport matchedSupport = findMatchingFragmentSupport(second.support(), support.read());
-
-            if(matchedSupport != null)
-            {
-                support.read().makeReadLinks(matchedSupport.read());
-            }
+            List<AssemblySupport> matchedSupport = findMatchingFragmentSupport(second.support(), support.read());
+            matchedSupport.forEach(x -> support.read().makeReadLinks(x.read()));
         }
     }
 

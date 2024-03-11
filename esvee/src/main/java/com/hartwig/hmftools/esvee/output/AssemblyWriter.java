@@ -22,9 +22,11 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.SvConfig;
 import com.hartwig.hmftools.esvee.common.AssemblyLink;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
@@ -74,9 +76,10 @@ public class AssemblyWriter
 
             sj.add("ExtBaseLength").add("RefBasePosition").add("RefBaseLength");
 
-            sj.add("SplitReads").add("RefSplitReads");
-            sj.add("DiscReads").add("RefDiscReads");
+            sj.add("SplitFrags").add("RefSplitFrags");
+            sj.add("DiscFrags").add("RefDiscFrags");
 
+            sj.add("IndelReads");
             sj.add("JuncMates");
             sj.add("JuncMateUnmapped");
 
@@ -159,10 +162,11 @@ public class AssemblyWriter
             sj.add(String.valueOf(assembly.refBasePosition()));
             sj.add(String.valueOf(assembly.refBaseLength()));
 
-            int juncReadsCount = 0;
-            int refSampleJuncReadsCount = 0;
-            int discReadCount = 0;
-            int refSampleDiscReadCount = 0;
+            int juncFrags = 0;
+            int refSampleJuncFrags = 0;
+            int discFrags = 0;
+            int refSampleDiscFrags = 0;
+            int indelReads = 0;
             int juncMateUnmapped = 0;
             int juncMateCount = 0;
             int refBaseMismatches = 0;
@@ -172,6 +176,8 @@ public class AssemblyWriter
             int juncUnlinkedSupps = 0;
             int discUnlinkedMates = 0;
 
+            Set<String> uniqueReadIds = Sets.newHashSet();
+
             for(AssemblySupport support : assembly.support())
             {
                 boolean isReference = support.read().isReference();
@@ -179,10 +185,18 @@ public class AssemblyWriter
 
                 if(support.type() == JUNCTION || support.type() == INDEL)
                 {
-                    ++juncReadsCount;
+                    if(uniqueReadIds.contains(read.getName()))
+                        continue;
+
+                    uniqueReadIds.add(read.getName()); // since fragments are being counted
+
+                    ++juncFrags;
+
+                    if(support.type() == INDEL)
+                        ++indelReads;
 
                     if(isReference)
-                        ++refSampleJuncReadsCount;
+                        ++refSampleJuncFrags;
 
                     softClipBaseMismatches += support.junctionMismatches();
                     refBaseMismatches += support.referenceMismatches();
@@ -202,10 +216,10 @@ public class AssemblyWriter
 
                     if(support.type() == DISCORDANT)
                     {
-                        ++discReadCount;
+                        ++discFrags;
 
                         if(isReference)
-                            ++refSampleDiscReadCount;
+                            ++refSampleDiscFrags;
 
                         if(!read.isSupplementary() && !read.hasMateSet())
                             ++discUnlinkedMates;
@@ -217,31 +231,16 @@ public class AssemblyWriter
                 }
             }
 
-            sj.add(String.valueOf(juncReadsCount));
-            sj.add(String.valueOf(refSampleJuncReadsCount));
-            sj.add(String.valueOf(discReadCount));
-            sj.add(String.valueOf(refSampleDiscReadCount));
+            sj.add(String.valueOf(juncFrags));
+            sj.add(String.valueOf(refSampleJuncFrags));
+            sj.add(String.valueOf(discFrags));
+            sj.add(String.valueOf(refSampleDiscFrags));
+            sj.add(String.valueOf(indelReads));
             sj.add(String.valueOf(juncMateCount));
             sj.add(String.valueOf(juncMateUnmapped));
 
-            /*
-            // where the mismatches on a ref base exceeds 50% of the junction read count, suggesting the wrong base was used or there are
-            // valid alternatives
-            int refBaseDominantMismatches = 0;
-
-            if(assembly.mismatches().hasMismatches())
-            {
-                for(BaseMismatches baseMismatch : assembly.mismatches().indexedBaseMismatches().values())
-                {
-                    if(baseMismatch.mismatchReadTotal() >= assembly.supportCount() * 0.4)
-                        ++refBaseDominantMismatches;
-                }
-            }
-            */
-
             sj.add(String.valueOf(softClipBaseMismatches));
             sj.add(String.valueOf(refBaseMismatches));
-            // sj.add(String.valueOf(refBaseDominantMismatches));
 
             // ref sequence stats purely for analysis
             ReadStats readStats = buildReadStats(assembly.support());

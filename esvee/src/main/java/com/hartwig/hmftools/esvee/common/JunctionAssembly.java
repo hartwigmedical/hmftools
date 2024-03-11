@@ -24,6 +24,8 @@ import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.esvee.filters.FilterType;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public class JunctionAssembly
@@ -58,6 +60,8 @@ public class JunctionAssembly
     // info only
     private int mMergedAssemblies;
 
+    private final Set<FilterType> mFilters;
+
     public JunctionAssembly(
             final Junction junction, final Read read, final int maxExtensionDistance,
             final int minAlignedPosition, final int maxAlignedPosition)
@@ -85,6 +89,7 @@ public class JunctionAssembly
         mMergedAssemblies = 0;
         mPhaseGroup = null;
         mOutcome = UNSET;
+        mFilters = Sets.newHashSet();
 
         addInitialRead(read);
     }
@@ -561,6 +566,7 @@ public class JunctionAssembly
         mRefSideSoftClips = Lists.newArrayList(refSideSoftClip);
         mRemoteRegions = Lists.newArrayList();
         mBranchedAssemblies = Lists.newArrayList();
+        mFilters = Sets.newHashSet();
         mMergedAssemblies = 0;
         mPhaseGroup = null;
 
@@ -593,6 +599,10 @@ public class JunctionAssembly
 
     public List<AssemblySupport> candidateSupport() { return mCandidateSupport; }
     public void clearCandidateSupport() { mCandidateSupport.clear(); }
+
+    public Set<FilterType> filters() { return mFilters; }
+    public boolean passing() { return mFilters.isEmpty(); }
+    public void addFilter(final FilterType filterType) { mFilters.add(filterType); }
 
     public String toString()
     {
@@ -702,6 +712,7 @@ public class JunctionAssembly
         mRemoteRegions = Lists.newArrayList();
         mBranchedAssemblies = Lists.newArrayList();
         mRefSideSoftClips = Lists.newArrayList();
+        mFilters = Sets.newHashSet();
         mMergedAssemblies = 0;
         mOutcome = UNSET;
     }
