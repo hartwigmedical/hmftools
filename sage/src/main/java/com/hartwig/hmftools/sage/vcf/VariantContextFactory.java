@@ -87,15 +87,15 @@ public final class VariantContextFactory
 
         builder.attribute(MAX_READ_EDGE_DISTANCE, primaryRcCounter.readEdgeDistance().maxAltDistanceFromUnclippedEdge());
 
+        if(primaryRcCounter.ultimaQualModel() != null)
+        {
+            builder.attribute(QUAL_MODEL_TYPE, primaryRcCounter.ultimaQualModel().type().toString());
+        }
+
         final VariantContext context = builder.make();
         if(context.isNotFiltered())
         {
             context.getCommonInfo().addFilter(PASS);
-        }
-
-        if(primaryRcCounter.ultimaQualModel() != null)
-        {
-            builder.attribute(QUAL_MODEL_TYPE, primaryRcCounter.ultimaQualModel().type().toString());
         }
 
         return context;

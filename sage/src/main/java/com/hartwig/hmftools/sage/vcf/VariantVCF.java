@@ -61,6 +61,7 @@ import java.util.function.Consumer;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
+import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.variant.SageVcfTags;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
@@ -90,12 +91,12 @@ public class VariantVCF implements AutoCloseable
     private final Consumer<VariantContext> mConsumer;
 
     public VariantVCF(
-            final IndexedFastaSequenceFile reference, final String version, final String outputFile,
+            final IndexedFastaSequenceFile reference, final SageConfig config,
             final List<String> tumorIds, final List<String> referenceIds)
     {
         final SAMSequenceDictionary sequenceDictionary = reference.getSequenceDictionary();
 
-        mWriter = new VariantContextWriterBuilder().setOutputFile(outputFile)
+        mWriter = new VariantContextWriterBuilder().setOutputFile(config.OutputFile)
                 .modifyOption(Options.INDEX_ON_THE_FLY, true)
                 .modifyOption(Options.USE_ASYNC_IO, false)
                 .setReferenceDictionary(sequenceDictionary)
@@ -104,7 +105,13 @@ public class VariantVCF implements AutoCloseable
         SomaticRefContextEnrichment enrichment = new SomaticRefContextEnrichment(reference, mWriter::add);
         mConsumer = enrichment;
 
-        final VCFHeader header = enrichment.enrichHeader(header(version, tumorIds, referenceIds));
+        final List<String> samples = Lists.newArrayList();
+        samples.addAll(referenceIds);
+        samples.addAll(tumorIds);
+
+        VCFHeader vcfHeader = createHeader(config.Version, samples, config.Sequencing.Type == SequencingType.ULTIMA);
+
+        SageVcfTags.addRefContextHeader(vcfHeader);
 
         final SAMSequenceDictionary condensedDictionary = new SAMSequenceDictionary();
         for(SAMSequenceRecord sequence : sequenceDictionary.getSequences())
@@ -115,8 +122,8 @@ public class VariantVCF implements AutoCloseable
             }
         }
 
-        header.setSequenceDictionary(condensedDictionary);
-        mWriter.writeHeader(header);
+        vcfHeader.setSequenceDictionary(condensedDictionary);
+        mWriter.writeHeader(vcfHeader);
     }
 
     public VariantVCF(final IndexedFastaSequenceFile reference, final SageConfig config, final VCFHeader existingHeader)
@@ -141,25 +148,40 @@ public class VariantVCF implements AutoCloseable
         mConsumer.accept(context);
     }
 
-    private static VCFHeader header(final String version, final List<String> tumorIds, final List<String> referenceIds)
-    {
-        final List<String> samples = Lists.newArrayList();
-        samples.addAll(referenceIds);
-        samples.addAll(tumorIds);
-        return header(version, samples);
-    }
-
-    public static VCFHeader header(final String version, final List<String> allSamples)
+    public static VCFHeader createHeader(final String version, final List<String> allSamples, final boolean includeModelData)
     {
         VCFHeader header = SageVcfTags.addMetaData(new VCFHeader(Collections.emptySet(), allSamples));
 
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                LOCAL_PHASE_SET_READ_COUNT, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, LPS_READ_COUNT_DESC));
-
+        // standard fields
         header.addMetaDataLine(new VCFHeaderLine(VERSION_META_DATA, version));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_ALLELE_DEPTHS)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.DEPTH_KEY)));
+
+        // info fields
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_EVENTS, 1, VCFHeaderLineType.Integer, READ_CONTEXT_EVENTS_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, "Read context core"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_INDEX, 1, VCFHeaderLineType.Integer, "Read context index"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_LEFT_FLANK, 1, VCFHeaderLineType.String, "Read context left flank"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_RIGHT_FLANK, 1, VCFHeaderLineType.String, "Read context right flank"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                READ_CONTEXT_REPEAT_SEQUENCE, 1, VCFHeaderLineType.String, READ_CONTEXT_REPEAT_SEQUENCE_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                READ_CONTEXT_MICRO_HOMOLOGY, 1, VCFHeaderLineType.String, READ_CONTEXT_MICRO_HOMOLOGY_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                MIXED_SOMATIC_GERMLINE, 1, VCFHeaderLineType.Integer, MIXED_SOMATIC_GERMLINE_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                LOCAL_PHASE_SET_READ_COUNT, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, LPS_READ_COUNT_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Integer, MAX_READ_EDGE_DISTANCE_DESC));
+
+        if(includeModelData)
+        {
+            header.addMetaDataLine(new VCFInfoHeaderLine(QUAL_MODEL_TYPE, 1, VCFHeaderLineType.String, QUAL_MODEL_TYPE_DESC));
+        }
+
+        SageVcfTags.addRefContextHeader(header);
+
+        // genotype fields
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 VCFConstants.ALLELE_FREQUENCY_KEY, 1, VCFHeaderLineType.Float, READ_CONTEXT_AF_DESC));
 
@@ -187,19 +209,7 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESC));
 
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_EVENTS, 1, VCFHeaderLineType.Integer, READ_CONTEXT_EVENTS_DESC));
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, "Read context core"));
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_INDEX, 1, VCFHeaderLineType.Integer, "Read context index"));
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_LEFT_FLANK, 1, VCFHeaderLineType.String, "Read context left flank"));
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_RIGHT_FLANK, 1, VCFHeaderLineType.String, "Read context right flank"));
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                READ_CONTEXT_REPEAT_SEQUENCE, 1, VCFHeaderLineType.String, READ_CONTEXT_REPEAT_SEQUENCE_DESC));
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                READ_CONTEXT_MICRO_HOMOLOGY, 1, VCFHeaderLineType.String, READ_CONTEXT_MICRO_HOMOLOGY_DESC));
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                MIXED_SOMATIC_GERMLINE, 1, VCFHeaderLineType.Integer, MIXED_SOMATIC_GERMLINE_DESC));
-        header.addMetaDataLine(new VCFInfoHeaderLine(QUAL_MODEL_TYPE, 1, VCFHeaderLineType.String, QUAL_MODEL_TYPE_DESC));
-
+        // filter options
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_MNV_FILTER, "Filter duplicate MNV"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_SNV_MNV_FILTER, "Variant duplicate MNV vs SNV"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_INDEL_FILTER, "Variant duplicate SNV/MNV vs INDEL"));
@@ -212,8 +222,6 @@ public class VariantVCF implements AutoCloseable
         }
 
         header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
-
-        header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Integer, MAX_READ_EDGE_DISTANCE_DESC));
 
         return header;
     }
