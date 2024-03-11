@@ -298,9 +298,7 @@ public class UltimaQualCalculator
             byte upperQual = calcTpBaseQual(
                     record, varReadIndex + mUpperHpStartIndex, varReadIndex + mUpperHpEndIndex, mUpperRefAdjustCount);
 
-            double combinedProb = phredQualToProbability(lowerQual) + phredQualToProbability(upperQual);
-            int combinedQual = probabilityToPhredQual(combinedProb);
-            return (byte)min(combinedQual, ULTIMA_MAX_QUAL);
+            return (byte)(lowerQual + upperQual);
         }
 
         public String toString()
@@ -333,10 +331,13 @@ public class UltimaQualCalculator
         {
             super(UltimaModelType.SNV);
 
-            // scenarios
+            byte refBase = (byte)variant.ref().charAt(0);
+            byte altBase = (byte)variant.alt().charAt(0);
+            byte leftBase = refBases[refVarIndex - 1];
+            byte rightBase = refBases[refVarIndex + 1];
 
             // SNVs and MNVs
-            if(refBases[refVarIndex - 1] == refBases[refVarIndex + 1])
+            if(leftBase == rightBase && (leftBase == refBase || leftBase == altBase))
             {
                 // both straddling bases match either the ref or alt, so no need to check for HP adjustment
                 mLeftAdjust = null;
@@ -352,7 +353,6 @@ public class UltimaQualCalculator
             HomopolymerDeletion leftDeletion = null;
             HomopolymerDeletion rightDeletion = null;
 
-            byte altBase = (byte)variant.alt().charAt(0);
             boolean leftMatchesRef = refBases[refVarIndex - 1] == refBases[refVarIndex];
             boolean leftMatchesAlt = refBases[refVarIndex - 1] == altBase;
             boolean rightMatchesRef = refBases[refVarIndex + 1] == refBases[refVarIndex];
@@ -434,6 +434,13 @@ public class UltimaQualCalculator
         {
             if(mLeftAdjust == null && mLeftDeletion == null)
                 return ULTIMA_MAX_QUAL;
+
+            if(mLeftDeletion != null || mRightDeletion != null)
+            {
+                // any HP deletion can just use the SNV base itself
+                final byte[] t0Values = record.getStringAttribute(T0_TAG).getBytes();
+                return t0Values[varReadIndex];
+            }
 
             int leftQual = mLeftAdjust != null ?
                     mLeftAdjust.calculateQual(record, varReadIndex) : mLeftDeletion.calculateQual(record, varReadIndex);

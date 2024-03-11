@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.INDEL_DEDUP_MIN_MATCHED_LPS_PERCENT;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PERC;
 import static com.hartwig.hmftools.sage.dedup.DedupIndelOld.dedupIndelsOld;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER_OLD;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_INDEL_FILTER;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_INDEL_FILTER_OLD;
 
 import java.util.Collections;
 import java.util.Comparator;

@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
+import static com.hartwig.hmftools.sage.common.TestUtils.MOCK_REF_GENOME;
 import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.createReadContext;
@@ -197,7 +198,8 @@ public class FragmentSyncTest
         final ReadContext readContext = createReadContext(position, 12, 10, 14, readBases, Strings.EMPTY);
 
         final IndexedBases REF_INDEXED_BASES = new IndexedBases(1, 0, REF_BASES.getBytes());
-        final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG, RECALIBRATION, REF_INDEXED_BASES);
+
+        final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG, RECALIBRATION, REF_INDEXED_BASES, MOCK_REF_GENOME);
 
         final ReadContextCounter readContextCounter = new ReadContextCounter(
                 1, variant, readContext, VariantTier.PANEL, 100, 0,

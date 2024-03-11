@@ -58,7 +58,7 @@ public class UltimaQualModelTest
         String readBases = BUFFER_REF_BASES + "ATTTCGTCGT";
         byte[] baseQualities = buildDefaultBaseQuals(readBases.length());
         byte[] t0Values = buildDefaultBaseQuals(readBases.length());
-        short[] tpValues = new short[readBases.length()];
+        byte[] tpValues = new byte[readBases.length()];
         tpValues[10] = 1;
         tpValues[12 ] = 1;
         SAMRecord read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
@@ -66,7 +66,7 @@ public class UltimaQualModelTest
         byte calcQual = model.calculateQual(read, 9);
         assertEquals(34, calcQual);
 
-        tpValues = new short[readBases.length()];
+        tpValues = new byte[readBases.length()];
         tpValues[11] = 1;
         baseQualities[11] = 25;
         read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
@@ -83,7 +83,7 @@ public class UltimaQualModelTest
         readBases = BUFFER_REF_BASES + "ATCGTCGT";
         baseQualities = buildDefaultBaseQuals(readBases.length());
         t0Values = buildDefaultBaseQuals(readBases.length());
-        tpValues = new short[readBases.length()];
+        tpValues = new byte[readBases.length()];
         tpValues[10] = 3;
         baseQualities[10] = 25;
         read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
@@ -106,7 +106,7 @@ public class UltimaQualModelTest
         readBases = BUFFER_REF_BASES + "ATTTTTTCGTCGT";
         baseQualities = buildDefaultBaseQuals(readBases.length());
         t0Values = buildDefaultBaseQuals(readBases.length());
-        tpValues = new short[readBases.length()];
+        tpValues = new byte[readBases.length()];
         tpValues[10] = 1;
         tpValues[11] = -1;
         tpValues[12] = -2; // will use these 2
@@ -130,7 +130,7 @@ public class UltimaQualModelTest
 
         baseQualities = buildDefaultBaseQuals(readBases.length());
         t0Values = buildDefaultBaseQuals(readBases.length());
-        tpValues = new short[readBases.length()];
+        tpValues = new byte[readBases.length()];
 
         tpValues[16] = -1;
         baseQualities[16] = 32;
@@ -158,7 +158,7 @@ public class UltimaQualModelTest
         String readBases = BUFFER_REF_BASES + "ACGTCGT";
         byte[] baseQualities = buildDefaultBaseQuals(readBases.length());
         byte[] t0Values = buildDefaultBaseQuals(readBases.length());
-        short[] tpValues = new short[readBases.length()];
+        byte[] tpValues = new byte[readBases.length()];
         t0Values[9] = 25;
         t0Values[10] = 30;
         SAMRecord read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
@@ -181,7 +181,7 @@ public class UltimaQualModelTest
         readBases = BUFFER_REF_BASES + "ATTTTCGCGT";
         baseQualities = buildDefaultBaseQuals(readBases.length());
         t0Values = buildDefaultBaseQuals(readBases.length());
-        tpValues = new short[readBases.length()];
+        tpValues = new byte[readBases.length()];
         read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         calcQual = model.calculateQual(read, 9);
@@ -210,12 +210,12 @@ public class UltimaQualModelTest
         String readBases = BUFFER_REF_BASES + "ATTAAAG";
         byte[] baseQualities = buildDefaultBaseQuals(readBases.length());
         byte[] t0Values = buildDefaultBaseQuals(readBases.length());
-        short[] tpValues = new short[readBases.length()];
+        byte[] tpValues = new byte[readBases.length()];
 
         tpValues[11] = 2;
         tpValues[12] = 2;
-        baseQualities[11] = 30;
-        baseQualities[2] = 30;
+        baseQualities[11] = 11;
+        baseQualities[2] = 11;
 
         tpValues[13] = 2;
         tpValues[15] = 2;
@@ -225,7 +225,7 @@ public class UltimaQualModelTest
         SAMRecord read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         byte calcQual = model.calculateQual(read, 12);
-        assertEquals(17, calcQual);
+        assertEquals(30, calcQual);
 
         // as before but with longer, lopsided transitional delete
         variant = new SimpleVariant(CHR_1, 11, "TTTTA", "T");
@@ -237,22 +237,22 @@ public class UltimaQualModelTest
         readBases = BUFFER_REF_BASES + "ATAAAAG";
         baseQualities = buildDefaultBaseQuals(readBases.length());
         t0Values = buildDefaultBaseQuals(readBases.length());
-        tpValues = new short[readBases.length()];
+        tpValues = new byte[readBases.length()];
 
         tpValues[11] = 3;
-        baseQualities[11] = 30;
+        baseQualities[11] = 25;
 
         tpValues[12] = -1;
         tpValues[13] = 1;
         tpValues[14] = 1;
         tpValues[15] = -1;
-        baseQualities[13] = 35;
-        baseQualities[14] = 35;
+        baseQualities[13] = 12;
+        baseQualities[14] = 12;
 
         read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         calcQual = model.calculateQual(read, 11);
-        assertEquals(27, calcQual);
+        assertEquals(34, calcQual);
     }
 
     @Test
@@ -272,12 +272,12 @@ public class UltimaQualModelTest
         String readBases = BUFFER_REF_BASES + "AGATAAG";
         byte[] baseQualities = buildDefaultBaseQuals(readBases.length());
         byte[] t0Values = buildDefaultBaseQuals(readBases.length());
-        short[] tpValues = new short[readBases.length()];
+        byte[] tpValues = new byte[readBases.length()];
 
         SAMRecord read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         byte calcQual = model.calculateQual(read, 13);
-        assertEquals(ULTIMA_MAX_QUAL, calcQual);
+        assertEquals(37, calcQual);
 
         //                             01     234     56
         refBases = BUFFER_REF_BASES + "AG" + "CCG" + "AG" + BUFFER_REF_BASES;
@@ -292,7 +292,7 @@ public class UltimaQualModelTest
 
         baseQualities = buildDefaultBaseQuals(readBases.length());
         t0Values = buildDefaultBaseQuals(readBases.length());
-        tpValues = new short[readBases.length()];
+        tpValues = new byte[readBases.length()];
 
         // the deleted base qual
         tpValues[12] = 1;
@@ -318,11 +318,10 @@ public class UltimaQualModelTest
 
         baseQualities = buildDefaultBaseQuals(readBases.length());
         t0Values = buildDefaultBaseQuals(readBases.length());
-        tpValues = new short[readBases.length()];
+        tpValues = new byte[readBases.length()];
 
-        // the deleted base qual
         t0Values[12] = 10;
-        t0Values[13] = 15;
+        t0Values[13] = 15; // an SNV with any HP deletion, including of a single base, just uses t0
 
         tpValues[13] = -1;
         baseQualities[13] = 21;
@@ -330,8 +329,7 @@ public class UltimaQualModelTest
         read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         calcQual = model.calculateQual(read, 13);
-        assertEquals(36, calcQual);
-
+        assertEquals(15, calcQual);
 
         // C>T in TCG > TTG, left 1-base ins/expansion, right full delete
         //                             01     234     56
@@ -345,10 +343,9 @@ public class UltimaQualModelTest
 
         baseQualities = buildDefaultBaseQuals(readBases.length());
         t0Values = buildDefaultBaseQuals(readBases.length());
-        tpValues = new short[readBases.length()];
+        tpValues = new byte[readBases.length()];
 
-        // the deleted base qual
-        t0Values[13] = 15;
+        t0Values[13] = 25;
         t0Values[14] = 10;
 
         tpValues[12] = tpValues[13] = -1;
@@ -357,7 +354,7 @@ public class UltimaQualModelTest
         read = buildUltimaRead(readBases, 1, baseQualities, tpValues, t0Values);
 
         calcQual = model.calculateQual(read, 13);
-        assertEquals(40, calcQual);
+        assertEquals(25, calcQual);
 
 
         // C>T in GCC > GTC, left contraction, right insertion/expansion
@@ -371,7 +368,7 @@ public class UltimaQualModelTest
 
         baseQualities = buildDefaultBaseQuals(readBases.length());
         t0Values = buildDefaultBaseQuals(readBases.length());
-        tpValues = new short[readBases.length()];
+        tpValues = new byte[readBases.length()];
 
         // the delete base qual
         tpValues[14] = 1;
@@ -402,7 +399,7 @@ public class UltimaQualModelTest
 
         baseQualities = buildDefaultBaseQuals(readBases.length());
         t0Values = buildDefaultBaseQuals(readBases.length());
-        tpValues = new short[readBases.length()];
+        tpValues = new byte[readBases.length()];
 
         // the HP insert base quals
         tpValues[10] = tpValues[14] = -1;
@@ -438,7 +435,7 @@ public class UltimaQualModelTest
     }
 
     private static SAMRecord buildUltimaRead(
-            final String readBases, final int readStart, final byte[] qualities, final short[] tpValues, final byte[] t0Values)
+            final String readBases, final int readStart, final byte[] qualities, final byte[] tpValues, final byte[] t0Values)
     {
         String cigar = format("%dM", qualities.length);
         SAMRecord record = buildSamRecord(readStart, cigar, readBases, qualities);

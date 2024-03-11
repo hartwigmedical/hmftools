@@ -12,6 +12,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
@@ -29,8 +30,10 @@ public class TestUtils
 
     public static final BqrRecordMap RECALIBRATION = new BqrRecordMap(Collections.emptyList());
 
+    public static final MockRefGenome MOCK_REF_GENOME = new MockRefGenome();
+
     private static final IndexedBases REF_BASES = new IndexedBases(550, 0, "TGTTTCTGTTTC".getBytes());
-    public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG, RECALIBRATION, REF_BASES);
+    public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG, RECALIBRATION, REF_BASES, MOCK_REF_GENOME );
 
     public static SageConfig createSageConfig()
     {

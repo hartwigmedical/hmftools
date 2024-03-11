@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcExonicCodingPhase;
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_MIXED_GERMLINE_SOMATIC_FILTER;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -136,11 +137,11 @@ public class DedupMixedGermlineSomatic
 
                 if(positionCodon != null && keepMnv(positionCodon, snvPassing.variant(), mnv.variant()))
                 {
-                    snvPassing.filters().add(VariantVCF.DEDUP_MIXED_GERMLINE_SOMATIC_FILTER);
+                    snvPassing.filters().add(DEDUP_MIXED_GERMLINE_SOMATIC_FILTER);
                 }
                 else
                 {
-                    mnv.filters().add(VariantVCF.DEDUP_MIXED_GERMLINE_SOMATIC_FILTER);
+                    mnv.filters().add(DEDUP_MIXED_GERMLINE_SOMATIC_FILTER);
                 }
             }
         }

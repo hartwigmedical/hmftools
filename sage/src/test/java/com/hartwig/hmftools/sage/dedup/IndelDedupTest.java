@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.sage.common.TestUtils.setTumorQuality;
 import static com.hartwig.hmftools.sage.dedup.DedupIndelOld.dedupIndelsOld;
 import static com.hartwig.hmftools.sage.dedup.IndelDeduper.buildAltBasesString;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_INDEL_FILTER;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATT
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
+import static com.hartwig.hmftools.sage.common.TestUtils.MOCK_REF_GENOME;
 import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.createReadContext;
@@ -41,7 +42,9 @@ public class SoftFilterTest
 {
     private static final String REF_BASES = "X" + generateRandomBases(100);
     private static final IndexedBases REF_INDEXED_BASES = new IndexedBases(1, 0, REF_BASES.getBytes());
-    private static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG, RECALIBRATION, REF_INDEXED_BASES);
+
+    private static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(
+            TEST_CONFIG, RECALIBRATION, REF_INDEXED_BASES, MOCK_REF_GENOME);
 
     private static final String TEST_READ_ID = "READ_01";
     private static final String TEST_CIGAR = "30M";

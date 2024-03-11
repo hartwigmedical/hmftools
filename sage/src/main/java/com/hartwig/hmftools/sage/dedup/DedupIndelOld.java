@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.sage.dedup;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER_OLD;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_INDEL_FILTER_OLD;
 
 import java.util.List;
 import java.util.stream.Collectors;

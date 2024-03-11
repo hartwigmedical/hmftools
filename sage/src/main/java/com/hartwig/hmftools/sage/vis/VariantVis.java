@@ -21,11 +21,11 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.read.NumberEvents.rawNM;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_BASE_QUAL;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_MAP_QUALITY;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_NM_COUNT;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.FRAG_STRAND_BIAS;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_STRAND_BIAS;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_NM_COUNT;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vis.ColorUtil.DARK_BLUE;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.FINAL_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MAP_QUAL_COL;

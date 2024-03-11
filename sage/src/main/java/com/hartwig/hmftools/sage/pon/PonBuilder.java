@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.pon;
 
+import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_DEPTH;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +11,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -30,9 +31,9 @@ public class PonBuilder
         final VariantHotspot hotspot = hotspot(context);
         final Counter counter = mMap.computeIfAbsent(hotspot, Counter::new);
         final Genotype genotype = context.getGenotype(0);
-        if(!hotspot.ref().contains("N") && genotype.hasExtendedAttribute(VariantVCF.RAW_ALLELIC_DEPTH))
+        if(!hotspot.ref().contains("N") && genotype.hasExtendedAttribute(RAW_SUPPORT_DEPTH))
         {
-            String rawDepth = (String) genotype.getExtendedAttribute(VariantVCF.RAW_ALLELIC_DEPTH);
+            String rawDepth = (String) genotype.getExtendedAttribute(RAW_SUPPORT_DEPTH);
             int allelicDepth = Integer.parseInt(rawDepth.split(",")[1]);
             if(allelicDepth >= MIN_INPUT_ALLELIC_DEPTH)
             {

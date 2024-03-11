@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
+import static com.hartwig.hmftools.sage.common.TestUtils.MOCK_REF_GENOME;
 import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
@@ -321,7 +322,7 @@ public class ReadContextCounterTest
         ReadContext readContext = new ReadContext(pos, "", 0, "", indexBases, false);
 
         IndexedBases indexedRefBases = new IndexedBases(100, 0, refBases.getBytes());
-        QualityCalculator qualityCalculator = new QualityCalculator(TEST_CONFIG, RECALIBRATION, indexedRefBases);
+        QualityCalculator qualityCalculator = new QualityCalculator(TEST_CONFIG, RECALIBRATION, indexedRefBases, MOCK_REF_GENOME);
 
         ReadContextCounter rcCounter = new ReadContextCounter(
                 1, variant, readContext, VariantTier.PANEL, 100, 0,
