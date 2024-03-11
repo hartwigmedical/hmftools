@@ -93,13 +93,17 @@ public class AltSpliceJunctionPrep implements CategoryPrep
                 dataItems.add(new DataItem(RNA, ItemType.ALT_SJ, asjKey, String.valueOf(fragCount)));
             }
 
-            // CUP_LOGGER.info("loaded {} matching alt-SJs from file({})", matchedRefAltSJs, filename);
+            if(dataItems.isEmpty())
+            {
+                CUP_LOGGER.warn("sample({}) had no matching alt-SJs of the {} selected", sampleId, mRefAsjIndexMap.size());
+            }
+
             return dataItems;
 
         }
         catch(IOException e)
         {
-            CUP_LOGGER.error("failed to load alt splice junction file({}): {}", filename, e.toString());
+            CUP_LOGGER.error("failed to load sample alt-SJ file({}): {}", filename, e.toString());
             return null;
         }
     }
@@ -135,8 +139,8 @@ public class AltSpliceJunctionPrep implements CategoryPrep
         }
         catch (IOException e)
         {
-            CUP_LOGGER.error("failed to read RNA ref alt-SJs from file({}): {}", filename, e.toString());
-            return false;
+            CUP_LOGGER.error("failed to read selected alt-SJs from file({}): {}", filename, e.toString());
+            System.exit(0);
         }
 
         return true;
