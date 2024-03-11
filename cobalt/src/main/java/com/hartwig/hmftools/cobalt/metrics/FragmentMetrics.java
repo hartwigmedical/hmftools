@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cobalt.metrics;
 
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.APP_NAME;
@@ -140,27 +141,29 @@ public class FragmentMetrics
         CB_LOGGER.debug("all regions complete");
 
         FragmentGcMap combinedAllFragGcMap = new FragmentGcMap();
+        FragmentGcMap combinedTargedFragGcMap = new FragmentGcMap();
         FragmentGcMap combinedNonTargedFragGcMap = new FragmentGcMap();
 
         for(PartitionReader partitionReader : partitionReaders)
         {
             combinedAllFragGcMap.merge(partitionReader.allFragmentGcMap());
+            combinedTargedFragGcMap.merge(partitionReader.targetedFragmentGcMap());
             combinedNonTargedFragGcMap.merge(partitionReader.nonTargetedFragmentGcMap());
         }
 
-        writeResults(combinedAllFragGcMap, combinedNonTargedFragGcMap, targetRegionData);
+        writeResults(combinedAllFragGcMap, combinedTargedFragGcMap, combinedNonTargedFragGcMap, targetRegionData);
 
         CB_LOGGER.info("FragmentGcMetrics complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private void writeResults(
-            final FragmentGcMap combinedAllFragGcMap, final FragmentGcMap combinedNonTargedFragGcMap,
-            final List<TargetRegionData> targetRegionData)
+            final FragmentGcMap combinedAllFragGcMap, final FragmentGcMap combinedTargedFragGcMap,
+            final FragmentGcMap combinedNonTargedFragGcMap, final List<TargetRegionData> targetRegionData)
     {
         try
         {
             // write summary metrics
-            String filename = mConfig.OutputDir + mConfig.SampleId + "fragment_gc_metrics";
+            String filename = mConfig.OutputDir + mConfig.SampleId + ".fragment_gc_metrics";
 
             if(mConfig.OutputId != null)
                 filename += "." + mConfig.OutputId;
@@ -170,17 +173,31 @@ public class FragmentMetrics
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             StringJoiner sb = new StringJoiner(TSV_DELIM);
-            sb.add(FLD_CHROMOSOME).add(FLD_POSITION_START).add(FLD_POSITION_END);
-            sb.add("FragmentLength").add("GcPercent").add("Count");
+
+            if(mConfig.CaptureRegionCounts)
+            {
+                sb.add(FLD_CHROMOSOME).add(FLD_POSITION_START).add(FLD_POSITION_END);
+            }
+            else
+            {
+                sb.add("RegionType");
+            }
+
+            sb.add("FragmentLength").add("GcPercent").add("Count").add("DuplicateReadCount");
             writer.write(sb.toString());
             writer.newLine();
 
-            combinedAllFragGcMap.writeMap(writer, "ALL", 0, 0);
-            combinedNonTargedFragGcMap.writeMap(writer, "NON_TARGET", 0, 0);
+            combinedAllFragGcMap.writeMap(writer, "ALL");
+            combinedTargedFragGcMap.writeMap(writer, "TARGET");
+            combinedNonTargedFragGcMap.writeMap(writer, "NON_TARGET");
 
-            for(TargetRegionData targetRegion : targetRegionData)
+            if(mConfig.CaptureRegionCounts)
             {
-                targetRegion.FragmentGcCounts.writeMap(writer, targetRegion.Chromosome, targetRegion.start(), targetRegion.end());
+                for(TargetRegionData targetRegion : targetRegionData)
+                {
+                    String regionStr = format("%s\t%d\t%d", targetRegion.Chromosome, targetRegion.start(), targetRegion.end());
+                    targetRegion.FragmentGcCounts.writeMap(writer, regionStr);
+                }
             }
 
             writer.close();

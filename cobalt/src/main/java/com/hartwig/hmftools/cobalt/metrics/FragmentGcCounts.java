@@ -9,12 +9,14 @@ public class FragmentGcCounts implements Comparable<FragmentGcCounts>
     public final double GcPercent;
 
     public int Count;
+    public int DuplicateReadCount;
 
     public FragmentGcCounts(final int fragmentLength, final double gcPercent)
     {
         FragmentLength = fragmentLength;
         GcPercent = gcPercent;
         Count = 0;
+        DuplicateReadCount = 0;
     }
 
     @Override

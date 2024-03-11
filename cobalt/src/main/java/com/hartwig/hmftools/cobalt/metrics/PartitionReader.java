@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.cobalt.metrics.FragmentGcCounts.roundFragmentLength;
 import static com.hartwig.hmftools.cobalt.metrics.FragmentGcCounts.roundGcPercent;
+import static com.hartwig.hmftools.cobalt.metrics.MetricsConfig.TARGET_REGION_PROXIMITY;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_INFO_DELIM;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
@@ -41,6 +42,7 @@ public class PartitionReader extends Thread
 
     private final FragmentGcMap mAllFragmentGcMap; // will contribute to whole BAM metrics
     private final FragmentGcMap mNonTargetedFragmentGcMap; // for reads outside targeted reginos
+    private final FragmentGcMap mTargetedFragmentGcMap;
 
     private final Map<String,SAMRecord> mReadGroupMap;
 
@@ -61,6 +63,7 @@ public class PartitionReader extends Thread
         mReadGroupMap = Maps.newHashMap();
         mAllFragmentGcMap = new FragmentGcMap();
         mNonTargetedFragmentGcMap = new FragmentGcMap();
+        mTargetedFragmentGcMap = new FragmentGcMap();
     }
 
     @Override
@@ -75,11 +78,11 @@ public class PartitionReader extends Thread
             {
                 mCurrentPartition = mPartitions.remove();
 
-                int remainingCount = mPartitionCount - mPartitions.size();
+                int processedCount = mPartitionCount - mPartitions.size();
 
-                if((remainingCount % 100) == 0)
+                if((processedCount % 100) == 0)
                 {
-                    CB_LOGGER.info("processing partition({}), remaining({})", mCurrentPartition, remainingCount);
+                    CB_LOGGER.info("processed {} partitions", processedCount);
                 }
 
                 processPartition();
@@ -108,6 +111,7 @@ public class PartitionReader extends Thread
 
     public FragmentGcMap allFragmentGcMap() { return mAllFragmentGcMap; }
     public FragmentGcMap nonTargetedFragmentGcMap() { return mNonTargetedFragmentGcMap; }
+    public FragmentGcMap targetedFragmentGcMap() { return mTargetedFragmentGcMap; }
 
     private void processPartition()
     {
@@ -128,6 +132,8 @@ public class PartitionReader extends Thread
         {
             processSamRecord(read);
         }
+
+        mReadGroupMap.clear();
     }
 
     private void processSamRecord(final SAMRecord read)
@@ -185,24 +191,29 @@ public class PartitionReader extends Thread
             SAMRecord upperRead = read == lowerRead ? mate : read;
 
             String alignedBases = getAlignedReadBases(lowerRead, 0);
-            alignedBases += getAlignedReadBases(upperRead, lowerRead.getAlignmentEnd());
+
+            if(upperRead.getAlignmentEnd() > lowerRead.getAlignmentEnd())
+            {
+                alignedBases += getAlignedReadBases(upperRead, lowerRead.getAlignmentEnd());
+            }
+
             gcContent = GcCalcs.calcGcPercent(alignedBases);
         }
         else
         {
-            double readGcContent = getReadGcContent(read);
-            double mateGcContent = getReadGcContent(mate);
+            String fragmentBases = getAlignedReadBases(read, 0);
+            fragmentBases += getAlignedReadBases(mate, 0);
 
             int gapPosStart = readPosEnd < matePosStart ? readPosEnd : matePosEnd + 1;
             int gapPosEnd = readPosEnd < matePosStart ? matePosStart - 1 : readPosStart - 1;
-            String gapRefBases = mConfig.RefGenome.getBaseString(read.getReferenceName(), gapPosStart, gapPosEnd);
-            double gapGcContent = GcCalcs.calcGcPercent(gapRefBases);
 
-            gcContent = readGcContent + mateGcContent + gapGcContent;
+            String gapRefBases = mConfig.RefGenome.getBaseString(read.getReferenceName(), gapPosStart, gapPosEnd);
+            fragmentBases += gapRefBases;
+
+            gcContent = GcCalcs.calcGcPercent(fragmentBases);
         }
 
         addFragmentData(read.getAlignmentStart(), read.getAlignmentEnd(), duplicateCount, gcContent, fragmentLength);
-
     }
 
     private static int getDuplicateReadCount(final SAMRecord read)
@@ -300,16 +311,25 @@ public class PartitionReader extends Thread
 
         boolean matchesRegion = false;
 
+        int fragBoundsStart = fragmentPosStart - TARGET_REGION_PROXIMITY;
+        int fragBoundsEnd = fragmentPosEnd + TARGET_REGION_PROXIMITY;
+
         for(TargetRegionData targetRegion : mCurrentPartition.TargetRegions)
         {
-            if(positionsOverlap(fragmentPosStart, fragmentPosEnd, targetRegion.start(), targetRegion.end()))
+            if(positionsOverlap(fragBoundsStart, fragBoundsEnd, targetRegion.start(), targetRegion.end()))
             {
-                targetRegion.FragmentGcCounts.add(fragmentLength, gcPercent, duplicateCount);
                 matchesRegion = true;
+
+                if(mConfig.CaptureRegionCounts)
+                    targetRegion.FragmentGcCounts.add(fragmentLength, gcPercent, duplicateCount);
+                else
+                    break;
             }
         }
 
-        if(!matchesRegion)
+        if(matchesRegion)
+            mTargetedFragmentGcMap.add(fragmentLength, gcPercent, duplicateCount);
+        else
             mNonTargetedFragmentGcMap.add(fragmentLength, gcPercent, duplicateCount);
     }
 }

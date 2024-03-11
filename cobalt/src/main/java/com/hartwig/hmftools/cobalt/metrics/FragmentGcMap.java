@@ -2,13 +2,10 @@ package com.hartwig.hmftools.cobalt.metrics;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +23,7 @@ public class FragmentGcMap
         mMap = Maps.newHashMap();
     }
 
-    public void add(final int fragmentLength, final double gcPercent, final int readCount)
+    public void add(final int fragmentLength, final double gcPercent, final int duplicateCount)
     {
         String key = FragmentGcCounts.formKey(fragmentLength, gcPercent);
 
@@ -38,7 +35,8 @@ public class FragmentGcMap
             mMap.put(key, counts);
         }
 
-        counts.Count += readCount;
+        ++counts.Count;
+        counts.DuplicateReadCount += duplicateCount;
     }
 
     public void merge(final FragmentGcMap other)
@@ -57,16 +55,15 @@ public class FragmentGcMap
             else
             {
                 fragGcCounts.Count += otherCounts.Count;
+                fragGcCounts.DuplicateReadCount += otherCounts.DuplicateReadCount;
             }
         }
     }
 
-    public void writeMap(final BufferedWriter writer, final String chromosome, final int regionStart, final int regionEnd) throws IOException
+    public void writeMap(final BufferedWriter writer, final String regionStr) throws IOException
     {
         if(mMap.isEmpty())
             return;
-
-        String regionStr = format("%s\t%d\t%d", chromosome, regionStart, regionEnd);
 
         List<FragmentGcCounts> fragmentGcCounts = mMap.values().stream().collect(Collectors.toList());
         Collections.sort(fragmentGcCounts);
@@ -78,6 +75,7 @@ public class FragmentGcMap
             sb.add(String.valueOf(fragGcCount.FragmentLength));
             sb.add(format("%.2f", fragGcCount.GcPercent));
             sb.add(String.valueOf(fragGcCount.Count));
+            sb.add(String.valueOf(fragGcCount.DuplicateReadCount));
             writer.write(sb.toString());
             writer.newLine();
         }

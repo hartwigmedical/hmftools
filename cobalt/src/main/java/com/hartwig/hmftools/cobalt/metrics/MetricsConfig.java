@@ -51,6 +51,7 @@ public class MetricsConfig
 
     public final int FragmentLengthUnits;
     public final double GcPercentUnits;
+    public final boolean CaptureRegionCounts;
 
     public final int Threads;
 
@@ -60,8 +61,10 @@ public class MetricsConfig
     private static final String ONLY_TARGET = "only_target";
     private static final String FRAG_LENGTH_UNITS = "frag_length_units";
     private static final String GC_PERCENT_UNITS = "gc_percent_units";
+    private static final String CAPTURE_REGION_COUNTS = "capture_region_counts";
 
-    private static final int DEFAULT_MAP_QUAL_THRESHOLD = 20;
+    public static final int TARGET_REGION_PROXIMITY = 100;
+
     private static final int DEFAULT_PARTITION_SIZE = 1_000_000;
     private static final double DEFAULT_GC_BUCKET = 0.01;
     private static final int DEFAULT_FRAG_LENGTH_BUCKET = 10;
@@ -96,6 +99,7 @@ public class MetricsConfig
 
         FragmentLengthUnits = configBuilder.getInteger(FRAG_LENGTH_UNITS);
         GcPercentUnits = configBuilder.getDecimal(GC_PERCENT_UNITS);
+        CaptureRegionCounts = configBuilder.hasFlag(CAPTURE_REGION_COUNTS);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
         Threads = parseThreads(configBuilder);
@@ -115,6 +119,7 @@ public class MetricsConfig
         configBuilder.addDecimal(GC_PERCENT_UNITS, "GC percent bucket size", DEFAULT_GC_BUCKET);
 
         configBuilder.addFlag(ONLY_TARGET, "Only capture metrics within the specific regions file");
+        configBuilder.addFlag(CAPTURE_REGION_COUNTS, "Capture metrics for each regions");
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
