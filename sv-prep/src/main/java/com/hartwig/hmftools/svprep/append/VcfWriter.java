@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS_DESCRIPTION;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS_DESC;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.append.AppendConstants.JUNCTION_FRAGMENTS;
 import static com.hartwig.hmftools.svprep.append.AppendConstants.JUNCTION_FRAGMENTS_DESCRIPTION;
@@ -99,7 +99,7 @@ public class VcfWriter
         newHeader.getGenotypeSamples().add(mConfig.SampleId);
 
         newHeader.addMetaDataLine(new VCFFormatHeaderLine(
-                UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESCRIPTION));
+                UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESC));
 
         newHeader.addMetaDataLine(new VCFFormatHeaderLine(
                 JUNCTION_FRAGMENTS, JUNCTION_FRAGMENT_TYPE_COUNT, VCFHeaderLineType.Integer, JUNCTION_FRAGMENTS_DESCRIPTION));
