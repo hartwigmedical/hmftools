@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_MIN_MAPPING_QUALITY;
+import static com.hartwig.hmftools.cobalt.metrics.FragmentGcCounts.roundDuplicateCount;
 import static com.hartwig.hmftools.cobalt.metrics.FragmentGcCounts.roundFragmentLength;
 import static com.hartwig.hmftools.cobalt.metrics.FragmentGcCounts.roundGcPercent;
 import static com.hartwig.hmftools.cobalt.metrics.MetricsConfig.TARGET_REGION_PROXIMITY;
@@ -234,6 +235,39 @@ public class PartitionReader extends Thread
         return GcCalcs.calcGcPercent(getAlignedReadBases(read, 0));
     }
 
+    private void addFragmentData(int fragmentPosStart, int fragmentPosEnd, int duplicateCount, double rawGcPercent, int rawFragmentLength)
+    {
+        double gcPercent = roundGcPercent(rawGcPercent, mConfig.GcPercentUnits);
+        int fragmentLength = roundFragmentLength(rawFragmentLength, mConfig.FragmentLengthUnits);
+
+        int dupCountRounded = roundDuplicateCount(duplicateCount);
+
+        mAllFragmentGcMap.add(fragmentLength, gcPercent, dupCountRounded);
+
+        boolean matchesRegion = false;
+
+        int fragBoundsStart = fragmentPosStart - TARGET_REGION_PROXIMITY;
+        int fragBoundsEnd = fragmentPosEnd + TARGET_REGION_PROXIMITY;
+
+        for(TargetRegionData targetRegion : mCurrentPartition.TargetRegions)
+        {
+            if(positionsOverlap(fragBoundsStart, fragBoundsEnd, targetRegion.start(), targetRegion.end()))
+            {
+                matchesRegion = true;
+
+                if(mConfig.CaptureRegionCounts)
+                    targetRegion.FragmentGcCounts.add(fragmentLength, gcPercent, dupCountRounded);
+                else
+                    break;
+            }
+        }
+
+        if(matchesRegion)
+            mTargetedFragmentGcMap.add(fragmentLength, gcPercent, dupCountRounded);
+        else
+            mNonTargetedFragmentGcMap.add(fragmentLength, gcPercent, dupCountRounded);
+    }
+
     private static String getAlignedReadBases(final SAMRecord read, final int minReadStartPos)
     {
         String readBasesStr = read.getReadString();
@@ -300,36 +334,5 @@ public class PartitionReader extends Thread
         }
 
         return alignedReadBases;
-    }
-
-    private void addFragmentData(int fragmentPosStart, int fragmentPosEnd, int duplicateCount, double rawGcPercent, int rawFragmentLength)
-    {
-        double gcPercent = roundGcPercent(rawGcPercent, mConfig.GcPercentUnits);
-        int fragmentLength = roundFragmentLength(rawFragmentLength, mConfig.FragmentLengthUnits);
-
-        mAllFragmentGcMap.add(fragmentLength, gcPercent, duplicateCount);
-
-        boolean matchesRegion = false;
-
-        int fragBoundsStart = fragmentPosStart - TARGET_REGION_PROXIMITY;
-        int fragBoundsEnd = fragmentPosEnd + TARGET_REGION_PROXIMITY;
-
-        for(TargetRegionData targetRegion : mCurrentPartition.TargetRegions)
-        {
-            if(positionsOverlap(fragBoundsStart, fragBoundsEnd, targetRegion.start(), targetRegion.end()))
-            {
-                matchesRegion = true;
-
-                if(mConfig.CaptureRegionCounts)
-                    targetRegion.FragmentGcCounts.add(fragmentLength, gcPercent, duplicateCount);
-                else
-                    break;
-            }
-        }
-
-        if(matchesRegion)
-            mTargetedFragmentGcMap.add(fragmentLength, gcPercent, duplicateCount);
-        else
-            mNonTargetedFragmentGcMap.add(fragmentLength, gcPercent, duplicateCount);
     }
 }

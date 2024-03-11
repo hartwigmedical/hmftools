@@ -183,7 +183,7 @@ public class FragmentMetrics
                 sb.add("RegionType");
             }
 
-            sb.add("FragmentLength").add("GcPercent").add("Count").add("DuplicateReadCount");
+            sb.add("FragmentLength").add("DuplicateCount").add("GcPercent").add("Count");
             writer.write(sb.toString());
             writer.newLine();
 

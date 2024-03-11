@@ -25,18 +25,17 @@ public class FragmentGcMap
 
     public void add(final int fragmentLength, final double gcPercent, final int duplicateCount)
     {
-        String key = FragmentGcCounts.formKey(fragmentLength, gcPercent);
+        String key = FragmentGcCounts.formKey(fragmentLength, duplicateCount, gcPercent);
 
         FragmentGcCounts counts = mMap.get(key);
 
         if(counts == null)
         {
-            counts = new FragmentGcCounts(fragmentLength, gcPercent);
+            counts = new FragmentGcCounts(fragmentLength, duplicateCount, gcPercent);
             mMap.put(key, counts);
         }
 
         ++counts.Count;
-        counts.DuplicateReadCount += duplicateCount;
     }
 
     public void merge(final FragmentGcMap other)
@@ -55,7 +54,6 @@ public class FragmentGcMap
             else
             {
                 fragGcCounts.Count += otherCounts.Count;
-                fragGcCounts.DuplicateReadCount += otherCounts.DuplicateReadCount;
             }
         }
     }
@@ -73,9 +71,9 @@ public class FragmentGcMap
             StringJoiner sb = new StringJoiner(TSV_DELIM);
             sb.add(regionStr);
             sb.add(String.valueOf(fragGcCount.FragmentLength));
+            sb.add(String.valueOf(fragGcCount.DuplicateCount));
             sb.add(format("%.2f", fragGcCount.GcPercent));
             sb.add(String.valueOf(fragGcCount.Count));
-            sb.add(String.valueOf(fragGcCount.DuplicateReadCount));
             writer.write(sb.toString());
             writer.newLine();
         }
