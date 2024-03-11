@@ -6,12 +6,78 @@ library(ggh4x)
 library(stringr)
 library(patchwork)
 library(plyr)
+library(dplyr)
 
 ## Args ================================
 args <- commandArgs(trailingOnly = TRUE)
 
 VIS_DATA_PATH <- args[1]
 PLOT_PATH <- args[2]
+COHORT_PERCENTILES_PATH <- "~/cuppa_sig_cohort_percentiles.tsv" #Should be changed!
+
+## Cohort percentiles ================================
+COHORT_PERCENTILES <- read.delim(COHORT_PERCENTILES_PATH)
+
+getPercentile <- function(cohortPercentiles, cohort, value, name) {
+  percentiles <- subset(cohortPercentiles, class==cohort)
+  name <- gsub("[[:punct:]]+", ".", name)
+  name <- gsub(" ", ".", name)
+  name <- paste("sig.", name, sep="")
+  percentiles <- percentiles[name][,1]
+
+  if (length(percentiles) != 101) {
+    return(-1)
+  }
+
+  if(value < percentiles[1]) {
+    if(percentiles[1] == 0) {
+      return(0)
+    }
+    else if(value == 0) {
+      return(-100)
+    }
+    else {
+      return(-percentiles[1] / value)
+    }
+  }
+  else if(value > percentiles[length(percentiles)]) {
+    maxValue <- percentiles[length(percentiles)]
+    return(ifelse(maxValue>0, value/maxValue, 100.01))
+  }
+
+  sameValueStart <- -1
+  sameValueEnd <- 0
+  for (i in 1:(length(percentiles))){
+    if(value == percentiles[i] && percentiles[i] == percentiles[i + 1]) {
+      if(sameValueStart == -1) {
+        sameValueStart <- i
+      }
+      sameValueEnd <- i + 1
+      if(i < length(percentiles) - 1) {
+        next
+      }
+    }
+
+    if(value >= percentiles[i] && value <= percentiles[i+1]) {
+      if(value > percentiles[i] && value == percentiles[i+1] && i < length(percentiles) - 1 ) {
+        next
+      }
+
+      if(value == percentiles[i] && sameValueStart >= 1 && sameValueStart < sameValueEnd) {
+        return ((0.5 * (sameValueStart - 1) + 0.5 * (sameValueEnd - 1)) * 0.01)
+      }
+
+      if(percentiles[i+1] == percentiles[i]) {
+        return((i-1) * 0.01)
+      }
+
+      upperFactor <- (value - percentiles[i]) / (percentiles[i+1] - percentiles[i])
+      return((upperFactor * i + (1 - upperFactor) * (i - 1))*0.01)
+    }
+  }
+
+  return(-1)
+}
 
 ## Load data ================================
 VIS_DATA <- read.delim(VIS_DATA_PATH)
@@ -436,7 +502,8 @@ plot_signatures <- function(
    plot_data <- subset(VIS_DATA, data_type=="sig_quantile")
 
    plot_data$row_group <- "signature"
-   plot_data$data_label <- round(plot_data$data_value, data_value_rounding)
+   plot_data <- plot_data %>% rowwise() %>% mutate(data_label = getPercentile(COHORT_PERCENTILES, cancer_type, feat_value, feat_name))
+   plot_data$data_label <- round(plot_data$data_label, data_value_rounding)
 
    ## Make row labels --------------------------------
    plot_data$row_label <- with(plot_data, {
@@ -451,17 +518,17 @@ plot_signatures <- function(
       paste0(gsub("_", " ", feat_name), " = ", feat_value, " (", perc, "%)")
    })
 
-   ## Discretize quantiles --------------------------------
-   quantile_info <- list(
-      breaks=c(0, 0.95, 1.2, Inf),
-      labels=c(">0 - 0.95 (in expected range)", "0.95 - 1.2 (above expected range)", ">1.2 (well above expected range)"),
-      colors=c("#C9E7CD", "#f5dfdf","#e8b6b6") ## white, green, light green, red
+   ## Discretize percentiles --------------------------------
+   percentile_info <- list(
+      breaks=c(-Inf, 0, 0.02, 0.98, 1, 2, Inf),
+      labels=c("< 0 (below expected range)", "0 - 0.02 (low in expected range)", "0.02 - 0.98 (expected range)", "0.98-1.00 (high in expected range)", ">1.0 (above expected range)", ">2 (well above expected range)"),
+      colors=c("#e8b6b6", "#f5dfdf", "#FFFFFF", "#f5dfdf","#e8b6b6", "#d67c81")
    )
 
    plot_data$data_value <- cut(
-      plot_data$data_value,
-      breaks=quantile_info$breaks,
-      labels=quantile_info$labels
+      plot_data$data_label,
+      breaks=percentile_info$breaks,
+      labels=percentile_info$labels
    )
 
    ## Plot --------------------------------
@@ -471,11 +538,12 @@ plot_signatures <- function(
       cell_color="grey50"
    ) +
    scale_fill_manual(
-      values=structure(quantile_info$colors, names=quantile_info$labels),
+      values=structure(percentile_info$colors, names=percentile_info$labels),
       guide=guide_legend(override.aes=list(colour="black", linetype=1)),
-      na.value="grey95", drop=FALSE
+      na.value="grey95", drop=TRUE
    ) +
-   labs(fill="Quantile in subtype cohort", title="SNV96: Mutational signatures")
+   labs(fill="Percentile in subtype cohort", title="SNV96: Mutational signatures") +
+     theme(legend.text = element_text(size=10), legend.key.size = unit(0.4, "cm"))
 }
 
 plot_feat_contrib <- function(VIS_DATA){
