@@ -230,7 +230,7 @@ public final class AssemblyLinker
 
         if(firstSeqIndexInSecond >= 0)
         {
-            // check that this match covers the second's junction
+            // check that this match covers the second's junction or allow a tolerance into its ref bases if the assemblies aren't local
             int secondMatchIndexEnd = firstSeqIndexInSecond + firstJunctionSeqLength - 1;
 
             if(positionWithin(secondSeq.junctionIndex(), firstSeqIndexInSecond, secondMatchIndexEnd))

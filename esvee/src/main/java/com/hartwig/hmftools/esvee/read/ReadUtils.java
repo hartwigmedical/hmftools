@@ -26,6 +26,7 @@ public final class ReadUtils
 
     public static boolean isDiscordant(final Read read, final int discordantPairFragmentLength)
     {
+        // FIXME: share method from SvUtils and/or SvPrep
         if(read.isMateUnmapped())
             return false;
 
