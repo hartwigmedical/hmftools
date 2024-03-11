@@ -165,18 +165,18 @@ public class SomaticStream
 
         try
         {
-            VCFHeader readHeader = mSomaticVariants.getVcfHeader();
+            VCFHeader vcfHeader = mSomaticVariants.getVcfHeader();
 
             mVcfWriter = new VariantContextWriterBuilder().setOutputFile(mOutputVCF)
                     .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                     .build();
 
-            final VCFHeader header = populateHeader(readHeader, mConfig.Version);
+            populateHeader(vcfHeader, mConfig.Version);
 
             if(mConfig.tumorOnlyMode())
-                SomaticGermlineLikelihood.enrichHeader(header);
+                SomaticGermlineLikelihood.enrichHeader(vcfHeader);
 
-            mVcfWriter.writeHeader(header);
+            mVcfWriter.writeHeader(vcfHeader);
 
             boolean tumorOnly = mConfig.tumorOnlyMode();
             AtomicInteger kataegisId = new AtomicInteger();

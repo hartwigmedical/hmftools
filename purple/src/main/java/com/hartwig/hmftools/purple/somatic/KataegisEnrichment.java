@@ -35,10 +35,9 @@ public class KataegisEnrichment
         mReverseDetector.flush();
     }
 
-    public static VCFHeader enrichHeader(final VCFHeader template)
+    public static void enrichHeader(final VCFHeader template)
     {
         template.addMetaDataLine(new VCFInfoHeaderLine(KATAEGIS_FLAG, 1, VCFHeaderLineType.String, KATAEGIS_FLAG_DESCRIPTION));
-        return template;
     }
 
     private static boolean isForwardCandidate(final SomaticVariant variant)

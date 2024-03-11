@@ -111,8 +111,6 @@ public class VariantVCF implements AutoCloseable
 
         VCFHeader vcfHeader = createHeader(config.Version, samples, config.Sequencing.Type == SequencingType.ULTIMA);
 
-        SageVcfTags.addRefContextHeader(vcfHeader);
-
         final SAMSequenceDictionary condensedDictionary = new SAMSequenceDictionary();
         for(SAMSequenceRecord sequence : sequenceDictionary.getSequences())
         {

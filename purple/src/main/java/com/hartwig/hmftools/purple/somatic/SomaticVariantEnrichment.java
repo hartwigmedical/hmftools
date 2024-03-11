@@ -87,13 +87,12 @@ public class SomaticVariantEnrichment implements Callable
         mKataegisEnrichment.flush();
     }
 
-    public static VCFHeader populateHeader(final VCFHeader template, final String purpleVersion)
+    public static void populateHeader(final VCFHeader header, final String purpleVersion)
     {
-        VCFHeader header = SageVcfTags.addRefContextHeader(template);
-        header = KataegisEnrichment.enrichHeader(header);
-        header = SubclonalLikelihoodEnrichment.enrichHeader(header);
-        header = HotspotEnrichment.enrichHeader(header);
-        header = PurpleVcfTags.addSomaticHeader(purpleVersion, header);
-        return header;
+        SageVcfTags.addRefContextHeader(header);
+        KataegisEnrichment.enrichHeader(header);
+        SubclonalLikelihoodEnrichment.enrichHeader(header);
+        HotspotEnrichment.enrichHeader(header);
+        PurpleVcfTags.addSomaticHeader(purpleVersion, header);
     }
 }
