@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.cup.prep.DataItem.FLD_VALUE;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
@@ -52,9 +52,9 @@ public class CuppaDataPrep
         mConfig = prepConfig;
     }
 
-    public static HashMap<CategoryType, CategoryPrep> buildDataPreparers(PrepConfig mConfig)
+    public static LinkedHashMap<CategoryType, CategoryPrep> buildDataPreparers(PrepConfig mConfig)
     {
-        HashMap<CategoryType, CategoryPrep> dataPreparers = new HashMap<>();
+        LinkedHashMap<CategoryType, CategoryPrep> dataPreparers = new LinkedHashMap<>();
 
         for(CategoryType categoryType : mConfig.Categories)
         {
@@ -114,7 +114,7 @@ public class CuppaDataPrep
 
     private class SingleSampleTask
     {
-        public List<DataItem> getData(HashMap<CategoryType, CategoryPrep> dataPreparers)
+        public List<DataItem> getData(LinkedHashMap<CategoryType, CategoryPrep> dataPreparers)
         {
             List<DataItem> dataItems = new ArrayList<>();
 
@@ -168,7 +168,7 @@ public class CuppaDataPrep
         {
             CUP_LOGGER.info("Extracting CUPPA features in single sample mode for sample({})", mConfig.SampleIds.get(0));
 
-            HashMap<CategoryType, CategoryPrep> dataPreparers = buildDataPreparers(mConfig);
+            LinkedHashMap<CategoryType, CategoryPrep> dataPreparers = buildDataPreparers(mConfig);
             List<DataItem> dataItems = getData(dataPreparers);
 
             String outputPath = getOutputPath(null);
@@ -180,6 +180,8 @@ public class CuppaDataPrep
     {
         public DataItemMatrix getDataOneCategory(CategoryPrep categoryPrep)
         {
+            CUP_LOGGER.info("Extracting categoryType({})", categoryPrep.categoryType());
+
             String[] sampleIds =  mConfig.SampleIds.toArray(String[]::new);
             ConcurrentHashMap<DataItem.Index, String[]> featureBySampleMatrix = new ConcurrentHashMap<>();
 
@@ -254,7 +256,7 @@ public class CuppaDataPrep
             CUP_LOGGER.info("Extracting CUPPA features in multi sample mode: {} samples, {} threads",
                     mConfig.SampleIds.size(), mConfig.Threads);
 
-            HashMap<CategoryType, CategoryPrep> dataPreparers = buildDataPreparers(mConfig);
+            LinkedHashMap<CategoryType, CategoryPrep> dataPreparers = buildDataPreparers(mConfig);
 
             int i = 0;
             for(CategoryType categoryType : dataPreparers.keySet())
