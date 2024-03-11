@@ -45,9 +45,10 @@ public class SampleOneCategoryTask implements Callable
     {
         try
         {
-            if(mConfig.isMultiSample() & (mSampleIndex % 100 == 0 | mSampleIndex == 1))
+            int sampleNum = mSampleIndex + 1;
+            if(mConfig.isMultiSample() & (sampleNum % 100 == 0))
             {
-                CUP_LOGGER.info("  sampleId({}): {}/{}", getSampleId(), mSampleIndex + 1, mConfig.SampleIds.size());
+                CUP_LOGGER.info("{}/{}: sample({})", sampleNum, mConfig.SampleIds.size(), getSampleId());
             }
             mDataItems = mCategoryPrep.extractSampleData(getSampleId());
         }
