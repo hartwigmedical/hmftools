@@ -4,17 +4,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 
 public class DataItemMatrix
 {
     public final String[] SampleIds;
-    public final ConcurrentHashMap<DataItem.Index, String[]> FeatureBySampleMatrix;
+    public final Map<DataItem.Index, String[]> FeatureBySampleMatrix;
     public List<DataItem.Index> Indexes;
 
     public DataItemMatrix(
             final String[] sampleIds,
-            final ConcurrentHashMap<DataItem.Index, String[]> featureBySampleMatrix
+            final Map<DataItem.Index, String[]> featureBySampleMatrix
     ){
         SampleIds = sampleIds;
         FeatureBySampleMatrix = featureBySampleMatrix;
