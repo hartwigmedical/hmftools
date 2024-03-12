@@ -5,8 +5,8 @@ import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.DUP_SPLIT;
-import static com.hartwig.hmftools.esvee.common.AssemblyUtils.buildFromJunctionReads;
-import static com.hartwig.hmftools.esvee.common.AssemblyUtils.expandReferenceBases;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.buildFromJunctionReads;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.expandReferenceBases;
 import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAtJunction;
 
 import java.util.Collections;

@@ -29,6 +29,7 @@ import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
 public class Read
@@ -436,4 +437,6 @@ public class Read
         updateCigarString();
         setBoundaries(newReadStart);
     }
+
+    public boolean isConvertedIndel() { return mCigarString != null && mOrigCigarString.contains(CigarOperator.I.toString()); }
 }

@@ -53,6 +53,9 @@ public class AssemblyLink
             if(abs(mFirst.junction().Position - mSecond.junction().Position) == 1 && !mInsertedBases.isEmpty())
                 return INS;
 
+            if(!mOverlapBases.isEmpty())
+                return DUP;
+
             boolean firstIsLower = mFirst.junction().Position <= mSecond.junction().Position;
 
             return (firstIsLower == mFirst.junction().isForward()) ? DEL : DUP;

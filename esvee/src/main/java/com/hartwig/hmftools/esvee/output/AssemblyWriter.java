@@ -112,6 +112,7 @@ public class AssemblyWriter
 
             sj.add("PhaseGroupId");
             sj.add("PhaseGroupCount");
+            sj.add("PhaseGroupLinkInfo");
 
             sj.add("PhaseSetId");
             sj.add("PhaseSetCount");
@@ -192,7 +193,7 @@ public class AssemblyWriter
 
                     ++juncFrags;
 
-                    if(support.type() == INDEL)
+                    if(support.type() == INDEL || read.isConvertedIndel())
                         ++indelReads;
 
                     if(isReference)
@@ -287,10 +288,11 @@ public class AssemblyWriter
             {
                 sj.add(String.valueOf(phaseGroup.id()));
                 sj.add(String.valueOf(phaseGroup.assemblyCount()));
+                sj.add(assembly.phaseGroupLinkingInfo());
             }
             else
             {
-                sj.add("-1").add("0");
+                sj.add("-1").add("0").add("0");
             }
 
             PhaseSet phaseSet = phaseGroup != null ? phaseGroup.findPhaseSet(assembly) : null;

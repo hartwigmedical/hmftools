@@ -83,11 +83,13 @@ public class PhaseGroupBuilder
 
     public List<PhaseGroup> phaseGroups() { return mPhaseGroups; }
 
-    private void findLinkedAssemblies(final JunctionGroup assemblyJunctionGroup, final JunctionAssembly assembly)
+    private void findLinkedAssemblies(final JunctionGroup assemblyGroup, final JunctionAssembly assembly)
     {
         // for the given assembly, looks in all overlapping other junction groups (based on remote regions, ref-side soft-clips, and
         // the local junction group for indels) for other assemblies with shared reads
-        if(assembly.remoteRegions().isEmpty() && assembly.refSideSoftClips().isEmpty() && !assembly.indel())
+        boolean hasLocalAssemblyCandidates = assemblyGroup.junctionAssemblies().stream().anyMatch(x -> isLocalAssemblyCandidate(assembly, x));
+
+        if(!hasLocalAssemblyCandidates && assembly.remoteRegions().isEmpty() && assembly.refSideSoftClips().isEmpty() && !assembly.indel())
             return;
 
         PhaseGroup phaseGroup = assembly.phaseGroup(); // may have been set from an earlier assembly link
@@ -100,7 +102,7 @@ public class PhaseGroupBuilder
             if(isFiltered(region))
                 continue;
 
-            List<JunctionGroup> overlappingJunctions = findOverlappingJunctionGroups(assemblyJunctionGroup, region);
+            List<JunctionGroup> overlappingJunctions = findOverlappingJunctionGroups(assemblyGroup, region);
 
             if(overlappingJunctions == null)
                 continue;
@@ -114,14 +116,14 @@ public class PhaseGroupBuilder
             // discordant in one and a junction read in the other
             RefSideSoftClip refSideSoftClip = assembly.refSideSoftClips().get(0);
 
-            if(positionWithin(refSideSoftClip.Position, assemblyJunctionGroup.minPosition(), assemblyJunctionGroup.maxPosition()))
+            if(positionWithin(refSideSoftClip.Position, assemblyGroup.minPosition(), assemblyGroup.maxPosition()))
             {
-                linkedJunctionGroups.add(assemblyJunctionGroup);
+                linkedJunctionGroups.add(assemblyGroup);
             }
         }
 
-        if(assembly.indel())
-            linkedJunctionGroups.add(assemblyJunctionGroup);
+        if(assembly.indel() || hasLocalAssemblyCandidates)
+            linkedJunctionGroups.add(assemblyGroup);
 
         for(JunctionGroup junctionGroup : linkedJunctionGroups)
         {
@@ -144,7 +146,7 @@ public class PhaseGroupBuilder
                     continue;
                 }
 
-                boolean isLocalCandidateLink = (assemblyJunctionGroup == junctionGroup && isLocalAssemblyCandidate(assembly, otherAssembly));
+                boolean isLocalCandidateLink = (assemblyGroup == junctionGroup && isLocalAssemblyCandidate(assembly, otherAssembly));
 
                 if(!isLocalCandidateLink && !assembliesShareReads(assembly, otherAssembly))
                     continue;
@@ -167,7 +169,7 @@ public class PhaseGroupBuilder
                     if(otherAssembly.phaseGroup() != null)
                     {
                         phaseGroup = otherAssembly.phaseGroup();
-                        phaseGroup.addAssembly(assembly);
+                        phaseGroup.addAssembly(assembly, otherAssembly);
                         linksWithExisting = true;
                     }
                     else
@@ -187,7 +189,7 @@ public class PhaseGroupBuilder
                     }
                     else
                     {
-                        phaseGroup.addAssembly(otherAssembly);
+                        phaseGroup.addAssembly(otherAssembly, assembly);
                     }
                 }
             }

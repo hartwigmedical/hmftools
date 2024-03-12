@@ -97,7 +97,7 @@ public final class AssemblyLinker
 
     private static AssemblyLink formLink(
             final JunctionAssembly first, final JunctionAssembly second, final AssemblySequence firstSeq, final AssemblySequence secondSeq,
-            int firstIndexStart, int secondIndexStart)
+            int firstIndexStart, int secondIndexStart, boolean isSecondary)
     {
         int firstJunctionOffset = firstSeq.junctionIndex() - firstIndexStart;
         int secondJunctionOffset = secondSeq.junctionIndex() - secondIndexStart;
@@ -132,18 +132,18 @@ public final class AssemblyLinker
         if(junctionOffsetDiff != 0)
         {
             // inserted bases for any same-orientation break could be reverse-complemented at either breakend,
-            // go with the convention of doing that for the higher breakend?
+            // go with the convention of doing that for the higher breakend
             if(firstSeq.Reversed)
             {
+                // FIXME: doesn't handle overlaps, only inserts
                 extraBases = first.formSequence(
                         first.junctionIndex() - (junctionOffsetDiff), first.junctionIndex() - 1);
             }
             else
             {
-                // TODO: any inserted bases should be retrievable if the junction index of one assembly has been found in the other
-                // look into more examples from of the logs
                 int insertStartIndex, insertEndIndex;
 
+                // note the first sequence can use its normal junction coords since it is not reversed
                 if(junctionOffsetDiff > 0)
                 {
                     insertStartIndex = first.junctionIndex() + 1;
@@ -155,15 +155,26 @@ public final class AssemblyLinker
                     insertEndIndex = first.junctionIndex() + 1;
                 }
 
-                if(insertStartIndex >= 0 && insertEndIndex > insertStartIndex && insertEndIndex < firstSeq.BaseLength)
+                if(insertStartIndex < 0 || insertEndIndex <= insertStartIndex || insertEndIndex > firstSeq.BaseLength)
+                {
+                    if(isSecondary)
+                        return null;
+
+                    SV_LOGGER.debug("asm({} & {}) invalid insert/overlap indexRange({} -> {} junctOffsetDiff={} firstIndex={} secIndex={}) on firstSeq({}) secSeq({})",
+                            first.junction().coords(), second.junction().coords(), insertStartIndex, insertEndIndex, junctionOffsetDiff,
+                            firstIndexStart, secondIndexStart, firstSeq, secondSeq);
+
+                    // attempt to correct to get some sequence  but needs investigation
+                    if(insertStartIndex < 0)
+                        insertStartIndex = 0;
+
+                    if(insertEndIndex >= firstSeq.BaseLength)
+                        insertEndIndex = firstSeq.BaseLength - 1;
+                }
+
+                if(insertEndIndex > insertStartIndex)
                 {
                     extraBases = firstSeq.FullSequence.substring(insertStartIndex, insertEndIndex);
-                }
-                else
-                {
-                    SV_LOGGER.debug("asm({} & {}) invalid insert/overlap indexRange({} -> {} junctOffsetDiff={} firstIndex={} secIndex={}) on firstSeq({}) secSeq({})",
-                            first.junction().coords(), second.junction().coords(),
-                            insertStartIndex, insertEndIndex, junctionOffsetDiff, firstIndexStart, secondIndexStart, firstSeq, secondSeq);
                 }
             }
         }
@@ -198,6 +209,11 @@ public final class AssemblyLinker
 
     public AssemblyLink tryAssemblyOverlap(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
+        return tryAssemblyOverlap(assembly1, assembly2, false);
+    }
+
+    public AssemblyLink tryAssemblyOverlap(final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean isSecondary)
+    {
         JunctionAssembly first, second;
         AssemblySequence firstSeq, secondSeq;
         boolean firstReversed = false;
@@ -230,15 +246,12 @@ public final class AssemblyLinker
 
         if(firstSeqIndexInSecond >= 0)
         {
-            // check that this match covers the second's junction or allow a tolerance into its ref bases if the assemblies aren't local
-            int secondMatchIndexEnd = firstSeqIndexInSecond + firstJunctionSeqLength - 1;
-
-            if(positionWithin(secondSeq.junctionIndex(), firstSeqIndexInSecond, secondMatchIndexEnd))
-            {
-                // easy match, so can form a link at these 2 locations
-                return formLink(first, second, firstSeq, secondSeq, firstSeq.junctionSeqStartIndex(), firstSeqIndexInSecond);
-            }
+            // simple sequence match, so can form a link between these 2 assemblies
+            return formLink(first, second, firstSeq, secondSeq, firstSeq.junctionSeqStartIndex(), firstSeqIndexInSecond, isSecondary);
         }
+
+        if(isSecondary)
+            return null;
 
         // take a smaller sections of the first's junction sequence and try to find their start index in the second sequence
         int juncSeqStartIndex = 0;
@@ -272,6 +285,8 @@ public final class AssemblyLinker
         // now perform a full junction sequence search in the second using the sequence matching logic
         Set<Integer> testedOffsets = Sets.newHashSet();
 
+        int minOverlapLength = min(first.extensionLength(), second.extensionLength());
+
         for(int[] indexStarts : alternativeIndexStarts)
         {
             // find a comparison range that falls within both sequence's index range around the junction
@@ -297,14 +312,15 @@ public final class AssemblyLinker
                 secondIndexStart = 0;
             }
 
-            secondIndexEnd = min(secondIndexEnd, secondSeq.BaseLength - 1);
-
-            // the second match indices must cover its junction index
-            if(!positionWithin(secondSeq.junctionIndex(), secondIndexStart, secondIndexEnd))
+            // discount this match if the implied end of the match in the second sequence is past its ref base end
+            if(secondIndexEnd >= secondSeq.BaseLength)
                 continue;
 
             int firstIndexStart = firstJuncIndexStart + firstSeq.junctionSeqStartIndex();
             int firstIndexEnd = min(firstJuncIndexEnd + firstSeq.junctionSeqStartIndex(), firstSeq.BaseLength - 1);
+
+            if(secondIndexEnd - secondIndexStart  < minOverlapLength || firstIndexEnd - firstIndexStart  < minOverlapLength)
+                continue;
 
             int mismatchCount = SequenceCompare.compareSequences(
                     firstSeq.bases(), firstSeq.baseQuals(), firstIndexStart, firstIndexEnd, firstSeq.repeatInfo(),
@@ -314,14 +330,12 @@ public final class AssemblyLinker
             if(mismatchCount <= PRIMARY_ASSEMBLY_MERGE_MISMATCH)
             {
                 // could hold out for a better match if there was more than one, but seem unlikely?
-                return formLink(first, second, firstSeq, secondSeq, firstIndexStart, secondIndexStart);
+                return formLink(first, second, firstSeq, secondSeq, firstIndexStart, secondIndexStart, false);
             }
         }
 
         return null;
     }
-
-    private static final int COMPARISON_RANGE = PHASED_ASSEMBLY_OVERLAP_BASES - PHASED_ASSEMBLY_JUNCTION_OVERLAP;
 
     private class AssemblySequence
     {

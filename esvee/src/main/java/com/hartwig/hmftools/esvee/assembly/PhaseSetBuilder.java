@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isSupplementaryOnly;
 import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.DUP_BRANCHED;
 import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.LINKED;
 import static com.hartwig.hmftools.esvee.assembly.PhaseGroupBuilder.isLocalAssemblyCandidate;
@@ -11,7 +12,7 @@ import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.extendRefBases
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.tryAssemblyFacing;
 import static com.hartwig.hmftools.esvee.common.AssemblySupport.findMatchingFragmentSupport;
 import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
-import static com.hartwig.hmftools.esvee.common.AssemblyUtils.assembliesShareReads;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.assembliesShareReads;
 
 import java.util.Collections;
 import java.util.List;
@@ -29,8 +30,6 @@ import com.hartwig.hmftools.esvee.common.LinkType;
 import com.hartwig.hmftools.esvee.common.PhaseGroup;
 import com.hartwig.hmftools.esvee.common.PhaseSet;
 import com.hartwig.hmftools.esvee.common.SupportType;
-
-import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.BOBYQAOptimizer;
 
 public class PhaseSetBuilder
 {
@@ -162,11 +161,14 @@ public class PhaseSetBuilder
                 continue;
             }
 
-            // form secondaries for any assemblies which aren't duplicates of another
+            // form secondaries for any assemblies which aren't duplicates of another or supplementary only
             if(assembly1.outcome().isDuplicate() || assembly2.outcome().isDuplicate())
                 continue;
 
-            AssemblyLink assemblyLink = mAssemblyLinker.tryAssemblyOverlap(assembly1, assembly2);
+            if(isSupplementaryOnly(assembly1) || isSupplementaryOnly(assembly2))
+                continue;
+
+            AssemblyLink assemblyLink = mAssemblyLinker.tryAssemblyOverlap(assembly1, assembly2, true);
 
             if(assemblyLink != null)
                 mSecondarySplitLinks.add(assemblyLink);
@@ -210,8 +212,8 @@ public class PhaseSetBuilder
         extendRefBases(assembly2, matchedCandidates2, mRefGenome, allowBranching);
 
         // add any branched assemblies to the phase group - these will be cleaned up if not used
-        assembly1.branchedAssemblies().forEach(x -> mPhaseGroup.addAssembly(x));
-        assembly2.branchedAssemblies().forEach(x -> mPhaseGroup.addAssembly(x));
+        assembly1.branchedAssemblies().forEach(x -> mPhaseGroup.addAssembly(x, assembly1));
+        assembly2.branchedAssemblies().forEach(x -> mPhaseGroup.addAssembly(x, assembly2));
     }
 
     private static void checkMatchingCandidateSupport(
@@ -219,6 +221,7 @@ public class PhaseSetBuilder
             final List<AssemblySupport> candidateSupport, final List<AssemblySupport> otherCandidateSupport,
             final List<AssemblySupport> matchedCandidates, final List<AssemblySupport> otherMatchedCandidates)
     {
+        // consider each candidate support read to see if it has a matching read in the other assembly's candidates or junction reads
         for(AssemblySupport support : candidateSupport)
         {
             // add any junction mate reads local to the assembly
@@ -228,8 +231,8 @@ public class PhaseSetBuilder
                 continue;
             }
 
+            // now check for discordant reads with matching support in the other assembly
             List<AssemblySupport> matchedSupport = findMatchingFragmentSupport(otherAssembly.support(), support.read());
-            matchedCandidates.addAll(matchedSupport);
 
             List<AssemblySupport> matchedCandidateSupport = findMatchingFragmentSupport(otherCandidateSupport, support.read());
 
@@ -237,32 +240,12 @@ public class PhaseSetBuilder
             matchedCandidateSupport.forEach(x -> otherCandidateSupport.remove(x));
             otherMatchedCandidates.addAll(matchedCandidateSupport);
 
+            matchedSupport.addAll(matchedCandidateSupport);
+
             for(AssemblySupport matched : matchedSupport)
             {
                 support.read().makeReadLinks(matched.read());
             }
-
-            /*
-            AssemblySupport matchedSupport = findMatchingFragmentSupport(otherAssembly.support(), support.read());
-
-            if(matchedSupport == null)
-            {
-                matchedSupport = findMatchingFragmentSupport(otherCandidateSupport, support.read());
-
-                if(matchedSupport != null)
-                {
-                    // remove from other's candidates to avoid checking again
-                    otherMatchedCandidates.add(matchedSupport);
-                    otherCandidateSupport.remove(matchedSupport);
-                }
-            }
-
-            if(matchedSupport != null)
-            {
-                matchedCandidates.add(support);
-                support.read().makeReadLinks(matchedSupport.read());
-            }
-            */
         }
     }
 

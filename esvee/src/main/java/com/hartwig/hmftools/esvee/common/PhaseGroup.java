@@ -28,12 +28,12 @@ public class PhaseGroup
         mSecondarySplitLinks = Lists.newArrayList();
         mDiscordantGroups = Lists.newArrayList();
 
-        first.setPhaseGroup(this);
+        first.setPhaseGroup(this, second != null ? second.junction().coords() : "");
 
         if(second != null)
         {
             mAssemblies.add(second);
-            second.setPhaseGroup(this);
+            second.setPhaseGroup(this, first.junction().coords());
         }
     }
 
@@ -64,11 +64,11 @@ public class PhaseGroup
         for(JunctionAssembly assembly : other.assemblies())
         {
             mAssemblies.add(assembly);
-            assembly.setPhaseGroup(this);
+            assembly.setPhaseGroup(this, "transfer");
         }
     }
 
-    public void addAssembly(final JunctionAssembly assembly)
+    public void addAssembly(final JunctionAssembly assembly, final JunctionAssembly linkingAssembly)
     {
         mAssemblies.add(assembly);
 
@@ -78,7 +78,7 @@ public class PhaseGroup
             System.exit(1);
         }
 
-        assembly.setPhaseGroup(this);
+        assembly.setPhaseGroup(this, linkingAssembly != null ? linkingAssembly.junction().coords() : "");
     }
 
     public void addDiscordantGroup(final DiscordantGroup discordantGroup)

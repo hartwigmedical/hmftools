@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.common;
+package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -13,6 +13,12 @@ import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAtJunct
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.esvee.common.AssemblyLink;
+import com.hartwig.hmftools.esvee.common.AssemblyOutcome;
+import com.hartwig.hmftools.esvee.common.AssemblySupport;
+import com.hartwig.hmftools.esvee.common.Direction;
+import com.hartwig.hmftools.esvee.common.Junction;
+import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public final class AssemblyUtils
@@ -198,6 +204,11 @@ public final class AssemblyUtils
         return false;
     }
 
+    public static boolean isSupplementaryOnly(final JunctionAssembly assembly)
+    {
+        return assembly.support().stream().allMatch(x -> x.read().isSupplementary());
+    }
+
     public static void setAssemblyOutcome(final JunctionAssembly assembly)
     {
         if(assembly.outcome() != AssemblyOutcome.UNSET)
@@ -217,7 +228,8 @@ public final class AssemblyUtils
             return;
         }
 
-        if(assembly.remoteRegions().stream().allMatch(x -> x.isSuppOnlyRegion()))
+        // check for assemblies only comprised of supp reads for support
+        if(isSupplementaryOnly(assembly))
         {
             assembly.setOutcome(SUPP_ONLY);
             return;

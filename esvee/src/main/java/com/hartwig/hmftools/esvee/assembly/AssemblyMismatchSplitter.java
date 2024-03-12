@@ -6,8 +6,8 @@ import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
-import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
-import static com.hartwig.hmftools.esvee.common.AssemblyUtils.buildFromJunctionReads;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.buildFromJunctionReads;
 import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAtJunction;
 
 import java.util.Collections;

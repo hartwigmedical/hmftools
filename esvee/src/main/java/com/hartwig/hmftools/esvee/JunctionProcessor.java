@@ -5,7 +5,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
-import static com.hartwig.hmftools.esvee.common.AssemblyUtils.setAssemblyOutcome;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
 import static com.hartwig.hmftools.esvee.common.JunctionGroup.buildJunctionGroups;
 
 import java.util.ArrayList;
@@ -20,7 +20,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.alignment.Alignment;
 import com.hartwig.hmftools.esvee.alignment.BwaAligner;
-import com.hartwig.hmftools.esvee.alignment.DecoyChecker;
 import com.hartwig.hmftools.esvee.assembly.PhaseGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
 import com.hartwig.hmftools.esvee.assembly.PhaseSetTask;

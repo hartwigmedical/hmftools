@@ -4,7 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
-import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 
 import java.util.List;
 

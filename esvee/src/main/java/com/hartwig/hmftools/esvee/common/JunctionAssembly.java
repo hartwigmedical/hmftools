@@ -10,11 +10,12 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.UNSET;
-import static com.hartwig.hmftools.esvee.common.AssemblyUtils.basesMatch;
-import static com.hartwig.hmftools.esvee.common.AssemblyUtils.findUnsetBases;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.findUnsetBases;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findRepeats;
 import static com.hartwig.hmftools.esvee.common.SupportType.INDEL;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION;
+import static com.hartwig.hmftools.esvee.read.Read.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 
 import java.util.List;
@@ -53,12 +54,11 @@ public class JunctionAssembly
     private final List<RemoteRegion> mRemoteRegions;
 
     private PhaseGroup mPhaseGroup;
+    private String mPhaseGroupLinkingInfo; // info only
     private AssemblyOutcome mOutcome;
 
     private final List<JunctionAssembly> mBranchedAssemblies;
-
-    // info only
-    private int mMergedAssemblies;
+    private int mMergedAssemblies; // info only
 
     private final Set<FilterType> mFilters;
 
@@ -88,6 +88,7 @@ public class JunctionAssembly
         mBranchedAssemblies = Lists.newArrayList();
         mMergedAssemblies = 0;
         mPhaseGroup = null;
+        mPhaseGroupLinkingInfo = null;
         mOutcome = UNSET;
         mFilters = Sets.newHashSet();
 
@@ -204,6 +205,9 @@ public class JunctionAssembly
             if(existingSupport == null)
             {
                 readJunctionIndex = read.getReadIndexAtReferencePosition(mJunction.Position, true);
+
+                if(readJunctionIndex == INVALID_INDEX)
+                    return;
             }
             else
             {
@@ -493,7 +497,16 @@ public class JunctionAssembly
     public void addRemoteRegions(final List<RemoteRegion> regions) { mRemoteRegions.addAll(regions); }
 
     public PhaseGroup phaseGroup() { return mPhaseGroup; }
-    public void setPhaseGroup(final PhaseGroup phaseGroup) { mPhaseGroup = phaseGroup; }
+
+    public void setPhaseGroup(final PhaseGroup phaseGroup, final String linkingInfo)
+    {
+        mPhaseGroup = phaseGroup;
+
+        if(mPhaseGroupLinkingInfo == null)
+            mPhaseGroupLinkingInfo = linkingInfo;
+    }
+
+    public String phaseGroupLinkingInfo() { return mPhaseGroupLinkingInfo != null ? mPhaseGroupLinkingInfo : ""; }
 
     public AssemblyOutcome outcome() { return mOutcome; }
     public void setOutcome(final AssemblyOutcome outcome) { mOutcome = outcome; }
