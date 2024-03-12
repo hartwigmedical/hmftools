@@ -138,7 +138,7 @@ public class SomaticVariantPrep implements CategoryPrep
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("sample({}) sample traits - failed to load purity file from dir{}): {}",
+            CUP_LOGGER.error("sample({}) - failed to extract somatic variant features from dir({}): {}",
                     sampleId, purpleDataDir, e.toString());
 
             return null;

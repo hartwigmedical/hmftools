@@ -104,9 +104,7 @@ public class FeaturePrep implements CategoryPrep
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("sample({}) sample traits - failed to load purity file from dir{}): {}",
-                    sampleId, purpleDataDir, e.toString());
-
+            CUP_LOGGER.error("sample({}) - failed to extract driver, fusion, and virus features: {}", sampleId, e.toString());
             return null;
         }
     }
