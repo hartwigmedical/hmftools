@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.cup.prep.DataItem.FLD_VALUE;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
@@ -52,41 +51,31 @@ public class CuppaDataPrep
         mConfig = prepConfig;
     }
 
-    public static LinkedHashMap<CategoryType, CategoryPrep> buildDataPreparers(PrepConfig mConfig)
+    public CategoryPrep createCategoryPrep(CategoryType categoryType)
     {
-        LinkedHashMap<CategoryType, CategoryPrep> dataPreparers = new LinkedHashMap<>();
-
-        for(CategoryType categoryType : mConfig.Categories)
+        switch(categoryType)
         {
-            switch(categoryType)
-            {
-                case SNV:
-                    dataPreparers.put(categoryType, new SomaticVariantPrep(mConfig));
-                    break;
+            case SNV:
+                return new SomaticVariantPrep(mConfig);
 
-                case SV:
-                    dataPreparers.put(categoryType, new StructuralVariantPrep(mConfig));
-                    break;
+            case SV:
+                return new StructuralVariantPrep(mConfig);
 
-                case SAMPLE_TRAIT:
-                    dataPreparers.put(categoryType, new SampleTraitPrep(mConfig));
-                    break;
+            case SAMPLE_TRAIT:
+                return new SampleTraitPrep(mConfig);
 
-                case FEATURE:
-                    dataPreparers.put(categoryType, new FeaturePrep(mConfig));
-                    break;
+            case FEATURE:
+                return new FeaturePrep(mConfig);
 
-                case ALT_SJ:
-                    dataPreparers.put(categoryType, new AltSpliceJunctionPrep(mConfig));
-                    break;
+            case ALT_SJ:
+                return new AltSpliceJunctionPrep(mConfig);
 
-                case GENE_EXP:
-                    dataPreparers.put(categoryType, new GeneExpressionPrep(mConfig));
-                    break;
-            }
+            case GENE_EXP:
+                return new GeneExpressionPrep(mConfig);
+
+            default:
+                throw new IllegalArgumentException(String.format("Invalid %s value", categoryType.getClass().getSimpleName()));
         }
-
-        return dataPreparers;
     }
 
     public String getOutputPath(@Nullable CategoryType categoryType)
@@ -114,13 +103,13 @@ public class CuppaDataPrep
 
     private class SingleSampleTask
     {
-        public List<DataItem> getData(LinkedHashMap<CategoryType, CategoryPrep> dataPreparers)
+        public List<DataItem> extractData()
         {
             List<DataItem> dataItems = new ArrayList<>();
 
-            for(CategoryType categoryType : dataPreparers.keySet())
+            for(CategoryType categoryType : mConfig.Categories)
             {
-                CategoryPrep categoryPrep = dataPreparers.get(categoryType);
+                CategoryPrep categoryPrep = createCategoryPrep(categoryType);
                 SampleOneCategoryTask sampleTask = new SampleOneCategoryTask(0, mConfig, categoryPrep, null);
                 sampleTask.run();
                 dataItems.addAll(sampleTask.getDataItems());
@@ -168,8 +157,7 @@ public class CuppaDataPrep
         {
             CUP_LOGGER.info("Extracting CUPPA features in single sample mode for sample({})", mConfig.SampleIds.get(0));
 
-            LinkedHashMap<CategoryType, CategoryPrep> dataPreparers = buildDataPreparers(mConfig);
-            List<DataItem> dataItems = getData(dataPreparers);
+            List<DataItem> dataItems = extractData();
 
             String outputPath = getOutputPath(null);
             writeData(dataItems, outputPath);
@@ -178,9 +166,9 @@ public class CuppaDataPrep
 
     private class MultiSampleTask
     {
-        public DataItemMatrix getDataOneCategory(CategoryPrep categoryPrep)
+        public DataItemMatrix extractDataOneCategory(CategoryType categoryType)
         {
-            CUP_LOGGER.info("Extracting categoryType({})", categoryPrep.categoryType());
+            CUP_LOGGER.info("Extracting categoryType({})", categoryType);
 
             String[] sampleIds =  mConfig.SampleIds.toArray(String[]::new);
             ConcurrentHashMap<DataItem.Index, String[]> featureBySampleMatrix = new ConcurrentHashMap<>();
@@ -188,6 +176,7 @@ public class CuppaDataPrep
             List<SampleOneCategoryTask> sampleTasks = new ArrayList<>();
             for(int sampleIndex = 0; sampleIndex < mConfig.SampleIds.size(); ++sampleIndex)
             {
+                CategoryPrep categoryPrep = createCategoryPrep(categoryType);
                 sampleTasks.add(new SampleOneCategoryTask(sampleIndex, mConfig, categoryPrep, featureBySampleMatrix));
             }
 
@@ -256,17 +245,14 @@ public class CuppaDataPrep
             CUP_LOGGER.info("Extracting CUPPA features in multi sample mode: {} samples, {} threads",
                     mConfig.SampleIds.size(), mConfig.Threads);
 
-            LinkedHashMap<CategoryType, CategoryPrep> dataPreparers = buildDataPreparers(mConfig);
-
             int i = 0;
-            for(CategoryType categoryType : dataPreparers.keySet())
+            for(CategoryType categoryType : mConfig.Categories)
             {
-                CategoryPrep categoryPrep = dataPreparers.get(categoryType);
-                DataItemMatrix dataItemMatrix = getDataOneCategory(categoryPrep);
+                DataItemMatrix dataItemMatrix = extractDataOneCategory(categoryType);
 
                 if(mConfig.WriteByCategory)
                 {
-                    String outputPath = getOutputPath(categoryPrep.categoryType());
+                    String outputPath = getOutputPath(categoryType);
                     writeDataOneCategory(dataItemMatrix, outputPath, false);
                 }
                 else
