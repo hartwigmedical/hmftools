@@ -15,17 +15,27 @@ public class DataItemTest
     public void canSortByIndex()
     {
         List<DataItem.Index> indexes = Arrays.asList(
-            new DataItem.Index(DataSource.DNA, ItemType.SIGNATURE, "SIG_2_13"),
-            new DataItem.Index(DataSource.DNA, ItemType.SIGNATURE, "SIG_1"),
-            new DataItem.Index(DataSource.DNA, ItemType.GEN_POS, "X_0"),
-            new DataItem.Index(DataSource.DNA, ItemType.GEN_POS, "10_0"),
-            new DataItem.Index(DataSource.DNA, ItemType.GEN_POS, "2_0")
+                new DataItem.Index(DataSource.DNA, ItemType.SIGNATURE, "SIG_2_13"),
+                new DataItem.Index(DataSource.DNA, ItemType.SIGNATURE, "SIG_1"),
+
+                new DataItem.Index(DataSource.DNA, ItemType.GEN_POS, "X_0"),
+                new DataItem.Index(DataSource.DNA, ItemType.GEN_POS, "10_0"),
+                new DataItem.Index(DataSource.DNA, ItemType.GEN_POS, "2_0"),
+
+                new DataItem.Index(DataSource.RNA, ItemType.ALT_SJ, "X;0;1"),
+                new DataItem.Index(DataSource.RNA, ItemType.ALT_SJ, "10;0;10"),
+                new DataItem.Index(DataSource.RNA, ItemType.ALT_SJ, "10;0;1"),
+                new DataItem.Index(DataSource.RNA, ItemType.ALT_SJ, "2;0;1")
         );
 
         Collections.sort(indexes, new DataItem.IndexComparator());
 
         String[] actualSortedKeys = indexes.stream().map(o -> o.Key).toArray(String[]::new);
-        String[] expectedSortedKeys = {"SIG_1", "SIG_2_13", "2_0", "10_0", "X_0"};
+        String[] expectedSortedKeys = {
+                "SIG_1", "SIG_2_13",
+                "2_0", "10_0", "X_0",
+                "2;0;1", "10;0;1", "10;0;10", "X;0;1"
+        };
 
         assertEquals(expectedSortedKeys, actualSortedKeys);
     }

@@ -93,6 +93,35 @@ public class DataItem
             return String.format("%2s", chrom).replace(' ', padChar);
         }
 
+        private int compareGenomicLoci(String locus1, String locus2, String delimiter)
+        {
+            String[] strings1 = locus1.split(delimiter);
+            String[] strings2 = locus2.split(delimiter);
+
+            String chrom1 = padChrom(strings1[0]);
+            String chrom2 = padChrom(strings2[0]);
+            int chromDiff = chrom1.compareTo(chrom2);
+            if(chromDiff != 0)
+                return chromDiff;
+
+            Integer startPos1 = Integer.parseInt(strings1[1]);
+            Integer startPos2 = Integer.parseInt(strings2[1]);
+            int startPosDiff = startPos1 - startPos2;
+            if(startPosDiff != 0)
+                return startPosDiff;
+
+            if(strings1.length==3)
+            {
+                Integer endPos1 = Integer.parseInt(strings1[2]);
+                Integer endPos2 = Integer.parseInt(strings2[2]);
+                int endPosDiff = endPos1 - endPos2;
+                if(endPosDiff != 0)
+                    return endPosDiff;
+            }
+
+            return 0;
+        }
+
         @Override
         public int compare(Index index1, Index index2)
         {
@@ -102,20 +131,12 @@ public class DataItem
 
             if(index1.Type == ItemType.GEN_POS)
             {
-                String[] key1 = index1.Key.split("_");
-                String[] key2 = index2.Key.split("_");
+                return compareGenomicLoci(index1.Key, index2.Key, "_");
+            }
 
-                String chrom1 = padChrom(key1[0]);
-                String chrom2 = padChrom(key2[0]);
-
-                int chromDiff = chrom1.compareTo(chrom2);
-                if(chromDiff != 0)
-                    return chromDiff;
-
-                Integer pos1 = Integer.parseInt(key1[1]);
-                Integer pos2 = Integer.parseInt(key2[1]);
-
-                return pos1 - pos2;
+            if(index1.Type == ItemType.ALT_SJ)
+            {
+                return compareGenomicLoci(index1.Key, index2.Key, ";");
             }
 
             if(index1.Type == ItemType.SIGNATURE)
