@@ -25,13 +25,13 @@ public final class SvConstants
 
     // primary assembly
     public static final int READ_SOFT_CLIP_JUNCTION_BUFFER = 2;
+    public static final int MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH;;
 
     public static final int PROXIMATE_DEL_LENGTH = 1000;
     public static final int PROXIMATE_DUP_LENGTH = 500;
 
     public static final int DECOY_MAX_MISMATCHES = 3;
 
-    public static final int PRIMARY_ASSEMBLY_MIN_LENGTH = 10;
     public static final int PRIMARY_ASSEMBLY_MIN_READ_SUPPORT = 2; // new
     public static final int PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL = 60; // new
     public static final int PROXIMATE_REF_SIDE_SOFT_CLIPS = 3;
@@ -54,6 +54,7 @@ public final class SvConstants
     // assembly extension
     public static final int ASSEMBLY_EXTENSION_OVERLAP_BASES = 20;
     public static final int ASSEMBLY_EXTENSION_BASE_MISMATCH = 2;
+    public static final int REF_SIDE_MIN_SOFT_CLIP_LENGTH = MIN_SOFT_CLIP_LENGTH;
 
     // phased assembly overlaps
     public static final int PHASED_ASSEMBLY_OVERLAP_BASES = 100;

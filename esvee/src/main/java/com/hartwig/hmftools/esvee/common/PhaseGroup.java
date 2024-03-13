@@ -68,7 +68,7 @@ public class PhaseGroup
 
     public int assemblyCount() { return mAssemblies.size(); }
 
-    public void transferAssemblies(final PhaseGroup other)
+    public void transferAssemblies(final PhaseGroup other, final JunctionAssembly linkingAssembly)
     {
         for(JunctionAssembly assembly : other.assemblies())
         {
@@ -76,7 +76,12 @@ public class PhaseGroup
                 mAssemblies.add(assembly);
 
             assembly.setPhaseGroup(this);
-            // assembly.addPhaseGroupLinkingInfo(format("%d_transfer", mAssemblies.size()));
+
+            if(linkingAssembly != null && !assembly.phaseGroupLinkingInfo().contains("transfer"))
+            {
+                assembly.addPhaseGroupLinkingInfo(
+                        format("%d_trans: %s", mAssemblies.size(), linkingAssembly.junction().coords()));
+            }
         }
     }
 

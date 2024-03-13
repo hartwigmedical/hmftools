@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.esvee.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.findUnsetBases;
@@ -50,6 +51,7 @@ public class JunctionAssembly
 
     private final SequenceMismatches mSequenceMismatches;
     private final List<RepeatInfo> mRepeatInfo;
+    private String mRefBasesRepeatedTrimmed;
 
     private final List<RemoteRegion> mRemoteRegions;
 
@@ -194,6 +196,7 @@ public class JunctionAssembly
     private void addRead(final Read read, final SupportType type, boolean registerMismatches, @Nullable final AssemblySupport existingSupport)
     {
         int mismatchCount = 0;
+        int highQualMatchCount = 0;
         int readJunctionIndex;
         int[] readIndexRange;
         int assemblyIndex;
@@ -259,6 +262,9 @@ public class JunctionAssembly
                 {
                     if((int)qual > (int)mBaseQuals[assemblyIndex])
                         mBaseQuals[assemblyIndex] = qual;
+
+                    if(qual >= LOW_BASE_QUAL_THRESHOLD)
+                        ++highQualMatchCount;
                 }
                 else if(mBaseQuals[assemblyIndex] < LOW_BASE_QUAL_THRESHOLD)
                 {
@@ -277,15 +283,14 @@ public class JunctionAssembly
 
         if(existingSupport == null)
         {
-            mSupport.add(new AssemblySupport(read, type, assemblyIndex, readJunctionIndex, readIndexRange, mismatchCount));
+            mSupport.add(new AssemblySupport(read, type, assemblyIndex, readJunctionIndex, highQualMatchCount, mismatchCount));
         }
         else
         {
-            int[] existingReadRange = existingSupport.readIndexRange();
-
-            existingSupport.setReadIndexRange(
-                    min(existingReadRange[SE_START], readIndexRange[SE_START]),
-                    max(existingReadRange[SE_END], readIndexRange[SE_END]));
+            // not set since not used for now
+            //int[] existingReadRange = existingSupport.readIndexRange();
+            // existingSupport.setReadIndexRange(
+            //        min(existingReadRange[SE_START], readIndexRange[SE_START]), max(existingReadRange[SE_END], readIndexRange[SE_END]));
 
             existingSupport.setReferenceMismatches(mismatchCount);
         }
@@ -483,8 +488,17 @@ public class JunctionAssembly
         mRepeatInfo.clear();
         List<RepeatInfo> repeats = findRepeats(mBases);
         if(repeats != null)
+        {
             mRepeatInfo.addAll(repeats);
+            mRefBasesRepeatedTrimmed = RepeatInfo.buildTrimmedRefBaseSequence(this, MIN_VARIANT_LENGTH);
+        }
+        else
+        {
+            mRefBasesRepeatedTrimmed = formRefBaseSequence(MIN_VARIANT_LENGTH);
+        }
     }
+
+    public String refBasesRepeatedTrimmed() { return mRefBasesRepeatedTrimmed; }
 
     public List<RefSideSoftClip> refSideSoftClips() { return mRefSideSoftClips; }
 
@@ -497,11 +511,7 @@ public class JunctionAssembly
     public void addRemoteRegions(final List<RemoteRegion> regions) { mRemoteRegions.addAll(regions); }
 
     public PhaseGroup phaseGroup() { return mPhaseGroup; }
-
-    public void setPhaseGroup(final PhaseGroup phaseGroup)
-    {
-        mPhaseGroup = phaseGroup;
-    }
+    public void setPhaseGroup(final PhaseGroup phaseGroup) { mPhaseGroup = phaseGroup; }
 
     public void addPhaseGroupLinkingInfo(final String info)
     {
@@ -522,7 +532,6 @@ public class JunctionAssembly
     }
 
     public List<JunctionAssembly> branchedAssemblies() { return mBranchedAssemblies; }
-    public boolean hasBranchedAssembly(final JunctionAssembly other) { return mBranchedAssemblies.contains(other); }
 
     public JunctionAssembly(
             final JunctionAssembly initialAssembly, final RefSideSoftClip refSideSoftClip,
@@ -581,6 +590,7 @@ public class JunctionAssembly
         mCandidateSupport = Lists.newArrayList();
 
         mRepeatInfo = Lists.newArrayList();
+        mRefBasesRepeatedTrimmed = initialAssembly.refBasesRepeatedTrimmed();
         mRefSideSoftClips = Lists.newArrayList(refSideSoftClip);
         mRemoteRegions = Lists.newArrayList();
         mBranchedAssemblies = Lists.newArrayList();
@@ -597,7 +607,8 @@ public class JunctionAssembly
 
             // any reference mismatches aren't take since they were against the orginal assembly's ref bases
             mSupport.add(new AssemblySupport(
-                    support.read(), support.type(), support.assemblyIndex(), support.junctionReadIndex(), support.readIndexRange(), support.junctionMismatches()));
+                    support.read(), support.type(), support.assemblyIndex(), support.junctionReadIndex(), support.junctionMatches(),
+                    support.junctionMismatches()));
 
             if(support.read() == initialAssembly.initialRead())
                 initialRead = support.read();
@@ -612,7 +623,7 @@ public class JunctionAssembly
 
     public void addCandidateSupport(final Read read, final SupportType type)
     {
-        mCandidateSupport.add(new AssemblySupport(read, type, 0, 0, new int[] {0, 0}, 0));
+        mCandidateSupport.add(new AssemblySupport(read, type, 0, 0, 0, 0));
     }
 
     public List<AssemblySupport> candidateSupport() { return mCandidateSupport; }
@@ -727,6 +738,7 @@ public class JunctionAssembly
         mSupport = Lists.newArrayList();
         mCandidateSupport = Lists.newArrayList();
         mRepeatInfo = Lists.newArrayList();
+        mRefBasesRepeatedTrimmed = "";
         mRemoteRegions = Lists.newArrayList();
         mBranchedAssemblies = Lists.newArrayList();
         mRefSideSoftClips = Lists.newArrayList();

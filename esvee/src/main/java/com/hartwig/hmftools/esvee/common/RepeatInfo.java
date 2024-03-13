@@ -184,4 +184,55 @@ public class RepeatInfo
         String repeat = String.valueOf((char)bases[index]) + (char)bases[index + 1] + (char)bases[index + 2] + (char)bases[index + 3];
         return new RepeatInfo(index, repeat, repeatLength);
     }
+
+    public static String buildTrimmedRefBaseSequence(final JunctionAssembly assembly, final int maxSequenceLength)
+    {
+        if(assembly.repeatInfo().isEmpty())
+            return "";
+
+        int seqStart = assembly.isForwardJunction() ? 0 : assembly.junctionIndex();
+        int seqEnd = assembly.isForwardJunction() ? assembly.junctionIndex() : assembly.baseLength() - 1;
+
+        StringBuilder refBasesTrimmed = new StringBuilder();
+        int currentIndex = seqStart;
+
+        List<RepeatInfo> repeats = assembly.repeatInfo();
+        int currentRepeatIndex = 0;
+        RepeatInfo currentRepeat = repeats.get(currentRepeatIndex);
+
+        while(currentIndex <= seqEnd)
+        {
+            while(currentRepeat != null && currentRepeat.Index < currentIndex)
+            {
+                ++currentRepeatIndex;
+
+                if(currentRepeatIndex >= repeats.size())
+                {
+                    currentRepeat = null;
+                    break;
+                }
+                else
+                {
+                    currentRepeat = repeats.get(currentRepeatIndex);
+                }
+            }
+
+            if(currentRepeat != null && currentRepeat.Index == currentIndex)
+            {
+                refBasesTrimmed.append(currentRepeat.Bases);
+                refBasesTrimmed.append(format("n%d", currentRepeat.Count));
+                currentIndex += currentRepeat.length();
+            }
+            else
+            {
+                refBasesTrimmed.append((char)assembly.bases()[currentIndex]);
+                ++currentIndex;
+            }
+
+            if(refBasesTrimmed.length() >= maxSequenceLength)
+                break;
+        }
+
+        return refBasesTrimmed.toString();
+    }
 }

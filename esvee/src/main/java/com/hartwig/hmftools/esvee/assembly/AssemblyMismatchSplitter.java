@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMAT
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.buildFromJunctionReads;
+import static com.hartwig.hmftools.esvee.read.ReadFilters.readJunctionExtensionLength;
 import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAtJunction;
 
 import java.util.Collections;
@@ -47,14 +48,19 @@ public class AssemblyMismatchSplitter
 
         for(AssemblySupport support : mAssembly.support())
         {
+            Read read = support.read();
+
             if(support.junctionMismatches() == 0)
             {
-                noMismatchReads.add(support.read());
+                noMismatchReads.add(read);
             }
             else
             {
-                if(support.readRangeLength() >= minSequenceLength && recordSoftClipsAtJunction(support.read(), mAssembly.junction()))
-                    longMismatchReads.add(support.read());
+                if(readJunctionExtensionLength(read, mAssembly.junction()) >= minSequenceLength
+                && recordSoftClipsAtJunction(read, mAssembly.junction()))
+                {
+                    longMismatchReads.add(read);
+                }
             }
         }
 

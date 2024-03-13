@@ -94,7 +94,6 @@ public class SvConfig
     public final int AssemblyRefBaseWriteMax;
     public final boolean SkipDiscordant;
     public final boolean LogPhaseGroupLinks;
-    public final boolean PhaseGroupMultiThread;
     public final int PhaseProcessingLimit;
 
     public final int Threads;
@@ -113,7 +112,6 @@ public class SvConfig
     public static final String SKIP_DISCORDANT = "skip_discordant";
     public static final String PHASE_PROCESSING_LIMIT = "phase_process_limit";
     public static final String LOG_PHASE_GROUP_LINKS = "phase_group_links";
-    public static final String PHASE_GROUP_MULTI_THREAD = "phase_group_mt";
 
     public static final String ASSEMBLY_REF_BASE_WRITE_MAX = "asm_ref_base_write_max";
 
@@ -234,7 +232,6 @@ public class SvConfig
 
         AssemblyRefBaseWriteMax = configBuilder.getInteger(ASSEMBLY_REF_BASE_WRITE_MAX);
         LogPhaseGroupLinks = configBuilder.hasFlag(LOG_PHASE_GROUP_LINKS);
-        PhaseGroupMultiThread = configBuilder.hasFlag(PHASE_GROUP_MULTI_THREAD);
 
         Threads = parseThreads(configBuilder);
 
@@ -320,7 +317,6 @@ public class SvConfig
         configBuilder.addDecimal(PERF_LOG_TIME, "Log performance data for routine exceeding specified time (0 = disabled)", 0);
         configBuilder.addFlag(SKIP_DISCORDANT, "Skip processing discordant-only groups");
         configBuilder.addFlag(LOG_PHASE_GROUP_LINKS, "Log assembly links to build phase groups");
-        configBuilder.addFlag(PHASE_GROUP_MULTI_THREAD, "Multi-thread phase group building");
 
         configBuilder.addInteger(
                 ASSEMBLY_REF_BASE_WRITE_MAX, "Cap assembly ref bases in TSV and VCF, use zero to write all",

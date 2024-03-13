@@ -6,8 +6,10 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_OVERLAP_BASES;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
+import static com.hartwig.hmftools.esvee.SvConstants.MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.SvConstants.REF_SIDE_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.DUP_BRANCHED;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensions;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.findRemoteRegions;
@@ -156,7 +158,7 @@ public class RefBaseExtender
 
         // only keep possible alternative ref-base assemblies with sufficient evidence and length
         int nonSoftClipRefPosition = isForwardJunction ? minAlignedPosition : maxAlignedPosition;
-        purgeRefSideSoftClips(assembly.refSideSoftClips(), PRIMARY_ASSEMBLY_MIN_READ_SUPPORT, PRIMARY_ASSEMBLY_MIN_LENGTH, nonSoftClipRefPosition);
+        purgeRefSideSoftClips(assembly.refSideSoftClips(), PRIMARY_ASSEMBLY_MIN_READ_SUPPORT, REF_SIDE_MIN_SOFT_CLIP_LENGTH, nonSoftClipRefPosition);
     }
 
     private class NonJunctionRead
@@ -246,7 +248,7 @@ public class RefBaseExtender
         }
 
         int nonSoftClipRefPosition = isForwardJunction ? minAlignedPosition : maxAlignedPosition;
-        purgeRefSideSoftClips(refSideSoftClips, PRIMARY_ASSEMBLY_MIN_READ_SUPPORT, PRIMARY_ASSEMBLY_MIN_LENGTH, nonSoftClipRefPosition);
+        purgeRefSideSoftClips(refSideSoftClips, PRIMARY_ASSEMBLY_MIN_READ_SUPPORT, REF_SIDE_MIN_SOFT_CLIP_LENGTH, nonSoftClipRefPosition);
 
         boolean hasUnmatched = assembly.refSideSoftClips().stream().anyMatch(x -> !x.matchesOriginal());
 

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.esvee.SvConstants.MIN_INDEL_LENGTH;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
+import static com.hartwig.hmftools.esvee.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.DUP_SPLIT;
@@ -93,12 +93,12 @@ public class JunctionAssembler
         JunctionAssembly junctionSequence = buildFromJunctionReads(mJunction, junctionReads, true);
 
         // CHECK: why keep these if less than the 32 soft-clip length, since will be dropped anyway
-        if(junctionSequence == null || junctionSequence.baseLength() < PRIMARY_ASSEMBLY_MIN_LENGTH)
+        if(junctionSequence == null || junctionSequence.baseLength() < MIN_VARIANT_LENGTH)
             return Collections.emptyList();
 
         // no filtering of the initial sequence and instead rely on the sequence splitting to do this with all initial mismatches preserved
         AssemblyMismatchSplitter splitter = new AssemblyMismatchSplitter(junctionSequence);
-        List<JunctionAssembly> junctionSequences = splitter.splitOnMismatches(PRIMARY_ASSEMBLY_MIN_LENGTH);
+        List<JunctionAssembly> junctionSequences = splitter.splitOnMismatches(MIN_VARIANT_LENGTH);
 
         // extend these sequences in the direction away from the junction
         junctionSequences.forEach(x -> expandReferenceBases(x));

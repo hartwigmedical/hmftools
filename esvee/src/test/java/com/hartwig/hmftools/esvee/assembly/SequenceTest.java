@@ -1,7 +1,11 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_BASE_QUAL;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.common.RepeatInfo.buildTrimmedRefBaseSequence;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findDualBaseRepeat;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findDualDualRepeat;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findRepeats;
@@ -14,6 +18,9 @@ import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.esvee.common.Junction;
+import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.RepeatInfo;
 
 import org.junit.Test;
@@ -171,6 +178,38 @@ public class SequenceTest
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats, -1);
 
         assertEquals(8, mismatches);
+    }
+
+    @Test
+    public void testAssemblyRefBasesTrimmed()
+    {
+        Junction posJunction = new Junction(CHR_1, 60, POS_ORIENT);
+
+        String extensionSequence = "AAAAAAGGGGGG";
+        String refBaseSequence = "ACGTAGAGAGAGACGTCCCCACGT";
+        String assemblySequence = refBaseSequence + extensionSequence;
+        byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(assemblySequence.length());
+
+        JunctionAssembly assembly = new JunctionAssembly(posJunction, assemblySequence.getBytes(), baseQuals, refBaseSequence.length() - 1);
+
+        assembly.buildRepeatInfo();
+
+        String refBasesTrimmed = buildTrimmedRefBaseSequence(assembly, 50);
+        assertEquals("ACGTAGn4ACGTCn4ACGT", refBasesTrimmed);
+
+        refBasesTrimmed = buildTrimmedRefBaseSequence(assembly, 12);
+        assertEquals("ACGTAGn4ACGT", refBasesTrimmed);
+
+        Junction negJunction = new Junction(CHR_1, 60, NEG_ORIENT);
+
+        assemblySequence = extensionSequence + refBaseSequence;
+
+        assembly = new JunctionAssembly(negJunction, assemblySequence.getBytes(), baseQuals, extensionSequence.length());
+
+        assembly.buildRepeatInfo();
+
+        refBasesTrimmed = buildTrimmedRefBaseSequence(assembly, 50);
+        assertEquals("ACGTAGn4ACGTCn4ACGT", refBasesTrimmed);
     }
 }
 

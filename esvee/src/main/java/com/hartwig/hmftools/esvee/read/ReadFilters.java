@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.esvee.read;
 
-import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.SvConstants.AVG_BASE_QUAL_THRESHOLD;
-import static com.hartwig.hmftools.esvee.SvConstants.READ_SOFT_CLIP_JUNCTION_BUFFER;
 
 import com.hartwig.hmftools.esvee.common.Junction;
 
@@ -41,9 +40,6 @@ public final class ReadFilters
         if(junction.isForward())
         {
             return read.isRightClipped() && read.unclippedEnd() > junction.Position;
-
-            //int junctionAlignmentDiff = abs(read.alignmentEnd() - junction.Position);
-            //return junctionAlignmentDiff <= READ_SOFT_CLIP_JUNCTION_BUFFER && read.unclippedEnd() > junction.Position;
         }
         else
         {
@@ -60,6 +56,18 @@ public final class ReadFilters
         else
         {
             return read.isLeftClipped() && read.alignmentStart() == junction.Position;
+        }
+    }
+
+    public static int readJunctionExtensionLength(final Read read, final Junction junction)
+    {
+        if(junction.isForward())
+        {
+            return read.isRightClipped() ? max(read.unclippedEnd() - junction.Position, 0) : 0;
+        }
+        else
+        {
+            return read.isLeftClipped() ? max(junction.Position - read.unclippedStart(), 0) : 0;
         }
     }
 

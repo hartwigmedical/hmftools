@@ -261,7 +261,7 @@ public class RefBaseAssembly
             mMaxAlignedPosition = max(mMaxAlignedPosition, read.alignmentEnd());
         }
 
-        mSupport.add(new AssemblySupport(read, supportType, assemblyIndex, 0, readIndexRange, mismatchCount));
+        mSupport.add(new AssemblySupport(read, supportType, assemblyIndex, 0, 0, mismatchCount));
     }
 
     public String toString()
