@@ -81,8 +81,11 @@ public class CategoryPrepTest
         FeaturePrep prep = new FeaturePrep(prepConfig);
         List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
 
-        assertEquals(9, dataItems.size());
+        assertEquals(7, dataItems.size());
+        assertEquals(dataItems.get(0), new DataItem(DataSource.DNA, ItemType.DRIVER, "TERT.mut", "1.0"));
         assertEquals(dataItems.get(1), new DataItem(DataSource.DNA, ItemType.DRIVER, "BRAF.mut", "1.0"));
+        assertEquals(dataItems.get(2), new DataItem(DataSource.DNA, ItemType.DRIVER, "SF3B1.mut", "0.146"));
+        assertEquals(dataItems.get(3), new DataItem(DataSource.DNA, ItemType.DRIVER, "CDKN2A.mut", "1.0"));
     }
 
     @Test
