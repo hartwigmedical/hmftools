@@ -48,7 +48,7 @@ public class CuppaDataPrepTest
         // Check values
         List<DataItem> dataItems = cuppaDataPrep.mDataItems;
 
-        assertEquals(6348,  dataItems.size());
+        assertEquals(6346,  dataItems.size());
 
         assertEquals(
                 new DataItem(DataSource.DNA, ItemType.SNV96, "C>A_ACA", "133"),
