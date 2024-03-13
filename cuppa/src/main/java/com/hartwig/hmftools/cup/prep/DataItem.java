@@ -3,7 +3,9 @@ package com.hartwig.hmftools.cup.prep;
 import java.util.Comparator;
 import java.util.Objects;
 
-public class DataItem
+import org.jetbrains.annotations.NotNull;
+
+public class DataItem implements Comparable<DataItem>
 {
     public final Index Index;
     public final String Value;
@@ -13,7 +15,13 @@ public class DataItem
     public static final String FLD_KEY = "Key";
     public static final String FLD_VALUE = "Value";
 
-    public static class Index
+    public DataItem(final DataSource source, final ItemType type, final String key, final String value)
+    {
+        Index = new Index(source, type, key);
+        Value = value;
+    }
+
+    public static class Index implements Comparable<Index>
     {
         public final DataSource Source;
         public final ItemType Type;
@@ -24,6 +32,17 @@ public class DataItem
             Source = source;
             Type = type;
             Key = key;
+        }
+
+        @Override
+        public String toString()
+        {
+            return String.format(
+                    "%s=%s, %s=%s, %s=%s",
+                    FLD_SOURCE, Source,
+                    FLD_CATEGORY, Type,
+                    FLD_KEY, Key
+            );
         }
 
         @Override
@@ -45,48 +64,6 @@ public class DataItem
             return Objects.hash(Source, Type, Key);
         }
 
-        @Override
-        public String toString()
-        {
-            return String.format(
-                    "%s=%s, %s=%s, %s=%s",
-                    FLD_SOURCE, Source,
-                    FLD_CATEGORY, Type,
-                    FLD_KEY, Key
-            );
-        }
-    }
-
-    public DataItem(final DataSource source, final ItemType type, final String key, final String value)
-    {
-        Index = new Index(source, type, key);
-        Value = value;
-    }
-
-    @Override
-    public boolean equals(final Object o)
-    {
-        if(this == o)
-            return true;
-
-        if(o == null || getClass() != o.getClass())
-            return false;
-
-        final DataItem dataItem = (DataItem) o;
-        return Index.Source == dataItem.Index.Source
-                && Index.Type == dataItem.Index.Type
-                && Index.Key.equals(dataItem.Index.Key)
-                && Value.equals(dataItem.Value);
-    }
-
-    @Override
-    public String toString()
-    {
-        return Index + ", Value=" + Value;
-    }
-
-    public static class IndexComparator implements Comparator<Index>
-    {
         private String padChrom(String chrom)
         {
             char padChar = (Character.isDigit(chrom.charAt(0))) ? '0' : 'a';
@@ -123,30 +100,55 @@ public class DataItem
         }
 
         @Override
-        public int compare(Index index1, Index index2)
+        public int compareTo(@NotNull final DataItem.Index otherIndex)
         {
-            int typeDiff = index1.Type.compareTo(index2.Type);
+            int typeDiff = this.Type.compareTo(otherIndex.Type);
             if(typeDiff != 0)
                 return typeDiff;
 
-            if(index1.Type == ItemType.GEN_POS)
+            if(otherIndex.Type == ItemType.GEN_POS)
             {
-                return compareGenomicLoci(index1.Key, index2.Key, "_");
+                return compareGenomicLoci(this.Key, otherIndex.Key, "_");
             }
 
-            if(index1.Type == ItemType.ALT_SJ)
+            if(this.Type == ItemType.ALT_SJ)
             {
-                return compareGenomicLoci(index1.Key, index2.Key, ";");
+                return compareGenomicLoci(this.Key, otherIndex.Key, ";");
             }
 
-            if(index1.Type == ItemType.SIGNATURE)
+            if(this.Type == ItemType.SIGNATURE)
             {
-                int sigNum1 = Integer.parseInt(index1.Key.split("_")[1]);
-                int sigNum2 = Integer.parseInt(index2.Key.split("_")[1]);
+                int sigNum1 = Integer.parseInt(this.Key.split("_")[1]);
+                int sigNum2 = Integer.parseInt(otherIndex.Key.split("_")[1]);
                 return sigNum1 - sigNum2;
             }
 
-            return index1.Key.compareTo(index2.Key);
+            return this.Key.compareTo(otherIndex.Key);
         }
+    }
+
+    @Override
+    public boolean equals(final Object o)
+    {
+        if(this == o)
+            return true;
+
+        if(o == null || getClass() != o.getClass())
+            return false;
+
+        final DataItem otherDataItem = (DataItem) o;
+        return Index.equals(otherDataItem.Index) && Value.equals(otherDataItem.Value);
+    }
+
+    @Override
+    public int compareTo(@NotNull final DataItem otherDataItem)
+    {
+        return this.Index.compareTo(otherDataItem.Index);
+    }
+
+    @Override
+    public String toString()
+    {
+        return Index + ", Value=" + Value;
     }
 }
