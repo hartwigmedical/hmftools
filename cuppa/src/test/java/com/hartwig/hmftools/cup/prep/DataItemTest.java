@@ -12,7 +12,7 @@ import static org.junit.Assert.assertEquals;
 public class DataItemTest
 {
     @Test
-    public void canSortByIndex()
+    public void canSortIndex()
     {
         List<DataItem.Index> indexes = Arrays.asList(
                 new DataItem.Index(DataSource.DNA, ItemType.SIGNATURE, "SIG_2_13"),
@@ -28,7 +28,7 @@ public class DataItemTest
                 new DataItem.Index(DataSource.RNA, ItemType.ALT_SJ, "2;0;1")
         );
 
-        Collections.sort(indexes, new DataItem.IndexComparator());
+        Collections.sort(indexes);
 
         String[] actualSortedKeys = indexes.stream().map(o -> o.Key).toArray(String[]::new);
         String[] expectedSortedKeys = {
@@ -47,13 +47,13 @@ public class DataItemTest
         ConcurrentHashMap<DataItem.Index, String[]> featureBySampleMatrix = new ConcurrentHashMap<>();
 
         List<List<DataItem>> dataItemsPerSample = Arrays.asList(
-                Arrays.asList(
+                List.of(
                         new DataItem(DataSource.DNA, ItemType.DRIVER, "BRAF.mut", "1"),
                         new DataItem(DataSource.DNA, ItemType.DRIVER, "TP53.mut", "0.5"),
                         new DataItem(DataSource.DNA, ItemType.DRIVER, "TERT.mut", "1")
                 ),
 
-                Arrays.asList(
+                List.of(
                         new DataItem(DataSource.DNA, ItemType.DRIVER, "BRAF.mut", "1")
                 )
         );
