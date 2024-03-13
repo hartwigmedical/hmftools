@@ -83,7 +83,7 @@ public class JunctionGroupAssembler extends ThreadTask
 
         if(taskCount > 1)
         {
-            SV_LOGGER.debug("splitting {} junction groups across {} threads", junctionGroupCount, taskCount);
+            SV_LOGGER.debug("primary assembly splits {} junction groups across {} threads", junctionGroupCount, taskCount);
         }
 
         return primaryAssemblyTasks;

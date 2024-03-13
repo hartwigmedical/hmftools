@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MERGE_READ_OVERLAP;
 import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_JUNCTION_DISTANCE;
 import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_JUNCTION_OVERLAP;
+import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAtJunction;
 
 import java.util.List;
 
@@ -95,7 +96,7 @@ public class AssemblyDeduper
                 }
 
                 // take the assembly with the most read support
-                if(assembly.supportCount() >= newAssembly.supportCount())
+                if(selectFirstAssembly(assembly, newAssembly))
                 {
                     assembly.addMergedAssembly();
                     newAssemblies.remove(newIndex);
@@ -115,29 +116,16 @@ public class AssemblyDeduper
         removeExisting.forEach(x -> existingAssemblies.remove(x));
     }
 
-    private static boolean haveOverlapDistance(final JunctionAssembly lower, final JunctionAssembly upper)
+
+    private static boolean selectFirstAssembly(final JunctionAssembly first, final JunctionAssembly second)
     {
-        int overlapDistance = min(upper.maxAlignedPosition(), lower.maxAlignedPosition())
-                - max(upper.minAlignedPosition(), lower.minAlignedPosition());
+        if(first.supportCount() != second.supportCount())
+            return first.supportCount() > second.supportCount();
 
-        return overlapDistance >= PROXIMATE_JUNCTION_OVERLAP;
-    }
+        // take the one with the most precise support
+        long preciseFirst = first.support().stream().filter(x -> recordSoftClipsAtJunction(x.read(), first.junction())).count();
+        long preciseSecond = second.support().stream().filter(x -> recordSoftClipsAtJunction(x.read(), second.junction())).count();
 
-    private static boolean haveOverlappingReads(final JunctionAssembly first, final JunctionAssembly second)
-    {
-        int matchedReads = 0;
-
-        for(AssemblySupport support : first.support())
-        {
-            if(second.support().stream().anyMatch(x -> x.read() == support.read()))
-            {
-                ++matchedReads;
-
-                if(matchedReads >= PRIMARY_ASSEMBLY_MERGE_READ_OVERLAP)
-                    return true;
-            }
-        }
-
-        return false;
+        return preciseFirst >= preciseSecond;
     }
 }

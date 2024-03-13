@@ -1,14 +1,18 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_DEL_LENGTH;
+import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.NO_LINK;
 import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.SECONDARY;
 import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.SUPP_ONLY;
 import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAtJunction;
+import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import java.util.List;
 
@@ -202,6 +206,48 @@ public final class AssemblyUtils
         }
 
         return false;
+    }
+
+    public static boolean isLocalAssemblyCandidate(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        if(!first.junction().chromosome().equals(second.junction().chromosome()))
+            return false;
+
+        // assemblies must have DEL or DUP orientations, be within threshold distances of each other
+        if(first.isForwardJunction() == second.isForwardJunction())
+            return false;
+
+        boolean firstIsLower = first.junction().Position <= second.junction().Position;
+        boolean isDelType = firstIsLower == first.isForwardJunction();
+        int junctionDistance = abs(first.junction().Position - second.junction().Position);
+
+        if((isDelType && junctionDistance > PROXIMATE_DEL_LENGTH) || (!isDelType && junctionDistance > PROXIMATE_DUP_LENGTH))
+            return false;
+
+        // must have concordant reads with mates crossing the other junction
+        JunctionAssembly lowerAssembly = firstIsLower ? first : second;
+        JunctionAssembly upperAssembly = !firstIsLower ? first : second;
+        Junction lowerJunction = firstIsLower ? first.junction() : second.junction();
+        Junction upperJunction = !firstIsLower ? first.junction() : second.junction();
+
+        if(lowerAssembly.support().stream().noneMatch(x -> isCrossingConcordantRead(x.read(), upperJunction, false)))
+            return false;
+
+        if(upperAssembly.support().stream().noneMatch(x -> isCrossingConcordantRead(x.read(), lowerJunction, true)))
+            return false;
+
+        return true;
+    }
+
+    private static boolean isCrossingConcordantRead(final Read read, final Junction junction, boolean requireLower)
+    {
+        if(isDiscordant(read) || read.isMateUnmapped() || !read.isPairedRead())
+            return false;
+
+        if(requireLower)
+            return read.mateAlignmentEnd() < junction.Position;
+        else
+            return read.mateAlignmentStart() > junction.Position;
     }
 
     public static boolean isSupplementaryOnly(final JunctionAssembly assembly)

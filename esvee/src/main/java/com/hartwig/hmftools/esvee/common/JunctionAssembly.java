@@ -498,12 +498,17 @@ public class JunctionAssembly
 
     public PhaseGroup phaseGroup() { return mPhaseGroup; }
 
-    public void setPhaseGroup(final PhaseGroup phaseGroup, final String linkingInfo)
+    public void setPhaseGroup(final PhaseGroup phaseGroup)
     {
         mPhaseGroup = phaseGroup;
+    }
 
+    public void addPhaseGroupLinkingInfo(final String info)
+    {
         if(mPhaseGroupLinkingInfo == null)
-            mPhaseGroupLinkingInfo = linkingInfo;
+            mPhaseGroupLinkingInfo = info;
+        else
+            mPhaseGroupLinkingInfo += ";" + info;
     }
 
     public String phaseGroupLinkingInfo() { return mPhaseGroupLinkingInfo != null ? mPhaseGroupLinkingInfo : ""; }

@@ -112,7 +112,6 @@ public class AssemblyWriter
 
             sj.add("PhaseGroupId");
             sj.add("PhaseGroupCount");
-            sj.add("PhaseGroupLinkInfo");
 
             sj.add("PhaseSetId");
             sj.add("PhaseSetCount");
@@ -129,6 +128,9 @@ public class AssemblyWriter
 
             sj.add("MergedAssemblies");
             sj.add("BranchedAssemblyIds");
+
+            if(mConfig.LogPhaseGroupLinks)
+                sj.add("PhaseGroupLinkInfo");
 
             if(mTruthsetAnnotation.enabled())
                 sj.add(TruthsetAnnotation.tsvHeader());
@@ -288,11 +290,10 @@ public class AssemblyWriter
             {
                 sj.add(String.valueOf(phaseGroup.id()));
                 sj.add(String.valueOf(phaseGroup.assemblyCount()));
-                sj.add(assembly.phaseGroupLinkingInfo());
             }
             else
             {
-                sj.add("-1").add("0").add("0");
+                sj.add("-1").add("0");
             }
 
             PhaseSet phaseSet = phaseGroup != null ? phaseGroup.findPhaseSet(assembly) : null;
@@ -350,6 +351,9 @@ public class AssemblyWriter
             String branchedAssemblyIds = assembly.branchedAssemblies().stream()
                     .map(x -> String.valueOf(x.id())).collect(Collectors.joining(";"));
             sj.add(branchedAssemblyIds);
+
+            if(mConfig.LogPhaseGroupLinks)
+                sj.add(assembly.phaseGroupLinkingInfo());
 
             if(mTruthsetAnnotation.enabled())
                 sj.add(mTruthsetAnnotation.findTruthsetAnnotation(assembly));
