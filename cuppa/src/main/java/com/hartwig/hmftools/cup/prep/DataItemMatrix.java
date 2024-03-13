@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cup.prep;
 
+import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -19,6 +21,20 @@ public class DataItemMatrix
         SampleIds = sampleIds;
         FeatureBySampleMatrix = featureBySampleMatrix;
         Indexes = new ArrayList<>(FeatureBySampleMatrix.keySet());
+
+        checkDimensions();
+    }
+
+    private void checkDimensions()
+    {
+        for(String[] row : FeatureBySampleMatrix.values())
+        {
+            if(nSamples() != row.length)
+            {
+                CUP_LOGGER.error("Found FeatureBySampleMatrix row with length {}, but required {} (= number of SampleIds)", row.length, nSamples());
+                System.exit(1);
+            }
+        }
     }
 
     public String[] get(DataItem.Index index)
@@ -43,7 +59,7 @@ public class DataItemMatrix
 
     public void sortIndexes()
     {
-        Collections.sort(Indexes, new DataItem.IndexComparator());
+        Collections.sort(Indexes);
     }
 
     public void printRows()
