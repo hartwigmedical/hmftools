@@ -33,7 +33,7 @@ public class DataItemTest
     @Test
     public void canCreateDataItemMatrixWithUniqueKeys()
     {
-        String[] sampleIds = {"Sample1", "Sample2"};
+        List<String> sampleIds = Arrays.asList("Sample1", "Sample2");
         ConcurrentHashMap<DataItem.Index, String[]> featureBySampleMatrix = new ConcurrentHashMap<>();
 
         List<List<DataItem>> dataItemsPerSample = Arrays.asList(
@@ -53,7 +53,7 @@ public class DataItemTest
         {
             for(DataItem dataItem : dataItems)
             {
-                featureBySampleMatrix.computeIfAbsent(dataItem.Index, k -> new String[sampleIds.length]);
+                featureBySampleMatrix.computeIfAbsent(dataItem.Index, k -> new String[sampleIds.size()]);
                 featureBySampleMatrix.get(dataItem.Index)[sampleIndex] = dataItem.Value;
             }
             sampleIndex++;
