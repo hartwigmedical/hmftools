@@ -37,9 +37,7 @@ import org.jetbrains.annotations.Nullable;
 public class CuppaDataPrep
 {
     public final PrepConfig mConfig;
-
     private static final String DELIMITER = TSV_DELIM;
-    private static final String NULL_VALUE_STRING = "0";
 
     public CuppaDataPrep(final ConfigBuilder configBuilder)
     {
@@ -221,9 +219,6 @@ public class CuppaDataPrep
                     for(int sampleIndex = 0; sampleIndex < dataItemMatrix.nSamples(); sampleIndex++)
                     {
                         String value = dataItemMatrix.get(index)[sampleIndex];
-                        if(value == null)
-                            value = NULL_VALUE_STRING;
-
                         joiner.add(value);
                     }
 
