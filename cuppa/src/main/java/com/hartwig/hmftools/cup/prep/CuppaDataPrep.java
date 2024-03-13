@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.cup.prep.DataItem.FLD_VALUE;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
@@ -37,7 +38,11 @@ import org.jetbrains.annotations.Nullable;
 public class CuppaDataPrep
 {
     public final PrepConfig mConfig;
+
     private static final String DELIMITER = TSV_DELIM;
+
+    @Nullable public List<DataItem> mDataItems; // only used for tests
+    @Nullable public HashMap<CategoryType, DataItemMatrix> mDataItemMatricesByCategory = new HashMap<>(); // only used for tests
 
     public CuppaDataPrep(final ConfigBuilder configBuilder)
     {
@@ -151,15 +156,21 @@ public class CuppaDataPrep
             }
         }
 
-        public void run()
+        public void run(boolean keepDataItems)
         {
             CUP_LOGGER.info("Extracting CUPPA features in single sample mode for sample({})", mConfig.SampleIds.get(0));
 
             List<DataItem> dataItems = extractData();
+            if(keepDataItems)
+            {
+                mDataItems = dataItems;
+            }
 
             String outputPath = getOutputPath(null);
             writeData(dataItems, outputPath);
         }
+
+        public void run(){ run(false); }
     }
 
     private class MultiSampleTask
@@ -168,7 +179,6 @@ public class CuppaDataPrep
         {
             CUP_LOGGER.info("Extracting categoryType({})", categoryType);
 
-            String[] sampleIds =  mConfig.SampleIds.toArray(String[]::new);
             ConcurrentHashMap<DataItem.Index, String[]> featureBySampleMatrix = new ConcurrentHashMap<>();
 
             List<SampleOneCategoryTask> sampleTasks = new ArrayList<>();
@@ -181,7 +191,7 @@ public class CuppaDataPrep
             List<Callable> callableTasks = sampleTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableTasks, mConfig.Threads);
 
-            DataItemMatrix matrix = new DataItemMatrix(sampleIds, featureBySampleMatrix);
+            DataItemMatrix matrix = new DataItemMatrix(mConfig.SampleIds, featureBySampleMatrix);
             matrix.sortIndexes();
 
             return matrix;
@@ -235,7 +245,7 @@ public class CuppaDataPrep
             }
         }
 
-        public void run()
+        public void run(boolean keepDataItems)
         {
             CUP_LOGGER.info("Extracting CUPPA features in multi sample mode: {} samples, {} threads",
                     mConfig.SampleIds.size(), mConfig.Threads);
@@ -244,6 +254,11 @@ public class CuppaDataPrep
             for(CategoryType categoryType : mConfig.Categories)
             {
                 DataItemMatrix dataItemMatrix = extractDataOneCategory(categoryType);
+
+                if(keepDataItems)
+                {
+                    mDataItemMatricesByCategory.put(categoryType, dataItemMatrix);
+                }
 
                 if(mConfig.WriteByCategory)
                 {
@@ -259,9 +274,11 @@ public class CuppaDataPrep
                 i++;
             }
         }
+
+        public void run(){ run(false); }
     }
 
-    public void run()
+    public void run(boolean keepDataItems)
     {
         if(mConfig.SampleIds.isEmpty())
         {
@@ -273,12 +290,17 @@ public class CuppaDataPrep
 
         if(mConfig.isSingleSample())
         {
-            new SingleSampleTask().run();
+            new SingleSampleTask().run(keepDataItems);
         } else {
-            new MultiSampleTask().run();
+            new MultiSampleTask().run(keepDataItems);
         }
 
         CUP_LOGGER.info("Cuppa data extraction complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    public void run()
+    {
+        run(false);
     }
 
     public static void main(@NotNull final String[] args)
