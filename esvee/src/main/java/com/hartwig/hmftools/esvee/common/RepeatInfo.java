@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.esvee.common;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import java.util.List;
@@ -190,14 +193,16 @@ public class RepeatInfo
         if(assembly.repeatInfo().isEmpty())
             return "";
 
-        int seqStart = assembly.isForwardJunction() ? 0 : assembly.junctionIndex();
-        int seqEnd = assembly.isForwardJunction() ? assembly.junctionIndex() : assembly.baseLength() - 1;
+        int refBaseLength = assembly.refBaseLength();
+        int seqStart = assembly.isForwardJunction() ? assembly.junctionIndex() - refBaseLength + 1 : assembly.junctionIndex();
+        int seqEnd = assembly.isForwardJunction() ? assembly.junctionIndex() : assembly.junctionIndex() + refBaseLength - 1;
 
         StringBuilder refBasesTrimmed = new StringBuilder();
         int currentIndex = seqStart;
 
         List<RepeatInfo> repeats = assembly.repeatInfo();
         int currentRepeatIndex = 0;
+        int trimmedBasesLength = 0;
         RepeatInfo currentRepeat = repeats.get(currentRepeatIndex);
 
         while(currentIndex <= seqEnd)
@@ -219,20 +224,73 @@ public class RepeatInfo
 
             if(currentRepeat != null && currentRepeat.Index == currentIndex)
             {
-                refBasesTrimmed.append(currentRepeat.Bases);
-                refBasesTrimmed.append(format("n%d", currentRepeat.Count));
+                if(trimmedBasesLength != 0)
+                    refBasesTrimmed.append("_");
+
+                refBasesTrimmed.append(format("%s%d_", currentRepeat.Bases, currentRepeat.Count));
                 currentIndex += currentRepeat.length();
+                trimmedBasesLength += currentRepeat.Bases.length() * 2;
             }
             else
             {
                 refBasesTrimmed.append((char)assembly.bases()[currentIndex]);
                 ++currentIndex;
+                ++trimmedBasesLength;
             }
 
-            if(refBasesTrimmed.length() >= maxSequenceLength)
+            if(trimmedBasesLength >= maxSequenceLength)
                 break;
         }
 
         return refBasesTrimmed.toString();
+    }
+
+    public static int calcTrimmedRefBaseLength(final JunctionAssembly assembly, final int maxSequenceLength)
+    {
+        int refBaseLength = assembly.refBaseLength();
+
+        if(assembly.repeatInfo().isEmpty())
+            return refBaseLength;
+
+        int seqStart = assembly.isForwardJunction() ? assembly.junctionIndex() - refBaseLength + 1 : assembly.junctionIndex();
+        int seqEnd = assembly.isForwardJunction() ? assembly.junctionIndex() : assembly.junctionIndex() + refBaseLength - 1;
+
+        int currentIndex = seqStart;
+
+        List<RepeatInfo> repeats = assembly.repeatInfo();
+        int currentRepeatIndex = 0;
+        int trimmedBasesLength = 0;
+        RepeatInfo currentRepeat = repeats.get(currentRepeatIndex);
+
+        while(currentIndex <= seqEnd)
+        {
+            while(currentRepeat != null && currentRepeat.Index < currentIndex)
+            {
+                ++currentRepeatIndex;
+
+                if(currentRepeatIndex >= repeats.size())
+                {
+                    currentRepeat = null;
+                    break;
+                }
+                else
+                {
+                    currentRepeat = repeats.get(currentRepeatIndex);
+                }
+            }
+
+            if(currentRepeat != null && currentRepeat.Index == currentIndex)
+            {
+                currentIndex += currentRepeat.length();
+                trimmedBasesLength += currentRepeat.Bases.length() * 2; // only count the repeat twice
+            }
+            else
+            {
+                ++currentIndex;
+                ++trimmedBasesLength;
+            }
+        }
+
+        return trimmedBasesLength;
     }
 }

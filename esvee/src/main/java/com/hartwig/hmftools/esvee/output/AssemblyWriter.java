@@ -72,6 +72,7 @@ public class AssemblyWriter
             addRemoteRegionHeader(sj);
 
             sj.add("RefBaseTrimmed");
+            sj.add("RefBaseTrimLength");
             sj.add("JunctionSequence");
             sj.add("RefBaseSequence");
 
@@ -133,6 +134,7 @@ public class AssemblyWriter
             addRemoteRegionInfo(assembly, sj);
 
             sj.add(assembly.refBasesRepeatedTrimmed());
+            sj.add(String.valueOf(assembly.refBaseTrimLength()));
 
             if(assembly.hasUnsetBases())
             {

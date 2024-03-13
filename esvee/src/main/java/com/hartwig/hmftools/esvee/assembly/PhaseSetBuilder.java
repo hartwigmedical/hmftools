@@ -242,6 +242,9 @@ public class PhaseSetBuilder
 
             matchedSupport.addAll(matchedCandidateSupport);
 
+            if(!matchedSupport.isEmpty())
+                matchedCandidates.add(support);
+
             for(AssemblySupport matched : matchedSupport)
             {
                 support.read().makeReadLinks(matched.read());
@@ -322,6 +325,7 @@ public class PhaseSetBuilder
                     if(assembliesShareReads(assembly, splitAssembly))
                     {
                         mFacingLinks.add(facingLink);
+                        linkExistingSupport(assembly, facingAssembly);
                         facingAssemblies.add(facingAssembly);
                         facingAssemblies.add(assembly);
                     }

@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.esvee.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.findUnsetBases;
+import static com.hartwig.hmftools.esvee.common.RepeatInfo.calcTrimmedRefBaseLength;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findRepeats;
 import static com.hartwig.hmftools.esvee.common.SupportType.INDEL;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION;
@@ -52,6 +53,7 @@ public class JunctionAssembly
     private final SequenceMismatches mSequenceMismatches;
     private final List<RepeatInfo> mRepeatInfo;
     private String mRefBasesRepeatedTrimmed;
+    private int mRefBaseTrimLength;
 
     private final List<RemoteRegion> mRemoteRegions;
 
@@ -496,9 +498,12 @@ public class JunctionAssembly
         {
             mRefBasesRepeatedTrimmed = formRefBaseSequence(MIN_VARIANT_LENGTH);
         }
+
+        mRefBaseTrimLength = calcTrimmedRefBaseLength(this, MIN_VARIANT_LENGTH);
     }
 
     public String refBasesRepeatedTrimmed() { return mRefBasesRepeatedTrimmed; }
+    public int refBaseTrimLength() { return mRefBaseTrimLength; }
 
     public List<RefSideSoftClip> refSideSoftClips() { return mRefSideSoftClips; }
 
@@ -591,6 +596,7 @@ public class JunctionAssembly
 
         mRepeatInfo = Lists.newArrayList();
         mRefBasesRepeatedTrimmed = initialAssembly.refBasesRepeatedTrimmed();
+        mRefBaseTrimLength = initialAssembly.refBaseTrimLength();
         mRefSideSoftClips = Lists.newArrayList(refSideSoftClip);
         mRemoteRegions = Lists.newArrayList();
         mBranchedAssemblies = Lists.newArrayList();
@@ -739,6 +745,7 @@ public class JunctionAssembly
         mCandidateSupport = Lists.newArrayList();
         mRepeatInfo = Lists.newArrayList();
         mRefBasesRepeatedTrimmed = "";
+        mRefBaseTrimLength = 0;
         mRemoteRegions = Lists.newArrayList();
         mBranchedAssemblies = Lists.newArrayList();
         mRefSideSoftClips = Lists.newArrayList();

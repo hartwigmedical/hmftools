@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_BASE_Q
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.expandReferenceBases;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.buildTrimmedRefBaseSequence;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findDualBaseRepeat;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findDualDualRepeat;
@@ -22,6 +24,7 @@ import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.RepeatInfo;
+import com.hartwig.hmftools.esvee.read.Read;
 
 import org.junit.Test;
 
@@ -185,20 +188,27 @@ public class SequenceTest
     {
         Junction posJunction = new Junction(CHR_1, 60, POS_ORIENT);
 
-        String extensionSequence = "AAAAAAGGGGGG";
+        String extensionSequence = "ACGTACGTAAAAAAGGGGGG";
         String refBaseSequence = "ACGTAGAGAGAGACGTCCCCACGT";
         String assemblySequence = refBaseSequence + extensionSequence;
         byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(assemblySequence.length());
 
-        JunctionAssembly assembly = new JunctionAssembly(posJunction, assemblySequence.getBytes(), baseQuals, refBaseSequence.length() - 1);
+        Read read1 = createSamRecord("READ_01", 37, assemblySequence, "24M20S");
 
+        String softClipRef = "GGGGGGGG";
+        Read read2 = createSamRecord("READ_02", 41, softClipRef + assemblySequence, "12S20M20S");
+
+        JunctionAssembly assembly = AssemblyUtils.buildFromJunctionReads(
+                posJunction, List.of(read1, read2), true);
+
+        expandReferenceBases(assembly);
         assembly.buildRepeatInfo();
 
-        String refBasesTrimmed = buildTrimmedRefBaseSequence(assembly, 50);
-        assertEquals("ACGTAGn4ACGTCn4ACGT", refBasesTrimmed);
+        assertEquals("ACGT_AG4_ACGT_C4_ACGT", assembly.refBasesRepeatedTrimmed()); // 4 + 4 + 4 + 2 + 4
+        assertEquals(18, assembly.refBaseTrimLength());
 
-        refBasesTrimmed = buildTrimmedRefBaseSequence(assembly, 12);
-        assertEquals("ACGTAGn4ACGT", refBasesTrimmed);
+        String refBasesTrimmed = buildTrimmedRefBaseSequence(assembly, 12);
+        assertEquals("ACGT_AG4_ACGT", refBasesTrimmed);
 
         Junction negJunction = new Junction(CHR_1, 60, NEG_ORIENT);
 
@@ -208,8 +218,7 @@ public class SequenceTest
 
         assembly.buildRepeatInfo();
 
-        refBasesTrimmed = buildTrimmedRefBaseSequence(assembly, 50);
-        assertEquals("ACGTAGn4ACGTCn4ACGT", refBasesTrimmed);
+        assertEquals("ACGT_AG4_ACGT_C4_ACGT", assembly.refBasesRepeatedTrimmed());
     }
 }
 

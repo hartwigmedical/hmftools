@@ -72,7 +72,7 @@ public final class AssemblyLinker
 
                 if(second.support()
                         .stream().filter(x -> x.type() == SupportType.JUNCTION)
-                        .anyMatch(x -> x.read() == support.read() || x.read().mateRead() == support.read()))
+                        .anyMatch(x -> x.read().matchesFragment(support.read())))
                 {
                     matched = true;
                     break;
