@@ -8,12 +8,12 @@ import java.util.Map;
 
 public class DataItemMatrix
 {
-    public final String[] SampleIds;
+    public final List<String> SampleIds;
     public final Map<DataItem.Index, String[]> FeatureBySampleMatrix;
     public List<DataItem.Index> Indexes;
 
     public DataItemMatrix(
-            final String[] sampleIds,
+            final List<String> sampleIds,
             final Map<DataItem.Index, String[]> featureBySampleMatrix
     ){
         SampleIds = sampleIds;
@@ -24,11 +24,6 @@ public class DataItemMatrix
     public String[] get(DataItem.Index index)
     {
         return FeatureBySampleMatrix.get(index);
-    }
-
-    public void put(DataItem.Index index, String[] values)
-    {
-        FeatureBySampleMatrix.put(index, values);
     }
 
     public List<DataItem.Index> getIndexes()
@@ -43,7 +38,7 @@ public class DataItemMatrix
 
     public int nSamples()
     {
-        return SampleIds.length;
+        return SampleIds.size();
     }
 
     public void sortIndexes()
@@ -57,5 +52,15 @@ public class DataItemMatrix
         {
             System.out.println(index + " Values=" + Arrays.toString(get(index)));
         }
+    }
+
+    public List<String> getFeatureValuesBySampleIndex(int sampleIndex)
+    {
+        List<String> featureValues = new ArrayList<>();
+        for(DataItem.Index featureIndex : Indexes)
+        {
+            featureValues.add(get(featureIndex)[sampleIndex]);
+        }
+        return featureValues;
     }
 }
