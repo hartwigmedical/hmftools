@@ -131,17 +131,19 @@ public class ReadAdjustmentsTest
 
     private static boolean convertEdgeIndelsToSoftClip(final Read read)
     {
-        return ReadAdjustments.convertEdgeIndelsToSoftClip(read, 15, 16);
+        return ReadAdjustments.convertEdgeIndelsToSoftClip(read, 6, 15);
     }
 
     @Test
     public void testEdgeIndelsToSoftClip()
     {
         // to far from edge
-        String cigar = "17M6I17M";
+        String cigar = "18M6I17M";
         String readBases = REF_BASES_RANDOM_100.substring(0, 40);
         Read read = createSamRecord(TEST_READ_ID, 100, readBases, cigar);
-        assertFalse(convertEdgeIndelsToSoftClip(read));
+        assertTrue(convertEdgeIndelsToSoftClip(read));
+        assertEquals(117, read.alignmentEnd());
+        assertEquals(140, read.unclippedEnd());
 
         // indel too short
         cigar = "10M5I10M";
@@ -176,19 +178,19 @@ public class ReadAdjustmentsTest
         assertEquals(140, read.unclippedEnd());
         assertEquals("20M21S", read.cigarString());
 
-        // convert both at once
-        cigar = "10M8D10M6I10M";
+        // only the shorter side will be converted
+        cigar = "12M8D10M6I10M";
         readBases = REF_BASES_RANDOM_100.substring(0, 36);
         read = createSamRecord(TEST_READ_ID, 100, readBases, cigar);
-        assertEquals(137, read.alignmentEnd());
-        assertEquals(137, read.unclippedEnd());
+        assertEquals(139, read.alignmentEnd());
+        assertEquals(139, read.unclippedEnd());
 
         assertTrue(convertEdgeIndelsToSoftClip(read));
 
-        assertEquals(110, read.alignmentStart());
+        assertEquals(100, read.alignmentStart());
         assertEquals(100, read.unclippedStart());
-        assertEquals(119, read.alignmentEnd());
-        assertEquals(135, read.unclippedEnd());
-        assertEquals("10S10M16S", read.cigarString());
+        assertEquals(129, read.alignmentEnd());
+        assertEquals(145, read.unclippedEnd());
+        assertEquals("12M8D10M16S", read.cigarString());
     }
 }

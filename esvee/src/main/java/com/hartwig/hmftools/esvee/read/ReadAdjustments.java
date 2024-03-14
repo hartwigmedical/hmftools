@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.read;
 
-import static com.hartwig.hmftools.esvee.SvConstants.INDEL_TO_SC_MAX_EDGE_DISTANCE;
 import static com.hartwig.hmftools.esvee.SvConstants.INDEL_TO_SC_MAX_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.SvConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
@@ -9,6 +8,8 @@ import static com.hartwig.hmftools.esvee.SvConstants.POLY_G_TRIM_LENGTH;
 import static com.hartwig.hmftools.esvee.common.BaseType.G;
 import static com.hartwig.hmftools.esvee.common.BaseType.C;
 
+import static htsjdk.samtools.CigarOperator.M;
+
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
@@ -16,26 +17,37 @@ public final class ReadAdjustments
 {
     public static boolean convertEdgeIndelsToSoftClip(final Read read)
     {
-        return convertEdgeIndelsToSoftClip(read, INDEL_TO_SC_MAX_SIZE_SOFTCLIP, INDEL_TO_SC_MAX_EDGE_DISTANCE);
+        return convertEdgeIndelsToSoftClip(read, INDEL_TO_SC_MIN_SIZE_SOFTCLIP, INDEL_TO_SC_MAX_SIZE_SOFTCLIP);
     }
 
-    public static boolean convertEdgeIndelsToSoftClip(final Read read, final int maxIndelLength, final int maxReadEdgeDistance)
+    public static boolean convertEdgeIndelsToSoftClip(final Read read, final int minIndelLength, final int maxIndelLength)
     {
         if(read.cigarElements().size() < 3)
             return false;
 
         int leftSoftClipLength = calcIndelToSoftClipLength(
-                read.cigarElements().get(0), read.cigarElements().get(1), read.cigarElements().get(2), maxIndelLength, maxReadEdgeDistance);
+                read.cigarElements().get(0), read.cigarElements().get(1), read.cigarElements().get(2),
+                minIndelLength, maxIndelLength);
+
+        int leftEdgeDistance = leftSoftClipLength > 0 ? read.cigarElements().get(0).getLength() : 0;
 
         int rightSoftClipLength = 0;
+        int rightEdgeDistance = 0;
 
-        if(leftSoftClipLength == 0 || read.cigarElements().size() >= 5) // cannot adjust the same I from each side so re-check length
+        int lastIndex = read.cigarElements().size() - 1;
+
+        rightSoftClipLength = calcIndelToSoftClipLength(
+                read.cigarElements().get(lastIndex), read.cigarElements().get(lastIndex - 1), read.cigarElements().get(lastIndex - 2),
+                minIndelLength, maxIndelLength);
+
+        rightEdgeDistance = rightSoftClipLength > 0 ? read.cigarElements().get(lastIndex).getLength() : 0;
+
+        if(leftSoftClipLength > 0 && rightSoftClipLength > 0)
         {
-            int lastIndex = read.cigarElements().size() - 1;
-
-            rightSoftClipLength = calcIndelToSoftClipLength(
-                    read.cigarElements().get(lastIndex), read.cigarElements().get(lastIndex - 1), read.cigarElements().get(lastIndex - 2),
-                    maxIndelLength, maxReadEdgeDistance);
+            if(leftEdgeDistance < rightEdgeDistance)
+                rightSoftClipLength = 0;
+            else
+                leftSoftClipLength = 0;
         }
 
         if(leftSoftClipLength > 0 || rightSoftClipLength > 0)
@@ -49,18 +61,18 @@ public final class ReadAdjustments
 
     private static int calcIndelToSoftClipLength(
             final CigarElement edge, final CigarElement inside, final CigarElement next,
-            final int maxIndelLength, final int maxReadEdgeDistance)
+            final int minIndelLength, final int maxIndelLength)
     {
-        if(edge.getOperator() != CigarOperator.M || edge.getLength() >= maxReadEdgeDistance)
+        if(edge.getOperator() != M)
             return 0;
 
         if(!inside.getOperator().isIndel())
             return 0;
 
-        if(next.getOperator() != CigarOperator.M)
+        if(next.getOperator() != M)
             return 0;
 
-        if(inside.getLength() < INDEL_TO_SC_MIN_SIZE_SOFTCLIP || inside.getLength() > maxIndelLength)
+        if(inside.getLength() < minIndelLength || inside.getLength() > maxIndelLength)
             return 0;
 
         return inside.getOperator() != CigarOperator.D ? edge.getLength() + inside.getLength() : edge.getLength();
