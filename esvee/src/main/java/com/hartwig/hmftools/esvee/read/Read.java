@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
 import static com.hartwig.hmftools.esvee.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 
+import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.util.StringUtil.bytesToString;
 
@@ -58,6 +59,8 @@ public class Read
 
     private boolean mCheckedIndelCoords;
     private IndelCoords mIndelCoords;
+    private int mIndelImpliedAlignmentStart;
+    private int mIndelImpliedAlignmentEnd;
 
     private boolean mIsReference;
     private int mTrimCount;
@@ -82,6 +85,8 @@ public class Read
         mSupplementaryData = null;
         mCheckedIndelCoords = false;
         mIndelCoords = null;
+        mIndelImpliedAlignmentStart = 0;
+        mIndelImpliedAlignmentEnd = 0;
         mTrimCount = 0;
     }
 
@@ -149,10 +154,12 @@ public class Read
     public int unclippedEnd() { return mUnclippedEnd; }
 
     // convenience
-    public boolean isLeftClipped() { return mUnclippedStart < mAlignmentStart; }
-    public boolean isRightClipped() { return mUnclippedEnd > mAlignmentEnd; }
-    public int leftClipLength() { return mAlignmentStart - mUnclippedStart; }
-    public int rightClipLength() { return mUnclippedEnd - mAlignmentEnd; }
+
+    // note: converted INDELs from deletes may have their unclipped position inside the alignment
+    public boolean isLeftClipped() { return mUnclippedStart != mAlignmentStart; }
+    public boolean isRightClipped() { return mUnclippedEnd != mAlignmentEnd; }
+    public int leftClipLength() { return max(mAlignmentStart - mUnclippedStart, 0); }
+    public int rightClipLength() { return max(mUnclippedEnd - mAlignmentEnd, 0); }
 
     public byte[] getBases() { return mBases != null ? mBases : mRecord.getReadBases(); }
     public byte[] getBaseQuality() { return mBaseQuals != null ? mBaseQuals : mRecord.getBaseQualities(); }
@@ -247,22 +254,27 @@ public class Read
     public int getReadIndexAtReferencePosition(final int refPosition, boolean allowExtrapolation)
     {
         // finds the read index given a reference position, and extrapolates outwards from alignments as required
-        if(refPosition <= mAlignmentStart)
+
+        // for indel reads, use the implied alignment and unclipped positions from each direction
+        int alignmentStart = allowExtrapolation && mIndelImpliedAlignmentStart > 0 ? mIndelImpliedAlignmentStart : mAlignmentStart;
+        int alignmentEnd = allowExtrapolation && mIndelImpliedAlignmentEnd > 0 ? mIndelImpliedAlignmentEnd : mAlignmentEnd;
+
+        if(refPosition <= alignmentStart)
         {
-            if(!allowExtrapolation && refPosition < mAlignmentStart)
+            if(!allowExtrapolation && refPosition < alignmentStart)
                 return INVALID_INDEX;
 
-            int baseDiff = mAlignmentStart - refPosition;
-            int softClipBases = mAlignmentStart - mUnclippedStart;
+            int baseDiff = alignmentStart - refPosition;
+            int softClipBases = alignmentStart - mUnclippedStart;
             return baseDiff <= softClipBases ? softClipBases - baseDiff : INVALID_INDEX;
         }
-        else if(refPosition >= mAlignmentEnd)
+        else if(refPosition >= alignmentEnd)
         {
-            if(!allowExtrapolation && refPosition > mAlignmentEnd)
+            if(!allowExtrapolation && refPosition > alignmentEnd)
                 return INVALID_INDEX;
 
-            int baseDiff = refPosition - mAlignmentEnd;
-            int softClipBases = mUnclippedEnd - mAlignmentEnd;
+            int baseDiff = refPosition - alignmentEnd;
+            int softClipBases = mUnclippedEnd - alignmentEnd;
             return baseDiff <= softClipBases ? basesLength() - (softClipBases - baseDiff) - 1 : INVALID_INDEX;
         }
 
@@ -416,6 +428,38 @@ public class Read
 
     public int baseTrimCount() { return mTrimCount; }
 
+    public void setIndelUnclippedBounds(int leftSoftClipBases, int rightSoftClipBases)
+    {
+        // expand the potential soft-clipped bounds from the internal indel but leave alignment and the CIGAR unch
+
+        // inserted bases - unclipped start/end = -/+ inserted base length
+        // delete bases - implied alignment moves in by outer M and deleted base length, then add delete length back to unclipped pos
+
+        if(leftSoftClipBases > 0)
+        {
+            boolean isDelete = mCigarElements.get(1).getOperator() == D;
+            mIndelImpliedAlignmentEnd = mAlignmentStart + mCigarElements.get(0).getLength();
+
+            if(isDelete)
+                mIndelImpliedAlignmentEnd += mCigarElements.get(1).getLength();
+
+            mUnclippedStart = mIndelImpliedAlignmentEnd - leftSoftClipBases;
+        }
+
+        if(rightSoftClipBases > 0)
+        {
+            int lastIndex = mCigarElements.size() - 1;
+            boolean isDelete = mCigarElements.get(lastIndex - 1).getOperator() == D;
+
+            mIndelImpliedAlignmentStart = mAlignmentEnd - mCigarElements.get(lastIndex).getLength();
+
+            if(isDelete)
+                mIndelImpliedAlignmentStart -= mCigarElements.get(lastIndex - 1).getLength();
+
+            mUnclippedEnd = mIndelImpliedAlignmentStart + rightSoftClipBases;
+        }
+    }
+
     public void convertEdgeIndelToSoftClip(int leftSoftClipBases, int rightSoftClipBases)
     {
         // convert elements and recompute read state
@@ -425,6 +469,10 @@ public class Read
         {
             newReadStart += mCigarElements.get(0).getLength(); // moves by the M alignment at the first position
             mCigarElements.remove(0);
+
+            if(mCigarElements.get(0).getOperator() == D)
+                newReadStart += mCigarElements.get(0).getLength(); // move past the delete as well
+
             mCigarElements.set(0, new CigarElement(leftSoftClipBases, S));
         }
 

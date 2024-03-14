@@ -43,6 +43,7 @@ public class JunctionGroupAssembler extends ThreadTask
     private final DecoyChecker mDecoyChecker;
 
     private final Map<String,ReadGroup> mReadGroupMap;
+    private final Map<String,SAMRecord> mSupplementaryRepeats; // temporary to track an issue in SvPrep
     private final ReadStats mReadStats;
 
     public JunctionGroupAssembler(
@@ -57,6 +58,7 @@ public class JunctionGroupAssembler extends ThreadTask
         mDecoyChecker = new DecoyChecker(mConfig.DecoyGenome, resultsWriter.decoyMatchWriter());
 
         mReadGroupMap = Maps.newHashMap();
+        mSupplementaryRepeats = Maps.newHashMap();
         mCurrentJunctionGroup = null;
         mReadStats = new ReadStats();
     }
@@ -146,6 +148,7 @@ public class JunctionGroupAssembler extends ThreadTask
 
         mReadGroupMap.values().forEach(x -> x.formReadLinks());
         mReadGroupMap.clear();
+        mSupplementaryRepeats.clear();
 
         List<JunctionAssembly> junctionGroupAssemblies = Lists.newArrayList();
 
@@ -216,6 +219,10 @@ public class JunctionGroupAssembler extends ThreadTask
     private void processRecord(final SAMRecord record)
     {
         mConfig.logReadId(record, "JunctionGroupAssembler:processRecord");
+
+        // temporary checking of repeated (ie identical) supplementaries from SvPrep
+        if(ignoreIdenticalSupplementary(record))
+            return;
 
         Read read = new Read(record);
 
@@ -298,5 +305,26 @@ public class JunctionGroupAssembler extends ThreadTask
         }
 
         public String toString() { return format("reads(%d exp=%d) id(%s)", mReads.size(), mExpectedCount, mReads.get(0).getName()); }
+    }
+
+    private boolean ignoreIdenticalSupplementary(final SAMRecord read)
+    {
+        if(!read.getSupplementaryAlignmentFlag())
+            return false;
+
+        SAMRecord previousRead = mSupplementaryRepeats.get(read.getReadName());
+
+        if(previousRead == null)
+        {
+            mSupplementaryRepeats.put(read.getReadName(), read);
+            return false;
+        }
+
+        if(previousRead.getAlignmentStart() != read.getAlignmentStart() || previousRead.getFlags() != read.getFlags())
+            return false;
+
+        ++mReadStats.IdenticalSupplementaries;
+        mSupplementaryRepeats.remove(read.getReadName());
+        return true;
     }
 }

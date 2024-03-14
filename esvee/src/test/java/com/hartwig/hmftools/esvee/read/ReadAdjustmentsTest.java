@@ -128,19 +128,49 @@ public class ReadAdjustmentsTest
         assertEquals("2S80M10S", read.cigarString());
     }
 
-    private static boolean convertEdgeIndelsToSoftClip(final Read read)
+    private static boolean convertEdgeIndelsToSoftClip(final Read read, boolean allowDoubleConversion)
     {
-        return ReadAdjustments.convertEdgeIndelsToSoftClip(read, 6, 15);
+        return ReadAdjustments.convertEdgeIndelsToSoftClip(read, 6, 15, allowDoubleConversion);
     }
 
     @Test
     public void testEdgeIndelsToSoftClip()
     {
-        // to far from edge
+        // converts both sides of the insert
         String cigar = "18M6I17M";
         String readBases = REF_BASES_RANDOM_100.substring(0, 40);
         Read read = createRead(TEST_READ_ID, 100, readBases, cigar);
-        assertTrue(convertEdgeIndelsToSoftClip(read));
+        assertTrue(convertEdgeIndelsToSoftClip(read, true));
+        assertEquals(100, read.alignmentStart());
+        assertEquals(134, read.alignmentEnd());
+        assertEquals(94, read.unclippedStart());
+        assertEquals(140, read.unclippedEnd());
+
+        // indel too short
+        cigar = "10M5I10M";
+        readBases = REF_BASES_RANDOM_100.substring(0, 25);
+        read = createRead(TEST_READ_ID, 100, readBases, cigar);
+        assertFalse(convertEdgeIndelsToSoftClip(read, true));
+
+        // converts both sides of the delete
+        cigar = "10M6D15M";
+        readBases = REF_BASES_RANDOM_100.substring(0, 31);
+        read = createRead(TEST_READ_ID, 100, readBases, cigar);
+        assertEquals(130, read.alignmentEnd());
+        assertTrue(convertEdgeIndelsToSoftClip(read, true));
+        assertEquals(100, read.alignmentStart());
+        assertEquals(130, read.alignmentEnd());
+        assertEquals(106, read.unclippedStart());
+        assertEquals(124, read.unclippedEnd());
+    }
+
+    @Test
+    public void testEdgeIndelsToSoftClipOld()
+    {
+        String cigar = "18M6I17M";
+        String readBases = REF_BASES_RANDOM_100.substring(0, 40);
+        Read read = createRead(TEST_READ_ID, 100, readBases, cigar);
+        assertTrue(convertEdgeIndelsToSoftClip(read, false));
         assertEquals(117, read.alignmentEnd());
         assertEquals(140, read.unclippedEnd());
 
@@ -148,16 +178,39 @@ public class ReadAdjustmentsTest
         cigar = "10M5I10M";
         readBases = REF_BASES_RANDOM_100.substring(0, 25);
         read = createRead(TEST_READ_ID, 100, readBases, cigar);
-        assertFalse(convertEdgeIndelsToSoftClip(read));
+        assertFalse(convertEdgeIndelsToSoftClip(read, false));
 
-        // convert a left-edge indel
+        // convert a left-edge delete
+        cigar = "10M6D15M";
+        readBases = REF_BASES_RANDOM_100.substring(0, 31);
+        read = createRead(TEST_READ_ID, 100, readBases, cigar);
+        assertEquals(100, read.unclippedStart());
+        assertEquals(130, read.alignmentEnd());
+        assertTrue(convertEdgeIndelsToSoftClip(read, false));
+        assertEquals(116, read.alignmentStart());
+        assertEquals(106, read.unclippedStart());
+        assertEquals(130, read.alignmentEnd());
+        assertEquals("10S15M", read.cigarString());
+
+        // convert a right-edge delete
+        cigar = "15M6D10M";
+        readBases = REF_BASES_RANDOM_100.substring(0, 31);
+        read = createRead(TEST_READ_ID, 100, readBases, cigar);
+        assertEquals(130, read.alignmentEnd());
+        assertTrue(convertEdgeIndelsToSoftClip(read, false));
+        assertEquals(100, read.alignmentStart());
+        assertEquals(114, read.alignmentEnd());
+        assertEquals(124, read.unclippedEnd());
+        assertEquals("15M10S", read.cigarString());
+
+        // convert a left-edge insert
         cigar = "10M6I15M";
         readBases = REF_BASES_RANDOM_100.substring(0, 31);
         read = createRead(TEST_READ_ID, 100, readBases, cigar);
         assertEquals(124, read.alignmentEnd());
         assertEquals(100, read.unclippedStart());
 
-        assertTrue(convertEdgeIndelsToSoftClip(read));
+        assertTrue(convertEdgeIndelsToSoftClip(read, false));
 
         assertEquals(110, read.alignmentStart());
         assertEquals(94, read.unclippedStart());
@@ -171,7 +224,7 @@ public class ReadAdjustmentsTest
         assertEquals(134, read.alignmentEnd());
         assertEquals(134, read.unclippedEnd());
 
-        assertTrue(convertEdgeIndelsToSoftClip(read));
+        assertTrue(convertEdgeIndelsToSoftClip(read, false));
 
         assertEquals(119, read.alignmentEnd());
         assertEquals(140, read.unclippedEnd());
@@ -184,7 +237,7 @@ public class ReadAdjustmentsTest
         assertEquals(139, read.alignmentEnd());
         assertEquals(139, read.unclippedEnd());
 
-        assertTrue(convertEdgeIndelsToSoftClip(read));
+        assertTrue(convertEdgeIndelsToSoftClip(read, false));
 
         assertEquals(100, read.alignmentStart());
         assertEquals(100, read.unclippedStart());
