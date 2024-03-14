@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID_2;
 import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
-import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.expandReferenceBases;
 
 import static org.junit.Assert.assertEquals;
@@ -43,25 +43,25 @@ public class JunctionAssemblyTest
         Junction junction = new Junction(CHR_1, 29, POS_STRAND);
 
         // read 1 defines the first sequence
-        Read read1 = createSamRecord("READ_01", 10, refBases.substring(10, 30) + "AACCGGGG", "20M8S");
+        Read read1 = createRead("READ_01", 10, refBases.substring(10, 30) + "AACCGGGG", "20M8S");
         Read read1b = cloneRead(read1, read1.getName() + "b");
 
         // read 2 has one mismatch on the first sequence and has a ref base mismatch
         String readRefBases = REF_BASES_RANDOM_100.substring(0, 20) + "TGGGCCAATT";
-        Read read2 = createSamRecord("READ_02", 9, readRefBases.substring(9, 30) + "ACCCGG", "21M6S");
+        Read read2 = createRead("READ_02", 9, readRefBases.substring(9, 30) + "ACCCGG", "21M6S");
 
         // read 3 defines the second sequence
-        Read read3 = createSamRecord("READ_03", 15, refBases.substring(15, 30) + "AATCGGTT", "15M8S");
+        Read read3 = createRead("READ_03", 15, refBases.substring(15, 30) + "AATCGGTT", "15M8S");
 
         // read 4 matches has mismatches against both sequences, but only one with the second
-        Read read4 = createSamRecord("READ_04", 10, refBases.substring(10, 30) + "AATCGGA", "20M7S");
+        Read read4 = createRead("READ_04", 10, refBases.substring(10, 30) + "AATCGGA", "20M7S");
 
         // read 5 matches the second sequence and also has a ref base mismatch
         readRefBases = REF_BASES_RANDOM_100.substring(0, 20) + "TTGCCCAATT";
-        Read read5 = createSamRecord("READ_05", 10, readRefBases.substring(10, 30) + "AATCGGT", "20M7S");
+        Read read5 = createRead("READ_05", 10, readRefBases.substring(10, 30) + "AATCGGT", "20M7S");
 
         // has 1 mismatch against each so will support both
-        Read read6 = createSamRecord("READ_06", 10, refBases.substring(10, 30) + "AATCGGG", "20M7S");
+        Read read6 = createRead("READ_06", 10, refBases.substring(10, 30) + "AATCGGG", "20M7S");
 
         JunctionAssembly junctionSequence = AssemblyUtils.buildFromJunctionReads(
                 junction, List.of(read1, read1b, read2, read3, read4, read5, read6), true);
@@ -106,19 +106,19 @@ public class JunctionAssemblyTest
         Junction junction = new Junction(CHR_1, 20, NEG_STRAND);
 
         // read 1 defines the first sequence
-        Read read1 = createSamRecord("READ_01", 20, "AACCGGGG" + refBases.substring(20, 32), "8S12M");
+        Read read1 = createRead("READ_01", 20, "AACCGGGG" + refBases.substring(20, 32), "8S12M");
 
         // read 2 supports the first sequence
-        Read read2 = createSamRecord("READ_02", 20, "ACCGGGGT" + refBases.substring(21, 40), "7S20M");
+        Read read2 = createRead("READ_02", 20, "ACCGGGGT" + refBases.substring(21, 40), "7S20M");
 
         // read 3 defines the second sequence
-        Read read3 = createSamRecord("READ_03", 20, "TTTTCCTTGG" + refBases.substring(20, 35), "10S15M");
+        Read read3 = createRead("READ_03", 20, "TTTTCCTTGG" + refBases.substring(20, 35), "10S15M");
 
         // read 4 matches has 1 mismatch against both sequences
-        Read read4 = createSamRecord("READ_04", 20, "CCTGGG" + refBases.substring(20, 40), "6S20M");
+        Read read4 = createRead("READ_04", 20, "CCTGGG" + refBases.substring(20, 40), "6S20M");
 
         // read 5 matches the second sequence
-        Read read5 = createSamRecord("READ_05", 20, "TTCCTTGG" + refBases.substring(20, 37), "8S17M");
+        Read read5 = createRead("READ_05", 20, "TTCCTTGG" + refBases.substring(20, 37), "8S17M");
 
         JunctionAssembly junctionSequence = AssemblyUtils.buildFromJunctionReads(
                 junction, List.of(read1, read2, read3, read4, read5), true);
@@ -188,8 +188,8 @@ public class JunctionAssemblyTest
 
         List<JunctionAssembly> assemblies = Lists.newArrayList(assembly1, assembly2, assembly3, assembly4, assembly5);
 
-        Read sharedRead = createSamRecord(TEST_READ_ID, 40, assemblyBases.substring(0, 30), "30M");
-        Read sharedRead2 = createSamRecord(TEST_READ_ID_2, 40, assemblyBases.substring(0, 30), "30M");
+        Read sharedRead = createRead(TEST_READ_ID, 40, assemblyBases.substring(0, 30), "30M");
+        Read sharedRead2 = createRead(TEST_READ_ID_2, 40, assemblyBases.substring(0, 30), "30M");
 
         assemblies.forEach(x -> x.addJunctionRead(sharedRead, false));
         assemblies.forEach(x -> x.addJunctionRead(sharedRead2, false));

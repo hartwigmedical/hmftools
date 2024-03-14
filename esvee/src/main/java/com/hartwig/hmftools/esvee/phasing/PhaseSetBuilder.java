@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.assembly;
+package com.hartwig.hmftools.esvee.phasing;
 
 import static java.lang.String.format;
 
@@ -22,6 +22,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.esvee.assembly.AssemblyLinker;
+import com.hartwig.hmftools.esvee.assembly.JunctionExtender;
 import com.hartwig.hmftools.esvee.common.AssemblyLink;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.DiscordantGroup;
@@ -212,8 +214,8 @@ public class PhaseSetBuilder
         extendRefBases(assembly2, matchedCandidates2, mRefGenome, allowBranching);
 
         // add any branched assemblies to the phase group - these will be cleaned up if not used
-        assembly1.branchedAssemblies().forEach(x -> mPhaseGroup.addAssembly(x, assembly1));
-        assembly2.branchedAssemblies().forEach(x -> mPhaseGroup.addAssembly(x, assembly2));
+        assembly1.branchedAssemblies().forEach(x -> mPhaseGroup.addAssembly(x));
+        assembly2.branchedAssemblies().forEach(x -> mPhaseGroup.addAssembly(x));
     }
 
     private static void checkMatchingCandidateSupport(

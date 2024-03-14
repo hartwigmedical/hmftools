@@ -80,8 +80,8 @@ public class JunctionGroup extends BaseRegion
 
     public String toString()
     {
-        return format("%s:%d-%d range(%d) count(%d) reads(%d)",
-            chromosome(), start(), end(), range(), mJunctions.size(), mCandidateReads.size());
+        return format("%s:%d-%d range(%d) count(%d) assemblies(%d) reads(%d)",
+            chromosome(), start(), end(), range(), mJunctions.size(), mJunctionAssemblies.size(), mCandidateReads.size());
     }
 
     public static <E extends BaseRegion> int binarySearch(int readStart, final List<E> regions)

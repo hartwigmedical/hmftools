@@ -20,9 +20,9 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.alignment.Alignment;
 import com.hartwig.hmftools.esvee.alignment.BwaAligner;
-import com.hartwig.hmftools.esvee.assembly.PhaseGroupBuilder;
+import com.hartwig.hmftools.esvee.phasing.PhaseGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
-import com.hartwig.hmftools.esvee.assembly.PhaseSetTask;
+import com.hartwig.hmftools.esvee.phasing.PhaseSetTask;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.JunctionGroup;
@@ -212,11 +212,12 @@ public class JunctionProcessor
 
     private void formPhaseGroups()
     {
-        PhaseGroupBuilder phaseGroupBuilder = new PhaseGroupBuilder(mConfig, mJunctionGroupMap);
+        PhaseGroupBuilder phaseGroupBuilder = new PhaseGroupBuilder(mConfig, mJunctionGroupMap, mResultsWriter.phaseGroupBuildWriter());
 
         phaseGroupBuilder.buildGroups();
 
-        mPerfCounters.add(ThreadTask.mergePerfCounters(phaseGroupBuilder.groupBuilderTasks()));
+        mPerfCounters.add(ThreadTask.mergePerfCounters(phaseGroupBuilder.localBuilderTasks()));
+        mPerfCounters.add(ThreadTask.mergePerfCounters(phaseGroupBuilder.remoteBuilderTasks()));
 
         List<PhaseGroup> phaseGroups = phaseGroupBuilder.phaseGroups();
 

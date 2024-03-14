@@ -2,7 +2,7 @@ package com.hartwig.hmftools.esvee.read;
 
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
-import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.read.Read.INVALID_INDEX;
 
 import static org.junit.Assert.assertEquals;
@@ -15,7 +15,7 @@ public class ReadUtilsTest
     public void testMiscReadFunctions()
     {
         String cigarStr = "5S20M8S";
-        Read read = createSamRecord(TEST_READ_ID, 20, REF_BASES_RANDOM_100.substring(15, 48), cigarStr);
+        Read read = createRead(TEST_READ_ID, 20, REF_BASES_RANDOM_100.substring(15, 48), cigarStr);
 
         assertEquals(15, read.unclippedStart());
         assertEquals(47, read.unclippedEnd());
@@ -39,7 +39,7 @@ public class ReadUtilsTest
         cigarStr = "4S20M10D10M5I10M3S";
         // positions 4S then 20-39 = M,   40-49 = D, 50-59 = M,    T at 59,     60-69 = M, then 3S
         // index: 4S is 0-3, 20M is 4-23, D is none, 10M is 24-33, 5I is 34-38, 10M is 39-48, 3S is 49-51
-        read = createSamRecord(
+        read = createRead(
                 TEST_READ_ID, 20,
                 REF_BASES_RANDOM_100.substring(16, 40) + REF_BASES_RANDOM_100.substring(50, 60) + "GGGGG" + REF_BASES_RANDOM_100.substring(60, 73),
                 cigarStr);

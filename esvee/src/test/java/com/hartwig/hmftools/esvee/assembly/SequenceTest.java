@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_BASE_QUAL;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.expandReferenceBases;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.buildTrimmedRefBaseSequence;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findDualBaseRepeat;
@@ -193,10 +192,10 @@ public class SequenceTest
         String assemblySequence = refBaseSequence + extensionSequence;
         byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(assemblySequence.length());
 
-        Read read1 = createSamRecord("READ_01", 37, assemblySequence, "24M20S");
+        Read read1 = createRead("READ_01", 37, assemblySequence, "24M20S");
 
         String softClipRef = "GGGGGGGG";
-        Read read2 = createSamRecord("READ_02", 41, softClipRef + assemblySequence, "12S20M20S");
+        Read read2 = createRead("READ_02", 41, softClipRef + assemblySequence, "12S20M20S");
 
         JunctionAssembly assembly = AssemblyUtils.buildFromJunctionReads(
                 posJunction, List.of(read1, read2), true);

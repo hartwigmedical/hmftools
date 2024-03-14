@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.assembly;
+package com.hartwig.hmftools.esvee.phasing;
 
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 

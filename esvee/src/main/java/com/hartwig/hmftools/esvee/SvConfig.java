@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
@@ -43,6 +44,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -343,5 +345,47 @@ public class SvConfig
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
+    }
+
+    @VisibleForTesting
+    public SvConfig()
+    {
+        TumorIds = Collections.emptyList();
+        ReferenceIds = Collections.emptyList();
+
+        TumorBams = Collections.emptyList();
+        ReferenceBams = Collections.emptyList();
+
+        JunctionFiles = Collections.emptyList();
+
+        RefGenVersion = V38;
+        RefGenomeCoords = null;
+        RefGenomeFile = null;
+        RefGenome = null;
+        RefGenomeImageFile = null;
+        DecoyGenome = null;
+
+        BamStringency = ValidationStringency.SILENT;
+
+        VcfFile = null;
+        WriteTypes = Collections.emptyList();
+
+        OutputDir = null;
+        OutputId = null;
+
+        SpecificChrRegions = new SpecificRegions();
+        SpecificJunctions = Collections.emptyList();
+
+        PerfDebug = false;
+        PerfLogTime = 0;
+        mLogReadIds = Collections.emptyList();
+        mCheckLogReadIds = false;
+
+        AssemblyRefBaseWriteMax = 0;
+        SkipDiscordant = true;
+        LogPhaseGroupLinks = false;
+        PhaseProcessingLimit = 0;
+        Threads = 0;
+        TruthsetFile = null;
     }
 }

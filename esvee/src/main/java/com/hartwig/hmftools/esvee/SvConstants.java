@@ -56,7 +56,8 @@ public final class SvConstants
     public static final int ASSEMBLY_EXTENSION_BASE_MISMATCH = 2;
     public static final int REF_SIDE_MIN_SOFT_CLIP_LENGTH = MIN_SOFT_CLIP_LENGTH;
 
-    // phased assembly overlaps
+    // phasing
+    public static final int REMOTE_PHASING_MIN_READS = 2;
     public static final int PHASED_ASSEMBLY_OVERLAP_BASES = 100;
     public static final int PHASED_ASSEMBLY_JUNCTION_OVERLAP = 50;
     public static final int PHASED_ASSEMBLY_MAX_TI = 1000;

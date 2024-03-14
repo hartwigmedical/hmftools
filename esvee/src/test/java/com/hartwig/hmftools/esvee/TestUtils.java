@@ -37,6 +37,8 @@ public class TestUtils
     public static final String TEST_CIGAR_30  = "30M";
     public static final String TEST_CIGAR_20  = "20M";
 
+    public static final SvConfig TEST_CONFIG = new SvConfig();
+
     public static final String REF_BASES_RANDOM_100 = generateRandomBases(100);
 
     public static String REF_BASES_200 =
@@ -81,11 +83,23 @@ public class TestUtils
         return new JunctionAssembly(junction, assemblyBases.getBytes(), baseQuals, junctionIndex);
     }
 
-    public static Read createSamRecord(final String readId, int readStart, final String readBases, final String cigar)
+    public static Read createRead(final String readId, int readStart, final String readBases, final String cigar)
     {
         SAMRecord record = SamRecordTestUtils.createSamRecord(
                 readId, CHR_1, readStart, readBases, cigar, CHR_1, readStart + 1000,
                 false, false, null);
+        return new Read(record);
+    }
+
+    public static Read createConcordantRead(
+            final String readId, int readStart, final String readBases, final String cigar, final int mateStart)
+    {
+        SAMRecord record = SamRecordTestUtils.createSamRecord(
+                readId, CHR_1, readStart, readBases, cigar, CHR_1, mateStart,
+                false, false, null);
+
+        record.setMateNegativeStrandFlag(true);
+
         return new Read(record);
     }
 

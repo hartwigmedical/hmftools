@@ -20,7 +20,7 @@ public class PhaseGroup
     private final List<PhaseSet> mPhaseSets;
     private final List<AssemblyLink> mSecondarySplitLinks;
 
-    public PhaseGroup(final JunctionAssembly first, @Nullable final JunctionAssembly second, boolean recordLink)
+    public PhaseGroup(final JunctionAssembly first, @Nullable final JunctionAssembly second)
     {
         mId = -1;
         mAssemblies = Lists.newArrayList(first);
@@ -30,20 +30,10 @@ public class PhaseGroup
 
         first.setPhaseGroup(this);
 
-        if(recordLink)
-            first.addPhaseGroupLinkingInfo("1: ");
-
         if(second != null)
         {
             mAssemblies.add(second);
             second.setPhaseGroup(this);
-
-            if(recordLink)
-            {
-                first.addPhaseGroupLinkingInfo(second.junction().coords());
-                second.addPhaseGroupLinkingInfo("2: ");
-                second.addPhaseGroupLinkingInfo(first.junction().coords());
-            }
         }
     }
 
@@ -68,24 +58,24 @@ public class PhaseGroup
 
     public int assemblyCount() { return mAssemblies.size(); }
 
-    public void transferAssemblies(final PhaseGroup other, final JunctionAssembly linkingAssembly)
+    public void transferAssemblies(final PhaseGroup other)
     {
         for(JunctionAssembly assembly : other.assemblies())
         {
-            if(!mAssemblies.contains(assembly))
-                mAssemblies.add(assembly);
+            if(mAssemblies.contains(assembly))
+            {
+                SV_LOGGER.error("assembly({}) transferred from pg({})but already in phase group({})",
+                        assembly, other, this);
+                System.exit(1);
+            }
+
+            mAssemblies.add(assembly);
 
             assembly.setPhaseGroup(this);
-
-            if(linkingAssembly != null && !assembly.phaseGroupLinkingInfo().contains("transfer"))
-            {
-                assembly.addPhaseGroupLinkingInfo(
-                        format("%d_trans: %s", mAssemblies.size(), linkingAssembly.junction().coords()));
-            }
         }
     }
 
-    public void addAssembly(final JunctionAssembly assembly, final JunctionAssembly linkingAssembly)
+    public void addAssembly(final JunctionAssembly assembly)
     {
         mAssemblies.add(assembly);
 
@@ -96,9 +86,6 @@ public class PhaseGroup
         }
 
         assembly.setPhaseGroup(this);
-
-        if(linkingAssembly != null)
-            assembly.addPhaseGroupLinkingInfo(format("%d: %s", mAssemblies.size(), linkingAssembly.junction().coords()));
     }
 
     public void addDiscordantGroup(final DiscordantGroup discordantGroup)

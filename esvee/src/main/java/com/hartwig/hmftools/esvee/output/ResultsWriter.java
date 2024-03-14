@@ -22,6 +22,7 @@ public class ResultsWriter
     private final BufferedWriter mDecoyMatchWriter;
     private final AssemblyWriter mAssemblyWriter;
     private final AssemblyReadWriter mReadWriter;
+    private final PhaseGroupBuildWriter mPhaseGroupBuildWriter;
     private final BamWriter mBamWriter;
 
     public ResultsWriter(final SvConfig config)
@@ -30,11 +31,13 @@ public class ResultsWriter
         mVariantWriter = initialiseVariantWriter();
         mAssemblyWriter = new AssemblyWriter(config);
         mReadWriter = new AssemblyReadWriter(config);
+        mPhaseGroupBuildWriter = new PhaseGroupBuildWriter(config);
         mBamWriter = new BamWriter(config);
         mDecoyMatchWriter = DecoyChecker.initialiseWriter(config);
     }
 
     public BufferedWriter decoyMatchWriter() { return mDecoyMatchWriter; }
+    public PhaseGroupBuildWriter phaseGroupBuildWriter() { return mPhaseGroupBuildWriter; }
 
     public void close()
     {
@@ -42,6 +45,7 @@ public class ResultsWriter
 
         mAssemblyWriter.close();
         mReadWriter.close();
+        mPhaseGroupBuildWriter.close();
         mBamWriter.close();
         closeBufferedWriter(mDecoyMatchWriter);
     }
