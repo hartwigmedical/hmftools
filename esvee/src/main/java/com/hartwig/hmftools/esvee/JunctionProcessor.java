@@ -216,6 +216,8 @@ public class JunctionProcessor
 
         phaseGroupBuilder.buildGroups();
 
+        mPerfCounters.add(ThreadTask.mergePerfCounters(phaseGroupBuilder.groupBuilderTasks()));
+
         List<PhaseGroup> phaseGroups = phaseGroupBuilder.phaseGroups();
 
         if(phaseGroups.isEmpty())

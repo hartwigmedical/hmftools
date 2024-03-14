@@ -38,11 +38,14 @@ public class PhaseGroupBuilder
     private final Map<String, List<JunctionGroup>> mJunctionGroupMap;
     private final List<PhaseGroup> mPhaseGroups;
 
+    private final List<PhaseGroupBuilderTask> mGroupBuilderTasks;
+
     public PhaseGroupBuilder(final SvConfig config, final Map<String, List<JunctionGroup>> junctionGroupMap)
     {
         mConfig = config;
         mJunctionGroupMap = junctionGroupMap;
         mPhaseGroups = Lists.newArrayList();
+        mGroupBuilderTasks = Lists.newArrayList();
 
         // setting an index for each junction group allows easy access to an assembly's own group during look-ups
         for(List<JunctionGroup> junctionGroups : mJunctionGroupMap.values())
@@ -55,12 +58,11 @@ public class PhaseGroupBuilder
     }
 
     public List<PhaseGroup> phaseGroups() { return mPhaseGroups; }
+    public List<ThreadTask> groupBuilderTasks() { return mGroupBuilderTasks.stream().collect(Collectors.toList()); }
 
     public void buildGroups()
     {
         List<Thread> threadTasks = new ArrayList<>();
-
-        List<PhaseGroupBuilderTask> groupBuilderTasks = Lists.newArrayList();
 
         Queue<JunctionGroup> junctionGroupQueue = new ConcurrentLinkedQueue<>();
 
@@ -76,7 +78,7 @@ public class PhaseGroupBuilder
         for(int i = 0; i < taskCount; ++i)
         {
             PhaseGroupBuilderTask groupBuilderTask = new PhaseGroupBuilderTask(junctionGroupQueue);
-            groupBuilderTasks.add(groupBuilderTask);
+            mGroupBuilderTasks.add(groupBuilderTask);
             threadTasks.add(groupBuilderTask);
         }
 
@@ -88,10 +90,10 @@ public class PhaseGroupBuilder
         if(!runThreadTasks(threadTasks))
             System.exit(1);
 
-        groupBuilderTasks.forEach(x -> mPhaseGroups.addAll(x.phaseGroups()));
+        mGroupBuilderTasks.forEach(x -> mPhaseGroups.addAll(x.phaseGroups()));
 
         // clean-up phase groups which were transferred into another group
-        groupBuilderTasks.forEach(x -> x.removedPhaseGroups().forEach(y -> mPhaseGroups.remove(y)));
+        mGroupBuilderTasks.forEach(x -> x.removedPhaseGroups().forEach(y -> mPhaseGroups.remove(y)));
 
         for(int i = 0; i < mPhaseGroups.size(); ++i)
         {

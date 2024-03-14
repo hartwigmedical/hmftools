@@ -257,6 +257,9 @@ public class JunctionAssembly
             {
                 mBases[assemblyIndex] = base;
                 mBaseQuals[assemblyIndex] = qual;
+
+                if(qual >= LOW_BASE_QUAL_THRESHOLD)
+                    ++highQualMatchCount;
             }
             else
             {

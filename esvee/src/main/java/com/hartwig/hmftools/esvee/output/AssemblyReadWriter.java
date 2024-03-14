@@ -67,6 +67,7 @@ public class AssemblyReadWriter
             sj.add("SuppData");
 
             sj.add("AssemblyIndex");
+            sj.add("Matches");
             sj.add("Mismatches");
             sj.add("TrimCount");
 
@@ -133,6 +134,7 @@ public class AssemblyReadWriter
                     sj.add("");
                 }
                 sj.add(String.valueOf(support.assemblyIndex()));
+                sj.add(String.valueOf(support.junctionMatches()));
                 sj.add(String.valueOf(support.mismatchCount()));
                 sj.add(String.valueOf(read.baseTrimCount()));
 

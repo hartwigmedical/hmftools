@@ -75,7 +75,7 @@ public class JunctionAssemblyTest
         assertEquals(4, junctionSequence.mismatches().positionCount());
 
         AssemblyMismatchSplitter splitter = new AssemblyMismatchSplitter(junctionSequence);
-        List<JunctionAssembly> allSequences = splitter.splitOnMismatches(5);
+        List<JunctionAssembly> allSequences = splitter.splitOnMismatches(5, 2);
         assertEquals(2, allSequences.size());
 
         assertEquals(4, allSequences.get(0).supportCount());
@@ -132,7 +132,7 @@ public class JunctionAssemblyTest
         assertEquals(4, junctionSequence.mismatches().positionCount());
 
         AssemblyMismatchSplitter splitter = new AssemblyMismatchSplitter(junctionSequence);
-        List<JunctionAssembly> allSequences = splitter.splitOnMismatches(5);
+        List<JunctionAssembly> allSequences = splitter.splitOnMismatches(5, 2);
         assertEquals(2, allSequences.size());
 
         assertEquals(3, allSequences.get(0).supportCount());

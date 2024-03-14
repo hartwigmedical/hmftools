@@ -4,7 +4,12 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.esvee.SvConstants.MIN_INDEL_LENGTH;
+import static com.hartwig.hmftools.esvee.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READS;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.expandReferenceBases;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.isValidSupportCoordsVsJunction;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.readQualFromJunction;
 import static com.hartwig.hmftools.esvee.common.SupportType.CANDIDATE_DISCORDANT;
@@ -14,22 +19,76 @@ import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import static htsjdk.samtools.CigarOperator.I;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.read.ReadFilters;
 
 import htsjdk.samtools.CigarElement;
 
 public final class IndelBuilder
 {
-    protected static JunctionAssembly buildFromIndelReads(
+    public static List<JunctionAssembly> processIndelJunction(
+            final Junction junction, final List<Read> nonJunctionReads, final List<Read> rawReads)
+    {
+        List<Read> indelReads = Lists.newArrayList();
+        List<Read> shortIndelReads = Lists.newArrayList();
+        List<Read> softClippedReads = Lists.newArrayList();
+
+        for(Read read : rawReads)
+        {
+            IndelCoords indelCoords = read.indelCoords();
+
+            if(indelCoords != null)
+            {
+                // must match junction exactly to be considered for support
+                if(!indelCoords.matchesJunction(junction.Position, junction.Orientation))
+                    continue;
+
+                if(indelCoords.Length >= MIN_INDEL_LENGTH)
+                    indelReads.add(read);
+                else
+                    shortIndelReads.add(read);
+            }
+            else
+            {
+                if(!ReadFilters.recordSoftClipsAndCrossesJunction(read, junction))
+                {
+                    nonJunctionReads.add(read);
+                    continue;
+                }
+
+                softClippedReads.add(read);
+            }
+        }
+
+        // CHECK: is read realignment to the specific junction required?
+
+        if(indelReads.size() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+            return List.of();
+
+        JunctionAssembly assembly = IndelBuilder.buildFromIndelReads(junction, indelReads, shortIndelReads, softClippedReads);
+
+        if(assembly.supportCount() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+            return Collections.emptyList();
+
+        expandReferenceBases(assembly);
+
+        assembly.buildRepeatInfo();
+
+        return Lists.newArrayList(assembly);
+    }
+
+    private static JunctionAssembly buildFromIndelReads(
             final Junction junction, final List<Read> indelReads, final List<Read> shortIndelReads, final List<Read> softClippedReads)
     {
         // find the most common indel length and the read with the highest qual bases from the junction
@@ -54,8 +113,8 @@ public final class IndelBuilder
             }
         }
 
-        Read maxJunctionBaseQualRead = null;
-        int maxJunctionBaseQualTotal = 0;
+        Read maxScoredRead = null;
+        int maxReadScore = 0;
 
         // now the base indel coords have been selected, look for the max extension only amongst reads that match that
         int minAlignedPosition = junction.Position;
@@ -83,24 +142,24 @@ public final class IndelBuilder
             }
 
             int junctionBaseQualTotal = readQualFromJunction(read, junction);
+            int nmCount = read.numberOfEvents();
+            int readScore = junctionBaseQualTotal * nmCount;
 
-            if(junctionBaseQualTotal > maxJunctionBaseQualTotal)
+            if(readScore > maxReadScore)
             {
-                maxJunctionBaseQualTotal = junctionBaseQualTotal;
-                maxJunctionBaseQualRead = read;
+                maxReadScore = readScore;
+                maxScoredRead = read;
             }
         }
 
         JunctionAssembly assembly = new JunctionAssembly(
-                junction, maxJunctionBaseQualRead, maxDistanceFromJunction, minAlignedPosition,  maxAlignedPosition);
-
-        // assembly.markIndel(); // uses junction attribute from SvPrep
+                junction, maxScoredRead, maxDistanceFromJunction, minAlignedPosition,  maxAlignedPosition);
 
         int permittedMismatches = PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
 
         for(Read read : indelReads)
         {
-            if(read == maxJunctionBaseQualRead)
+            if(read == maxScoredRead)
                 continue;
 
             if(read.indelCoords().Length != maxIndelLength) //  || !assembly.checkReadMatches(read, permittedMismatches)

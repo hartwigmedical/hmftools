@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.buildFromJunctionReads;
 import static com.hartwig.hmftools.esvee.read.ReadFilters.readJunctionExtensionLength;
@@ -25,6 +27,7 @@ import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.BaseMismatch;
 import com.hartwig.hmftools.esvee.common.BaseMismatches;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.common.SupportType;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public class AssemblyMismatchSplitter
@@ -36,7 +39,7 @@ public class AssemblyMismatchSplitter
         mAssembly = assembly;
     }
 
-    public List<JunctionAssembly> splitOnMismatches(int minSequenceLength)
+    public List<JunctionAssembly> splitOnMismatches(int minSequenceLength, int minExtraAssemblySupport)
     {
         int permittedMismatches = PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
         int minReadSupport = PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
@@ -64,10 +67,14 @@ public class AssemblyMismatchSplitter
             }
         }
 
+        // early exit if the majority of support is with the initial read and there is limited for alternatives?
+
         List<SequenceMismatches> uniqueSequenceMismatches = findOtherSequences(longMismatchReads);
 
         List<JunctionAssembly> finalSequences = Lists.newArrayList();
         Set<Read> processedReads = Sets.newHashSet();
+
+        int maxSupportCount = 0;
 
         if(noMismatchReads.size() >= minReadSupport)
         {
@@ -78,6 +85,7 @@ public class AssemblyMismatchSplitter
             {
                 processedReads.addAll(noMismatchReads);
                 finalSequences.add(initialSequence);
+                maxSupportCount = initialSequence.supportCount();
             }
         }
 
@@ -95,7 +103,25 @@ public class AssemblyMismatchSplitter
             JunctionAssembly mismatchSequence = buildFromJunctionReads(mAssembly.junction(), candidateReads, false);
 
             if(mismatchSequence != null)
+            {
                 finalSequences.add(mismatchSequence);
+                maxSupportCount = max(maxSupportCount, mismatchSequence.supportCount());
+            }
+        }
+
+        // require a higher level of support to keep a second assembly
+        if(finalSequences.size() > 1)
+        {
+            Collections.sort(finalSequences, Comparator.comparingInt(x -> -x.supportCount()));
+
+            int index = 1;
+            while(index < finalSequences.size())
+            {
+                if(finalSequences.get(index).supportCount() < minExtraAssemblySupport)
+                    finalSequences.remove(index);
+                else
+                    ++index;
+            }
         }
 
         // remove any sequences which are contained by a longer sequence

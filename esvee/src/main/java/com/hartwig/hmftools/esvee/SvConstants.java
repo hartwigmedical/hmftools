@@ -32,7 +32,8 @@ public final class SvConstants
 
     public static final int DECOY_MAX_MISMATCHES = 3;
 
-    public static final int PRIMARY_ASSEMBLY_MIN_READ_SUPPORT = 2; // new
+    public static final int PRIMARY_ASSEMBLY_MIN_READ_SUPPORT = 2;
+    public static final int PRIMARY_ASSEMBLY_SPLIT_MIN_READS = 5;
     public static final int PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL = 60; // new
     public static final int PROXIMATE_REF_SIDE_SOFT_CLIPS = 3;
     public static final int PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH;
@@ -65,11 +66,7 @@ public final class SvConstants
     public static final int MIN_INDEL_SUPPORT_LENGTH = 15;
     public static final int MIN_INDEL_LENGTH = MIN_VARIANT_LENGTH;
 
-    // variant calling
-    public static final int MAX_DUP_LENGTH = 6; // then classified as an INS
-
     public static final int DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX = 200; // for TSV and VCF output, no function impact
-
 
     public static final int DISCORDANT_FRAGMENT_LENGTH = 1000;
 

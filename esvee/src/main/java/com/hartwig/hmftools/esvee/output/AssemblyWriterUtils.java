@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.output;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
@@ -204,6 +205,7 @@ public final class AssemblyWriterUtils
 
                 if(support.junctionMatches() > maxExtBaseMatchCount)
                 {
+                    softClipSecondMaxLength = maxExtBaseMatchCount; // promote the second highest
                     maxExtBaseMatchCount = support.junctionMatches();
                 }
                 else if(support.junctionMatches() > softClipSecondMaxLength)

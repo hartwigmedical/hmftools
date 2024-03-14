@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.esvee.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READS;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.processIndelJunction;
 import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.DUP_SPLIT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.buildFromJunctionReads;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.expandReferenceBases;
@@ -14,27 +16,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.common.IndelCoords;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.read.ReadFilters;
 
 public class JunctionAssembler
 {
-    private final SvConfig mConfig;
-
     private final Junction mJunction;
-
     private final List<Read> mNonJunctionReads;
 
-    private int mNextAssemblyNumber = 1;
-
-    public JunctionAssembler(final SvConfig config, final Junction junction)
+    public JunctionAssembler(final Junction junction)
     {
-        mConfig = config;
         mJunction = junction;
         mNonJunctionReads = Lists.newArrayList();
     }
@@ -44,7 +37,7 @@ public class JunctionAssembler
     public List<JunctionAssembly> processJunction(final List<Read> rawReads)
     {
         if(mJunction.IndelBased)
-            return processIndelJunction(rawReads);
+            return processIndelJunction(mJunction, mNonJunctionReads, rawReads);
 
         List<Read> junctionReads = Lists.newArrayList();
         List<Read> preciseJunctionReads = Lists.newArrayList();
@@ -90,76 +83,19 @@ public class JunctionAssembler
 
     private List<JunctionAssembly> createInitialAssemblies(final List<Read> junctionReads)
     {
-        JunctionAssembly junctionSequence = buildFromJunctionReads(mJunction, junctionReads, true);
+        JunctionAssembly assembly = buildFromJunctionReads(mJunction, junctionReads, true);
 
         // CHECK: why keep these if less than the 32 soft-clip length, since will be dropped anyway
-        if(junctionSequence == null || junctionSequence.baseLength() < MIN_VARIANT_LENGTH)
+        if(assembly == null || assembly.baseLength() < MIN_VARIANT_LENGTH)
             return Collections.emptyList();
 
         // no filtering of the initial sequence and instead rely on the sequence splitting to do this with all initial mismatches preserved
-        AssemblyMismatchSplitter splitter = new AssemblyMismatchSplitter(junctionSequence);
-        List<JunctionAssembly> junctionSequences = splitter.splitOnMismatches(MIN_VARIANT_LENGTH);
+        AssemblyMismatchSplitter splitter = new AssemblyMismatchSplitter(assembly);
+        List<JunctionAssembly> assemblies = splitter.splitOnMismatches(MIN_VARIANT_LENGTH, PRIMARY_ASSEMBLY_SPLIT_MIN_READS);
 
         // extend these sequences in the direction away from the junction
-        junctionSequences.forEach(x -> expandReferenceBases(x));
+        assemblies.forEach(x -> expandReferenceBases(x));
 
-        return junctionSequences;
-    }
-
-    public List<JunctionAssembly> processIndelJunction(final List<Read> rawReads)
-    {
-        List<Read> indelReads = Lists.newArrayList();
-        List<Read> shortIndelReads = Lists.newArrayList();
-        List<Read> softClippedReads = Lists.newArrayList();
-
-        for(Read read : rawReads)
-        {
-            IndelCoords indelCoords = read.indelCoords();
-
-            if(indelCoords != null)
-            {
-                // must match junction exactly to be considered for support
-                if(!indelCoords.matchesJunction(mJunction.Position, mJunction.Orientation))
-                    continue;
-
-                if(indelCoords.Length >= MIN_INDEL_LENGTH)
-                    indelReads.add(read);
-                else
-                    shortIndelReads.add(read);
-            }
-            else
-            {
-                if(!ReadFilters.recordSoftClipsAndCrossesJunction(read, mJunction))
-                {
-                    mNonJunctionReads.add(read);
-                    continue;
-                }
-
-                softClippedReads.add(read);
-            }
-        }
-
-        // CHECK: is read realignment to the specific junction required?
-
-        if(indelReads.size() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
-            return List.of();
-
-        JunctionAssembly assembly = IndelBuilder.buildFromIndelReads(mJunction, indelReads, shortIndelReads, softClippedReads);
-
-        if(assembly.supportCount() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
-            return Collections.emptyList();
-
-        expandReferenceBases(assembly);
-
-        assembly.buildRepeatInfo();
-
-        return Lists.newArrayList(assembly);
-    }
-
-    private String nextAssemblyName()
-    {
-        // consider naming based on initial length and support? try to make typically deterministic
-        return String.format("%s:%s%s:%s", mJunction.Chromosome, mJunction.Position,
-                mJunction.direction() == Direction.FORWARDS ? "F" : "R", mNextAssemblyNumber++);
+        return assemblies;
     }
 }

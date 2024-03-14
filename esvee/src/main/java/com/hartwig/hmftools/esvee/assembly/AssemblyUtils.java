@@ -20,7 +20,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.common.AssemblyLink;
 import com.hartwig.hmftools.esvee.common.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
-import com.hartwig.hmftools.esvee.common.Direction;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
@@ -166,7 +165,7 @@ public final class AssemblyUtils
         int readIndexStart;
         int readIndexEnd;
 
-        if(junction.direction() == Direction.FORWARDS)
+        if(junction.isForward())
         {
             readIndexStart = readJunctionIndex;
             readIndexEnd = read.basesLength() - 1;

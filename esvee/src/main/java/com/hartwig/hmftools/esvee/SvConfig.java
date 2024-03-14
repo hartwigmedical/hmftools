@@ -37,7 +37,9 @@ import static com.hartwig.hmftools.esvee.output.WriteType.VCF;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.Ref;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -112,6 +114,7 @@ public class SvConfig
     public static final String SKIP_DISCORDANT = "skip_discordant";
     public static final String PHASE_PROCESSING_LIMIT = "phase_process_limit";
     public static final String LOG_PHASE_GROUP_LINKS = "phase_group_links";
+    public static final String RUN_LOCAL_PHASING = "run_local_phasing";
 
     public static final String ASSEMBLY_REF_BASE_WRITE_MAX = "asm_ref_base_write_max";
 
@@ -120,10 +123,18 @@ public class SvConfig
     public SvConfig(final ConfigBuilder configBuilder)
     {
         TumorIds = Arrays.stream(configBuilder.getValue(TUMOR).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
-        ReferenceIds = Arrays.stream(configBuilder.getValue(REFERENCE).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
-
         TumorBams = Arrays.stream(configBuilder.getValue(TUMOR_BAM).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
-        ReferenceBams = Arrays.stream(configBuilder.getValue(REFERENCE_BAM).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+
+        if(configBuilder.hasValue(REFERENCE) && configBuilder.hasValue(REFERENCE_BAM))
+        {
+            ReferenceIds = Arrays.stream(configBuilder.getValue(REFERENCE).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+            ReferenceBams = Arrays.stream(configBuilder.getValue(REFERENCE_BAM).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+        }
+        else
+        {
+            ReferenceIds = Collections.emptyList();
+            ReferenceBams = Collections.emptyList();
+        }
 
         if(TumorIds.isEmpty() || TumorIds.size() != TumorBams.size() || ReferenceIds.size() != ReferenceBams.size())
         {
