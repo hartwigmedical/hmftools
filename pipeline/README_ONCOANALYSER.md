@@ -17,10 +17,10 @@ The recommended way to run **hartwigmedical/hmftools** workflows or components i
 A principal aim of oncoanalyser is provide the HMF pipeline in a highly accessible form that is usable with a minimal
 set of inputs. This is achieved through flexible prefined configuration for individual tools, prebuilt Docker images
 retrieved at runtime for each process, and automated on-demand staging of reference genomes and resource files. The
-only required input to run an analysis with oncoanalyser is a samplesheet describing sample inputs.
+only required input to run an analysis with oncoanalyser is a sample CSV sheet listing the sample inputs.
 
 Both the WGS/WTS and targeted sequencing workflows are available in oncoanalyser. The targeted sequencing workflow has
-built-in support for the TSO500 panel and in future releases will be configured to work with custom DNA/RNA panels.
+built-in support for the TSO500 panel and supports custom targered panels.
 
 As oncoanalyser is written using Nextflow, it supports a range of compute environments including AWS, Azure, GCP, and
 HPC. Other features include continuous checkpointing with run resuming and the ability to integrate with [Seqera
@@ -33,11 +33,13 @@ described in the [Nextflow documentation](https://www.nextflow.io/docs/latest/in
 
 ### Workflow inputs
 
-The starting input for oncoanalyser are BAMs, which have the follow requirements:
+The starting input for oncoanalyser are either FASTQ or BAM files.
 
-| Sequence Type | Aligner | Requirements |
-| --- | --- | --- |
-| DNA | BWA-MEM<br />(or DRAGEN) | • Supplementary alignment soft-clipping (`-Y`)<br />• Duplicate marking with the Picard algorithm |
+If BAMs are used then the following aligners are recommended:
+
+| Sequence Type | Aligner                           | Requirements                                                                                                                                                                                                                              |
+| --- |-----------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| DNA | BWA-MEM,BWA-MEM2 or DRAGEN | • Supplementary alignment soft-clipping (`-Y`)<br />• Duplicate marking with HMF's [MarkDups](https://github.com/hartwigmedical/hmftools/tree/master/mark-dups) tool                                                                      |
 | RNA | STAR | • Several **essential** [STAR settings](../isofox#a-note-on-alignment-and-multi-mapping) for WGTS<br />• Duplicate marking with the Picard algorithm<br />• Ensembl v74 annotations for GRCh37<br />• Ensembl v105 annotations for GRCh38 |
 
 > [!WARNING]
@@ -46,25 +48,26 @@ The starting input for oncoanalyser are BAMs, which have the follow requirements
 [GRCh38](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/ref_genome/38) reference
 genomes.
 
-### WGTS workflow overview
+#### Duplicate marking and UMIs
+HMF's MarkDups tool is an alternative to the Picard and Sambamba mark duplicate routines and handles UMIs. 
+It highly recommended that BAMs with high rates of duplicates and/or UMIs are re-run through MarkDups - see instructions below.
+
+### WGTS workflow
 
 ![HMF_Pipeline](hmf_tools_pipeline.png)
-
-> [!NOTE]
-> The TEAL and Neo tools are planned additions for oncoanalyser.
 
 #### Available analysis types
 
 Require inputs shown as :white_check_mark: for available analyses
 
-| Analysis name     | Tumor DNA BAM      | Normal DNA BAM     | Tumor RNA BAM      |
+| Analysis name | Tumor DNA Fastq or BAM | Normal DNA Fastq or BAM | Tumor RNA Fastq or BAM |
 | ---               | :-:                | :-:                | :-:                |
 | Tumor/normal WGTS | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | Tumor/normal WGS  | :white_check_mark: | :white_check_mark: | -                  |
 | Tumor only WGS    | :white_check_mark: | -                  | -                  |
 | Tumor only WTS    | -                  | -                  | :white_check_mark: |
 
-### Targeted sequencing workflow overview
+### Targeted sequencing workflow
 
 ![HMF_Pipeline](hmf_tools_panel_pipeline.png)
 
@@ -72,7 +75,7 @@ Require inputs shown as :white_check_mark: for available analyses
 
 Require inputs shown as :white_check_mark: for available analyses
 
-| Analysis name | Tumor DNA BAM      | Tumor RNA BAM |
+| Analysis name | Tumor DNA Fastq or BAM | Tumor RNA Fastq or BAM |
 | ---           | :-:                | :-:           |
 | Tumor only    | :white_check_mark: | *optional*    |
 
@@ -225,10 +228,7 @@ has completed this directory can be removed.
 ## Future Improvements
 
 The following improvements are planned for the next few releases:
-* support for custom targeted panels
-* apply HMF's MarkDuplicates & UMI-analysis to BAMs prior to variant calling
 * longitudinal analysis of patient samples including ctDNA samples
-* ancillary analyses for neoantigen burden
 * cloud-specific instructions and optimisations (ie for AWS, Azure and GCP)
 
 ## Acknowledgements
