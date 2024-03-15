@@ -15,7 +15,7 @@ The recommended way to run **hartwigmedical/hmftools** workflows or components i
 [oncoanalyser](https://github.com/nf-core/oncoanalyser), a Nextflow implementation of the HMF pipeline.
 
 A principal aim of oncoanalyser is provide the HMF pipeline in a highly accessible form that is usable with a minimal
-set of inputs. This is achieved through flexible prefined configuration for individual tools, prebuilt Docker images
+set of inputs. This is achieved through flexible predefined configuration for individual tools, prebuilt Docker images
 retrieved at runtime for each process, and automated on-demand staging of reference genomes and resource files. The
 only required input to run an analysis with oncoanalyser is a sample CSV sheet listing the sample inputs.
 
@@ -89,23 +89,29 @@ Require inputs shown as :white_check_mark: for available analyses
 > [!NOTE]
 > Docker on Windows and macOS can perform poorly, so only running oncoanalyser on Linux is currently recommended.
 
+> [!WARNING]
+> Older versions of Docker may not work with Oncoanalyser. We recommend Docker version 25 or later. If you are
+> running an older version of your operating system, you may need to upgrade it in order to use an up to date
+> version of Docker.
+
 ### Input samplesheet
 
 Running an analysis with oncoanalyser requires a samplesheet describing input files and samples. The samplesheet
 contains information that allows oncoanalyser to appropriately group samples (e.g. tumor/normal pairs), locate input
 files, and select relevant tools to run.
 
-Each entry in the samplesheet represents a single input file and is connected with metadata such as sample/group
-identifers, sample type (tumor/normal), sequence type (DNA/RNA), and filetype. All entries with the same `group_id`
-value with be grouped together for processing, and the composition of a group determines the type of analysis run.
+Each entry in the samplesheet represents a single input file (or, in the case of paired fastq, the forward and reverse fastq files)
+and is connected with metadata such as sample/group
+identifers, sample type (tumor/normal), sequence type (DNA/RNA), filetype, and info. All entries with the same `group_id`
+value will be grouped together for processing, and the composition of a group determines the type of analysis run.
 
 An example samplesheet for the WGTS workflow is shown:
 
 ```
-group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
-COLO829_example,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
-COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,/path/to/COLO829T.rna.bam
-COLO829_example,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
+group_id,subject_id,sample_id,sample_type,sequence_type,filetype,info,filepath
+COLO829_example,COLO829,COLO829T,tumor,dna,bam,,/path/to/COLO829T.dna.bam
+COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,,/path/to/COLO829T.rna.bam
+COLO829_example,COLO829,COLO829R,normal,dna,bam,,/path/to/COLO829R.dna.bam
 ```
 
 In this example, there is a single group (`COLO829_example`) that contains paired tumor/normal DNA BAMs and an RNA BAM,
@@ -116,11 +122,11 @@ inputs](#available-analysis-types-1) sections.
 Multiple groups can also be provided in a single sample sheet:
 
 ```
-group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
-COLO829_example,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
-COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,/path/to/COLO829T.rna.bam
-COLO829_example,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
-SEQC_example,SEQC,SEQCT,tumor,dna,bam,/path/to/SEQCT.dna.bam
+group_id,subject_id,sample_id,sample_type,sequence_type,filetype,info,filepath
+COLO829_example,COLO829,COLO829T,tumor,dna,bam,,/path/to/COLO829T.dna.bam
+COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,,/path/to/COLO829T.rna.bam
+COLO829_example,COLO829,COLO829R,normal,dna,bam,,/path/to/COLO829R.dna.bam
+SEQC_example,SEQC,SEQCT,tumor,dna,bam,,/path/to/SEQCT.dna.bam
 ```
 
 Here the `SEQC_example` has been added to the previous example. Since only a tumor DNA BAM is provided for this
@@ -132,17 +138,55 @@ additional group, just a tumor-only WGS analysis is run for the SEQC sample.
 > [!WARNING]
 > BAM indexes are expected to exist along side the respective input BAM
 
+Although we strongly recommend running MarkDups as part of the pipeline, if you need to run the pipeline skipping
+MarkDups, then you can use `bam_markdups`, as opposed to `bam`, in the `filetype` field.
+Continuing with the previous example, the following sample sheet would run MarkDups on the `COLO829_example` DNA bams, but
+would skip MarkDups on the `SEQC_example` DNA bam:
+
+```
+group_id,subject_id,sample_id,sample_type,sequence_type,filetype,info,filepath
+COLO829_example,COLO829,COLO829T,tumor,dna,bam,,/path/to/COLO829T.dna.bam
+COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,,/path/to/COLO829T.rna.bam
+COLO829_example,COLO829,COLO829R,normal,dna,bam,,/path/to/COLO829R.dna.bam
+SEQC_example,SEQC,SEQCT,tumor,dna,bam_markdups,,/path/to/SEQCT.dna.bam
+```
+
+Instead of providing a bam, fastq files can be provided and the pipeline will align these against the selected
+reference genome.
+Continuing with the previous example, the following sample sheet would produce the COLO829T DNA bam for the pipeline
+from fastq files:
+
+```
+group_id,subject_id,sample_id,sample_type,sequence_type,filetype,info,filepath
+COLO829_example,COLO829,COLO829T,tumor,dna,fastq,lane:001;library_id:COLO829T_library,/path/to/lane001_COLO829T_first_of_pair.fastq.gz;/path/to/lane001_COLO829T_second_of_pair.fastq.gz
+COLO829_example,COLO829,COLO829T,tumor,dna,fastq,lane:002;library_id:COLO829T_library,/path/to/lane002_COLO829T_first_of_pair.fastq.gz;/path/to/lane002_COLO829T_second_of_pair.fastq.gz
+COLO829_example,COLO829,COLO829T,tumor,dna,fastq,lane:003;library_id:COLO829T_library,/path/to/lane003_COLO829T_first_of_pair.fastq.gz;/path/to/lane003_COLO829T_second_of_pair.fastq.gz
+COLO829_example,COLO829,COLO829T,tumor,dna,fastq,lane:004;library_id:COLO829T_library,/path/to/lane003_COLO829T_first_of_pair.fastq.gz;/path/to/lane004_COLO829T_second_of_pair.fastq.gz
+COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,,/path/to/COLO829T.rna.bam
+COLO829_example,COLO829,COLO829R,normal,dna,bam,,/path/to/COLO829R.dna.bam
+SEQC_example,SEQC,SEQCT,tumor,dna,bam_markdups,,/path/to/SEQCT.dna.bam
+```
+> [!NOTE]
+> There is a line in the samplesheet for each lane fastq file.
+
+> [!NOTE]
+> Fastq files must be gzipped.
+
+> [!NOTE]
+> It is not possible to skip MarkDups on a DNA bam when providing fastq files for alignment.
+
 #### Samplesheet column descriptions
 
-| Column        | Description                                                          |
-| ---           | ---                                                                  |
-| group_id      | Group ID for a set of samples and inputs                             |
-| subject_id    | Subject/patient ID                                                   |
-| sample_id     | Sample ID                                                            |
-| sample_type   | Sample type: `tumor`, `normal`                                       |
-| sequence_type | Sequence type: `dna`, `rna`                                          |
-| filetype      | File type: `bam`, `bai`                                              |
-| filepath      | Absolute filepath to input file (can be local filepath, URL, S3 URI) |
+| Column        | Description                                                                                         |
+| ---           | ---                                                                                                 |
+| group_id      | Group ID for a set of samples and inputs                                                            |
+| subject_id    | Subject/patient ID                                                                                  |
+| sample_id     | Sample ID                                                                                           |
+| sample_type   | Sample type: `tumor`, `normal`                                                                      |
+| sequence_type | Sequence type: `dna`, `rna`                                                                         |
+| filetype      | File type: `bam`, 'bam_markdups', 'fastq'                                                           |
+| info          | For `fastq` file types, specify *lane* and *library id*, e.g. `lane:004;library_id:COLO829_library` |
+| filepath      | Absolute filepath to input file (can be local filepath, URL, S3 URI)                                | 
 
 The identifiers provided in the samplesheet are used to set output file paths:
 

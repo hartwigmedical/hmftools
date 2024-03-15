@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Iterable, Any
 
 import numpy as np
 import pandas as pd
@@ -8,6 +8,7 @@ from sklearn.base import BaseEstimator
 from sklearn.preprocessing import QuantileTransformer
 from sklearn.utils.validation import check_is_fitted
 from cuppa.logger import LoggerMixin
+from cuppa.misc.unpickle import MissingAttrHandler
 
 
 class SigCohortQuantileTransformer(BaseEstimator, LoggerMixin):
@@ -18,10 +19,11 @@ class SigCohortQuantileTransformer(BaseEstimator, LoggerMixin):
         #output_distribution="uniform",
         ignore_implicit_zeros: bool = False,
         subsample: int = 10_000,
-        random_state: int = None,
+        random_state: int = None, ## TODO: change this to a fixed int in next cuppa iteration
         copy: bool = True,
 
-        clip_upper: bool = True,
+        clip_upper: bool = False,
+        clip_lower: bool = False,
         include_feat_values: bool = True
     ):
         self.n_quantiles = n_quantiles
@@ -32,7 +34,13 @@ class SigCohortQuantileTransformer(BaseEstimator, LoggerMixin):
         self.copy = copy
 
         self.clip_upper = clip_upper
+        self.clip_lower = clip_lower
         self.include_feat_values = include_feat_values
+
+    def __setstate__(self, state: Any):
+        self.__dict__.update(state)
+        handler = MissingAttrHandler(self)
+        handler.check_and_set_missing_attr(name="clip_lower", value=False)
 
     def _check_X(self, X: pd.DataFrame) -> None:
         if np.any(X < 0):
@@ -72,8 +80,9 @@ class SigCohortQuantileTransformer(BaseEstimator, LoggerMixin):
     def transform(
         self,
         X: pd.DataFrame,
-        clip_upper: bool = None,
-        include_feat_values: bool = None
+        clip_upper: bool | None = None,
+        clip_lower: bool | None = None,
+        include_feat_values: bool | None = None
     ) -> pd.DataFrame:
 
         ## Checks
@@ -83,6 +92,9 @@ class SigCohortQuantileTransformer(BaseEstimator, LoggerMixin):
         ## Args
         if clip_upper is None:
             clip_upper = self.clip_upper
+
+        if clip_lower is None:
+            clip_lower = self.clip_lower
 
         if include_feat_values is None:
             include_feat_values = self.include_feat_values
@@ -94,8 +106,20 @@ class SigCohortQuantileTransformer(BaseEstimator, LoggerMixin):
             X_trans_i = transformer.transform(X)
 
             if not clip_upper:
-                q_max = transformer.quantiles_[-1]
-                X_trans_i = np.where(X>q_max, X/q_max, X_trans_i)
+                sig_values_last_quantile = transformer.quantiles_[-1] ## array[n_signatures]
+                X_trans_i = np.where(
+                    X > sig_values_last_quantile,
+                    X / sig_values_last_quantile,
+                    X_trans_i
+                )
+
+            if not clip_lower:
+                sig_values_first_quantile = transformer.quantiles_[0] ## array[n_signatures]
+                X_trans_i = np.where(
+                    X < sig_values_first_quantile,
+                    -(sig_values_first_quantile / X),
+                    X_trans_i
+                )
 
             X_trans_i = pd.DataFrame(X_trans_i, columns=self.feature_names_in_, index=X.index)
             X_trans[class_i] = X_trans_i
@@ -144,29 +168,3 @@ class SigCohortQuantileTransformer(BaseEstimator, LoggerMixin):
         quantiles_per_class.index.names = ["class", "quantile"]
 
         return quantiles_per_class
-
-    def get_percentiles(
-        self,
-        percentages: Iterable[float] = range(0, 101),
-        as_dict: bool = False
-    ) -> pd.DataFrame | dict[str, pd.DataFrame]:
-
-        quantiles_per_class = self.get_quantiles(as_dict=True)
-        percentiles_per_class = {}
-
-        for cancer_type, quantiles in quantiles_per_class.items():
-            percentiles = {}
-
-            for signature, quantile_values in quantiles.items():
-                percentiles[signature] = np.percentile(quantile_values, percentages)
-
-            percentiles = pd.DataFrame(percentiles)
-            percentiles_per_class[cancer_type] = percentiles
-
-        if as_dict:
-            return percentiles_per_class
-
-        percentiles_per_class = pd.concat(percentiles_per_class)
-        percentiles_per_class.index.names = ["class", "percentile"]
-
-        return percentiles_per_class
