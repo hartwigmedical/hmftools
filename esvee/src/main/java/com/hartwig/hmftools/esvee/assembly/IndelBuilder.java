@@ -187,6 +187,14 @@ public final class IndelBuilder
         return assembly;
     }
 
+    public static boolean convertedIndelCrossesJunction(final JunctionAssembly assembly, final Read read)
+    {
+        if(assembly.isForwardJunction())
+            return read.indelImpliedAlignmentEnd() > 0 && read.unclippedEnd() > assembly.junction().Position;
+        else
+            return read.indelImpliedAlignmentStart() > 0 && read.unclippedStart() < assembly.junction().Position;
+    }
+
     public static void findIndelExtensions(final JunctionAssembly assembly, final List<Read> unfilteredNonJunctionReads)
     {
         // add junction mates only, could consider add reads which span since these should have a corresponding read in the other junction

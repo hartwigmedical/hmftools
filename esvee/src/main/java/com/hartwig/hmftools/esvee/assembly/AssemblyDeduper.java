@@ -1,17 +1,11 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MERGE_READ_OVERLAP;
 import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_JUNCTION_DISTANCE;
-import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_JUNCTION_OVERLAP;
 import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAtJunction;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 
 public class AssemblyDeduper

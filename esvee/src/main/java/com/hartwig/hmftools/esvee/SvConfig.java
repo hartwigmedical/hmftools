@@ -227,6 +227,8 @@ public class SvConfig
                 if(junction != null)
                     SpecificJunctions.add(junction);
             }
+
+            SV_LOGGER.debug("loaded {} specific junctions", SpecificJunctions.size());
         }
 
         if(WriteTypes.contains(READS) && !SpecificChrRegions.hasFilters() && SpecificJunctions.isEmpty())

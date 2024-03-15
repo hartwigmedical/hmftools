@@ -50,13 +50,15 @@ public class AssemblyLink
 
         if(mFirst.junction().Orientation != mSecond.junction().Orientation)
         {
-            if(abs(mFirst.junction().Position - mSecond.junction().Position) == 1 && !mInsertedBases.isEmpty())
+            int posDiff = abs(mFirst.junction().Position - mSecond.junction().Position);
+
+            if(posDiff == 1 && !mInsertedBases.isEmpty())
                 return INS;
 
-            if(!mOverlapBases.isEmpty())
+            if(posDiff == 0)
                 return DUP;
 
-            boolean firstIsLower = mFirst.junction().Position <= mSecond.junction().Position;
+            boolean firstIsLower = mFirst.junction().Position < mSecond.junction().Position;
 
             return (firstIsLower == mFirst.junction().isForward()) ? DEL : DUP;
         }

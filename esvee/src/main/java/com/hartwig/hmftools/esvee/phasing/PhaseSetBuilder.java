@@ -64,6 +64,8 @@ public class PhaseSetBuilder
 
     public void buildPhaseSets()
     {
+
+
         if(mAssemblies.size() == 2)
         {
             // if no link was made, then may need to revert to logic for finding discordant pair assemblies etc
@@ -88,6 +90,11 @@ public class PhaseSetBuilder
         formPhaseSets();
 
         cleanupBranchedAssemblies();
+    }
+
+    private void markShortIndelAssemblies()
+    {
+
     }
 
     private void formSplitLinks()

@@ -144,9 +144,6 @@ public class Read
     public String originalCigarString() { return mOrigCigarString; }
     private void updateCigarString() { mCigarString = cigarStringFromElements(mCigarElements); }
 
-    @Deprecated
-    public Cigar getCigar() { return mRecord.getCigar(); }
-
     public int alignmentStart() { return mAlignmentStart; }
     public int alignmentEnd() { return mAlignmentEnd; }
 
@@ -158,7 +155,8 @@ public class Read
     // note: converted INDELs from deletes may have their unclipped position inside the alignment
     public boolean isLeftClipped() { return mUnclippedStart != mAlignmentStart; }
     public boolean isRightClipped() { return mUnclippedEnd != mAlignmentEnd; }
-    public int leftClipLength() { return max(mAlignmentStart - mUnclippedStart, 0); }
+
+    public int leftClipLength() { return max(mAlignmentStart - mUnclippedStart, 0); } // no known need to use the indel-implied SC value
     public int rightClipLength() { return max(mUnclippedEnd - mAlignmentEnd, 0); }
 
     public byte[] getBases() { return mBases != null ? mBases : mRecord.getReadBases(); }
@@ -460,6 +458,9 @@ public class Read
         }
     }
 
+    public int indelImpliedAlignmentStart() { return mIndelImpliedAlignmentStart; }
+    public int indelImpliedAlignmentEnd() { return mIndelImpliedAlignmentEnd; }
+
     public void convertEdgeIndelToSoftClip(int leftSoftClipBases, int rightSoftClipBases)
     {
         // convert elements and recompute read state
@@ -485,6 +486,4 @@ public class Read
         updateCigarString();
         setBoundaries(newReadStart);
     }
-
-    public boolean isConvertedIndel() { return mCigarString != null && mOrigCigarString.contains(CigarOperator.I.toString()); }
 }

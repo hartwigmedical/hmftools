@@ -6,6 +6,7 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.convertedIndelCrossesJunction;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_DISCORDANT_READ;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_SUPP;
@@ -89,7 +90,7 @@ public final class AssemblyWriterUtils
                         ++refSampleJuncFrags;
                 }
 
-                if(support.type() == INDEL || read.isConvertedIndel())
+                if(support.type() == INDEL || convertedIndelCrossesJunction(assembly, read))
                     ++indelReads;
 
                 if(read.isSupplementary())

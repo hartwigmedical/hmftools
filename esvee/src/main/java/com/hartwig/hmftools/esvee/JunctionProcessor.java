@@ -154,7 +154,7 @@ public class JunctionProcessor
                 }
             }
 
-            if(mConfig.PerfDebug || !mConfig.SpecificChrRegions.hasFilters())
+            if(mConfig.PerfDebug || (!mConfig.SpecificChrRegions.hasFilters() && mConfig.SpecificJunctions.isEmpty()))
             {
                 mPerfCounters.forEach(x -> x.logStats());
             }

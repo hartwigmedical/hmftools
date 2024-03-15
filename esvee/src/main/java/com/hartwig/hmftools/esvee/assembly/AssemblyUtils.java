@@ -244,9 +244,9 @@ public final class AssemblyUtils
             return false;
 
         if(requireLower)
-            return read.mateAlignmentEnd() < junction.Position;
+            return read.mateAlignmentEnd() <= junction.Position;
         else
-            return read.mateAlignmentStart() > junction.Position;
+            return read.mateAlignmentStart() >= junction.Position;
     }
 
     public static boolean isSupplementaryOnly(final JunctionAssembly assembly)
