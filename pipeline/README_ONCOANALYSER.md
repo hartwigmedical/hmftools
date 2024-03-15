@@ -138,10 +138,10 @@ additional group, just a tumor-only WGS analysis is run for the SEQC sample.
 > [!WARNING]
 > BAM indexes are expected to exist along side the respective input BAM
 
-Although we strong recommend running MarkDups as part of the pipeline, if you need to run the pipeline from after
-MarkDups, then you can replace the `filetype` field in the samplesheet to `bam_markdups`.
+Although we strongly recommend running MarkDups as part of the pipeline, if you need to run the pipeline skipping
+MarkDups, then you can use `bam_markdups`, as opposed to `bam`, in the `filetype` field.
 Continuing with the previous example, the following sample sheet would run MarkDups on the `COLO829_example` DNA bams, but
-would skip it on the `SEQC_example` DNA bam:
+would skip MarkDups on the `SEQC_example` DNA bam:
 
 ```
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,info,filepath
@@ -155,6 +155,7 @@ Instead of providing a bam, fastq files can be provided and the pipeline will do
 reference genome.
 Continuing with the previous example, the following sample sheet would produce the COLO829T DNA bam from fastq files:
 
+```
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,info,filepath
 COLO829_example,COLO829,COLO829T,tumor,dna,fastq,lane:001;library_id:COLO829T_library,/path/to/lane001_COLO829T_first_of_pair.fastq.gz;/path/to/lane001_COLO829T_second_of_pair.fastq.gz
 COLO829_example,COLO829,COLO829T,tumor,dna,fastq,lane:002;library_id:COLO829T_library,/path/to/lane002_COLO829T_first_of_pair.fastq.gz;/path/to/lane002_COLO829T_second_of_pair.fastq.gz
