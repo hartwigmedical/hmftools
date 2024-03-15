@@ -235,7 +235,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
     def fit_sig_quantile_transformer(self, X: pd.DataFrame, y: pd.Series) -> "SigCohortQuantileTransformer":
         ## Mutational signature quantiles per class
         ## These are not used for prediction and therefore are generated outside the Pipeline.fit() call
-        transformer = SigCohortQuantileTransformer(clip_upper=False)
+        transformer = SigCohortQuantileTransformer(clip_upper=False, clip_lower=False)
 
         transformer = cuppa.compose.pipeline.Pipeline.fit_cached(
             estimator=transformer,
