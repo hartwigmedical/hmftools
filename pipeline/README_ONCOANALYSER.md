@@ -151,9 +151,10 @@ COLO829_example,COLO829,COLO829R,normal,dna,bam,,/path/to/COLO829R.dna.bam
 SEQC_example,SEQC,SEQCT,tumor,dna,bam_markdups,,/path/to/SEQCT.dna.bam
 ```
 
-Instead of providing a bam, fastq files can be provided and the pipeline will do align these against the selected
+Instead of providing a bam, fastq files can be provided and the pipeline will align these against the selected
 reference genome.
-Continuing with the previous example, the following sample sheet would produce the COLO829T DNA bam from fastq files:
+Continuing with the previous example, the following sample sheet would produce the COLO829T DNA bam for the pipeline
+from fastq files:
 
 ```
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,info,filepath
@@ -167,6 +168,9 @@ SEQC_example,SEQC,SEQCT,tumor,dna,bam_markdups,,/path/to/SEQCT.dna.bam
 ```
 > [!NOTE]
 > There is a line in the samplesheet for each lane fastq file.
+
+> [!NOTE]
+> Fastq files must be gzipped.
 
 > [!NOTE]
 > It is not possible to skip MarkDups on a DNA bam when providing fastq files for alignment.
