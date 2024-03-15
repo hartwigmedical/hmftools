@@ -138,17 +138,50 @@ additional group, just a tumor-only WGS analysis is run for the SEQC sample.
 > [!WARNING]
 > BAM indexes are expected to exist along side the respective input BAM
 
+Although we strong recommend running MarkDups as part of the pipeline, if you need to run the pipeline from after
+MarkDups, then you can replace the `filetype` field in the samplesheet to `bam_markdups`.
+Continuing with the previous example, the following sample sheet would run MarkDups on the `COLO829_example` DNA bams, but
+would skip it on the `SEQC_example` DNA bam:
+
+```
+group_id,subject_id,sample_id,sample_type,sequence_type,filetype,info,filepath
+COLO829_example,COLO829,COLO829T,tumor,dna,bam,,/path/to/COLO829T.dna.bam
+COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,,/path/to/COLO829T.rna.bam
+COLO829_example,COLO829,COLO829R,normal,dna,bam,,/path/to/COLO829R.dna.bam
+SEQC_example,SEQC,SEQCT,tumor,dna,bam_markdups,,/path/to/SEQCT.dna.bam
+```
+
+Instead of providing a bam, fastq files can be provided and the pipeline will do align these against the selected
+reference genome.
+Continuing with the previous example, the following sample sheet would produce the COLO829T DNA bam from fastq files:
+
+group_id,subject_id,sample_id,sample_type,sequence_type,filetype,info,filepath
+COLO829_example,COLO829,COLO829T,tumor,dna,fastq,lane:001;library_id:COLO829T_library,/path/to/lane001_COLO829T_first_of_pair.fastq.gz;/path/to/lane001_COLO829T_second_of_pair.fastq.gz
+COLO829_example,COLO829,COLO829T,tumor,dna,fastq,lane:002;library_id:COLO829T_library,/path/to/lane002_COLO829T_first_of_pair.fastq.gz;/path/to/lane002_COLO829T_second_of_pair.fastq.gz
+COLO829_example,COLO829,COLO829T,tumor,dna,fastq,lane:003;library_id:COLO829T_library,/path/to/lane003_COLO829T_first_of_pair.fastq.gz;/path/to/lane003_COLO829T_second_of_pair.fastq.gz
+COLO829_example,COLO829,COLO829T,tumor,dna,fastq,lane:004;library_id:COLO829T_library,/path/to/lane003_COLO829T_first_of_pair.fastq.gz;/path/to/lane004_COLO829T_second_of_pair.fastq.gz
+COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,,/path/to/COLO829T.rna.bam
+COLO829_example,COLO829,COLO829R,normal,dna,bam,,/path/to/COLO829R.dna.bam
+SEQC_example,SEQC,SEQCT,tumor,dna,bam_markdups,,/path/to/SEQCT.dna.bam
+```
+> [!NOTE]
+> There is a line in the samplesheet for each lane fastq file.
+
+> [!NOTE]
+> It is not possible to skip MarkDups on a DNA bam when providing fastq files for alignment.
+
 #### Samplesheet column descriptions
 
-| Column        | Description                                                          |
-| ---           | ---                                                                  |
-| group_id      | Group ID for a set of samples and inputs                             |
-| subject_id    | Subject/patient ID                                                   |
-| sample_id     | Sample ID                                                            |
-| sample_type   | Sample type: `tumor`, `normal`                                       |
-| sequence_type | Sequence type: `dna`, `rna`                                          |
-| filetype      | File type: `bam`, `bai`, 'bam_markdups', 'fastq'                     |
-| filepath      | Absolute filepath to input file (can be local filepath, URL, S3 URI) |
+| Column        | Description                                                                                         |
+| ---           | ---                                                                                                 |
+| group_id      | Group ID for a set of samples and inputs                                                            |
+| subject_id    | Subject/patient ID                                                                                  |
+| sample_id     | Sample ID                                                                                           |
+| sample_type   | Sample type: `tumor`, `normal`                                                                      |
+| sequence_type | Sequence type: `dna`, `rna`                                                                         |
+| filetype      | File type: `bam`, 'bam_markdups', 'fastq'                                                           |
+| info          | For `fastq` file types, specify *lane* and *library id*, e.g. `lane:004;library_id:COLO829_library` |
+| filepath      | Absolute filepath to input file (can be local filepath, URL, S3 URI)                                | 
 
 The identifiers provided in the samplesheet are used to set output file paths:
 
