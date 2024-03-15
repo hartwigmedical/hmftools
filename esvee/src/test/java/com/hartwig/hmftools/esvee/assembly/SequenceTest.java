@@ -198,8 +198,8 @@ public class SequenceTest
     {
         Junction posJunction = new Junction(CHR_1, 60, POS_ORIENT);
 
-        String extensionSequence = "ACGTACGTAAAAAAGGGGGG";
-        String refBaseSequence = "ACGTAGAGAGAGACGTCCCCACGT";
+        String extensionSequence = "ACGTTCGTAAAAAAGGGGGG";
+        String refBaseSequence = "ACGTAGAGAGAGACGTCCCCACGG";
         String assemblySequence = refBaseSequence + extensionSequence;
         byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(assemblySequence.length());
 
@@ -214,7 +214,7 @@ public class SequenceTest
         expandReferenceBases(assembly);
         assembly.buildRepeatInfo();
 
-        assertEquals("ACGT_AG4_ACGT_C4_ACGT", assembly.refBasesRepeatedTrimmed()); // 4 + 4 + 4 + 2 + 4
+        assertEquals("ACGT_AG4_ACGT_C4_ACGG", assembly.refBasesRepeatedTrimmed()); // 4 + 4 + 4 + 2 + 4
         assertEquals(18, assembly.refBaseTrimLength());
 
         String refBasesTrimmed = buildTrimmedRefBaseSequence(assembly, 12);
@@ -228,7 +228,7 @@ public class SequenceTest
 
         assembly.buildRepeatInfo();
 
-        assertEquals("ACGT_AG4_ACGT_C4_ACGT", assembly.refBasesRepeatedTrimmed());
+        assertEquals("ACGT_AG4_ACGT_C4_ACGG", assembly.refBasesRepeatedTrimmed());
     }
 }
 
