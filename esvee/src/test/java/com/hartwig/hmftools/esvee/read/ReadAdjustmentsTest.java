@@ -134,8 +134,10 @@ public class ReadAdjustmentsTest
     }
 
     @Test
-    public void testEdgeIndelsToSoftClip()
+    public void testImpliedEdgeIndelsToSoftClip()
     {
+        // the cigar remains unch but the implied new alignments are calculated and the unclipped alignments stored
+
         // converts both sides of the insert
         String cigar = "18M6I17M";
         String readBases = REF_BASES_RANDOM_100.substring(0, 40);
@@ -145,6 +147,8 @@ public class ReadAdjustmentsTest
         assertEquals(134, read.alignmentEnd());
         assertEquals(94, read.unclippedStart());
         assertEquals(140, read.unclippedEnd());
+        assertEquals(118, read.indelImpliedAlignmentStart());
+        assertEquals(117, read.indelImpliedAlignmentEnd());
 
         // indel too short
         cigar = "10M5I10M";
@@ -162,10 +166,12 @@ public class ReadAdjustmentsTest
         assertEquals(130, read.alignmentEnd());
         assertEquals(106, read.unclippedStart());
         assertEquals(124, read.unclippedEnd());
+        assertEquals(116, read.indelImpliedAlignmentStart());
+        assertEquals(109, read.indelImpliedAlignmentEnd());
     }
 
     @Test
-    public void testEdgeIndelsToSoftClipOld()
+    public void testEdgeIndelsToSoftClip()
     {
         String cigar = "18M6I17M";
         String readBases = REF_BASES_RANDOM_100.substring(0, 40);

@@ -153,14 +153,15 @@ public class JunctionAssembly
         int mismatchCount = 0;
 
         int readJunctionIndex = read.getReadIndexAtReferencePosition(mJunction.Position, true);
+
+        if(readJunctionIndex == INVALID_INDEX)
+            return false;
+
         int[] readIndexRange = getReadIndexCoordinates(read, readJunctionIndex, false);
         int assemblyIndex = getReadAssemblyStartIndex(readJunctionIndex, readIndexRange[SE_START], false);
 
         if(assemblyIndex < 0)
-        {
-            // SV_LOGGER.debug("readCoords({}) invalid for assembly({}) read({})", readCoords, toString(), read.toString());
             return false;
-        }
 
         for(int i = readIndexRange[SE_START]; i <= readIndexRange[SE_END]; ++i, ++assemblyIndex)
         {
@@ -238,12 +239,15 @@ public class JunctionAssembly
             }
         }
 
+        if(readIndexRange[SE_START] < 0)
+            return;
+
         for(int i = readIndexRange[SE_START]; i <= readIndexRange[SE_END]; ++i, ++assemblyIndex)
         {
             if(assemblyIndex < 0)
                 continue;
 
-            if(assemblyIndex >= mBases.length)
+            if(assemblyIndex >= mBases.length || i >= read.getBases().length)
             {
                 // can possibly happen with INDELs in the CIGAR or not now that aligned positions are used to establish read coordinates?
                 // SV_LOGGER.debug("i({}) readCoords({}) assembly({}) read({})", i, readCoords, toString(), read.toString());

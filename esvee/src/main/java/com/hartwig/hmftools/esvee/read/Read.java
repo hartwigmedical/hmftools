@@ -436,12 +436,12 @@ public class Read
         if(leftSoftClipBases > 0)
         {
             boolean isDelete = mCigarElements.get(1).getOperator() == D;
-            mIndelImpliedAlignmentEnd = mAlignmentStart + mCigarElements.get(0).getLength();
+            mIndelImpliedAlignmentStart = mAlignmentStart + mCigarElements.get(0).getLength();
 
             if(isDelete)
-                mIndelImpliedAlignmentEnd += mCigarElements.get(1).getLength();
+                mIndelImpliedAlignmentStart += mCigarElements.get(1).getLength();
 
-            mUnclippedStart = mIndelImpliedAlignmentEnd - leftSoftClipBases;
+            mUnclippedStart = mIndelImpliedAlignmentStart - leftSoftClipBases;
         }
 
         if(rightSoftClipBases > 0)
@@ -449,12 +449,12 @@ public class Read
             int lastIndex = mCigarElements.size() - 1;
             boolean isDelete = mCigarElements.get(lastIndex - 1).getOperator() == D;
 
-            mIndelImpliedAlignmentStart = mAlignmentEnd - mCigarElements.get(lastIndex).getLength();
+            mIndelImpliedAlignmentEnd = mAlignmentEnd - mCigarElements.get(lastIndex).getLength();
 
             if(isDelete)
-                mIndelImpliedAlignmentStart -= mCigarElements.get(lastIndex - 1).getLength();
+                mIndelImpliedAlignmentEnd -= mCigarElements.get(lastIndex - 1).getLength();
 
-            mUnclippedEnd = mIndelImpliedAlignmentStart + rightSoftClipBases;
+            mUnclippedEnd = mIndelImpliedAlignmentEnd + rightSoftClipBases;
         }
     }
 
@@ -483,7 +483,13 @@ public class Read
             mCigarElements.set(mCigarElements.size() - 1, new CigarElement(rightSoftClipBases, S));
         }
 
+        // revert since these no longer apply
+        mIndelImpliedAlignmentStart = 0;
+        mIndelImpliedAlignmentEnd = 0;
+
         updateCigarString();
         setBoundaries(newReadStart);
     }
+
+    public boolean isConvertedIndel() { return mCigarString != null && mOrigCigarString.contains(CigarOperator.I.toString()); }
 }

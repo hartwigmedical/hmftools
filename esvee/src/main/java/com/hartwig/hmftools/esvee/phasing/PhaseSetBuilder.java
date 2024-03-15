@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.DUP_BRANCHED;
 import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.LINKED;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.extendRefBases;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.tryAssemblyFacing;
+import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.SHORT_INDEL;
 import static com.hartwig.hmftools.esvee.common.AssemblySupport.findMatchingFragmentSupport;
 import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.assembliesShareReads;
@@ -23,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.assembly.AssemblyLinker;
+import com.hartwig.hmftools.esvee.assembly.IndelBuilder;
 import com.hartwig.hmftools.esvee.assembly.JunctionExtender;
 import com.hartwig.hmftools.esvee.common.AssemblyLink;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
@@ -64,10 +66,13 @@ public class PhaseSetBuilder
 
     public void buildPhaseSets()
     {
-
+        markShortIndelAssemblies();
 
         if(mAssemblies.size() == 2)
         {
+            if(mAssemblies.stream().anyMatch(x -> x.outcome() == SHORT_INDEL))
+                return;
+
             // if no link was made, then may need to revert to logic for finding discordant pair assemblies etc
             // likewise may depend for solo-assemblies how disc-only assemblies are used
             AssemblyLink assemblyLink = checkSplitLink(mAssemblies.get(0), mAssemblies.get(1));
@@ -94,7 +99,20 @@ public class PhaseSetBuilder
 
     private void markShortIndelAssemblies()
     {
+        // look for evidence that a local assembly with soft-clipped support is explained by a local short INDEL (length 10-31)
+        for(JunctionAssembly assembly : mAssemblies)
+        {
+            if(assembly.indel())
+                continue;
 
+            boolean hasSupportingIndel = assembly.support().stream()
+                    .anyMatch(x -> x.type() == SupportType.JUNCTION && IndelBuilder.convertedIndelCrossesJunction(assembly, x.read()));
+
+            if(hasSupportingIndel)
+            {
+                assembly.setOutcome(SHORT_INDEL);
+            }
+        }
     }
 
     private void formSplitLinks()
@@ -106,11 +124,14 @@ public class PhaseSetBuilder
         {
             JunctionAssembly assembly1 = mAssemblies.get(i);
 
+            if(assembly1.outcome() == SHORT_INDEL)
+                continue;
+
             for(int j = i + 1; j < mAssemblies.size(); ++j)
             {
                 JunctionAssembly assembly2 = mAssemblies.get(j);
 
-                if(assembly1.indel() != assembly2.indel())
+                if(assembly1.indel() != assembly2.indel() || assembly2.outcome() == SHORT_INDEL)
                     continue;
 
                 int sharedCount = 0;

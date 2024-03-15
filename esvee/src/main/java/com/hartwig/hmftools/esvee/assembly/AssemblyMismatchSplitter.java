@@ -67,11 +67,8 @@ public class AssemblyMismatchSplitter
             }
         }
 
-        // early exit if the majority of support is with the initial read and there is limited for alternatives?
-
-        List<SequenceMismatches> uniqueSequenceMismatches = findOtherSequences(longMismatchReads);
-
         List<JunctionAssembly> finalSequences = Lists.newArrayList();
+
         Set<Read> processedReads = Sets.newHashSet();
 
         int maxSupportCount = 0;
@@ -88,6 +85,8 @@ public class AssemblyMismatchSplitter
                 maxSupportCount = initialSequence.supportCount();
             }
         }
+
+        List<SequenceMismatches> uniqueSequenceMismatches = findOtherSequences(longMismatchReads);
 
         // and then add each unique mismatched sequence
         for(SequenceMismatches sequenceMismatches : uniqueSequenceMismatches)

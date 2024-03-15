@@ -66,7 +66,7 @@ public class LocalGroupBuilder extends ThreadTask
 
                 if((processedCount % LOG_COUNT) == 0)
                 {
-                    SV_LOGGER.debug("processed {} junction groups into phase groups", processedCount, mPhaseGroupsSets.size());
+                    SV_LOGGER.debug("processed {} junction groups into {} local phase groups", processedCount, mPhaseGroupsSets.size());
                 }
 
                 formLocalPhaseGroups(junctionGroup);

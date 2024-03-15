@@ -196,9 +196,17 @@ public final class IndelBuilder
     public static boolean convertedIndelCrossesJunction(final JunctionAssembly assembly, final Read read)
     {
         if(assembly.isForwardJunction())
-            return read.indelImpliedAlignmentEnd() > 0 && read.unclippedEnd() > assembly.junction().Position;
+        {
+            if(read.unclippedEnd() > assembly.junction().Position)
+                return read.indelImpliedAlignmentEnd() > 0 || read.isConvertedIndel();
+        }
         else
-            return read.indelImpliedAlignmentStart() > 0 && read.unclippedStart() < assembly.junction().Position;
+        {
+            if(read.unclippedStart() < assembly.junction().Position)
+                return read.indelImpliedAlignmentStart() > 0 || read.isConvertedIndel();
+        }
+
+        return false;
     }
 
     public static void findIndelExtensions(final JunctionAssembly assembly, final List<Read> unfilteredNonJunctionReads)
