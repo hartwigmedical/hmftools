@@ -94,7 +94,7 @@ Require inputs shown as :white_check_mark: for available analyses
 > running an older version of your operating system, you may need to upgrade it in order to use an up to date
 > version of Docker.
 
-### Input samplesheet
+### Input Samples Sheet
 
 Running an analysis with oncoanalyser requires a samplesheet describing input files and samples. The samplesheet
 contains information that allows oncoanalyser to appropriately group samples (e.g. tumor/normal pairs), locate input
@@ -138,21 +138,16 @@ additional group, just a tumor-only WGS analysis is run for the SEQC sample.
 > [!WARNING]
 > BAM indexes are expected to exist along side the respective input BAM
 
-Although we strongly recommend running MarkDups as part of the pipeline, if you need to run the pipeline skipping
-MarkDups, then you can use `bam_markdups`, as opposed to `bam`, in the `filetype` field.
-Continuing with the previous example, the following sample sheet would run MarkDups on the `COLO829_example` DNA bams, but
-would skip MarkDups on the `SEQC_example` DNA bam:
+It is recommended to run MarkDups as part of the pipeline even for a BAM which has previously had duplicated marked. 
+In this case, MarkDups will re-examine duplicate groups, create a consensus read and unmap poorly mapped reads.
+See [MarkDups](https://github.com/hartwigmedical/hmftools/tree/master/mark-dups) for more info.
 
-```
-group_id,subject_id,sample_id,sample_type,sequence_type,filetype,info,filepath
-COLO829_example,COLO829,COLO829T,tumor,dna,bam,,/path/to/COLO829T.dna.bam
-COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,,/path/to/COLO829T.rna.bam
-COLO829_example,COLO829,COLO829R,normal,dna,bam,,/path/to/COLO829R.dna.bam
-SEQC_example,SEQC,SEQCT,tumor,dna,bam_markdups,,/path/to/SEQCT.dna.bam
-```
+To skip running MarkDups, set the file type as `bam_markdups` instead of `bam`.
+
+### Starting from FASTQ files
 
 Instead of providing a bam, fastq files can be provided and the pipeline will align these against the selected
-reference genome.
+reference genome using BWA-MEM2.
 Continuing with the previous example, the following sample sheet would produce the COLO829T DNA bam for the pipeline
 from fastq files:
 
@@ -172,19 +167,17 @@ SEQC_example,SEQC,SEQCT,tumor,dna,bam_markdups,,/path/to/SEQCT.dna.bam
 > [!NOTE]
 > Fastq files must be gzipped.
 
-> [!NOTE]
-> It is not possible to skip MarkDups on a DNA bam when providing fastq files for alignment.
 
 #### Samplesheet column descriptions
 
 | Column        | Description                                                                                         |
-| ---           | ---                                                                                                 |
+| ---           |-----------------------------------------------------------------------------------------------------|
 | group_id      | Group ID for a set of samples and inputs                                                            |
 | subject_id    | Subject/patient ID                                                                                  |
 | sample_id     | Sample ID                                                                                           |
 | sample_type   | Sample type: `tumor`, `normal`                                                                      |
 | sequence_type | Sequence type: `dna`, `rna`                                                                         |
-| filetype      | File type: `bam`, 'bam_markdups', 'fastq'                                                           |
+| filetype      | File type: `fastq`, `bam` or `bam_markdups`                                                         |
 | info          | For `fastq` file types, specify *lane* and *library id*, e.g. `lane:004;library_id:COLO829_library` |
 | filepath      | Absolute filepath to input file (can be local filepath, URL, S3 URI)                                | 
 
