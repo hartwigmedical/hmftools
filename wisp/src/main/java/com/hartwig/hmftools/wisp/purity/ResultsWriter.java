@@ -8,7 +8,9 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.WriteType.CN_DATA;
+import static com.hartwig.hmftools.wisp.purity.WriteType.LOH_DATA;
 import static com.hartwig.hmftools.wisp.purity.WriteType.SOMATIC_DATA;
+import static com.hartwig.hmftools.wisp.purity.cn.AmberLohCalcs.initialiseAmberLohWriter;
 import static com.hartwig.hmftools.wisp.purity.cn.CopyNumberProfile.initialiseCnPlotCalcWriter;
 import static com.hartwig.hmftools.wisp.purity.cn.CopyNumberProfile.initialiseCnRatioWriter;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticVariants.initialiseVariantWriter;
@@ -29,6 +31,7 @@ public class ResultsWriter
     private final BufferedWriter mSampleSummaryWriter;
     private final BufferedWriter mVariantWriter;
     private final BufferedWriter mCnRatioWriter;
+    private final BufferedWriter mAmberLohWriter;
     private final BufferedWriter mSomaticPeakWriter;
     private final BufferedWriter mCnPlotCalcWriter;
 
@@ -39,6 +42,7 @@ public class ResultsWriter
         mSampleSummaryWriter = initialiseWriter();
         mVariantWriter = config.writeType(SOMATIC_DATA) ? initialiseVariantWriter(mConfig) : null;
         mCnRatioWriter = config.writeType(CN_DATA) || WriteType.plotCopyNumber(config.WriteTypes) ? initialiseCnRatioWriter(mConfig) : null;
+        mAmberLohWriter = config.writeType(LOH_DATA) ? initialiseAmberLohWriter(mConfig) : null;
         mSomaticPeakWriter = WriteType.plotSomatics(config.WriteTypes) ? initialiseSomaticPeakWriter(mConfig) : null  ;
         mCnPlotCalcWriter = WriteType.plotCopyNumber(config.WriteTypes) ? initialiseCnPlotCalcWriter(mConfig) : null;
     }
@@ -47,6 +51,7 @@ public class ResultsWriter
     public BufferedWriter getCnRatioWriter() { return mCnRatioWriter; }
     public BufferedWriter getSomaticPeakWriter() { return mSomaticPeakWriter; }
     public BufferedWriter getCnPlotCalcWriter() { return mCnPlotCalcWriter; }
+    public BufferedWriter getAmberLohWriter() { return mAmberLohWriter; }
 
     public static void addCommonHeaderFields(final StringJoiner sj, final PurityConfig config)
     {
@@ -142,6 +147,7 @@ public class ResultsWriter
         closeBufferedWriter(mVariantWriter);
         closeBufferedWriter(mSampleSummaryWriter);
         closeBufferedWriter(mCnRatioWriter);
+        closeBufferedWriter(mAmberLohWriter);
         closeBufferedWriter(mCnPlotCalcWriter);
         closeBufferedWriter(mSomaticPeakWriter);
     }
