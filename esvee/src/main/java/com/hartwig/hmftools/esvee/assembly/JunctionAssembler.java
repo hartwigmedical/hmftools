@@ -2,13 +2,16 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.esvee.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.MIN_VARIANT_LENGTH;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READS;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.hasConvertibleIndel;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.processIndelJunction;
 import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.DUP_SPLIT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.buildFromJunctionReads;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.expandReferenceBases;
+import static com.hartwig.hmftools.esvee.read.ReadAdjustments.convertIndelSoftClip;
 import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAtJunction;
 
 import java.util.Collections;
@@ -88,6 +91,17 @@ public class JunctionAssembler
         // CHECK: why keep these if less than the 32 soft-clip length, since will be dropped anyway
         if(assembly == null || assembly.baseLength() < MIN_VARIANT_LENGTH)
             return Collections.emptyList();
+
+        List<Read> mismatchIndelReads = assembly.support().stream()
+                .filter(x -> x.mismatchCount() >= PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH)
+                .filter(x -> hasConvertibleIndel(x.read()))
+                .map(x -> x.read()).collect(Collectors.toList());
+
+        if(mismatchIndelReads.size() >= PRIMARY_ASSEMBLY_SPLIT_MIN_READS)
+        {
+            boolean convertOnLeft = !assembly.isForwardJunction();
+            mismatchIndelReads.forEach(x -> convertIndelSoftClip(x, convertOnLeft));
+        }
 
         // no filtering of the initial sequence and instead rely on the sequence splitting to do this with all initial mismatches preserved
         AssemblyMismatchSplitter splitter = new AssemblyMismatchSplitter(assembly);

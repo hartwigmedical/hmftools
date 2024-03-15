@@ -52,7 +52,17 @@ public class RepeatInfo
 
             if(repeat == null)
             {
-                repeat = findTripleBaseRepeat(bases, index);
+                repeat = findMultiBaseRepeat(bases, index, THREE_LENGTH);
+            }
+
+            if(repeat == null)
+            {
+                repeat = findMultiBaseRepeat(bases, index, FOUR_LENGTH);
+            }
+
+            if(repeat == null)
+            {
+                repeat = findMultiBaseRepeat(bases, index, FIVE_LENGTH);
             }
 
             if(repeat == null)
@@ -90,7 +100,9 @@ public class RepeatInfo
     }
 
     private static final int DUAL_LENGTH = 2;
-    private static final int TRIPLE_LENGTH = 3;
+    private static final int THREE_LENGTH = 3;
+    private static final int FOUR_LENGTH = 4;
+    private static final int FIVE_LENGTH = 5;
     private static final int DUAL_DUAL_LENGTH = 4;
 
     public static RepeatInfo findSingleBaseRepeat(final byte[] bases, int index)
@@ -137,24 +149,43 @@ public class RepeatInfo
 
     public static RepeatInfo findTripleBaseRepeat(final byte[] bases, int index)
     {
-        if(index + MIN_OTHER_REPEAT * 3 >= bases.length)
+        return findMultiBaseRepeat(bases, index, THREE_LENGTH);
+    }
+
+    public static RepeatInfo findMultiBaseRepeat(final byte[] bases, int index, int repeatCount)
+    {
+        if(index + MIN_OTHER_REPEAT * repeatCount >= bases.length)
             return null;
 
-        int i = index + TRIPLE_LENGTH;
-        while(i < bases.length - 2)
+        int i = index + repeatCount;
+        while(i < bases.length - (repeatCount - 1))
         {
-            if(bases[i] != bases[index] || bases[i + 1] != bases[index + 1] || bases[i + 2] != bases[index + 2])
+            int matchedBases = 0;
+
+            for(int j = 0; j < repeatCount; ++j)
+            {
+                if(bases[i + j] == bases[index + j])
+                    ++matchedBases;
+                else
+                    break;
+            }
+
+            if(matchedBases != repeatCount)
                 break;
 
-            i += TRIPLE_LENGTH;
+            i += repeatCount;
         }
 
-        int repeatLength = (i - index) / TRIPLE_LENGTH;
+        int repeatLength = (i - index) / repeatCount;
 
         if(repeatLength < MIN_OTHER_REPEAT)
             return null;
 
-        String repeat = String.valueOf((char)bases[index]) + (char)bases[index + 1] + (char)bases[index + 2];
+        String repeat = String.valueOf((char)bases[index]);
+
+        for(int j = 1; j < repeatCount; ++j)
+            repeat += (char)bases[index + j];
+
         return new RepeatInfo(index, repeat, repeatLength);
     }
 

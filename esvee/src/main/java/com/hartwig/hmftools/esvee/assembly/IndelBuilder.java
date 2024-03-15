@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.esvee.SvConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
@@ -185,6 +186,11 @@ public final class IndelBuilder
         }
 
         return assembly;
+    }
+
+    public static boolean hasConvertibleIndel(final Read read)
+    {
+        return read.cigarElements().stream().anyMatch(x -> x.getOperator().isIndel() && x.getLength() >= INDEL_TO_SC_MIN_SIZE_SOFTCLIP);
     }
 
     public static boolean convertedIndelCrossesJunction(final JunctionAssembly assembly, final Read read)

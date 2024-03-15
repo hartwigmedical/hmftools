@@ -40,10 +40,8 @@ public final class SvConstants
     // primary assembly deduplication
     public static final int PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH = 1;
     public static final int PRIMARY_ASSEMBLY_MERGE_MISMATCH = 3;
-    public static final int PRIMARY_ASSEMBLY_MERGE_READ_OVERLAP = 2;
 
     public static final int PROXIMATE_JUNCTION_DISTANCE = 50;
-    public static final int PROXIMATE_JUNCTION_OVERLAP = 100;
 
     // filters
     public static int AVG_BASE_QUAL_THRESHOLD = 30;

@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.expandReferenceB
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.buildTrimmedRefBaseSequence;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findDualBaseRepeat;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findDualDualRepeat;
+import static com.hartwig.hmftools.esvee.common.RepeatInfo.findMultiBaseRepeat;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findRepeats;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findSingleBaseRepeat;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findTripleBaseRepeat;
@@ -65,12 +66,15 @@ public class SequenceTest
         //       012345678901234567890123456789
         bases = "ATGATGGGCCATGATGATGATG";
         repeatInfo = findTripleBaseRepeat(bases.getBytes(), 0);
+        repeatInfo = findMultiBaseRepeat(bases.getBytes(), 0, 3);
+
         assertNotNull(repeatInfo);
         assertEquals("ATG", repeatInfo.Bases);
         assertEquals(2, repeatInfo.Count);
         assertEquals(0, repeatInfo.Index);
 
         repeatInfo = findTripleBaseRepeat(bases.getBytes(), 10);
+        repeatInfo = findMultiBaseRepeat(bases.getBytes(), 10, 3);
         assertNotNull(repeatInfo);
         assertEquals("ATG", repeatInfo.Bases);
         assertEquals(4, repeatInfo.Count);
@@ -86,6 +90,13 @@ public class SequenceTest
         assertEquals("CCTT", repeatInfo.Bases);
         assertEquals(3, repeatInfo.Count);
         assertEquals(8, repeatInfo.Index);
+
+        // five-base repeat
+        bases = "ACTGTACTGTACTGTACTGTAATTGGTTGGAAGGT";
+        repeatInfo = findMultiBaseRepeat(bases.getBytes(), 0, 5);
+        assertNotNull(repeatInfo);
+        assertEquals("ACTGT", repeatInfo.Bases);
+        assertEquals(4, repeatInfo.Count);
 
         // test them all together
         //       0123456789012345678901234567890123456789
@@ -169,7 +180,7 @@ public class SequenceTest
         byte[] firstBaseQuals = buildDefaultBaseQuals(firstBases.length());
 
         List<RepeatInfo> secondRepeats = findRepeats(secondBases.getBytes());
-        assertEquals(5, secondRepeats.size());
+        assertEquals(6, secondRepeats.size());
 
         byte[] secondBaseQuals = buildDefaultBaseQuals(secondBases.length());
 

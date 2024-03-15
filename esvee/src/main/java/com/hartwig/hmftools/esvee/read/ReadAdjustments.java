@@ -32,16 +32,13 @@ public final class ReadAdjustments
 
         int leftEdgeDistance = leftSoftClipLength > 0 ? read.cigarElements().get(0).getLength() : 0;
 
-        int rightSoftClipLength = 0;
-        int rightEdgeDistance = 0;
-
         int lastIndex = read.cigarElements().size() - 1;
 
-        rightSoftClipLength = calcIndelToSoftClipLength(
+        int rightSoftClipLength = calcIndelToSoftClipLength(
                 read.cigarElements().get(lastIndex), read.cigarElements().get(lastIndex - 1), read.cigarElements().get(lastIndex - 2),
                 minIndelLength, maxIndelLength);
 
-        rightEdgeDistance = rightSoftClipLength > 0 ? read.cigarElements().get(lastIndex).getLength() : 0;
+        int rightEdgeDistance = rightSoftClipLength > 0 ? read.cigarElements().get(lastIndex).getLength() : 0;
 
         if(leftSoftClipLength > 0 && rightSoftClipLength > 0 && !allowDoubleConversion)
         {
@@ -62,6 +59,31 @@ public final class ReadAdjustments
         }
 
         return false;
+    }
+
+    public static void convertIndelSoftClip(final Read read, boolean onLeft)
+    {
+        if(read.cigarElements().size() < 3)
+            return;
+
+        if(onLeft)
+        {
+            int leftSoftClipLength = calcIndelToSoftClipLength(
+                    read.cigarElements().get(0), read.cigarElements().get(1), read.cigarElements().get(2),
+                    INDEL_TO_SC_MIN_SIZE_SOFTCLIP, INDEL_TO_SC_MAX_SIZE_SOFTCLIP);
+
+            read.convertEdgeIndelToSoftClip(leftSoftClipLength, 0);
+        }
+        else
+        {
+            int lastIndex = read.cigarElements().size() - 1;
+
+            int rightSoftClipLength = calcIndelToSoftClipLength(
+                    read.cigarElements().get(lastIndex), read.cigarElements().get(lastIndex - 1), read.cigarElements().get(lastIndex - 2),
+                    INDEL_TO_SC_MIN_SIZE_SOFTCLIP, INDEL_TO_SC_MAX_SIZE_SOFTCLIP);
+
+            read.convertEdgeIndelToSoftClip(0, rightSoftClipLength);
+        }
     }
 
     private static int calcIndelToSoftClipLength(
