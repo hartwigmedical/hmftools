@@ -15,7 +15,7 @@ The recommended way to run **hartwigmedical/hmftools** workflows or components i
 [oncoanalyser](https://github.com/nf-core/oncoanalyser), a Nextflow implementation of the HMF pipeline.
 
 A principal aim of oncoanalyser is provide the HMF pipeline in a highly accessible form that is usable with a minimal
-set of inputs. This is achieved through flexible prefined configuration for individual tools, prebuilt Docker images
+set of inputs. This is achieved through flexible predefined configuration for individual tools, prebuilt Docker images
 retrieved at runtime for each process, and automated on-demand staging of reference genomes and resource files. The
 only required input to run an analysis with oncoanalyser is a sample CSV sheet listing the sample inputs.
 
@@ -89,23 +89,29 @@ Require inputs shown as :white_check_mark: for available analyses
 > [!NOTE]
 > Docker on Windows and macOS can perform poorly, so only running oncoanalyser on Linux is currently recommended.
 
+> [!WARNING]
+> Older versions of Docker may not work with Oncoanalyser. We recommend Docker version 25 or later. If you are
+> running an older version of your operating system, you may need to upgrade it in order to use an up to date
+> version of Docker.
+
 ### Input samplesheet
 
 Running an analysis with oncoanalyser requires a samplesheet describing input files and samples. The samplesheet
 contains information that allows oncoanalyser to appropriately group samples (e.g. tumor/normal pairs), locate input
 files, and select relevant tools to run.
 
-Each entry in the samplesheet represents a single input file and is connected with metadata such as sample/group
-identifers, sample type (tumor/normal), sequence type (DNA/RNA), and filetype. All entries with the same `group_id`
-value with be grouped together for processing, and the composition of a group determines the type of analysis run.
+Each entry in the samplesheet represents a single input file (or, in the case of paired fastq, the forward and reverse fastq files)
+and is connected with metadata such as sample/group
+identifers, sample type (tumor/normal), sequence type (DNA/RNA), filetype, and info. All entries with the same `group_id`
+value will be grouped together for processing, and the composition of a group determines the type of analysis run.
 
 An example samplesheet for the WGTS workflow is shown:
 
 ```
-group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
-COLO829_example,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
-COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,/path/to/COLO829T.rna.bam
-COLO829_example,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
+group_id,subject_id,sample_id,sample_type,sequence_type,filetype,info,filepath
+COLO829_example,COLO829,COLO829T,tumor,dna,bam,,/path/to/COLO829T.dna.bam
+COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,,/path/to/COLO829T.rna.bam
+COLO829_example,COLO829,COLO829R,normal,dna,bam,,/path/to/COLO829R.dna.bam
 ```
 
 In this example, there is a single group (`COLO829_example`) that contains paired tumor/normal DNA BAMs and an RNA BAM,
@@ -116,11 +122,11 @@ inputs](#available-analysis-types-1) sections.
 Multiple groups can also be provided in a single sample sheet:
 
 ```
-group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
-COLO829_example,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
-COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,/path/to/COLO829T.rna.bam
-COLO829_example,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
-SEQC_example,SEQC,SEQCT,tumor,dna,bam,/path/to/SEQCT.dna.bam
+group_id,subject_id,sample_id,sample_type,sequence_type,filetype,info,filepath
+COLO829_example,COLO829,COLO829T,tumor,dna,bam,,/path/to/COLO829T.dna.bam
+COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,,/path/to/COLO829T.rna.bam
+COLO829_example,COLO829,COLO829R,normal,dna,bam,,/path/to/COLO829R.dna.bam
+SEQC_example,SEQC,SEQCT,tumor,dna,bam,,/path/to/SEQCT.dna.bam
 ```
 
 Here the `SEQC_example` has been added to the previous example. Since only a tumor DNA BAM is provided for this
@@ -141,7 +147,7 @@ additional group, just a tumor-only WGS analysis is run for the SEQC sample.
 | sample_id     | Sample ID                                                            |
 | sample_type   | Sample type: `tumor`, `normal`                                       |
 | sequence_type | Sequence type: `dna`, `rna`                                          |
-| filetype      | File type: `bam`, `bai`                                              |
+| filetype      | File type: `bam`, `bai`, 'bam_markdups', 'fastq'                     |
 | filepath      | Absolute filepath to input file (can be local filepath, URL, S3 URI) |
 
 The identifiers provided in the samplesheet are used to set output file paths:
