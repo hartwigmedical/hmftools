@@ -18,7 +18,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -181,8 +180,6 @@ public class AmberLohCalcs
             int observed = (int)round(lohMedianAf * totalLohSupportCount);
             double lohProbability = poissonDistribution.cumulativeProbability(observed);
 
-            // LOHpValue = ppois(medianAF*fragments,0.5*fragments,TRUE)
-
             return new AmberLohResult(
                     totalLohSiteCount, lohEstimatedPurity, lohPercent, lohMeanCN, lohMedianAf, lohProbability, totalLohSupportCount);
         }
@@ -237,7 +234,6 @@ public class AmberLohCalcs
         public double impliedPurity()
         {
             // impliedPurity=max(0,(1-2*avgAF) / (avgAF*(copyNumber-2) + 1)
-
             double avgAf = averageAF();
             double denom = avgAf * (CopyNumber.averageTumorCopyNumber() - 2) + 1;
             return denom > 0 ? max((1 - 2 * avgAf) / denom, 0) : 0;
@@ -347,5 +343,4 @@ public class AmberLohCalcs
             CT_LOGGER.error("failed to write Amber LOH file: {}", e.toString());
         }
     }
-
 }

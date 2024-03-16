@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.output;
 
+import java.util.List;
+
 public enum WriteType
 {
     ASSEMBLY_BAM("assembly.bam"),
@@ -7,8 +9,7 @@ public enum WriteType
     READS("assembly_reads.tsv"),
     VCF("esvee.vcf.gz"),
     DECOY_MATCHES("decoy_matches.tsv"),
-    PHASE_GROUP_BUILDING("phase_group_building.tsv"),
-    BREAKENDS("breakends.tsv"); // not currently defined or written
+    PHASE_GROUP_BUILDING("phase_group_building.tsv");
 
     private final String mFileId;
 
@@ -20,4 +21,9 @@ public enum WriteType
     public String fileId() { return mFileId; }
 
     public static final String ALL = "ALL";
+
+    public static boolean hasAssemblyOutput(final List<WriteType> writeTypes)
+    {
+        return writeTypes.contains(ASSEMBLIES) || writeTypes.contains(READS) || writeTypes.contains(ASSEMBLY_BAM);
+    }
 }

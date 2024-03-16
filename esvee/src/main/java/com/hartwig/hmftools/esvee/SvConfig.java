@@ -253,9 +253,6 @@ public class SvConfig
         TruthsetFile = TruthsetAnnotation.filename(configBuilder);
     }
 
-    public String tumorBam() { return TumorBams.get(0); }
-    public String referenceBam() { return !ReferenceBams.isEmpty() ? ReferenceBams.get(1) : null; }
-
     public List<String> combinedSampleIds()
     {
         List<String> combinedSampleIds = Lists.newArrayList(TumorIds);

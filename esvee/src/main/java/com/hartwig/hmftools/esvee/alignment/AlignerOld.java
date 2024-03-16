@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.esvee.old;
+package com.hartwig.hmftools.esvee.alignment;
 
 // @ThreadSafe
-public class Aligner // extends ThreadTask implements AutoCloseable
+public class AlignerOld // extends ThreadTask implements AutoCloseable
 {
     /*
     private final Queue<GappedAssembly> mSecondaryAssemblyQueue;

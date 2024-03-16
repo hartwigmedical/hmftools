@@ -1,13 +1,15 @@
 package com.hartwig.hmftools.esvee.output;
 
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.NEG_ORIENTATION_CHAR;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.POS_ORIENTATION_CHAR;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SINGLE_BREAKEND_CHAR;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ANCHOR_SUPPORT_CIGAR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ANCHOR_SUPPORT_CIGAR_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ANCHOR_SUPPORT_CIGAR_LENGTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ANCHOR_SUPPORT_CIGAR_LENGTH_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ASSEMBLY;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ASSEMBLY_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEALN;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEALN_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.BEID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.BEIDH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.BEIDH_DESC;
@@ -40,22 +42,36 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT_DESC;
+import static com.hartwig.hmftools.common.utils.Doubles.round;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.filters.SoftFilters.applyFilters;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.SvConfig;
+import com.hartwig.hmftools.esvee.common.AssemblyLink;
+import com.hartwig.hmftools.esvee.common.AssemblySupport;
+import com.hartwig.hmftools.esvee.common.Junction;
+import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.common.LinkType;
+import com.hartwig.hmftools.esvee.common.PhaseSet;
+import com.hartwig.hmftools.esvee.common.SupportType;
 import com.hartwig.hmftools.esvee.filters.FilterType;
-import com.hartwig.hmftools.esvee.old.VariantCall;
 
 import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -63,6 +79,7 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.VCFConstants;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
@@ -70,16 +87,25 @@ import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
+import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 public class VcfWriter implements AutoCloseable
 {
     private final SvConfig mConfig;
     private final VariantContextWriter mWriter;
-    private final List<VariantContext> mVariants = new ArrayList<>();
+
+    private final List<String> mSampleNames;
+
+    private final List<VariantContext> mVariants;
+
+    private static final List<Allele> NO_GENOTYPE_ALLELES = Lists.newArrayList(Allele.NO_CALL, Allele.NO_CALL);
 
     public VcfWriter(final SvConfig config)
     {
         mConfig = config;
+
+        mSampleNames = mConfig.combinedSampleIds();
+        mVariants = new ArrayList<>();
 
         if(config.WriteTypes.contains(WriteType.VCF) && config.VcfFile != null)
         {
@@ -94,7 +120,7 @@ public class VcfWriter implements AutoCloseable
                     .setReferenceDictionary(sequenceDictionary)
                     .build();
 
-            writeHeader(mConfig.combinedSampleIds());
+            writeHeader();
         }
         else
         {
@@ -102,18 +128,15 @@ public class VcfWriter implements AutoCloseable
         }
     }
 
-    private void writeHeader(final List<String> sampleNames)
+    private void writeHeader()
     {
         // no longer written:
         // new VCFFilterHeaderLine("GERMLINE", "This variant has support in the reference sample"),
-        // new VCFFilterHeaderLine("LIKELY_FALSE", "If this variant is most likely a false-positive"),
-        // new VCFInfoHeaderLine("CLASSIFICATION", 1, VCFHeaderLineType.String, ""),
-        // new VCFInfoHeaderLine("GERMLINE_SUPPORT_CNT", 1, VCFHeaderLineType.Integer, "Amount of support in samples identified as germline"),
-        // new VCFInfoHeaderLine("SOMATIC_SUPPORT_CNT", 1, VCFHeaderLineType.Integer, "Amount of support in samples not identified as germline"),
         // new VCFInfoHeaderLine("BEID_LEN", 1, VCFHeaderLineType.Integer, "The number of assemblies associated with this variant"),
 
         Set<VCFHeaderLine> metaData = Sets.newHashSet();
 
+        // TODO: check which of these are required
         metaData.add(new VCFInfoHeaderLine(EVENT, 1, VCFHeaderLineType.String, EVENT_DESC));
         metaData.add(new VCFInfoHeaderLine(MATE_ID, 1, VCFHeaderLineType.String, MATE_ID_DESC));
         metaData.add(new VCFInfoHeaderLine(SVTYPE, 1, VCFHeaderLineType.String, SVTYPE_DESC));
@@ -126,47 +149,28 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFInfoHeaderLine(REMOTE_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, REMOTE_LINKED_BY_DESC));
         metaData.add(new VCFInfoHeaderLine(CIPOS, 2, VCFHeaderLineType.Integer, CIPOS_DESC));
         metaData.add(new VCFInfoHeaderLine(HOMSEQ, 1, VCFHeaderLineType.String, HOMSEQ_DESC));
-        metaData.add(new VCFInfoHeaderLine(MAPQ, 1, VCFHeaderLineType.Integer, MAPQ_DESC));
-        metaData.add(new VCFInfoHeaderLine(BEALN, 1, VCFHeaderLineType.String, BEALN_DESC));
-        metaData.add(new VCFInfoHeaderLine(OVERHANG, 1, VCFHeaderLineType.Integer, OVERHANG_DESC));
-        metaData.add(new VCFInfoHeaderLine(ASSEMBLY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, ASSEMBLY_DESC));
+        // metaData.add(new VCFInfoHeaderLine(MAPQ, 1, VCFHeaderLineType.Integer, MAPQ_DESC));
+        // metaData.add(new VCFInfoHeaderLine(BEALN, 1, VCFHeaderLineType.String, BEALN_DESC));
+        //metaData.add(new VCFInfoHeaderLine(OVERHANG, 1, VCFHeaderLineType.Integer, OVERHANG_DESC));
 
         for(FilterType filter : FilterType.values())
         {
             metaData.add(new VCFFilterHeaderLine(filter.filterName(), filter.vcfDescription()));
         }
 
+        // metaData.add(new VCFFormatHeaderLine(QUAL, 1, VCFHeaderLineType.Integer, QUAL_DESC));
+
+        metaData.add(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
+        metaData.add(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_ALLELE_DEPTHS)));
+        metaData.add(VCFStandardHeaderLines.getFormatLine((VCFConstants.DEPTH_KEY)));
+
         metaData.add(new VCFFormatHeaderLine(DISCORDANT_READS, 1, VCFHeaderLineType.Integer, DISCORDANT_READS_DESC));
-        metaData.add(new VCFFormatHeaderLine(QUAL, 1, VCFHeaderLineType.Integer, QUAL_DESC));
         metaData.add(new VCFFormatHeaderLine(SPLIT_READS, 1, VCFHeaderLineType.Integer, SPLIT_READS_DESC));
         metaData.add(new VCFFormatHeaderLine(SV_FRAG_COUNT, 1, VCFHeaderLineType.Integer, SV_FRAG_COUNT_DESC));
 
-        final VCFHeader header = new VCFHeader(metaData, sampleNames);
+        final VCFHeader header = new VCFHeader(metaData, mSampleNames);
 
         mWriter.writeHeader(header);
-    }
-
-    public void append(final VariantCall call)
-    {
-        /*
-        if(!call.isSingleSided())
-        {
-            final VariantContextBuilder left = variant(call, 1, true);
-            final VariantContextBuilder right = variant(call, 2, false);
-            mVariants.add(left.make());
-            mVariants.add(right.make());
-        }
-        else
-        {
-            if(call.LeftDescriptor == null)
-            {
-                SV_LOGGER.error("Expected descriptor for {}", call);
-                return;
-            }
-            final VariantContextBuilder left = variant(call, 0, true);
-            mVariants.add(left.make());
-        }
-        */
     }
 
     @Override
@@ -182,41 +186,54 @@ public class VcfWriter implements AutoCloseable
         mWriter.close();
     }
 
-    private VariantContextBuilder variant(final VariantCall variantCall, final int index, final boolean left)
+    public void addVariant(final JunctionAssembly assembly)
     {
-        /*
-        final String callID = variantCall.compactName();
-        final String chromosome = left ? variantCall.LeftChromosome : variantCall.RightChromosome;
-        final int position = left ? variantCall.LeftPosition : variantCall.RightPosition;
-        final String ref = left ? variantCall.leftRef(mConfig.RefGenome) : variantCall.rightRef(mConfig.RefGenome);
-        final String descriptor = left ? variantCall.LeftDescriptor : variantCall.RightDescriptor;
-        assert descriptor != null;
-        final int mapQ = left ? variantCall.LeftMappingQuality : variantCall.RightMappingQuality;
-        final int overhang = variantCall.overhang();
+        List<SampleData> sampleDataList = buildSampleData(assembly);
 
-        final List<Genotype> genotypes = variantCall.sampleSupport().stream()
-                .map(support -> new GenotypeBuilder(support.sampleName())
-                        .DP(support.discordantPairFragmentCount())
-                        .attribute(QUAL, support.quality())
-                        .attribute(SPLIT_READS, support.splitReadFragmentCount())
-                        .attribute(SV_FRAG_COUNT, support.totalSupportFragmentCount())
-                        .make())
-                .sorted(Comparator.comparing(Genotype::getSampleName))
-                .collect(Collectors.toList());
+        List<Genotype> genotypes = Lists.newArrayList();
 
-        Set<String> filters = applyFilters(variantCall);
+        for(int i = 0; i < mSampleNames.size(); ++i)
+        {
+            String sampleId = mSampleNames.get(i);
+            SampleData sampleData = sampleDataList.get(i);
 
-        final VariantContextBuilder builder = new VariantContextBuilder()
-                .id(callID + (index != 0 ? "_" + index : ""))
-                .chr(chromosome)
-                .start(position)
-                .alleles(ref, descriptor)
-                .log10PError(-mapQ)
+            genotypes.add(buildGenotype(assembly, sampleId, sampleData));
+        }
+
+        PhaseSet phaseSet = assembly.phaseGroup() != null ? assembly.phaseGroup().findPhaseSet(assembly) : null;
+        List<AssemblyLink> assemblyLinks = phaseSet != null ? phaseSet.findAssemblyLinks(assembly) : Collections.emptyList();
+        AssemblyLink splitLink = assemblyLinks.stream().filter(x -> x.type() == LinkType.SPLIT).findFirst().orElse(null);
+        StructuralVariantType svType = splitLink != null ? splitLink.svType() : SGL;
+
+        List<Allele> alleles = buildAlleleInfo(assembly, splitLink, svType);
+
+        // see comments when preparing final variants and setting assembly IDs
+        String assemblyId = String.valueOf(assembly.id());
+
+
+        // TODO: modify post-alignment and homology sliding as required
+        int breakendPosition = assembly.junction().Position;
+
+        double mapQualityTotal = assembly.support().stream().mapToInt(x -> x.read().mappingQuality()).sum();
+        int averageMapQuality = (int)Math.round(mapQualityTotal / assembly.supportCount());
+        double tempQualityScore = sampleDataList.stream().mapToDouble(x -> x.SplitFragments + x.DiscordantFragments).sum();
+
+        Set<String> filters = assembly.filters().stream().map(x -> x.filterName()).collect(Collectors.toSet());
+
+        VariantContextBuilder builder = new VariantContextBuilder()
+                .id(assemblyId)
+                .chr(assembly.junction().Chromosome)
+                .start(breakendPosition)
+                .alleles(alleles)
+                .log10PError(tempQualityScore / -10.0)
                 .filters(filters)
                 .genotypes(genotypes);
 
-        if(index != 0)
-            builder.attribute(MATE_ID, callID + "_" + (index == 1 ? 2 : 1));
+        mVariants.add(builder.make());
+
+        // builder.attribute(MAP)
+
+        /*
 
         builder
                 .attribute(EVENT, callID)
@@ -228,33 +245,6 @@ public class VcfWriter implements AutoCloseable
                 .attribute(OVERHANG, overhang)
         ;
 
-        final List<String> assemblyNames = new ArrayList<>();
-        final List<String> assemblies = new ArrayList<>();
-        final List<Integer> assemblyLeftIndices = new ArrayList<>();
-        final List<Integer> assemblyRightIndices = new ArrayList<>();
-        final List<String> anchorLeftCigars = new ArrayList<>();
-        final List<String> anchorRightCigars = new ArrayList<>();
-        final List<Integer> anchorLeftCigarLengths = new ArrayList<>();
-        final List<Integer> anchorRightCigarLengths = new ArrayList<>();
-
-        for(VariantAssembly assembly : variantCall.variantAssemblies())
-        {
-            assemblyNames.add(assembly.Assembly.Name);
-            assemblyLeftIndices.add(assembly.LeftPosition);
-            assemblyRightIndices.add(assembly.RightPosition);
-            if(assembly.LeftAnchorCigar != null)
-            {
-                anchorLeftCigars.add(assembly.LeftAnchorCigar.toString());
-                anchorLeftCigarLengths.add(assembly.LeftCigarLength);
-            }
-            if(assembly.RightAnchorCigar != null)
-            {
-                anchorRightCigars.add(assembly.RightAnchorCigar.toString());
-                anchorRightCigarLengths.add(assembly.RightCigarLength);
-            }
-            assemblies.add(assembly.Assembly.Assembly);
-        }
-
         builder.attribute(BEID, assemblyNames);
         builder.attribute(BEIDL, left ? assemblyLeftIndices : assemblyRightIndices);
         builder.attribute(BEIDH, left ? assemblyRightIndices : assemblyLeftIndices);
@@ -262,32 +252,179 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(ANCHOR_SUPPORT_CIGAR_LENGTH, left ? anchorLeftCigarLengths : anchorRightCigarLengths);
 
         builder.attribute(ASSEMBLY, assemblies);
-
-        return builder;
          */
-
-        return null;
     }
 
-    /*
-    private String svType(final AssemblyClassification classification)
+    private class SampleData
     {
-        switch(classification.Type)
+        public int SplitFragments;
+        public int DiscordantFragments;
+
+        public SampleData()
         {
-            case INSERT:
-                return "INS";
-            case DELETION:
-                return "DEL";
-            case DUPLICATION:
-                return "DUP";
-            case TRANSLOCATION:
-                return "BND";
-            case INVERSION:
-                return "INV";
-            case UNKNOWN:
-                return "SGL";
+            SplitFragments = 0;
+            DiscordantFragments = 0;
         }
-        throw new IllegalStateException("Invalid AssemblyClassification: " + classification);
     }
-    */
+
+    private List<SampleData> buildSampleData(final JunctionAssembly assembly)
+    {
+        List<SampleData> sampleDataList = Lists.newArrayListWithExpectedSize(mSampleNames.size());
+
+        mSampleNames.forEach(x -> sampleDataList.add(new SampleData()));
+
+        String currentSampleId = "";
+        int currentSampleIndex = 0;
+        SampleData sampleData = null;
+
+        for(AssemblySupport support : assembly.support())
+        {
+            if(support.type() == SupportType.JUNCTION_MATE)
+                continue;
+
+            String readSampleId = support.read().sampleName();
+
+            if(!currentSampleId.equals(readSampleId))
+            {
+                currentSampleId = readSampleId;
+                currentSampleIndex = getSampleIdIndex(readSampleId);
+                sampleData = sampleDataList.get(currentSampleIndex);
+            }
+
+            if(support.type().isSplitSupport())
+                ++sampleData.SplitFragments;
+            else
+                ++sampleData.DiscordantFragments;
+        }
+
+        return sampleDataList;
+    }
+
+    private int getSampleIdIndex(final String sampleId)
+    {
+        for(int i = 0; i < mSampleNames.size(); ++i)
+        {
+            if(mSampleNames.get(i).equals(sampleId))
+                return i;
+        }
+
+        return -1;
+    }
+
+    private Genotype buildGenotype(final JunctionAssembly assembly, final String sampleId, final SampleData sampleData)
+    {
+        GenotypeBuilder builder = new GenotypeBuilder(sampleId);
+
+        int depth = 0; // set from full BAM in a separate process
+        int altSupport = sampleData.SplitFragments + sampleData.DiscordantFragments;
+
+        // ideas for more per-sample data:
+        // - average read quality
+        // - trimmed base qualities
+        // - average extension or read base distance
+        // - strand bias
+
+        builder.DP(depth)
+                .AD(new int[] { 0, altSupport })
+                .alleles(NO_GENOTYPE_ALLELES); // is this optional for a genotype?
+
+
+        return builder.make();
+    }
+
+    private List<Allele> buildAlleleInfo(final JunctionAssembly assembly, final AssemblyLink splitLink, final StructuralVariantType svType)
+    {
+        // pos orientation for DEL and DUP: AGAGATTATACTTTGTGTA[10:89712341[
+        // pos orientation for INV: G]3:26664499]
+
+        // neg orientation for DEL and DUP: ]10:89700299]GAGATTATACTTTGTGTAA
+        // neg orientation for INV: [3:24566181[C
+
+        // position orientation for SG: extension sequence then '.'
+        // negative orientation for SG: '.' then extension sequence
+        byte[] refBase = { assembly.bases()[assembly.junctionIndex()] };
+        Allele refAllele = Allele.create(refBase, true);
+
+        String insertedBases = "";
+
+        if(splitLink != null)
+        {
+            int insertLength = splitLink.insertedBases().length();
+
+            if(insertLength > 0)
+            {
+                String extensionBases = assembly.formJunctionSequence();
+
+                if(assembly.isForwardJunction())
+                {
+                    insertedBases = extensionBases.substring(0, insertLength);
+                }
+                else
+                {
+                    int extBaseLength = extensionBases.length();
+                    insertedBases = extensionBases.substring(extBaseLength - insertLength);
+                }
+            }
+        }
+        else
+        {
+            insertedBases = assembly.formJunctionSequence();
+        }
+
+        StringBuilder altBases = new StringBuilder();
+
+        if(svType != SGL)
+        {
+            JunctionAssembly otherAssembly = splitLink.otherAssembly(assembly);
+
+            // TODO: see previous comment about using correct breakend position
+            String otherBreakendInfo = formOtherBreakendInfo(
+                    otherAssembly.junction().Chromosome, otherAssembly.junction().Position, otherAssembly.junction().Orientation);
+
+            if(assembly.isForwardJunction())
+            {
+                altBases.append((char)refBase[0]);
+
+                if(!insertedBases.isEmpty())
+                    altBases.append(insertedBases);
+
+                // details about the other breakend
+                altBases.append(otherBreakendInfo);
+            }
+            else
+            {
+                altBases.append(otherBreakendInfo);
+
+                // FIXME: check orientation or take from the extension bses
+                if(!insertedBases.isEmpty())
+                    altBases.append(insertedBases);
+
+                altBases.append((char)refBase[0]);
+            }
+        }
+        else
+        {
+            if(assembly.isForwardJunction())
+            {
+                altBases.append(insertedBases);
+                altBases.append(SINGLE_BREAKEND_CHAR);
+            }
+            else
+            {
+                altBases.append(SINGLE_BREAKEND_CHAR);
+                altBases.append(insertedBases);
+            }
+        }
+
+        Allele altAllele = Allele.create(altBases.toString().getBytes(), false);
+
+        return List.of(refAllele, altAllele);
+    }
+
+    private static String formOtherBreakendInfo(final String chromosome, final int position, final byte orientation)
+    {
+        // ]3:26664499]
+        char orientationChar = orientation == POS_ORIENT ? POS_ORIENTATION_CHAR : NEG_ORIENTATION_CHAR;
+        return format("%c%s:%d%c", orientationChar, chromosome, position, orientationChar);
+    }
 }

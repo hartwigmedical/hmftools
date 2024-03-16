@@ -1,10 +1,16 @@
 package com.hartwig.hmftools.sage.vcf;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS_DESC;
@@ -148,7 +154,15 @@ public class VariantVCF implements AutoCloseable
 
     public static VCFHeader createHeader(final String version, final List<String> allSamples, final boolean includeModelData)
     {
-        VCFHeader header = SageVcfTags.addMetaData(new VCFHeader(Collections.emptySet(), allSamples));
+        VCFHeader header = new VCFHeader(Collections.emptySet(), allSamples);
+
+        header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESC));
+
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                LOCAL_PHASE_SET, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, LOCAL_PHASE_SET_DESC));
+
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                READ_CONTEXT_REPEAT_COUNT, 1, VCFHeaderLineType.Integer, READ_CONTEXT_REPEAT_COUNT_DESC));
 
         // standard fields
         header.addMetaDataLine(new VCFHeaderLine(VERSION_META_DATA, version));
@@ -255,7 +269,6 @@ public class VariantVCF implements AutoCloseable
         if(!header.hasInfoLine(MAX_READ_EDGE_DISTANCE))
         {
             header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Integer, MAX_READ_EDGE_DISTANCE_DESC));
-
         }
     }
 

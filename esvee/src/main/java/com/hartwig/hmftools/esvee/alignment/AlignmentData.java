@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.esvee.old;
+package com.hartwig.hmftools.esvee.alignment;
 
-public class Alignment
+public class AlignmentData
 {
     public final String Chromosome;
     public final int ReferenceStartPosition;
@@ -9,7 +9,7 @@ public class Alignment
     public final boolean Inverted;
     public final int Quality;
 
-    public Alignment(
+    public AlignmentData(
             final String chromosome, final int referenceStartPosition, final int sequenceStartPosition, final int length,
             final boolean inverted, final int quality)
     {
@@ -21,24 +21,24 @@ public class Alignment
         Quality = quality;
     }
 
-    public static Alignment unmapped(final int length)
+    public static AlignmentData unmapped(final int length)
     {
         return unmapped(1, length);
     }
 
-    public static Alignment unmapped(final int startPosition, final int length)
+    public static AlignmentData unmapped(final int startPosition, final int length)
     {
-        return new Alignment("?", 0, startPosition, length, false, 0);
+        return new AlignmentData("?", 0, startPosition, length, false, 0);
     }
 
-    public static Alignment insert(final int startPosition, final int length)
+    public static AlignmentData insert(final int startPosition, final int length)
     {
-        return new Alignment("*", 0, startPosition, length, false, 0);
+        return new AlignmentData("*", 0, startPosition, length, false, 0);
     }
 
-    public static Alignment gap(final int startPosition)
+    public static AlignmentData gap(final int startPosition)
     {
-        return new Alignment("-", 0, startPosition, 1, false, 0);
+        return new AlignmentData("-", 0, startPosition, 1, false, 0);
     }
 
     public boolean isUnmapped()

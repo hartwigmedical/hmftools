@@ -7,6 +7,9 @@ import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
 import static com.hartwig.hmftools.esvee.common.JunctionGroup.buildJunctionGroups;
+import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLIES;
+import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLY_BAM;
+import static com.hartwig.hmftools.esvee.output.WriteType.READS;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,6 +23,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.alignment.Alignment;
 import com.hartwig.hmftools.esvee.alignment.BwaAligner;
+import com.hartwig.hmftools.esvee.output.AssemblyReadWriter;
+import com.hartwig.hmftools.esvee.output.AssemblyWriter;
 import com.hartwig.hmftools.esvee.phasing.PhaseGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
 import com.hartwig.hmftools.esvee.phasing.PhaseSetTask;
@@ -38,12 +43,9 @@ public class JunctionProcessor
 {
     private final SvConfig mConfig;
     private final ResultsWriter mResultsWriter;
-    private final VcfWriter mVcfWriter;
 
     private final Map<String,List<Junction>> mChrJunctionsMap;
     private final Map<String,List<JunctionGroup>> mJunctionGroupMap;
-
-    private final Alignment mAlignment;
 
     private final List<BamReader> mBamReaders;
 
@@ -57,10 +59,7 @@ public class JunctionProcessor
         mJunctionGroupMap = Maps.newHashMap();
         mBamReaders = Lists.newArrayList();
 
-        mAlignment = new Alignment(mConfig, new BwaAligner(mConfig));
-
         mResultsWriter = new ResultsWriter(mConfig);
-        mVcfWriter = new VcfWriter(mConfig);
 
         mPerfCounters = Lists.newArrayList();
     }
@@ -128,31 +127,11 @@ public class JunctionProcessor
 
             alignPhaseSets();
 
-            if(mConfig.WriteTypes.contains(WriteType.ASSEMBLIES))
-            {
-                SV_LOGGER.debug("writing assembly data");
+            List<JunctionAssembly> finalAssemblies = prepareFinalAssemblies();
 
-                int assemblyId = 0;
-                for(List<JunctionGroup> junctionGroups : mJunctionGroupMap.values())
-                {
-                    for(JunctionGroup junctionGroup : junctionGroups)
-                    {
-                        // set ID first so any references have them set - may need or could to be done earlier once
-                        // all references between then are established
+            writeAssemblyOutput(finalAssemblies);
 
-                        // NOTE: is there a cleaner place to do this? eg prior to alignment after phasing is done?
-                        junctionGroup.addBranchedAssemblies();
-
-                        for(JunctionAssembly assembly : junctionGroup.junctionAssemblies())
-                        {
-                            assembly.setId(assemblyId++);
-                            setAssemblyOutcome(assembly);
-                        }
-
-                        junctionGroup.junctionAssemblies().forEach(x -> mResultsWriter.writeAssembly(x));
-                    }
-                }
-            }
+            writeVariantVcf(finalAssemblies);
 
             if(mConfig.PerfDebug || (!mConfig.SpecificChrRegions.hasFilters() && mConfig.SpecificJunctions.isEmpty()))
             {
@@ -241,20 +220,105 @@ public class JunctionProcessor
     private void alignPhaseSets()
     {
         /*
+        Alignment alignment = new Alignment(mConfig, new BwaAligner(mConfig));
+
         for(PhaseGroup phaseGroup : phaseGroupBuilder.phaseGroups())
         {
             for(PhaseSet phaseSet : phaseGroup.phaseSets())
             {
-                mAlignment.processPhaseSet(phaseSet);
+                alignment.processPhaseSet(phaseSet);
             }
         }
         */
 
     }
 
+    private List<JunctionAssembly> prepareFinalAssemblies()
+    {
+        List<JunctionAssembly> allAssemblies = Lists.newArrayList();
+
+        int assemblyId = 0;
+        for(List<JunctionGroup> junctionGroups : mJunctionGroupMap.values())
+        {
+            for(JunctionGroup junctionGroup : junctionGroups)
+            {
+                // set ID first so any references have them set - may need or could to be done earlier once
+                // all references between then are established
+
+                // NOTE: is there a cleaner place to do this? eg prior to alignment after phasing is done?
+                // junctionGroup.addBranchedAssemblies();
+
+                for(JunctionAssembly assembly : junctionGroup.junctionAssemblies())
+                {
+                    assembly.setId(assemblyId++);
+                    allAssemblies.add(assembly);
+                    setAssemblyOutcome(assembly);
+
+                    for(JunctionAssembly branchedAssembly : assembly.branchedAssemblies())
+                    {
+                        branchedAssembly.setId(assembly.id());
+                        allAssemblies.add(branchedAssembly);
+                        setAssemblyOutcome(branchedAssembly);
+                    }
+                }
+
+            }
+        }
+
+        // TODO: assembly ID could be set once assemblies have been ordered, and a unique assebly string ID also set in a
+        // fairly deterministic way based on final coords, with any duplicates given an extra incrementor
+
+        Collections.sort(allAssemblies, Comparator.comparing(x -> x.junction()));
+
+        return allAssemblies;
+    }
+
+    private void writeAssemblyOutput(final List<JunctionAssembly> assemblies)
+    {
+        if(mConfig.WriteTypes.contains(ASSEMBLIES) || mConfig.WriteTypes.contains(READS))
+        {
+            SV_LOGGER.debug("writing assembly TSV output");
+
+            AssemblyReadWriter readWriter = mConfig.WriteTypes.contains(READS) ? mResultsWriter.readWriter() : null;
+            AssemblyWriter assemblyWriter = mConfig.WriteTypes.contains(ASSEMBLIES) ? mResultsWriter.assemblyWriter() : null;
+
+            for(JunctionAssembly assembly : assemblies)
+            {
+                if(assemblyWriter != null)
+                    assemblyWriter.writeAssembly(assembly);
+
+                if(readWriter != null)
+                    readWriter.writeAssemblyReads(assembly);
+            }
+        }
+
+        // write BAM records
+        if(mConfig.WriteTypes.contains(ASSEMBLY_BAM))
+        {
+            SV_LOGGER.debug("writing assembly BAM");
+
+        }
+    }
+
+    private void writeVariantVcf(final List<JunctionAssembly> assemblies)
+    {
+        if(!mConfig.WriteTypes.contains(WriteType.VCF))
+            return;
+
+        SV_LOGGER.debug("writing variant VCF");
+
+        VcfWriter vcfWriter = new VcfWriter(mConfig);
+
+        for(JunctionAssembly assembly : assemblies)
+        {
+            vcfWriter.addVariant(assembly);
+        }
+
+        vcfWriter.close();
+    }
+
     public void close()
     {
-        mVcfWriter.close();
         mResultsWriter.close();
     }
 }

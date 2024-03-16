@@ -3,36 +3,13 @@ package com.hartwig.hmftools.esvee.output;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 
 import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.old.Alignment;
-import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.old.VariantCall;
-
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.BAMStreamWriter;
-import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.util.SequenceUtil;
 
 public class BamWriter
 {

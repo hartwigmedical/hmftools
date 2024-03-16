@@ -3,12 +3,11 @@ package com.hartwig.hmftools.esvee.filters;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.hartwig.hmftools.esvee.SvConstants;
-import com.hartwig.hmftools.esvee.old.VariantCall;
+import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 
 public final class SoftFilters
 {
-    public static Set<String> applyFilters(final VariantCall variantCall)
+    public static Set<String> applyFilters(final JunctionAssembly assembly)
     {
         final Set<String> filters = new HashSet<>();
 
