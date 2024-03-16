@@ -101,7 +101,7 @@ public class AmberLohCalcs
                 copyNumbers.add(copyNumber);
             }
 
-            List<SiteData> siteDataList = Lists.newArrayList();
+            List<RegionData> regionDataList = Lists.newArrayList();
 
             int totalAmberSites = 0;
 
@@ -124,52 +124,67 @@ public class AmberLohCalcs
                     List<AmberBAF> sampleLohSites = sampleChrites.stream()
                             .filter(x -> positionWithin(x.position(), copyNumber.start(), copyNumber.end())).collect(Collectors.toList());
 
-                    SiteData siteData = calculateAmberSupport(copyNumber, tumorLohSites, sampleLohSites);
+                    RegionData regionData = buildCopyNumberRegionData(copyNumber, tumorLohSites, sampleLohSites);
 
-                    if(siteData == null)
+                    if(regionData == null)
                         continue;
 
-                    siteDataList.add(siteData);
+                    regionDataList.add(regionData);
 
-                    writeLohData(mWriter, mConfig, mSample, sampleId, siteData);
+                    writeLohData(mWriter, mConfig, mSample, sampleId, regionData);
                 }
             }
 
-            List<SiteData> filteredSiteData = siteDataList.stream().filter(x -> x.averageAF() < AMBER_LOH_MIN_AF).collect(Collectors.toList());
+            List<Double> lohSiteAFs = Lists.newArrayList();
+            List<Double> lohSiteImpliedPurities = Lists.newArrayList();
+            int totalLohSupportCount = 0;
+            int totalLohSiteCount = 0;
+            double totalLohCopyNumber = 0;
 
-            if(filteredSiteData.isEmpty())
-                return AmberLohResult.INVALID_RESULT;
-
-            double lohPercent = filteredSiteData.size() / (double)totalAmberSites;
-
-            Collections.sort(filteredSiteData, Comparator.comparingDouble(x -> x.impliedPurity()));
-            int medianIndex = filteredSiteData.size() / 2;
-            double lohEstimatedPurity = filteredSiteData.get(medianIndex).impliedPurity();
-
-            double lohTotalCopyNumber = 0;
-            double lohTotalAf = 0;
-            int lohTotalSupport = 0;
-
-            for(SiteData siteData : filteredSiteData)
+            for(RegionData regionData : regionDataList)
             {
-                lohTotalCopyNumber += siteData.CopyNumber.averageTumorCopyNumber();
-                lohTotalSupport += siteData.SupportCount;
-                lohTotalAf += siteData.averageAF();
+                double regionAverageAf = regionData.averageAF();
+
+                if(regionAverageAf >= AMBER_LOH_MIN_AF)
+                    continue;
+
+                double regionImpliedPurity = regionData.impliedPurity();
+                double regionCopyNumber = regionData.CopyNumber.averageTumorCopyNumber();
+
+                totalLohSiteCount += regionData.Sites.size();
+
+                for(SiteData siteData : regionData.Sites)
+                {
+                    totalLohSupportCount += siteData.Support;
+                    totalLohCopyNumber += regionCopyNumber;
+
+                    lohSiteAFs.add(regionAverageAf);
+                    lohSiteImpliedPurities.add(regionImpliedPurity);
+                }
             }
 
-            double filteredSites = filteredSiteData.size();
+            if(lohSiteAFs.isEmpty() || totalLohSupportCount == 0)
+                return AmberLohResult.INVALID_RESULT;
 
-            double lohMeanCN = lohTotalCopyNumber / filteredSites;
-            double lohMeanAf = lohTotalAf / filteredSites;
+            double lohPercent = lohSiteAFs.size() / (double)totalAmberSites;
 
-            PoissonDistribution poissonDistribution = new PoissonDistribution(0.5 * lohTotalSupport);
-            int observed = (int)round(lohMeanAf * lohTotalSupport);
+            Collections.sort(lohSiteAFs);
+            Collections.sort(lohSiteImpliedPurities);
+
+            int medianIndex = lohSiteAFs.size() / 2;
+            double lohEstimatedPurity = lohSiteImpliedPurities.get(medianIndex);
+            double lohMedianAf = lohSiteAFs.get(medianIndex);
+
+            double lohMeanCN = totalLohCopyNumber / totalLohSiteCount;
+
+            PoissonDistribution poissonDistribution = new PoissonDistribution(0.5 * totalLohSupportCount);
+            int observed = (int)round(lohMedianAf * totalLohSupportCount);
             double lohProbability = poissonDistribution.cumulativeProbability(observed);
 
             // LOHpValue = ppois(medianAF*fragments,0.5*fragments,TRUE)
 
             return new AmberLohResult(
-                    filteredSiteData.size(), lohEstimatedPurity, lohPercent, lohMeanCN, lohMeanAf, lohProbability, lohTotalSupport);
+                    totalLohSiteCount, lohEstimatedPurity, lohPercent, lohMeanCN, lohMedianAf, lohProbability, totalLohSupportCount);
         }
         catch(Exception e)
         {
@@ -181,30 +196,43 @@ public class AmberLohCalcs
 
     private class SiteData
     {
-        public final PurpleCopyNumber CopyNumber;
-        public int SiteCount;
-        public int SupportCount;
-        public int SampleDepthTotal;
-        public double AfTotal;
+        public final int Support;
+        public final double TumorBaf;
+        public final double SampleBaf;
+        public final int TumorDepth;
+        public final int SampleDepth;
+        public final double AF;
 
-        public SiteData(final PurpleCopyNumber copyNumber)
+        public SiteData(final double tumorBaf, final double sampleBaf, final int tumorDepth, final int sampleDepth)
+        {
+            TumorBaf = tumorBaf;
+            SampleBaf = sampleBaf;
+            TumorDepth = tumorDepth;
+            SampleDepth = sampleDepth;
+
+            double adjustedSampleBaf = TumorBaf < 0.5 ? SampleBaf : 1 - SampleBaf;
+            double support = sampleDepth * adjustedSampleBaf;
+            Support = (int)round(support);
+            AF = SampleDepth > 0 ? support / SampleDepth : 0;
+        }
+    }
+
+    private class RegionData
+    {
+        public final PurpleCopyNumber CopyNumber;
+        public final List<SiteData> Sites;
+
+        public RegionData(final PurpleCopyNumber copyNumber)
         {
             CopyNumber = copyNumber;
-            SiteCount = 0;
-            SupportCount = 0;
-            SampleDepthTotal = 0;
-            AfTotal = 0;
+            Sites = Lists.newArrayList();
         }
 
-        public void merge(final SiteData other)
+        public double averageAF()
         {
-            SiteCount += other.SiteCount;
-            SupportCount += other.SupportCount;
-            SampleDepthTotal += other.SampleDepthTotal;
+            double totalAF = Sites.stream().mapToDouble(x -> x.AF).sum();
+            return Sites.size() > 0 ? totalAF / Sites.size() : 0;
         }
-
-        // public double meanAF() { return SampleDepthTotal > 0 ? SupportCount / (double)SampleDepthTotal : 0; }
-        public double averageAF() { return SiteCount > 0 ? AfTotal / (double)SiteCount : 0; }
 
         public double impliedPurity()
         {
@@ -216,7 +244,7 @@ public class AmberLohCalcs
         }
     }
 
-    private SiteData calculateAmberSupport(
+    private RegionData buildCopyNumberRegionData(
             final PurpleCopyNumber copyNumber, final List<AmberBAF> tumorLohSites, final List<AmberBAF> sampleLohSites)
     {
         // find matching sites and accumulate VAF counts
@@ -226,11 +254,11 @@ public class AmberLohCalcs
         int sampleSiteIndex = 0;
         AmberBAF sampleSite = sampleLohSites.get(sampleSiteIndex);
 
-        SiteData siteData = new SiteData(copyNumber);
+        RegionData regionData = new RegionData(copyNumber);
 
         for(AmberBAF tumorSite : tumorLohSites)
         {
-            if(tumorSite.tumorBAF() < AMBER_LOH_MIN_TUMOR_BAF)
+            if(tumorSite.tumorModifiedBAF() <= AMBER_LOH_MIN_TUMOR_BAF)
                 continue;
 
             while(sampleSite.position() < tumorSite.position())
@@ -254,20 +282,12 @@ public class AmberLohCalcs
 
             if(sampleSite.position() == tumorSite.position())
             {
-                ++siteData.SiteCount;
-
-                double sampleBaf = tumorSite.tumorBAF() < 0.5 ? sampleSite.tumorBAF() : 1 - sampleSite.tumorBAF();
-                int sampleSupport = (int)round(sampleSite.tumorDepth() * sampleBaf);
-
-                siteData.SupportCount += sampleSupport;
-                siteData.SampleDepthTotal += sampleSite.tumorDepth();
-
-                double af = sampleSite.tumorDepth() > 0 ? sampleSupport / (double)sampleSite.tumorDepth() : 0;
-                siteData.AfTotal += af;
+                regionData.Sites.add(
+                        new SiteData(tumorSite.tumorBAF(), sampleSite.tumorBAF(), tumorSite.tumorDepth(), sampleSite.tumorDepth()));
             }
         }
 
-        return siteData;
+        return regionData;
     }
 
     public static BufferedWriter initialiseAmberLohWriter(final PurityConfig config)
@@ -298,7 +318,7 @@ public class AmberLohCalcs
 
     private static synchronized void writeLohData(
             final BufferedWriter writer, final PurityConfig config,
-            final SampleData sampleData, final String sampleId, final SiteData siteData)
+            final SampleData sampleData, final String sampleId, final RegionData regionData)
     {
         if(writer == null)
             return;
@@ -308,14 +328,16 @@ public class AmberLohCalcs
             StringJoiner sj = new StringJoiner(TSV_DELIM);
             addCommonFields(sj, config, sampleData, sampleId);
 
-            sj.add(siteData.CopyNumber.chromosome());
-            sj.add(String.valueOf(siteData.CopyNumber.start()));
-            sj.add(String.valueOf(siteData.CopyNumber.end()));
-            sj.add(format("%.2f", siteData.CopyNumber.averageTumorCopyNumber()));
-            sj.add(String.valueOf(siteData.SiteCount));
-            sj.add(String.valueOf(siteData.SupportCount));
-            sj.add(format("%.2f", siteData.averageAF()));
-            sj.add(format("%.2f", siteData.impliedPurity()));
+            sj.add(regionData.CopyNumber.chromosome());
+            sj.add(String.valueOf(regionData.CopyNumber.start()));
+            sj.add(String.valueOf(regionData.CopyNumber.end()));
+            sj.add(format("%.2f", regionData.CopyNumber.averageTumorCopyNumber()));
+            sj.add(String.valueOf(regionData.Sites.size()));
+
+            int totalSupport = regionData.Sites.stream().mapToInt(x -> x.Support).sum();
+            sj.add(String.valueOf(totalSupport));
+            sj.add(format("%.2f", regionData.averageAF()));
+            sj.add(format("%.2f", regionData.impliedPurity()));
 
             writer.write(sj.toString());
             writer.newLine();

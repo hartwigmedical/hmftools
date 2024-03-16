@@ -54,7 +54,7 @@ public class AmberLohResult
         sj.add(String.valueOf(SiteCount));
         sj.add(format("%.3f", LohPercent));
         sj.add(format("%.2f", AvgCopyNumber));
-        sj.add(format("%.4f", AvgAF));
+        sj.add(format("%.6f", AvgAF));
         sj.add(formatProbabilityValue(PValue));
         sj.add(String.valueOf(TotalFragments));
 
