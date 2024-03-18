@@ -17,10 +17,13 @@ The recommended way to run **hartwigmedical/hmftools** workflows or components i
 A principal aim of oncoanalyser is provide the HMF pipeline in a highly accessible form that is usable with a minimal
 set of inputs. This is achieved through flexible predefined configuration for individual tools, prebuilt Docker images
 retrieved at runtime for each process, and automated on-demand staging of reference genomes and resource files. The
-only required input to run an analysis with oncoanalyser is a sample CSV sheet listing the sample inputs.
+only required input to run an analysis with oncoanalyser is a samplesheet listing the sample inputs.
 
 Both the WGS/WTS and targeted sequencing workflows are available in oncoanalyser. The targeted sequencing workflow has
-built-in support for the TSO500 panel and supports custom targered panels.
+built-in support for the TSO500 panel and can also analyse any custom panel data where the required [panel-specific
+normalisation
+data](https://github.com/hartwigmedical/hmftools/blob/master/pipeline/README_TARGETED.md#training-process-to-build-panel-specific-resource-files)
+is available.
 
 As oncoanalyser is written using Nextflow, it supports a range of compute environments including AWS, Azure, GCP, and
 HPC. Other features include continuous checkpointing with run resuming and the ability to integrate with [Seqera
@@ -33,13 +36,12 @@ described in the [Nextflow documentation](https://www.nextflow.io/docs/latest/in
 
 ### Workflow inputs
 
-The starting input for oncoanalyser are either FASTQ or BAM files.
-
-If BAMs are used then the following aligners are recommended:
+The starting input for oncoanalyser is either FASTQ or BAM files. If alignment and BAM processing is performed outside
+oncoanalyser, the below aligners with the specified criteria must be used:
 
 | Sequence Type | Aligner                           | Requirements                                                                                                                                                                                                                              |
 | --- |-----------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| DNA | BWA-MEM,BWA-MEM2 or DRAGEN | • Supplementary alignment soft-clipping (`-Y`)<br />• Duplicate marking with HMF's [MarkDups](https://github.com/hartwigmedical/hmftools/tree/master/mark-dups) tool                                                                      |
+| DNA | BWA-MEM,<br />BWA-MEM2,<br />or DRAGEN | • Supplementary alignment soft-clipping (`-Y`)<br />• Duplicate marking with hmftools [MarkDups](https://github.com/hartwigmedical/hmftools/tree/master/mark-dups)
 | RNA | STAR | • Several **essential** [STAR settings](../isofox#a-note-on-alignment-and-multi-mapping) for WGTS<br />• Duplicate marking with the Picard algorithm<br />• Ensembl v74 annotations for GRCh37<br />• Ensembl v105 annotations for GRCh38 |
 
 > [!WARNING]
@@ -48,9 +50,12 @@ If BAMs are used then the following aligners are recommended:
 [GRCh38](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/ref_genome/38) reference
 genomes.
 
-#### Duplicate marking and UMIs
-HMF's MarkDups tool is an alternative to the Picard and Sambamba mark duplicate routines and handles UMIs. 
-It highly recommended that BAMs with high rates of duplicates and/or UMIs are re-run through MarkDups - see instructions below.
+#### Duplicate read marking and UMI processing
+
+The hmftools workflows is optimised to analyse reads processed by MarkDups, which has specialised approaches for
+duplicate read marking and UMI processing that are distinct from other common tools (e.g. Picard, Sambamba, UMI-tools,
+etc). Hence, it is strongly recommended that externally-generated BAMs are processed with MarkDups, this is
+particularly important where there are high rates of read duplicates or where UMIs have been used.
 
 ### WGTS workflow
 
@@ -60,7 +65,7 @@ It highly recommended that BAMs with high rates of duplicates and/or UMIs are re
 
 Require inputs shown as :white_check_mark: for available analyses
 
-| Analysis name | Tumor DNA Fastq or BAM | Normal DNA Fastq or BAM | Tumor RNA Fastq or BAM |
+| Analysis name | Tumor DNA (FASTQ/BAM) | Normal DNA (FASTQ/BAM) | Tumor RNA (FASTQ/BAM)|
 | ---               | :-:                | :-:                | :-:                |
 | Tumor/normal WGTS | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | Tumor/normal WGS  | :white_check_mark: | :white_check_mark: | -                  |
@@ -75,7 +80,7 @@ Require inputs shown as :white_check_mark: for available analyses
 
 Require inputs shown as :white_check_mark: for available analyses
 
-| Analysis name | Tumor DNA Fastq or BAM | Tumor RNA Fastq or BAM |
+| Analysis name | Tumor DNA (FASTQ/BAM) | Tumor RNA (FASTQ/BAM) |
 | ---           | :-:                | :-:           |
 | Tumor only    | :white_check_mark: | *optional*    |
 
@@ -89,29 +94,24 @@ Require inputs shown as :white_check_mark: for available analyses
 > [!NOTE]
 > Docker on Windows and macOS can perform poorly, so only running oncoanalyser on Linux is currently recommended.
 
-> [!WARNING]
-> Older versions of Docker may not work with Oncoanalyser. We recommend Docker version 25 or later. If you are
-> running an older version of your operating system, you may need to upgrade it in order to use an up to date
-> version of Docker.
-
-### Input Samples Sheet
+### Input samplesheet
 
 Running an analysis with oncoanalyser requires a samplesheet describing input files and samples. The samplesheet
 contains information that allows oncoanalyser to appropriately group samples (e.g. tumor/normal pairs), locate input
 files, and select relevant tools to run.
 
-Each entry in the samplesheet represents a single input file (or, in the case of paired fastq, the forward and reverse fastq files)
-and is connected with metadata such as sample/group
-identifers, sample type (tumor/normal), sequence type (DNA/RNA), filetype, and info. All entries with the same `group_id`
-value will be grouped together for processing, and the composition of a group determines the type of analysis run.
+Each entry in the samplesheet represents a single input file (or, in the case of paired FASTQ, the forward and reverse
+FASTQ files) and is connected with metadata such as sample/group identifers, sample type (tumor/normal), sequence type
+(DNA/RNA), and filetype. All entries with the same `group_id` value will be grouped together for processing, and
+the composition of a group determines the type of analysis run.
 
-An example samplesheet for the WGTS workflow is shown:
+An example samplesheet for the WGTS workflow with BAM inputs is shown:
 
 ```
-group_id,subject_id,sample_id,sample_type,sequence_type,filetype,info,filepath
-COLO829_example,COLO829,COLO829T,tumor,dna,bam,,/path/to/COLO829T.dna.bam
-COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,,/path/to/COLO829T.rna.bam
-COLO829_example,COLO829,COLO829R,normal,dna,bam,,/path/to/COLO829R.dna.bam
+group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
+COLO829_example,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
+COLO829_example,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
+COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,/path/to/COLO829T.rna.bam
 ```
 
 In this example, there is a single group (`COLO829_example`) that contains paired tumor/normal DNA BAMs and an RNA BAM,
@@ -122,11 +122,11 @@ inputs](#available-analysis-types-1) sections.
 Multiple groups can also be provided in a single sample sheet:
 
 ```
-group_id,subject_id,sample_id,sample_type,sequence_type,filetype,info,filepath
-COLO829_example,COLO829,COLO829T,tumor,dna,bam,,/path/to/COLO829T.dna.bam
-COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,,/path/to/COLO829T.rna.bam
-COLO829_example,COLO829,COLO829R,normal,dna,bam,,/path/to/COLO829R.dna.bam
-SEQC_example,SEQC,SEQCT,tumor,dna,bam,,/path/to/SEQCT.dna.bam
+group_id,subject_id,sample_id,sample_type,sequence_type,filetype,filepath
+COLO829_example,COLO829,COLO829R,normal,dna,bam,/path/to/COLO829R.dna.bam
+COLO829_example,COLO829,COLO829T,tumor,dna,bam,/path/to/COLO829T.dna.bam
+COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,/path/to/COLO829T.rna.bam
+SEQC_example,SEQC,SEQCT,tumor,dna,bam,/path/to/SEQCT.dna.bam
 ```
 
 Here the `SEQC_example` has been added to the previous example. Since only a tumor DNA BAM is provided for this
@@ -136,37 +136,41 @@ additional group, just a tumor-only WGS analysis is run for the SEQC sample.
 > Input filepaths can be absolute local paths, URLs, or S3 URIs
 
 > [!WARNING]
-> BAM indexes are expected to exist along side the respective input BAM
+> BAM indexes are expected to exist along side the respective input BAM but can also be provided as a separate
+> samplesheet entry by using the `bai` filetype
 
-It is recommended to run MarkDups as part of the pipeline even for a BAM which has previously had duplicated marked. 
-In this case, MarkDups will re-examine duplicate groups, create a consensus read and unmap poorly mapped reads.
-See [MarkDups](https://github.com/hartwigmedical/hmftools/tree/master/mark-dups) for more info.
+Given the importance of processing input BAMs with MarkDups prior to commencing analysis with the hmftools workflow,
+oncoanalyser will run MarkDups by default in order to apply specialised duplicate read marking, read consensus, and
+unmapping of low-quality reads. See [MarkDups](https://github.com/hartwigmedical/hmftools/tree/master/mark-dups) for
+more info.
 
-To skip running MarkDups, set the file type as `bam_markdups` instead of `bam`.
+The MarkDups step can be skipped where an input BAM has previously been processed by setting the samplesheet filetype as
+`bam_markdups` instead of `bam`.
 
-### Starting from FASTQ files
+#### FASTQ inputs
 
-Instead of providing a bam, fastq files can be provided and the pipeline will align these against the selected
-reference genome using BWA-MEM2.
-Continuing with the previous example, the following sample sheet would produce the COLO829T DNA bam for the pipeline
-from fastq files:
+An analysis can also be started from FASTQ inputs where oncoanalyser will perform alignment against the selected
+reference genome using bwa-mem2 (DNA reads) or STAR (RNA reads) then subsequently apply all necessary post-alignment
+processing. Continuing with the previous example, we can provide FASTQ files for COLO829:
 
 ```
 group_id,subject_id,sample_id,sample_type,sequence_type,filetype,info,filepath
-COLO829_example,COLO829,COLO829T,tumor,dna,fastq,lane:001;library_id:COLO829T_library,/path/to/lane001_COLO829T_first_of_pair.fastq.gz;/path/to/lane001_COLO829T_second_of_pair.fastq.gz
-COLO829_example,COLO829,COLO829T,tumor,dna,fastq,lane:002;library_id:COLO829T_library,/path/to/lane002_COLO829T_first_of_pair.fastq.gz;/path/to/lane002_COLO829T_second_of_pair.fastq.gz
-COLO829_example,COLO829,COLO829T,tumor,dna,fastq,lane:003;library_id:COLO829T_library,/path/to/lane003_COLO829T_first_of_pair.fastq.gz;/path/to/lane003_COLO829T_second_of_pair.fastq.gz
-COLO829_example,COLO829,COLO829T,tumor,dna,fastq,lane:004;library_id:COLO829T_library,/path/to/lane003_COLO829T_first_of_pair.fastq.gz;/path/to/lane004_COLO829T_second_of_pair.fastq.gz
-COLO829_example,COLO829,COLO829T_RNA,tumor,rna,bam,,/path/to/COLO829T.rna.bam
-COLO829_example,COLO829,COLO829R,normal,dna,bam,,/path/to/COLO829R.dna.bam
-SEQC_example,SEQC,SEQCT,tumor,dna,bam_markdups,,/path/to/SEQCT.dna.bam
+COLO829_example,COLO829,COLO829R,normal,dna,fastq,library_id:COLO829R_library;lane:001,/path/to/COLO829R.dna.001_R1.fastq.gz;/path/to/COLO829R.dna.001_R2.fastq.gz
+COLO829_example,COLO829,COLO829T,tumor,dna,fastq,library_id:COLO829T_library;lane:001,/path/to/COLO829T.dna.001_R1.fastq.gz;/path/to/COLO829T.dna.001_R2.fastq.gz
+COLO829_example,COLO829,COLO829T,tumor,dna,fastq,library_id:COLO829T_library;lane:002,/path/to/COLO829T.dna.002_R1.fastq.gz;/path/to/COLO829T.dna.002_R2.fastq.gz
+COLO829_example,COLO829,COLO829T,tumor,dna,fastq,library_id:COLO829T_library;lane:003,/path/to/COLO829T.dna.003_R1.fastq.gz;/path/to/COLO829T.dna.003_R2.fastq.gz
+COLO829_example,COLO829,COLO829T,tumor,dna,fastq,library_id:COLO829T_library;lane:004,/path/to/COLO829T.dna.004_R1.fastq.gz;/path/to/COLO829T.dna.004_R2.fastq.gz
+COLO829_example,COLO829,COLO829T_RNA,tumor,rna,fastq,library_id:COLO829T_RNA_library;lane:001,/path/to/COLO829T.rna.001_R1.fastq.gz;/path/to/COLO829T.rna.001_R2.fastq.gz
+SEQC_example,SEQC,SEQCT,tumor,dna,bam_markdups,,/path/to/SEQCT.markdups.dna.bam
 ```
-> [!NOTE]
-> There is a line in the samplesheet for each lane fastq file.
+
+Importantly we have now added the `info` column to the samplesheet so that we can provide the required lane and library
+data for FASTQ entries with each field delimited by a semi-column. The forward and reverse FASTQ files are set in the
+`filepath` column and are also separated by a semi-column, and are *strictly* ordered with forward reads in position one
+and reverse in position two.
 
 > [!NOTE]
-> Fastq files must be gzipped.
-
+> Only gzipped compressed, non-interleaved pair-end FASTQs are currently supported
 
 #### Samplesheet column descriptions
 
@@ -177,9 +181,9 @@ SEQC_example,SEQC,SEQCT,tumor,dna,bam_markdups,,/path/to/SEQCT.dna.bam
 | sample_id     | Sample ID                                                                                           |
 | sample_type   | Sample type: `tumor`, `normal`                                                                      |
 | sequence_type | Sequence type: `dna`, `rna`                                                                         |
-| filetype      | File type: `fastq`, `bam` or `bam_markdups`                                                         |
-| info          | For `fastq` file types, specify *lane* and *library id*, e.g. `lane:004;library_id:COLO829_library` |
-| filepath      | Absolute filepath to input file (can be local filepath, URL, S3 URI)                                | 
+| filetype      | File type: `fastq`, `bam`, `bam_markdups`, `bai`, etc                                               |
+| info          | For `fastq` file types, specify *library id* and *lane*, e.g. `library_id:COLO829_library;lane:001` |
+| filepath      | Absolute filepath to input file (can be local filepath, URL, S3 URI)                                |
 
 The identifiers provided in the samplesheet are used to set output file paths:
 
@@ -204,7 +208,7 @@ and the desired workflow. When running the targeted sequencing workflow the appl
 ```
 nextflow run nf-core/oncoanalyser \
   -profile docker \
-  -revision v0.3.0 \
+  -revision 0.4.0 \
   --mode wgts \
   --genome GRCh38_hmf \
   --input samplesheet.csv \
@@ -216,7 +220,7 @@ nextflow run nf-core/oncoanalyser \
 ```
 nextflow run nf-core/oncoanalyser \
   -profile docker \
-  -revision v0.3.0 \
+  -revision 0.4.0 \
   --mode targeted \
   --panel tso500 \
   --genome GRCh38_hmf \
