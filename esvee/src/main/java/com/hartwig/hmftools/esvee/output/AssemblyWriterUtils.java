@@ -6,6 +6,7 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.convertedIndelCrossesJunction;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_DISCORDANT_READ;
 import static com.hartwig.hmftools.esvee.common.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_MATE;
@@ -46,11 +47,13 @@ public final class AssemblyWriterUtils
         sj.add("RefDiscFrags");
 
         sj.add("JuncSupps");
+        sj.add("JuncIndels");
         sj.add("JuncMateConcord");
-        sj.add("JuncMateDiscord");
         sj.add("JuncMateRefSide");
-        sj.add("JuncMateUnmapped");
-        sj.add("IndelReads");
+        sj.add("JuncMateDiscordRemote");
+        sj.add("JuncMateDiscordRefSide");
+        sj.add("JuncMateUnmappedRemote");
+        sj.add("JuncMateUnmappedRefSide");
     }
 
     protected static void addSupportCounts(final JunctionAssembly assembly, final StringJoiner sj)
@@ -62,9 +65,11 @@ public final class AssemblyWriterUtils
 
         int juncSupps = 0;
         int juncMateConcordant = 0;
-        int juncMateDiscordant = 0;
+        int juncMateDiscordantRemote = 0;
+        int juncMateDiscordantRefSide = 0;
         int juncMateRefSide = 0;
-        int juncMateUnmapped = 0;
+        int juncMateUnmappedRemote = 0;
+        int juncMateUnmappedRefSide = 0;
         int indelReads = 0;
 
         int juncUnlinkedMates = 0;
@@ -96,15 +101,23 @@ public final class AssemblyWriterUtils
                 if(read.isSupplementary())
                     ++juncSupps;
 
+                boolean matePastJunction = (read.orientation() == POS_ORIENT) == assembly.isForwardJunction();
+
                 if(read.isMateUnmapped())
                 {
-                    ++juncMateUnmapped;
+                    if(matePastJunction)
+                        ++juncMateUnmappedRemote;
+                    else
+                        ++juncMateUnmappedRefSide;
                 }
                 else
                 {
                     if(isDiscordant(read))
                     {
-                        ++juncMateDiscordant;
+                        if(matePastJunction)
+                            ++juncMateDiscordantRemote;
+                        else
+                            ++juncMateDiscordantRefSide;
                     }
                     else
                     {
@@ -147,11 +160,14 @@ public final class AssemblyWriterUtils
         sj.add(String.valueOf(refSampleDiscFrags));
 
         sj.add(String.valueOf(juncSupps));
-        sj.add(String.valueOf(juncMateConcordant));
-        sj.add(String.valueOf(juncMateDiscordant));
-        sj.add(String.valueOf(juncMateRefSide));
-        sj.add(String.valueOf(juncMateUnmapped));
         sj.add(String.valueOf(indelReads));
+
+        sj.add(String.valueOf(juncMateConcordant));
+        sj.add(String.valueOf(juncMateRefSide));
+        sj.add(String.valueOf(juncMateDiscordantRemote));
+        sj.add(String.valueOf(juncMateDiscordantRefSide));
+        sj.add(String.valueOf(juncMateUnmappedRemote));
+        sj.add(String.valueOf(juncMateUnmappedRefSide));
 
         /*
         sj.add(String.valueOf(juncUnlinkedMates));

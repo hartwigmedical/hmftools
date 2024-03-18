@@ -70,19 +70,7 @@ public class PhaseSetBuilder
 
         if(mAssemblies.size() == 2)
         {
-            if(mAssemblies.stream().anyMatch(x -> x.outcome() == SHORT_INDEL))
-                return;
-
-            // if no link was made, then may need to revert to logic for finding discordant pair assemblies etc
-            // likewise may depend for solo-assemblies how disc-only assemblies are used
-            AssemblyLink assemblyLink = checkSplitLink(mAssemblies.get(0), mAssemblies.get(1));
-
-            if(assemblyLink != null)
-            {
-                buildSplitLink(mAssemblies.get(0), mAssemblies.get(1), false);
-                mPhaseSets.add(new PhaseSet(assemblyLink));
-            }
-
+            handleAssemblyPair();
             return;
         }
 
@@ -95,6 +83,26 @@ public class PhaseSetBuilder
         formPhaseSets();
 
         cleanupBranchedAssemblies();
+    }
+
+    private void handleAssemblyPair()
+    {
+        // simpler routine without prioritising pairs, facing links or branching
+        JunctionAssembly assembly1 = mAssemblies.get(0);
+        JunctionAssembly assembly2 = mAssemblies.get(1);
+
+        if(!isLocalAssemblyCandidate(assembly1, assembly2) && (assembly1.outcome() == SHORT_INDEL) || assembly2.outcome() == SHORT_INDEL)
+            return;
+
+        // if no link was made, then may need to revert to logic for finding discordant pair assemblies etc
+        // likewise may depend for solo-assemblies how disc-only assemblies are used
+        AssemblyLink assemblyLink = checkSplitLink(assembly1, assembly2);
+
+        if(assemblyLink != null)
+        {
+            buildSplitLink(assembly1, assembly2, false);
+            mPhaseSets.add(new PhaseSet(assemblyLink));
+        }
     }
 
     private void markShortIndelAssemblies()
@@ -124,14 +132,16 @@ public class PhaseSetBuilder
         {
             JunctionAssembly assembly1 = mAssemblies.get(i);
 
-            if(assembly1.outcome() == SHORT_INDEL)
-                continue;
-
             for(int j = i + 1; j < mAssemblies.size(); ++j)
             {
                 JunctionAssembly assembly2 = mAssemblies.get(j);
 
-                if(assembly1.indel() != assembly2.indel() || assembly2.outcome() == SHORT_INDEL)
+                if(assembly1.indel() != assembly2.indel())
+                    continue;
+
+                boolean isLocalLink = isLocalAssemblyCandidate(assembly1, assembly2);
+
+                if(!isLocalLink && (assembly1.outcome() == SHORT_INDEL || assembly2.outcome() == SHORT_INDEL))
                     continue;
 
                 int sharedCount = 0;
@@ -148,8 +158,6 @@ public class PhaseSetBuilder
                     if(hasMatchingFragment(assembly2.support(), support.read()))
                         ++sharedCount;
                 }
-
-                boolean isLocalLink = isLocalAssemblyCandidate(assembly1, assembly2);
 
                 if(sharedCount > 1 || isLocalLink)
                     assemblySupportPairs.add(new SharedAssemblySupport(assembly1, assembly2, sharedCount, isLocalLink));
