@@ -43,6 +43,8 @@ public class PurityConstants
     public static final int CHIP_MIN_ALLELE_FRAGS = 5;
     public static final double CHIP_MIN_SAMPLE_PERC = 0.33;
 
+    public static final double AMBER_LOH_MINOR_ALLELE_THRESHOLD = 0.2;
+    public static final double AMBER_LOH_CN_THRESHOLD = 0.8;
     public static final double AMBER_LOH_MIN_TUMOR_BAF = 0.55;
     public static final double AMBER_LOH_MIN_AF = 0.55;
 

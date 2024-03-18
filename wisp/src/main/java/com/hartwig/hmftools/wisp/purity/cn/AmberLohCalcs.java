@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.FileType.AMBER_LOH;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_CN_THRESHOLD;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_MINOR_ALLELE_THRESHOLD;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_MIN_AF;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.AMBER_LOH_MIN_TUMOR_BAF;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
@@ -86,8 +88,12 @@ public class AmberLohCalcs
 
             for(PurpleCopyNumber copyNumber : mCopyNumbers)
             {
-                if(copyNumber.minorAlleleCopyNumber() > 0.5)
+                // purpleLOH = purpleCN %>% filter(minorAlleleCopyNumber<0.2&copyNumber>0.8)
+                if(copyNumber.minorAlleleCopyNumber() > AMBER_LOH_MINOR_ALLELE_THRESHOLD
+                || copyNumber.averageTumorCopyNumber() < AMBER_LOH_CN_THRESHOLD)
+                {
                     continue;
+                }
 
                 List<PurpleCopyNumber> copyNumbers = chrCopyNumbers.get(copyNumber.chromosome());
 
