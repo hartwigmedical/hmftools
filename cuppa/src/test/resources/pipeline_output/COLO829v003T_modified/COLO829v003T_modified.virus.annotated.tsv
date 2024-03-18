@@ -1,0 +1,2 @@
+taxid	name	qcStatus	integrations	interpretation	percentageCovered	meanCoverage	expectedClonalCoverage	reported	driverLikelihood
+493803	Merkel cell polyomavirus	NO_ABNORMALITIES	2	MCV	99.4251	97.5443	40.580068941176464	true	HIGH
