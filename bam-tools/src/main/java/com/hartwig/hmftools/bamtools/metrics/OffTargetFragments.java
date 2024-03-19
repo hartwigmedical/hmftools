@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;
@@ -69,6 +70,7 @@ public class OffTargetFragments
     private void processOverlappingFragments()
     {
         int maxOverlaps = 0;
+        Fragment peakOverlapFragment = null;
 
         for(Fragment first : mFragments)
         {
@@ -88,13 +90,18 @@ public class OffTargetFragments
             Integer frequency = mOverlapCounts.get(overlaps);
             mOverlapCounts.put(overlaps, frequency != null ? frequency + 1 : 1);
 
-            maxOverlaps = max(maxOverlaps, overlaps);
+            if(overlaps > maxOverlaps)
+            {
+                maxOverlaps = overlaps;
+                peakOverlapFragment = first;
+            }
         }
 
         if(mFragmentOverlapWriteThreshold > 0 && maxOverlaps >= mFragmentOverlapWriteThreshold)
         {
             mEnrichedSites.add(new EnrichedSite(
                     new ChrBaseRegion(mFragments.get(0).Chromosome, mCurrentLowerPosition, mCurrentUpperPosition),
+                    new BaseRegion(peakOverlapFragment.AlignmentStart, peakOverlapFragment.AlignmentEnd),
                     mFragments.size(), maxOverlaps));
         }
 
@@ -137,12 +144,14 @@ public class OffTargetFragments
     private class EnrichedSite
     {
         public final ChrBaseRegion Region;
+        public final BaseRegion PeakRegion;
         public final int Fragments;
         public final int MaxOverlap;
 
-        public EnrichedSite(final ChrBaseRegion region, final int fragments, final int maxOverlap)
+        public EnrichedSite(final ChrBaseRegion region, final BaseRegion peakRegion, final int fragments, final int maxOverlap)
         {
             Region = region;
+            PeakRegion = peakRegion;
             Fragments = fragments;
             MaxOverlap = maxOverlap;
         }
@@ -162,8 +171,9 @@ public class OffTargetFragments
 
         for(EnrichedSite enrichedSite : mEnrichedSites)
         {
-            enrichedDataInfo.add(format("%s\t%s\t%d\t%d\t%d",
+            enrichedDataInfo.add(format("%s\t%s\t%d\t%d\t%d\t%d\t%d",
                     enrichedSite.Region.Chromosome, enrichedSite.Region.start(), enrichedSite.Region.end(),
+                    enrichedSite.PeakRegion.start(), enrichedSite.PeakRegion.end(),
                     enrichedSite.Fragments, enrichedSite.MaxOverlap));
         }
 
@@ -208,7 +218,7 @@ public class OffTargetFragments
             String filename = config.formFilename("off_target_enriched");
 
             BufferedWriter writer = createBufferedWriter(filename, false);
-            writer.write("Chromosome\tPosStart\tPosEnd\tFragments\tMaxOverlap");
+            writer.write("Chromosome\tPosStart\tPosEnd\tPeakPosStart\tPeakPosEnd\tFragments\tMaxOverlap");
             writer.newLine();
             return writer;
         }

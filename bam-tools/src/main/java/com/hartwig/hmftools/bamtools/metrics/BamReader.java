@@ -217,8 +217,14 @@ public class BamReader
         {
             isLocalConcordantFragment = !SvUtils.isDiscordant(read);
 
-            if(isLocalConcordantFragment && read.getSecondOfPairFlag())
-                return; // to avoid double-counting
+            if(isLocalConcordantFragment)
+            {
+                // avoid double-counting
+                if(read.getAlignmentStart() > read.getMateAlignmentStart())
+                    return;
+                else if(read.getAlignmentStart() == read.getMateAlignmentStart() && read.getSecondOfPairFlag())
+                    return;
+            }
         }
         else
         {
