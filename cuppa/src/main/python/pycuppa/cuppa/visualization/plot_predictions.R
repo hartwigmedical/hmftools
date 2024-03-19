@@ -423,12 +423,10 @@ plot_cv_performance <- function(VIS_DATA, data_value_rounding = 2){
 
 plot_signatures <- function(
    VIS_DATA,
-   data_value_rounding = 2,
    feat_value_rounding = 0,
    feat_perc_signif = 1
 ){
    if(FALSE){
-      data_value_rounding = 2
       feat_value_rounding = 0
       feat_perc_signif = 2
    }
@@ -436,7 +434,22 @@ plot_signatures <- function(
    plot_data <- subset(VIS_DATA, data_type=="sig_quantile")
 
    plot_data$row_group <- "signature"
-   plot_data$data_label <- round(plot_data$data_value, data_value_rounding)
+
+   rounding_params <- list(
+     list(lower=1000, upper=Inf,   func=function(x) formatC(x, format="e", digits=0)),
+     list(lower=-100, upper=1000, func=function(x) round(x, digits=2)),
+     list(lower=-Inf, upper=-100,  func=function(x) formatC(x, format="e", digits=0))
+   )
+
+   plot_data$data_label <- sapply(plot_data$data_value, function(value){
+     for(params in rounding_params){
+       if(value >= params$lower & value < params$upper){
+         return(params$func(value))
+       }
+     }
+
+     return(value)
+  })
 
    ## Make row labels --------------------------------
    plot_data$row_label <- with(plot_data, {
@@ -453,9 +466,9 @@ plot_signatures <- function(
 
    ## Discretize quantiles --------------------------------
    quantile_info <- list(
-      breaks=c(0, 0.95, 1.2, Inf),
-      labels=c(">0 - 0.95 (in expected range)", "0.95 - 1.2 (above expected range)", ">1.2 (well above expected range)"),
-      colors=c("#C9E7CD", "#f5dfdf","#e8b6b6") ## white, green, light green, red
+      breaks=c(-Inf, -0.004, 0.004, 0.95, 1.2, Inf),
+      labels=c("<0 (below expected range)", "0", ">0 - 0.95 (in expected range)", "0.95 - 1.2 (above expected range)", ">1.2 (well above expected range)"),
+      colors=c("lightcyan2", "grey95", "#C9E7CD", "#f5dfdf","#e8b6b6") ## white, green, light green, red
    )
 
    plot_data$data_value <- cut(
@@ -471,7 +484,7 @@ plot_signatures <- function(
       cell_color="grey50"
    ) +
    scale_fill_manual(
-      values=structure(quantile_info$colors, names=quantile_info$labels),
+      values=structure(quantile_info$colors[quantile_info$colors != "grey95"], names=quantile_info$labels[quantile_info$labels != "0"]),
       guide=guide_legend(override.aes=list(colour="black", linetype=1)),
       na.value="grey95", drop=FALSE
    ) +
