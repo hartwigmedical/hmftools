@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.samtools.BamSlicer;
 
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
 
 public class PartitionThread extends Thread
 {
@@ -22,13 +21,16 @@ public class PartitionThread extends Thread
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
     private final Queue<PartitionTask> mPartitions;
+    private final MetricsWriter mMetricsWriter;
 
     public PartitionThread(
-            final MetricsConfig config, final Queue<PartitionTask> partitions, final CombinedStats combinedStats)
+            final MetricsConfig config, final Queue<PartitionTask> partitions, final CombinedStats combinedStats,
+            final MetricsWriter metricsWriter)
     {
         mConfig = config;
         mCombinedStats = combinedStats;
         mPartitions = partitions;
+        mMetricsWriter = metricsWriter;
 
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
@@ -49,14 +51,19 @@ public class PartitionThread extends Thread
             {
                 PartitionTask partition = mPartitions.remove();
 
-                BamReader slicer = new BamReader(partition.Region, mConfig, mSamReader, mBamSlicer, mCombinedStats);
+                BamReader bamReader = new BamReader(partition.Region, mConfig, mSamReader, mBamSlicer, mCombinedStats);
 
                 if(partition.TaskId > 0 && (partition.TaskId % 10) == 0)
                 {
                     BT_LOGGER.info("processing partition({}), remaining({})", partition.TaskId, mPartitions.size());
                 }
 
-                slicer.run();
+                bamReader.run();
+
+                TargetRegionStats.writeStatistics(mMetricsWriter.targetRegionsWriter(), bamReader.targetRegionStats());
+
+                OffTargetFragments.writeEnrichedRegions(
+                        mMetricsWriter.offTargetHighFragmentOverlapWriter(), bamReader.offTargetFragments().enrichedFragmentSites());
             }
             catch(NoSuchElementException e)
             {

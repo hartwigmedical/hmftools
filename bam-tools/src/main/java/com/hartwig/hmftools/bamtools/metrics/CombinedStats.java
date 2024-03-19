@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
-import java.util.List;
+import java.util.Map;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
 public class CombinedStats
@@ -11,8 +11,7 @@ public class CombinedStats
     private final FragmentLengths mFragmentLengths;
     private final ReadCounts mReadCounts;
     private final FlagStats mFlagStats;
-
-    private final List<TargetRegionStats> mTargetRegions;
+    private final Map<Integer,Integer> mOffTargetOverlapCounts;
 
     private final PerformanceCounter mPerfCounter;
 
@@ -23,7 +22,7 @@ public class CombinedStats
         mPerfCounter = new PerformanceCounter("Coverage");
         mReadCounts = new ReadCounts();
         mFlagStats = new FlagStats();
-        mTargetRegions = Lists.newArrayList();
+        mOffTargetOverlapCounts = Maps.newHashMap();
     }
 
     public CoverageMetrics coverageMetrics() { return mCoverageMetrics; }
@@ -36,11 +35,12 @@ public class CombinedStats
     {
         return mFlagStats;
     }
-    public List<TargetRegionStats> targetRegions() { return mTargetRegions; }
+
+    public Map<Integer,Integer> offTargetOverlapCounts() { return mOffTargetOverlapCounts; }
 
     public synchronized void addStats(
             final CoverageMetrics metrics, final FragmentLengths fragmentLengths, final ReadCounts readCounts,
-            final FlagStats flagStats, final List<TargetRegionStats> targetRegions, final PerformanceCounter perfCounter)
+            final FlagStats flagStats, final Map<Integer,Integer> offTargetOverlapCounts, final PerformanceCounter perfCounter)
     {
         mCoverageMetrics.merge(metrics);
         mFragmentLengths.merge(fragmentLengths);
@@ -48,18 +48,10 @@ public class CombinedStats
         mPerfCounter.merge(perfCounter);
         mFlagStats.merge(flagStats);
 
-        for(TargetRegionStats targetRegion : targetRegions)
+        for(Map.Entry<Integer,Integer> entry : offTargetOverlapCounts.entrySet())
         {
-            TargetRegionStats matchedRegion = mTargetRegions.stream().filter(x -> x.Region.matches(targetRegion.Region)).findFirst().orElse(null);
-
-            if(matchedRegion != null)
-            {
-                matchedRegion.Counts.merge(targetRegion.Counts);
-            }
-            else
-            {
-                mTargetRegions.add(targetRegion);
-            }
+            Integer frequency = mOffTargetOverlapCounts.get(entry.getKey());
+            mOffTargetOverlapCounts.put(entry.getKey(), frequency != null ? frequency + entry.getValue() : entry.getValue());
         }
     }
 }

@@ -68,7 +68,7 @@ public class MetricsTest
         bamReader.processRead(read);
 
         bamReader.postSliceProcess();
-        assertEquals(3, combinedStats.readCounts().TotalReads);
+        assertEquals(3, combinedStats.readCounts().Total);
         assertEquals(1, combinedStats.readCounts().Duplicates);
         assertEquals(3, combinedStats.flagStats().passCount(FlagStatType.PRIMARY));
         assertEquals(1, combinedStats.flagStats().passCount(FlagStatType.DUPLICATE));
@@ -109,7 +109,7 @@ public class MetricsTest
         bamReader.processRead(read);
 
         bamReader.postSliceProcess();
-        assertEquals(2, combinedStats.readCounts().TotalReads);
+        assertEquals(2, combinedStats.readCounts().Total);
         assertEquals(1, combinedStats.readCounts().Duplicates);
         assertEquals(1, combinedStats.readCounts().DualStrand);
         assertEquals(0, combinedStats.flagStats().passCount(FlagStatType.PRIMARY));

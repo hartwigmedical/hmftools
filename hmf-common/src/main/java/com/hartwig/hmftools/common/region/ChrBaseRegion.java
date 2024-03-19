@@ -277,7 +277,6 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
         }
     }
 
-
     public static void checkMergeOverlaps(final List<ChrBaseRegion> regions, boolean checkSorted)
     {
         if(checkSorted)
