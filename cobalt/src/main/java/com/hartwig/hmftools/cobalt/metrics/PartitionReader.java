@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cobalt.metrics;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_MIN_MAPPING_QUALITY;
@@ -182,6 +183,9 @@ public class PartitionReader extends Thread
         int matePosStart = mate.getAlignmentStart();
         int matePosEnd = mate.getAlignmentEnd();
 
+        int fragPosStart = min(readPosStart, matePosStart);
+        int fragPosEnd = max(readPosEnd, matePosEnd);
+
         double gcContent;
 
         if(positionsOverlap(readPosStart, readPosEnd, matePosStart, matePosEnd))
@@ -214,7 +218,7 @@ public class PartitionReader extends Thread
             gcContent = GcCalcs.calcGcPercent(fragmentBases);
         }
 
-        addFragmentData(read.getAlignmentStart(), read.getAlignmentEnd(), duplicateCount, gcContent, fragmentLength);
+        addFragmentData(fragPosStart, fragPosEnd, duplicateCount, gcContent, fragmentLength);
     }
 
     private static int getDuplicateReadCount(final SAMRecord read)
