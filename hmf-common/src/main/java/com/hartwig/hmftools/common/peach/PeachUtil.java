@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 public class PeachUtil
 {
     public static final String HAPLOTYPE_SEPARATOR = "_";
+    public static final String DRUG_SEPARATOR = ";";
 
     public static final String HOMOZYGOUS_ZYGOSITY_STRING = "HOM";
     public static final String HETEROZYGOUS_ZYGOSITY_STRING = "HET";

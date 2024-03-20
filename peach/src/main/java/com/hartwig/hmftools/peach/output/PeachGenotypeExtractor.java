@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.peach.output;
 
+import static com.hartwig.hmftools.common.peach.PeachUtil.DRUG_SEPARATOR;
 import static com.hartwig.hmftools.common.peach.PeachUtil.UNKNOWN_ALLELE_STRING;
 import static com.hartwig.hmftools.peach.PeachUtils.GERMLINE_TOTAL_COPY_NUMBER;
 
@@ -21,8 +22,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class PeachGenotypeExtractor
 {
-    private static final String DRUG_SEPARATOR = ";";
-
     @NotNull
     public static List<PeachGenotype> extract(final @NotNull Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis,
             final @Nullable DrugInfoStore drugInfoStore, final @Nullable HaplotypeFunctionStore haplotypeFunctionStore)
