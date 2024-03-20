@@ -6,18 +6,16 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.bamtools.metrics.OffTargetFragments.FLD_PEAK_POS_END;
+import static com.hartwig.hmftools.bamtools.metrics.OffTargetFragments.FLD_PEAK_POS_START;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations.REPEAT_MASK_FILE;
-import static com.hartwig.hmftools.common.region.ChrBaseRegion.getPositionEndFieldIndex;
-import static com.hartwig.hmftools.common.region.ChrBaseRegion.getPositionStartFieldIndex;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
@@ -42,7 +40,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
-public class EnrichedRegionAnnotations
+public class EnrichedRegionRepeatMasks
 {
     private final String mOutputFile;
     private final String mInputRegionsFile;
@@ -53,7 +51,7 @@ public class EnrichedRegionAnnotations
     private static final String INPUT_REGION_FILE = "input_region_file";
     private static final String OUTPUT_FILE = "output_file";
 
-    public EnrichedRegionAnnotations(final ConfigBuilder configBuilder)
+    public EnrichedRegionRepeatMasks(final ConfigBuilder configBuilder)
     {
         mRmAnnotation = new RepeatMaskAnnotations();
 
@@ -124,11 +122,14 @@ public class EnrichedRegionAnnotations
 
             String header = fileReader.readLine();
 
-            mWriter = createBufferedWriter(mOutputFile, false);
+            String outputFile = mOutputFile != null ?
+                    mOutputFile : mInputRegionsFile.replaceAll(TSV_EXTENSION, ".repeat_mask" + TSV_EXTENSION);
+
+            mWriter = createBufferedWriter(outputFile, false);
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add(header);
-            sj.add("RmRegions").add("RmOverlapBases").add("RmClassTypes");
+            sj.add("RmRegions").add("RmOverlapBases").add("RmClassTypes").add("RmRepeat");
 
             mWriter.write(sj.toString());
             mWriter.newLine();
@@ -136,8 +137,8 @@ public class EnrichedRegionAnnotations
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
 
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
-            int posStartIndex = fieldsIndexMap.get("PeakPosStart");
-            int posEndIndex = fieldsIndexMap.get("PeakPosEnd");
+            int posStartIndex = fieldsIndexMap.get(FLD_PEAK_POS_START);
+            int posEndIndex = fieldsIndexMap.get(FLD_PEAK_POS_END);
 
             String line = null;
 
@@ -196,10 +197,6 @@ public class EnrichedRegionAnnotations
     private void processRegion(final RegionData region)
     {
         List<RepeatMaskData> rmDataMatches = mRmAnnotation.findMatches(region);
-
-        if(rmDataMatches.isEmpty())
-            return;
-
         write(region, rmDataMatches);
     }
 
@@ -221,8 +218,9 @@ public class EnrichedRegionAnnotations
                 }
             }
 
-            mWriter.write(format("%s\t%d\t%d\t%s",
-                    region.Data, rmDataMatches.size(), maxBaseOverlap, maxOverlapRmData.ClassType));
+            mWriter.write(format("%s\t%d\t%d\t%s\t%s",
+                    region.Data, rmDataMatches.size(), maxBaseOverlap,
+                    maxOverlapRmData != null ? maxOverlapRmData.ClassType : "", maxOverlapRmData != null ? maxOverlapRmData.Repeat : ""));
 
             mWriter.newLine();
          }
@@ -237,7 +235,7 @@ public class EnrichedRegionAnnotations
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         configBuilder.addPath(INPUT_REGION_FILE, true, "File with enriched regions to annotation");
-        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output matching file");
+        configBuilder.addConfigItem(OUTPUT_FILE, false, "Output matching file");
         addRefGenomeVersion(configBuilder);
         RepeatMaskAnnotations.addConfig(configBuilder);
         addThreadOptions(configBuilder);
@@ -246,7 +244,7 @@ public class EnrichedRegionAnnotations
         
         configBuilder.checkAndParseCommandLine(args);
 
-        EnrichedRegionAnnotations enrichedRegionAnnotations = new EnrichedRegionAnnotations(configBuilder);
-        enrichedRegionAnnotations.run();
+        EnrichedRegionRepeatMasks enrichedRegionRepeatMasks = new EnrichedRegionRepeatMasks(configBuilder);
+        enrichedRegionRepeatMasks.run();
     }
 }

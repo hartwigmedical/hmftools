@@ -5,8 +5,12 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.common.metrics.BamMetricsSummary.BAM_METRICS_FILE_ID;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
@@ -14,6 +18,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -34,6 +39,9 @@ public class OffTargetFragments
     private final Map<Integer,Integer> mOverlapCounts;
 
     private final int mFragmentOverlapWriteThreshold;
+
+    public static final String FLD_PEAK_POS_START = "PeakPosStart";
+    public static final String FLD_PEAK_POS_END = "PeakPosEnd";
 
     public OffTargetFragments(final int fragmentOverlapWriteThreshold)
     {
@@ -69,6 +77,10 @@ public class OffTargetFragments
 
     private void processOverlappingFragments()
     {
+        if(mFragments.isEmpty())
+            return;
+
+        // find how many other fragments overlap each fragment
         int maxOverlaps = 0;
         Fragment peakOverlapFragment = null;
 
@@ -97,12 +109,38 @@ public class OffTargetFragments
             }
         }
 
-        if(mFragmentOverlapWriteThreshold > 0 && maxOverlaps >= mFragmentOverlapWriteThreshold)
+        // find the max depth across these fragments
+        int maxBaseDepth = 0;
+        int maxBaseDepthRegionStart = 0;
+        int maxBaseDepthRegionEnd = 0;
+
+        for(int pos = peakOverlapFragment.AlignmentStart; pos <= peakOverlapFragment.AlignmentEnd; ++pos)
+        {
+            int baseDepth = 0;
+
+            for(Fragment fragment : mFragments)
+            {
+                if(positionWithin(pos, fragment.AlignmentStart, fragment.AlignmentEnd))
+                    ++baseDepth;
+            }
+
+            if(baseDepth > maxBaseDepth)
+            {
+                maxBaseDepth = baseDepth;
+                maxBaseDepthRegionStart = pos;
+            }
+            else if(baseDepth == maxBaseDepth)
+            {
+                maxBaseDepthRegionEnd = pos;
+            }
+        }
+
+        if(mFragmentOverlapWriteThreshold > 0 && maxBaseDepth >= mFragmentOverlapWriteThreshold)
         {
             mEnrichedSites.add(new EnrichedSite(
                     new ChrBaseRegion(mFragments.get(0).Chromosome, mCurrentLowerPosition, mCurrentUpperPosition),
-                    new BaseRegion(peakOverlapFragment.AlignmentStart, peakOverlapFragment.AlignmentEnd),
-                    mFragments.size(), maxOverlaps));
+                    new BaseRegion(maxBaseDepthRegionStart, maxBaseDepthRegionEnd),
+                    mFragments.size(), maxBaseDepth));
         }
 
         mFragments.clear();
@@ -218,7 +256,16 @@ public class OffTargetFragments
             String filename = config.formFilename("off_target_enriched");
 
             BufferedWriter writer = createBufferedWriter(filename, false);
-            writer.write("Chromosome\tPosStart\tPosEnd\tPeakPosStart\tPeakPosEnd\tFragments\tMaxOverlap");
+
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(FLD_CHROMOSOME);
+            sj.add(FLD_POS_START);
+            sj.add(FLD_POS_END);
+            sj.add(FLD_PEAK_POS_START);
+            sj.add(FLD_PEAK_POS_END);
+            sj.add("Fragments");
+            sj.add("MaxOverlap");
+            writer.write(sj.toString());
             writer.newLine();
             return writer;
         }
