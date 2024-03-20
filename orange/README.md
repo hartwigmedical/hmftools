@@ -231,6 +231,9 @@ investigate potential causes for QC failure.
 
 ## Version History and Download Links
 
+- Upcoming
+    - Bugfix: ORANGE can now map stomach and esophageal squamous cell carcinomas to their rightful cohort. 
+      - Note: Available in ORANGE [3.3.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.3.1)
 - [3.3.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.3.0)
     - Clonal likelihood is set to 0 or 1 based on variant copy number when converting germline variants to somatic
     - Bugfix: Fix bug in germline MVLH parsing that caused them to be underestimated by a factor 100.
