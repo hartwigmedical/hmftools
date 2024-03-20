@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.peach;
 
-import static com.hartwig.hmftools.peach.TestUtils.loadTestHaplotypePanel;
+import static com.hartwig.hmftools.peach.TestUtils.getTestResourcePath;
+import static com.hartwig.hmftools.peach.panel.TestHaplotypePanelFactory.createDefaultTestHaplotypePanel;
 
 import static junit.framework.TestCase.assertEquals;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.peach.data_loader.PanelLoader;
 import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
 import com.hartwig.hmftools.peach.panel.HaplotypePanel;
 
@@ -32,7 +34,7 @@ public class HaplotypeCallerTest
     @Test
     public void testNoEvents()
     {
-        HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.complicated.37.tsv");
+        HaplotypePanel haplotypePanel = createDefaultTestHaplotypePanel();
         Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, new HashMap<>());
 
         HaplotypeAnalysis expectedDpydHaplotypeAnalysis = new HaplotypeAnalysis(
@@ -58,7 +60,7 @@ public class HaplotypeCallerTest
     @Test
     public void testWildTypes()
     {
-        HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.complicated.37.tsv");
+        HaplotypePanel haplotypePanel = createDefaultTestHaplotypePanel();
         Map<String, Integer> eventIdToCount = Map.of("VAR_chr1_98348885_G_A", 2);
         Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, eventIdToCount);
 
@@ -85,7 +87,7 @@ public class HaplotypeCallerTest
     @Test
     public void testHeterozygousNonWildType()
     {
-        HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.complicated.37.tsv");
+        HaplotypePanel haplotypePanel = createDefaultTestHaplotypePanel();
         Map<String, Integer> eventIdToCount = Map.of(
                 "VAR_chr1_98348885_G_A", 2,
                 "VAR_chr1_98205966_GATGA_G", 1,
@@ -127,7 +129,7 @@ public class HaplotypeCallerTest
     @Test
     public void testHeterozygousWildType()
     {
-        HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.complicated.37.tsv");
+        HaplotypePanel haplotypePanel = createDefaultTestHaplotypePanel();
         Map<String, Integer> eventIdToCount = Map.of(
                 "VAR_chr1_98348885_G_A", 1,
                 "VAR_chr2_234669144_G_A", 1
@@ -161,7 +163,7 @@ public class HaplotypeCallerTest
     @Test
     public void testHeterozygousDefaultHaplotype()
     {
-        HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.complicated.37.tsv");
+        HaplotypePanel haplotypePanel = createDefaultTestHaplotypePanel();
         Map<String, Integer> eventIdToCount = Map.of(
                 "VAR_chr1_98348885_G_A", 1,
                 "VAR_chr1_97915614_C_T", 1,
@@ -197,7 +199,7 @@ public class HaplotypeCallerTest
     @Test
     public void testHomozygousNonWildType()
     {
-        HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.complicated.37.tsv");
+        HaplotypePanel haplotypePanel = createDefaultTestHaplotypePanel();
         Map<String, Integer> eventIdToCount = Map.of(
                 "VAR_chr1_97981343_A_C", 2,
                 "VAR_chr1_98348885_G_A", 2,
@@ -233,7 +235,7 @@ public class HaplotypeCallerTest
     @Test
     public void testOverlappingGenes()
     {
-        HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.overlap.tsv");
+        HaplotypePanel haplotypePanel = PanelLoader.loadHaplotypePanel(getTestResourcePath("haplotypes.overlap.tsv"));
         Map<String, Integer> eventIdToCount = Map.of(
                 "VAR_chr3_1234567_CAT_C", 1,
                 "VAR_chr3_1234567_C_CAT", 1
@@ -279,7 +281,7 @@ public class HaplotypeCallerTest
     @Test
     public void testAmbiguousCallingPreferFewerHaplotypes()
     {
-        HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.ambiguous.tsv");
+        HaplotypePanel haplotypePanel = PanelLoader.loadHaplotypePanel(getTestResourcePath("haplotypes.ambiguous.tsv"));
         Map<String, Integer> eventIdToCount = Map.of(
                 "VAR_chr3_1234567_C_CAT", 2,
                 "VAR_chr3_1234765_G_C", 1
@@ -309,7 +311,7 @@ public class HaplotypeCallerTest
     @Test
     public void testAmbiguousCallingNoBestHaplotype()
     {
-        HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.ambiguous.tsv");
+        HaplotypePanel haplotypePanel = PanelLoader.loadHaplotypePanel(getTestResourcePath("haplotypes.ambiguous.tsv"));
         Map<String, Integer> eventIdToCount = Map.of(
                 "VAR_chr3_1234567_C_CAT", 1,
                 "VAR_chr3_1234765_G_C", 1,
@@ -341,7 +343,7 @@ public class HaplotypeCallerTest
     @Test
     public void testAmbiguousCallingPreferWildType()
     {
-        HaplotypePanel haplotypePanel = loadTestHaplotypePanel("haplotypes.ambiguous.tsv");
+        HaplotypePanel haplotypePanel = PanelLoader.loadHaplotypePanel(getTestResourcePath("haplotypes.ambiguous.tsv"));
         Map<String, Integer> eventIdToCount = Map.of(
                 "VAR_chr3_1234567_C_CAT", 1,
                 "VAR_chr3_1234765_G_C", 1

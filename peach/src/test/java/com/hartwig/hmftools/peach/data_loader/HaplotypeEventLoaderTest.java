@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.peach.data_loader;
 
 import static com.hartwig.hmftools.peach.TestUtils.getTestResourcePath;
-import static com.hartwig.hmftools.peach.TestUtils.loadTestHaplotypePanel;
+import static com.hartwig.hmftools.peach.panel.TestHaplotypePanelFactory.createDefaultTestHaplotypePanel;
 
 import static org.junit.Assert.assertEquals;
 
@@ -67,7 +67,7 @@ public class HaplotypeEventLoaderTest
     {
         String vcfPath = getTestResourcePath("variants.vcf");
         String sampleName = "FAKER";
-        HaplotypePanel panel = loadTestHaplotypePanel("haplotypes.complicated.37.tsv");
+        HaplotypePanel panel = createDefaultTestHaplotypePanel();
 
         Map<String, Integer> haplotypeEventsToCount = HaplotypeEventLoader.loadRelevantVariantHaplotypeEvents(
                 vcfPath, sampleName, panel.getRelevantVariantPositions()
