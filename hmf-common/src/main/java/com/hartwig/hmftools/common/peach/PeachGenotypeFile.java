@@ -16,15 +16,25 @@ import org.jetbrains.annotations.NotNull;
 
 public final class PeachGenotypeFile
 {
-    private static final String OLD_FORMAT_HEADER = new StringJoiner(TSV_DELIM).add("gene")
-            .add("haplotype")
-            .add("function")
-            .add("linked_drugs")
-            .add("url_prescription_info")
-            .add("panel_version")
-            .add("repo_version")
-            .add("haplotype_only")
-            .add("zygosity_only")
+    private static final String PYTHON_GENE_COLUMN_NAME = "gene";
+    private static final String PYTHON_HAPLOTYPE_AND_ZYGOSITY_COLUMN_NAME = "haplotype";
+    private static final String PYTHON_FUNCTION_COLUMN_NAME = "function";
+    private static final String PYTHON_DRUGS_COLUMN_NAME = "linked_drugs";
+    private static final String PYTHON_PRESCRIPTION_URL_COLUMN_NAME = "url_prescription_info";
+    private static final String PYTHON_PANEL_VERSION_COLUMN_NAME = "panel_version";
+    private static final String PYTHON_REPO_VERSION_COLUMN_NAME = "repo_version";
+    private static final String PYTHON_HAPLOTYPE_ONLY_COLUMN_NAME = "haplotype_only";
+    private static final String PYTHON_ZYGOSITY_ONLY_COLUMN_NAME = "zygosity_only";
+
+    private static final String OLD_FORMAT_HEADER = new StringJoiner(TSV_DELIM).add(PYTHON_GENE_COLUMN_NAME)
+            .add(PYTHON_HAPLOTYPE_AND_ZYGOSITY_COLUMN_NAME)
+            .add(PYTHON_FUNCTION_COLUMN_NAME)
+            .add(PYTHON_DRUGS_COLUMN_NAME)
+            .add(PYTHON_PRESCRIPTION_URL_COLUMN_NAME)
+            .add(PYTHON_PANEL_VERSION_COLUMN_NAME)
+            .add(PYTHON_REPO_VERSION_COLUMN_NAME)
+            .add(PYTHON_HAPLOTYPE_ONLY_COLUMN_NAME)
+            .add(PYTHON_ZYGOSITY_ONLY_COLUMN_NAME)
             .toString();
 
     @NotNull
@@ -87,14 +97,14 @@ public final class PeachGenotypeFile
     {
         final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
 
-        int geneIndex = fieldsIndexMap.get("gene");
-        int functionIndex = fieldsIndexMap.get("function");
-        int linkedDrugsIndex = fieldsIndexMap.get("linked_drugs");
-        int urlPrescriptionInfoIndex = fieldsIndexMap.get("url_prescription_info");
-        int panelVersionIndex = fieldsIndexMap.get("panel_version");
-        int repoVersionIndex = fieldsIndexMap.get("repo_version");
-        int alleleIndex = fieldsIndexMap.get("haplotype_only");
-        int zygosityIndex = fieldsIndexMap.get("zygosity_only");
+        int geneIndex = fieldsIndexMap.get(PYTHON_GENE_COLUMN_NAME);
+        int functionIndex = fieldsIndexMap.get(PYTHON_FUNCTION_COLUMN_NAME);
+        int linkedDrugsIndex = fieldsIndexMap.get(PYTHON_DRUGS_COLUMN_NAME);
+        int urlPrescriptionInfoIndex = fieldsIndexMap.get(PYTHON_PRESCRIPTION_URL_COLUMN_NAME);
+        int panelVersionIndex = fieldsIndexMap.get(PYTHON_PANEL_VERSION_COLUMN_NAME);
+        int repoVersionIndex = fieldsIndexMap.get(PYTHON_REPO_VERSION_COLUMN_NAME);
+        int alleleIndex = fieldsIndexMap.get(PYTHON_HAPLOTYPE_ONLY_COLUMN_NAME);
+        int zygosityIndex = fieldsIndexMap.get(PYTHON_ZYGOSITY_ONLY_COLUMN_NAME);
 
         List<PeachGenotype> genotypes = new ArrayList<>();
         lines.remove(0);
