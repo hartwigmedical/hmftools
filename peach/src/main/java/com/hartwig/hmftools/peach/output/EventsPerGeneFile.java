@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.peach.output;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+
 import com.hartwig.hmftools.peach.HaplotypeAnalysis;
 
 import org.jetbrains.annotations.NotNull;
@@ -13,8 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
-
-import static com.hartwig.hmftools.peach.PeachUtils.TSV_DELIMITER;
 
 public class EventsPerGeneFile
 {
@@ -40,7 +40,7 @@ public class EventsPerGeneFile
     @NotNull
     private static String header()
     {
-        return new StringJoiner(TSV_DELIMITER).add("gene").add("event").add("count").toString();
+        return new StringJoiner(TSV_DELIM).add("gene").add("event").add("count").toString();
     }
 
     @NotNull
@@ -52,6 +52,6 @@ public class EventsPerGeneFile
     @NotNull
     private static String toLine(@NotNull String gene, @NotNull String eventId, int count)
     {
-        return new StringJoiner(TSV_DELIMITER).add(gene).add(eventId).add(Integer.toString(count)).toString();
+        return new StringJoiner(TSV_DELIM).add(gene).add(eventId).add(Integer.toString(count)).toString();
     }
 }

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.peach.output;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+
 import com.hartwig.hmftools.peach.HaplotypeAnalysis;
 import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
 
@@ -15,8 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
-
-import static com.hartwig.hmftools.peach.PeachUtils.TSV_DELIMITER;
 
 public class AllHaplotypeCombinationsFile
 {
@@ -44,7 +44,7 @@ public class AllHaplotypeCombinationsFile
     @NotNull
     private static String header()
     {
-        return new StringJoiner(TSV_DELIMITER).add("gene").add("combination").add("nonWildTypeCount").toString();
+        return new StringJoiner(TSV_DELIM).add("gene").add("combination").add("nonWildTypeCount").toString();
     }
 
     @NotNull
@@ -64,7 +64,7 @@ public class AllHaplotypeCombinationsFile
     @NotNull
     private static String toLine(@NotNull String gene, @NotNull HaplotypeCombination combination, @NotNull String wildTypeHaplotypeName)
     {
-        return new StringJoiner(TSV_DELIMITER).add(gene)
+        return new StringJoiner(TSV_DELIM).add(gene)
                 .add(getHaplotypeCombinationString(combination))
                 .add(Integer.toString(combination.getHaplotypeCountWithout(wildTypeHaplotypeName)))
                 .toString();

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.peach.output;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+
 import com.hartwig.hmftools.peach.HaplotypeAnalysis;
 
 import org.jetbrains.annotations.NotNull;
@@ -11,8 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
-
-import static com.hartwig.hmftools.peach.PeachUtils.TSV_DELIMITER;
 
 public class QcStatusFile
 {
@@ -37,12 +37,12 @@ public class QcStatusFile
     @NotNull
     private static String header()
     {
-        return new StringJoiner(TSV_DELIMITER).add("gene").add("status").toString();
+        return new StringJoiner(TSV_DELIM).add("gene").add("status").toString();
     }
 
     @NotNull
     private static String toLine(@NotNull String gene, @NotNull HaplotypeAnalysis analysis)
     {
-        return new StringJoiner(TSV_DELIMITER).add(gene).add(analysis.getAnalysisStatus().toString()).toString();
+        return new StringJoiner(TSV_DELIM).add(gene).add(analysis.getAnalysisStatus().toString()).toString();
     }
 }

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.peach.data_loader;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.peach.PeachUtils.PCH_LOGGER;
 
@@ -9,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.peach.PeachUtils;
 import com.hartwig.hmftools.peach.effect.HaplotypeFunction;
 import com.hartwig.hmftools.peach.effect.ImmutableHaplotypeFunction;
 
@@ -38,12 +38,12 @@ public class HaplotypeFunctionLoader
     private static List<HaplotypeFunction> fromLines(@NotNull List<String> lines)
     {
         String header = lines.get(0);
-        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, PeachUtils.TSV_DELIMITER);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
 
         List<HaplotypeFunction> functions = new ArrayList<>();
         for(String line : lines.subList(1, lines.size()))
         {
-            String[] splitLine = line.split(PeachUtils.TSV_DELIMITER);
+            String[] splitLine = line.split(TSV_DELIM);
             HaplotypeFunction function = ImmutableHaplotypeFunction.builder()
                     .geneName(splitLine[fieldsIndexMap.get("Gene")])
                     .haplotypeName(splitLine[fieldsIndexMap.get("Haplotype")])

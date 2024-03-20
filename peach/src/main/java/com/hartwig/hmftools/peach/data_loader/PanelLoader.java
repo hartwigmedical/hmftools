@@ -5,7 +5,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Streams;
 import com.hartwig.hmftools.peach.panel.GeneHaplotypePanel;
 import com.hartwig.hmftools.peach.panel.HaplotypePanel;
-import com.hartwig.hmftools.peach.PeachUtils;
 import com.hartwig.hmftools.peach.event.HaplotypeEvent;
 import com.hartwig.hmftools.peach.event.HaplotypeEventFactory;
 import com.hartwig.hmftools.peach.haplotype.NonDefaultHaplotype;
@@ -23,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.peach.PeachUtils.PCH_LOGGER;
 
@@ -54,7 +54,7 @@ public class PanelLoader
         Map<String, List<NonDefaultHaplotype>> geneToNonDefaultHaplotypes = new HashMap<>();
 
         String header = lines.get(0);
-        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, PeachUtils.TSV_DELIMITER);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         int geneIndex = fieldsIndexMap.get("Gene");
         int haplotypeIndex = fieldsIndexMap.get("Haplotype");
         int defaultIndex = fieldsIndexMap.get("Default");
@@ -63,7 +63,7 @@ public class PanelLoader
 
         for(String line : lines.subList(1, lines.size()))
         {
-            String[] values = line.split(PeachUtils.TSV_DELIMITER, -1);
+            String[] values = line.split(TSV_DELIM, -1);
 
             String haplotypeEventsString = values[eventsIndex];
             String gene = values[geneIndex];
