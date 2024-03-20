@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.jetbrains.annotations.NotNull;
 
 public final class PeachGenotypeFile
@@ -41,6 +43,11 @@ public final class PeachGenotypeFile
     public static List<PeachGenotype> read(@NotNull final String filename) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
+    }
+
+    public static void write(@NotNull final String filename, @NotNull List<PeachGenotype> genotypes) throws IOException
+    {
+        Files.write(new File(filename).toPath(), toLines(genotypes));
     }
 
     @NotNull
@@ -127,5 +134,39 @@ public final class PeachGenotypeFile
         }
 
         return genotypes;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static List<String> toLines(@NotNull List<PeachGenotype> genotypes)
+    {
+        List<String> lines = new ArrayList<>();
+        lines.add(headerJavaPeach());
+        genotypes.stream().map(PeachGenotypeFile::toLine).forEachOrdered(lines::add);
+        return lines;
+    }
+
+    @NotNull
+    private static String headerJavaPeach()
+    {
+        return new StringJoiner(TSV_DELIM).add("gene")
+                .add("allele")
+                .add("count")
+                .add("function")
+                .add("linkedDrugs")
+                .add("prescriptionUrls")
+                .toString();
+    }
+
+    @NotNull
+    private static String toLine(PeachGenotype genotype)
+    {
+        return new StringJoiner(TSV_DELIM).add(genotype.gene())
+                .add(genotype.allele())
+                .add(Integer.toString(genotype.alleleCount()))
+                .add(genotype.function())
+                .add(genotype.linkedDrugs())
+                .add(genotype.urlPrescriptionInfo())
+                .toString();
     }
 }

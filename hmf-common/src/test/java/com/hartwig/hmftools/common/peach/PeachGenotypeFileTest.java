@@ -2,8 +2,10 @@ package com.hartwig.hmftools.common.peach;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.io.Resources;
@@ -89,5 +91,59 @@ public class PeachGenotypeFileTest
         assertEquals("link", peachGenotypes.get(2).urlPrescriptionInfo());
         assertNull(peachGenotypes.get(0).panelVersion());
         assertNull(peachGenotypes.get(0).repoVersion());
+    }
+
+    @Test
+    public void createEmptyPeachJavaGenotypeOutputLines()
+    {
+        List<PeachGenotype> peachGenotypes = Collections.emptyList();
+
+        List<String> expectedLines = List.of("gene\tallele\tcount\tfunction\tlinkedDrugs\tprescriptionUrls");
+
+        assertEquals(expectedLines, PeachGenotypeFile.toLines(peachGenotypes));
+    }
+
+    @Test
+    public void createNonEmptyPeachJavaGenotypeOutputLines()
+    {
+        List<PeachGenotype> peachGenotypes = List.of(
+                ImmutablePeachGenotype.builder()
+                        .gene("GENE")
+                        .allele("*1")
+                        .alleleCount(1)
+                        .function("Reduced Function")
+                        .linkedDrugs("Capecitabine;otherDrug")
+                        .urlPrescriptionInfo("link;otherLink")
+                        .panelVersion("V1")
+                        .repoVersion("V2")
+                        .build(),
+                ImmutablePeachGenotype.builder()
+                        .gene("GENE2")
+                        .allele("*3")
+                        .alleleCount(2)
+                        .function("Normal Function")
+                        .linkedDrugs("Capecitabine")
+                        .urlPrescriptionInfo("link")
+                        .panelVersion(null)
+                        .repoVersion(null)
+                        .build(),
+                ImmutablePeachGenotype.builder()
+                        .gene("GENE3")
+                        .allele("Unresolved Haplotype")
+                        .alleleCount(2)
+                        .function("Unknown Function")
+                        .linkedDrugs("Capecitabine")
+                        .urlPrescriptionInfo("link")
+                        .build()
+        );
+
+        List<String> expectedLines = List.of(
+                "gene\tallele\tcount\tfunction\tlinkedDrugs\tprescriptionUrls",
+                "GENE\t*1\t1\tReduced Function\tCapecitabine;otherDrug\tlink;otherLink",
+                "GENE2\t*3\t2\tNormal Function\tCapecitabine\tlink",
+                "GENE3\tUnresolved Haplotype\t2\tUnknown Function\tCapecitabine\tlink"
+        );
+
+        assertEquals(expectedLines, PeachGenotypeFile.toLines(peachGenotypes));
     }
 }
