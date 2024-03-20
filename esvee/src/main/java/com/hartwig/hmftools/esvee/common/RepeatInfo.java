@@ -34,14 +34,14 @@ public class RepeatInfo
     public static final int MIN_DUAL_REPEAT = 3;
     public static final int MIN_OTHER_REPEAT = 2;
 
-    public static List<RepeatInfo> findRepeats(final byte[] bases)
+    public static List<RepeatInfo>  findRepeats(final byte[] bases)
     {
         // types of repeats, single, dual, triples (ATCATC) and dual x2 (AATTAATT)
         // favour longer repeat types
         List<RepeatInfo> repeats = null;
 
         int index = 0;
-        while(index < bases.length - 4)
+        while(index <= bases.length - MIN_SINGLE_REPEAT)
         {
             RepeatInfo repeat = findSingleBaseRepeat(bases, index);
 
@@ -107,7 +107,7 @@ public class RepeatInfo
 
     public static RepeatInfo findSingleBaseRepeat(final byte[] bases, int index)
     {
-        if(index + MIN_SINGLE_REPEAT >= bases.length)
+        if(index + MIN_SINGLE_REPEAT - 1 >= bases.length)
             return null;
 
         int i = index + 1;
@@ -126,7 +126,7 @@ public class RepeatInfo
 
     public static RepeatInfo findDualBaseRepeat(final byte[] bases, int index)
     {
-        if(index + MIN_DUAL_REPEAT * 2 >= bases.length)
+        if(index + MIN_DUAL_REPEAT * 2 - 1 >= bases.length)
             return null;
 
         int i = index + DUAL_LENGTH;
@@ -154,7 +154,7 @@ public class RepeatInfo
 
     public static RepeatInfo findMultiBaseRepeat(final byte[] bases, int index, int repeatCount)
     {
-        if(index + MIN_OTHER_REPEAT * repeatCount >= bases.length)
+        if(index + MIN_OTHER_REPEAT - 1 * repeatCount >= bases.length)
             return null;
 
         int i = index + repeatCount;
@@ -191,7 +191,7 @@ public class RepeatInfo
 
     public static RepeatInfo findDualDualRepeat(final byte[] bases, int index)
     {
-        if(index + MIN_OTHER_REPEAT * DUAL_DUAL_LENGTH >= bases.length)
+        if(index + MIN_OTHER_REPEAT * DUAL_DUAL_LENGTH - 1 >= bases.length)
             return null;
 
         // check for initial repeat type

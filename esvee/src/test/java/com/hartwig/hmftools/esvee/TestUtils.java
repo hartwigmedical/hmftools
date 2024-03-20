@@ -20,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
@@ -40,6 +41,8 @@ public class TestUtils
     public static final SvConfig TEST_CONFIG = new SvConfig();
 
     public static final String REF_BASES_RANDOM_100 = generateRandomBases(100);
+
+    public static final ReadIdGenerator READ_ID_GENERATOR = new ReadIdGenerator();
 
     public static String REF_BASES_200 =
             "AAACCCGGGTTTACGTAACCGGTTACGTAAAAACCCCCGGGGGTTTTTACGTAACCGGTTACGTAAACCCGGGTTTAAACGTTTTTGGGGCCCCAAAAAC"

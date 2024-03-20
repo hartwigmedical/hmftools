@@ -188,11 +188,6 @@ public final class IndelBuilder
         return assembly;
     }
 
-    public static boolean hasConvertibleIndel(final Read read)
-    {
-        return read.cigarElements().stream().anyMatch(x -> x.getOperator().isIndel() && x.getLength() >= INDEL_TO_SC_MIN_SIZE_SOFTCLIP);
-    }
-
     public static boolean convertedIndelCrossesJunction(final JunctionAssembly assembly, final Read read)
     {
         if(assembly.isForwardJunction())

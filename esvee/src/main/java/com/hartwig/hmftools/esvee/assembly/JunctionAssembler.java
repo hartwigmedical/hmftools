@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.esvee.SvConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
@@ -9,13 +10,17 @@ import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.processIndelJunct
 import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.DUP_SPLIT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.buildFromJunctionReads;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.expandReferenceBases;
+import static com.hartwig.hmftools.esvee.read.ReadFilters.readJunctionExtensionLength;
 import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAtJunction;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.read.Read;
@@ -39,6 +44,111 @@ public class JunctionAssembler
         if(mJunction.IndelBased)
             return processIndelJunction(mJunction, mNonJunctionReads, rawReads);
 
+        // find prominent reads to establish the extension sequence, taking any read meeting min soft-clip lengths
+        // and repetitive indels
+
+        int permittedMismatches = PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
+
+        List<Read> junctionReads = Lists.newArrayList();
+        List<Read> extensionReads = Lists.newArrayList();
+
+        Map<Integer,List<Read>> indelLengthReads = Maps.newHashMap();
+
+        for(Read read : rawReads)
+        {
+            if(!ReadFilters.recordSoftClipsAndCrossesJunction(read, mJunction))
+            {
+                mNonJunctionReads.add(read);
+                continue;
+            }
+
+            if(recordSoftClipsAtJunction(read, mJunction) && readJunctionExtensionLength(read, mJunction) >= PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
+                extensionReads.add(read);
+
+            if((mJunction.isForward() && read.indelImpliedAlignmentEnd() > 0)
+            || (mJunction.isReverse() && read.indelImpliedAlignmentStart() > 0))
+            {
+                buildIndelFrequencies(indelLengthReads, read);
+            }
+
+            junctionReads.add(read);
+        }
+
+        List<Read> dominantIndelReads = findMaxFrequencyIndelReads(indelLengthReads);
+
+        if(extensionReads.size() <= PRIMARY_ASSEMBLY_MIN_READ_SUPPORT && dominantIndelReads.size() <= PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+            return Collections.emptyList();
+
+        extensionReads.addAll(dominantIndelReads);
+
+        ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads, permittedMismatches);
+
+        if(!extensionSeqBuilder.isValid())
+            return Collections.emptyList();
+
+        List<AssemblySupport> assemblySupport = extensionSeqBuilder.formAssemblySupport();
+
+        JunctionAssembly assembly = new JunctionAssembly(
+                mJunction, extensionSeqBuilder.extensionBases(), extensionSeqBuilder.baseQualitiies(), assemblySupport,
+                extensionSeqBuilder.repeatInfo());
+
+        // test other reads against this new assembly
+        for(Read read : junctionReads)
+        {
+            if(assemblySupport.stream().anyMatch(x -> x.read() == read))
+                continue;
+
+            if(assembly.checkReadMatches(read, permittedMismatches))
+                assembly.addJunctionRead(read, false);
+        }
+
+        // deal with mismatch reads by forming a new assembly if they are significant
+
+
+        return List.of(assembly);
+    }
+
+    private void buildIndelFrequencies(final Map<Integer,List<Read>> indelLengthReads, final Read read)
+    {
+        int maxIndelLength = read.cigarElements().stream()
+                .filter(x -> x.getOperator().isIndel())
+                .mapToInt(x -> x.getLength()).max().orElse(0);
+
+        if(maxIndelLength >= INDEL_TO_SC_MIN_SIZE_SOFTCLIP)
+        {
+            List<Read> lengthReads = indelLengthReads.get(maxIndelLength);
+            if(lengthReads == null)
+            {
+                lengthReads = Lists.newArrayList();
+                indelLengthReads.put(maxIndelLength, lengthReads);
+            }
+
+            lengthReads.add(read);
+        }
+    }
+
+    private static List<Read> findMaxFrequencyIndelReads(final Map<Integer,List<Read>> indelLengthReads)
+    {
+        if(indelLengthReads.isEmpty())
+            return Collections.emptyList();
+
+        int maxFrequency = 0;
+        int indelLength = 0;
+
+        for(Map.Entry<Integer,List<Read>> entry : indelLengthReads.entrySet())
+        {
+            if(entry.getValue().size() > maxFrequency)
+            {
+                indelLength = entry.getKey();
+                maxFrequency = entry.getValue().size();
+            }
+        }
+
+        return indelLengthReads.get(indelLength);
+    }
+
+    private List<JunctionAssembly> processJunctionOld(final List<Read> rawReads)
+    {
         List<Read> junctionReads = Lists.newArrayList();
         List<Read> preciseJunctionReads = Lists.newArrayList();
 

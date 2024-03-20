@@ -3,7 +3,7 @@ package com.hartwig.hmftools.esvee.read;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
-import static com.hartwig.hmftools.esvee.read.Read.INVALID_INDEX;
+import static com.hartwig.hmftools.esvee.read.ReadUtils.INVALID_INDEX;
 
 import static org.junit.Assert.assertEquals;
 

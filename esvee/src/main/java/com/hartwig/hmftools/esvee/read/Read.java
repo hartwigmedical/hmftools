@@ -161,7 +161,7 @@ public class Read
 
     public byte[] getBases() { return mBases != null ? mBases : mRecord.getReadBases(); }
     public byte[] getBaseQuality() { return mBaseQuals != null ? mBaseQuals : mRecord.getBaseQualities(); }
-    public int basesLength() { return mBases != null ? mBases.length : mRecord.getReadBases().length; }
+    public int  basesLength() { return mBases != null ? mBases.length : mRecord.getReadBases().length; }
     public int insertSize() { return mRecord.getInferredInsertSize(); }
 
     // flags
@@ -242,8 +242,6 @@ public class Read
         return mSupplementaryData;
     }
 
-    public static final int INVALID_INDEX = -1;
-
     public int getReadIndexAtReferencePosition(final int refPosition)
     {
         return getReadIndexAtReferencePosition(refPosition, false);
@@ -251,65 +249,7 @@ public class Read
 
     public int getReadIndexAtReferencePosition(final int refPosition, boolean allowExtrapolation)
     {
-        // finds the read index given a reference position, and extrapolates outwards from alignments as required
-
-        // for indel reads, use the implied alignment and unclipped positions from each direction
-        int alignmentStart = allowExtrapolation && mIndelImpliedAlignmentStart > 0 ? mIndelImpliedAlignmentStart : mAlignmentStart;
-        int alignmentEnd = allowExtrapolation && mIndelImpliedAlignmentEnd > 0 ? mIndelImpliedAlignmentEnd : mAlignmentEnd;
-
-        if(refPosition <= alignmentStart)
-        {
-            if(!allowExtrapolation && refPosition < alignmentStart)
-                return INVALID_INDEX;
-
-            int baseDiff = alignmentStart - refPosition;
-            int softClipBases = alignmentStart - mUnclippedStart;
-            return baseDiff <= softClipBases ? softClipBases - baseDiff : INVALID_INDEX;
-        }
-        else if(refPosition >= alignmentEnd)
-        {
-            if(!allowExtrapolation && refPosition > alignmentEnd)
-                return INVALID_INDEX;
-
-            int baseDiff = refPosition - alignmentEnd;
-            int softClipBases = mUnclippedEnd - alignmentEnd;
-            return baseDiff <= softClipBases ? basesLength() - (softClipBases - baseDiff) - 1 : INVALID_INDEX;
-        }
-
-        // cannot use standard method since CIGAR and coords may have been adjusted
-        int readIndex = 0;
-        int currentPos = mAlignmentStart;
-        for(CigarElement element : mCigarElements)
-        {
-            if(!element.getOperator().consumesReferenceBases())
-            {
-                readIndex += element.getLength();
-                continue;
-            }
-
-            if(currentPos == refPosition)
-                break;
-
-            if(!element.getOperator().consumesReadBases())
-            {
-                // for a D or N where the position is inside it, return the read index for the start of the element
-                if(refPosition >= currentPos && refPosition < currentPos + element.getLength())
-                    return readIndex - 1;
-
-                currentPos += element.getLength();
-            }
-            else
-            {
-                // pos = 100, element = 10M, covering pos 100-109, read index 4 (say after 4S), ref pos at last base of element = 109
-                if(refPosition >= currentPos && refPosition < currentPos + element.getLength())
-                    return readIndex + refPosition - currentPos;
-
-                currentPos += element.getLength();
-                readIndex += element.getLength();
-            }
-        }
-
-        return readIndex;
+        return ReadUtils.getReadIndexAtReferencePosition(this, refPosition, allowExtrapolation);
     }
 
     public Object getAttribute(final String name) { return mRecord.getAttribute(name); }

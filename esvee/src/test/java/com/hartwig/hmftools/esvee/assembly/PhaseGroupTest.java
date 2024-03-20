@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.assembly;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.esvee.TestUtils.createConcordantRead;
@@ -30,8 +31,6 @@ import org.junit.Test;
 
 public class PhaseGroupTest
 {
-    private static final ReadIdGenerator READ_ID_GENERATOR = new ReadIdGenerator();
-
     @Test
     public void testLocalPhaseGroupBuilding()
     {
