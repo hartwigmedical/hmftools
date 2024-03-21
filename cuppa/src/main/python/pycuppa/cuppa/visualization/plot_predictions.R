@@ -69,6 +69,12 @@ MAPPINGS_CLASSIFIER_NAMES = c(
   "GEN POS"="GENOMIC POSITION"
 )
 
+MAPPING_EVENT_NAMES = c(
+  "driver"="driver (DL)",
+  "virus"="virus (DL)",
+  "fusion"="fusion (DL)"
+)
+
 ## Heatmap of probs ================================
 get_plot_data_probs <- function(VIS_DATA, data_value_rounding = 2){
 
@@ -140,7 +146,7 @@ get_plot_data_probs <- function(VIS_DATA, data_value_rounding = 2){
       NA,
       "darkgrey"
    )
-   
+
    return(plot_data)
 }
 
@@ -344,14 +350,14 @@ plot_heatmap <- function(
 
 plot_probs <- function(VIS_DATA){
    plot_data <- get_plot_data_probs(VIS_DATA)
-   
+
    LOW_SNV_COUNT_THRES <- 50
    if(SNV_COUNT < LOW_SNV_COUNT_THRES){
       warning_string <- sprintf(" | WARNING: Sample has <%s SNVs. Predictions may be unreliable", LOW_SNV_COUNT_THRES)
    } else {
       warning_string <- ""
    }
-   
+
    plot_heatmap(
       plot_data,
       show_first_row_hline = TRUE,
@@ -486,7 +492,7 @@ plot_signatures <- function(
    scale_fill_manual(
       values=structure(quantile_info$colors[quantile_info$colors != "grey95"], names=quantile_info$labels[quantile_info$labels != "0"]),
       guide=guide_legend(override.aes=list(colour="black", linetype=1)),
-      na.value="grey95", drop=FALSE
+      na.value="grey95", drop=TRUE
    ) +
    labs(fill="Quantile in subtype cohort", title="SNV96: Mutational signatures")
 }
@@ -498,10 +504,10 @@ plot_feat_contrib <- function(VIS_DATA){
    ## Parse feature names --------------------------------
    affixes <- as.data.frame(do.call(
       rbind,
-      str_split(gsub("_", " ", plot_data$feat_name), '[.]', n=2)
+      str_split(ifelse(!(grepl("fusion",plot_data$feat_name)), gsub("_", " ", plot_data$feat_name), plot_data$feat_name), '[.]', n=2)
    ))
    colnames(affixes) <- c("feat_type", "feat_basename")
-   affixes$feat_type <- revalue(affixes$feat_type, replace=c(driver="driver (DL)"))
+   affixes$feat_type <- revalue(affixes$feat_type, replace=MAPPING_EVENT_NAMES, warn_missing=FALSE)
 
    ## Format labels --------------------------------
    plot_data$row_group <- affixes$feat_type
@@ -539,10 +545,10 @@ plot_feat_contrib <- function(VIS_DATA){
       feat_value_label[feat_value==1] <- "1"
 
       driver_feat_value_label <- paste0(gsub("\\.", " ", affixes$feat_basename), " (", feat_value_label, ")")
-      trait_feat_value_label <- paste(affixes$feat_basename, "=", feat_value_label==1, sep = " ")
-      tmb_or_sv_feat_value_label <- paste(affixes$feat_basename, "=", feat_value_label, sep = " ")
-      non_driver_feat_value_label <- ifelse(affixes$feat_basename %in% c("is male", "whole genome duplication"), trait_feat_value_label, tmb_or_sv_feat_value_label)
-      paste0(ifelse(grepl("\\.", affixes$feat_basename), driver_feat_value_label, non_driver_feat_value_label))
+          trait_feat_value_label <- paste(affixes$feat_basename, "=", feat_value_label==1, sep = " ")
+          tmb_or_sv_feat_value_label <- paste(affixes$feat_basename, "=", feat_value_label, sep = " ")
+          non_driver_feat_value_label <- ifelse(affixes$feat_basename %in% c("is male", "whole genome duplication"), trait_feat_value_label, tmb_or_sv_feat_value_label)
+          paste0(ifelse(affixes$feat_type %in% MAPPING_EVENT_NAMES, driver_feat_value_label, non_driver_feat_value_label))
    })
 
    ## Legend breaks --------------------------------
