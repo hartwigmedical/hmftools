@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.esvee.common.RepeatInfo.calcTrimmedRefBaseLen
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.findRepeats;
 import static com.hartwig.hmftools.esvee.common.SupportType.INDEL;
 import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION;
-import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAtJunction;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 
@@ -65,7 +64,10 @@ public class JunctionAssembly
     private AssemblyOutcome mOutcome;
 
     private final List<JunctionAssembly> mBranchedAssemblies;
-    private int mMergedAssemblies; // info only
+
+    // info only
+    private int mMergedAssemblies;
+    private int mMismatchReadCount;
 
     private final Set<FilterType> mFilters;
 
@@ -76,7 +78,6 @@ public class JunctionAssembly
         mJunction = junction;
 
         // set initial bounds from the assembly support
-        int maxExtensionDistance = 0;
         int minAlignedPosition = 0;
         int maxAlignedPosition = 0;
         Read maxJunctionBaseQualRead = null;
@@ -86,9 +87,6 @@ public class JunctionAssembly
         {
             Read read = support.read();
             int readJunctionIndex = read.getReadIndexAtReferencePosition(junction.Position, true);
-
-            int extensionDistance = junction.isForward() ? read.basesLength() - readJunctionIndex - 1 : readJunctionIndex;
-            maxExtensionDistance = max(maxExtensionDistance, extensionDistance);
 
             maxAlignedPosition = max(maxAlignedPosition, read.alignmentEnd());
             minAlignedPosition = minAlignedPosition == 0 ? read.alignmentStart() : min(minAlignedPosition, read.alignmentStart());
@@ -104,12 +102,13 @@ public class JunctionAssembly
 
         mInitialRead = maxJunctionBaseQualRead;
 
-        mJunctionSequenceIndex = junction.isForward() ? 0 : maxExtensionDistance;
+        mBases = bases;
+        mBaseQuals = baseQualities;
+
+        mJunctionSequenceIndex = junction.isForward() ? 0 : mBases.length - 1;
         mMinAlignedPosition = minAlignedPosition;
         mMaxAlignedPosition = maxAlignedPosition;
 
-        mBases = bases;
-        mBaseQuals = baseQualities;
         mSequenceMismatches = new SequenceMismatches();
 
         mSupport = Lists.newArrayList(assemblySupport);
@@ -123,6 +122,7 @@ public class JunctionAssembly
         mPhaseGroupLinkingInfo = null;
         mOutcome = UNSET;
         mFilters = Sets.newHashSet();
+        mMismatchReadCount = 0;
     }
 
     public JunctionAssembly(
@@ -291,12 +291,18 @@ public class JunctionAssembly
                 ++mismatchCount;
 
                 if(mismatchCount > permittedMismatches)
-                    return false;
+                    break;
             }
         }
 
-        return true;
+        mismatchCount = calcReadSequenceMismatches(
+                mJunction.isForward(), mBases, mBaseQuals, mRepeatInfo, read, readJunctionIndex, permittedMismatches);
+
+        return mismatchCount <= permittedMismatches;
    }
+
+   public int mismatchReadCount() { return mMismatchReadCount; }
+   public void addMismatchReadCount(int count) { mMismatchReadCount += count; }
 
     public void addReadSupport(final Read read, final SupportType type, boolean registerMismatches)
     {
@@ -723,6 +729,7 @@ public class JunctionAssembly
         mBranchedAssemblies = Lists.newArrayList();
         mFilters = Sets.newHashSet();
         mMergedAssemblies = 0;
+        mMismatchReadCount = 0;
         mPhaseGroup = null;
 
         Read initialRead = null;
@@ -873,5 +880,6 @@ public class JunctionAssembly
         mFilters = Sets.newHashSet();
         mMergedAssemblies = 0;
         mOutcome = UNSET;
+        mMismatchReadCount = 0;
     }
 }

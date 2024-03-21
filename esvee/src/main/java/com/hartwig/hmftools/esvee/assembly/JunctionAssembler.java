@@ -2,10 +2,11 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.esvee.SvConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.SvConstants.MIN_VARIANT_LENGTH;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READS;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_SUPPORT_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.processIndelJunction;
 import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.DUP_SPLIT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.buildFromJunctionReads;
@@ -47,7 +48,7 @@ public class JunctionAssembler
         // find prominent reads to establish the extension sequence, taking any read meeting min soft-clip lengths
         // and repetitive indels
 
-        int permittedMismatches = PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
+        int consensusMismatch = PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH;
 
         List<Read> junctionReads = Lists.newArrayList();
         List<Read> extensionReads = Lists.newArrayList();
@@ -76,36 +77,48 @@ public class JunctionAssembler
 
         List<Read> dominantIndelReads = findMaxFrequencyIndelReads(indelLengthReads);
 
-        if(extensionReads.size() <= PRIMARY_ASSEMBLY_MIN_READ_SUPPORT && dominantIndelReads.size() <= PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+        if(extensionReads.size() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT && dominantIndelReads.size() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
             return Collections.emptyList();
 
         extensionReads.addAll(dominantIndelReads);
 
-        ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads, permittedMismatches);
+        ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads, consensusMismatch);
 
         if(!extensionSeqBuilder.isValid())
             return Collections.emptyList();
 
         List<AssemblySupport> assemblySupport = extensionSeqBuilder.formAssemblySupport();
 
+        if(assemblySupport.size() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+            return Collections.emptyList();
+
         JunctionAssembly assembly = new JunctionAssembly(
                 mJunction, extensionSeqBuilder.extensionBases(), extensionSeqBuilder.baseQualitiies(), assemblySupport,
                 extensionSeqBuilder.repeatInfo());
 
         // test other reads against this new assembly
+        int supportMismatch = PRIMARY_ASSEMBLY_SUPPORT_MISMATCH;
+
+        int mismatchReads = extensionSeqBuilder.mismatches();
+
         for(Read read : junctionReads)
         {
             if(assemblySupport.stream().anyMatch(x -> x.read() == read))
                 continue;
 
-            if(assembly.checkReadMatches(read, permittedMismatches))
+            if(assembly.checkReadMatches(read, supportMismatch))
                 assembly.addJunctionRead(read, false);
+            else
+                ++mismatchReads;
         }
+
+        assembly.addMismatchReadCount(mismatchReads);
 
         // deal with mismatch reads by forming a new assembly if they are significant
 
+        expandReferenceBases(assembly);
 
-        return List.of(assembly);
+        return Lists.newArrayList(assembly);
     }
 
     private void buildIndelFrequencies(final Map<Integer,List<Read>> indelLengthReads, final Read read)
@@ -196,7 +209,7 @@ public class JunctionAssembler
         if(assembly == null || assembly.baseLength() < MIN_VARIANT_LENGTH)
             return Collections.emptyList();
 
-        int mismatchReads = (int)assembly.support().stream().filter(x -> x.mismatchCount() > PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH).count();
+        int mismatchReads = (int)assembly.support().stream().filter(x -> x.mismatchCount() > PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH).count();
 
         if(mismatchReads == 0)
         {

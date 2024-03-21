@@ -4,12 +4,9 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.esvee.SvConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.SvConstants.MIN_INDEL_LENGTH;
-import static com.hartwig.hmftools.esvee.SvConstants.MIN_VARIANT_LENGTH;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READS;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.expandReferenceBases;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.isValidSupportCoordsVsJunction;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.readQualFromJunction;
@@ -156,7 +153,7 @@ public final class IndelBuilder
         JunctionAssembly assembly = new JunctionAssembly(
                 junction, maxScoredRead, maxDistanceFromJunction, minAlignedPosition,  maxAlignedPosition);
 
-        int permittedMismatches = PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
+        int permittedMismatches = PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH;
 
         for(Read read : indelReads)
         {

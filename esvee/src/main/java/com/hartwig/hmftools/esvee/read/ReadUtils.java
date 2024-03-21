@@ -110,20 +110,20 @@ public final class ReadUtils
         return readIndex;
     }
 
-    public static int avgBaseQuality(final Read read) { return avgBaseQuality(read.getBaseQuality(), 0, read.basesLength()); }
+    public static int avgBaseQuality(final Read read) { return avgBaseQuality(read.getBaseQuality(), 0, read.basesLength() - 1); }
 
-    public static int avgBaseQuality(final byte[] baseQualities, final int startPosition, final int length)
+    public static int avgBaseQuality(final byte[] baseQualities, final int startIndex, final int endIndex)
     {
-        int startIndex = startPosition - 1;
-        int endIndex = Math.min(startIndex + length, baseQualities.length);
+        if(startIndex > endIndex || startIndex < 0 || endIndex >= baseQualities.length)
+            return -1;
 
         int qualitySum = 0;
-        for(int i = startIndex; i < endIndex; i++)
+        for(int i = startIndex; i <= endIndex; i++)
         {
             qualitySum += baseQualities[i];
         }
 
-        return qualitySum / length;
+        return qualitySum / (endIndex - startIndex + 1);
     }
 
     public static void copyArray(final byte[] source, final byte[] dest, final int sourceIndexStart, final int destIndexStart)

@@ -6,6 +6,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.compareSequences;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.getReadIndexAtReferencePosition;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.subsetArray;
@@ -77,6 +78,8 @@ public class ExtensionSeqBuilder
         buildConsensus();
 
         assignReads();
+
+        determineFinalBases();
     }
 
     public byte[] extensionBases() { return mBases; }
@@ -122,12 +125,18 @@ public class ExtensionSeqBuilder
                 byte base = read.currentBase();
                 int qual = read.currentQual();
 
+                if(base == N_BASE)
+                {
+                    base = DNA_BASE_BYTES[0];
+                    qual = 0;
+                }
+
                 read.moveNext(mIsForward);
 
                 if(readCounts == null)
                 {
-                    if(consensusBase == 0 || base == consensusBase
-                    || qual < LOW_BASE_QUAL_THRESHOLD || consensusMaxQual < LOW_BASE_QUAL_THRESHOLD)
+                    if(consensusBase == 0
+                    || AssemblyUtils.basesMatch(base, consensusBase, (byte)qual, (byte)consensusMaxQual, LOW_BASE_QUAL_THRESHOLD))
                     {
                         if(consensusBase == 0)
                         {
@@ -217,7 +226,7 @@ public class ExtensionSeqBuilder
                     continue;
 
                 byte base = read.currentBase();
-                int qual = read.currentQual();
+                byte qual = read.currentQual();
 
                 if(qual >= LOW_BASE_QUAL_THRESHOLD && mBaseQuals[extensionIndex] >= LOW_BASE_QUAL_THRESHOLD)
                 {
@@ -250,18 +259,60 @@ public class ExtensionSeqBuilder
         }
     }
 
+    private void determineFinalBases()
+    {
+        int maxValidExtensionLength = 0;
+
+        for(ReadState read : mReads)
+        {
+            if(read.Mismatches > mMaxMismatches)
+                continue;
+
+            // note the read's extension length does not include the junction base itself, hence the +1
+            maxValidExtensionLength = max(read.extensionLength() + 1, maxValidExtensionLength);
+        }
+
+        if(maxValidExtensionLength == 0)
+        {
+            mIsValid = false;
+            return;
+        }
+
+        // trim extension bases if required
+        if(maxValidExtensionLength == mBases.length)
+            return;
+
+        int reduction = mBases.length - maxValidExtensionLength;
+        int startIndex = mIsForward ? 0 : reduction;
+        int endIndex = mIsForward ? maxValidExtensionLength - 1 : mBases.length - 1;
+        mBases = subsetArray(mBases, startIndex, endIndex);
+        mBaseQuals = subsetArray(mBaseQuals, startIndex, endIndex);
+
+        mExtensionRepeats.clear();
+        List<RepeatInfo> repeats = RepeatInfo.findRepeats(mBases);
+
+        if(repeats != null)
+            mExtensionRepeats.addAll(repeats);
+    }
+
     public static int calcReadSequenceMismatches(
             final boolean isForward, final byte[] extensionBases, final byte[] extensionQuals, final List<RepeatInfo> extensionRepeats,
             final Read read, final int readJunctionIndex, final int maxMismatches)
     {
         int readStartIndex = isForward ? readJunctionIndex : 0;
         int readEndIndex = isForward ? read.basesLength() - 1 : readJunctionIndex;
+
+        // for -ve orientations, if extension sequence length = 10, with 0-8 being soft-clip and 9 being the first ref and junction index
+        // and the read has 5 bases of soft-clip then read's start index will be 0 -> 4 + 1 = 5
+        // so the comparison offset in the extension sequence is
+        int extSeqReadStartIndex = isForward ? 0 : extensionBases.length - 1 - readJunctionIndex;
+
         byte[] readExtensionBases = subsetArray(read.getBases(), readStartIndex, readEndIndex);
         byte[] readExtensionQuals = subsetArray(read.getBaseQuality(), readStartIndex, readEndIndex);
         List<RepeatInfo> readRepeats = RepeatInfo.findRepeats(readExtensionBases);
 
         return compareSequences(
-                extensionBases, extensionQuals, 0, extensionBases.length - 1, extensionRepeats,
+                extensionBases, extensionQuals, extSeqReadStartIndex, extensionBases.length - 1, extensionRepeats,
                 readExtensionBases, readExtensionQuals, 0, readExtensionBases.length - 1,
                 readRepeats != null ? readRepeats : Collections.emptyList(), maxMismatches);
     }
@@ -288,6 +339,7 @@ public class ExtensionSeqBuilder
 
         public Read read() { return mRead; }
         public int junctionIndex() { return mJunctionIndex; }
+        public int extensionLength() { return mExtensionLength; }
         public int matchedBases() { return mExtensionLength - Mismatches; }
         public boolean exhausted() { return mExhausted; }
 

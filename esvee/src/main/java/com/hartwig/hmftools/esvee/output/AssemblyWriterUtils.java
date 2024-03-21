@@ -189,6 +189,7 @@ public final class AssemblyWriterUtils
         sj.add("AvgIndelLength");
         sj.add("AvgBaseQual");
         sj.add("AvgMapQual");
+        sj.add("MismatchReads");
     }
 
     protected static void addReadStats(final JunctionAssembly assembly, final StringJoiner sj)
@@ -244,6 +245,7 @@ public final class AssemblyWriterUtils
         sj.add(statString(indelLengthTotal, supportCount));
         sj.add(statString(baseQualTotal, supportCount));
         sj.add(statString(mapQualTotal, supportCount));
+        sj.add(String.valueOf(assembly.mismatchReadCount()));
     }
 
     private static String statString(int count, double readCount)

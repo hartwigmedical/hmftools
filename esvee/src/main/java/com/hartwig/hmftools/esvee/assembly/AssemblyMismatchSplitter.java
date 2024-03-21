@@ -6,8 +6,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_SPLIT_MIN_READS;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.buildFromJunctionReads;
 import static com.hartwig.hmftools.esvee.read.ReadFilters.readJunctionExtensionLength;
@@ -27,7 +26,6 @@ import com.hartwig.hmftools.esvee.common.AssemblySupport;
 import com.hartwig.hmftools.esvee.common.BaseMismatch;
 import com.hartwig.hmftools.esvee.common.BaseMismatches;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.SupportType;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public class AssemblyMismatchSplitter
@@ -41,7 +39,7 @@ public class AssemblyMismatchSplitter
 
     public List<JunctionAssembly> splitOnMismatches(int minSequenceLength, int minExtraAssemblySupport)
     {
-        int permittedMismatches = PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH;
+        int permittedMismatches = PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH;
         int minReadSupport = PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 
         // every remaining mismatch should have 2+ (or whatever configured) supporting reads

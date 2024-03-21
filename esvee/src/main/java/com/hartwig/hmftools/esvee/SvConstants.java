@@ -38,7 +38,8 @@ public final class SvConstants
     public static final int PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH;
 
     // primary assembly deduplication
-    public static final int PRIMARY_ASSEMBLY_MAX_BASE_MISMATCH = 1;
+    public static final int PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH = 1;
+    public static final int PRIMARY_ASSEMBLY_SUPPORT_MISMATCH = 2;
     public static final int PRIMARY_ASSEMBLY_MERGE_MISMATCH = 3;
 
     public static final int PROXIMATE_JUNCTION_DISTANCE = 50;

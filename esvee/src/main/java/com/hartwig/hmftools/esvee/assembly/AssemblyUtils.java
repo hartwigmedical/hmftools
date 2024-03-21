@@ -186,10 +186,13 @@ public final class AssemblyUtils
         return baseQualTotal;
     }
 
+    public static final byte N_BASE = 78;
+
     public static boolean basesMatch(
             final byte first, final byte second, final byte firstQual, final byte secondQual, final int lowQualThreshold)
     {
-        return first == second || firstQual < lowQualThreshold || secondQual < lowQualThreshold;
+        return first == second || first == N_BASE || second == N_BASE
+                || firstQual < lowQualThreshold || secondQual < lowQualThreshold;
     }
 
     public static boolean assembliesShareReads(final JunctionAssembly first, final JunctionAssembly second)
