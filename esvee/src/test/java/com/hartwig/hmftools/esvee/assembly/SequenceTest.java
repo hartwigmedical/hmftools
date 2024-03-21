@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
+import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.expandReferenceBases;
 import static com.hartwig.hmftools.esvee.common.RepeatInfo.buildTrimmedRefBaseSequence;
@@ -198,21 +200,23 @@ public class SequenceTest
     {
         Junction posJunction = new Junction(CHR_1, 60, POS_ORIENT);
 
-        String extensionSequence = "ACGTTCGTAAAAAAGGGGGG";
+        String extensionSequence = "ACGTTCGTAAAAAAGGGGGGACGTACGTCCCC";
         String refBaseSequence = "ACGTAGAGAGAGACGTCCCCACGG";
         String assemblySequence = refBaseSequence + extensionSequence;
         byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(assemblySequence.length());
 
-        Read read1 = createRead("READ_01", 37, assemblySequence, "24M20S");
+        Read read1 = createRead(READ_ID_GENERATOR.nextId(), 37, assemblySequence, "24M32S");
+        Read read1b = cloneRead(read1, READ_ID_GENERATOR.nextId());
 
         String softClipRef = "GGGGGGGG";
-        Read read2 = createRead("READ_02", 41, softClipRef + assemblySequence, "12S20M20S");
+        Read read2 = createRead(
+                READ_ID_GENERATOR.nextId(), 41,
+                softClipRef + refBaseSequence + extensionSequence.substring(0, 20), "12S20M20S");
 
-        JunctionAssembly assembly = AssemblyUtils.buildFromJunctionReads(
-                posJunction, List.of(read1, read2), true);
+        JunctionAssembly assembly = new JunctionAssembler(posJunction).processJunction(List.of(read1, read1b, read2)).get(0);
 
-        expandReferenceBases(assembly);
-        assembly.buildRepeatInfo();
+        // expandReferenceBases(assembly);
+        // assembly.buildRepeatInfo();
 
         assertEquals("ACGT_AG4_ACGT_C4_ACGG", assembly.refBasesRepeatedTrimmed()); // 4 + 4 + 4 + 2 + 4
         assertEquals(18, assembly.refBaseTrimLength());

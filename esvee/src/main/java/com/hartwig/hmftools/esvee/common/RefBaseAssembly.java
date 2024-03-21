@@ -27,9 +27,9 @@ public class RefBaseAssembly
     private byte mBases[];
     private byte mBaseQuals[];
 
-    private final List<AssemblySupport> mSupport;
+    private int mReadMismatchesCount;
 
-    private final SequenceMismatches mSequenceMismatches;
+    private final List<AssemblySupport> mSupport;
 
     public RefBaseAssembly(final JunctionAssembly assembly, final int extensionRefPosition, final RefGenomeInterface refGenome)
     {
@@ -45,9 +45,9 @@ public class RefBaseAssembly
         mBases = new byte[assemblyLength];
         mBaseQuals = new byte[assemblyLength];
 
-        mSequenceMismatches = new SequenceMismatches();
-
         mSupport = Lists.newArrayList();
+
+        mReadMismatchesCount = 0;
 
         // copy the ref bases from the junction assembly starting at the first ref base (ie the junction base itself)
         // for now ignoring mismatches even if they're dominant could also lower the qual for those, but better to sort this out prior or properly
@@ -110,8 +110,7 @@ public class RefBaseAssembly
 
     public List<AssemblySupport> support() { return mSupport; }
     public int supportCount() { return mSupport.size(); }
-
-    public SequenceMismatches mismatches() { return mSequenceMismatches; }
+    public int readMismatchesCount() { return mReadMismatchesCount; }
 
     public boolean checkAddRead(final Read read, final SupportType supportType, int permittedMismatches, int requiredOverlap)
     {
@@ -247,7 +246,8 @@ public class RefBaseAssembly
                 else
                 {
                     ++mismatchCount;
-                    mSequenceMismatches.add(assemblyIndex, base, read, qual);
+
+                    ++mReadMismatchesCount;
                 }
             }
         }
@@ -266,9 +266,9 @@ public class RefBaseAssembly
 
     public String toString()
     {
-        return format("junc(%s) aligned(%d - %d) extensionRefPos(%d) length(%d) support(%d) mismatches(pos=%d all=%d)",
+        return format("junc(%s) aligned(%d - %d) extensionRefPos(%d) length(%d) support(%d) mismatches(%d)",
                 mJunction, mMinAlignedPosition, mMaxAlignedPosition, mExtensionRefPosition, baseLength(),
-                mSupport.size(), mSequenceMismatches.positionCount(), mSequenceMismatches.distinctBaseCount());
+                mSupport.size(), mReadMismatchesCount);
     }
 }
 

@@ -61,7 +61,7 @@ public class AssemblyExtensionTest
                 "READ_03", 45, refBases.substring(15, 20) + "G" + refBases.substring(21, 30), "15M");
 
         assertTrue(refBaseAssembly.checkAddRead(read3, DISCORDANT,permittedMismatches, requiredOverlap));
-        assertEquals(1, refBaseAssembly.mismatches().positionCount());
+        assertEquals(1, refBaseAssembly.readMismatchesCount());
 
         // with 2 mismatches
         Read read4 = createRead(
@@ -91,7 +91,7 @@ public class AssemblyExtensionTest
                 "READ_03", 70, refBases.substring(40, 45) + "C" + refBases.substring(46, 50), "10M");
 
         assertTrue(refBaseAssembly.checkAddRead(read3, DISCORDANT, permittedMismatches, requiredOverlap));
-        assertEquals(1, refBaseAssembly.mismatches().positionCount());
+        assertEquals(1, refBaseAssembly.readMismatchesCount());
 
         // with 2 mismatches
         read4 = createRead(

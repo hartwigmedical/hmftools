@@ -61,6 +61,5 @@ public class IndelsTest
         assertEquals(1, assemblies.size());
         assembly = assemblies.get(0);
         assertEquals(3, assembly.supportCount());
-
     }
 }

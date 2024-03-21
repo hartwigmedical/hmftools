@@ -17,7 +17,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.common.AssemblySupport;
-import com.hartwig.hmftools.esvee.common.IndelCoords;
 import com.hartwig.hmftools.esvee.common.JunctionAssembly;
 import com.hartwig.hmftools.esvee.common.Junction;
 import com.hartwig.hmftools.esvee.read.Read;
@@ -38,9 +37,6 @@ public class JunctionAssembler
 
     public List<JunctionAssembly> processJunction(final List<Read> rawReads)
     {
-        // if(mJunction.IndelBased)
-        //    return processIndelJunction(mJunction, mNonJunctionReads, rawReads);
-
         // find prominent reads to establish the extension sequence, taking any read meeting min soft-clip lengths
         // and repetitive indels
 
@@ -74,7 +70,7 @@ public class JunctionAssembler
                 }
 
                 if((mJunction.isForward() && read.indelImpliedAlignmentEnd() > 0)
-                        || (mJunction.isReverse() && read.indelImpliedAlignmentStart() > 0))
+                || (mJunction.isReverse() && read.indelImpliedAlignmentStart() > 0))
                 {
                     buildIndelFrequencies(indelLengthReads, read);
                 }
@@ -114,9 +110,7 @@ public class JunctionAssembler
             if(assemblySupport.stream().anyMatch(x -> x.read() == read))
                 continue;
 
-            if(assembly.checkReadMatches(read, supportMismatch))
-                assembly.addJunctionRead(read, false);
-            else
+            if(!assembly.checkAddJunctionRead(read, supportMismatch))
                 ++mismatchCount;
         }
 
@@ -128,6 +122,8 @@ public class JunctionAssembler
         // AssemblyDeduper.dedupJunctionAssemblies(filteredAssemblies);
 
         expandReferenceBases(assembly);
+
+        assembly.buildRepeatInfo();
 
         return Lists.newArrayList(assembly);
     }

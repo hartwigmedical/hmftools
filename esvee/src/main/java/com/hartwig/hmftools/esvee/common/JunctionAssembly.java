@@ -52,7 +52,6 @@ public class JunctionAssembly
     private final List<AssemblySupport> mCandidateSupport;
     private final List<RefSideSoftClip> mRefSideSoftClips;
 
-    private final SequenceMismatches mSequenceMismatches;
     private final List<RepeatInfo> mRepeatInfo;
     private String mRefBasesRepeatedTrimmed;
     private int mRefBaseTrimLength;
@@ -86,7 +85,6 @@ public class JunctionAssembly
         for(AssemblySupport support : assemblySupport)
         {
             Read read = support.read();
-            int readJunctionIndex = read.getReadIndexAtReferencePosition(junction.Position, true);
 
             maxAlignedPosition = max(maxAlignedPosition, read.alignmentEnd());
             minAlignedPosition = minAlignedPosition == 0 ? read.alignmentStart() : min(minAlignedPosition, read.alignmentStart());
@@ -109,8 +107,6 @@ public class JunctionAssembly
         mMinAlignedPosition = minAlignedPosition;
         mMaxAlignedPosition = maxAlignedPosition;
 
-        mSequenceMismatches = new SequenceMismatches();
-
         mSupport = Lists.newArrayList(assemblySupport);
         mCandidateSupport = Lists.newArrayList();
         mRepeatInfo = repeatInfo;
@@ -123,39 +119,6 @@ public class JunctionAssembly
         mOutcome = UNSET;
         mFilters = Sets.newHashSet();
         mMismatchReadCount = 0;
-    }
-
-    public JunctionAssembly(
-            final Junction junction, final Read read, final int maxExtensionDistance,
-            final int minAlignedPosition, final int maxAlignedPosition)
-    {
-        mJunction = junction;
-        mInitialRead = read;
-
-        mJunctionSequenceIndex = junction.isForward() ? 0 : maxExtensionDistance;
-
-        mMinAlignedPosition = minAlignedPosition;
-        mMaxAlignedPosition = maxAlignedPosition;
-
-        int initialAssemblyLength = maxExtensionDistance + 1;
-        mBases = new byte[initialAssemblyLength];
-
-        mBaseQuals = new byte[initialAssemblyLength];
-        mSequenceMismatches = new SequenceMismatches();
-
-        mSupport = Lists.newArrayList();
-        mCandidateSupport = Lists.newArrayList();
-        mRepeatInfo = Lists.newArrayList();
-        mRefSideSoftClips = Lists.newArrayList();
-        mRemoteRegions = Lists.newArrayList();
-        mBranchedAssemblies = Lists.newArrayList();
-        mMergedAssemblies = 0;
-        mPhaseGroup = null;
-        mPhaseGroupLinkingInfo = null;
-        mOutcome = UNSET;
-        mFilters = Sets.newHashSet();
-
-        addInitialRead(read);
     }
 
     public void setId(int id) { mAssemblyId = id; }
@@ -194,20 +157,7 @@ public class JunctionAssembly
     public List<AssemblySupport> support() { return mSupport; }
     public int supportCount() { return mSupport.size(); }
 
-    public SequenceMismatches mismatches() { return mSequenceMismatches; }
-
-    private void addInitialRead(final Read read)
-    {
-        for(int i = 0; i < mBases.length; ++i)
-        {
-            mBases[i] = 0;
-            mBaseQuals[i] = 0;
-        }
-
-        addReadSupport(read, mJunction.IndelBased ? INDEL : JUNCTION, false);
-    }
-
-    public boolean checkReadMatches(final Read read, int permittedMismatches)
+    public boolean checkAddJunctionRead(final Read read, int permittedMismatches)
     {
         int mismatchCount = 0;
 
@@ -222,6 +172,8 @@ public class JunctionAssembly
         if(assemblyIndex < 0)
             return false;
 
+        int highQualMatchCount = 0;
+
         for(int i = readIndexRange[SE_START]; i <= readIndexRange[SE_END]; ++i, ++assemblyIndex)
         {
             if(assemblyIndex < 0)
@@ -230,8 +182,14 @@ public class JunctionAssembly
             if(assemblyIndex >= mBases.length)
                 break;
 
-            if(!basesMatch(
-                    read.getBases()[i], mBases[assemblyIndex], read.getBaseQuality()[i], mBaseQuals[assemblyIndex], LOW_BASE_QUAL_THRESHOLD))
+            byte qual = read.getBaseQuality()[i];
+
+            if(basesMatch(read.getBases()[i], mBases[assemblyIndex], qual, mBaseQuals[assemblyIndex], LOW_BASE_QUAL_THRESHOLD))
+            {
+                if(qual >= LOW_BASE_QUAL_THRESHOLD)
+                    ++highQualMatchCount;
+            }
+            else
             {
                 ++mismatchCount;
 
@@ -243,25 +201,22 @@ public class JunctionAssembly
         mismatchCount = calcReadSequenceMismatches(
                 mJunction.isForward(), mBases, mBaseQuals, mRepeatInfo, read, readJunctionIndex, permittedMismatches);
 
-        return mismatchCount <= permittedMismatches;
-   }
+        if(mismatchCount > permittedMismatches)
+            return false;
 
-   public int mismatchReadCount() { return mMismatchReadCount; }
-   public void addMismatchReadCount(int count) { mMismatchReadCount += count; }
-
-    public void addReadSupport(final Read read, final SupportType type, boolean registerMismatches)
-    {
-        addRead(read, type, registerMismatches, null);
+        mSupport.add(new AssemblySupport(read, JUNCTION, assemblyIndex, readJunctionIndex, highQualMatchCount, mismatchCount));
+        return true;
     }
 
-    public void addJunctionRead(final Read read, boolean registerMismatches) { addReadSupport(read, JUNCTION, registerMismatches); }
+    public int mismatchReadCount() { return mMismatchReadCount; }
+    public void addMismatchReadCount(int count) { mMismatchReadCount += count; }
 
     public void extendJunctionReadSupport(final Read read, final AssemblySupport existingSupport)
     {
-        addRead(read, existingSupport.type(), true, existingSupport);
+        addRead(read, existingSupport.type(), existingSupport);
     }
 
-    private void addRead(final Read read, final SupportType type, boolean registerMismatches, @Nullable final AssemblySupport existingSupport)
+    private void addRead(final Read read, final SupportType type, @Nullable final AssemblySupport existingSupport)
     {
         int mismatchCount = 0;
         int highQualMatchCount = 0;
@@ -348,9 +303,6 @@ public class JunctionAssembly
                 else
                 {
                     ++mismatchCount;
-
-                    if(registerMismatches)
-                        mSequenceMismatches.add(assemblyIndex, base, read, qual);
                 }
             }
         }
@@ -457,7 +409,7 @@ public class JunctionAssembly
 
         for(AssemblySupport support : refBaseAssembly.support())
         {
-            addRead(support.read(), support.type(), true, null);
+            addRead(support.read(), support.type(), null);
         }
 
         // use the ref assembly to fill in any missing bases
@@ -534,17 +486,6 @@ public class JunctionAssembly
                 mSupport.remove(i);
                 return;
             }
-        }
-    }
-
-    public void checkAddReadSupport(final JunctionAssembly other)
-    {
-        for(AssemblySupport support : other.support())
-        {
-            if(hasReadSupport(support.read()))
-                continue;
-
-            addJunctionRead(support.read(), false);
         }
     }
 
@@ -661,8 +602,6 @@ public class JunctionAssembly
             }
         }
 
-        mSequenceMismatches = new SequenceMismatches();
-
         mSupport = Lists.newArrayList();
         mCandidateSupport = Lists.newArrayList();
 
@@ -714,9 +653,9 @@ public class JunctionAssembly
 
     public String toString()
     {
-        return format("junc(%s) coords(extLen=%d refBasePos=%d len=%d) juncIndex(%d) support(%d) mismatches(pos=%d all=%d)",
+        return format("junc(%s) coords(extLen=%d refBasePos=%d len=%d) juncIndex(%d) support(%d) mismatches(%d)",
                 mJunction, extensionLength(), refBasePosition(), baseLength(), mJunctionSequenceIndex,
-                mSupport.size(), mSequenceMismatches.positionCount(), mSequenceMismatches.distinctBaseCount());
+                mSupport.size(), mMismatchReadCount);
     }
 
     public boolean hasUnsetBases() { return !findUnsetBases(mBases).isEmpty(); }
@@ -788,7 +727,6 @@ public class JunctionAssembly
         return sb.toString();
     }
 
-
     @VisibleForTesting
     public JunctionAssembly(
             final Junction junction, final byte[] bases, final byte[] quals, final int junctionIndex)
@@ -813,7 +751,6 @@ public class JunctionAssembly
 
         mBases = copyArray(bases);
         mBaseQuals = copyArray(quals);
-        mSequenceMismatches = new SequenceMismatches();
         mSupport = Lists.newArrayList();
         mCandidateSupport = Lists.newArrayList();
         mRepeatInfo = Lists.newArrayList();
@@ -826,5 +763,11 @@ public class JunctionAssembly
         mMergedAssemblies = 0;
         mOutcome = UNSET;
         mMismatchReadCount = 0;
+    }
+
+    @VisibleForTesting
+    public void addJunctionRead(final Read read, boolean registerMismatches)
+    {
+        mSupport.add(new AssemblySupport(read, JUNCTION, 0, 0, 0, 0));
     }
 }
