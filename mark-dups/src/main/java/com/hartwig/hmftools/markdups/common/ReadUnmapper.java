@@ -725,7 +725,10 @@ public class ReadUnmapper
 
     private static void setUnmapCoordsAttribute(final SAMRecord read, final String chromosome, final int position)
     {
-        read.setAttribute(UNMAP_ATTRIBUTE, chromosome + UNMAPP_COORDS_DELIM + position);
+        // some alt contigs have the delimiter in their name, hence the replace
+        read.setAttribute(
+                UNMAP_ATTRIBUTE,
+                chromosome.replaceAll(UNMAPP_COORDS_DELIM, "") + UNMAPP_COORDS_DELIM + position);
     }
 
     public static void unmapMateAlignment(final SAMRecord read, final boolean readUnmapped, final boolean unmapRead)
