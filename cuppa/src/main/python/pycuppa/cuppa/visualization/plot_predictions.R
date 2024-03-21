@@ -5,6 +5,7 @@ library(ggplot2)
 library(ggh4x)
 library(stringr)
 library(patchwork)
+library(plyr)
 
 ## Args ================================
 args <- commandArgs(trailingOnly = TRUE)
@@ -62,12 +63,19 @@ if(is.na(SNV_COUNT)){
    stop("`snv_count` was not found as a feature in `VIS_DATA`")
 }
 
+## Define mapping ================================
+MAPPINGS_CLASSIFIER_NAMES = c(
+  "GENE EXP"="GENE EXPRESSION",
+  "GEN POS"="GENOMIC POSITION"
+)
+
 ## Heatmap of probs ================================
 get_plot_data_probs <- function(VIS_DATA, data_value_rounding = 2){
 
    plot_data <- subset(VIS_DATA, data_type=="prob")
 
-   plot_data$row_label <- toupper(plot_data$clf_name)
+   plot_data$row_label <- toupper(gsub("_"," ", plot_data$clf_name))
+   plot_data$row_label <- revalue(plot_data$row_label, replace=MAPPINGS_CLASSIFIER_NAMES, warn_missing=FALSE)
    plot_data$row_group <- toupper(plot_data$clf_group)
 
    ## Data label --------------------------------
@@ -366,7 +374,7 @@ plot_probs <- function(VIS_DATA){
 plot_cv_performance <- function(VIS_DATA, data_value_rounding = 2){
    plot_data <- subset(VIS_DATA, data_type=="cv_performance")
 
-   plot_data$row_group <- "training_set"
+   plot_data$row_group <- "training set"
    plot_data$row_label <- plot_data$feat_name
 
    ## Data label --------------------------------
@@ -408,19 +416,17 @@ plot_cv_performance <- function(VIS_DATA, data_value_rounding = 2){
       guide=guide_colorbar(frame.colour="black", ticks.colour="black", barheight=3.5)
    ) +
    #guides(fill=FALSE) +
-   labs(title="DNA_COMBINED: Training set performance", fill="Metric value") +
+   labs(title="DNA COMBINED: Training set performance", fill="Metric value") +
    theme(legend.justification=c("left", "bottom"))
 }
 
 
 plot_signatures <- function(
    VIS_DATA,
-   data_value_rounding = 2,
    feat_value_rounding = 0,
    feat_perc_signif = 1
 ){
    if(FALSE){
-      data_value_rounding = 2
       feat_value_rounding = 0
       feat_perc_signif = 2
    }
@@ -428,7 +434,22 @@ plot_signatures <- function(
    plot_data <- subset(VIS_DATA, data_type=="sig_quantile")
 
    plot_data$row_group <- "signature"
-   plot_data$data_label <- round(plot_data$data_value, data_value_rounding)
+
+   rounding_params <- list(
+     list(lower=1000, upper=Inf,   func=function(x) formatC(x, format="e", digits=0)),
+     list(lower=-100, upper=1000, func=function(x) round(x, digits=2)),
+     list(lower=-Inf, upper=-100,  func=function(x) formatC(x, format="e", digits=0))
+   )
+
+   plot_data$data_label <- sapply(plot_data$data_value, function(value){
+     for(params in rounding_params){
+       if(value >= params$lower & value < params$upper){
+         return(params$func(value))
+       }
+     }
+
+     return(value)
+  })
 
    ## Make row labels --------------------------------
    plot_data$row_label <- with(plot_data, {
@@ -440,14 +461,14 @@ plot_signatures <- function(
 
       feat_value <- round(feat_value, feat_value_rounding)
 
-      paste0(feat_name, " = ", feat_value, " (", perc, "%)")
+      paste0(gsub("_", " ", feat_name), " = ", feat_value, " (", perc, "%)")
    })
 
    ## Discretize quantiles --------------------------------
    quantile_info <- list(
-      breaks=c(0, 0.95, 1.2, Inf),
-      labels=c(">0 - 0.95 (in expected range)", "0.95 - 1.2 (above expected range)", ">1.2 (well above expected range)"),
-      colors=c("#C9E7CD", "#f5dfdf","#e8b6b6") ## white, green, light green, red
+      breaks=c(-Inf, -0.004, 0.004, 0.95, 1.2, Inf),
+      labels=c("<0 (below expected range)", "0", ">0 - 0.95 (in expected range)", "0.95 - 1.2 (above expected range)", ">1.2 (well above expected range)"),
+      colors=c("lightcyan2", "grey95", "#C9E7CD", "#f5dfdf","#e8b6b6") ## white, green, light green, red
    )
 
    plot_data$data_value <- cut(
@@ -463,7 +484,7 @@ plot_signatures <- function(
       cell_color="grey50"
    ) +
    scale_fill_manual(
-      values=structure(quantile_info$colors, names=quantile_info$labels),
+      values=structure(quantile_info$colors[quantile_info$colors != "grey95"], names=quantile_info$labels[quantile_info$labels != "0"]),
       guide=guide_legend(override.aes=list(colour="black", linetype=1)),
       na.value="grey95", drop=FALSE
    ) +
@@ -477,9 +498,10 @@ plot_feat_contrib <- function(VIS_DATA){
    ## Parse feature names --------------------------------
    affixes <- as.data.frame(do.call(
       rbind,
-      str_split(plot_data$feat_name, '[.]', n=2)
+      str_split(gsub("_", " ", plot_data$feat_name), '[.]', n=2)
    ))
    colnames(affixes) <- c("feat_type", "feat_basename")
+   affixes$feat_type <- revalue(affixes$feat_type, replace=c(driver="driver (DL)"))
 
    ## Format labels --------------------------------
    plot_data$row_group <- affixes$feat_type
@@ -492,14 +514,14 @@ plot_feat_contrib <- function(VIS_DATA){
       list(lower=0.01,  upper=1,     func=function(x) signif(x, digits=1)),
       list(lower=-Inf,  upper=0.01,  func=function(x) formatC(x, format="e", digits=0))
    )
-   
+
    data_labels <- sapply(plot_data$data_value, function(value){
       for(params in rounding_params){
          if(value >= params$lower & value < params$upper){
             return(params$func(value))
          }
       }
-      
+
       return(value)
    })
    data_labels[data_labels==1] <- "" ## odds of 1 == log(odds) of 0 -> unimportant, thus hide
@@ -513,11 +535,16 @@ plot_feat_contrib <- function(VIS_DATA){
 
       feat_value_label <- round(feat_value, digits=1)
       feat_value_label[feat_value==0] <- "0"
+      feat_value_label[feat_value==-0.00000001] <- "absent"
       feat_value_label[feat_value==1] <- "1"
 
-      paste0(affixes$feat_basename, " = ", feat_value_label)
+      driver_feat_value_label <- paste0(gsub("\\.", " ", affixes$feat_basename), " (", feat_value_label, ")")
+      trait_feat_value_label <- paste(affixes$feat_basename, "=", feat_value_label==1, sep = " ")
+      tmb_or_sv_feat_value_label <- paste(affixes$feat_basename, "=", feat_value_label, sep = " ")
+      non_driver_feat_value_label <- ifelse(affixes$feat_basename %in% c("is male", "whole genome duplication"), trait_feat_value_label, tmb_or_sv_feat_value_label)
+      paste0(ifelse(grepl("\\.", affixes$feat_basename), driver_feat_value_label, non_driver_feat_value_label))
    })
-   
+
    ## Legend breaks --------------------------------
    exponent_range <- log10(max(plot_data$data_value)) - log10(min(plot_data$data_value))
    legend_breaks <- 10^seq(from=-10, to=10, by=if(exponent_range < 5) 1 else 2)
