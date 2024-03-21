@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
@@ -38,7 +39,7 @@ public class JunctionAssemblyTest
         String refBases = REF_BASES_200.substring(0, 20);
         String extBases = REF_BASES_200.substring(100, 140);
 
-        Junction junction = new Junction(CHR_1, 29, POS_STRAND);
+        Junction junction = new Junction(CHR_1, 29, POS_ORIENT);
 
         // first a basic assembly with all reads agreeing
         String readBases = refBases + extBases;
@@ -92,7 +93,7 @@ public class JunctionAssemblyTest
         String extBases = REF_BASES_200.substring(100, 140);
 
         int juncPosition = 100;
-        Junction junction = new Junction(CHR_1, juncPosition, NEG_STRAND);
+        Junction junction = new Junction(CHR_1, juncPosition, NEG_ORIENT);
 
         // first a basic assembly with all reads agreeing
 
@@ -147,7 +148,7 @@ public class JunctionAssemblyTest
     {
         String refBases = REF_BASES_200.substring(0, 20);
 
-        Junction junction = new Junction(CHR_1, 29, POS_STRAND);
+        Junction junction = new Junction(CHR_1, 29, POS_ORIENT);
 
         String consensusExtBases = "AAAAAAAACCGTGTGTCCAGTAGTAGTCCTTTT";
         String readBases = refBases + consensusExtBases;
@@ -180,7 +181,7 @@ public class JunctionAssemblyTest
     }
 
     @Test
-    public void testBuildJunctionSequence()
+    public void testBuildJunctionSequencePosOrientation()
     {
         String refBases = REF_BASES_RANDOM_100.substring(0, 20) + "TTGGCCAATT";
 
@@ -192,7 +193,7 @@ public class JunctionAssemblyTest
         //       GATCGATCGATCGATCGATCTTGGCCAATT AATCGGTT (2nd sequence)
         // 2nd-asm index  012345678901234567890 12345678
 
-        Junction junction = new Junction(CHR_1, 29, POS_STRAND);
+        Junction junction = new Junction(CHR_1, 29, POS_ORIENT);
 
         // read 1 defines the first sequence
         Read read1 = createRead("READ_01", 10, refBases.substring(10, 30) + "AACCGGGG", "20M8S");
@@ -255,7 +256,7 @@ public class JunctionAssemblyTest
         //               TTTTCCTTGG TTGGCCAATT GATCGATCGATCGATCGATCTTGGCCAATT (1st sequence, designated since longest / high-qual SC)
         // 2nd-asm index   01234567 8901234567890 12345678
 
-        Junction junction = new Junction(CHR_1, 20, NEG_STRAND);
+        Junction junction = new Junction(CHR_1, 20, NEG_ORIENT);
 
         // read 1 defines the first sequence
         Read read1 = createRead("READ_01", 20, "AACCGGGG" + refBases.substring(20, 32), "8S12M");

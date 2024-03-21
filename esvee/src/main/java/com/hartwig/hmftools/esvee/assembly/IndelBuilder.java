@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH;
 import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_SUPPORT_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.expandReferenceBases;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.isValidSupportCoordsVsJunction;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.readQualFromJunction;
@@ -35,6 +36,38 @@ import htsjdk.samtools.CigarElement;
 
 public final class IndelBuilder
 {
+    public static void findIndelExtensionReads(
+            final Junction junction, final List<Read> rawReads,
+            final List<Read> extensionReads, final List<Read> junctionReads, final List<Read> nonJunctionReads)
+    {
+        for(Read read : rawReads)
+        {
+            IndelCoords indelCoords = read.indelCoords();
+
+            if(indelCoords != null)
+            {
+                // must match junction exactly to be considered for support
+                if(!indelCoords.matchesJunction(junction.Position, junction.Orientation))
+                    continue;
+
+                if(indelCoords.Length >= MIN_INDEL_LENGTH)
+                    extensionReads.add(read);
+                else
+                    junctionReads.add(read);
+            }
+            else
+            {
+                if(!ReadFilters.recordSoftClipsAndCrossesJunction(read, junction))
+                {
+                    nonJunctionReads.add(read);
+                    continue;
+                }
+
+                junctionReads.add(read);
+            }
+        }
+    }
+
     public static List<JunctionAssembly> processIndelJunction(
             final Junction junction, final List<Read> nonJunctionReads, final List<Read> rawReads)
     {

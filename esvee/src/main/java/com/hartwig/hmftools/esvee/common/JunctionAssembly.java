@@ -207,61 +207,6 @@ public class JunctionAssembly
         addReadSupport(read, mJunction.IndelBased ? INDEL : JUNCTION, false);
     }
 
-    public boolean tryAddJunctionRead(final Read read, int permittedMismatches)
-    {
-        int mismatchCount = 0;
-
-        int readJunctionIndex = read.getReadIndexAtReferencePosition(mJunction.Position, true);
-
-        if(readJunctionIndex == INVALID_INDEX)
-            return false;
-
-        int[] readIndexRange = getReadIndexCoordinates(read, readJunctionIndex, false);
-        int assemblyIndex = getReadAssemblyStartIndex(readJunctionIndex, readIndexRange[SE_START], false);
-
-        if(assemblyIndex < 0)
-            return false;
-
-        for(int i = readIndexRange[SE_START]; i <= readIndexRange[SE_END]; ++i, ++assemblyIndex)
-        {
-            if(assemblyIndex < 0)
-                continue;
-
-            if(assemblyIndex >= mBases.length) // CHECK: similar to issue with INDELs in addRead() ??
-                break;
-
-            if(!basesMatch(
-                    read.getBases()[i], mBases[assemblyIndex], read.getBaseQuality()[i], mBaseQuals[assemblyIndex], LOW_BASE_QUAL_THRESHOLD))
-            {
-                ++mismatchCount;
-
-                if(mismatchCount > permittedMismatches)
-                    break;
-            }
-        }
-
-        if(mismatchCount > permittedMismatches)
-        {
-            // attempt a match taking repeats into consideration
-            List<RepeatInfo> repeats = RepeatInfo.findRepeats(read.getBases());
-
-            if(repeats != null)
-            {
-                mismatchCount = calcReadSequenceMismatches(
-                        mJunction.isForward(), mBases, mBaseQuals, mRepeatInfo, read, readJunctionIndex, permittedMismatches);
-
-            }
-        }
-
-        if(mismatchCount > permittedMismatches)
-            return false;
-
-        int matchCount = readIndexRange[SE_END] - readIndexRange[SE_START] + 1 - mismatchCount;
-        mSupport.add(new AssemblySupport(read, JUNCTION, assemblyIndex, readJunctionIndex, matchCount, mismatchCount));
-
-        return true;
-    }
-
     public boolean checkReadMatches(final Read read, int permittedMismatches)
     {
         int mismatchCount = 0;
@@ -282,7 +227,7 @@ public class JunctionAssembly
             if(assemblyIndex < 0)
                 continue;
 
-            if(assemblyIndex >= mBases.length) // CHECK: similar to issue with INDELs in addRead() ??
+            if(assemblyIndex >= mBases.length)
                 break;
 
             if(!basesMatch(
