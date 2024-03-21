@@ -100,7 +100,7 @@ public class TruthsetAnnotation
                         getByteValue(fieldsIndexMap, "JunctionOrientation", values),
                         fragments,
                         cipos,
-                        mapFromStr(values[fieldsIndexMap.get("SvType")]));
+                        StructuralVariantType.valueOf(values[fieldsIndexMap.get("SvType")]));
 
                 breakends.add(truthsetBreakend);
             }
@@ -121,17 +121,6 @@ public class TruthsetAnnotation
     }
 
     public static String NO_TRUTHSET_MATCH = "NA\t0\tNA";
-
-    private static StructuralVariantType mapFromStr(final String typeStr)
-    {
-        if(typeStr.equals("TRANSLOCATION")) return StructuralVariantType.BND;
-        if(typeStr.equals("INVERSION")) return StructuralVariantType.INV;
-        if(typeStr.equals("DUPLICATION")) return StructuralVariantType.DUP;
-        if(typeStr.equals("DELETION")) return StructuralVariantType.DEL;
-        if(typeStr.equals("INSERTION")) return StructuralVariantType.INS;
-
-        return StructuralVariantType.SGL;
-    }
 
     private class TruthsetBreakend
     {
