@@ -12,7 +12,10 @@ import static com.hartwig.hmftools.cup.prep.DataSource.RNA;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
@@ -64,7 +67,7 @@ public class GeneExpressionPrep implements CategoryPrep
 
                 double logTpm = log(adjTpm + 1);
 
-                dataItems.add(new DataItem(RNA, ItemType.EXPRESSION, geneName, String.format("%6.3e", logTpm)));
+                dataItems.add(new DataItem(RNA, ItemType.EXPRESSION, geneName, String.format(Locale.ENGLISH, "%6.3e", logTpm)));
             }
         }
         catch(IOException e)
