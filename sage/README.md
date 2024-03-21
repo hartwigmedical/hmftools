@@ -190,7 +190,7 @@ vis_pass_only | Generate output for all passing variants
 vis_max_support_reads | Max reads per type to display, default is 40
 vis_output_dir | Output directory for HTML files, defaults to 'vis' if not specified
 
-A guide to the visualisations is shown below. A link to the HTML file for this variant is available [here.](http://htmlpreview.github.io/?https://github.com/hartwigmedical/hmftools/blob/master/sage/docs/COLO829v003T.sage.chr7_152079940_G_T.html)
+A guide to the visualisations is shown below. A link to the HTML file for this variant is available [here.](https://raw.githack.com/hartwigmedical/hmftools/master/sage/docs/COLO829v003T.sage.chr7_152079940_G_T.html)
 
 ![image](docs/COLO829v003T.annotated_sage_vis.png)
 
