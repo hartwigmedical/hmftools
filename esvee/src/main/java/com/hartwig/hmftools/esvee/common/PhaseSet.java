@@ -44,6 +44,11 @@ public class PhaseSet
         return mAssemblyLinks.stream().filter(x -> x.hasAssembly(assembly)).collect(Collectors.toList());
     }
 
+    public AssemblyLink findSplitLink(final JunctionAssembly assembly)
+    {
+        return mAssemblyLinks.stream().filter(x -> x.hasAssembly(assembly)).filter(x -> x.type() == LinkType.SPLIT).findFirst().orElse(null);
+    }
+
     public boolean hasAssembly(final JunctionAssembly assembly)
     {
         return mAssemblies.contains(assembly);

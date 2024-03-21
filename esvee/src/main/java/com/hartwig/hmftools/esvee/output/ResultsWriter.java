@@ -28,6 +28,7 @@ public class ResultsWriter
     public AssemblyWriter assemblyWriter() { return mAssemblyWriter; }
     public AssemblyReadWriter readWriter() { return mReadWriter; }
     public PhaseGroupBuildWriter phaseGroupBuildWriter() { return mPhaseGroupBuildWriter; }
+    public BamWriter bamWriter() { return mBamWriter; }
 
     public void close()
     {

@@ -1,26 +1,58 @@
 package com.hartwig.hmftools.esvee.output;
 
+import static java.lang.Math.round;
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 
+import java.io.File;
 import java.io.FileOutputStream;
+import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.esvee.SvConfig;
+import com.hartwig.hmftools.esvee.common.AssemblyLink;
+import com.hartwig.hmftools.esvee.common.AssemblySupport;
+import com.hartwig.hmftools.esvee.common.IndelCoords;
+import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.common.PhaseSet;
+import com.hartwig.hmftools.esvee.common.SupportType;
+import com.hartwig.hmftools.esvee.read.Read;
 
 import htsjdk.samtools.BAMStreamWriter;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SAMReadGroupRecord;
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 
 public class BamWriter
 {
-    private final BAMStreamWriter mWriter;
+    // private final BAMStreamWriter mWriter;
+    private final SAMFileWriter mWriter;
     private SAMFileHeader mHeader;
+    private boolean mValid;
 
     public BamWriter(final SvConfig config)
     {
         mHeader = null;
-        mWriter = initialiseBam(config);
+        mValid = true;
+        mWriter = initialiseBamWriter(config);
+        // mWriter = initialiseBam(config);
     }
+
+    public boolean isValid() { return mWriter != null && mValid; }
 
     private BAMStreamWriter initialiseBam(final SvConfig config)
     {
@@ -33,7 +65,6 @@ public class BamWriter
         RefGenomeSource refGenomeFile = (RefGenomeSource)config.RefGenome;
 
         refGenomeFile.refGenomeFile().getSequenceDictionary().getSequences().stream()
-                // .sorted(NaturalSortComparator.of(SAMSequenceRecord::getSequenceName))
                 .map(seq -> new SAMSequenceRecord(seq.getSequenceName(), seq.getSequenceLength()))
                 .forEach(mHeader::addSequence);
 
@@ -41,9 +72,16 @@ public class BamWriter
 
         try
         {
-            final BAMStreamWriter writer = new BAMStreamWriter(new FileOutputStream(outputFilename),
+            BAMStreamWriter writer = new BAMStreamWriter(
+                    new FileOutputStream(outputFilename),
                     new FileOutputStream(outputFilename + ".bai"),
                     null, 0, mHeader);
+
+            // could take these from the original BAM(s)
+            String programId = "ESVEE";
+            String readGroupId = "NONE";
+            mHeader.addProgramRecord(new SAMProgramRecord(programId));
+            mHeader.addReadGroup(new SAMReadGroupRecord(readGroupId));
 
             writer.writeHeader(mHeader);
 
@@ -51,288 +89,199 @@ public class BamWriter
         }
         catch(final Exception e)
         {
-            SV_LOGGER.warn("failure while writing output BAM", e.toString());
+            SV_LOGGER.error("failure while initialising output BAM", e.toString());
+            mValid = false;
             return null;
         }
+    }
+
+    private SAMFileWriter initialiseBamWriter(final SvConfig config)
+    {
+        SAMFileHeader fileHeader = new SAMFileHeader();
+
+        fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
+
+        RefGenomeSource refGenomeFile = (RefGenomeSource)config.RefGenome;
+
+        refGenomeFile.refGenomeFile().getSequenceDictionary().getSequences().stream()
+                .map(seq -> new SAMSequenceRecord(seq.getSequenceName(), seq.getSequenceLength()))
+                .forEach(fileHeader::addSequence);
+
+        String programId = "ESVEE";
+        String readGroupId = "NONE";
+        fileHeader.addProgramRecord(new SAMProgramRecord(programId));
+        fileHeader.addReadGroup(new SAMReadGroupRecord(readGroupId));
+
+        String outputBam = config.outputFilename(WriteType.ASSEMBLY_BAM);
+        return new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(outputBam));
     }
 
     public void close()
     {
         if(mWriter != null)
-            mWriter.finish(true);
+        {
+            mWriter.close();
+            // mWriter.finish(true);
+        }
     }
 
-    /*
-    public void writeVariantAssemblyBamRecords(final List<VariantCall> variants)
+    private static final String ASSEMBLY_ID_TAG = "AS";
+    private static final String READ_TYPE_TAG = "RT";
+    private static final String ORIG_CIGAR_TAG = "OC";
+    private static final String SPLIT_READ_COUNT = "SR";
+    private static final String DISC_READ_COUNT = "DP";
+    private static final String SAMPLE_TYPE_REF = "REF";
+    private static final String SAMPLE_TYPE_TUMOR = "TUMOR";
+
+    private static void setReadTypeTag(final SAMRecord read, final String sampleType, final String supportType)
     {
-        if(mWriter == null)
+        read.setAttribute(READ_TYPE_TAG, sampleType + "_" + supportType);
+    }
+
+    public void writeAssembly(final JunctionAssembly assembly)
+    {
+        if(mWriter == null || !mValid)
             return;
 
-        Map<String, List<VariantBAMRecord>> recordsByAssemblyName = new HashMap<>();
-        
-        for(VariantCall call : variants)
+        // write the assembly itself and then all its contributing reads
+        PhaseSet phaseSet = assembly.phaseGroup().findPhaseSet(assembly);
+
+        AssemblyLink assemblyLink = phaseSet.findSplitLink(assembly);
+
+        String assemblyReadId = format("ASSEMBLY_%d_%s", assembly.id(), assembly.junction().coords());
+
+        int splitFragmentCount = 0;
+        int discordantFragmentCount = 0;
+        int totalMapQuality = 0;
+        Set<String> uniqueFragmentIds = Sets.newHashSet();
+
+        for(AssemblySupport support : assembly.support())
         {
-            Set<String> supportFragments = call.sampleSupport().stream()
-                    .flatMap(s -> Stream.concat(s.splitReads().stream(), s.discordantReads().stream()))
-                    .map(Read::getName)
-                    .collect(Collectors.toSet());
+            Read read = support.read();
+            SAMRecord record = read.bamRecord();
 
-            for(VariantAssembly variantAssembly : call.variantAssemblies())
+            record.setAttribute(ASSEMBLY_ID_TAG, assemblyReadId);
+
+            setReadTypeTag(record, read.isReference() ? SAMPLE_TYPE_REF : SAMPLE_TYPE_TUMOR, support.type().toString());
+
+            if(read.originalCigarString() != read.cigarString())
+                record.setAttribute(ORIG_CIGAR_TAG, read.originalCigarString());
+
+            mWriter.addAlignment(record);
+
+            if(!uniqueFragmentIds.contains(record.getReadName()))
             {
-                final AlignedAssembly assembly = variantAssembly.Assembly;
-                final List<VariantBAMRecord> assemblyRecords = recordsByAssemblyName.computeIfAbsent(assembly.Name, __ ->
+                uniqueFragmentIds.add(record.getReadName());
+
+                if(support.type().isSplitSupport())
                 {
-                    final List<VariantBAMRecord> records = new ArrayList<>();
-
-                      Set<String> junctions = Sets.newHashSet();
-
-                    final Set<String> fragments = new HashSet<>();
-
-                    final List<VariantAssemblyAlignment> alignments = constructAlignments(assembly.getAlignmentBlocks());
-
-                    for(VariantAssemblyAlignment alignment : alignments)
-                    {
-                        records.add(new VariantBAMRecord(assembly.Name,
-                                assembly.getBasesString().replace('X', 'N'), assembly.getBaseQuality(),
-                                alignment.Offset, alignment.Chromosome, alignment.Position, alignment.Inverted,
-                                alignment.MapQ,
-                                alignment.Cigar,
-                                new HashSet<>(), junctions, fragments,
-                                alignments));
-                    }
-                    return records;
-                });
-
-                final Set<String> support = new HashSet<>();
-                support.addAll(supportFragments);
-                support.retainAll(assembly.getSupportReadNames());
-                assemblyRecords.forEach(r -> r.SourceFragments.addAll(support));
-                assemblyRecords.forEach(r -> r.Variants.add(call.compactName()));
-            }
-        }
-
-        final List<VariantBAMRecord> records = recordsByAssemblyName.values().stream()
-                .flatMap(Collection::stream)
-                .sorted(NaturalSortComparator.<VariantBAMRecord>of(r -> r.Chromosome).thenComparingInt(r -> r.Position))
-                .collect(Collectors.toList());
-
-        try
-        {
-            for(VariantBAMRecord record : records)
-            {
-                final var samRecord = new SAMRecord(mHeader);
-                samRecord.setReadName(record.Name);
-                samRecord.setReadBases(record.Assembly.getBytes());
-                samRecord.setBaseQualities(record.Quality);
-                samRecord.setReferenceName(record.Chromosome);
-                samRecord.setAlignmentStart(record.Position);
-                samRecord.setReadNegativeStrandFlag(record.Inverted);
-                samRecord.setMappingQuality(record.MapQ);
-                samRecord.setCigarString(record.Cigar);
-                samRecord.setAttribute("XV", String.join(",", record.Variants));
-                samRecord.setAttribute("XJ", String.join(",", record.Junctions));
-                samRecord.setAttribute("XF", String.join(",", record.SourceFragments));
-
-                @Nullable
-                final VariantAssemblyAlignment mate = record.getMate();
-                if(mate != null)
-                {
-                    samRecord.setReadPairedFlag(true);
-                    samRecord.setFirstOfPairFlag(record.Offset < mate.Offset);
-                    samRecord.setSecondOfPairFlag(record.Offset > mate.Offset);
-                    samRecord.setMateReferenceName(mate.Chromosome);
-                    samRecord.setMateAlignmentStart(mate.Position);
-                    samRecord.setMateNegativeStrandFlag(mate.Inverted);
-                    samRecord.setAttribute("MC", mate.Cigar);
+                    ++splitFragmentCount;
+                    totalMapQuality += read.mappingQuality();
                 }
-                
-                if(!record.Supplementaries.isEmpty())
+                else if(support.type() == SupportType.DISCORDANT)
                 {
-                    final String supplementals = record.Supplementaries.stream()
-                            .map(sup -> String.join(",", sup.Chromosome, String.valueOf(sup.Position),
-                                    sup.Inverted ? "-" : "+", sup.Cigar, String.valueOf(sup.MapQ), "0") + ";")
-                            .collect(Collectors.joining());
-                    samRecord.setAttribute("SA", supplementals);
-                }
-
-                mWriter.writeAlignment(samRecord);
-            }
-        }
-        catch(final Exception e)
-        {
-            SV_LOGGER.warn("failure while writing output BAM", e.toString());
-        }
-    }
-
-    private static class VariantBAMRecord
-    {
-        public final String Name;
-        public final String Assembly;
-        public final byte[] Quality;
-        public final int Offset;
-        public final String Chromosome;
-        public final int Position;
-        public final boolean Inverted;
-        public final int MapQ;
-        public final String Cigar;
-        public final Set<String> Variants;
-        public final Set<String> Junctions;
-        public final Set<String> SourceFragments;
-        public final List<VariantAssemblyAlignment> Supplementaries;
-
-        private VariantBAMRecord(
-                final String name, final String assembly, final byte[] quality, final int offset, final String chromosome,
-                final int position, final boolean inverted, final int mapQ, final String cigar, final Set<String> variants,
-                final Set<String> junctions, final Set<String> sourceFragments, final List<VariantAssemblyAlignment> supplementaries)
-        {
-            Name = name;
-            if(inverted)
-            {
-                Assembly = SequenceUtil.reverseComplement(assembly);
-                final byte[] reversedQuals = Arrays.copyOf(quality, quality.length);
-                SequenceUtil.reverseQualities(quality);
-                Quality = reversedQuals;
-            }
-            else
-            {
-                Assembly = assembly;
-                Quality = quality;
-            }
-            Offset = offset;
-            Chromosome = chromosome;
-            Position = position;
-            Inverted = inverted;
-            MapQ = mapQ;
-            Cigar = cigar;
-            Variants = variants;
-            Junctions = junctions;
-            SourceFragments = sourceFragments;
-            Supplementaries = supplementaries.stream().filter(s -> s.Offset != Offset).collect(Collectors.toList());
-        }
-
-        @Nullable
-        public VariantAssemblyAlignment getMate()
-        {
-            if(Supplementaries.size() != 1)
-                return null;
-
-            return Supplementaries.get(0);
-        }
-    }
-
-    private List<VariantAssemblyAlignment> constructAlignments(final List<Alignment> alignments)
-    {
-        final Set<Alignment> used = Collections.newSetFromMap(new IdentityHashMap<>());
-
-        final List<VariantAssemblyAlignment> variantAlignments = new ArrayList<>();
-        for(int i = 0; i < alignments.size(); i++)
-        {
-            final Alignment alignment = alignments.get(i);
-            if(alignment.isUnmapped() || used.contains(alignment))
-                continue;
-            variantAlignments.add(constructAlignment(alignments, i, used));
-        }
-
-        return variantAlignments;
-    }
-
-    private VariantAssemblyAlignment constructAlignment(final List<Alignment> alignments, final int startIndex, final Set<Alignment> used)
-    {
-        final List<CigarElement> elements = new ArrayList<>();
-
-        final Alignment start = alignments.get(startIndex);
-        if(start.SequenceStartPosition != 1)
-            elements.add(new CigarElement(start.SequenceStartPosition - 1, CigarOperator.S));
-        int index = startIndex;
-        for(; index < alignments.size(); index++)
-        {
-            final Alignment current = alignments.get(index);
-            used.add(current);
-            elements.add(new CigarElement(current.Length, CigarOperator.M));
-
-            if(index + 1 < alignments.size())
-            {
-                final Alignment next = alignments.get(index + 1);
-                if(next.isMapped())
-                {
-                    if(next.Inverted != current.Inverted || !next.Chromosome.equals(current.Chromosome))
-                        break;
-
-                    // Might be a delete
-                    final int impliedDelete = !current.Inverted
-                            ? next.ReferenceStartPosition - (current.ReferenceStartPosition + current.Length)
-                            : current.ReferenceStartPosition - (next.ReferenceStartPosition + next.Length);
-                    if(impliedDelete > 0 && impliedDelete <= 100)
-                    {
-                        elements.add(new CigarElement(impliedDelete, CigarOperator.D));
-                        continue;
-                    }
+                    ++discordantFragmentCount;
                 }
             }
-            if(index + 2 < alignments.size())
-            {
-                // Does a future alignment come back to within 100 bases of us?
-                int insertSize = alignments.get(index + 1).Length;
-                boolean addedInsert = false;
-                for(int checkIndex = index + 2; checkIndex < alignments.size(); checkIndex++)
-                {
-                    final Alignment next = alignments.get(checkIndex);
-                    if(next.isUnmapped() || next.Inverted != current.Inverted || !next.Chromosome.equals(current.Chromosome))
-                        continue;
-
-                    final int impliedDelete = !current.Inverted
-                            ? next.ReferenceStartPosition - (current.ReferenceStartPosition + current.Length)
-                            : current.ReferenceStartPosition - (next.ReferenceStartPosition + next.Length);
-                    if(impliedDelete >= 0 && impliedDelete < 20)
-                    {
-                        elements.add(new CigarElement(insertSize, CigarOperator.I));
-                        if(impliedDelete > 0)
-                            elements.add(new CigarElement(impliedDelete, CigarOperator.D));
-                        index = checkIndex - 1;
-                        addedInsert = true;
-                        break;
-                    }
-
-                    insertSize += next.Length;
-                }
-                if(addedInsert)
-                    continue;
-            }
-            break;
         }
 
-        int softClipSize = 0;
-        for(index++; index < alignments.size(); index++)
-            softClipSize += alignments.get(index).Length;
-        if(softClipSize != 0)
-            elements.add(new CigarElement(softClipSize, CigarOperator.S));
-        if(start.Inverted)
-            Collections.reverse(elements);
+        int averageMapQual = (int)round(totalMapQuality / (double)splitFragmentCount);
 
-        return new VariantAssemblyAlignment(startIndex, start.Chromosome, start.ReferenceStartPosition,
-                start.Inverted, start.Quality, new Cigar(elements).toString());
-    }
+        boolean isLinkedIndel = assembly.indel() && assemblyLink != null;
 
-    private static class VariantAssemblyAlignment
-    {
-        public final int Offset;
-        public final String Chromosome;
-        public final int Position;
-        public final boolean Inverted;
-        public final int MapQ;
-        public final String Cigar;
-
-        private VariantAssemblyAlignment(final int offset, final String chromosome, final int position,
-                final boolean inverted, final int mapQ, final String cigar)
+        if(!isLinkedIndel || assembly.isForwardJunction())
         {
-            Offset = offset;
-            Chromosome = chromosome;
-            Position = position;
-            Inverted = inverted;
-            MapQ = mapQ;
-            Cigar = cigar;
+            SAMRecord assemblyRead = createAssemblyRead(
+                    assembly, assemblyReadId, assemblyLink, splitFragmentCount, discordantFragmentCount, averageMapQual);
+
+            // mWriter.writeAlignment(assemblyRead);
+            mWriter.addAlignment(assemblyRead);
         }
     }
-    */
 
+    private static String formSplitAssemblyCigar(final JunctionAssembly assembly)
+    {
+        if(assembly.isForwardJunction())
+        {
+            return format("%dM%dS", assembly.refBaseLength(), assembly.extensionLength());
+        }
+        else
+        {
+            return format("%dS%dM", assembly.extensionLength(), assembly.refBaseLength());
+        }
+    }
+
+    private SAMRecord createAssemblyRead(
+            final JunctionAssembly assembly, final String assemblyReadId, final AssemblyLink assemblyLink,
+            final int splitFragmentCount, final int discordantFragmentCount, final int avgMapQuality)
+    {
+        JunctionAssembly linkedAssembly = assemblyLink != null ? assemblyLink.otherAssembly(assembly) : null;
+
+        boolean isLinkedIndel = assembly.indel() && linkedAssembly != null;
+
+        SAMRecord record = new SAMRecord(mHeader);
+
+        record.setReadName(assemblyReadId);
+        record.setReadBases(assembly.bases());
+        record.setBaseQualities(assembly.baseQuals());
+
+        record.setMappingQuality(avgMapQuality);
+        record.setReferenceName(assembly.junction().Chromosome);
+
+        String cigarString;
+        int alignmentStart;
+
+        int mateAlignmentStart = NO_POSITION;
+        String mateCigar = NO_CIGAR;
+
+        if(isLinkedIndel)
+        {
+            IndelCoords indelCoords = assembly.initialRead().indelCoords();
+            int upperRefLength = linkedAssembly.refBaseLength();
+
+            alignmentStart = assembly.minAlignedPosition();
+
+            cigarString = format("%dM%d%s%dM",
+                    assembly.refBaseLength(),
+                    indelCoords.isDelete() ? CigarOperator.D.toString() : CigarOperator.D.toString(),
+                    indelCoords.Length, upperRefLength);
+        }
+        else
+        {
+            alignmentStart = assembly.isForwardJunction() ? assembly.minAlignedPosition() : assembly.junction().Position;
+            cigarString = formSplitAssemblyCigar(assembly);
+
+            if(linkedAssembly != null)
+            {
+                mateCigar = formSplitAssemblyCigar(linkedAssembly);
+                mateAlignmentStart = linkedAssembly.isForwardJunction() ? linkedAssembly.minAlignedPosition() : linkedAssembly.junction().Position;
+            }
+        }
+
+        record.setAlignmentStart(alignmentStart);
+        record.setCigarString(cigarString);
+
+        record.setFlags(assembly.initialRead().getFlags());
+
+        if(linkedAssembly != null)
+        {
+            record.setMateReferenceName(linkedAssembly.junction().Chromosome);
+            record.setMateAlignmentStart(mateAlignmentStart);
+            // record.setMateReferenceIndex(templateRead.getMateReferenceIndex());
+            record.setAttribute(MATE_CIGAR_ATTRIBUTE, mateCigar);
+        }
+
+        record.setDuplicateReadFlag(false);
+
+        record.setInferredInsertSize(0);
+        record.setAttribute(NUM_MUTATONS_ATTRIBUTE, 0);
+
+        // special tags
+        record.setAttribute(ASSEMBLY_ID_TAG, assemblyReadId);
+        record.setAttribute(READ_TYPE_TAG, "ASSEMBLY");
+        record.setAttribute(SPLIT_READ_COUNT, splitFragmentCount);
+        record.setAttribute(DISC_READ_COUNT, discordantFragmentCount);
+
+        return record;
+    }
 }

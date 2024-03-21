@@ -25,6 +25,7 @@ import com.hartwig.hmftools.esvee.alignment.Alignment;
 import com.hartwig.hmftools.esvee.alignment.BwaAligner;
 import com.hartwig.hmftools.esvee.output.AssemblyReadWriter;
 import com.hartwig.hmftools.esvee.output.AssemblyWriter;
+import com.hartwig.hmftools.esvee.output.BamWriter;
 import com.hartwig.hmftools.esvee.phasing.PhaseGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
 import com.hartwig.hmftools.esvee.phasing.PhaseSetTask;
@@ -132,6 +133,10 @@ public class JunctionProcessor
             writeAssemblyOutput(finalAssemblies);
 
             writeVariantVcf(finalAssemblies);
+
+            // note this is written after the VCF since writing reassigns the reads to the output BAM, there-by removing their association
+            // with the BAM they were read from (ie as used in tumor vs ref counts)
+            writeAssemblyBam(finalAssemblies);
 
             if(mConfig.PerfDebug || (!mConfig.SpecificChrRegions.hasFilters() && mConfig.SpecificJunctions.isEmpty()))
             {
@@ -291,12 +296,21 @@ public class JunctionProcessor
                     readWriter.writeAssemblyReads(assembly);
             }
         }
+    }
 
+    private void writeAssemblyBam(final List<JunctionAssembly> assemblies)
+    {
         // write BAM records
-        if(mConfig.WriteTypes.contains(ASSEMBLY_BAM))
+        if(mConfig.WriteTypes.contains(ASSEMBLY_BAM) && mResultsWriter.bamWriter().isValid())
         {
             SV_LOGGER.debug("writing assembly BAM");
 
+            BamWriter bamWriter = mResultsWriter.bamWriter();
+
+            for(JunctionAssembly assembly : assemblies)
+            {
+                bamWriter.writeAssembly(assembly);
+            }
         }
     }
 
