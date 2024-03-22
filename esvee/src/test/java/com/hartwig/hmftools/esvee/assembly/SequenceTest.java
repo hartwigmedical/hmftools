@@ -7,14 +7,13 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.expandReferenceBases;
-import static com.hartwig.hmftools.esvee.common.RepeatInfo.buildTrimmedRefBaseSequence;
-import static com.hartwig.hmftools.esvee.common.RepeatInfo.findDualBaseRepeat;
-import static com.hartwig.hmftools.esvee.common.RepeatInfo.findDualDualRepeat;
-import static com.hartwig.hmftools.esvee.common.RepeatInfo.findMultiBaseRepeat;
-import static com.hartwig.hmftools.esvee.common.RepeatInfo.findRepeats;
-import static com.hartwig.hmftools.esvee.common.RepeatInfo.findSingleBaseRepeat;
-import static com.hartwig.hmftools.esvee.common.RepeatInfo.findTripleBaseRepeat;
+import static com.hartwig.hmftools.esvee.types.RepeatInfo.buildTrimmedRefBaseSequence;
+import static com.hartwig.hmftools.esvee.types.RepeatInfo.findDualBaseRepeat;
+import static com.hartwig.hmftools.esvee.types.RepeatInfo.findDualDualRepeat;
+import static com.hartwig.hmftools.esvee.types.RepeatInfo.findMultiBaseRepeat;
+import static com.hartwig.hmftools.esvee.types.RepeatInfo.findRepeats;
+import static com.hartwig.hmftools.esvee.types.RepeatInfo.findSingleBaseRepeat;
+import static com.hartwig.hmftools.esvee.types.RepeatInfo.findTripleBaseRepeat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -23,9 +22,9 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.RepeatInfo;
+import com.hartwig.hmftools.esvee.types.Junction;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.read.Read;
 
 import org.junit.Test;

@@ -12,7 +12,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.esvee.SvConstants;
+import com.hartwig.hmftools.esvee.AssemblyConstants;
 
 import org.junit.Test;
 
@@ -36,7 +36,7 @@ public class ReadAdjustmentsTest
         assertFalse(ReadAdjustments.trimPolyGSequences(read));
 
         // trimmed on the 3' end
-        readBases = otherBases + polyGSection.substring(0, SvConstants.POLY_G_TRIM_LENGTH);
+        readBases = otherBases + polyGSection.substring(0, AssemblyConstants.POLY_G_TRIM_LENGTH);
         read = createRead(TEST_READ_ID, 100, readBases, makeCigarString(readBases, 0, 0));
         assertTrue(ReadAdjustments.trimPolyGSequences(read));
 

@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_JUNCTION_DISTANCE;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_JUNCTION_DISTANCE;
 import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAtJunction;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
 
 public class AssemblyDeduper
 {

@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.esvee.phasing;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.SvConstants.REMOTE_PHASING_MIN_READS;
-import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
-import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.REMOTE_PHASING_MIN_READS;
+import static com.hartwig.hmftools.esvee.types.AssemblySupport.hasMatchingFragment;
+import static com.hartwig.hmftools.esvee.types.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.phasing.PhaseGroupBuilder.linkToPhaseGroups;
 
 import java.util.Collections;
@@ -16,20 +16,20 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.common.AssemblySupport;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.JunctionGroup;
-import com.hartwig.hmftools.esvee.common.PhaseGroup;
-import com.hartwig.hmftools.esvee.common.RefSideSoftClip;
-import com.hartwig.hmftools.esvee.common.RemoteRegion;
-import com.hartwig.hmftools.esvee.common.ThreadTask;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.JunctionGroup;
+import com.hartwig.hmftools.esvee.types.PhaseGroup;
+import com.hartwig.hmftools.esvee.types.RefSideSoftClip;
+import com.hartwig.hmftools.esvee.types.RemoteRegion;
+import com.hartwig.hmftools.esvee.types.ThreadTask;
 import com.hartwig.hmftools.esvee.output.PhaseGroupBuildWriter;
 import com.hartwig.hmftools.esvee.read.Read;
 
 class RemoteGroupBuilder extends ThreadTask
 {
-    private final SvConfig mConfig;
+    private final AssemblyConfig mConfig;
     private final PhaseGroupBuildWriter mWriter;
     private final Queue<JunctionGroup> mJunctionGroups;
     private final Map<String, List<JunctionGroup>> mJunctionGroupMap;
@@ -39,7 +39,7 @@ class RemoteGroupBuilder extends ThreadTask
     private final int mJunctionGroupCount;
 
     public RemoteGroupBuilder(
-            final SvConfig config, final Queue<JunctionGroup> junctionGroups,
+            final AssemblyConfig config, final Queue<JunctionGroup> junctionGroups,
             final Map<String,List<JunctionGroup>> junctionGroupMap, final PhaseGroupBuildWriter writer)
     {
         super("RemotePhaseGroups");

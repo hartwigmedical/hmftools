@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.esvee.SvConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_SUPPORT_MISMATCH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_SUPPORT_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.expandReferenceBases;
 import static com.hartwig.hmftools.esvee.read.ReadFilters.readJunctionExtensionLength;
@@ -16,9 +16,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.esvee.common.AssemblySupport;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.Junction;
+import com.hartwig.hmftools.esvee.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.Junction;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.read.ReadFilters;
 

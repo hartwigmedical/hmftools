@@ -3,7 +3,7 @@ package com.hartwig.hmftools.esvee.output;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.output.AssemblyWriterUtils.addPhasingHeader;
 import static com.hartwig.hmftools.esvee.output.AssemblyWriterUtils.addPhasingInfo;
 import static com.hartwig.hmftools.esvee.output.AssemblyWriterUtils.addReadStats;
@@ -20,19 +20,19 @@ import java.io.IOException;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
 public class AssemblyWriter
 {
-    private final SvConfig mConfig;
+    private final AssemblyConfig mConfig;
 
     private final BufferedWriter mWriter;
     private final TruthsetAnnotation mTruthsetAnnotation;
 
     // write info about assemblies
-    public AssemblyWriter(final SvConfig config)
+    public AssemblyWriter(final AssemblyConfig config)
     {
         mConfig = config;
         mTruthsetAnnotation = new TruthsetAnnotation(mConfig.TruthsetFile);

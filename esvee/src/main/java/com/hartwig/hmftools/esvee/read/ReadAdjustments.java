@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.esvee.read;
 
-import static com.hartwig.hmftools.esvee.SvConstants.INDEL_TO_SC_MAX_SIZE_SOFTCLIP;
-import static com.hartwig.hmftools.esvee.SvConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
-import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
-import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_TRIM_PERC;
-import static com.hartwig.hmftools.esvee.SvConstants.POLY_G_TRIM_LENGTH;
-import static com.hartwig.hmftools.esvee.common.BaseType.G;
-import static com.hartwig.hmftools.esvee.common.BaseType.C;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MAX_SIZE_SOFTCLIP;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.LOW_BASE_TRIM_PERC;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.POLY_G_TRIM_LENGTH;
+import static com.hartwig.hmftools.esvee.types.BaseType.G;
+import static com.hartwig.hmftools.esvee.types.BaseType.C;
 
 import static htsjdk.samtools.CigarOperator.M;
 

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.esvee.filters;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
 
 public final class SoftFilters
 {

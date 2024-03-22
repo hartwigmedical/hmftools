@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAndCros
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.esvee.common.Junction;
+import com.hartwig.hmftools.esvee.types.Junction;
 
 import org.junit.Test;
 

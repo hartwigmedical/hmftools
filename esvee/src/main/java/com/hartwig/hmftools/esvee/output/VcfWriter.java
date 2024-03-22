@@ -26,14 +26,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.LOCAL_LINKED_BY;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.LOCAL_LINKED_BY_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.MAPQ;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.MAPQ_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.OVERHANG;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.OVERHANG_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REMOTE_LINKED_BY;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REMOTE_LINKED_BY_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_READS;
@@ -42,16 +36,10 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT_DESC;
-import static com.hartwig.hmftools.common.utils.Doubles.round;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -60,14 +48,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.common.AssemblyLink;
-import com.hartwig.hmftools.esvee.common.AssemblySupport;
-import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.LinkType;
-import com.hartwig.hmftools.esvee.common.PhaseSet;
-import com.hartwig.hmftools.esvee.common.SupportType;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.LinkType;
+import com.hartwig.hmftools.esvee.types.PhaseSet;
+import com.hartwig.hmftools.esvee.types.SupportType;
 import com.hartwig.hmftools.esvee.filters.FilterType;
 
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -91,7 +78,7 @@ import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 public class VcfWriter implements AutoCloseable
 {
-    private final SvConfig mConfig;
+    private final AssemblyConfig mConfig;
     private final VariantContextWriter mWriter;
 
     private final List<String> mSampleNames;
@@ -100,7 +87,7 @@ public class VcfWriter implements AutoCloseable
 
     private static final List<Allele> NO_GENOTYPE_ALLELES = Lists.newArrayList(Allele.NO_CALL, Allele.NO_CALL);
 
-    public VcfWriter(final SvConfig config)
+    public VcfWriter(final AssemblyConfig config)
     {
         mConfig = config;
 

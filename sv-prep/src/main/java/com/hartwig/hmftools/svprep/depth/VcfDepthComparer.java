@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
-import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.depth.DepthConfig.VCF_TAG_PREFIX;
 
 import java.io.BufferedWriter;

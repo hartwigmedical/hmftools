@@ -17,9 +17,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.esvee.common.AssemblyLink;
-import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.types.Junction;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
 
 import org.junit.Test;
 

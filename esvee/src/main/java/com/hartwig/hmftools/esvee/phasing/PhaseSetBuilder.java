@@ -5,16 +5,16 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_DUP_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isSupplementaryOnly;
-import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.DUP_BRANCHED;
-import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.LINKED;
+import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.DUP_BRANCHED;
+import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.LINKED;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.extendRefBases;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.tryAssemblyFacing;
-import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.SHORT_INDEL;
-import static com.hartwig.hmftools.esvee.common.AssemblySupport.findMatchingFragmentSupport;
-import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
+import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.SHORT_INDEL;
+import static com.hartwig.hmftools.esvee.types.AssemblySupport.findMatchingFragmentSupport;
+import static com.hartwig.hmftools.esvee.types.AssemblySupport.hasMatchingFragment;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.assembliesShareReads;
 
 import java.util.Collections;
@@ -28,14 +28,14 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.assembly.AssemblyLinker;
 import com.hartwig.hmftools.esvee.assembly.IndelBuilder;
 import com.hartwig.hmftools.esvee.assembly.JunctionExtender;
-import com.hartwig.hmftools.esvee.common.AssemblyLink;
-import com.hartwig.hmftools.esvee.common.AssemblySupport;
-import com.hartwig.hmftools.esvee.common.DiscordantGroup;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.LinkType;
-import com.hartwig.hmftools.esvee.common.PhaseGroup;
-import com.hartwig.hmftools.esvee.common.PhaseSet;
-import com.hartwig.hmftools.esvee.common.SupportType;
+import com.hartwig.hmftools.esvee.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.types.DiscordantGroup;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.LinkType;
+import com.hartwig.hmftools.esvee.types.PhaseGroup;
+import com.hartwig.hmftools.esvee.types.PhaseSet;
+import com.hartwig.hmftools.esvee.types.SupportType;
 
 public class PhaseSetBuilder
 {

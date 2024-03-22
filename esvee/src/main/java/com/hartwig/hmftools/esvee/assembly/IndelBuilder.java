@@ -1,20 +1,19 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.esvee.SvConstants.MIN_INDEL_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.isValidSupportCoordsVsJunction;
-import static com.hartwig.hmftools.esvee.common.SupportType.CANDIDATE_DISCORDANT;
-import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
+import static com.hartwig.hmftools.esvee.types.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import static htsjdk.samtools.CigarOperator.I;
 
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.common.AssemblySupport;
-import com.hartwig.hmftools.esvee.common.IndelCoords;
-import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.types.IndelCoords;
+import com.hartwig.hmftools.esvee.types.Junction;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
 import com.hartwig.hmftools.esvee.read.ReadFilters;
 

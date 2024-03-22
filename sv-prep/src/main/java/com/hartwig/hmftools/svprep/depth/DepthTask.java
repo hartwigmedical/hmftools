@@ -18,8 +18,8 @@ import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANOS_IN_SECO
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
-import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
-import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
 
 import java.io.File;
 import java.util.List;

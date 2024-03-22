@@ -4,7 +4,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,16 +17,16 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.JunctionGroup;
-import com.hartwig.hmftools.esvee.common.PhaseGroup;
-import com.hartwig.hmftools.esvee.common.ThreadTask;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.JunctionGroup;
+import com.hartwig.hmftools.esvee.types.PhaseGroup;
+import com.hartwig.hmftools.esvee.types.ThreadTask;
 import com.hartwig.hmftools.esvee.output.PhaseGroupBuildWriter;
 
 public class PhaseGroupBuilder
 {
-    private final SvConfig mConfig;
+    private final AssemblyConfig mConfig;
     private final Map<String, List<JunctionGroup>> mJunctionGroupMap;
     private final List<PhaseGroup> mPhaseGroups;
 
@@ -36,7 +36,7 @@ public class PhaseGroupBuilder
     private final PhaseGroupBuildWriter mWriter;
 
     public PhaseGroupBuilder(
-            final SvConfig config, final Map<String,List<JunctionGroup>> junctionGroupMap, final PhaseGroupBuildWriter writer)
+            final AssemblyConfig config, final Map<String,List<JunctionGroup>> junctionGroupMap, final PhaseGroupBuildWriter writer)
     {
         mConfig = config;
         mWriter = writer;

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.phasing;
 
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -8,18 +8,18 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.common.PhaseGroup;
-import com.hartwig.hmftools.esvee.common.PhaseSet;
-import com.hartwig.hmftools.esvee.common.ThreadTask;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.types.PhaseGroup;
+import com.hartwig.hmftools.esvee.types.PhaseSet;
+import com.hartwig.hmftools.esvee.types.ThreadTask;
 
 public class PhaseSetTask extends ThreadTask
 {
-    private final SvConfig mConfig;
+    private final AssemblyConfig mConfig;
     private final Queue<PhaseGroup> mPhaseGroups;
     private final int mPhaseGroupCount;
 
-    public PhaseSetTask(final SvConfig config, final Queue<PhaseGroup> phaseGroups)
+    public PhaseSetTask(final AssemblyConfig config, final Queue<PhaseGroup> phaseGroups)
     {
         super("PhaseSets");
 
@@ -29,7 +29,7 @@ public class PhaseSetTask extends ThreadTask
     }
 
     public static List<PhaseSetTask> createThreadTasks(
-            final SvConfig config, final List<PhaseGroup> phaseGroups, final int taskCount, final List<Thread> threadTasks)
+            final AssemblyConfig config, final List<PhaseGroup> phaseGroups, final int taskCount, final List<Thread> threadTasks)
     {
         List<PhaseSetTask> phaseSetTasks = Lists.newArrayList();
 

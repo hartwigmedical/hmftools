@@ -5,25 +5,24 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.List;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.common.AssemblySupport;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public class AssemblyReadWriter
 {
-    private final SvConfig mConfig;
+    private final AssemblyConfig mConfig;
 
     private final BufferedWriter mWriter;
 
-    public AssemblyReadWriter(final SvConfig config)
+    public AssemblyReadWriter(final AssemblyConfig config)
     {
         mConfig = config;
         mWriter = initialiseWriter();

@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.createAssembly;
 import java.util.Collections;
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
 
 import org.junit.Test;
 

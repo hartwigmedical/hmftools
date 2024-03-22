@@ -4,19 +4,17 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
-import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_OVERLAP_BASES;
-import static com.hartwig.hmftools.esvee.SvConstants.MIN_SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.SvConstants.MIN_VARIANT_LENGTH;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
-import static com.hartwig.hmftools.esvee.SvConstants.REF_SIDE_MIN_SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.DUP_BRANCHED;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_EXTENSION_OVERLAP_BASES;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_SIDE_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.DUP_BRANCHED;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensions;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.findRemoteRegions;
-import static com.hartwig.hmftools.esvee.common.RefSideSoftClip.purgeRefSideSoftClips;
-import static com.hartwig.hmftools.esvee.common.SupportType.CANDIDATE_DISCORDANT;
-import static com.hartwig.hmftools.esvee.common.SupportType.DISCORDANT;
-import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
+import static com.hartwig.hmftools.esvee.types.RefSideSoftClip.purgeRefSideSoftClips;
+import static com.hartwig.hmftools.esvee.types.SupportType.CANDIDATE_DISCORDANT;
+import static com.hartwig.hmftools.esvee.types.SupportType.DISCORDANT;
+import static com.hartwig.hmftools.esvee.types.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import java.util.Collections;
@@ -28,11 +26,11 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.esvee.common.AssemblySupport;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.RefBaseAssembly;
-import com.hartwig.hmftools.esvee.common.RefSideSoftClip;
-import com.hartwig.hmftools.esvee.common.SupportType;
+import com.hartwig.hmftools.esvee.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.RefBaseAssembly;
+import com.hartwig.hmftools.esvee.types.RefSideSoftClip;
+import com.hartwig.hmftools.esvee.types.SupportType;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public class RefBaseExtender

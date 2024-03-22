@@ -2,8 +2,8 @@ package com.hartwig.hmftools.esvee.alignment;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.SvConstants.DECOY_MAX_MISMATCHES;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.DECOY_MAX_MISMATCHES;
 
 import static htsjdk.samtools.CigarOperator.M;
 
@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.samtools.CigarUtils;
-import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.output.WriteType;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
@@ -87,7 +87,7 @@ public class DecoyChecker
         return false;
     }
 
-    public static BufferedWriter initialiseWriter(final SvConfig config)
+    public static BufferedWriter initialiseWriter(final AssemblyConfig config)
     {
         if(!config.WriteTypes.contains(WriteType.DECOY_MATCHES))
             return null;

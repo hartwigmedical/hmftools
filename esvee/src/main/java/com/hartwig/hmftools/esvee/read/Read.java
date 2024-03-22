@@ -13,8 +13,8 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
-import static com.hartwig.hmftools.esvee.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.BAM_HEADER_SAMPLE_ID_TAG;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -26,9 +26,8 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.samtools.CigarUtils;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
-import com.hartwig.hmftools.esvee.common.IndelCoords;
+import com.hartwig.hmftools.esvee.types.IndelCoords;
 
-import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;

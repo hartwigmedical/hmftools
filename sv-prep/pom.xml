@@ -60,7 +60,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.svprep.SvPrepApplication
+                            <mainClass>com.hartwig.hmftools.esvee.prep.SvPrepApplication
                             </mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>

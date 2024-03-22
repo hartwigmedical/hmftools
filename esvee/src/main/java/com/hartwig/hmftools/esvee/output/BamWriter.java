@@ -7,22 +7,21 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATT
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
-import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.common.AssemblyLink;
-import com.hartwig.hmftools.esvee.common.AssemblySupport;
-import com.hartwig.hmftools.esvee.common.IndelCoords;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.PhaseSet;
-import com.hartwig.hmftools.esvee.common.SupportType;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.types.IndelCoords;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.PhaseSet;
+import com.hartwig.hmftools.esvee.types.SupportType;
 import com.hartwig.hmftools.esvee.read.Read;
 
 import htsjdk.samtools.BAMStreamWriter;
@@ -34,8 +33,6 @@ import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 public class BamWriter
 {
@@ -44,7 +41,7 @@ public class BamWriter
     private SAMFileHeader mHeader;
     private boolean mValid;
 
-    public BamWriter(final SvConfig config)
+    public BamWriter(final AssemblyConfig config)
     {
         mHeader = null;
         mValid = true;
@@ -54,7 +51,7 @@ public class BamWriter
 
     public boolean isValid() { return mWriter != null && mValid; }
 
-    private BAMStreamWriter initialiseBam(final SvConfig config)
+    private BAMStreamWriter initialiseBam(final AssemblyConfig config)
     {
         if(!config.WriteTypes.contains(WriteType.ASSEMBLY_BAM))
             return null;
@@ -95,7 +92,7 @@ public class BamWriter
         }
     }
 
-    private SAMFileWriter initialiseBamWriter(final SvConfig config)
+    private SAMFileWriter initialiseBamWriter(final AssemblyConfig config)
     {
         SAMFileHeader fileHeader = new SAMFileHeader();
 

@@ -3,10 +3,10 @@ package com.hartwig.hmftools.esvee;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
-import static com.hartwig.hmftools.esvee.common.JunctionGroup.buildJunctionGroups;
+import static com.hartwig.hmftools.esvee.types.JunctionGroup.buildJunctionGroups;
 import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLIES;
 import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLY_BAM;
 import static com.hartwig.hmftools.esvee.output.WriteType.READS;
@@ -21,19 +21,17 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.esvee.alignment.Alignment;
-import com.hartwig.hmftools.esvee.alignment.BwaAligner;
 import com.hartwig.hmftools.esvee.output.AssemblyReadWriter;
 import com.hartwig.hmftools.esvee.output.AssemblyWriter;
 import com.hartwig.hmftools.esvee.output.BamWriter;
 import com.hartwig.hmftools.esvee.phasing.PhaseGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
 import com.hartwig.hmftools.esvee.phasing.PhaseSetTask;
-import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.JunctionGroup;
-import com.hartwig.hmftools.esvee.common.PhaseGroup;
-import com.hartwig.hmftools.esvee.common.ThreadTask;
+import com.hartwig.hmftools.esvee.types.Junction;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.JunctionGroup;
+import com.hartwig.hmftools.esvee.types.PhaseGroup;
+import com.hartwig.hmftools.esvee.types.ThreadTask;
 import com.hartwig.hmftools.esvee.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.output.WriteType;
 import com.hartwig.hmftools.esvee.read.BamReader;
@@ -42,7 +40,7 @@ import com.hartwig.hmftools.esvee.read.ReadStats;
 
 public class JunctionProcessor
 {
-    private final SvConfig mConfig;
+    private final AssemblyConfig mConfig;
     private final ResultsWriter mResultsWriter;
 
     private final Map<String,List<Junction>> mChrJunctionsMap;
@@ -52,7 +50,7 @@ public class JunctionProcessor
 
     private final List<PerformanceCounter> mPerfCounters;
 
-    public JunctionProcessor(final SvConfig config)
+    public JunctionProcessor(final AssemblyConfig config)
     {
         mConfig = config;
 

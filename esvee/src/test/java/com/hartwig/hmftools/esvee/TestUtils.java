@@ -22,8 +22,8 @@ import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.Junction;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
 
 import htsjdk.samtools.SAMRecord;
@@ -38,7 +38,7 @@ public class TestUtils
     public static final String TEST_CIGAR_30  = "30M";
     public static final String TEST_CIGAR_20  = "20M";
 
-    public static final SvConfig TEST_CONFIG = new SvConfig();
+    public static final AssemblyConfig TEST_CONFIG = new AssemblyConfig();
 
     public static final String REF_BASES_RANDOM_100 = generateRandomBases(100);
 

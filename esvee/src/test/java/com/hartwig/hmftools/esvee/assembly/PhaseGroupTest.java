@@ -17,12 +17,11 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.JunctionGroup;
-import com.hartwig.hmftools.esvee.common.PhaseGroup;
+import com.hartwig.hmftools.esvee.types.Junction;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.JunctionGroup;
+import com.hartwig.hmftools.esvee.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.output.PhaseGroupBuildWriter;
 import com.hartwig.hmftools.esvee.phasing.LocalGroupBuilder;
 import com.hartwig.hmftools.esvee.read.Read;

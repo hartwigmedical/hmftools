@@ -2,14 +2,14 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.RepeatInfo;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.RepeatInfo;
 
 public final class SequenceCompare
 {

@@ -4,23 +4,23 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_DEL_LENGTH;
-import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_DUP_LENGTH;
-import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.NO_LINK;
-import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.SECONDARY;
-import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.SUPP_ONLY;
-import static com.hartwig.hmftools.esvee.common.AssemblySupport.hasMatchingFragment;
-import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DEL_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
+import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.NO_LINK;
+import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.SECONDARY;
+import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.SUPP_ONLY;
+import static com.hartwig.hmftools.esvee.types.AssemblySupport.hasMatchingFragment;
+import static com.hartwig.hmftools.esvee.types.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.common.AssemblyLink;
-import com.hartwig.hmftools.esvee.common.AssemblyOutcome;
-import com.hartwig.hmftools.esvee.common.AssemblySupport;
-import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.types.AssemblyOutcome;
+import com.hartwig.hmftools.esvee.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.types.Junction;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public final class AssemblyUtils

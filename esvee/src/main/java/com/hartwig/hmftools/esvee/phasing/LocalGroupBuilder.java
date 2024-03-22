@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.esvee.phasing;
 
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_DEL_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DEL_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
 
 import java.util.Collections;
@@ -13,23 +13,23 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.JunctionGroup;
-import com.hartwig.hmftools.esvee.common.PhaseGroup;
-import com.hartwig.hmftools.esvee.common.ThreadTask;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.JunctionGroup;
+import com.hartwig.hmftools.esvee.types.PhaseGroup;
+import com.hartwig.hmftools.esvee.types.ThreadTask;
 import com.hartwig.hmftools.esvee.output.PhaseGroupBuildWriter;
 
 public class LocalGroupBuilder extends ThreadTask
 {
     private final Queue<JunctionGroup> mJunctionGroups;
-    private final SvConfig mConfig;
+    private final AssemblyConfig mConfig;
     private final PhaseGroupBuildWriter mWriter;
 
     private final Set<PhaseGroup> mPhaseGroupsSets;
     private final int mJunctionGroupCount;
 
-    public LocalGroupBuilder(final SvConfig config, final Queue<JunctionGroup> junctionGroups, final PhaseGroupBuildWriter writer)
+    public LocalGroupBuilder(final AssemblyConfig config, final Queue<JunctionGroup> junctionGroups, final PhaseGroupBuildWriter writer)
     {
         super("LocalPhaseGroups");
 

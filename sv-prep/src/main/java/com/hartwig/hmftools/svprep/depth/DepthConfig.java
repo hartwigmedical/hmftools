@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringe
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 
 import java.util.Arrays;
 import java.util.List;

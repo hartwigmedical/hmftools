@@ -4,8 +4,8 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.SvConstants.BAM_READ_JUNCTION_BUFFER;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyDeduper.dedupProximateAssemblies;
 
 import java.util.List;
@@ -17,12 +17,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.esvee.SvConfig;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.alignment.DecoyChecker;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.common.JunctionGroup;
-import com.hartwig.hmftools.esvee.common.ThreadTask;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.Junction;
+import com.hartwig.hmftools.esvee.types.JunctionGroup;
+import com.hartwig.hmftools.esvee.types.ThreadTask;
 import com.hartwig.hmftools.esvee.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.read.BamReader;
 import com.hartwig.hmftools.esvee.read.Read;
@@ -33,7 +33,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class JunctionGroupAssembler extends ThreadTask
 {
-    private final SvConfig mConfig;
+    private final AssemblyConfig mConfig;
 
     private final Queue<JunctionGroup> mJunctionGroups;
     private final int mJunctionCount;
@@ -47,7 +47,7 @@ public class JunctionGroupAssembler extends ThreadTask
     private final ReadStats mReadStats;
 
     public JunctionGroupAssembler(
-            final SvConfig config, final BamReader bamReader, final Queue<JunctionGroup> junctionGroups, final ResultsWriter resultsWriter)
+            final AssemblyConfig config, final BamReader bamReader, final Queue<JunctionGroup> junctionGroups, final ResultsWriter resultsWriter)
     {
         super("PrimaryAssembly");
         mConfig = config;
@@ -64,7 +64,7 @@ public class JunctionGroupAssembler extends ThreadTask
     }
 
     public static List<JunctionGroupAssembler> createThreadTasks(
-            final List<JunctionGroup> junctionGroups, final List<BamReader> bamReaders, final SvConfig config,
+            final List<JunctionGroup> junctionGroups, final List<BamReader> bamReaders, final AssemblyConfig config,
             final ResultsWriter resultsWriter, final int taskCount, final List<Thread> threadTasks)
     {
         List<JunctionGroupAssembler> primaryAssemblyTasks = Lists.newArrayList();

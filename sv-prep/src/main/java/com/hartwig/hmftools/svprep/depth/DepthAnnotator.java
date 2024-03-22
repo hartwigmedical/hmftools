@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_DESC;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.svprep.SvCommon.APP_NAME;
-import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;

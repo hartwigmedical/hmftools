@@ -4,8 +4,8 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
-import static com.hartwig.hmftools.esvee.SvConstants.LOW_BASE_QUAL_THRESHOLD;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.compareSequences;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.getReadIndexAtReferencePosition;
@@ -18,10 +18,10 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.esvee.common.AssemblySupport;
-import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.common.RepeatInfo;
-import com.hartwig.hmftools.esvee.common.SupportType;
+import com.hartwig.hmftools.esvee.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.types.Junction;
+import com.hartwig.hmftools.esvee.types.RepeatInfo;
+import com.hartwig.hmftools.esvee.types.SupportType;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public class ExtensionSeqBuilder

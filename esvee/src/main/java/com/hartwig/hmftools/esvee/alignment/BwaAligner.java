@@ -5,7 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.SvConfig;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
@@ -15,7 +15,7 @@ public class BwaAligner implements Aligner
 {
     private final BwaMemAligner mAligner;
 
-    public BwaAligner(final SvConfig config)
+    public BwaAligner(final AssemblyConfig config)
     {
         if(!config.RefGenomeImageFile.isEmpty() && Files.exists(Paths.get(config.RefGenomeImageFile)))
         {

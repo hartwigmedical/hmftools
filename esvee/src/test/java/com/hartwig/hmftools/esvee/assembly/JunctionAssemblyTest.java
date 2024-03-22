@@ -1,20 +1,16 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
-import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
-import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID_2;
 import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.expandReferenceBases;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -23,10 +19,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.Junction;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.Junction;
 import com.hartwig.hmftools.esvee.read.Read;
 
 import org.junit.Test;

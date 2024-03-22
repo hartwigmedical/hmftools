@@ -5,8 +5,8 @@ import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.common.DiscordantGroup;
-import com.hartwig.hmftools.esvee.common.Junction;
+import com.hartwig.hmftools.esvee.types.DiscordantGroup;
+import com.hartwig.hmftools.esvee.types.Junction;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public class DiscordantReads

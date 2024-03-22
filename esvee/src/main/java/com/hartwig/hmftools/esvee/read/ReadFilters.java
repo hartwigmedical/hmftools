@@ -3,9 +3,9 @@ package com.hartwig.hmftools.esvee.read;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.esvee.SvConstants.AVG_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.AVG_BASE_QUAL_THRESHOLD;
 
-import com.hartwig.hmftools.esvee.common.Junction;
+import com.hartwig.hmftools.esvee.types.Junction;
 
 public final class ReadFilters
 {

@@ -4,17 +4,17 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
-import static com.hartwig.hmftools.esvee.common.SupportType.DISCORDANT;
-import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
+import static com.hartwig.hmftools.esvee.types.SupportType.DISCORDANT;
+import static com.hartwig.hmftools.esvee.types.SupportType.JUNCTION_MATE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.RefBaseAssembly;
+import com.hartwig.hmftools.esvee.types.Junction;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.RefBaseAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
 
 import org.junit.Test;
