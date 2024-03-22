@@ -67,13 +67,15 @@ MAPPING_EVENT_NAMES <- c(
 
 LOW_SNV_COUNT_THRES <- 50
 
+PROBABILITIES_DECIMAL_PLACES <- 2
+
+SIGNATURE_VALUES_DECIMAL_PLACES <- 0
+SIGNATURE_PERC_SIGNIF_DIGITS <- 2
+
+EVENT_FEATURES_DECIMAL_PLACES <- 1
 EVENT_FEATURE_ABSENT_VALUE <- -0.00000001
 
-DECIMAL_PLACES_PROBABILITIES <- 2
-DECIMAL_PLACES_CV_PERFORMANCE <- 2
-
-DECIMAL_PLACES_SIGNATURE_VALUE <- 0
-SIGNIF_DIGITS_SIGNATURE_PERC <- 2
+CV_PERFORMANCE_DECIMAL_PLACES <- 2
 
 NUMBER_FORMATTING_SIGNATURE_QUANTILES <- list(
    list(lower=10000,  upper=Inf,    func=function(x) formatC(x, format="e", digits=0)),
@@ -122,7 +124,7 @@ get_plot_data_probs <- function(VIS_DATA){
    ## Data label --------------------------------
    plot_data$data_label <- ifelse(
       !is.na(plot_data$data_value),
-      round(plot_data$data_value, DECIMAL_PLACES_PROBABILITIES),
+      round(plot_data$data_value, PROBABILITIES_DECIMAL_PLACES),
       ""
    )
 
@@ -152,7 +154,7 @@ get_plot_data_probs <- function(VIS_DATA){
       if(nrow(df)==1) return(df)
 
       prob_sum <- sum(df$data_value, na.rm=TRUE)
-      prob_sum <- round(prob_sum, DECIMAL_PLACES_PROBABILITIES)
+      prob_sum <- round(prob_sum, PROBABILITIES_DECIMAL_PLACES)
 
       ## Fill value
       df$data_value <- prob_sum
@@ -399,7 +401,7 @@ plot_cv_performance <- function(VIS_DATA){
    is_n_samples_row <- plot_data$feat_name=="n_samples"
 
    plot_data$data_label <- with(plot_data, {
-      data_label <- as.character(round(data_value, DECIMAL_PLACES_CV_PERFORMANCE))
+      data_label <- as.character(round(data_value, CV_PERFORMANCE_DECIMAL_PLACES))
       data_label[is_n_samples_row] <- data_value[is_n_samples_row]
       return(data_label)
    })
@@ -451,8 +453,8 @@ plot_signatures <- function(VIS_DATA){
    ## Make row labels --------------------------------
    plot_data$row_label <- with(plot_data, {
 
-      perc <- round((feat_value / SNV_COUNT) * 100, SIGNIF_DIGITS_SIGNATURE_PERC)
-      feat_value <- round(feat_value, DECIMAL_PLACES_SIGNATURE_VALUE)
+      perc <- round((feat_value / SNV_COUNT) * 100, SIGNATURE_PERC_SIGNIF_DIGITS)
+      feat_value <- round(feat_value, SIGNATURE_VALUES_DECIMAL_PLACES)
       paste0(gsub("_", " ", feat_name), " = ", feat_value, " (", perc, "%)")
    })
 
@@ -511,7 +513,7 @@ plot_feat_contrib <- function(VIS_DATA){
    ## Row values
    plot_data$row_label <- with(plot_data, {
 
-      feat_value_label <- round(feat_value, digits=1)
+      feat_value_label <- round(feat_value, digits=EVENT_FEATURES_DECIMAL_PLACES)
       feat_value_label[feat_value==0] <- "0"
       feat_value_label[feat_value==EVENT_FEATURE_ABSENT_VALUE] <- "absent"
       feat_value_label[feat_value==1] <- "1"
