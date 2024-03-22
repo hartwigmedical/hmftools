@@ -16,45 +16,27 @@ PLOT_PATH <- args[2]
 ## Load data ================================
 VIS_DATA <- read.delim(VIS_DATA_PATH)
 
-as_factor_unsorted <- function(x){
-   if(is.vector(x)){
-      return(factor(x, unique(x)))
-   }
-
-   if(is.data.frame(x)){
-      for(colname in colnames(x)){
-         if(is.character(x[[colname]])){
-            x[[colname]] <- factor(x[[colname]], unique(x[[colname]]))
-         }
-      }
-      return(x)
-   }
-
-   stop("`x` must be a vector or dataframe")
-}
-
-get_cancer_type_metadata <- function(VIS_DATA){
-
+CANCER_TYPE_METADATA <- (function(){
+   
    cancer_types <- unique(VIS_DATA$cancer_type)
-
+   
    prefix <- str_extract(cancer_types, "^[A-Za-z/ ]+")
    suffix <- str_replace(cancer_types, "^[A-Za-z/ ]+: ", "")
-
-   df <- data.frame(
-      supertype = prefix,
-      subtype = suffix,
-
-      row.names = cancer_types
-   )
-   df <- as_factor_unsorted(df)
-
+   
+   df <- data.frame(supertype = prefix, subtype = suffix, row.names = cancer_types)
+   
+   ## Convert character vectors to factors
+   for(colname in colnames(df)){
+      if(is.character(df[[colname]])){
+         df[[colname]] <- factor(df[[colname]], unique(df[[colname]]))
+      }
+   }
+   
    subtypes_per_supertype <- sapply(split(df$subtype, df$supertype), length)
    df$subtypes_per_supertype <- subtypes_per_supertype[df$supertype]
-
+   
    return(df)
-}
-
-CANCER_TYPE_METADATA <- get_cancer_type_metadata(VIS_DATA)
+})()
 
 VIS_DATA$cancer_supertype <- CANCER_TYPE_METADATA[VIS_DATA$cancer_type, "supertype"]
 
@@ -110,7 +92,7 @@ NUMBER_FORMATTING_ODDS_RATIOS <- list(
 format_numbers <- function(values, configs){
    
    for(config in configs){
-      if(!(c("lower","upper","func") %in% names(config))){
+      if(!all(c("lower","upper","func") %in% names(config))){
          stop("`configs` must be list containing items in the format: `list(lower={numeric}, upper={numeric}, func={function})`")
       }
    }
@@ -136,7 +118,7 @@ get_plot_data_probs <- function(VIS_DATA){
    ## Data label --------------------------------
    plot_data$data_label <- ifelse(
       !is.na(plot_data$data_value),
-      round(plot_data$data_value, PROB_DECIMAL_PLACES),
+      round(plot_data$data_value, DECIMAL_PLACES_PROBABILITIES),
       ""
    )
 
@@ -304,7 +286,12 @@ plot_heatmap <- function(
    facet_strip_theme <- get_facet_strip_theme()
 
    ## Plot --------------------------------
-   plot_data <- as_factor_unsorted(plot_data)
+   ## Convert character vectors to factors
+   for(colname in colnames(plot_data)){
+      if(is.character(plot_data[[colname]])){
+         plot_data[[colname]] <- factor(plot_data[[colname]], unique(plot_data[[colname]]))
+      }
+   }
 
    p <- ggplot(plot_data, aes(y=row_label, x=cancer_type)) +
       facet_grid2(
