@@ -5,7 +5,6 @@ library(ggplot2)
 library(ggh4x)
 library(stringr)
 library(patchwork)
-library(plyr)
 
 ## Args ================================
 args <- commandArgs(trailingOnly = TRUE)
@@ -65,6 +64,15 @@ MAPPING_EVENT_NAMES <- c(
    "fusion"="fusion (DL)"
 )
 
+revalue <- function(values, mappings){
+   sapply(values, function(value){
+      if(value %in% names(mappings))
+         return(mappings[[value]])
+      
+      return(value)
+   })
+}
+
 LOW_SNV_COUNT_THRES <- 50
 
 PROBABILITIES_DECIMAL_PLACES <- 2
@@ -118,7 +126,7 @@ get_plot_data_probs <- function(VIS_DATA){
 
    plot_data <- subset(VIS_DATA, data_type=="prob")
 
-   plot_data$row_label <- revalue(plot_data$clf_name, MAPPINGS_CLASSIFIER_NAMES, warn_missing = FALSE)
+   plot_data$row_label <- revalue(plot_data$clf_name, MAPPINGS_CLASSIFIER_NAMES)
    plot_data$row_group <- toupper(plot_data$clf_group)
 
    ## Data label --------------------------------
@@ -536,7 +544,7 @@ plot_feat_contrib <- function(VIS_DATA){
       sprintf("%s = %s", feat_names, feat_values)
    )
 
-   plot_data$row_group <- revalue(feat_types, replace=MAPPING_EVENT_NAMES, warn_missing=FALSE)
+   plot_data$row_group <- revalue(feat_types, MAPPING_EVENT_NAMES)
    
    ## Legend breaks --------------------------------
    exponent_range <- log10(max(plot_data$data_value)) - log10(min(plot_data$data_value))
