@@ -112,25 +112,11 @@ public final class IndelBuilder
                 continue;
             }
 
-            if(!isJunctionMate)
+            // no discordant candidates for local indels
+            if(isJunctionMate)
             {
-                if(isDiscordant(read) || read.isMateUnmapped())
-                    continue;
-
-                if(positionsOverlap(indelInnerStart, indelInnerEnd, read.mateAlignmentStart(), read.mateAlignmentEnd()))
-                {
-                    continue;
-                }
-
-                // 'discordant' reads must have their mate on the other side of the indel
-                boolean onLowerSide = read.alignmentEnd() <= indelCoords.PosStart;
-                boolean mateOnLowerSide = read.mateAlignmentEnd() <= indelCoords.PosStart;
-
-                if(onLowerSide == mateOnLowerSide)
-                    continue;
+                assembly.addCandidateSupport(read, JUNCTION_MATE);
             }
-
-            assembly.addCandidateSupport(read, isJunctionMate ? JUNCTION_MATE : CANDIDATE_DISCORDANT);
         }
     }
 
