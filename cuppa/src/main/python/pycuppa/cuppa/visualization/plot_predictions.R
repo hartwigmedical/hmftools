@@ -490,41 +490,54 @@ plot_signatures <- function(VIS_DATA){
 plot_feat_contrib <- function(VIS_DATA){
 
    plot_data <- subset(VIS_DATA, data_type=="feat_contrib")
-
-   ## Parse feature names --------------------------------
-   affixes <- as.data.frame(do.call(
-      rbind,
-      str_split(ifelse(!(grepl("fusion",plot_data$feat_name)), gsub("_", " ", plot_data$feat_name), plot_data$feat_name), '[.]', n=2)
-   ))
-   colnames(affixes) <- c("feat_type", "feat_basename")
-   affixes$feat_type <- revalue(affixes$feat_type, replace=MAPPING_EVENT_NAMES, warn_missing=FALSE)
-
+   
    ## Format labels --------------------------------
-   plot_data$row_group <- affixes$feat_type
+   ## Parse feature names
+   affixes <- str_split(plot_data$feat_name, "[.]", n=2, simplify=TRUE)
+   feat_types <- affixes[,1]
+   feat_names <- affixes[,2]
+   rm(affixes)
 
-   ## Odds
-   data_labels <- format_numbers(plot_data$data_value, NUMBER_FORMATTING_ODDS_RATIOS)
-   data_labels[data_labels==1] <- "" ## odds of 1 == log(odds) of 0 -> unimportant, thus hide
-   data_labels <- sub("[-]0", "-", data_labels)
-   data_labels <- sub("[+]0", "", data_labels)
+   ## Format odds ratios
+   odds_ratios <- format_numbers(plot_data$data_value, NUMBER_FORMATTING_ODDS_RATIOS)
+   odds_ratios[odds_ratios==1] <- "" ## odds of 1 == log(odds) of 0 -> unimportant, thus hide
+   odds_ratios <- sub("[-]0", "-", odds_ratios) ## Remove leading 0 from negative exponent
+   odds_ratios <- sub("[+]0", "", odds_ratios) ## Remove leading 0 and sign from positive exponent
+   plot_data$data_label <- odds_ratios
 
-   plot_data$data_label <- data_labels
-
-   ## Row values
-   plot_data$row_label <- with(plot_data, {
-
-      feat_value_label <- round(feat_value, digits=EVENT_FEATURES_DECIMAL_PLACES)
-      feat_value_label[feat_value==0] <- "0"
-      feat_value_label[feat_value==EVENT_FEATURE_ABSENT_VALUE] <- "absent"
-      feat_value_label[feat_value==1] <- "1"
-
-      driver_feat_value_label <- paste0(gsub("\\.", " ", affixes$feat_basename), " (", feat_value_label, ")")
-      trait_feat_value_label <- paste(affixes$feat_basename, "=", feat_value_label==1, sep = " ")
-      tmb_or_sv_feat_value_label <- paste(affixes$feat_basename, "=", feat_value_label, sep = " ")
-      non_driver_feat_value_label <- ifelse(affixes$feat_basename %in% c("is male", "whole genome duplication"), trait_feat_value_label, tmb_or_sv_feat_value_label)
-      paste0(ifelse(affixes$feat_type %in% MAPPING_EVENT_NAMES, driver_feat_value_label, non_driver_feat_value_label))
+   ## Make feature names more human readable
+   feat_names <- sapply(1:nrow(plot_data), function(i){
+      feat_type <- feat_types[i]
+      feat_name <- feat_names[i]
+      
+      if(feat_type %in% c("driver"))
+         return(sub(".", " ", feat_name, fixed=TRUE))
+      
+      if(feat_type == "fusion")
+         return(sub("_", "-", feat_name, fixed=TRUE))
+      
+      if(feat_type %in% c("trait","tmb","sv"))
+         return(gsub("_", " ", feat_name, fixed=TRUE))
+      
+      return(feat_name)
    })
+   
+   ## Format feature values
+   raw_feat_values <- plot_data$feat_value
+   feat_values <- round(raw_feat_values, digits=EVENT_FEATURES_DECIMAL_PLACES)
+   feat_values[raw_feat_values==0] <- "0" ## Use integer representation
+   feat_values[raw_feat_values==1] <- "1" ## Use integer representation
+   feat_values[raw_feat_values==EVENT_FEATURE_ABSENT_VALUE] <- "absent"
+   feat_values <- ifelse(feat_types=="trait", feat_values==1, feat_values) ## Convert to boolean
+   
+   plot_data$row_label <- ifelse(
+      feat_types=="driver",
+      sprintf("%s (%s)", feat_names, feat_values),
+      sprintf("%s = %s", feat_names, feat_values)
+   )
 
+   plot_data$row_group <- revalue(feat_types, replace=MAPPING_EVENT_NAMES, warn_missing=FALSE)
+   
    ## Legend breaks --------------------------------
    exponent_range <- log10(max(plot_data$data_value)) - log10(min(plot_data$data_value))
    legend_breaks <- 10^seq(from=-10, to=10, by=if(exponent_range < 5) 1 else 2)
