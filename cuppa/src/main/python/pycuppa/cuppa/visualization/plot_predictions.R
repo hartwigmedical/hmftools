@@ -63,8 +63,8 @@ if(is.na(SNV_COUNT)){
    stop("`snv_count` was not found as a feature in `VIS_DATA`")
 }
 
-## Define mappings ================================
-MAPPINGS_CLASSIFIER_NAMES = c(
+## Constants ================================
+MAPPINGS_CLASSIFIER_NAMES <- c(
    "combined"="COMBINED",
    
    "dna_combined"="DNA COMBINED",
@@ -77,14 +77,56 @@ MAPPINGS_CLASSIFIER_NAMES = c(
    "alt_sj"="ALT SJ"
 )
 
-MAPPING_EVENT_NAMES = c(
+MAPPING_EVENT_NAMES <- c(
    "driver"="driver (DL)",
    "virus"="virus (DL)",
    "fusion"="fusion (DL)"
 )
 
+LOW_SNV_COUNT_THRES <- 50
+
+EVENT_FEATURE_ABSENT_VALUE <- -0.00000001
+
+DECIMAL_PLACES_PROBABILITIES <- 2
+DECIMAL_PLACES_CV_PERFORMANCE <- 2
+
+DECIMAL_PLACES_SIGNATURE_VALUE <- 0
+SIGNIF_DIGITS_SIGNATURE_PERC <- 2
+
+NUMBER_FORMATTING_SIGNATURE_QUANTILES <- list(
+   list(lower=1000, upper=Inf,   func=function(x) formatC(x, format="e", digits=0)),
+   list(lower=-100, upper=1000, func=function(x) round(x, digits=2)),
+   list(lower=-Inf, upper=-100,  func=function(x) formatC(x, format="e", digits=0))
+)
+
+NUMBER_FORMATTING_ODDS_RATIOS <- list(
+   list(lower=10000, upper=Inf,   func=function(x) formatC(x, format="e", digits=1)),
+   list(lower=10,    upper=10000, func=function(x) round(x, digits=0)),
+   list(lower=1,     upper=10,    func=function(x) round(x, digits=1)),
+   list(lower=0.01,  upper=1,     func=function(x) signif(x, digits=1)),
+   list(lower=-Inf,  upper=0.01,  func=function(x) formatC(x, format="e", digits=0))
+)
+
+format_numbers <- function(values, configs){
+   
+   for(config in configs){
+      if(!(c("lower","upper","func") %in% names(config))){
+         stop("`configs` must be list containing items in the format: `list(lower={numeric}, upper={numeric}, func={function})`")
+      }
+   }
+   
+   sapply(values, function(value){
+      for(config in configs){
+         if(value >= config$lower & value < config$upper){
+            return(config$func(value))
+         }
+      }
+      return(value)
+   })
+}
+
 ## Heatmap of probs ================================
-get_plot_data_probs <- function(VIS_DATA, data_value_rounding = 2){
+get_plot_data_probs <- function(VIS_DATA){
 
    plot_data <- subset(VIS_DATA, data_type=="prob")
 
@@ -94,7 +136,7 @@ get_plot_data_probs <- function(VIS_DATA, data_value_rounding = 2){
    ## Data label --------------------------------
    plot_data$data_label <- ifelse(
       !is.na(plot_data$data_value),
-      round(plot_data$data_value, data_value_rounding),
+      round(plot_data$data_value, PROB_DECIMAL_PLACES),
       ""
    )
 
@@ -358,7 +400,6 @@ plot_heatmap <- function(
 plot_probs <- function(VIS_DATA){
    plot_data <- get_plot_data_probs(VIS_DATA)
 
-   LOW_SNV_COUNT_THRES <- 50
    if(SNV_COUNT < LOW_SNV_COUNT_THRES){
       warning_string <- sprintf(" | WARNING: Sample has <%s SNVs. Predictions may be unreliable", LOW_SNV_COUNT_THRES)
    } else {
@@ -384,7 +425,7 @@ plot_probs <- function(VIS_DATA){
 
 
 ## Plotting other data_types ================================
-plot_cv_performance <- function(VIS_DATA, data_value_rounding = 2){
+plot_cv_performance <- function(VIS_DATA){
    plot_data <- subset(VIS_DATA, data_type=="cv_performance")
 
    plot_data$row_group <- "training set"
@@ -394,7 +435,7 @@ plot_cv_performance <- function(VIS_DATA, data_value_rounding = 2){
    is_n_samples_row <- plot_data$feat_name=="n_samples"
 
    plot_data$data_label <- with(plot_data, {
-      data_label <- as.character(round(data_value, 2))
+      data_label <- as.character(round(data_value, DECIMAL_PLACES_CV_PERFORMANCE))
       data_label[is_n_samples_row] <- data_value[is_n_samples_row]
       return(data_label)
    })
@@ -433,47 +474,19 @@ plot_cv_performance <- function(VIS_DATA, data_value_rounding = 2){
    theme(legend.justification=c("left", "bottom"))
 }
 
-
-plot_signatures <- function(
-   VIS_DATA,
-   feat_value_rounding = 0,
-   feat_perc_signif = 1
-){
-   if(FALSE){
-      feat_value_rounding = 0
-      feat_perc_signif = 2
-   }
+plot_signatures <- function(VIS_DATA){
 
    plot_data <- subset(VIS_DATA, data_type=="sig_quantile")
 
    plot_data$row_group <- "signature"
-
-   rounding_params <- list(
-     list(lower=1000, upper=Inf,   func=function(x) formatC(x, format="e", digits=0)),
-     list(lower=-100, upper=1000, func=function(x) round(x, digits=2)),
-     list(lower=-Inf, upper=-100,  func=function(x) formatC(x, format="e", digits=0))
-   )
-
-   plot_data$data_label <- sapply(plot_data$data_value, function(value){
-     for(params in rounding_params){
-       if(value >= params$lower & value < params$upper){
-         return(params$func(value))
-       }
-     }
-
-     return(value)
-  })
+   
+   plot_data$data_label <- format_numbers(plot_data$data_value, NUMBER_FORMATTING_SIGNATURE_QUANTILES)
 
    ## Make row labels --------------------------------
    plot_data$row_label <- with(plot_data, {
 
-      perc <- round(
-         (feat_value / SNV_COUNT) * 100,
-         feat_perc_signif
-      )
-
-      feat_value <- round(feat_value, feat_value_rounding)
-
+      perc <- round((feat_value / SNV_COUNT) * 100, SIGNIF_DIGITS_SIGNATURE_PERC)
+      feat_value <- round(feat_value, DECIMAL_PLACES_SIGNATURE_VALUE)
       paste0(gsub("_", " ", feat_name), " = ", feat_value, " (", perc, "%)")
    })
 
@@ -520,23 +533,7 @@ plot_feat_contrib <- function(VIS_DATA){
    plot_data$row_group <- affixes$feat_type
 
    ## Odds
-   rounding_params <- list(
-      list(lower=10000, upper=Inf,   func=function(x) formatC(x, format="e", digits=1)),
-      list(lower=10,    upper=10000, func=function(x) round(x, digits=0)),
-      list(lower=1,     upper=10,    func=function(x) round(x, digits=1)),
-      list(lower=0.01,  upper=1,     func=function(x) signif(x, digits=1)),
-      list(lower=-Inf,  upper=0.01,  func=function(x) formatC(x, format="e", digits=0))
-   )
-
-   data_labels <- sapply(plot_data$data_value, function(value){
-      for(params in rounding_params){
-         if(value >= params$lower & value < params$upper){
-            return(params$func(value))
-         }
-      }
-
-      return(value)
-   })
+   data_labels <- format_numbers(plot_data$data_value, NUMBER_FORMATTING_ODDS_RATIOS)
    data_labels[data_labels==1] <- "" ## odds of 1 == log(odds) of 0 -> unimportant, thus hide
    data_labels <- sub("[-]0", "-", data_labels)
    data_labels <- sub("[+]0", "", data_labels)
@@ -548,7 +545,7 @@ plot_feat_contrib <- function(VIS_DATA){
 
       feat_value_label <- round(feat_value, digits=1)
       feat_value_label[feat_value==0] <- "0"
-      feat_value_label[feat_value==-0.00000001] <- "absent"
+      feat_value_label[feat_value==EVENT_FEATURE_ABSENT_VALUE] <- "absent"
       feat_value_label[feat_value==1] <- "1"
 
       driver_feat_value_label <- paste0(gsub("\\.", " ", affixes$feat_basename), " (", feat_value_label, ")")
