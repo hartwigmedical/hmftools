@@ -32,8 +32,6 @@ public final class AssemblyConstants
     public static final int DECOY_MAX_MISMATCHES = 3;
 
     public static final int PRIMARY_ASSEMBLY_MIN_READ_SUPPORT = 2;
-    public static final int PRIMARY_ASSEMBLY_SPLIT_MIN_READS = 5;
-    public static final int PRIMARY_ASSEMBLY_MIN_MISMATCH_TOTAL_QUAL = 60; // new
     public static final int PROXIMATE_REF_SIDE_SOFT_CLIPS = 3;
     public static final int PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH;
 
