@@ -186,7 +186,7 @@ public class JunctionProcessor
 
         SV_LOGGER.info("created {} junction assemblies, {} discordant groups", totalJunctionAssemblies, totalDiscordantGroups);
 
-        mPerfCounters.add(ThreadTask.mergePerfCounters(primaryAssemblyTasks.stream().collect(Collectors.toList())));
+        addPerfCounters(primaryAssemblyTasks.stream().collect(Collectors.toList()));
 
         int totalCachedReads = junctionGroups.stream().mapToInt(x -> x.candidateReadCount()).sum();
 
@@ -200,8 +200,8 @@ public class JunctionProcessor
 
         phaseGroupBuilder.buildGroups();
 
-        mPerfCounters.add(ThreadTask.mergePerfCounters(phaseGroupBuilder.localBuilderTasks()));
-        mPerfCounters.add(ThreadTask.mergePerfCounters(phaseGroupBuilder.remoteBuilderTasks()));
+        addPerfCounters(phaseGroupBuilder.localBuilderTasks());
+        addPerfCounters(phaseGroupBuilder.remoteBuilderTasks());
 
         List<PhaseGroup> phaseGroups = phaseGroupBuilder.phaseGroups();
 
@@ -217,9 +217,17 @@ public class JunctionProcessor
         if(!runThreadTasks(threadTasks))
             System.exit(1);
 
-        mPerfCounters.add(ThreadTask.mergePerfCounters(phaseSetTasks.stream().collect(Collectors.toList())));
+        addPerfCounters(phaseSetTasks.stream().collect(Collectors.toList()));
 
         SV_LOGGER.info("created {} phase sets", phaseGroups.stream().mapToInt(x -> x.phaseSets().size()).sum());
+    }
+
+    private void addPerfCounters(final List<ThreadTask> tasks)
+    {
+        if(tasks.isEmpty())
+            return;
+
+        mPerfCounters.add(ThreadTask.mergePerfCounters(tasks));
     }
 
     private void alignPhaseSets()

@@ -31,7 +31,7 @@ public final class ReadUtils
         if(read.isMateUnmapped())
             return false;
 
-        if(!read.chromosome().equals(read.mateChromosome()))
+        if(!read.chromosome().equals(read.mateChromosome())) // not strictly correct for supplementaries, since needs to check the primary
             return true;
 
         if(read.positiveStrand() == read.matePositiveStrand())

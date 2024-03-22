@@ -2,8 +2,10 @@ package com.hartwig.hmftools.esvee.phasing;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.esvee.SvConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isSupplementaryOnly;
 import static com.hartwig.hmftools.esvee.common.AssemblyOutcome.DUP_BRANCHED;
@@ -195,7 +197,8 @@ public class PhaseSetBuilder
                 mSplitLinks.add(assemblyLink);
                 linkedAssemblies.add(assembly1);
                 linkedAssemblies.add(assembly2);
-                buildSplitLink(assembly1, assembly2, true);
+                boolean allowBranching = !(assemblyLink.svType() == DUP && assemblyLink.length() < PROXIMATE_DUP_LENGTH);
+                buildSplitLink(assembly1, assembly2, allowBranching);
                 continue;
             }
 

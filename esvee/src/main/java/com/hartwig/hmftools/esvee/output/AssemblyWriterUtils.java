@@ -99,45 +99,52 @@ public final class AssemblyWriterUtils
                     ++indelReads;
 
                 if(read.isSupplementary())
+                {
                     ++juncSupps;
 
-                boolean matePastJunction = (read.orientation() == POS_ORIENT) == assembly.isForwardJunction();
-
-                if(read.isMateUnmapped())
-                {
-                    if(matePastJunction)
-                        ++juncMateUnmappedRemote;
-                    else
-                        ++juncMateUnmappedRefSide;
+                    if(read.supplementaryRead() == null)
+                        ++juncUnlinkedSupps;
                 }
                 else
                 {
-                    if(isDiscordant(read))
+                    // don't attempt to set mate info for supplementaries - these counts are for the primary reads (ie the fragment itself)
+                    boolean matePastJunction = (read.orientation() == POS_ORIENT) == assembly.isForwardJunction();
+
+                    if(read.isMateUnmapped())
                     {
                         if(matePastJunction)
-                            ++juncMateDiscordantRemote;
+                            ++juncMateUnmappedRemote;
                         else
-                            ++juncMateDiscordantRefSide;
+                            ++juncMateUnmappedRefSide;
                     }
                     else
                     {
-                        if((assembly.isForwardJunction() && read.mateAlignmentStart() > assembly.junction().Position)
-                        || (!assembly.isForwardJunction() && read.mateAlignmentEnd() < assembly.junction().Position))
+                        if(isDiscordant(read))
                         {
-                            ++juncMateConcordant;
+                            if(matePastJunction)
+                                ++juncMateDiscordantRemote;
+                            else
+                                ++juncMateDiscordantRefSide;
                         }
                         else
                         {
-                            ++juncMateRefSide;
+                            // check if the mate
+
+                            if((assembly.isForwardJunction() && read.mateAlignmentStart() > assembly.junction().Position)
+                                    || (!assembly.isForwardJunction() && read.mateAlignmentEnd() < assembly.junction().Position))
+                            {
+                                ++juncMateConcordant;
+                            }
+                            else
+                            {
+                                ++juncMateRefSide;
+                            }
                         }
                     }
+
+                    if(read.isMateMapped() && !read.hasMateSet())
+                        ++juncUnlinkedMates;
                 }
-
-                if(read.isMateMapped() && !read.isSupplementary() && !read.hasMateSet())
-                    ++juncUnlinkedMates;
-
-                if(read.hasSupplementary() && read.supplementaryRead() == null)
-                    ++juncUnlinkedSupps;
             }
             else
             {
