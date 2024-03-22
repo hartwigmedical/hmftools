@@ -429,7 +429,10 @@ plot_cv_performance <- function(VIS_DATA){
       colors=c("white", "#fffedc", "#76c99b"), na.value="grey95", limits=c(0,1),
       guide=guide_colorbar(frame.colour="black", ticks.colour="black", barheight=3.5)
    ) +
-   labs(title="DNA COMBINED: Training set performance", fill="Metric value") +
+   labs(
+      title=sprintf("%s: Training set performance", MAPPINGS_CLASSIFIER_NAMES[["dna_combined"]]), 
+      fill="Metric value"
+   ) +
    theme(legend.justification=c("left", "bottom"))
 }
 
@@ -472,7 +475,10 @@ plot_signatures <- function(VIS_DATA){
       guide=guide_legend(override.aes=list(colour="black", linetype=1)),
       na.value="grey95", drop=TRUE
    ) +
-   labs(fill="Quantile in subtype cohort", title="SNV96: Mutational signatures")
+   labs(
+      fill="Quantile in subtype cohort", 
+      title=sprintf("%s: Mutational signatures", MAPPINGS_CLASSIFIER_NAMES[["snv96"]])
+   )
 }
 
 plot_feat_contrib <- function(VIS_DATA){
@@ -532,7 +538,7 @@ plot_feat_contrib <- function(VIS_DATA){
    labs(
       fill="Odds ratio\n(subtype / not subtype)", 
       y="Feature", 
-      title="EVENT: Feature contributions"
+      title=sprintf("%s: Feature contributions", MAPPINGS_CLASSIFIER_NAMES[["event"]])
    )
 }
 
