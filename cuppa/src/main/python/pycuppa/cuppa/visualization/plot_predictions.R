@@ -63,16 +63,24 @@ if(is.na(SNV_COUNT)){
    stop("`snv_count` was not found as a feature in `VIS_DATA`")
 }
 
-## Define mapping ================================
+## Define mappings ================================
 MAPPINGS_CLASSIFIER_NAMES = c(
-  "GENE EXP"="GENE EXPRESSION",
-  "GEN POS"="GENOMIC POSITION"
+   "combined"="COMBINED",
+   
+   "dna_combined"="DNA COMBINED",
+   "gen_pos"="GENOMIC POSITION",
+   "snv96"="SNV96",
+   "event"="EVENT",
+   
+   "rna_combined"="RNA COMBINED",
+   "gene_exp"="GENE EXPRESSION",
+   "alt_sj"="ALT SJ"
 )
 
 MAPPING_EVENT_NAMES = c(
-  "driver"="driver (DL)",
-  "virus"="virus (DL)",
-  "fusion"="fusion (DL)"
+   "driver"="driver (DL)",
+   "virus"="virus (DL)",
+   "fusion"="fusion (DL)"
 )
 
 ## Heatmap of probs ================================
@@ -80,8 +88,7 @@ get_plot_data_probs <- function(VIS_DATA, data_value_rounding = 2){
 
    plot_data <- subset(VIS_DATA, data_type=="prob")
 
-   plot_data$row_label <- toupper(gsub("_"," ", plot_data$clf_name))
-   plot_data$row_label <- revalue(plot_data$row_label, replace=MAPPINGS_CLASSIFIER_NAMES, warn_missing=FALSE)
+   plot_data$row_label <- revalue(plot_data$clf_name, MAPPINGS_CLASSIFIER_NAMES)
    plot_data$row_group <- toupper(plot_data$clf_group)
 
    ## Data label --------------------------------
