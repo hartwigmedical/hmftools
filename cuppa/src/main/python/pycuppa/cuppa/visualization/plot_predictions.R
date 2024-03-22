@@ -76,9 +76,13 @@ DECIMAL_PLACES_SIGNATURE_VALUE <- 0
 SIGNIF_DIGITS_SIGNATURE_PERC <- 2
 
 NUMBER_FORMATTING_SIGNATURE_QUANTILES <- list(
-   list(lower=1000, upper=Inf,   func=function(x) formatC(x, format="e", digits=0)),
-   list(lower=-100, upper=1000, func=function(x) round(x, digits=2)),
-   list(lower=-Inf, upper=-100,  func=function(x) formatC(x, format="e", digits=0))
+   list(lower=10000,  upper=Inf,    func=function(x) formatC(x, format="e", digits=0)),
+   list(lower=10,     upper=10000,  func=function(x) round(x, digits=0)),
+   list(lower=1,      upper=10,     func=function(x) round(x, digits=1)),
+   list(lower=-1,     upper=1,      func=function(x) round(x, digits=2)),
+   list(lower=-10,    upper=-1,     func=function(x) round(x, digits=1)),
+   list(lower=-10000, upper=-10,    func=function(x) round(x, digits=0)),
+   list(lower=-Inf,   upper=-10000, func=function(x) formatC(x, format="e", digits=0))
 )
 
 NUMBER_FORMATTING_ODDS_RATIOS <- list(
@@ -112,7 +116,7 @@ get_plot_data_probs <- function(VIS_DATA){
 
    plot_data <- subset(VIS_DATA, data_type=="prob")
 
-   plot_data$row_label <- revalue(plot_data$clf_name, MAPPINGS_CLASSIFIER_NAMES)
+   plot_data$row_label <- revalue(plot_data$clf_name, MAPPINGS_CLASSIFIER_NAMES, warn_missing = FALSE)
    plot_data$row_group <- toupper(plot_data$clf_group)
 
    ## Data label --------------------------------
