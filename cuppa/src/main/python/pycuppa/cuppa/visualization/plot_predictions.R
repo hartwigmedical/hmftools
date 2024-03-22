@@ -143,13 +143,12 @@ get_plot_data_probs <- function(VIS_DATA){
    plot_data_split <- split_plot_data_by_supertype(plot_data)
 
    plot_data_supertypes <- lapply(plot_data_split, function(df){
-      #df = plot_data_split[["COMBINED.Bone/Soft tissue"]]
       df$row_label <- paste0("[GROUP] ", df$row_label)
 
       if(nrow(df)==1) return(df)
 
       prob_sum <- sum(df$data_value, na.rm=TRUE)
-      prob_sum <- round(prob_sum, 2)
+      prob_sum <- round(prob_sum, DECIMAL_PLACES_PROBABILITIES)
 
       ## Fill value
       df$data_value <- prob_sum
@@ -165,13 +164,9 @@ get_plot_data_probs <- function(VIS_DATA){
 
    plot_data_supertypes <- do.call(rbind, unname(plot_data_supertypes))
 
-   plot_data <- rbind(
-      plot_data_supertypes,
-      plot_data
-   )
+   plot_data <- rbind(plot_data_supertypes, plot_data)
 
    ## Cell border color --------------------------------
-   ## Remove color for
    plot_data$cell_color <- ifelse(
       plot_data$row_label %in% plot_data_supertypes$row_label,
       NA,
@@ -195,20 +190,6 @@ plot_heatmap <- function(
 
    y_labels_remap=waiver()
 ){
-
-   if(FALSE){
-      plot_data <- get_plot_data_probs(VIS_DATA)
-      x_axis_position = "top"
-      y_strip_whitespaces = NULL
-      show_first_row_hline = TRUE
-
-      cell_color = plot_data$cell_color
-      data_label_nudge_x = "data_label_nudge_x"
-
-      simplify_cancer_type_labels=TRUE
-      cancer_type_label_wrap_width=20
-   }
-
    ## Checks --------------------------------
    if(!(x_axis_position %in% c("top","bottom","none")))
       stop("`x_axis_position` must be 'top', 'bottom' or 'none'")
@@ -222,10 +203,7 @@ plot_heatmap <- function(
       ## Use the above and below line to insert white spaces so that:
       ## - The width is constant
       ## - The target text is vertically centered
-      x <- sprintf(
-         "%s\n%s\n%s",
-         white_space, x, white_space
-      )
+      x <- sprintf("%s\n%s\n%s", white_space, x, white_space)
 
       return(x)
    }
@@ -318,11 +296,6 @@ plot_heatmap <- function(
          name="Cancer supertype (strips) and subtype (labels)",
          labels=format_cancer_type_labels
       ) +
-
-      # scale_fill_gradient(
-      #    low="white", high="mediumseagreen", na.value="grey95", limits=c(0,1),
-      #    guide=guide_colorbar(frame.colour="black", ticks.colour="black", barheight=5)
-      # ) +
 
       theme_bw() +
       theme(
@@ -439,10 +412,10 @@ plot_cv_performance <- function(VIS_DATA){
 
    ## Plot --------------------------------
    y_labels_remap <- c(
-         n_samples="Total no. of samples",
-         recall="Recall (prop. of total correct)",
-         precision="Precision (prop. of predicted correct)"
-      )
+      n_samples="Total no. of samples",
+      recall="Recall (prop. of total correct)",
+      precision="Precision (prop. of predicted correct)"
+   )
 
    plot_heatmap(
       plot_data,
@@ -456,7 +429,6 @@ plot_cv_performance <- function(VIS_DATA){
       colors=c("white", "#fffedc", "#76c99b"), na.value="grey95", limits=c(0,1),
       guide=guide_colorbar(frame.colour="black", ticks.colour="black", barheight=3.5)
    ) +
-   #guides(fill=FALSE) +
    labs(title="DNA COMBINED: Training set performance", fill="Metric value") +
    theme(legend.justification=c("left", "bottom"))
 }
@@ -491,13 +463,12 @@ plot_signatures <- function(VIS_DATA){
    )
 
    ## Plot --------------------------------
-   plot_heatmap(
-      plot_data,
-      x_axis_position="none",
-      cell_color="grey50"
-   ) +
+   plot_heatmap(plot_data, x_axis_position="none", cell_color="grey50") +
    scale_fill_manual(
-      values=structure(quantile_info$colors[quantile_info$colors != "grey95"], names=quantile_info$labels[quantile_info$labels != "0"]),
+      values=structure(
+         quantile_info$colors[quantile_info$colors != "grey95"], 
+         names=quantile_info$labels[quantile_info$labels != "0"]
+      ),
       guide=guide_legend(override.aes=list(colour="black", linetype=1)),
       na.value="grey95", drop=TRUE
    ) +
@@ -536,10 +507,10 @@ plot_feat_contrib <- function(VIS_DATA){
       feat_value_label[feat_value==1] <- "1"
 
       driver_feat_value_label <- paste0(gsub("\\.", " ", affixes$feat_basename), " (", feat_value_label, ")")
-          trait_feat_value_label <- paste(affixes$feat_basename, "=", feat_value_label==1, sep = " ")
-          tmb_or_sv_feat_value_label <- paste(affixes$feat_basename, "=", feat_value_label, sep = " ")
-          non_driver_feat_value_label <- ifelse(affixes$feat_basename %in% c("is male", "whole genome duplication"), trait_feat_value_label, tmb_or_sv_feat_value_label)
-          paste0(ifelse(affixes$feat_type %in% MAPPING_EVENT_NAMES, driver_feat_value_label, non_driver_feat_value_label))
+      trait_feat_value_label <- paste(affixes$feat_basename, "=", feat_value_label==1, sep = " ")
+      tmb_or_sv_feat_value_label <- paste(affixes$feat_basename, "=", feat_value_label, sep = " ")
+      non_driver_feat_value_label <- ifelse(affixes$feat_basename %in% c("is male", "whole genome duplication"), trait_feat_value_label, tmb_or_sv_feat_value_label)
+      paste0(ifelse(affixes$feat_type %in% MAPPING_EVENT_NAMES, driver_feat_value_label, non_driver_feat_value_label))
    })
 
    ## Legend breaks --------------------------------
@@ -558,7 +529,11 @@ plot_feat_contrib <- function(VIS_DATA){
       labels = function(x) sprintf("%g", x),
       guide=guide_colorbar(frame.colour="black", ticks.colour="black", barheight=5)
    ) +
-   labs(fill="Odds ratio\n(subtype / not subtype)", y="Feature", title="EVENT: Feature contributions")
+   labs(
+      fill="Odds ratio\n(subtype / not subtype)", 
+      y="Feature", 
+      title="EVENT: Feature contributions"
+   )
 }
 
 
