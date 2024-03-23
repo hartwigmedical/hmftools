@@ -7,12 +7,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.BamOperations;
+import com.hartwig.hmftools.common.bam.BamToolName;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
 
 import org.jetbrains.annotations.Nullable;
@@ -184,6 +184,9 @@ public class FileWriterCache
 
     public boolean runSortMergeIndex() { return mConfig.SamToolsPath != null || mConfig.SambambaPath != null; }
 
+    private BamToolName bamToolName() { return mConfig.SamToolsPath != null ? BamToolName.SAMTOOLS : BamToolName.SAMBAMBA; }
+    private String bamToolPath() { return mConfig.SamToolsPath != null ? mConfig.SamToolsPath : mConfig.SambambaPath; }
+
     public boolean sortAndIndexBams()
     {
         if(!runSortMergeIndex())
@@ -246,8 +249,6 @@ public class FileWriterCache
         if(!sortingOk)
             return false;
 
-        MD_LOGGER.debug("sort complete");
-
         if(mBamWriters.size() > 1)
         {
             if(!mergeBams(finalBamFilename, bamsToMerge))
@@ -265,38 +266,7 @@ public class FileWriterCache
 
     private boolean mergeBams(final String finalBamFilename, final List<String> sortedThreadBams)
     {
-        MD_LOGGER.debug("merging {} bams", mBamWriters.size());
-
-        List<String> commandArgs = Lists.newArrayList();
-
-        if(mConfig.SambambaPath != null)
-        {
-            commandArgs.add(mConfig.SambambaPath);
-            commandArgs.add("merge");
-            commandArgs.add("-t");
-        }
-        else
-        {
-            commandArgs.add(mConfig.SamToolsPath);
-            commandArgs.add("merge");
-            commandArgs.add("-@");
-        }
-
-        commandArgs.add(String.valueOf(mConfig.Threads));
-        commandArgs.add(finalBamFilename);
-
-        for(String threadBam : sortedThreadBams)
-        {
-            commandArgs.add(threadBam);
-        }
-
-        if(executeCommand(commandArgs, finalBamFilename))
-        {
-            MD_LOGGER.debug("merge complete");
-            return true;
-        }
-
-        return false;
+        return BamOperations.mergeBams(bamToolName(), bamToolPath(), finalBamFilename, sortedThreadBams, mConfig.Threads);
     }
 
     private void deleteInterimBams(final List<String> interimBams)
@@ -320,21 +290,7 @@ public class FileWriterCache
         if(mConfig.SambambaPath != null && mBamWriters.size() > 1)
             return true;
 
-        MD_LOGGER.debug("indexing final bam");
-
-        List<String> commandArgs = Lists.newArrayList();
-
-        commandArgs.add(mConfig.SamToolsPath);
-        commandArgs.add("index");
-        commandArgs.add("-@");
-        commandArgs.add(String.valueOf(mConfig.Threads));
-        commandArgs.add(finalBamFilename);
-
-        if(!executeCommand(commandArgs, finalBamFilename))
-            return false;
-
-        MD_LOGGER.debug("index complete");
-        return true;
+        return BamOperations.indexBam(bamToolName(), bamToolPath(), finalBamFilename, mConfig.Threads);
     }
 
     private class SortBamTask implements Callable
@@ -366,73 +322,8 @@ public class FileWriterCache
 
             // MD_LOGGER.debug("sorting unsorted bam({}) to sorted bam({})", mBamfile, mSortedBamfile);
 
-            List<String> commandArgs = Lists.newArrayList();
-
-            commandArgs.add(mConfig.SamToolsPath);
-            commandArgs.add("sort");
-
-            if(mThreadCount > 1)
-            {
-                commandArgs.add("-@");
-                commandArgs.add(String.valueOf(mThreadCount));
-            }
-
-            // default memory per thread according to samtools doco is 768MB, could configure as a function of max heap used by MarkDups
-            // commandArgs.add("-m");
-            // commandArgs.add("1G");
-
-            commandArgs.add("-T");
-            commandArgs.add("tmp");
-            commandArgs.add("-O");
-            commandArgs.add("bam");
-            commandArgs.add(mBamfile);
-            commandArgs.add("-o");
-            commandArgs.add(mSortedBamfile);
-
-            mSuccess = executeCommand(commandArgs, mSortedBamfile);
+            mSuccess = BamOperations.sortBam(bamToolName(), bamToolPath(), mBamfile, mSortedBamfile, mThreadCount);
             return (long)0;
         }
-    }
-
-    private static boolean executeCommand(final List<String> commandArgs, final String outputPrefix)
-    {
-        String redirectOutputFile = outputPrefix + ".out";
-        String redirectErrFile = outputPrefix + ".err";
-
-        String[] command = new String[commandArgs.size()];
-        for(int i = 0; i < commandArgs.size(); ++i)
-        {
-            command[i] = commandArgs.get(i);
-        }
-
-        try
-        {
-            int result = new ProcessBuilder(command)
-                    .redirectOutput(new File(redirectOutputFile))
-                    .redirectError(new File(redirectErrFile))
-                    .start().waitFor();
-
-            if(result != 0)
-            {
-                MD_LOGGER.error("error running command({}) for file({})", commandToStr(command), outputPrefix);
-                return false;
-            }
-
-            // clean-up process log files
-            Files.deleteIfExists(Paths.get(redirectOutputFile));
-            Files.deleteIfExists(Paths.get(redirectErrFile));
-        }
-        catch(Exception e)
-        {
-            MD_LOGGER.error("error running command({}) for file({}): {}", commandToStr(command), outputPrefix, e.toString());
-            return false;
-        }
-
-        return true;
-    }
-
-    private static String commandToStr(final String[] command)
-    {
-        return Arrays.stream(command).collect(Collectors.joining(" "));
     }
 }
