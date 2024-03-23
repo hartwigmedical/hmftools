@@ -182,10 +182,10 @@ public class FileWriterCache
         return new SAMFileWriterFactory().makeBAMWriter(fileHeader, presorted, new File(filename));
     }
 
-    public boolean runSortMergeIndex() { return mConfig.SamToolsPath != null || mConfig.SambambaPath != null; }
+    public boolean runSortMergeIndex() { return mConfig.BamToolPath != null; }
 
-    private BamToolName bamToolName() { return mConfig.SamToolsPath != null ? BamToolName.SAMTOOLS : BamToolName.SAMBAMBA; }
-    private String bamToolPath() { return mConfig.SamToolsPath != null ? mConfig.SamToolsPath : mConfig.SambambaPath; }
+    private BamToolName bamToolName() { return BamToolName.fromPath(mConfig.BamToolPath); }
+    private String bamToolPath() { return mConfig.BamToolPath; }
 
     public boolean sortAndIndexBams()
     {
@@ -193,12 +193,6 @@ public class FileWriterCache
             return true;
 
         String finalBamFilename = mConfig.OutputBam != null ? mConfig.OutputBam : formBamFilename(null, null);
-
-        if(mConfig.SamToolsPath == null)
-        {
-            MD_LOGGER.error("samtools required for sort");
-            return false;
-        }
 
         // MD_LOGGER.info("sorting, merging and indexing final BAM");
 
@@ -287,7 +281,7 @@ public class FileWriterCache
     private boolean indexFinalBam(String finalBamFilename)
     {
         // no need to index if Sambamba merge was used
-        if(mConfig.SambambaPath != null && mBamWriters.size() > 1)
+        if(bamToolName() == BamToolName.SAMBAMBA && mBamWriters.size() > 1)
             return true;
 
         return BamOperations.indexBam(bamToolName(), bamToolPath(), finalBamFilename, mConfig.Threads);

@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.writeSortedBam;
+import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLY_BAM;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -36,27 +38,27 @@ import htsjdk.samtools.SAMSequenceRecord;
 
 public class BamWriter
 {
-    // private final BAMStreamWriter mWriter;
+    private final AssemblyConfig mConfig;
     private final SAMFileWriter mWriter;
     private SAMFileHeader mHeader;
+
     private boolean mValid;
+    private String mUnsortedBam;
 
     public BamWriter(final AssemblyConfig config)
     {
-        mHeader = null;
+        mConfig = config;
         mValid = true;
+        mUnsortedBam = null;
         mWriter = initialiseBamWriter(config);
-        // mWriter = initialiseBam(config);
     }
 
     public boolean isValid() { return mWriter != null && mValid; }
 
-    private BAMStreamWriter initialiseBam(final AssemblyConfig config)
+    private SAMFileWriter initialiseBamWriter(final AssemblyConfig config)
     {
-        if(!config.WriteTypes.contains(WriteType.ASSEMBLY_BAM))
-            return null;
-
         mHeader = new SAMFileHeader();
+
         mHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
 
         RefGenomeSource refGenomeFile = (RefGenomeSource)config.RefGenome;
@@ -65,52 +67,14 @@ public class BamWriter
                 .map(seq -> new SAMSequenceRecord(seq.getSequenceName(), seq.getSequenceLength()))
                 .forEach(mHeader::addSequence);
 
-        String outputFilename = config.outputFilename(WriteType.ASSEMBLY_BAM);
-
-        try
-        {
-            BAMStreamWriter writer = new BAMStreamWriter(
-                    new FileOutputStream(outputFilename),
-                    new FileOutputStream(outputFilename + ".bai"),
-                    null, 0, mHeader);
-
-            // could take these from the original BAM(s)
-            String programId = "ESVEE";
-            String readGroupId = "NONE";
-            mHeader.addProgramRecord(new SAMProgramRecord(programId));
-            mHeader.addReadGroup(new SAMReadGroupRecord(readGroupId));
-
-            writer.writeHeader(mHeader);
-
-            return writer;
-        }
-        catch(final Exception e)
-        {
-            SV_LOGGER.error("failure while initialising output BAM", e.toString());
-            mValid = false;
-            return null;
-        }
-    }
-
-    private SAMFileWriter initialiseBamWriter(final AssemblyConfig config)
-    {
-        SAMFileHeader fileHeader = new SAMFileHeader();
-
-        fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
-
-        RefGenomeSource refGenomeFile = (RefGenomeSource)config.RefGenome;
-
-        refGenomeFile.refGenomeFile().getSequenceDictionary().getSequences().stream()
-                .map(seq -> new SAMSequenceRecord(seq.getSequenceName(), seq.getSequenceLength()))
-                .forEach(fileHeader::addSequence);
-
         String programId = "ESVEE";
         String readGroupId = "NONE";
-        fileHeader.addProgramRecord(new SAMProgramRecord(programId));
-        fileHeader.addReadGroup(new SAMReadGroupRecord(readGroupId));
+        mHeader.addProgramRecord(new SAMProgramRecord(programId));
+        mHeader.addReadGroup(new SAMReadGroupRecord(readGroupId));
 
-        String outputBam = config.outputFilename(WriteType.ASSEMBLY_BAM);
-        return new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(outputBam));
+        String sortedBam = config.outputFilename(ASSEMBLY_BAM);
+        mUnsortedBam = sortedBam.replaceAll(ASSEMBLY_BAM.fileId(), "unsorted." + ASSEMBLY_BAM);
+        return new SAMFileWriterFactory().makeBAMWriter(mHeader, false, new File(mUnsortedBam));
     }
 
     public void close()
@@ -118,7 +82,9 @@ public class BamWriter
         if(mWriter != null)
         {
             mWriter.close();
-            // mWriter.finish(true);
+
+            String sortedBam = mConfig.outputFilename(ASSEMBLY_BAM);
+            writeSortedBam(mUnsortedBam, sortedBam, mConfig.BamToolPath, mConfig.Threads);
         }
     }
 

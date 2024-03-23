@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee;
 
+import static com.hartwig.hmftools.common.bam.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -32,6 +33,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFil
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.SV_PREP_JUNCTIONS_FILE_ID;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.formOutputFile;
 import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLY_BAM;
 import static com.hartwig.hmftools.esvee.output.WriteType.READS;
 import static com.hartwig.hmftools.esvee.output.WriteType.VCF;
@@ -45,6 +47,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.BamToolName;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -85,6 +88,7 @@ public class AssemblyConfig
 
     public final String OutputDir;
     public final String OutputId;
+    public final String BamToolPath;
 
     public final SpecificRegions SpecificChrRegions;
     public final List<Junction> SpecificJunctions;
@@ -186,6 +190,8 @@ public class AssemblyConfig
             WriteTypes.add(ASSEMBLY_BAM);
         }
 
+        BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
+
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
@@ -268,16 +274,7 @@ public class AssemblyConfig
 
     public String outputFilename(final WriteType writeType)
     {
-        String filename = OutputDir;
-
-        filename += TumorIds.get(0);
-
-        if(OutputId != null)
-            filename += "." + OutputId;
-
-        filename += "." + writeType.fileId();
-
-        return filename;
+        return formOutputFile(OutputDir, TumorIds.get(0), writeType.fileId(), OutputId);
     }
 
     public void logReadId(final SAMRecord record, final String caller)
@@ -337,6 +334,7 @@ public class AssemblyConfig
                 PHASE_PROCESSING_LIMIT, "Exclude phase groups above this size from extension and phase sets", 0);
 
         TruthsetAnnotation.registerConfig(configBuilder);
+        BamToolName.addConfig(configBuilder);
 
         SpecificRegions.addSpecificChromosomesRegionsConfig(configBuilder);
 
@@ -370,6 +368,7 @@ public class AssemblyConfig
 
         OutputDir = null;
         OutputId = null;
+        BamToolPath = null;
 
         SpecificChrRegions = new SpecificRegions();
         SpecificJunctions = Collections.emptyList();

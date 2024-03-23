@@ -2,6 +2,9 @@ package com.hartwig.hmftools.markdups;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.BamToolName.BAMTOOL_PATH;
+import static com.hartwig.hmftools.common.bam.BamToolName.SAMBAMBA_PATH;
+import static com.hartwig.hmftools.common.bam.BamToolName.SAMTOOLS_PATH;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -38,6 +41,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.bam.BamToolName;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -85,8 +89,7 @@ public class MarkDupsConfig
     public final boolean NoMateCigar;
     public final int Threads;
 
-    public final String SamToolsPath;
-    public final String SambambaPath;
+    public final String BamToolPath;
 
     // debug
     public final boolean KeepInterimBams;
@@ -116,8 +119,6 @@ public class MarkDupsConfig
     private static final String FORM_CONSENSUS = "form_consensus";
     private static final String READ_LENGTH = "read_length";
 
-    private static final String SAMTOOLS_PATH = "samtools";
-    private static final String SAMBAMBA_PATH = "sambamba";
     private static final String UNMAP_REGIONS = "unmap_regions";
     private static final String WRITE_STATS = "write_stats";
     private static final String DROP_DUPLICATES = "drop_duplicates";
@@ -187,8 +188,7 @@ public class MarkDupsConfig
 
         mReadLength = configBuilder.getInteger(READ_LENGTH);
 
-        SambambaPath = configBuilder.getValue(SAMBAMBA_PATH);
-        SamToolsPath = configBuilder.getValue(SAMTOOLS_PATH);
+        BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
 
         NoMateCigar = configBuilder.hasFlag(NO_MATE_CIGAR);
         UMIs = UmiConfig.from(configBuilder);
@@ -283,8 +283,8 @@ public class MarkDupsConfig
 
         configBuilder.addFlag(NO_WRITE_BAM, "BAM not written, producing only TSV reads and/or statistics");
         configBuilder.addFlag(KEEP_INTERIM_BAMS, "Do no delete per-thread BAMs");
-        configBuilder.addPath(SAMTOOLS_PATH, false, "Path to samtools for sort");
-        configBuilder.addPath(SAMBAMBA_PATH, false, "Path to sambamba for merge");
+
+        BamToolName.addConfig(configBuilder);
 
         configBuilder.addFlag(FORM_CONSENSUS, "Form consensus reads from duplicate groups without UMIs");
         configBuilder.addFlag(NO_MATE_CIGAR, "Mate CIGAR not set by aligner, make no attempt to use it");
@@ -330,8 +330,7 @@ public class MarkDupsConfig
         SpecificChrRegions = new SpecificRegions();
         SpecificRegionsFilterType = FilterReadsType.MATE_AND_SUPP;
 
-        SamToolsPath = null;
-        SambambaPath = null;
+        BamToolPath = null;
 
         UnmapRegions = new ReadUnmapper(Maps.newHashMap());
 

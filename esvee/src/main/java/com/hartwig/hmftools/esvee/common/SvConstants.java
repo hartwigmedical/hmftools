@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.common;
 
-public class SvConstants
+public final class SvConstants
 {
+    public static final String ESVEE_FILE_ID = "esvee";
 }

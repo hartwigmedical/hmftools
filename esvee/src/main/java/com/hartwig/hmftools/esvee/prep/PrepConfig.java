@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.prep;
 
+import static com.hartwig.hmftools.common.bam.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
@@ -22,6 +23,7 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.formOutputFile;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_CHR_PARTITION_SIZE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_BASES;
@@ -43,6 +45,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.bam.BamToolName;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.bam.BamUtils;
@@ -74,6 +77,8 @@ public class PrepConfig
     public final String OutputDir;
     public final String OutputId;
     public final Set<WriteType> WriteTypes;
+
+    public final String BamToolPath;
 
     public final int Threads;
     public final boolean UseCacheBam;
@@ -169,6 +174,7 @@ public class PrepConfig
 
         CalcFragmentLength = configBuilder.hasFlag(CALC_FRAG_LENGTH) || WriteTypes.contains(FRAGMENT_LENGTH_DIST);
         BamStringency = BamUtils.validationStringency(configBuilder);
+        BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
 
@@ -203,23 +209,36 @@ public class PrepConfig
 
     public String formFilename(final WriteType writeType)
     {
-        String filename = OutputDir + SampleId;
-
-        filename += ".sv_prep.";
-
-        if(OutputId != null)
-            filename += OutputId + ".";
+        String fileExtension = "";
 
         switch(writeType)
         {
-            case READS: return filename + "reads" + TSV_EXTENSION;
-            case BAM: return filename + "bam";
-            case CACHE_BAM: return filename + "cache";
-            case JUNCTIONS: return filename + "junctions" + TSV_EXTENSION;
-            case FRAGMENT_LENGTH_DIST: return filename + "fragment_lengths" + TSV_EXTENSION;
+            case READS:
+                fileExtension = "reads" + TSV_EXTENSION;
+                break;
+
+            case UNSORTED_BAM:
+                fileExtension = "prep.unsorted.bam";
+                break;
+
+            case BAM:
+                fileExtension = "prep.bam";
+                break;
+
+            case CACHE_BAM:
+                fileExtension = "cache";
+                break;
+
+            case JUNCTIONS:
+                fileExtension = "junctions" + TSV_EXTENSION;
+                break;
+
+            case FRAGMENT_LENGTH_DIST:
+                fileExtension = "fragment_lengths" + TSV_EXTENSION;
+                break;
         }
 
-        return null;
+        return formOutputFile(OutputDir, SampleId, fileExtension, OutputId);
     }
 
     public boolean writeReads() { return WriteTypes.contains(BAM) || WriteTypes.contains(READS); }
@@ -260,6 +279,7 @@ public class PrepConfig
         WriteTypes = Sets.newHashSet();
         SpecificChrRegions = new SpecificRegions();
         LogReadIds = Lists.newArrayList();
+        BamToolPath = null;
         Threads = 1;
         MaxPartitionReads = 0;
         TrackRemotes = true;
@@ -294,6 +314,7 @@ public class PrepConfig
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         addValidationStringencyOption(configBuilder);
         ReadFilterConfig.addConfig(configBuilder);
+        BamToolName.addConfig(configBuilder);
         addThreadOptions(configBuilder);
         addOutputOptions(configBuilder, false);
         ConfigUtils.addLoggingOptions(configBuilder);
