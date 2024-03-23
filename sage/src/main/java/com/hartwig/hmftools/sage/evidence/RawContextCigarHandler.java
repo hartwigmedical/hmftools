@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.sage.SageConstants.MIN_SOFT_CLIP_HIGH_QUAL_PE
 import static com.hartwig.hmftools.sage.SageConstants.MIN_SOFT_CLIP_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
 
-import com.hartwig.hmftools.common.samtools.CigarHandler;
+import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.read.SplitReadUtils;
 

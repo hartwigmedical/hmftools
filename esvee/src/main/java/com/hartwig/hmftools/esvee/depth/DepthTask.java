@@ -7,8 +7,8 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
-import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
+import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
+import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
@@ -31,8 +31,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.bam.BamSlicer;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
 import htsjdk.samtools.SAMRecord;

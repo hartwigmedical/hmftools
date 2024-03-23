@@ -8,9 +8,9 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
-import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.extractUmiType;
+import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.CORE;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.FULL;
@@ -57,7 +57,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.samtools.UmiReadType;
+import com.hartwig.hmftools.common.bam.UmiReadType;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.ReadContext;

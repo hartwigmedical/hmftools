@@ -7,10 +7,10 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.compare.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.bamtools.compare.MismatchType.REF_ONLY;
 import static com.hartwig.hmftools.bamtools.compare.MismatchType.VALUE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UNMAP_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 
 import static htsjdk.samtools.SAMFlag.DUPLICATE_READ;
 
@@ -20,7 +20,7 @@ import java.util.Queue;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import com.hartwig.hmftools.common.region.ExcludedRegions;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;

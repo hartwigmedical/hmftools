@@ -3,8 +3,8 @@ package com.hartwig.hmftools.gripss.rm;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.samtools.CigarUtils.calcCigarLength;
-import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
+import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
@@ -13,7 +13,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.samtools.CigarUtils;
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.region.BaseRegion;
 
 import htsjdk.samtools.Cigar;

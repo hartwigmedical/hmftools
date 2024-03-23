@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.samtools;
+package com.hartwig.hmftools.common.bam;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
@@ -8,8 +8,6 @@ import static htsjdk.samtools.ValidationStringency.DEFAULT_STRINGENCY;
 
 import java.io.File;
 
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 

@@ -3,12 +3,12 @@ package com.hartwig.hmftools.esvee.read;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarElementsFromStr;
-import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarStringFromElements;
-import static com.hartwig.hmftools.common.samtools.CigarUtils.maxIndelLength;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
-import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.extractAlignment;
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsFromStr;
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarStringFromElements;
+import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.common.bam.SupplementaryReadData.extractAlignment;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
@@ -24,8 +24,8 @@ import static htsjdk.samtools.util.StringUtil.bytesToString;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.samtools.CigarUtils;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.bam.CigarUtils;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.esvee.types.IndelCoords;
 
 import htsjdk.samtools.CigarElement;

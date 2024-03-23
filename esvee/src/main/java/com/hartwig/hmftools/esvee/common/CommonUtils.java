@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.common;
 
-import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.bam.BamSlicer;
 
 public final class CommonUtils
 {

@@ -11,8 +11,8 @@ import static com.hartwig.hmftools.cobalt.metrics.FragmentGcCounts.roundFragment
 import static com.hartwig.hmftools.cobalt.metrics.FragmentGcCounts.roundGcPercent;
 import static com.hartwig.hmftools.cobalt.metrics.MetricsConfig.TARGET_REGION_PROXIMITY;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_INFO_DELIM;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_INFO_DELIM;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,7 +23,7 @@ import java.util.Queue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.gc.GcCalcs;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.sv.SvUtils;
 
 import htsjdk.samtools.CigarElement;

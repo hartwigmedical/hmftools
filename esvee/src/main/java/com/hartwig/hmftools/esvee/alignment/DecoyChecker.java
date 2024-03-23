@@ -14,7 +14,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.samtools.CigarUtils;
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.output.WriteType;

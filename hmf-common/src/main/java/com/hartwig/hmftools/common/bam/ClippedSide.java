@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.common.samtools;
+package com.hartwig.hmftools.common.bam;
 
-import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
-import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
+import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
+import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 

@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.common.samtools;
+package com.hartwig.hmftools.common.bam;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;

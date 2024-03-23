@@ -2,7 +2,7 @@ package com.hartwig.hmftools.cobalt.count;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.PARTITION_SIZE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +21,7 @@ import com.hartwig.hmftools.cobalt.CobaltColumns;
 import com.hartwig.hmftools.cobalt.CobaltConfig;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.bam.BamSlicer;
 
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.Nullable;

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.esvee.prep;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;

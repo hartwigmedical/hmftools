@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.bqr;
 
-import com.hartwig.hmftools.common.samtools.UmiReadType;
+import com.hartwig.hmftools.common.bam.UmiReadType;
 import com.hartwig.hmftools.common.sequencing.UltimaConsensusType;
 
 public enum BqrReadType

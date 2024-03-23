@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.teal.telbam
 
-import com.hartwig.hmftools.common.samtools.SamRecordUtils
+import com.hartwig.hmftools.common.bam.SamRecordUtils
 import com.hartwig.hmftools.teal.ReadGroup
 import com.hartwig.hmftools.teal.TealUtils.hasTelomericContent
 import com.hartwig.hmftools.teal.TealUtils.openSamReader

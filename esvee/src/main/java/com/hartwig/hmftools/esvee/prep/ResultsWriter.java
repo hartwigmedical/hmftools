@@ -21,8 +21,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.samtools.CigarUtils;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.bam.CigarUtils;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.bamtools.compare;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
@@ -15,10 +14,9 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
-import com.hartwig.hmftools.common.samtools.BamUtils;
+import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class CompareConfig

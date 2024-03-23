@@ -3,10 +3,10 @@ package com.hartwig.hmftools.isofox.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
-import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.generateMappedCoords;
+import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
+import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipped;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.generateMappedCoords;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
@@ -39,7 +39,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.samtools.ClippedSide;
+import com.hartwig.hmftools.common.bam.ClippedSide;
 
 import org.jetbrains.annotations.NotNull;
 

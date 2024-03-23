@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.common.samtools;
+package com.hartwig.hmftools.common.bam;
 
-import static com.hartwig.hmftools.common.samtools.CigarUtils.calcCigarLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarLength;
 
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;

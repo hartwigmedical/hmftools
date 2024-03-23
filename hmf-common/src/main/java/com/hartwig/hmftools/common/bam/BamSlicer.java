@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.common.samtools;
+package com.hartwig.hmftools.common.bam;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SAM_LOGGER;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.firstInPair;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SAM_LOGGER;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +14,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;

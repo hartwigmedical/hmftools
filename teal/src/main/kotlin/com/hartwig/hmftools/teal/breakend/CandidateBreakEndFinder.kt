@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.teal.breakend
 
 import com.hartwig.hmftools.common.genome.chromosome.ContigComparator
-import com.hartwig.hmftools.common.samtools.CigarUtils
+import com.hartwig.hmftools.common.bam.CigarUtils
 import htsjdk.samtools.SAMRecord
 import com.hartwig.hmftools.common.region.ExcludedRegions
 import com.hartwig.hmftools.common.region.ChrBaseRegion

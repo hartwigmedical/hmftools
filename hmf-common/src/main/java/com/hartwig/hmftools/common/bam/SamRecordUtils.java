@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.common.samtools;
+package com.hartwig.hmftools.common.bam;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.samtools.CigarUtils.getReadBoundaryPosition;
+import static com.hartwig.hmftools.common.bam.CigarUtils.getReadBoundaryPosition;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.teal
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.SAMTag
 import com.hartwig.hmftools.common.region.ChrBaseRegion
-import com.hartwig.hmftools.common.samtools.SamRecordUtils
+import com.hartwig.hmftools.common.bam.SamRecordUtils
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import java.util.ArrayList

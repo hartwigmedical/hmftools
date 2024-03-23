@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.bamtools.slice;
 
-import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_NEG_STRAND;
+import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_NEG_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 
@@ -8,7 +8,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 
 import org.junit.Test;

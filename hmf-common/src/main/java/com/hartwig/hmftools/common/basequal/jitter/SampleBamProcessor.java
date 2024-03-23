@@ -17,7 +17,7 @@ import com.google.common.collect.Multimaps;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.bam.BamSlicer;
 
 import org.apache.commons.lang3.Validate;
 

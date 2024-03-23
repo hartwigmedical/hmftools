@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.samtools;
+package com.hartwig.hmftools.common.bam;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

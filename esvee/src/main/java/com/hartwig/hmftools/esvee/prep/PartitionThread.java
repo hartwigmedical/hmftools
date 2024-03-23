@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
-import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
 import com.hartwig.hmftools.esvee.prep.types.PartitionTask;
 

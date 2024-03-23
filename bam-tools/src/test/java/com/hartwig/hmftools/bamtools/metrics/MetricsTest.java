@@ -2,13 +2,13 @@ package com.hartwig.hmftools.bamtools.metrics;
 
 import static com.hartwig.hmftools.bamtools.metrics.CoverageTest.TEST_CIGAR;
 import static com.hartwig.hmftools.bamtools.metrics.CoverageTest.TEST_READ_BASES;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.addConsensusReadAttribute;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.addConsensusReadAttribute;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.samtools.UmiReadType;
+import com.hartwig.hmftools.common.bam.UmiReadType;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.esvee.prep.types;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarFromStr;
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
@@ -13,8 +13,8 @@ import static htsjdk.samtools.CigarOperator.N;
 import java.util.Comparator;
 import java.util.List;
 
-import com.hartwig.hmftools.common.samtools.ClippedSide;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.bam.ClippedSide;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 
 import htsjdk.samtools.Cigar;
 

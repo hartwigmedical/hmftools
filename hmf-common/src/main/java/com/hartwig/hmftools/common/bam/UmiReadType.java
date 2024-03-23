@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.samtools;
+package com.hartwig.hmftools.common.bam;
 
 public enum UmiReadType
 {
