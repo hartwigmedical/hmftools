@@ -51,6 +51,7 @@ import com.hartwig.hmftools.esvee.prep.types.ReadIdTrimmer;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 import com.hartwig.hmftools.esvee.prep.types.RemoteJunction;
+import com.hartwig.hmftools.esvee.types.IndelCoords;
 
 import htsjdk.samtools.CigarElement;
 
@@ -393,7 +394,7 @@ public class JunctionTracker
             if(read.readType() != ReadType.JUNCTION)
                 continue;
 
-            final int[] indelCoords = read.indelCoords();
+            IndelCoords indelCoords = read.indelCoords();
 
             if(indelCoords != null)
                 handleIndelJunction(readGroup, read, indelCoords);
@@ -468,18 +469,17 @@ public class JunctionTracker
         return mBlacklistRegions.stream().anyMatch(x -> x.containsPosition(junctionPosition));
     }
 
-    private void handleIndelJunction(final ReadGroup readGroup, final PrepRead read, final int[] indelCoords)
+    private void handleIndelJunction(final ReadGroup readGroup, final PrepRead read, final IndelCoords indelCoords)
     {
-        // TODO: make IndelCoords class to be shared with Esvee to save recomputing
-        if(maxIndelLength(read.cigar().getCigarElements()) < mFilterConfig.MinIndelLength)
+        if(indelCoords.Length < mFilterConfig.MinIndelLength)
             return;
 
-        if(positionInBlacklist(indelCoords[SE_START]) || positionInBlacklist(indelCoords[SE_END]))
+        if(positionInBlacklist(indelCoords.PosStart) || positionInBlacklist(indelCoords.PosEnd))
             return;
 
         // a bit inefficient to search twice, but there won't be too many of these long indel reads
-        JunctionData junctionStart = getOrCreateJunction(read, indelCoords[SE_START], POS_ORIENT);
-        JunctionData junctionEnd = getOrCreateJunction(read, indelCoords[SE_END], NEG_ORIENT);
+        JunctionData junctionStart = getOrCreateJunction(read, indelCoords.PosStart, POS_ORIENT);
+        JunctionData junctionEnd = getOrCreateJunction(read, indelCoords.PosEnd, NEG_ORIENT);
 
         junctionStart.markInternalIndel();
         junctionStart.JunctionGroups.add(readGroup);
@@ -494,7 +494,7 @@ public class JunctionTracker
 
     private void checkIndelSupport(final PrepRead read, final Map<JunctionData,ReadType> supportedJunctions)
     {
-        final int[] indelCoords = read.indelCoords();
+        IndelCoords indelCoords = read.indelCoords();
 
         if(indelCoords == null)
             return;
@@ -515,7 +515,7 @@ public class JunctionTracker
 
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                int indelPos = indelCoords[se];
+                int indelPos = se == SE_START ? indelCoords.PosStart : indelCoords.PosEnd;
 
                 if(indelPos != junctionData.Position)
                     continue;

@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.AssemblyConstants.BAM_HEADER_SAMPLE_ID_TAG;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.createBamSlicer;
 
 import java.io.File;
 import java.io.IOException;
@@ -71,15 +72,6 @@ public class BamReader implements AutoCloseable
     }
 
     public boolean currentIsReferenceSample() { return mCurrentIsReferenceSample; }
-
-    private BamSlicer createBamSlicer()
-    {
-        // as per SvPrep
-        BamSlicer bamSlicer = new BamSlicer(0, false, true, false);
-        bamSlicer.setKeepUnmapped();
-        bamSlicer.setKeepHardClippedSecondaries();
-        return bamSlicer;
-    }
 
     @Override
     public void close()

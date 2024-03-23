@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.maxIndelLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
@@ -68,7 +69,7 @@ public class ReadFilters
         int scRight = rightSoftClipLength(record);
 
         // a read with an indel junction does not need to meet the min soft-clip length condition, but other SC inserts are checked
-        int maxIndelLength = PrepRead.maxIndelLength(record.getCigar());
+        int maxIndelLength = maxIndelLength(record.getCigar().getCigarElements());
 
         if(maxIndelLength < mConfig.MinIndelLength && scLeft < mConfig.MinSoftClipLength && scRight < mConfig.MinSoftClipLength)
             filters = ReadFilterType.set(filters, ReadFilterType.SOFT_CLIP_LENGTH);
@@ -142,7 +143,7 @@ public class ReadFilters
 
         // or with any amount of soft or hard clipping or a long INDEL
         return record.getCigar().isLeftClipped() || record.getCigar().isRightClipped()
-                || PrepRead.maxIndelLength(record.getCigar()) >= MIN_INDEL_SUPPORT_LENGTH;
+                || maxIndelLength(record.getCigar().getCigarElements()) >= MIN_INDEL_SUPPORT_LENGTH;
     }
 
     public static boolean isChimericRead(final SAMRecord record, final ReadFilterConfig config)

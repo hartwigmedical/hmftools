@@ -54,14 +54,6 @@ public class PartitionSlicer
         Total;
     }
 
-    public static BamSlicer createBamSlicer()
-    {
-        BamSlicer bamSlicer = new BamSlicer(0, false, true, false);
-        bamSlicer.setKeepUnmapped();
-        bamSlicer.setKeepHardClippedSecondaries();
-        return bamSlicer;
-    }
-    
     public PartitionSlicer(
             final int id, final ChrBaseRegion region, final PrepConfig config, final SamReader samReader, final BamSlicer bamSlicer,
             final SpanningReadCache spanningReadCache, final ExistingJunctionCache existingJunctionCache, final ResultsWriter writer,

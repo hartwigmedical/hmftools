@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.prep.types;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.CigarUtils.maxIndelLength;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
@@ -16,6 +17,7 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_INDEL_SUPPORT_LE
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.CigarUtils;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.esvee.types.IndelCoords;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMFlag;
@@ -34,7 +36,7 @@ public class PrepRead
     private final SupplementaryReadData mSupplementaryAlignment;
 
     private boolean mCheckedIndelCoords;
-    private int[] mIndelCoords;
+    private IndelCoords mIndelCoords;
 
     private int mFilters;
     private ReadType mReadType;
@@ -127,11 +129,15 @@ public class PrepRead
 
     public int fragmentInsertSize() { return mFragmentInsertSize; }
 
-    public int[] indelCoords()
+    public IndelCoords indelCoords()
     {
         if(!mCheckedIndelCoords)
         {
-            mIndelCoords = CigarUtils.findIndelCoords(start(), cigar().getCigarElements(), MIN_INDEL_SUPPORT_LENGTH);
+            int[] indelCoords = CigarUtils.findIndelCoords(start(), cigar().getCigarElements(), MIN_INDEL_SUPPORT_LENGTH);
+
+            if(indelCoords != null)
+                mIndelCoords = new IndelCoords(indelCoords[SE_START], indelCoords[SE_END], maxIndelLength(cigar().getCigarElements()));
+
             mCheckedIndelCoords = true;
         }
 
@@ -144,8 +150,6 @@ public class PrepRead
                 Chromosome, start(), end(), cigar().toString(), MateChromosome, MatePosStart, id(),
                 isFirstOfPair(), isSupplementaryAlignment(), isReadReversed(), mSupplementaryAlignment != null, mReadType);
     }
-
-    public static int maxIndelLength(final Cigar cigar) { return CigarUtils.maxIndelLength(cigar.getCigarElements()); }
 
     public static String getSoftClippedBases(final SAMRecord record, final boolean isClippedLeft)
     {
