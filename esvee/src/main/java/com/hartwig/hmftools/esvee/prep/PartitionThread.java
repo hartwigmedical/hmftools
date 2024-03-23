@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.esvee.prep.types;
+package com.hartwig.hmftools.esvee.prep;
 
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.prep.types.PartitionSlicer.createBamSlicer;
+import static com.hartwig.hmftools.esvee.prep.PartitionSlicer.createBamSlicer;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,11 +9,13 @@ import java.util.NoSuchElementException;
 import java.util.Queue;
 
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.esvee.prep.CombinedStats;
 import com.hartwig.hmftools.esvee.prep.ExistingJunctionCache;
+import com.hartwig.hmftools.esvee.prep.PartitionSlicer;
 import com.hartwig.hmftools.esvee.prep.PrepConfig;
 import com.hartwig.hmftools.esvee.prep.ResultsWriter;
 import com.hartwig.hmftools.esvee.prep.SpanningReadCache;
+import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
+import com.hartwig.hmftools.esvee.prep.types.PartitionTask;
 
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;

@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.APP_NAME;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
 
 import org.jetbrains.annotations.NotNull;
 

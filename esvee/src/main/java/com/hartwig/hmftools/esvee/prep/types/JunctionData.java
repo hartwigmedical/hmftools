@@ -3,7 +3,7 @@ package com.hartwig.hmftools.esvee.prep.types;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.esvee.prep.types.ReadRecord.getSoftClippedBases;
+import static com.hartwig.hmftools.esvee.prep.types.PrepRead.getSoftClippedBases;
 
 import java.util.List;
 import java.util.Map;
@@ -22,15 +22,15 @@ public class JunctionData
     public final List<ReadGroup> ExactSupportGroups;
     public final List<RemoteJunction> RemoteJunctions;
 
-    public final Map<ReadType,List<ReadRecord>> ReadTypeReads;
+    public final Map<ReadType,List<PrepRead>> ReadTypeReads;
 
-    private ReadRecord mTopJunctionRead;
+    private PrepRead mTopJunctionRead;
     private boolean mInternalIndel;
     private boolean mDiscordantGroup;
     private boolean mHotspot;
     private int mDepth;
 
-    public JunctionData(final int position, final byte orientation, final ReadRecord read)
+    public JunctionData(final int position, final byte orientation, final PrepRead read)
     {
         Position = position;
         Orientation = orientation;
@@ -56,7 +56,7 @@ public class JunctionData
 
     public boolean isExisting() { return mIsExisting; }
 
-    public ReadRecord topJunctionRead() { return mTopJunctionRead; }
+    public PrepRead topJunctionRead() { return mTopJunctionRead; }
 
     public int junctionFragmentCount() { return JunctionGroups.size(); }
     public int supportingFragmentCount() { return SupportingGroups.size(); }
@@ -75,7 +75,7 @@ public class JunctionData
     public void setDepth(int depth) { mDepth = depth; }
     public int depth() { return mDepth; }
 
-    public void addReadType(final ReadRecord read, final ReadType type)
+    public void addReadType(final PrepRead read, final ReadType type)
     {
         if(ReadTypeReads.containsKey(type))
         {
@@ -90,11 +90,11 @@ public class JunctionData
 
         // select the junction read with the highest number of high-qual bases in the soft-clip
         int maxHighQualBases = 0;
-        ReadRecord topRead = null;
+        PrepRead topRead = null;
 
         boolean useLeftSoftClip = Orientation == NEG_ORIENT;
 
-        List<ReadRecord> junctionReads = ReadTypeReads.get(ReadType.JUNCTION);
+        List<PrepRead> junctionReads = ReadTypeReads.get(ReadType.JUNCTION);
 
         if(junctionReads.size() == 1)
         {
@@ -102,7 +102,7 @@ public class JunctionData
             return;
         }
 
-        for(ReadRecord read : junctionReads)
+        for(PrepRead read : junctionReads)
         {
             String scBases = getSoftClippedBases(read.record(), useLeftSoftClip);
 

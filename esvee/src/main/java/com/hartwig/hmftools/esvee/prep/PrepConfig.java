@@ -33,9 +33,9 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_HIGH_Q
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SUPPORTING_READ_DISTANCE;
-import static com.hartwig.hmftools.esvee.prep.WriteType.BAM;
-import static com.hartwig.hmftools.esvee.prep.WriteType.FRAGMENT_LENGTH_DIST;
-import static com.hartwig.hmftools.esvee.prep.WriteType.READS;
+import static com.hartwig.hmftools.esvee.prep.types.WriteType.BAM;
+import static com.hartwig.hmftools.esvee.prep.types.WriteType.FRAGMENT_LENGTH_DIST;
+import static com.hartwig.hmftools.esvee.prep.types.WriteType.READS;
 
 import java.util.Arrays;
 import java.util.List;
@@ -50,6 +50,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterConfig;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilters;
+import com.hartwig.hmftools.esvee.prep.types.WriteType;
 
 import htsjdk.samtools.ValidationStringency;
 

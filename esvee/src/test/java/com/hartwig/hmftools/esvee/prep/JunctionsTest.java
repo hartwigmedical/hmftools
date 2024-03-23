@@ -25,11 +25,9 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.esvee.prep.types.DiscordantGroups;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
-import com.hartwig.hmftools.esvee.prep.types.JunctionTracker;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
-import com.hartwig.hmftools.esvee.prep.types.ReadRecord;
+import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 
 import org.apache.commons.compress.utils.Lists;
@@ -48,7 +46,7 @@ public class JunctionsTest
         mJunctionTracker = new JunctionTracker(mPartitionRegion, new PrepConfig(1000), HOTSPOT_CACHE, BLACKLIST_LOCATIONS);
     }
 
-    private void addRead(final ReadRecord read, final ReadType readType)
+    private void addRead(final PrepRead read, final ReadType readType)
     {
         read.setReadType(readType);
         mJunctionTracker.processRead(read);
@@ -59,60 +57,60 @@ public class JunctionsTest
     {
         int readId = 0;
 
-        ReadRecord read1 = ReadRecord.from(createSamRecord(
+        PrepRead read1 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 800, REF_BASES.substring(0, 100), "30S70M"));
 
-        ReadRecord read2 = ReadRecord.from(createSamRecord(
+        PrepRead read2 = PrepRead.from(createSamRecord(
                 readIdStr(readId), CHR_1, 820, REF_BASES.substring(20, 120), "100M",
                 buildFlags(false, true, false)));
 
         addRead(read1, JUNCTION);
         addRead(read2, NO_SUPPORT);
 
-        ReadRecord suppRead1 = ReadRecord.from(createSamRecord(
+        PrepRead suppRead1 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 800, REF_BASES.substring(0, 73), "3S70M"));
 
         addRead(suppRead1, CANDIDATE_SUPPORT);
 
-        ReadRecord read3 = ReadRecord.from(createSamRecord(
+        PrepRead read3 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 950, REF_BASES.substring(0, 100), "30S70M"));
 
-        ReadRecord read4 = ReadRecord.from(createSamRecord(
+        PrepRead read4 = PrepRead.from(createSamRecord(
                 readIdStr(readId), CHR_1, 980, REF_BASES.substring(20, 120), "100M",
                 buildFlags(false, true, false)));
 
         addRead(read3, JUNCTION);
         addRead(read4, NO_SUPPORT);
 
-        ReadRecord suppRead2 = ReadRecord.from(createSamRecord(
+        PrepRead suppRead2 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 950, REF_BASES.substring(0, 73), "3S70M"));
 
         addRead(suppRead2, CANDIDATE_SUPPORT);
 
-        ReadRecord read5 = ReadRecord.from(createSamRecord(
+        PrepRead read5 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 950, REF_BASES.substring(20, 120), "100M"));
 
-        ReadRecord read6 = ReadRecord.from(createSamRecord(
+        PrepRead read6 = PrepRead.from(createSamRecord(
                 readIdStr(readId), CHR_1, 980, REF_BASES.substring(0, 100), "70M30S"));
 
         addRead(read5, NO_SUPPORT);
         addRead(read6, JUNCTION);
 
-        ReadRecord suppRead3 = ReadRecord.from(createSamRecord(
+        PrepRead suppRead3 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 990, REF_BASES.substring(0, 63), "60M3S"));
 
         addRead(suppRead3, CANDIDATE_SUPPORT);
 
-        ReadRecord read7 = ReadRecord.from(createSamRecord(
+        PrepRead read7 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 1010, REF_BASES.substring(10, 90), "50M30S"));
 
-        ReadRecord read8 = ReadRecord.from(createSamRecord(
+        PrepRead read8 = PrepRead.from(createSamRecord(
                 readIdStr(readId), CHR_1, 1010, REF_BASES.substring(0, 50), "50M"));
 
         addRead(read7, JUNCTION);
         addRead(read8, NO_SUPPORT);
 
-        ReadRecord suppRead4 = ReadRecord.from(createSamRecord(
+        PrepRead suppRead4 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 990, REF_BASES.substring(0, 73), "70M3S"));
 
         addRead(suppRead4, CANDIDATE_SUPPORT);
@@ -154,24 +152,24 @@ public class JunctionsTest
         // initial delete is too short
         int readId = 0;
 
-        ReadRecord read1 = ReadRecord.from(createSamRecord(
+        PrepRead read1 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 10, REF_BASES.substring(0, 80), "20M10D50M"));
 
         addRead(read1, JUNCTION);
 
         // then a simple one
-        ReadRecord read2 = ReadRecord.from(createSamRecord(
+        PrepRead read2 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 100, REF_BASES.substring(0, 80), "20M40D20M"));
 
         addRead(read2, JUNCTION);
 
         // with supporting reads - first is too short as an indel
-        ReadRecord suppRead = ReadRecord.from(createSamRecord(
+        PrepRead suppRead = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 100, REF_BASES.substring(0, 80), "20M20D20M"));
 
         addRead(suppRead, CANDIDATE_SUPPORT);
 
-        suppRead = ReadRecord.from(createSamRecord(
+        suppRead = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 120, REF_BASES.substring(0, 80), "20M20D20M"));
 
         addRead(suppRead, CANDIDATE_SUPPORT);
@@ -179,7 +177,7 @@ public class JunctionsTest
         // and a more complicated one
         // 5S10M2D10M3I10M35D10M2S from base 210: 10-19 match, 20-21 del, 22-31 match, ignore insert, 32-41 match, 42-76 del, 77-86 match
 
-        ReadRecord read3 = ReadRecord.from(createSamRecord(
+        PrepRead read3 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 210, REF_BASES.substring(0, 1), "5S10M2D10M3I10M35D10M2S"));
 
         addRead(read3, JUNCTION);
@@ -219,20 +217,20 @@ public class JunctionsTest
         int readId = 0;
 
         // first is too short
-        ReadRecord read1 = ReadRecord.from(createSamRecord(
+        PrepRead read1 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 10, REF_BASES.substring(0, 70), "20M10I50M"));
 
         addRead(read1, JUNCTION);
 
         // then a simple one
-        ReadRecord read2 = ReadRecord.from(createSamRecord(
+        PrepRead read2 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 100, REF_BASES.substring(0, 70), "20M40I50M"));
 
         addRead(read2, JUNCTION);
 
         // and a more complicated one
 
-        ReadRecord read3 = ReadRecord.from(createSamRecord(
+        PrepRead read3 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 210, REF_BASES.substring(0, 100), "5S10M2D10M3I10M35I10M2S"));
 
         addRead(read3, JUNCTION);
@@ -256,10 +254,10 @@ public class JunctionsTest
 
         int readId = 0;
 
-        ReadRecord read1 = ReadRecord.from(createSamRecord(
+        PrepRead read1 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 800, REF_BASES.substring(0, 100), "30S70M"));
 
-        ReadRecord read2 = ReadRecord.from(createSamRecord(
+        PrepRead read2 = PrepRead.from(createSamRecord(
                 readIdStr(readId), CHR_1, 820, REF_BASES.substring(20, 120), "100M"));
 
         read1.setReadType(JUNCTION);
@@ -267,7 +265,7 @@ public class JunctionsTest
         junctionTracker.processRead(read1);
         junctionTracker.processRead(read2);
 
-        ReadRecord suppRead1 = ReadRecord.from(createSamRecord(
+        PrepRead suppRead1 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 800, REF_BASES.substring(0, 73), "3S70M"));
 
         suppRead1.setReadType(CANDIDATE_SUPPORT);
@@ -281,7 +279,7 @@ public class JunctionsTest
     private void addDiscordantCandidate(
             final List<ReadGroup> discordantCandidates, final String readId, final String chr1, int pos1, final String chr2, int pos2)
     {
-        ReadRecord read = ReadRecord.from(createSamRecord(readId, chr1, pos1, chr2, pos2, true, false, null));
+        PrepRead read = PrepRead.from(createSamRecord(readId, chr1, pos1, chr2, pos2, true, false, null));
         read.setReadType(CANDIDATE_SUPPORT);
         read.record().setMateNegativeStrandFlag(true);
         discordantCandidates.add(new ReadGroup(read));

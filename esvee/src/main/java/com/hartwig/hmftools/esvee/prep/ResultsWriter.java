@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.prep.WriteType.JUNCTIONS;
-import static com.hartwig.hmftools.esvee.prep.WriteType.READS;
+import static com.hartwig.hmftools.esvee.prep.types.WriteType.JUNCTIONS;
+import static com.hartwig.hmftools.esvee.prep.types.WriteType.READS;
 
 import static htsjdk.samtools.SAMFlag.DUPLICATE_READ;
 import static htsjdk.samtools.SAMFlag.PROPER_PAIR;
@@ -27,7 +27,7 @@ import com.hartwig.hmftools.esvee.prep.types.JunctionData;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
-import com.hartwig.hmftools.esvee.prep.types.ReadRecord;
+import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 import com.hartwig.hmftools.esvee.prep.types.RemoteJunction;
 
@@ -100,7 +100,7 @@ public class ResultsWriter
 
             String junctionPosStr = readGroup.junctionPositionsStr();
 
-            for(ReadRecord read : readGroup.reads())
+            for(PrepRead read : readGroup.reads())
             {
                 if(read.written())
                     continue;
@@ -123,7 +123,7 @@ public class ResultsWriter
     }
 
     private void writeReadData(
-            final ReadRecord read, int readCount, int expectedReadCount, final ReadGroupStatus status, boolean spansPartitions,
+            final PrepRead read, int readCount, int expectedReadCount, final ReadGroupStatus status, boolean spansPartitions,
             final String junctionPositions)
     {
         if(mReadWriter == null)
@@ -200,7 +200,7 @@ public class ResultsWriter
                 boolean hasPloyAT = false;
                 boolean expectLeftClipped = junctionData.Orientation == NEG_ORIENT;
 
-                for(ReadRecord read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
+                for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
                 {
                     // check the read supports this junction (it can only support another junction)
                     boolean supportsJunction =
@@ -218,7 +218,7 @@ public class ResultsWriter
                     if(!junctionData.internalIndel())
                     {
                         if(!hasPloyAT)
-                            hasPloyAT = ReadRecord.hasPolyATSoftClip(read, expectLeftClipped);
+                            hasPloyAT = PrepRead.hasPolyATSoftClip(read, expectLeftClipped);
 
                         int scLength = expectLeftClipped ?
                                 read.cigar().getFirstCigarElement().getLength() : read.cigar().getLastCigarElement().getLength();
@@ -226,7 +226,7 @@ public class ResultsWriter
                         if(scLength > maxSoftClip)
                         {
                             maxSoftClip = scLength;
-                            softClipBases = ReadRecord.getSoftClippedBases(read.record(), expectLeftClipped);
+                            softClipBases = PrepRead.getSoftClippedBases(read.record(), expectLeftClipped);
                         }
                     }
                 }
@@ -234,7 +234,7 @@ public class ResultsWriter
                 int exactSupportFrags = junctionData.ExactSupportGroups.size();
                 int discordantFrags = junctionData.SupportingGroups.size();
 
-                for(ReadRecord read : junctionData.ReadTypeReads.get(ReadType.EXACT_SUPPORT))
+                for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.EXACT_SUPPORT))
                 {
                     maxMapQual = Math.max(maxMapQual, read.mapQuality());
 
@@ -292,7 +292,7 @@ public class ResultsWriter
         // - excessive low qual soft-clip bases
         // - above the poly-G(C) threshold
         // - cannot be a group of only supplementaries (in case the group is an unmarked duplicate)
-        for(ReadRecord read : readGroup.reads())
+        for(PrepRead read : readGroup.reads())
         {
             if(filterBamRecord(read))
                 continue;
@@ -304,7 +304,7 @@ public class ResultsWriter
         }
     }
 
-    private boolean filterBamRecord(final ReadRecord read)
+    private boolean filterBamRecord(final PrepRead read)
     {
         if(ReadFilterType.isSet(read.filters(), ReadFilterType.POLY_G_SC))
             return true;

@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.alignment.DecoyChecker;
 import com.hartwig.hmftools.esvee.types.JunctionAssembly;
@@ -322,6 +323,15 @@ public class JunctionGroupAssembler extends ThreadTask
 
         if(previousRead.getAlignmentStart() != read.getAlignmentStart() || previousRead.getFlags() != read.getFlags())
             return false;
+
+        if(!previousRead.getCigarString().equals(read.getCigarString()))
+            return false;
+
+        SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
+
+        SV_LOGGER.trace("repeated supp({}) coords({}:{}) primary({}:{}) mate({}:{})",
+                read.getReadName(), read.getReferenceName(), read.getAlignmentStart(),
+                suppData.Chromosome, suppData.Position, read.getMateReferenceName(), read.getMateAlignmentStart());
 
         ++mReadStats.IdenticalSupplementaries;
         mSupplementaryRepeats.remove(read.getReadName());

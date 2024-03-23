@@ -21,7 +21,7 @@ import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 
-public class ReadRecord
+public class PrepRead
 {
     public final String Chromosome;
     public final int[] Positions;
@@ -40,11 +40,11 @@ public class ReadRecord
     private ReadType mReadType;
     private boolean mWritten;
 
-    public static ReadRecord from(final SAMRecord record) { return new ReadRecord(record); }
+    public static PrepRead from(final SAMRecord record) { return new PrepRead(record); }
 
     public static final String UNMAPPED_CHR = "-1";
 
-    public ReadRecord(final SAMRecord record)
+    public PrepRead(final SAMRecord record)
     {
         mRecord = record;
 
@@ -156,7 +156,7 @@ public class ReadRecord
         return record.getReadString().substring(scStart, scEnd);
     }
 
-    public static boolean hasPolyATSoftClip(final ReadRecord read, final boolean isClippedLeft)
+    public static boolean hasPolyATSoftClip(final PrepRead read, final boolean isClippedLeft)
     {
         byte orientation = isClippedLeft ? NEG_ORIENT : POS_ORIENT;
         String scBases = getSoftClippedBases(read.record(), isClippedLeft);

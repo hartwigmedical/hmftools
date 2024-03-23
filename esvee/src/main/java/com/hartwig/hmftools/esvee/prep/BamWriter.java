@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.esvee.prep;
 
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.prep.WriteType.BAM;
+import static com.hartwig.hmftools.esvee.prep.types.WriteType.BAM;
 
 import java.io.File;
 

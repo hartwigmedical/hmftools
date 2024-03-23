@@ -16,8 +16,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
 import com.hartwig.hmftools.esvee.prep.types.PartitionTask;
-import com.hartwig.hmftools.esvee.prep.types.PartitionThread;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
 
 public class ChromosomeTask

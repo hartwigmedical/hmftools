@@ -22,7 +22,7 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_LINE_SOFT_CLIP_L
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_CHECK_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_MIN_SC_LENGTH;
-import static com.hartwig.hmftools.esvee.prep.types.ReadRecord.getSoftClippedBases;
+import static com.hartwig.hmftools.esvee.prep.types.PrepRead.getSoftClippedBases;
 
 import static htsjdk.samtools.CigarOperator.M;
 
@@ -68,7 +68,7 @@ public class ReadFilters
         int scRight = rightSoftClipLength(record);
 
         // a read with an indel junction does not need to meet the min soft-clip length condition, but other SC inserts are checked
-        int maxIndelLength = ReadRecord.maxIndelLength(record.getCigar());
+        int maxIndelLength = PrepRead.maxIndelLength(record.getCigar());
 
         if(maxIndelLength < mConfig.MinIndelLength && scLeft < mConfig.MinSoftClipLength && scRight < mConfig.MinSoftClipLength)
             filters = ReadFilterType.set(filters, ReadFilterType.SOFT_CLIP_LENGTH);
@@ -142,7 +142,7 @@ public class ReadFilters
 
         // or with any amount of soft or hard clipping or a long INDEL
         return record.getCigar().isLeftClipped() || record.getCigar().isRightClipped()
-                || ReadRecord.maxIndelLength(record.getCigar()) >= MIN_INDEL_SUPPORT_LENGTH;
+                || PrepRead.maxIndelLength(record.getCigar()) >= MIN_INDEL_SUPPORT_LENGTH;
     }
 
     public static boolean isChimericRead(final SAMRecord record, final ReadFilterConfig config)

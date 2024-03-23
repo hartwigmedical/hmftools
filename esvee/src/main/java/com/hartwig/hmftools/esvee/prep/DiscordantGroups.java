@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.prep.types;
+package com.hartwig.hmftools.esvee.prep;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MAX_DISTANCE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_FRAGMENTS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
-import static com.hartwig.hmftools.esvee.prep.types.ReadRecord.UNMAPPED_CHR;
+import static com.hartwig.hmftools.esvee.prep.types.PrepRead.UNMAPPED_CHR;
 
 import java.util.List;
 import java.util.Set;
@@ -20,6 +20,12 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.esvee.prep.types.GroupBoundary;
+import com.hartwig.hmftools.esvee.prep.types.JunctionData;
+import com.hartwig.hmftools.esvee.prep.types.PrepRead;
+import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
+import com.hartwig.hmftools.esvee.prep.types.ReadType;
+import com.hartwig.hmftools.esvee.prep.types.RemoteJunction;
 
 public final class DiscordantGroups
 {
@@ -39,10 +45,10 @@ public final class DiscordantGroups
                 continue;
             }
 
-            ReadRecord read1 = group1.reads().get(0);
+            PrepRead read1 = group1.reads().get(0);
 
             GroupBoundary[] group1Boundaries = groupBoundaries(group1);
-            ReadRecord[] boundaryReads = null;
+            PrepRead[] boundaryReads = null;
             GroupBoundary[] innerBoundaries = null;
             List<ReadGroup> closeGroups = null;
 
@@ -55,7 +61,7 @@ public final class DiscordantGroups
                 if(assignedGroups.contains(group2.id()))
                     continue;
 
-                ReadRecord read2 = group2.reads().get(0);
+                PrepRead read2 = group2.reads().get(0);
 
                 if(read2.orientation() != read1.orientation() || read2.mateOrientation() != read1.mateOrientation())
                 {
@@ -82,7 +88,7 @@ public final class DiscordantGroups
                 if(closeGroups == null)
                 {
                     closeGroups = Lists.newArrayList(group1);
-                    boundaryReads = new ReadRecord[] {read1, read1};
+                    boundaryReads = new PrepRead[] {read1, read1};
                     innerBoundaries = new GroupBoundary[] { group1Boundaries[SE_START], group1Boundaries[SE_END] };
                 }
 
@@ -131,7 +137,7 @@ public final class DiscordantGroups
     }
 
     private static void addJunctions(
-            final List<ReadGroup> readGroups, final GroupBoundary[] innerBoundaries, final ReadRecord[] boundaryReads,
+            final List<ReadGroup> readGroups, final GroupBoundary[] innerBoundaries, final PrepRead[] boundaryReads,
             final ChrBaseRegion region, final List<JunctionData> discordantJunctions)
     {
         for(int se = SE_START; se <= SE_END; ++se)
@@ -172,7 +178,7 @@ public final class DiscordantGroups
         return isDiscordantRead(readGroup.reads().get(0), minFragmentLength, maxFragmentLength);
     }
 
-    private static boolean isDiscordantRead(final ReadRecord read, final int minFragmentLength, final int maxFragmentLength)
+    private static boolean isDiscordantRead(final PrepRead read, final int minFragmentLength, final int maxFragmentLength)
     {
         if(read.Chromosome.equals(UNMAPPED_CHR) || read.MateChromosome.equals(UNMAPPED_CHR))
             return false;
@@ -222,7 +228,7 @@ public final class DiscordantGroups
 
     private static GroupBoundary[] groupBoundaries(final ReadGroup readGroup)
     {
-        ReadRecord read = readGroup.reads().get(0);
+        PrepRead read = readGroup.reads().get(0);
 
         GroupBoundary boundary1 = new GroupBoundary(
                 read.Chromosome, read.orientation() == POS_ORIENT ? read.end() : read.start(),
@@ -232,7 +238,7 @@ public final class DiscordantGroups
 
         if(readGroup.size() == 2)
         {
-            ReadRecord read2 = readGroup.reads().get(1);
+            PrepRead read2 = readGroup.reads().get(1);
             boundary2 = new GroupBoundary(
                     read2.Chromosome, read2.orientation() == POS_ORIENT ? read2.end() : read2.start(),
                     read2.orientation());

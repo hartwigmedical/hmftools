@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.prep;
+package com.hartwig.hmftools.esvee.prep.types;
 
 public enum WriteType
 {

@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 public class ReadGroup
 {
     private final String mReadId;
-    private final List<ReadRecord> mReads;
+    private final List<PrepRead> mReads;
 
     private ReadGroupStatus mStatus;
     private final Set<String> mRemotePartitions; // given that supplementaries are no longer included, this is now 0 or 1 entries
@@ -43,7 +43,7 @@ public class ReadGroup
         }
     }
 
-    public ReadGroup(final ReadRecord read, @Nullable final String readId)
+    public ReadGroup(final PrepRead read, @Nullable final String readId)
     {
         mReadId = readId;
         mReads = Lists.newArrayListWithCapacity(2);
@@ -55,13 +55,13 @@ public class ReadGroup
         addRead(read);
     }
 
-    public ReadGroup(final ReadRecord read)
+    public ReadGroup(final PrepRead read)
     {
         this(read, null);
     }
 
     public final String id() { return mReadId != null ? mReadId : mReads.get(0).id(); }
-    public List<ReadRecord> reads() { return mReads; }
+    public List<PrepRead> reads() { return mReads; }
     public int size() { return mReads.size(); }
 
     public boolean isComplete() { return mStatus == ReadGroupStatus.COMPLETE; }
@@ -81,7 +81,7 @@ public class ReadGroup
         return sj.toString();
     }
 
-    public void addRead(final ReadRecord read)
+    public void addRead(final PrepRead read)
     {
         mReads.add(read);
     }
@@ -120,7 +120,7 @@ public class ReadGroup
         // no supplementaries and both reads received or no mate
         if(mReads.size() == 1)
         {
-            ReadRecord read = mReads.get(0);
+            PrepRead read = mReads.get(0);
             return !read.hasMate() && !read.hasSuppAlignment();
         }
 
@@ -150,7 +150,7 @@ public class ReadGroup
         boolean secondHasSupp = false;
         boolean nonSuppPaired = false;
 
-        for(ReadRecord read : mReads)
+        for(PrepRead read : mReads)
         {
             if(!read.isSupplementaryAlignment() && !nonSuppPaired)
             {
@@ -200,7 +200,7 @@ public class ReadGroup
 
     public void setPartitionCount(final ChrBaseRegion region, int partitionSize)
     {
-        for(ReadRecord read : mReads)
+        for(PrepRead read : mReads)
         {
             if(read.isUnmapped())
                 continue;
@@ -222,12 +222,12 @@ public class ReadGroup
         }
     }
 
-    public boolean hasReadMate(final ReadRecord read)
+    public boolean hasReadMate(final PrepRead read)
     {
         if(!read.hasMate())
             return false;
 
-        for(ReadRecord otherRead : mReads)
+        for(PrepRead otherRead : mReads)
         {
             if(otherRead == read)
                 continue;

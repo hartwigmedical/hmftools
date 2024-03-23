@@ -2,7 +2,7 @@ package com.hartwig.hmftools.esvee.prep;
 
 import static com.hartwig.hmftools.esvee.prep.SpanningReadCache.chrFromChrPartition;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.prep.WriteType.CACHE_BAM;
+import static com.hartwig.hmftools.esvee.prep.types.WriteType.CACHE_BAM;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +21,7 @@ import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
 import com.hartwig.hmftools.esvee.prep.types.ReadIdTrimmer;
-import com.hartwig.hmftools.esvee.prep.types.ReadRecord;
+import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 
 import htsjdk.samtools.SAMFileHeader;
@@ -68,7 +68,7 @@ public class CandidateBamWriter
         }
     }
 
-    public void writeCandidateRead(final ReadRecord read)
+    public void writeCandidateRead(final PrepRead read)
     {
         if(!mConfig.UseCacheBam)
             return;
@@ -191,7 +191,7 @@ public class CandidateBamWriter
                 if(checkJunctionRead(record.getContig(), record.getReadName()))
                 {
                     ++matchedCandidates;
-                    ReadRecord read = ReadRecord.from(record);
+                    PrepRead read = PrepRead.from(record);
                     read.setReadType(ReadType.CANDIDATE_SUPPORT);
                     ReadGroup readGroup = new ReadGroup(read);
                     readGroup.markHasRemoteJunctionReads();

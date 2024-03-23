@@ -18,7 +18,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
-import com.hartwig.hmftools.esvee.prep.types.ReadRecord;
+import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 
 import org.junit.Test;
@@ -58,7 +58,7 @@ public class SpanningReadsCacheTest
         Map<String,ReadGroup> spanningGroupsMap = Maps.newHashMap();
 
         // test 1: 2 junction reads
-        ReadRecord read1 = ReadRecord.from(createSamRecord(
+        PrepRead read1 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 800, CHR_1, 10800, true, false, ""));
         read1.setReadType(JUNCTION);
 
@@ -66,7 +66,7 @@ public class SpanningReadsCacheTest
         readGroup.setPartitionCount(REGION_1, PARTITION_SIZE);
         assertEquals(2, readGroup.partitionCount());
 
-        ReadRecord read2 = ReadRecord.from(createSamRecord(
+        PrepRead read2 = PrepRead.from(createSamRecord(
                 readIdStr(readId), CHR_1, 10800, CHR_1, 800, false, false, ""));
         read2.setReadType(JUNCTION);
 
@@ -89,9 +89,8 @@ public class SpanningReadsCacheTest
 
         mSpanningReadCache.reset();
 
-
         // test 2: junction then a candidate read
-        read1 = ReadRecord.from(createSamRecord(
+        read1 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 800, CHR_1, 10800, true, false, ""));
         read1.setReadType(JUNCTION);
 
@@ -104,7 +103,7 @@ public class SpanningReadsCacheTest
         spanningGroupsMap.put(readGroup.id(), readGroup);
         mSpanningReadCache.processSpanningReadGroups(REGION_1, spanningGroupsMap);
 
-        read2 = ReadRecord.from(createSamRecord(
+        read2 = PrepRead.from(createSamRecord(
                 readIdStr(readId), CHR_1, 10800, CHR_1, 800, false, false, ""));
         read2.setReadType(CANDIDATE_SUPPORT);
 
@@ -121,7 +120,7 @@ public class SpanningReadsCacheTest
 
 
         // test 3: candidate then junction read
-        read1 = ReadRecord.from(createSamRecord(
+        read1 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 800, CHR_1, 10800, true, false, ""));
         read1.setReadType(CANDIDATE_SUPPORT);
 
@@ -136,7 +135,7 @@ public class SpanningReadsCacheTest
         assertEquals(1, getCachedReadsCount(null));
         assertFalse(hasJunctionReadId(readGroup.id()));
 
-        read2 = ReadRecord.from(createSamRecord(
+        read2 = PrepRead.from(createSamRecord(
                 readIdStr(readId), CHR_1, 10800, CHR_1, 800, false, false, ""));
         read2.setReadType(ReadType.SUPPORT);
 
@@ -154,7 +153,7 @@ public class SpanningReadsCacheTest
 
 
         // test 4: candidate then an empty partition clears out its cache
-        read1 = ReadRecord.from(createSamRecord(
+        read1 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 800, CHR_1, 10800, true, false, ""));
         read1.setReadType(CANDIDATE_SUPPORT);
 
@@ -179,10 +178,10 @@ public class SpanningReadsCacheTest
         Map<String, ReadGroup> spanningGroupsMap = Maps.newHashMap();
 
         // test1: 2 reads, one with a supp, spanning different partitions
-        ReadRecord read1 = ReadRecord.from(createSamRecord(
+        PrepRead read1 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 800, CHR_1, 801, true, false, ""));
 
-        ReadRecord read2 = ReadRecord.from(createSamRecord(
+        PrepRead read2 = PrepRead.from(createSamRecord(
                 readIdStr(readId), CHR_1, 801, CHR_1, 800, false, false, "1;10800;-;46S30M;255;0"));
         read2.setReadType(JUNCTION);
 
@@ -196,7 +195,7 @@ public class SpanningReadsCacheTest
         assertTrue(hasJunctionReadId(readGroup.id()));
         assertEquals(0, getCachedReadsCount(null));
 
-        ReadRecord read3 = ReadRecord.from(createSamRecord(
+        PrepRead read3 = PrepRead.from(createSamRecord(
                 readIdStr(readId), CHR_1, 10800, CHR_1, 800, false, true, "1;801;-;46S30M;255;0"));
         read2.setReadType(CANDIDATE_SUPPORT);
 
@@ -218,7 +217,7 @@ public class SpanningReadsCacheTest
         mSpanningReadCache.reset();
         spanningGroupsMap.clear();
 
-        read1 = ReadRecord.from(createSamRecord(
+        read1 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 800, CHR_1, 10801, true, false, ""));
         read1.setReadType(CANDIDATE_SUPPORT);
 
@@ -230,7 +229,7 @@ public class SpanningReadsCacheTest
         mSpanningReadCache.processSpanningReadGroups(REGION_1, spanningGroupsMap);
         assertEquals(1, getCachedReadsCount(null));
 
-        read2 = ReadRecord.from(createSamRecord(
+        read2 = PrepRead.from(createSamRecord(
                 readIdStr(readId), CHR_1, 10801, CHR_1, 800, false, false, "1;20800;-;46S30M;255;0"));
         read2.setReadType(JUNCTION);
 
@@ -246,7 +245,7 @@ public class SpanningReadsCacheTest
         assertTrue(readGroup.reads().contains(read1)); // has picked up the candidate
 
         // now the supplementary
-        read3 = ReadRecord.from(createSamRecord(
+        read3 = PrepRead.from(createSamRecord(
                 readIdStr(readId), CHR_1, 20800, CHR_1, 800, false, true, "1;10801;-;46S30M;255;0"));
         read3.setReadType(CANDIDATE_SUPPORT);
 
@@ -265,11 +264,11 @@ public class SpanningReadsCacheTest
         mSpanningReadCache.reset();
         spanningGroupsMap.clear();
 
-        read1 = ReadRecord.from(createSamRecord(
+        read1 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 800, CHR_1, 10801, false, false, ""));
         read1.setReadType(CANDIDATE_SUPPORT);
 
-        read2 = ReadRecord.from(createSamRecord(
+        read2 = PrepRead.from(createSamRecord(
                 readIdStr(readId), CHR_1, 801, CHR_1, 800, true, true, "1;10801;-;46S30M;255;0"));
         read2.setReadType(JUNCTION);
 
@@ -286,7 +285,48 @@ public class SpanningReadsCacheTest
         assertTrue(hasJunctionReadId(readGroup.id())); // doesn't know if the following read will be a junction
 
         // now the junction
-        read3 = ReadRecord.from(createSamRecord(
+        read3 = PrepRead.from(createSamRecord(
+                readIdStr(readId), CHR_1, 10801, CHR_1, 800, true, false, "1;801;-;46S30M;255;0"));
+        read3.setReadType(JUNCTION);
+
+        readGroup = new ReadGroup(read3);
+        readGroup.setPartitionCount(REGION_2, PARTITION_SIZE);
+        assertEquals(2, readGroup.partitionCount());
+
+        spanningGroupsMap.clear();
+        spanningGroupsMap.put(readGroup.id(), readGroup);
+        mSpanningReadCache.processSpanningReadGroups(REGION_2, spanningGroupsMap);
+        assertEquals(0, getCachedReadsCount(null));
+        assertFalse(hasJunctionReadId(readGroup.id()));
+        assertEquals(1, readGroup.reads().size());
+
+
+        // test 4: a supplementary and a candidate, followed by the junction
+        mSpanningReadCache.reset();
+        spanningGroupsMap.clear();
+
+        read1 = PrepRead.from(createSamRecord(
+                readIdStr(++readId), CHR_1, 800, CHR_1, 10801, false, false, ""));
+        read1.setReadType(CANDIDATE_SUPPORT);
+
+        read2 = PrepRead.from(createSamRecord(
+                readIdStr(readId), CHR_1, 801, CHR_1, 800, true, true, "1;10801;-;46S30M;255;0"));
+        read2.setReadType(JUNCTION);
+
+        readGroup = new ReadGroup(read1);
+        readGroup.addRead(read2);
+        readGroup.setPartitionCount(REGION_1, PARTITION_SIZE);
+        assertEquals(2, readGroup.partitionCount());
+
+        spanningGroupsMap.put(readGroup.id(), readGroup);
+        mSpanningReadCache.processSpanningReadGroups(REGION_1, spanningGroupsMap);
+
+        // group treated as a junction
+        assertEquals(0, getCachedReadsCount(null));
+        assertTrue(hasJunctionReadId(readGroup.id())); // doesn't know if the following read will be a junction
+
+        // now the junction
+        read3 = PrepRead.from(createSamRecord(
                 readIdStr(readId), CHR_1, 10801, CHR_1, 800, true, false, "1;801;-;46S30M;255;0"));
         read3.setReadType(JUNCTION);
 
@@ -302,61 +342,6 @@ public class SpanningReadsCacheTest
         assertEquals(1, readGroup.reads().size());
     }
 
-    /*
-    @Test
-    public void testSupplementaryLast()
-    {
-        int readId = 0;
-
-        Map<String, ReadGroup> spanningGroupsMap = Maps.newHashMap();
-
-        // test3: the 2 candidates first then the junction
-        mSpanningReadCache.reset();
-        spanningGroupsMap.clear();
-
-        ReadRecord read1 = ReadRecord.from(createSamRecord(
-                readIdStr(++readId), CHR_1, 800, CHR_1, 10801, true, false, "1;20800;-;46S30M;255;0"));
-        read1.setReadType(CANDIDATE_SUPPORT);
-
-        ReadGroup readGroup = new ReadGroup(read1);
-        readGroup.setPartitionCount(REGION_1, PARTITION_SIZE);
-
-        spanningGroupsMap.put(readGroup.id(), readGroup);
-        mSpanningReadCache.processSpanningReadGroups(REGION_1, spanningGroupsMap);
-        assertEquals(1, getCachedReadsCount(null));
-
-        ReadRecord read2 = ReadRecord.from(createSamRecord(
-                readIdStr(readId), CHR_1, 10801, CHR_1, 800, false, false, ""));
-        read2.setReadType(CANDIDATE_SUPPORT);
-
-        readGroup = new ReadGroup(read2);
-        readGroup.setPartitionCount(REGION_2, PARTITION_SIZE);
-        assertEquals(2, readGroup.partitionCount());
-
-        spanningGroupsMap.clear();
-        spanningGroupsMap.put(readGroup.id(), readGroup);
-        mSpanningReadCache.processSpanningReadGroups(REGION_2, spanningGroupsMap);
-        // assertEquals(1, getCachedReadsCount(null));
-        assertEquals(2, getCachedReadsCount(null)); // doesn't know about the supp read to come, so isn't stored
-
-        // now the supplementary
-        ReadRecord read3 = ReadRecord.from(createSamRecord(
-                readIdStr(readId), CHR_1, 20800, CHR_1, 10801, true, true, "1;800;-;46S30M;255;0"));
-        read3.setReadType(JUNCTION);
-
-        readGroup = new ReadGroup(read3);
-        readGroup.setPartitionCount(REGION_3, PARTITION_SIZE);
-
-        spanningGroupsMap.clear();
-        spanningGroupsMap.put(readGroup.id(), readGroup);
-        mSpanningReadCache.processSpanningReadGroups(REGION_3, spanningGroupsMap);
-        assertEquals(0, getCachedReadsCount(null));
-        assertFalse(hasJunctionReadId(readGroup.id()));
-        assertTrue(readGroup.reads().contains(read1)); // has picked up 2 candidates
-        assertTrue(readGroup.reads().contains(read2));
-    }
-    */
-
     @Test
     public void testCandidateOnlyGroups()
     {
@@ -365,7 +350,7 @@ public class SpanningReadsCacheTest
         Map<String, ReadGroup> spanningGroupsMap = Maps.newHashMap();
 
         // test 1: a read group split across partitions, both only candidates for support, neither should be written
-        ReadRecord read1 = ReadRecord.from(createSamRecord(
+        PrepRead read1 = PrepRead.from(createSamRecord(
                 readIdStr(++readId), CHR_1, 800, CHR_1, 10800, true, false, ""));
 
         read1.setReadType(CANDIDATE_SUPPORT);
@@ -379,7 +364,7 @@ public class SpanningReadsCacheTest
         mSpanningReadCache.processSpanningReadGroups(REGION_1, spanningGroupsMap);
         assertEquals(1, getCachedReadsCount(null));
 
-        ReadRecord read2 = ReadRecord.from(createSamRecord(
+        PrepRead read2 = PrepRead.from(createSamRecord(
                 readIdStr(readId), CHR_1, 10800, CHR_1, 800, false, false, ""));
 
         read2.setReadType(CANDIDATE_SUPPORT);

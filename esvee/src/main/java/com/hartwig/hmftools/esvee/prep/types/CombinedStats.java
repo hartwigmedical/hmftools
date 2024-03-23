@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.prep;
+package com.hartwig.hmftools.esvee.prep.types;
 
 import java.util.Arrays;
 import java.util.List;

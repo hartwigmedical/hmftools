@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.prep.types;
+package com.hartwig.hmftools.esvee.prep;
 
 import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
@@ -13,12 +13,15 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.esvee.prep.CombinedStats;
-import com.hartwig.hmftools.esvee.prep.ExistingJunctionCache;
-import com.hartwig.hmftools.esvee.prep.PrepConfig;
-import com.hartwig.hmftools.esvee.prep.ResultsWriter;
-import com.hartwig.hmftools.esvee.prep.SpanningReadCache;
-import com.hartwig.hmftools.esvee.prep.WriteType;
+import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
+import com.hartwig.hmftools.esvee.prep.types.PartitionStats;
+import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
+import com.hartwig.hmftools.esvee.prep.types.ReadFilters;
+import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
+import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
+import com.hartwig.hmftools.esvee.prep.types.PrepRead;
+import com.hartwig.hmftools.esvee.prep.types.ReadType;
+import com.hartwig.hmftools.esvee.prep.types.WriteType;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -131,8 +134,6 @@ public class PartitionSlicer
         mCombinedStats.addPerfCounters(mPerfCounters);
     }
 
-    private static final boolean LOG_READ_ONLY = false;
-
     private void processSamRecord(final SAMRecord record)
     {
         int readStart = record.getAlignmentStart();
@@ -158,16 +159,16 @@ public class PartitionSlicer
         if(mLogReadIds) // debugging only
         {
             if(mConfig.LogReadIds.contains(record.getReadName()))
+            {
                 SV_LOGGER.debug("specific readId({}) unmapped({})", record.getReadName(), record.getReadUnmappedFlag());
-            else if(LOG_READ_ONLY)
-                return;
+            }
         }
 
         int filters = mReadFilters.checkFilters(record);
 
         if(filters == 0 || filters == ReadFilterType.MIN_MAP_QUAL.flag()) // allow reads only filtered by low map quality through
         {
-            ReadRecord read = ReadRecord.from(record);
+            PrepRead read = PrepRead.from(record);
             read.setFilters(filters);
             read.setReadType(ReadType.JUNCTION);
 
@@ -197,7 +198,7 @@ public class PartitionSlicer
         if(!isSupportCandidate && !mConfig.writeReads())
             return;
 
-        ReadRecord read = ReadRecord.from(record);
+        PrepRead read = PrepRead.from(record);
         read.setFilters(filters);
 
         if(isSupportCandidate)

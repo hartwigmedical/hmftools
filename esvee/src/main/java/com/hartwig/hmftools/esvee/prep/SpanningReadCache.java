@@ -17,7 +17,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
-import com.hartwig.hmftools.esvee.prep.types.ReadRecord;
+import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 
 public class SpanningReadCache
 {
@@ -103,7 +103,7 @@ public class SpanningReadCache
 
             if(readGroup.conditionalOnRemoteReads())
             {
-                for(ReadRecord read : readGroup.reads())
+                for(PrepRead read : readGroup.reads())
                 {
                     processCandidateRead(unprocessedPartitions, readGroup, read);
                 }
@@ -125,7 +125,7 @@ public class SpanningReadCache
     private void processJunctionRead(
             final List<String> unprocessedPartitions, final ReadGroup readGroup, final String sourceChrPartition)
     {
-        final ReadRecord read = readGroup.reads().get(0);
+        final PrepRead read = readGroup.reads().get(0);
 
         if(ignoreChromosome(read.Chromosome))
             return;
@@ -187,7 +187,7 @@ public class SpanningReadCache
     }
 
     private void processCandidateRead(
-            final List<String> unprocessedPartitions, final ReadGroup readGroup, final ReadRecord read)
+            final List<String> unprocessedPartitions, final ReadGroup readGroup, final PrepRead read)
     {
         if(unprocessedPartitions.isEmpty())
             return;
@@ -328,7 +328,7 @@ public class SpanningReadCache
     private class CachedReadGroup
     {
         public final String ReadId;
-        public final List<ReadRecord> Reads;
+        public final List<PrepRead> Reads;
         public final Set<String> Partitions;
 
         public CachedReadGroup(final String readId)
