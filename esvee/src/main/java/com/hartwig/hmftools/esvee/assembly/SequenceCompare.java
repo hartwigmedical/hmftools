@@ -2,9 +2,9 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.esvee.AssemblyConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
+import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
 import java.util.List;
 

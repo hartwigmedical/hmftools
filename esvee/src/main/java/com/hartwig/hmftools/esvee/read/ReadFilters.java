@@ -3,8 +3,6 @@ package com.hartwig.hmftools.esvee.read;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.esvee.AssemblyConstants.AVG_BASE_QUAL_THRESHOLD;
-
 import com.hartwig.hmftools.esvee.types.Junction;
 
 public final class ReadFilters
@@ -23,7 +21,7 @@ public final class ReadFilters
         return qualitySum / length;
     }
 
-    public static boolean isAboveBaseQualAvgThreshold(final byte[] baseQualities)
+    public static boolean isAboveBaseQualAvgThreshold(final byte[] baseQualities, final int threshold)
     {
         int qualitySum = 0;
         for(int i = 0; i < baseQualities.length; i++)
@@ -32,7 +30,7 @@ public final class ReadFilters
         }
 
         double avgBaseQual = qualitySum / (double)baseQualities.length;
-        return avgBaseQual >= AVG_BASE_QUAL_THRESHOLD;
+        return avgBaseQual >= threshold;
     }
 
     public static boolean recordSoftClipsAndCrossesJunction(final Read read, final Junction junction)

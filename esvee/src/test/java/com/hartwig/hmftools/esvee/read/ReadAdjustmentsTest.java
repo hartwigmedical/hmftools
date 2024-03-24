@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.TEST_CIGAR_100;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
+import static com.hartwig.hmftools.esvee.common.SvConstants.POLY_G_TRIM_LENGTH;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -36,7 +37,7 @@ public class ReadAdjustmentsTest
         assertFalse(ReadAdjustments.trimPolyGSequences(read));
 
         // trimmed on the 3' end
-        readBases = otherBases + polyGSection.substring(0, AssemblyConstants.POLY_G_TRIM_LENGTH);
+        readBases = otherBases + polyGSection.substring(0, POLY_G_TRIM_LENGTH);
         read = createRead(TEST_READ_ID, 100, readBases, makeCigarString(readBases, 0, 0));
         assertTrue(ReadAdjustments.trimPolyGSequences(read));
 

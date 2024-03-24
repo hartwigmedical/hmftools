@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.isValidSupportCoordsVsJunction;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.types.SupportType.JUNCTION_MATE;
-import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import static htsjdk.samtools.CigarOperator.I;
 

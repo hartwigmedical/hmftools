@@ -33,6 +33,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFil
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.SV_PREP_JUNCTIONS_FILE_ID;
+import static com.hartwig.hmftools.esvee.alignment.BwaAligner.loadAlignerLibrary;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formOutputFile;
 import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLY_BAM;
 import static com.hartwig.hmftools.esvee.output.WriteType.READS;
@@ -256,6 +257,9 @@ public class AssemblyConfig
         Threads = parseThreads(configBuilder);
 
         TruthsetFile = TruthsetAnnotation.filename(configBuilder);
+
+        if(DecoyGenome != null) // or running alignment
+            loadAlignerLibrary(null); // or load path from config
     }
 
     public List<String> combinedSampleIds()

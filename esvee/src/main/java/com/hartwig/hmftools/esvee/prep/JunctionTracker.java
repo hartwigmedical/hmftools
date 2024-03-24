@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.prep.PrepConstants.LOW_BASE_QUALITY;
+import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_EXACT_BASE_PERC;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_HOTSPOT_JUNCTION_SUPPORT;
@@ -901,7 +901,7 @@ public class JunctionTracker
                     continue;
                 }
 
-                if(read.baseQualities()[i] < LOW_BASE_QUALITY || juncRead.baseQualities()[juncIndex] < LOW_BASE_QUALITY)
+                if(read.baseQualities()[i] < LOW_BASE_QUAL_THRESHOLD || juncRead.baseQualities()[juncIndex] < LOW_BASE_QUAL_THRESHOLD)
                     continue;
 
                 ++highQualMismatches;
@@ -984,7 +984,7 @@ public class JunctionTracker
                     continue;
                 }
 
-                if(read.baseQualities()[i] < LOW_BASE_QUALITY || juncRead.baseQualities()[juncIndex] < LOW_BASE_QUALITY)
+                if(read.baseQualities()[i] < LOW_BASE_QUAL_THRESHOLD || juncRead.baseQualities()[juncIndex] < LOW_BASE_QUAL_THRESHOLD)
                     continue;
 
                 ++highQualMismatches;

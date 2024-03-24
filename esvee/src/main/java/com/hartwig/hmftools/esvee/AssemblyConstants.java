@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee;
 
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
+
 public final class AssemblyConstants
 {
     public static final String APP_NAME = "Esvee";
@@ -13,14 +15,9 @@ public final class AssemblyConstants
     // BAM reading
     public static final int BAM_READ_JUNCTION_BUFFER = 1000;
 
-    // common
-    public static final int MIN_VARIANT_LENGTH = 32;
-
     // read adjustments
-    public static final int POLY_G_TRIM_LENGTH = 4;
     public static final int INDEL_TO_SC_MIN_SIZE_SOFTCLIP = 10;
     public static final int INDEL_TO_SC_MAX_SIZE_SOFTCLIP = MIN_VARIANT_LENGTH - 1;
-    public static final double LOW_BASE_TRIM_PERC = 0.3;
 
     // primary assembly
     public static final int READ_SOFT_CLIP_JUNCTION_BUFFER = 2;
@@ -42,10 +39,6 @@ public final class AssemblyConstants
 
     public static final int PROXIMATE_JUNCTION_DISTANCE = 50;
 
-    // filters
-    public static int AVG_BASE_QUAL_THRESHOLD = 30;
-    public static int LOW_BASE_QUAL_THRESHOLD = 26;
-
     public static final double REMOTE_REGION_WEAK_SUPP_PERCENT = 0.1;
 
     // assembly extension
@@ -59,13 +52,7 @@ public final class AssemblyConstants
     public static final int PHASED_ASSEMBLY_JUNCTION_OVERLAP = 50;
     public static final int PHASED_ASSEMBLY_MAX_TI = 1000;
 
-    // CHECK: share with SvPrep, possibly shorten
-    public static final int MIN_INDEL_SUPPORT_LENGTH = 15;
-    public static final int MIN_INDEL_LENGTH = MIN_VARIANT_LENGTH;
-
     public static final int DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX = 200; // for TSV and VCF output, no function impact
-
-    public static final int DISCORDANT_FRAGMENT_LENGTH = 1000;
 
     // alignment - to check
 

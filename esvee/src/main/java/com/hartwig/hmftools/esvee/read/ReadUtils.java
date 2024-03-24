@@ -3,6 +3,8 @@ package com.hartwig.hmftools.esvee.read;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.esvee.common.SvConstants.DISCORDANT_FRAGMENT_LENGTH;
+
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.AssemblyConstants;
 
@@ -20,7 +22,7 @@ public final class ReadUtils
 
     public static boolean isDiscordant(final Read read)
     {
-        return isDiscordant(read, AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH);
+        return isDiscordant(read, DISCORDANT_FRAGMENT_LENGTH);
     }
 
     public static boolean isDiscordant(final Read read, final int discordantPairFragmentLength)
