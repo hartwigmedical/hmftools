@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.esvee.read;
 
-import static java.lang.Math.abs;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.esvee.common.CommonUtils;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -19,26 +19,9 @@ public final class ReadUtils
                 read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
     }
 
-    public static boolean isDiscordant(final Read read)
+    public static boolean isDiscordantFragment(final Read read)
     {
-        return isDiscordant(read, DEFAULT_DISCORDANT_FRAGMENT_LENGTH);
-    }
-
-    public static boolean isDiscordant(final Read read, final int discordantPairFragmentLength)
-    {
-        // FIXME: share method from SvUtils and/or SvPrep
-        if(read.isMateUnmapped())
-            return false;
-
-        if(!read.chromosome().equals(read.mateChromosome())) // not strictly correct for supplementaries, since needs to check the primary
-            return true;
-
-        if(read.positiveStrand() == read.matePositiveStrand())
-            return true;
-
-        int fragmentSize = abs(read.insertSize());
-
-        return fragmentSize == 0 || fragmentSize >= discordantPairFragmentLength;
+        return CommonUtils.isDiscordantFragment(read.bamRecord(), DISCORDANT_FRAGMENT_LENGTH, read.supplementaryData());
     }
 
     public static final int INVALID_INDEX = -1;

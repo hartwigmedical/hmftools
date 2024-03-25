@@ -7,7 +7,6 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_C_INSERT;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_INSERT;
@@ -15,6 +14,7 @@ import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_LENGTH;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_LINE_SOFT_CLIP_LENGTH;
@@ -146,29 +146,12 @@ public class ReadFilters
 
     public static boolean isChimericRead(final SAMRecord record, final ReadFilterConfig config)
     {
-        if(record.getReadUnmappedFlag())
-            return false;
-
-        // or a fragment length outside the observed distribution
-        if(abs(record.getInferredInsertSize()) > config.fragmentLengthMax())
-            return true;
-
+        // only difference from the common discordant fragment method is that reads with unmapped mates are also captured
         // an unmapped mate
         if(mateUnmapped(record))
             return true;
 
-        if(record.getReadPairedFlag())
-        {
-            // inter-chromosomal
-            if(!record.getReferenceName().equals(record.getMateReferenceName()))
-                return true;
-
-            // inversion
-            if(record.getReadNegativeStrandFlag() == mateNegativeStrand(record))
-                return true;
-        }
-
-        return false;
+        return isDiscordantFragment(record, config.fragmentLengthMax(), null);
     }
 
     public static boolean isRepetitiveSectionBreak(final byte[] readBases, boolean leftClipped, int scLength)

@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.esvee.types.RemoteRegion.REMOTE_READ_TYPE_JUN
 import static com.hartwig.hmftools.esvee.types.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_SUPP;
 import static com.hartwig.hmftools.esvee.types.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.types.SupportType.INDEL;
-import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
+import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordantFragment;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -117,7 +117,7 @@ public final class AssemblyWriterUtils
                     }
                     else
                     {
-                        if(isDiscordant(read))
+                        if(isDiscordantFragment(read))
                         {
                             if(matePastJunction)
                                 ++juncMateDiscordantRemote;

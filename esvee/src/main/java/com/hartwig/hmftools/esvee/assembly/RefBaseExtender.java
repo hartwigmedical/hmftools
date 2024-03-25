@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.esvee.types.RefSideSoftClip.purgeRefSideSoftC
 import static com.hartwig.hmftools.esvee.types.SupportType.CANDIDATE_DISCORDANT;
 import static com.hartwig.hmftools.esvee.types.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.types.SupportType.JUNCTION_MATE;
-import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
+import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordantFragment;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -71,7 +71,7 @@ public class RefBaseExtender
             if(support.read().hasSupplementary())
                 suppJunctionReads.add(support.read());
 
-            if(isDiscordant(support.read()))
+            if(isDiscordantFragment(support.read()))
             {
                 remoteJunctionMates.add(support.read());
                 continue;
@@ -205,7 +205,7 @@ public class RefBaseExtender
 
     private boolean isDiscordantCandidate(final Read read, boolean isForwardJunction, int junctionPosition)
     {
-        return isValidSupportCoordsVsJunction(read, isForwardJunction, junctionPosition) && isDiscordant(read);
+        return isValidSupportCoordsVsJunction(read, isForwardJunction, junctionPosition) && isDiscordantFragment(read);
     }
 
     public static void extendRefBases(

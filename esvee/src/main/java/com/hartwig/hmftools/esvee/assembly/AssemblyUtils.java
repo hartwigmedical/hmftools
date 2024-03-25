@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.SECONDARY;
 import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.SUPP_ONLY;
 import static com.hartwig.hmftools.esvee.types.AssemblySupport.hasMatchingFragment;
 import static com.hartwig.hmftools.esvee.types.SupportType.JUNCTION_MATE;
-import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
+import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordantFragment;
 
 import java.util.List;
 
@@ -174,7 +174,7 @@ public final class AssemblyUtils
 
     private static boolean isCrossingConcordantRead(final Read read, final Junction junction, boolean requireLower)
     {
-        if(isDiscordant(read) || read.isMateUnmapped() || !read.isPairedRead())
+        if(isDiscordantFragment(read) || read.isMateUnmapped() || !read.isPairedRead())
             return false;
 
         if(requireLower)
