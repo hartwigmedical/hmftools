@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
 
-import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
@@ -31,12 +30,7 @@ import htsjdk.samtools.SamReaderFactory;
 
 public class BamSlicer
 {
-    private final int mMinMappingQuality;
-    private final boolean mKeepDuplicates;
-    private final boolean mKeepSupplementaries;
-    private final boolean mKeepSecondaries;
-    private boolean mKeepHardClippedSecondaries; // when the -M was historically used in the BWA call
-    private boolean mKeepUnmapped;
+    private final BamSlicerFilter mFilter;
 
     private volatile boolean mConsumerHalt = false; // allow consumer to halt processing
 
@@ -47,16 +41,23 @@ public class BamSlicer
 
     public BamSlicer(int minMappingQuality, boolean keepDuplicates, boolean keepSupplementaries, boolean keepSecondaries)
     {
-        mMinMappingQuality = minMappingQuality;
-        mKeepDuplicates = keepDuplicates;
-        mKeepSupplementaries = keepSupplementaries;
-        mKeepSecondaries = keepSecondaries;
-        mKeepUnmapped = false;
-        mKeepHardClippedSecondaries = false;
+        mFilter = new BamSlicerFilter(minMappingQuality, keepDuplicates, keepSupplementaries, keepSecondaries);
     }
 
-    public void setKeepUnmapped() { mKeepUnmapped = true; }
-    public void setKeepHardClippedSecondaries() { mKeepHardClippedSecondaries = true; }
+    public BamSlicer(final BamSlicerFilter filter)
+    {
+        mFilter = filter;
+    }
+
+    public void setKeepUnmapped()
+    {
+        mFilter.setKeepUnmapped();
+    }
+
+    public void setKeepHardClippedSecondaries()
+    {
+        mFilter.setKeepHardClippedSecondaries();
+    }
 
     public void haltProcessing() { mConsumerHalt = true; }
 
@@ -80,7 +81,7 @@ public class BamSlicer
             {
                 final SAMRecord record = iterator.next();
 
-                if(passesFilters(record))
+                if(mFilter.passesFilters(record))
                 {
                     consumer.accept(record);
                 }
@@ -106,7 +107,7 @@ public class BamSlicer
             {
                 final SAMRecord record = iterator.next();
 
-                if(passesFilters(record))
+                if(mFilter.passesFilters(record))
                 {
                     records.add(record);
                 }
@@ -126,7 +127,7 @@ public class BamSlicer
             {
                 final SAMRecord record = iterator.next();
 
-                if(passesFilters(record))
+                if(mFilter.passesFilters(record))
                 {
                     consumer.accept(record);
                 }
@@ -141,7 +142,7 @@ public class BamSlicer
         for(SAMRecord record : records)
         {
             SAMRecord mateRecord = queryMate(samReader, record);
-            if(mateRecord != null && passesFilters(mateRecord))
+            if(mateRecord != null && mFilter.passesFilters(mateRecord))
                 mateRecords.add(mateRecord);
         }
 
@@ -181,7 +182,7 @@ public class BamSlicer
 
         iter.close();
 
-        return mateRecord != null && passesFilters(mateRecord) ? mateRecord : null;
+        return mateRecord != null && mFilter.passesFilters(mateRecord) ? mateRecord : null;
     }
 
     public SAMRecord queryMate(final SamReader samReader, final SAMRecord record)
@@ -234,7 +235,7 @@ public class BamSlicer
 
         iter.close();
 
-        return mateRecord != null && passesFilters(mateRecord) ? mateRecord : null;
+        return mateRecord != null && mFilter.passesFilters(mateRecord) ? mateRecord : null;
     }
 
     public static QueryInterval[] createIntervals(final List<ChrBaseRegion> regions, final SAMFileHeader header)
@@ -256,26 +257,6 @@ public class BamSlicer
         }
 
         return queryIntervals;
-    }
-
-    private boolean passesFilters(final SAMRecord record)
-    {
-        if(record.getMappingQuality() < mMinMappingQuality)
-            return false;
-
-        if(record.getReadUnmappedFlag() && !mKeepUnmapped)
-            return false;
-
-        if(record.isSecondaryAlignment() && !mKeepSecondaries)
-        {
-            if(!mKeepHardClippedSecondaries || !record.getCigar().containsOperator(CigarOperator.H))
-                return false;
-        }
-
-        if(record.getSupplementaryAlignmentFlag() && !mKeepSupplementaries)
-            return false;
-
-        return !record.getDuplicateReadFlag() || mKeepDuplicates;
     }
 
     // farm out the asynchronous query tasks into the ExecutorService.
@@ -309,7 +290,7 @@ public class BamSlicer
 
         if(queryUnmapped)
         {
-            if(!mKeepUnmapped)
+            if(!mFilter.keepUnmapped())
             {
                 SAM_LOGGER.warn("queryAsync on BamSlicer with keepUnmapped=false");
             }
