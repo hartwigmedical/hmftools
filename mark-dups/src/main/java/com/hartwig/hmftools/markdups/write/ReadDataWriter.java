@@ -60,6 +60,12 @@ public class ReadDataWriter
             sj.add("FirstInPair").add("ReadReversed").add("MateReversed");
             sj.add("Unmapped").add("UnmapCoords").add("MateUnmapped").add("Supplementary").add("Secondary");
 
+            if(mConfig.WriteReadBaseLength > 0)
+            {
+                sj.add("BasesStart");
+                sj.add("BasesEnd");
+            }
+
             writer.write(sj.toString());
             writer.newLine();
 
@@ -121,6 +127,14 @@ public class ReadDataWriter
                     !isPaired || read.getFirstOfPairFlag(), read.getReadNegativeStrandFlag(), isPaired && read.getMateNegativeStrandFlag(),
                     read.getReadUnmappedFlag(), unmapOrigCoords != null ? unmapOrigCoords : "",
                     isPaired && read.getMateUnmappedFlag(), read.getSupplementaryAlignmentFlag(), read.isSecondaryAlignment()));
+
+            if(mConfig.WriteReadBaseLength > 0 && mConfig.WriteReadBaseLength * 2 <= read.getReadBases().length)
+            {
+                String readBases = read.getReadString();
+                mWriter.write(format("\t%s\t%s",
+                        readBases.substring(0, mConfig.WriteReadBaseLength),
+                        readBases.substring(readBases.length() - mConfig.WriteReadBaseLength)));
+            }
 
             mWriter.newLine();
         }

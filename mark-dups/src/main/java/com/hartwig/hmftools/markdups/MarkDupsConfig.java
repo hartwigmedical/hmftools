@@ -3,8 +3,6 @@ package com.hartwig.hmftools.markdups;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.BamToolName.BAMTOOL_PATH;
-import static com.hartwig.hmftools.common.bam.BamToolName.SAMBAMBA_PATH;
-import static com.hartwig.hmftools.common.bam.BamToolName.SAMTOOLS_PATH;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -101,6 +99,7 @@ public class MarkDupsConfig
     public final boolean RunChecks;
     public final boolean DropDuplicates;
     public final boolean LogFinalCache;
+    public final int WriteReadBaseLength;
 
     private boolean mIsValid;
     private int mReadLength;
@@ -129,6 +128,7 @@ public class MarkDupsConfig
     private static final String RUN_CHECKS = "run_checks";
     private static final String LOG_FINAL_CACHE = "log_final_cache";
     private static final String SPECIFIC_REGION_FILTER_TYPE = "specific_region_filter";
+    private static final String WRITE_READ_BASE_LENGTH = "write_read_base_length";
 
     public MarkDupsConfig(final ConfigBuilder configBuilder)
     {
@@ -235,6 +235,7 @@ public class MarkDupsConfig
         RunChecks = configBuilder.hasFlag(RUN_CHECKS);
         LogFinalCache = configBuilder.hasFlag(LOG_FINAL_CACHE);
         DropDuplicates = configBuilder.hasFlag(DROP_DUPLICATES);
+        WriteReadBaseLength = configBuilder.getInteger(WRITE_READ_BASE_LENGTH);
 
         if(RunChecks)
         {
@@ -303,6 +304,8 @@ public class MarkDupsConfig
         configBuilder.addFlag(RUN_CHECKS, "Run duplicate mismatch checks");
         configBuilder.addFlag(LOG_FINAL_CACHE, "Log cached fragments on completion");
         configBuilder.addConfigItem(SPECIFIC_REGION_FILTER_TYPE, "Used with specific regions, to filter mates or supps");
+
+        configBuilder.addInteger(WRITE_READ_BASE_LENGTH, "Number of read bases to write with read data", 0);
     }
 
     public MarkDupsConfig(
@@ -346,5 +349,6 @@ public class MarkDupsConfig
         WriteStats = false;
         LogFinalCache = true;
         DropDuplicates = false;
+        WriteReadBaseLength = 0;
     }
 }
