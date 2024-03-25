@@ -7,6 +7,7 @@ import com.hartwig.hmftools.common.sv.LineElements;
 public final class PrepConstants
 {
     public static final String PREP_JUNCTIONS_FILE_ID = "junctions" + TSV_EXTENSION;
+    public static final String PREP_FRAG_LENGTH_FILE_ID = "fragment_lengths" + TSV_EXTENSION;
 
     // region processing
     public static final int DEFAULT_CHR_PARTITION_SIZE = 1000000;

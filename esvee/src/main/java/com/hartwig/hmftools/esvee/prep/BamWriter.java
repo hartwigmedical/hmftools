@@ -64,7 +64,7 @@ public class BamWriter
 
     public void writeRecord(final SAMRecord record)
     {
-        if(mWriters == null)
+        if(mWriters.isEmpty())
             return;
 
         ++mRecordWriteCount;

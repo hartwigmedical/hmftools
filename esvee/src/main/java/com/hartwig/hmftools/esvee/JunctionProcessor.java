@@ -3,9 +3,13 @@ package com.hartwig.hmftools.esvee;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
+import static com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution.loadFragmentLengthBounds;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
 import static com.hartwig.hmftools.esvee.types.JunctionGroup.buildJunctionGroups;
 import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLIES;
 import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLY_BAM;
@@ -21,12 +25,14 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 import com.hartwig.hmftools.esvee.output.AssemblyReadWriter;
 import com.hartwig.hmftools.esvee.output.AssemblyWriter;
 import com.hartwig.hmftools.esvee.output.BamWriter;
 import com.hartwig.hmftools.esvee.phasing.PhaseGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
 import com.hartwig.hmftools.esvee.phasing.PhaseSetTask;
+import com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution;
 import com.hartwig.hmftools.esvee.types.Junction;
 import com.hartwig.hmftools.esvee.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.types.JunctionGroup;
@@ -104,8 +110,29 @@ public class JunctionProcessor
         return !mChrJunctionsMap.isEmpty();
     }
 
+    private void loadFragmentLengthBounds()
+    {
+        if(mConfig.JunctionFiles.isEmpty())
+            return;
+
+        String prepPath = pathFromFile(mConfig.JunctionFiles.get(0));
+        String fragLengthFilename = mConfig.formPrepInputFilename(mConfig.sampleId(), PREP_FRAG_LENGTH_FILE_ID);
+
+        FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
+
+        if(fragmentLengthBounds.isValid())
+        {
+            SV_LOGGER.info("fragment length bounds(min={} max={})",
+                    fragmentLengthBounds.LowerBound, fragmentLengthBounds.UpperBound);
+
+            DISCORDANT_FRAGMENT_LENGTH = fragmentLengthBounds.UpperBound;
+        }
+    }
+
     public void run()
     {
+        loadFragmentLengthBounds();
+
         try
         {
             // create junction groups from existing junctions

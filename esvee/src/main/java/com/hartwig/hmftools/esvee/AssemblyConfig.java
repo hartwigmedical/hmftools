@@ -35,6 +35,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_GENOME_IMAGE_EXTE
 import static com.hartwig.hmftools.esvee.alignment.BwaAligner.loadAlignerLibrary;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formOutputFile;
 import static com.hartwig.hmftools.esvee.common.SvConstants.ESVEE_FILE_ID;
+import static com.hartwig.hmftools.esvee.common.SvConstants.FILE_NAME_DELIM;
 import static com.hartwig.hmftools.esvee.common.SvConstants.PREP_FILE_ID;
 import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLY_BAM;
 import static com.hartwig.hmftools.esvee.output.WriteType.READS;
@@ -158,13 +159,12 @@ public class AssemblyConfig
         }
         else
         {
-            String bamPath = pathFromFile(TumorBams.get(0));
             List<String> combinedSampleIds = Lists.newArrayList(TumorIds);
             combinedSampleIds.addAll(ReferenceIds);
 
             for(String sampleId : combinedSampleIds)
             {
-                String junctionFile = bamPath + sampleId + "." + PREP_FILE_ID + "." + PREP_JUNCTIONS_FILE_ID;
+                String junctionFile = formPrepInputFilename(sampleId, PREP_JUNCTIONS_FILE_ID);
 
                 if(Files.exists(Paths.get(junctionFile)))
                     JunctionFiles.add(junctionFile);
@@ -278,9 +278,17 @@ public class AssemblyConfig
         return combinedSampleIds;
     }
 
+    public String sampleId() { return TumorIds.get(0); }
+
     public String outputFilename(final WriteType writeType)
     {
-        return formOutputFile(OutputDir, TumorIds.get(0), ESVEE_FILE_ID, writeType.fileId(), OutputId);
+        return formOutputFile(OutputDir, sampleId(), ESVEE_FILE_ID, writeType.fileId(), OutputId);
+    }
+
+    public String formPrepInputFilename(final String sampleId, final String fileId)
+    {
+        String bamPath = pathFromFile(TumorBams.get(0));
+        return bamPath + sampleId + FILE_NAME_DELIM + PREP_FILE_ID + FILE_NAME_DELIM + fileId;
     }
 
     public void logReadId(final SAMRecord record, final String caller)
