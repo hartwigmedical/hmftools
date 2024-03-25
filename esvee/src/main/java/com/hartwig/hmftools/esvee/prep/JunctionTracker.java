@@ -340,9 +340,23 @@ public class JunctionTracker
                 }
             }
 
-            if(!hasBlacklistedRead && DiscordantGroups.isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMin(), mFilterConfig.fragmentLengthMax()))
+            if(!hasBlacklistedRead
+            && DiscordantGroups.isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMin(), mFilterConfig.fragmentLengthMax()))
             {
-                mCandidateDiscordantGroups.add(readGroup);
+                // require one end of this candidate group to be in a hotspot read
+                boolean hasHotspotMatch = false;
+
+                for(PrepRead read : readGroup.reads())
+                {
+                    if(mHotspotRegions.stream().anyMatch(x -> x.overlaps(read.Chromosome, read.start(), read.end())))
+                    {
+                        hasHotspotMatch = true;
+                        break;
+                    }
+                }
+
+                if(hasHotspotMatch)
+                    mCandidateDiscordantGroups.add(readGroup);
             }
         }
 
@@ -361,7 +375,8 @@ public class JunctionTracker
             SV_LOGGER.debug("region({}) checking discordant groups from {} read groups", mRegion, mCandidateDiscordantGroups.size());
         }
 
-        List<JunctionData> discordantJunctions = DiscordantGroups.formDiscordantJunctions(mRegion, mCandidateDiscordantGroups, mFilterConfig.fragmentLengthMax());
+        List<JunctionData> discordantJunctions = DiscordantGroups.formDiscordantJunctions(
+                mRegion, mCandidateDiscordantGroups, mFilterConfig.fragmentLengthMax());
 
         if(!discordantJunctions.isEmpty())
         {

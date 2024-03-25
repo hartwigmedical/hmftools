@@ -50,7 +50,11 @@ public class BamWriter
         mConfig = config;
         mValid = true;
         mUnsortedBam = null;
-        mWriter = initialiseBamWriter(config);
+
+        if(config.WriteTypes.contains(WriteType.ASSEMBLY_BAM))
+            mWriter = initialiseBamWriter(config);
+        else
+            mWriter = null;
     }
 
     public boolean isValid() { return mWriter != null && mValid; }

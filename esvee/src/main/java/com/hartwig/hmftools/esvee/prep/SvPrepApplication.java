@@ -30,7 +30,7 @@ public class SvPrepApplication
         if(!mConfig.isValid())
             System.exit(1);
 
-        SV_LOGGER.info("running SvPrep for sample({})", mConfig.SampleId);
+        SV_LOGGER.info("running Esvee Prep for sample({})", mConfig.SampleId);
 
         long startTimeMs = System.currentTimeMillis();
 
@@ -87,7 +87,7 @@ public class SvPrepApplication
                 combinedStats.PerfCounters.forEach(x -> x.logStats());
         }
 
-        SV_LOGGER.info("SvPrep complete, mins({})", runTimeMinsStr(startTimeMs));
+        SV_LOGGER.info("Esvee Prep complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private void calcFragmentDistribution()

@@ -48,20 +48,22 @@ public class FragmentSizeDistribution
     {
         SV_LOGGER.info("calculating fragment size distribution");
 
-        final List<ChromosomeTask> chrTasks = Lists.newArrayList();
-
         // for(HumanChromosome chromosome : HumanChromosome.values())
-        for(int i = 1; i <= 10; ++i)
+        List<String> sampledChromosomes = Lists.newArrayList();
+
+        if(mConfig.SpecificChrRegions.hasFilters())
         {
-            String chromosome = String.valueOf(i);
-            String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome);
-
-            if(mConfig.SpecificChrRegions.excludeChromosome(chromosomeStr))
-                continue;
-
-            ChromosomeTask chrTask = new ChromosomeTask(chromosomeStr);
-            chrTasks.add(chrTask);
+            sampledChromosomes.addAll(mConfig.SpecificChrRegions.Chromosomes);
         }
+        else
+        {
+            for(int i = 1; i <= 10; ++i)
+            {
+                sampledChromosomes.add(mConfig.RefGenVersion.versionedChromosome(String.valueOf(i)));
+            }
+        }
+
+        List<ChromosomeTask> chrTasks = sampledChromosomes.stream().map(x -> new ChromosomeTask(x)).collect(Collectors.toList());
 
         final List<Callable> callableList = chrTasks.stream().collect(Collectors.toList());
         boolean validExecution = TaskExecutor.executeTasks(callableList, mConfig.Threads);
@@ -87,7 +89,7 @@ public class FragmentSizeDistribution
         int minLength = mLengthFrequencies.get(0).Length;
         int maxLength = mLengthFrequencies.get(mLengthFrequencies.size() - 1).Length;
 
-        SV_LOGGER.info("fragment size distribution complete: min({}) max({})", minLength, maxLength);
+        SV_LOGGER.debug("fragment size distribution complete: min({}) max({})", minLength, maxLength);
 
         if(mConfig.WriteTypes.contains(FRAGMENT_LENGTH_DIST))
             writeDistribution();
