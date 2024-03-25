@@ -643,6 +643,7 @@ Variant calling Improvements
 - **Improve readEvents calculation for synced fragments** - we normally transform a read's raw NM by applying only 1 edit count per INDEL element and ignoring the edit count for the variant itself, when applying event penalty. However, doing this with synced fragments (which use the first read's NM attribute but a 'superset' CIGAR) can result in unexpected behaviour.
 - **Looking in correct direction for homopolymer in synced fragment** - we suppress calling specific known NovaSeqX artefacts by looking for long homopolymers upstream of a candidate variant. For synced fragments, we will sometimes look the wrong way and so assign the wrong base qual to that read. Most relevant for targeted panel sequencing on NovaSeqX
 - **Handling germline multi-base inserts in NovaSeqX artefact suppression logic** - suppressing artefacts phased with homopolymer inserts of 3 or more bases is not currently supported by the algorithm, and there is a known issue with handling 2 base inserts, causing some artefacts associated with these to PASS as well
+- **Running indel deduper with germline filtered indel** - If an indel is germline filtered but we have a few potential somatic variants that are artefacts of this indel, we want to filter these.
 
 Phasing improvements
 - **Only first tumor sample is currently phased** - Reference and additional tumor samples are not utilised for phasing
