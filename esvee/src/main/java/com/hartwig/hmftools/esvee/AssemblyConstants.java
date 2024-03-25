@@ -9,8 +9,6 @@ public final class AssemblyConstants
     // file related
     public static final String REF_GENOME_IMAGE_EXTENSION = ".img";
 
-    public static final String BAM_HEADER_SAMPLE_ID_TAG = "sampleId";
-
     // BAM reading
     public static final int BAM_READ_JUNCTION_BUFFER = 1000;
 

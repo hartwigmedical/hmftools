@@ -17,7 +17,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
-import com.hartwig.hmftools.esvee.prep.types.PartitionTask;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
 
 public class ChromosomeTask
@@ -27,7 +26,7 @@ public class ChromosomeTask
     private final SpanningReadCache mSpanningReadCache;
     private final ExistingJunctionCache mExistingJunctionCache;
     private final ResultsWriter mWriter;
-    private final Queue<PartitionTask> mPartitions;
+    private final Queue<ChrBaseRegion> mPartitions;
 
     private final CombinedStats mCombinedStats;
 
@@ -50,7 +49,7 @@ public class ChromosomeTask
         for(int i = 0; i < partitions.size(); ++i)
         {
             ChrBaseRegion region = partitions.get(i);
-            mPartitions.add(new PartitionTask(region, taskId++));
+            mPartitions.add(region);
         }
     }
 

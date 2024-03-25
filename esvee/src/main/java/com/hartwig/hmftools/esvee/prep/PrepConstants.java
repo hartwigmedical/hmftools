@@ -52,4 +52,6 @@ public final class PrepConstants
     public static final double FRAG_LENGTH_DIST_PERCENTILE = 0.9975;
 
     public static final int DEFAULT_MAX_FRAGMENT_LENGTH = DISCORDANT_FRAGMENT_LENGTH_MIN;
+
+    public static final String BAM_RECORD_SAMPLE_ID_TAG = "SI";
 }

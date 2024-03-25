@@ -12,7 +12,9 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
@@ -42,8 +44,10 @@ import static com.hartwig.hmftools.esvee.prep.types.WriteType.FRAGMENT_LENGTH_DI
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.READS;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -57,12 +61,14 @@ import com.hartwig.hmftools.esvee.prep.types.ReadFilterConfig;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilters;
 import com.hartwig.hmftools.esvee.prep.types.WriteType;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.samtools.ValidationStringency;
 
 public class PrepConfig
 {
-    public final String SampleId;
-    public final String BamFile;
+    public final List<String> SampleIds;
+    public final List<String> BamFiles;
     public final String RefGenomeFile;
     public final RefGenomeVersion RefGenVersion;
 
@@ -94,7 +100,6 @@ public class PrepConfig
     public final boolean PerfDebug;
 
     // throttling and down-sampling - off by default
-    public final int MaxPartitionReads;
     public final boolean CaptureDepth;
     public final boolean NoCleanUp;
 
@@ -102,6 +107,7 @@ public class PrepConfig
 
     // config strings
     public static final String BAM_FILE = "bam_file";
+    public static final String BAM_FILES = "bam_files";
     private static final String KNOWN_FUSION_BED = "known_fusion_bed";
     public static final String BLACKLIST_BED = "blacklist_bed";
     private static final String EXISTING_JUNCTION_FILE = "existing_junction_file";
@@ -112,7 +118,6 @@ public class PrepConfig
     private static final String CALC_FRAG_LENGTH = "calc_fragment_length";
     private static final String PARTITION_SIZE = "partition_size";
 
-    private static final String MAX_PARTITION_READS = "max_partition_reads";
     private static final String CAPTURE_DEPTH = "capture_depth";
     private static final String TRACK_REMOTES = "track_remotes";
     private static final String NO_CACHE_BAM = "no_cache_bam";
@@ -124,8 +129,13 @@ public class PrepConfig
     {
         mIsValid = true;
 
-        SampleId = configBuilder.getValue(SAMPLE);
-        BamFile = configBuilder.getValue(BAM_FILE);
+        SampleIds = Arrays.stream(configBuilder.getValue(SAMPLE).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+
+        if(configBuilder.hasValue(BAM_FILE))
+            BamFiles = Lists.newArrayList(configBuilder.getValue(BAM_FILE));
+        else
+            BamFiles = Arrays.stream(configBuilder.getValue(BAM_FILES).split(CONFIG_FILE_DELIM)).collect(Collectors.toList());
+
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
 
         if(configBuilder.hasValue(OUTPUT_DIR))
@@ -134,22 +144,27 @@ public class PrepConfig
         }
         else
         {
-            OutputDir = pathFromFile(BamFile);
+            OutputDir = pathFromFile(BamFiles.get(0));
         }
 
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
-        if(SampleId == null || BamFile == null || OutputDir == null || RefGenomeFile == null)
+        if(SampleIds.size() != BamFiles.size())
+        {
+            SV_LOGGER.error("samples({}) and bam({}) not matched", SampleIds.size(), BamFiles.size());
+            mIsValid = false;
+        }
+
+        if(SampleIds.isEmpty() || BamFiles.isEmpty() || OutputDir == null || RefGenomeFile == null)
         {
             SV_LOGGER.error("missing config: sample({}) bam({}) refGenome({}) outputDir({})",
-                    SampleId != null, BamFile != null, RefGenomeFile != null, OutputDir != null);
+                    !SampleIds.isEmpty(), !BamFiles.isEmpty(), RefGenomeFile != null, OutputDir != null);
             mIsValid = false;
         }
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        SV_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
-        SV_LOGGER.info("output({})", OutputDir);
+        SV_LOGGER.info("output({}) {}", OutputDir, OutputId != null ? OutputId : "");
 
         Hotspots = new HotspotCache(configBuilder.getValue(KNOWN_FUSION_BED));
         Blacklist = new BlacklistLocations(configBuilder.getValue(BLACKLIST_BED));
@@ -191,7 +206,6 @@ public class PrepConfig
         TrimReadId = !configBuilder.hasFlag(NO_TRIM_READ_ID) && !SpecificChrRegions.hasFilters();
         UnpairedReads = configBuilder.hasFlag(UNPAIRED_READS);
         UseCacheBam = !configBuilder.hasFlag(NO_CACHE_BAM) && !SpecificChrRegions.hasFilters();
-        MaxPartitionReads = configBuilder.getInteger(MAX_PARTITION_READS);
         CaptureDepth = configBuilder.hasFlag(CAPTURE_DEPTH);
         TrackRemotes = configBuilder.hasFlag(TRACK_REMOTES);
         NoCleanUp = configBuilder.hasFlag(NO_CLEAN_UP);
@@ -209,7 +223,12 @@ public class PrepConfig
         return true;
     }
 
-    public String formFilename(final WriteType writeType)
+    public String sampleId() { return SampleIds.get(0); }
+    public String bamFile() { return BamFiles.get(0); }
+
+    public String formFilename(final WriteType writeType) { return formFilename(writeType, sampleId()); }
+
+    public String formFilename(final WriteType writeType, final String sampleId)
     {
         String fileExtension = "";
 
@@ -240,7 +259,7 @@ public class PrepConfig
                 break;
         }
 
-        return formOutputFile(OutputDir, SampleId, PREP_FILE_ID, fileExtension, OutputId);
+        return formOutputFile(OutputDir, sampleId, PREP_FILE_ID, fileExtension, OutputId);
     }
 
     public boolean writeReads() { return WriteTypes.contains(BAM) || WriteTypes.contains(READS); }
@@ -248,8 +267,8 @@ public class PrepConfig
     public PrepConfig(int partitionSize)
     {
         mIsValid = true;
-        SampleId = "TEST";
-        BamFile = null;
+        SampleIds = Collections.emptyList();
+        BamFiles = Collections.emptyList();
         RefGenomeFile = "";
         OutputDir = null;
         OutputId = null;
@@ -283,7 +302,6 @@ public class PrepConfig
         LogReadIds = Lists.newArrayList();
         BamToolPath = null;
         Threads = 1;
-        MaxPartitionReads = 0;
         TrackRemotes = true;
         UseCacheBam = false;
         PerfDebug = false;
@@ -295,7 +313,8 @@ public class PrepConfig
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
-        configBuilder.addPath(BAM_FILE, true, "BAM file location");
+        configBuilder.addPath(BAM_FILE, false, "BAM file location");
+        configBuilder.addPaths(BAM_FILES, false, "BAM file(s) location");
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(KNOWN_FUSION_BED, false, "Known fusion hotspot BED file");
         configBuilder.addPath(BLACKLIST_BED, false, "Blacklist regions BED file");
@@ -307,7 +326,6 @@ public class PrepConfig
         configBuilder.addFlag(UNPAIRED_READS, "Unpaired reads ignores non-expect junction support");
         addSpecificChromosomesRegionsConfig(configBuilder);
         configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);
-        configBuilder.addInteger(MAX_PARTITION_READS, "Limit to stop processing reads in partition, for debug", 0);
         configBuilder.addFlag(CAPTURE_DEPTH, "Capture depth for junctions");
         configBuilder.addFlag(NO_CACHE_BAM, "Write a BAM to cache candidate reads");
         configBuilder.addFlag(TRACK_REMOTES, "Track support for remote junctions");

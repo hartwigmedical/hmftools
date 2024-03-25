@@ -5,12 +5,14 @@ import static com.hartwig.hmftools.esvee.common.CommonUtils.createBamSlicer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.BamSlicer;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
-import com.hartwig.hmftools.esvee.prep.types.PartitionTask;
 
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -24,12 +26,14 @@ public class PartitionThread extends Thread
     private final CombinedStats mCombinedStats;
     private final ExistingJunctionCache mExistingJunctionCache;
 
-    private final SamReader mSamReader;
+    private final List<SamReader> mSamReaders;
     private final BamSlicer mBamSlicer;
-    private final Queue<PartitionTask> mPartitions;
+    private final Queue<ChrBaseRegion> mPartitions;
+
+    private final int mPartitionCount;
 
     public PartitionThread(
-            final String chromosome, final PrepConfig config, final Queue<PartitionTask> partitions,
+            final String chromosome, final PrepConfig config, final Queue<ChrBaseRegion> partitions,
             final SpanningReadCache spanningReadCache, final ExistingJunctionCache existingJunctionCache,
             final ResultsWriter writer, final CombinedStats combinedStats)
     {
@@ -41,10 +45,16 @@ public class PartitionThread extends Thread
         mCombinedStats = combinedStats;
         mPartitions = partitions;
 
-        mSamReader = mConfig.BamFile != null ?
-                SamReaderFactory.makeDefault()
-                        .validationStringency(mConfig.BamStringency)
-                        .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
+        mPartitionCount = partitions.size();
+
+        mSamReaders = Lists.newArrayList();
+
+        for(String bamFile : mConfig.BamFiles)
+        {
+            mSamReaders.add(
+                    SamReaderFactory.makeDefault().validationStringency(mConfig.BamStringency)
+                            .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(bamFile)));
+        }
 
         mBamSlicer = createBamSlicer();
 
@@ -57,19 +67,20 @@ public class PartitionThread extends Thread
         {
             try
             {
-                PartitionTask partition = mPartitions.remove();
+                ChrBaseRegion partition = mPartitions.remove();
+
+                int processedCount = mPartitionCount - mPartitions.size();
 
                 PartitionSlicer slicer = new PartitionSlicer(
-                        partition.TaskId, partition.Region, mConfig, mSamReader, mBamSlicer,
+                        0, partition, mConfig, mSamReaders, mBamSlicer,
                         mSpanningReadCache, mExistingJunctionCache, mWriter, mCombinedStats);
 
-                if(partition.TaskId > 0 && (partition.TaskId % 10) == 0)
-                {
-                    SV_LOGGER.debug("chromosome({}) processing partition({}), remaining({})",
-                            mChromosome, partition.TaskId, mPartitions.size());
-                }
-
                 slicer.run();
+
+                if((processedCount % 10) == 0)
+                {
+                    SV_LOGGER.info("chromosome({}) processed {} partitions", mChromosome, mPartitions.size());
+                }
             }
             catch(NoSuchElementException e)
             {
@@ -86,7 +97,10 @@ public class PartitionThread extends Thread
 
         try
         {
-            mSamReader.close();
+            for(SamReader reader : mSamReaders)
+            {
+                reader.close();
+            }
         }
         catch(IOException e)
         {

@@ -206,7 +206,8 @@ public class FragmentSizeDistribution
             mProcessedReads = 0;
             mMaxReadLength = 0;
 
-            mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
+            // only run on the first sample if more than 1 are loaded
+            mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.bamFile()));
             mBamSlicer = new BamSlicer(FRAG_LENGTH_DIST_MIN_QUAL, false, false, false);
 
             mLengthFrequencies = Lists.newArrayList();

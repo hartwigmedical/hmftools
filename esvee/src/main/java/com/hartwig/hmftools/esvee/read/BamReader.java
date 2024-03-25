@@ -3,8 +3,8 @@ package com.hartwig.hmftools.esvee.read;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.esvee.AssemblyConstants.BAM_HEADER_SAMPLE_ID_TAG;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.createBamSlicer;
+import static com.hartwig.hmftools.esvee.common.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
 
 import java.io.File;
 import java.io.IOException;

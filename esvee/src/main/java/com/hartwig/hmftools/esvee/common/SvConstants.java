@@ -5,6 +5,8 @@ public final class SvConstants
     public static final String ESVEE_FILE_ID = "esvee";
     public static final String PREP_FILE_ID = "esvee.prep";
 
+    public static final String BAM_HEADER_SAMPLE_ID_TAG = "sampleId";
+
     // commonly used thresholds
     public static final int MIN_VARIANT_LENGTH = 32;
     public static final int DISCORDANT_FRAGMENT_LENGTH = 1000; // default, otherwise set from BAM fragment sampling

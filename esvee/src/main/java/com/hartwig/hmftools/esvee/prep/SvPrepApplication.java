@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsSt
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.APP_NAME;
 
+import java.util.stream.Collectors;
+
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
@@ -30,7 +32,8 @@ public class SvPrepApplication
         if(!mConfig.isValid())
             System.exit(1);
 
-        SV_LOGGER.info("running Esvee Prep for sample({})", mConfig.SampleId);
+        SV_LOGGER.info("running Esvee Prep for {}",
+                mConfig.SampleIds.size() == 1 ? mConfig.sampleId() : mConfig.SampleIds.stream().collect(Collectors.joining(",")));
 
         long startTimeMs = System.currentTimeMillis();
 

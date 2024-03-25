@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.prep;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.BAM_RECORD_SAMPLE_ID_TAG;
 
 import java.util.List;
 import java.util.Map;
@@ -36,8 +37,9 @@ public class PartitionSlicer
     private final ReadFilters mReadFilters;
     private final ChrBaseRegion mFilterRegion;
 
-    private final SamReader mSamReader;
+    private final List<SamReader> mSamReaders;
     private final BamSlicer mBamSlicer;
+    private String mCurrentSampleId;
 
     private final JunctionTracker mJunctionTracker;
 
@@ -55,7 +57,7 @@ public class PartitionSlicer
     }
 
     public PartitionSlicer(
-            final int id, final ChrBaseRegion region, final PrepConfig config, final SamReader samReader, final BamSlicer bamSlicer,
+            final int id, final ChrBaseRegion region, final PrepConfig config, final List<SamReader> samReaders, final BamSlicer bamSlicer,
             final SpanningReadCache spanningReadCache, final ExistingJunctionCache existingJunctionCache, final ResultsWriter writer,
             final CombinedStats combinedStats)
     {
@@ -71,7 +73,7 @@ public class PartitionSlicer
 
         mJunctionTracker.addExistingJunctions(existingJunctionCache.getRegionJunctions(mRegion));
 
-        mSamReader = samReader;
+        mSamReaders = samReaders;
         mBamSlicer = bamSlicer;
 
         ChrBaseRegion excludedRegion = getPolyGRegion(mConfig.RefGenVersion);
@@ -96,7 +98,12 @@ public class PartitionSlicer
         perfCounterStart(PerfCounters.Total);
         perfCounterStart(PerfCounters.Slice);
 
-        mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
+        for(int i = 0; i < mConfig.SampleIds.size(); ++i)
+        {
+            SamReader samReader = mSamReaders.get(i);
+            mCurrentSampleId = mConfig.SampleIds.get(i);
+            mBamSlicer.slice(samReader, mRegion, this::processSamRecord);
+        }
 
         perfCounterStop(PerfCounters.Slice);
 
@@ -141,20 +148,12 @@ public class PartitionSlicer
                 return;
         }
 
-        if(mConfig.MaxPartitionReads > 0 && mStats.TotalReads >= mConfig.MaxPartitionReads)
+        if(mLogReadIds && mConfig.LogReadIds.contains(record.getReadName())) // debugging only
         {
-            SV_LOGGER.warn("region({}) readCount({}) exceeds maximum, stopping slice", mRegion, mStats.TotalReads);
-            mBamSlicer.haltProcessing();
-            return;
+            SV_LOGGER.debug("specific readId({}) unmapped({})", record.getReadName(), record.getReadUnmappedFlag());
         }
 
-        if(mLogReadIds) // debugging only
-        {
-            if(mConfig.LogReadIds.contains(record.getReadName()))
-            {
-                SV_LOGGER.debug("specific readId({}) unmapped({})", record.getReadName(), record.getReadUnmappedFlag());
-            }
-        }
+        record.setAttribute(BAM_RECORD_SAMPLE_ID_TAG, mCurrentSampleId);
 
         int filters = mReadFilters.checkFilters(record);
 
