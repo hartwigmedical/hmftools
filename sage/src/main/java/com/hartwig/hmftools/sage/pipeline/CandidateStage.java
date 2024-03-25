@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.sage.pipeline.ChromosomePartition.getPanelReg
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -19,6 +20,8 @@ import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.CandidateEvidence;
 import com.hartwig.hmftools.sage.common.RefSequence;
 
+import org.jetbrains.annotations.Nullable;
+
 public class CandidateStage
 {
     private final SageCallConfig mConfig;
@@ -31,7 +34,7 @@ public class CandidateStage
     public CandidateStage(
             final SageCallConfig config, final List<VariantHotspot> hotspots,
             final List<BaseRegion> panelRegions, final List<BaseRegion> highConfidenceRegions, final Coverage coverage,
-            final SamSlicerFactory samSlicerFactory)
+            final SamSlicerFactory samSlicerFactory, @Nullable final JitterAnalyser jitterAnalyser)
     {
         mConfig = config;
         mHotspots = hotspots;
@@ -39,7 +42,7 @@ public class CandidateStage
         mHighConfidenceRegions = highConfidenceRegions;
         mSamSlicerFactory = samSlicerFactory;
 
-        mCandidateEvidence = new CandidateEvidence(config.Common, hotspots, panelRegions, coverage);
+        mCandidateEvidence = new CandidateEvidence(config.Common, hotspots, panelRegions, coverage, jitterAnalyser);
     }
 
     public int totalReadsProcessed() { return mCandidateEvidence.totalReadsProcessed(); }

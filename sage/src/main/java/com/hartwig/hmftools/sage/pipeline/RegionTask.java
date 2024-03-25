@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.BaseRegion;
@@ -33,6 +34,8 @@ import com.hartwig.hmftools.sage.filter.VariantFilters;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.vis.VariantVis;
+
+import org.jetbrains.annotations.Nullable;
 
 public class RegionTask
 {
@@ -62,7 +65,8 @@ public class RegionTask
             final RefGenomeInterface refGenome, final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions,
             final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
             final Map<String, BqrRecordMap> qualityRecalibrationMap, final PhaseSetCounter phaseSetCounter,
-            final Coverage coverage, final SamSlicerFactory samSlicerFactory, final FragmentLengths fragmentLengths)
+            final Coverage coverage, final SamSlicerFactory samSlicerFactory, final FragmentLengths fragmentLengths,
+            @Nullable final JitterAnalyser jitterAnalyser)
     {
         mTaskId = taskId;
         mRegion = region;
@@ -71,7 +75,7 @@ public class RegionTask
         mRefGenome = refGenome;
         mFragmentLengths = fragmentLengths;
 
-        mCandidateState = new CandidateStage(config, hotspots, panelRegions, highConfidenceRegions, coverage, samSlicerFactory);
+        mCandidateState = new CandidateStage(config, hotspots, panelRegions, highConfidenceRegions, coverage, samSlicerFactory, jitterAnalyser);
         mEvidenceStage = new EvidenceStage(config.Common, refGenome, qualityRecalibrationMap, phaseSetCounter, samSlicerFactory);
 
         mVariantDeduper = new VariantDeduper(transcripts, mRefGenome, mConfig.Common.getReadLength());
@@ -83,6 +87,17 @@ public class RegionTask
         mPerfCounters.add(new PerformanceCounter("Candidates"));
         mPerfCounters.add(new PerformanceCounter("Evidence"));
         mPerfCounters.add(new PerformanceCounter("Variants"));
+    }
+
+    public RegionTask(
+            final int taskId, final ChrBaseRegion region, final RegionResults results, final SageCallConfig config,
+            final RefGenomeInterface refGenome, final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions,
+            final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
+            final Map<String, BqrRecordMap> qualityRecalibrationMap, final PhaseSetCounter phaseSetCounter,
+            final Coverage coverage, final SamSlicerFactory samSlicerFactory, final FragmentLengths fragmentLengths)
+    {
+        this(taskId, region, results, config, refGenome, hotspots, panelRegions, transcripts, highConfidenceRegions,
+                qualityRecalibrationMap, phaseSetCounter, coverage, samSlicerFactory, fragmentLengths, null);
     }
 
     public final List<SageVariant> getVariants() { return mSageVariants; }

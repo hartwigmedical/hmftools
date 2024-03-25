@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.sage.coverage.Coverage;
@@ -83,6 +84,12 @@ public class SageApplication implements AutoCloseable
 
         final Map<String, BqrRecordMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
 
+        JitterAnalyser jitterAnalyser = null;
+        if(mConfig.JitterAnalyser != null)
+        {
+            jitterAnalyser = new JitterAnalyser(mConfig.toJitterAnalyserConfig(), SG_LOGGER);
+        }
+
         final SAMSequenceDictionary dictionary = dictionary();
         for(final SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
         {
@@ -92,13 +99,28 @@ public class SageApplication implements AutoCloseable
                 continue;
 
             final ChromosomePipeline pipeline = new ChromosomePipeline(
-                    chromosome, mConfig, mRefData, recalibrationMap, coverage, mPhaseSetCounter, mVcfWriter, mFragmentLengths);
+                    chromosome, mConfig, mRefData, recalibrationMap, coverage, mPhaseSetCounter, mVcfWriter, mFragmentLengths,
+                    jitterAnalyser);
 
             pipeline.process();
         }
 
         coverage.writeFiles(mConfig.Common.OutputFile);
         mFragmentLengths.close();
+
+        if(jitterAnalyser != null)
+        {
+            try
+            {
+                SG_LOGGER.info("analysing microsatellite jitter");
+                jitterAnalyser.writeAnalysisOutput();
+            }
+            catch(Exception e)
+            {
+                SG_LOGGER.error("failed to write output of jitter analysis: {}", e.toString());
+                System.exit(1);
+            }
+        }
 
         SG_LOGGER.info("Sage complete, mins({})", runTimeMinsStr(startTimeMs));
     }

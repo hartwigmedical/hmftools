@@ -11,6 +11,7 @@ import java.util.Queue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.BaseRegion;
@@ -23,6 +24,8 @@ import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -48,13 +51,15 @@ public class RegionThread extends Thread
 
     private final SamSlicerFactory mSamSlicerFactory;
     private final FragmentLengths mFragmentLengths;
+    private final JitterAnalyser mJitterAnalyser;
 
     public RegionThread(
             final String chromosome, final SageCallConfig config,
             final Map<String, BqrRecordMap> qualityRecalibrationMap, final Coverage coverage,
             final PhaseSetCounter phaseSetCounter, final List<BaseRegion> panelRegions, final List<VariantHotspot> hotspots,
             final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
-            final Queue<PartitionTask> partitions, final RegionResults regionResults, final FragmentLengths fragmentLengths)
+            final Queue<PartitionTask> partitions, final RegionResults regionResults, final FragmentLengths fragmentLengths,
+            @Nullable final JitterAnalyser jitterAnalyser)
     {
         mChromosome = chromosome;
         mConfig = config;
@@ -65,6 +70,7 @@ public class RegionThread extends Thread
         mCoverage = coverage;
         mPhaseSetCounter = phaseSetCounter;
         mFragmentLengths = fragmentLengths;
+        mJitterAnalyser = jitterAnalyser;
 
         mPanelRegions = panelRegions;
         mHighConfidenceRegions = highConfidenceRegions;
@@ -134,6 +140,6 @@ public class RegionThread extends Thread
 
         return new RegionTask(
                 partitionTask.TaskId, region, mRegionResults, mConfig, mRefGenome, regionHotspots, regionPanel, regionsTranscripts,
-                regionHighConfidence, mQualityRecalibrationMap, mPhaseSetCounter, mCoverage, mSamSlicerFactory, mFragmentLengths);
+                regionHighConfidence, mQualityRecalibrationMap, mPhaseSetCounter, mCoverage, mSamSlicerFactory, mFragmentLengths, mJitterAnalyser);
     }
 }

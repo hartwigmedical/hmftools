@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -16,6 +17,8 @@ import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.coverage.GeneCoverage;
 import com.hartwig.hmftools.sage.common.RefSequence;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.samtools.SAMRecord;
 
 public class CandidateEvidence
@@ -24,16 +27,19 @@ public class CandidateEvidence
     private final List<VariantHotspot> mHotspots;
     private final List<BaseRegion> mPanel;
     private final Coverage mCoverage;
+    private final JitterAnalyser mJitterAnalyser;
 
     private int mTotalReadsProcessed;
 
     public CandidateEvidence(
-            final SageConfig config, final List<VariantHotspot> hotspots, final List<BaseRegion> panel, final Coverage coverage)
+            final SageConfig config, final List<VariantHotspot> hotspots, final List<BaseRegion> panel, final Coverage coverage,
+            @Nullable final JitterAnalyser jitterAnalyser)
     {
         mConfig = config;
         mPanel = panel;
         mHotspots = hotspots;
         mCoverage = coverage;
+        mJitterAnalyser = jitterAnalyser;
 
         mTotalReadsProcessed = 0;
     }
@@ -49,6 +55,11 @@ public class CandidateEvidence
 
         final Consumer<SAMRecord> consumer = record ->
         {
+            if(mJitterAnalyser != null)
+            {
+                mJitterAnalyser.processRead(record);
+            }
+
             refContextConsumer.processRead(record);
 
             if(!geneCoverage.isEmpty())

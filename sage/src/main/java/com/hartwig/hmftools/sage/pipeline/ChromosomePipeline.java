@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -32,6 +33,8 @@ import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -55,11 +58,13 @@ public class ChromosomePipeline implements AutoCloseable
     private final List<VariantHotspot> mHotspots;
     private final List<TranscriptData> mTranscripts;
     private final List<BaseRegion> mHighConfidenceRegions;
+    private final JitterAnalyser mJitterAnalyser;
 
     public ChromosomePipeline(
             final String chromosome, final SageCallConfig config,
             final ReferenceData refData, final Map<String, BqrRecordMap> qualityRecalibrationMap,
-            final Coverage coverage, final PhaseSetCounter phaseSetCounter, final VcfWriter vcfWriter, final FragmentLengths fragmentLengths)
+            final Coverage coverage, final PhaseSetCounter phaseSetCounter, final VcfWriter vcfWriter, final FragmentLengths fragmentLengths,
+            @Nullable final JitterAnalyser jitterAnalyser)
     {
         mChromosome = chromosome;
         mConfig = config;
@@ -70,6 +75,8 @@ public class ChromosomePipeline implements AutoCloseable
 
         mVcfWriter = vcfWriter;
         mFragmentLengths = fragmentLengths;
+
+        mJitterAnalyser = jitterAnalyser;
 
         final Chromosome chr = HumanChromosome.contains(chromosome)
                 ? HumanChromosome.fromString(chromosome) : MitochondrialChromosome.fromString(chromosome);
@@ -118,7 +125,8 @@ public class ChromosomePipeline implements AutoCloseable
         {
             workers.add(new RegionThread(
                     mChromosome, mConfig, mQualityRecalibrationMap, mCoverage, mPhaseSetCounter,
-                    mPanelRegions, mHotspots, mTranscripts, mHighConfidenceRegions, mPartitions, mRegionResults, mFragmentLengths));
+                    mPanelRegions, mHotspots, mTranscripts, mHighConfidenceRegions, mPartitions, mRegionResults, mFragmentLengths,
+                    mJitterAnalyser));
         }
 
         if(!runThreadTasks(workers))

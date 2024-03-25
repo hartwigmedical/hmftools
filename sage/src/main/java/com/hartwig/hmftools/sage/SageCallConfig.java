@@ -9,12 +9,14 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.sage.SageCommon.SAMPLE_DELIM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConfig.registerCommonConfig;
+import static com.hartwig.hmftools.sage.SageJitterAnalyserConfig.MICROSATELLITE_OUTPUT_DIR;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.util.Strings;
@@ -30,6 +32,7 @@ public class SageCallConfig
     public final String PanelBed;
     public final String Hotspots;
     public final boolean PanelOnly;
+    public final SageJitterAnalyserConfig JitterAnalyser;
 
     private final String mResourceDir;
 
@@ -65,6 +68,8 @@ public class SageCallConfig
         Hotspots = getReferenceFile(configBuilder, HOTSPOTS);
 
         PanelOnly = configBuilder.hasFlag(PANEL_ONLY);
+
+        JitterAnalyser = configBuilder.hasValue(MICROSATELLITE_OUTPUT_DIR) ? new SageJitterAnalyserConfig(configBuilder) : null;
     }
 
     public boolean isValid()
@@ -121,6 +126,8 @@ public class SageCallConfig
 
         registerCommonConfig(configBuilder);
         addEnsemblDir(configBuilder);
+
+        SageJitterAnalyserConfig.registerConfig(configBuilder);
     }
 
     public SageCallConfig()
@@ -133,10 +140,19 @@ public class SageCallConfig
         PanelBed = "panel";
         Hotspots = "hotspots";
         PanelOnly = false;
+        JitterAnalyser = null;
         mResourceDir = "";
     }
 
+    public JitterAnalyserConfig toJitterAnalyserConfig()
+    {
+        if(JitterAnalyser == null)
+        {
+            return null;
+        }
 
-
-
+        // TODO: What is the SampleId?
+        return new JitterAnalyserConfig(TumorIds.get(0), Common.RefGenVersion, Common.RefGenomeFile, JitterAnalyser.RefGenomeMicrosatelliteFile,
+                JitterAnalyser.OutputDir, JitterAnalyser.MinMapQuality, JitterAnalyser.MaxSitesPerType, Common.Threads);
+    }
 }
