@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.common;
 public final class SvConstants
 {
     public static final String ESVEE_FILE_ID = "esvee";
+    public static final String PREP_FILE_ID = "esvee.prep";
 
     // commonly used thresholds
     public static final int MIN_VARIANT_LENGTH = 32;

@@ -32,12 +32,14 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_GENOME_IMAGE_EXTENSION;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.SV_PREP_JUNCTIONS_FILE_ID;
 import static com.hartwig.hmftools.esvee.alignment.BwaAligner.loadAlignerLibrary;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formOutputFile;
+import static com.hartwig.hmftools.esvee.common.SvConstants.ESVEE_FILE_ID;
+import static com.hartwig.hmftools.esvee.common.SvConstants.PREP_FILE_ID;
 import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLY_BAM;
 import static com.hartwig.hmftools.esvee.output.WriteType.READS;
 import static com.hartwig.hmftools.esvee.output.WriteType.VCF;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTIONS_FILE_ID;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -162,7 +164,7 @@ public class AssemblyConfig
 
             for(String sampleId : combinedSampleIds)
             {
-                String junctionFile = bamPath + sampleId + SV_PREP_JUNCTIONS_FILE_ID;
+                String junctionFile = bamPath + sampleId + "." + PREP_FILE_ID + "." + PREP_JUNCTIONS_FILE_ID;
 
                 if(Files.exists(Paths.get(junctionFile)))
                     JunctionFiles.add(junctionFile);
@@ -278,7 +280,7 @@ public class AssemblyConfig
 
     public String outputFilename(final WriteType writeType)
     {
-        return formOutputFile(OutputDir, TumorIds.get(0), writeType.fileId(), OutputId);
+        return formOutputFile(OutputDir, TumorIds.get(0), ESVEE_FILE_ID, writeType.fileId(), OutputId);
     }
 
     public void logReadId(final SAMRecord record, final String caller)

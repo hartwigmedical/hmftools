@@ -7,7 +7,6 @@ public final class AssemblyConstants
     public static final String APP_NAME = "Esvee";
 
     // file related
-    public static final String SV_PREP_JUNCTIONS_FILE_ID = ".sv_prep.junctions.tsv";
     public static final String REF_GENOME_IMAGE_EXTENSION = ".img";
 
     public static final String BAM_HEADER_SAMPLE_ID_TAG = "sampleId";

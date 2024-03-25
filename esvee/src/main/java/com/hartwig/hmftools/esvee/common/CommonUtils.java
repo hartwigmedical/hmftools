@@ -25,16 +25,16 @@ public final class CommonUtils
     }
 
     public static String formOutputFile(
-            final String outputDir, final String sampleId, final String fileTypeExtension, @Nullable final String outputId)
+            final String outputDir, final String sampleId, final String appStage, final String fileType, @Nullable final String outputId)
     {
         String filename = outputDir;
 
-        filename += sampleId + "." + ESVEE_FILE_ID;
+        filename += sampleId + "." + appStage;
 
         if(outputId != null)
             filename += "." + outputId;
 
-        filename += "." + fileTypeExtension;
+        filename += "." + fileType;
 
         return filename;
     }
@@ -65,9 +65,9 @@ public final class CommonUtils
         if(success && toolName == BamToolName.SAMTOOLS)
         {
             success = BamOperations.indexBam(toolName, bamToolPath, sortedBam, threads);
-
-            if(success)
-                deleteInterimFile(unsortedBam);
         }
+
+        if(success)
+            deleteInterimFile(unsortedBam);
     }
 }

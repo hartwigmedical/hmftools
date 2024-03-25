@@ -1,9 +1,13 @@
 package com.hartwig.hmftools.esvee.prep;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
+
 import com.hartwig.hmftools.common.sv.LineElements;
 
 public final class PrepConstants
 {
+    public static final String PREP_JUNCTIONS_FILE_ID = "junctions" + TSV_EXTENSION;
+
     // region processing
     public static final int DEFAULT_CHR_PARTITION_SIZE = 1000000;
 

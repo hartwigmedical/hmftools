@@ -26,6 +26,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formOutputFile;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.PREP_FILE_ID;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_CHR_PARTITION_SIZE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_BASES;
@@ -35,6 +36,7 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_HIGH_QUAL_PERC;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SUPPORTING_READ_DISTANCE;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTIONS_FILE_ID;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.BAM;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.FRAGMENT_LENGTH_DIST;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.READS;
@@ -218,11 +220,11 @@ public class PrepConfig
                 break;
 
             case UNSORTED_BAM:
-                fileExtension = "prep.unsorted.bam";
+                fileExtension = "unsorted.bam";
                 break;
 
             case BAM:
-                fileExtension = "prep.bam";
+                fileExtension = "bam";
                 break;
 
             case CACHE_BAM:
@@ -230,7 +232,7 @@ public class PrepConfig
                 break;
 
             case JUNCTIONS:
-                fileExtension = "junctions" + TSV_EXTENSION;
+                fileExtension = PREP_JUNCTIONS_FILE_ID;
                 break;
 
             case FRAGMENT_LENGTH_DIST:
@@ -238,7 +240,7 @@ public class PrepConfig
                 break;
         }
 
-        return formOutputFile(OutputDir, SampleId, fileExtension, OutputId);
+        return formOutputFile(OutputDir, SampleId, PREP_FILE_ID, fileExtension, OutputId);
     }
 
     public boolean writeReads() { return WriteTypes.contains(BAM) || WriteTypes.contains(READS); }
