@@ -3,12 +3,12 @@ package com.hartwig.hmftools.markdups;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.BamToolName.BAMTOOL_PATH;
+import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
@@ -25,6 +25,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
+import static com.hartwig.hmftools.markdups.MarkDupsJitterAnalyserConfig.MICROSATELLITE_OUTPUT_DIR;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_PARTITION_SIZE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
@@ -40,12 +41,13 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.BamToolName;
+import com.hartwig.hmftools.common.bam.BamUtils;
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.region.SpecificRegions;
-import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.markdups.common.FilterReadsType;
@@ -101,6 +103,8 @@ public class MarkDupsConfig
     public final boolean LogFinalCache;
     public final int WriteReadBaseLength;
 
+    public final MarkDupsJitterAnalyserConfig JitterAnalyser;
+
     private boolean mIsValid;
     private int mReadLength;
 
@@ -108,9 +112,9 @@ public class MarkDupsConfig
     public static final String APP_NAME = "MarkDups";
 
     // config strings
-    private  static final String INPUT_BAM = "input_bam";
-    private  static final String BAM_FILE = "bam_file";
-    private  static final String OUTPUT_BAM = "output_bam";
+    private static final String INPUT_BAM = "input_bam";
+    private static final String BAM_FILE = "bam_file";
+    private static final String OUTPUT_BAM = "output_bam";
     private static final String PARTITION_SIZE = "partition_size";
     private static final String BUFFER_SIZE = "buffer_size";
     private static final String READ_OUTPUTS = "read_output";
@@ -170,7 +174,7 @@ public class MarkDupsConfig
 
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
-        if(SampleId == null|| OutputDir == null || RefGenomeFile == null)
+        if(SampleId == null || OutputDir == null || RefGenomeFile == null)
         {
             MD_LOGGER.error("missing config: sample({}) refGenome({}) outputDir({})",
                     SampleId != null, RefGenomeFile != null, OutputDir != null);
@@ -237,6 +241,8 @@ public class MarkDupsConfig
         DropDuplicates = configBuilder.hasFlag(DROP_DUPLICATES);
         WriteReadBaseLength = configBuilder.getInteger(WRITE_READ_BASE_LENGTH);
 
+        JitterAnalyser = configBuilder.hasValue(MICROSATELLITE_OUTPUT_DIR) ? new MarkDupsJitterAnalyserConfig(configBuilder) : null;
+
         if(RunChecks)
         {
             MD_LOGGER.info("running debug options: read-checks({})", RunChecks);
@@ -266,7 +272,7 @@ public class MarkDupsConfig
         return filename;
     }
 
-    public static void addConfig(final ConfigBuilder configBuilder)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addPath(BAM_FILE, false, "BAM filename, deprecated, use 'input_bam' instead");
@@ -306,10 +312,13 @@ public class MarkDupsConfig
         configBuilder.addConfigItem(SPECIFIC_REGION_FILTER_TYPE, "Used with specific regions, to filter mates or supps");
 
         configBuilder.addInteger(WRITE_READ_BASE_LENGTH, "Number of read bases to write with read data", 0);
+
+        MarkDupsJitterAnalyserConfig.registerConfig(configBuilder);
     }
 
     public MarkDupsConfig(
-            int partitionSize, int bufferSize, final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus)
+            int partitionSize, int bufferSize, final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi,
+            boolean formConsensus)
     {
         mIsValid = true;
         SampleId = "";
@@ -350,5 +359,18 @@ public class MarkDupsConfig
         LogFinalCache = true;
         DropDuplicates = false;
         WriteReadBaseLength = 0;
+
+        JitterAnalyser = null;
+    }
+
+    public JitterAnalyserConfig toJitterAnalyserConfig()
+    {
+        if(JitterAnalyser == null)
+        {
+            return null;
+        }
+
+        return new JitterAnalyserConfig(SampleId, RefGenVersion, RefGenomeFile, JitterAnalyser.RefGenomeMicrosatelliteFile,
+                JitterAnalyser.OutputDir, JitterAnalyser.MinMapQuality, JitterAnalyser.MaxSitesPerType, Threads);
     }
 }

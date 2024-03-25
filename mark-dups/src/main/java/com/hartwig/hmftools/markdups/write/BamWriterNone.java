@@ -1,14 +1,18 @@
 package com.hartwig.hmftools.markdups.write;
 
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
 public class BamWriterNone extends BamWriter
 {
-    public BamWriterNone(final String filename, final MarkDupsConfig config, final ReadDataWriter readDataWriter)
+    public BamWriterNone(final String filename, final MarkDupsConfig config, final ReadDataWriter readDataWriter,
+            @Nullable final JitterAnalyser jitterAnalyser)
     {
-        super(filename, config, readDataWriter, null);
+        super(filename, config, readDataWriter, null, jitterAnalyser);
     }
 
     public boolean isSorted() { return false; }

@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.BamOperations;
 import com.hartwig.hmftools.common.bam.BamToolName;
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
 
 import org.jetbrains.annotations.Nullable;
@@ -33,13 +34,16 @@ public class FileWriterCache
     private final List<BamWriter> mBamWriters;
     private final BamWriter mSharedUnsortedWriter;
 
+    private final JitterAnalyser mJitterAnalyser;
+
     private static final String BAM_FILE_ID = "mark_dups";
     private static final String SORTED_ID = "sorted";
     private static final String UNSORTED_ID = "unsorted";
-    
-    public FileWriterCache(final MarkDupsConfig config)
+
+    public FileWriterCache(final MarkDupsConfig config, @Nullable final JitterAnalyser jitterAnalyser)
     {
         mConfig = config;
+        mJitterAnalyser = jitterAnalyser;
 
         mReadDataWriter = new ReadDataWriter(mConfig);
 
@@ -48,7 +52,7 @@ public class FileWriterCache
         // create a shared BAM writer if either no multi-threading or using the sorted BAM writer
         if(!mConfig.WriteBam)
         {
-            BamWriter bamWriter = new BamWriterNone("none", mConfig, mReadDataWriter);
+            BamWriter bamWriter = new BamWriterNone("none", mConfig, mReadDataWriter, jitterAnalyser);
             mSharedUnsortedWriter = bamWriter;
             mBamWriters.add(bamWriter);
             return;
@@ -112,11 +116,12 @@ public class FileWriterCache
 
         if(isSynchronous)
         {
-            bamWriter = new BamWriterSync(filename, mConfig, mReadDataWriter, samFileWriter);
+            bamWriter = new BamWriterSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser);
         }
         else
         {
-            bamWriter = new BamWriterNoSync(filename, mConfig, mReadDataWriter, samFileWriter, isSorted, mSharedUnsortedWriter);
+            bamWriter =
+                    new BamWriterNoSync(filename, mConfig, mReadDataWriter, samFileWriter, mJitterAnalyser, isSorted, mSharedUnsortedWriter);
         }
 
         mBamWriters.add(bamWriter);
@@ -252,10 +257,7 @@ public class FileWriterCache
         if(!mConfig.KeepInterimBams)
             deleteInterimBams(interimBams);
 
-        if(!indexFinalBam(finalBamFilename))
-            return false;
-
-        return true;
+        return indexFinalBam(finalBamFilename);
     }
 
     private boolean mergeBams(final String finalBamFilename, final List<String> sortedThreadBams)
@@ -311,7 +313,7 @@ public class FileWriterCache
             {
                 MD_LOGGER.error("invalid bam filename({})", mBamfile);
                 mSuccess = false;
-                return (long)0;
+                return (long) 0;
             }
 
             // MD_LOGGER.debug("sorting unsorted bam({}) to sorted bam({})", mBamfile, mSortedBamfile);

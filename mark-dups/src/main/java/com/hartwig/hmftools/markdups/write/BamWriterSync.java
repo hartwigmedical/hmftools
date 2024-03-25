@@ -2,9 +2,11 @@ package com.hartwig.hmftools.markdups.write;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
-import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
 
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
@@ -14,9 +16,10 @@ public class BamWriterSync extends BamWriter
     private long mWriteCount;
 
     public BamWriterSync(
-            final String filename, final MarkDupsConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter)
+            final String filename, final MarkDupsConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter,
+            @Nullable final JitterAnalyser jitterAnalyser)
     {
-        super(filename, config, readDataWriter, samFileWriter);
+        super(filename, config, readDataWriter, samFileWriter, jitterAnalyser);
         mWriteCount = 0;
     }
 
