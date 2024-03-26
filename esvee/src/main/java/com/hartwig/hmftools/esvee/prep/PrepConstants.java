@@ -9,6 +9,13 @@ public final class PrepConstants
     public static final String PREP_JUNCTIONS_FILE_ID = "junctions" + TSV_EXTENSION;
     public static final String PREP_FRAG_LENGTH_FILE_ID = "fragment_lengths" + TSV_EXTENSION;
 
+    // common fields
+    public static final String FLD_JUNCTION_FRAGS = "JunctionFrags";
+    public static final String FLD_INDEL_JUNCTION = "Indel";
+    public static final String FLD_EXACT_SUPPORT_FRAGS = "ExactSupportFrags";
+    public static final String FLD_OTHER_SUPPORT_FRAGS = "OtherSupportFrags";
+    public static final String FLD_HOTSPOT_JUNCTION = "Hotspot";
+
     // region processing
     public static final int DEFAULT_CHR_PARTITION_SIZE = 1000000;
 

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.prep.types;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.prep.types.PrepRead.getSoftClippedBases;
 
 import java.util.List;
@@ -55,6 +56,8 @@ public class JunctionData
     }
 
     public boolean isExisting() { return mIsExisting; }
+    public boolean isForward() { return Orientation == POS_ORIENT; }
+    public boolean isReverse() { return Orientation == NEG_ORIENT; }
 
     public PrepRead topJunctionRead() { return mTopJunctionRead; }
 

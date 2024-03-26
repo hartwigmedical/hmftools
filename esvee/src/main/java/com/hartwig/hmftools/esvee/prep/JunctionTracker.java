@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipped;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -513,13 +514,30 @@ public class JunctionTracker
         if(indelCoords == null)
             return;
 
+        int impliedUnclippedStart = read.start();
+        int impliedUnclippedEnd = read.end();
+
+        if(indelCoords.isInsert())
+        {
+            impliedUnclippedStart -= indelCoords.Length;
+            impliedUnclippedEnd += indelCoords.Length;
+        }
+        else
+        {
+            impliedUnclippedStart += indelCoords.Length;
+            impliedUnclippedEnd -= indelCoords.Length;
+        }
+
+        int readBoundsMin = min(read.start(), impliedUnclippedStart);
+        int readBoundsMax = max(read.end(), impliedUnclippedEnd);
+
         // reads with a sufficiently long indel only need to cover a junction with any of their read bases, not the indel itself
         for(JunctionData junctionData : mJunctions)
         {
-            if(read.start() > junctionData.Position)
+            if(min(readBoundsMin, readBoundsMax) > junctionData.Position)
                 continue;
 
-            if(junctionData.Position > read.end())
+            if(junctionData.Position > max(readBoundsMin, readBoundsMax))
                 break;
 
             if(supportedJunctions.containsKey(junctionData))
@@ -534,9 +552,9 @@ public class JunctionTracker
                 if(indelPos != junctionData.Position)
                     continue;
 
-                if(se == SE_START && junctionData.Orientation != POS_ORIENT)
+                if(se == SE_START && junctionData.isReverse())
                     continue;
-                else if(se == SE_END && junctionData.Orientation != NEG_ORIENT)
+                else if(se == SE_END && junctionData.isForward())
                     continue;
 
                 // indel coords support a junction
@@ -694,7 +712,7 @@ public class JunctionTracker
             return;
         }
 
-        if(readType != ReadType.SUPPORT && !mConfig.UnpairedReads && hasDiscordantJunctionSupport(read, junctionData, mFilterConfig))
+        if(readType != ReadType.SUPPORT && !mConfig.UnpairedReads && hasOtherJunctionSupport(read, junctionData, mFilterConfig))
         {
             junctionData.addReadType(read, ReadType.SUPPORT);
             read.setReadType(ReadType.SUPPORT, true);
@@ -781,17 +799,48 @@ public class JunctionTracker
         return false;
     }
 
-    public static boolean hasDiscordantJunctionSupport(
+    public static boolean hasOtherJunctionSupport(
             final PrepRead read, final JunctionData junctionData, final ReadFilterConfig filterConfig)
     {
-        // correct orientation
+        // look for any read with the correct orientation, soft-clipped on the junction side and crossing the junction
         if(junctionData.Orientation != read.orientation())
             return false;
 
-        // correct side of the junction
+        int unclippedStart = read.unclippedStart();
+        int unclippedEnd = read.unclippedEnd();
+
+        // first check for a read crossing the junction
+        if(positionWithin(junctionData.Position, unclippedStart, unclippedEnd))
+        {
+            // correct side of the junction
+            int junctionDistance = 0;
+
+            if(junctionData.isForward())
+            {
+                junctionDistance = min(abs(unclippedEnd - junctionData.Position), abs(read.end() - junctionData.Position));
+            }
+            else
+            {
+                junctionDistance = min(abs(unclippedStart - junctionData.Position), abs(read.start() - junctionData.Position));
+            }
+
+            // any soft-clipping on the correct side if close to the junction
+            if(junctionDistance <= filterConfig.MinSupportingReadDistance)
+            {
+                if(junctionData.isForward() && read.isRightClipped())
+                    return true;
+
+                if(junctionData.isReverse() && read.isLeftClipped())
+                    return true;
+            }
+
+            return false;
+        }
+
+        // otherwise can be distant if discordant
         int junctionDistance = 0;
 
-        if(junctionData.Orientation == POS_ORIENT)
+        if(junctionData.isForward())
         {
             if(read.end() > junctionData.Position)
                 return false;
@@ -800,23 +849,12 @@ public class JunctionTracker
         }
         else
         {
-            if(read.start() < junctionData.Position || abs(read.end() - junctionData.Position) > filterConfig.maxSupportingFragmentDistance())
+            if(read.start() < junctionData.Position) //  || abs(read.end() - junctionData.Position) > filterConfig.maxSupportingFragmentDistance()
                 return false;
 
             junctionDistance = abs(read.start() - junctionData.Position);
         }
 
-        // any soft-clipping on the correct side if close to the junction
-        if(junctionDistance <= filterConfig.MinSupportingReadDistance)
-        {
-            if(junctionData.Orientation == POS_ORIENT && rightSoftClipped(read.record()))
-                return true;
-
-            if(junctionData.Orientation == NEG_ORIENT && leftSoftClipped(read.record()))
-                return true;
-        }
-
-        // otherwise can be distant if chimeric
         if(junctionDistance <= filterConfig.maxSupportingFragmentDistance())
             return isChimericRead(read.record(), filterConfig);
 
@@ -844,7 +882,7 @@ public class JunctionTracker
 
         int readLength = read.readBases().length();
 
-        if(junctionData.Orientation == POS_ORIENT)
+        if(junctionData.isForward())
         {
             if(!rightSoftClipped)
                 return false;

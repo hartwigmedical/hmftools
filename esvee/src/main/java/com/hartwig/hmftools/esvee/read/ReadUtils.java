@@ -1,24 +1,14 @@
 package com.hartwig.hmftools.esvee.read;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.common.CommonUtils;
 
 import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.SAMRecord;
 
 public final class ReadUtils
 {
-    public static String readToString(final SAMRecord read)
-    {
-        return format("id(%s) coords(%s:%d-%d) cigar(%s) mate(%s:%d) flags(%d)",
-                read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
-                read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
-    }
-
     public static boolean isDiscordantFragment(final Read read)
     {
         return CommonUtils.isDiscordantFragment(read.bamRecord(), DISCORDANT_FRAGMENT_LENGTH, read.supplementaryData());

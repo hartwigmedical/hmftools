@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.esvee.prep.TestUtils.READ_FILTERS;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.buildFlags;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.readIdStr;
-import static com.hartwig.hmftools.esvee.prep.JunctionTracker.hasDiscordantJunctionSupport;
+import static com.hartwig.hmftools.esvee.prep.JunctionTracker.hasOtherJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.JunctionTracker.hasExactJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.SOFT_CLIP_LENGTH;
@@ -196,19 +196,19 @@ public class ReadSupportTest
 
         // distant within range, correct orientation
         PrepRead supportRead = createRead(readIdStr(readId++), 500, false, true);
-        assertTrue(hasDiscordantJunctionSupport(supportRead, junctionData, READ_FILTERS));
+        assertTrue(hasOtherJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // too far
         supportRead = createRead(readIdStr(readId++), 1500, false, true);
-        assertFalse(hasDiscordantJunctionSupport(supportRead, junctionData, READ_FILTERS));
+        assertFalse(hasOtherJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // wrong orientation
         supportRead = createRead(readIdStr(readId++), 500, false, false);
-        assertFalse(hasDiscordantJunctionSupport(supportRead, junctionData, READ_FILTERS));
+        assertFalse(hasOtherJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // wrong side of junction
         supportRead = createRead(readIdStr(readId++), 220, false, true);
-        assertFalse(hasDiscordantJunctionSupport(supportRead, junctionData, READ_FILTERS));
+        assertFalse(hasOtherJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // other junction side
         junctionRead = PrepRead.from(TestUtils.createSamRecord(
@@ -217,19 +217,19 @@ public class ReadSupportTest
         junctionData = new JunctionData(1500, POS_ORIENT, junctionRead);
 
         supportRead = createRead(readIdStr(readId++), 1000, true, false);
-        assertTrue(hasDiscordantJunctionSupport(supportRead, junctionData, READ_FILTERS));
+        assertTrue(hasOtherJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // too far
         supportRead = createRead(readIdStr(readId++), 100, true, false);
-        assertFalse(hasDiscordantJunctionSupport(supportRead, junctionData, READ_FILTERS));
+        assertFalse(hasOtherJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // wrong orientation
         supportRead = createRead(readIdStr(readId++), 100, true, true);
-        assertFalse(hasDiscordantJunctionSupport(supportRead, junctionData, READ_FILTERS));
+        assertFalse(hasOtherJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // wrong side of junction
         supportRead = createRead(readIdStr(readId++), 1510, true, false);
-        assertFalse(hasDiscordantJunctionSupport(supportRead, junctionData, READ_FILTERS));
+        assertFalse(hasOtherJunctionSupport(supportRead, junctionData, READ_FILTERS));
     }
 
     @Test

@@ -77,17 +77,15 @@ For each site we also obtain the following reads (excluding reads with alignment
 - All reads with soft clipping that matches the orientation and position of the variant (+/-50 bases)
 - All reads within min[99.75%,1kb] range fragment length of the site on the correct side of the breakend with read facing the breakend and mate is unmapped, 
 interchromosomal, has the same orientation or has an insert size outside the percentile range [0.25,99.75]
-- All reads that overlap the breakend and contain an INDEL of > 15 bases
+- All reads that overlap the breakend and contain an INDEL of 5+ bases
 
 For the last 2 categories (discordant & indel containing reads), we filter if they have more than max(5,25% of soft clip length) soft clip bases with base qual < 25, since these frequently cause FP calls in GRIDSS. 
 
-When run in germline + tumor mode, the tumor is run first and reads in the germline that may support for a site in the tumor are also obtained as well as searching for additional sites.   
-
-Output a bam file which is subsequently name sorted  and used as input to ComputeSamTags step in GRIDSS
+A BAM is written for each input sample which contains the reads described above and their mates. This is then fed into the Esvee assembly routine described below.
 
 ## Reference Depth Annotation
 
-Sv Prep also has an additional feature to replace the depth annotation of GRIDSS (ie the annotation of REF and REFPAIR) with a faster implementation.  This can be run with the following command: 
+Esvee Prep also has an additional feature to replace the depth annotation of GRIDSS (ie the annotation of REF and REFPAIR) with a faster implementation.  This can be run with the following command: 
 
 ```
 java -cp esvee.jar com.hartwig.hmftools.esvee.depth.DepthAnnotator \

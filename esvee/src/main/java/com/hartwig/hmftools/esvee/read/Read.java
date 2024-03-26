@@ -117,7 +117,6 @@ public class Read
             if(i == mCigarElements.size() - 1)
             {
                 mAlignmentEnd = currentPosition - 1;
-
                 mUnclippedEnd = element.getOperator() == S ? mAlignmentEnd + element.getLength() : mAlignmentEnd;
             }
         }

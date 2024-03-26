@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.Math.abs;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.BamToolName.fromPath;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
@@ -50,6 +51,13 @@ public final class CommonUtils
         int fragmentSize = abs(read.getInferredInsertSize());
 
         return fragmentSize == 0 || fragmentSize >= fragmentLengthUpperBound;
+    }
+
+    public static String readToString(final SAMRecord read)
+    {
+        return format("id(%s) coords(%s:%d-%d) cigar(%s) mate(%s:%d) flags(%d)",
+                read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
+                read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
     }
 
     public static BamSlicer createBamSlicer()

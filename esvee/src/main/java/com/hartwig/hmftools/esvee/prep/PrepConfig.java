@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.prep;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.bam.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
@@ -165,7 +167,8 @@ public class PrepConfig
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        SV_LOGGER.info("output({}) {}", OutputDir, OutputId != null ? OutputId : "");
+        SV_LOGGER.info("output({}) {}",
+                OutputDir, OutputId != null ? format("outputId(%s)", OutputId) : "");
 
         Hotspots = new HotspotCache(configBuilder.getValue(KNOWN_FUSION_BED));
         Blacklist = new BlacklistLocations(configBuilder.getValue(BLACKLIST_BED));

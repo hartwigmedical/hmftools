@@ -115,7 +115,6 @@ public class JunctionProcessor
         if(mConfig.JunctionFiles.isEmpty())
             return;
 
-        String prepPath = pathFromFile(mConfig.JunctionFiles.get(0));
         String fragLengthFilename = mConfig.formPrepInputFilename(mConfig.sampleId(), PREP_FRAG_LENGTH_FILE_ID);
 
         FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
