@@ -47,6 +47,7 @@ public class BqrRegionReader implements CigarHandler
 
     private ChrBaseRegion mRegion;
     private IndexedBases mIndexedBases;
+    private final Set<Integer> mKnownVariants;
 
     private final Set<BqrKeyCounter> mQualityCounts; // summarised counts with position removed
     private final Map<BqrKey,Integer> mKeyCountsMap;
@@ -85,6 +86,7 @@ public class BqrRegionReader implements CigarHandler
 
         mBaseQualityData = null;
         mQualityCounts = Sets.newHashSet();
+        mKnownVariants = Sets.newHashSet();
         mKeyCountsMap = Maps.newHashMap();
         mPurgeIndex = 0;
         mMaxIndex = 0;
@@ -93,9 +95,11 @@ public class BqrRegionReader implements CigarHandler
         mReadCounter = 0;
     }
 
-    public void initialise(final ChrBaseRegion region)
+    public void initialise(final ChrBaseRegion region, final Set<Integer> knownVariants)
     {
         mRegion = region;
+        mKnownVariants.clear();
+        mKnownVariants.addAll(knownVariants);
 
         if(mRefGenome != null)
         {
@@ -320,6 +324,9 @@ public class BqrRegionReader implements CigarHandler
 
             if(mMaxReadEndPosition > 0 && position > mMaxReadEndPosition)
                 break;
+
+            if(mKnownVariants.contains(position))
+                continue;
 
             int readIndex = startReadIndex + i;
 

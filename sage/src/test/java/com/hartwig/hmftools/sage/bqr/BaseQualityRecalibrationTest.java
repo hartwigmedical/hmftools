@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
@@ -24,7 +25,7 @@ public class BaseQualityRecalibrationTest
         BqrRegionReader bqrCounter = new BqrRegionReader(
                 config, null, null, new BaseQualityResults(), new BqrRecordWriter(config, SAMPLE_ID));
 
-        bqrCounter.initialise(new ChrBaseRegion("1", 100, 300));
+        bqrCounter.initialise(new ChrBaseRegion("1", 100, 300), Collections.emptySet());
 
         int pos1 = 100;
         BqrKey key1 = createKey('A', 'G', 30, BqrReadType.NONE);
@@ -96,7 +97,7 @@ public class BaseQualityRecalibrationTest
         BqrRegionReader bqrCounter = new BqrRegionReader(
                 config, null, null, new BaseQualityResults(), new BqrRecordWriter(config, SAMPLE_ID));
 
-        bqrCounter.initialise(new ChrBaseRegion("1", 100, 300));
+        bqrCounter.initialise(new ChrBaseRegion("1", 100, 300), Collections.emptySet());
 
         char refBase = 'G';
         char altBase = 'G';
