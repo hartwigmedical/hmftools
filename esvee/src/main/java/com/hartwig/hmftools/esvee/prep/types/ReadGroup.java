@@ -92,7 +92,11 @@ public class ReadGroup
                 && mJunctionPositions.stream().anyMatch(x -> x.Position == junctionData.Position && x.Orientation == junctionData.Orientation);
     }
 
-    public boolean noRegisteredfJunctionPositions() { return mJunctionPositions == null; }
+    public boolean noRegisteredJunctionPositions()
+    {
+        return mJunctionPositions == null || mJunctionPositions.isEmpty();
+    }
+
     public boolean hasJunctionPositions() { return mJunctionPositions != null && !mJunctionPositions.isEmpty(); }
 
     public void addJunctionPosition(final JunctionData junctionData)
@@ -190,6 +194,7 @@ public class ReadGroup
             return true;
 
         if(mReads.stream().allMatch(x -> x.readType() == CANDIDATE_SUPPORT
+        || x.isUnmapped()
         || (x.readType() == SUPPORT && ReadFilterType.isSet(x.filters(), SOFT_CLIP_LOW_BASE_QUAL))))
         {
             return true;

@@ -159,6 +159,7 @@ public class AssemblyConfig
         }
         else
         {
+            // since Prep now reads multiple BAMs, only the tumor-labelled junctions file needs to be loaded
             List<String> combinedSampleIds = Lists.newArrayList(TumorIds);
             combinedSampleIds.addAll(ReferenceIds);
 

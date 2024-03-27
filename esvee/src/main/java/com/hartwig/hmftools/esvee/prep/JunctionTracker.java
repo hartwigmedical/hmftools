@@ -4,8 +4,6 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
-import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -24,6 +22,7 @@ import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.INSERT_MAP_OV
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.POLY_G_SC;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilters.isChimericRead;
+import static com.hartwig.hmftools.esvee.prep.types.ReadType.NO_SUPPORT;
 
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
@@ -67,7 +66,10 @@ public class JunctionTracker
     private final Map<String, ReadGroup> mReadGroupMap; // keyed by readId
     private final Set<String> mExpectedReadIds; // as indicated by another partition
     private final List<ReadGroup> mExpectedReadGroups;
-    private final List<ReadGroup> mRemoteCandidateReadGroups; // reads with their mate(s) in another partition, but not supporting a junction
+
+    // reads with their mate(s) in another partition, may or may not end up supporting a local junction
+    private final Set<ReadGroup> mRemoteCandidateReadGroups;
+
     private final List<ReadGroup> mCandidateDiscordantGroups;
 
     private final List<JunctionData> mJunctions; // ordered by position
@@ -117,7 +119,7 @@ public class JunctionTracker
         mReadGroupMap = Maps.newHashMap();
         mExpectedReadIds = Sets.newHashSet();
         mExpectedReadGroups = Lists.newArrayList();
-        mRemoteCandidateReadGroups = Lists.newArrayList();
+        mRemoteCandidateReadGroups = Sets.newHashSet();
         mCandidateDiscordantGroups = Lists.newArrayList();
         mJunctions = Lists.newArrayList();
         mLastJunctionIndex = -1;
@@ -178,7 +180,7 @@ public class JunctionTracker
     {
         // gather groups with a read in another partition and not linked to a junction
         // to then pass to the combined cache
-        return mRemoteCandidateReadGroups.stream().filter(x -> x.noRegisteredfJunctionPositions()).collect(Collectors.toList());
+        return mRemoteCandidateReadGroups.stream().filter(x -> x.noRegisteredJunctionPositions()).collect(Collectors.toList());
     }
 
     public int initialSupportingFrags() { return mInitialSupportingFrags; }
@@ -188,7 +190,7 @@ public class JunctionTracker
         if(!read.hasMate() && !read.hasSuppAlignment())
         {
             // handle unpaired reads similarly to simple groups
-            if(read.readType() == ReadType.NO_SUPPORT || readInBlacklist(read))
+            if(read.readType() == NO_SUPPORT || readInBlacklist(read))
                 return;
         }
 
@@ -285,16 +287,17 @@ public class JunctionTracker
 
         perfCounterStop(PerfCounters.InitJunctions);
 
-        if(mJunctions.isEmpty())
-            return;
-
         mLastJunctionIndex = -1; // reset before supporting fragment assignment
         mInitialSupportingFrags = candidateSupportGroups.size();
 
         perfCounterStart(PerfCounters.JunctionSupport);
 
+        // cannot early exit even if there are no junctions since could miss capture of any candidate support for remote junctions
+        boolean hasJunctions = !mJunctions.isEmpty();
+
         // order by first read's start position to assist with efficient junction look-up using the last junction index
-        Collections.sort(candidateSupportGroups, new ReadGroup.ReadGroupComparator());
+        if(hasJunctions)
+            Collections.sort(candidateSupportGroups, new ReadGroup.ReadGroupComparator());
 
         Map<JunctionData,ReadType> supportedJunctions = Maps.newHashMap();
         for(ReadGroup readGroup : candidateSupportGroups)
@@ -316,9 +319,16 @@ public class JunctionTracker
                     hasBlacklistedRead = true;
                 }
 
-                // allow reads that match a junction to be considered for support (eg exact) for other junctions
-                if(read.readType() == ReadType.CANDIDATE_SUPPORT || read.readType() == ReadType.JUNCTION)
-                    checkJunctionSupport(readGroup, read, supportedJunctions);
+                if(hasJunctions)
+                {
+                    // allow reads that match a junction to be considered for support (eg exact) for other junctions
+                    if(read.readType() == ReadType.CANDIDATE_SUPPORT || read.readType() == ReadType.JUNCTION)
+                        checkJunctionSupport(readGroup, read, supportedJunctions);
+                }
+                else if(hasBlacklistedRead)
+                {
+                    break;
+                }
             }
 
             if(!supportedJunctions.isEmpty())
@@ -340,8 +350,16 @@ public class JunctionTracker
                     readGroup.addJunctionPosition(junctionData);
                 }
             }
+            else if(!readGroup.hasJunctionPositions())
+            {
+                // will be passed onto the spanning cache if not assigned to a unfiltered junction
+                mRemoteCandidateReadGroups.add(readGroup);
+            }
 
-            if(!hasBlacklistedRead
+            if(hasBlacklistedRead)
+                continue;
+
+            if(!mHotspotRegions.isEmpty()
             && DiscordantGroups.isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMin(), mFilterConfig.fragmentLengthMax()))
             {
                 // require one end of this candidate group to be in a hotspot read
@@ -644,8 +662,7 @@ public class JunctionTracker
         mJunctions.add(index, newJunction);
     }
 
-    private void checkJunctionSupport(
-            final ReadGroup readGroup, final PrepRead read, final Map<JunctionData,ReadType> supportedJunctions)
+    private void checkJunctionSupport(final ReadGroup readGroup, final PrepRead read, final Map<JunctionData,ReadType> supportedJunctions)
     {
         // first check indel support
         checkIndelSupport(read, supportedJunctions);
@@ -1055,6 +1072,8 @@ public class JunctionTracker
     {
         perfCounterStart(PerfCounters.JunctionFilter);
 
+        Set<ReadGroup> removedReadGroups = Sets.newHashSet();
+
         // alternatively when processing then also just remove all processed junctions
         int index = 0;
         while(index < mJunctions.size())
@@ -1062,9 +1081,18 @@ public class JunctionTracker
             JunctionData junctionData = mJunctions.get(index);
 
             if(junctionHasSupport(junctionData))
+            {
                 ++index;
+            }
             else
+            {
                 mJunctions.remove(index);
+
+                // now can remove candidate remote groups since they will be handled as part of actual junction groups
+                junctionData.JunctionGroups.forEach(x -> removedReadGroups.add(x));
+                junctionData.ExactSupportGroups.forEach(x -> removedReadGroups.add(x));
+                junctionData.SupportingGroups.forEach(x -> removedReadGroups.add(x));
+            }
         }
 
         // reset read group junction positions, to remove those for purged junctions
@@ -1075,6 +1103,16 @@ public class JunctionTracker
             junctionData.JunctionGroups.forEach(x -> x.addJunctionPosition(junctionData));
             junctionData.ExactSupportGroups.forEach(x -> x.addJunctionPosition(junctionData));
             junctionData.SupportingGroups.forEach(x -> x.addJunctionPosition(junctionData));
+        }
+
+        // any reads no longer in any junction need to be reset to candidates only and will be passed to the spanning partition cache
+        for(ReadGroup readGroup : removedReadGroups)
+        {
+            if(!readGroup.hasJunctionPositions())
+            {
+                mRemoteCandidateReadGroups.add(readGroup);
+                readGroup.reads().stream().filter(x -> x.readType() != NO_SUPPORT).forEach(x -> x.setReadType(ReadType.CANDIDATE_SUPPORT));
+            }
         }
 
         perfCounterStop(PerfCounters.JunctionFilter);
