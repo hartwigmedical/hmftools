@@ -346,7 +346,7 @@ public class BqrRegionReader implements CigarHandler
             baseQualityData.processReadBase(alt, quality);
 
             if(mWriteReadData && ref != alt)
-                mRecordWriter.writeRecordData(record, position, readIndex, ref, alt, trinucleotideContext, quality);
+                mRecordWriter.writeRecordData(record, position, readIndex, ref, alt, trinucleotideContext, quality, mCurrentReadType);
         }
     }
 

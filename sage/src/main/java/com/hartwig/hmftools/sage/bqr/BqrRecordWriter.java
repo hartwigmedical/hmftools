@@ -32,38 +32,36 @@ public class BqrRecordWriter
     public boolean enabled() { return mWriter != null; }
 
     public synchronized void writeRecordData(
-            final SAMRecord record,
-            final int position, final int readIndex, final byte ref, final byte alt, final byte[] trinucleotideContext, final byte quality)
+            final SAMRecord record, final int position, final int readIndex, final byte ref, final byte alt,
+            final byte[] trinucleotideContext, final byte quality, final BqrReadType readType)
     {
         if(mWriter == null)
             return;
 
-        /*
-        input: trinucleotide, alt
-        output: per read matching these criteria, output a row containing
-        (chrom, pos, read ID, qual,
-        fwd/bwd strand, fragment orientation,
-        skip aggregate: number of reads in fragment per strand,
-        distance from 3' end of read,
-        distance from 5' end of read,
-        skip aggregate: number of errors at this site on fwd strand with any qual,
-        skip aggregate: number of errors at this site on bwd strand with any qual)
-        */
-
         try
         {
-            mWriter.write(format("%c\t%c\t%s", (char)ref, (char)alt, new String(trinucleotideContext)));
-            mWriter.write(format("\t%s\t%d\t%d\t%d", record.getReferenceName(), position, readIndex, quality));
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+            sj.add(String.valueOf((char)ref));
+            sj.add(String.valueOf((char)alt));
+            sj.add(new String(trinucleotideContext));
+            sj.add(record.getReferenceName());
+            sj.add(String.valueOf(position));
+            sj.add(String.valueOf(readIndex));
+            sj.add(String.valueOf(quality));
+            sj.add(String.valueOf(readType));
 
             boolean isNegStrand = record.getReadNegativeStrandFlag();
             int readLength = record.getReadBases().length;
             int distanceFromFivePrimeEnd = isNegStrand ? readLength - readIndex - 1 : readIndex;
             int distanceFromThreePrimeEnd = readLength - distanceFromFivePrimeEnd;
 
-            mWriter.write(format("\t%c\t%s\t%d\t%d",
-                    orientationChar(record.getReadNegativeStrandFlag()), fragmentOrientationStr(record),
-                    distanceFromFivePrimeEnd, distanceFromThreePrimeEnd));
+            sj.add(String.valueOf(orientationChar(record.getReadNegativeStrandFlag())));
+            sj.add(fragmentOrientationStr(record));
+            sj.add(String.valueOf(distanceFromFivePrimeEnd));
+            sj.add(String.valueOf(distanceFromThreePrimeEnd));
 
+            mWriter.write(sj.toString());
             mWriter.newLine();
         }
         catch(IOException e)
@@ -74,6 +72,9 @@ public class BqrRecordWriter
 
     private static String fragmentOrientationStr(final SAMRecord record)
     {
+        if(!record.getReadPairedFlag())
+            return orientationChar(record.getReadNegativeStrandFlag()) + "1";
+
         if(record.getFirstOfPairFlag())
             return format("%c1%c2", orientationChar(record.getReadNegativeStrandFlag()), orientationChar(record.getMateNegativeStrandFlag()));
         else
@@ -97,7 +98,7 @@ public class BqrRecordWriter
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
             sj.add("Ref").add("Alt").add("TriNuc");
-            sj.add("Chromosome").add("Position").add("ReadIndex").add("Quality");
+            sj.add("Chromosome").add("Position").add("ReadIndex").add("Quality").add("ReadType");
             sj.add("ReadOrient").add("FragOrient").add("FivePrimeDist").add("ThreePrimeDist");
 
             writer.write(sj.toString());
