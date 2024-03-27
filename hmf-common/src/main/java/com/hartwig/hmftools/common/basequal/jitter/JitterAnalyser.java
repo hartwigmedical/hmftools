@@ -165,12 +165,11 @@ public class JitterAnalyser
     private static void drawMicrosatelliteCharts(final String outputDir, final String sampleId, final String statsTableFile)
             throws IOException, InterruptedException
     {
-        // TODO: Uncomment this.
-//        int result = RExecutor.executeFromClasspath("basequal/microsatellite/ms_plot.R", outputDir, sampleId, statsTableFile);
-//        if(result != 0)
-//        {
-//            throw new IOException("R execution failed. Unable to complete segmentation.");
-//        }
+        int result = RExecutor.executeFromClasspath("basequal/microsatellite/ms_plot.R", outputDir, sampleId, statsTableFile);
+        if(result != 0)
+        {
+            throw new IOException("R execution failed. Unable to complete segmentation.");
+        }
     }
 
     public BamSlicerFilter bamSlicerFilter()
