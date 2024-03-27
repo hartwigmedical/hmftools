@@ -41,10 +41,6 @@ CLF_GROUPS = {
     SUB_CLF_NAMES.ALT_SJ: "rna"
 }
 
-CLF_NAME_ALIASES = {
-    SUB_CLF_NAMES.GEN_POS: "rmd"
-}
-
 CUPPA_PREDICTION_INDEX_NAMES = ["sample_id", "data_type", "clf_group", "clf_name", "feat_name", "feat_value"]
 
 

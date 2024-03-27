@@ -10,7 +10,7 @@ from numpy.typing import NDArray
 from pandas.core.dtypes.common import is_integer_dtype
 from sklearn.compose import make_column_selector
 
-from cuppa.constants import CLF_NAME_ALIASES, CUPPA_PREDICTION_INDEX_NAMES
+from cuppa.constants import CUPPA_PREDICTION_INDEX_NAMES
 from cuppa.logger import LoggerMixin
 from cuppa.misc.utils import get_top_cols, check_required_columns, as_categorical
 from cuppa.performance.performance_stats import PerformanceStatsBuilder, PerformanceStats
@@ -21,24 +21,6 @@ logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from cuppa.classifier.cuppa_classifier import CuppaClassifier
     from cuppa.visualization.visualization import CuppaVisData
-
-
-def _convert_clf_names_to_aliases(
-    series: pd.Series,
-    aliases: dict[str, str] = CLF_NAME_ALIASES,
-    _logger = logger,
-    verbose: bool = True,
-) -> pd.Series:
-
-    conversions = ", ".join(pd.Series(aliases.keys()) + " -> " + pd.Series(aliases.values()))
-
-    if len(conversions) == 0:
-        _logger.error("`aliases` must not be an empty dict")
-
-    if verbose:
-        _logger.info("Converting the following clf_name values in-place: " + conversions)
-
-    return series.replace(aliases)
 
 
 class CuppaPredictionBuilder(LoggerMixin):
@@ -233,23 +215,6 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
     def concat(predictions_list) -> CuppaPrediction:
         predictions_merged = pd.concat(predictions_list, axis=0)
         return CuppaPrediction(predictions_merged)
-
-    def convert_clf_names_to_aliases(
-        self,
-        aliases: dict[str, str] = CLF_NAME_ALIASES,
-        verbose: bool = True
-    ) -> None:
-        index = self.index.to_frame(index=False)
-
-        index["clf_name"] = _convert_clf_names_to_aliases(
-            index["clf_name"],
-            aliases=aliases,
-            _logger=self.logger,
-            verbose=verbose
-        )
-
-        index = pd.MultiIndex.from_frame(index)
-        self.index = index
 
     ## Subtypes / supertypes ================================
     @staticmethod
@@ -885,18 +850,4 @@ class CuppaPredSummary(pd.DataFrame, LoggerMixin):
         bins: NDArray = np.linspace(0, 1, 6)
     ) -> PerformanceStats:
         return PerformanceStatsBuilder(self, prob_bins=bins).build(by_prob_bin=True)
-
-
-    def convert_clf_names_to_aliases(
-        self,
-        aliases: dict[str, str] = CLF_NAME_ALIASES,
-        verbose: bool = True
-    ) -> None:
-        self["clf_name"] = _convert_clf_names_to_aliases(
-            self["clf_name"],
-            aliases=aliases,
-            _logger=self.logger,
-            verbose=verbose
-        )
-
 
