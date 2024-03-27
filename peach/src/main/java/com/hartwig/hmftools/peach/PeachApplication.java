@@ -5,8 +5,11 @@ import static com.hartwig.hmftools.peach.PeachUtils.PCH_LOGGER;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.peach.PeachGenotype;
+import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.peach.data_loader.DrugInfoLoader;
 import com.hartwig.hmftools.peach.data_loader.HaplotypeEventLoader;
@@ -15,9 +18,9 @@ import com.hartwig.hmftools.peach.data_loader.PanelLoader;
 import com.hartwig.hmftools.peach.effect.DrugInfoStore;
 import com.hartwig.hmftools.peach.effect.HaplotypeFunctionStore;
 import com.hartwig.hmftools.peach.output.AllHaplotypeCombinationsFile;
-import com.hartwig.hmftools.peach.output.BestHaplotypeCombinationsFile;
 import com.hartwig.hmftools.peach.output.EventsFile;
 import com.hartwig.hmftools.peach.output.EventsPerGeneFile;
+import com.hartwig.hmftools.peach.output.PeachGenotypeExtractor;
 import com.hartwig.hmftools.peach.output.QcStatusFile;
 import com.hartwig.hmftools.peach.panel.HaplotypePanel;
 
@@ -87,8 +90,8 @@ public class PeachApplication
             PCH_LOGGER.info("write all haplotype combinations output file");
             AllHaplotypeCombinationsFile.write(config.getAllHaplotypeCombinationsOutputPath(), geneToHaplotypeAnalysis);
             PCH_LOGGER.info("write best haplotype combination output file");
-            BestHaplotypeCombinationsFile.write(config.getBestHaplotypeCombinationsOutputPath(), geneToHaplotypeAnalysis,
-                    drugInfoStore, haplotypeFunctionStore);
+            List<PeachGenotype> genotypes = PeachGenotypeExtractor.extract(geneToHaplotypeAnalysis, drugInfoStore, haplotypeFunctionStore);
+            PeachGenotypeFile.write(config.getBestHaplotypeCombinationsOutputPath(), genotypes);
             PCH_LOGGER.info("write qc status output file");
             QcStatusFile.write(config.getQcStatusOutputPath(), geneToHaplotypeAnalysis);
         }
