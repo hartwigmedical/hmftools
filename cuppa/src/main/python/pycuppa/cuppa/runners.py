@@ -404,6 +404,9 @@ class TrainingRunner(LoggerMixin):
     def get_cv_performance(self) -> None:
         self.cv_performance = self.cv_pred_summ.performance()
 
+    def add_cv_performance_to_cv_predictions(self):
+        self.cv_predictions = self.cv_predictions.add_cv_performance(self.cv_performance)
+
     def get_cv_performance_by_prob_bin(self) -> None:
         self.cv_performance_by_prob_bin = self.cv_pred_summ.performance_by_prob_bin()
 
@@ -427,6 +430,7 @@ class TrainingRunner(LoggerMixin):
         self.get_cv_predictions()
         self.get_cv_pred_summ()
         self.get_cv_performance()
+        self.add_cv_performance_to_cv_predictions()
         self.get_cv_performance_by_prob_bin()
 
         self.cv_pred_summ.to_tsv(os.path.join(self.cv_report_dir, "pred_summ.tsv.gz"), verbose=True)

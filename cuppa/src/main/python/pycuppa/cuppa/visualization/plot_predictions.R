@@ -580,11 +580,10 @@ cuppa_vis <- function(VIS_DATA, plot_path=NULL){
    plots$signatures <- plot_signatures(VIS_DATA)
    plots$feat_contrib <- plot_feat_contrib(VIS_DATA)
 
-   if("cv_performance" %in% VIS_DATA$data_type){
-      plots$cv_performance <- plot_cv_performance(VIS_DATA)
-   } else {
-      warning("CV performance data is missing from vis data and will not be plotted")
+   if(!("cv_performance" %in% VIS_DATA$data_type)){
+      stop("CV performance data is missing from vis data")
    }
+   plots$cv_performance <- plot_cv_performance(VIS_DATA)
 
    ## Combine --------------------------------
    ## Heights
