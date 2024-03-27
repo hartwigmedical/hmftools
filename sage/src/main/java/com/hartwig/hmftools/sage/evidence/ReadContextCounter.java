@@ -8,9 +8,9 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
-import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.extractUmiType;
+import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.CORE;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.FULL;
@@ -57,7 +57,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.samtools.UmiReadType;
+import com.hartwig.hmftools.common.bam.UmiReadType;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.ReadContext;
@@ -67,6 +67,7 @@ import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.filter.FragmentCoords;
 import com.hartwig.hmftools.sage.filter.StrandBiasData;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
+import com.hartwig.hmftools.sage.quality.UltimaQualModel;
 import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.read.SplitReadUtils;
 import com.hartwig.hmftools.sage.vis.VariantVis;
@@ -109,12 +110,14 @@ public class ReadContextCounter//  extends SimpleVariant
     private final JitterData mJitterData;
     private int mImproperPairCount;
     private final ArtefactContext mArtefactContext;
+    private final UltimaQualModel mUltimaQualModel;
 
     private int mRawDepth;
     private int mRawAltSupport;
     private int mRawRefSupport;
     private int mRawAltBaseQualityTotal;
     private int mRawRefBaseQualityTotal;
+    private int mRawContextAltBaseQualityTotal;
     private int mRecalibratedBaseQualityTotal;
     private double mSupportAltBaseQualityTotal;
 
@@ -168,7 +171,9 @@ public class ReadContextCounter//  extends SimpleVariant
         mCounts = new ReadSupportCounts();
 
         mJitterData = new JitterData();
+
         mArtefactContext = ArtefactContext.buildContext(variant, readContext.indexedBases());
+        mUltimaQualModel = qualityCalculator.createUltimateQualModel(variant);
 
         mAltFragmentStrandBias = new StrandBiasData(true);
         mRefFragmentStrandBias = new StrandBiasData(false);
@@ -183,6 +188,7 @@ public class ReadContextCounter//  extends SimpleVariant
         mRawAltBaseQualityTotal = 0;
         mRawRefBaseQualityTotal = 0;
         mRecalibratedBaseQualityTotal = 0;
+        mRawContextAltBaseQualityTotal = 0;
         mSupportAltBaseQualityTotal = 0;
         mSoftClipInsertSupport = 0;
         mMaxCandidateDeleteLength = 0;
@@ -237,6 +243,7 @@ public class ReadContextCounter//  extends SimpleVariant
         return mJitterData.summary();
     }
     public ArtefactContext artefactContext() { return mArtefactContext; }
+    public UltimaQualModel ultimaQualModel() { return mUltimaQualModel; }
 
     public StrandBiasData fragmentStrandBiasAlt() { return mAltFragmentStrandBias; }
     public StrandBiasData fragmentStrandBiasRef() { return mRefFragmentStrandBias; }
@@ -248,6 +255,7 @@ public class ReadContextCounter//  extends SimpleVariant
     public int rawAltSupport() { return mRawAltSupport; }
     public int rawRefSupport() { return mRawRefSupport; }
     public int rawAltBaseQualityTotal() { return mRawAltBaseQualityTotal; }
+    public int rawContextAltBaseQualityTotal() { return mRawContextAltBaseQualityTotal; }
     public int rawRefBaseQualityTotal() { return mRawRefBaseQualityTotal; }
     public int recalibratedBaseQualityTotal() { return mRecalibratedBaseQualityTotal; }
 
@@ -446,6 +454,7 @@ public class ReadContextCounter//  extends SimpleVariant
                 mAltNmCountTotal += numberOfEvents;
 
                 mSupportAltBaseQualityTotal += rawBaseQuality;
+                mRawContextAltBaseQualityTotal += rawContext.BaseQuality;
 
                 registerRawSupport(rawContext, qualityScores.RecalibratedBaseQuality);
 

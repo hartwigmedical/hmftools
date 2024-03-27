@@ -2,9 +2,9 @@ package com.hartwig.hmftools.esvee;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
-import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_NEG_STRAND;
-import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_POS_STRAND;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
+import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_NEG_STRAND;
+import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.cloneSamRecord;
@@ -18,11 +18,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.Junction;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.read.Read;
 
 import htsjdk.samtools.SAMRecord;
@@ -37,7 +38,11 @@ public class TestUtils
     public static final String TEST_CIGAR_30  = "30M";
     public static final String TEST_CIGAR_20  = "20M";
 
+    public static final AssemblyConfig TEST_CONFIG = new AssemblyConfig();
+
     public static final String REF_BASES_RANDOM_100 = generateRandomBases(100);
+
+    public static final ReadIdGenerator READ_ID_GENERATOR = new ReadIdGenerator();
 
     public static String REF_BASES_200 =
             "AAACCCGGGTTTACGTAACCGGTTACGTAAAAACCCCCGGGGGTTTTTACGTAACCGGTTACGTAAACCCGGGTTTAAACGTTTTTGGGGCCCCAAAAAC"
@@ -81,11 +86,23 @@ public class TestUtils
         return new JunctionAssembly(junction, assemblyBases.getBytes(), baseQuals, junctionIndex);
     }
 
-    public static Read createSamRecord(final String readId, int readStart, final String readBases, final String cigar)
+    public static Read createRead(final String readId, int readStart, final String readBases, final String cigar)
     {
         SAMRecord record = SamRecordTestUtils.createSamRecord(
                 readId, CHR_1, readStart, readBases, cigar, CHR_1, readStart + 1000,
                 false, false, null);
+        return new Read(record);
+    }
+
+    public static Read createConcordantRead(
+            final String readId, int readStart, final String readBases, final String cigar, final int mateStart)
+    {
+        SAMRecord record = SamRecordTestUtils.createSamRecord(
+                readId, CHR_1, readStart, readBases, cigar, CHR_1, mateStart,
+                false, false, null);
+
+        record.setMateNegativeStrandFlag(true);
+
         return new Read(record);
     }
 

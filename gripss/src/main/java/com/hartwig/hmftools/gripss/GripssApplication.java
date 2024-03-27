@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsSt
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
+import static com.hartwig.hmftools.gripss.GripssConfig.APP_NAME;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.gripss.GripssConfig.addConfig;
@@ -363,7 +364,7 @@ public class GripssApplication
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder("Gripss");
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         addConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);

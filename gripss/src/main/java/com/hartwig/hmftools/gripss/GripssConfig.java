@@ -48,6 +48,8 @@ public class GripssConfig
 
     public static final Logger GR_LOGGER = LogManager.getLogger(GripssApplication.class);
 
+    public static final String APP_NAME = "Gripss";
+
     public GripssConfig(final ConfigBuilder configBuilder)
     {
         SampleId = configBuilder.getValue(SAMPLE);

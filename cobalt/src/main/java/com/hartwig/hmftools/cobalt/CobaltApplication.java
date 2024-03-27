@@ -80,8 +80,7 @@ public class CobaltApplication
 
             ChromosomePositionCodec chromosomePosCodec = new ChromosomePositionCodec();
 
-            final BamReadCounter bamReadCounter = new BamReadCounter(
-                    WINDOW_SIZE, mConfig.MinMappingQuality, executorService, readerFactory, chromosomePosCodec);
+            final BamReadCounter bamReadCounter = new BamReadCounter(WINDOW_SIZE, mConfig, executorService, readerFactory, chromosomePosCodec);
 
             bamReadCounter.generateDepths(mConfig.ReferenceBamPath, mConfig.TumorBamPath);
 

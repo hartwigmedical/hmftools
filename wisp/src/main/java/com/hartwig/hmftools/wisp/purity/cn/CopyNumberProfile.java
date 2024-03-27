@@ -65,8 +65,8 @@ public class CopyNumberProfile
 
         try
         {
-            mCopyNumbers.addAll(PurpleCopyNumberFile.read(
-                    PurpleCopyNumberFile.generateFilenameForReading(mConfig.getPurpleDir(sample.TumorId), mSample.TumorId)));
+            String cnFile = PurpleCopyNumberFile.generateFilenameForReading(mConfig.getPurpleDir(sample.TumorId), mSample.TumorId);
+            mCopyNumbers.addAll(PurpleCopyNumberFile.read(cnFile));
         }
         catch(Exception e)
         {

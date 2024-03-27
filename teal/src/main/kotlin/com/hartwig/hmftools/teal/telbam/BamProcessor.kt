@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.teal.telbam
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion
-import com.hartwig.hmftools.common.samtools.BamSlicer
+import com.hartwig.hmftools.common.bam.BamSlicer
 import com.hartwig.hmftools.teal.ReadGroup
 import com.hartwig.hmftools.teal.TealUtils
 import com.hartwig.hmftools.teal.TealUtils.createPartitions

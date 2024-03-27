@@ -3,6 +3,8 @@ package com.hartwig.hmftools.cup.prep;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.THREADS;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
@@ -41,9 +43,11 @@ public class PrepConfig
 
     public final String OutputDir;
     public final String OutputId; // for multi-sample mode
+    public final int Threads;
     public final boolean WriteByCategory;
 
     // pipeline directories, accepting wildcards
+    public final String SampleDataDir;
     public final String LinxDir;
     public final String PurpleDir;
     public final String VirusDir;
@@ -70,16 +74,17 @@ public class PrepConfig
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        String sampleDataDir = configBuilder.getValue(SAMPLE_DATA_DIR_CFG, "");
+        SampleDataDir = configBuilder.getValue(SAMPLE_DATA_DIR_CFG, "");
+        LinxDir = configBuilder.getValue(LINX_DIR_CFG, SampleDataDir);
+        PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG, SampleDataDir);
+        VirusDir = configBuilder.getValue(VIRUS_DIR_CFG, SampleDataDir);
+        IsofoxDir = configBuilder.getValue(ISOFOX_DIR_CFG, SampleDataDir);
 
-        LinxDir = configBuilder.getValue(LINX_DIR_CFG, sampleDataDir);
-        PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG, sampleDataDir);
-        VirusDir = configBuilder.getValue(VIRUS_DIR_CFG, sampleDataDir);
-        IsofoxDir = configBuilder.getValue(ISOFOX_DIR_CFG, sampleDataDir);
         AltSpliceJunctionSites = configBuilder.getValue(REF_ALT_SJ_SITES);
 
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
+        Threads = parseThreads(configBuilder);
 
         WriteByCategory = SampleIds.size() > 1 && configBuilder.hasFlag(WRITE_FILE_BY_CATEGORY);
     }
@@ -101,7 +106,7 @@ public class PrepConfig
     {
         configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
-        configBuilder.addPath(VIRUS_DIR_CFG, false, PURPLE_DIR_DESC);
+        configBuilder.addPath(VIRUS_DIR_CFG, false, VIRUS_DIR_CFG);
         configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
     }
 
@@ -114,11 +119,43 @@ public class PrepConfig
         configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
         configBuilder.addPath(REF_ALT_SJ_SITES, false, "RNA required alternative splice junction sites");
         configBuilder.addFlag(WRITE_FILE_BY_CATEGORY, "Cohort mode - write files by category");
+        configBuilder.addConfigItem(THREADS, false, "Number of threads to use in multi sample mode", "1");
 
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
         addPipelineDirectories(configBuilder);
 
         addLoggingOptions(configBuilder);
         addOutputOptions(configBuilder);
+    }
+
+    public PrepConfig(
+            final List<String> sampleIds,
+            final List<CategoryType> categories,
+            final RefGenomeVersion refGenVersion,
+            final String outputDir,
+            final String outputId,
+            final int threads,
+            final boolean writeByCategory,
+            final String sampleDataDir,
+            final String linxDir,
+            final String purpleDir,
+            final String virusDir,
+            final String isofoxDir,
+            final String altSpliceJunctionSites
+    )
+    {
+        SampleIds = sampleIds;
+        Categories = categories;
+        RefGenVersion = refGenVersion;
+        OutputDir = outputDir;
+        OutputId = outputId;
+        Threads = threads;
+        WriteByCategory = writeByCategory;
+        SampleDataDir = sampleDataDir;
+        LinxDir = linxDir;
+        PurpleDir = purpleDir;
+        VirusDir = virusDir;
+        IsofoxDir = isofoxDir;
+        AltSpliceJunctionSites = altSpliceJunctionSites;
     }
 }

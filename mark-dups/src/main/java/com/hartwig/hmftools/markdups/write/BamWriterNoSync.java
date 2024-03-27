@@ -3,7 +3,10 @@ package com.hartwig.hmftools.markdups.write;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
@@ -12,13 +15,13 @@ public class BamWriterNoSync extends BamWriter
 {
     private final SortedBamWriter mSortedBamWriter;
     private final BamWriter mSharedUnsortedWriter;
-    private boolean mWriteSorted;
+    private final boolean mWriteSorted;
 
     public BamWriterNoSync(
             final String filename, final MarkDupsConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter,
-            boolean writeSorted, final BamWriter sharedUnsortedWriter)
+            @Nullable final JitterAnalyser jitterAnalyser, boolean writeSorted, final BamWriter sharedUnsortedWriter)
     {
-        super(filename, config, readDataWriter, samFileWriter);
+        super(filename, config, readDataWriter, samFileWriter, jitterAnalyser);
 
         mWriteSorted = writeSorted;
 

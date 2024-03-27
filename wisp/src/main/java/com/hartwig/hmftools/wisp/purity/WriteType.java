@@ -6,6 +6,7 @@ public enum WriteType
 {
     CN_DATA,
     CN_PLOT,
+    LOH_DATA,
     SOMATIC_DATA,
     SOMATIC_PLOT;
 

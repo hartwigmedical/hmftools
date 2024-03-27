@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.appendHeader;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.VERSION_META_DATA;
 
 import java.io.File;
 import java.io.IOException;
@@ -249,7 +250,7 @@ public class SageAppendApplication
 
     private static double sageVersion(@NotNull final VCFHeader header)
     {
-        VCFHeaderLine oldVersion = header.getMetaDataLine(VariantVCF.VERSION_META_DATA);
+        VCFHeaderLine oldVersion = header.getMetaDataLine(VERSION_META_DATA);
 
         if(oldVersion == null)
             return 0;

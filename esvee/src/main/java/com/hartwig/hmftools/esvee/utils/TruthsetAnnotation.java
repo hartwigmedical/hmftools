@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getByteValue;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,7 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
 
 public class TruthsetAnnotation
 {
@@ -100,7 +100,7 @@ public class TruthsetAnnotation
                         getByteValue(fieldsIndexMap, "JunctionOrientation", values),
                         fragments,
                         cipos,
-                        mapFromStr(values[fieldsIndexMap.get("SvType")]));
+                        StructuralVariantType.valueOf(values[fieldsIndexMap.get("SvType")]));
 
                 breakends.add(truthsetBreakend);
             }
@@ -121,17 +121,6 @@ public class TruthsetAnnotation
     }
 
     public static String NO_TRUTHSET_MATCH = "NA\t0\tNA";
-
-    private static StructuralVariantType mapFromStr(final String typeStr)
-    {
-        if(typeStr.equals("TRANSLOCATION")) return StructuralVariantType.BND;
-        if(typeStr.equals("INVERSION")) return StructuralVariantType.INV;
-        if(typeStr.equals("DUPLICATION")) return StructuralVariantType.DUP;
-        if(typeStr.equals("DELETION")) return StructuralVariantType.DEL;
-        if(typeStr.equals("INSERTION")) return StructuralVariantType.INS;
-
-        return StructuralVariantType.SGL;
-    }
 
     private class TruthsetBreakend
     {

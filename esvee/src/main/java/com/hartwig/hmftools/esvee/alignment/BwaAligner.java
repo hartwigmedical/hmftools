@@ -5,40 +5,39 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.SvConfig;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
+import org.jetbrains.annotations.Nullable;
 
 public class BwaAligner implements Aligner
 {
-    private final BwaMemIndex mIndex;
     private final BwaMemAligner mAligner;
 
-    public BwaAligner(final SvConfig config)
+    public BwaAligner(final AssemblyConfig config)
     {
         if(!config.RefGenomeImageFile.isEmpty() && Files.exists(Paths.get(config.RefGenomeImageFile)))
         {
-            loadAlignerLibrary();
-
-            mIndex = new BwaMemIndex(config.RefGenomeImageFile);
-            mAligner = new BwaMemAligner(mIndex);
+            BwaMemIndex index = new BwaMemIndex(config.RefGenomeImageFile);
+            mAligner = new BwaMemAligner(index);
         }
         else
         {
-            mIndex = null;
             mAligner = null;
         }
     }
 
-    private void loadAlignerLibrary()
+    public static void loadAlignerLibrary(@Nullable final String bwaLibPath)
     {
         final var props = System.getProperties();
-        final String candidateBWAPath = "libbwa." + props.getProperty("os.arch") + osExtension();
+        String candidateBWAPath = bwaLibPath != null ? bwaLibPath : "libbwa." + props.getProperty("os.arch") + osExtension();
 
         if(System.getProperty("LIBBWA_PATH") == null && new File(candidateBWAPath).exists())
+        {
             System.setProperty("LIBBWA_PATH", new File(candidateBWAPath).getAbsolutePath());
+        }
     }
 
     private static String osExtension()
@@ -51,7 +50,6 @@ public class BwaAligner implements Aligner
         else
             return ".so";
     }
-
 
     @Override
     public List<BwaMemAlignment> alignSequence(final byte[] bases)

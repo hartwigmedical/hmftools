@@ -3,19 +3,18 @@ package com.hartwig.hmftools.esvee.read;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.createBamSlicer;
+import static com.hartwig.hmftools.esvee.common.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.esvee.SvConfig;
+import com.hartwig.hmftools.common.bam.BamSlicer;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -23,13 +22,13 @@ import htsjdk.samtools.SamReaderFactory;
 
 public class BamReader implements AutoCloseable
 {
-    private final SvConfig mConfig;
+    private final AssemblyConfig mConfig;
 
     private final List<SamReader> mSamReaders;
     private final BamSlicer mBamSlicer;
     private boolean mCurrentIsReferenceSample;
 
-    public BamReader(final SvConfig config)
+    public BamReader(final AssemblyConfig config)
     {
         mConfig = config;
 
@@ -73,15 +72,6 @@ public class BamReader implements AutoCloseable
     }
 
     public boolean currentIsReferenceSample() { return mCurrentIsReferenceSample; }
-
-    private BamSlicer createBamSlicer()
-    {
-        // as per SvPrep
-        BamSlicer bamSlicer = new BamSlicer(0, false, true, false);
-        bamSlicer.setKeepUnmapped();
-        bamSlicer.setKeepHardClippedSecondaries();
-        return bamSlicer;
-    }
 
     @Override
     public void close()

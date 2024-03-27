@@ -35,7 +35,7 @@ import com.hartwig.hmftools.isofox.fusion.FusionWriter;
 import com.hartwig.hmftools.isofox.fusion.JunctionRacFragments;
 import com.hartwig.hmftools.isofox.fusion.PassingFusions;
 import com.hartwig.hmftools.isofox.fusion.RacFragmentCache;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;

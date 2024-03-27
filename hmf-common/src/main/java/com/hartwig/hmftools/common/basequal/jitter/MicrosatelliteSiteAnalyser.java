@@ -41,7 +41,7 @@ public class MicrosatelliteSiteAnalyser
         this.refGenomeMicrosatellite = refGenomeMicrosatellite;
     }
 
-    public void addReadToStats(final SAMRecord read)
+    public synchronized void addReadToStats(final SAMRecord read)
     {
         if(read.getReadUnmappedFlag() || read.getDuplicateReadFlag())
             return;

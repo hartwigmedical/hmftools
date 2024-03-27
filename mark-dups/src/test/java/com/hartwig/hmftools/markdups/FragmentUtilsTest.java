@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.markdups;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getFivePrimeUnclippedPosition;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.calcBaseQualAverage;
@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.markdups.TestUtils.createFragment;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.samtools.CigarUtils;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.markdups.common.DuplicateGroup;
 import com.hartwig.hmftools.markdups.common.Fragment;
@@ -23,7 +22,7 @@ import com.hartwig.hmftools.markdups.common.FragmentUtils;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 
 import static com.hartwig.hmftools.markdups.TestUtils.setBaseQualities;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 

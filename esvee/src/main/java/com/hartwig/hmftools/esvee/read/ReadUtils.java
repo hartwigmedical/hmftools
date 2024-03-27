@@ -3,11 +3,12 @@ package com.hartwig.hmftools.esvee.read;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.esvee.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
+import static com.hartwig.hmftools.esvee.common.SvConstants.DISCORDANT_FRAGMENT_LENGTH;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.esvee.SvConstants;
+import com.hartwig.hmftools.esvee.AssemblyConstants;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public final class ReadUtils
@@ -21,15 +22,16 @@ public final class ReadUtils
 
     public static boolean isDiscordant(final Read read)
     {
-        return isDiscordant(read, SvConstants.DISCORDANT_FRAGMENT_LENGTH);
+        return isDiscordant(read, DISCORDANT_FRAGMENT_LENGTH);
     }
 
     public static boolean isDiscordant(final Read read, final int discordantPairFragmentLength)
     {
+        // FIXME: share method from SvUtils and/or SvPrep
         if(read.isMateUnmapped())
             return false;
 
-        if(!read.chromosome().equals(read.mateChromosome()))
+        if(!read.chromosome().equals(read.mateChromosome())) // not strictly correct for supplementaries, since needs to check the primary
             return true;
 
         if(read.positiveStrand() == read.matePositiveStrand())
@@ -40,39 +42,88 @@ public final class ReadUtils
         return fragmentSize == 0 || fragmentSize >= discordantPairFragmentLength;
     }
 
-    public static double avgBaseQuality(final Read read)
+    public static final int INVALID_INDEX = -1;
+
+    public static int getReadIndexAtReferencePosition(final Read read, final int refPosition, boolean allowExtrapolation)
     {
-        byte[] baseQualities = read.getBaseQuality();
+        // finds the read index given a reference position, and extrapolates outwards from alignments as required
+
+        // for indel reads, use the implied alignment and unclipped positions from each direction
+        int alignmentStart = allowExtrapolation && read.indelImpliedAlignmentStart() > 0 ?
+                read.indelImpliedAlignmentStart() : read.alignmentStart();
+
+        int alignmentEnd = allowExtrapolation && read.indelImpliedAlignmentEnd() > 0 ?
+                read.indelImpliedAlignmentEnd() : read.alignmentEnd();
+
+        if(refPosition <= alignmentStart)
+        {
+            if(!allowExtrapolation && refPosition < alignmentStart)
+                return INVALID_INDEX;
+
+            int baseDiff = alignmentStart - refPosition;
+            int softClipBases = alignmentStart - read.unclippedStart();
+            return baseDiff <= softClipBases ? softClipBases - baseDiff : INVALID_INDEX;
+        }
+        else if(refPosition >= alignmentEnd)
+        {
+            if(!allowExtrapolation && refPosition > alignmentEnd)
+                return INVALID_INDEX;
+
+            int baseDiff = refPosition - alignmentEnd;
+            int softClipBases = read.unclippedEnd() - alignmentEnd;
+            return baseDiff <= softClipBases ? read.basesLength() - (softClipBases - baseDiff) - 1 : INVALID_INDEX;
+        }
+
+        // cannot use standard method since CIGAR and coords may have been adjusted
+        int readIndex = 0;
+        int currentPos = read.alignmentStart();
+        for(CigarElement element : read.cigarElements())
+        {
+            if(!element.getOperator().consumesReferenceBases())
+            {
+                readIndex += element.getLength();
+                continue;
+            }
+
+            if(currentPos == refPosition)
+                break;
+
+            if(!element.getOperator().consumesReadBases())
+            {
+                // for a D or N where the position is inside it, return the read index for the start of the element
+                if(refPosition >= currentPos && refPosition < currentPos + element.getLength())
+                    return readIndex - 1;
+
+                currentPos += element.getLength();
+            }
+            else
+            {
+                // pos = 100, element = 10M, covering pos 100-109, read index 4 (say after 4S), ref pos at last base of element = 109
+                if(refPosition >= currentPos && refPosition < currentPos + element.getLength())
+                    return readIndex + refPosition - currentPos;
+
+                currentPos += element.getLength();
+                readIndex += element.getLength();
+            }
+        }
+
+        return readIndex;
+    }
+
+    public static int avgBaseQuality(final Read read) { return avgBaseQuality(read.getBaseQuality(), 0, read.basesLength() - 1); }
+
+    public static int avgBaseQuality(final byte[] baseQualities, final int startIndex, final int endIndex)
+    {
+        if(startIndex > endIndex || startIndex < 0 || endIndex >= baseQualities.length)
+            return -1;
 
         int qualitySum = 0;
-        for(int i = 0; i < baseQualities.length; i++)
+        for(int i = startIndex; i <= endIndex; i++)
         {
             qualitySum += baseQualities[i];
         }
 
-        return qualitySum / (double)baseQualities.length;
-    }
-
-    public static int avgBaseQuality(final Read read, final int startPosition, final int length)
-    {
-        byte[] baseQualities = read.getBaseQuality();
-        int startIndex = startPosition - 1;
-        int endIndex = Math.min(startIndex + length, baseQualities.length);
-
-        int qualitySum = 0;
-        for(int i = startIndex; i < endIndex; i++)
-        {
-            qualitySum += baseQualities[i];
-        }
-
-        return qualitySum / length;
-    }
-
-    @Deprecated
-    public static int getReadPositionAtReferencePosition(final Read read, final int position)
-    {
-        // CHECK: is this the same implementation as below? obviously needs to adjust for any changes to cigar
-        return read.bamRecord().getReadPositionAtReferencePosition(position);
+        return qualitySum / (endIndex - startIndex + 1);
     }
 
     public static void copyArray(final byte[] source, final byte[] dest, final int sourceIndexStart, final int destIndexStart)
@@ -91,6 +142,19 @@ public final class ReadUtils
         for(int i = 0; i < source.length; ++i)
         {
             dest[i] = source[i];
+        }
+
+        return dest;
+    }
+
+    public static byte[] subsetArray(final byte[] source, final int startIndex, final int endIndex)
+    {
+        byte[] dest = new byte[endIndex - startIndex + 1];
+
+        int newIndex = 0;
+        for(int index = startIndex; index <= endIndex; ++index, ++newIndex)
+        {
+            dest[newIndex] = source[index];
         }
 
         return dest;
@@ -131,82 +195,19 @@ public final class ReadUtils
         return reversed.getBytes();
     }
 
-    /*
-    public static int getReadPositionAtReferencePosition(final Read read, final int position)
+    public static void initialise(final byte[] array, final byte value)
     {
-        if(position <= 0)
-            return 0;
-
-        for(Alignment alignmentBlock : read.getAlignmentBlocks())
+        for(int i = 0; i < array.length; ++i)
         {
-            final int end = alignmentBlock.ReferenceStartPosition + alignmentBlock.Length - 1;
-            if(end >= position)
-            {
-                if(position < alignmentBlock.ReferenceStartPosition)
-                    return 0;
-                else
-                    return position - alignmentBlock.ReferenceStartPosition + alignmentBlock.SequenceStartPosition;
-            }
+            array[i] = value;
         }
-        return 0;
-    }
-    */
-    
-    public static Read flipRead(final Read read)
-    {
-        // TO-DO - either skip doing this an just register a reversed read with assembly / support, or mark the read or copy it
-        return read;
     }
 
-    public static boolean isGermline(final Read read, final String refSampleId)
+    public static void initialise(final int[] array, final int value)
     {
-        return read.bamRecord().getHeader().getAttribute(BAM_HEADER_SAMPLE_ID_TAG).equals(refSampleId);
-    }
-
-    /*
-    default MutableRecord trimLeft(final int count)
-    {
-        final MutableRecord clone = copyRecord();
-        clone.setBases(Arrays.copyOfRange(getBases(), count, getLength()),
-                Arrays.copyOfRange(getBaseQuality(), count, getLength()));
-        if(!clone.isUnmapped())
+        for(int i = 0; i < array.length; ++i)
         {
-            clone.setCigar(CigarUtils.trimLeft(clone.getCigar(), count));
-            final int alignmentMove = Math.max(0, count - leftSoftClipLength(getCigar()));
-            clone.setAlignmentStart(getAlignmentStart() + alignmentMove);
+            array[i] = value;
         }
-
-        return clone;
     }
-
-    default MutableRecord trimRight(final int count)
-    {
-        final MutableRecord clone = copyRecord();
-        clone.setBases(Arrays.copyOfRange(getBases(), 0, getLength() - count),
-                Arrays.copyOfRange(getBaseQuality(), 0, getLength() - count));
-        if(!clone.isUnmapped())
-            clone.setCigar(CigarUtils.trimRight(clone.getCigar(), count));
-
-        return clone;
-    }
-
-    default MutableRecord flipRecord()
-    {
-        final byte[] readBases = getBases().clone();
-        SequenceUtil.reverseComplement(readBases);
-        final byte[] newQuals = getBaseQuality().clone();
-        SequenceUtil.reverseQualities(newQuals);
-
-        final MutableRecord flipped = copyRecord();
-        flipped.setBases(readBases, newQuals);
-        flipped.setPositiveStrand(!isPositiveStrand());
-
-        final var cigarElements = new ArrayList<>(flipped.getCigar().getCigarElements());
-        Collections.reverse(cigarElements);
-        flipped.setCigar(new Cigar(cigarElements));
-
-        return flipped;
-    }
-    */
-
 }

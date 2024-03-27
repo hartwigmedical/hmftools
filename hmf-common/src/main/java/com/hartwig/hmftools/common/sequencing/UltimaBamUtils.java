@@ -25,9 +25,9 @@ public final class UltimaBamUtils
 
     private static final byte[] CYCLE_BASES = new byte[] { (byte)'T', (byte)'G', (byte)'C', (byte)'A' };
 
-    public static short[] extractTpValues(final SAMRecord record)
+    public static byte[] extractTpValues(final SAMRecord record)
     {
-        return record.getSignedShortArrayAttribute(TP_TAG);
+        return record.getByteArrayAttribute(TP_TAG);
     }
 
     public static short[] extractT0Values(final SAMRecord record)
@@ -65,7 +65,7 @@ public final class UltimaBamUtils
 
     public static byte calcTpBaseQual(final SAMRecord record, int indexStart, int indexEnd, int tpSearchValue)
     {
-        short[] tpValues = extractTpValues(record);
+        byte[] tpValues = extractTpValues(record);
 
         int qualValue1 = -1;
         int qualValue2 = -1;
@@ -91,7 +91,7 @@ public final class UltimaBamUtils
             // if bases aren't found, use middle base(s) as: min(40, Q + 6 * abs(required_tp – T))
             int middleIndex = indexStart + (indexEnd - indexStart) / 2;
             qualValue1 = record.getBaseQualities()[middleIndex];
-            short tpValue = tpValues[middleIndex];
+            byte tpValue = tpValues[middleIndex];
 
             return (byte)min(ULTIMA_MAX_QUAL, qualValue1 + 6 * abs(tpSearchValue - tpValue));
         }

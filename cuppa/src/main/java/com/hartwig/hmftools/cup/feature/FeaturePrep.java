@@ -3,15 +3,15 @@ package com.hartwig.hmftools.cup.feature;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
-import static com.hartwig.hmftools.cup.common.CupCalcs.BOOL_STR_TRUE;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromFile;
 import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.cup.prep.CategoryPrep;
 import com.hartwig.hmftools.cup.prep.DataItem;
@@ -37,7 +37,7 @@ public class FeaturePrep implements CategoryPrep
     @Override
     public List<DataItem> extractSampleData(final String sampleId)
     {
-        List<DataItem> dataItems = Lists.newArrayList();
+        LinkedHashMap<DataItem.Index, DataItem> dataItemsMap = new LinkedHashMap<>();
 
         final String linxDataDir = formSamplePath(mConfig.LinxDir, sampleId);
         final String purpleDataDir = formSamplePath(mConfig.PurpleDir, sampleId);
@@ -46,7 +46,7 @@ public class FeaturePrep implements CategoryPrep
         try
         {
             // TODO: remove use of sample map once Cuppa becomes just a data-loader, or refactor
-            Map<String,List<SampleFeatureData>> sampleFeaturesMap = Maps.newHashMap();
+            Map<String,List<SampleFeatureData>> sampleFeaturesMap = new HashMap<>();
 
             if(!loadFeaturesFromFile(sampleId, linxDataDir, purpleDataDir, virusDataDir, sampleFeaturesMap))
                 return null;
@@ -66,47 +66,54 @@ public class FeaturePrep implements CategoryPrep
             {
                 String likelihood = String.valueOf(featureData.Likelihood);
 
+                DataItem dataItem;
                 switch(featureData.Type)
                 {
                     case DRIVER:
-                    {
-                        dataItems.add(new DataItem(DNA, ItemType.DRIVER, featureData.Name + MUTATION_TYPE, likelihood));
+                        dataItem = new DataItem(DNA, ItemType.DRIVER, featureData.Name + MUTATION_TYPE, likelihood);
                         break;
-                    }
 
                     case AMP:
-                    {
-                        dataItems.add(new DataItem(DNA, ItemType.DRIVER, featureData.Name + AMP_TYPE, likelihood));
+                        dataItem = new DataItem(DNA, ItemType.DRIVER, featureData.Name + AMP_TYPE, likelihood);
                         break;
-                    }
 
                     case INDEL:
-                    {
-                        dataItems.add(new DataItem(DNA, ItemType.DRIVER, featureData.Name.replace("INDEL_", "") + INDEL_TYPE, likelihood));
+                        dataItem = new DataItem(DNA, ItemType.DRIVER, featureData.Name.replace("INDEL_", "") + INDEL_TYPE, likelihood);
                         break;
-                    }
 
                     case FUSION:
-                    {
-                        dataItems.add(new DataItem(DNA, ItemType.FUSION, featureData.Name, likelihood));
+                        dataItem = new DataItem(DNA, ItemType.FUSION, featureData.Name, likelihood);
                         break;
-                    }
 
                     case VIRUS:
-                    {
-                        dataItems.add(new DataItem(DNA, ItemType.VIRUS, featureData.Name, likelihood));
+                        dataItem = new DataItem(DNA, ItemType.VIRUS, featureData.Name, likelihood);
                         break;
+
+                    default:
+                        throw new IllegalStateException("Invalid FeatureType");
+                }
+
+                // De-duplicate features by max value
+                if(dataItemsMap.containsKey(dataItem.Index))
+                {
+                    float newDataItemValue = Float.parseFloat(dataItem.Value);
+                    float existingDataItemValue = Float.parseFloat(dataItemsMap.get(dataItem.Index).Value);
+
+                    if(existingDataItemValue >= newDataItemValue)
+                    {
+                        // Keep old value if it is higher and discard new value
+                        continue;
                     }
                 }
+
+                dataItemsMap.put(dataItem.Index, dataItem);
             }
 
-            return dataItems;
+            return new ArrayList<>(dataItemsMap.values());
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("sample({}) sample traits - failed to load purity file from dir{}): {}",
-                    sampleId, purpleDataDir, e.toString());
-
+            CUP_LOGGER.error("sample({}) - failed to extract driver, fusion, and virus features: {}", sampleId, e.toString());
             return null;
         }
     }

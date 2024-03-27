@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsSt
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.APP_NAME;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
-import static com.hartwig.hmftools.markdups.MarkDupsConfig.addConfig;
+import static com.hartwig.hmftools.markdups.MarkDupsConfig.registerConfig;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.markdups.common.Constants.LOCK_ACQUIRE_LONG_TIME_MS;
 import static com.hartwig.hmftools.markdups.common.ReadUnmapper.unmapMateAlignment;
@@ -23,9 +23,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.BamSampler;
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.samtools.BamSampler;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
@@ -57,7 +58,13 @@ public class MarkDuplicates
 
         setReadLength();
 
-        FileWriterCache fileWriterCache = new FileWriterCache(mConfig);
+        JitterAnalyser jitterAnalyser = null;
+        if(mConfig.JitterAnalyser != null)
+        {
+            jitterAnalyser = new JitterAnalyser(mConfig.toJitterAnalyserConfig(), MD_LOGGER);
+        }
+
+        FileWriterCache fileWriterCache = new FileWriterCache(mConfig, jitterAnalyser);
 
         PartitionDataStore partitionDataStore = new PartitionDataStore(mConfig);
 
@@ -140,6 +147,20 @@ public class MarkDuplicates
             if(!fileWriterCache.sortAndIndexBams())
             {
                 MD_LOGGER.error("sort-merge-index failed");
+                System.exit(1);
+            }
+        }
+
+        if(jitterAnalyser != null)
+        {
+            try
+            {
+                MD_LOGGER.info("analysing microsatellite jitter");
+                jitterAnalyser.writeAnalysisOutput();
+            }
+            catch(Exception e)
+            {
+                MD_LOGGER.error("failed to write output of jitter analysis: {}", e.toString());
                 System.exit(1);
             }
         }
@@ -328,7 +349,7 @@ public class MarkDuplicates
     public static void main(final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
-        addConfig(configBuilder);
+        registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
 

@@ -190,7 +190,7 @@ vis_pass_only | Generate output for all passing variants
 vis_max_support_reads | Max reads per type to display, default is 40
 vis_output_dir | Output directory for HTML files, defaults to 'vis' if not specified
 
-A guide to the visualisations is shown below. A link to the HTML file for this variant is available [here.](http://htmlpreview.github.io/?https://github.com/hartwigmedical/hmftools/blob/master/sage/docs/COLO829v003T.sage.chr7_152079940_G_T.html)
+A guide to the visualisations is shown below. A link to the HTML file for this variant is available [here.](https://raw.githack.com/hartwigmedical/hmftools/master/sage/docs/COLO829v003T.sage.chr7_152079940_G_T.html)
 
 ![image](docs/COLO829v003T.annotated_sage_vis.png)
 
@@ -532,8 +532,14 @@ For targeted sequencing, the `high_depth_mode` flag should be provided. This all
 * Variants must have at least 3 supporting fragments with unique start and end coordinates, or get soft filtered with `minFragmentCoords`
 * INDEL variants in or near microsatellite repeats must meet a minimum VAF dependent upon the repeat context, or get soft filtered with `jitter`
 * SNV variants with VAF < 1% and inside a microsatellite repeat of length > 5 get soft filtered with `jitter`
-* `modifiedMapQuality` is calculated in a different way, using the ratio of average Ref and Alt raw MAPQ
-
+* Mapping quality is used in a different way. Specifically, we use a different fixed penalty for `modifiedMapQuality`:
+<pre>
+modifiedMapQuality = MAPQ - fixedPenalty (-15) - improperPairPenalty - distanceFromReferencePenalty - softClipPenalty 
+</pre>
+and then multiply final variant QUAL by a mapping quality ratio:
+<pre>
+MQRatio = min(1, (AMQ[1] + MQ_RATIO_SMOOTHING (3)) / (AMQ[0] + MQ_RATIO_SMOOTHING)) ^ MQ_RATIO_FACTOR (2.5)
+</pre>
 We also recommend setting `hotspot_min_tumor_vaf` to 0.015 and `panel_min_tumor_qual` to 150 for targeted sequencing.
 
 ## 6. Phasing
@@ -636,6 +642,8 @@ Variant calling Improvements
 - **Adding strand context to BQR** - Recalibration accuracy could be improved if we combined reverse complemented contexts into one, and had separate recalibrated quals for forward and reverse strand to reflect different sequencing idiosyncracies
 - **Improve readEvents calculation for synced fragments** - we normally transform a read's raw NM by applying only 1 edit count per INDEL element and ignoring the edit count for the variant itself, when applying event penalty. However, doing this with synced fragments (which use the first read's NM attribute but a 'superset' CIGAR) can result in unexpected behaviour.
 - **Looking in correct direction for homopolymer in synced fragment** - we suppress calling specific known NovaSeqX artefacts by looking for long homopolymers upstream of a candidate variant. For synced fragments, we will sometimes look the wrong way and so assign the wrong base qual to that read. Most relevant for targeted panel sequencing on NovaSeqX
+- **Handling germline multi-base inserts in NovaSeqX artefact suppression logic** - suppressing artefacts phased with homopolymer inserts of 3 or more bases is not currently supported by the algorithm, and there is a known issue with handling 2 base inserts, causing some artefacts associated with these to PASS as well
+- **Running indel deduper with germline filtered indel** - If an indel is germline filtered but we have a few potential somatic variants that are artefacts of this indel, we want to filter these.
 
 Phasing improvements
 - **Only first tumor sample is currently phased** - Reference and additional tumor samples are not utilised for phasing

@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.sage.dedup;
 
 import static com.hartwig.hmftools.sage.dedup.VariantDeduper.longerContainsShorter;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_MNV_FILTER;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_SNV_MNV_FILTER;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_MNV_FILTER;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_SNV_MNV_FILTER;
 
 import java.util.List;
 import java.util.stream.Collectors;

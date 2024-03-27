@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static java.lang.String.format;
 
-import com.hartwig.hmftools.common.samtools.CigarTraversal;
+import com.hartwig.hmftools.common.bam.CigarTraversal;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 
 import htsjdk.samtools.SAMRecord;

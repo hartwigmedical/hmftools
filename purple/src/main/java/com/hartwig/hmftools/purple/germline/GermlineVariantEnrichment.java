@@ -66,15 +66,14 @@ public class GermlineVariantEnrichment
         mReportableEnrichment.flush();
     }
 
-    public VCFHeader enrichHeader(final VCFHeader template)
+    public void enrichHeader(final VCFHeader header)
     {
-        VCFHeader header = mPurityEnrichment.enrichHeader(template);
-        header = mHotspotEnrichment.enrichHeader(header);
-        header = mRefGenomeEnrichment.enrichHeader(header);
-
-        header = GermlineLowTumorVCNFilter.enrichHeader(header);
-        header = mReportableEnrichment.enrichHeader(header);
-        header = mGenotypeEnrichment.enrichHeader(header);
-        return GermlinePathogenicEnrichment.enrichHeader(header);
+        mPurityEnrichment.enrichHeader(header);
+        mHotspotEnrichment.enrichHeader(header);
+        mRefGenomeEnrichment.enrichHeader(header);
+        GermlineLowTumorVCNFilter.enrichHeader(header);
+        mReportableEnrichment.enrichHeader(header);
+        mGenotypeEnrichment.enrichHeader(header);
+        GermlinePathogenicEnrichment.enrichHeader(header);
     }
 }

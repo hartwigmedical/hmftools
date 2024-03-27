@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cobalt.count;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.PARTITION_SIZE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,9 +18,10 @@ import java.util.concurrent.Future;
 import com.hartwig.hmftools.cobalt.Chromosome;
 import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
 import com.hartwig.hmftools.cobalt.CobaltColumns;
+import com.hartwig.hmftools.cobalt.CobaltConfig;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.bam.BamSlicer;
 
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.Nullable;
@@ -35,6 +37,7 @@ import tech.tablesaw.api.*;
 public class BamReadCounter
 {
     private final int mMinMappingQuality;
+    private final boolean mIncludeDuplicates;
 
     private Table mReferenceDepths = null;
     private Table mTumorDepths = null;
@@ -53,11 +56,12 @@ public class BamReadCounter
     public Table getTumorDepths() { return mTumorDepths; }
 
     public BamReadCounter(
-            final int windowSize, final int minMappingQuality,
+            final int windowSize, final CobaltConfig config,
             final ExecutorService executorService, final SamReaderFactory readerFactory,
             final ChromosomePositionCodec chromosomePosCodec)
     {
-        mMinMappingQuality = minMappingQuality;
+        mMinMappingQuality = config.MinMappingQuality;
+        mIncludeDuplicates = config.IncludeDuplicates;
         mExecutorService = executorService;
         mReaderFactory = readerFactory;
         mChromosomePosCodec = chromosomePosCodec;
@@ -150,7 +154,9 @@ public class BamReadCounter
         CB_LOGGER.debug("region({}) accumulating read depth", region);
 
         final SamReader reader = samReaderSupplier.get();
-        BamSlicer bamSlicer = new BamSlicer(mMinMappingQuality, false, false, false);
+
+        BamSlicer bamSlicer = new BamSlicer(mMinMappingQuality, mIncludeDuplicates, false, false);
+
         bamSlicer.slice(reader, region, samRecord -> processRead(samRecord, region, readDepthAccumulator));
 
         CB_LOGGER.debug("region({}) complete", region);
@@ -158,6 +164,18 @@ public class BamReadCounter
 
     private void processRead(final SAMRecord record, ChrBaseRegion region, ReadDepthAccumulator readDepthAccumulator)
     {
+        if(mIncludeDuplicates)
+        {
+            // revert to only analysing the raw reads
+            if(record.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
+                return;
+        }
+        else
+        {
+            if(record.getDuplicateReadFlag())
+                return;
+        }
+
         Validate.isTrue(record.getContig().equals(region.Chromosome));
 
         for(AlignmentBlock currentBlock : record.getAlignmentBlocks())

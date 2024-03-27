@@ -2,9 +2,9 @@ package com.hartwig.hmftools.esvee.assembly;
 
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.common.DiscordantGroup;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.JunctionExtension;
+import com.hartwig.hmftools.esvee.types.DiscordantGroup;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.JunctionExtension;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public class JunctionExtender

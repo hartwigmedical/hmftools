@@ -16,18 +16,24 @@ public final class Nucleotides
 
     public static byte swapDnaBase(final byte base) { return (byte)swapDnaBase((char)base); }
 
+    public static int baseIndex(final byte base)
+    {
+        if(base == DNA_BASE_BYTES[0]) return 0;
+        if(base == DNA_BASE_BYTES[1]) return 1;
+        if(base == DNA_BASE_BYTES[2]) return 2;
+        if(base == DNA_BASE_BYTES[3]) return 3;
+
+        return -1;
+    }
+
     public static int baseIndex(final char base)
     {
-        if(base == 'G')
-            return 0;
-        if(base == 'A')
-            return 1;
-        if(base == 'T')
-            return 2;
-        if(base == 'C')
-            return 3;
-        else
-            return -1;
+        if(base == DNA_BASES[0]) return 0;
+        if(base == DNA_BASES[1]) return 1;
+        if(base == DNA_BASES[2]) return 2;
+        if(base == DNA_BASES[3]) return 3;
+
+        return -1;
     }
 
     public static String swapDnaBase(final String base) { return String.valueOf(swapDnaBase(base.charAt(0))); }

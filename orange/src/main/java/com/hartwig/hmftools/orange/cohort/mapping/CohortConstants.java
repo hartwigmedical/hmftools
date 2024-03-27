@@ -36,6 +36,7 @@ public final class CohortConstants
         DOID_COMBINATIONS_TO_MAP_TO_ESOPHAGUS.add(Sets.newHashSet("0080374", "5041"));
         DOID_COMBINATIONS_TO_MAP_TO_ESOPHAGUS.add(Sets.newHashSet("0080374", "1107"));
         DOID_COMBINATIONS_TO_MAP_TO_ESOPHAGUS.add(Sets.newHashSet("0080374", "4914"));
+        DOID_COMBINATIONS_TO_MAP_TO_ESOPHAGUS.add(Sets.newHashSet("0080374", "3748"));
         DOID_COMBINATIONS_TO_MAP_TO_ESOPHAGUS.add(Sets.newHashSet("0080375", "5041"));
         DOID_COMBINATIONS_TO_MAP_TO_ESOPHAGUS.add(Sets.newHashSet("0080375", "1107"));
         DOID_COMBINATIONS_TO_MAP_TO_ESOPHAGUS.add(Sets.newHashSet("0080375", "4914"));
@@ -45,6 +46,7 @@ public final class CohortConstants
 
         DOID_COMBINATIONS_TO_MAP_TO_STOMACH.add(Sets.newHashSet("0080374", "10534"));
         DOID_COMBINATIONS_TO_MAP_TO_STOMACH.add(Sets.newHashSet("0080374", "5517"));
+        DOID_COMBINATIONS_TO_MAP_TO_STOMACH.add(Sets.newHashSet("0080374", "5516"));
         DOID_COMBINATIONS_TO_MAP_TO_STOMACH.add(Sets.newHashSet("0080374", "3717"));
         DOID_COMBINATIONS_TO_MAP_TO_STOMACH.add(Sets.newHashSet("0080375", "10534"));
         DOID_COMBINATIONS_TO_MAP_TO_STOMACH.add(Sets.newHashSet("0080375", "5517"));

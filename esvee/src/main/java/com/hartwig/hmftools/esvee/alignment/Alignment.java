@@ -2,23 +2,23 @@ package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.common.AssemblyLink;
-import com.hartwig.hmftools.esvee.common.PhaseSet;
+import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.types.PhaseSet;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 
 public class Alignment
 {
-    private final SvConfig mConfig;
+    private final AssemblyConfig mConfig;
 
     private final Aligner mAligner;
 
-    public Alignment(final SvConfig config, final Aligner aligner)
+    public Alignment(final AssemblyConfig config, final Aligner aligner)
     {
         mConfig = config;
         mAligner = aligner;

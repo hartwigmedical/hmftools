@@ -4,16 +4,17 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
-import static com.hartwig.hmftools.esvee.SvConstants.ASSEMBLY_EXTENSION_OVERLAP_BASES;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_EXTENSION_OVERLAP_BASES;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_SIDE_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.DUP_BRANCHED;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensions;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.findRemoteRegions;
-import static com.hartwig.hmftools.esvee.common.RefSideSoftClip.purgeRefSideSoftClips;
-import static com.hartwig.hmftools.esvee.common.SupportType.CANDIDATE_DISCORDANT;
-import static com.hartwig.hmftools.esvee.common.SupportType.DISCORDANT;
-import static com.hartwig.hmftools.esvee.common.SupportType.JUNCTION_MATE;
+import static com.hartwig.hmftools.esvee.types.RefSideSoftClip.purgeRefSideSoftClips;
+import static com.hartwig.hmftools.esvee.types.SupportType.CANDIDATE_DISCORDANT;
+import static com.hartwig.hmftools.esvee.types.SupportType.DISCORDANT;
+import static com.hartwig.hmftools.esvee.types.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
 
 import java.util.Collections;
@@ -25,11 +26,11 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.esvee.common.AssemblySupport;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.RefBaseAssembly;
-import com.hartwig.hmftools.esvee.common.RefSideSoftClip;
-import com.hartwig.hmftools.esvee.common.SupportType;
+import com.hartwig.hmftools.esvee.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.RefBaseAssembly;
+import com.hartwig.hmftools.esvee.types.RefSideSoftClip;
+import com.hartwig.hmftools.esvee.types.SupportType;
 import com.hartwig.hmftools.esvee.read.Read;
 
 public class RefBaseExtender
@@ -52,9 +53,9 @@ public class RefBaseExtender
         boolean isForwardJunction = assembly.junction().isForward();
         int junctionPosition = assembly.junction().Position;
 
+        // not keeping reads with unmapped mates since not sure how to incorporate their bases
         List<Read> discordantReads = unfilteredNonJunctionReads.stream()
-                .filter(x -> isDiscordantCandidate(x, isForwardJunction, junctionPosition)) // not keeping reads with unmapped mates since not sure how to incorporate their bases
-                // .filter(x -> !x.hasMateSet()) // will now be set for local INVs and DUPs, so cannot bea an excluding criteria
+                .filter(x -> isDiscordantCandidate(x, isForwardJunction, junctionPosition))
                 .filter(x -> !assembly.hasReadSupport(x.mateRead()))
                 .collect(Collectors.toList());
 
@@ -155,7 +156,7 @@ public class RefBaseExtender
 
         // only keep possible alternative ref-base assemblies with sufficient evidence and length
         int nonSoftClipRefPosition = isForwardJunction ? minAlignedPosition : maxAlignedPosition;
-        purgeRefSideSoftClips(assembly.refSideSoftClips(), PRIMARY_ASSEMBLY_MIN_READ_SUPPORT, PRIMARY_ASSEMBLY_MIN_LENGTH, nonSoftClipRefPosition);
+        purgeRefSideSoftClips(assembly.refSideSoftClips(), PRIMARY_ASSEMBLY_MIN_READ_SUPPORT, REF_SIDE_MIN_SOFT_CLIP_LENGTH, nonSoftClipRefPosition);
     }
 
     private class NonJunctionRead
@@ -208,7 +209,8 @@ public class RefBaseExtender
     }
 
     public static void extendRefBases(
-            final JunctionAssembly assembly, final List<AssemblySupport> nonJunctionSupport, final RefGenomeInterface refGenome)
+            final JunctionAssembly assembly, final List<AssemblySupport> nonJunctionSupport, final RefGenomeInterface refGenome,
+            boolean allowBranching)
     {
         // find the maximal ref base extension point and make note of any recurrent soft-clip points including possible branched assemblies
         int minAlignedPosition = assembly.minAlignedPosition();
@@ -244,11 +246,11 @@ public class RefBaseExtender
         }
 
         int nonSoftClipRefPosition = isForwardJunction ? minAlignedPosition : maxAlignedPosition;
-        purgeRefSideSoftClips(refSideSoftClips, PRIMARY_ASSEMBLY_MIN_READ_SUPPORT, PRIMARY_ASSEMBLY_MIN_LENGTH, nonSoftClipRefPosition);
+        purgeRefSideSoftClips(refSideSoftClips, PRIMARY_ASSEMBLY_MIN_READ_SUPPORT, REF_SIDE_MIN_SOFT_CLIP_LENGTH, nonSoftClipRefPosition);
 
         boolean hasUnmatched = assembly.refSideSoftClips().stream().anyMatch(x -> !x.matchesOriginal());
 
-        if(!hasUnmatched)
+        if(!hasUnmatched || !allowBranching)
         {
             if(nonSoftClipRefPosition != initialRefPosition && !nonJunctionSupport.isEmpty())
             {
@@ -331,6 +333,7 @@ public class RefBaseExtender
                     continue;
 
                 branchedAssemblies.add(junctionAssembly);
+                junctionAssembly.setOutcome(DUP_BRANCHED);
             }
             else
             {

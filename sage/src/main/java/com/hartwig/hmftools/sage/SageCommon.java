@@ -8,7 +8,7 @@ import java.util.Map;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.samtools.BamSampler;
+import com.hartwig.hmftools.common.bam.BamSampler;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

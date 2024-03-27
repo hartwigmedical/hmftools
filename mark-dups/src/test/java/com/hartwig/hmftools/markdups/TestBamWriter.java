@@ -18,7 +18,7 @@ public class TestBamWriter extends BamWriter
 
     public TestBamWriter(final MarkDupsConfig config)
     {
-        super("", config, new ReadDataWriter(config), null);
+        super("", config, new ReadDataWriter(config), null, null);
 
         WrittenRecords = Lists.newArrayList();
         CurrentPosUpper = 0;

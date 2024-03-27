@@ -3,10 +3,10 @@ package com.hartwig.hmftools.markdups.write;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UNMAP_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -21,8 +21,8 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
-import com.hartwig.hmftools.common.samtools.UmiReadType;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.bam.UmiReadType;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
 
@@ -59,6 +59,12 @@ public class ReadDataWriter
             sj.add("AvgBaseQual").add("MapQual").add("SuppData").add("Flags");
             sj.add("FirstInPair").add("ReadReversed").add("MateReversed");
             sj.add("Unmapped").add("UnmapCoords").add("MateUnmapped").add("Supplementary").add("Secondary");
+
+            if(mConfig.WriteReadBaseLength > 0)
+            {
+                sj.add("BasesStart");
+                sj.add("BasesEnd");
+            }
 
             writer.write(sj.toString());
             writer.newLine();
@@ -121,6 +127,14 @@ public class ReadDataWriter
                     !isPaired || read.getFirstOfPairFlag(), read.getReadNegativeStrandFlag(), isPaired && read.getMateNegativeStrandFlag(),
                     read.getReadUnmappedFlag(), unmapOrigCoords != null ? unmapOrigCoords : "",
                     isPaired && read.getMateUnmappedFlag(), read.getSupplementaryAlignmentFlag(), read.isSecondaryAlignment()));
+
+            if(mConfig.WriteReadBaseLength > 0 && mConfig.WriteReadBaseLength * 2 <= read.getReadBases().length)
+            {
+                String readBases = read.getReadString();
+                mWriter.write(format("\t%s\t%s",
+                        readBases.substring(0, mConfig.WriteReadBaseLength),
+                        readBases.substring(readBases.length() - mConfig.WriteReadBaseLength)));
+            }
 
             mWriter.newLine();
         }

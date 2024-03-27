@@ -30,7 +30,6 @@ public class SageCallConfig
     public final String PanelBed;
     public final String Hotspots;
     public final boolean PanelOnly;
-    public final boolean OldIndelDedup; // run first but then override
 
     private final String mResourceDir;
 
@@ -40,7 +39,6 @@ public class SageCallConfig
     private static final String PANEL_BED = "panel_bed";
     private static final String HOTSPOTS = "hotspots";
     private static final String PANEL_ONLY = "panel_only";
-    private static final String RUN_OLD_DEDUP = "old_indel_dedup_diffs";
 
     public SageCallConfig(final String version, final ConfigBuilder configBuilder)
     {
@@ -67,7 +65,6 @@ public class SageCallConfig
         Hotspots = getReferenceFile(configBuilder, HOTSPOTS);
 
         PanelOnly = configBuilder.hasFlag(PANEL_ONLY);
-        OldIndelDedup = configBuilder.hasFlag(RUN_OLD_DEDUP);
     }
 
     public boolean isValid()
@@ -121,7 +118,6 @@ public class SageCallConfig
         configBuilder.addPrefixedPath(HOTSPOTS, false, "Hotspots", RESOURCE_DIR);
         configBuilder.addPrefixedPath(COVERAGE_BED, false, "Coverage is calculated for optionally supplied bed", RESOURCE_DIR);
         configBuilder.addFlag(PANEL_ONLY, "Only examine panel for variants");
-        configBuilder.addFlag(RUN_OLD_DEDUP, "Run old INDEL dedup logic but only to annotate differences with new");
 
         registerCommonConfig(configBuilder);
         addEnsemblDir(configBuilder);
@@ -137,7 +133,6 @@ public class SageCallConfig
         PanelBed = "panel";
         Hotspots = "hotspots";
         PanelOnly = false;
-        OldIndelDedup = false;
         mResourceDir = "";
     }
 

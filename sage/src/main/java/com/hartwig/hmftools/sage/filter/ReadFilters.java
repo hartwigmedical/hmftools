@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sage.filter;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.sage.SageConstants.CHIMERIC_FRAGMENT_LENGTH_MAX;
 
 import htsjdk.samtools.SAMRecord;

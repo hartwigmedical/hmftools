@@ -4,7 +4,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -21,13 +20,13 @@ import static com.hartwig.hmftools.sage.ReferenceData.loadRefGenome;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 import static com.hartwig.hmftools.sage.vcf.VariantContextFactory.NO_CALL;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_BASE_QUAL;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_ALLELIC_BASE_QUALITY;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_ALLELIC_DEPTH;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_DEPTH;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_IMPROPER_PAIR;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_JITTER;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.FRAG_STRAND_BIAS;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_DEPTH;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_BASE_QUALITY;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_DEPTH;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_IMPROPER_PAIR;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -42,8 +41,6 @@ import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.IndexedBases;
@@ -222,7 +219,7 @@ public class SyntheticVcfWriter
                 .build();
 
         VersionInfo version = new VersionInfo("sage.version");
-        VCFHeader header = VariantVCF.header(version.version(), List.of(mSampleId));
+        VCFHeader header = VariantVCF.createHeader(version.version(), List.of(mSampleId), false);
 
         header = mRefContextEnrichment.enrichHeader(header);
 
@@ -289,8 +286,8 @@ public class SyntheticVcfWriter
                 .attribute(READ_CONTEXT_COUNT, 0)
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, 0)
                 .attribute(READ_CONTEXT_JITTER, 0)
-                .attribute(RAW_ALLELIC_DEPTH, new int[] { 0, 0 })
-                .attribute(RAW_ALLELIC_BASE_QUALITY, new int[] { 0, 0 })
+                .attribute(RAW_SUPPORT_DEPTH, new int[] { 0, 0 })
+                .attribute(RAW_SUPPORT_BASE_QUALITY, new int[] { 0, 0 })
                 .attribute(RAW_DEPTH, 0)
                 .attribute(FRAG_STRAND_BIAS, 0)
                 .attribute(AVG_BASE_QUAL, 0)
