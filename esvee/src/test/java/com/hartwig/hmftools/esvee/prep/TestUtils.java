@@ -113,6 +113,13 @@ public final class TestUtils
         record.setReferenceName(chromosome);
 
         record.setFlags(flags);
+
+        record.setMateReferenceName(chromosome);
+        record.setMateAlignmentStart(readStart + 300);
+        record.setMateNegativeStrandFlag(true);
+
+        record.setInferredInsertSize(400);
+
         return record;
     }
 

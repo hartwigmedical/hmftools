@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_C_INSERT;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_INSERT;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_LENGTH;
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -21,7 +22,6 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_LINE_SOFT_CLIP_L
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_CHECK_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_MIN_SC_LENGTH;
-import static com.hartwig.hmftools.esvee.prep.types.PrepRead.getSoftClippedBases;
 
 import static htsjdk.samtools.CigarOperator.M;
 
@@ -38,6 +38,8 @@ public class ReadFilters
     }
 
     public ReadFilterConfig config() { return mConfig; }
+
+    private static final int MIN_CHECK_SC_BASES = min(LINE_POLY_AT_REQ, POLY_G_LENGTH);
 
     public int checkFilters(final SAMRecord record)
     {
@@ -76,16 +78,20 @@ public class ReadFilters
         if(scLeft > 0 || scRight > 0)
         {
             final byte[] baseQualities = record.getBaseQualities();
-            int scRangeStart = scLeft > scRight ? 0 : baseQualities.length - scRight;
-            int scRangeEnd = scLeft > scRight ? scLeft : baseQualities.length;
             boolean useLeftClip = scLeft > scRight;
+            int scRangeStart = useLeftClip ? 0 : baseQualities.length - scRight;
+            int scRangeEnd = useLeftClip ? scLeft : baseQualities.length;
             int scLength = useLeftClip ? scLeft : scRight;
 
             int aboveQual = 0;
+            StringBuilder scStr = scLength >= MIN_CHECK_SC_BASES ? new StringBuilder() : null;
             for(int i = scRangeStart; i < scRangeEnd; ++i)
             {
                 if(baseQualities[i] >= mConfig.MinSoftClipHighQual)
                     ++aboveQual;
+
+                if(scStr != null)
+                    scStr.append((char)record.getReadBases()[i]);
             }
 
             if(aboveQual / (double)scLength < mConfig.MinSoftClipHighQualPerc)
@@ -99,7 +105,7 @@ public class ReadFilters
                     filters = ReadFilterType.set(filters, ReadFilterType.SOFT_CLIP_LOW_BASE_QUAL);
             }
 
-            String scBases = getSoftClippedBases(record, useLeftClip);
+            String scBases = scStr != null ? scStr.toString() : "";
 
             // check for poly G/C inserts, then a break in a repetitive section, then poly A/T mobile line insertion
             if(scLength >= POLY_G_LENGTH && (scBases.contains(POLY_G_INSERT) || scBases.contains(POLY_C_INSERT)))

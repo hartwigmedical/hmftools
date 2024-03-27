@@ -59,63 +59,64 @@ public class JunctionsTest
     @Test
     public void testBasicJunctions()
     {
-        int readId = 0;
-
         PrepRead read1 = PrepRead.from(createSamRecord(
-                readIdStr(++readId), CHR_1, 800, REF_BASES.substring(0, 100), "30S70M"));
+                READ_ID_GENERATOR.nextId(), CHR_1, 800, REF_BASES.substring(0, 100), "30S70M"));
 
         PrepRead read2 = PrepRead.from(createSamRecord(
-                readIdStr(readId), CHR_1, 820, REF_BASES.substring(20, 120), "100M",
+                read1.id(), CHR_1, 820, REF_BASES.substring(20, 120), "100M",
                 buildFlags(false, true, false)));
 
         addRead(read1, JUNCTION);
         addRead(read2, NO_SUPPORT);
 
         PrepRead suppRead1 = PrepRead.from(createSamRecord(
-                readIdStr(++readId), CHR_1, 800, REF_BASES.substring(0, 73), "3S70M"));
+                READ_ID_GENERATOR.nextId(), CHR_1, 800, REF_BASES.substring(0, 73), "3S70M"));
+
+        assertTrue(suppRead1.record().getMateNegativeStrandFlag());
+        assertFalse(suppRead1.record().getReadNegativeStrandFlag());
 
         addRead(suppRead1, CANDIDATE_SUPPORT);
 
         PrepRead read3 = PrepRead.from(createSamRecord(
-                readIdStr(++readId), CHR_1, 950, REF_BASES.substring(0, 100), "30S70M"));
+                READ_ID_GENERATOR.nextId(), CHR_1, 950, REF_BASES.substring(0, 100), "30S70M"));
 
         PrepRead read4 = PrepRead.from(createSamRecord(
-                readIdStr(readId), CHR_1, 980, REF_BASES.substring(20, 120), "100M",
+                read3.id(), CHR_1, 980, REF_BASES.substring(20, 120), "100M",
                 buildFlags(false, true, false)));
 
         addRead(read3, JUNCTION);
         addRead(read4, NO_SUPPORT);
 
         PrepRead suppRead2 = PrepRead.from(createSamRecord(
-                readIdStr(++readId), CHR_1, 950, REF_BASES.substring(0, 73), "3S70M"));
+                READ_ID_GENERATOR.nextId(), CHR_1, 950, REF_BASES.substring(0, 73), "3S70M"));
 
         addRead(suppRead2, CANDIDATE_SUPPORT);
 
         PrepRead read5 = PrepRead.from(createSamRecord(
-                readIdStr(++readId), CHR_1, 950, REF_BASES.substring(20, 120), "100M"));
+                READ_ID_GENERATOR.nextId(), CHR_1, 950, REF_BASES.substring(20, 120), "100M"));
 
         PrepRead read6 = PrepRead.from(createSamRecord(
-                readIdStr(readId), CHR_1, 980, REF_BASES.substring(0, 100), "70M30S"));
+                read5.id(), CHR_1, 980, REF_BASES.substring(0, 100), "70M30S"));
 
         addRead(read5, NO_SUPPORT);
         addRead(read6, JUNCTION);
 
         PrepRead suppRead3 = PrepRead.from(createSamRecord(
-                readIdStr(++readId), CHR_1, 990, REF_BASES.substring(0, 63), "60M3S"));
+                READ_ID_GENERATOR.nextId(), CHR_1, 990, REF_BASES.substring(0, 63), "60M3S"));
 
         addRead(suppRead3, CANDIDATE_SUPPORT);
 
         PrepRead read7 = PrepRead.from(createSamRecord(
-                readIdStr(++readId), CHR_1, 1010, REF_BASES.substring(10, 90), "50M30S"));
+                READ_ID_GENERATOR.nextId(), CHR_1, 1010, REF_BASES.substring(10, 90), "50M30S"));
 
         PrepRead read8 = PrepRead.from(createSamRecord(
-                readIdStr(readId), CHR_1, 1010, REF_BASES.substring(0, 50), "50M"));
+                read7.id(), CHR_1, 1010, REF_BASES.substring(0, 50), "50M"));
 
         addRead(read7, JUNCTION);
         addRead(read8, NO_SUPPORT);
 
         PrepRead suppRead4 = PrepRead.from(createSamRecord(
-                readIdStr(++readId), CHR_1, 990, REF_BASES.substring(0, 73), "70M3S"));
+                READ_ID_GENERATOR.nextId(), CHR_1, 990, REF_BASES.substring(0, 73), "70M3S"));
 
         addRead(suppRead4, CANDIDATE_SUPPORT);
 
@@ -140,14 +141,14 @@ public class JunctionsTest
         assertEquals(POS_ORIENT, junctionData.Orientation);
         assertEquals(1, junctionData.junctionFragmentCount());
         assertEquals(1, junctionData.exactSupportFragmentCount());
-        assertEquals(5, junctionData.supportingFragmentCount());
+        assertEquals(2, junctionData.supportingFragmentCount());
 
         junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 1059).findFirst().orElse(null);
         assertNotNull(junctionData);
         assertEquals(POS_ORIENT, junctionData.Orientation);
         assertEquals(1, junctionData.junctionFragmentCount());
         assertEquals(2, junctionData.exactSupportFragmentCount());
-        assertEquals(5, junctionData.supportingFragmentCount());
+        assertEquals(0, junctionData.supportingFragmentCount());
     }
 
     @Test

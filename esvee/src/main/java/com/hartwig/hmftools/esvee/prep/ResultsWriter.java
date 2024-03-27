@@ -119,7 +119,7 @@ public class ResultsWriter
             StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add(FLD_CHROMOSOME).add(FLD_POSITION).add(FLD_ORIENTATION);
             sj.add(FLD_JUNCTION_FRAGS).add(FLD_EXACT_SUPPORT_FRAGS).add(FLD_OTHER_SUPPORT_FRAGS).add("LowMapQualFrags");
-            sj.add("MaxQual").add("MaxSoftClip").add("BaseDepth").add("HasPolyAT");
+            sj.add("MaxQual").add("MaxSoftClip");
             sj.add(FLD_INDEL_JUNCTION).add(FLD_HOTSPOT_JUNCTION).add("SoftClipBases").add("InitialReadId");
 
             if(mConfig.TrackRemotes)
@@ -150,8 +150,7 @@ public class ResultsWriter
                 int maxMapQual = 0;
                 int lowMapQualFrags = 0;
                 int maxSoftClip = 0;
-                String softClipBases = "";
-                boolean hasPloyAT = false;
+                PrepRead maxSoftClipRead = null;
                 boolean expectLeftClipped = junctionData.Orientation == NEG_ORIENT;
 
                 for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
@@ -171,22 +170,19 @@ public class ResultsWriter
 
                     if(!junctionData.internalIndel())
                     {
-                        if(!hasPloyAT)
-                            hasPloyAT = PrepRead.hasPolyATSoftClip(read, expectLeftClipped);
-
-                        int scLength = expectLeftClipped ?
-                                read.cigar().getFirstCigarElement().getLength() : read.cigar().getLastCigarElement().getLength();
+                        int scLength = expectLeftClipped ? read.leftClipLength() : read.rightClipLength();
 
                         if(scLength > maxSoftClip)
                         {
                             maxSoftClip = scLength;
-                            softClipBases = PrepRead.getSoftClippedBases(read.record(), expectLeftClipped);
+                            maxSoftClipRead = read;
                         }
                     }
                 }
 
                 int exactSupportFrags = junctionData.ExactSupportGroups.size();
                 int otherSupportFrags = junctionData.SupportingGroups.size();
+                String softClipBases = maxSoftClipRead != null ? getSoftClippedBases(maxSoftClipRead, expectLeftClipped) : "";
 
                 for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.EXACT_SUPPORT))
                 {
@@ -200,8 +196,8 @@ public class ResultsWriter
                         chromosome, junctionData.Position, junctionData.Orientation, junctionData.junctionFragmentCount(),
                         exactSupportFrags, otherSupportFrags, lowMapQualFrags, maxMapQual));
 
-                mJunctionWriter.write(String.format("\t%d\t%d\t%s\t%s\t%s\t%s\t%s",
-                        maxSoftClip, junctionData.depth(), hasPloyAT, junctionData.internalIndel(), junctionData.hotspot(),
+                mJunctionWriter.write(String.format("\t%d\t%s\t%s\t%s\t%s",
+                        maxSoftClip, junctionData.internalIndel(), junctionData.hotspot(),
                         softClipBases, junctionData.topJunctionRead() != null ? junctionData.topJunctionRead().id() : "EXISTING"));
 
                 if(mConfig.TrackRemotes)
@@ -235,6 +231,26 @@ public class ResultsWriter
         {
             SV_LOGGER.error(" failed to write junction data: {}", e.toString());
         }
+    }
+
+    private static String getSoftClippedBases(final PrepRead read, final boolean isClippedLeft)
+    {
+        int scLength = isClippedLeft ? read.leftClipLength() : read.rightClipLength();
+
+        if(scLength <= 0)
+            return "";
+
+        int readLength = read.record().getReadBases().length;
+        int scStart = isClippedLeft ? 0 : readLength - scLength;
+        int scEnd = isClippedLeft ? scLength : readLength;
+
+        StringBuilder scStr = new StringBuilder();
+        for(int i = scStart; i < scEnd; ++i)
+        {
+            scStr.append((char)read.record().getReadBases()[i]);
+        }
+
+        return scStr.toString();
     }
 
     private void writeBamRecords(final ReadGroup readGroup)

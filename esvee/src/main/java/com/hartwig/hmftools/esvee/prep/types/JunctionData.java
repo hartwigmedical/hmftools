@@ -4,7 +4,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.esvee.prep.types.PrepRead.getSoftClippedBases;
 
 import java.util.List;
 import java.util.Map;
@@ -29,7 +28,6 @@ public class JunctionData
     private boolean mInternalIndel;
     private boolean mDiscordantGroup;
     private boolean mHotspot;
-    private int mDepth;
 
     public JunctionData(final int position, final byte orientation, final PrepRead read)
     {
@@ -52,7 +50,6 @@ public class JunctionData
         mHotspot = false;
         mInternalIndel = false;
         mDiscordantGroup = false;
-        mDepth = 0;
     }
 
     public boolean isExisting() { return mIsExisting; }
@@ -74,9 +71,6 @@ public class JunctionData
 
     public boolean discordantGroup() { return mDiscordantGroup; }
     public void markDiscordantGroup() { mDiscordantGroup = true; }
-
-    public void setDepth(int depth) { mDepth = depth; }
-    public int depth() { return mDepth; }
 
     public void addReadType(final PrepRead read, final ReadType type)
     {
@@ -107,14 +101,14 @@ public class JunctionData
 
         for(PrepRead read : junctionReads)
         {
-            String scBases = getSoftClippedBases(read.record(), useLeftSoftClip);
+            int scLength = useLeftSoftClip ? read.leftClipLength() : read.rightClipLength();
 
-            if(scBases.length() < maxHighQualBases)
+            if(scLength < maxHighQualBases)
                 continue;
 
             final byte[] baseQualities = read.record().getBaseQualities();
-            int scRangeStart = useLeftSoftClip ? 0 : baseQualities.length - scBases.length();
-            int scRangeEnd = useLeftSoftClip ? scBases.length() : baseQualities.length;
+            int scRangeStart = useLeftSoftClip ? 0 : baseQualities.length - scLength;
+            int scRangeEnd = useLeftSoftClip ? scLength : baseQualities.length;
 
             int aboveQual = 0;
             for(int i = scRangeStart; i < scRangeEnd; ++i)
@@ -130,7 +124,8 @@ public class JunctionData
             }
         }
 
-        mTopJunctionRead = topRead;
+        if(topRead != null)
+            mTopJunctionRead = topRead;
     }
 
     public void addRemoteJunction(final RemoteJunction remoteJunction)

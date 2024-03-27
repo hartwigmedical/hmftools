@@ -66,7 +66,7 @@ public class PrepRead
             int scLeft = CigarUtils.leftSoftClipLength(record);
             int scRight = CigarUtils.rightSoftClipLength(record);
             mUnclippedStart = mAlignmentStart - scLeft;
-            mUnclippedEnd = mAlignmentEnd - scRight;
+            mUnclippedEnd = mAlignmentEnd + scRight;
         }
         else
         {
@@ -172,21 +172,5 @@ public class PrepRead
         return format("coords(%s:%d-%d) cigar(%s) mate(%s:%d) id(%s) flags(first=%s supp=%s reversed=%s) hasSupp(%s) type(%s)",
                 Chromosome, start(), end(), cigar().toString(), MateChromosome, MatePosStart, id(),
                 isFirstOfPair(), isSupplementaryAlignment(), isReadReversed(), mSupplementaryAlignment != null, mReadType);
-    }
-
-    public static String getSoftClippedBases(final SAMRecord record, final boolean isClippedLeft)
-    {
-        int scLength = isClippedLeft ? record.getCigar().getFirstCigarElement().getLength() : record.getCigar().getLastCigarElement().getLength();
-        int readLength = record.getReadBases().length;
-        int scStart = isClippedLeft ? 0 : readLength - scLength;
-        int scEnd = isClippedLeft ? scLength : readLength;
-        return record.getReadString().substring(scStart, scEnd);
-    }
-
-    public static boolean hasPolyATSoftClip(final PrepRead read, final boolean isClippedLeft)
-    {
-        byte orientation = isClippedLeft ? NEG_ORIENT : POS_ORIENT;
-        String scBases = getSoftClippedBases(read.record(), isClippedLeft);
-        return isMobileLineElement(orientation, scBases);
     }
 }

@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.esvee.prep;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_BASE_QUAL;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_MAP_QUAL;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.READ_FILTERS;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.buildFlags;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.createSamRecord;
@@ -15,7 +17,6 @@ import static com.hartwig.hmftools.esvee.prep.JunctionTracker.hasExactJunctionSu
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.INSERT_MAP_OVERLAP;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilters.isRepetitiveSectionBreak;
-import static com.hartwig.hmftools.esvee.prep.types.PrepRead.hasPolyATSoftClip;
 
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
@@ -186,49 +187,48 @@ public class ReadSupportTest
     @Test
     public void testDistantSupportingReads()
     {
-        int readId = 1;
-
         // first negative orientation
         PrepRead junctionRead = PrepRead.from(TestUtils.createSamRecord(
-                readIdStr(readId++), CHR_1, 230, REF_BASES.substring(0, 100), "30S70M"));
+                READ_ID_GENERATOR.nextId(), CHR_1, 230, REF_BASES.substring(0, 100), "30S70M"));
 
         JunctionData junctionData = new JunctionData(230, NEG_ORIENT, junctionRead);
 
         // distant within range, correct orientation
-        PrepRead supportRead = createRead(readIdStr(readId++), 500, false, true);
+        PrepRead supportRead = createRead(READ_ID_GENERATOR.nextId(), 500, false, true);
         assertTrue(hasOtherJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // too far
-        supportRead = createRead(readIdStr(readId++), 1500, false, true);
+        supportRead = createRead(READ_ID_GENERATOR.nextId(), 1500, false, true);
         assertFalse(hasOtherJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // wrong orientation
-        supportRead = createRead(readIdStr(readId++), 500, false, false);
+        supportRead = createRead(READ_ID_GENERATOR.nextId(), 500, false, false);
         assertFalse(hasOtherJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // wrong side of junction
-        supportRead = createRead(readIdStr(readId++), 220, false, true);
+        supportRead = createRead(READ_ID_GENERATOR.nextId(), 220, false, true);
         assertFalse(hasOtherJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // other junction side
         junctionRead = PrepRead.from(TestUtils.createSamRecord(
-                readIdStr(readId++), CHR_1, 1500, REF_BASES.substring(0, 100), "70M30S"));
+                READ_ID_GENERATOR.nextId(), CHR_1, 1500, REF_BASES.substring(0, 100), "70M30S"));
 
         junctionData = new JunctionData(1500, POS_ORIENT, junctionRead);
 
-        supportRead = createRead(readIdStr(readId++), 1000, true, false);
+        supportRead = PrepRead.from(createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 1000, CHR_3, 100, true, false, null));
         assertTrue(hasOtherJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // too far
-        supportRead = createRead(readIdStr(readId++), 100, true, false);
+        supportRead = createRead(READ_ID_GENERATOR.nextId(), 100, true, false);
         assertFalse(hasOtherJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // wrong orientation
-        supportRead = createRead(readIdStr(readId++), 100, true, true);
+        supportRead = createRead(READ_ID_GENERATOR.nextId(), 100, true, true);
         assertFalse(hasOtherJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // wrong side of junction
-        supportRead = createRead(readIdStr(readId++), 1510, true, false);
+        supportRead = createRead(READ_ID_GENERATOR.nextId(), 1510, true, false);
         assertFalse(hasOtherJunctionSupport(supportRead, junctionData, READ_FILTERS));
     }
 
@@ -289,25 +289,6 @@ public class ReadSupportTest
 
         assertFalse(isRepetitiveSectionBreak(bases.getBytes(), true, 10));
         assertFalse(isRepetitiveSectionBreak(bases.getBytes(), false, 10));
-    }
-
-    @Test
-    public void testPolyATReads()
-    {
-        String aRepeat = "AAAAAAAAAACAAAAAAA";
-        String tRepeat = "TTTTTGTTTTTTTTTTTT";
-        String bases = aRepeat + generateRandomBases(30) + tRepeat;
-
-        PrepRead read = PrepRead.from(createSamRecord("01",  CHR_1, 100, bases, "18S30M18S"));
-        assertTrue(hasPolyATSoftClip(read, true));
-        assertTrue(hasPolyATSoftClip(read, false));
-
-        aRepeat = "AAAAACGAAACAAAAAAA";
-        tRepeat = "TTTTTGTTTTTAGTTTTT";
-        bases = aRepeat + generateRandomBases(30) + tRepeat;
-        read = PrepRead.from(createSamRecord("01",  CHR_1, 100, bases, "18S30M18S"));
-        assertFalse(hasPolyATSoftClip(read, true));
-        assertFalse(hasPolyATSoftClip(read, false));
     }
 
     private static PrepRead createRead(

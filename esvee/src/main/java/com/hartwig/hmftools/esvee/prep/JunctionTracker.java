@@ -77,7 +77,6 @@ public class JunctionTracker
 
     private ReadIdTrimmer mReadIdTrimmer;
     private int mInitialSupportingFrags;
-    private final int[] mBaseDepth;
 
     private final List<PerformanceCounter> mPerfCounters;
 
@@ -125,8 +124,6 @@ public class JunctionTracker
         mLastJunctionIndex = -1;
         mInitialSupportingFrags = 0;
         mReadIdTrimmer = new ReadIdTrimmer(mConfig.TrimReadId);
-
-        mBaseDepth = config.CaptureDepth ? new int[mRegion.baseLength()] : null;
 
         mPerfCounters = Lists.newArrayList();
 
@@ -211,7 +208,6 @@ public class JunctionTracker
         {
             if(readGroup.allNoSupport())
             {
-                captureDepth(readGroup);
                 mReadGroupMap.remove(readGroup.id());
             }
             else if(groupInBlacklist(readGroup))
@@ -234,11 +230,6 @@ public class JunctionTracker
         filterJunctions();
 
         findDiscordantGroups();
-
-        if(mBaseDepth != null)
-        {
-            mJunctions.forEach(x -> x.setDepth(getBaseDepth(x.Position)));
-        }
     }
 
     public void assignJunctionFragmentsAndSupport()
@@ -251,8 +242,6 @@ public class JunctionTracker
         // NOTE: the read groups are not ordered by position until the discordant group routine below
         for(ReadGroup readGroup : mReadGroupMap.values())
         {
-            captureDepth(readGroup);
-
             if(mExpectedReadIds.contains(readGroup.id()))
             {
                 readGroup.markHasRemoteJunctionReads();
@@ -1174,26 +1163,5 @@ public class JunctionTracker
             return;
 
         mPerfCounters.get(pc.ordinal()).stop();
-    }
-
-    private void captureDepth(final ReadGroup readGroup)
-    {
-        if(mBaseDepth == null)
-            return;
-
-        int readsPosMin = readGroup.reads().stream().mapToInt(x -> x.start()).min().orElse(0);
-        int readsPosMax = readGroup.reads().stream().mapToInt(x -> x.end()).max().orElse(0);
-        int baseStart = max(readsPosMin - mRegion.start(), 0);
-        int baseEnd = min(readsPosMax - mRegion.start(), mBaseDepth.length - 1);
-        for(int i = baseStart; i <= baseEnd; ++i)
-        {
-            ++mBaseDepth[i];
-        }
-    }
-
-    private int getBaseDepth(int position)
-    {
-        int baseIndex = position - mRegion.start();
-        return baseIndex >= 0 && baseIndex < mBaseDepth.length ? mBaseDepth[baseIndex] : 0;
     }
 }
