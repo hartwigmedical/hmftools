@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-from functools import cached_property
 from typing import TYPE_CHECKING, Optional, Literal
 
 import joblib
@@ -271,7 +270,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         return self
 
-    @cached_property
+    @property
     def is_fitted(self) -> bool:
         ## Check for an attribute that only exists if the model is fitted
         ## There are many attributes we could check, but one is selected to make the check quick
@@ -418,55 +417,44 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
             LAYER_NAMES.SUB_CLF,
         ]
 
-        probs = self.transform(
-            X, y,
-            keep_steps=keep_steps,
-            verbose=verbose
-        )
-
+        probs = self.transform(X, y, keep_steps=keep_steps, verbose=verbose)
         probs = {step: probs[step] for step in keep_steps}
 
-        ## Convert columns to multi-indexes --------------------------------
+        ## Convert to wide format --------------------------------
         ## Add 'combined__' prefix
-        probs[LAYER_NAMES.COMBINED].columns = \
-            META_CLF_NAMES.COMBINED + \
-            DEFAULT_FEATURE_PREFIX_SEPERATOR + \
-            probs[LAYER_NAMES.COMBINED].columns.astype(str)
+        probs[LAYER_NAMES.COMBINED].columns = (
+            META_CLF_NAMES.COMBINED +
+            DEFAULT_FEATURE_PREFIX_SEPERATOR +
+            probs[LAYER_NAMES.COMBINED].columns
+        )
 
-        ## Make columns a list of tuple string pairs (prefix, suffix)
-        for probs_i in probs.values():
-            probs_i.columns = probs_i.columns.str.split(DEFAULT_FEATURE_PREFIX_SEPERATOR, n=1).map(tuple)
+        probs = pd.concat(probs.values(), axis=1) ## Shape: n_samples x pred_classes
 
-        probs = pd.concat(probs.values(), axis=1)
-
+        ## Make column multi-indexes
+        probs.columns = probs.columns.str.split(DEFAULT_FEATURE_PREFIX_SEPERATOR, n=1).map(tuple)
         probs.columns.names = ["clf_name", "pred_class"]
+
         probs.index.name = "sample_id"
 
-        ## Long dataframe --------------------------------
-        probs_long = probs.stack(level="clf_name") ## Shape: (n_samples, clf_groups, clf_names) x pred_classes
+        ## Convert to long format --------------------------------
+        probs = probs.stack(level="clf_name") ## Shape: (n_samples, clf_names) x pred_classes
 
         ## Add classifier group to index
-        index = probs_long.index.to_frame(index=False)
-        index["clf_group"] = pd.Series(CLF_GROUPS.MAPPINGS_CLF_NAMES)[index["clf_name"]].values
+        index = probs.index.to_frame(index=False)
+
+        ## Force row order
+        index["sample_id"] = pd.Categorical(index["sample_id"], X.index)
+        index["clf_name"] = pd.Categorical(index["clf_name"], CLF_GROUPS.MAPPINGS_CLF_NAMES.keys())
+        index["clf_group"] = pd.Categorical(pd.Series(CLF_GROUPS.MAPPINGS_CLF_NAMES)[index["clf_name"]], CLF_GROUPS.get_all())
         index = index[["sample_id", "clf_group", "clf_name"]]
 
-        probs_long.index = pd.MultiIndex.from_frame(index)
+        probs.index = pd.MultiIndex.from_frame(index)
+        probs = probs.sort_index()
 
-        ## Force ordering --------------------------------
-        ## Original sample order
-        index["sample_id"] = pd.Categorical(index["sample_id"], X.index)
+        ## Force column order
+        probs = probs[self.classes_]
 
-        ## Classifier order
-        clf_names = probs.columns.get_level_values("clf_name").unique()
-        index["clf_name"] = pd.Categorical(index["clf_name"], clf_names)
-
-        index_reordered = pd.MultiIndex.from_frame(index.sort_values(["sample_id", "clf_name"]))
-        probs_long = probs_long.loc[index_reordered]
-
-        ## Class order
-        probs_long = probs_long[self.classes_]
-
-        return probs_long
+        return probs
 
     def feat_imp(self) -> pd.DataFrame:
         self._check_is_fitted()
