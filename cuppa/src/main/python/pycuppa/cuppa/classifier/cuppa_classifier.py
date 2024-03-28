@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import shutil
 from functools import cached_property
 from typing import TYPE_CHECKING, Optional, Literal
 
@@ -11,7 +10,7 @@ import pandas as pd
 from sklearn.compose import make_column_selector
 
 import cuppa.compose.pipeline
-from cuppa.constants import SUB_CLF_NAMES, META_CLF_NAMES, LAYER_NAMES, CLF_GROUPS, NA_FILL_VALUE
+from cuppa.constants import SUB_CLF_NAMES, META_CLF_NAMES, LAYER_NAMES, CLF_GROUPS, NA_FILL_VALUE, SIG_QUANTILE_TRANSFORMER_NAME
 from cuppa.classifier.classifiers import ClassifierLayers, SubClassifiers, MetaClassifiers
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredictionBuilder
 from cuppa.classifier.feature_importance import FeatureImportance
@@ -285,6 +284,32 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
 
     ## Features ================================
+    def get_required_features(self) -> dict[str, pd.Index]:
+
+        self._check_is_fitted()
+
+        required_features = {
+            SUB_CLF_NAMES.GEN_POS: self.gen_pos_clf["cos_sim"].profiles_.index,
+            SUB_CLF_NAMES.SNV96: self.snv96_clf["logistic_regression"].feature_names_in_,
+            SUB_CLF_NAMES.EVENT: self.event_clf["logistic_regression"].feature_names_in_,
+            SIG_QUANTILE_TRANSFORMER_NAME: self.sig_quantile_transformer.feature_names_in_,
+
+            SUB_CLF_NAMES.GENE_EXP: self.gene_exp_clf["chi2"].selected_features,
+            SUB_CLF_NAMES.ALT_SJ: self.alt_sj_clf["chi2"].selected_features,
+
+            META_CLF_NAMES.DNA_COMBINED: self.dna_combined_clf["logistic_regression"].feature_names_in_,
+            META_CLF_NAMES.RNA_COMBINED: self.rna_combined_clf["logistic_regression"].feature_names_in_,
+        }
+
+        required_features[META_CLF_NAMES.COMBINED] = (
+            required_features[META_CLF_NAMES.DNA_COMBINED].tolist() +
+            required_features[META_CLF_NAMES.RNA_COMBINED].tolist()
+        )
+
+        required_features = {clf_name: pd.Index(features) for clf_name, features in required_features.items()}
+
+        return required_features
+
     def _check_features(self, X: pd.DataFrame) -> None:
         handler = MissingFeaturesHandler(X=X, cuppa_classifier=self)
         handler.check_features()
@@ -422,7 +447,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         ## Add classifier group to index
         index = probs_long.index.to_frame(index=False)
-        index["clf_group"] = pd.Series(CLF_GROUPS)[index["clf_name"]].values
+        index["clf_group"] = pd.Series(CLF_GROUPS.MAPPINGS_CLF_NAMES)[index["clf_name"]].values
         index = index[["sample_id", "clf_group", "clf_name"]]
 
         probs_long.index = pd.MultiIndex.from_frame(index)
@@ -503,7 +528,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         self._check_is_fitted()
         self._check_features(X)
 
-        sub_classifiers = self["sub_clfs"]
+        sub_classifiers = self[LAYER_NAMES.SUB_CLF]
         if sub_clf_names is not None:
             super().check_step_names(
                 steps = sub_clf_names,
