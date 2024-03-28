@@ -313,7 +313,7 @@ class MockCvOutputBuilder(LoggerMixin):
     def _build_cached(self) -> tuple[CuppaPrediction, CuppaPredSummary, PerformanceStats]:
         cross_validator = self.cross_validate()
         #probs = cross_validator.apply_on_test_sets("predict_proba", n_jobs=1)
-        predictions = cross_validator.apply_on_test_sets("predict", probs_only=False, n_jobs=1)
+        predictions = cross_validator.apply_on_test_sets("predict", n_jobs=1)
         pred_summ = predictions.summarize(actual_classes=self.y)
         performance = pred_summ.performance()
 

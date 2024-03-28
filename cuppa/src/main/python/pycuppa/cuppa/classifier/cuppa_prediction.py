@@ -29,14 +29,12 @@ class CuppaPredictionBuilder(LoggerMixin):
         self,
         cuppa_classifier: CuppaClassifier,
         X: pd.DataFrame,
-        probs_only: bool = False,
         rm_all_zero_rows: bool = False,
         verbose: bool = False
     ):
         self.cuppa_classifier = cuppa_classifier
         self.X = X
 
-        self.probs_only = probs_only
         self.rm_all_zero_rows = rm_all_zero_rows
         self.verbose = verbose
 
@@ -162,9 +160,6 @@ class CuppaPredictionBuilder(LoggerMixin):
 
     def build(self) -> CuppaPrediction:
 
-        if self.probs_only:
-            return CuppaPrediction(self.probs)
-
         df = pd.concat([
             self.probs,
             self.feat_contribs,
@@ -200,11 +195,6 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
     @property
     def is_multi_sample(self) -> bool:
         return len(self.sample_ids.dropna()) > 1
-
-    @cached_property
-    def has_probs_only(self) -> bool:
-        index_values = self.index.get_level_values("data_type").unique()
-        return len(index_values) == 1 and index_values[0] == "prob"
 
     @property
     def has_cv_performance(self) -> bool:
@@ -331,12 +321,7 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
 
     @cached_property
     def probs(self) -> CuppaPrediction:
-
-        if self.has_probs_only:
-            probs = self
-        else:
-            probs = self.get_rows("prob", index_level="data_type")
-
+        probs = self.get_rows("prob", index_level="data_type")
         probs.index = probs.index.droplevel(["data_type", "feat_name", "feat_value"])
         return probs
 

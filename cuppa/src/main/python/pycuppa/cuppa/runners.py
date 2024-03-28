@@ -395,7 +395,7 @@ class TrainingRunner(LoggerMixin):
         self.cross_validator.fit(cache_training=self.cache_training)
 
     def get_cv_predictions(self) -> None:
-        self.cv_predictions = self.cross_validator.apply_on_test_sets("predict", probs_only=False, n_jobs=1)  ## TODO: add probs_only as a global argument
+        self.cv_predictions = self.cross_validator.apply_on_test_sets("predict", n_jobs=1)
 
     def get_cv_pred_summ(self) -> None:
         predictions = self.cv_predictions
