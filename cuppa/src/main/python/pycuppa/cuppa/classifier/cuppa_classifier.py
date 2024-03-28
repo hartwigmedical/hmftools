@@ -548,7 +548,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         self,
         X: pd.DataFrame,
         y: None = None,
-        rm_all_zero_rows: bool = False,
         bypass_steps: str | list[str] | None = None,
         verbose: bool = False
     ) -> CuppaPrediction:
@@ -572,10 +571,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         y: None
            Not used. Argument only exists for compatibility
 
-        rm_all_zero_rows: bool
-           Per sample, remove features with 0 contribution across all classes? This is intended to reduce the file
-           size, especially with many samples
-
         verbose: bool
            Show progress messages?
 
@@ -596,7 +591,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         builder = CuppaPredictionBuilder(
             cuppa_classifier = cuppa_classifier,
             X = X,
-            rm_all_zero_rows = rm_all_zero_rows,
             verbose = verbose
         )
 

@@ -29,13 +29,10 @@ class CuppaPredictionBuilder(LoggerMixin):
         self,
         cuppa_classifier: CuppaClassifier,
         X: pd.DataFrame,
-        rm_all_zero_rows: bool = False,
         verbose: bool = False
     ):
         self.cuppa_classifier = cuppa_classifier
         self.X = X
-
-        self.rm_all_zero_rows = rm_all_zero_rows
         self.verbose = verbose
 
     @cached_property
@@ -80,10 +77,6 @@ class CuppaPredictionBuilder(LoggerMixin):
             sub_clf_names="event",
             column_type="classes"
         )
-
-        ## Per sample, remove features with 0 contribution across all classes
-        if self.rm_all_zero_rows:
-            df = df.loc[~(df == 0).all(axis=1)]
 
         df = self._set_required_columns(df)
 
