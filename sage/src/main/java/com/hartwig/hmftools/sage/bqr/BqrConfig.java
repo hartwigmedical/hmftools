@@ -13,19 +13,24 @@ public class BqrConfig
     public final boolean LoadBqrFiles;
     public final boolean WriteFile;
     public final boolean WritePlot;
+    public final boolean WritePositions;
     public final boolean WriteReads;
     public final boolean FullBam;
     public final boolean ExcludeKnown;
     public final int SampleSize;
     public final int MinMapQuality;
 
-    private static final String DISABLE_BQR = "disable_bqr";
-    private static final String LOAD_BQR_FILES = "load_bqr";
+    private static final String DISABLE_BQR = "bqr_disable";
+    private static final String LOAD_BQR_FILES = "bqr_load";
     private static final String FULL_BAM = "bqr_full_bam";
     private static final String EXCLUDE_KNOWN_VARIANTS = "bqr_exclude_known";
-    private static final String WRITE_BQR_DATA = "write_bqr_data";
-    private static final String WRITE_BQR_PLOT = "write_bqr_plot";
-    private static final String WRITE_BQR_READS = "write_bqr_reads";
+    private static final String WRITE_BQR_READS = "bqr_write_reads";
+    private static final String WRITE_BQR_POSITIONS = "bqr_write_positions";
+
+    private static final String WRITE_BQR_PLOT = "bqr_write_plot";
+
+    @Deprecated
+    private static final String WRITE_BQR_PLOT_OLD = "write_bqr_plot";
 
     private static final String BQR_SAMPLE_SIZE = "bqr_sample_size";
     private static final String BQR_MIN_MAP_QUAL = "bqr_min_map_qual";
@@ -39,13 +44,15 @@ public class BqrConfig
             LoadBqrFiles = true;
             WriteFile = false;
             WritePlot = false;
+            WritePositions = false;
             WriteReads = false;
         }
         else
         {
             LoadBqrFiles = false;
-            WriteFile = Enabled || configBuilder.hasFlag(WRITE_BQR_DATA); // written by default now
-            WritePlot = configBuilder.hasFlag(WRITE_BQR_PLOT);
+            WriteFile = Enabled; // written by default
+            WritePlot = configBuilder.hasFlag(WRITE_BQR_PLOT) || configBuilder.hasFlag(WRITE_BQR_PLOT_OLD);
+            WritePositions = configBuilder.hasFlag(WRITE_BQR_POSITIONS);
             WriteReads = configBuilder.hasFlag(WRITE_BQR_READS);
         }
 
@@ -61,6 +68,7 @@ public class BqrConfig
         Enabled = false;
         WritePlot = false;
         WriteReads = false;
+        WritePositions = false;
         LoadBqrFiles = false;
         WriteFile = false;
         SampleSize = SageConstants.BQR_SAMPLE_SIZE;
@@ -77,8 +85,9 @@ public class BqrConfig
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addFlag(DISABLE_BQR, "Disable Base Quality Recalibration");
-        configBuilder.addFlag(WRITE_BQR_DATA, "Write BQR output file");
         configBuilder.addFlag(WRITE_BQR_PLOT, "Generate BQR plot");
+        configBuilder.addFlag(WRITE_BQR_PLOT_OLD, "Decpreated, use instead: " + WRITE_BQR_PLOT);
+        configBuilder.addFlag(WRITE_BQR_POSITIONS, "Write positional data as contributes to BQR");
         configBuilder.addFlag(WRITE_BQR_READS, "Write detailed read data as contributes to BQR");
         configBuilder.addFlag(LOAD_BQR_FILES, "Attemps to find and load previously-written BQR files");
         configBuilder.addFlag(FULL_BAM, "Run over full BAM");

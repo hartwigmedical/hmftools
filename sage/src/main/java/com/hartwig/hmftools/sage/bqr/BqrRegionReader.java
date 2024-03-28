@@ -43,6 +43,7 @@ public class BqrRegionReader implements CigarHandler
     private final SamReader mBamReader;
     private final BaseQualityResults mResults;
     private final BqrRecordWriter mRecordWriter;
+    private final boolean mWritePositionData;
     private final boolean mWriteReadData;
 
     private ChrBaseRegion mRegion;
@@ -78,7 +79,8 @@ public class BqrRegionReader implements CigarHandler
         mRefGenome = refGenome;
         mResults = results;
         mRecordWriter = recordWriter;
-        mWriteReadData = mRecordWriter.enabled();
+        mWriteReadData = mConfig.QualityRecalibration.WriteReads;
+        mWritePositionData = mConfig.QualityRecalibration.WritePositions;
 
         mUseReadType = useReadType(mConfig);
         mCurrentReadType = BqrReadType.NONE;
@@ -164,7 +166,12 @@ public class BqrRegionReader implements CigarHandler
     {
         for(int i = mPurgeIndex; i <= mMaxIndex; ++i)
         {
-            buildSummaryData(mBaseQualityData[i]);
+            BaseQualityDataCollection bqDataCollection = mBaseQualityData[i];
+
+            if(bqDataCollection == null)
+                continue;
+
+            buildSummaryData(bqDataCollection);
         }
 
         for(Map.Entry<BqrKey,Integer> entry : mKeyCountsMap.entrySet())
@@ -179,7 +186,32 @@ public class BqrRegionReader implements CigarHandler
     private void buildSummaryData(final BaseQualityDataCollection bqDataCollection)
     {
         if(bqDataCollection != null)
+        {
+            if(mWritePositionData)
+            {
+                for(Map.Entry<BqrReadType,BaseQualityData> entry : bqDataCollection.DataMap.entrySet())
+                {
+                    BqrReadType readType = entry.getKey();
+
+                    if(readType != BqrReadType.DUAL)
+                        continue;
+
+                    BaseQualityData bqData = entry.getValue();
+
+                    if(bqData.hasIndel())
+                        continue;
+
+                    for(AltQualityCount altQualityCount : bqData.altQualityCounts())
+                    {
+                        mRecordWriter.writePositionData(
+                                mRegion.Chromosome, bqDataCollection.Position, bqData.Ref, altQualityCount.Alt,
+                                bqData.TrinucleotideContext, altQualityCount.Quality, readType, altQualityCount.Count);
+                    }
+                }
+            }
+
             bqDataCollection.DataMap.values().forEach(x -> buildSummaryData(x));
+        }
     }
 
     private void buildSummaryData(final BaseQualityData bqData)
