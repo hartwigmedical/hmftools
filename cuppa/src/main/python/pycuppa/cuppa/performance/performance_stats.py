@@ -244,7 +244,7 @@ class PerformanceStats(pd.DataFrame, LoggerMixin):
 
         ## Add row info
         wide["data_type"] = "cv_performance"
-        wide["clf_group"] = pd.Series(CLF_GROUPS)[wide["clf_name"]].values
+        wide["clf_group"] = pd.Series(CLF_GROUPS.MAPPINGS_CLF_NAMES)[wide["clf_name"]].values
 
         if set_index:
             wide = wide.set_index(CUPPA_PREDICTION_INDEX_NAMES)
