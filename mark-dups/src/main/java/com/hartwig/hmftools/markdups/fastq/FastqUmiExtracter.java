@@ -250,7 +250,7 @@ public class FastqUmiExtracter
             r2ReadBuffer[READ_ITEM_BASES] = r2ReadBuffer[READ_ITEM_BASES].substring(mAdapterUmiLength);
             r2ReadBuffer[READ_ITEM_QUALS] = r2ReadBuffer[READ_ITEM_QUALS].substring(mAdapterUmiLength);
         }
-        else if(mAdapterUmiLength > 0)
+        else if(mAdapterLength > 0)
         {
             String adapterUmiBases1 = r1ReadBuffer[READ_ITEM_BASES].substring(0, mAdapterUmiLength);
 
@@ -334,7 +334,7 @@ public class FastqUmiExtracter
         configBuilder.addConfigItem(FASTQ_FILES, true, "Fastq file-pair path, separated by delim ','");
         configBuilder.addRequiredInteger(UMI_LENGTH, "UMI length");
         configBuilder.addConfigItem(ADAPTER_SEQUENCE, "Adapter sequence (optional)");
-        configBuilder.addConfigItem(ConfigItemType.INTEGER, SPECIFIC_READ, false,"Specific read to extract from (optional)", null);
+        configBuilder.addInteger(SPECIFIC_READ, "Specific read to extract from (optional)", 0);
         configBuilder.addInteger(ADAPTER_LENGTH, "Adapter length", 0);
 
         addOutputOptions(configBuilder);
