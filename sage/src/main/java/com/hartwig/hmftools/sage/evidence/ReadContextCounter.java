@@ -355,7 +355,7 @@ public class ReadContextCounter//  extends SimpleVariant
                         rawContext.DepthSupport, rawContext.AltSupport, rawContext.RefSupport);
             }
 
-            // search for a core match within soft-clipped bases, checking if a proixmate DEL may explain the soft-clipping
+            // search for a core match within soft-clipped bases, checking if a proximate DEL may explain the soft-clipping
             rawContext = createRawContextFromCoreMatch(record);
 
             if(rawContext.ReadIndex < 0)
