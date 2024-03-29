@@ -13,9 +13,9 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.copyArray;
 import static com.hartwig.hmftools.esvee.common.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
-import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.S;
@@ -133,7 +133,7 @@ public class Read
     public boolean hasMateSet() { return mMateRead != null; }
     public Read mateRead() { return mMateRead; }
 
-    public String getName() { return mRecord.getReadName(); }
+    public String id() { return mRecord.getReadName(); }
 
     public String chromosome() { return mRecord.getReferenceName(); }
 
@@ -278,12 +278,12 @@ public class Read
         return mIndelCoords;
     }
 
-    public boolean matchesFragment(final Read other) { return this == other || getName().equals(other.getName()); }
+    public boolean matchesFragment(final Read other) { return this == other || id().equals(other.id()); }
 
     public String toString()
     {
         return format("id(%s) coords(%s:%d-%d) cigar(%s) mate(%s:%d) flags(%d)",
-                getName(), chromosome(), mAlignmentStart, mAlignmentEnd, cigarString(),
+                id(), chromosome(), mAlignmentStart, mAlignmentEnd, cigarString(),
                 mateChromosome(), mateAlignmentStart(), mRecord.getFlags());
     }
 

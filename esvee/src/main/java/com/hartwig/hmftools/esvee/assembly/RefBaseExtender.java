@@ -5,7 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_EXTENSION_BASE_MISMATCH;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_EXTENSION_OVERLAP_BASES;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_SIDE_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_SIDE_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.DUP_BRANCHED;
@@ -113,7 +113,7 @@ public class RefBaseExtender
 
             if(isForwardJunction)
             {
-                if(read.alignmentEnd() < minAlignedPosition + ASSEMBLY_EXTENSION_OVERLAP_BASES)
+                if(read.alignmentEnd() < minAlignedPosition + ASSEMBLY_REF_SIDE_OVERLAP_BASES)
                 {
                     hasGapped = true;
                 }
@@ -124,7 +124,7 @@ public class RefBaseExtender
             }
             else
             {
-                if(read.alignmentStart() > maxAlignedPosition - ASSEMBLY_EXTENSION_OVERLAP_BASES)
+                if(read.alignmentStart() > maxAlignedPosition - ASSEMBLY_REF_SIDE_OVERLAP_BASES)
                 {
                     hasGapped = true;
                 }
@@ -438,7 +438,7 @@ public class RefBaseExtender
             if(!excludedReads.contains(support.read()))
             {
                 SupportType type = support.type() == CANDIDATE_DISCORDANT ? DISCORDANT : support.type();
-                refBaseAssembly.checkAddRead(support.read(), type, ASSEMBLY_EXTENSION_BASE_MISMATCH, ASSEMBLY_EXTENSION_OVERLAP_BASES);
+                refBaseAssembly.checkAddRead(support.read(), type, ASSEMBLY_EXTENSION_BASE_MISMATCH, ASSEMBLY_REF_SIDE_OVERLAP_BASES);
             }
         }
     }

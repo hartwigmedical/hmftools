@@ -77,6 +77,9 @@ public class SvPrepApplication
             mSpanningReadCache.candidateBamWriter().assignCandidateReads(mWriter);
         }
 
+        if(mConfig.BamToolPath != null)
+            System.gc(); // call to free up prep memory before the BAM tools sort & index routines are run
+
         mWriter.close();
 
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;

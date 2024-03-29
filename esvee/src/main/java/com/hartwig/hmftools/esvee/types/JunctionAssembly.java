@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.readQualFromJunction;
 import static com.hartwig.hmftools.esvee.assembly.ExtensionSeqBuilder.calcReadSequenceMismatches;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.copyArray;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.UNSET;
@@ -20,7 +21,6 @@ import static com.hartwig.hmftools.esvee.types.RepeatInfo.findRepeats;
 import static com.hartwig.hmftools.esvee.types.SupportType.INDEL;
 import static com.hartwig.hmftools.esvee.types.SupportType.JUNCTION;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.INVALID_INDEX;
-import static com.hartwig.hmftools.esvee.read.ReadUtils.copyArray;
 
 import java.util.List;
 import java.util.Set;

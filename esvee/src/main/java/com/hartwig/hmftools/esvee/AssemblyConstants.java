@@ -35,7 +35,8 @@ public final class AssemblyConstants
     public static int DISCORDANT_FRAGMENT_LENGTH = DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
 
     // assembly extension
-    public static final int ASSEMBLY_EXTENSION_OVERLAP_BASES = 20;
+    public static final int ASSEMBLY_REF_SIDE_OVERLAP_BASES = 20;
+    public static final int ASSEMBLY_LINK_OVERLAP_BASES = 50;
     public static final int ASSEMBLY_EXTENSION_BASE_MISMATCH = 2;
     public static final int REF_SIDE_MIN_SOFT_CLIP_LENGTH = MIN_SOFT_CLIP_LENGTH;
 

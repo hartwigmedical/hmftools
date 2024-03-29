@@ -236,7 +236,8 @@ public class JunctionProcessor
 
         List<Thread> threadTasks = new ArrayList<>();
 
-        List<PhaseSetTask> phaseSetTasks = PhaseSetTask.createThreadTasks(mConfig, phaseGroupBuilder.phaseGroups(), mConfig.Threads, threadTasks);
+        List<PhaseSetTask> phaseSetTasks = PhaseSetTask.createThreadTasks(
+                mConfig, phaseGroupBuilder.phaseGroups(), mBamReaders, mConfig.Threads, threadTasks);
 
         if(!runThreadTasks(threadTasks))
             System.exit(1);

@@ -89,7 +89,7 @@ public class DiscordantGroup
     public boolean hasRead(final Read read) { return mReads.stream().anyMatch(x -> x == read); }
     public boolean hasFragment(final String readId)
     {
-        return mReads.stream().anyMatch(x -> x.getName().equals(readId));
+        return mReads.stream().anyMatch(x -> x.id().equals(readId));
     }
 
     public boolean matches(final DiscordantGroup other)

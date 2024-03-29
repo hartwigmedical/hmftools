@@ -149,7 +149,7 @@ public class AssemblyWriter
                 sj.add(assembly.formRefBaseSequence(refBaseLength)); // long enough to show most short TIs
             }
 
-            sj.add(assembly.initialRead() != null ? assembly.initialRead().getName() : "NONE"); // shouldn't occur
+            sj.add(assembly.initialRead() != null ? assembly.initialRead().id() : "NONE"); // shouldn't occur
 
             sj.add(String.valueOf(assembly.candidateSupport().size()));
 

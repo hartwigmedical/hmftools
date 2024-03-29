@@ -9,6 +9,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.assembly.RemoteRegionAssembler;
+import com.hartwig.hmftools.esvee.read.BamReader;
 import com.hartwig.hmftools.esvee.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.types.PhaseSet;
 import com.hartwig.hmftools.esvee.types.ThreadTask;
@@ -19,17 +21,22 @@ public class PhaseSetTask extends ThreadTask
     private final Queue<PhaseGroup> mPhaseGroups;
     private final int mPhaseGroupCount;
 
-    public PhaseSetTask(final AssemblyConfig config, final Queue<PhaseGroup> phaseGroups)
+    private final RemoteRegionAssembler mRemoteRegionAssembler;
+
+    public PhaseSetTask(final AssemblyConfig config, final BamReader bamReader, final Queue<PhaseGroup> phaseGroups)
     {
         super("PhaseSets");
 
         mConfig = config;
         mPhaseGroups = phaseGroups;
         mPhaseGroupCount = mPhaseGroups.size();
+
+        mRemoteRegionAssembler = new RemoteRegionAssembler(config, bamReader);
     }
 
     public static List<PhaseSetTask> createThreadTasks(
-            final AssemblyConfig config, final List<PhaseGroup> phaseGroups, final int taskCount, final List<Thread> threadTasks)
+            final AssemblyConfig config, final List<PhaseGroup> phaseGroups, final List<BamReader> bamReaders,
+            final int taskCount, final List<Thread> threadTasks)
     {
         List<PhaseSetTask> phaseSetTasks = Lists.newArrayList();
 
@@ -38,7 +45,7 @@ public class PhaseSetTask extends ThreadTask
 
         for(int i = 0; i < taskCount; ++i)
         {
-            PhaseSetTask phaseSetTask = new PhaseSetTask(config, phaseGroupQueue);
+            PhaseSetTask phaseSetTask = new PhaseSetTask(config, bamReaders.get(i), phaseGroupQueue);
             phaseSetTasks.add(phaseSetTask);
             threadTasks.add(phaseSetTask);
         }
@@ -71,7 +78,7 @@ public class PhaseSetTask extends ThreadTask
                 mPerfCounter.start();
 
                 // where there are more than 2 assemblies, start with the ones with the most support and overlapping junction reads
-                PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(mConfig.RefGenome, phaseGroup);
+                PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(mConfig.RefGenome, mRemoteRegionAssembler, phaseGroup);
 
                 phaseSetBuilder.buildPhaseSets();
 

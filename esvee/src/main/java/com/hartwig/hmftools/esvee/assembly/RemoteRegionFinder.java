@@ -75,13 +75,13 @@ public final class RemoteRegionFinder
 
         if(matchedRegion != null)
         {
-            matchedRegion.addReadDetails(read.getName(), remotePosStart, remotePosEnd, readType);
+            matchedRegion.addReadDetails(read.id(), remotePosStart, remotePosEnd, readType);
             return matchedRegion;
         }
         else
         {
             RemoteRegion newRegion = new RemoteRegion(
-                    new ChrBaseRegion(remoteChr, remotePosStart, remotePosEnd), read.orientation(), read.getName(), readType);
+                    new ChrBaseRegion(remoteChr, remotePosStart, remotePosEnd), read.orientation(), read.id(), readType);
             remoteRegions.add(newRegion);
             return newRegion;
         }

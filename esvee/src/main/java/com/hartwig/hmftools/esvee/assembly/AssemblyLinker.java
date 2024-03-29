@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_JUNCTION_OVERLAP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
@@ -254,7 +256,8 @@ public final class AssemblyLinker
         // take a smaller sections of the first's junction sequence and try to find their start index in the second sequence
         int juncSeqStartIndex = 0;
         List<int[]> alternativeIndexStarts = Lists.newArrayList();
-        for(int i = 0; i < 10; ++i) // being the total junction sequence length (ie 100) divided by the subsequence length
+        int subSeqIterations = (int)floor(firstJunctionSeqLength / SUBSEQUENCE_LENGTH);
+        for(int i = 0; i < subSeqIterations; ++i) // being the total junction sequence length (ie 100) divided by the subsequence length
         {
             juncSeqStartIndex = i * SUBSEQUENCE_LENGTH;
             int juncSeqEndIndex = juncSeqStartIndex + SUBSEQUENCE_LENGTH;
@@ -283,7 +286,7 @@ public final class AssemblyLinker
         // now perform a full junction sequence search in the second using the sequence matching logic
         Set<Integer> testedOffsets = Sets.newHashSet();
 
-        int minOverlapLength = min(first.extensionLength(), second.extensionLength());
+        int minOverlapLength = min(min(first.extensionLength(), second.extensionLength()), ASSEMBLY_LINK_OVERLAP_BASES);
 
         for(int[] indexStarts : alternativeIndexStarts)
         {

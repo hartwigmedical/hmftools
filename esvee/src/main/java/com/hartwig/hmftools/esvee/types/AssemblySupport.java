@@ -58,7 +58,7 @@ public class AssemblySupport
     public String toString()
     {
         return format("type(%s) read(%s %d-%d %s) index(asm=%d junc=%d) hqMatch(%d) mismatch(junc=%d ref=%d)",
-                mType, mRead.getName(), mRead.unclippedStart(), mRead.unclippedEnd(), mRead.cigarString(),
+                mType, mRead.id(), mRead.unclippedStart(), mRead.unclippedEnd(), mRead.cigarString(),
                 mAssemblyIndex, mJunctionReadIndex, mJunctionMatches, mJunctionMismatches, mReferenceMismatches);
     }
 

@@ -7,9 +7,9 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.compareSequences;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.subsetArray;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.read.ReadUtils.getReadIndexAtReferencePosition;
-import static com.hartwig.hmftools.esvee.read.ReadUtils.subsetArray;
 
 import java.util.Collections;
 import java.util.List;
@@ -365,7 +365,7 @@ public class ExtensionSeqBuilder
         public String toString()
         {
             return format("%s: range(%d - %d) cigar(%s) extLen(%d) curIndex(%d) mismatches(%d) %s",
-                    mRead.getName(), mRead.unclippedStart(), mRead.unclippedEnd(), mRead.cigarString(),
+                    mRead.id(), mRead.unclippedStart(), mRead.unclippedEnd(), mRead.cigarString(),
                     mExtensionLength, mCurrentIndex, Mismatches, mExhausted ? "exhausted" : "");
         }
     }

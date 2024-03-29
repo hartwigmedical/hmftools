@@ -83,9 +83,9 @@ public final class AssemblyWriterUtils
 
             if(support.type().isSplitSupport())
             {
-                if(!uniqueReadIds.contains(read.getName()))
+                if(!uniqueReadIds.contains(read.id()))
                 {
-                    uniqueReadIds.add(read.getName()); // since fragments are being counted
+                    uniqueReadIds.add(read.id()); // since fragments are being counted
 
                     ++juncFrags;
 
@@ -129,7 +129,7 @@ public final class AssemblyWriterUtils
                             // check if the mate
 
                             if((assembly.isForwardJunction() && read.mateAlignmentStart() > assembly.junction().Position)
-                                    || (!assembly.isForwardJunction() && read.mateAlignmentEnd() < assembly.junction().Position))
+                            || (!assembly.isForwardJunction() && read.mateAlignmentEnd() < assembly.junction().Position))
                             {
                                 ++juncMateConcordant;
                             }

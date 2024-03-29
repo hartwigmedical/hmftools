@@ -301,7 +301,7 @@ public class AssemblyConfig
     public void logReadId(final Read read, final String caller)
     {
         if(mCheckLogReadIds)
-            logReadId(read.getName(), caller);
+            logReadId(read.id(), caller);
     }
 
     private void logReadId(final String readId, final String caller)
