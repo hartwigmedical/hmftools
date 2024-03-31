@@ -107,6 +107,9 @@ public final class AssemblyUtils
             readIndexEnd = readJunctionIndex;
         }
 
+        readIndexStart = max(readIndexStart, 0);
+        readIndexEnd = min(readIndexEnd, read.getBaseQuality().length - 1);
+
         int baseQualTotal = 0;
 
         for(int i = readIndexStart; i <= readIndexEnd; ++i)

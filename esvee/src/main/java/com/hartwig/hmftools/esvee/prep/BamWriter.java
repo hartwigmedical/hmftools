@@ -69,10 +69,13 @@ public class BamWriter
 
         ++mRecordWriteCount;
 
+        String sampleId = record.getStringAttribute(BAM_RECORD_SAMPLE_ID_TAG);
+        record.setAttribute(BAM_RECORD_SAMPLE_ID_TAG, null); // remove since not required downstream
+
         if(mSingleWriter != null)
             mSingleWriter.addAlignment(record);
         else
-            mWriters.get(record.getStringAttribute(BAM_RECORD_SAMPLE_ID_TAG)).addAlignment(record);
+            mWriters.get(sampleId).addAlignment(record);
     }
 
     public void close()

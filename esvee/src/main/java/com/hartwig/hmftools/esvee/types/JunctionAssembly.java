@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.esvee.assembly.ExtensionSeqBuilder.calcReadSe
 import static com.hartwig.hmftools.esvee.common.CommonUtils.copyArray;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
+import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.REMOTE_REF;
 import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.findUnsetBases;
@@ -98,7 +99,8 @@ public class JunctionAssembly
             }
         }
 
-        mInitialRead = maxJunctionBaseQualRead;
+        mInitialRead = maxJunctionBaseQualRead != null ? maxJunctionBaseQualRead :
+                (!assemblySupport.isEmpty() ? assemblySupport.get(0).read() : null);
 
         mBases = bases;
         mBaseQuals = baseQualities;
@@ -134,6 +136,7 @@ public class JunctionAssembly
     public void addMergedAssembly() { ++mMergedAssemblies; }
 
     public int junctionIndex() { return mJunctionSequenceIndex; };
+    public void setJunctionIndex(int index) { mJunctionSequenceIndex = index; };
 
     // eg 21 bases, junction index at 10 (so 0-9 = 10 before, 11-20 = 10 after), note: doesn't count the junction base
     public int lowerDistanceFromJunction() { return mJunctionSequenceIndex; };
@@ -542,7 +545,12 @@ public class JunctionAssembly
     public String phaseGroupLinkingInfo() { return mPhaseGroupLinkingInfo != null ? mPhaseGroupLinkingInfo : ""; }
 
     public AssemblyOutcome outcome() { return mOutcome; }
-    public void setOutcome(final AssemblyOutcome outcome) { mOutcome = outcome; }
+
+    public void setOutcome(final AssemblyOutcome outcome)
+    {
+        if(mOutcome != REMOTE_REF) // persist classification for now
+            mOutcome = outcome;
+    }
 
     public void addBranchedAssembly(final JunctionAssembly assembly)
     {

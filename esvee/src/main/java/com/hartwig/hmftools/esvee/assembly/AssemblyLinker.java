@@ -15,18 +15,16 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_REF_SIDE_SO
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findInsertedBases;
 import static com.hartwig.hmftools.esvee.types.LinkType.INDEL;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.esvee.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.types.AssemblySupport;
 import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.types.JunctionSequence;
 import com.hartwig.hmftools.esvee.types.LinkType;
-import com.hartwig.hmftools.esvee.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.types.SupportType;
 import com.hartwig.hmftools.esvee.read.Read;
 
@@ -95,8 +93,8 @@ public final class AssemblyLinker
         return abs(refAlignedPosition - otherJunctionPosition) <= PROXIMATE_REF_SIDE_SOFT_CLIPS;
     }
 
-    private static AssemblyLink formLink(
-            final JunctionAssembly first, final JunctionAssembly second, final AssemblySequence firstSeq, final AssemblySequence secondSeq,
+    public static AssemblyLink formLink(
+            final JunctionAssembly first, final JunctionAssembly second, final JunctionSequence firstSeq, final JunctionSequence secondSeq,
             int firstIndexStart, int secondIndexStart, boolean isSecondary)
     {
         int firstJunctionOffset = firstSeq.junctionIndex() - firstIndexStart;
@@ -185,9 +183,9 @@ public final class AssemblyLinker
         return new AssemblyLink(first, second, LinkType.SPLIT, firstJunctionIndexInSecond, insertedBases, overlapBases);
     }
 
-    private static final int SUBSEQUENCE_LENGTH = 10;
+    public static final int MATCH_SUBSEQUENCE_LENGTH = 10;
 
-    public AssemblyLink tryAssemblyIndel(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
+    public static AssemblyLink tryAssemblyIndel(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
         if(!assembly1.indel() || !assembly2.indel())
             return null;
@@ -207,15 +205,15 @@ public final class AssemblyLinker
         return new AssemblyLink(assembly1, assembly2, INDEL, 0, insertedBases, "");
     }
 
-    public AssemblyLink tryAssemblyOverlap(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
+    public static AssemblyLink tryAssemblyOverlap(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
         return tryAssemblyOverlap(assembly1, assembly2, false);
     }
 
-    public AssemblyLink tryAssemblyOverlap(final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean isSecondary)
+    public static AssemblyLink tryAssemblyOverlap(final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean isSecondary)
     {
         JunctionAssembly first, second;
-        AssemblySequence firstSeq, secondSeq;
+        JunctionSequence firstSeq, secondSeq;
         boolean firstReversed = false;
         boolean secondReversed = false;
 
@@ -235,8 +233,8 @@ public final class AssemblyLinker
                 firstReversed = true;
         }
 
-        firstSeq = new AssemblySequence(first, firstReversed);
-        secondSeq = new AssemblySequence(second, secondReversed);
+        firstSeq = new JunctionSequence(first, firstReversed, PHASED_ASSEMBLY_JUNCTION_OVERLAP);
+        secondSeq = new JunctionSequence(second, secondReversed, PHASED_ASSEMBLY_JUNCTION_OVERLAP);
 
         // start with a simple comparison looking for the first sequence around its junction in the second
         String firstJunctionSequence = firstSeq.junctionSequence();
@@ -256,16 +254,16 @@ public final class AssemblyLinker
         // take a smaller sections of the first's junction sequence and try to find their start index in the second sequence
         int juncSeqStartIndex = 0;
         List<int[]> alternativeIndexStarts = Lists.newArrayList();
-        int subSeqIterations = (int)floor(firstJunctionSeqLength / SUBSEQUENCE_LENGTH);
+        int subSeqIterations = (int)floor(firstJunctionSeqLength / MATCH_SUBSEQUENCE_LENGTH);
         for(int i = 0; i < subSeqIterations; ++i) // being the total junction sequence length (ie 100) divided by the subsequence length
         {
-            juncSeqStartIndex = i * SUBSEQUENCE_LENGTH;
-            int juncSeqEndIndex = juncSeqStartIndex + SUBSEQUENCE_LENGTH;
+            juncSeqStartIndex = i * MATCH_SUBSEQUENCE_LENGTH;
+            int juncSeqEndIndex = juncSeqStartIndex + MATCH_SUBSEQUENCE_LENGTH;
 
             if(juncSeqEndIndex >= firstJunctionSeqLength)
                 break;
 
-            String firstSubSequence = firstJunctionSequence.substring(juncSeqStartIndex, juncSeqStartIndex + SUBSEQUENCE_LENGTH);
+            String firstSubSequence = firstJunctionSequence.substring(juncSeqStartIndex, juncSeqStartIndex + MATCH_SUBSEQUENCE_LENGTH);
 
             int secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence);
 
@@ -274,12 +272,12 @@ public final class AssemblyLinker
 
             alternativeIndexStarts.add(new int[] {juncSeqStartIndex, secondSubSeqIndex});
 
-            secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence, secondSubSeqIndex + SUBSEQUENCE_LENGTH);
+            secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence, secondSubSeqIndex + MATCH_SUBSEQUENCE_LENGTH);
 
             while(secondSubSeqIndex >= 0)
             {
                 alternativeIndexStarts.add(new int[] {juncSeqStartIndex, secondSubSeqIndex});
-                secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence, secondSubSeqIndex + SUBSEQUENCE_LENGTH);
+                secondSubSeqIndex = secondSeq.FullSequence.indexOf(firstSubSequence, secondSubSeqIndex + MATCH_SUBSEQUENCE_LENGTH);
             }
         }
 
@@ -336,151 +334,5 @@ public final class AssemblyLinker
         }
 
         return null;
-    }
-
-    private class AssemblySequence
-    {
-        public final boolean Reversed;
-        public final String FullSequence;
-
-        public final int ExtensionLength;
-        public final int RefBaseLength; // may be capped
-        public final int BaseLength;
-
-        private final JunctionAssembly mAssembly;
-
-        private final int mJunctionIndex;
-
-        // indices for the min-overlap around the junction (eg +/- 50 bases)
-        private final int mJunctionSeqIndexStart;
-        private final int mJunctionSeqIndexEnd;
-
-        // built on demand since only used for the sequence comparison routine
-        private List<RepeatInfo> mRepeatInfo;
-        private byte[] mBases;
-        private byte[] mBaseQuals;
-
-        public AssemblySequence(final JunctionAssembly assembly, boolean reverseCompliment)
-        {
-            mAssembly = assembly;
-            mBases = null;
-            mBaseQuals = null;
-            mRepeatInfo = null;
-
-            Reversed = reverseCompliment;
-            // RefBaseLength = min(assembly.refBaseLength(), REF_BASE_LENGTH_CAP); // not capped since throws out the junction index
-            RefBaseLength = assembly.refBaseLength();
-            ExtensionLength = assembly.extensionLength();
-            BaseLength = RefBaseLength + ExtensionLength;
-
-            mJunctionIndex = assembly.junctionIndex();
-
-            if(!Reversed)
-            {
-                FullSequence = assembly.formJunctionSequence(RefBaseLength);
-            }
-            else
-            {
-                FullSequence = Nucleotides.reverseComplementBases(assembly.formJunctionSequence(RefBaseLength));
-            }
-
-            // also make a shorter sequence centred around the junction
-            int juncSeqExtLength = min(ExtensionLength, PHASED_ASSEMBLY_JUNCTION_OVERLAP);
-            int juncSeqRefLength = min(RefBaseLength, PHASED_ASSEMBLY_JUNCTION_OVERLAP);
-
-            int juncIndexStart, juncIndexEnd;
-
-            if(assembly.isForwardJunction())
-            {
-                juncIndexStart = mJunctionIndex - juncSeqRefLength + 1;
-                juncIndexEnd = mJunctionIndex + juncSeqExtLength;
-            }
-            else
-            {
-                juncIndexStart = mJunctionIndex - juncSeqExtLength;
-                juncIndexEnd = mJunctionIndex + juncSeqRefLength - 1;
-            }
-
-            if(!Reversed)
-            {
-                mJunctionSeqIndexStart = juncIndexStart;
-                mJunctionSeqIndexEnd = juncIndexEnd;
-            }
-            else
-            {
-                // note the switches here
-                mJunctionSeqIndexStart = indexReversed(juncIndexEnd);
-                mJunctionSeqIndexEnd = indexReversed(juncIndexStart);
-            }
-        }
-
-        public int junctionIndex() { return !Reversed ? mJunctionIndex : BaseLength - mJunctionIndex - 1; }
-
-        public final String junctionSequence() { return FullSequence.substring(junctionSeqStartIndex(), junctionSeqEndIndex() + 1); }
-
-        public int junctionSeqStartIndex() { return mJunctionSeqIndexStart; }
-        public int junctionSeqEndIndex() { return mJunctionSeqIndexEnd; }
-
-        public byte[] bases()
-        {
-            if(!Reversed)
-                return mAssembly.bases();
-
-            if(mBases == null)
-            {
-                mBases = FullSequence.getBytes();
-            }
-
-            return mBases;
-        }
-
-        public byte[] baseQuals()
-        {
-            if(!Reversed)
-                return mAssembly.baseQuals();
-
-            if(mBaseQuals == null)
-            {
-                int baseLength = mAssembly.baseQuals().length;
-                mBaseQuals = new byte[baseLength];
-
-                for(int i = 0; i < baseLength; ++i)
-                {
-                    mBaseQuals[i] = mAssembly.baseQuals()[baseLength - i - 1];
-                }
-            }
-
-            return mBaseQuals;
-        }
-
-        public List<RepeatInfo> repeatInfo()
-        {
-            if(mRepeatInfo == null)
-            {
-                List<RepeatInfo> repeats = RepeatInfo.findRepeats(FullSequence.getBytes());
-                mRepeatInfo = repeats != null ? repeats : Collections.emptyList();
-            }
-
-            return mRepeatInfo;
-        }
-
-        private int indexReversed(int index)
-        {
-            int juncIndexDiff = index - mJunctionIndex;
-            return junctionIndex() - juncIndexDiff;
-        }
-
-        public int indexReverted(int index)
-        {
-            int juncIndexDiff = index - junctionIndex();
-            return mJunctionIndex - juncIndexDiff;
-        }
-
-        public String toString()
-        {
-            return format("len(%d ref=%d ext=%d juncIndex=%d) %s juncSeq(%d - %d)",
-                    BaseLength, RefBaseLength, ExtensionLength, mJunctionIndex, Reversed ? "rev" : "fwd",
-                    junctionSeqStartIndex(), junctionSeqEndIndex());
-        }
     }
 }

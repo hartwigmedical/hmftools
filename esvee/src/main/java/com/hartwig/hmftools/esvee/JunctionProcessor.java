@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_L
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
 import static com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution.loadFragmentLengthBounds;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
+import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.REMOTE_REF;
 import static com.hartwig.hmftools.esvee.types.JunctionGroup.buildJunctionGroups;
 import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLIES;
 import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLY_BAM;
@@ -33,10 +34,13 @@ import com.hartwig.hmftools.esvee.phasing.PhaseGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
 import com.hartwig.hmftools.esvee.phasing.PhaseSetTask;
 import com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution;
+import com.hartwig.hmftools.esvee.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.types.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.types.Junction;
 import com.hartwig.hmftools.esvee.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.types.JunctionGroup;
 import com.hartwig.hmftools.esvee.types.PhaseGroup;
+import com.hartwig.hmftools.esvee.types.PhaseSet;
 import com.hartwig.hmftools.esvee.types.ThreadTask;
 import com.hartwig.hmftools.esvee.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.output.WriteType;
@@ -294,14 +298,32 @@ public class JunctionProcessor
 
                     for(JunctionAssembly branchedAssembly : assembly.branchedAssemblies())
                     {
-                        branchedAssembly.setId(assembly.id());
+                        branchedAssembly.setId(assembly.id()); // for now given the same ID
                         allAssemblies.add(branchedAssembly);
                         setAssemblyOutcome(branchedAssembly);
                     }
-                }
 
+                    if(assembly.phaseGroup() != null)
+                    {
+                        PhaseSet phaseSet = assembly.phaseGroup().findPhaseSet(assembly);
+                        List<AssemblyLink> assemblyLinks = phaseSet != null ? phaseSet.findAssemblyLinks(assembly) : Collections.emptyList();
+
+                        for(AssemblyLink splitLink : assemblyLinks)
+                        {
+                            JunctionAssembly otherAssembly = splitLink.otherAssembly(assembly);
+
+                            if(otherAssembly.outcome() == REMOTE_REF)
+                            {
+                                otherAssembly.setId(assemblyId++);
+                                allAssemblies.add(otherAssembly);
+                            }
+                        }
+                    }
+                }
             }
         }
+
+
 
         // TODO: assembly ID could be set once assemblies have been ordered, and a unique assebly string ID also set in a
         // fairly deterministic way based on final coords, with any duplicates given an extra incrementor

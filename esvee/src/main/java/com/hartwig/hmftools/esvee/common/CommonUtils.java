@@ -193,6 +193,18 @@ public final class CommonUtils
         }
     }
 
+    public static byte[] createByteArray(final int length, final byte value)
+    {
+        final byte[] array = new byte[length];
+
+        for(int i = 0; i < array.length; ++i)
+        {
+            array[i] = value;
+        }
+
+        return array;
+    }
+
     public static void initialise(final int[] array, final int value)
     {
         for(int i = 0; i < array.length; ++i)
