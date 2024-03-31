@@ -137,6 +137,10 @@ public class MarkDuplicates
             // log interim time
             MD_LOGGER.info("BAM duplicate processing complete, mins({})", runTimeMinsStr(startTimeMs));
 
+            // usually avoid manual calls to this but since the external BAM tools make independent calls to access memory and
+            // the core routines are complete, it is helpful to do so now
+            System.gc();
+
             if(!fileWriterCache.sortAndIndexBams())
             {
                 MD_LOGGER.error("sort-merge-index failed");
