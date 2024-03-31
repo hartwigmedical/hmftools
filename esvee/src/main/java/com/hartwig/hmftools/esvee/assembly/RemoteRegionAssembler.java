@@ -52,6 +52,9 @@ public class RemoteRegionAssembler
     private final Map<String,Read> mSourceReads;
     private final List<Read> mMatchedRemoteReads;
 
+    private int mTotalRemoteReadsSearch;
+    private int mTotalRemoteReadsMatched;
+
     public RemoteRegionAssembler(final AssemblyConfig config, final BamReader bamReader)
     {
         mConfig = config;
@@ -60,7 +63,13 @@ public class RemoteRegionAssembler
         mRemoteRegion = null;
         mSourceReads = Maps.newHashMap();
         mMatchedRemoteReads = Lists.newArrayList();
+
+        mTotalRemoteReadsSearch = 0;
+        mTotalRemoteReadsMatched = 0;
     }
+
+    public int totalRemoteReadsSearch() { return mTotalRemoteReadsSearch; }
+    public int totalRemoteReadsMatched() { return mTotalRemoteReadsMatched; }
 
     public static boolean isExtensionCandidateAssembly(final JunctionAssembly assembly)
     {
@@ -135,12 +144,18 @@ public class RemoteRegionAssembler
         SV_LOGGER.trace("remote region({}) slice", mRemoteRegion);
 
         mMatchedRemoteReads.clear();
+        mSourceReads.clear();
+
+        mTotalRemoteReadsSearch += sourceReads.size();
+
         sourceReads.forEach(x -> mSourceReads.put(x.id(), x));
 
         mBamReader.sliceBam(mRemoteRegion.Chromosome, mRemoteRegion.start(), mRemoteRegion.end(), this::processRecord);
 
         SV_LOGGER.debug("remote region({}) sourcedReads(matched={} unmatched={})",
                 mRemoteRegion, mMatchedRemoteReads.size(), mSourceReads.size());
+
+        mTotalRemoteReadsMatched += mMatchedRemoteReads.size();
 
         if(mMatchedRemoteReads.size() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
             return null;
@@ -156,7 +171,7 @@ public class RemoteRegionAssembler
         if(assemblyLink == null)
             return null;
 
-        SV_LOGGER.debug("assembly({}) links with remote region({}) matchedReads({})",
+        SV_LOGGER.trace("assembly({}) links with remote region({}) matchedReads({})",
                 assembly, remoteRegion.toString(), mMatchedRemoteReads.size());
 
         return assemblyLink;

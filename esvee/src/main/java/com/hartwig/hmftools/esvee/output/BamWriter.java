@@ -111,15 +111,8 @@ public class BamWriter
             return;
 
         // write the assembly itself and then all its contributing reads
-        AssemblyLink assemblyLink = null;
-
-        if(assembly.phaseGroup() != null)
-        {
-            PhaseSet phaseSet = assembly.phaseGroup().findPhaseSet(assembly);
-
-            if(phaseSet != null)
-                assemblyLink = phaseSet.findSplitLink(assembly);
-        }
+        PhaseSet phaseSet = assembly.phaseSet();
+        AssemblyLink assemblyLink = phaseSet != null ? phaseSet.findSplitLink(assembly) : null;
 
         String assemblyReadId = format("ASSEMBLY_%d_%s", assembly.id(), assembly.junction().coords());
 

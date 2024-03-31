@@ -60,7 +60,6 @@ public class JunctionAssembly
     private final List<RemoteRegion> mRemoteRegions;
 
     private PhaseGroup mPhaseGroup;
-    private String mPhaseGroupLinkingInfo; // info only
     private AssemblyOutcome mOutcome;
 
     private final List<JunctionAssembly> mBranchedAssemblies;
@@ -117,7 +116,6 @@ public class JunctionAssembly
         mBranchedAssemblies = Lists.newArrayList();
         mMergedAssemblies = 0;
         mPhaseGroup = null;
-        mPhaseGroupLinkingInfo = null;
         mOutcome = UNSET;
         mFilters = Sets.newHashSet();
         mMismatchReadCount = 0;
@@ -534,15 +532,11 @@ public class JunctionAssembly
     public PhaseGroup phaseGroup() { return mPhaseGroup; }
     public void setPhaseGroup(final PhaseGroup phaseGroup) { mPhaseGroup = phaseGroup; }
 
-    public void addPhaseGroupLinkingInfo(final String info)
+    public PhaseSet phaseSet()
     {
-        if(mPhaseGroupLinkingInfo == null)
-            mPhaseGroupLinkingInfo = info;
-        else
-            mPhaseGroupLinkingInfo += ";" + info;
+        // can only be a part of one and could add a reference but for now is retrieved
+        return mPhaseGroup != null ? mPhaseGroup.findPhaseSet(this) : null;
     }
-
-    public String phaseGroupLinkingInfo() { return mPhaseGroupLinkingInfo != null ? mPhaseGroupLinkingInfo : ""; }
 
     public AssemblyOutcome outcome() { return mOutcome; }
 

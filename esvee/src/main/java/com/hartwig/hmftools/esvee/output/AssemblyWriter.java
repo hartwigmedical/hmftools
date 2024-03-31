@@ -85,10 +85,7 @@ public class AssemblyWriter
 
             sj.add("RepeatInfo");
             sj.add("RefSideSoftClips");
-            sj.add("BranchedAssemblyIds");
-
-            if(mConfig.LogPhaseGroupLinks)
-                sj.add("PhaseGroupLinkInfo");
+            sj.add("BranchedCount");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -159,12 +156,7 @@ public class AssemblyWriter
 
             sj.add(refSideSoftClipsStr(assembly.refSideSoftClips()));
 
-            String branchedAssemblyIds = assembly.branchedAssemblies().stream()
-                    .map(x -> String.valueOf(x.id())).collect(Collectors.joining(";"));
-            sj.add(branchedAssemblyIds);
-
-            if(mConfig.LogPhaseGroupLinks)
-                sj.add(assembly.phaseGroupLinkingInfo());
+            sj.add(String.valueOf(assembly.branchedAssemblies().size()));
 
             mWriter.write(sj.toString());
             mWriter.newLine();

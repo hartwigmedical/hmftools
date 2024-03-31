@@ -187,7 +187,7 @@ public class VcfWriter implements AutoCloseable
             genotypes.add(buildGenotype(assembly, sampleId, sampleData));
         }
 
-        PhaseSet phaseSet = assembly.phaseGroup() != null ? assembly.phaseGroup().findPhaseSet(assembly) : null;
+        PhaseSet phaseSet = assembly.phaseSet();
         List<AssemblyLink> assemblyLinks = phaseSet != null ? phaseSet.findAssemblyLinks(assembly) : Collections.emptyList();
         AssemblyLink splitLink = assemblyLinks.stream().filter(x -> x.type() == LinkType.SPLIT).findFirst().orElse(null);
         StructuralVariantType svType = splitLink != null ? splitLink.svType() : SGL;

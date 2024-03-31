@@ -272,60 +272,78 @@ public final class AssemblyWriterUtils
         sj.add("SvLength");
         sj.add("InsertedBases");
         sj.add("OverlapBases");
+        sj.add("RefLinkedFrags");
 
         sj.add("SecondaryLinks");
     }
+
+    private static final int NO_PHASE_ID = -1;
 
     protected static void addPhasingInfo(final JunctionAssembly assembly, final StringJoiner sj)
     {
         PhaseGroup phaseGroup = assembly.phaseGroup();
 
+        int phaseGroupId = NO_PHASE_ID;
+        int phaseGroupCount = 0;
+        int phaseSetId = NO_PHASE_ID;
+        int phaseSetCount = 0;
+        String splitLinkInfo = "";
+        String facingLinkInfo = "";
+        String svType = "";
+        int svLinkLength = 0;
+        String insertedBases = "";
+        String overlapBases = "";
+        String linkFragmentInfo = "";
+        String secondaryLinkInfo = "";
+
         if(phaseGroup != null)
         {
-            sj.add(String.valueOf(phaseGroup.id()));
-            sj.add(String.valueOf(phaseGroup.assemblyCount()));
-        }
-        else
-        {
-            sj.add("-1").add("0");
-        }
+            phaseGroupId = phaseGroup.id();
+            phaseGroupCount = phaseGroup.assemblyCount();
 
-        PhaseSet phaseSet = phaseGroup != null ? phaseGroup.findPhaseSet(assembly) : null;
+            PhaseSet phaseSet = assembly.phaseSet();
 
-        if(phaseSet != null)
-        {
-            sj.add(String.valueOf(phaseSet.id()));
-            sj.add(String.valueOf(phaseSet.assemblies().size()));
-
-            List<AssemblyLink> assemblyLinks = phaseSet.findAssemblyLinks(assembly);
-
-            List<AssemblyLink> splitLinks = assemblyLinks.stream()
-                    .filter(x -> x.type() == LinkType.SPLIT || x.type() == LinkType.INDEL).collect(Collectors.toList());
-
-            List<AssemblyLink> facingLinks = assemblyLinks.stream().filter(x -> x.type() == LinkType.FACING).collect(Collectors.toList());
-            sj.add(assemblyLinksStr(assembly, splitLinks));
-            sj.add(assemblyLinksStr(assembly, facingLinks));
-
-            if(!splitLinks.isEmpty())
+            if(phaseSet != null)
             {
-                AssemblyLink svLink = splitLinks.get(0);
-                sj.add(svLink.svType().toString());
-                sj.add(String.valueOf(svLink.length()));
-                sj.add(svLink.insertedBases());
-                sj.add(svLink.overlapBases());
-            }
-            else
-            {
-                sj.add("").add("0").add("").add("");
+                phaseSetId = phaseSet.id();
+                phaseSetCount = phaseSet.assemblies().size();
+
+                List<AssemblyLink> assemblyLinks = phaseSet.findAssemblyLinks(assembly);
+
+                List<AssemblyLink> splitLinks = assemblyLinks.stream()
+                        .filter(x -> x.type() == LinkType.SPLIT || x.type() == LinkType.INDEL).collect(Collectors.toList());
+
+                List<AssemblyLink> facingLinks = assemblyLinks.stream().filter(x -> x.type() == LinkType.FACING).collect(Collectors.toList());
+                splitLinkInfo = assemblyLinksStr(assembly, splitLinks);
+                facingLinkInfo = assemblyLinksStr(assembly, facingLinks);
+
+                if(!splitLinks.isEmpty())
+                {
+                    AssemblyLink svLink = splitLinks.get(0);
+                    svType = svLink.svType().toString();
+                    svLinkLength = svLink.length();
+                    insertedBases = svLink.insertedBases();
+                    overlapBases = svLink.overlapBases();
+                    linkFragmentInfo = assemblyLinkFragmentStr(svLink);
+                }
+
+                List<AssemblyLink> secondarySplitLinks = phaseGroup.findSecondarySplitLinks(assembly);
+                secondaryLinkInfo = assemblyLinksStr(assembly, secondarySplitLinks);
             }
         }
-        else
-        {
-            sj.add("-1").add("0").add("").add("").add("").add("0").add("").add("");
-        }
 
-        List<AssemblyLink> secondarySplitLinks = phaseGroup != null ? phaseGroup.findSecondarySplitLinks(assembly) : Collections.emptyList();
-        sj.add(assemblyLinksStr(assembly, secondarySplitLinks));
+        sj.add(String.valueOf(phaseGroupId));
+        sj.add(String.valueOf(phaseGroupCount));
+        sj.add(String.valueOf(phaseSetId));
+        sj.add(String.valueOf(phaseSetCount));
+        sj.add(splitLinkInfo);
+        sj.add(facingLinkInfo);
+        sj.add(svType);
+        sj.add(String.valueOf(svLinkLength));
+        sj.add(insertedBases);
+        sj.add(overlapBases);
+        sj.add(linkFragmentInfo);
+        sj.add(secondaryLinkInfo);
     }
 
     protected static String assemblyLinksStr(final JunctionAssembly assembly, final List<AssemblyLink> assemblyLinks)
@@ -341,6 +359,62 @@ public final class AssemblyWriterUtils
             sj.add(format("%s=%s", link.type(), otherAssembly.junction().coords()));
         }
         return sj.toString();
+    }
+
+    private static String assemblyLinkFragmentStr(final AssemblyLink assemblyLink)
+    {
+        int uniqueFrags = 0;
+        int uniqueRefFrags = 0;
+        int matchedFrags = 0;
+        int matchedRefFrags = 0;
+
+        JunctionAssembly first = assemblyLink.first();
+        JunctionAssembly second = assemblyLink.second();
+
+        Set<String> uniqueReadIds = Sets.newHashSet();
+
+        for(AssemblySupport firstSupport : first.support())
+        {
+            if(uniqueReadIds.contains(firstSupport.read().id()))
+                continue;
+
+            uniqueReadIds.add(firstSupport.read().id());
+
+            boolean isReference = firstSupport.read().isReference();
+
+            if(second.support().stream().anyMatch(x -> x.read().matchesFragment(firstSupport.read())))
+            {
+                ++matchedFrags;
+
+                if(isReference)
+                    ++matchedRefFrags;
+            }
+            else
+            {
+                ++uniqueFrags;
+
+                if(isReference)
+                    ++uniqueRefFrags;
+            }
+        }
+
+        for(AssemblySupport secondSupport : second.support())
+        {
+            if(uniqueReadIds.contains(secondSupport.read().id()))
+                continue;
+
+            uniqueReadIds.add(secondSupport.read().id());
+
+            if(first.support().stream().noneMatch(x -> x.read().matchesFragment(secondSupport.read())))
+            {
+                ++uniqueFrags;
+
+                if(secondSupport.read().isReference())
+                    ++uniqueRefFrags;
+            }
+        }
+
+        return format("Match=%d;MatchRef=%d;Unique=%d;UniqueRef=%d", matchedFrags, matchedRefFrags, uniqueFrags, uniqueRefFrags);
     }
 
     protected static String repeatsInfoStr(final List<RepeatInfo> repeats)

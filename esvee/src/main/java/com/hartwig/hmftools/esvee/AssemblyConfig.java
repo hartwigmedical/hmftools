@@ -104,7 +104,6 @@ public class AssemblyConfig
 
     public final int AssemblyRefBaseWriteMax;
     public final boolean SkipDiscordant;
-    public final boolean LogPhaseGroupLinks;
     public final int PhaseProcessingLimit;
 
     public final int Threads;
@@ -255,7 +254,6 @@ public class AssemblyConfig
         PhaseProcessingLimit = configBuilder.getInteger(PHASE_PROCESSING_LIMIT);
 
         AssemblyRefBaseWriteMax = configBuilder.getInteger(ASSEMBLY_REF_BASE_WRITE_MAX);
-        LogPhaseGroupLinks = configBuilder.hasFlag(LOG_PHASE_GROUP_LINKS);
 
         Threads = parseThreads(configBuilder);
 
@@ -395,7 +393,6 @@ public class AssemblyConfig
 
         AssemblyRefBaseWriteMax = 0;
         SkipDiscordant = true;
-        LogPhaseGroupLinks = false;
         PhaseProcessingLimit = 0;
         Threads = 0;
         TruthsetFile = null;

@@ -248,7 +248,12 @@ public class JunctionProcessor
 
         addPerfCounters(phaseSetTasks.stream().collect(Collectors.toList()));
 
-        SV_LOGGER.info("created {} phase sets", phaseGroups.stream().mapToInt(x -> x.phaseSets().size()).sum());
+        int totalRemoteReadSearch = phaseSetTasks.stream().mapToInt(x -> x.totalRemoteReadsSearch()).sum();
+        int totalRemoteReadMatched = phaseSetTasks.stream().mapToInt(x -> x.totalRemoteReadsMatched()).sum();
+
+        SV_LOGGER.info("created {} phase sets, remote read(search={} matched={})",
+                phaseGroups.stream().mapToInt(x -> x.phaseSets().size()).sum(),
+                totalRemoteReadSearch, totalRemoteReadMatched);
     }
 
     private void addPerfCounters(final List<ThreadTask> tasks)
@@ -279,6 +284,9 @@ public class JunctionProcessor
     {
         List<JunctionAssembly> allAssemblies = Lists.newArrayList();
 
+        // assemblies are source from junction groups
+        // they could instead be sourced from phase groups, to automatically collect any branched or ref-remote assemblies
+
         int assemblyId = 0;
         for(List<JunctionGroup> junctionGroups : mJunctionGroupMap.values())
         {
@@ -303,27 +311,22 @@ public class JunctionProcessor
                         setAssemblyOutcome(branchedAssembly);
                     }
 
-                    if(assembly.phaseGroup() != null)
+                    PhaseSet phaseSet = assembly.phaseSet();
+                    List<AssemblyLink> assemblyLinks = phaseSet != null ? phaseSet.findAssemblyLinks(assembly) : Collections.emptyList();
+
+                    for(AssemblyLink splitLink : assemblyLinks)
                     {
-                        PhaseSet phaseSet = assembly.phaseGroup().findPhaseSet(assembly);
-                        List<AssemblyLink> assemblyLinks = phaseSet != null ? phaseSet.findAssemblyLinks(assembly) : Collections.emptyList();
+                        JunctionAssembly otherAssembly = splitLink.otherAssembly(assembly);
 
-                        for(AssemblyLink splitLink : assemblyLinks)
+                        if(otherAssembly.outcome() == REMOTE_REF)
                         {
-                            JunctionAssembly otherAssembly = splitLink.otherAssembly(assembly);
-
-                            if(otherAssembly.outcome() == REMOTE_REF)
-                            {
-                                otherAssembly.setId(assemblyId++);
-                                allAssemblies.add(otherAssembly);
-                            }
+                            otherAssembly.setId(assemblyId++);
+                            allAssemblies.add(otherAssembly);
                         }
                     }
                 }
             }
         }
-
-
 
         // TODO: assembly ID could be set once assemblies have been ordered, and a unique assebly string ID also set in a
         // fairly deterministic way based on final coords, with any duplicates given an extra incrementor

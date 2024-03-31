@@ -278,7 +278,10 @@ public class Read
         return mIndelCoords;
     }
 
-    public boolean matchesFragment(final Read other) { return this == other || id().equals(other.id()); }
+    public boolean matchesFragment(final Read other)
+    {
+        return this == other || this == other.mateRead() || this == other.supplementaryRead() || id().equals(other.id());
+    }
 
     public String toString()
     {
