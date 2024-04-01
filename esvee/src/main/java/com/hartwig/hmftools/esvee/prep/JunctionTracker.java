@@ -808,10 +808,6 @@ public class JunctionTracker
     public static boolean hasOtherJunctionSupport(
             final PrepRead read, final JunctionData junctionData, final ReadFilterConfig filterConfig)
     {
-        // look for any read with the correct orientation, soft-clipped on the junction side and crossing the junction
-        if(junctionData.Orientation != read.orientation())
-            return false;
-
         int unclippedStart = read.unclippedStart();
         int unclippedEnd = read.unclippedEnd();
 
@@ -843,8 +839,11 @@ public class JunctionTracker
             return false;
         }
 
-        // otherwise can be distant if discordant
+        // otherwise can be distant if discordant and with an orientation cross the junction
         int junctionDistance = 0;
+
+        if(junctionData.Orientation != read.orientation())
+            return false;
 
         if(junctionData.isForward())
         {
