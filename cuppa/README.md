@@ -786,6 +786,8 @@ number of samples correctly predicted per cancer type).
 <img src="src/main/python/pycuppa/doc/diagrams/training_and_cross_validation.jpg" width="600"/>
 
 # Version History and Download Links
+- [2.1.0](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v2.1.0)
+- [2.0](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v2.0)
 - [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.8)
 - [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.7.2)
 - [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.6)
