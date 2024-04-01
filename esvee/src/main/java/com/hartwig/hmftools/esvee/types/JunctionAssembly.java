@@ -62,8 +62,6 @@ public class JunctionAssembly
     private PhaseGroup mPhaseGroup;
     private AssemblyOutcome mOutcome;
 
-    private final List<JunctionAssembly> mBranchedAssemblies;
-
     // info only
     private int mMergedAssemblies;
     private int mMismatchReadCount;
@@ -113,7 +111,6 @@ public class JunctionAssembly
         mRepeatInfo = repeatInfo;
         mRefSideSoftClips = Lists.newArrayList();
         mRemoteRegions = Lists.newArrayList();
-        mBranchedAssemblies = Lists.newArrayList();
         mMergedAssemblies = 0;
         mPhaseGroup = null;
         mOutcome = UNSET;
@@ -546,13 +543,6 @@ public class JunctionAssembly
             mOutcome = outcome;
     }
 
-    public void addBranchedAssembly(final JunctionAssembly assembly)
-    {
-        mBranchedAssemblies.add(assembly);
-    }
-
-    public List<JunctionAssembly> branchedAssemblies() { return mBranchedAssemblies; }
-
     public JunctionAssembly(
             final JunctionAssembly initialAssembly, final RefSideSoftClip refSideSoftClip,
             final List<AssemblySupport> initialSupport, final Set<Read> excludedReads)
@@ -612,7 +602,6 @@ public class JunctionAssembly
         mRefBaseTrimLength = initialAssembly.refBaseTrimLength();
         mRefSideSoftClips = Lists.newArrayList(refSideSoftClip);
         mRemoteRegions = Lists.newArrayList();
-        mBranchedAssemblies = Lists.newArrayList();
         mFilters = Sets.newHashSet();
         mMergedAssemblies = 0;
         mMismatchReadCount = 0;
@@ -759,7 +748,6 @@ public class JunctionAssembly
         mRefBasesRepeatedTrimmed = "";
         mRefBaseTrimLength = 0;
         mRemoteRegions = Lists.newArrayList();
-        mBranchedAssemblies = Lists.newArrayList();
         mRefSideSoftClips = Lists.newArrayList();
         mFilters = Sets.newHashSet();
         mMergedAssemblies = 0;

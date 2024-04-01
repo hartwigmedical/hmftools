@@ -73,6 +73,7 @@ public class RemoteRegionAssembler
 
     public static boolean isExtensionCandidateAssembly(final JunctionAssembly assembly)
     {
+        // apply some filters to limit the number of assemblies which attempt to find a remote discordant match
         if(assembly.refBaseTrimLength() < MIN_VARIANT_LENGTH)
             return false;
 
@@ -152,7 +153,7 @@ public class RemoteRegionAssembler
 
         mBamReader.sliceBam(mRemoteRegion.Chromosome, mRemoteRegion.start(), mRemoteRegion.end(), this::processRecord);
 
-        SV_LOGGER.debug("remote region({}) sourcedReads(matched={} unmatched={})",
+        SV_LOGGER.trace("remote region({}) sourcedReads(matched={} unmatched={})",
                 mRemoteRegion, mMatchedRemoteReads.size(), mSourceReads.size());
 
         mTotalRemoteReadsMatched += mMatchedRemoteReads.size();

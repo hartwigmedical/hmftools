@@ -347,7 +347,8 @@ public class RefBaseExtender
         // set references between them - for now just for TSV output
         for(JunctionAssembly junctionAssembly : branchedAssemblies)
         {
-            branchedAssemblies.stream().filter(x -> x != junctionAssembly).forEach(x -> junctionAssembly.addBranchedAssembly(x));
+            if(junctionAssembly != assembly)
+                assembly.phaseGroup().addDerivedAssembly(junctionAssembly);
         }
     }
 

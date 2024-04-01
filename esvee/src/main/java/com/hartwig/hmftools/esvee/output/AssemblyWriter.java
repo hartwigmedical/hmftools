@@ -85,7 +85,6 @@ public class AssemblyWriter
 
             sj.add("RepeatInfo");
             sj.add("RefSideSoftClips");
-            sj.add("BranchedCount");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -155,8 +154,6 @@ public class AssemblyWriter
             sj.add(repeatsInfoStr(assembly.repeatInfo()));
 
             sj.add(refSideSoftClipsStr(assembly.refSideSoftClips()));
-
-            sj.add(String.valueOf(assembly.branchedAssemblies().size()));
 
             mWriter.write(sj.toString());
             mWriter.newLine();

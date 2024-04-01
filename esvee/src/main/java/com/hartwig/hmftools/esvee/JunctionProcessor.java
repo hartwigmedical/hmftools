@@ -21,10 +21,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 import com.hartwig.hmftools.esvee.output.AssemblyReadWriter;
@@ -282,56 +284,40 @@ public class JunctionProcessor
 
     private List<JunctionAssembly> prepareFinalAssemblies()
     {
-        List<JunctionAssembly> allAssemblies = Lists.newArrayList();
-
         // assemblies are source from junction groups
         // they could instead be sourced from phase groups, to automatically collect any branched or ref-remote assemblies
 
         int assemblyId = 0;
+
+        Set<PhaseGroup> phaseGroups = Sets.newHashSet();
+        List<JunctionAssembly> allAssemblies = Lists.newArrayList();
+
         for(List<JunctionGroup> junctionGroups : mJunctionGroupMap.values())
         {
             for(JunctionGroup junctionGroup : junctionGroups)
             {
-                // set ID first so any references have them set - may need or could to be done earlier once
-                // all references between then are established
-
-                // NOTE: is there a cleaner place to do this? eg prior to alignment after phasing is done?
-                // junctionGroup.addBranchedAssemblies();
-
                 for(JunctionAssembly assembly : junctionGroup.junctionAssemblies())
                 {
-                    assembly.setId(assemblyId++);
+                    if(assembly.phaseGroup() != null)
+                        phaseGroups.add(assembly.phaseGroup());
+
                     allAssemblies.add(assembly);
-                    setAssemblyOutcome(assembly);
-
-                    for(JunctionAssembly branchedAssembly : assembly.branchedAssemblies())
-                    {
-                        branchedAssembly.setId(assembly.id()); // for now given the same ID
-                        allAssemblies.add(branchedAssembly);
-                        setAssemblyOutcome(branchedAssembly);
-                    }
-
-                    PhaseSet phaseSet = assembly.phaseSet();
-                    List<AssemblyLink> assemblyLinks = phaseSet != null ? phaseSet.findAssemblyLinks(assembly) : Collections.emptyList();
-
-                    for(AssemblyLink splitLink : assemblyLinks)
-                    {
-                        JunctionAssembly otherAssembly = splitLink.otherAssembly(assembly);
-
-                        if(otherAssembly.outcome() == REMOTE_REF)
-                        {
-                            otherAssembly.setId(assemblyId++);
-                            allAssemblies.add(otherAssembly);
-                        }
-                    }
                 }
             }
         }
 
-        // TODO: assembly ID could be set once assemblies have been ordered, and a unique assebly string ID also set in a
-        // fairly deterministic way based on final coords, with any duplicates given an extra incrementor
+        for(PhaseGroup phaseGroup : phaseGroups)
+        {
+            allAssemblies.addAll(phaseGroup.derivedAssemblies());
+        }
 
         Collections.sort(allAssemblies, Comparator.comparing(x -> x.junction()));
+
+        for(JunctionAssembly assembly : allAssemblies)
+        {
+            assembly.setId(assemblyId++);
+            setAssemblyOutcome(assembly);
+        }
 
         return allAssemblies;
     }
