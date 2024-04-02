@@ -113,6 +113,7 @@ public class RemoteRegionAssembler
             }
             else
             {
+                // not local and concordant
                 if((assembly.isForwardJunction() && read.mateAlignmentStart() > assembly.junction().Position)
                 || (!assembly.isForwardJunction() && read.mateAlignmentEnd() < assembly.junction().Position))
                 {

@@ -74,11 +74,8 @@ public class PhaseSetBuilder
     {
         markShortIndelAssemblies();
 
-        if(mAssemblies.size() == 2)
-        {
-            handleAssemblyPair();
+        if(mAssemblies.size() == 2 && handleAssemblyPair())
             return;
-        }
 
         formSplitLinks();
 
@@ -93,24 +90,25 @@ public class PhaseSetBuilder
         cleanupBranchedAssemblies();
     }
 
-    private void handleAssemblyPair()
+    private boolean handleAssemblyPair()
     {
-        // simpler routine without prioritising pairs, facing links or branching
+        // simpler routine without prioritising pairs, facing links or branching - return true if a link is found
         JunctionAssembly assembly1 = mAssemblies.get(0);
         JunctionAssembly assembly2 = mAssemblies.get(1);
 
         if(!isLocalAssemblyCandidate(assembly1, assembly2) && (assembly1.outcome() == SHORT_INDEL) || assembly2.outcome() == SHORT_INDEL)
-            return;
+            return false;
 
-        // if no link was made, then may need to revert to logic for finding discordant pair assemblies etc
-        // likewise may depend for solo-assemblies on how disc-only assemblies are used
         AssemblyLink assemblyLink = checkSplitLink(assembly1, assembly2);
 
         if(assemblyLink != null)
         {
             buildSplitLink(assembly1, assembly2, false);
             mPhaseSets.add(new PhaseSet(assemblyLink));
+            return true;
         }
+
+        return false;
     }
 
     private void markShortIndelAssemblies()
@@ -297,6 +295,7 @@ public class PhaseSetBuilder
 
     private static void linkExistingSupport(final JunctionAssembly first, final JunctionAssembly second)
     {
+        // establishes read links with mates and supplementaries (ie the same fragment) once an assembly link has been made
         for(AssemblySupport support : first.support())
         {
             List<AssemblySupport> matchedSupport = findMatchingFragmentSupport(second.support(), support.read());
