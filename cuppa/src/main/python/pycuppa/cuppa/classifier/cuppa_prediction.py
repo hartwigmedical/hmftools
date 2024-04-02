@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from functools import cached_property
-from typing import Iterable, TYPE_CHECKING, Optional
+from typing import Iterable, TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -10,17 +10,15 @@ from numpy.typing import NDArray
 from pandas.core.dtypes.common import is_integer_dtype
 from sklearn.compose import make_column_selector
 
-from cuppa.constants import CUPPA_PREDICTION_INDEX_NAMES, CLF_GROUPS, SUB_CLF_NAMES
+from cuppa.constants import CLF_GROUPS, SUB_CLF_NAMES
 from cuppa.logger import LoggerMixin
 from cuppa.misc.utils import get_top_cols, check_required_columns, as_categorical
 from cuppa.performance.performance_stats import PerformanceStatsBuilder, PerformanceStats
-from cuppa.visualization.visualization import CuppaVisDataBuilder, CuppaVisPlotter
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from cuppa.classifier.cuppa_classifier import CuppaClassifier
-    from cuppa.visualization.visualization import CuppaVisData
 
 
 class CuppaPredictionBuilder(LoggerMixin):
@@ -37,19 +35,21 @@ class CuppaPredictionBuilder(LoggerMixin):
         self.clf_groups = clf_groups
         self.verbose = verbose
 
+    INDEX_NAMES = ["sample_id", "data_type", "clf_group", "clf_name", "feat_name", "feat_value"]
+
     @property
     def class_columns(self) -> list[str]:
         return list(self.cuppa_classifier.classes_)
 
     @property
     def all_columns(self) -> list[str]:
-        return CUPPA_PREDICTION_INDEX_NAMES + self.class_columns
+        return self.INDEX_NAMES + self.class_columns
 
     def _set_required_columns(self, df: pd.DataFrame) -> pd.DataFrame:
         return df.reset_index().reindex(self.all_columns, axis=1)
 
     def _set_required_indexes(self, df: pd.DataFrame) -> pd.DataFrame:
-        return df.set_index(CUPPA_PREDICTION_INDEX_NAMES)
+        return df.set_index(self.INDEX_NAMES)
 
     def _check_clf_groups(self) -> pd.Series:
 
@@ -130,46 +130,11 @@ class CuppaPredictionBuilder(LoggerMixin):
 
         return df
 
-    @staticmethod
-    def _check_classes_in_cv_performance(
-        perf: PerformanceStats,
-        expected_classes: Iterable[str]
-    ) -> PerformanceStats:
-
-        expected_classes = pd.Series(expected_classes)
-        missing_classes = expected_classes[ ~expected_classes.isin(perf["class"]) ]
-
-        if len(missing_classes)>0:
-            logger.error("`cv_performance` is missing some classes: " + ", ".join(missing_classes))
-            raise KeyError
-
-        return perf[perf["class"].isin(expected_classes)]
-
-    @cached_property
-    def cv_performance(self):
-        perf = self.cuppa_classifier.cv_performance
-
-        if perf is None:
-            self.logger.warning("`cv_performance` attr is missing from `cuppa_classifier`")
-            return None
-
-        if perf._is_by_prob_bin:
-            self.logger.error("Cannot parse `cv_performance` when it is split by prob bin")
-
-        perf = self._check_classes_in_cv_performance(perf, self.class_columns)
-
-        return perf.to_cuppa_prediction_format()
-
 
     def build(self) -> CuppaPrediction:
 
         df = pd.concat([self.probs, self.feat_contribs, self.sig_quantiles])
-
-        ## Make rows from the same sample consecutive
-        df = df.loc[self.X.index]
-
-        ## Add cv performance
-        df = pd.concat([df, self.cv_performance])
+        df = df.loc[self.X.index] ## Make rows from the same sample consecutive
 
         return CuppaPrediction.from_data_frame(df)
 
@@ -194,10 +159,6 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
     @property
     def is_multi_sample(self) -> bool:
         return len(self.sample_ids.dropna()) > 1
-
-    @property
-    def has_cv_performance(self) -> bool:
-        return "cv_performance" in self.index.get_level_values("data_type")
 
     ## Utility methods ================================
     @staticmethod
@@ -245,7 +206,7 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
     ## I/O ================================
     @classmethod
     def from_data_frame(cls, df: pd.DataFrame) -> CuppaPrediction:
-        check_required_columns(df, required_columns=CUPPA_PREDICTION_INDEX_NAMES, from_index=True)
+        check_required_columns(df, required_columns=CuppaPredictionBuilder.INDEX_NAMES, from_index=True)
 
         ## Force column order with Other subtypes as last amongst subtypes
         metadata = cls._columns_to_class_metadata(df.columns)
@@ -342,14 +303,6 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
 
         return self.get_rows(keys=keys, index_level="sample_id")
 
-        ## return self.loc[keys]
-
-    def add_cv_performance(self, perf: PerformanceStats) -> CuppaPrediction:
-
-        perf = CuppaPredictionBuilder._check_classes_in_cv_performance(perf, self.class_columns)
-        perf_formatted = perf.to_cuppa_prediction_format()
-        return self.concat([self, perf_formatted])
-
     ## Downstream output ================================
     def summarize(
         self,
@@ -373,38 +326,6 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
         pred_summ = builder.build()
 
         return pred_summ
-
-    def get_vis_data(
-        self,
-        sample_id: Optional[str | int] = None,
-        verbose: bool = True
-    ) -> CuppaVisData:
-
-        builder = CuppaVisDataBuilder(
-            predictions = self,
-            sample_id = sample_id,
-            verbose = verbose
-        )
-
-        return builder.build()
-
-    def plot(
-        self,
-        plot_path: str,
-        sample_id: Optional[str | int] = None,
-        verbose: bool = True
-    ) -> None:
-        vis_data = self.get_vis_data(
-            sample_id=sample_id,
-            verbose=verbose
-        )
-
-        plotter = CuppaVisPlotter(
-            vis_data = vis_data,
-            plot_path = plot_path,
-            verbose = verbose
-        )
-        plotter.plot()
 
 
 class CuppaPredSummaryBuilder(LoggerMixin):
