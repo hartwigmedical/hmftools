@@ -32,7 +32,8 @@ class DEFAULT_RUNNER_ARGS:
     excl_chroms: str | list[str] = ["ChrY", "Y"]
     excl_classes: str | list[str] = ["_Other","_Unknown"]
 
-    fusion_overrides_path = DEFAULT_FUSION_OVERRIDES_PATH
+    fusion_overrides_path: str = DEFAULT_FUSION_OVERRIDES_PATH
+    clf_group: str = "all"
 
     skip_cv: bool = False
     cv_folds: int = 10
@@ -85,6 +86,14 @@ class RunnerArgParser:
             help="Path to a CuppaPrediction tsv file containing the cross-validation predictions."
                  "If provided, sample ids found in this file will have their predictions returned from this file"
                  "instead of being computed"
+        )
+
+    def add_clf_group(self):
+        self.parser.add_argument(
+            "--clf_group", type=str,
+            default=DEFAULT_RUNNER_ARGS.clf_group,
+            help="Comma separated list of classifier groups to filter probabilities for."
+                 "Can be 'all' or 'dna'. Default: " + ",".join(DEFAULT_RUNNER_ARGS.clf_group)
         )
 
     def add_sample_id(self) -> None:
@@ -186,6 +195,7 @@ class RunnerArgParser:
 
         self.add_classifier_path()
         self.add_cv_predictions_path()
+        self.add_clf_group()
 
         self.add_using_old_features_format()
         self.add_genome_version()
@@ -493,6 +503,7 @@ class PredictionRunner(LoggerMixin):
         excl_chroms: str | list[str] = DEFAULT_RUNNER_ARGS.excl_chroms,
         cv_predictions_path: str = None,
         cv_predictions: CuppaPrediction | None = None,
+        clf_group: str = DEFAULT_RUNNER_ARGS.clf_group,
         log_to_file: bool = DEFAULT_RUNNER_ARGS.log_to_file,
         log_path: Optional[str] = DEFAULT_RUNNER_ARGS.log_path
     ):
@@ -510,6 +521,7 @@ class PredictionRunner(LoggerMixin):
 
         self.cv_predictions_path = cv_predictions_path
         self.cv_predictions = cv_predictions
+        self.clf_group = clf_group
 
         self.log_to_file = log_to_file
         self.log_path = log_path
@@ -586,6 +598,14 @@ class PredictionRunner(LoggerMixin):
 
         predictions = CuppaPrediction.concat(predictions)
         predictions = predictions.loc[self.X.index]
+
+        if self.clf_group == "all":
+            pass
+        elif self.clf_group == "dna":
+            predictions = predictions.subset_probs_by_clf_groups("dna")
+        else:
+            self.logger.error("`clf_group` must be 'all' or 'dna'")
+            raise ValueError
 
         self.predictions = predictions
 
