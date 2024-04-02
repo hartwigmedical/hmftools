@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from functools import cached_property
 
-from cuppa.constants import RSCRIPT_PLOT_PREDICTIONS_PATH
+from cuppa.constants import RSCRIPT_PLOT_PREDICTIONS_PATH, META_CLF_NAMES, CLF_GROUPS
 from cuppa.logger import LoggerMixin
 from cuppa.misc.executors import RscriptExecutor
 from cuppa.misc.utils import check_required_columns
@@ -16,12 +16,14 @@ from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from cuppa.classifier.cuppa_prediction import CuppaPrediction
+    from cuppa.performance.performance_stats import PerformanceStats
 
 
 class CuppaVisDataBuilder(LoggerMixin):
     def __init__(
         self,
         predictions: CuppaPrediction,
+        cv_performance: PerformanceStats,
         sample_id: Optional[str | int] = None,
         require_all_feat_types: bool = True,
 
@@ -31,7 +33,10 @@ class CuppaVisDataBuilder(LoggerMixin):
         verbose: bool = True
     ):
         self.predictions = predictions
+        self.cv_performance = cv_performance
+
         self.sample_id = sample_id
+
         self.require_all_feat_types = require_all_feat_types
 
         self.min_driver_likelihood = min_driver_likelihood
@@ -40,6 +45,12 @@ class CuppaVisDataBuilder(LoggerMixin):
         self.verbose = verbose
 
         self._get_predictions_one_sample()
+
+    COLUMN_NAMES = [
+        "sample_id", "data_type", "clf_group", "clf_name",
+        "feat_name", "feat_value", "cancer_type", "data_value",
+        "rank", "rank_group"
+    ]
 
     def _get_predictions_one_sample(self) -> CuppaPrediction:
         if not self.predictions.is_multi_sample:
@@ -50,14 +61,6 @@ class CuppaVisDataBuilder(LoggerMixin):
             raise Exception
 
         predictions = self.predictions.get_samples(self.sample_id)
-
-        if self.predictions.has_cv_performance:
-            predictions = predictions.__class__.concat([
-                predictions,
-                self.predictions.get_data_types("cv_performance")
-            ])
-        else:
-            self.logger.warning("`cv_performance` data missing from `predictions`")
 
         self.predictions = predictions
 
@@ -158,41 +161,43 @@ class CuppaVisDataBuilder(LoggerMixin):
         return long
 
     ## CV performance ================================
-    def _get_cv_performance_one_clf(self, clf_name: str = "dna_combined") -> pd.DataFrame | None:
-
-        if not self.predictions.has_cv_performance:
-            return None
+    def parse_cv_performance(self) -> pd.DataFrame:
 
         if self.verbose:
-            self.logger.debug("Getting cross-validation performance")
+            self.logger.debug("Parsing cross-validation performance data")
 
-        required_metrics = ["n_total", "recall", "precision"]
-        cancer_type_order = self.predictions.class_metadata.index
+        perf = self.cv_performance.copy()
 
-        wide = self.predictions.get_data_types("cv_performance")
-        wide = wide[
-            wide.index.get_level_values("feat_name").isin(required_metrics) &
-            (wide.index.get_level_values("clf_name") == clf_name)
+        ## Cast to long format
+        perf = perf.melt(id_vars=["class", "clf_name"], var_name="feat_name")
+
+        perf = perf.rename(columns={
+            "class": "cancer_type",
+            "value": "data_value"
+        })
+
+        ## Subset for relevant rows
+        perf = perf[
+            (perf["clf_name"] == META_CLF_NAMES.DNA_COMBINED) & ## Only use DNA combined perfs as RNA combined misses some cancer types
+            (perf["cancer_type"].isin(self.predictions.class_columns)) &
+            (perf["feat_name"].isin(["n_total", "recall", "precision"]))
         ]
 
-        ## Force metric and cancer type order
-        long = wide.wide_to_long()
-        long["feat_name"] = pd.Categorical(long["feat_name"], required_metrics)
-        long["cancer_type"] = pd.Categorical(long["cancer_type"], cancer_type_order)
-        long = long.sort_values(["feat_name","cancer_type"])
+        ## Check if performance stats has all required cancer types
+        if perf["cancer_type"].unique().__len__() != self.predictions.class_columns.__len__():
+            self.logger.error("`self.cv_performance` is missing some classes found in `self.predictions`")
+            raise LookupError
 
-        ## Rename
-        long["feat_name"] = long["feat_name"].replace(dict(n_total="n_samples"))
+        perf = perf.reindex(columns=self.COLUMN_NAMES)
 
-        return long
+        perf["data_type"] = "cv_performance"
+        perf["clf_group"] = CLF_GROUPS.from_clf_names(perf["clf_name"])
 
-    def get_cv_performance(self) -> pd.DataFrame | None:
-        ## Only use DNA combined perfs as RNA combined misses some cancer types
-        return self._get_cv_performance_one_clf(clf_name="dna_combined")
+        return perf
 
     ## Merge ================================
     @staticmethod
-    def _add_rank(vis_data: pd.DataFrame) -> None:
+    def add_ranks(vis_data: pd.DataFrame) -> None:
         grouper = vis_data.groupby(["data_type", "clf_name", "feat_name"], dropna=False)
 
         vis_data["rank"] = grouper["data_value"]\
@@ -221,10 +226,11 @@ class CuppaVisDataBuilder(LoggerMixin):
             self.get_probs(),
             self.get_signatures(),
             self.get_top_feat_contrib(),
-            self.get_cv_performance()
+            self.parse_cv_performance()
         ])
 
-        self._add_rank(vis_data)
+        self.add_ranks(vis_data)
+        vis_data.reset_index(drop=True, inplace=True)
 
         return CuppaVisData.from_data_frame(vis_data)
 
