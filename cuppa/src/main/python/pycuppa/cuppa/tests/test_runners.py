@@ -93,6 +93,9 @@ class TestPredictionRunner:
         runner.get_predictions()
         predictions_with_lookup = runner.predictions.copy()
 
+        ## Ensure rows are aligned
+        predictions_with_lookup = predictions_with_lookup.reindex(predictions_all.index)
+
         assert \
             predictions_with_lookup.loc[non_cv_samples]\
             .equals(predictions_all.loc[non_cv_samples])
