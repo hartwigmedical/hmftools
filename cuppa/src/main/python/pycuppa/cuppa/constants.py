@@ -1,10 +1,15 @@
 from __future__ import annotations
+from typing import Iterable
+
+import pandas as pd
+import numpy as np
 
 try:
     from importlib import resources as impresources
 except ImportError:
     ## Try `importlib_resources` backported for Python<3.7
     import importlib_resources as impresources
+
 
 ## Classifier ================================
 class SUB_CLF_NAMES:
@@ -23,7 +28,9 @@ class SUB_CLF_NAMES:
     def get_rna_clf_names(cls) -> list[str]:
         return [cls.GENE_EXP, cls.ALT_SJ]
 
+
 SIG_QUANTILE_TRANSFORMER_NAME = "sig"
+
 
 class META_CLF_NAMES:
     DNA_COMBINED = "dna_combined"
@@ -46,18 +53,31 @@ class CLF_GROUPS:
     def get_all(cls) -> list[str]:
         return [cls.COMBINED, cls.DNA, cls.RNA]
 
-    MAPPINGS_CLF_NAMES = {
-        META_CLF_NAMES.COMBINED: COMBINED,
+    @classmethod
+    def get_clf_group_name_mappings(cls) -> pd.Series:
+        mappings = {
+            META_CLF_NAMES.COMBINED:        cls.COMBINED,
 
-        META_CLF_NAMES.DNA_COMBINED: DNA,
-        SUB_CLF_NAMES.GEN_POS: DNA,
-        SUB_CLF_NAMES.SNV96: DNA,
-        SUB_CLF_NAMES.EVENT: DNA,
+            META_CLF_NAMES.DNA_COMBINED:    cls.DNA,
+            SUB_CLF_NAMES.GEN_POS:          cls.DNA,
+            SUB_CLF_NAMES.SNV96:            cls.DNA,
+            SUB_CLF_NAMES.EVENT:            cls.DNA,
 
-        META_CLF_NAMES.RNA_COMBINED: RNA,
-        SUB_CLF_NAMES.GENE_EXP: RNA,
-        SUB_CLF_NAMES.ALT_SJ: RNA
-    }
+            META_CLF_NAMES.RNA_COMBINED:    cls.RNA,
+            SUB_CLF_NAMES.GENE_EXP:         cls.RNA,
+            SUB_CLF_NAMES.ALT_SJ:           cls.RNA
+        }
+
+        return pd.Series(mappings)
+
+    @classmethod
+    def from_clf_names(cls, clf_names: Iterable) -> np.array:
+        clf_names = np.array(clf_names)
+        mappings = cls.get_clf_group_name_mappings()
+        return mappings[clf_names].values
+
+
+CLF_NAMES = CLF_GROUPS.get_clf_group_name_mappings().keys()
 
 
 CUPPA_PREDICTION_INDEX_NAMES = ["sample_id", "data_type", "clf_group", "clf_name", "feat_name", "feat_value"]
