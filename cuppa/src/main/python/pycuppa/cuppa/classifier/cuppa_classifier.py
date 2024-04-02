@@ -9,7 +9,8 @@ import pandas as pd
 from sklearn.compose import make_column_selector
 
 import cuppa.compose.pipeline
-from cuppa.constants import SUB_CLF_NAMES, META_CLF_NAMES, LAYER_NAMES, CLF_GROUPS, NA_FILL_VALUE, SIG_QUANTILE_TRANSFORMER_NAME
+from cuppa.constants import SUB_CLF_NAMES, META_CLF_NAMES, LAYER_NAMES, CLF_GROUPS, NA_FILL_VALUE, \
+    SIG_QUANTILE_TRANSFORMER_NAME, CLF_NAMES
 from cuppa.classifier.classifiers import ClassifierLayers, SubClassifiers, MetaClassifiers
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredictionBuilder
 from cuppa.classifier.feature_importance import FeatureImportance
@@ -444,8 +445,9 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         ## Force row order
         index["sample_id"] = pd.Categorical(index["sample_id"], X.index)
-        index["clf_name"] = pd.Categorical(index["clf_name"], CLF_GROUPS.MAPPINGS_CLF_NAMES.keys())
-        index["clf_group"] = pd.Categorical(pd.Series(CLF_GROUPS.MAPPINGS_CLF_NAMES)[index["clf_name"]], CLF_GROUPS.get_all())
+        index["clf_name"] = pd.Categorical(index["clf_name"], CLF_NAMES)
+        index["clf_group"] = pd.Categorical(CLF_GROUPS.from_clf_names(index["clf_name"]), CLF_GROUPS.get_all())
+
         index = index[["sample_id", "clf_group", "clf_name"]]
 
         probs.index = pd.MultiIndex.from_frame(index)
@@ -548,6 +550,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         self,
         X: pd.DataFrame,
         y: None = None,
+        clf_groups: str | list[str] = "all",
         bypass_steps: str | list[str] | None = None,
         verbose: bool = False
     ) -> CuppaPrediction:
@@ -591,6 +594,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         builder = CuppaPredictionBuilder(
             cuppa_classifier = cuppa_classifier,
             X = X,
+            clf_groups = clf_groups,
             verbose = verbose
         )
 

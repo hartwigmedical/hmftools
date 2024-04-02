@@ -10,7 +10,7 @@ from numpy.typing import NDArray
 from pandas.core.dtypes.common import is_integer_dtype
 from sklearn.compose import make_column_selector
 
-from cuppa.constants import CUPPA_PREDICTION_INDEX_NAMES
+from cuppa.constants import CUPPA_PREDICTION_INDEX_NAMES, CLF_GROUPS, SUB_CLF_NAMES
 from cuppa.logger import LoggerMixin
 from cuppa.misc.utils import get_top_cols, check_required_columns, as_categorical
 from cuppa.performance.performance_stats import PerformanceStatsBuilder, PerformanceStats
@@ -29,29 +29,40 @@ class CuppaPredictionBuilder(LoggerMixin):
         self,
         cuppa_classifier: CuppaClassifier,
         X: pd.DataFrame,
+        clf_groups: str | list[str] = "all",
         verbose: bool = False
     ):
         self.cuppa_classifier = cuppa_classifier
         self.X = X
+        self.clf_groups = clf_groups
         self.verbose = verbose
 
-    @cached_property
+    @property
     def class_columns(self) -> list[str]:
         return list(self.cuppa_classifier.classes_)
 
-    @cached_property
+    @property
     def all_columns(self) -> list[str]:
         return CUPPA_PREDICTION_INDEX_NAMES + self.class_columns
 
-    def _set_required_columns(self, df: pd.DataFrame):
+    def _set_required_columns(self, df: pd.DataFrame) -> pd.DataFrame:
         return df.reset_index().reindex(self.all_columns, axis=1)
 
-    def _set_required_indexes(self, df: pd.DataFrame):
+    def _set_required_indexes(self, df: pd.DataFrame) -> pd.DataFrame:
         return df.set_index(CUPPA_PREDICTION_INDEX_NAMES)
 
-    def _get_clf_groups(self, clf_names: pd.Series) -> NDArray:
-        mappings = pd.Series(self.cuppa_classifier.CLF_NAMES_GROUPS)
-        return mappings[clf_names].values
+    def _check_clf_groups(self) -> pd.Series:
+
+        if self.clf_groups == "all":
+            return pd.Series(CLF_GROUPS.get_all())
+
+        clf_groups = pd.Series(self.clf_groups)
+
+        if not all(clf_groups.isin(CLF_GROUPS.get_all())):
+            self.logger.error("`clf_groups` must be 'all', or one or more of: " + ", ".join(CLF_GROUPS.get_all()))
+            raise ValueError
+
+        return clf_groups
 
     @cached_property
     def probs(self) -> pd.DataFrame:
@@ -59,10 +70,14 @@ class CuppaPredictionBuilder(LoggerMixin):
             self.logger.info("Getting probabilities")
 
         df = self.cuppa_classifier.predict_proba(self.X)
-        df["data_type"] = "prob" ## Add row info
+        df["data_type"] = "prob"
 
         df = self._set_required_columns(df)
         df = self._set_required_indexes(df)
+
+        if self.clf_groups is not None and self.clf_groups != "all":
+            clf_groups = self._check_clf_groups()
+            df = df[df.index.get_level_values("clf_group").isin(clf_groups)]
 
         return df
 
@@ -72,17 +87,12 @@ class CuppaPredictionBuilder(LoggerMixin):
             self.logger.info("Getting feature contributions")
 
         ## Contribs --------------------------------
-        df = self.cuppa_classifier.feat_contrib(
-            X=self.X,
-            sub_clf_names="event",
-            column_type="classes"
-        )
-
+        df = self.cuppa_classifier.feat_contrib(X=self.X, sub_clf_names=SUB_CLF_NAMES.EVENT, column_type="classes")
         df = self._set_required_columns(df)
 
         ## Row info
         df["data_type"] = "feat_contrib"
-        df["clf_group"] = "dna"
+        df["clf_group"] = CLF_GROUPS.DNA
 
         ## Get feat values --------------------------------
         feat_values = self.X[make_column_selector("^event")]
@@ -153,11 +163,7 @@ class CuppaPredictionBuilder(LoggerMixin):
 
     def build(self) -> CuppaPrediction:
 
-        df = pd.concat([
-            self.probs,
-            self.feat_contribs,
-            self.sig_quantiles,
-        ])
+        df = pd.concat([self.probs, self.feat_contribs, self.sig_quantiles])
 
         ## Make rows from the same sample consecutive
         df = df.loc[self.X.index]
