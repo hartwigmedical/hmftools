@@ -550,7 +550,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         self,
         X: pd.DataFrame,
         y: None = None,
-        clf_groups: str | list[str] = "all",
         bypass_steps: str | list[str] | None = None,
         verbose: bool = False
     ) -> CuppaPrediction:
@@ -591,13 +590,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         cuppa_classifier._check_is_fitted()
 
-        builder = CuppaPredictionBuilder(
-            cuppa_classifier = cuppa_classifier,
-            X = X,
-            clf_groups = clf_groups,
-            verbose = verbose
-        )
-
+        builder = CuppaPredictionBuilder(cuppa_classifier = cuppa_classifier, X = X, verbose = verbose)
         predictions = builder.build()
 
         return predictions
