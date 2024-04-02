@@ -1,10 +1,12 @@
 options(max.print=500)
 options(stringsAsFactors=FALSE)
 
-library(ggplot2)
-library(ggh4x)
-library(stringr)
-library(patchwork)
+suppressMessages({
+   library(ggplot2)
+   library(ggh4x)
+   library(stringr)
+   library(patchwork)
+})
 
 ## Args ================================
 args <- commandArgs(trailingOnly = TRUE)
