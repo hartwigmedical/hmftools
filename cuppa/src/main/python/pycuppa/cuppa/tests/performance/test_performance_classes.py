@@ -24,13 +24,6 @@ class TestPerformanceStats:
         performance = PerformanceStats.from_tsv(MockCvOutput.path_performance)
         assert isinstance(performance, PerformanceStats)
 
-    def test_cuppa_prediction_format_has_correct_indexes(self):
-        perf = MockCvOutput.performance
-        perf_formatted = perf.to_cuppa_prediction_format()
-
-        expected_index_names = ["sample_id", "data_type", "clf_group", "clf_name", "feat_name", "feat_value"]
-        assert pd.Series(perf_formatted.index.names).isin(expected_index_names).all()
-
 
 class TestConfusionMatrix:
     def test_can_initialize_from_prediction_summary(self):

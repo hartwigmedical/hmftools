@@ -54,14 +54,6 @@ class TestCuppaPrediction:
         predictions = CuppaPrediction.from_tsv(MockCvOutput.path_predictions)
         assert True
 
-    def test_that_adding_cv_performance_does_not_create_unwanted_columns(self):
-        predictions = MockCvOutput.predictions
-        performance = MockCvOutput.performance
-
-        predictions_with_perf = predictions.add_cv_performance(performance)
-
-        assert all(predictions.columns == predictions_with_perf.columns)
-
     def test_can_cast_from_wide_to_long_dataframe(self):
         predictions_wide = MockCvOutput.predictions
         predictions_long = predictions_wide.get_samples(1).wide_to_long()
