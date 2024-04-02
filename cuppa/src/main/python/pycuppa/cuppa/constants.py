@@ -80,9 +80,6 @@ class CLF_GROUPS:
 CLF_NAMES = CLF_GROUPS.get_clf_group_name_mappings().keys()
 
 
-CUPPA_PREDICTION_INDEX_NAMES = ["sample_id", "data_type", "clf_group", "clf_name", "feat_name", "feat_value"]
-
-
 ## Paths ================================
 RESOURCES_DIR = impresources.files("cuppa")/"resources"
 
