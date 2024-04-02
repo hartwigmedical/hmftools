@@ -27,12 +27,10 @@ class CuppaPredictionBuilder(LoggerMixin):
         self,
         cuppa_classifier: CuppaClassifier,
         X: pd.DataFrame,
-        clf_groups: str | list[str] = "all",
         verbose: bool = False
     ):
         self.cuppa_classifier = cuppa_classifier
         self.X = X
-        self.clf_groups = clf_groups
         self.verbose = verbose
 
     INDEX_NAMES = ["sample_id", "data_type", "clf_group", "clf_name", "feat_name", "feat_value"]
@@ -51,19 +49,6 @@ class CuppaPredictionBuilder(LoggerMixin):
     def _set_required_indexes(self, df: pd.DataFrame) -> pd.DataFrame:
         return df.set_index(self.INDEX_NAMES)
 
-    def _check_clf_groups(self) -> pd.Series:
-
-        if self.clf_groups == "all":
-            return pd.Series(CLF_GROUPS.get_all())
-
-        clf_groups = pd.Series(self.clf_groups)
-
-        if not all(clf_groups.isin(CLF_GROUPS.get_all())):
-            self.logger.error("`clf_groups` must be 'all', or one or more of: " + ", ".join(CLF_GROUPS.get_all()))
-            raise ValueError
-
-        return clf_groups
-
     @cached_property
     def probs(self) -> pd.DataFrame:
         if self.verbose:
@@ -74,10 +59,6 @@ class CuppaPredictionBuilder(LoggerMixin):
 
         df = self._set_required_columns(df)
         df = self._set_required_indexes(df)
-
-        if self.clf_groups is not None and self.clf_groups != "all":
-            clf_groups = self._check_clf_groups()
-            df = df[df.index.get_level_values("clf_group").isin(clf_groups)]
 
         return df
 
@@ -253,6 +234,27 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
         df.set_index(list(index_cols), inplace=True)
 
         return cls.from_data_frame(df)
+
+    def subset_probs_by_clf_groups(self, clf_groups: str | list[str] = None, verbose: bool = True) -> CuppaPrediction:
+
+        clf_groups = pd.Series(clf_groups)
+        if not all(clf_groups.isin(CLF_GROUPS.get_all())):
+            self.logger.error("`clf_groups` must be one or more of: " + ", ".join(CLF_GROUPS.get_all()))
+            raise ValueError
+
+        if verbose:
+            self.logger.info("Subsetting probabilties for clf_groups: " + ", ".join(clf_groups))
+
+        indexes = self.index.to_frame(index=False)
+        selected_rows = (
+            (indexes["data_type"] != "prob") |
+            (
+                (indexes["data_type"] == "prob") &
+                (indexes["clf_group"].isin(clf_groups))
+            )
+        )
+
+        return self[selected_rows.values]
 
     def wide_to_long(self) -> pd.DataFrame:
 
