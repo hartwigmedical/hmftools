@@ -13,14 +13,12 @@ import com.hartwig.hmftools.common.variant.SageVcfTags;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.fitting.PeakModelData;
 import com.hartwig.hmftools.purple.config.ReferenceData;
-import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 
 import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticVariantEnrichment implements Callable
 {
     private final KataegisEnrichment mKataegisEnrichment;
-    private final SomaticRefContextEnrichment mSomaticRefContextEnrichment;
     private final SubclonalLikelihoodEnrichment mSubclonalLikelihoodEnrichment;
     private final SomaticGenotypeEnrichment mGenotypeEnrichment;
 
@@ -37,7 +35,6 @@ public class SomaticVariantEnrichment implements Callable
         mGenotypeEnrichment = new SomaticGenotypeEnrichment(mConfig.ReferenceId, mConfig.TumorId);
         mSubclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(CLONALITY_BIN_WIDTH, peakModel);
         mKataegisEnrichment = new KataegisEnrichment(kataegisId);
-        mSomaticRefContextEnrichment = new SomaticRefContextEnrichment(refData.RefGenome, null);
         mVariants = Lists.newArrayList();
     }
 
@@ -73,12 +70,8 @@ public class SomaticVariantEnrichment implements Callable
 
     public void enrich(final SomaticVariant variant)
     {
-        mSomaticRefContextEnrichment.processVariant(variant.context());
-
         mKataegisEnrichment.processVariant(variant);
-
         mSubclonalLikelihoodEnrichment.processVariant(variant);
-
         mGenotypeEnrichment.processVariant(variant);
     }
 
