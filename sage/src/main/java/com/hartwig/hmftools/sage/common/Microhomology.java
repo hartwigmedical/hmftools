@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.sage.common;
 
 import com.google.common.annotations.VisibleForTesting;
 

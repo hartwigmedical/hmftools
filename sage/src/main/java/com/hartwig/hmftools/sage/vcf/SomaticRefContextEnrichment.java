@@ -1,33 +1,31 @@
-package com.hartwig.hmftools.common.variant.enrich;
+package com.hartwig.hmftools.sage.vcf;
 
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_FLAG;
+import static com.hartwig.hmftools.common.variant.VariantUtils.relativePositionAndRef;
 
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.variant.Microhomology;
+import com.hartwig.hmftools.sage.common.Microhomology;
 import com.hartwig.hmftools.common.variant.SageVcfTags;
+import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContext;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
 
 import org.apache.commons.math3.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.Nullable;
 
-import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticRefContextEnrichment implements VariantContextEnrichment
 {
-    private static final Logger LOGGER = LogManager.getLogger(SomaticRefContextEnrichment.class);
-
     private final IndexedFastaSequenceFile mRefGenome;
 
     @Nullable
@@ -107,34 +105,6 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment
                 variant.getCommonInfo().putAttribute(MICROHOMOLOGY_FLAG, microhomology, true);
             }
         }
-    }
-
-    public static Pair<Integer, String> relativePositionAndRef(final IndexedFastaSequenceFile reference, final VariantContext variant)
-    {
-        final int refLength = variant.getReference().getBaseString().length();
-        final SAMSequenceRecord samSequenceRecord = reference.getSequenceDictionary().getSequence(variant.getContig());
-        if(samSequenceRecord == null)
-        {
-            return new Pair<>(-1, Strings.EMPTY);
-        }
-
-        final int chromosomeLength = samSequenceRecord.getSequenceLength();
-        int positionBeforeEvent = variant.getStart();
-
-        int start = Math.max(positionBeforeEvent - 100, 1);
-        int end = Math.min(positionBeforeEvent + refLength + 100 - 1, chromosomeLength - 1);
-        int relativePosition = positionBeforeEvent - start;
-        final String sequence;
-        if(start < chromosomeLength && end < chromosomeLength)
-        {
-            sequence = reference.getSubsequenceAt(variant.getContig(), start, end).getBaseString();
-        }
-        else
-        {
-            sequence = Strings.EMPTY;
-            LOGGER.warn("Requested base sequence outside of chromosome region!");
-        }
-        return new Pair<>(relativePosition, sequence);
     }
 
     private Optional<RepeatContext> getRepeatContext(final VariantContext variant, int relativePosition, final String sequence)

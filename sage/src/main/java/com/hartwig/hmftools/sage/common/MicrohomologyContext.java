@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.sage.common;
 
 import org.apache.logging.log4j.util.Strings;
 

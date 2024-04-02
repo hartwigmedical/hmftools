@@ -2,21 +2,20 @@ package com.hartwig.hmftools.sage.read;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.variant.Microhomology.expandMicrohomologyRepeats;
-import static com.hartwig.hmftools.common.variant.Microhomology.microhomologyAtDeleteFromReadSequence;
-import static com.hartwig.hmftools.common.variant.Microhomology.microhomologyAtInsert;
+import static com.hartwig.hmftools.sage.common.Microhomology.expandMicrohomologyRepeats;
+import static com.hartwig.hmftools.sage.common.Microhomology.microhomologyAtDeleteFromReadSequence;
+import static com.hartwig.hmftools.sage.common.Microhomology.microhomologyAtInsert;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.variant.MicrohomologyContext;
+import com.hartwig.hmftools.sage.common.MicrohomologyContext;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContext;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 

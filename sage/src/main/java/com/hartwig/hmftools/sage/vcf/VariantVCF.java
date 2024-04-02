@@ -70,7 +70,6 @@ import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.variant.SageVcfTags;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
-import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
 
@@ -108,8 +107,7 @@ public class VariantVCF implements AutoCloseable
                 .setReferenceDictionary(sequenceDictionary)
                 .build();
 
-        SomaticRefContextEnrichment enrichment = new SomaticRefContextEnrichment(reference, mWriter::add);
-        mConsumer = enrichment;
+        mConsumer = new SomaticRefContextEnrichment(reference, mWriter::add);
 
         final List<String> samples = Lists.newArrayList();
         samples.addAll(referenceIds);

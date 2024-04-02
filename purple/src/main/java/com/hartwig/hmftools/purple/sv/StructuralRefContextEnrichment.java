@@ -2,7 +2,7 @@ package com.hartwig.hmftools.purple.sv;
 
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_CONTEXT_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_CONTEXT_FLAG;
-import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.relativePositionAndRef;
+import static com.hartwig.hmftools.common.variant.VariantUtils.relativePositionAndRef;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.function.Consumer;
