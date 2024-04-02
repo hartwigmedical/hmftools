@@ -68,8 +68,8 @@ import com.hartwig.hmftools.sage.filter.FragmentCoords;
 import com.hartwig.hmftools.sage.filter.StrandBiasData;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.quality.UltimaQualModel;
-import com.hartwig.hmftools.sage.read.NumberEvents;
-import com.hartwig.hmftools.sage.read.SplitReadUtils;
+import com.hartwig.hmftools.sage.common.NumberEvents;
+import com.hartwig.hmftools.sage.common.SplitReadUtils;
 import com.hartwig.hmftools.sage.vis.VariantVis;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 

@@ -1,10 +1,11 @@
-package com.hartwig.hmftools.sage.read;
+package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
-import static com.hartwig.hmftools.sage.read.SplitReadUtils.MAX_SKIPPED_REFERENCE_REGIONS;
+import static com.hartwig.hmftools.sage.common.SplitReadUtils.MAX_SKIPPED_REFERENCE_REGIONS;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.sage.common.SplitReadUtils;
 import com.hartwig.hmftools.sage.evidence.ReadIndexBases;
 
 import org.junit.Test;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.read;
+package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 
@@ -7,6 +7,7 @@ import static org.junit.Assert.assertFalse;
 
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.ReadContextFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;

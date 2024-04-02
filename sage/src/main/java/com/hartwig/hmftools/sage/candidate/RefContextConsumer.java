@@ -30,8 +30,8 @@ import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
-import com.hartwig.hmftools.sage.read.ReadContextFactory;
-import com.hartwig.hmftools.sage.read.NumberEvents;
+import com.hartwig.hmftools.sage.common.ReadContextFactory;
+import com.hartwig.hmftools.sage.common.NumberEvents;
 import com.hartwig.hmftools.sage.select.ReadPanelStatus;
 
 import htsjdk.samtools.CigarElement;

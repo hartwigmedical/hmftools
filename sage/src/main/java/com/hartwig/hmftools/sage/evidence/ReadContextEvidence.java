@@ -29,7 +29,7 @@ import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.read.NumberEvents;
+import com.hartwig.hmftools.sage.common.NumberEvents;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 import com.hartwig.hmftools.sage.sync.FragmentSync;
 import com.hartwig.hmftools.sage.sync.FragmentSyncReadHandler;

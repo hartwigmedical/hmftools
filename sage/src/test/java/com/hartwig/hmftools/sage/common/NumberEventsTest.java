@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.sage.read;
+package com.hartwig.hmftools.sage.common;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.sage.read.NumberEvents;
+import com.hartwig.hmftools.sage.common.NumberEvents;
 import com.hartwig.hmftools.sage.common.RefSequence;
 
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +13,6 @@ import htsjdk.samtools.reference.ReferenceSequence;
 
 public class NumberEventsTest
 {
-
     @Test
     public void testRawNumberEvents()
     {

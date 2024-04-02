@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.read;
+package com.hartwig.hmftools.sage.common;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;

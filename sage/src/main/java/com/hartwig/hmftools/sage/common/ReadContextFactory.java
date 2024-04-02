@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.read;
+package com.hartwig.hmftools.sage.common;
 
 import static java.lang.Math.max;
 
