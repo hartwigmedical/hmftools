@@ -18,7 +18,7 @@ from cuppa.performance.confusion_matrix import ConfusionMatrix
 from cuppa.sample_data.cuppa_features import CuppaFeaturesPaths, FeatureLoaderOld, FeatureLoaderNew, CuppaFeatures
 from cuppa.sample_data.sample_metadata import SampleMetadata, TrainingSampleSelector
 from cuppa.performance.performance_stats import PerformanceStats
-from cuppa.visualization.visualization import CuppaVisData, CuppaVisPlotter
+from cuppa.visualization.visualization import CuppaVisData, CuppaVisPlotter, CuppaVisDataBuilder
 
 
 class DEFAULT_RUNNER_ARGS:
@@ -404,9 +404,6 @@ class TrainingRunner(LoggerMixin):
     def get_cv_performance(self) -> None:
         self.cv_performance = self.cv_pred_summ.performance()
 
-    def add_cv_performance_to_cv_predictions(self):
-        self.cv_predictions = self.cv_predictions.add_cv_performance(self.cv_performance)
-
     def get_cv_performance_by_prob_bin(self) -> None:
         self.cv_performance_by_prob_bin = self.cv_pred_summ.performance_by_prob_bin()
 
@@ -417,7 +414,7 @@ class TrainingRunner(LoggerMixin):
         for clf_name in self.cv_pred_summ.clf_names:
             pred_summ_clf = self.cv_pred_summ.query(f"clf_name=='{clf_name}'")
             confusion_matrix = ConfusionMatrix(pred_summ_clf, clf_name=clf_name)
-            confusion_matrix.plot(os.path.join(confusion_dir, f"confusion.{clf_name}.pdf"), verbose=True)
+            confusion_matrix.plot(os.path.join(confusion_dir, f"confusion.{clf_name}.pdf"))
 
     @cached_property
     def cv_report_dir(self) -> str:
@@ -430,7 +427,6 @@ class TrainingRunner(LoggerMixin):
         self.get_cv_predictions()
         self.get_cv_pred_summ()
         self.get_cv_performance()
-        self.add_cv_performance_to_cv_predictions()
         self.get_cv_performance_by_prob_bin()
 
         self.cv_pred_summ.to_tsv(os.path.join(self.cv_report_dir, "pred_summ.tsv.gz"), verbose=True)
@@ -464,7 +460,7 @@ class TrainingRunner(LoggerMixin):
 
     def export_final_model(self) -> None:
         path = os.path.join(self.output_dir, "cuppa_classifier.pickle.gz")
-        self.cuppa_classifier.to_file(path, verbose=True)
+        self.cuppa_classifier.to_file(path)
 
     ## Run ================================
     def run(self) -> None:
@@ -597,7 +593,13 @@ class PredictionRunner(LoggerMixin):
         self.pred_summ = self.predictions.summarize(show_extra_info=True, verbose=True)
 
     def get_vis_data(self) -> None:
-        self.vis_data = self.predictions.get_vis_data()
+        builder = CuppaVisDataBuilder(
+            predictions = self.predictions,
+            sample_id = self.sample_id,
+            cv_performance = self.cuppa_classifier.cv_performance
+        )
+
+        self.vis_data = builder.build()
 
     def add_filename_affixes(self, filename: str):
         if self.sample_id is not None:
