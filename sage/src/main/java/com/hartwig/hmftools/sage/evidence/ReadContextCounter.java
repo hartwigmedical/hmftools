@@ -123,8 +123,6 @@ public class ReadContextCounter//  extends SimpleVariant
 
     private long mMapQualityTotal;
     private long mAltMapQualityTotal;
-    private int mNmCountTotal;
-    private int mAltNmCountTotal;
 
     private int mSoftClipInsertSupport;
     private int mMaxCandidateDeleteLength;
@@ -194,8 +192,6 @@ public class ReadContextCounter//  extends SimpleVariant
         mMaxCandidateDeleteLength = 0;
         mMapQualityTotal = 0;
         mAltMapQualityTotal = 0;
-        mNmCountTotal = 0;
-        mAltNmCountTotal = 0;
 
         mReadEdgeDistance = new ReadEdgeDistance(calcAdjustedVariantPosition(mVariant.position(), indelLength()));
 
@@ -262,8 +258,6 @@ public class ReadContextCounter//  extends SimpleVariant
     public long mapQualityTotal() { return mMapQualityTotal; }
     public long altMapQualityTotal() { return mAltMapQualityTotal; }
 
-    public long nmCountTotal() { return mNmCountTotal; }
-    public long altNmCountTotal() { return mAltNmCountTotal; }
     public ReadEdgeDistance readEdgeDistance() { return mReadEdgeDistance; }
     public int minNumberOfEvents() { return mMinNumberOfEvents; }
 
@@ -450,8 +444,6 @@ public class ReadContextCounter//  extends SimpleVariant
 
                 mMapQualityTotal += record.getMappingQuality();
                 mAltMapQualityTotal += record.getMappingQuality();
-                mNmCountTotal += numberOfEvents;
-                mAltNmCountTotal += numberOfEvents;
 
                 mSupportAltBaseQualityTotal += rawBaseQuality;
                 mRawContextAltBaseQualityTotal += rawContext.BaseQuality;
@@ -493,8 +485,6 @@ public class ReadContextCounter//  extends SimpleVariant
 
             mMapQualityTotal += record.getMappingQuality();
             mAltMapQualityTotal += record.getMappingQuality();
-            mNmCountTotal += numberOfEvents;
-            mAltNmCountTotal += numberOfEvents;
 
             addVariantVisRecord(record, MatchType.REALIGNED, qualityScores, fragmentData);
             logReadEvidence(record, MatchType.REALIGNED, readIndex,quality);
@@ -526,7 +516,6 @@ public class ReadContextCounter//  extends SimpleVariant
         ReadMatchType readMatchType = UNRELATED;
 
         mMapQualityTotal += record.getMappingQuality();
-        mNmCountTotal += numberOfEvents;
 
         VariantReadSupport readSupport = null;
 
@@ -545,7 +534,6 @@ public class ReadContextCounter//  extends SimpleVariant
             readSupport = OTHER_ALT;
 
             mAltMapQualityTotal += record.getMappingQuality();
-            mAltNmCountTotal += numberOfEvents;
 
             countAltSupportMetrics(record, fragmentData);
         }

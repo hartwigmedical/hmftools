@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sage.vcf;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.Doubles.round;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
@@ -10,7 +9,6 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALI
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_NM_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.LOCAL_PHASE_SET_READ_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
@@ -111,9 +109,6 @@ public final class VariantContextFactory
         int avgMapQuality = depth > 0 ? (int)Math.round(counter.mapQualityTotal() / (double)depth) : 0;
         int avgAltMapQuality = altSupport > 0 ? (int)Math.round(counter.altMapQualityTotal() / (double)altSupport) : 0;
 
-        double avgNmCount = depth > 0 ? round(counter.nmCountTotal() / (double)depth, 1) : 0;
-        double avgAltNmCount = altSupport > 0 ? round(counter.altNmCountTotal() / (double)altSupport, 1) : 0;
-
         builder.DP(depth)
                 .AD(new int[] { counter.refSupport(), altSupport })
                 .attribute(READ_CONTEXT_QUALITY, counter.quality())
@@ -121,7 +116,6 @@ public final class VariantContextFactory
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPairCount())
                 .attribute(READ_CONTEXT_JITTER, counter.jitter())
                 .attribute(AVG_MAP_QUALITY, new int[] { avgMapQuality, avgAltMapQuality })
-                .attribute(AVG_NM_COUNT, new double[] { avgNmCount, avgAltNmCount })
                 .attribute(RAW_SUPPORT_DEPTH, new int[] { counter.rawRefSupport(), counter.rawAltSupport() })
                 .attribute(RAW_SUPPORT_BASE_QUALITY, new int[] { counter.rawRefBaseQualityTotal(), counter.rawAltBaseQualityTotal() })
                 .attribute(RAW_DEPTH, counter.rawDepth())

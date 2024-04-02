@@ -18,8 +18,6 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_NM_COUNT;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_NM_COUNT_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_INDEL_FILTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_MATCH;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_MIXED_GERMLINE_SOMATIC_FILTER;
@@ -199,7 +197,6 @@ public class VariantVCF implements AutoCloseable
 
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_JITTER, 3, VCFHeaderLineType.Integer, READ_CONTEXT_JITTER_DESC));
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_MAP_QUALITY_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_NM_COUNT, 2, VCFHeaderLineType.Float, AVG_NM_COUNT_DESC));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_SUPPORT_DEPTH, 2, VCFHeaderLineType.Integer, "Raw allelic depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_SUPPORT_BASE_QUALITY, 2, VCFHeaderLineType.Integer, "Raw allelic base quality"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_DEPTH, 1, VCFHeaderLineType.Integer, "Raw read depth"));
@@ -248,11 +245,6 @@ public class VariantVCF implements AutoCloseable
         if(!header.hasFormatLine(AVG_MAP_QUALITY))
         {
             header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_MAP_QUALITY_DESC));
-        }
-
-        if(!header.hasFormatLine(AVG_NM_COUNT))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_NM_COUNT, 2, VCFHeaderLineType.Float, AVG_NM_COUNT_DESC));
         }
 
         if(!header.hasFormatLine(UMI_TYPE_COUNTS))
