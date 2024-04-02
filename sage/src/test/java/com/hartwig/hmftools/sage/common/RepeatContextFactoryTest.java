@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.repeat;
+package com.hartwig.hmftools.sage.common;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -100,7 +100,7 @@ public class RepeatContextFactoryTest
         assertEquals(2, RepeatContextFactory.backwardRepeats(9, 3, sequence.getBytes()));
     }
 
-    private static void assertRepeatContext(int expectedCount, @NotNull String expectedBases, int index, @NotNull String sequence)
+    private static void assertRepeatContext(int expectedCount, String expectedBases, int index, String sequence)
     {
         Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory.repeats(index, sequence);
         RepeatContext repeatContextGATC = optRepeatContextGATC.get();
@@ -108,18 +108,18 @@ public class RepeatContextFactoryTest
         assertEquals(expectedBases, repeatContextGATC.sequence());
     }
 
-    private static void assertRepeatContext(int start, int end, int count, @NotNull String expectedBases, int index,
-            @NotNull String sequence)
+    private static void assertRepeatContext(
+            int start, int end, int count, String expectedBases, int index, String sequence)
     {
         Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory.repeats(index, sequence);
         RepeatContext repeatContextGATC = optRepeatContextGATC.get();
         assertEquals(count, repeatContextGATC.count());
-        assertEquals(start, repeatContextGATC.startIndex());
-        assertEquals(end, repeatContextGATC.endIndex());
+        assertEquals(start, repeatContextGATC.StartIndex);
+        assertEquals(end, repeatContextGATC.EndIndex);
         assertEquals(expectedBases, repeatContextGATC.sequence());
     }
 
-    private static void assertNone(int index, @NotNull String sequence)
+    private static void assertNone(int index, String sequence)
     {
         Optional<RepeatContext> optRepeatContextGATC = RepeatContextFactory.repeats(index, sequence);
         assertFalse(optRepeatContextGATC.isPresent());

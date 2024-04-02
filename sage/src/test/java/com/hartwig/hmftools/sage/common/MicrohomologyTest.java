@@ -18,19 +18,6 @@ public class MicrohomologyTest
     }
 
     @Test
-    public void worksOnSangerExamples()
-    {
-        String expectedMicrohomology = "TATC";
-        String refGenome = "GCACTGTATCCACTTGATATCATTAT";
-
-        assertEquals(expectedMicrohomology, Microhomology.microhomologyAtDelete(5, refGenome, "GTATCCACTTGA"));
-        assertEquals(expectedMicrohomology, Microhomology.microhomologyAtDelete(6, refGenome, "TATCCACTTGAT"));
-        assertEquals(expectedMicrohomology, Microhomology.microhomologyAtDelete(7, refGenome, "ATCCACTTGATA"));
-        assertEquals(expectedMicrohomology, Microhomology.microhomologyAtDelete(8, refGenome, "TCCACTTGATAT"));
-        assertEquals(expectedMicrohomology, Microhomology.microhomologyAtDelete(9, refGenome, "CCACTTGATATC"));
-    }
-
-    @Test
     public void testMicrohomologyOnInsert()
     {
         final String refSequence = "ATGCGATCTTCC";

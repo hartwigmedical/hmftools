@@ -1,22 +1,18 @@
 package com.hartwig.hmftools.sage.common;
 
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+
 import com.google.common.annotations.VisibleForTesting;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 public final class Microhomology
 {
-    private static final Logger LOGGER = LogManager.getLogger(Microhomology.class);
-
-    @NotNull
-    public static String microhomologyAtInsert(int position, @NotNull final String refSequence, @NotNull final String alt)
+    public static String microhomologyAtInsert(int position, final String refSequence, final String alt)
     {
         if(refSequence.length() < position)
         {
-            LOGGER.warn("Attempt to determine microhomology outside of sequence length");
+            SG_LOGGER.warn("Attempt to determine microhomology outside of sequence length");
             return Strings.EMPTY;
         }
 
@@ -29,38 +25,34 @@ public final class Microhomology
         return microhomologyAtInsert(position, alt.length(), readSequence.getBytes()).toString();
     }
 
-    @NotNull
-    public static String microhomologyAtDelete(int position, @NotNull final String refSequence, @NotNull final String ref)
+    public static String microhomologyAtDelete(int position, final String refSequence, final String ref)
     {
         if(refSequence.length() < position + ref.length())
         {
-            LOGGER.warn("Attempt to determine microhomology outside of sequence length");
+            SG_LOGGER.warn("Attempt to determine microhomology outside of sequence length");
             return Strings.EMPTY;
         }
 
         return microhomologyAtDelete(position, ref.length(), refSequence.getBytes()).toString();
     }
 
-    @NotNull
-    public static MicrohomologyContext microhomologyAtDeleteFromReadSequence(int position, @NotNull final String ref,
-            @NotNull final byte[] readSequence)
+    public static MicrohomologyContext microhomologyAtDeleteFromReadSequence(int position, final String ref,
+            final byte[] readSequence)
     {
         return microhomologyAtDelete(position, ref.length(), reconstructDeletedSequence(position, readSequence, ref));
     }
 
-    @NotNull
-    public static MicrohomologyContext microhomologyAtInsert(int position, int altLength, @NotNull final byte[] readSequence)
+    public static MicrohomologyContext microhomologyAtInsert(int position, int altLength, final byte[] readSequence)
     {
         return leftAlignedMicrohomology(position, altLength, readSequence);
     }
 
-    @NotNull
-    public static MicrohomologyContext microhomologyAtDelete(int position, int refLength, @NotNull final byte[] sequence)
+    public static MicrohomologyContext microhomologyAtDelete(int position, int refLength, final byte[] sequence)
     {
         return leftAlignedMicrohomology(position, refLength, sequence);
     }
 
-    private static MicrohomologyContext leftAlignedMicrohomology(int position, int altLength, @NotNull final byte[] sequence)
+    private static MicrohomologyContext leftAlignedMicrohomology(int position, int altLength, final byte[] sequence)
     {
         // Left align
         if(position > 0 && position + altLength - 1 < sequence.length)
@@ -89,8 +81,7 @@ public final class Microhomology
         return new MicrohomologyContext(position, sequence, length);
     }
 
-    @NotNull
-    public static MicrohomologyContext expandMicrohomologyRepeats(@NotNull final MicrohomologyContext result)
+    public static MicrohomologyContext expandMicrohomologyRepeats(final MicrohomologyContext result)
     {
         if(result.length() == 0)
         {
@@ -126,7 +117,7 @@ public final class Microhomology
     }
 
     @VisibleForTesting
-    static byte[] reconstructDeletedSequence(int position, @NotNull final byte[] readSequence, @NotNull final String ref)
+    static byte[] reconstructDeletedSequence(int position, final byte[] readSequence, final String ref)
     {
         final byte[] refBytes = ref.getBytes();
         final byte[] completeSequence = new byte[readSequence.length + ref.length() - 1];

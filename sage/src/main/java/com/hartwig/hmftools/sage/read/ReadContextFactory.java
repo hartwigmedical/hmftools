@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import java.util.Optional;
 
 import com.hartwig.hmftools.sage.common.MicrohomologyContext;
-import com.hartwig.hmftools.common.variant.repeat.RepeatContext;
-import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
+import com.hartwig.hmftools.sage.common.RepeatContext;
+import com.hartwig.hmftools.sage.common.RepeatContextFactory;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
 
@@ -47,8 +47,8 @@ public class ReadContextFactory
         if(refRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = refRepeatContext.get();
-            int repeatStartIndexInReadSpace = repeat.startIndex() - refIndex + readIndex;
-            int repeatEndIndexInReadSpace = repeat.endIndex() - refIndex + readIndex;
+            int repeatStartIndexInReadSpace = repeat.StartIndex - refIndex + readIndex;
+            int repeatEndIndexInReadSpace = repeat.EndIndex - refIndex + readIndex;
             startIndex = Math.min(startIndex, repeatStartIndexInReadSpace - 1);
             endIndex = max(endIndex, repeatEndIndexInReadSpace + 1);
         }
@@ -57,8 +57,8 @@ public class ReadContextFactory
         if(readRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = readRepeatContext.get();
-            startIndex = Math.min(startIndex, repeat.startIndex() - 1);
-            endIndex = max(endIndex, repeat.endIndex() + 1);
+            startIndex = Math.min(startIndex, repeat.StartIndex - 1);
+            endIndex = max(endIndex, repeat.EndIndex + 1);
         }
 
         return ReadContext.fromReadRecord(
@@ -85,8 +85,8 @@ public class ReadContextFactory
         if(refRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = refRepeatContext.get();
-            int repeatStartIndexInReadSpace = repeat.startIndex() - refIndex + readIndex;
-            int repeatEndIndexInReadSpace = repeat.endIndex() - refIndex + readIndex;
+            int repeatStartIndexInReadSpace = repeat.StartIndex - refIndex + readIndex;
+            int repeatEndIndexInReadSpace = repeat.EndIndex - refIndex + readIndex;
             startIndex = Math.min(startIndex, repeatStartIndexInReadSpace - 1);
             endIndex = max(endIndex, repeatEndIndexInReadSpace + 1);
         }
@@ -95,8 +95,8 @@ public class ReadContextFactory
         if(readRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = readRepeatContext.get();
-            startIndex = Math.min(startIndex, repeat.startIndex() - 1);
-            endIndex = max(endIndex, repeat.endIndex() + 1);
+            startIndex = Math.min(startIndex, repeat.StartIndex - 1);
+            endIndex = max(endIndex, repeat.EndIndex + 1);
         }
 
         // ensure that MH hasn't reduced the right core index too much
@@ -124,8 +124,8 @@ public class ReadContextFactory
         if(refPriorRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = refPriorRepeatContext.get();
-            int repeatStartIndexInReadSpace = repeat.startIndex() - refIndex + readIndex;
-            int repeatEndIndexInReadSpace = repeat.endIndex() - refIndex + readIndex;
+            int repeatStartIndexInReadSpace = repeat.StartIndex - refIndex + readIndex;
+            int repeatEndIndexInReadSpace = repeat.EndIndex - refIndex + readIndex;
             startIndex = Math.min(startIndex, repeatStartIndexInReadSpace - 1);
             endIndex = max(endIndex, repeatEndIndexInReadSpace + 1);
         }
@@ -134,8 +134,8 @@ public class ReadContextFactory
         if(refPostRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = refPostRepeatContext.get();
-            int repeatStartIndexInReadSpace = repeat.startIndex() - refIndex + readIndex;
-            int repeatEndIndexInReadSpace = repeat.endIndex() - refIndex + readIndex;
+            int repeatStartIndexInReadSpace = repeat.StartIndex - refIndex + readIndex;
+        int repeatEndIndexInReadSpace = repeat.EndIndex - refIndex + readIndex;
             startIndex = Math.min(startIndex, repeatStartIndexInReadSpace - 1);
             endIndex = max(endIndex, repeatEndIndexInReadSpace + 1);
         }
@@ -144,8 +144,8 @@ public class ReadContextFactory
         if(readRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = readRepeatContext.get();
-            startIndex = Math.min(startIndex, repeat.startIndex() - 1);
-            endIndex = max(endIndex, repeat.endIndex() + 1);
+            startIndex = Math.min(startIndex, repeat.StartIndex - 1);
+            endIndex = max(endIndex, repeat.EndIndex + 1);
         }
 
         return ReadContext.fromReadRecord(

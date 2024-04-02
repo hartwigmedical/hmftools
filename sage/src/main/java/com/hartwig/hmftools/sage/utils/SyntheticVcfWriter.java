@@ -87,7 +87,7 @@ public class SyntheticVcfWriter
         mRefGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
         mVariants = Lists.newArrayList();
 
-        mRefContextEnrichment = new SomaticRefContextEnrichment(mRefGenome, null);
+        mRefContextEnrichment = new SomaticRefContextEnrichment(mRefGenome);
         mWriter = initialiseVcf();
     }
 
@@ -221,7 +221,7 @@ public class SyntheticVcfWriter
         VersionInfo version = new VersionInfo("sage.version");
         VCFHeader header = VariantVCF.createHeader(version.version(), List.of(mSampleId), false);
 
-        header = mRefContextEnrichment.enrichHeader(header);
+        mRefContextEnrichment.appendHeader(header);
 
         final SAMSequenceDictionary condensedDictionary = new SAMSequenceDictionary();
         for(SAMSequenceRecord sequence : sequenceDictionary.getSequences())

@@ -7,46 +7,30 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_FLAG
 import static com.hartwig.hmftools.common.variant.VariantUtils.relativePositionAndRef;
 
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import com.hartwig.hmftools.sage.common.Microhomology;
 import com.hartwig.hmftools.common.variant.SageVcfTags;
-import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
-import com.hartwig.hmftools.common.variant.repeat.RepeatContext;
-import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
+import com.hartwig.hmftools.sage.common.RepeatContext;
+import com.hartwig.hmftools.sage.common.RepeatContextFactory;
 
 import org.apache.commons.math3.util.Pair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 
-public class SomaticRefContextEnrichment implements VariantContextEnrichment
+public class SomaticRefContextEnrichment
 {
     private final IndexedFastaSequenceFile mRefGenome;
 
-    @Nullable
-    private final Consumer<VariantContext> mConsumer;
-
-    public SomaticRefContextEnrichment(final IndexedFastaSequenceFile reference, final Consumer<VariantContext> consumer)
+    public SomaticRefContextEnrichment(final IndexedFastaSequenceFile reference)
     {
         mRefGenome = reference;
-        mConsumer = consumer;
     }
 
-    @Override
-    public VCFHeader enrichHeader(final VCFHeader template) { return SageVcfTags.addRefContextHeader(template); }
-
-    @Override
-    public void accept(final VariantContext context)
+    public void appendHeader(final VCFHeader template)
     {
-        processVariant(context);
-
-        if(mConsumer != null)
-            mConsumer.accept(context);
+        SageVcfTags.addRefContextHeader(template);
     }
 
     public void processVariant(final VariantContext context)
@@ -60,10 +44,7 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment
         }
     }
 
-    @Override
-    public void flush() { }
-
-    private void addTrinucleotideContext(final VariantContext variant, final Pair<Integer, String> relativePositionAndRef)
+    private void addTrinucleotideContext(final VariantContext variant, final Pair<Integer,String> relativePositionAndRef)
     {
         final int relativePosition = relativePositionAndRef.getFirst();
         final String sequence = relativePositionAndRef.getSecond();
