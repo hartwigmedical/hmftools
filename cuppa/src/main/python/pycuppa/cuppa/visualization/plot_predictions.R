@@ -406,7 +406,7 @@ plot_cv_performance <- function(VIS_DATA){
    plot_data$row_label <- plot_data$feat_name
 
    ## Data label --------------------------------
-   is_n_samples_row <- plot_data$feat_name=="n_samples"
+   is_n_samples_row <- plot_data$feat_name=="n_total"
 
    plot_data$data_label <- with(plot_data, {
       data_label <- as.character(round(data_value, CV_PERFORMANCE_DECIMAL_PLACES))
@@ -426,7 +426,7 @@ plot_cv_performance <- function(VIS_DATA){
 
    ## Plot --------------------------------
    y_labels_remap <- c(
-      n_samples="Total no. of samples",
+      n_total="Total no. of samples",
       recall="Recall (prop. of total correct)",
       precision="Precision (prop. of predicted correct)"
    )
