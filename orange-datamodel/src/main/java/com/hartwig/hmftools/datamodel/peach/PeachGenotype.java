@@ -14,6 +14,12 @@ public interface PeachGenotype
     String gene();
 
     @NotNull
+    String allele();
+
+    int alleleCount();
+
+    @Deprecated
+    @NotNull
     String haplotype();
 
     @NotNull

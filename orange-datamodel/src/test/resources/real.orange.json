@@ -1310,6 +1310,8 @@
   "peach": [
     {
       "gene": "DPYD",
+      "allele": "*1",
+      "alleleCount": 2,
       "haplotype": "*1_HOM",
       "function": "Normal Function",
       "linkedDrugs": "5-Fluorouracil;Capecitabine;Tegafur",
@@ -1319,6 +1321,8 @@
     },
     {
       "gene": "UGT1A1",
+      "allele": "*1",
+      "alleleCount": 2,
       "haplotype": "*1_HOM",
       "function": "Normal Function",
       "linkedDrugs": "Irinotecan",

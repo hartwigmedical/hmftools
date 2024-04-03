@@ -508,6 +508,8 @@
   "peach": [
     {
       "gene": "DPYD",
+      "allele": "*1",
+      "alleleCount": 2,
       "haplotype": "*1_HOM",
       "function": "Normal Function",
       "linkedDrugs": "5-Fluorouracil",
