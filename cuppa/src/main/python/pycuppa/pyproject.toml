@@ -28,4 +28,8 @@ classifiers = [
 test = ["pytest == 7.4.0"]
 
 [tool.setuptools.packages.find]
-include = ["cuppa","cuppa.*"]
+include = [
+    "cuppa", "cuppa.*",
+    "resources", "resources.*",
+    "tests", "tests.*"
+]

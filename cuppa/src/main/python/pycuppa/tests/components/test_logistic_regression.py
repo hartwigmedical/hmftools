@@ -1,4 +1,5 @@
 import pandas as pd
+
 from cuppa.components.logistic_regression import LogisticRegression
 from cuppa.misc.cached_class_property import cached_class_property
 

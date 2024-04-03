@@ -1,8 +1,8 @@
 import pandas as pd
 import pytest
 
+from tests.mock_data import MockTrainingData, MockCuppaClassifier
 from cuppa.constants import NA_FILL_VALUE
-from cuppa.tests.mock_data import MockTrainingData, MockCuppaClassifier
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.classifier.cuppa_classifier_utils import MissingFeaturesHandler, BypassedClassifierBuilder
 from cuppa.components.calibration import RollingAvgCalibration

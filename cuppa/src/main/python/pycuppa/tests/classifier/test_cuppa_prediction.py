@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
+
+from tests.mock_data import MockCvOutput, MockCuppaClassifier, MockTrainingData
 from cuppa.classifier.cuppa_prediction import CuppaPredictionBuilder, CuppaPrediction, CuppaPredSummaryBuilder, CuppaPredSummary
-from cuppa.tests.mock_data import MockCvOutput, MockCuppaClassifier, MockTrainingData
 
 
 class TestCuppaPredictionBuilder:

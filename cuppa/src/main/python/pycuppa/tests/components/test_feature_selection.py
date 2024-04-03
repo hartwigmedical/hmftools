@@ -1,7 +1,8 @@
 import pandas as pd
 from sklearn.compose import make_column_selector
+
+from tests.mock_data import MockTrainingData
 from cuppa.components.feature_selection import Chi2FeatureSelector
-from cuppa.tests.mock_data import MockTrainingData
 
 
 class TestChi2FeatureSelector:

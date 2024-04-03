@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_2;
 import static com.hartwig.hmftools.cup.somatics.TrinucleotideCounts.extractTrinucleotideCounts;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -34,12 +35,18 @@ public class SomaticVariantPrep implements CategoryPrep
 {
     private final PrepConfig mConfig;
 
+    private final List<SomaticVariant> mVariants = new ArrayList<>();
+    private final List<DataItem> mDataItems = new ArrayList<>();
+
     private final Map<String,Integer> mTriNucBucketNameMap;
     private final List<String> mSnv96BucketNames;
+    private double[] mTriNucCounts;
+    private int mTotalSnvCount = 0;
+
+    private final SomaticSigs mSomaticSigs;
 
     private final PositionFrequencies mPosFrequencies;
 
-    private final SomaticSigs mSomaticSigs;
 
     public SomaticVariantPrep(final PrepConfig config)
     {
@@ -53,94 +60,115 @@ public class SomaticVariantPrep implements CategoryPrep
 
         // could add bucket size and max counts as config
         mPosFrequencies = new PositionFrequencies(
-                mConfig.RefGenVersion, GEN_POS_BUCKET_SIZE, GEN_POS_MAX_SAMPLE_COUNT,
-                buildStandardChromosomeLengths(mConfig.RefGenVersion), false);
+                mConfig.RefGenVersion,
+                GEN_POS_BUCKET_SIZE,
+                GEN_POS_MAX_SAMPLE_COUNT,
+                buildStandardChromosomeLengths(mConfig.RefGenVersion),
+                false
+        );
     }
 
     @Override
     public CategoryType categoryType() { return CategoryType.SNV; }
 
+    private void loadVariants(String sampleId)
+    {
+        final String purpleDataDir = mConfig.getPurpleDataDir(sampleId);
+        final String somaticVcfFile = PurpleCommon.purpleSomaticVcfFile(purpleDataDir, sampleId);
+        mVariants.addAll(SomaticDataLoader.loadSomaticVariantsFromVcf(somaticVcfFile, Lists.newArrayList(SNP)));
+    }
+
+    private void getTrinucleotideCounts()
+    {
+        // build the 96 trinucleotide context counts
+        mTriNucCounts = extractTrinucleotideCounts(mVariants, mTriNucBucketNameMap);
+        // TODO: extractTrinucleotideCounts() will only used here after removing deprecated code and should potentially be moved here
+
+        for(int b = 0; b < mSnv96BucketNames.size(); ++b)
+        {
+            String bucketName = mSnv96BucketNames.get(b);
+            int count = (int) mTriNucCounts[b];
+
+            mTotalSnvCount += count;
+
+            DataItem dataItem = new DataItem(DNA, ItemType.SNV96, bucketName, String.valueOf(count));
+            mDataItems.add(dataItem);
+        }
+    }
+
+    private void getSnvCount()
+    {
+        DataItem dataItem = new DataItem(DNA, ItemType.TUMOR_MUTATIONAL_BURDEN, SampleTraitType.SNV_COUNT.getAlias(), String.valueOf(mTotalSnvCount));
+        mDataItems.add(dataItem);
+    }
+
+    private void getGenomicPositionCounts()
+    {
+        // build genomic position counts
+        AidApobecStatus aidApobecStatus = AidApobecStatus.FALSE_ONLY;
+        extractPositionFrequencyCounts(mVariants, mPosFrequencies, aidApobecStatus);
+        // TODO: extractPositionFrequencyCounts() will only used here after removing deprecated code and should potentially be moved here
+
+        final int[] genPosCount = mPosFrequencies.getCounts();
+
+        for(int b = 0; b < mPosFrequencies.getBucketCount(); ++b)
+        {
+            final String chromosome = getChromosomeFromIndex(mConfig.RefGenVersion, mPosFrequencies.chromosomePosIndex(), b);
+            int position = getPositionFromIndex(mPosFrequencies.chromosomePosIndex(), chromosome, b, mPosFrequencies.getBucketSize());
+            String keyName = format("%s_%d", chromosome, position);
+
+            DataItem dataItem = new DataItem(DNA, ItemType.GEN_POS, keyName, String.valueOf(genPosCount[b]));
+            mDataItems.add(dataItem);
+        }
+    }
+
+    private void getSignatureAllocations()
+    {
+        final double[] sigAllocations = mSomaticSigs.fitSampleCounts(mTriNucCounts);
+
+        Map<String,Double> reportedAllocations = Maps.newHashMap();
+
+        for(int i = 0; i < sigAllocations.length; ++i)
+        {
+            final String sigName = mSomaticSigs.getSigName(i);
+            reportedAllocations.put(sigName, sigAllocations[i]);
+        }
+
+        for(Map.Entry<String,String> entry :SomaticSigs.REPORTABLE_SIGS.entrySet())
+        {
+            String sigName = entry.getKey();
+            double sigAllocation = reportedAllocations.get(sigName);
+
+            // combine 2 & 13
+            if(sigName.equalsIgnoreCase(SIG_NAME_13))
+                continue;
+
+            if(sigName.equalsIgnoreCase(SIG_NAME_2))
+            {
+                sigAllocation += reportedAllocations.get(SIG_NAME_13);
+            }
+
+            DataItem dataItem = new DataItem(DNA, ItemType.SIGNATURE, entry.getValue(), format("%.1f", sigAllocation));
+            mDataItems.add(dataItem);
+        }
+    }
+
     @Override
     public List<DataItem> extractSampleData(final String sampleId)
     {
-        List<DataItem> dataItems = Lists.newArrayList();
-
-        final String purpleDataDir = mConfig.getPurpleDataDir(sampleId);
-
         try
         {
-            List<SomaticVariant> variants = Lists.newArrayList();
+            loadVariants(sampleId);
+            getTrinucleotideCounts();
+            getSnvCount();
+            getSignatureAllocations();
+            getGenomicPositionCounts();
 
-            // load variants
-            final String somaticVcfFile = PurpleCommon.purpleSomaticVcfFile(purpleDataDir, sampleId);
-            variants.addAll(SomaticDataLoader.loadSomaticVariantsFromVcf(somaticVcfFile, Lists.newArrayList(SNP)));
-
-            // build the 96 trinucleotide context counts
-            final double[] triNucCounts = extractTrinucleotideCounts(variants, mTriNucBucketNameMap);
-
-            int totalSnvCount = 0;
-
-            for(int b = 0; b < mSnv96BucketNames.size(); ++b)
-            {
-                String bucketName = mSnv96BucketNames.get(b);
-                int count = (int)triNucCounts[b];
-
-                totalSnvCount += count;
-
-                dataItems.add(new DataItem(DNA, ItemType.SNV96, bucketName, String.valueOf(count)));
-            }
-
-            dataItems.add(new DataItem(DNA, ItemType.TUMOR_MUTATIONAL_BURDEN, SampleTraitType.SNV_COUNT.getAlias(), String.valueOf(totalSnvCount)));
-
-            // build genomic position counts
-            AidApobecStatus aidApobecStatus = AidApobecStatus.FALSE_ONLY;
-            extractPositionFrequencyCounts(variants, mPosFrequencies, aidApobecStatus);
-            final int[] genPosCount = mPosFrequencies.getCounts();
-
-            for(int b = 0; b < mPosFrequencies.getBucketCount(); ++b)
-            {
-                final String chromosome = getChromosomeFromIndex(mConfig.RefGenVersion, mPosFrequencies.chromosomePosIndex(), b);
-                int position = getPositionFromIndex(mPosFrequencies.chromosomePosIndex(), chromosome, b, mPosFrequencies.getBucketSize());
-                String keyName = format("%s_%d", chromosome, position);
-
-                dataItems.add(new DataItem(DNA, ItemType.GEN_POS, keyName, String.valueOf(genPosCount[b])));
-            }
-
-            // write signatures
-            final double[] sigAllocations = mSomaticSigs.fitSampleCounts(triNucCounts);
-
-            Map<String,Double> reportedAllocations = Maps.newHashMap();
-
-            for(int i = 0; i < sigAllocations.length; ++i)
-            {
-                final String sigName = mSomaticSigs.getSigName(i);
-                reportedAllocations.put(sigName, sigAllocations[i]);
-            }
-
-            for(Map.Entry<String,String> entry :SomaticSigs.REPORTABLE_SIGS.entrySet())
-            {
-                String sigName = entry.getKey();
-                double sigAllocation = reportedAllocations.get(sigName);
-
-                // combine 2 & 13
-                if(sigName.equalsIgnoreCase(SIG_NAME_13))
-                    continue;
-
-                if(sigName.equalsIgnoreCase(SIG_NAME_2))
-                {
-                    sigAllocation += reportedAllocations.get(SIG_NAME_13);
-                }
-
-                dataItems.add(new DataItem(DNA, ItemType.SIGNATURE, entry.getValue(), format("%.1f", sigAllocation)));
-            }
-
-            return dataItems;
+            return mDataItems;
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("sample({}) - failed to extract somatic variant features from dir({}): {}",
-                    sampleId, purpleDataDir, e.toString());
-
+            CUP_LOGGER.error("sample({}) - failed to extract somatic variant features: {}", sampleId, e.toString());
             return null;
         }
     }

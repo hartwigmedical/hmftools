@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-from cuppa.tests.mock_data import MockCuppaClassifier, MockTrainingData
+
+from tests.mock_data import MockCuppaClassifier, MockTrainingData
 from cuppa.classifier.feature_importance import FeatureImportance
 
 

@@ -1,11 +1,9 @@
 import numpy as np
 import pandas as pd
-import os
-import tempfile
 
+from tests.mock_data import MockTrainingData
 from cuppa.components.prob_overriders import SexProbFilter, FusionProbOverrider
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
-from cuppa.tests.mock_data import MockTrainingData
 
 
 class TestFusionProbOverrider:

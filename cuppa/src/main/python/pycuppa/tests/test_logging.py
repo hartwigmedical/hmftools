@@ -4,9 +4,9 @@ class TestLogging:
 
         reset_logging_basic_config("/Users/lnguyen/Desktop/train.log")
 
-        from cuppa.runners import TrainingRunner
+        from cuppa.runners.training_runner import TrainingRunner
         from cuppa.constants import DEFAULT_FUSION_OVERRIDES_PATH
-        from cuppa.misc.mock_data import MockTrainingData
+        from tests.mock_data import MockTrainingData
 
         runner = TrainingRunner(
             input_dir="PLACEHOLDER",

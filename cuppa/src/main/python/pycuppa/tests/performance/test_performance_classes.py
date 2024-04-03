@@ -2,9 +2,9 @@ import pandas as pd
 import os
 import tempfile
 
+from tests.mock_data import MockCvOutput
 from cuppa.performance.performance_stats import PerformanceStatsBuilder, PerformanceStats
 from cuppa.performance.confusion_matrix import ConfusionMatrix
-from cuppa.tests.mock_data import MockCvOutput
 
 
 class TestPerformanceStatsBuilder:

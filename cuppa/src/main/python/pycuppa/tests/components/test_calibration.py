@@ -1,6 +1,7 @@
 import pandas as pd
+
+from tests.mock_data import MockCvOutput, MockTrainingData
 from cuppa.components.calibration import RollingAvgCalibration
-from cuppa.tests.mock_data import MockCvOutput, MockTrainingData
 
 
 class TestKernel:

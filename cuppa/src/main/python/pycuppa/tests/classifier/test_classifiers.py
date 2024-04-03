@@ -3,8 +3,8 @@ from __future__ import annotations
 import pandas as pd
 from sklearn.compose import make_column_selector
 
+from tests.mock_data import MockTrainingData, MockCuppaClassifier
 from cuppa.classifier.classifiers import SubClassifiers, MetaClassifiers, ClassifierLayers
-from cuppa.tests.mock_data import MockTrainingData, MockCuppaClassifier
 
 def get_expected_probs(clf_names: str | list[str]) -> pd.DataFrame:
     clf_names = pd.Series(clf_names)
