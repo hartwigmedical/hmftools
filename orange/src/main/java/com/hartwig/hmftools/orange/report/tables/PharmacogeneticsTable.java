@@ -36,9 +36,11 @@ public final class PharmacogeneticsTable
 
         for(PeachGenotype genotype : sort(genotypes))
         {
+            String genotypeString = genotype.allele().equals(UNKNOWN_ALLELE_STRING) ? "" : convertToZygosityString(genotype.alleleCount());
+
             contentTable.addCell(cells.createContent(genotype.gene()));
             contentTable.addCell(cells.createContent(genotype.allele()));
-            contentTable.addCell(cells.createContent(genotype.allele().equals(UNKNOWN_ALLELE_STRING) ? "" : convertToZygosityString(genotype.alleleCount())));
+            contentTable.addCell(cells.createContent(genotypeString));
             contentTable.addCell(cells.createContent(genotype.function()));
             contentTable.addCell(cells.createContent(genotype.linkedDrugs()));
             contentTable.addCell(cells.createUrl(sourceName(genotype.urlPrescriptionInfo()), url(genotype.urlPrescriptionInfo())));
