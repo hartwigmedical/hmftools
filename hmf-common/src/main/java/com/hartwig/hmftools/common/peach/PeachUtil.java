@@ -43,7 +43,7 @@ public class PeachUtil
     }
 
     @NotNull
-    private static String convertToZygosityString(int alleleCount)
+    public static String convertToZygosityString(int alleleCount)
     {
         if(alleleCount == 1)
         {
