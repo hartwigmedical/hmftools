@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static com.hartwig.hmftools.common.peach.PeachUtil.UNKNOWN_ALLELE_STRING;
 import static com.hartwig.hmftools.common.peach.PeachUtil.convertToZygosityString;
 
 import java.util.List;
@@ -29,15 +30,15 @@ public final class PharmacogeneticsTable
 
         Cells cells = new Cells(reportResources);
         Table contentTable = Tables.createContent(width,
-                new float[] { 1, 1, 1, 2, 1 },
-                new Cell[] { cells.createHeader("Gene"), cells.createHeader("Haplotype"), cells.createHeader("Genotype"), cells.createHeader("Function"),
-                        cells.createHeader("Linked drugs"), cells.createHeader("Source") });
+                new float[] { 1, 1, 1, 1, 2, 1 },
+                new Cell[] { cells.createHeader("Gene"), cells.createHeader("Haplotype"), cells.createHeader("Genotype"),
+                        cells.createHeader("Function"), cells.createHeader("Linked drugs"), cells.createHeader("Source") });
 
         for(PeachGenotype genotype : sort(genotypes))
         {
             contentTable.addCell(cells.createContent(genotype.gene()));
             contentTable.addCell(cells.createContent(genotype.allele()));
-            contentTable.addCell(cells.createContent(convertToZygosityString(genotype.alleleCount())));
+            contentTable.addCell(cells.createContent(genotype.allele().equals(UNKNOWN_ALLELE_STRING) ? "" : convertToZygosityString(genotype.alleleCount())));
             contentTable.addCell(cells.createContent(genotype.function()));
             contentTable.addCell(cells.createContent(genotype.linkedDrugs()));
             contentTable.addCell(cells.createUrl(sourceName(genotype.urlPrescriptionInfo()), url(genotype.urlPrescriptionInfo())));
