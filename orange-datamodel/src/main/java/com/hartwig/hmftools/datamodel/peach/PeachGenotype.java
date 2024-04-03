@@ -25,9 +25,11 @@ public interface PeachGenotype
     @NotNull
     String urlPrescriptionInfo();
 
+    @Deprecated
     @Nullable
     String panelVersion();
 
+    @Deprecated
     @Nullable
     String repoVersion();
 }
