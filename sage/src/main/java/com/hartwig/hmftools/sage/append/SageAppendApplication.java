@@ -151,7 +151,7 @@ public class SageAppendApplication
             return;
         }
 
-        final SAMSequenceDictionary dictionary = dictionary();
+        SageCommon.setReadLength(mConfig.Common, Collections.emptyMap(), mConfig.Common.ReferenceBams.get(0));
 
         BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(
                 mConfig.Common, mRefGenome, "", Collections.emptyList(), Collections.emptyList());
@@ -164,13 +164,11 @@ public class SageAppendApplication
         if(!baseQualityRecalibration.isValid())
             System.exit(1);
 
-        SageCommon.setReadLength(mConfig.Common, Collections.emptyMap(), mConfig.Common.ReferenceBams.get(0));
-
         final Map<String, BqrRecordMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
 
         final ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig.Common, mRefGenome);
 
-        for(final SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
+        for(final SAMSequenceRecord samSequenceRecord : dictionary().getSequences())
         {
             final String chromosome = samSequenceRecord.getSequenceName();
 
