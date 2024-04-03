@@ -9,8 +9,6 @@ import static com.hartwig.hmftools.pave.impact.PaveUtils.createRightAlignedVaria
 import static com.hartwig.hmftools.pave.impact.PaveUtils.findVariantImpacts;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.hasCodingEffectDiff;
-import static com.hartwig.hmftools.pave.compare.ComparisonUtils.hasHgvsCodingDiff;
-import static com.hartwig.hmftools.pave.compare.ComparisonUtils.hasHgvsProteinDiff;
 import static com.hartwig.hmftools.pave.compare.ImpactDiffType.CODING_EFFECT;
 import static com.hartwig.hmftools.pave.compare.ImpactDiffType.HGVS_CODING;
 import static com.hartwig.hmftools.pave.compare.ImpactDiffType.HGVS_PROTEIN;
@@ -24,7 +22,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.pave.GeneDataCache;
 import com.hartwig.hmftools.pave.impact.ImpactClassifier;
@@ -285,5 +282,4 @@ public class SampleComparisonTask implements Callable
                 sampleId, variant.toString(), variantImpact.CanonicalGeneName, variantImpact.CanonicalCodingEffect,
                 refVariant.Gene, refVariant.CanonicalCodingEffect);
     }
-
 }
