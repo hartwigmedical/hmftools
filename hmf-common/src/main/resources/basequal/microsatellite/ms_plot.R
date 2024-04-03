@@ -56,7 +56,7 @@ df$jitter <- factor(df$jitter, levels=c(sprintf("%+d", c(-10:10)), "reads"))
 units <- c("A/T", "C/G", "AT/TA", "AG/GA/CT/TC", "AC/CA/GT/TG", "CG/GC", "3bp repeat", "4bp repeat", "5bp repeat")
 #units <- head(units, 1)
 
-msStatsHeatmap <- paste0(outDir, sampleId, '.ms_stats.png')
+msStatsHeatmap <- file.path(outDir, paste0(sampleId, '.ms_stats.png'))
 png(file = msStatsHeatmap, res = 140, height = 2200, width = 4000)
 
 # Create a list to store individual plots

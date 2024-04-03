@@ -65,7 +65,7 @@ public class SageConfig
     public final String OutputFile;
     public final FilterConfig Filter;
     public final QualityConfig Quality;
-    public final BqrConfig QualityRecalibration;
+    public final BqrConfig BQR;
     public final boolean IncludeMT;
     public final boolean SyncFragments;
     public final int RegionSliceSize;
@@ -157,7 +157,7 @@ public class SageConfig
 
         Filter = new FilterConfig(configBuilder);
         Quality = new QualityConfig(configBuilder);
-        QualityRecalibration = new BqrConfig(configBuilder);
+        BQR = new BqrConfig(configBuilder);
 
         MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
 
@@ -287,7 +287,7 @@ public class SageConfig
         return false;
     }
 
-    public boolean bqrRecordWritingOnly() { return QualityRecalibration.WriteReads; }
+    public boolean bqrRecordWritingOnly() { return BQR.WriteReads; }
 
     public boolean logPerfStats() { return PerfWarnTime > 0; }
 
@@ -345,7 +345,7 @@ public class SageConfig
         ReferenceBams = Lists.newArrayList();
         Filter = new FilterConfig();
         Quality = new QualityConfig(highDepthMode);
-        QualityRecalibration = new BqrConfig();
+        BQR = new BqrConfig();
         SpecificChrRegions = new SpecificRegions();
         IncludeMT = false;
         RegionSliceSize = DEFAULT_SLICE_SIZE;

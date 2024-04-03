@@ -100,7 +100,7 @@ public class AssemblyReadWriter
 
                 final Read read = support.read();
 
-                sj.add(read.getName());
+                sj.add(read.id());
                 sj.add(support.type().toString());
                 sj.add(String.valueOf(read.isReference()));
                 sj.add(read.chromosome());

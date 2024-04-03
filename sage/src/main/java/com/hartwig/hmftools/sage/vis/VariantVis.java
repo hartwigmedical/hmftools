@@ -16,14 +16,12 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getOrientationString;
-import static com.hartwig.hmftools.common.utils.Doubles.round;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.read.NumberEvents.rawNM;
+import static com.hartwig.hmftools.sage.common.NumberEvents.rawNM;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_NM_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vis.ColorUtil.DARK_BLUE;
@@ -295,7 +293,7 @@ public class VariantVis
 
         List<String> headers = Lists.newArrayList("SAMPLE", "QUAL", "AD", ALLELE_FREQUENCY_KEY, "DP");
         headers.addAll(SORTED_MATCH_TYPES.stream().map(ReadContextCounter.MatchType::name).collect(Collectors.toList()));
-        headers.addAll(Lists.newArrayList(AVG_BASE_QUAL, AVG_MAP_QUALITY, AVG_NM_COUNT, FRAG_STRAND_BIAS, READ_STRAND_BIAS, "JIT"));
+        headers.addAll(Lists.newArrayList(AVG_BASE_QUAL, AVG_MAP_QUALITY, FRAG_STRAND_BIAS, READ_STRAND_BIAS, "JIT"));
 
         List<DomContent> headerColumns = Lists.newArrayList();
         for(int i = 0; i < headers.size(); i++)
@@ -336,7 +334,6 @@ public class VariantVis
             int depth = counter.depth();
             int altSupport = counter.altSupport();
             int avgAltMapQuality = altSupport > 0 ? (int) Math.round(counter.altMapQualityTotal() / (double) altSupport) : 0;
-            double avgAltNmCount = altSupport > 0 ? round(counter.altNmCountTotal() / (double) altSupport, 1) : 0;
 
             List<TdTag> columnElems = Lists.newArrayList(
                     td(sampleId),
@@ -355,7 +352,6 @@ public class VariantVis
             columnElems.addAll(Lists.newArrayList(
                     td(String.valueOf((int) counter.averageAltBaseQuality())),
                     td(format("%d", avgAltMapQuality)),
-                    td(format("%.1f", avgAltNmCount)),
                     td(format("%.2f", counter.fragmentStrandBiasAlt().bias())),
                     td(format("%.2f", counter.readStrandBiasAlt().bias())),
                     td(String.valueOf(counter.jitter()[2]))));

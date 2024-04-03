@@ -101,7 +101,7 @@ public class GenomeLiftoverCache
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPath(LIFTOVER_MAPPING_FILE, true, LIFTOVER_MAPPING_FILE_DESC);
+        configBuilder.addPath(LIFTOVER_MAPPING_FILE, false, LIFTOVER_MAPPING_FILE_DESC);
     }
 
     public boolean loadFile(final String filename)

@@ -9,6 +9,7 @@ public enum AssemblyOutcome
     SECONDARY,
     DUP_SPLIT,
     DUP_BRANCHED,
+    REMOTE_REF,
     SUPP_ONLY;
 
     public boolean isDuplicate() { return this == DUP_BRANCHED || this == DUP_SPLIT; }

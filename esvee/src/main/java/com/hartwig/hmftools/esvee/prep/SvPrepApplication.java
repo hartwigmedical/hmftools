@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 import com.hartwig.hmftools.esvee.prep.types.CombinedStats;
 
 import org.jetbrains.annotations.NotNull;
@@ -76,6 +77,9 @@ public class SvPrepApplication
             mSpanningReadCache.candidateBamWriter().assignCandidateReads(mWriter);
         }
 
+        if(mConfig.BamToolPath != null)
+            System.gc(); // call to free up prep memory before the BAM tools sort & index routines are run
+
         mWriter.close();
 
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
@@ -98,13 +102,13 @@ public class SvPrepApplication
         FragmentSizeDistribution fragSizeDistribution = new FragmentSizeDistribution(mConfig);
         fragSizeDistribution.run();
 
-        final int[] fragmentDistLengths = fragSizeDistribution.calculatePercentileLengths();
+        FragmentLengthBounds fragmentLengthBounds = fragSizeDistribution.calculateFragmentLengthBounds();
 
-        SV_LOGGER.info("fragment length distribution percentile values(min={} max={})",
-                fragmentDistLengths[0], fragmentDistLengths[1]);
+        SV_LOGGER.info("fragment length distribution bounds(min={} max={})",
+                fragmentLengthBounds.LowerBound, fragmentLengthBounds.UpperBound);
 
-        if(fragmentDistLengths[0] > 0 && fragmentDistLengths[1] > 0)
-            mConfig.ReadFiltering.config().setFragmentLengths(fragmentDistLengths[0], fragmentDistLengths[1]);
+        if(fragmentLengthBounds.isValid())
+            mConfig.ReadFiltering.config().setFragmentLengths(fragmentLengthBounds.LowerBound, fragmentLengthBounds.UpperBound);
 
         if(fragSizeDistribution.maxReadLength() > 0)
             mConfig.ReadLength = fragSizeDistribution.maxReadLength();

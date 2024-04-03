@@ -106,7 +106,12 @@ public final class BedFileReader
 
                 final String[] values = line.split(TSV_DELIM, -1);
 
-                Chromosome chromosome = HumanChromosome.fromString(values[0]);
+                String chrStr = values[0];
+
+                if(!HumanChromosome.contains(chrStr))
+                    continue;
+
+                Chromosome chromosome = HumanChromosome.fromString(chrStr);
                 int posStart = Integer.parseInt(values[1]) + 1; // as per convention
                 int posEnd = Integer.parseInt(values[2]);
 

@@ -15,6 +15,7 @@ public class PhaseGroup
 {
     private int mId;
     private final List<JunctionAssembly> mAssemblies;
+    private final List<JunctionAssembly> mDerivedAssemblies;
     private final List<DiscordantGroup> mDiscordantGroups;
     private final List<PhaseSet> mPhaseSets;
     private final List<AssemblyLink> mSecondarySplitLinks;
@@ -23,6 +24,7 @@ public class PhaseGroup
     {
         mId = -1;
         mAssemblies = Lists.newArrayList(first);
+        mDerivedAssemblies = Lists.newArrayList();
         mPhaseSets = Lists.newArrayList();
         mSecondarySplitLinks = Lists.newArrayList();
         mDiscordantGroups = Lists.newArrayList();
@@ -40,6 +42,7 @@ public class PhaseGroup
     public int id() { return mId; }
 
     public List<JunctionAssembly> assemblies() { return mAssemblies; }
+    public List<JunctionAssembly> derivedAssemblies() { return mDerivedAssemblies; }
     public List<DiscordantGroup> discordantGroups() { return mDiscordantGroups; }
     public List<PhaseSet> phaseSets() { return mPhaseSets; }
 
@@ -85,6 +88,12 @@ public class PhaseGroup
         }
 
         assembly.setPhaseGroup(this);
+    }
+
+    public void addDerivedAssembly(final JunctionAssembly assembly)
+    {
+        mDerivedAssemblies.add(assembly);
+        addAssembly(assembly);
     }
 
     public void addDiscordantGroup(final DiscordantGroup discordantGroup)

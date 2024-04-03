@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftC
 
 import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
-import com.hartwig.hmftools.sage.read.SplitReadUtils;
+import com.hartwig.hmftools.sage.common.SplitReadUtils;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;

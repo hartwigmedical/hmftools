@@ -18,8 +18,6 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_NM_COUNT;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_NM_COUNT_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_INDEL_FILTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_MATCH;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.DEDUP_MIXED_GERMLINE_SOMATIC_FILTER;
@@ -70,7 +68,6 @@ import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.variant.SageVcfTags;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
-import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
 
@@ -94,7 +91,7 @@ import htsjdk.variant.vcf.VCFStandardHeaderLines;
 public class VariantVCF implements AutoCloseable
 {
     private final VariantContextWriter mWriter;
-    private final Consumer<VariantContext> mConsumer;
+    private final SomaticRefContextEnrichment mRefContextEnrichment;
 
     public VariantVCF(
             final IndexedFastaSequenceFile reference, final SageConfig config,
@@ -108,8 +105,7 @@ public class VariantVCF implements AutoCloseable
                 .setReferenceDictionary(sequenceDictionary)
                 .build();
 
-        SomaticRefContextEnrichment enrichment = new SomaticRefContextEnrichment(reference, mWriter::add);
-        mConsumer = enrichment;
+        mRefContextEnrichment = new SomaticRefContextEnrichment(reference);
 
         final List<String> samples = Lists.newArrayList();
         samples.addAll(referenceIds);
@@ -143,13 +139,15 @@ public class VariantVCF implements AutoCloseable
                 .modifyOption(Options.USE_ASYNC_IO, false)
                 .setReferenceDictionary(reference.getSequenceDictionary())
                 .build();
-        mConsumer = mWriter::add;
         mWriter.writeHeader(newHeader);
+
+        mRefContextEnrichment = new SomaticRefContextEnrichment(reference);
     }
 
     public void write(final VariantContext context)
     {
-        mConsumer.accept(context);
+        mRefContextEnrichment.processVariant(context);
+        mWriter.add(context);
     }
 
     public static VCFHeader createHeader(final String version, final List<String> allSamples, final boolean includeModelData)
@@ -199,7 +197,6 @@ public class VariantVCF implements AutoCloseable
 
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_JITTER, 3, VCFHeaderLineType.Integer, READ_CONTEXT_JITTER_DESC));
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_MAP_QUALITY_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_NM_COUNT, 2, VCFHeaderLineType.Float, AVG_NM_COUNT_DESC));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_SUPPORT_DEPTH, 2, VCFHeaderLineType.Integer, "Raw allelic depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_SUPPORT_BASE_QUALITY, 2, VCFHeaderLineType.Integer, "Raw allelic base quality"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_DEPTH, 1, VCFHeaderLineType.Integer, "Raw read depth"));
@@ -248,11 +245,6 @@ public class VariantVCF implements AutoCloseable
         if(!header.hasFormatLine(AVG_MAP_QUALITY))
         {
             header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_MAP_QUALITY_DESC));
-        }
-
-        if(!header.hasFormatLine(AVG_NM_COUNT))
-        {
-            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_NM_COUNT, 2, VCFHeaderLineType.Float, AVG_NM_COUNT_DESC));
         }
 
         if(!header.hasFormatLine(UMI_TYPE_COUNTS))

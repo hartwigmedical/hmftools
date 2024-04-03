@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.prep.types;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
@@ -14,6 +15,8 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 
+import com.hartwig.hmftools.common.bam.ClippedSide;
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
@@ -26,7 +29,11 @@ import htsjdk.samtools.SAMRecord;
 public class PrepRead
 {
     public final String Chromosome;
-    public final int[] Positions;
+
+    private int mAlignmentStart;
+    private int mAlignmentEnd;
+    private int mUnclippedStart;
+    private int mUnclippedEnd;
 
     public String MateChromosome;
     public int MatePosStart;
@@ -53,12 +60,21 @@ public class PrepRead
         if(!record.getReadUnmappedFlag())
         {
             Chromosome = record.getReferenceName();
-            Positions = new int[] { record.getStart(), record.getEnd() };
+            mAlignmentStart = record.getStart();
+            mAlignmentEnd = record.getEnd();
+
+            int scLeft = CigarUtils.leftSoftClipLength(record);
+            int scRight = CigarUtils.rightSoftClipLength(record);
+            mUnclippedStart = mAlignmentStart - scLeft;
+            mUnclippedEnd = mAlignmentEnd + scRight;
         }
         else
         {
             Chromosome = UNMAPPED_CHR;
-            Positions = new int[] { 0, 0 };
+            mAlignmentStart = 0;
+            mAlignmentEnd = 0;
+            mUnclippedStart = 0;
+            mUnclippedEnd = 0;
         }
 
         if(!mateUnmapped(record) && record.getMateAlignmentStart() > 0)
@@ -85,8 +101,15 @@ public class PrepRead
 
     public String id() { return mRecord.getReadName(); }
     public final SAMRecord record() { return mRecord; }
-    public int start() { return Positions[SE_START]; }
-    public int end() { return Positions[SE_END]; }
+    public int start() { return mAlignmentStart; }
+    public int end() { return mAlignmentEnd; }
+
+    public int unclippedStart()  { return mUnclippedStart; }
+    public int unclippedEnd() { return mUnclippedEnd; }
+    public boolean isLeftClipped() { return mUnclippedStart != mAlignmentStart; }
+    public boolean isRightClipped() { return mUnclippedEnd != mAlignmentEnd; }
+    public int leftClipLength() { return max(mAlignmentStart - mUnclippedStart, 0); }
+    public int rightClipLength() { return max(mUnclippedEnd - mAlignmentEnd, 0); }
 
     public byte orientation() { return !isReadReversed() ? POS_ORIENT : NEG_ORIENT; }
     public byte mateOrientation() { return !hasFlag(SAMFlag.MATE_REVERSE_STRAND) ? POS_ORIENT : NEG_ORIENT; }
@@ -150,27 +173,4 @@ public class PrepRead
                 Chromosome, start(), end(), cigar().toString(), MateChromosome, MatePosStart, id(),
                 isFirstOfPair(), isSupplementaryAlignment(), isReadReversed(), mSupplementaryAlignment != null, mReadType);
     }
-
-    public static String getSoftClippedBases(final SAMRecord record, final boolean isClippedLeft)
-    {
-        int scLength = isClippedLeft ? record.getCigar().getFirstCigarElement().getLength() : record.getCigar().getLastCigarElement().getLength();
-        int readLength = record.getReadBases().length;
-        int scStart = isClippedLeft ? 0 : readLength - scLength;
-        int scEnd = isClippedLeft ? scLength : readLength;
-        return record.getReadString().substring(scStart, scEnd);
-    }
-
-    public static boolean hasPolyATSoftClip(final PrepRead read, final boolean isClippedLeft)
-    {
-        byte orientation = isClippedLeft ? NEG_ORIENT : POS_ORIENT;
-        String scBases = getSoftClippedBases(read.record(), isClippedLeft);
-        return isMobileLineElement(orientation, scBases);
-    }
-
-    /*
-    public static int[] findIndelCoords(final ReadRecord read, int minIndelLength)
-    {
-        return CigarUtils.findIndelCoords(read.start(), read.cigar().getCigarElements(), minIndelLength);
-    }
-    */
 }

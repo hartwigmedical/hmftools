@@ -10,7 +10,7 @@ from sklearn.compose import make_column_selector
 
 from cuppa.components.passthrough import PassthroughTransformer
 from cuppa.components.preprocessing import NaRowFilter
-from cuppa.constants import SUB_CLF_NAMES, NA_FILL_VALUE
+from cuppa.constants import SUB_CLF_NAMES, SIG_QUANTILE_TRANSFORMER_NAME, NA_FILL_VALUE
 from cuppa.logger import LoggerMixin
 
 if TYPE_CHECKING:
@@ -40,25 +40,16 @@ class MissingFeaturesHandler(LoggerMixin):
             self.logger.error("Either `cuppa_classifier` or `required_features` must be provided")
             raise ValueError
 
-    FEAT_TYPES_DNA = ("gen_pos", "snv96", "event", "sig")
-    FEAT_TYPES_RNA = ("gene_exp", "alt_sj")
+    FEAT_TYPES_DNA = SUB_CLF_NAMES.get_dna_clf_names() + [SIG_QUANTILE_TRANSFORMER_NAME]
+    FEAT_TYPES_RNA = SUB_CLF_NAMES.get_rna_clf_names()
     FEAT_TYPES = FEAT_TYPES_DNA + FEAT_TYPES_RNA
 
     def _get_required_features_by_type_from_classifier(self) -> dict[str, pd.Index]:
 
-        cuppa_classifier = self.cuppa_classifier
+        required_features = self.cuppa_classifier.get_required_features()
+        required_features = {name: required_features[name] for name in self.FEAT_TYPES}
 
-        cuppa_classifier._check_is_fitted()
-        return dict(
-            gen_pos=cuppa_classifier.gen_pos_clf["cos_sim"].profiles_.index,
-            snv96=pd.Index(cuppa_classifier.snv96_clf["logistic_regression"].feature_names_in_),
-            event=pd.Index(cuppa_classifier.event_clf["logistic_regression"].feature_names_in_),
-
-            sig=cuppa_classifier.sig_quantile_transformer.feature_names_in_,
-
-            gene_exp=pd.Index(cuppa_classifier.gene_exp_clf["chi2"].selected_features),
-            alt_sj=pd.Index(cuppa_classifier.alt_sj_clf["chi2"].selected_features)
-        )
+        return required_features
 
     ## This method is only used for testing
     def _get_required_features_by_type_from_list(self) -> dict[str, pd.Index]:
@@ -79,7 +70,7 @@ class MissingFeaturesHandler(LoggerMixin):
         if self.cuppa_classifier is not None:
             return self._get_required_features_by_type_from_classifier()
 
-    def _get_required_features(self, feat_types: tuple):
+    def _get_required_features(self, feat_types: list):
         features = [
             self.required_features_by_type[feat_type]
             for feat_type in feat_types

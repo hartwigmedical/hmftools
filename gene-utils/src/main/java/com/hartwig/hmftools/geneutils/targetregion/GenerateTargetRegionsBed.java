@@ -56,8 +56,8 @@ public class GenerateTargetRegionsBed
     private static final String SPECIFIC_REGIONS_FILE = "specific_regions_file";
     private static final String CODING_GENE_FILE = "coding_genes_file";
     private static final String TRANS_TSL_FILE = "trans_tsl_file";
-    private static final String SOURCE_DIR = "source_dir";
-    private static final String OUTPUT_FILE = "output_file";
+    protected static final String SOURCE_DIR = "source_dir";
+    protected static final String OUTPUT_FILE = "output_file";
     private static final String INCLUDE_UTR = "include_utr";
     private static final String CANONICAL_ONLY = "canonical_only";
 

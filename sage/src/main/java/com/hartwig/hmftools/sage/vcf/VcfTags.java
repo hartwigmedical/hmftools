@@ -39,9 +39,6 @@ public final class VcfTags
     public static final String AVG_MAP_QUALITY = "AMQ";
     public static final String AVG_MAP_QUALITY_DESC = "Average map quality count (all,alt)";
 
-    public static final String AVG_NM_COUNT = "ANM";
-    public static final String AVG_NM_COUNT_DESC = "Average NM count (all,alt)";
-
     public static final String MAX_READ_EDGE_DISTANCE = "MED";
     public static final String MAX_READ_EDGE_DISTANCE_DESC = "Max read edge distance";
 

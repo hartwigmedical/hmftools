@@ -92,7 +92,7 @@ public class JunctionGroupAssembler extends ThreadTask
         return primaryAssemblyTasks;
     }
 
-    private static final int TASK_LOG_COUNT = 1000;
+    private static final int TASK_LOG_COUNT = 10000;
 
     @Override
     public void run()
@@ -243,7 +243,7 @@ public class JunctionGroupAssembler extends ThreadTask
 
         mCurrentJunctionGroup.addCandidateRead(read);
 
-        ReadGroup readGroup = mReadGroupMap.get(read.getName());
+        ReadGroup readGroup = mReadGroupMap.get(read.id());
 
         if(readGroup != null)
         {
@@ -267,7 +267,7 @@ public class JunctionGroupAssembler extends ThreadTask
 
         int expectedCount = 1 + (hasLocalMate ? 1 : 0) + (hasLocalSupplementary ? 1 : 0); // approximate only for array size
         readGroup = new ReadGroup(read, expectedCount);
-        mReadGroupMap.put(read.getName(), readGroup);
+        mReadGroupMap.put(read.id(), readGroup);
     }
 
     private class ReadGroup
@@ -305,7 +305,7 @@ public class JunctionGroupAssembler extends ThreadTask
             }
         }
 
-        public String toString() { return format("reads(%d exp=%d) id(%s)", mReads.size(), mExpectedCount, mReads.get(0).getName()); }
+        public String toString() { return format("reads(%d exp=%d) id(%s)", mReads.size(), mExpectedCount, mReads.get(0).id()); }
     }
 
     private boolean ignoreIdenticalSupplementary(final SAMRecord read)

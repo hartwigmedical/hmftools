@@ -199,7 +199,7 @@ class RemoteGroupBuilder extends ThreadTask
 
             if(hasMatchingFragment(second.support(), read) || hasMatchingFragment(second.candidateSupport(), read))
             {
-                readsMatched.add(read.getName());
+                readsMatched.add(read.id());
 
                 if(readsMatched.size() >= minSharedReads)
                     return true;
@@ -211,7 +211,7 @@ class RemoteGroupBuilder extends ThreadTask
         {
             if(hasMatchingFragment(second.support(), support.read()))
             {
-                readsMatched.add(support.read().getName());
+                readsMatched.add(support.read().id());
 
                 if(readsMatched.size() >= minSharedReads)
                     return true;

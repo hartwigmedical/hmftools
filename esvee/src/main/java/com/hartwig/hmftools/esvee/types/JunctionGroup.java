@@ -66,13 +66,6 @@ public class JunctionGroup extends BaseRegion
     public void addDiscordantGroups(final List<DiscordantGroup> groups) { mDiscordantGroups.addAll(groups); }
     public List<DiscordantGroup> discordantGroups() { return mDiscordantGroups; }
 
-    public void addBranchedAssemblies()
-    {
-        List<JunctionAssembly> branchedAssemblies = Lists.newArrayList();
-        mJunctionAssemblies.forEach(x -> branchedAssemblies.addAll(x.branchedAssemblies()));
-        mJunctionAssemblies.addAll(branchedAssemblies);
-    }
-
     public boolean overlapsRemoteRegion(final RemoteRegion region)
     {
         return positionsOverlap(readRangeStart(), readRangeEnd(), region.start(), region.end());

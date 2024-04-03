@@ -119,10 +119,14 @@ public class HrdDetection
             String chrStr = refGenomeVersion.versionedChromosome(chromosome.toString());
 
             // filter copy numbers to required types
-            List<PurpleCopyNumber> chrCopyNumbers = chrCopyNumberMap.get(chrStr).stream()
-                    .filter(x -> x.method() == CopyNumberMethod.BAF_WEIGHTED).collect(Collectors.toList());
+            List<PurpleCopyNumber> chrCopyNumbers = chrCopyNumberMap.get(chrStr);
 
-            if(chrCopyNumbers == null || chrStr.isEmpty())
+            if(chrCopyNumbers == null)
+                continue;
+
+            chrCopyNumbers = chrCopyNumbers.stream().filter(x -> x.method() == CopyNumberMethod.BAF_WEIGHTED).collect(Collectors.toList());
+
+            if(chrCopyNumbers.isEmpty())
                 continue;
 
             totalLohSegments += calcLohSegments(chrStr, chrCopyNumbers);

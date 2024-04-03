@@ -36,7 +36,7 @@ public class PartitionUtils
     {
         RefGenomeCoordinates refGenomeCoords = refGenomeVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
         int chromosomeLength = refGenomeCoords.length(stripChrPrefix(chromosome));
-        return buildPartitions(chromosome, chromosomeLength, partitionSize);
+        return buildPartitions(refGenomeVersion.versionedChromosome(chromosome), chromosomeLength, partitionSize);
     }
 
     public static List<ChrBaseRegion> partitionSpecificRegions(final List<ChrBaseRegion> specificRegions, int partitionSize)

@@ -2,11 +2,21 @@ package com.hartwig.hmftools.esvee.prep;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ORIENTATION;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.BAM_RECORD_SAMPLE_ID_TAG;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_EXACT_SUPPORT_FRAGS;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_HOTSPOT_JUNCTION;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_JUNCTION_FRAGS;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_OTHER_SUPPORT_FRAGS;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.JUNCTIONS;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.READS;
 
@@ -63,32 +73,6 @@ public class ResultsWriter
         mBamWriter.close();
     }
 
-    private BufferedWriter initialiseReadWriter()
-    {
-        if(!mConfig.WriteTypes.contains(READS))
-            return null;
-
-        try
-        {
-            String filename = mConfig.formFilename(READS);
-            BufferedWriter writer = createBufferedWriter(filename, false);
-
-            writer.write("ReadId\tGroupCount\tExpectedCount\tGroupStatus\tHasExternal\tReadType\tChromosome\tPosStart\tPosEnd\tCigar");
-            writer.write("\tFragLength\tMateChr\tMatePosStart\tMapQual\tSuppData\tFlags\tFilters");
-            writer.write("\tFirstInPair\tReadReversed\tProper\tUnmapped\tMateUnmapped\tSupplementary\tDuplicate\tJunctionPositions");
-
-            writer.newLine();
-
-            return writer;
-        }
-        catch(IOException e)
-        {
-            SV_LOGGER.error(" failed to create read writer: {}", e.toString());
-        }
-
-        return null;
-    }
-
     public synchronized void writeReadGroup(final List<ReadGroup> readGroups)
     {
         for(ReadGroup readGroup : readGroups)
@@ -122,40 +106,6 @@ public class ResultsWriter
         return false;
     }
 
-    private void writeReadData(
-            final PrepRead read, int readCount, int expectedReadCount, final ReadGroupStatus status, boolean spansPartitions,
-            final String junctionPositions)
-    {
-        if(mReadWriter == null)
-            return;
-
-        try
-        {
-            mReadWriter.write(String.format("%s\t%d\t%d\t%s\t%s", read.id(), readCount, expectedReadCount, status, spansPartitions));
-
-            mReadWriter.write(String.format("\t%s\t%s\t%d\t%d\t%s",
-                    read.readType(), read.Chromosome, read.start(), read.end(), read.cigar().toString()));
-
-            SupplementaryReadData suppData = read.supplementaryAlignment();
-
-            mReadWriter.write(String.format("\t%d\t%s\t%d\t%d\t%s\t%d\t%d",
-                    read.fragmentInsertSize(), read.MateChromosome, read.MatePosStart, read.mapQuality(),
-                    suppData != null ? suppData.asCsv() : "N/A", read.flags(), read.filters()));
-
-            mReadWriter.write(String.format("\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
-                    read.isFirstOfPair(), read.isReadReversed(), read.hasFlag(PROPER_PAIR), read.hasFlag(READ_UNMAPPED),
-                    read.hasMate() && read.isMateUnmapped(), read.hasFlag(SUPPLEMENTARY_ALIGNMENT), read.hasFlag(DUPLICATE_READ)));
-
-            mReadWriter.write(format("\t%s", junctionPositions));
-
-            mReadWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            SV_LOGGER.error(" failed to write read data: {}", e.toString());
-        }
-    }
-
     private BufferedWriter initialiseJunctionWriter()
     {
         if(!mConfig.WriteTypes.contains(JUNCTIONS))
@@ -166,12 +116,16 @@ public class ResultsWriter
             String filename = mConfig.formFilename(JUNCTIONS);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Chromosome\tPosition\tOrientation\tJunctionFrags\tSupportFrags\tDiscordantFrags\tLowMapQualFrags\tMaxQual");
-            writer.write("\tMaxSoftClip\tBaseDepth\tHasPolyAT\tIndel\tHotspot\tSoftClipBases\tInitialReadId");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(FLD_CHROMOSOME).add(FLD_POSITION).add(FLD_ORIENTATION);
+            sj.add(FLD_JUNCTION_FRAGS).add(FLD_EXACT_SUPPORT_FRAGS).add(FLD_OTHER_SUPPORT_FRAGS).add("LowMapQualFrags");
+            sj.add("MaxQual").add("MaxSoftClip");
+            sj.add(FLD_INDEL_JUNCTION).add(FLD_HOTSPOT_JUNCTION).add("SoftClipBases").add("InitialReadId");
 
             if(mConfig.TrackRemotes)
-                writer.write("\tRemoteJunctionCount\tRemoteJunctions");
+                sj.add("RemoteJunctionCount").add("RemoteJunctions");
 
+            writer.write(sj.toString());
             writer.newLine();
 
             return writer;
@@ -196,8 +150,7 @@ public class ResultsWriter
                 int maxMapQual = 0;
                 int lowMapQualFrags = 0;
                 int maxSoftClip = 0;
-                String softClipBases = "";
-                boolean hasPloyAT = false;
+                PrepRead maxSoftClipRead = null;
                 boolean expectLeftClipped = junctionData.Orientation == NEG_ORIENT;
 
                 for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
@@ -217,22 +170,19 @@ public class ResultsWriter
 
                     if(!junctionData.internalIndel())
                     {
-                        if(!hasPloyAT)
-                            hasPloyAT = PrepRead.hasPolyATSoftClip(read, expectLeftClipped);
-
-                        int scLength = expectLeftClipped ?
-                                read.cigar().getFirstCigarElement().getLength() : read.cigar().getLastCigarElement().getLength();
+                        int scLength = expectLeftClipped ? read.leftClipLength() : read.rightClipLength();
 
                         if(scLength > maxSoftClip)
                         {
                             maxSoftClip = scLength;
-                            softClipBases = PrepRead.getSoftClippedBases(read.record(), expectLeftClipped);
+                            maxSoftClipRead = read;
                         }
                     }
                 }
 
                 int exactSupportFrags = junctionData.ExactSupportGroups.size();
-                int discordantFrags = junctionData.SupportingGroups.size();
+                int otherSupportFrags = junctionData.SupportingGroups.size();
+                String softClipBases = maxSoftClipRead != null ? getSoftClippedBases(maxSoftClipRead, expectLeftClipped) : "";
 
                 for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.EXACT_SUPPORT))
                 {
@@ -244,10 +194,10 @@ public class ResultsWriter
 
                 mJunctionWriter.write(String.format("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
                         chromosome, junctionData.Position, junctionData.Orientation, junctionData.junctionFragmentCount(),
-                        exactSupportFrags, discordantFrags, lowMapQualFrags, maxMapQual));
+                        exactSupportFrags, otherSupportFrags, lowMapQualFrags, maxMapQual));
 
-                mJunctionWriter.write(String.format("\t%d\t%d\t%s\t%s\t%s\t%s\t%s",
-                        maxSoftClip, junctionData.depth(), hasPloyAT, junctionData.internalIndel(), junctionData.hotspot(),
+                mJunctionWriter.write(String.format("\t%d\t%s\t%s\t%s\t%s",
+                        maxSoftClip, junctionData.internalIndel(), junctionData.hotspot(),
                         softClipBases, junctionData.topJunctionRead() != null ? junctionData.topJunctionRead().id() : "EXISTING"));
 
                 if(mConfig.TrackRemotes)
@@ -283,6 +233,26 @@ public class ResultsWriter
         }
     }
 
+    private static String getSoftClippedBases(final PrepRead read, final boolean isClippedLeft)
+    {
+        int scLength = isClippedLeft ? read.leftClipLength() : read.rightClipLength();
+
+        if(scLength <= 0)
+            return "";
+
+        int readLength = read.record().getReadBases().length;
+        int scStart = isClippedLeft ? 0 : readLength - scLength;
+        int scEnd = isClippedLeft ? scLength : readLength;
+
+        StringBuilder scStr = new StringBuilder();
+        for(int i = scStart; i < scEnd; ++i)
+        {
+            scStr.append((char)read.record().getReadBases()[i]);
+        }
+
+        return scStr.toString();
+    }
+
     private void writeBamRecords(final ReadGroup readGroup)
     {
         if(mBamWriter == null)
@@ -310,5 +280,87 @@ public class ResultsWriter
             return true;
 
         return false;
+    }
+
+    private BufferedWriter initialiseReadWriter()
+    {
+        if(!mConfig.WriteTypes.contains(READS))
+            return null;
+
+        try
+        {
+            String filename = mConfig.formFilename(READS);
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+            sj.add("ReadId").add("SampleId").add("GroupCount").add("ExpectedCount").add("GroupStatus").add("HasExternal").add("ReadType");
+            sj.add("Chromosome").add("PosStart").add("PosEnd").add("Cigar");
+            sj.add("FragLength").add("MateChr").add("MatePosStart").add("MapQual").add("SuppData").add("Flags").add("Filters");
+            sj.add("FirstInPair").add("ReadReversed").add("Proper").add("Unmapped").add("MateUnmapped").add("Supplementary");
+            sj.add("JunctionPositions");
+
+            writer.write(sj.toString());
+            writer.newLine();
+
+            return writer;
+        }
+        catch(IOException e)
+        {
+            SV_LOGGER.error(" failed to create read writer: {}", e.toString());
+        }
+
+        return null;
+    }
+
+    private void writeReadData(
+            final PrepRead read, int readCount, int expectedReadCount, final ReadGroupStatus status, boolean spansPartitions,
+            final String junctionPositions)
+    {
+        if(mReadWriter == null)
+            return;
+
+        try
+        {
+            String sampleId = read.record().getStringAttribute(BAM_RECORD_SAMPLE_ID_TAG);
+
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(read.id());
+            sj.add(sampleId);
+            sj.add(String.valueOf(readCount));
+            sj.add(String.valueOf(expectedReadCount));
+            sj.add(String.valueOf(status));
+            sj.add(String.valueOf(spansPartitions));
+            sj.add(String.valueOf(read.readType()));
+            sj.add(read.Chromosome);
+            sj.add(String.valueOf(read.start()));
+            sj.add(String.valueOf(read.end()));
+            sj.add(String.valueOf(read.cigar()));
+            sj.add(String.valueOf(read.fragmentInsertSize()));
+            sj.add(read.MateChromosome);
+
+            sj.add(String.valueOf(read.MatePosStart));
+            sj.add(String.valueOf(read.mapQuality()));
+
+            SupplementaryReadData suppData = read.supplementaryAlignment();
+            sj.add(suppData != null ? suppData.asCsv() : "N/A");
+
+            sj.add(String.valueOf(read.flags()));
+            sj.add(String.valueOf(read.filters()));
+            sj.add(String.valueOf(read.isFirstOfPair()));
+            sj.add(String.valueOf(read.isReadReversed()));
+            sj.add(String.valueOf(read.hasFlag(PROPER_PAIR)));
+            sj.add(String.valueOf(read.hasFlag(READ_UNMAPPED)));
+            sj.add(String.valueOf(read.hasMate() && read.isMateUnmapped()));
+            sj.add(String.valueOf(read.hasFlag(SUPPLEMENTARY_ALIGNMENT)));
+            sj.add(String.valueOf(junctionPositions));
+
+            mReadWriter.write(sj.toString());
+            mReadWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            SV_LOGGER.error(" failed to write read data: {}", e.toString());
+        }
     }
 }

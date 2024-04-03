@@ -141,6 +141,10 @@ public class MarkDuplicates
 
         if(fileWriterCache.runSortMergeIndex())
         {
+            // usually avoid manual calls to this but since the external BAM tools make independent calls to access memory and
+            // the core routines are complete, it is helpful to do so now
+            System.gc();
+
             // log interim time
             MD_LOGGER.info("BAM duplicate processing complete, mins({})", runTimeMinsStr(startTimeMs));
 

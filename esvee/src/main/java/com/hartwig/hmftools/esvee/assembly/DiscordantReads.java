@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordant;
+import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordantFragment;
 
 import java.util.List;
 
@@ -26,7 +26,7 @@ public class DiscordantReads
 
         for(Read read : rawReads)
         {
-            if(read.isUnmapped() || !read.isPairedRead() || read.isMateUnmapped() || !isDiscordant(read))
+            if(read.isUnmapped() || !read.isPairedRead() || read.isMateUnmapped() || !isDiscordantFragment(read))
                 continue;
 
             // search amongst existing groups and match on orientation and remote region

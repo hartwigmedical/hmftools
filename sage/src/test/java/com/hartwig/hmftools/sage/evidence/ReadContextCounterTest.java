@@ -19,6 +19,7 @@ import static htsjdk.samtools.SAMUtils.phredToFastq;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
@@ -321,8 +322,9 @@ public class ReadContextCounterTest
 
         ReadContext readContext = new ReadContext(pos, "", 0, "", indexBases, false);
 
-        IndexedBases indexedRefBases = new IndexedBases(100, 0, refBases.getBytes());
-        QualityCalculator qualityCalculator = new QualityCalculator(TEST_CONFIG, RECALIBRATION, indexedRefBases, MOCK_REF_GENOME);
+        RefSequence refSequence = new RefSequence(100, refBases.getBytes());
+
+        QualityCalculator qualityCalculator = new QualityCalculator(TEST_CONFIG, RECALIBRATION, refSequence, MOCK_REF_GENOME);
 
         ReadContextCounter rcCounter = new ReadContextCounter(
                 1, variant, readContext, VariantTier.PANEL, 100, 0,

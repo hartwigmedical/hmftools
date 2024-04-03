@@ -7,21 +7,21 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_C_INSERT;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_INSERT;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_LENGTH;
+import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_LINE_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_CHECK_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_MIN_SC_LENGTH;
-import static com.hartwig.hmftools.esvee.prep.types.PrepRead.getSoftClippedBases;
 
 import static htsjdk.samtools.CigarOperator.M;
 
@@ -38,6 +38,8 @@ public class ReadFilters
     }
 
     public ReadFilterConfig config() { return mConfig; }
+
+    private static final int MIN_CHECK_SC_BASES = min(LINE_POLY_AT_REQ, POLY_G_LENGTH);
 
     public int checkFilters(final SAMRecord record)
     {
@@ -76,16 +78,20 @@ public class ReadFilters
         if(scLeft > 0 || scRight > 0)
         {
             final byte[] baseQualities = record.getBaseQualities();
-            int scRangeStart = scLeft > scRight ? 0 : baseQualities.length - scRight;
-            int scRangeEnd = scLeft > scRight ? scLeft : baseQualities.length;
             boolean useLeftClip = scLeft > scRight;
+            int scRangeStart = useLeftClip ? 0 : baseQualities.length - scRight;
+            int scRangeEnd = useLeftClip ? scLeft : baseQualities.length;
             int scLength = useLeftClip ? scLeft : scRight;
 
             int aboveQual = 0;
+            StringBuilder scStr = scLength >= MIN_CHECK_SC_BASES ? new StringBuilder() : null;
             for(int i = scRangeStart; i < scRangeEnd; ++i)
             {
                 if(baseQualities[i] >= mConfig.MinSoftClipHighQual)
                     ++aboveQual;
+
+                if(scStr != null)
+                    scStr.append((char)record.getReadBases()[i]);
             }
 
             if(aboveQual / (double)scLength < mConfig.MinSoftClipHighQualPerc)
@@ -99,7 +105,7 @@ public class ReadFilters
                     filters = ReadFilterType.set(filters, ReadFilterType.SOFT_CLIP_LOW_BASE_QUAL);
             }
 
-            String scBases = getSoftClippedBases(record, useLeftClip);
+            String scBases = scStr != null ? scStr.toString() : "";
 
             // check for poly G/C inserts, then a break in a repetitive section, then poly A/T mobile line insertion
             if(scLength >= POLY_G_LENGTH && (scBases.contains(POLY_G_INSERT) || scBases.contains(POLY_C_INSERT)))
@@ -146,29 +152,12 @@ public class ReadFilters
 
     public static boolean isChimericRead(final SAMRecord record, final ReadFilterConfig config)
     {
-        if(record.getReadUnmappedFlag())
-            return false;
-
-        // or a fragment length outside the observed distribution
-        if(abs(record.getInferredInsertSize()) > config.fragmentLengthMax())
-            return true;
-
+        // only difference from the common discordant fragment method is that reads with unmapped mates are also captured
         // an unmapped mate
         if(mateUnmapped(record))
             return true;
 
-        if(record.getReadPairedFlag())
-        {
-            // inter-chromosomal
-            if(!record.getReferenceName().equals(record.getMateReferenceName()))
-                return true;
-
-            // inversion
-            if(record.getReadNegativeStrandFlag() == mateNegativeStrand(record))
-                return true;
-        }
-
-        return false;
+        return isDiscordantFragment(record, config.fragmentLengthMax(), null);
     }
 
     public static boolean isRepetitiveSectionBreak(final byte[] readBases, boolean leftClipped, int scLength)

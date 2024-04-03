@@ -27,6 +27,8 @@ import com.hartwig.hmftools.esvee.prep.types.ReadType;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
@@ -85,6 +87,27 @@ public class CandidateBamWriter
 
             SAMFileHeader fileHeader = samReader.getFileHeader().clone();
             fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+
+            // add read group info if reads are from multiple input BAMs
+            if(mConfig.BamFiles.size() > 1)
+            {
+                for(int i = 1; i < mConfig.BamFiles.size(); ++i)
+                {
+                    SamReader nextReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
+                            .open(new File(mConfig.BamFiles.get(i)));
+
+                    for(SAMReadGroupRecord readGroupRecord : nextReader.getFileHeader().getReadGroups())
+                    {
+                        if(!fileHeader.getReadGroups().contains(readGroupRecord))
+                            fileHeader.addReadGroup(readGroupRecord);
+                    }
+
+                    final SAMProgramRecord nextProgramRecord = nextReader.getFileHeader().getProgramRecords().get(0);
+                    String newProgramId = String.format("%s.%d", nextProgramRecord.getId(), i);
+
+                    fileHeader.addProgramRecord(new SAMProgramRecord(newProgramId, nextProgramRecord));
+                }
+            }
 
             writer = new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(bamFile));
             mCandidatesWriters.put(read.Chromosome, writer);

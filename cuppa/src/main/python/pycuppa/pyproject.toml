@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pycuppa"
-version = "2.0.0"
+version = "2.1.1"
 authors = [{ name="Luan Nguyen", email="lnguyen@hartwigmedicalfoundation.nl" }]
 description = "Python machine learning component of CUPPA"
 readme = "README.md"
@@ -28,4 +28,8 @@ classifiers = [
 test = ["pytest == 7.4.0"]
 
 [tool.setuptools.packages.find]
-include = ["cuppa","cuppa.*"]
+include = [
+    "cuppa", "cuppa.*",
+    "resources", "resources.*",
+    "tests", "tests.*"
+]

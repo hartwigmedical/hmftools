@@ -6,8 +6,10 @@ import static java.lang.Math.max;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.FragmentLengthBounds.INVALID;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_DIST_MAX_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_DIST_MIN_QUAL;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_DIST_PERCENTILE;
@@ -17,6 +19,8 @@ import static com.hartwig.hmftools.esvee.prep.types.WriteType.FRAGMENT_LENGTH_DI
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -25,6 +29,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
+import com.hartwig.hmftools.esvee.prep.types.LengthFrequency;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
@@ -97,28 +103,31 @@ public class FragmentSizeDistribution
 
     public int maxReadLength() { return mMaxReadLength; }
 
-    public int[] calculatePercentileLengths()
+    public FragmentLengthBounds calculateFragmentLengthBounds() { return calculateFragmentLengthBounds(mLengthFrequencies); }
+
+    public static FragmentLengthBounds calculateFragmentLengthBounds(final List<LengthFrequency> lengthFrequencies)
     {
-        int[] percentileLengths = { 0, 0 };
+        if(lengthFrequencies.isEmpty())
+            return INVALID;
 
-        if(mLengthFrequencies.isEmpty())
-            return percentileLengths;
-
-        int totalFragments = mLengthFrequencies.stream().mapToInt(x -> x.Frequency).sum();
+        int totalFragments = lengthFrequencies.stream().mapToInt(x -> x.Frequency).sum();
         int cumulativeTotal = 0;
         int requiredMinTotal = (int)floor(totalFragments * (1 - FRAG_LENGTH_DIST_PERCENTILE));
         int requiredMaxTotal = (int)floor(totalFragments * FRAG_LENGTH_DIST_PERCENTILE);
 
-        for(LengthFrequency lengthData : mLengthFrequencies)
+        int lowerBound = 0;
+        int upperBound = 0;
+
+        for(LengthFrequency lengthData : lengthFrequencies)
         {
-            if(percentileLengths[0] == 0 && lengthData.Frequency + cumulativeTotal >= requiredMinTotal)
+            if(lowerBound == 0 && lengthData.Frequency + cumulativeTotal >= requiredMinTotal)
             {
-                percentileLengths[0] = lengthData.Length;
+                lowerBound = lengthData.Length;
             }
 
             if(lengthData.Frequency + cumulativeTotal >= requiredMaxTotal)
             {
-                percentileLengths[1] = lengthData.Length;
+                upperBound = lengthData.Length;
                 break;
             }
             else
@@ -127,7 +136,7 @@ public class FragmentSizeDistribution
             }
         }
 
-        return percentileLengths;
+        return new FragmentLengthBounds(lowerBound, upperBound);
     }
 
     private void mergeDistributions(final List<LengthFrequency> lengthFrequencies, final List<LengthFrequency> otherFrequencies)
@@ -162,31 +171,6 @@ public class FragmentSizeDistribution
                 LengthFrequency newLengthData = new LengthFrequency(fragmentLength, otherLengthData.Frequency);
                 lengthFrequencies.add(index, newLengthData);
             }
-        }
-    }
-
-    private void writeDistribution()
-    {
-        try
-        {
-            final String outputFileName = mConfig.formFilename(FRAGMENT_LENGTH_DIST);
-
-            BufferedWriter writer = createBufferedWriter(outputFileName, false);
-
-            writer.write("FragmentLength\tCount");
-            writer.newLine();
-
-            for(LengthFrequency lengthFrequency : mLengthFrequencies)
-            {
-                writer.write(String.format("%d\t%d", lengthFrequency.Length, lengthFrequency.Frequency));
-                writer.newLine();
-            }
-
-            writer.close();
-        }
-        catch(IOException e)
-        {
-            SV_LOGGER.error("failed to write fragment length file: {}", e.toString());
         }
     }
 
@@ -326,18 +310,54 @@ public class FragmentSizeDistribution
         }
     }
 
-    private class LengthFrequency
+    private void writeDistribution()
     {
-        public final int Length;
-        public int Frequency;
-
-        public LengthFrequency(final int length, final int frequency)
+        try
         {
-            Length = length;
-            Frequency = frequency;
-        }
+            final String outputFileName = mConfig.formFilename(FRAGMENT_LENGTH_DIST);
 
-        public String toString() { return String.format("length(%d) freq(%d)", Length, Frequency); }
+            BufferedWriter writer = createBufferedWriter(outputFileName, false);
+
+            writer.write("FragmentLength\tCount");
+            writer.newLine();
+
+            for(LengthFrequency lengthFrequency : mLengthFrequencies)
+            {
+                writer.write(String.format("%d\t%d", lengthFrequency.Length, lengthFrequency.Frequency));
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            SV_LOGGER.error("failed to write fragment length file: {}", e.toString());
+        }
     }
 
+    public static FragmentLengthBounds loadFragmentLengthBounds(final String filename)
+    {
+        try
+        {
+            List<LengthFrequency> lengthFrequencies = Lists.newArrayList();
+
+            List<String> lines = Files.readAllLines(Paths.get(filename));
+            lines.remove(0);
+
+            for(String line : lines)
+            {
+                String[] values = line.split(TSV_DELIM);
+
+                lengthFrequencies.add(new LengthFrequency(Integer.parseInt(values[0]), Integer.parseInt(values[1])));
+            }
+
+            return calculateFragmentLengthBounds(lengthFrequencies);
+        }
+        catch(IOException e)
+        {
+            SV_LOGGER.error("failed to read fragment length file: {}", e.toString());
+            return INVALID;
+        }
+
+    }
 }

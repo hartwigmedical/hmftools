@@ -142,7 +142,6 @@ public class LocalGroupBuilder extends ThreadTask
 
                 negAssembly = negJunctionAssemblies.get(nextNegIndex);
             }
-
         }
     }
 }

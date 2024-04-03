@@ -35,6 +35,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_GENOME_IMAGE_EXTE
 import static com.hartwig.hmftools.esvee.alignment.BwaAligner.loadAlignerLibrary;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formOutputFile;
 import static com.hartwig.hmftools.esvee.common.SvConstants.ESVEE_FILE_ID;
+import static com.hartwig.hmftools.esvee.common.SvConstants.FILE_NAME_DELIM;
 import static com.hartwig.hmftools.esvee.common.SvConstants.PREP_FILE_ID;
 import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLY_BAM;
 import static com.hartwig.hmftools.esvee.output.WriteType.READS;
@@ -103,7 +104,6 @@ public class AssemblyConfig
 
     public final int AssemblyRefBaseWriteMax;
     public final boolean SkipDiscordant;
-    public final boolean LogPhaseGroupLinks;
     public final int PhaseProcessingLimit;
 
     public final int Threads;
@@ -158,13 +158,13 @@ public class AssemblyConfig
         }
         else
         {
-            String bamPath = pathFromFile(TumorBams.get(0));
+            // since Prep now reads multiple BAMs, only the tumor-labelled junctions file needs to be loaded
             List<String> combinedSampleIds = Lists.newArrayList(TumorIds);
             combinedSampleIds.addAll(ReferenceIds);
 
             for(String sampleId : combinedSampleIds)
             {
-                String junctionFile = bamPath + sampleId + "." + PREP_FILE_ID + "." + PREP_JUNCTIONS_FILE_ID;
+                String junctionFile = formPrepInputFilename(sampleId, PREP_JUNCTIONS_FILE_ID);
 
                 if(Files.exists(Paths.get(junctionFile)))
                     JunctionFiles.add(junctionFile);
@@ -254,7 +254,6 @@ public class AssemblyConfig
         PhaseProcessingLimit = configBuilder.getInteger(PHASE_PROCESSING_LIMIT);
 
         AssemblyRefBaseWriteMax = configBuilder.getInteger(ASSEMBLY_REF_BASE_WRITE_MAX);
-        LogPhaseGroupLinks = configBuilder.hasFlag(LOG_PHASE_GROUP_LINKS);
 
         Threads = parseThreads(configBuilder);
 
@@ -278,9 +277,17 @@ public class AssemblyConfig
         return combinedSampleIds;
     }
 
+    public String sampleId() { return TumorIds.get(0); }
+
     public String outputFilename(final WriteType writeType)
     {
-        return formOutputFile(OutputDir, TumorIds.get(0), ESVEE_FILE_ID, writeType.fileId(), OutputId);
+        return formOutputFile(OutputDir, sampleId(), ESVEE_FILE_ID, writeType.fileId(), OutputId);
+    }
+
+    public String formPrepInputFilename(final String sampleId, final String fileId)
+    {
+        String bamPath = pathFromFile(TumorBams.get(0));
+        return bamPath + sampleId + FILE_NAME_DELIM + PREP_FILE_ID + FILE_NAME_DELIM + fileId;
     }
 
     public void logReadId(final SAMRecord record, final String caller)
@@ -292,7 +299,7 @@ public class AssemblyConfig
     public void logReadId(final Read read, final String caller)
     {
         if(mCheckLogReadIds)
-            logReadId(read.getName(), caller);
+            logReadId(read.id(), caller);
     }
 
     private void logReadId(final String readId, final String caller)
@@ -386,7 +393,6 @@ public class AssemblyConfig
 
         AssemblyRefBaseWriteMax = 0;
         SkipDiscordant = true;
-        LogPhaseGroupLinks = false;
         PhaseProcessingLimit = 0;
         Threads = 0;
         TruthsetFile = null;

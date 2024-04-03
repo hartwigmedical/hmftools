@@ -10,6 +10,10 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_HOTSPOT_JUNCTION;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_JUNCTION_FRAGS;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_OTHER_SUPPORT_FRAGS;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -156,10 +160,14 @@ public class Junction implements Comparable<Junction>
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
             int posIndex = fieldsIndexMap.get(FLD_POSITION);
             int orientIndex = fieldsIndexMap.get(FLD_ORIENTATION);
-            Integer juncFragsIndex = fieldsIndexMap.get("JunctionFrags");
-            Integer discFragsIndex = fieldsIndexMap.get("DiscordantFrags");
-            Integer indelIndex = fieldsIndexMap.get("Indel");
-            Integer hotspotIndex = fieldsIndexMap.get("Hotspot");
+
+            Integer juncFragsIndex = fieldsIndexMap.get(FLD_JUNCTION_FRAGS);
+
+            Integer otherSupportFragsIndex = fieldsIndexMap.containsKey(FLD_OTHER_SUPPORT_FRAGS) ?
+                    fieldsIndexMap.get(FLD_OTHER_SUPPORT_FRAGS) : fieldsIndexMap.get("DiscordantFrags"); // old name
+
+            Integer indelIndex = fieldsIndexMap.get(FLD_INDEL_JUNCTION);
+            Integer hotspotIndex = fieldsIndexMap.get(FLD_HOTSPOT_JUNCTION);
 
             List<Junction> junctionDataList = null;
             String currentChromosome = "";
@@ -188,8 +196,8 @@ public class Junction implements Comparable<Junction>
                 }
 
                 int junctionFrags = juncFragsIndex != null ? Integer.parseInt(values[juncFragsIndex]) : 0;
-                int discordantFrags = discFragsIndex != null ? Integer.parseInt(values[discFragsIndex]) : 0;
-                boolean discordantOnly = junctionFrags == 0 && discordantFrags > 0;
+                int otherSupportFrags = otherSupportFragsIndex != null ? Integer.parseInt(values[otherSupportFragsIndex]) : 0;
+                boolean discordantOnly = junctionFrags == 0 && otherSupportFrags > 0;
 
                 if(discordantOnly && skipDiscordantGroups)
                     continue;

@@ -3,9 +3,14 @@ package com.hartwig.hmftools.esvee;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
+import static com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution.loadFragmentLengthBounds;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
+import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.REMOTE_REF;
 import static com.hartwig.hmftools.esvee.types.JunctionGroup.buildJunctionGroups;
 import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLIES;
 import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLY_BAM;
@@ -16,21 +21,28 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 import com.hartwig.hmftools.esvee.output.AssemblyReadWriter;
 import com.hartwig.hmftools.esvee.output.AssemblyWriter;
 import com.hartwig.hmftools.esvee.output.BamWriter;
 import com.hartwig.hmftools.esvee.phasing.PhaseGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
 import com.hartwig.hmftools.esvee.phasing.PhaseSetTask;
+import com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution;
+import com.hartwig.hmftools.esvee.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.types.AssemblyOutcome;
 import com.hartwig.hmftools.esvee.types.Junction;
 import com.hartwig.hmftools.esvee.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.types.JunctionGroup;
 import com.hartwig.hmftools.esvee.types.PhaseGroup;
+import com.hartwig.hmftools.esvee.types.PhaseSet;
 import com.hartwig.hmftools.esvee.types.ThreadTask;
 import com.hartwig.hmftools.esvee.output.ResultsWriter;
 import com.hartwig.hmftools.esvee.output.WriteType;
@@ -104,8 +116,28 @@ public class JunctionProcessor
         return !mChrJunctionsMap.isEmpty();
     }
 
+    private void loadFragmentLengthBounds()
+    {
+        if(mConfig.JunctionFiles.isEmpty())
+            return;
+
+        String fragLengthFilename = mConfig.formPrepInputFilename(mConfig.sampleId(), PREP_FRAG_LENGTH_FILE_ID);
+
+        FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
+
+        if(fragmentLengthBounds.isValid())
+        {
+            SV_LOGGER.info("fragment length bounds(min={} max={})",
+                    fragmentLengthBounds.LowerBound, fragmentLengthBounds.UpperBound);
+
+            DISCORDANT_FRAGMENT_LENGTH = fragmentLengthBounds.UpperBound;
+        }
+    }
+
     public void run()
     {
+        loadFragmentLengthBounds();
+
         try
         {
             // create junction groups from existing junctions
@@ -210,14 +242,20 @@ public class JunctionProcessor
 
         List<Thread> threadTasks = new ArrayList<>();
 
-        List<PhaseSetTask> phaseSetTasks = PhaseSetTask.createThreadTasks(mConfig, phaseGroupBuilder.phaseGroups(), mConfig.Threads, threadTasks);
+        List<PhaseSetTask> phaseSetTasks = PhaseSetTask.createThreadTasks(
+                mConfig, phaseGroupBuilder.phaseGroups(), mBamReaders, mConfig.Threads, threadTasks);
 
         if(!runThreadTasks(threadTasks))
             System.exit(1);
 
         addPerfCounters(phaseSetTasks.stream().collect(Collectors.toList()));
 
-        SV_LOGGER.info("created {} phase sets", phaseGroups.stream().mapToInt(x -> x.phaseSets().size()).sum());
+        int totalRemoteReadSearch = phaseSetTasks.stream().mapToInt(x -> x.totalRemoteReadsSearch()).sum();
+        int totalRemoteReadMatched = phaseSetTasks.stream().mapToInt(x -> x.totalRemoteReadsMatched()).sum();
+
+        SV_LOGGER.info("created {} phase sets, remote read(search={} matched={})",
+                phaseGroups.stream().mapToInt(x -> x.phaseSets().size()).sum(),
+                totalRemoteReadSearch, totalRemoteReadMatched);
     }
 
     private void addPerfCounters(final List<ThreadTask> tasks)
@@ -246,40 +284,40 @@ public class JunctionProcessor
 
     private List<JunctionAssembly> prepareFinalAssemblies()
     {
-        List<JunctionAssembly> allAssemblies = Lists.newArrayList();
+        // assemblies are source from junction groups
+        // they could instead be sourced from phase groups, to automatically collect any branched or ref-remote assemblies
 
         int assemblyId = 0;
+
+        Set<PhaseGroup> phaseGroups = Sets.newHashSet();
+        List<JunctionAssembly> allAssemblies = Lists.newArrayList();
+
         for(List<JunctionGroup> junctionGroups : mJunctionGroupMap.values())
         {
             for(JunctionGroup junctionGroup : junctionGroups)
             {
-                // set ID first so any references have them set - may need or could to be done earlier once
-                // all references between then are established
-
-                // NOTE: is there a cleaner place to do this? eg prior to alignment after phasing is done?
-                // junctionGroup.addBranchedAssemblies();
-
                 for(JunctionAssembly assembly : junctionGroup.junctionAssemblies())
                 {
-                    assembly.setId(assemblyId++);
+                    if(assembly.phaseGroup() != null)
+                        phaseGroups.add(assembly.phaseGroup());
+
                     allAssemblies.add(assembly);
-                    setAssemblyOutcome(assembly);
-
-                    for(JunctionAssembly branchedAssembly : assembly.branchedAssemblies())
-                    {
-                        branchedAssembly.setId(assembly.id());
-                        allAssemblies.add(branchedAssembly);
-                        setAssemblyOutcome(branchedAssembly);
-                    }
                 }
-
             }
         }
 
-        // TODO: assembly ID could be set once assemblies have been ordered, and a unique assebly string ID also set in a
-        // fairly deterministic way based on final coords, with any duplicates given an extra incrementor
+        for(PhaseGroup phaseGroup : phaseGroups)
+        {
+            allAssemblies.addAll(phaseGroup.derivedAssemblies());
+        }
 
         Collections.sort(allAssemblies, Comparator.comparing(x -> x.junction()));
+
+        for(JunctionAssembly assembly : allAssemblies)
+        {
+            assembly.setId(assemblyId++);
+            setAssemblyOutcome(assembly);
+        }
 
         return allAssemblies;
     }

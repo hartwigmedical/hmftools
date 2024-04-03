@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.prep;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.bam.BamToolName.BAMTOOL_PATH;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
@@ -38,6 +40,7 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_HIGH_QUAL_PERC;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_SUPPORTING_READ_DISTANCE;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTIONS_FILE_ID;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.BAM;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.FRAGMENT_LENGTH_DIST;
@@ -99,8 +102,6 @@ public class PrepConfig
     public final boolean TrackRemotes;
     public final boolean PerfDebug;
 
-    // throttling and down-sampling - off by default
-    public final boolean CaptureDepth;
     public final boolean NoCleanUp;
 
     private boolean mIsValid;
@@ -118,7 +119,6 @@ public class PrepConfig
     private static final String CALC_FRAG_LENGTH = "calc_fragment_length";
     private static final String PARTITION_SIZE = "partition_size";
 
-    private static final String CAPTURE_DEPTH = "capture_depth";
     private static final String TRACK_REMOTES = "track_remotes";
     private static final String NO_CACHE_BAM = "no_cache_bam";
     private static final String NO_CLEAN_UP = "no_clean_up";
@@ -164,7 +164,8 @@ public class PrepConfig
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        SV_LOGGER.info("output({}) {}", OutputDir, OutputId != null ? OutputId : "");
+        SV_LOGGER.info("output({}) {}",
+                OutputDir, OutputId != null ? format("outputId(%s)", OutputId) : "");
 
         Hotspots = new HotspotCache(configBuilder.getValue(KNOWN_FUSION_BED));
         Blacklist = new BlacklistLocations(configBuilder.getValue(BLACKLIST_BED));
@@ -206,7 +207,6 @@ public class PrepConfig
         TrimReadId = !configBuilder.hasFlag(NO_TRIM_READ_ID) && !SpecificChrRegions.hasFilters();
         UnpairedReads = configBuilder.hasFlag(UNPAIRED_READS);
         UseCacheBam = !configBuilder.hasFlag(NO_CACHE_BAM) && !SpecificChrRegions.hasFilters();
-        CaptureDepth = configBuilder.hasFlag(CAPTURE_DEPTH);
         TrackRemotes = configBuilder.hasFlag(TRACK_REMOTES);
         NoCleanUp = configBuilder.hasFlag(NO_CLEAN_UP);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
@@ -255,7 +255,7 @@ public class PrepConfig
                 break;
 
             case FRAGMENT_LENGTH_DIST:
-                fileExtension = "fragment_lengths" + TSV_EXTENSION;
+                fileExtension = PREP_FRAG_LENGTH_FILE_ID;
                 break;
         }
 
@@ -295,7 +295,6 @@ public class PrepConfig
                 MIN_JUNCTION_SUPPORT));
 
         CalcFragmentLength = false;
-        CaptureDepth = false;
         BamStringency = ValidationStringency.STRICT;
         WriteTypes = Sets.newHashSet();
         SpecificChrRegions = new SpecificRegions();
@@ -326,7 +325,6 @@ public class PrepConfig
         configBuilder.addFlag(UNPAIRED_READS, "Unpaired reads ignores non-expect junction support");
         addSpecificChromosomesRegionsConfig(configBuilder);
         configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);
-        configBuilder.addFlag(CAPTURE_DEPTH, "Capture depth for junctions");
         configBuilder.addFlag(NO_CACHE_BAM, "Write a BAM to cache candidate reads");
         configBuilder.addFlag(TRACK_REMOTES, "Track support for remote junctions");
         configBuilder.addFlag(NO_TRIM_READ_ID, "Disable use of a shortened readId internally");

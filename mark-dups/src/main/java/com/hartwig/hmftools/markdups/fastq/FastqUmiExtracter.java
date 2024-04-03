@@ -33,9 +33,11 @@ public class FastqUmiExtracter
     private final String mOutputDir;
     private final String mOutputId;
     private final int mUmiLength;
+    private final int mAdapterLength;
     private final int mAdapterUmiLength;
     private final String mAdapterSequence;
     private final String mAdapterSequenceReversed;
+    private final Integer mSpecificRead;
 
     private BufferedWriter mWriterR1;
     private BufferedWriter mWriterR2;
@@ -43,7 +45,9 @@ public class FastqUmiExtracter
     // config
     private static final String FASTQ_FILES = "fastq_files";
     private static final String UMI_LENGTH = "umi_length";
+    private static final String ADAPTER_LENGTH = "adapter_length";
     private static final String ADAPTER_SEQUENCE = "adapter_seq";
+    private static final String SPECIFIC_READ = "specific_read";
 
     private static final String FASTQ_FILES_DELIM = ";";
     private static final int LINE_LOG_COUNT = 1000000;
@@ -54,10 +58,21 @@ public class FastqUmiExtracter
         mOutputDir = parseOutputDir(configBuilder);
         mOutputId = configBuilder.getValue(OUTPUT_ID);
         mUmiLength = configBuilder.getInteger(UMI_LENGTH);
+        mAdapterLength = configBuilder.getInteger(ADAPTER_LENGTH);
         mAdapterSequence = configBuilder.getValue(ADAPTER_SEQUENCE);
 
-        mAdapterUmiLength = mAdapterSequence != null ? mAdapterSequence.length() + mUmiLength : 0;
-        mAdapterSequenceReversed = mAdapterSequence != null ? Nucleotides.reverseComplementBases(mAdapterSequence) : null;
+        mSpecificRead = configBuilder.hasValue(SPECIFIC_READ) ? configBuilder.getInteger(SPECIFIC_READ) : null;
+
+        if(mAdapterSequence != null)
+        {
+            mAdapterUmiLength = mAdapterSequence != null ? mAdapterSequence.length() + mUmiLength : 0;
+            mAdapterSequenceReversed = mAdapterSequence != null ? Nucleotides.reverseComplementBases(mAdapterSequence) : null;
+        }
+        else
+        {
+            mAdapterUmiLength = mAdapterLength > 0 ? mUmiLength + mAdapterLength : mUmiLength;
+            mAdapterSequenceReversed = null;
+        }
     }
 
     public void run()
@@ -218,7 +233,24 @@ public class FastqUmiExtracter
         if(!readId1.equals(readId2))
             return false;
 
-        if(mAdapterUmiLength > 0)
+        if(mSpecificRead != null && mAdapterLength > 0)
+        {
+            String adapterUmiBases = mSpecificRead == 1 ?
+                    r1ReadBuffer[READ_ITEM_BASES].substring(0, mAdapterUmiLength) : r2ReadBuffer[READ_ITEM_BASES].substring(0, mAdapterUmiLength);
+
+            String umiBases = adapterUmiBases.substring(0, mUmiLength);
+
+            // append UMIs to read Id and remove from bases and quals
+            String newReadId = readId1 + READ_ID_DELIM + umiBases;
+            r1ReadBuffer[READ_ITEM_ID] = READ_ID_START + newReadId + r1ReadBuffer[READ_ITEM_ID].substring(delimIndex);
+            r2ReadBuffer[READ_ITEM_ID] = READ_ID_START + newReadId + r2ReadBuffer[READ_ITEM_ID].substring(delimIndex);
+
+            r1ReadBuffer[READ_ITEM_BASES] = r1ReadBuffer[READ_ITEM_BASES].substring(mAdapterUmiLength);
+            r1ReadBuffer[READ_ITEM_QUALS] = r1ReadBuffer[READ_ITEM_QUALS].substring(mAdapterUmiLength);
+            r2ReadBuffer[READ_ITEM_BASES] = r2ReadBuffer[READ_ITEM_BASES].substring(mAdapterUmiLength);
+            r2ReadBuffer[READ_ITEM_QUALS] = r2ReadBuffer[READ_ITEM_QUALS].substring(mAdapterUmiLength);
+        }
+        else if(mAdapterLength > 0)
         {
             String adapterUmiBases1 = r1ReadBuffer[READ_ITEM_BASES].substring(0, mAdapterUmiLength);
 
@@ -300,8 +332,11 @@ public class FastqUmiExtracter
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         configBuilder.addConfigItem(FASTQ_FILES, true, "Fastq file-pair path, separated by delim ','");
-        configBuilder.addConfigItem(ConfigItemType.INTEGER, UMI_LENGTH, true, "UMI length", null);
+        configBuilder.addRequiredInteger(UMI_LENGTH, "UMI length");
         configBuilder.addConfigItem(ADAPTER_SEQUENCE, "Adapter sequence (optional)");
+        configBuilder.addInteger(SPECIFIC_READ, "Specific read to extract from (optional)", 0);
+        configBuilder.addInteger(ADAPTER_LENGTH, "Adapter length", 0);
+
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 

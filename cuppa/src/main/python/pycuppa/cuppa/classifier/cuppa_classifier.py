@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import os
-import shutil
-from functools import cached_property
 from typing import TYPE_CHECKING, Optional, Literal
 
 import joblib
@@ -11,7 +9,8 @@ import pandas as pd
 from sklearn.compose import make_column_selector
 
 import cuppa.compose.pipeline
-from cuppa.constants import SUB_CLF_NAMES, META_CLF_NAMES, LAYER_NAMES, CLF_GROUPS, NA_FILL_VALUE
+from cuppa.constants import SUB_CLF_NAMES, META_CLF_NAMES, LAYER_NAMES, CLF_GROUPS, NA_FILL_VALUE, \
+    SIG_QUANTILE_TRANSFORMER_NAME, CLF_NAMES
 from cuppa.classifier.classifiers import ClassifierLayers, SubClassifiers, MetaClassifiers
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredictionBuilder
 from cuppa.classifier.feature_importance import FeatureImportance
@@ -272,7 +271,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         return self
 
-    @cached_property
+    @property
     def is_fitted(self) -> bool:
         ## Check for an attribute that only exists if the model is fitted
         ## There are many attributes we could check, but one is selected to make the check quick
@@ -285,6 +284,32 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
 
     ## Features ================================
+    def get_required_features(self) -> dict[str, pd.Index]:
+
+        self._check_is_fitted()
+
+        required_features = {
+            SUB_CLF_NAMES.GEN_POS: self.gen_pos_clf["cos_sim"].profiles_.index,
+            SUB_CLF_NAMES.SNV96: self.snv96_clf["logistic_regression"].feature_names_in_,
+            SUB_CLF_NAMES.EVENT: self.event_clf["logistic_regression"].feature_names_in_,
+            SIG_QUANTILE_TRANSFORMER_NAME: self.sig_quantile_transformer.feature_names_in_,
+
+            SUB_CLF_NAMES.GENE_EXP: self.gene_exp_clf["chi2"].selected_features,
+            SUB_CLF_NAMES.ALT_SJ: self.alt_sj_clf["chi2"].selected_features,
+
+            META_CLF_NAMES.DNA_COMBINED: self.dna_combined_clf["logistic_regression"].feature_names_in_,
+            META_CLF_NAMES.RNA_COMBINED: self.rna_combined_clf["logistic_regression"].feature_names_in_,
+        }
+
+        required_features[META_CLF_NAMES.COMBINED] = (
+            required_features[META_CLF_NAMES.DNA_COMBINED].tolist() +
+            required_features[META_CLF_NAMES.RNA_COMBINED].tolist()
+        )
+
+        required_features = {clf_name: pd.Index(features) for clf_name, features in required_features.items()}
+
+        return required_features
+
     def _check_features(self, X: pd.DataFrame) -> None:
         handler = MissingFeaturesHandler(X=X, cuppa_classifier=self)
         handler.check_features()
@@ -393,55 +418,45 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
             LAYER_NAMES.SUB_CLF,
         ]
 
-        probs = self.transform(
-            X, y,
-            keep_steps=keep_steps,
-            verbose=verbose
-        )
-
+        probs = self.transform(X, y, keep_steps=keep_steps, verbose=verbose)
         probs = {step: probs[step] for step in keep_steps}
 
-        ## Convert columns to multi-indexes --------------------------------
+        ## Convert to wide format --------------------------------
         ## Add 'combined__' prefix
-        probs[LAYER_NAMES.COMBINED].columns = \
-            META_CLF_NAMES.COMBINED + \
-            DEFAULT_FEATURE_PREFIX_SEPERATOR + \
-            probs[LAYER_NAMES.COMBINED].columns.astype(str)
+        probs[LAYER_NAMES.COMBINED].columns = (
+            META_CLF_NAMES.COMBINED +
+            DEFAULT_FEATURE_PREFIX_SEPERATOR +
+            probs[LAYER_NAMES.COMBINED].columns
+        )
 
-        ## Make columns a list of tuple string pairs (prefix, suffix)
-        for probs_i in probs.values():
-            probs_i.columns = probs_i.columns.str.split(DEFAULT_FEATURE_PREFIX_SEPERATOR, n=1).map(tuple)
+        probs = pd.concat(probs.values(), axis=1) ## Shape: n_samples x pred_classes
 
-        probs = pd.concat(probs.values(), axis=1)
-
+        ## Make column multi-indexes
+        probs.columns = probs.columns.str.split(DEFAULT_FEATURE_PREFIX_SEPERATOR, n=1).map(tuple)
         probs.columns.names = ["clf_name", "pred_class"]
+
         probs.index.name = "sample_id"
 
-        ## Long dataframe --------------------------------
-        probs_long = probs.stack(level="clf_name") ## Shape: (n_samples, clf_groups, clf_names) x pred_classes
+        ## Convert to long format --------------------------------
+        probs = probs.stack(level="clf_name") ## Shape: (n_samples, clf_names) x pred_classes
 
         ## Add classifier group to index
-        index = probs_long.index.to_frame(index=False)
-        index["clf_group"] = pd.Series(CLF_GROUPS)[index["clf_name"]].values
+        index = probs.index.to_frame(index=False)
+
+        ## Force row order
+        index["sample_id"] = pd.Categorical(index["sample_id"], X.index)
+        index["clf_name"] = pd.Categorical(index["clf_name"], CLF_NAMES)
+        index["clf_group"] = pd.Categorical(CLF_GROUPS.from_clf_names(index["clf_name"]), CLF_GROUPS.get_all())
+
         index = index[["sample_id", "clf_group", "clf_name"]]
 
-        probs_long.index = pd.MultiIndex.from_frame(index)
+        probs.index = pd.MultiIndex.from_frame(index)
+        probs = probs.sort_index()
 
-        ## Force ordering --------------------------------
-        ## Original sample order
-        index["sample_id"] = pd.Categorical(index["sample_id"], X.index)
+        ## Force column order
+        probs = probs[self.classes_]
 
-        ## Classifier order
-        clf_names = probs.columns.get_level_values("clf_name").unique()
-        index["clf_name"] = pd.Categorical(index["clf_name"], clf_names)
-
-        index_reordered = pd.MultiIndex.from_frame(index.sort_values(["sample_id", "clf_name"]))
-        probs_long = probs_long.loc[index_reordered]
-
-        ## Class order
-        probs_long = probs_long[self.classes_]
-
-        return probs_long
+        return probs
 
     def feat_imp(self) -> pd.DataFrame:
         self._check_is_fitted()
@@ -503,7 +518,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         self._check_is_fitted()
         self._check_features(X)
 
-        sub_classifiers = self["sub_clfs"]
+        sub_classifiers = self[LAYER_NAMES.SUB_CLF]
         if sub_clf_names is not None:
             super().check_step_names(
                 steps = sub_clf_names,
@@ -535,8 +550,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         self,
         X: pd.DataFrame,
         y: None = None,
-        probs_only: bool = False,
-        rm_all_zero_rows: bool = False,
         bypass_steps: str | list[str] | None = None,
         verbose: bool = False
     ) -> CuppaPrediction:
@@ -560,13 +573,6 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
         y: None
            Not used. Argument only exists for compatibility
 
-        probs_only: bool
-            Only return probabilities?
-
-        rm_all_zero_rows: bool
-           Per sample, remove features with 0 contribution across all classes? This is intended to reduce the file
-           size, especially with many samples
-
         verbose: bool
            Show progress messages?
 
@@ -584,14 +590,7 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
 
         cuppa_classifier._check_is_fitted()
 
-        builder = CuppaPredictionBuilder(
-            cuppa_classifier = cuppa_classifier,
-            X = X,
-            probs_only = probs_only,
-            rm_all_zero_rows = rm_all_zero_rows,
-            verbose = verbose
-        )
-
+        builder = CuppaPredictionBuilder(cuppa_classifier = cuppa_classifier, X = X, verbose = verbose)
         predictions = builder.build()
 
         return predictions

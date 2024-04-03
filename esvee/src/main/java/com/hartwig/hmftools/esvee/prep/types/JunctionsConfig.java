@@ -9,19 +9,17 @@ public class JunctionsConfig
     public final boolean TrimReadId;
     public final boolean UnpairedReads;
     public final boolean TrackRemotes;
-    public final boolean CaptureDepth;
     public final boolean PerfDebug;
 
     public JunctionsConfig(
             final ReadFilters readFiltering, final int readLength, final boolean trimReadId,
-            final boolean unpairedReads, final boolean trackRemotes, final boolean captureDepth, final boolean perfDebug)
+            final boolean unpairedReads, final boolean trackRemotes, final boolean perfDebug)
     {
         ReadFiltering = readFiltering;
         ReadLength = readLength;
         TrimReadId = trimReadId;
         UnpairedReads = unpairedReads;
         TrackRemotes = trackRemotes;
-        CaptureDepth = captureDepth;
         PerfDebug = perfDebug;
     }
 
@@ -29,6 +27,6 @@ public class JunctionsConfig
     {
         return new JunctionsConfig(
                 svConfig.ReadFiltering, svConfig.ReadLength, svConfig.TrimReadId, svConfig.UnpairedReads,
-                svConfig.TrackRemotes, svConfig.CaptureDepth, svConfig.PerfDebug);
+                svConfig.TrackRemotes, svConfig.PerfDebug);
     }
 }

@@ -7,32 +7,6 @@ import com.hartwig.hmftools.esvee.types.Junction;
 
 public final class ReadFilters
 {
-    private static int getAvgBaseQuality(final Read read, final int readPosition, final int length)
-    {
-        int startIndex = readPosition - 1;
-        int endIndex = min(startIndex + length, read.getBaseQuality().length);
-
-        int qualitySum = 0;
-        for(int i = startIndex; i < endIndex; i++)
-        {
-            qualitySum += read.getBaseQuality()[i];
-        }
-
-        return qualitySum / length;
-    }
-
-    public static boolean isAboveBaseQualAvgThreshold(final byte[] baseQualities, final int threshold)
-    {
-        int qualitySum = 0;
-        for(int i = 0; i < baseQualities.length; i++)
-        {
-            qualitySum += baseQualities[i];
-        }
-
-        double avgBaseQual = qualitySum / (double)baseQualities.length;
-        return avgBaseQual >= threshold;
-    }
-
     public static boolean recordSoftClipsAndCrossesJunction(final Read read, final Junction junction)
     {
         if(junction.isForward())
@@ -69,4 +43,29 @@ public final class ReadFilters
         }
     }
 
+    private static int getAvgBaseQuality(final Read read, final int readPosition, final int length)
+    {
+        int startIndex = readPosition - 1;
+        int endIndex = min(startIndex + length, read.getBaseQuality().length);
+
+        int qualitySum = 0;
+        for(int i = startIndex; i < endIndex; i++)
+        {
+            qualitySum += read.getBaseQuality()[i];
+        }
+
+        return qualitySum / length;
+    }
+
+    public static boolean isAboveBaseQualAvgThreshold(final byte[] baseQualities, final int threshold)
+    {
+        int qualitySum = 0;
+        for(int i = 0; i < baseQualities.length; i++)
+        {
+            qualitySum += baseQualities[i];
+        }
+
+        double avgBaseQual = qualitySum / (double)baseQualities.length;
+        return avgBaseQual >= threshold;
+    }
 }

@@ -85,10 +85,6 @@ public class AssemblyWriter
 
             sj.add("RepeatInfo");
             sj.add("RefSideSoftClips");
-            sj.add("BranchedAssemblyIds");
-
-            if(mConfig.LogPhaseGroupLinks)
-                sj.add("PhaseGroupLinkInfo");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -149,7 +145,7 @@ public class AssemblyWriter
                 sj.add(assembly.formRefBaseSequence(refBaseLength)); // long enough to show most short TIs
             }
 
-            sj.add(assembly.initialRead() != null ? assembly.initialRead().getName() : "NONE"); // shouldn't occur
+            sj.add(assembly.initialRead() != null ? assembly.initialRead().id() : "NONE"); // shouldn't occur
 
             sj.add(String.valueOf(assembly.candidateSupport().size()));
 
@@ -158,13 +154,6 @@ public class AssemblyWriter
             sj.add(repeatsInfoStr(assembly.repeatInfo()));
 
             sj.add(refSideSoftClipsStr(assembly.refSideSoftClips()));
-
-            String branchedAssemblyIds = assembly.branchedAssemblies().stream()
-                    .map(x -> String.valueOf(x.id())).collect(Collectors.joining(";"));
-            sj.add(branchedAssemblyIds);
-
-            if(mConfig.LogPhaseGroupLinks)
-                sj.add(assembly.phaseGroupLinkingInfo());
 
             mWriter.write(sj.toString());
             mWriter.newLine();
