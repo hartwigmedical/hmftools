@@ -81,7 +81,7 @@ CLF_NAMES = CLF_GROUPS.get_clf_group_name_mappings().keys()
 
 
 ## Paths ================================
-RESOURCES_DIR = impresources.files("cuppa")/"resources"
+RESOURCES_DIR = impresources.files("resources")
 
 DEFAULT_FUSION_OVERRIDES_PATH = str(RESOURCES_DIR/"feature_overrides/20230731-fusion_overrides.split_adenoid_salivary.txt")
 MOCK_DATA_DIR = str(RESOURCES_DIR/"mock_data")
