@@ -45,7 +45,10 @@ public class PurpleVariantFactory
     public PurpleVariant fromPurpleVariantContext(@NotNull PurpleVariantContext context)
     {
         List<PurpleTranscriptImpact> purpleVariantTranscriptImpacts =
-                context.otherImpacts().stream().map(PurpleConversion::convert).collect(Collectors.toList());
+                context.otherImpacts()
+                        .stream()
+                        .map(x -> PurpleConversion.convert(x, context.reportableTranscripts().contains(x.Transcript)))
+                        .collect(Collectors.toList());
         PurpleAllelicDepth rnaDepth = context.rnaDepth() != null ? PurpleConversion.convert(context.rnaDepth()) : null;
 
         return ImmutablePurpleVariant.builder()
@@ -59,7 +62,6 @@ public class PurpleVariantFactory
                 .canonicalImpact(extractCanonicalImpact(context))
                 .otherImpacts(purpleVariantTranscriptImpacts)
                 .hotspot(HotspotType.valueOf(context.hotspot().name()))
-                .reported(context.reported())
                 .tumorDepth(PurpleConversion.convert(context))
                 .rnaDepth(rnaDepth)
                 .adjustedCopyNumber(context.adjustedCopyNumber())
@@ -89,6 +91,7 @@ public class PurpleVariantFactory
                 .inSpliceRegion(purpleContext.spliceRegion())
                 .effects(purpleVariantEffects)
                 .codingEffect(PurpleConversion.convert(purpleContext.canonicalCodingEffect()))
+                .reported(purpleContext.reported())
                 .build();
     }
 }

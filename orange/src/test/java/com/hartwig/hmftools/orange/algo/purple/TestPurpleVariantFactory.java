@@ -26,7 +26,6 @@ public final class TestPurpleVariantFactory
                 .worstCodingEffect(PurpleCodingEffect.UNDEFINED)
                 .canonicalImpact(impactBuilder().build())
                 .hotspot(HotspotType.NON_HOTSPOT)
-                .reported(false)
                 .tumorDepth(depthBuilder().build())
                 .rnaDepth(null)
                 .adjustedCopyNumber(0)

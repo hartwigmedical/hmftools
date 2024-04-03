@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import static java.util.Collections.emptyList;
+
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS_DELIM;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 
@@ -131,6 +135,8 @@ public class PurpleVariantContextLoader
         List<Integer> localPhaseSets =
                 variantContext.hasAttribute(LOCAL_PHASE_SET) ? variantContext.getAttributeAsIntList(LOCAL_PHASE_SET, 0) : null;
 
+        List<String> reportableTranscripts = extractReportableTranscripts(variantContext);
+
         return ImmutablePurpleVariantContext.builder()
                 .chromosome(contextDecorator.chromosome())
                 .position(contextDecorator.position())
@@ -160,6 +166,7 @@ public class PurpleVariantContextLoader
                 .repeatCount(contextDecorator.repeatCount())
                 .subclonalLikelihood(variantContext.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
                 .localPhaseSets(localPhaseSets)
+                .reportableTranscripts(reportableTranscripts)
                 .build();
     }
 
@@ -177,6 +184,15 @@ public class PurpleVariantContextLoader
                 .filter(AllelicDepth::containsAllelicDepth)
                 .map(AllelicDepth::fromGenotype)
                 .orElse(null);
+    }
+
+    @NotNull
+    private static List<String> extractReportableTranscripts(VariantContext context)
+    {
+        return context.hasAttribute(REPORTABLE_TRANSCRIPTS)
+                ? Arrays.asList(context.getAttributeAsString(REPORTABLE_TRANSCRIPTS, "")
+                .split("\\" + REPORTABLE_TRANSCRIPTS_DELIM, -1))
+                : emptyList();
     }
 
     private static boolean sampleInFile(final String sample, final VCFHeader header)

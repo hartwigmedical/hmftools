@@ -29,9 +29,12 @@ public class VariantEntryFactoryTest
     public void canCreateVariantEntries()
     {
         PurpleVariant driverVariant = TestPurpleVariantFactory.builder()
-                .reported(true)
                 .gene("gene 1")
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().transcript("transcript 1").hgvsProteinImpact("impact 1").build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder()
+                        .transcript("transcript 1")
+                        .hgvsProteinImpact("impact 1")
+                        .reported(true)
+                        .build())
                 .addOtherImpacts(TestPurpleVariantFactory.impactBuilder().transcript("transcript 2").hgvsProteinImpact("impact 2").build())
                 .adjustedCopyNumber(2)
                 .adjustedVAF(1.3)
@@ -124,16 +127,22 @@ public class VariantEntryFactoryTest
     public void shouldGenerateMultipleVariantsForNonCanonicalAndCanonicalDriver()
     {
         PurpleVariant driverVariant1 = TestPurpleVariantFactory.builder()
-                .reported(true)
                 .gene("gene 1")
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().transcript("transcript 1").hgvsProteinImpact("impact 1").build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder()
+                        .transcript("transcript 1")
+                        .hgvsProteinImpact("impact 1")
+                        .reported(true)
+                        .build())
                 .addOtherImpacts(TestPurpleVariantFactory.impactBuilder().transcript("transcript 2").hgvsProteinImpact("impact 2").build())
                 .build();
 
         PurpleVariant driverVariant2 = TestPurpleVariantFactory.builder()
-                .reported(true)
                 .gene("gene 1")
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().transcript("transcript 1").hgvsProteinImpact("impact 3").build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder()
+                        .transcript("transcript 1")
+                        .hgvsProteinImpact("impact 3")
+                        .reported(true)
+                        .build())
                 .addOtherImpacts(TestPurpleVariantFactory.impactBuilder().transcript("transcript 2").hgvsProteinImpact("impact 4").build())
                 .build();
 
