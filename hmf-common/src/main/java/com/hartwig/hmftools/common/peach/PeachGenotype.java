@@ -42,6 +42,7 @@ public abstract class PeachGenotype
     };
 
     @NotNull
+    @Value.Derived
     public String haplotype()
     {
         return convertToHaplotypeString(allele(), alleleCount());
