@@ -89,8 +89,6 @@ public final class PeachGenotypeFile
                     .function(values[functionIndex])
                     .linkedDrugs(values[linkedDrugsIndex])
                     .urlPrescriptionInfo(values[urlPrescriptionInfoIndex])
-                    .panelVersion(null)
-                    .repoVersion(null)
                     .build();
 
             genotypes.add(genotype);

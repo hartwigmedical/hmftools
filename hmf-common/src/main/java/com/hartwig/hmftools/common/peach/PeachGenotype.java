@@ -27,11 +27,19 @@ public abstract class PeachGenotype
     @NotNull
     public abstract String urlPrescriptionInfo();
 
-    @Nullable
-    public abstract String panelVersion();
+    @Deprecated
+    @Value.Default
+    public String panelVersion()
+    {
+        return "";
+    };
 
-    @Nullable
-    public abstract String repoVersion();
+    @Deprecated
+    @Value.Default
+    public String repoVersion()
+    {
+        return "";
+    };
 
     @NotNull
     public String haplotype()

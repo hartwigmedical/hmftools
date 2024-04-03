@@ -69,8 +69,6 @@ public class PeachGenotypeExtractor
                 .function(printableHaplotypeFunction)
                 .linkedDrugs(printableDrugNamesString)
                 .urlPrescriptionInfo(printablePresciptionUrlsString)
-                .panelVersion(null)
-                .repoVersion(null)
                 .build();
     }
 

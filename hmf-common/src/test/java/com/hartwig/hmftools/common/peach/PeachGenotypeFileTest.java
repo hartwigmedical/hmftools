@@ -69,8 +69,8 @@ public class PeachGenotypeFileTest
         assertEquals("Reduced Function", peachGenotypes.get(0).function());
         assertEquals("Capecitabine;otherDrug", peachGenotypes.get(0).linkedDrugs());
         assertEquals("link;otherLink", peachGenotypes.get(0).urlPrescriptionInfo());
-        assertNull(peachGenotypes.get(0).panelVersion());
-        assertNull(peachGenotypes.get(0).repoVersion());
+        assertEquals("", peachGenotypes.get(0).panelVersion());
+        assertEquals("", peachGenotypes.get(0).repoVersion());
 
         assertEquals("GENE2", peachGenotypes.get(1).gene());
         assertEquals("*3_HOM", peachGenotypes.get(1).haplotype());
@@ -79,8 +79,8 @@ public class PeachGenotypeFileTest
         assertEquals("Normal Function", peachGenotypes.get(1).function());
         assertEquals("Capecitabine", peachGenotypes.get(1).linkedDrugs());
         assertEquals("link", peachGenotypes.get(1).urlPrescriptionInfo());
-        assertNull(peachGenotypes.get(0).panelVersion());
-        assertNull(peachGenotypes.get(0).repoVersion());
+        assertEquals("", peachGenotypes.get(1).panelVersion());
+        assertEquals("", peachGenotypes.get(1).repoVersion());
 
         assertEquals("GENE3", peachGenotypes.get(2).gene());
         assertEquals("Unresolved Haplotype", peachGenotypes.get(2).haplotype());
@@ -89,8 +89,8 @@ public class PeachGenotypeFileTest
         assertEquals("Unknown Function", peachGenotypes.get(2).function());
         assertEquals("Capecitabine", peachGenotypes.get(2).linkedDrugs());
         assertEquals("link", peachGenotypes.get(2).urlPrescriptionInfo());
-        assertNull(peachGenotypes.get(0).panelVersion());
-        assertNull(peachGenotypes.get(0).repoVersion());
+        assertEquals("", peachGenotypes.get(2).panelVersion());
+        assertEquals("", peachGenotypes.get(2).repoVersion());
     }
 
     @Test
@@ -124,8 +124,8 @@ public class PeachGenotypeFileTest
                         .function("Normal Function")
                         .linkedDrugs("Capecitabine")
                         .urlPrescriptionInfo("link")
-                        .panelVersion(null)
-                        .repoVersion(null)
+                        .panelVersion("")
+                        .repoVersion("")
                         .build(),
                 ImmutablePeachGenotype.builder()
                         .gene("GENE3")
