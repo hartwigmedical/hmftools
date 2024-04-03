@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from functools import cached_property
-from typing import Iterable, TYPE_CHECKING, Optional
+from typing import Iterable, TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -10,35 +10,15 @@ from numpy.typing import NDArray
 from pandas.core.dtypes.common import is_integer_dtype
 from sklearn.compose import make_column_selector
 
-from cuppa.constants import CLF_NAME_ALIASES, CUPPA_PREDICTION_INDEX_NAMES
+from cuppa.constants import CLF_GROUPS, SUB_CLF_NAMES
 from cuppa.logger import LoggerMixin
 from cuppa.misc.utils import get_top_cols, check_required_columns, as_categorical
 from cuppa.performance.performance_stats import PerformanceStatsBuilder, PerformanceStats
-from cuppa.visualization.visualization import CuppaVisDataBuilder, CuppaVisPlotter
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from cuppa.classifier.cuppa_classifier import CuppaClassifier
-    from cuppa.visualization.visualization import CuppaVisData
-
-
-def _convert_clf_names_to_aliases(
-    series: pd.Series,
-    aliases: dict[str, str] = CLF_NAME_ALIASES,
-    _logger = logger,
-    verbose: bool = True,
-) -> pd.Series:
-
-    conversions = ", ".join(pd.Series(aliases.keys()) + " -> " + pd.Series(aliases.values()))
-
-    if len(conversions) == 0:
-        _logger.error("`aliases` must not be an empty dict")
-
-    if verbose:
-        _logger.info("Converting the following clf_name values in-place: " + conversions)
-
-    return series.replace(aliases)
 
 
 class CuppaPredictionBuilder(LoggerMixin):
@@ -47,34 +27,27 @@ class CuppaPredictionBuilder(LoggerMixin):
         self,
         cuppa_classifier: CuppaClassifier,
         X: pd.DataFrame,
-        probs_only: bool = False,
-        rm_all_zero_rows: bool = False,
         verbose: bool = False
     ):
         self.cuppa_classifier = cuppa_classifier
         self.X = X
-
-        self.probs_only = probs_only
-        self.rm_all_zero_rows = rm_all_zero_rows
         self.verbose = verbose
 
-    @cached_property
+    INDEX_NAMES = ["sample_id", "data_type", "clf_group", "clf_name", "feat_name", "feat_value"]
+
+    @property
     def class_columns(self) -> list[str]:
         return list(self.cuppa_classifier.classes_)
 
-    @cached_property
+    @property
     def all_columns(self) -> list[str]:
-        return CUPPA_PREDICTION_INDEX_NAMES + self.class_columns
+        return self.INDEX_NAMES + self.class_columns
 
-    def _set_required_columns(self, df: pd.DataFrame):
+    def _set_required_columns(self, df: pd.DataFrame) -> pd.DataFrame:
         return df.reset_index().reindex(self.all_columns, axis=1)
 
-    def _set_required_indexes(self, df: pd.DataFrame):
-        return df.set_index(CUPPA_PREDICTION_INDEX_NAMES)
-
-    def _get_clf_groups(self, clf_names: pd.Series) -> NDArray:
-        mappings = pd.Series(self.cuppa_classifier.CLF_NAMES_GROUPS)
-        return mappings[clf_names].values
+    def _set_required_indexes(self, df: pd.DataFrame) -> pd.DataFrame:
+        return df.set_index(self.INDEX_NAMES)
 
     @cached_property
     def probs(self) -> pd.DataFrame:
@@ -82,7 +55,7 @@ class CuppaPredictionBuilder(LoggerMixin):
             self.logger.info("Getting probabilities")
 
         df = self.cuppa_classifier.predict_proba(self.X)
-        df["data_type"] = "prob" ## Add row info
+        df["data_type"] = "prob"
 
         df = self._set_required_columns(df)
         df = self._set_required_indexes(df)
@@ -95,21 +68,12 @@ class CuppaPredictionBuilder(LoggerMixin):
             self.logger.info("Getting feature contributions")
 
         ## Contribs --------------------------------
-        df = self.cuppa_classifier.feat_contrib(
-            X=self.X,
-            sub_clf_names="event",
-            column_type="classes"
-        )
-
-        ## Per sample, remove features with 0 contribution across all classes
-        if self.rm_all_zero_rows:
-            df = df.loc[~(df == 0).all(axis=1)]
-
+        df = self.cuppa_classifier.feat_contrib(X=self.X, sub_clf_names=SUB_CLF_NAMES.EVENT, column_type="classes")
         df = self._set_required_columns(df)
 
         ## Row info
         df["data_type"] = "feat_contrib"
-        df["clf_group"] = "dna"
+        df["clf_group"] = CLF_GROUPS.DNA
 
         ## Get feat values --------------------------------
         feat_values = self.X[make_column_selector("^event")]
@@ -147,53 +111,11 @@ class CuppaPredictionBuilder(LoggerMixin):
 
         return df
 
-    @staticmethod
-    def _check_classes_in_cv_performance(
-        perf: PerformanceStats,
-        expected_classes: Iterable[str]
-    ) -> PerformanceStats:
-
-        expected_classes = pd.Series(expected_classes)
-        missing_classes = expected_classes[ ~expected_classes.isin(perf["class"]) ]
-
-        if len(missing_classes)>0:
-            logger.error("`cv_performance` is missing some classes: " + ", ".join(missing_classes))
-            raise KeyError
-
-        return perf[perf["class"].isin(expected_classes)]
-
-    @cached_property
-    def cv_performance(self):
-        perf = self.cuppa_classifier.cv_performance
-
-        if perf is None:
-            self.logger.warning("`cv_performance` attr is missing from `cuppa_classifier`")
-            return None
-
-        if perf._is_by_prob_bin:
-            self.logger.error("Cannot parse `cv_performance` when it is split by prob bin")
-
-        perf = self._check_classes_in_cv_performance(perf, self.class_columns)
-
-        return perf.to_cuppa_prediction_format()
-
 
     def build(self) -> CuppaPrediction:
 
-        if self.probs_only:
-            return CuppaPrediction(self.probs)
-
-        df = pd.concat([
-            self.probs,
-            self.feat_contribs,
-            self.sig_quantiles,
-        ])
-
-        ## Make rows from the same sample consecutive
-        df = df.loc[self.X.index]
-
-        ## Add cv performance
-        df = pd.concat([df, self.cv_performance])
+        df = pd.concat([self.probs, self.feat_contribs, self.sig_quantiles])
+        df = df.loc[self.X.index] ## Make rows from the same sample consecutive
 
         return CuppaPrediction.from_data_frame(df)
 
@@ -219,37 +141,11 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
     def is_multi_sample(self) -> bool:
         return len(self.sample_ids.dropna()) > 1
 
-    @cached_property
-    def has_probs_only(self) -> bool:
-        index_values = self.index.get_level_values("data_type").unique()
-        return len(index_values) == 1 and index_values[0] == "prob"
-
-    @property
-    def has_cv_performance(self) -> bool:
-        return "cv_performance" in self.index.get_level_values("data_type")
-
     ## Utility methods ================================
     @staticmethod
     def concat(predictions_list) -> CuppaPrediction:
         predictions_merged = pd.concat(predictions_list, axis=0)
         return CuppaPrediction(predictions_merged)
-
-    def convert_clf_names_to_aliases(
-        self,
-        aliases: dict[str, str] = CLF_NAME_ALIASES,
-        verbose: bool = True
-    ) -> None:
-        index = self.index.to_frame(index=False)
-
-        index["clf_name"] = _convert_clf_names_to_aliases(
-            index["clf_name"],
-            aliases=aliases,
-            _logger=self.logger,
-            verbose=verbose
-        )
-
-        index = pd.MultiIndex.from_frame(index)
-        self.index = index
 
     ## Subtypes / supertypes ================================
     @staticmethod
@@ -291,7 +187,7 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
     ## I/O ================================
     @classmethod
     def from_data_frame(cls, df: pd.DataFrame) -> CuppaPrediction:
-        check_required_columns(df, required_columns=CUPPA_PREDICTION_INDEX_NAMES, from_index=True)
+        check_required_columns(df, required_columns=CuppaPredictionBuilder.INDEX_NAMES, from_index=True)
 
         ## Force column order with Other subtypes as last amongst subtypes
         metadata = cls._columns_to_class_metadata(df.columns)
@@ -339,6 +235,27 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
 
         return cls.from_data_frame(df)
 
+    def subset_probs_by_clf_groups(self, clf_groups: str | list[str] = None, verbose: bool = True) -> CuppaPrediction:
+
+        clf_groups = pd.Series(clf_groups)
+        if not all(clf_groups.isin(CLF_GROUPS.get_all())):
+            self.logger.error("`clf_groups` must be one or more of: " + ", ".join(CLF_GROUPS.get_all()))
+            raise ValueError
+
+        if verbose:
+            self.logger.info("Subsetting probabilties for clf_groups: " + ", ".join(clf_groups))
+
+        indexes = self.index.to_frame(index=False)
+        selected_rows = (
+            (indexes["data_type"] != "prob") |
+            (
+                (indexes["data_type"] == "prob") &
+                (indexes["clf_group"].isin(clf_groups))
+            )
+        )
+
+        return self[selected_rows.values]
+
     def wide_to_long(self) -> pd.DataFrame:
 
         self.columns.name = "cancer_type"
@@ -366,12 +283,7 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
 
     @cached_property
     def probs(self) -> CuppaPrediction:
-
-        if self.has_probs_only:
-            probs = self
-        else:
-            probs = self.get_rows("prob", index_level="data_type")
-
+        probs = self.get_rows("prob", index_level="data_type")
         probs.index = probs.index.droplevel(["data_type", "feat_name", "feat_value"])
         return probs
 
@@ -392,14 +304,6 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
             keys = self.sample_ids[keys]
 
         return self.get_rows(keys=keys, index_level="sample_id")
-
-        ## return self.loc[keys]
-
-    def add_cv_performance(self, perf: PerformanceStats) -> CuppaPrediction:
-
-        perf = CuppaPredictionBuilder._check_classes_in_cv_performance(perf, self.class_columns)
-        perf_formatted = perf.to_cuppa_prediction_format()
-        return self.concat([self, perf_formatted])
 
     ## Downstream output ================================
     def summarize(
@@ -424,38 +328,6 @@ class CuppaPrediction(pd.DataFrame, LoggerMixin):
         pred_summ = builder.build()
 
         return pred_summ
-
-    def get_vis_data(
-        self,
-        sample_id: Optional[str | int] = None,
-        verbose: bool = True
-    ) -> CuppaVisData:
-
-        builder = CuppaVisDataBuilder(
-            predictions = self,
-            sample_id = sample_id,
-            verbose = verbose
-        )
-
-        return builder.build()
-
-    def plot(
-        self,
-        plot_path: str,
-        sample_id: Optional[str | int] = None,
-        verbose: bool = True
-    ) -> None:
-        vis_data = self.get_vis_data(
-            sample_id=sample_id,
-            verbose=verbose
-        )
-
-        plotter = CuppaVisPlotter(
-            vis_data = vis_data,
-            plot_path = plot_path,
-            verbose = verbose
-        )
-        plotter.plot()
 
 
 class CuppaPredSummaryBuilder(LoggerMixin):
@@ -885,18 +757,4 @@ class CuppaPredSummary(pd.DataFrame, LoggerMixin):
         bins: NDArray = np.linspace(0, 1, 6)
     ) -> PerformanceStats:
         return PerformanceStatsBuilder(self, prob_bins=bins).build(by_prob_bin=True)
-
-
-    def convert_clf_names_to_aliases(
-        self,
-        aliases: dict[str, str] = CLF_NAME_ALIASES,
-        verbose: bool = True
-    ) -> None:
-        self["clf_name"] = _convert_clf_names_to_aliases(
-            self["clf_name"],
-            aliases=aliases,
-            _logger=self.logger,
-            verbose=verbose
-        )
-
 

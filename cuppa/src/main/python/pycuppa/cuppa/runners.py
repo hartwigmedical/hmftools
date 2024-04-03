@@ -18,7 +18,7 @@ from cuppa.performance.confusion_matrix import ConfusionMatrix
 from cuppa.sample_data.cuppa_features import CuppaFeaturesPaths, FeatureLoaderOld, FeatureLoaderNew, CuppaFeatures
 from cuppa.sample_data.sample_metadata import SampleMetadata, TrainingSampleSelector
 from cuppa.performance.performance_stats import PerformanceStats
-from cuppa.visualization.visualization import CuppaVisData, CuppaVisPlotter
+from cuppa.visualization.visualization import CuppaVisData, CuppaVisPlotter, CuppaVisDataBuilder
 
 
 class DEFAULT_RUNNER_ARGS:
@@ -32,7 +32,8 @@ class DEFAULT_RUNNER_ARGS:
     excl_chroms: str | list[str] = ["ChrY", "Y"]
     excl_classes: str | list[str] = ["_Other","_Unknown"]
 
-    fusion_overrides_path = DEFAULT_FUSION_OVERRIDES_PATH
+    fusion_overrides_path: str = DEFAULT_FUSION_OVERRIDES_PATH
+    clf_group: str = "all"
 
     skip_cv: bool = False
     cv_folds: int = 10
@@ -85,6 +86,14 @@ class RunnerArgParser:
             help="Path to a CuppaPrediction tsv file containing the cross-validation predictions."
                  "If provided, sample ids found in this file will have their predictions returned from this file"
                  "instead of being computed"
+        )
+
+    def add_clf_group(self):
+        self.parser.add_argument(
+            "--clf_group", type=str,
+            default=DEFAULT_RUNNER_ARGS.clf_group,
+            help="Comma separated list of classifier groups to filter probabilities for."
+                 "Can be 'all' or 'dna'. Default: " + ",".join(DEFAULT_RUNNER_ARGS.clf_group)
         )
 
     def add_sample_id(self) -> None:
@@ -186,6 +195,7 @@ class RunnerArgParser:
 
         self.add_classifier_path()
         self.add_cv_predictions_path()
+        self.add_clf_group()
 
         self.add_using_old_features_format()
         self.add_genome_version()
@@ -395,7 +405,7 @@ class TrainingRunner(LoggerMixin):
         self.cross_validator.fit(cache_training=self.cache_training)
 
     def get_cv_predictions(self) -> None:
-        self.cv_predictions = self.cross_validator.apply_on_test_sets("predict", probs_only=False, n_jobs=1)  ## TODO: add probs_only as a global argument
+        self.cv_predictions = self.cross_validator.apply_on_test_sets("predict", n_jobs=1)
 
     def get_cv_pred_summ(self) -> None:
         predictions = self.cv_predictions
@@ -403,9 +413,6 @@ class TrainingRunner(LoggerMixin):
 
     def get_cv_performance(self) -> None:
         self.cv_performance = self.cv_pred_summ.performance()
-
-    def add_cv_performance_to_cv_predictions(self):
-        self.cv_predictions = self.cv_predictions.add_cv_performance(self.cv_performance)
 
     def get_cv_performance_by_prob_bin(self) -> None:
         self.cv_performance_by_prob_bin = self.cv_pred_summ.performance_by_prob_bin()
@@ -417,7 +424,7 @@ class TrainingRunner(LoggerMixin):
         for clf_name in self.cv_pred_summ.clf_names:
             pred_summ_clf = self.cv_pred_summ.query(f"clf_name=='{clf_name}'")
             confusion_matrix = ConfusionMatrix(pred_summ_clf, clf_name=clf_name)
-            confusion_matrix.plot(os.path.join(confusion_dir, f"confusion.{clf_name}.pdf"), verbose=True)
+            confusion_matrix.plot(os.path.join(confusion_dir, f"confusion.{clf_name}.pdf"))
 
     @cached_property
     def cv_report_dir(self) -> str:
@@ -430,7 +437,6 @@ class TrainingRunner(LoggerMixin):
         self.get_cv_predictions()
         self.get_cv_pred_summ()
         self.get_cv_performance()
-        self.add_cv_performance_to_cv_predictions()
         self.get_cv_performance_by_prob_bin()
 
         self.cv_pred_summ.to_tsv(os.path.join(self.cv_report_dir, "pred_summ.tsv.gz"), verbose=True)
@@ -464,7 +470,7 @@ class TrainingRunner(LoggerMixin):
 
     def export_final_model(self) -> None:
         path = os.path.join(self.output_dir, "cuppa_classifier.pickle.gz")
-        self.cuppa_classifier.to_file(path, verbose=True)
+        self.cuppa_classifier.to_file(path)
 
     ## Run ================================
     def run(self) -> None:
@@ -497,6 +503,7 @@ class PredictionRunner(LoggerMixin):
         excl_chroms: str | list[str] = DEFAULT_RUNNER_ARGS.excl_chroms,
         cv_predictions_path: str = None,
         cv_predictions: CuppaPrediction | None = None,
+        clf_group: str = DEFAULT_RUNNER_ARGS.clf_group,
         log_to_file: bool = DEFAULT_RUNNER_ARGS.log_to_file,
         log_path: Optional[str] = DEFAULT_RUNNER_ARGS.log_path
     ):
@@ -514,6 +521,7 @@ class PredictionRunner(LoggerMixin):
 
         self.cv_predictions_path = cv_predictions_path
         self.cv_predictions = cv_predictions
+        self.clf_group = clf_group
 
         self.log_to_file = log_to_file
         self.log_path = log_path
@@ -591,13 +599,27 @@ class PredictionRunner(LoggerMixin):
         predictions = CuppaPrediction.concat(predictions)
         predictions = predictions.loc[self.X.index]
 
+        if self.clf_group == "all":
+            pass
+        elif self.clf_group == "dna":
+            predictions = predictions.subset_probs_by_clf_groups("dna")
+        else:
+            self.logger.error("`clf_group` must be 'all' or 'dna'")
+            raise ValueError
+
         self.predictions = predictions
 
     def get_pred_summ(self) -> None:
         self.pred_summ = self.predictions.summarize(show_extra_info=True, verbose=True)
 
     def get_vis_data(self) -> None:
-        self.vis_data = self.predictions.get_vis_data()
+        builder = CuppaVisDataBuilder(
+            predictions = self.predictions,
+            sample_id = self.sample_id,
+            cv_performance = self.cuppa_classifier.cv_performance
+        )
+
+        self.vis_data = builder.build()
 
     def add_filename_affixes(self, filename: str):
         if self.sample_id is not None:

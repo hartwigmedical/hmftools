@@ -21,6 +21,7 @@ class TestCuppaVisData:
 
         builder = CuppaVisDataBuilder(
             predictions=MockCvOutput.predictions,
+            cv_performance=MockCvOutput.performance,
             sample_id=1,
             require_all_feat_types=False ## Mock data is missing 'trait' and 'virus' features
         )

@@ -1,10 +1,15 @@
 from __future__ import annotations
+from typing import Iterable
+
+import pandas as pd
+import numpy as np
 
 try:
     from importlib import resources as impresources
 except ImportError:
     ## Try `importlib_resources` backported for Python<3.7
     import importlib_resources as impresources
+
 
 ## Classifier ================================
 class SUB_CLF_NAMES:
@@ -14,6 +19,17 @@ class SUB_CLF_NAMES:
 
     GENE_EXP = "gene_exp"
     ALT_SJ = "alt_sj"
+
+    @classmethod
+    def get_dna_clf_names(cls) -> list[str]:
+        return [cls.GEN_POS, cls.SNV96, cls.EVENT]
+
+    @classmethod
+    def get_rna_clf_names(cls) -> list[str]:
+        return [cls.GENE_EXP, cls.ALT_SJ]
+
+
+SIG_QUANTILE_TRANSFORMER_NAME = "sig"
 
 
 class META_CLF_NAMES:
@@ -28,24 +44,40 @@ class LAYER_NAMES:
     COMBINED = "prob_combiner"
 
 
-CLF_GROUPS = {
-    META_CLF_NAMES.COMBINED: "combined",
-    META_CLF_NAMES.DNA_COMBINED: "dna",
-    META_CLF_NAMES.RNA_COMBINED: "rna",
+class CLF_GROUPS:
+    COMBINED = "combined"
+    DNA = "dna"
+    RNA = "rna"
 
-    SUB_CLF_NAMES.GEN_POS: "dna",
-    SUB_CLF_NAMES.SNV96: "dna",
-    SUB_CLF_NAMES.EVENT: "dna",
+    @classmethod
+    def get_all(cls) -> list[str]:
+        return [cls.COMBINED, cls.DNA, cls.RNA]
 
-    SUB_CLF_NAMES.GENE_EXP: "rna",
-    SUB_CLF_NAMES.ALT_SJ: "rna"
-}
+    @classmethod
+    def get_clf_group_name_mappings(cls) -> pd.Series:
+        mappings = {
+            META_CLF_NAMES.COMBINED:        cls.COMBINED,
 
-CLF_NAME_ALIASES = {
-    SUB_CLF_NAMES.GEN_POS: "rmd"
-}
+            META_CLF_NAMES.DNA_COMBINED:    cls.DNA,
+            SUB_CLF_NAMES.GEN_POS:          cls.DNA,
+            SUB_CLF_NAMES.SNV96:            cls.DNA,
+            SUB_CLF_NAMES.EVENT:            cls.DNA,
 
-CUPPA_PREDICTION_INDEX_NAMES = ["sample_id", "data_type", "clf_group", "clf_name", "feat_name", "feat_value"]
+            META_CLF_NAMES.RNA_COMBINED:    cls.RNA,
+            SUB_CLF_NAMES.GENE_EXP:         cls.RNA,
+            SUB_CLF_NAMES.ALT_SJ:           cls.RNA
+        }
+
+        return pd.Series(mappings)
+
+    @classmethod
+    def from_clf_names(cls, clf_names: Iterable) -> np.array:
+        clf_names = np.array(clf_names)
+        mappings = cls.get_clf_group_name_mappings()
+        return mappings[clf_names].values
+
+
+CLF_NAMES = CLF_GROUPS.get_clf_group_name_mappings().keys()
 
 
 ## Paths ================================
