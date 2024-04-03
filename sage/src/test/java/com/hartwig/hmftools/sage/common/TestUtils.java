@@ -30,7 +30,9 @@ public class TestUtils
 
     public static final MockRefGenome MOCK_REF_GENOME = new MockRefGenome();
 
-    private static final IndexedBases REF_BASES = new IndexedBases(550, 0, "TGTTTCTGTTTC".getBytes());
+    // private static final IndexedBases INDEXED_REF_BASES = new IndexedBases(550, 0, "TGTTTCTGTTTC".getBytes());
+    private static final RefSequence REF_BASES = new RefSequence(550, "TGTTTCTGTTTC".getBytes());
+
     public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG, RECALIBRATION, REF_BASES, MOCK_REF_GENOME );
 
     public static SageConfig createSageConfig()

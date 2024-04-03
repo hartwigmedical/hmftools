@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.sage.common;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -9,29 +12,76 @@ import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class RefSequence
 {
-    public final int End;
     public final int Start;
-    public final IndexedBases IndexedBases;
+    public final int End;
+    public final byte[] Bases;
 
     private static final int BUFFER = 1000;
 
     public RefSequence(final ChrBaseRegion region, final RefGenomeInterface refGenome)
     {
         final int sequenceEnd = refGenome.getChromosomeLength(region.Chromosome);
-        Start = Math.max(1, region.start() - BUFFER);
-        End = Math.min(sequenceEnd, region.end() + BUFFER);
-        final byte[] seqBases = refGenome.getBases(region.Chromosome, Start, End);
-        IndexedBases = new IndexedBases(Start, 0, seqBases);
+
+        Start = max(1, region.start() - BUFFER);
+        End = min(sequenceEnd, region.end() + BUFFER);
+        Bases = refGenome.getBases(region.Chromosome, Start, End);
+    }
+
+    public RefSequence(final int startPosition, final byte[] refBases)
+    {
+        Start = startPosition;
+        End = startPosition + refBases.length - 1;
+        Bases = refBases;
+    }
+
+    public int index(int position)
+    {
+        return position - Start;
+    }
+
+    public int length() { return Bases.length; }
+
+    public boolean containsPosition(int position)
+    {
+        int index = index(position);
+        return index >= 0 && index < Bases.length;
+    }
+
+    public byte base(int position) { return Bases[index(position)]; }
+
+    public String indexBases(int start, int end)
+    {
+        if(start < 0 || end >= Bases.length || start > end)
+            return null;
+
+        return new String(Bases, start, end - start + 1);
+    }
+
+    public String positionBases(int posStart, int posEnd)
+    {
+        int start = index(posStart);
+        int length = posEnd - posStart;
+        int end = start + length;
+
+        if(start < 0 || end >= Bases.length || start > end)
+            return null;
+
+        return new String(Bases, start, length + 1);
+    }
+
+    public byte[] trinucleotideContext(int position)
+    {
+        int index = index(position);
+        return new byte[] { Bases[index - 1], Bases[index], Bases[index + 1] };
     }
 
     @VisibleForTesting
     public RefSequence(final ChrBaseRegion region, final ReferenceSequenceFile refGenome)
     {
         final int sequenceEnd = refGenome.getSequenceDictionary().getSequence(region.Chromosome).getSequenceLength();
-        Start = Math.max(1, region.start() - BUFFER);
-        End = Math.min(sequenceEnd, region.end() + BUFFER);
-        final byte[] seqBases = refGenome.getSubsequenceAt(region.Chromosome, Start, End).getBases();
-        IndexedBases = new IndexedBases(Start, 0, seqBases);
+        Start = max(1, region.start() - BUFFER);
+        End = min(sequenceEnd, region.end() + BUFFER);
+        Bases = refGenome.getSubsequenceAt(region.Chromosome, Start, End).getBases();
     }
 
     @VisibleForTesting
@@ -39,10 +89,8 @@ public class RefSequence
     {
         Start = sequence.getContigIndex() + 1;
         End = Start + sequence.getBases().length - 1;
-        IndexedBases = new IndexedBases(Start, 0, sequence.getBases());
+        Bases = sequence.getBases();
     }
 
-    // returns reference sequence spanning read with index pointing to alignment start
-    public IndexedBases alignment() { return IndexedBases; }
 
 }

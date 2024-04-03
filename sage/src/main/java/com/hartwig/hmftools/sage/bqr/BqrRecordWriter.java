@@ -32,7 +32,7 @@ public class BqrRecordWriter
 
     private BufferedWriter initialisePositionWriter(final String sampleId)
     {
-        if(!mConfig.QualityRecalibration.WritePositions)
+        if(!mConfig.BQR.WritePositions)
             return null;
 
         try
@@ -89,7 +89,7 @@ public class BqrRecordWriter
 
     private BufferedWriter initialiseReadWriter(final String sampleId)
     {
-        if(!mConfig.QualityRecalibration.WriteReads)
+        if(!mConfig.BQR.WriteReads)
             return null;
 
         try

@@ -73,10 +73,8 @@ public class RegionAppendTask implements Callable
     {
         SG_LOGGER.trace("{}: region({}) finding evidence", mTaskId, mRegion);
 
-        RefSequence refSequence = new RefSequence(mRegion, mRefGenomeFile);
-
         List<Candidate> candidates = mOriginalVariants.stream()
-                .map(x -> CandidateSerialization.toCandidate(x, refSequence)).collect(Collectors.toList());
+                .map(x -> CandidateSerialization.toCandidate(x)).collect(Collectors.toList());
 
         ReadContextCounters readContextCounters = mEvidenceStage.findEvidence
                 (mRegion, "reference", mConfig.Common.ReferenceIds, candidates, false);

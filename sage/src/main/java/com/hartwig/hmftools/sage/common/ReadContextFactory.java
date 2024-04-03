@@ -9,12 +9,6 @@ import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 
 import java.util.Optional;
 
-import com.hartwig.hmftools.sage.common.MicrohomologyContext;
-import com.hartwig.hmftools.sage.common.RepeatContext;
-import com.hartwig.hmftools.sage.common.RepeatContextFactory;
-import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.ReadContext;
-
 import org.apache.logging.log4j.util.Strings;
 
 import htsjdk.samtools.SAMRecord;
@@ -31,9 +25,9 @@ public class ReadContextFactory
     }
 
     public ReadContext createDelContext(
-            final String ref, int refPosition, int readIndex, final byte[] readBases, final IndexedBases refBases)
+            final String ref, int refPosition, int readIndex, final byte[] readBases, final RefSequence refSequence)
     {
-        int refIndex = refBases.index(refPosition);
+        int refIndex = refSequence.index(refPosition);
 
         final MicrohomologyContext microhomologyContext = microhomologyAtDeleteFromReadSequence(readIndex, ref, readBases);
         final MicrohomologyContext microhomologyContextWithRepeats = expandMicrohomologyRepeats(microhomologyContext);
@@ -43,7 +37,7 @@ public class ReadContextFactory
         int endIndex = max(
                 microhomologyContextWithRepeats.position() + MIN_CORE_DISTANCE, microhomologyContextWithRepeats.position() + length);
 
-        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1, refBases.Bases);
+        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1, refSequence.Bases);
         if(refRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = refRepeatContext.get();
@@ -69,9 +63,9 @@ public class ReadContextFactory
     }
 
     public ReadContext createInsertContext(
-            final String alt, int refPosition, int readIndex, final byte[] readBases, final IndexedBases refBases)
+            final String alt, int refPosition, int readIndex, final byte[] readBases, final RefSequence refSequence)
     {
-        int refIndex = refBases.index(refPosition);
+        int refIndex = refSequence.index(refPosition);
 
         final MicrohomologyContext microhomologyContext = microhomologyAtInsert(readIndex, alt.length(), readBases);
         final MicrohomologyContext microhomologyContextWithRepeats = expandMicrohomologyRepeats(microhomologyContext);
@@ -81,7 +75,7 @@ public class ReadContextFactory
         int endIndex = max(
                 microhomologyContextWithRepeats.position() + MIN_CORE_DISTANCE, microhomologyContextWithRepeats.position() + length);
 
-        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1, refBases.Bases);
+        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1, refSequence.Bases);
         if(refRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = refRepeatContext.get();
@@ -109,12 +103,12 @@ public class ReadContextFactory
                 refPosition, readIndex, startIndex, endIndex, mFlankSize, readBases);
     }
 
-    public ReadContext createSNVContext(int refPosition, int readIndex, final SAMRecord record, final IndexedBases refBases)
+    public ReadContext createSNVContext(int refPosition, int readIndex, final SAMRecord record, final RefSequence refSequence)
     {
-        return createMNVContext(refPosition, readIndex, 1, record.getReadBases(), refBases);
+        return createMNVContext(refPosition, readIndex, 1, record.getReadBases(), refSequence);
     }
 
-    public ReadContext createMNVContext(int refPosition, int readIndex, int length, final byte[] readBases, final IndexedBases refBases)
+    public ReadContext createMNVContext(int refPosition, int readIndex, int length, final byte[] readBases, final RefSequence refBases)
     {
         int refIndex = refBases.index(refPosition);
         int startIndex = readIndex - MIN_CORE_DISTANCE;

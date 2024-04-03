@@ -5,13 +5,10 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
-import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.bqr.BqrConfig.useReadType;
 import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
 import static com.hartwig.hmftools.sage.evidence.ArtefactContext.NOT_APPLICABLE_BASE_QUAL;
-
-import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -19,7 +16,7 @@ import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.bqr.BqrReadType;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
-import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
@@ -29,7 +26,7 @@ public class QualityCalculator
 {
     private final QualityConfig mConfig;
     private final BqrRecordMap mQualityRecalibrationMap;
-    private final IndexedBases mRefBases;
+    private final RefSequence mRefBases;
     private final boolean mUseReadType;
     private final SequencingType mSequencingType;
     private final UltimaQualCalculator mUltimaQualCalculator;
@@ -38,7 +35,7 @@ public class QualityCalculator
     private static final String NO_MODEL_NAME = "";
 
     public QualityCalculator(
-            final SageConfig config, final BqrRecordMap qualityRecalibrationMap, final IndexedBases refBases,
+            final SageConfig config, final BqrRecordMap qualityRecalibrationMap, final RefSequence refBases,
             final RefGenomeInterface refGenome)
     {
         mConfig = config.Quality;

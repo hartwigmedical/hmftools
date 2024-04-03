@@ -1,14 +1,11 @@
 package com.hartwig.hmftools.sage.common;
 
 import static java.lang.Math.max;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
-
-import com.hartwig.hmftools.sage.common.RefSequence;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -16,9 +13,9 @@ import htsjdk.samtools.util.SequenceUtil;
 
 public final class NumberEvents
 {
-    public static int calc(final SAMRecord record, final RefSequence refGenome)
+    public static int calc(final SAMRecord record, final RefSequence refSequence)
     {
-        int nm = rawNM(record, refGenome);
+        int nm = rawNM(record, refSequence);
 
         int additionalIndels = 0;
 
@@ -51,8 +48,8 @@ public final class NumberEvents
             return (int) nm;
         }
 
-        int offset = refGenome.alignment().Position - refGenome.alignment().Index - 1;
-        return SequenceUtil.calculateSamNmTag(record, refGenome.alignment().Bases, offset);
+        int offset = refGenome.Start - 1;
+        return SequenceUtil.calculateSamNmTag(record, refGenome.Bases, offset);
     }
 
     public static int calcWithMnvRaw(int numberOfEvents, final String ref, final String alt)

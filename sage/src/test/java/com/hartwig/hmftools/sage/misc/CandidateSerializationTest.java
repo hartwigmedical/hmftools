@@ -41,8 +41,8 @@ public class CandidateSerializationTest
     public static Candidate decode(String line)
     {
         VariantContext context = CODEC.decode(line);
-        IndexedBases cheatRefBases = CandidateSerialization.readBases(context);
-        return CandidateSerialization.toCandidate(context, cheatRefBases, cheatRefBases);
+        IndexedBases indexedReadBases = CandidateSerialization.readBases(context);
+        return CandidateSerialization.toCandidate(context, indexedReadBases);
     }
 
     @Test
@@ -54,7 +54,6 @@ public class CandidateSerializationTest
         final String expectedMH = "ATGA";
         final int expectedIndex = 1;
         final int expositionPosition = 1000;
-        final IndexedBases refBases = IndexedBasesTest.createIndexedBases(expositionPosition, expectedIndex, "AA", "TA", "ATG", "CG", "TT");
         final IndexedBases readBases = IndexedBasesTest.createIndexedBases(expositionPosition, expectedIndex, "AA", "TA", "ACG", "CG", "TT");
 
         final ReadContext readContext = new ReadContext(
@@ -66,7 +65,7 @@ public class CandidateSerializationTest
 
         final VariantContext serialized = toContext(candidate);
         final IndexedBases deserializedReadBases = CandidateSerialization.readBases(serialized);
-        final Candidate deserialized = CandidateSerialization.toCandidate(serialized, deserializedReadBases, refBases);
+        final Candidate deserialized = CandidateSerialization.toCandidate(serialized, deserializedReadBases);
 
         assertEqual(candidate, deserialized);
         assertEquals(5, candidate.readContext().readBasesPositionIndex());

@@ -156,7 +156,7 @@ public class SageAppendApplication
         BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(
                 mConfig.Common, mRefGenome, "", Collections.emptyList(), Collections.emptyList());
 
-        if(mConfig.Common.QualityRecalibration.ExcludeKnown)
+        if(mConfig.Common.BQR.ExcludeKnown)
             baseQualityRecalibration.setKnownVariants(existingVariants);
 
         baseQualityRecalibration.produceRecalibrationMap();

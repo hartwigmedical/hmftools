@@ -2,42 +2,23 @@ package com.hartwig.hmftools.sage.common;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.common.test.MockRefGenome;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
-
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.reference.ReferenceSequence;
 
 public class RefSequenceTest
 {
-
-    private static final ReferenceSequence REF_SEQ = new ReferenceSequence("1", 999, new byte[] { 'G', 'A', 'T', 'A', 'C', 'A' });
-
     @Test
-    public void testRNA()
+    public void testRefSequence()
     {
-        RefSequence rnaRefSequence = new RefSequence(REF_SEQ);
-        SAMRecord samRecord = buildSamRecord(990, "20M", "GGGGGAAAAATTTTTCCCCC", "XXXXXXXXXXXXXXXXXXXX");
-        IndexedBases indexedBases = rnaRefSequence.alignment();
-        assertEquals(1000, indexedBases.Position);
-    }
+        String refBases = MockRefGenome.generateRandomBases(101);
+        RefSequence refSequence = new RefSequence(100, refBases.getBytes());
 
-    @NotNull
-    public static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString,
-            @NotNull final String qualities)
-    {
-        final SAMRecord record = new SAMRecord(null);
-        record.setAlignmentStart(alignmentStart);
-        record.setCigarString(cigar);
-        record.setReadString(readString);
-        record.setReadNegativeStrandFlag(false);
-        record.setBaseQualityString(qualities);
-        record.setMappingQuality(20);
-        record.setDuplicateReadFlag(false);
-        record.setReadUnmappedFlag(false);
-        return record;
+        assertEquals(200, refSequence.End);
+        assertEquals(10, refSequence.index(110));
+        assertEquals(101, refSequence.length());
+        assertEquals(refBases.substring(5, 16), refSequence.positionBases(105, 115));
+        assertEquals(refBases.substring(5, 16), refSequence.indexBases(5, 15));
+        assertEquals(refBases.substring(9, 12), new String(refSequence.trinucleotideContext(110)));
     }
 }

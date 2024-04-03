@@ -18,7 +18,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
-import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
@@ -32,10 +31,10 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public final class CandidateSerialization
 {
-    public static Candidate toCandidate(final VariantContext context, final RefSequence refGenome)
+    public static Candidate toCandidate(final VariantContext context)
     {
         final IndexedBases readBases = readBases(context);
-        return toCandidate(context, readBases, refGenome.alignment());
+        return toCandidate(context, readBases);
     }
 
     public static IndexedBases readBases(final VariantContext context)
@@ -63,7 +62,7 @@ public final class CandidateSerialization
                 bases);
     }
 
-    public static Candidate toCandidate(final VariantContext context, final IndexedBases readBases, final IndexedBases refBases)
+    public static Candidate toCandidate(final VariantContext context, final IndexedBases readBases)
     {
         SimpleVariant variant = new SimpleVariant(
                 context.getContig(), context.getStart(),

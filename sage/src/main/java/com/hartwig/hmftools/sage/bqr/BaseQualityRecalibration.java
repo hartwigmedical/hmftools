@@ -31,10 +31,8 @@ import com.hartwig.hmftools.common.region.PartitionUtils;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.common.PartitionTask;
 
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -98,13 +96,13 @@ public class BaseQualityRecalibration
 
     public void produceRecalibrationMap()
     {
-        if(!mConfig.QualityRecalibration.Enabled)
+        if(!mConfig.BQR.Enabled)
         {
             buildEmptyRecalibrations();
             return;
         }
 
-        if(mConfig.QualityRecalibration.LoadBqrFiles)
+        if(mConfig.BQR.LoadBqrFiles)
         {
             Map<String,String> sampleFileNames = Maps.newHashMap();
             String outputDir = mConfig.outputDir();
@@ -178,7 +176,7 @@ public class BaseQualityRecalibration
         mSampleRecalibrationMap.put(sampleId, new BqrRecordMap(records));
 
         // write results to file
-        if(mConfig.QualityRecalibration.WriteFile)
+        if(mConfig.BQR.WriteFile)
             writeSampleData(sampleId, records);
 
         recordWriter.close();
@@ -264,10 +262,7 @@ public class BaseQualityRecalibration
     {
         List<ChrBaseRegion> regionTasks = Lists.newArrayList();
 
-        // form regions from 2MB per chromosome and additionally include the coding panel
-        Map<Chromosome,List<BaseRegion>> panelBed = !mPanelBedFile.isEmpty() ? loadBedFileChrMap(mPanelBedFile) : null;
-
-        if(!mConfig.SpecificChrRegions.Regions.isEmpty())
+        if(!mConfig.BQR.UsePanel && !mConfig.SpecificChrRegions.Regions.isEmpty())
         {
             for(ChrBaseRegion region : mConfig.SpecificChrRegions.Regions)
             {
@@ -278,7 +273,7 @@ public class BaseQualityRecalibration
             return regionTasks;
         }
 
-        if(mConfig.QualityRecalibration.FullBam)
+        if(mConfig.BQR.FullBam)
         {
             for(HumanChromosome chromosome : HumanChromosome.values())
             {
@@ -290,6 +285,9 @@ public class BaseQualityRecalibration
 
             return regionTasks;
         }
+
+        // form regions from 2MB per chromosome and additionally include the coding panel
+        Map<Chromosome,List<BaseRegion>> panelBed = !mPanelBedFile.isEmpty() ? loadBedFileChrMap(mPanelBedFile) : null;
 
         for(final SAMSequenceRecord sequenceRecord : mRefGenome.getSequenceDictionary().getSequences())
         {
@@ -303,7 +301,7 @@ public class BaseQualityRecalibration
 
             List<ChrBaseRegion> chrRegionTasks = Lists.newArrayList();
 
-            int start = sequenceRecord.getSequenceLength() - END_BUFFER - mConfig.QualityRecalibration.SampleSize;
+            int start = sequenceRecord.getSequenceLength() - END_BUFFER - mConfig.BQR.SampleSize;
             int end = sequenceRecord.getSequenceLength() - (END_BUFFER + 1);
 
             while(start < end)
@@ -348,7 +346,7 @@ public class BaseQualityRecalibration
 
             BqrFile.write(tsvFile, records.stream().collect(Collectors.toList()));
 
-            if(mConfig.QualityRecalibration.WritePlot)
+            if(mConfig.BQR.WritePlot)
             {
                 RExecutor.executeFromClasspath("r/baseQualityRecalibrationPlot.R", tsvFile);
             }

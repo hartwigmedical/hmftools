@@ -36,10 +36,12 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.vcf.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.candidate.Candidate;
@@ -248,10 +250,9 @@ public class SyntheticVcfWriter
         String refBasesBefore = mRefGenome.getSubsequenceAt(variant.Chromosome, refLocationStart, variant.Position - 1).getBaseString();
 
         String refBasesAfter = mRefGenome.getSubsequenceAt(variant.Chromosome, variant.Position, refLocationEnd).getBaseString();
-        String refLocationBases = refBasesBefore + refBasesAfter;
 
-        // int refPositionIndex = readFlankLength;
-        IndexedBases indexedBases = new IndexedBases(refLocationStart, 0, refLocationBases.getBytes());
+        ChrBaseRegion refRegion = new ChrBaseRegion(variant.Chromosome, refLocationStart, refLocationEnd);
+        RefSequence refSequence = new RefSequence(refRegion, mRefGenome);
 
         // form synthetic read bases
         String readBases = refBasesBefore + variant.Alt + refBasesAfter.substring(variant.Ref.length());
@@ -261,11 +262,11 @@ public class SyntheticVcfWriter
         ReadContext readContext;
 
         if(variant.isDelete())
-            readContext = readContextFactory.createDelContext(variant.Ref, variant.Position, readIndex, readBases.getBytes(), indexedBases);
+            readContext = readContextFactory.createDelContext(variant.Ref, variant.Position, readIndex, readBases.getBytes(), refSequence);
         else if(variant.isInsert())
-            readContext = readContextFactory.createInsertContext(variant.Alt, variant.Position, readIndex, readBases.getBytes(), indexedBases);
+            readContext = readContextFactory.createInsertContext(variant.Alt, variant.Position, readIndex, readBases.getBytes(), refSequence);
         else
-            readContext = readContextFactory.createMNVContext(variant.Position, readIndex, variant.Ref.length(), readBases.getBytes(), indexedBases);
+            readContext = readContextFactory.createMNVContext(variant.Position, readIndex, variant.Ref.length(), readBases.getBytes(), refSequence);
 
         if(readContext.hasIncompleteCore() || readContext.hasIncompleteFlanks())
         {

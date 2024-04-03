@@ -5,10 +5,6 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.ReadContext;
-import com.hartwig.hmftools.sage.common.ReadContextFactory;
-
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +26,7 @@ public class ReadContextFactoryTest
     {
         String refSequence = "GATCATCTAGG";
         String readSequence = "GATCACCTAGG";
-        IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
+        RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("11M", readSequence);
         ReadContext victim = this.victim.createSNVContext(1005, 5, record, refBases);
@@ -42,7 +38,7 @@ public class ReadContextFactoryTest
     {
         String refSequence = "GATCATCTAGG";
         String readSequence = "GAGGCTCATCTAGG";
-        IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
+        RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("2M3I9M", readSequence);
         ReadContext victim = this.victim.createInsertContext("AGGC", 1000, 1, record.getReadBases(), refBases);
@@ -54,7 +50,7 @@ public class ReadContextFactoryTest
     {
         String refSequence = "TGAAAAAAAATCT";
         String readSequence = "TGAAAAAAAAATCT";
-        IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
+        RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("2M1I11M", readSequence);
         ReadContext victim = this.victim.createInsertContext("GA", 1000, 1, record.getReadBases(), refBases);
@@ -66,7 +62,7 @@ public class ReadContextFactoryTest
     {
         String refSequence = "GATCATCTG";
         String readSequence = "GATCATCATCTG";
-        IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
+        RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("1M3I8M", readSequence);
         ReadContext victim = this.victim.createInsertContext("ATCA", 1000, 1, record.getReadBases(), refBases);
@@ -78,7 +74,7 @@ public class ReadContextFactoryTest
     {
         String refSequence = "GATCATCATCTG";
         String readSequence = "GATCATCATCATCTG";
-        IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
+        RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("1M3I10M", readSequence);
         ReadContext victim = this.victim.createInsertContext("ATCA", 1000, 1, record.getReadBases(), refBases);
@@ -90,7 +86,7 @@ public class ReadContextFactoryTest
     {
         String refSequence = "ATGCGATCTTCC";
         String readSequence = "ATGCGATCAATCTTCC";
-        IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
+        RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("5M4I7M", readSequence);
         ReadContext victim = this.victim.createInsertContext("GATCA", 1000, 4, record.getReadBases(), refBases);
@@ -105,9 +101,9 @@ public class ReadContextFactoryTest
         // variant: pos 1025 AT>A
         String refBases =  "ATCTCTCAATGTTGACGGACAGCCTATTTTTGCCAATATCACACTGCCAGGT";
         String readBases = "ATCTCTCAATGTTGACGGACAGCCTATTTTGCCAATATCACACTGCCAGGT";
-        IndexedBases refIndexedBases = new IndexedBases(1000, 0, refBases.getBytes());
+        RefSequence refSequence = new RefSequence(1000, refBases.getBytes());
 
-        ReadContext readContext = READ_CONTEXT_FACTORY.createDelContext("AT", 1025, 25, readBases.getBytes(), refIndexedBases);
+        ReadContext readContext = READ_CONTEXT_FACTORY.createDelContext("AT", 1025, 25, readBases.getBytes(), refSequence);
 
         assertFalse(readContext.hasIncompleteCore());
         assertEquals("CTATTTTGC", readContext.coreString());
@@ -120,7 +116,7 @@ public class ReadContextFactoryTest
     {
         String refSequence = "GATCGGATCGCTT";
         String readSequence = "GATCGCTT";
-        IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
+        RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("1M5D7M", readSequence);
         ReadContext victim = this.victim.createDelContext("GATCGG", 1000, 0, record.getReadBases(), refBases);
@@ -132,7 +128,7 @@ public class ReadContextFactoryTest
     {
         String refSequence = "GATCACCATCTG";
         String readSequence = "GATCATCTG";
-        IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
+        RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("1M3D8M", readSequence);
         ReadContext victim = this.victim.createDelContext("ATCA", 1000, 1, record.getReadBases(), refBases);
@@ -144,7 +140,7 @@ public class ReadContextFactoryTest
     {
         String refSequence = "GATCATCATCTG";
         String readSequence = "GATCATCTG";
-        IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
+        RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("1M3D8M", readSequence);
         ReadContext victim = this.victim.createDelContext("ATCA", 1000, 1, record.getReadBases(), refBases);
@@ -156,7 +152,7 @@ public class ReadContextFactoryTest
     {
         String refSequence = "GATCATCTAGG";
         String readSequence = "GTCATCTAGG";
-        IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
+        RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("1M1D9M", readSequence);
         ReadContext victim = this.victim.createDelContext("GA", 1000, 0, record.getReadBases(), refBases);
@@ -168,7 +164,7 @@ public class ReadContextFactoryTest
     {
         String refSequence = "GATCATCTAGG";
         String readSequence = "GCATCTAGG";
-        IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
+        RefSequence refBases = new RefSequence(1000, refSequence.getBytes());
 
         SAMRecord record = buildSamRecord("1M2D8M", readSequence);
         ReadContext victim = this.victim.createDelContext("GAT", 1000, 0, record.getReadBases(), refBases);
