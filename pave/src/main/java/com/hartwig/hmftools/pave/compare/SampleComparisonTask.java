@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.pave.compare;
 
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
+import static com.hartwig.hmftools.pave.compare.RefVariantData.loadVariantsFromVcf;
 import static com.hartwig.hmftools.pave.impact.PaveUtils.createRightAlignedVariant;
 import static com.hartwig.hmftools.pave.impact.PaveUtils.findVariantImpacts;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
@@ -20,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.pave.GeneDataCache;
 import com.hartwig.hmftools.pave.impact.ImpactClassifier;
@@ -49,7 +54,7 @@ public class SampleComparisonTask implements Callable
     private int mMatchedCount;
 
     public SampleComparisonTask(
-            int taskId, final ComparisonConfig config, RefGenomeInterface refGenome,
+            int taskId, final ComparisonConfig config, final RefGenomeInterface refGenome,
             final ComparisonWriter writer, final GeneDataCache geneDataCache, final Map<String,List<RefVariantData>> sampleVariantsCache)
     {
         mTaskId = taskId;
@@ -98,16 +103,35 @@ public class SampleComparisonTask implements Callable
 
     private void checkSampleDiffs(final String sampleId)
     {
-        List<RefVariantData> refVariants = mSampleVariantsCache.get(sampleId);
+        List<RefVariantData> refVariants = null;
+
+        if(!mSampleVariantsCache.isEmpty())
+        {
+            refVariants = mSampleVariantsCache.get(sampleId);
+        }
+        else
+        {
+            String sampleVcf = convertWildcardSamplePath(mConfig.SampleVCF, sampleId);
+            refVariants = loadVariantsFromVcf(sampleVcf, mConfig);
+        }
 
         if(refVariants == null || refVariants.isEmpty())
+        {
+            PV_LOGGER.error("failed to load sample({}) variants", sampleId);
             return;
+        }
 
         mPerfCounters.get(PC_PROCESS).start();
 
         for(RefVariantData refVariant :refVariants)
         {
-            // generate variant impact data and then write comparison results to CSV file
+            // generate variant impact data and then write comparison results to TSV
+
+            boolean isDriverGene = mGeneDataCache.isDriverPanelGene(refVariant.Gene);
+
+            if(mConfig.OnlyDriverGenes && !isDriverGene)
+                continue;
+
             VariantData variant = new VariantData(
                     refVariant.Chromosome, refVariant.Position, refVariant.Ref, refVariant.Alt);
 
@@ -119,19 +143,19 @@ public class SampleComparisonTask implements Callable
 
                 findVariantImpacts(variant, mImpactClassifier, mGeneDataCache);
 
-                processPhasedVariants(variant.localPhaseSet(), sampleId);
+                processPhasedVariants(variant.localPhaseSet(), sampleId, refVariants);
 
                 if(!variant.hasLocalPhaseSet())
-                    processVariant(sampleId, variant, refVariant);
+                    processVariant(sampleId, variant, refVariant, isDriverGene);
             }
             catch(Exception e)
             {
-                PV_LOGGER.error("error processing var({})", variant);
+                PV_LOGGER.error("error processing var({}): {}", variant, e.toString());
                 e.printStackTrace();
             }
         }
 
-        processPhasedVariants(NO_LOCAL_PHASE_SET, sampleId);
+        processPhasedVariants(NO_LOCAL_PHASE_SET, sampleId, refVariants);
         mImpactClassifier.phasedVariants().clear();
 
         mPerfCounters.get(PC_PROCESS).stop();
@@ -139,23 +163,23 @@ public class SampleComparisonTask implements Callable
         PV_LOGGER.debug("{}: sample({}) processed {} variants", mTaskId, sampleId, refVariants.size());
     }
 
-    private void processPhasedVariants(int currentLocalPhaseSet, final String sampleId)
+    private void processPhasedVariants(int currentLocalPhaseSet, final String sampleId, final List<RefVariantData> refVariants)
     {
         List<VariantData> variants = mImpactClassifier.processPhasedVariants(currentLocalPhaseSet);
-
-        List<RefVariantData> refVariants = mSampleVariantsCache.get(sampleId);
 
         if(variants != null)
         {
             for(VariantData variant : variants)
             {
                 RefVariantData refVariant = refVariants.stream().filter(x -> x.matches(variant)).findFirst().orElse(null);
-                processVariant(sampleId, variant, refVariant);
+                boolean isDriverGene = mGeneDataCache.isDriverPanelGene(refVariant.Gene);
+                processVariant(sampleId, variant, refVariant, isDriverGene);
             }
         }
     }
 
-    private void processVariant(final String sampleId, final VariantData variant, final RefVariantData refVariant)
+    private void processVariant(
+            final String sampleId, final VariantData variant, final RefVariantData refVariant, boolean isDriverGene)
     {
         ++mTotalComparisons;
 
@@ -172,7 +196,7 @@ public class SampleComparisonTask implements Callable
         if(reportable)
             variant.markReported();
 
-        boolean hasDiff = false;
+        List<String> diffs = Lists.newArrayList();
 
         if(variantImpact == null)
         {
@@ -182,10 +206,19 @@ public class SampleComparisonTask implements Callable
         else
         {
             if(mConfig.checkDiffType(REPORTED) && refVariant.Reported != variant.reported())
-                hasDiff = true;
+                diffs.add(format("Reported(%s/%s)", variant.reported(), refVariant.Reported));
 
-            if(mConfig.checkDiffType(CODING_EFFECT) && hasCodingEffectDiff(variantImpact, refVariant))
-                hasDiff = true;
+            if(mConfig.checkDiffType(CODING_EFFECT))
+            {
+                if(!variantImpact.CanonicalEffect.equals(refVariant.CanonicalEffect))
+                    diffs.add(format("CanonicalEffect(%s/%s)", variantImpact.CanonicalEffect, refVariant.CanonicalEffect));
+
+                if(!variantImpact.WorstCodingEffect.equals(refVariant.WorstCodingEffect))
+                    diffs.add(format("WorstCodingEffect(%s/%s)", variantImpact.WorstCodingEffect, refVariant.WorstCodingEffect));
+
+                if(hasCodingEffectDiff(variantImpact, refVariant))
+                    diffs.add(format("CodingEffect(%s/%s)", variantImpact.CanonicalCodingEffect, refVariant.CanonicalCodingEffect));
+            }
 
             VariantTransImpact transImpact = variant.getCanonicalTransImpacts(refVariant.Gene);
 
@@ -195,19 +228,21 @@ public class SampleComparisonTask implements Callable
 
                 if(mConfig.checkDiffType(HGVS_CODING))
                 {
-                    if(hasHgvsCodingDiff(transImpact, raTransImpact, refVariant))
-                        hasDiff = true;
+                    //if(hasHgvsCodingDiff(transImpact, raTransImpact, refVariant))
+                    if(!variantImpact.CanonicalHgvsCoding.equals(refVariant.HgvsCodingImpact))
+                        diffs.add(format("HgvsCoding(%s/%s)", variantImpact.CanonicalHgvsCoding, refVariant.HgvsCodingImpact));
                 }
 
                 if(mConfig.checkDiffType(HGVS_PROTEIN))
                 {
-                    if(hasHgvsProteinDiff(variant, transImpact, raTransImpact, refVariant))
-                        hasDiff = true;
+                    //if(hasHgvsProteinDiff(variant, transImpact, raTransImpact, refVariant))
+                    if(!variantImpact.CanonicalHgvsProtein.equals(refVariant.HgvsProteinImpact))
+                        diffs.add(format("HgvsProtein(%s/%s)", variantImpact.CanonicalHgvsProtein, refVariant.HgvsProteinImpact));
                 }
             }
         }
 
-        if(!hasDiff)
+        if(diffs.isEmpty())
         {
             ++mMatchedCount;
         }
@@ -216,8 +251,8 @@ public class SampleComparisonTask implements Callable
             logComparison(sampleId, refVariant, variant, variantImpact);
         }
 
-        if(hasDiff || mConfig.WriteMatches)
-            mWriter.writeVariantData(sampleId, variant, variantImpact, refVariant, hasDiff);
+        if(!diffs.isEmpty() || mConfig.WriteMatches)
+            mWriter.writeVariantDiff(sampleId, variant, variantImpact, refVariant, isDriverGene, diffs);
     }
 
     private boolean isReported(final VariantData variant, final VariantImpact variantImpact, final RefVariantData refVariant)

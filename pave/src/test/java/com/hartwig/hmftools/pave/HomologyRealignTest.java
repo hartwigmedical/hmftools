@@ -52,7 +52,7 @@ public class HomologyRealignTest
 
         GeneData geneData = createEnsemblGeneData(GENE_ID_1, GENE_NAME_1, CHR_1, POS_STRAND, 20, 90);
 
-        GeneDataCache geneDataCache = new GeneDataCache("", V37, null, false);
+        GeneDataCache geneDataCache = new GeneDataCache("", V37, null);
         geneDataCache.getEnsemblCache().getChrGeneDataMap().put(CHR_1, Lists.newArrayList(geneData));
         geneDataCache.getEnsemblCache().getTranscriptDataMap().put(GENE_ID_1, Lists.newArrayList(transDataPos));
 
@@ -162,7 +162,7 @@ public class HomologyRealignTest
 
         GeneData geneData = createEnsemblGeneData(GENE_ID_1, GENE_NAME_1, CHR_1, NEG_STRAND, negTransData.TransStart, negTransData.TransEnd);
 
-        GeneDataCache geneDataCache = new GeneDataCache("", V37, null, false);
+        GeneDataCache geneDataCache = new GeneDataCache("", V37, null);
         geneDataCache.getEnsemblCache().getChrGeneDataMap().put(CHR_1, Lists.newArrayList(geneData));
         geneDataCache.getEnsemblCache().getTranscriptDataMap().put(GENE_ID_1, Lists.newArrayList(negTransData));
 
@@ -228,7 +228,7 @@ public class HomologyRealignTest
 
         GeneData geneData = createEnsemblGeneData(GENE_ID_1, GENE_NAME_1, CHR_1, POS_STRAND, posTransData.TransStart, posTransData.TransEnd);
 
-        GeneDataCache geneDataCache = new GeneDataCache("", V37, null, false);
+        GeneDataCache geneDataCache = new GeneDataCache("", V37, null);
         geneDataCache.getEnsemblCache().getChrGeneDataMap().put(CHR_1, Lists.newArrayList(geneData));
         geneDataCache.getEnsemblCache().getTranscriptDataMap().put(GENE_ID_1, Lists.newArrayList(posTransData));
 
