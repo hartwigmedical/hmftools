@@ -1,9 +1,8 @@
 import os
 import tempfile
-
 import pandas as pd
 
-from cuppa.tests.mock_data import MockCvOutput, MockVisData
+from tests.mock_data import MockCvOutput, MockVisData
 from cuppa.visualization.visualization import CuppaVisDataBuilder, CuppaVisPlotter, CuppaVisData
 
 

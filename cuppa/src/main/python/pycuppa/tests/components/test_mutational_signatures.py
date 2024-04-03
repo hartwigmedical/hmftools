@@ -1,4 +1,5 @@
 import pandas as pd
+
 from cuppa.components.mutational_signatures import SigCohortQuantileTransformer
 
 

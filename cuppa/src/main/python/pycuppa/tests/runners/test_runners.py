@@ -1,9 +1,8 @@
 import os
 import tempfile
-
 import pandas as pd
 
-from cuppa.tests.mock_data import MockTrainingData, MockCuppaClassifier, MockCvOutput
+from tests.mock_data import MockTrainingData, MockCuppaClassifier, MockCvOutput
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.runners.prediction_runner import PredictionRunner
 from cuppa.runners.training_runner import TrainingRunner

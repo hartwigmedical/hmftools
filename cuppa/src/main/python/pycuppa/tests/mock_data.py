@@ -1,11 +1,11 @@
 import pandas as pd
 import os
 
+from cuppa.constants import MOCK_DATA_DIR
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredSummary
 from cuppa.performance.performance_stats import PerformanceStats
 from cuppa.misc.cached_class_property import cached_class_property
-from cuppa.constants import MOCK_DATA_DIR
 from cuppa.visualization.visualization import CuppaVisData
 
 """

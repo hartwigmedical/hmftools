@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
+
 from cuppa.components.preprocessing import Log1pTransformer, MaxScaler, NaRowFilter
+
 
 class TestLog1pTransformer:
     def test(self):

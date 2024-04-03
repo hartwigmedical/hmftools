@@ -1,4 +1,5 @@
 import pandas as pd
+
 from cuppa.components.preprocessing import MaxScaler, Log1pTransformer
 from cuppa.compose.column_transformer import ColumnTransformer
 

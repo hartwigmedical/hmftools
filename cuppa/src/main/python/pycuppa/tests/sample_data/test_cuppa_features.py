@@ -1,5 +1,5 @@
+from tests.mock_data import MockInputData
 from cuppa.sample_data.cuppa_features import CuppaFeaturesPaths, FeatureLoaderOld, FeatureLoaderNew
-from cuppa.tests.mock_data import MockInputData
 
 
 class TestCuppaFeaturesPaths:

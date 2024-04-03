@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+
 from cuppa.sample_data.sample_metadata import SampleMetadata, TrainingSampleSelector
 
 
