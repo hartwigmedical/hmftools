@@ -1,26 +1,62 @@
 package com.hartwig.hmftools.cup.feature;
 
 import static com.hartwig.hmftools.common.cuppa.CategoryType.FEATURE;
+import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
+import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.MSS;
+import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.HIGH;
+import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.UNKNOWN;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
+import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromFile;
 import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.drivercatalog.DriverType;
+import com.hartwig.hmftools.common.fusion.KnownFusionType;
+import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
+import com.hartwig.hmftools.common.linx.LinxDriver;
+import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurityContextFile;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.cup.prep.CategoryPrep;
 import com.hartwig.hmftools.cup.prep.DataItem;
 import com.hartwig.hmftools.cup.prep.ItemType;
 import com.hartwig.hmftools.cup.prep.PrepConfig;
+import com.hartwig.hmftools.cup.somatics.SomaticDataLoader;
+import com.hartwig.hmftools.cup.somatics.SomaticVariant;
 
 public class FeaturePrep implements CategoryPrep
 {
     private final PrepConfig mConfig;
+
+    LinkedHashMap<DataItem.Index, DataItem> mDataItemsMap = new LinkedHashMap<>();
+
+    private static final String AMP_SUFFIX = ".amp";
+    private static final String MUTATION_SUFFIX = ".mut";
+    private static final String INDEL_SUFFIX = ".indel";
+
+    private static final String PROMISCUOUS_5_SUFFIX = "_PROM5";
+    private static final String PROMISCUOUS_3_SUFFIX = "_PROM3";
+
+    private static final int INDEL_MAX_REPEAT_COUNT = 6;
+    private static final String INDEL_ALB = "ALB";
+    private static final String INDEL_SFTPB = "SFTPB";
+    private static final String INDEL_SLC34A2 = "SLC34A2";
 
     public FeaturePrep(final PrepConfig config)
     {
@@ -30,12 +66,202 @@ public class FeaturePrep implements CategoryPrep
     @Override
     public CategoryType categoryType() { return FEATURE; }
 
-    private static final String AMP_TYPE = ".amp";
-    private static final String MUTATION_TYPE = ".mut";
-    private static final String INDEL_TYPE = ".indel";
+    private void addDataItem(DataItem dataItem)
+    {
+        if(!mDataItemsMap.containsKey(dataItem.Index))
+        {
+            mDataItemsMap.put(dataItem.Index, dataItem);
+        }
+
+        // De-duplicate features by max likelihood
+        float newDataItemValue = Float.parseFloat(dataItem.Value);
+        float existingDataItemValue = Float.parseFloat(mDataItemsMap.get(dataItem.Index).Value);
+
+        if(newDataItemValue > existingDataItemValue)
+        {
+            mDataItemsMap.put(dataItem.Index, dataItem);
+        }
+    }
+
+    public void getDriversFromCatalog(String sampleId)
+    {
+        final List<DriverCatalog> drivers = Lists.newArrayList();
+
+        final String linxDataDir = formSamplePath(mConfig.LinxDir, sampleId);
+        final String purpleDataDir = formSamplePath(mConfig.PurpleDir, sampleId);
+
+        final String linxDriverCatalogFilename = LinxDriver.generateCatalogFilename(linxDataDir, sampleId, true);
+        final String purpleDriverCatalogFilename = DriverCatalogFile.generateSomaticFilename(purpleDataDir, sampleId);
+
+        try
+        {
+            if(Files.exists(Paths.get(linxDriverCatalogFilename)))
+            {
+                drivers.addAll(DriverCatalogFile.read(linxDriverCatalogFilename));
+            } else {
+                drivers.addAll(DriverCatalogFile.read(purpleDriverCatalogFilename));
+            }
+        }
+        catch(Exception e)
+        {
+            CUP_LOGGER.error("sample({}) failed to load drivers", sampleId);
+            System.exit(1);
+        }
+
+        for(final DriverCatalog driver : drivers)
+        {
+            if(DriverType.isGermline(driver.driver()))
+                continue;
+
+            double likelihood = driver.driverLikelihood();
+
+            String featureName = driver.gene();
+            if(driver.driver() == DriverType.AMP || driver.driver() == DriverType.PARTIAL_AMP)
+            {
+                featureName += AMP_SUFFIX;
+            } else {
+                featureName += MUTATION_SUFFIX;
+            }
+
+            DataItem dataItem = new DataItem(DNA, ItemType.DRIVER, featureName, String.valueOf(likelihood));
+            addDataItem(dataItem);
+        }
+    }
+
+    public void getRepeatIndelDrivers(String sampleId)
+    {
+        final String purpleDataDir = formSamplePath(mConfig.PurpleDir, sampleId);
+        final String somaticVcf = purpleSomaticVcfFile(purpleDataDir, sampleId);
+
+        PurityContext purityContext = null;
+        try
+        {
+            purityContext = PurityContextFile.read(purpleDataDir, sampleId);
+        }
+        catch(Exception e)
+        {
+            CUP_LOGGER.error("sample({}) check indels - failed to load purity file( from dir{}): {}", sampleId, purpleDataDir, e.toString());
+            System.exit(1);
+        }
+        boolean isMicrosatelliteStable = purityContext.microsatelliteStatus() == MSS;
+
+        final List<SomaticVariant> variants = SomaticDataLoader.loadSomaticVariantsFromVcf(somaticVcf, Lists.newArrayList());
+        for(SomaticVariant variant : variants)
+        {
+            String gene = variant.Gene;
+
+            // TODO: Look for known hotspot mutations in CupConstants. Potentially rename method
+            // KNOWN_MUTATIONS.stream().anyMatch(x -> x.matches(gene, variant.Type, variant.Ref, variant.Alt, variant.Position));
+
+            boolean isKnownIndelGene = gene.equals(INDEL_ALB) || gene.equals(INDEL_SFTPB) || gene.equals(INDEL_SLC34A2);
+            boolean isRepeatIndelDriver = isKnownIndelGene && variant.Type == INDEL && variant.RepeatCount <= INDEL_MAX_REPEAT_COUNT;
+
+            if(isMicrosatelliteStable && isRepeatIndelDriver)
+            {
+                String featureName = gene + INDEL_SUFFIX;
+                String likelihood = "1.0";
+                DataItem dataItem = new DataItem(DNA, ItemType.DRIVER, featureName, likelihood);
+                addDataItem(dataItem);
+            }
+        }
+    }
+
+    public void getFusions(String sampleId)
+    {
+        final String linxDataDir = formSamplePath(mConfig.LinxDir, sampleId);
+        final String fusionsFilename = LinxFusion.generateFilename(linxDataDir, sampleId);
+
+        List<LinxFusion> fusions = null;
+        try
+        {
+            fusions = LinxFusion.read(fusionsFilename);
+        }
+        catch(Exception e)
+        {
+            CUP_LOGGER.error("sample({}) failed to load fusions: {}", sampleId, e.toString());
+            System.exit(1);
+        }
+
+        for(final LinxFusion fusion : fusions)
+        {
+            if(!fusion.reported())
+                continue;
+
+            boolean isPromiscuous5 = fusion.reportedType().equals(KnownFusionType.PROMISCUOUS_5.toString());
+            boolean isPromiscuous3 = fusion.reportedType().equals(KnownFusionType.PROMISCUOUS_3.toString());
+
+            final String fusionName;
+
+            //TODO: split PROMISCUOUS_BOTH fusions into 2 sepearate DataItem entries?
+            if(isPromiscuous5 || isPromiscuous3){
+
+                if(fusion.likelihood() != FusionLikelihoodType.HIGH)
+                    continue;
+
+                final String[] genes = fusion.name().split("_");
+
+                fusionName = isPromiscuous5 ?
+                        genes[0] + PROMISCUOUS_5_SUFFIX :
+                        genes[1] + PROMISCUOUS_3_SUFFIX;
+            }
+            else
+            {
+                fusionName = fusion.name();
+            }
+
+            String likelihood = "1.0";
+            DataItem dataItem = new DataItem(DNA, ItemType.FUSION, fusionName, likelihood);
+            addDataItem(dataItem);
+        }
+
+    }
+
+    public void getVirusAnnotations(String sampleId)
+    {
+        final String virusDataDir = formSamplePath(mConfig.VirusDir, sampleId);
+
+        String viralAnnotationFilename = AnnotatedVirusFile.generateFileName(virusDataDir, sampleId);
+        final List<AnnotatedVirus> virusAnnotations = Lists.newArrayList();
+
+        try
+        {
+            AnnotatedVirusFile.read(viralAnnotationFilename).stream().filter(AnnotatedVirus::reported).forEach(virusAnnotations::add);
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.error("Failed to load viral annotations file({}): {}", viralAnnotationFilename, e);
+            System.exit(1);
+        }
+
+        if(virusAnnotations.size() == 0)
+            return;
+
+        for(AnnotatedVirus annotatedVirus : virusAnnotations)
+        {
+            if(!annotatedVirus.reported())
+                continue;
+
+            double likelihood = (annotatedVirus.virusDriverLikelihoodType() == HIGH || annotatedVirus.virusDriverLikelihoodType() == UNKNOWN) ? 1 : 0.5;
+            String virusName = ViralInsertionType.fromVirusName(annotatedVirus.name()).toString();
+
+            DataItem dataItem = new DataItem(DNA, ItemType.VIRUS, virusName, String.valueOf(likelihood));
+            addDataItem(dataItem);
+        }
+    }
 
     @Override
     public List<DataItem> extractSampleData(final String sampleId)
+    {
+        getDriversFromCatalog(sampleId);
+        getRepeatIndelDrivers(sampleId);
+        getFusions(sampleId);
+        getVirusAnnotations(sampleId);
+
+        return new ArrayList<>(mDataItemsMap.values());
+    }
+
+    // TODO: remove extractSampleDataOld once extractSampleData is confirmed to work
+    public List<DataItem> extractSampleDataOld(final String sampleId)
     {
         LinkedHashMap<DataItem.Index, DataItem> dataItemsMap = new LinkedHashMap<>();
 
@@ -70,15 +296,15 @@ public class FeaturePrep implements CategoryPrep
                 switch(featureData.Type)
                 {
                     case DRIVER:
-                        dataItem = new DataItem(DNA, ItemType.DRIVER, featureData.Name + MUTATION_TYPE, likelihood);
+                        dataItem = new DataItem(DNA, ItemType.DRIVER, featureData.Name + MUTATION_SUFFIX, likelihood);
                         break;
 
                     case AMP:
-                        dataItem = new DataItem(DNA, ItemType.DRIVER, featureData.Name + AMP_TYPE, likelihood);
+                        dataItem = new DataItem(DNA, ItemType.DRIVER, featureData.Name + AMP_SUFFIX, likelihood);
                         break;
 
                     case INDEL:
-                        dataItem = new DataItem(DNA, ItemType.DRIVER, featureData.Name.replace("INDEL_", "") + INDEL_TYPE, likelihood);
+                        dataItem = new DataItem(DNA, ItemType.DRIVER, featureData.Name.replace("INDEL_", "") + INDEL_SUFFIX, likelihood);
                         break;
 
                     case FUSION:
