@@ -4,10 +4,12 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBa
 import static com.hartwig.hmftools.sage.common.RepeatInfo.findMaxRepeat;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSimpleVariant;
+import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.findHomology;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import com.hartwig.hmftools.sage.common.Microhomology;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.RepeatInfo;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
@@ -107,7 +109,7 @@ public class VariantReadContextTest
     private static final String REF_BASES =
         //             10        20        30        40        50        60        70        80        90
         //   0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
-            "CGCAATATTCGGGTGGGAGTGACCCGATTTTCCAGGTGCGTTCGTCACCGCTGTCTGTGACTCGGAAAGGGAACTCCCTGACCCCTTGCGCTTCCCAGGT"
+            "CGCAATATTCGGGTGGGAGTGACCCGATTTTCCAGGTGCGTTCGTCACCGCTGTCTGTGACTCGGAAAAAAAACTCCCTGACCCCTTGCGCTTCCCAGGT"
           + "GAGGCAATGCCTCGCCCTGCTTCGGCTCGCGCACAGTGCGCGCACACACTGGCCTGCGCCCACTGTCTGGCACTCCCTAGTGAGATGAACCCGGTACCTC";
 
     private static final RefSequence REF_SEQUENCE = new RefSequence(0, REF_BASES.getBytes()); // note zero-based to line up with indices
@@ -140,5 +142,49 @@ public class VariantReadContextTest
         assertEquals("CGATG", readContext.coreStr());
         assertEquals("GTCAC", readContext.leftFlankStr());
         assertEquals("TCTGT", readContext.rightFlankStr());
+    }
+
+    @Test
+    public void testHomology()
+    {
+        SimpleVariant var = createSimpleVariant(26, "A", "AT");
+
+        String readBases = REF_BASES.substring(10, 26) + "AT" + REF_BASES.substring(27, 40);
+        byte[] baseQuals = buildDefaultBaseQuals(readBases.length());
+        String readCigar = "16M1I13M";
+        SAMRecord read = buildSamRecord(10, readCigar, readBases, baseQuals);
+
+        Microhomology homology = findHomology(var, read, 16, REF_SEQUENCE);
+
+        assertNotNull(homology);
+        assertEquals("T", homology.Bases);
+        assertEquals(4, homology.Length);
+
+        var = createSimpleVariant(26, "A", "ATT");
+
+        readBases = REF_BASES.substring(10, 26) + "ATT" + REF_BASES.substring(27, 40);
+        baseQuals = buildDefaultBaseQuals(readBases.length());
+        readCigar = "16M2I13M";
+        read = buildSamRecord(10, readCigar, readBases, baseQuals);
+
+        homology = findHomology(var, read, 16, REF_SEQUENCE);
+
+        assertNotNull(homology);
+        assertEquals("TT", homology.Bases);
+        assertEquals(4, homology.Length);
+
+        // delete
+        var = createSimpleVariant(64, "GAAA", "G");
+
+        readBases = REF_BASES.substring(50, 65) + REF_BASES.substring(69, 80);
+        baseQuals = buildDefaultBaseQuals(readBases.length());
+        readCigar = "15M3D11M";
+        read = buildSamRecord(50, readCigar, readBases, baseQuals);
+
+        homology = findHomology(var, read, 15, REF_SEQUENCE);
+
+        assertNotNull(homology);
+        assertEquals("AAA", homology.Bases);
+        assertEquals(3, homology.Length);
     }
 }

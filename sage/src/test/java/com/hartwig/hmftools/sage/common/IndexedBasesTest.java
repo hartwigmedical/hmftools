@@ -11,6 +11,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.sage.evidence.ReadIndexBases;
+import com.hartwig.hmftools.sage.old.IndexedBases;
+import com.hartwig.hmftools.sage.old.ReadContext;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;

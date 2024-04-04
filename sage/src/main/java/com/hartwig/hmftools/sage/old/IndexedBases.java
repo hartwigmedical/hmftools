@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.common;
+package com.hartwig.hmftools.sage.old;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL;
 
+import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.evidence.ReadIndexBases;
 
 import org.apache.logging.log4j.util.Strings;
@@ -174,7 +175,7 @@ public class IndexedBases
         return length() == otherLength && leftFlankingBases == leftFlankLength && rightFlankingBases == rightFlankLength ? FULL : PARTIAL;
     }
 
-    protected ReadContextMatch coreMatch(
+    public ReadContextMatch coreMatch(
             int otherRefIndex, final byte[] otherBases, final byte[] otherBaseQuals, boolean wildcardAllowed, int maxCoreMismatches)
     {
         int otherLeftCentreIndex = otherLeftCoreIndex(otherRefIndex);
@@ -263,7 +264,7 @@ public class IndexedBases
         return baseQualities[bqIndex] < MATCHING_BASE_QUALITY;
     }
 
-    protected int rightFlankMatchingBases(int otherRefIndex, final byte[] otherBases)
+    public int rightFlankMatchingBases(int otherRefIndex, final byte[] otherBases)
     {
         return rightFlankMatchingBases(otherRefIndex, otherBases, null);
     }
@@ -291,7 +292,7 @@ public class IndexedBases
         return maxLength;
     }
 
-    protected int leftFlankMatchingBases(int otherRefIndex, final byte[] otherBases)
+    public int leftFlankMatchingBases(int otherRefIndex, final byte[] otherBases)
     {
         return leftFlankMatchingBases(otherRefIndex, otherBases, null);
     }

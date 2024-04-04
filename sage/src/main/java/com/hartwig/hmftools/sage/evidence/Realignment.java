@@ -5,8 +5,8 @@ import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 
-import com.hartwig.hmftools.sage.common.RepeatContextFactory;
-import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.old.RepeatContextFactory;
+import com.hartwig.hmftools.sage.old.ReadContext;
 
 public class Realignment
 {

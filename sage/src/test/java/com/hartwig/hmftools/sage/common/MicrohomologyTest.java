@@ -2,6 +2,9 @@ package com.hartwig.hmftools.sage.common;
 
 import static org.junit.Assert.assertEquals;
 
+import com.hartwig.hmftools.sage.old.MicrohomologyContext;
+import com.hartwig.hmftools.sage.old.MicrohomologyContextBuilder;
+
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -14,7 +17,7 @@ public class MicrohomologyTest
         String refGenome = "CGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAG";
         String ref = "CGTAACCAGGAGTGTATT";
 
-        assertEquals(expectedMicrohomology, Microhomology.microhomologyAtDelete(0, refGenome, ref));
+        assertEquals(expectedMicrohomology, MicrohomologyContextBuilder.microhomologyAtDelete(0, refGenome, ref));
     }
 
     @Test
@@ -22,26 +25,26 @@ public class MicrohomologyTest
     {
         final String refSequence = "ATGCGATCTTCC";
 
-        assertEquals("TC", Microhomology.microhomologyAtInsert(7, refSequence, "CTC"));
-        assertEquals("TT", Microhomology.microhomologyAtInsert(7, refSequence, "CTT"));
-        assertEquals("", Microhomology.microhomologyAtInsert(7, refSequence, "CATG"));
-        assertEquals("TT", Microhomology.microhomologyAtInsert(7, refSequence, "CTTA"));
+        assertEquals("TC", MicrohomologyContextBuilder.microhomologyAtInsert(7, refSequence, "CTC"));
+        assertEquals("TT", MicrohomologyContextBuilder.microhomologyAtInsert(7, refSequence, "CTT"));
+        assertEquals("", MicrohomologyContextBuilder.microhomologyAtInsert(7, refSequence, "CATG"));
+        assertEquals("TT", MicrohomologyContextBuilder.microhomologyAtInsert(7, refSequence, "CTTA"));
 
         // Note these two examples below are equivalent
-        assertEquals("ATC", Microhomology.microhomologyAtInsert(4, refSequence, "GATCA"));
-        assertEquals("ATC", Microhomology.microhomologyAtInsert(5, refSequence, "ATCAA"));
-        assertEquals("ATC", Microhomology.microhomologyAtInsert(6, refSequence, "TCAAT"));
-        assertEquals("ATC", Microhomology.microhomologyAtInsert(7, refSequence, "CAATC"));
+        assertEquals("ATC", MicrohomologyContextBuilder.microhomologyAtInsert(4, refSequence, "GATCA"));
+        assertEquals("ATC", MicrohomologyContextBuilder.microhomologyAtInsert(5, refSequence, "ATCAA"));
+        assertEquals("ATC", MicrohomologyContextBuilder.microhomologyAtInsert(6, refSequence, "TCAAT"));
+        assertEquals("ATC", MicrohomologyContextBuilder.microhomologyAtInsert(7, refSequence, "CAATC"));
     }
 
     @Test
     public void testMicrohomologyOnInsertWithReadSequence()
     {
         final String readSequence = "ATGCGATCAATCTTCC";
-        assertEquals("ATC", Microhomology.microhomologyAtInsert(4, 5, readSequence.getBytes()).toString());
-        assertEquals("ATC", Microhomology.microhomologyAtInsert(5, 5, readSequence.getBytes()).toString());
-        assertEquals("ATC", Microhomology.microhomologyAtInsert(6, 5, readSequence.getBytes()).toString());
-        assertEquals("ATC", Microhomology.microhomologyAtInsert(7, 5, readSequence.getBytes()).toString());
+        assertEquals("ATC", MicrohomologyContextBuilder.microhomologyAtInsert(4, 5, readSequence.getBytes()).toString());
+        assertEquals("ATC", MicrohomologyContextBuilder.microhomologyAtInsert(5, 5, readSequence.getBytes()).toString());
+        assertEquals("ATC", MicrohomologyContextBuilder.microhomologyAtInsert(6, 5, readSequence.getBytes()).toString());
+        assertEquals("ATC", MicrohomologyContextBuilder.microhomologyAtInsert(7, 5, readSequence.getBytes()).toString());
     }
 
     @Test
@@ -101,37 +104,37 @@ public class MicrohomologyTest
     @Test
     public void testReconstructDeletedSequence()
     {
-        assertEquals("GATCAA", new String(Microhomology.reconstructDeletedSequence(0, "GTCAA".getBytes(), "GA")));
-        assertEquals("GATCAA", new String(Microhomology.reconstructDeletedSequence(1, "GACAA".getBytes(), "AT")));
-        assertEquals("GATCAA", new String(Microhomology.reconstructDeletedSequence(2, "GATAA".getBytes(), "TC")));
-        assertEquals("GATCAA", new String(Microhomology.reconstructDeletedSequence(3, "GATCA".getBytes(), "CA")));
-        assertEquals("GATCAA", new String(Microhomology.reconstructDeletedSequence(4, "GATCA".getBytes(), "AA")));
+        assertEquals("GATCAA", new String(MicrohomologyContextBuilder.reconstructDeletedSequence(0, "GTCAA".getBytes(), "GA")));
+        assertEquals("GATCAA", new String(MicrohomologyContextBuilder.reconstructDeletedSequence(1, "GACAA".getBytes(), "AT")));
+        assertEquals("GATCAA", new String(MicrohomologyContextBuilder.reconstructDeletedSequence(2, "GATAA".getBytes(), "TC")));
+        assertEquals("GATCAA", new String(MicrohomologyContextBuilder.reconstructDeletedSequence(3, "GATCA".getBytes(), "CA")));
+        assertEquals("GATCAA", new String(MicrohomologyContextBuilder.reconstructDeletedSequence(4, "GATCA".getBytes(), "AA")));
     }
 
     @Test
     public void testReconstructDeletedSequenceWithDelCombinedWithSnv()
     {
-        assertEquals("GATCAA", new String(Microhomology.reconstructDeletedSequence(1, "GACAA".getBytes(), "TT")));
-        assertEquals("GATCAA", new String(Microhomology.reconstructDeletedSequence(1, "GACAA".getBytes(), "AT")));
+        assertEquals("GATCAA", new String(MicrohomologyContextBuilder.reconstructDeletedSequence(1, "GACAA".getBytes(), "TT")));
+        assertEquals("GATCAA", new String(MicrohomologyContextBuilder.reconstructDeletedSequence(1, "GACAA".getBytes(), "AT")));
     }
 
     private static void assertDeleteExpandRepeats(@NotNull String expected, int position, int altLength, @NotNull String readSequence)
     {
-        MicrohomologyContext context = Microhomology.microhomologyAtDelete(position, altLength, readSequence.getBytes());
-        MicrohomologyContext context2 = Microhomology.expandMicrohomologyRepeats(context);
+        MicrohomologyContext context = MicrohomologyContextBuilder.microhomologyAtDelete(position, altLength, readSequence.getBytes());
+        MicrohomologyContext context2 = MicrohomologyContextBuilder.expandMicrohomologyRepeats(context);
         assertEquals(expected, context2.toString());
     }
 
     private static void assertInsertExpandRepeats(@NotNull String expected, int position, int altLength, @NotNull String readSequence)
     {
-        MicrohomologyContext context = Microhomology.microhomologyAtInsert(position, altLength, readSequence.getBytes());
-        MicrohomologyContext context2 = Microhomology.expandMicrohomologyRepeats(context);
+        MicrohomologyContext context = MicrohomologyContextBuilder.microhomologyAtInsert(position, altLength, readSequence.getBytes());
+        MicrohomologyContext context2 = MicrohomologyContextBuilder.expandMicrohomologyRepeats(context);
         assertEquals(expected, context2.toString());
     }
 
     private static void assertInsert(@NotNull String expected, int position, int altLength, @NotNull String readSequence)
     {
-        MicrohomologyContext context = Microhomology.microhomologyAtInsert(position, altLength, readSequence.getBytes());
+        MicrohomologyContext context = MicrohomologyContextBuilder.microhomologyAtInsert(position, altLength, readSequence.getBytes());
         assertEquals(expected, context.toString());
     }
 }

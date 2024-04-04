@@ -5,6 +5,9 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import com.hartwig.hmftools.sage.old.ReadContext;
+import com.hartwig.hmftools.sage.old.ReadContextFactory;
+
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;

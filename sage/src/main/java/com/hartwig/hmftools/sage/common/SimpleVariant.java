@@ -18,7 +18,7 @@ public class SimpleVariant implements GenomePosition
     public final String Alt;
     public final VariantType Type;
 
-    private final int mIndelLength;
+    private final int mIndelLength; // number of bases inserted or deleted
 
     public SimpleVariant(final String chromosome, final int position, final String ref, final String alt)
     {

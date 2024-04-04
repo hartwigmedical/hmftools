@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.common;
+package com.hartwig.hmftools.sage.old;
 
 import static java.lang.String.format;
 

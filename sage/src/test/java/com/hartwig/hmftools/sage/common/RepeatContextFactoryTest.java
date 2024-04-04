@@ -6,7 +6,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Optional;
 
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.sage.old.RepeatContext;
+import com.hartwig.hmftools.sage.old.RepeatContextFactory;
+
 import org.junit.Test;
 
 public class RepeatContextFactoryTest

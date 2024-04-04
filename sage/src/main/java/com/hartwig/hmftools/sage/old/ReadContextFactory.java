@@ -1,13 +1,15 @@
-package com.hartwig.hmftools.sage.common;
+package com.hartwig.hmftools.sage.old;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.sage.common.Microhomology.expandMicrohomologyRepeats;
-import static com.hartwig.hmftools.sage.common.Microhomology.microhomologyAtDeleteFromReadSequence;
-import static com.hartwig.hmftools.sage.common.Microhomology.microhomologyAtInsert;
+import static com.hartwig.hmftools.sage.old.MicrohomologyContextBuilder.expandMicrohomologyRepeats;
+import static com.hartwig.hmftools.sage.old.MicrohomologyContextBuilder.microhomologyAtDeleteFromReadSequence;
+import static com.hartwig.hmftools.sage.old.MicrohomologyContextBuilder.microhomologyAtInsert;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 
 import java.util.Optional;
+
+import com.hartwig.hmftools.sage.common.RefSequence;
 
 import org.apache.logging.log4j.util.Strings;
 

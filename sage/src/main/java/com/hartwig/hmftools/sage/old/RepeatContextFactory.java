@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.common;
+package com.hartwig.hmftools.sage.old;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -58,7 +58,7 @@ public final class RepeatContextFactory
     }
 
     @VisibleForTesting
-    static int forwardRepeats(int index, int repeatLength, final byte[] readSequence)
+    public static int forwardRepeats(int index, int repeatLength, final byte[] readSequence)
     {
         for(int count = 1; ; count++)
         {
@@ -81,7 +81,7 @@ public final class RepeatContextFactory
     }
 
     @VisibleForTesting
-    static boolean match(int repeatIndex, int repeatLength, int readIndex, byte[] readSequence)
+    public static boolean match(int repeatIndex, int repeatLength, int readIndex, byte[] readSequence)
     {
         return matchingBasesFromLeft(repeatIndex, repeatLength, readIndex, readSequence) == repeatLength;
     }

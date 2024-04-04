@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.common;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -14,6 +15,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Arrays;
+import com.hartwig.hmftools.sage.old.ReadContext;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -177,8 +179,6 @@ public class VariantReadContextBuilder
         byte[] refBases = refSequence.baseRange(readCigarInfo.AlignmentStart, readCigarInfo.AlignmentEnd);
 
         int readContextOffset = readFlankStart;
-        // int flankIndexStart = max(readFlankStart - readContextOffset, 0);
-        // int flankIndexEnd = min(readFlankEnd - readContextOffset, readBases.length - 1);
         int coreIndexStart = readCoreStart - readContextOffset;
         int readVarIndex = varReadIndex - readContextOffset;
         int coreIndexEnd = readCoreEnd - readContextOffset;
@@ -188,14 +188,75 @@ public class VariantReadContextBuilder
                 contextReadBases, readCigarInfo.Cigar, coreIndexStart, readVarIndex, coreIndexEnd, "", repeatBoundaryInfo.MaxRepeat);
     }
 
+    public static Microhomology findHomology(final SimpleVariant variant, final SAMRecord read, int varReadIndex, final RefSequence refSequence)
+    {
+        if(!variant.isIndel())
+            return null;
+
+        int indelAltLength = abs(variant.indelLength());
+
+        StringBuilder homology = null;
+        final byte[] readBases = read.getReadBases();
+        int refBaseStartPos = variant.isInsert() ? variant.Position + 1 : variant.Position + indelAltLength + 1;
+        int refBaseIndex = refSequence.index(refBaseStartPos);
+
+        for(int i = varReadIndex + 1; i <= min(varReadIndex + indelAltLength, readBases.length - 1); ++i, ++refBaseIndex)
+        {
+            byte readBase = readBases[i];
+            byte refBase = refSequence.Bases[refBaseIndex];
+
+            if(readBase != refBase)
+                break;
+
+            if(homology == null)
+                homology = new StringBuilder();
+
+            homology.append((char)readBase);
+        }
+
+        if(homology == null)
+            return null;
+
+        String homologyBases = homology.toString();
+        int homologyLength = homologyBases.length();
+
+        if(homologyLength == indelAltLength)
+        {
+            // continue searching for repeats of the homology to find the point of right-alignment
+            boolean matched = true;
+
+            while(matched)
+            {
+                for(int i = 0; i < indelAltLength; ++i, ++refBaseIndex)
+                {
+                    byte homologyBase = (byte)homologyBases.charAt(0);
+                    byte refBase = refSequence.Bases[refBaseIndex];
+
+                    if(homologyBase != refBase)
+                    {
+                        matched = false;
+                        break;
+                    }
+                }
+
+                if(matched)
+                    homologyLength += indelAltLength;
+            }
+        }
+
+        return new Microhomology(homologyBases, homologyLength);
+    }
+
     public ReadContext createDelContext(
             final String ref, int refPosition, int readIndex, final byte[] readBases, final RefSequence refSequence)
     {
         /* Routine:
-            - no need to test for homology for non-INDELs
+            - test for homology and right-align if required
             - continue in each direction until repeat ends
             - add 2 bases then flank
         */
+
+        // Microhomology microhomology = findHomology(final SimpleVariant variant, final SAMRecord read, int varReadIndex, final RefSequence refSequence)
 
 
 
