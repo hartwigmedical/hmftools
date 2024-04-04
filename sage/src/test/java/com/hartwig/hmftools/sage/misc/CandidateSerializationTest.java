@@ -8,7 +8,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.old.IndexedBases;
-import com.hartwig.hmftools.sage.common.IndexedBasesTest;
+import com.hartwig.hmftools.sage.old.IndexedBasesTest;
 import com.hartwig.hmftools.sage.old.ReadContext;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;

@@ -1,10 +1,11 @@
-package com.hartwig.hmftools.sage.common;
+package com.hartwig.hmftools.sage.old;
 
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.old.ReadContext;
 import com.hartwig.hmftools.sage.old.ReadContextFactory;
 

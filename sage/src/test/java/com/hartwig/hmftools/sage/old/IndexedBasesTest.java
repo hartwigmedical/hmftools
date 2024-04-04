@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.common;
+package com.hartwig.hmftools.sage.old;
 
 import static java.util.Arrays.fill;
 
@@ -10,11 +10,13 @@ import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.evidence.ReadIndexBases;
 import com.hartwig.hmftools.sage.old.IndexedBases;
 import com.hartwig.hmftools.sage.old.ReadContext;
 
 import org.apache.logging.log4j.util.Strings;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class IndexedBasesTest
@@ -120,7 +122,7 @@ public class IndexedBasesTest
         IndexedBases indexedBases = new IndexedBases(1000, 2, 2, 2, 2, "GGTAA".getBytes());
 
         IndexedBases testBases = new IndexedBases(1000, 2, 2, 2, 2, "GGTAA".getBytes());
-        assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases));
+        Assert.assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases));
 
         testBases = new IndexedBases(1000, 2, 2, 2, 2, "GGTA".getBytes());
         assertEquals(ReadContextMatch.PARTIAL, indexedBases.matchAtPosition(testBases));

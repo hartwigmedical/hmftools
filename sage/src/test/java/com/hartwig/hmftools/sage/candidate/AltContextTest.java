@@ -12,7 +12,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.old.ReadContext;
-import com.hartwig.hmftools.sage.common.ReadContextTest;
+import com.hartwig.hmftools.sage.old.ReadContextTest;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

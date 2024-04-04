@@ -3,13 +3,16 @@ package com.hartwig.hmftools.sage.common;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarStringFromElements;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.List;
 
@@ -29,7 +32,89 @@ public class VariantReadContextBuilder
         mFlankSize = flankSize;
     }
 
-    private static final int REPEAT_SEARCH_LENGTH = MAX_REPEAT_LENGTH * 2;
+    public VariantReadContext createMnvContext(
+            final SimpleVariant variant, final SAMRecord read, int varReadIndex, final RefSequence refSequence)
+    {
+        int readCoreStart = varReadIndex - MIN_CORE_DISTANCE;
+        int readCoreEnd = varReadIndex + variant.Alt.length() - 1 + MIN_CORE_DISTANCE;
+
+        final byte[] readBases = read.getReadBases();
+
+        RepeatBoundaryInfo repeatBoundaryInfo = findRepeatBoundaries(readCoreStart, readCoreEnd, readBases);
+
+        readCoreStart = repeatBoundaryInfo.CoreStart;
+        readCoreEnd = repeatBoundaryInfo.CoreEnd;
+
+        int readFlankStart = max(readCoreStart - mFlankSize, 0);
+        int readFlankEnd = min(readCoreEnd + mFlankSize, readBases.length - 1);
+
+        // build a CIGAR from the read to cover this range
+        ReadCigarInfo readCigarInfo = buildReadCigar(read, readFlankStart, readFlankEnd);
+
+        readFlankStart = readCigarInfo.FlankIndexStart;
+        readFlankEnd = readCigarInfo.FlankIndexEnd;
+
+        byte[] contextReadBases = Arrays.subsetArray(readBases, readFlankStart, readFlankEnd);
+        byte[] refBases = refSequence.baseRange(readCigarInfo.AlignmentStart, readCigarInfo.AlignmentEnd);
+
+        int readContextOffset = readFlankStart;
+        int coreIndexStart = readCoreStart - readContextOffset;
+        int readVarIndex = varReadIndex - readContextOffset;
+        int coreIndexEnd = readCoreEnd - readContextOffset;
+
+        return new VariantReadContext(
+                variant, readCigarInfo.AlignmentStart, readCigarInfo.AlignmentEnd, refBases,
+                contextReadBases, readCigarInfo.Cigar, coreIndexStart, readVarIndex, coreIndexEnd,
+                null, repeatBoundaryInfo.MaxRepeat);
+    }
+
+    public VariantReadContext createIndelContext(
+            final SimpleVariant variant, final SAMRecord read, int varReadIndex, final RefSequence refSequence)
+    {
+        /* Routine:
+            - test for homology and right-align if required
+            - continue in each direction until repeat ends
+            - add 2 bases then flank
+        */
+
+        // note that for indels only the 2 ref bases on each side are part of the core
+        int readCoreStart = varReadIndex - MIN_CORE_DISTANCE + 1;
+
+        int readCoreEnd = varReadIndex + (variant.isInsert() ? variant.indelLength() + 1 : 1) + MIN_CORE_DISTANCE - 1;
+
+        final byte[] readBases = read.getReadBases();
+
+        Microhomology homology = findHomology(variant, read, varReadIndex, refSequence);
+
+        if(homology != null)
+            readCoreEnd += homology.Length;
+
+        RepeatBoundaryInfo repeatBoundaryInfo = findRepeatBoundaries(readCoreStart, readCoreEnd, readBases);
+
+        readCoreStart = repeatBoundaryInfo.CoreStart;
+        readCoreEnd = repeatBoundaryInfo.CoreEnd;
+
+        int readFlankStart = max(readCoreStart - mFlankSize, 0);
+        int readFlankEnd = min(readCoreEnd + mFlankSize, readBases.length - 1);
+
+        // build a CIGAR from the read to cover this range
+        ReadCigarInfo readCigarInfo = buildReadCigar(read, readFlankStart, readFlankEnd);
+
+        readFlankStart = readCigarInfo.FlankIndexStart;
+        readFlankEnd = readCigarInfo.FlankIndexEnd;
+
+        byte[] contextReadBases = Arrays.subsetArray(readBases, readFlankStart, readFlankEnd);
+        byte[] refBases = refSequence.baseRange(readCigarInfo.AlignmentStart, readCigarInfo.AlignmentEnd);
+
+        int readContextOffset = readFlankStart;
+        int coreIndexStart = readCoreStart - readContextOffset;
+        int readVarIndex = varReadIndex - readContextOffset;
+        int coreIndexEnd = readCoreEnd - readContextOffset;
+
+        return new VariantReadContext(
+                variant, readCigarInfo.AlignmentStart, readCigarInfo.AlignmentEnd, refBases,
+                contextReadBases, readCigarInfo.Cigar, coreIndexStart, readVarIndex, coreIndexEnd, homology, repeatBoundaryInfo.MaxRepeat);
+    }
 
     private class RepeatBoundaryInfo
     {
@@ -43,11 +128,19 @@ public class VariantReadContextBuilder
             CoreEnd = coreEnd;
             MaxRepeat = maxRepeat;
         }
+
+        public String toString()
+        {
+            return format("core(%d-%d) repeat(%s)", CoreStart, CoreEnd, MaxRepeat != null ? MaxRepeat : "");
+        }
     }
+
+    // set an initial search length long enough to find a min count of the longest repeat
+    private static final int REPEAT_SEARCH_LENGTH = MAX_REPEAT_LENGTH * MIN_REPEAT_COUNT;
 
     private RepeatBoundaryInfo findRepeatBoundaries(int lowerRefIndex, int upperRefIndex, final byte[] readBases)
     {
-        int repeatSearchStart = lowerRefIndex - REPEAT_SEARCH_LENGTH;
+        int repeatSearchStart = max(lowerRefIndex - REPEAT_SEARCH_LENGTH, 0);
 
         RepeatInfo lowerRepeat = RepeatInfo.findMaxRepeat(
                 readBases, repeatSearchStart, readBases.length - 1,
@@ -86,6 +179,8 @@ public class VariantReadContextBuilder
         public List<CigarElement> Cigar;
         public final int AlignmentStart;
         public final int AlignmentEnd;
+
+        // stored for the scenario where an indel in the flanks pushes out the alignment beyond the standard flank length
         public final int FlankIndexStart;
         public final int FlankIndexEnd;
 
@@ -99,16 +194,26 @@ public class VariantReadContextBuilder
             FlankIndexStart = flankIndexStart;
             FlankIndexEnd = flankIndexEnd;
         }
+
+        public String toString()
+        {
+            return format("%s align(%d-%d) flankIndex(%d-%d)",
+                    cigarStringFromElements(Cigar), AlignmentStart, AlignmentEnd, FlankIndexStart, FlankIndexEnd);
+        }
     }
 
     private ReadCigarInfo buildReadCigar(final SAMRecord read, int indexStart, int indexEnd)
     {
+        // builds a cigar around the specified index boundaries and calculates the corresponding alignment positions
         List<CigarElement> cigar = Lists.newArrayList();
 
         int readIndex = 0;
         int refPosition = read.getAlignmentStart();
         int alignmentStart = 0;
         int alignmentEnd = 0;
+
+        int finalIndexStart = indexStart;
+        int finalIndexEnd = indexEnd;
 
         for(CigarElement element : read.getCigar().getCigarElements())
         {
@@ -123,20 +228,47 @@ public class VariantReadContextBuilder
 
                 if(alignmentStart == 0)
                 {
-                    if(element.getOperator().isIndel())
+                    if(element.getOperator() == I)
+                    {
+                        // handles an insert that pushes the alignment out - always take the prior alignment base and reduce index start
+                        // eg looking to find the alignment boundary for index start 12 for 10M5I1350M, alignment start == 100
+                        // so at the insert element, read index = 10, ref pos = 110 (pointing at next ref base)
+                        int extraIndexStart = indexStart - readIndex + 1;
+                        cigar.add(0, new CigarElement(1, M));
+
+                        finalIndexStart -= extraIndexStart;
                         alignmentStart = max(refPosition - 1, read.getAlignmentStart());
+                    }
+                    else if(element.getOperator() == D)
+                    {
+                        alignmentStart = max(refPosition - 1, read.getAlignmentStart());
+                    }
                     else
+                    {
                         alignmentStart = refPosition + (indexStart - readIndex);
+                    }
                 }
 
                 if(alignmentEnd == 0 && elementEndIndex >= indexEnd)
                 {
                     if(element.getOperator() == I)
-                        alignmentEnd = refPosition + 1;
-                    if(element.getOperator() == D)
+                    {
+                        // similar extension to the above
+                        int extraIndexEnd = elementEndIndex + 1 - indexEnd;
+                        cigar.add(new CigarElement(1, M));
+
+                        finalIndexEnd += extraIndexEnd;
+
+                        alignmentEnd = refPosition; // already pointing at the next M (aligned) base
+                    }
+                    else if(element.getOperator() == D)
+                    {
                         alignmentEnd = refPosition + element.getLength();
+                    }
                     else
+                    {
                         alignmentEnd = min(refPosition + (indexEnd - readIndex), read.getAlignmentEnd());
+                    }
                 }
             }
 
@@ -150,42 +282,7 @@ public class VariantReadContextBuilder
                 break;
         }
 
-        return new ReadCigarInfo(cigar, alignmentStart, alignmentEnd, indexStart, indexEnd);
-    }
-
-    public VariantReadContext createMnvContext(
-            final SimpleVariant variant, final SAMRecord read, int varReadIndex, final RefSequence refSequence)
-    {
-        int readCoreStart = varReadIndex - MIN_CORE_DISTANCE;
-        int readCoreEnd = varReadIndex + variant.Alt.length() - 1 + MIN_CORE_DISTANCE;
-
-        final byte[] readBases = read.getReadBases();
-
-        RepeatBoundaryInfo repeatBoundaryInfo = findRepeatBoundaries(readCoreStart, readCoreEnd, readBases);
-
-        readCoreStart = repeatBoundaryInfo.CoreStart;
-        readCoreEnd = repeatBoundaryInfo.CoreEnd;
-
-        int readFlankStart = max(readCoreStart - mFlankSize, 0);
-        int readFlankEnd = min(readCoreEnd + mFlankSize, readBases.length - 1);
-
-        // build a CIGAR from the read to cover this range
-        ReadCigarInfo readCigarInfo = buildReadCigar(read, readFlankStart, readFlankEnd);
-
-        readFlankStart = readCigarInfo.FlankIndexStart;
-        readFlankEnd = readCigarInfo.FlankIndexEnd;
-
-        byte[] contextReadBases = Arrays.subsetArray(readBases, readFlankStart, readFlankEnd);
-        byte[] refBases = refSequence.baseRange(readCigarInfo.AlignmentStart, readCigarInfo.AlignmentEnd);
-
-        int readContextOffset = readFlankStart;
-        int coreIndexStart = readCoreStart - readContextOffset;
-        int readVarIndex = varReadIndex - readContextOffset;
-        int coreIndexEnd = readCoreEnd - readContextOffset;
-
-        return new VariantReadContext(
-                variant, readCigarInfo.AlignmentStart, readCigarInfo.AlignmentEnd, refBases,
-                contextReadBases, readCigarInfo.Cigar, coreIndexStart, readVarIndex, coreIndexEnd, "", repeatBoundaryInfo.MaxRepeat);
+        return new ReadCigarInfo(cigar, alignmentStart, alignmentEnd, finalIndexStart, finalIndexEnd);
     }
 
     public static Microhomology findHomology(final SimpleVariant variant, final SAMRecord read, int varReadIndex, final RefSequence refSequence)
@@ -196,13 +293,14 @@ public class VariantReadContextBuilder
         int indelAltLength = abs(variant.indelLength());
 
         StringBuilder homology = null;
-        final byte[] readBases = read.getReadBases();
+        String indelBases = variant.isInsert() ? variant.alt().substring(1) : variant.ref().substring(1);
+        // final byte[] readBases = read.getReadBases();
         int refBaseStartPos = variant.isInsert() ? variant.Position + 1 : variant.Position + indelAltLength + 1;
         int refBaseIndex = refSequence.index(refBaseStartPos);
 
-        for(int i = varReadIndex + 1; i <= min(varReadIndex + indelAltLength, readBases.length - 1); ++i, ++refBaseIndex)
+        for(int i = 0; i < indelBases.length(); ++i, ++refBaseIndex)
         {
-            byte readBase = readBases[i];
+            byte readBase = (byte)indelBases.charAt(i);
             byte refBase = refSequence.Bases[refBaseIndex];
 
             if(readBase != refBase)
@@ -245,30 +343,5 @@ public class VariantReadContextBuilder
         }
 
         return new Microhomology(homologyBases, homologyLength);
-    }
-
-    public ReadContext createDelContext(
-            final String ref, int refPosition, int readIndex, final byte[] readBases, final RefSequence refSequence)
-    {
-        /* Routine:
-            - test for homology and right-align if required
-            - continue in each direction until repeat ends
-            - add 2 bases then flank
-        */
-
-        // Microhomology microhomology = findHomology(final SimpleVariant variant, final SAMRecord read, int varReadIndex, final RefSequence refSequence)
-
-
-
-
-        /*
-
-        PosCigarBases refPosCigarBases = new PosCigarBases(
-            final byte[] bases, final int alignmentStart, final int alignmentEnd,
-            final int corePosStart, final int position, final int coreIndexStart,
-            final int index, final int coreIndexEnd, final int corePosEnd, final List<CigarElement> cigar)
-        */
-
-        return null;
     }
 }

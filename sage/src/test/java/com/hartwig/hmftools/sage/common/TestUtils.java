@@ -32,9 +32,17 @@ public class TestUtils
 
     public static final MockRefGenome MOCK_REF_GENOME = new MockRefGenome();
 
-    private static final RefSequence REF_BASES = new RefSequence(550, "TGTTTCTGTTTC".getBytes());
+    public static final String REF_BASES_200 =
+        //             10        20        30        40        50        60        70        80        90
+        //   0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+            "CGCAATATTCGGGTGGGAGTGACCCGATTTTCCAGGTGCGTTCGTCACCGCTGTCTGTGACTCGGAAAAAAAACTCCCTGACCCCTTGCGCTTCCCAGGT"
+          + "GAGGCAATGCCTCGCCCTGCTTCGGCTCGCGCACAGTGCGCGCTACACACACTGGCCTGCGCCCACTGTCTGGCACTCCCTAGTGAGATGAACCCGGTAC";
 
-    public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG, RECALIBRATION, REF_BASES, MOCK_REF_GENOME );
+    public static final RefSequence REF_SEQUENCE_200 = new RefSequence(0, REF_BASES_200.getBytes()); // note zero-based to line up with indices
+
+    // investigate how these are used and consider removing or switching to a full ref sequence
+    private static final RefSequence QUAL_CALC_REF_BASES = new RefSequence(550, "TGTTTCTGTTTC".getBytes());
+    public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG, RECALIBRATION, QUAL_CALC_REF_BASES, MOCK_REF_GENOME );
 
     public static SageConfig createSageConfig()
     {

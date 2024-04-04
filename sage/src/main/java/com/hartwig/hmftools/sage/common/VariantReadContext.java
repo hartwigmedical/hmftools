@@ -23,17 +23,17 @@ public class VariantReadContext
     public final int VarReadIndex;
     public final int CoreIndexEnd;
 
-    public final String Homology;
+    public final Microhomology Homology;
     public final RepeatInfo MaxRepeat;
 
     private final SimpleVariant mVariant;
     private final String mReadCigarStr;
 
-    public VariantReadContext(
+    public  VariantReadContext(
             final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases,
             final byte[] readBases, final List<CigarElement> readCigar,
             final int coreIndexStart, final int varReadIndex, final int coreIndexEnd,
-            final String homology, final RepeatInfo maxRepeat)
+            final Microhomology homology, final RepeatInfo maxRepeat)
     {
         mVariant = variant;
         AlignmentStart = alignmentStart;
@@ -71,9 +71,12 @@ public class VariantReadContext
     }
 
     public final String trinucleotideStr() { return new String(trinucleotide()); }
+    public final String readCigar() { return mReadCigarStr; }
 
     public String toString()
     {
-        return format("");
+        return format("%s-%s-%s %s pos(%d-%d) index(%d-%d-%d) repeat(%s) homology(%s)",
+                leftFlankStr(), coreStr(), rightFlankStr(), mReadCigarStr, AlignmentStart, AlignmentEnd,
+                CoreIndexStart, VarReadIndex, CoreIndexEnd, MaxRepeat != null ? MaxRepeat : "", Homology != null ? Homology : "");
     }
 }
