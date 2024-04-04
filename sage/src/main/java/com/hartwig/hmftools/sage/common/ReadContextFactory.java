@@ -129,7 +129,7 @@ public class ReadContextFactory
         {
             final RepeatContext repeat = refPostRepeatContext.get();
             int repeatStartIndexInReadSpace = repeat.StartIndex - refIndex + readIndex;
-        int repeatEndIndexInReadSpace = repeat.EndIndex - refIndex + readIndex;
+            int repeatEndIndexInReadSpace = repeat.EndIndex - refIndex + readIndex;
             startIndex = Math.min(startIndex, repeatStartIndexInReadSpace - 1);
             endIndex = max(endIndex, repeatEndIndexInReadSpace + 1);
         }

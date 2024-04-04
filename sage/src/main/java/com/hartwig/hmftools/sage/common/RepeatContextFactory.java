@@ -12,33 +12,31 @@ public final class RepeatContextFactory
     private static final int MIN_COUNT = 2;
     private static final int MAX_LENGTH = 10;
 
-    public static RepeatContext findRepeat(int index, final byte[] readSequence, final int minCount, final int maxLength)
+    public static RepeatContext findRepeat(int index, final byte[] readBases, final int minCount, final int maxLength)
     {
-        if(index > readSequence.length)
+        if(index > readBases.length)
             return null;
 
         RepeatContext maxRepeatCount = null;
 
-        // TODO: improve the efficiency of this search
-        // TODO: change the paramterisation around which repeat lengths and counts are permitted
         for(int repeatStartIndex = max(0, index - maxLength); repeatStartIndex <= index; repeatStartIndex++)
         {
-            for(int repeatEndIndex = index; repeatEndIndex <= min(readSequence.length, repeatStartIndex + maxLength); repeatEndIndex++)
+            for(int repeatEndIndex = index; repeatEndIndex <= min(readBases.length, repeatStartIndex + maxLength); repeatEndIndex++)
             {
                 int repeatLength = repeatEndIndex - repeatStartIndex + 1;
-                int forwardsCount = forwardRepeats(repeatStartIndex, repeatLength, readSequence);
-                int backwardsCount = backwardRepeats(repeatStartIndex, repeatLength, readSequence);
+                int forwardsCount = forwardRepeats(repeatStartIndex, repeatLength, readBases);
+                int backwardsCount = backwardRepeats(repeatStartIndex, repeatLength, readBases);
 
                 if(forwardsCount + backwardsCount >= minCount)
                 {
                     int startIndex = repeatStartIndex - backwardsCount * repeatLength;
                     int endIndex = repeatStartIndex + forwardsCount * repeatLength - 1;
-                    int additionalBasesAtEnd = matchingBasesFromLeft(repeatStartIndex, repeatLength, endIndex + 1, readSequence);
+                    int additionalBasesAtEnd = matchingBasesFromLeft(repeatStartIndex, repeatLength, endIndex + 1, readBases);
 
                     if(maxRepeatCount == null || forwardsCount + backwardsCount > maxRepeatCount.count())
                     {
                         maxRepeatCount = new RepeatContext(
-                                readSequence, repeatStartIndex, startIndex, endIndex + additionalBasesAtEnd,
+                                readBases, repeatStartIndex, startIndex, endIndex + additionalBasesAtEnd,
                                 repeatLength, forwardsCount, backwardsCount);
                     }
                 }
