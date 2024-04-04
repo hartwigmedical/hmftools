@@ -526,7 +526,7 @@ Patients who have previously undergone bone marrow transplantation may have a si
 ### High Depth Mode
 
 For targeted sequencing, the `high_depth_mode` flag should be provided. This allows Sage to make high-quality variant calls at low VAFs in high depth samples by adding the following additional conditions:
-* Reads without duplicates that have discordant or unmapped mates are ignored
+* Reads that have discordant or unmapped mates are ignored
 * Reads with raw base qual < 30 do not provide variant support
 * Reads cannot provide soft-clip support for a variant
 * Variants must have at least 3 supporting fragments with unique start and end coordinates, or get soft filtered with `minFragmentCoords`
