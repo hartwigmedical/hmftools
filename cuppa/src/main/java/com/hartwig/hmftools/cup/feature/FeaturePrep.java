@@ -7,13 +7,12 @@ import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.HIGH;
 import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.UNKNOWN;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromFile;
 import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -27,7 +26,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
-import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
@@ -40,6 +38,7 @@ import com.hartwig.hmftools.cup.prep.PrepConfig;
 import com.hartwig.hmftools.cup.somatics.SomaticDataLoader;
 import com.hartwig.hmftools.cup.somatics.SomaticVariant;
 
+//TODO: Rename this to DriverEventPrep
 public class FeaturePrep implements CategoryPrep
 {
     private final PrepConfig mConfig;
@@ -83,28 +82,34 @@ public class FeaturePrep implements CategoryPrep
         }
     }
 
+    public String getDriverCatalogFile(final String sampleId) throws FileNotFoundException
+    {
+        String path;
+
+        path = mConfig.linxDriverCatalogFile(sampleId);
+        if(new File(path).isFile())
+            return path;
+
+        path = mConfig.purpleDriverCatalogFile(sampleId);
+        if(new File(path).isFile())
+            return path;
+
+        CUP_LOGGER.error("sample({}) has no LINX or PURPLE driver catalog file", sampleId);
+        throw new FileNotFoundException();
+    }
+
     public void getDriversFromCatalog(String sampleId)
     {
         final List<DriverCatalog> drivers = Lists.newArrayList();
 
-        final String linxDataDir = formSamplePath(mConfig.LinxDir, sampleId);
-        final String purpleDataDir = formSamplePath(mConfig.PurpleDir, sampleId);
-
-        final String linxDriverCatalogFilename = LinxDriver.generateCatalogFilename(linxDataDir, sampleId, true);
-        final String purpleDriverCatalogFilename = DriverCatalogFile.generateSomaticFilename(purpleDataDir, sampleId);
-
         try
         {
-            if(Files.exists(Paths.get(linxDriverCatalogFilename)))
-            {
-                drivers.addAll(DriverCatalogFile.read(linxDriverCatalogFilename));
-            } else {
-                drivers.addAll(DriverCatalogFile.read(purpleDriverCatalogFilename));
-            }
+            String driverCatalogFile = getDriverCatalogFile(sampleId);
+            drivers.addAll(DriverCatalogFile.read(driverCatalogFile));
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("sample({}) failed to load drivers", sampleId);
+            CUP_LOGGER.error("sample({}) failed to load drivers catalog: {}", sampleId, e.toString());
             System.exit(1);
         }
 
@@ -130,17 +135,20 @@ public class FeaturePrep implements CategoryPrep
 
     public void getRepeatIndelDrivers(String sampleId)
     {
-        final String purpleDataDir = formSamplePath(mConfig.PurpleDir, sampleId);
-        final String somaticVcf = purpleSomaticVcfFile(purpleDataDir, sampleId);
+        final String somaticVcf = mConfig.purpleSomaticVcfFile(sampleId);
 
         PurityContext purityContext = null;
         try
         {
-            purityContext = PurityContextFile.read(purpleDataDir, sampleId);
+            purityContext = PurityContextFile.readWithQC(
+                    mConfig.purpleQcFile(sampleId),
+                    mConfig.purplePurityFile(sampleId)
+            );
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("sample({}) check indels - failed to load purity file( from dir{}): {}", sampleId, purpleDataDir, e.toString());
+            CUP_LOGGER.error("sample({}) check indels - failed to load purity files from dir({}): {}",
+                    sampleId, mConfig.getPurpleDataDir(sampleId), e.toString());
             System.exit(1);
         }
         boolean isMicrosatelliteStable = purityContext.microsatelliteStatus() == MSS;
@@ -168,8 +176,7 @@ public class FeaturePrep implements CategoryPrep
 
     public void getFusions(String sampleId)
     {
-        final String linxDataDir = formSamplePath(mConfig.LinxDir, sampleId);
-        final String fusionsFilename = LinxFusion.generateFilename(linxDataDir, sampleId);
+        final String fusionsFilename = mConfig.linxFusionFile(sampleId);
 
         List<LinxFusion> fusions = null;
         try
@@ -218,9 +225,7 @@ public class FeaturePrep implements CategoryPrep
 
     public void getVirusAnnotations(String sampleId)
     {
-        final String virusDataDir = formSamplePath(mConfig.VirusDir, sampleId);
-
-        String viralAnnotationFilename = AnnotatedVirusFile.generateFileName(virusDataDir, sampleId);
+        String viralAnnotationFilename = mConfig.viralAnnotationFile(sampleId);
         final List<AnnotatedVirus> virusAnnotations = Lists.newArrayList();
 
         try

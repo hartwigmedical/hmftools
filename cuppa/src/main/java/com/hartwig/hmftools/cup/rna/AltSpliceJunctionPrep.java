@@ -55,7 +55,7 @@ public class AltSpliceJunctionPrep implements CategoryPrep
 
         List<DataItem> dataItems = Lists.newArrayList();
 
-        final String filename = AltSpliceJunctionFile.generateFilename(mConfig.getIsofoxDataDir(sampleId), sampleId);
+        final String filename = mConfig.altSpliceJunctionFile(sampleId);
 
         if(!Files.exists(Paths.get(filename)))
             return dataItems;

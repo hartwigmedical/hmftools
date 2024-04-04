@@ -3,7 +3,6 @@ package com.hartwig.hmftools.cup.svs;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.SV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSvFile;
 import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.extractSvCounts;
 
@@ -41,16 +40,13 @@ public class StructuralVariantPrep implements CategoryPrep
     {
         List<DataItem> dataItems = Lists.newArrayList();
 
-        final String purpleDataDir = mConfig.getPurpleDataDir(sampleId);
-
         try
         {
-            final String svVcfFile = purpleSvFile(mConfig.PurpleDir, sampleId);
-            final String linxDataDir = mConfig.getLinxDataDir(sampleId);
-            final String clusterFile = LinxCluster.generateFilename(linxDataDir, sampleId, false);
-
             final List<StructuralVariantData> svDataList = Lists.newArrayList();
-            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(svVcfFile, new AlwaysPassFilter());
+            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(
+                    mConfig.purpleSvFile(sampleId),
+                    new AlwaysPassFilter()
+            );
             final List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
 
             int svId = 0;
@@ -59,7 +55,7 @@ public class StructuralVariantPrep implements CategoryPrep
                 svDataList.add(convertSvData(var, svId++));
             }
 
-            final List<LinxCluster> clusterList = LinxCluster.read(clusterFile);
+            final List<LinxCluster> clusterList = LinxCluster.read(mConfig.linxClusterFile(sampleId));
 
             final int[] svDataCounts = extractSvCounts(svDataList, clusterList);
 
@@ -72,8 +68,11 @@ public class StructuralVariantPrep implements CategoryPrep
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("sample({}) sample traits - failed to load purity file from dir{}): {}",
-                    sampleId, purpleDataDir, e.toString());
+            CUP_LOGGER.error("sample({}) failed to load structural variants from file{}): {}",
+                    sampleId,
+                    mConfig.purpleSvFile(sampleId),
+                    e.toString()
+            );
 
             return null;
         }

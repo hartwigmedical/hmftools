@@ -23,7 +23,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
-import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.cup.prep.CategoryPrep;
 import com.hartwig.hmftools.cup.prep.DataItem;
@@ -46,7 +45,6 @@ public class SomaticVariantPrep implements CategoryPrep
     private final SomaticSigs mSomaticSigs;
 
     private final PositionFrequencies mPosFrequencies;
-
 
     public SomaticVariantPrep(final PrepConfig config)
     {
@@ -73,9 +71,12 @@ public class SomaticVariantPrep implements CategoryPrep
 
     private void loadVariants(String sampleId)
     {
-        final String purpleDataDir = mConfig.getPurpleDataDir(sampleId);
-        final String somaticVcfFile = PurpleCommon.purpleSomaticVcfFile(purpleDataDir, sampleId);
-        mVariants.addAll(SomaticDataLoader.loadSomaticVariantsFromVcf(somaticVcfFile, Lists.newArrayList(SNP)));
+        List<SomaticVariant> variants = SomaticDataLoader.loadSomaticVariantsFromVcf(
+                mConfig.purpleSomaticVcfFile(sampleId),
+                Lists.newArrayList(SNP)
+        );
+
+        mVariants.addAll(variants);
     }
 
     private void getTrinucleotideCounts()

@@ -36,11 +36,12 @@ public class SampleTraitPrep implements CategoryPrep
     {
         List<DataItem> dataItems = Lists.newArrayList();
 
-        final String purpleDataDir = mConfig.getPurpleDataDir(sampleId);
-
         try
         {
-            final PurityContext purityContext = PurityContextFile.read(purpleDataDir, sampleId);
+            final PurityContext purityContext = PurityContextFile.readWithQC(
+                    mConfig.purpleQcFile(sampleId),
+                    mConfig.purplePurityFile(sampleId)
+            );
 
             dataItems.add(new DataItem(DNA, ItemType.SAMPLE_TRAIT, GENDER.getAlias(), boolToIntString(purityContext.gender() == Gender.MALE)));
 
@@ -53,7 +54,10 @@ public class SampleTraitPrep implements CategoryPrep
         catch(Exception e)
         {
             CUP_LOGGER.error("sample({}) sample traits - failed to load purity file from dir{}): {}",
-                    sampleId, purpleDataDir, e.toString());
+                    sampleId,
+                    mConfig.getPurpleDataDir(sampleId),
+                    e.toString()
+            );
 
             return null;
         }
