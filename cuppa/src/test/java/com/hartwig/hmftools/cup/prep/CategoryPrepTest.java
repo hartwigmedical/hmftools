@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.cup.feature.FeaturePrep;
 import com.hartwig.hmftools.cup.rna.AltSpliceJunctionPrep;
 import com.hartwig.hmftools.cup.rna.GeneExpressionPrep;
@@ -79,13 +80,17 @@ public class CategoryPrepTest
     public void canExtractEventFeatures()
     {
         FeaturePrep prep = new FeaturePrep(prepConfig);
-        List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
+        List<DataItem> dataItems = prep.extractSampleData("COLO829v003T_modified"); // Use modified COLO files with dummy driver/fusion/virus features inserted
 
-        assertEquals(7, dataItems.size());
-        assertEquals(dataItems.get(0), new DataItem(DataSource.DNA, ItemType.DRIVER, "TERT.mut", "1.0"));
-        assertEquals(dataItems.get(1), new DataItem(DataSource.DNA, ItemType.DRIVER, "BRAF.mut", "1.0"));
-        assertEquals(dataItems.get(2), new DataItem(DataSource.DNA, ItemType.DRIVER, "SF3B1.mut", "0.146"));
-        assertEquals(dataItems.get(3), new DataItem(DataSource.DNA, ItemType.DRIVER, "CDKN2A.mut", "1.0"));
+        assertEquals(8, dataItems.size());
+        assertEquals(dataItems.get(0), new DataItem(DataSource.DNA, ItemType.DRIVER, "BRAF.mut", "1.0"));
+        assertEquals(dataItems.get(1), new DataItem(DataSource.DNA, ItemType.DRIVER, "MYC.amp", "1.0"));
+        assertEquals(dataItems.get(2), new DataItem(DataSource.DNA, ItemType.DRIVER, "CDKN2A.mut", "1.0"));
+        assertEquals(dataItems.get(3), new DataItem(DataSource.DNA, ItemType.DRIVER, "SFTPB.indel", "1.0"));
+        assertEquals(dataItems.get(4), new DataItem(DataSource.DNA, ItemType.FUSION, "TMPRSS2_ERG", "1.0"));
+        assertEquals(dataItems.get(5), new DataItem(DataSource.DNA, ItemType.FUSION, "BRAF_PROM3", "1.0"));
+        assertEquals(dataItems.get(6), new DataItem(DataSource.DNA, ItemType.FUSION, "FGFR2_PROM5", "1.0"));
+        assertEquals(dataItems.get(7), new DataItem(DataSource.DNA, ItemType.VIRUS, "MERKEL", "1.0"));
     }
 
     @Test
