@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.esvee.types;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import java.util.List;
@@ -34,7 +31,7 @@ public class RepeatInfo
     public static final int MIN_DUAL_REPEAT = 3;
     public static final int MIN_OTHER_REPEAT = 2;
 
-    public static List<RepeatInfo>  findRepeats(final byte[] bases)
+    public static List<RepeatInfo> findRepeats(final byte[] bases)
     {
         // types of repeats, single, dual, triples (ATCATC) and dual x2 (AATTAATT)
         // favour longer repeat types

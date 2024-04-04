@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.Math.abs;
 import static java.lang.String.format;
+import static java.lang.System.arraycopy;
 
 import static com.hartwig.hmftools.common.bam.BamToolName.fromPath;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
@@ -116,81 +117,10 @@ public final class CommonUtils
             deleteInterimFile(unsortedBam);
     }
 
-    public static void copyArray(final byte[] source, final byte[] dest, final int sourceIndexStart, final int destIndexStart)
-    {
-        int d = destIndexStart;
-        for(int s = sourceIndexStart; s < source.length && d < dest.length; ++s, ++d)
-        {
-            dest[d] = source[s];
-        }
-    }
-
-    public static byte[] copyArray(final byte[] source)
-    {
-        byte[] dest = new byte[source.length];
-
-        for(int i = 0; i < source.length; ++i)
-        {
-            dest[i] = source[i];
-        }
-
-        return dest;
-    }
-
-    public static byte[] subsetArray(final byte[] source, final int startIndex, final int endIndex)
-    {
-        byte[] dest = new byte[endIndex - startIndex + 1];
-
-        int newIndex = 0;
-        for(int index = startIndex; index <= endIndex; ++index, ++newIndex)
-        {
-            dest[newIndex] = source[index];
-        }
-
-        return dest;
-    }
-
-    public static int[] copyArray(final int[] source)
-    {
-        int[] dest = new int[source.length];
-
-        for(int i = 0; i < source.length; ++i)
-        {
-            dest[i] = source[i];
-        }
-
-        return dest;
-    }
-
-    public static byte[] addByteArray(final byte[] first, final byte[] second)
-    {
-        byte[] combined = new byte[first.length + second.length];
-
-        for(int i = 0; i < first.length; ++i)
-        {
-            combined[i] = first[i];
-        }
-
-        for(int i = 0; i < second.length; ++i)
-        {
-            combined[first.length + i] = second[i];
-        }
-
-        return combined;
-    }
-
     public static byte[] reverseBytes(final byte[] bases)
     {
         String reversed = Nucleotides.reverseComplementBases(new String(bases));
         return reversed.getBytes();
-    }
-
-    public static void initialise(final byte[] array, final byte value)
-    {
-        for(int i = 0; i < array.length; ++i)
-        {
-            array[i] = value;
-        }
     }
 
     public static byte[] createByteArray(final int length, final byte value)
@@ -204,13 +134,4 @@ public final class CommonUtils
 
         return array;
     }
-
-    public static void initialise(final int[] array, final int value)
-    {
-        for(int i = 0; i < array.length; ++i)
-        {
-            array[i] = value;
-        }
-    }
-
 }
