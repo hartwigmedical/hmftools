@@ -82,6 +82,8 @@ public class CombinedSyncData
         SAMRecordSetBuilder recordBuilder = new SAMRecordSetBuilder();
         recordBuilder.setUnmappedHasBasesAndQualities(false);
 
+        recordBuilder.setHeader(first.getHeader());
+
         SAMRecord combinedRecord = recordBuilder.addFrag(
                 first.getReadName(),
                 first.getReferenceIndex(),
@@ -92,13 +94,11 @@ public class CombinedSyncData
 
         combinedRecord.setReadBases(mCombinedBases);
         combinedRecord.setAlignmentStart(mFragmentStart);
-        combinedRecord.setReferenceIndex(first.getReferenceIndex());
+        combinedRecord.setReferenceIndex(first.getReferenceIndex()); // also set ref name, same for mate ref below
 
         combinedRecord.setBaseQualities(mCombinedBaseQualities);
-        combinedRecord.setReferenceName(first.getReferenceName());
         combinedRecord.setMateAlignmentStart(mFragmentStart);
-        combinedRecord.setMateReferenceName(first.getReferenceName());
-        combinedRecord.setMateReferenceIndex(first.getReferenceIndex());
+        combinedRecord.setMateReferenceIndex(first.getMateReferenceIndex());
 
         combinedRecord.setFlags(first.getFlags());
 
