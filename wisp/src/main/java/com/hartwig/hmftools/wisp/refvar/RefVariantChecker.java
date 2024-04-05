@@ -71,7 +71,7 @@ public class RefVariantChecker
             System.exit(1);
 
         CT_LOGGER.info("running probe variant selection for {} patients and {} samples",
-                mSamples.size(), mSamples.stream().mapToInt(x -> x.CtDnaSamples.size()).sum());
+                mSamples.size(), mSamples.stream().mapToInt(x -> x.SampleIds.size()).sum());
 
         for(SampleData sample : mSamples)
         {
@@ -98,7 +98,7 @@ public class RefVariantChecker
         loadPurpleVariants(purpleGermlineVcf, germlineChrVariantMap, sample.PatientId);
 
         // now process each ctDNA sample in turn
-        for(String ctDnaSampleId : sample.CtDnaSamples)
+        for(String ctDnaSampleId : sample.SampleIds)
         {
             String ctDnaSampleVcf = convertWildcardSamplePath(mCtDnaVcfs, ctDnaSampleId);
 

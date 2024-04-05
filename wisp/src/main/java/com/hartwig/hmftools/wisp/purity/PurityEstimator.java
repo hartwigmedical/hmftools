@@ -172,7 +172,7 @@ public class PurityEstimator
                 amberLohCalcs = new AmberLohCalcs(mConfig, mResultsWriter, sample);
             }
 
-            for(String ctDnaSampleId : sample.CtDnaSamples)
+            for(String ctDnaSampleId : sample.SampleIds)
             {
                 CnPurityResult cnPurityResult = copyNumberProfile != null ?
                         copyNumberProfile.processSample(ctDnaSampleId, purityContext) : CnPurityResult.INVALID_RESULT;
@@ -259,7 +259,7 @@ public class PurityEstimator
         {
             // CT_LOGGER.info("processing sample: {}", sample);
 
-            for(String sampleId : sample.CtDnaSamples)
+            for(String sampleId : sample.SampleIds)
             {
                 if(!sample.IsPanel && plotCopyNumber(mConfig.WriteTypes))
                 {

@@ -24,16 +24,16 @@ public class SampleData
 {
     public final String PatientId;
     public final String TumorId;
-    public final List<String> CtDnaSamples;
+    public final List<String> SampleIds;
     public final String VcfTag;
     public final boolean IsPanel;
 
     public SampleData(
-            final String patientId, final String tumorId, final List<String> ctDnaSamples, final String vcfTag, final boolean isPanel)
+            final String patientId, final String tumorId, final List<String> sampleIds, final String vcfTag, final boolean isPanel)
     {
         PatientId = patientId;
         TumorId = tumorId;
-        CtDnaSamples = ctDnaSamples;
+        SampleIds = sampleIds;
         VcfTag = vcfTag;
         IsPanel = isPanel;
     }
@@ -43,13 +43,13 @@ public class SampleData
     public String toString()
     {
         StringJoiner sj = new StringJoiner(", ");
-        CtDnaSamples.forEach(x -> sj.add(x));
+        SampleIds.forEach(x -> sj.add(x));
         return format("patient(%s) tumor(%s) ctDnaSamples(%s)", PatientId, TumorId, sj);
     }
 
-    public static List<String> ctDnaSamplesFromStr(final String ctDnaSamples)
+    public static List<String> sampleIdsFromStr(final String sampleIds)
     {
-        return Arrays.stream(ctDnaSamples.split(ITEM_DELIM, -1)).collect(Collectors.toList());
+        return Arrays.stream(sampleIds.split(ITEM_DELIM, -1)).collect(Collectors.toList());
     }
 
     public static List<SampleData> loadSampleDataFile(final String filename)
@@ -66,7 +66,7 @@ public class SampleData
 
             int patientIndex = fieldsIndexMap.get("PatientId");
             int tumorIndex = fieldsIndexMap.get("TumorId");
-            int ctdnaIndex = fieldsIndexMap.get("CtDnaSampleIds");
+            int sampleIdsIndex = fieldsIndexMap.get("SampleIds");
             Integer vcfIndex = fieldsIndexMap.get("VcfTag");
             Integer isPanelIndex = fieldsIndexMap.get("IsPanel");
 
@@ -82,7 +82,7 @@ public class SampleData
                         Boolean.parseBoolean(values[isPanelIndex]) : false;
 
                 samples.add(new SampleData(
-                        values[patientIndex], values[tumorIndex], ctDnaSamplesFromStr(values[ctdnaIndex]), vcfTag, isPanel));
+                        values[patientIndex], values[tumorIndex], sampleIdsFromStr(values[sampleIdsIndex]), vcfTag, isPanel));
             }
         }
         catch (IOException e)

@@ -112,7 +112,7 @@ public class SomaticVariants
         CT_LOGGER.debug("loading somatic variant VCF: {}", somaticVcf);
 
         List<String> targetSampleIds = Lists.newArrayList(mSample.TumorId);
-        mSample.CtDnaSamples.forEach(x -> targetSampleIds.add(x));
+        mSample.SampleIds.forEach(x -> targetSampleIds.add(x));
 
         VcfFileReader vcfFileReader = new VcfFileReader(somaticVcf);
 
