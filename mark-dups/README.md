@@ -204,6 +204,7 @@ In hg38, 152 genes in total have some overlap with the problematic regions file,
 - **Reads with unmapped mates** – currently marked as duplicates based on the coordinates (and UMI) of the aligned read only.  Could lead to over-clustering.
 - **Reads with mates with multiple similar local alignments** – These are currently under-clustered and lead to counting umi groups multiple times 
 - **Distinguish optical vs PCR duplicates** - Duplicates should be marked as ‘optical’ if the tile distance < opticalThreshold or otherwise as PCR duplicates. 
+- **Supplementary and Primary mixed up** - A fragment with a supplementary can be duplicated sometimes where there are the same 2 alignments for the read but the opposite alignment is marked as supplementary in each.  This leads us to fail to realise it is the same fragment
 
 **UMI matching** 
 - **Fixed UMI sets** - (eg TWIST) we don’t explicitly model, but doing so could lead to improvements.
