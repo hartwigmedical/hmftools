@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.cup.somatics;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_FLAG;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT;
@@ -41,6 +39,8 @@ public class SomaticVariant
     public static final String FLD_TRINUC_CONTEXT = "TriNucContext";
 
     public static final String SOMATIC_VAR_FILE_ID = ".somatic_variants.csv";
+    public static final String SOMATIC_VARIANTS_DIR_CFG = "somatic_variants_dir";
+    public static final String SOMATIC_VARIANTS_DIR_DESC = "Directory containing somatic variant generic tabular files";
 
     public SomaticVariant(
             final String chromosome, final int position, final String ref, final String alt, final VariantType type,
