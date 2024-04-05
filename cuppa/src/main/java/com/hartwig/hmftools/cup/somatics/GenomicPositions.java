@@ -55,6 +55,7 @@ public final class GenomicPositions
         }
     }
 
+    @Deprecated
     public static Matrix convertSomaticVariantsToPosFrequencies(
             final String sampleId, final List<SomaticVariant> variants, final Map<String,Integer> samplePosFreqIndex,
             final PositionFrequencies posFrequencies, AidApobecStatus aidApobecStatus)
@@ -108,6 +109,7 @@ public final class GenomicPositions
         }
     }
 
+    @Deprecated
     public static Matrix buildCancerMatrix(
             final Matrix samplePosFreqCounts, final Map<String,Integer> sampleIndexMap,
             final List<String> cancerTypes, final Map<String,List<SampleData>> refCancerSampleData, int maxSampleCount)
