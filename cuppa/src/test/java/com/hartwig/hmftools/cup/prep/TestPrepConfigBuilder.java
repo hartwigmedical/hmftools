@@ -36,6 +36,7 @@ public class TestPrepConfigBuilder
     private String PurpleDir = SampleDataDir;
     private String VirusDir = SampleDataDir;
     private String IsofoxDir = SampleDataDir;
+    private String SomaticVariantsDir = SampleDataDir;
 
     private String AltSpliceJunctionSites = TEST_ALT_SPLICE_JUNCTION_SITES;
 
@@ -95,6 +96,7 @@ public class TestPrepConfigBuilder
         LinxDir = sampleDataDir;
         VirusDir = sampleDataDir;
         IsofoxDir = sampleDataDir;
+        SomaticVariantsDir = sampleDataDir;
         return this;
     }
 
@@ -122,6 +124,12 @@ public class TestPrepConfigBuilder
         return this;
     }
 
+    public TestPrepConfigBuilder somaticVariantsDir(String somaticVariantsDir)
+    {
+        SomaticVariantsDir = somaticVariantsDir;
+        return this;
+    }
+
     public TestPrepConfigBuilder altSpliceJunctionSites(String altSpliceJunctionSites)
     {
         AltSpliceJunctionSites = altSpliceJunctionSites;
@@ -143,6 +151,7 @@ public class TestPrepConfigBuilder
                 PurpleDir,
                 VirusDir,
                 IsofoxDir,
+                SomaticVariantsDir,
                 AltSpliceJunctionSites
         );
     };
