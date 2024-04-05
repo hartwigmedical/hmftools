@@ -101,7 +101,7 @@ cnGcRatioPlot = ggplot() +
         geom_abline(slope=fitCoefficientLow,intercept=fitInterceptLow,color='grey') +
         geom_abline(slope=fitCoefficientHigh,intercept=fitInterceptHigh,color='grey') +
         theme(legend.position="none") +
-        labs(x='Tumor Copy Number',y='ctDNA GC Ratio',title=plotTitle) +
+        labs(x='Tumor Copy Number',y='Sample GC Ratio',title=plotTitle) +
         theme(plot.title=element_text(size=titleSize),
               axis.title=element_text(size=labelSize),axis.text=element_text(size=labelSize),
               legend.position="none")

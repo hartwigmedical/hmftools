@@ -94,7 +94,7 @@ public class SomaticVariants
 
         if(mConfig.SomaticVcf.isEmpty())
         {
-            somaticVcf = mConfig.SomaticDir + mSample.TumorId + PurityConstants.PURPLE_CTDNA_SOMATIC_VCF_ID;
+            somaticVcf = mConfig.SomaticDir + mSample.TumorId + PurityConstants.PURPLE_APPENDED_SOMATIC_VCF_ID;
 
             if(!mSample.VcfTag.isEmpty())
                 somaticVcf += mSample.VcfTag + ".";
@@ -268,7 +268,7 @@ public class SomaticVariants
 
             if(variant.filterReasons().isEmpty())
             {
-                // only include variants which satisfy the min avg qual check in the ctDNA sample
+                // only include variants which satisfy the min avg qual check in the sample
                 if(sampleFragData.isLowQual())
                 {
                     variant.addFilterReason(LOW_QUAL_PER_AD);

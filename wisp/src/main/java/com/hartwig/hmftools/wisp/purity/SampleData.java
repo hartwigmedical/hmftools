@@ -44,7 +44,7 @@ public class SampleData
     {
         StringJoiner sj = new StringJoiner(", ");
         SampleIds.forEach(x -> sj.add(x));
-        return format("patient(%s) tumor(%s) ctDnaSamples(%s)", PatientId, TumorId, sj);
+        return format("patient(%s) tumor(%s) samples(%s)", PatientId, TumorId, sj);
     }
 
     public static List<String> sampleIdsFromStr(final String sampleIds)

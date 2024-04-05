@@ -172,18 +172,18 @@ public class PurityEstimator
                 amberLohCalcs = new AmberLohCalcs(mConfig, mResultsWriter, sample);
             }
 
-            for(String ctDnaSampleId : sample.SampleIds)
+            for(String sampleId : sample.SampleIds)
             {
                 CnPurityResult cnPurityResult = copyNumberProfile != null ?
-                        copyNumberProfile.processSample(ctDnaSampleId, purityContext) : CnPurityResult.INVALID_RESULT;
+                        copyNumberProfile.processSample(sampleId, purityContext) : CnPurityResult.INVALID_RESULT;
 
                 SomaticPurityResult somaticPurityResult = somaticVariants != null ?
-                        somaticVariants.processSample(ctDnaSampleId, purityContext) : SomaticPurityResult.INVALID_RESULT;
+                        somaticVariants.processSample(sampleId, purityContext) : SomaticPurityResult.INVALID_RESULT;
 
                 AmberLohResult lohResult = amberLohCalcs != null ?
-                        amberLohCalcs.processSample(ctDnaSampleId, purityContext) : AmberLohResult.INVALID_RESULT;
+                        amberLohCalcs.processSample(sampleId, purityContext) : AmberLohResult.INVALID_RESULT;
 
-                mResultsWriter.writeSampleSummary(sample, ctDnaSampleId, purityContext, cnPurityResult, somaticPurityResult, lohResult);
+                mResultsWriter.writeSampleSummary(sample, sampleId, purityContext, cnPurityResult, somaticPurityResult, lohResult);
             }
         }
 

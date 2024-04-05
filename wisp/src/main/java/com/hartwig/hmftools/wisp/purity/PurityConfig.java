@@ -192,7 +192,7 @@ public class PurityConfig
                     sampleIdsFromStr(configBuilder.getValue(SAMPLES)), "", GcRatioMin > 0));
         }
 
-        CT_LOGGER.info("loaded {} patients and {} ctDNA samples",
+        CT_LOGGER.info("loaded {} patients and {} samples",
                 Samples.size(), Samples.stream().mapToInt(x -> x.SampleIds.size()).sum());
     }
 
@@ -225,10 +225,10 @@ public class PurityConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(SAMPLE_ID_FILE, false, "Patient and sample data file: PatientId,TumorId,CtDnaSampleIds");
+        configBuilder.addConfigItem(SAMPLE_ID_FILE, false, "Patient and sample data file: PatientId,TumorId,SampleIds");
         configBuilder.addConfigItem(PATIENT_ID, false, "Patient ID");
         configBuilder.addConfigItem(TUMOR_ID, false, "Original tumor sample ID");
-        configBuilder.addConfigItem(SAMPLES, false, "List of ctDNA sample IDs separated by ','");
+        configBuilder.addConfigItem(SAMPLES, false, "List of sample IDs separated by ','");
 
         configBuilder.addConfigItem(
                 PURITY_METHODS, false,
