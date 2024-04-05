@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.bqr;
+package com.hartwig.hmftools.common.qual;
 
 public class BqrRecord implements Comparable<BqrRecord>
 {

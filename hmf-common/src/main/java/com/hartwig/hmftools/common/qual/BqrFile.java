@@ -1,8 +1,7 @@
-package com.hartwig.hmftools.sage.bqr;
+package com.hartwig.hmftools.common.qual;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,8 +14,13 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public final class BqrFile
 {
+    private static final Logger LOGGER = LogManager.getLogger(BqrFile.class);
+
     public static void write(final String filename, final List<BqrRecord> counts) throws IOException
     {
         Collections.sort(counts);
@@ -91,7 +95,7 @@ public final class BqrFile
         }
         catch(Exception e)
         {
-            SG_LOGGER.error("failed to read BQR file({}) record index({}): {}", filename, counts.size(), e.toString());
+            LOGGER.error("failed to read BQR file({}) record index({}): {}", filename, counts.size(), e.toString());
             return null;
         }
 

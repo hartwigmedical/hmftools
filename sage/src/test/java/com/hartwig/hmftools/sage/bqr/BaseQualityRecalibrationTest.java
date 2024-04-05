@@ -9,6 +9,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.Collection;
 import java.util.Collections;
 
+import com.hartwig.hmftools.common.qual.BqrKey;
+import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
 

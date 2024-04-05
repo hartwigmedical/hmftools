@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.bqr;
+package com.hartwig.hmftools.common.qual;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -49,6 +49,9 @@ public class BqrKey
         return result;
     }
 
-    public String toString() { return String.format("var(%c->%c) cxt(%s) qual(%d) type(%s)",
-            (char)Ref, (char)Alt, TrinucleotideContext != null ? new String(TrinucleotideContext) : "", (int)Quality, ReadType);}
+    public String toString()
+    {
+        return String.format("var(%c->%c) cxt(%s) qual(%d) type(%s)",
+            (char)Ref, (char)Alt, TrinucleotideContext != null ? new String(TrinucleotideContext) : "", (int)Quality, ReadType);
+    }
 }

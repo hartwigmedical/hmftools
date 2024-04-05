@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.bqr;
+package com.hartwig.hmftools.common.qual;
 
 import com.hartwig.hmftools.common.bam.UmiReadType;
 import com.hartwig.hmftools.common.sequencing.UltimaConsensusType;

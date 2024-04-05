@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.bqr;
 
+import com.hartwig.hmftools.common.qual.BqrKey;
+
 public class BqrKeyCounter
 {
     public final BqrKey Key;

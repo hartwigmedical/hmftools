@@ -23,6 +23,8 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.common.bam.CigarTraversal;
+import com.hartwig.hmftools.common.qual.BqrKey;
+import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
