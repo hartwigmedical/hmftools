@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.cup.traits;
 
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.common.CupCalcs.boolToIntString;
 import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
 import static com.hartwig.hmftools.cup.traits.SampleTraitType.GENDER;
 import static com.hartwig.hmftools.cup.traits.SampleTraitType.MS_INDELS_TMB;
@@ -31,29 +30,44 @@ public class SampleTraitPrep implements CategoryPrep
     @Override
     public CategoryType categoryType() { return CategoryType.SAMPLE_TRAIT; }
 
+    private static String boolToIntString(final boolean boolValue) { return boolValue ? "1" : "0"; }
+
     @Override
     public List<DataItem> extractSampleData(final String sampleId)
     {
         List<DataItem> dataItems = Lists.newArrayList();
 
-        final String purpleDataDir = mConfig.getPurpleDataDir(sampleId);
-
         try
         {
-            final PurityContext purityContext = PurityContextFile.read(purpleDataDir, sampleId);
+            final PurityContext purityContext = PurityContextFile.readWithQC(
+                    mConfig.purpleQcFile(sampleId),
+                    mConfig.purplePurityFile(sampleId)
+            );
 
-            dataItems.add(new DataItem(DNA, ItemType.SAMPLE_TRAIT, GENDER.getAlias(), boolToIntString(purityContext.gender() == Gender.MALE)));
+            dataItems.add(new DataItem(
+                    DNA, ItemType.SAMPLE_TRAIT, GENDER.getAlias(),
+                    boolToIntString(purityContext.gender() == Gender.MALE)
+            ));
 
-            dataItems.add(new DataItem(DNA, ItemType.TUMOR_MUTATIONAL_BURDEN, MS_INDELS_TMB.getAlias(), String.valueOf(purityContext.microsatelliteIndelsPerMb())));
+            dataItems.add(new DataItem(
+                    DNA, ItemType.TUMOR_MUTATIONAL_BURDEN, MS_INDELS_TMB.getAlias(),
+                    String.valueOf(purityContext.microsatelliteIndelsPerMb())
+            ));
 
-            dataItems.add(new DataItem(DNA, ItemType.SAMPLE_TRAIT, WGD.getAlias(), boolToIntString(purityContext.wholeGenomeDuplication())));
+            dataItems.add(new DataItem(
+                    DNA, ItemType.SAMPLE_TRAIT, WGD.getAlias(),
+                    boolToIntString(purityContext.wholeGenomeDuplication())
+            ));
 
             return dataItems;
         }
         catch(Exception e)
         {
             CUP_LOGGER.error("sample({}) sample traits - failed to load purity file from dir{}): {}",
-                    sampleId, purpleDataDir, e.toString());
+                    sampleId,
+                    mConfig.getPurpleDataDir(sampleId),
+                    e.toString()
+            );
 
             return null;
         }

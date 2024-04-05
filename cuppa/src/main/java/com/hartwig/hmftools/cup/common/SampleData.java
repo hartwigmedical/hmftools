@@ -15,6 +15,7 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.purple.Gender;
 
+@Deprecated
 public class SampleData
 {
     public final String Id;

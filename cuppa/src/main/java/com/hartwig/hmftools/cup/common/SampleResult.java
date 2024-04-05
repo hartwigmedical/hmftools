@@ -26,6 +26,7 @@ import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.cuppa.ResultType;
 
+@Deprecated
 public class SampleResult
 {
     public final String SampleId;

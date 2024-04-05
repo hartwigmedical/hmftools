@@ -19,6 +19,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.cup.traits.SampleTraitsData;
 
+@Deprecated
 public class SampleDataCache
 {
     public final List<String> SampleIds;

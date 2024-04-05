@@ -23,7 +23,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
-import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.cup.prep.CategoryPrep;
 import com.hartwig.hmftools.cup.prep.DataItem;
@@ -46,7 +45,6 @@ public class SomaticVariantPrep implements CategoryPrep
     private final SomaticSigs mSomaticSigs;
 
     private final PositionFrequencies mPosFrequencies;
-
 
     public SomaticVariantPrep(final PrepConfig config)
     {
@@ -73,16 +71,14 @@ public class SomaticVariantPrep implements CategoryPrep
 
     private void loadVariants(String sampleId)
     {
-        final String purpleDataDir = mConfig.getPurpleDataDir(sampleId);
-        final String somaticVcfFile = PurpleCommon.purpleSomaticVcfFile(purpleDataDir, sampleId);
-        mVariants.addAll(SomaticDataLoader.loadSomaticVariantsFromVcf(somaticVcfFile, Lists.newArrayList(SNP)));
+        List<SomaticVariant> variants = SomaticVariantsLoader.loadFromConfig(mConfig, sampleId, Lists.newArrayList(SNP));
+        mVariants.addAll(variants);
     }
 
     private void getTrinucleotideCounts()
     {
         // build the 96 trinucleotide context counts
         mTriNucCounts = extractTrinucleotideCounts(mVariants, mTriNucBucketNameMap);
-        // TODO: extractTrinucleotideCounts() will only used here after removing deprecated code and should potentially be moved here
 
         for(int b = 0; b < mSnv96BucketNames.size(); ++b)
         {
@@ -107,7 +103,6 @@ public class SomaticVariantPrep implements CategoryPrep
         // build genomic position counts
         AidApobecStatus aidApobecStatus = AidApobecStatus.FALSE_ONLY;
         extractPositionFrequencyCounts(mVariants, mPosFrequencies, aidApobecStatus);
-        // TODO: extractPositionFrequencyCounts() will only used here after removing deprecated code and should potentially be moved here
 
         final int[] genPosCount = mPosFrequencies.getCounts();
 

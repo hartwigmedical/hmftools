@@ -17,6 +17,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Matrix;
 
+@Deprecated
 public class GeneExpressionDataLoader
 {
     public static final List<String> GENE_EXP_IGNORE_FIELDS = Lists.newArrayList("GeneId", "GeneName");

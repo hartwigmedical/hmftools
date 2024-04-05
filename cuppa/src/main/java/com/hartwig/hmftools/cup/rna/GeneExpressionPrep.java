@@ -12,8 +12,6 @@ import static com.hartwig.hmftools.cup.prep.DataSource.RNA;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -42,9 +40,7 @@ public class GeneExpressionPrep implements CategoryPrep
     public List<DataItem> extractSampleData(final String sampleId)
     {
         List<DataItem> dataItems = Lists.newArrayList();
-
-        final String isofoxDir = mConfig.getIsofoxDataDir(sampleId);
-        final String filename = GeneExpressionFile.generateFilename(isofoxDir, sampleId);
+        final String filename = mConfig.geneExpressionFile(sampleId);
 
         try
         {

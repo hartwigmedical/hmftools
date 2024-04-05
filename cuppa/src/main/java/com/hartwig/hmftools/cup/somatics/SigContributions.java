@@ -24,6 +24,7 @@ import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 
+@Deprecated
 public class SigContributions
 {
     private final CuppaConfig mConfig;

@@ -80,6 +80,8 @@ public class VcfPositionConverter implements Callable
 
             for(VariantContext variantContext : reader.iterator())
             {
+                // TODO: is ApplyFilters necessary? Why not load all variants?
+                //  If not, FeatureDataLoader dependency can be removed
                 if(mConfig.ApplyFilters && variantContext.isFiltered())
                     continue;
 
