@@ -35,7 +35,7 @@ import com.hartwig.hmftools.cup.prep.CategoryPrep;
 import com.hartwig.hmftools.cup.prep.DataItem;
 import com.hartwig.hmftools.cup.prep.ItemType;
 import com.hartwig.hmftools.cup.prep.PrepConfig;
-import com.hartwig.hmftools.cup.somatics.SomaticDataLoader;
+import com.hartwig.hmftools.cup.somatics.SomaticVariantsLoader;
 import com.hartwig.hmftools.cup.somatics.SomaticVariant;
 
 //TODO: Rename this to DriverEventPrep
@@ -135,8 +135,6 @@ public class FeaturePrep implements CategoryPrep
 
     public void getRepeatIndelDrivers(String sampleId)
     {
-        final String somaticVcf = mConfig.purpleSomaticVcfFile(sampleId);
-
         PurityContext purityContext = null;
         try
         {
@@ -153,7 +151,7 @@ public class FeaturePrep implements CategoryPrep
         }
         boolean isMicrosatelliteStable = purityContext.microsatelliteStatus() == MSS;
 
-        final List<SomaticVariant> variants = SomaticDataLoader.loadSomaticVariantsFromVcf(somaticVcf, Lists.newArrayList());
+        final List<SomaticVariant> variants = SomaticVariantsLoader.loadFromConfig(mConfig, sampleId, null);
         for(SomaticVariant variant : variants)
         {
             String gene = variant.Gene;

@@ -71,11 +71,7 @@ public class SomaticVariantPrep implements CategoryPrep
 
     private void loadVariants(String sampleId)
     {
-        List<SomaticVariant> variants = SomaticDataLoader.loadSomaticVariantsFromVcf(
-                mConfig.purpleSomaticVcfFile(sampleId),
-                Lists.newArrayList(SNP)
-        );
-
+        List<SomaticVariant> variants = SomaticVariantsLoader.loadFromConfig(mConfig, sampleId, Lists.newArrayList(SNP));
         mVariants.addAll(variants);
     }
 
@@ -83,7 +79,6 @@ public class SomaticVariantPrep implements CategoryPrep
     {
         // build the 96 trinucleotide context counts
         mTriNucCounts = extractTrinucleotideCounts(mVariants, mTriNucBucketNameMap);
-        // TODO: extractTrinucleotideCounts() will only used here after removing deprecated code and should potentially be moved here
 
         for(int b = 0; b < mSnv96BucketNames.size(); ++b)
         {
@@ -108,7 +103,6 @@ public class SomaticVariantPrep implements CategoryPrep
         // build genomic position counts
         AidApobecStatus aidApobecStatus = AidApobecStatus.FALSE_ONLY;
         extractPositionFrequencyCounts(mVariants, mPosFrequencies, aidApobecStatus);
-        // TODO: extractPositionFrequencyCounts() will only used here after removing deprecated code and should potentially be moved here
 
         final int[] genPosCount = mPosFrequencies.getCounts();
 
