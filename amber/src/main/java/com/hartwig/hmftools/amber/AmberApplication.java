@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.amber.AmberUtils.fromBaseDepth;
 import static com.hartwig.hmftools.amber.AmberUtils.fromTumorBaf;
 import static com.hartwig.hmftools.amber.AmberUtils.isValid;
 import static com.hartwig.hmftools.common.genome.bed.BedFileReader.loadBedFileChrMap;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 
 import java.io.File;
@@ -30,6 +31,7 @@ import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSitesFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.BaseRegion;
@@ -267,20 +269,13 @@ public class AmberApplication implements AutoCloseable
         return readerFactory;
     }
 
-    private List<GenomeRegion> loadTumorOnlyExcludedSnp() throws IOException
+    private List<GenomeRegion> loadTumorOnlyExcludedSnp()
     {
-        String resourcePath = null;
-        switch (mConfig.RefGenVersion)
-        {
-            case V37:
-                // we don't have excluded region for v37 genome
-                return Collections.emptyList();
-            case V38:
-                resourcePath = "tumorOnlyExcludedSnp.38.bed";
-                break;
-        }
+        if(mConfig.RefGenVersion == V37)
+            return Collections.emptyList();
 
-        return AmberUtils.loadBedFromResource(resourcePath);
+        List<ChrBaseRegion> regions = AmberUtils.loadBedFromResource("tumorOnlyExcludedSnp.38.bed");
+        return regions.stream().map(x -> x.genomeRegion()).collect(toList());
     }
 
     @Override
