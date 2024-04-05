@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.cup.prep;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.cuppa.CategoryType;
-import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.cup.feature.FeaturePrep;
 import com.hartwig.hmftools.cup.rna.AltSpliceJunctionPrep;
 import com.hartwig.hmftools.cup.rna.GeneExpressionPrep;
@@ -29,14 +29,23 @@ public class CategoryPrepTest
             .outputDir("/tmp/")
             .build();
 
+    private HashMap<String, String> makeDataItemsMap(List<DataItem> dataItems)
+    {
+        HashMap<String, String> dataItemsMap = new HashMap<>();
+        for(DataItem dataItem : dataItems)
+            dataItemsMap.put(dataItem.Index.Key, dataItem.Value);
+
+        return dataItemsMap;
+    }
+
     @Test
     public void canExtractSnvFeatures()
     {
         SomaticVariantPrep prep = new SomaticVariantPrep(prepConfig);
         List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
 
+        // Check that all required item types exist
         List<ItemType> itemTypesUnique = dataItems.stream().map(o -> o.Index.Type).distinct().collect(Collectors.toList());
-
         List<ItemType> itemTypesExpected = List.of(
                 ItemType.SNV96,
                 ItemType.TUMOR_MUTATIONAL_BURDEN,
@@ -47,6 +56,13 @@ public class CategoryPrepTest
         for(ItemType itemTypeExpected : itemTypesExpected){
             assertTrue(itemTypesUnique.contains(itemTypeExpected));
         }
+
+        // Check one value of each type
+        HashMap<String, String> dataItemsMap = makeDataItemsMap(dataItems);
+        assertEquals(dataItemsMap.get("C>A_ACA"), "133");
+        assertEquals(dataItemsMap.get("snv_count"), "37660");
+        assertEquals(dataItemsMap.get("SIG_7_UV"), "24193.2");
+        assertEquals(dataItemsMap.get("1_3000000"), "10");
     }
 
     @Test
