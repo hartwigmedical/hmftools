@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.cuppa.ClassifierType;
 import com.hartwig.hmftools.common.utils.Matrix;
 
+@Deprecated
 public class NoiseRefCache
 {
     private final String mRefNoiseFile;

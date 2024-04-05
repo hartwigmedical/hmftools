@@ -22,6 +22,7 @@ import java.nio.file.Paths;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
+@Deprecated
 public class AnonymiseConfig
 {
     public final String OutputDir;

@@ -9,6 +9,7 @@ import java.util.StringJoiner;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurityContext;
 
+@Deprecated
 public class SampleTraitsData
 {
     public final String SampleId;

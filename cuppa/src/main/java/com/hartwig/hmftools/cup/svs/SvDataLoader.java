@@ -35,6 +35,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.linx.LinxCluster;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
+@Deprecated
 public class SvDataLoader
 {
     public static boolean loadSvDataFromCohortFile(final String filename, final Map<String,SvData> sampleSvData)

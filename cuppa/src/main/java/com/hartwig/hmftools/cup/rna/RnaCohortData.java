@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cup.rna;
 
+@Deprecated
 public class RnaCohortData
 {
     public final String CancerType;

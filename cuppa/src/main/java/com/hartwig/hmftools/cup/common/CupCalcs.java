@@ -23,6 +23,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.common.cuppa.ClassifierType;
 
+@Deprecated
 public class CupCalcs
 {
     private static final double PERCENTILE_THRESHOLD_PERC = 0.25;

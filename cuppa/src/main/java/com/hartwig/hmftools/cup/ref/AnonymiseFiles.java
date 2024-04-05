@@ -40,6 +40,7 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 public class AnonymiseFiles
 {
     private final AnonymiseConfig mConfig;

@@ -18,6 +18,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
+@Deprecated
 public class SampleTraitsDataLoader
 {
     public static final int GENDER_MALE_INDEX = 1;
