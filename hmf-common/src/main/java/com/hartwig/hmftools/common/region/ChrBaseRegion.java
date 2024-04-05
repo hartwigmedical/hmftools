@@ -203,6 +203,8 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
             entry.getValue().forEach(x -> regions.add(new ChrBaseRegion(entry.getKey(), x.start(), x.end())));
         }
 
+        checkMergeOverlaps(regions, true);
+
         return regions;
     }
 

@@ -10,6 +10,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.bed.ImmutableNamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import static com.hartwig.hmftools.cobalt.norm.Normaliser.calcSampleAdjustedRatios;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
@@ -24,19 +25,17 @@ public class NormalisationFileTest
     @Test
     public void testCreateTargetRegions()
     {
-        List<NamedBed> namedBedRecords = Lists.newArrayList();
+        List<ChrBaseRegion> bedRegions = Lists.newArrayList();
 
-        namedBedRecords.add(ImmutableNamedBed.builder().name("REGION1").chromosome(CHR_1).start(1100).end(2900).build());
-        namedBedRecords.add(ImmutableNamedBed.builder().name("REGION2").chromosome(CHR_1).start(2950).end(4000).build());
+        bedRegions.add(new ChrBaseRegion(CHR_1, 1100, 2900));
+        bedRegions.add(new ChrBaseRegion(CHR_1, 2950, 4000));
+        bedRegions.add(new ChrBaseRegion(CHR_1, 5000, 6001));
+        bedRegions.add(new ChrBaseRegion(CHR_2, 9000, 10001));
+        bedRegions.add(new ChrBaseRegion(CHR_2, 12999, 14500));
 
-        namedBedRecords.add(ImmutableNamedBed.builder().name("REGION3").chromosome(CHR_1).start(5000).end(6001).build());
-
-        namedBedRecords.add(ImmutableNamedBed.builder().name("REGION3").chromosome(CHR_2).start(9000).end(10001).build());
-
-        namedBedRecords.add(ImmutableNamedBed.builder().name("REGION3").chromosome(CHR_2).start(12999).end(14500).build());
         Map<String,List<RegionData>> chrRegionData = Maps.newHashMap();
 
-        addTargetRegions(namedBedRecords, chrRegionData);
+        addTargetRegions(bedRegions, chrRegionData);
 
         List<RegionData> allRegions = Lists.newArrayList();
         chrRegionData.values().forEach(x -> allRegions.addAll(x));
