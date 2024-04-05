@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
-import static com.hartwig.hmftools.esvee.types.RemoteRegion.REMOTE_READ_TYPE_DISCORDANT_READ;
-import static com.hartwig.hmftools.esvee.types.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_MATE;
-import static com.hartwig.hmftools.esvee.types.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_SUPP;
-import static com.hartwig.hmftools.esvee.types.RemoteRegion.mergeRegions;
-import static com.hartwig.hmftools.esvee.types.RemoteRegion.purgeWeakSupplementaryRegions;
+import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.REMOTE_READ_TYPE_DISCORDANT_READ;
+import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_MATE;
+import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_SUPP;
+import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.mergeRegions;
+import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.purgeWeakSupplementaryRegions;
 
 import java.util.List;
 
@@ -13,9 +13,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.esvee.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.types.RemoteRegion;
-import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 public final class RemoteRegionFinder
 {

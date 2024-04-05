@@ -6,22 +6,22 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DEL_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
-import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.NO_LINK;
-import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.SECONDARY;
-import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.SUPP_ONLY;
-import static com.hartwig.hmftools.esvee.types.AssemblySupport.hasMatchingFragment;
-import static com.hartwig.hmftools.esvee.types.SupportType.JUNCTION_MATE;
-import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordantFragment;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SECONDARY;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SUPP_ONLY;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblySupport.hasMatchingFragment;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.types.AssemblyOutcome;
-import com.hartwig.hmftools.esvee.types.AssemblySupport;
-import com.hartwig.hmftools.esvee.types.Junction;
-import com.hartwig.hmftools.esvee.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
+import com.hartwig.hmftools.esvee.assembly.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 public final class AssemblyUtils
 {

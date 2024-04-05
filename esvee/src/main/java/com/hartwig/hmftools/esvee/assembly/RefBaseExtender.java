@@ -8,14 +8,14 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_EXTENSION_BA
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_SIDE_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_SIDE_MIN_SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.DUP_BRANCHED;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRANCHED;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensions;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.findRemoteRegions;
-import static com.hartwig.hmftools.esvee.types.RefSideSoftClip.purgeRefSideSoftClips;
-import static com.hartwig.hmftools.esvee.types.SupportType.CANDIDATE_DISCORDANT;
-import static com.hartwig.hmftools.esvee.types.SupportType.DISCORDANT;
-import static com.hartwig.hmftools.esvee.types.SupportType.JUNCTION_MATE;
-import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordantFragment;
+import static com.hartwig.hmftools.esvee.assembly.types.RefSideSoftClip.purgeRefSideSoftClips;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.CANDIDATE_DISCORDANT;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -26,12 +26,12 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.esvee.types.AssemblySupport;
-import com.hartwig.hmftools.esvee.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.types.RefBaseAssembly;
-import com.hartwig.hmftools.esvee.types.RefSideSoftClip;
-import com.hartwig.hmftools.esvee.types.SupportType;
-import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.RefBaseAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.RefSideSoftClip;
+import com.hartwig.hmftools.esvee.assembly.types.SupportType;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 public class RefBaseExtender
 {

@@ -18,13 +18,13 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.esvee.types.Junction;
-import com.hartwig.hmftools.esvee.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.types.JunctionGroup;
-import com.hartwig.hmftools.esvee.types.PhaseGroup;
-import com.hartwig.hmftools.esvee.output.PhaseGroupBuildWriter;
-import com.hartwig.hmftools.esvee.phasing.LocalGroupBuilder;
-import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionGroup;
+import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
+import com.hartwig.hmftools.esvee.assembly.output.PhaseGroupBuildWriter;
+import com.hartwig.hmftools.esvee.assembly.phase.LocalGroupBuilder;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 import org.junit.Test;
 

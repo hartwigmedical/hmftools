@@ -2,13 +2,9 @@ package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.Math.abs;
 import static java.lang.String.format;
-import static java.lang.System.arraycopy;
 
 import static com.hartwig.hmftools.common.bam.BamToolName.fromPath;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.common.SvConstants.ESVEE_FILE_ID;
 import static com.hartwig.hmftools.esvee.common.SvConstants.FILE_NAME_DELIM;
 
 import java.io.IOException;
@@ -20,8 +16,6 @@ import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bam.BamToolName;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.esvee.prep.types.ReadFilterConfig;
-import com.hartwig.hmftools.esvee.read.Read;
 
 import org.jetbrains.annotations.Nullable;
 
