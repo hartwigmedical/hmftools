@@ -62,9 +62,11 @@ public class AlignmentWriter
             sj.add("AssemblyInfo");
             sj.add("SvType");
             sj.add("SvLength");
+            sj.add("RefBaseLength");
             sj.add("SequenceLength");
             sj.add("AssemblyCigar");
 
+            sj.add("AlignResults");
             sj.add("AlignCigar");
             sj.add("AlignScore");
             sj.add("AlignedBases");
@@ -102,6 +104,7 @@ public class AlignmentWriter
             sj.add(assemblyAlignment.info());
             sj.add(String.valueOf(assemblyAlignment.svType()));
             sj.add(String.valueOf(assemblyAlignment.svLength()));
+            sj.add(String.valueOf(assemblyAlignment.refBaseLength()));
             sj.add(String.valueOf(fullSequence.length()));
             sj.add(assemblyAlignment.assemblyCigar());
 
@@ -109,12 +112,14 @@ public class AlignmentWriter
 
             if(topAlignment == null || topAlignment.getAlignerScore() == 0 || topAlignment.getCigar().isEmpty())
             {
-                sj.add("").add("0").add("0").add("").add("0").add("0");
+                sj.add("0").add("").add("0").add("0").add("").add("0").add("0");
                 sj.add(fullSequence);
                 writer.write(sj.toString());
                 writer.newLine();
                 return;
             }
+
+            sj.add(String.valueOf(alignmentResults.size()));
 
             Cigar cigar = CigarUtils.cigarFromStr(topAlignment.getCigar());
             int alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();

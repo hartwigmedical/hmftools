@@ -54,6 +54,16 @@ public class AssemblyAlignment
         return mAssemblies.size() == 1 ? 0 : mAssemblyLink.length();
     }
 
+    public int refBaseLength()
+    {
+        int refBaseLength = mAssemblies.get(0).refBaseLength();
+
+        if(mAssemblies.size() > 1)
+            refBaseLength += mAssemblies.get(1).refBaseLength();
+
+        return refBaseLength;
+    }
+
     public String fullSequence()
     {
         if(mAssemblies.size() == 1)
@@ -96,12 +106,12 @@ public class AssemblyAlignment
 
         StringBuilder fullSequence = new StringBuilder(fullSequenceLength);
 
-        fullSequence.append(firstReversed ? Nucleotides.reverseComplementBases(first.formFullSequence()) : first.formFullSequence());
+        fullSequence.append(firstReversed ? Nucleotides.reverseComplementBases(first.formRefBaseSequence()) : first.formRefBaseSequence());
 
         if(!insertedBases.isEmpty())
             fullSequence.append(insertedBases);
 
-        String secondSequence = secondReversed ? Nucleotides.reverseComplementBases(second.formFullSequence()) : second.formFullSequence();
+        String secondSequence = secondReversed ? Nucleotides.reverseComplementBases(second.formRefBaseSequence()) : second.formRefBaseSequence();
 
         fullSequence.append(overlapLength > 0 ? secondSequence.substring(overlapLength) : secondSequence);
 
