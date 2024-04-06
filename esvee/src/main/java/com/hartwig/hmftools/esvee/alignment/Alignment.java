@@ -207,12 +207,12 @@ public class Alignment
 
             List<BwaMemAlignment> alignmentResults = mAligner.alignSequence(fullSequence.getBytes());
 
-            if(alignmentResults.isEmpty())
-                return;
-
             AlignmentWriter.writeAssemblyAlignment(mWriter.alignmentWriter(), assemblyAlignment, fullSequence, alignmentResults);
 
-            AlignmentWriter.writeAlignmentDetails(mWriter.alignmentDetailsWriter(), assemblyAlignment, alignmentResults);
+            if(!alignmentResults.isEmpty())
+            {
+                AlignmentWriter.writeAlignmentDetails(mWriter.alignmentDetailsWriter(), assemblyAlignment, alignmentResults);
+            }
         }
     }
 }

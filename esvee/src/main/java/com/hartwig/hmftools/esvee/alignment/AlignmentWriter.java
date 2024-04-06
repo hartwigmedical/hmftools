@@ -62,14 +62,18 @@ public class AlignmentWriter
             sj.add("AssemblyInfo");
             sj.add("SvType");
             sj.add("SvLength");
-            sj.add("FullSequence");
+            sj.add("SequenceLength");
+            sj.add("AssemblyCigar");
 
             sj.add("AlignCigar");
-            sj.add("AlignMatchedBases");
-            sj.add("AlignMismatches");
-            sj.add("AlignLocation");
             sj.add("AlignScore");
-            sj.add("AlignNextScore");
+            sj.add("AlignedBases");
+
+            sj.add("SecondCigar");
+            sj.add("SecondScore");
+            sj.add("SecondAlignedBases");
+
+            sj.add("FullSequence");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -87,14 +91,6 @@ public class AlignmentWriter
             final BufferedWriter writer, final AssemblyAlignment assemblyAlignment, final String fullSequence,
             final List<BwaMemAlignment> alignmentResults)
     {
-        if(alignmentResults.isEmpty())
-            return;
-
-        BwaMemAlignment topAlignment = alignmentResults.get(0);
-
-        if(topAlignment.getAlignerScore() == 0 || topAlignment.getCigar().isEmpty())
-            return;
-
         if(writer == null)
             return;
 
@@ -106,21 +102,44 @@ public class AlignmentWriter
             sj.add(assemblyAlignment.info());
             sj.add(String.valueOf(assemblyAlignment.svType()));
             sj.add(String.valueOf(assemblyAlignment.svLength()));
-            sj.add(fullSequence);
+            sj.add(String.valueOf(fullSequence.length()));
+            sj.add(assemblyAlignment.assemblyCigar());
 
-            BwaMemAlignment nextAlignment = alignmentResults.size() > 1 ? alignmentResults.get(1) : null;
+            BwaMemAlignment topAlignment = !alignmentResults.isEmpty() ? alignmentResults.get(0) : null;
+
+            if(topAlignment == null || topAlignment.getAlignerScore() == 0 || topAlignment.getCigar().isEmpty())
+            {
+                sj.add("").add("0").add("0").add("").add("0").add("0");
+                sj.add(fullSequence);
+                writer.write(sj.toString());
+                writer.newLine();
+                return;
+            }
 
             Cigar cigar = CigarUtils.cigarFromStr(topAlignment.getCigar());
             int alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
 
-            // writeMatchInfo(mWriter, assembly, topAlignment, alignedBases, nextAlignment);
-
             sj.add(topAlignment.getCigar());
-            sj.add(String.valueOf(alignedBases));
-            sj.add(String.valueOf(topAlignment.getNMismatches()));
-            sj.add(topAlignment.getXATag());
             sj.add(String.valueOf(topAlignment.getAlignerScore()));
-            sj.add(String.valueOf(nextAlignment != null ? nextAlignment.getAlignerScore() : -1));
+            sj.add(String.valueOf(alignedBases));
+
+            BwaMemAlignment nextAlignment = alignmentResults.size() > 1 ? alignmentResults.get(1) : null;
+
+            if(nextAlignment != null)
+            {
+                cigar = CigarUtils.cigarFromStr(nextAlignment.getCigar());
+                alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
+
+                sj.add(nextAlignment.getCigar());
+                sj.add(String.valueOf(nextAlignment.getAlignerScore()));
+                sj.add(String.valueOf(alignedBases));
+            }
+            else
+            {
+                sj.add("").add("0").add("0");
+            }
+
+            sj.add(fullSequence);
 
             writer.write(sj.toString());
             writer.newLine();
@@ -152,10 +171,11 @@ public class AlignmentWriter
             sj.add("SequenceCoords");
             sj.add("MapQual");
             sj.add("Cigar");
-            sj.add("Matches");
+            sj.add("AlignedBases");
             sj.add("Score");
-            sj.add("MateRefInfo");
-            sj.add("TemplateLength");
+            sj.add("NMatches");
+            // sj.add("MateRefInfo");
+            // sj.add("TemplateLength");
             sj.add("Location");
             sj.add("MDTag");
 
@@ -189,10 +209,15 @@ public class AlignmentWriter
                 sj.add(format("%d-%d", alignment.getSeqStart(), alignment.getSeqEnd()));
                 sj.add(String.valueOf(alignment.getMapQual()));
                 sj.add(String.valueOf(alignment.getCigar()));
-                sj.add(String.valueOf(alignment.getNMismatches()));
+
+                Cigar cigar = CigarUtils.cigarFromStr(alignment.getCigar());
+                int alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
+                sj.add(String.valueOf(alignedBases));
+
                 sj.add(String.valueOf(alignment.getAlignerScore()));
-                sj.add(format("%d-%d", alignment.getMateRefId(), alignment.getMateRefStart()));
-                sj.add(String.valueOf(alignment.getTemplateLen()));
+                sj.add(String.valueOf(alignment.getNMismatches()));
+                // sj.add(format("%d-%d", alignment.getMateRefId(), alignment.getMateRefStart()));
+                //sj.add(String.valueOf(alignment.getTemplateLen()));
                 sj.add(alignment.getXATag());
                 sj.add(alignment.getMDTag());
 

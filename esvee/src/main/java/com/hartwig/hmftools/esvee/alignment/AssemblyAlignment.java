@@ -3,6 +3,7 @@ package com.hartwig.hmftools.esvee.alignment;
 import static java.lang.String.format;
 
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
@@ -69,7 +70,6 @@ public class AssemblyAlignment
             {
                 first = mAssemblyLink.first();
                 second = mAssemblyLink.second();
-
             }
             else
             {
@@ -106,6 +106,33 @@ public class AssemblyAlignment
         fullSequence.append(overlapLength > 0 ? secondSequence.substring(overlapLength) : secondSequence);
 
         return fullSequence.toString();
+    }
+
+    public String assemblyCigar()
+    {
+        if(mAssemblies.size() == 1)
+        {
+            JunctionAssembly assembly = mAssemblies.get(0);
+
+            if(assembly.isForwardJunction())
+                return format("%dM%dS", assembly.refBaseLength(), assembly.extensionLength());
+            else
+                return format("%dS%dM", assembly.extensionLength(), assembly.refBaseLength());
+        }
+
+        int insertedBases = mAssemblyLink.insertedBases().length();
+        int overlapLength = mAssemblyLink.overlapBases().length();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(format("%dM", mAssemblyLink.first().refBaseLength()));
+
+        if(insertedBases > 0)
+            sb.append(format("%dI", insertedBases));
+
+        int secondLength = mAssemblyLink.second().refBaseLength() - overlapLength;
+        sb.append(format("%dM", secondLength));
+
+        return sb.toString();
     }
 
     public String toString() { return info(); }
