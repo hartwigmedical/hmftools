@@ -11,9 +11,10 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.readQualFromJunction;
 import static com.hartwig.hmftools.esvee.assembly.ExtensionSeqBuilder.calcReadSequenceMismatches;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_REF;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REF;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REGION;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.findUnsetBases;
@@ -539,7 +540,7 @@ public class JunctionAssembly
 
     public void setOutcome(final AssemblyOutcome outcome)
     {
-        if(mOutcome != REMOTE_REF) // persist classification for now
+        if(mOutcome != REMOTE_REGION && mOutcome != LOCAL_REF) // persist classification for now
             mOutcome = outcome;
     }
 

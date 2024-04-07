@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee;
+package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;

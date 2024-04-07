@@ -40,10 +40,12 @@ public final class AssemblyConstants
     public static final int ASSEMBLY_EXTENSION_BASE_MISMATCH = 2;
     public static final int REF_SIDE_MIN_SOFT_CLIP_LENGTH = MIN_SOFT_CLIP_LENGTH;
 
+    public static final int LOCAL_ASSEMBLY_MATCH_DISTANCE = 500;
+    public static final int LOCAL_ASSEMBLY_REF_LENGTH = 100;
+
     // phasing
     public static final int REMOTE_PHASING_MIN_READS = 2;
     public static final double REMOTE_REGION_WEAK_SUPP_PERCENT = 0.1;
-    public static final int PHASED_ASSEMBLY_OVERLAP_BASES = 100;
     public static final int PHASED_ASSEMBLY_JUNCTION_OVERLAP = 50;
     public static final int PHASED_ASSEMBLY_MAX_TI = 1000;
     public static final int PROXIMATE_DEL_LENGTH = 1000;
@@ -66,9 +68,4 @@ public final class AssemblyConstants
     // When extending alignments, if we have a candidate match within this many bases of the existing neighbour, prioritise that alignment
     public static final int ALIGNER_NEARBY_MAX_DISTANCE = 2000;
 
-    // The threshold below which a LOW_OVERHANG filter will be applied to the VCF
-    public static final int LOW_OVERHANG_THRESHOLD = 30;
-
-    // The threshold below which a LOW_QUALITY filter will be applied to the VCF
-    public static final int LOW_QUALITY_THRESHOLD = 40;
 }

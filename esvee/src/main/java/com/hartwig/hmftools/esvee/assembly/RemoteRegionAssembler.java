@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERG
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.formLink;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createMinBaseQuals;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.createByteArray;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
@@ -24,6 +25,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
@@ -39,7 +41,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class RemoteRegionAssembler
 {
-    private final AssemblyConfig mConfig;
+    private final RefGenomeInterface mRefGenome;
     private final BamReader mBamReader;
 
     private RemoteRegion mRemoteRegion;
@@ -49,9 +51,9 @@ public class RemoteRegionAssembler
     private int mTotalRemoteReadsSearch;
     private int mTotalRemoteReadsMatched;
 
-    public RemoteRegionAssembler(final AssemblyConfig config, final BamReader bamReader)
+    public RemoteRegionAssembler(final RefGenomeInterface refGenome, final BamReader bamReader)
     {
-        mConfig = config;
+        mRefGenome = refGenome;
         mBamReader = bamReader;
 
         mRemoteRegion = null;
@@ -77,8 +79,8 @@ public class RemoteRegionAssembler
 
         for(AssemblySupport support : assembly.support())
         {
-            if(support.read().isReference()) // for now no reference support
-                return false;
+            // if(support.read().isReference()) // for now no reference support
+            //    return false;
 
             Read read = support.read();
 
@@ -160,7 +162,7 @@ public class RemoteRegionAssembler
         int remoteRegionStart = mMatchedRemoteReads.stream().mapToInt(x -> x.alignmentStart()).min().orElse(0);
         int remoteRegionEnd = mMatchedRemoteReads.stream().mapToInt(x -> x.alignmentEnd()).max().orElse(0);
 
-        byte[] refGenomeBases = mConfig.RefGenome.getBases(remoteRegion.Chromosome, remoteRegionStart, remoteRegionEnd);
+        byte[] refGenomeBases = mRefGenome.getBases(remoteRegion.Chromosome, remoteRegionStart, remoteRegionEnd);
 
         AssemblyLink assemblyLink = tryAssemblyRemoteRefOverlap(assembly, remoteRegionStart, remoteRegionEnd, refGenomeBases);
 
@@ -363,12 +365,10 @@ public class RemoteRegionAssembler
                 inferredEnd = remoteRegionStart;
             }
 
-            String inferredRefBases = mConfig.RefGenome.getBaseString(mRemoteRegion.Chromosome, inferredStart, inferredEnd);
-            // byte[] inferredRefBaseQuals = createMinBaseQuals(inferredRefBasees.length);
+            String inferredRefBases = mRefGenome.getBaseString(mRemoteRegion.Chromosome, inferredStart, inferredEnd);
 
             // check for a simple match at the assembly's junction
             String assemblyJunctionSequence = assemblySeq.junctionSequence();
-            // int assemblyJunctionSeqLength = firstJunctionSequence.length();
 
             int secondIndexInFirst = assemblyJunctionSequence.indexOf(inferredRefBases);
 
@@ -382,7 +382,7 @@ public class RemoteRegionAssembler
                 int adjustedRemoteStart = mRemoteRegion.isForward() ? remoteRegionStart : inferredRemoteJunctionPosition;
                 int adjustedRemoteEnd = mRemoteRegion.isForward() ? inferredRemoteJunctionPosition : remoteRegionEnd;
 
-                byte[] remoteRefBases = mConfig.RefGenome.getBases(mRemoteRegion.Chromosome, adjustedRemoteStart, adjustedRemoteEnd);
+                byte[] remoteRefBases = mRefGenome.getBases(mRemoteRegion.Chromosome, adjustedRemoteStart, adjustedRemoteEnd);
                 byte[] remoteRefBaseQuals = createMinBaseQuals(remoteRefBases.length);
 
                 remoteRefSeq = new JunctionSequence(remoteRefBases, remoteRefBaseQuals, mRemoteRegion.orientation(), initialRemoteRefSeq.Reversed);
@@ -411,6 +411,9 @@ public class RemoteRegionAssembler
             remoteSupport.add(support);
         }
 
+        // TODO: consider adjusting the start pos and sequence to the inferred remote junction, or let reads from other remote locations
+        // fill in this gap?
+
         Junction remoteJunction = new Junction(mRemoteRegion.Chromosome, remoteJunctionPosition, mRemoteRegion.orientation());
 
         JunctionAssembly remoteAssembly = new JunctionAssembly(
@@ -423,6 +426,4 @@ public class RemoteRegionAssembler
         return formLink(assembly, remoteAssembly, assemblySeq, remoteRefSeq, firstIndexStart, secondIndexStart, false);
 
     }
-
-    private static byte[] createMinBaseQuals(final int length) { return createByteArray(length, (byte) (LOW_BASE_QUAL_THRESHOLD + 1)); }
 }

@@ -239,4 +239,33 @@ public class TestUtils
 
         return reads;
     }
+
+    public static String formTestRefSequence(final int length)
+    {
+        // tries to avoid long repeats
+        int currentIndex = 0;
+        int maxSegmentLength = 40;
+
+        StringBuilder sb = new StringBuilder();
+        int currentLength = 0;
+
+        while(currentLength < length)
+        {
+            String nextSegment = REF_BASES_200.substring(currentIndex, currentIndex + maxSegmentLength)
+                    + MockRefGenome.generateRandomBases(10);
+
+            if(nextSegment.length() + currentLength > length)
+                nextSegment = nextSegment.substring(0, length - currentLength);
+
+            sb.append(nextSegment);
+            currentLength += nextSegment.length();
+
+            ++currentIndex;
+
+            if(currentIndex + maxSegmentLength > REF_BASES_200.length())
+                currentIndex = 0;
+        }
+
+        return sb.toString();
+    }
 }

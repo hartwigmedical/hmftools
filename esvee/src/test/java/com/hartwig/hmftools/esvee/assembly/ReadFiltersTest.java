@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.assembly.read;
+package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftCli
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 
 import org.junit.Test;

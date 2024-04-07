@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.assembly.read;
+package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID;
@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 
 import static org.junit.Assert.assertEquals;
+
+import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 import org.junit.Test;
 

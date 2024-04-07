@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SUPP_ONL
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblySupport.hasMatchingFragment;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.createByteArray;
+import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
 import java.util.List;
 
@@ -190,6 +192,8 @@ public final class AssemblyUtils
     {
         return assembly.support().stream().allMatch(x -> x.read().isSupplementary());
     }
+
+    public static byte[] createMinBaseQuals(final int length) { return createByteArray(length, (byte) (LOW_BASE_QUAL_THRESHOLD + 1)); }
 
     public static void setAssemblyOutcome(final JunctionAssembly assembly)
     {

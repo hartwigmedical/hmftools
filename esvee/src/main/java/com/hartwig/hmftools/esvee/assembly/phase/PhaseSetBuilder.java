@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.LOCAL_ASSEMBLY_MATCH_DISTANCE;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isSupplementaryOnly;
@@ -13,7 +14,8 @@ import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRAN
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LINKED;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.extendRefBases;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.tryAssemblyFacing;
-import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REF;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_REF;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REGION;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SHORT_INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblySupport.findMatchingFragmentSupport;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblySupport.hasMatchingFragment;
@@ -30,6 +32,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.assembly.AssemblyLinker;
 import com.hartwig.hmftools.esvee.assembly.IndelBuilder;
+import com.hartwig.hmftools.esvee.assembly.LocalSequenceMatcher;
 import com.hartwig.hmftools.esvee.assembly.RemoteRegionAssembler;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
@@ -46,6 +49,7 @@ public class PhaseSetBuilder
     private final PhaseGroup mPhaseGroup;
     private final RefGenomeInterface mRefGenome;
     private final RemoteRegionAssembler mRemoteRegionAssembler;
+    private final LocalSequenceMatcher mLocalSequenceMatcher;
 
     // references from phase group
     private final List<JunctionAssembly> mAssemblies;
@@ -62,6 +66,8 @@ public class PhaseSetBuilder
         mRefGenome = refGenome;
         mPhaseGroup = phaseGroup;
         mRemoteRegionAssembler = remoteRegionAssembler;
+        mLocalSequenceMatcher = new LocalSequenceMatcher(refGenome, LOCAL_ASSEMBLY_MATCH_DISTANCE);
+
         mPhaseSets = mPhaseGroup.phaseSets();
         mAssemblies = mPhaseGroup.assemblies();
         mSecondarySplitLinks = mPhaseGroup.secondaryLinks();
@@ -72,7 +78,7 @@ public class PhaseSetBuilder
 
     public void buildPhaseSets()
     {
-        markShortIndelAssemblies();
+        markShortLocalIndels();
 
         if(mAssemblies.size() == 2 && handleAssemblyPair())
             return;
@@ -96,8 +102,13 @@ public class PhaseSetBuilder
         JunctionAssembly assembly1 = mAssemblies.get(0);
         JunctionAssembly assembly2 = mAssemblies.get(1);
 
-        if(!isLocalAssemblyCandidate(assembly1, assembly2) && (assembly1.outcome() == SHORT_INDEL) || assembly2.outcome() == SHORT_INDEL)
-            return false;
+        if(assembly1.outcome() == SHORT_INDEL || assembly2.outcome() == SHORT_INDEL)
+        {
+            // other than genuine local assemblies ie well-formed DELs and DUPs within the short bounds, don't attempt to form links
+            // if there is evidence that the reads and assembly relate to local short indels
+            if(!isLocalAssemblyCandidate(assembly1, assembly2))
+                return false;
+        }
 
         AssemblyLink assemblyLink = checkSplitLink(assembly1, assembly2);
 
@@ -111,9 +122,9 @@ public class PhaseSetBuilder
         return false;
     }
 
-    private void markShortIndelAssemblies()
+    private void markShortLocalIndels()
     {
-        // look for evidence that a local assembly with soft-clipped support is explained by a local short INDEL (length 10-31)
+        // look for evidence that a local assembly with soft-clipp support is explained by a local short INDEL (length 10-31)
         for(JunctionAssembly assembly : mAssemblies)
         {
             if(assembly.indel())
@@ -127,6 +138,25 @@ public class PhaseSetBuilder
                 assembly.setOutcome(SHORT_INDEL);
             }
         }
+    }
+
+    private boolean formsLocalLink(final JunctionAssembly assembly)
+    {
+        AssemblyLink localRefLink = mLocalSequenceMatcher.tryLocalAssemblyLink(assembly);
+
+        if(localRefLink == null)
+            return false;
+
+        assembly.setOutcome(LOCAL_REF);
+
+        JunctionAssembly localRefAssembly = localRefLink.otherAssembly(assembly);
+        localRefAssembly.setOutcome(LOCAL_REF);
+
+        mPhaseGroup.addDerivedAssembly(localRefAssembly);
+        mSplitLinks.add(localRefLink);
+
+        // no need to build out the link with matching reads etc since only one assembly has read support
+        return true;
     }
 
     private void formSplitLinks()
@@ -184,15 +214,30 @@ public class PhaseSetBuilder
 
             boolean alreadyLinked = linkedAssemblies.contains(assembly1) || linkedAssemblies.contains(assembly2);
 
-            /*
-            boolean hasLinkedDuplicate =
-                    (assembly1.outcome().isDuplicate() && linkedAssemblies.stream().anyMatch(x -> x.junction() == assembly1.junction()))
-                    || (assembly2.outcome().isDuplicate() && linkedAssemblies.stream().anyMatch(x -> x.junction() == assembly2.junction()));
-            */
-
             // test if a link can be made
             if(!alreadyLinked)
             {
+                // first check if either assembly matches a local sequence (note both are checked)
+                if(!sharedReadPair.IsLocalDelDup)
+                {
+                    boolean matchesLocal = false;
+
+                    if(formsLocalLink(assembly1))
+                    {
+                        matchesLocal = true;
+                        linkedAssemblies.add(assembly1);
+                    }
+
+                    if(formsLocalLink(assembly2))
+                    {
+                        matchesLocal = true;
+                        linkedAssemblies.add(assembly2);
+                    }
+
+                    if(matchesLocal)
+                        continue;
+                }
+
                 AssemblyLink assemblyLink = checkSplitLink(assembly1, assembly2);
 
                 if(assemblyLink == null)
@@ -382,7 +427,7 @@ public class PhaseSetBuilder
 
                 JunctionAssembly remoteAssembly = assemblyLink.otherAssembly(assembly);
 
-                remoteAssembly.setOutcome(REMOTE_REF);
+                remoteAssembly.setOutcome(REMOTE_REGION);
 
                 mPhaseGroup.addDerivedAssembly(remoteAssembly);
 

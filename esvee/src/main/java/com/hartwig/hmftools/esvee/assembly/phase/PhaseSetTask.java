@@ -31,7 +31,7 @@ public class PhaseSetTask extends ThreadTask
         mPhaseGroups = phaseGroups;
         mPhaseGroupCount = mPhaseGroups.size();
 
-        mRemoteRegionAssembler = new RemoteRegionAssembler(config, bamReader);
+        mRemoteRegionAssembler = new RemoteRegionAssembler(config.RefGenome, bamReader);
     }
 
     public static List<PhaseSetTask> createThreadTasks(

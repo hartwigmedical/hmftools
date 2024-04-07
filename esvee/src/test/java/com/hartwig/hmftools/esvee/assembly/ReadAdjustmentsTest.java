@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.assembly.read;
+package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_BASE_QUAL;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
@@ -12,6 +12,9 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.POLY_G_TRIM_LENGTH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
 
 import org.junit.Test;
 

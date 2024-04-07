@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.prep;
+package com.hartwig.hmftools.esvee.depth;
 
 import static java.lang.String.format;
 
