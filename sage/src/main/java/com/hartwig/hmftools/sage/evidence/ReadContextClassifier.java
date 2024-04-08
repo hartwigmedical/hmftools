@@ -31,7 +31,17 @@ public class ReadContextClassifier
             return null;
         }
 
-        return ReadContextCounter.MatchType.NONE;
+        if(isFullMatch(read))
+        {
+            return ReadContextCounter.MatchType.FULL;
+        }
+
+        return ReadContextCounter.MatchType.FULL;
+    }
+
+    private boolean isFullMatch(final SAMRecord read)
+    {
+        return false;
     }
 
 //    public ReadMatchType processRead(final SAMRecord record, int numberOfEvents, @Nullable final FragmentData fragmentData)

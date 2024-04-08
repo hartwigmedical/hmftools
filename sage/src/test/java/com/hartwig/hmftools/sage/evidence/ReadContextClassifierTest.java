@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
@@ -30,25 +31,25 @@ public class ReadContextClassifierTest
         }
     }
 
+    // TODO: Other types of variants.
+    private static final String SNV_READ_STRING;
+    private static final int SNV_READ_START_POS = 50;
     private static final VariantReadContext SNV_CONTEXT;
     static
     {
         String chromosome = CHR_1;
         int position = 100;
-        int readStartPos = 50;
         String refBases = REF_BASES_200;
 
         String ref = String.valueOf(REF_BASES_200.charAt(position - 1));
-        String alt = "A";
+        String alt = swapDnaBase(ref);
 
-        // TODO:
-//        assertNotEquals(ref, alt);
+        int varReadIndex = position - SNV_READ_START_POS;
 
-        int varReadIndex = position - readStartPos;
-
-        StringBuilder readBases = new StringBuilder(refBases.substring(readStartPos - 1, readStartPos - 1 + READ_LENGTH));
-        readBases.setCharAt(varReadIndex, alt.charAt(0));
-        SAMRecord read = buildSamRecord(readStartPos, READ_LENGTH + "M", readBases.toString(), QUALITIES);
+        StringBuilder readString = new StringBuilder(refBases.substring(SNV_READ_START_POS - 1, SNV_READ_START_POS - 1 + READ_LENGTH));
+        readString.setCharAt(varReadIndex, alt.charAt(0));
+        SNV_READ_STRING = readString.toString();
+        SAMRecord read = buildSamRecord(SNV_READ_START_POS, READ_LENGTH + "M", SNV_READ_STRING, QUALITIES);
 
         SimpleVariant variant = new SimpleVariant(chromosome, position, ref, alt);
         RefSequence refSequence = new RefSequence(1, refBases.getBytes());
@@ -68,7 +69,7 @@ public class ReadContextClassifierTest
     }
 
     @Test
-    public void testNonoverlappingRead()
+    public void testNonOverlappingRead()
     {
         SAMRecord read = buildSamRecord(SNV_CONTEXT.AlignmentEnd + 1, READ_LENGTH + "M", "A".repeat(READ_LENGTH), QUALITIES);
         ReadContextClassifier classifier = new ReadContextClassifier(SNV_CONTEXT);
@@ -78,12 +79,19 @@ public class ReadContextClassifierTest
     }
 
     @Test
-    public void testOverlappingRead()
+    public void testFullMatchSnvCoreAndRightFlank()
     {
-        SAMRecord read = buildSamRecord(SNV_CONTEXT.AlignmentStart, READ_LENGTH + "M", "A".repeat(READ_LENGTH), QUALITIES);
+        StringBuilder readString = new StringBuilder(SNV_READ_STRING);
+        for(int pos = SNV_READ_START_POS; pos < SNV_CONTEXT.AlignmentStart; ++pos)
+        {
+            int idx = pos - SNV_READ_START_POS;
+            readString.setCharAt(idx, swapDnaBase(readString.charAt(idx)));
+        }
+
+        SAMRecord read = buildSamRecord(SNV_READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
         ReadContextClassifier classifier = new ReadContextClassifier(SNV_CONTEXT);
         ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
 
-        assertEquals(ReadContextCounter.MatchType.NONE, matchType);
+        assertEquals(ReadContextCounter.MatchType.FULL, matchType);
     }
 }
