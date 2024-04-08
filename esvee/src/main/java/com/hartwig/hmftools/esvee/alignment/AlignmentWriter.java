@@ -3,28 +3,22 @@ package com.hartwig.hmftools.esvee.alignment;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.DECOY_MAX_MISMATCHES;
 
 import static htsjdk.samtools.CigarOperator.M;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.output.WriteType;
-import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
-import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
 
 import htsjdk.samtools.Cigar;
 
@@ -36,13 +30,28 @@ public class AlignmentWriter
 
     public AlignmentWriter(final AssemblyConfig config)
     {
-        mWriter = initialiseWriter(config);
-        mDetailedWriter = initialiseDetailedWriter(config);
+        if(config.AlignmentFile == null)
+        {
+            mWriter = initialiseWriter(config);
+            mDetailedWriter = initialiseDetailedWriter(config);
+        }
+        else
+        {
+            mWriter = null;
+            mDetailedWriter = null;
+        }
+
         mAligner = null;
     }
 
     public BufferedWriter alignmentWriter() { return mWriter; }
     public BufferedWriter alignmentDetailsWriter() { return mDetailedWriter; }
+
+    public void close()
+    {
+        closeBufferedWriter(mWriter);
+        closeBufferedWriter(mDetailedWriter);
+    }
 
     private BufferedWriter initialiseWriter(final AssemblyConfig config)
     {
@@ -58,8 +67,8 @@ public class AlignmentWriter
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            sj.add("AssemblyIds");
-            sj.add("AssemblyInfo");
+            sj.add(FLD_ASSEMBLY_IDS);
+            sj.add(FLD_ASSEMLY_INFO);
             sj.add("SvType");
             sj.add("SvLength");
             sj.add("RefBaseLength");
@@ -91,7 +100,7 @@ public class AlignmentWriter
 
     public synchronized static void writeAssemblyAlignment(
             final BufferedWriter writer, final AssemblyAlignment assemblyAlignment, final String fullSequence,
-            final List<BwaMemAlignment> alignmentResults)
+            final List<AlignData> alignmentResults)
     {
         if(writer == null)
             return;
@@ -108,9 +117,9 @@ public class AlignmentWriter
             sj.add(String.valueOf(fullSequence.length()));
             sj.add(assemblyAlignment.assemblyCigar());
 
-            BwaMemAlignment topAlignment = !alignmentResults.isEmpty() ? alignmentResults.get(0) : null;
+            AlignData topAlignment = !alignmentResults.isEmpty() ? alignmentResults.get(0) : null;
 
-            if(topAlignment == null || topAlignment.getAlignerScore() == 0 || topAlignment.getCigar().isEmpty())
+            if(topAlignment == null || topAlignment.Score == 0 || topAlignment.Cigar.isEmpty())
             {
                 sj.add("0").add("").add("0").add("0").add("").add("0").add("0");
                 sj.add(fullSequence);
@@ -121,22 +130,22 @@ public class AlignmentWriter
 
             sj.add(String.valueOf(alignmentResults.size()));
 
-            Cigar cigar = CigarUtils.cigarFromStr(topAlignment.getCigar());
+            Cigar cigar = CigarUtils.cigarFromStr(topAlignment.Cigar);
             int alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
 
-            sj.add(topAlignment.getCigar());
-            sj.add(String.valueOf(topAlignment.getAlignerScore()));
+            sj.add(topAlignment.Cigar);
+            sj.add(String.valueOf(topAlignment.Score));
             sj.add(String.valueOf(alignedBases));
 
-            BwaMemAlignment nextAlignment = alignmentResults.size() > 1 ? alignmentResults.get(1) : null;
+            AlignData nextAlignment = alignmentResults.size() > 1 ? alignmentResults.get(1) : null;
 
             if(nextAlignment != null)
             {
-                cigar = CigarUtils.cigarFromStr(nextAlignment.getCigar());
+                cigar = CigarUtils.cigarFromStr(nextAlignment.Cigar);
                 alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
 
-                sj.add(nextAlignment.getCigar());
-                sj.add(String.valueOf(nextAlignment.getAlignerScore()));
+                sj.add(nextAlignment.Cigar);
+                sj.add(String.valueOf(nextAlignment.Score));
                 sj.add(String.valueOf(alignedBases));
             }
             else
@@ -155,6 +164,17 @@ public class AlignmentWriter
         }
     }
 
+    public static final String FLD_ASSEMBLY_IDS = "AssemblyIds";
+    public static final String FLD_ASSEMLY_INFO = "AssemblyInfo";
+    public static final String FLD_REF_LOCATION = "RefInfo";
+    public static final String FLD_SEQUENCE_COORDS = "SequenceCoords";
+    public static final String FLD_MAP_QUAL = "MapQual";
+    public static final String FLD_CIGAR = "Cigar";
+    public static final String FLD_SCORE = "Score";
+    public static final String FLD_NMATCHES = "NMatches";
+    public static final String FLD_LOC_TAG = "LocTag";
+    public static final String FLD_MD_TAG = "MdTag";
+
     private BufferedWriter initialiseDetailedWriter(final AssemblyConfig config)
     {
         if(!config.WriteTypes.contains(WriteType.ALIGNMENT_DETAILED))
@@ -169,20 +189,18 @@ public class AlignmentWriter
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            sj.add("AssemblyIds");
-            sj.add("AssemblyInfo");
+            sj.add(FLD_ASSEMBLY_IDS);
+            sj.add(FLD_ASSEMLY_INFO);
 
-            sj.add("RefInfo");
-            sj.add("SequenceCoords");
-            sj.add("MapQual");
-            sj.add("Cigar");
+            sj.add(FLD_REF_LOCATION);
+            sj.add(FLD_SEQUENCE_COORDS);
+            sj.add(FLD_MAP_QUAL);
+            sj.add(FLD_CIGAR);
             sj.add("AlignedBases");
-            sj.add("Score");
-            sj.add("NMatches");
-            // sj.add("MateRefInfo");
-            // sj.add("TemplateLength");
-            sj.add("Location");
-            sj.add("MDTag");
+            sj.add(FLD_SCORE);
+            sj.add(FLD_NMATCHES);
+            sj.add(FLD_LOC_TAG);
+            sj.add(FLD_MD_TAG);
 
             writer.write(sj.toString());
             writer.newLine();
@@ -197,34 +215,32 @@ public class AlignmentWriter
     }
 
     public synchronized static void writeAlignmentDetails(
-            final BufferedWriter writer, final AssemblyAlignment assemblyAlignment, final List<BwaMemAlignment> alignments)
+            final BufferedWriter writer, final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments)
     {
-        if(writer == null)
+        if(writer == null || alignments.isEmpty())
             return;
 
         try
         {
             String assemblyStr = format("%s\t%s", assemblyAlignment.ids(), assemblyAlignment.info());
 
-            for(BwaMemAlignment alignment : alignments)
+            for(AlignData alignment : alignments)
             {
                 StringJoiner sj = new StringJoiner(TSV_DELIM);
                 sj.add(assemblyStr);
-                sj.add(format("%d:%d-%d", alignment.getRefId(), alignment.getRefStart(), alignment.getRefEnd()));
-                sj.add(format("%d-%d", alignment.getSeqStart(), alignment.getSeqEnd()));
-                sj.add(String.valueOf(alignment.getMapQual()));
-                sj.add(String.valueOf(alignment.getCigar()));
+                sj.add(alignment.RefLocation.toString());
+                sj.add(format("%d-%d", alignment.SequenceStart, alignment.SequenceEnd));
+                sj.add(String.valueOf(alignment.MapQual));
+                sj.add(String.valueOf(alignment.Cigar));
 
-                Cigar cigar = CigarUtils.cigarFromStr(alignment.getCigar());
+                Cigar cigar = CigarUtils.cigarFromStr(alignment.Cigar);
                 int alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
                 sj.add(String.valueOf(alignedBases));
 
-                sj.add(String.valueOf(alignment.getAlignerScore()));
-                sj.add(String.valueOf(alignment.getNMismatches()));
-                // sj.add(format("%d-%d", alignment.getMateRefId(), alignment.getMateRefStart()));
-                //sj.add(String.valueOf(alignment.getTemplateLen()));
-                sj.add(alignment.getXATag());
-                sj.add(alignment.getMDTag());
+                sj.add(String.valueOf(alignment.Score));
+                sj.add(String.valueOf(alignment.NMatches));
+                sj.add(alignment.LocationInfo);
+                sj.add(alignment.MdTag);
 
                 writer.write(sj.toString());
                 writer.newLine();

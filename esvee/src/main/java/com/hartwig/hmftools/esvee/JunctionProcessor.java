@@ -6,8 +6,8 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
-import static com.hartwig.hmftools.esvee.alignment.Alignment.alignAssemblyLink;
-import static com.hartwig.hmftools.esvee.alignment.Alignment.alignJunctionAssembly;
+import static com.hartwig.hmftools.esvee.alignment.Alignment.skipAssemblyLink;
+import static com.hartwig.hmftools.esvee.alignment.Alignment.skipJunctionAssembly;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
@@ -270,8 +270,10 @@ public class JunctionProcessor
         if(!mConfig.RunAlignment)
             return;
 
-        Alignment alignment = new Alignment(mConfig, new BwaAligner(mConfig));
+        boolean useCache = mConfig.AlignmentFile != null;
+        Alignment alignment = new Alignment(mConfig, !useCache ? new BwaAligner(mConfig) : null);
         alignment.run(assemblyAlignments, mPerfCounters);
+        alignment.close();
     }
 
     private void gatherAssemblies(final List<JunctionAssembly> allAssemblies, final List<AssemblyAlignment> assemblyAlignments)
@@ -308,14 +310,14 @@ public class JunctionProcessor
                 {
                     for(AssemblyLink assemblyLink : phaseSet.assemblyLinks())
                     {
-                        if(alignAssemblyLink(assemblyLink))
+                        if(!skipAssemblyLink(assemblyLink))
                             assemblyAlignments.add(new AssemblyAlignment(assemblyLink));
                     }
                 }
 
                 for(JunctionAssembly assembly : phaseGroup.assemblies())
                 {
-                    if(assembly.phaseSet() == null && alignJunctionAssembly(assembly))
+                    if(assembly.phaseSet() == null && !skipJunctionAssembly(assembly))
                         assemblyAlignments.add(new AssemblyAlignment(assembly));
                 }
             }

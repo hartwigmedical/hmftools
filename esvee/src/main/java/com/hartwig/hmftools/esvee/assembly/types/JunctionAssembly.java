@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.alignment.AlignmentOutcome.UNALIGNED;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.readQualFromJunction;
 import static com.hartwig.hmftools.esvee.assembly.ExtensionSeqBuilder.calcReadSequenceMismatches;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_REF;
@@ -32,6 +33,7 @@ import javax.annotation.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.esvee.alignment.AlignmentOutcome;
 import com.hartwig.hmftools.esvee.assembly.filters.FilterType;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 
@@ -62,6 +64,7 @@ public class JunctionAssembly
 
     private PhaseGroup mPhaseGroup;
     private AssemblyOutcome mOutcome;
+    private AlignmentOutcome mAlignmentOutcome;
 
     // info only
     private int mMergedAssemblies;
@@ -115,6 +118,7 @@ public class JunctionAssembly
         mMergedAssemblies = 0;
         mPhaseGroup = null;
         mOutcome = UNSET;
+        mAlignmentOutcome = UNALIGNED;
         mFilters = Sets.newHashSet();
         mMismatchReadCount = 0;
     }
@@ -544,6 +548,9 @@ public class JunctionAssembly
             mOutcome = outcome;
     }
 
+    public AlignmentOutcome alignmentOutcome() { return mAlignmentOutcome; }
+    public void setAlignmentOutcome(final AlignmentOutcome outcome) { mAlignmentOutcome = outcome; }
+
     public JunctionAssembly(
             final JunctionAssembly initialAssembly, final RefSideSoftClip refSideSoftClip,
             final List<AssemblySupport> initialSupport, final Set<Read> excludedReads)
@@ -629,6 +636,7 @@ public class JunctionAssembly
 
         mInitialRead = initialRead;
         mOutcome = initialAssembly.outcome();
+        mAlignmentOutcome = initialAssembly.alignmentOutcome();
     }
 
     public void addCandidateSupport(final Read read, final SupportType type)
@@ -753,6 +761,7 @@ public class JunctionAssembly
         mFilters = Sets.newHashSet();
         mMergedAssemblies = 0;
         mOutcome = UNSET;
+        mAlignmentOutcome = UNALIGNED;
         mMismatchReadCount = 0;
     }
 

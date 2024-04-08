@@ -57,6 +57,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.esvee.alignment.AlignmentCache;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
@@ -111,6 +112,7 @@ public class AssemblyConfig
     public final int Threads;
 
     public final String TruthsetFile;
+    public final String AlignmentFile;
 
     public static final String OUTPUT_VCF = "output_vcf";
     private static final String REF_GENOME_IMAGE = "ref_genome_image";
@@ -262,6 +264,7 @@ public class AssemblyConfig
         Threads = parseThreads(configBuilder);
 
         TruthsetFile = TruthsetAnnotation.filename(configBuilder);
+        AlignmentFile = AlignmentCache.filename(configBuilder);
 
         if(RunAlignment || DecoyGenome != null)
             loadAlignerLibrary(null); // or load path from config
@@ -347,6 +350,7 @@ public class AssemblyConfig
                 PHASE_PROCESSING_LIMIT, "Exclude phase groups above this size from extension and phase sets", 0);
 
         TruthsetAnnotation.registerConfig(configBuilder);
+        AlignmentCache.registerConfig(configBuilder);
         BamToolName.addConfig(configBuilder);
 
         SpecificRegions.addSpecificChromosomesRegionsConfig(configBuilder);
@@ -398,5 +402,6 @@ public class AssemblyConfig
         PhaseProcessingLimit = 0;
         Threads = 0;
         TruthsetFile = null;
+        AlignmentFile = null;
     }
 }

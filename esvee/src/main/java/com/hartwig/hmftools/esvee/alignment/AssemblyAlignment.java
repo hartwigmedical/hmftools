@@ -28,6 +28,14 @@ public class AssemblyAlignment
         mAssemblyLink = assemblyLink;
     }
 
+    public JunctionAssembly first() { return mAssemblies.get(0); }
+    public JunctionAssembly second() { return mAssemblies.size() > 1 ? mAssemblies.get(1) : null; }
+
+    public void setOutcome(final AlignmentOutcome outcome)
+    {
+        mAssemblies.forEach(x -> x.setAlignmentOutcome(outcome));
+    }
+
     public String ids()
     {
         if(mAssemblies.size() == 1)

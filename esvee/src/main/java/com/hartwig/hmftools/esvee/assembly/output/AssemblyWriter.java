@@ -74,6 +74,7 @@ public class AssemblyWriter
             sj.add("RefBaseTrimLength");
             sj.add("JunctionSequence");
             sj.add("RefBaseSequence");
+            sj.add("AlignResult");
 
             // extra detailed fields
             sj.add("InitialReadId");
@@ -143,6 +144,8 @@ public class AssemblyWriter
                 int refBaseLength = mConfig.AssemblyRefBaseWriteMax == 0 ? assembly.refBaseLength() : mConfig.AssemblyRefBaseWriteMax;
                 sj.add(assembly.formRefBaseSequence(refBaseLength)); // long enough to show most short TIs
             }
+
+            sj.add(String.valueOf(assembly.alignmentOutcome()));
 
             sj.add(assembly.initialRead() != null ? assembly.initialRead().id() : "NONE"); // shouldn't occur
 
