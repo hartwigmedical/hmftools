@@ -124,7 +124,9 @@ public class GermlineSvCache
 
             final StructuralRefContextEnrichment refEnricher = new StructuralRefContextEnrichment(mRefGenomeFile, writer::add);
 
-            writer.writeHeader(refEnricher.enrichHeader(mVcfHeader.get()));
+            VCFHeader header = mVcfHeader.get();
+            refEnricher.enrichHeader(header);
+            writer.writeHeader(header);
 
             // may be no reason to use the enriched collection, unsure if it adds any value
             for(StructuralVariant variant : mVariantCollection.variants())
@@ -144,8 +146,6 @@ public class GermlineSvCache
 
                 refEnricher.accept(variant);
             }
-
-            refEnricher.flush();
 
             writer.close();
         }
