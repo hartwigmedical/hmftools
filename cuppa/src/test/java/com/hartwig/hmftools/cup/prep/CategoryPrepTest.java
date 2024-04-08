@@ -18,7 +18,7 @@ import static org.junit.Assert.assertTrue;
 
 public class CategoryPrepTest
 {
-    public final String selectedSampleId = "COLO829v003T";
+    public final String selectedSampleId = "TUMOR_SAMPLE";
 
     public final PrepConfig prepConfig = new TestPrepConfigBuilder()
             .sampleIds(List.of(selectedSampleId))
@@ -59,10 +59,10 @@ public class CategoryPrepTest
 
         // Check one value of each type
         HashMap<String, String> dataItemsMap = makeDataItemsMap(dataItems);
-        assertEquals(dataItemsMap.get("C>A_ACA"), "133");
-        assertEquals(dataItemsMap.get("snv_count"), "37660");
-        assertEquals(dataItemsMap.get("SIG_7_UV"), "24193.2");
-        assertEquals(dataItemsMap.get("1_3000000"), "10");
+        assertEquals(dataItemsMap.get("C>T_TCC"), "2");
+        assertEquals(dataItemsMap.get("snv_count"), "8");
+        assertEquals(dataItemsMap.get("SIG_7_UV"), "6.4");
+        assertEquals(dataItemsMap.get("1_1000000"), "1");
     }
 
     @Test
@@ -96,7 +96,7 @@ public class CategoryPrepTest
     public void canExtractEventFeatures()
     {
         FeaturePrep prep = new FeaturePrep(prepConfig);
-        List<DataItem> dataItems = prep.extractSampleData("COLO829v003T_modified"); // Use modified COLO files with dummy driver/fusion/virus features inserted
+        List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
 
         assertEquals(8, dataItems.size());
         assertEquals(dataItems.get(0), new DataItem(DataSource.DNA, ItemType.DRIVER, "BRAF.mut", "1.0"));

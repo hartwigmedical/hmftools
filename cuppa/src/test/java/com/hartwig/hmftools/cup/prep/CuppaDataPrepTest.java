@@ -30,7 +30,7 @@ public class CuppaDataPrepTest
     {
         TMP_DIR.mkdir();
 
-        String selectedSampleId = "COLO829v003T";
+        String selectedSampleId = "TUMOR_SAMPLE";
 
         PrepConfig prepConfig = new TestPrepConfigBuilder()
                 .sampleIds(List.of(selectedSampleId))
@@ -48,11 +48,11 @@ public class CuppaDataPrepTest
         // Check values
         List<DataItem> dataItems = cuppaDataPrep.mDataItems;
 
-        assertEquals(6346,  dataItems.size());
+        assertEquals(6347,  dataItems.size());
 
         assertEquals(
-                new DataItem(DataSource.DNA, ItemType.SNV96, "C>A_ACA", "133"),
-                dataItems.get(0)
+                new DataItem(DataSource.DNA, ItemType.SNV96, "C>T_TCC", "2"),
+                dataItems.get(45)
         );
 
         assertEquals(
@@ -73,8 +73,8 @@ public class CuppaDataPrepTest
 
         PrepConfig prepConfig = new TestPrepConfigBuilder()
                 .sampleIds(Arrays.asList(
-                        "COLO829v003T", "COLO829v003T",
-                        "COLO829v003T_modified", "COLO829v003T_modified", "COLO829v003T_modified", "COLO829v003T_modified"
+                        "MINIMAL_SAMPLE", "MINIMAL_SAMPLE",
+                        "TUMOR_SAMPLE", "TUMOR_SAMPLE", "TUMOR_SAMPLE", "TUMOR_SAMPLE"
                 ))
                 .categories(CategoryType.getAllCategories())
                 .refGenomeVersion("V37")
