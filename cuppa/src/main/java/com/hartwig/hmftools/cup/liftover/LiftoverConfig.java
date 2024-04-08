@@ -47,7 +47,7 @@ public class LiftoverConfig
 
         configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
         configBuilder.addPath(SAMPLE_VCF_DIR, true, "Path to sample VCF(s)");
-        configBuilder.addFlag(APPLY_FILTERS, "Only convert and write variants used by Cuppa's somatic classifier");
+        configBuilder.addFlag(APPLY_FILTERS, "Ignore MNVs and non-PASS variants");
         configBuilder.addFlag(KEEP_EXISTING, "Do not overwrite existing output sample files");
     }
 }

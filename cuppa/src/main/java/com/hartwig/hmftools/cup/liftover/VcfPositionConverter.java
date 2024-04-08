@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.U
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.isKnownIndel;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -80,21 +79,13 @@ public class VcfPositionConverter implements Callable
 
             for(VariantContext variantContext : reader.iterator())
             {
-                // TODO: is ApplyFilters necessary? Why not load all variants?
-                //  If not, FeatureDataLoader dependency can be removed
                 if(mConfig.ApplyFilters && variantContext.isFiltered())
                     continue;
 
                 SomaticVariant variant = SomaticVariant.fromContext(variantContext);
 
-                if(mConfig.ApplyFilters)
-                {
-                    if(variant.Type == VariantType.MNP)
-                        continue;
-
-                    if(variant.Type == VariantType.INDEL && !isKnownIndel(variant.Gene, variant.RepeatCount, variant.Type))
-                        continue;
-                }
+                if(mConfig.ApplyFilters && variant.Type == VariantType.MNP)
+                    continue;
 
                 int convertedPosition = mMappingEnabled ? convertPosition(variant.Chromosome, variant.Position) : variant.Position;
                 writeVariant(variant, convertedPosition);
