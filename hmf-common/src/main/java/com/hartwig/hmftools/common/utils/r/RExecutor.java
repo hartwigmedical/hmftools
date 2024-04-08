@@ -44,22 +44,17 @@ public final class RExecutor
     private static final String R_EXE = "Rscript";
     private static final Logger LOGGER = LogManager.getLogger(RExecutor.class);
 
-    public static int executeFromClasspath(final String rScriptName, final String... arguments) throws IOException, InterruptedException
-    {
-        return executeFromClasspath(rScriptName, false, arguments);
-    }
-
-    public static int executeFromClasspath(final String rScriptName, final boolean writeErrorToFile, final String... arguments)
+    public static int executeFromClasspath(final String rScriptName, final String... arguments)
             throws IOException, InterruptedException
     {
         final File scriptFile = writeScriptFile(rScriptName);
 
-        final int returnCode = executeFromFile(rScriptName, scriptFile, writeErrorToFile, arguments);
+        final int returnCode = executeFromFile(rScriptName, scriptFile, arguments);
         htsjdk.samtools.util.IOUtil.deleteFiles(scriptFile);
         return returnCode;
     }
 
-    private static int executeFromFile(final String rScriptName, final File scriptFile, final boolean writeErrorToFile, final String... arguments)
+    private static int executeFromFile(final String rScriptName, final File scriptFile, final String... arguments)
             throws IOException, InterruptedException
     {
         final String[] command = new String[arguments.length + 2];
@@ -76,22 +71,8 @@ public final class RExecutor
 
         if(result != 0)
         {
-            if(writeErrorToFile)
-            {
-                File errorFile = File.createTempFile(rScriptName, ".error");
-
-                try(FileOutputStream errorFileStream = new FileOutputStream(errorFile))
-                {
-                    errorFileStream.write(process.getErrorStream().readAllBytes());
-                }
-
-                LOGGER.fatal("Error executing R script. Examine error file {} for details.", errorFile.toString());
-            }
-            else
-            {
-                System.err.print(new String(process.getErrorStream().readAllBytes()));
-                LOGGER.fatal("Error executing R script.");
-            }
+            System.err.print(new String(process.getErrorStream().readAllBytes()));
+            LOGGER.fatal("Error executing R script.");
         }
 
         return result;

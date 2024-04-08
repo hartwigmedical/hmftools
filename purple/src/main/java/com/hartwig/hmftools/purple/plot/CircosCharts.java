@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -21,20 +22,19 @@ import com.hartwig.hmftools.common.circos.CircosINDELWriter;
 import com.hartwig.hmftools.common.circos.CircosLinkWriter;
 import com.hartwig.hmftools.common.circos.CircosSNPWriter;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
-import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.purple.region.ObservedRegion;
+import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Downsample;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.purple.config.ChartConfig;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.apache.logging.log4j.core.util.IOUtils;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CircosCharts
@@ -117,18 +117,25 @@ public class CircosCharts
         List<ObservedRegion> selectRegions = fittedRegions.stream()
                 .filter(x -> x.germlineStatus() == GermlineStatus.DIPLOID).collect(Collectors.toList());
 
+        // make the glyph size proportional to number of cobalt windows
+        ToDoubleFunction<ObservedRegion> glyphSizeFunc = (ObservedRegion region) -> {
+            int windowCount = region.depthWindowCount();
+            return 4 * (Math.log10(Math.max(windowCount, 1)) + 1);
+        };
+
         if(!mBaseCircosReferenceSample.isEmpty())
         {
-            CircosFileWriter.writeRegions(
-                    mBaseCircosReferenceSample + ".ratio.circos",
+            CircosFileWriter.writeRegions(mBaseCircosReferenceSample + ".ratio.circos",
                     selectRegions.stream().filter(x -> Doubles.positive(x.unnormalisedObservedNormalRatio())).collect(Collectors.toList()),
-                    ObservedRegion::unnormalisedObservedNormalRatio);
+                    ObservedRegion::unnormalisedObservedNormalRatio,
+                    glyphSizeFunc);
         }
 
         CircosFileWriter.writeRegions(
                 mBaseCircosTumorSample + ".ratio.circos",
                 selectRegions.stream().filter(x -> Doubles.positive(x.observedTumorRatio())).collect(Collectors.toList()),
-                ObservedRegion::observedTumorRatio);
+                ObservedRegion::observedTumorRatio,
+                glyphSizeFunc);
     }
 
     private void writeBafs(final List<AmberBAF> bafs) throws IOException

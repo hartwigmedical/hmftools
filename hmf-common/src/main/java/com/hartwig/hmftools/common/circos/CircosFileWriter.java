@@ -14,14 +14,24 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class CircosFileWriter
 {
     public static <T extends GenomeRegion> void writeRegions(
             final String filePath, Collection<T> values, ToDoubleFunction<T> valueExtractor) throws IOException
     {
-        Function<T, String> toString = t -> transformRegion(valueExtractor, t);
+        Function<T, String> toString = t -> transformRegion(valueExtractor, null, t);
+        writeCircosFile(filePath, values, toString);
+    }
+
+    public static <T extends GenomeRegion> void writeRegions(
+            final String filePath,
+            Collection<T> values,
+            ToDoubleFunction<T> valueExtractor,
+            ToDoubleFunction<T> glyphSizeExtractor) throws IOException
+    {
+        Function<T, String> toString = t -> transformRegion(valueExtractor, glyphSizeExtractor, t);
         writeCircosFile(filePath, values, toString);
     }
 
@@ -32,7 +42,7 @@ public final class CircosFileWriter
         writeCircosFile(filePath, values, toString);
     }
 
-    private static <T> void writeCircosFile(
+    public static <T> void writeCircosFile(
             final String filePath, Collection<T> values, Function<T, String> toStringFunction) throws IOException
     {
         final Collection<String> lines = Lists.newArrayList();
@@ -58,19 +68,27 @@ public final class CircosFileWriter
                 .toString();
     }
 
-    private static <T extends GenomeRegion> String transformRegion(ToDoubleFunction<T> valueExtractor, T region)
+    private static <T extends GenomeRegion> String transformRegion(
+            ToDoubleFunction<T> valueExtractor,
+            @Nullable ToDoubleFunction<T> glyphSizeExtractor, T region)
     {
-        return new StringBuilder().append(circosContig(region.chromosome()))
+        StringBuilder stringBuilder = new StringBuilder().append(circosContig(region.chromosome()))
                 .append('\t')
                 .append(region.start())
                 .append('\t')
                 .append(region.end())
                 .append('\t')
-                .append(valueExtractor.applyAsDouble(region))
-                .toString();
+                .append(String.format("%.4f", valueExtractor.applyAsDouble(region)));
+
+        if(glyphSizeExtractor != null)
+        {
+            stringBuilder.append('\t')
+                    .append(String.format("glyph_size=%.2f", glyphSizeExtractor.applyAsDouble(region)));
+        }
+        return stringBuilder.toString();
     }
 
-    static String circosContig(String chromosome)
+    public static String circosContig(String chromosome)
     {
         return "hs" + HumanChromosome.fromString(chromosome);
     }

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.circos;
 
+import static com.hartwig.hmftools.common.circos.CircosFileWriter.writeCircosFile;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,20 +26,6 @@ public final class CircosSNPWriter
     public static void writePositions(final String filePath, Collection<VariantContextDecorator> values) throws IOException
     {
         writeCircosFile(filePath, values, CircosSNPWriter::transformPosition);
-    }
-
-    private static <T> void writeCircosFile(
-            final String filePath, Collection<T> values, Function<T, String> toStringFunction) throws IOException
-    {
-        final Collection<String> lines = Lists.newArrayList();
-        lines.add(header());
-        values.stream().map(toStringFunction).forEach(lines::add);
-        Files.write(new File(filePath).toPath(), lines);
-    }
-
-    private static String header()
-    {
-        return "#chromosome\tstart\tend\tvalue";
     }
 
     private static String transformPosition(final VariantContextDecorator position)
