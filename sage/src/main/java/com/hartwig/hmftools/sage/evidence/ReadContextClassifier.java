@@ -11,6 +11,9 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContextClassifier
 {
+    // TODO: Update this.
+    private final static int HIGH_BASE_QUAL_CUTOFF = 37;
+
     private final VariantReadContext mVariantReadContext;
 
     public ReadContextClassifier(final VariantReadContext variantReadContext)
@@ -57,6 +60,12 @@ public class ReadContextClassifier
         if(rightMatchLength >= mVariantReadContext.rightFlankLength() + mVariantReadContext.CoreIndexEnd - mVariantReadContext.VarReadIndex + 1)
         {
             return ReadContextCounter.MatchType.PARTIAL;
+        }
+
+        BaseRegion coreRegion = new BaseRegion(mVariantReadContext.AlignmentStart + mVariantReadContext.CoreIndexStart,mVariantReadContext.AlignmentStart + mVariantReadContext.CoreIndexEnd);
+        if (maxLeftMatchLength(coreRegion, read) == coreRegion.baseLength())
+        {
+            return ReadContextCounter.MatchType.CORE;
         }
 
         return ReadContextCounter.MatchType.NONE;

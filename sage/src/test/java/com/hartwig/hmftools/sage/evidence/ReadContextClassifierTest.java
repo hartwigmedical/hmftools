@@ -10,6 +10,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
@@ -126,5 +127,28 @@ public class ReadContextClassifierTest
         ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
 
         assertEquals(ReadContextCounter.MatchType.PARTIAL, matchType);
+    }
+
+    @Test
+    public void testCoreMatchSnv()
+    {
+        BaseRegion coreRegion = new BaseRegion(SNV_CONTEXT.AlignmentStart + SNV_CONTEXT.CoreIndexStart, SNV_CONTEXT.AlignmentStart + SNV_CONTEXT.CoreIndexEnd);
+        StringBuilder readString = new StringBuilder(SNV_READ_STRING);
+        for(int pos = SNV_READ_START_POS; pos < SNV_READ_START_POS + READ_LENGTH; ++pos)
+        {
+            if (coreRegion.containsPosition(pos))
+            {
+                continue;
+            }
+
+            int idx = pos - SNV_READ_START_POS;
+            readString.setCharAt(idx, swapDnaBase(readString.charAt(idx)));
+        }
+
+        SAMRecord read = buildSamRecord(SNV_READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
+        ReadContextClassifier classifier = new ReadContextClassifier(SNV_CONTEXT);
+        ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
+
+        assertEquals(ReadContextCounter.MatchType.CORE, matchType);
     }
 }
