@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 
 import javax.annotation.Nullable;
 
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 import htsjdk.samtools.SAMRecord;
@@ -17,6 +18,8 @@ public class ReadContextClassifier
         mVariantReadContext = variantReadContext;
     }
 
+    // TODO: What happens if we go into soft-clips?
+    // TODO: Other cigar types?
     // TODO: Fragment data.
     @Nullable
     public ReadContextCounter.MatchType classifyRead(final SAMRecord read)
@@ -33,76 +36,68 @@ public class ReadContextClassifier
             return null;
         }
 
-        if(isFullMatch(read))
+        BaseRegion coreAndFlanksRegion = new BaseRegion(mVariantReadContext.AlignmentStart, mVariantReadContext.AlignmentEnd);
+        int leftMatchLength = maxLeftMatchLength(coreAndFlanksRegion, read);
+        if(leftMatchLength >= mVariantReadContext.leftFlankLength() + mVariantReadContext.coreLength())
         {
             return ReadContextCounter.MatchType.FULL;
+        }
+
+        int rightMatchLength = maxRightMatchLength(coreAndFlanksRegion, read);
+        if(rightMatchLength >= mVariantReadContext.rightFlankLength() + mVariantReadContext.coreLength())
+        {
+            return ReadContextCounter.MatchType.FULL;
+        }
+
+        if(leftMatchLength >= mVariantReadContext.leftFlankLength() + mVariantReadContext.VarReadIndex - mVariantReadContext.CoreIndexStart + 1)
+        {
+            return ReadContextCounter.MatchType.PARTIAL;
+        }
+
+        if(rightMatchLength >= mVariantReadContext.rightFlankLength() + mVariantReadContext.CoreIndexEnd - mVariantReadContext.VarReadIndex + 1)
+        {
+            return ReadContextCounter.MatchType.PARTIAL;
         }
 
         return ReadContextCounter.MatchType.NONE;
     }
 
-    private boolean isFullMatch(final SAMRecord read)
+    private int maxLeftMatchLength(final BaseRegion region, final SAMRecord read)
     {
-        return coreMatches(read) && (leftFlankMatches(read) || rightFlankMatches(read));
-    }
-
-    // TODO: What happens if we go into soft-clips?
-    // TODO: Other cigar types?
-    private boolean coreMatches(final SAMRecord read)
-    {
-        String readString = read.getReadString();
-        String coreString = mVariantReadContext.coreStr();
-        for(int i = 0; i < coreString.length(); ++i)
+        byte[] variantBases = mVariantReadContext.ReadBases;
+        byte[] readBases = read.getReadBases();
+        for(int pos = region.start(); pos <= region.end(); ++pos)
         {
-            int pos = i + mVariantReadContext.CoreIndexStart + mVariantReadContext.AlignmentStart;
+            int variantIndex = pos - mVariantReadContext.AlignmentStart;
             int readIndex = pos - read.getUnclippedStart();
-            char readBase = readString.charAt(readIndex);
-            char coreBase = coreString.charAt(i);
-            if(readBase != coreBase)
+            byte variantBase = variantBases[variantIndex];
+            byte readBase = readBases[readIndex];
+            if(variantBase != readBase)
             {
-                return false;
+                return pos - region.start();
             }
         }
 
-        return true;
+        return region.baseLength();
     }
 
-    private boolean leftFlankMatches(final SAMRecord read)
+    private int maxRightMatchLength(final BaseRegion region, final SAMRecord read)
     {
-        String readString = read.getReadString();
-        String leftFlankString = mVariantReadContext.leftFlankStr();
-        for(int i = 0; i < leftFlankString.length(); ++i)
+        byte[] variantBases = mVariantReadContext.ReadBases;
+        byte[] readBases = read.getReadBases();
+        for(int pos = region.end(); pos >= region.start(); --pos)
         {
-            int pos = i + mVariantReadContext.AlignmentStart;
+            int variantIndex = pos - mVariantReadContext.AlignmentStart;
             int readIndex = pos - read.getUnclippedStart();
-            char readBase = readString.charAt(readIndex);
-            char leftFlankBase = leftFlankString.charAt(i);
-            if(readBase != leftFlankBase)
+            byte variantBase = variantBases[variantIndex];
+            byte readBase = readBases[readIndex];
+            if(variantBase != readBase)
             {
-                return false;
+                return region.end() - pos;
             }
         }
 
-        return true;
-    }
-
-    private boolean rightFlankMatches(final SAMRecord read)
-    {
-        String readString = read.getReadString();
-        String rightFlankString = mVariantReadContext.rightFlankStr();
-        for(int i = 0; i < rightFlankString.length(); ++i)
-        {
-            int pos = i + mVariantReadContext.CoreIndexEnd + 1 + mVariantReadContext.AlignmentStart;
-            int readIndex = pos - read.getUnclippedStart();
-            char readBase = readString.charAt(readIndex);
-            char rightFlankBase = rightFlankString.charAt(i);
-            if(readBase != rightFlankBase)
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return region.baseLength();
     }
 
     //    public ReadMatchType processRead(final SAMRecord record, int numberOfEvents, @Nullable final FragmentData fragmentData)

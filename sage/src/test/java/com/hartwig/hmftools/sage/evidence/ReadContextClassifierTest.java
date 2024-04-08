@@ -110,4 +110,21 @@ public class ReadContextClassifierTest
 
         assertEquals(ReadContextCounter.MatchType.FULL, matchType);
     }
+
+    @Test
+    public void testPartialMatchSnvPartialCoreAndLeftFlank()
+    {
+        StringBuilder readString = new StringBuilder(SNV_READ_STRING);
+        for(int pos = SNV_CONTEXT.VarReadIndex + SNV_CONTEXT.AlignmentStart + 1; pos < SNV_READ_START_POS + READ_LENGTH; ++pos)
+        {
+            int idx = pos - SNV_READ_START_POS;
+            readString.setCharAt(idx, swapDnaBase(readString.charAt(idx)));
+        }
+
+        SAMRecord read = buildSamRecord(SNV_READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
+        ReadContextClassifier classifier = new ReadContextClassifier(SNV_CONTEXT);
+        ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
+
+        assertEquals(ReadContextCounter.MatchType.PARTIAL, matchType);
+    }
 }
