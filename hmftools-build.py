@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 This script does the following:
 - Whenever a user pushes a git tag in the format '<tool>-<version>' this script will parse that tag.
@@ -64,12 +66,14 @@ def main():
     parser = ArgumentParser(
         description="A tool for automatically building and deploying individual modules in HMF-tools.")
     parser.add_argument('tag', help="The semantic versioning tag in the following format: <tool-name>-<version>")
+    parser.add_argument('-nr', '--no-release', dest='deploy', help="Only build artifacts, don't try to release nor publish", action='store_true')
     args = parser.parse_args()
 
-    build_and_release(args.tag)
+    build_and_release(args)
 
 
-def build_and_release(raw_tag: str):
+def build_and_release(args):
+    raw_tag = args.tag
     match = SEMVER_REGEX.match(raw_tag)
     if not match:
         print(f"Invalid tag: '{raw_tag}' (it does not match the regex pattern: '{SEMVER_REGEX.pattern}')")
@@ -96,7 +100,8 @@ def build_and_release(raw_tag: str):
     parent_pom.set_version(tag)
     module_pom.set_version(version)
 
-    Maven.deploy_all(module_pom, *dependencies_pom)
+    if not args.deploy:
+        Maven.deploy_all(module_pom, *dependencies_pom)
 
 
 if __name__ == '__main__':
