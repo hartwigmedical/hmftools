@@ -26,6 +26,8 @@ public class ReadContextClassifier
             return null;
         }
 
+        // TODO: Chromosome matches?
+
         if (!positionsOverlap(mVariantReadContext.AlignmentStart, mVariantReadContext.AlignmentEnd, read.getAlignmentStart(), read.getAlignmentEnd()))
         {
             return null;
@@ -36,15 +38,74 @@ public class ReadContextClassifier
             return ReadContextCounter.MatchType.FULL;
         }
 
-        return ReadContextCounter.MatchType.FULL;
+        return ReadContextCounter.MatchType.NONE;
     }
 
     private boolean isFullMatch(final SAMRecord read)
     {
-        return false;
+        return coreMatches(read) && (leftFlankMatches(read) || rightFlankMatches(read));
     }
 
-//    public ReadMatchType processRead(final SAMRecord record, int numberOfEvents, @Nullable final FragmentData fragmentData)
+    // TODO: What happens if we go into soft-clips?
+    // TODO: Other cigar types?
+    private boolean coreMatches(final SAMRecord read)
+    {
+        String readString = read.getReadString();
+        String coreString = mVariantReadContext.coreStr();
+        for(int i = 0; i < coreString.length(); ++i)
+        {
+            int pos = i + mVariantReadContext.CoreIndexStart + mVariantReadContext.AlignmentStart;
+            int readIndex = pos - read.getUnclippedStart();
+            char readBase = readString.charAt(readIndex);
+            char coreBase = coreString.charAt(i);
+            if(readBase != coreBase)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean leftFlankMatches(final SAMRecord read)
+    {
+        String readString = read.getReadString();
+        String leftFlankString = mVariantReadContext.leftFlankStr();
+        for(int i = 0; i < leftFlankString.length(); ++i)
+        {
+            int pos = i + mVariantReadContext.AlignmentStart;
+            int readIndex = pos - read.getUnclippedStart();
+            char readBase = readString.charAt(readIndex);
+            char leftFlankBase = leftFlankString.charAt(i);
+            if(readBase != leftFlankBase)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean rightFlankMatches(final SAMRecord read)
+    {
+        String readString = read.getReadString();
+        String rightFlankString = mVariantReadContext.rightFlankStr();
+        for(int i = 0; i < rightFlankString.length(); ++i)
+        {
+            int pos = i + mVariantReadContext.CoreIndexEnd + 1 + mVariantReadContext.AlignmentStart;
+            int readIndex = pos - read.getUnclippedStart();
+            char readBase = readString.charAt(readIndex);
+            char rightFlankBase = rightFlankString.charAt(i);
+            if(readBase != rightFlankBase)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    //    public ReadMatchType processRead(final SAMRecord record, int numberOfEvents, @Nullable final FragmentData fragmentData)
 //    {
 //        if(exceedsMaxCoverage())
 //            return MAX_COVERAGE;

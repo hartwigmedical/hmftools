@@ -79,6 +79,22 @@ public class ReadContextClassifierTest
     }
 
     @Test
+    public void testNoMatchingBasesSnv()
+    {
+        StringBuilder readString = new StringBuilder(SNV_READ_STRING);
+        for(int i = 0; i < readString.length(); ++i)
+        {
+            readString.setCharAt(i, swapDnaBase(readString.charAt(i)));
+        }
+
+        SAMRecord read = buildSamRecord(SNV_READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
+        ReadContextClassifier classifier = new ReadContextClassifier(SNV_CONTEXT);
+        ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
+
+        assertEquals(ReadContextCounter.MatchType.NONE, matchType);
+    }
+
+    @Test
     public void testFullMatchSnvCoreAndRightFlank()
     {
         StringBuilder readString = new StringBuilder(SNV_READ_STRING);
