@@ -39,14 +39,15 @@ public class ReadContextClassifier
             return null;
         }
 
+        // alt matching
         BaseRegion coreAndFlanksRegion = new BaseRegion(mVariantReadContext.AlignmentStart, mVariantReadContext.AlignmentEnd);
-        int leftMatchLength = maxLeftMatchLength(coreAndFlanksRegion, read);
+        int leftMatchLength = maxLeftMatchLength(coreAndFlanksRegion, read, mVariantReadContext.ReadBases, mVariantReadContext.AlignmentStart);
         if(leftMatchLength >= mVariantReadContext.leftFlankLength() + mVariantReadContext.coreLength())
         {
             return ReadContextCounter.MatchType.FULL;
         }
 
-        int rightMatchLength = maxRightMatchLength(coreAndFlanksRegion, read);
+        int rightMatchLength = maxRightMatchLength(coreAndFlanksRegion, read, mVariantReadContext.ReadBases, mVariantReadContext.AlignmentStart);
         if(rightMatchLength >= mVariantReadContext.rightFlankLength() + mVariantReadContext.coreLength())
         {
             return ReadContextCounter.MatchType.FULL;
@@ -63,25 +64,45 @@ public class ReadContextClassifier
         }
 
         BaseRegion coreRegion = new BaseRegion(mVariantReadContext.AlignmentStart + mVariantReadContext.CoreIndexStart,mVariantReadContext.AlignmentStart + mVariantReadContext.CoreIndexEnd);
-        if (maxLeftMatchLength(coreRegion, read) == coreRegion.baseLength())
+        int coreMatchLength = maxLeftMatchLength(coreRegion, read, mVariantReadContext.ReadBases, mVariantReadContext.AlignmentStart);
+        if (coreMatchLength == coreRegion.baseLength())
         {
             return ReadContextCounter.MatchType.CORE;
+        }
+
+        // TODO: Copy and paste.
+        // ref matching
+        int refLeftMatchLength = maxLeftMatchLength(coreAndFlanksRegion, read, mVariantReadContext.RefBases, mVariantReadContext.AlignmentStart);
+        if(refLeftMatchLength >= mVariantReadContext.leftFlankLength() + mVariantReadContext.VarReadIndex - mVariantReadContext.CoreIndexStart + 1)
+        {
+            return ReadContextCounter.MatchType.REF;
+        }
+
+        int refRightMatchLength = maxRightMatchLength(coreAndFlanksRegion, read, mVariantReadContext.RefBases, mVariantReadContext.AlignmentStart);
+        if(refRightMatchLength >= mVariantReadContext.rightFlankLength() + mVariantReadContext.CoreIndexEnd - mVariantReadContext.VarReadIndex + 1)
+        {
+            return ReadContextCounter.MatchType.REF;
+        }
+
+        int refCoreMatchLength = maxLeftMatchLength(coreRegion, read, mVariantReadContext.RefBases, mVariantReadContext.AlignmentStart);
+        if (refCoreMatchLength == coreRegion.baseLength())
+        {
+            return ReadContextCounter.MatchType.REF;
         }
 
         return ReadContextCounter.MatchType.NONE;
     }
 
-    private int maxLeftMatchLength(final BaseRegion region, final SAMRecord read)
+    private static int maxLeftMatchLength(final BaseRegion region, final SAMRecord read, final byte[] comparisonBases, int startPos)
     {
-        byte[] variantBases = mVariantReadContext.ReadBases;
         byte[] readBases = read.getReadBases();
         for(int pos = region.start(); pos <= region.end(); ++pos)
         {
-            int variantIndex = pos - mVariantReadContext.AlignmentStart;
+            int comparisonIndex = pos - startPos;
             int readIndex = pos - read.getUnclippedStart();
-            byte variantBase = variantBases[variantIndex];
+            byte comparisonBase = comparisonBases[comparisonIndex];
             byte readBase = readBases[readIndex];
-            if(variantBase != readBase)
+            if(comparisonBase != readBase)
             {
                 return pos - region.start();
             }
@@ -90,17 +111,16 @@ public class ReadContextClassifier
         return region.baseLength();
     }
 
-    private int maxRightMatchLength(final BaseRegion region, final SAMRecord read)
+    private static int maxRightMatchLength(final BaseRegion region, final SAMRecord read, final byte[] comparisonBases, int startPos)
     {
-        byte[] variantBases = mVariantReadContext.ReadBases;
         byte[] readBases = read.getReadBases();
         for(int pos = region.end(); pos >= region.start(); --pos)
         {
-            int variantIndex = pos - mVariantReadContext.AlignmentStart;
+            int comparisonIndex = pos - startPos;
             int readIndex = pos - read.getUnclippedStart();
-            byte variantBase = variantBases[variantIndex];
+            byte comparisonBase = comparisonBases[comparisonIndex];
             byte readBase = readBases[readIndex];
-            if(variantBase != readBase)
+            if(comparisonBase != readBase)
             {
                 return region.end() - pos;
             }

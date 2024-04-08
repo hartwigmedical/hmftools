@@ -33,8 +33,9 @@ public class ReadContextClassifierTest
     }
 
     // TODO: Other types of variants.
+    private static final int READ_START_POS = 50;
+    private static final String REF_READ_STRING;
     private static final String SNV_READ_STRING;
-    private static final int SNV_READ_START_POS = 50;
     private static final VariantReadContext SNV_CONTEXT;
     static
     {
@@ -45,12 +46,13 @@ public class ReadContextClassifierTest
         String ref = String.valueOf(REF_BASES_200.charAt(position - 1));
         String alt = swapDnaBase(ref);
 
-        int varReadIndex = position - SNV_READ_START_POS;
+        REF_READ_STRING = refBases.substring(READ_START_POS - 1, READ_START_POS - 1 + READ_LENGTH);
 
-        StringBuilder readString = new StringBuilder(refBases.substring(SNV_READ_START_POS - 1, SNV_READ_START_POS - 1 + READ_LENGTH));
+        int varReadIndex = position - READ_START_POS;
+        StringBuilder readString = new StringBuilder(REF_READ_STRING);
         readString.setCharAt(varReadIndex, alt.charAt(0));
         SNV_READ_STRING = readString.toString();
-        SAMRecord read = buildSamRecord(SNV_READ_START_POS, READ_LENGTH + "M", SNV_READ_STRING, QUALITIES);
+        SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", SNV_READ_STRING, QUALITIES);
 
         SimpleVariant variant = new SimpleVariant(chromosome, position, ref, alt);
         RefSequence refSequence = new RefSequence(1, refBases.getBytes());
@@ -88,7 +90,7 @@ public class ReadContextClassifierTest
             readString.setCharAt(i, swapDnaBase(readString.charAt(i)));
         }
 
-        SAMRecord read = buildSamRecord(SNV_READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
+        SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
         ReadContextClassifier classifier = new ReadContextClassifier(SNV_CONTEXT);
         ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
 
@@ -99,13 +101,13 @@ public class ReadContextClassifierTest
     public void testFullMatchSnvCoreAndRightFlank()
     {
         StringBuilder readString = new StringBuilder(SNV_READ_STRING);
-        for(int pos = SNV_READ_START_POS; pos < SNV_CONTEXT.AlignmentStart; ++pos)
+        for(int pos = READ_START_POS; pos < SNV_CONTEXT.AlignmentStart + SNV_CONTEXT.leftFlankLength(); ++pos)
         {
-            int idx = pos - SNV_READ_START_POS;
+            int idx = pos - READ_START_POS;
             readString.setCharAt(idx, swapDnaBase(readString.charAt(idx)));
         }
 
-        SAMRecord read = buildSamRecord(SNV_READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
+        SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
         ReadContextClassifier classifier = new ReadContextClassifier(SNV_CONTEXT);
         ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
 
@@ -116,13 +118,13 @@ public class ReadContextClassifierTest
     public void testPartialMatchSnvPartialCoreAndLeftFlank()
     {
         StringBuilder readString = new StringBuilder(SNV_READ_STRING);
-        for(int pos = SNV_CONTEXT.VarReadIndex + SNV_CONTEXT.AlignmentStart + 1; pos < SNV_READ_START_POS + READ_LENGTH; ++pos)
+        for(int pos = SNV_CONTEXT.VarReadIndex + SNV_CONTEXT.AlignmentStart + 1; pos < READ_START_POS + READ_LENGTH; ++pos)
         {
-            int idx = pos - SNV_READ_START_POS;
+            int idx = pos - READ_START_POS;
             readString.setCharAt(idx, swapDnaBase(readString.charAt(idx)));
         }
 
-        SAMRecord read = buildSamRecord(SNV_READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
+        SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
         ReadContextClassifier classifier = new ReadContextClassifier(SNV_CONTEXT);
         ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
 
@@ -134,21 +136,61 @@ public class ReadContextClassifierTest
     {
         BaseRegion coreRegion = new BaseRegion(SNV_CONTEXT.AlignmentStart + SNV_CONTEXT.CoreIndexStart, SNV_CONTEXT.AlignmentStart + SNV_CONTEXT.CoreIndexEnd);
         StringBuilder readString = new StringBuilder(SNV_READ_STRING);
-        for(int pos = SNV_READ_START_POS; pos < SNV_READ_START_POS + READ_LENGTH; ++pos)
+        for(int pos = READ_START_POS; pos < READ_START_POS + READ_LENGTH; ++pos)
         {
             if (coreRegion.containsPosition(pos))
             {
                 continue;
             }
 
-            int idx = pos - SNV_READ_START_POS;
+            int idx = pos - READ_START_POS;
             readString.setCharAt(idx, swapDnaBase(readString.charAt(idx)));
         }
 
-        SAMRecord read = buildSamRecord(SNV_READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
+        SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
         ReadContextClassifier classifier = new ReadContextClassifier(SNV_CONTEXT);
         ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
 
         assertEquals(ReadContextCounter.MatchType.CORE, matchType);
+    }
+
+    @Test
+    public void testRefMatchSnvPartialCoreAndLeftFlank()
+    {
+        StringBuilder readString = new StringBuilder(REF_READ_STRING);
+        for(int pos = SNV_CONTEXT.VarReadIndex + SNV_CONTEXT.AlignmentStart + 1; pos < READ_START_POS + READ_LENGTH; ++pos)
+        {
+            int idx = pos - READ_START_POS;
+            readString.setCharAt(idx, swapDnaBase(readString.charAt(idx)));
+        }
+
+        SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
+        ReadContextClassifier classifier = new ReadContextClassifier(SNV_CONTEXT);
+        ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
+
+        assertEquals(ReadContextCounter.MatchType.REF, matchType);
+    }
+
+    @Test
+    public void testRefMatchSnvCore()
+    {
+        BaseRegion coreRegion = new BaseRegion(SNV_CONTEXT.AlignmentStart + SNV_CONTEXT.CoreIndexStart, SNV_CONTEXT.AlignmentStart + SNV_CONTEXT.CoreIndexEnd);
+        StringBuilder readString = new StringBuilder(REF_READ_STRING);
+        for(int pos = READ_START_POS; pos < READ_START_POS + READ_LENGTH; ++pos)
+        {
+            if (coreRegion.containsPosition(pos))
+            {
+                continue;
+            }
+
+            int idx = pos - READ_START_POS;
+            readString.setCharAt(idx, swapDnaBase(readString.charAt(idx)));
+        }
+
+        SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
+        ReadContextClassifier classifier = new ReadContextClassifier(SNV_CONTEXT);
+        ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
+
+        assertEquals(ReadContextCounter.MatchType.REF, matchType);
     }
 }
