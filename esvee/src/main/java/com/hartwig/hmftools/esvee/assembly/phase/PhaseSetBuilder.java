@@ -31,10 +31,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.assembly.AssemblyLinker;
-import com.hartwig.hmftools.esvee.assembly.IndelBuilder;
 import com.hartwig.hmftools.esvee.assembly.LocalSequenceMatcher;
 import com.hartwig.hmftools.esvee.assembly.RemoteRegionAssembler;
-import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -91,7 +89,7 @@ public class PhaseSetBuilder
 
         formPhaseSets();
 
-        cleanupBranchedAssemblies();
+        cleanupAssemblies();
     }
 
     private boolean handleAssemblyPair()
@@ -571,8 +569,11 @@ public class PhaseSetBuilder
 
         return null;
     }
-    private void cleanupBranchedAssemblies()
+
+    private void cleanupAssemblies()
     {
+        mAssemblies.forEach(x -> x.clearCandidateSupport()); // no longer required
+
         // finally remove any branched assemblies which did not form a facing link
         List<JunctionAssembly> branchedAssemblies = mAssemblies.stream()
                 .filter(x -> x.outcome() == DUP_BRANCHED)

@@ -213,20 +213,34 @@ public class JunctionProcessor
         if(!runThreadTasks(threadTasks))
             System.exit(1);
 
-        int totalJunctionAssemblies = junctionGroups.stream().mapToInt(x -> x.junctionAssemblies().size()).sum();
-        int totalDiscordantGroups = junctionGroups.stream().mapToInt(x -> x.discordantGroups().size()).sum();
+        int assemblyCount = 0;
+        int junctionReadCount = 0;
+        int candidateReadCount = 0;
+
+        for(JunctionGroup junctionGroup : junctionGroups)
+        {
+            for(JunctionAssembly assembly : junctionGroup.junctionAssemblies())
+            {
+                ++assemblyCount;
+                junctionReadCount += assembly.supportCount();
+                candidateReadCount += assembly.candidateSupport().size();
+
+                // clear assembly read info for support fragments - candidates will be cleared after phasing
+                assembly.clearSupportCachedRead();
+            }
+
+            junctionGroup.clearCandidateReads();
+        }
 
         ReadStats combinedReadStats = new ReadStats();
         primaryAssemblyTasks.forEach(x -> combinedReadStats.merge(x.readStats()));
 
-        SV_LOGGER.info("created {} junction assemblies, {} discordant groups", totalJunctionAssemblies, totalDiscordantGroups);
+        SV_LOGGER.info("created {} junction assemblies reads(junc={} candidate={})",
+                assemblyCount, junctionReadCount, candidateReadCount);
+
+        SV_LOGGER.info("extracted read stats: {}", combinedReadStats);
 
         addPerfCounters(primaryAssemblyTasks.stream().collect(Collectors.toList()));
-
-        int totalCachedReads = junctionGroups.stream().mapToInt(x -> x.candidateReadCount()).sum();
-
-        SV_LOGGER.info("cached read count({}) from {} junction groups, stats: {}",
-                totalCachedReads, junctionGroups.size(), combinedReadStats);
     }
 
     private void formPhaseGroups()
@@ -252,12 +266,10 @@ public class JunctionProcessor
 
         addPerfCounters(phaseSetTasks.stream().collect(Collectors.toList()));
 
-        int totalRemoteReadSearch = phaseSetTasks.stream().mapToInt(x -> x.totalRemoteReadsSearch()).sum();
         int totalRemoteReadMatched = phaseSetTasks.stream().mapToInt(x -> x.totalRemoteReadsMatched()).sum();
 
-        SV_LOGGER.info("created {} phase sets, remote read(search={} matched={})",
-                phaseGroups.stream().mapToInt(x -> x.phaseSets().size()).sum(),
-                totalRemoteReadSearch, totalRemoteReadMatched);
+        SV_LOGGER.info("created {} phase sets, remote reads extracted({})",
+                phaseGroups.stream().mapToInt(x -> x.phaseSets().size()).sum(), totalRemoteReadMatched);
     }
 
     private void addPerfCounters(final List<ThreadTask> tasks)

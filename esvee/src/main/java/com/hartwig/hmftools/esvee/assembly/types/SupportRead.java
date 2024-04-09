@@ -112,6 +112,7 @@ public class SupportRead
     public boolean isSupplementary() { return isFlagSet(SUPPLEMENTARY_ALIGNMENT); }
     public boolean isPairedRead() { return isFlagSet(READ_PAIRED); }
     public boolean isMateUnmapped() { return isFlagSet(MATE_UNMAPPED); }
+    public boolean isMateMapped() { return isFlagSet(READ_PAIRED) && !isFlagSet(MATE_UNMAPPED); }
     public boolean isDiscordant() { return mIsDiscordant; }
 
     public boolean isFlagSet(final SAMFlag flag) { return (mFlags & flag.intValue()) != 0; }

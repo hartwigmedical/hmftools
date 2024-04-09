@@ -356,22 +356,22 @@ public class RefBaseExtender
         List<RefSideSoftClip> refSideSoftClips = assembly.refSideSoftClips();
 
         boolean isForwardJunction = assembly.isForwardJunction();
-        Set<Read> nscReads = Sets.newHashSet();
+        Set<String> nscReads = Sets.newHashSet();
 
         int maxRefSideSoftClipPosition = isForwardJunction ?
                 refSideSoftClips.stream().filter(x -> !x.matchesOriginal()).mapToInt(x -> x.Position).min().orElse(0)
                 : refSideSoftClips.stream().filter(x -> !x.matchesOriginal()).mapToInt(x -> x.Position).max().orElse(0);
 
-        List<Read> allReads = assembly.support().stream().map(x -> x.cachedRead()).collect(Collectors.toList());
-        nonJunctionReads.forEach(x -> allReads.add(x.cachedRead()));
+        List<SupportRead> allReads = Lists.newArrayList(assembly.support());
+        allReads.addAll(nonJunctionReads);
 
         Set<Read> softClippedReads = Sets.newHashSet();
         refSideSoftClips.stream().filter(x -> !x.matchesOriginal()).forEach(x -> softClippedReads.addAll(x.reads()));
 
         // find any supporting read or read mate which extends past the furthest soft-clip position
-        for(Read read : allReads)
+        for(SupportRead read : allReads)
         {
-            if(softClippedReads.contains(read) || (read.hasMateSet() && softClippedReads.contains(read.mateRead())))
+            if(softClippedReads.stream().anyMatch(x -> x.id().equals(read.id())))
                 continue;
 
             boolean addRead = false;
@@ -379,7 +379,7 @@ public class RefBaseExtender
             if(isForwardJunction)
             {
                 if(read.alignmentStart() < maxRefSideSoftClipPosition
-                || (read.hasMateSet() && read.mateRead().alignmentStart() < maxRefSideSoftClipPosition))
+                || (!read.isDiscordant() && read.isMateMapped() && read.mateAlignmentStart() < maxRefSideSoftClipPosition))
                 {
                     addRead = true;
                 }
@@ -387,7 +387,7 @@ public class RefBaseExtender
             else
             {
                 if(read.alignmentEnd() > maxRefSideSoftClipPosition
-                || (read.hasMateSet() && read.mateRead().alignmentEnd() > maxRefSideSoftClipPosition))
+                || (!read.isDiscordant() && read.isMateMapped() && read.mateAlignmentEnd() > maxRefSideSoftClipPosition))
                 {
                     addRead = true;
                 }
@@ -395,10 +395,7 @@ public class RefBaseExtender
 
             if(addRead)
             {
-                nscReads.add(read);
-
-                if(read.hasMateSet())
-                    nscReads.add(read.mateRead());
+                nscReads.add(read.id());
             }
         }
 
@@ -413,7 +410,7 @@ public class RefBaseExtender
             Set<String> excludedReads = Sets.newHashSet();
 
             if(!refSideSoftClip.matchesOriginal())
-                excludedReads.addAll(nscReads.stream().map(x -> x.id()).collect(Collectors.toSet()));
+                excludedReads.addAll(nscReads);
 
             excludedReadsList.add(excludedReads);
 

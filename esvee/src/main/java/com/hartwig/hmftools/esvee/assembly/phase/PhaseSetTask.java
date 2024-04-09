@@ -109,6 +109,5 @@ public class PhaseSetTask extends ThreadTask
         }
     }
 
-    public int totalRemoteReadsSearch() { return mRemoteRegionAssembler.totalRemoteReadsSearch(); }
     public int totalRemoteReadsMatched() { return mRemoteRegionAssembler.totalRemoteReadsMatched(); }
 }

@@ -455,6 +455,9 @@ public class JunctionAssembly
         for(SupportRead support : refBaseAssembly.support())
         {
             addRead(support.cachedRead(), support.type(), null);
+
+            // once added, clear the cached data read
+            support.clearCachedRead();
         }
 
         // use the ref assembly to fill in any missing bases
@@ -539,6 +542,8 @@ public class JunctionAssembly
     {
         return read != null && mSupport.stream().anyMatch(x -> x.cachedRead() == read);
     }
+
+    public void clearSupportCachedRead() { mSupport.forEach(x -> x.clearCachedRead()); }
 
     // caching repeat info needs careful consideration since any extension of ref bases invalidates the values,
     // at least for +ve orientation assemblies
