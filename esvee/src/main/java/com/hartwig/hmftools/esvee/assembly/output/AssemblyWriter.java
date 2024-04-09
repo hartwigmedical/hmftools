@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.output.AssemblyWriterUtils.addPhasingHeader;
 import static com.hartwig.hmftools.esvee.assembly.output.AssemblyWriterUtils.addPhasingInfo;
-import static com.hartwig.hmftools.esvee.assembly.output.AssemblyWriterUtils.addReadStats;
-import static com.hartwig.hmftools.esvee.assembly.output.AssemblyWriterUtils.addReadStatsHeader;
 import static com.hartwig.hmftools.esvee.assembly.output.AssemblyWriterUtils.addRemoteRegionHeader;
 import static com.hartwig.hmftools.esvee.assembly.output.AssemblyWriterUtils.addRemoteRegionInfo;
 import static com.hartwig.hmftools.esvee.assembly.output.AssemblyWriterUtils.addSupportCounts;
@@ -20,6 +18,7 @@ import java.io.IOException;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.assembly.types.AssemblyStats;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
@@ -58,8 +57,9 @@ public class AssemblyWriter
             sj.add("ExtBaseLength").add("RefBasePosition").add("RefBaseLength");
 
             addSupportHeader(sj);
-
-            addReadStatsHeader(sj);
+            AssemblyStats.addReadTypeHeader(sj);
+            AssemblyStats.addReadStatsHeader(sj);
+            sj.add("MismatchReads");
 
             sj.add("Outcome");
 
@@ -117,8 +117,11 @@ public class AssemblyWriter
             sj.add(String.valueOf(assembly.refBaseLength()));
 
             addSupportCounts(assembly, sj);
+            assembly.stats().addReadTypeCounts(sj);
 
-            addReadStats(assembly, sj);
+            // addReadStats(assembly, sj);
+            assembly.stats().addReadStats(sj);
+            sj.add(String.valueOf(assembly.mismatchReadCount()));
 
             sj.add(String.valueOf(assembly.outcome()));
 
@@ -147,9 +150,9 @@ public class AssemblyWriter
 
             sj.add(String.valueOf(assembly.alignmentOutcome()));
 
-            sj.add(assembly.initialRead() != null ? assembly.initialRead().id() : "NONE"); // shouldn't occur
+            sj.add(assembly.initialReadId());
 
-            sj.add(String.valueOf(assembly.candidateSupport().size()));
+            sj.add(String.valueOf(assembly.stats().CandidateSupportCount));
 
             sj.add(String.valueOf(assembly.mergedAssemblyCount()));
 

@@ -21,7 +21,8 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.assembly.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.assembly.types.IndelCoords;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionSequence;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
@@ -63,14 +64,14 @@ public final class AssemblyLinker
             // must share a junction read & mate in each
             boolean matched = false;
 
-            for(AssemblySupport support : first.support())
+            for(SupportRead support : first.support())
             {
                 if(!support.type().isSplitSupport())
                     continue;
 
                 if(second.support()
                         .stream().filter(x -> x.type() == SupportType.JUNCTION)
-                        .anyMatch(x -> x.read().matchesFragment(support.read())))
+                        .anyMatch(x -> x.matchesFragment(support)))
                 {
                     matched = true;
                     break;
@@ -191,16 +192,10 @@ public final class AssemblyLinker
             return null;
 
         // have already confirmed they share reads, so now just check the indel coords match
-        if(!assembly1.initialRead().indelCoords().matches(assembly2.initialRead().indelCoords()))
+        if(!assembly1.indelCoords().matches(assembly2.indelCoords()))
             return null;
 
-        String insertedBases = "";
-        Read indelRead = assembly1.initialRead();
-
-        if(indelRead.indelCoords().isInsert())
-        {
-            insertedBases = findInsertedBases(indelRead);
-        }
+        String insertedBases = assembly1.indelCoords().insertedBases();
 
         return new AssemblyLink(assembly1, assembly2, INDEL, 0, insertedBases, "");
     }

@@ -13,24 +13,20 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.formLink;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createMinBaseQuals;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.createByteArray;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.assembly.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionSequence;
@@ -45,7 +41,7 @@ public class RemoteRegionAssembler
     private final BamReader mBamReader;
 
     private RemoteRegion mRemoteRegion;
-    private final Map<String,Read> mSourceReads;
+    private final Set<String> mSourceReadIds;
     private final List<Read> mMatchedRemoteReads;
 
     private int mTotalRemoteReadsSearch;
@@ -57,7 +53,7 @@ public class RemoteRegionAssembler
         mBamReader = bamReader;
 
         mRemoteRegion = null;
-        mSourceReads = Maps.newHashMap();
+        mSourceReadIds = Sets.newHashSet();
         mMatchedRemoteReads = Lists.newArrayList();
 
         mTotalRemoteReadsSearch = 0;
@@ -77,12 +73,10 @@ public class RemoteRegionAssembler
         int secondExtBaseMatchCount = 0;
         int remoteJuncMates = 0;
 
-        for(AssemblySupport support : assembly.support())
+        for(SupportRead support : assembly.support())
         {
             // if(support.read().isReference()) // for now no reference support
             //    return false;
-
-            Read read = support.read();
 
             if(support.type() != SupportType.JUNCTION)
                 continue;
@@ -97,12 +91,12 @@ public class RemoteRegionAssembler
                 secondExtBaseMatchCount = support.junctionMatches();
             }
 
-            if(read.isSupplementary() || read.isMateUnmapped())
+            if(support.isSupplementary() || support.isMateUnmapped())
                 continue;
 
-            boolean matePastJunction = (read.orientation() == POS_ORIENT) == assembly.isForwardJunction();
+            boolean matePastJunction = (support.orientation() == POS_ORIENT) == assembly.isForwardJunction();
 
-            if(isDiscordantFragment(read))
+            if(support.isDiscordant())
             {
                 if(matePastJunction)
                     ++remoteJuncMates;
@@ -110,8 +104,8 @@ public class RemoteRegionAssembler
             else
             {
                 // not local and concordant
-                if((assembly.isForwardJunction() && read.mateAlignmentStart() > assembly.junction().Position)
-                || (!assembly.isForwardJunction() && read.mateAlignmentEnd() < assembly.junction().Position))
+                if((assembly.isForwardJunction() && support.mateAlignmentStart() > assembly.junction().Position)
+                || (!assembly.isForwardJunction() && support.mateAlignmentEnd() < assembly.junction().Position))
                 {
                     return false;
                 }
@@ -135,23 +129,24 @@ public class RemoteRegionAssembler
     // private static final int REMOTE_REF_BASE_LENGTH_MAX = 300;
     // private static final int REMOTE_REF_BASE_EXTENSION_LENGTH = 100;
 
-    public AssemblyLink tryRemoteAssemblyLink(final JunctionAssembly assembly, final RemoteRegion remoteRegion, final List<Read> sourceReads)
+    public AssemblyLink tryRemoteAssemblyLink(
+            final JunctionAssembly assembly, final RemoteRegion remoteRegion, final List<String> sourceReadIds)
     {
         mRemoteRegion = remoteRegion;
 
         SV_LOGGER.trace("remote region({}) slice", mRemoteRegion);
 
         mMatchedRemoteReads.clear();
-        mSourceReads.clear();
+        mSourceReadIds.clear();
 
-        mTotalRemoteReadsSearch += sourceReads.size();
+        mTotalRemoteReadsSearch += sourceReadIds.size();
 
-        sourceReads.forEach(x -> mSourceReads.put(x.id(), x));
+        mSourceReadIds.addAll(sourceReadIds);
 
         mBamReader.sliceBam(mRemoteRegion.Chromosome, mRemoteRegion.start(), mRemoteRegion.end(), this::processRecord);
 
         SV_LOGGER.trace("remote region({}) sourcedReads(matched={} unmatched={})",
-                mRemoteRegion, mMatchedRemoteReads.size(), mSourceReads.size());
+                mRemoteRegion, mMatchedRemoteReads.size(), mSourceReadIds.size());
 
         mTotalRemoteReadsMatched += mMatchedRemoteReads.size();
 
@@ -172,14 +167,17 @@ public class RemoteRegionAssembler
         SV_LOGGER.trace("assembly({}) links with remote region({}) matchedReads({})",
                 assembly, remoteRegion.toString(), mMatchedRemoteReads.size());
 
+        mSourceReadIds.clear();
+        mMatchedRemoteReads.clear();
+
         return assemblyLink;
     }
 
     private void processRecord(final SAMRecord record)
     {
-        Read sourceRead = mSourceReads.remove(record.getReadName());
+        boolean containedRead = mSourceReadIds.contains(record.getReadName());
 
-        if(sourceRead == null)
+        if(!containedRead)
             return;
 
         Read remoteRead = new Read(record);
@@ -396,7 +394,7 @@ public class RemoteRegionAssembler
 
         }
 
-        List<AssemblySupport> remoteSupport = Lists.newArrayList();
+        List<SupportRead> remoteSupport = Lists.newArrayList();
 
         for(Read read : mMatchedRemoteReads)
         {
@@ -404,9 +402,8 @@ public class RemoteRegionAssembler
 
             int matchLength = read.basesLength();
 
-            AssemblySupport support = new AssemblySupport(
-                    read, spansJunction ? SupportType.JUNCTION : SupportType.DISCORDANT,
-                    0, 0, matchLength, 0);
+            SupportRead support = new SupportRead(
+                    read, spansJunction ? SupportType.JUNCTION : SupportType.DISCORDANT, 0, matchLength, 0);
 
             remoteSupport.add(support);
         }

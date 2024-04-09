@@ -9,7 +9,7 @@ import static htsjdk.samtools.CigarOperator.I;
 
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.assembly.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.IndelCoords;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -52,16 +52,16 @@ public final class IndelBuilder
         }
     }
 
-    public static boolean convertedIndelCrossesJunction(final JunctionAssembly assembly, final Read read)
+    public static boolean convertedIndelCrossesJunction(final Junction junction, final Read read)
     {
-        if(assembly.isForwardJunction())
+        if(junction.isForward())
         {
-            if(read.unclippedEnd() > assembly.junction().Position)
+            if(read.unclippedEnd() > junction.Position)
                 return read.indelImpliedAlignmentEnd() > 0 || read.isConvertedIndel();
         }
         else
         {
-            if(read.unclippedStart() < assembly.junction().Position)
+            if(read.unclippedStart() < junction.Position)
                 return read.indelImpliedAlignmentStart() > 0 || read.isConvertedIndel();
         }
 
@@ -71,7 +71,7 @@ public final class IndelBuilder
     public static void findIndelExtensions(final JunctionAssembly assembly, final List<Read> unfilteredNonJunctionReads)
     {
         // add junction mates only, could consider add reads which span since these should have a corresponding read in the other junction
-        final IndelCoords indelCoords = assembly.initialRead().indelCoords();
+        final IndelCoords indelCoords = assembly.indelCoords();
         boolean isForwardJunction = assembly.junction().isForward();
         int junctionPosition = assembly.junction().Position;
 
@@ -87,15 +87,15 @@ public final class IndelBuilder
             if(!isValidSupportCoordsVsJunction(read, isForwardJunction, junctionPosition))
                 continue;
 
-            for(AssemblySupport support : assembly.support())
+            for(SupportRead support : assembly.support())
             {
-                if(support.read() == read)
+                if(support.cachedRead() == read)
                 {
                     alreadySupport = true;
                     break;
                 }
 
-                if(support.read().mateRead() == read)
+                if(support.cachedRead().mateRead() == read)
                 {
                     isJunctionMate = true;
                     break;

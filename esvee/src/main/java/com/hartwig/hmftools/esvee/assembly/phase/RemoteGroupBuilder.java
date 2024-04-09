@@ -3,7 +3,7 @@ package com.hartwig.hmftools.esvee.assembly.phase;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REMOTE_PHASING_MIN_READS;
-import static com.hartwig.hmftools.esvee.assembly.types.AssemblySupport.hasMatchingFragment;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragment;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.assembly.phase.PhaseGroupBuilder.linkToPhaseGroups;
 
@@ -17,7 +17,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
-import com.hartwig.hmftools.esvee.assembly.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionGroup;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
@@ -190,16 +190,14 @@ class RemoteGroupBuilder extends ThreadTask
         // tests matching reads in both the junction reads and any extension reads (ie discordant)
         Set<String> readsMatched = Sets.newHashSet();
 
-        for(AssemblySupport support : first.support())
+        for(SupportRead support : first.support())
         {
             if(support.type() == JUNCTION_MATE)
                 break;
 
-            Read read = support.read();
-
-            if(hasMatchingFragment(second.support(), read) || hasMatchingFragment(second.candidateSupport(), read))
+            if(hasMatchingFragment(second.support(), support) || hasMatchingFragment(second.candidateSupport(), support))
             {
-                readsMatched.add(read.id());
+                readsMatched.add(support.id());
 
                 if(readsMatched.size() >= minSharedReads)
                     return true;
@@ -207,11 +205,11 @@ class RemoteGroupBuilder extends ThreadTask
         }
 
         // search amongst candidates for a remote juncton read match
-        for(AssemblySupport support : first.candidateSupport())
+        for(SupportRead support : first.candidateSupport())
         {
-            if(hasMatchingFragment(second.support(), support.read()))
+            if(hasMatchingFragment(second.support(), support))
             {
-                readsMatched.add(support.read().id());
+                readsMatched.add(support.id());
 
                 if(readsMatched.size() >= minSharedReads)
                     return true;

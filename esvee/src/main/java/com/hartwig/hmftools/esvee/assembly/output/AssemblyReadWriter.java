@@ -7,14 +7,19 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
+import static htsjdk.samtools.SAMFlag.FIRST_OF_PAIR;
+import static htsjdk.samtools.SAMFlag.MATE_REVERSE_STRAND;
+import static htsjdk.samtools.SAMFlag.MATE_UNMAPPED;
+import static htsjdk.samtools.SAMFlag.READ_REVERSE_STRAND;
+import static htsjdk.samtools.SAMFlag.READ_UNMAPPED;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.esvee.AssemblyConfig;
-import com.hartwig.hmftools.esvee.assembly.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 public class AssemblyReadWriter
 {
@@ -51,7 +56,6 @@ public class AssemblyReadWriter
             sj.add("PosStart");
             sj.add("PosEnd");
             sj.add("Cigar");
-            sj.add("OrigCigar");
             sj.add("InsertSize");
             sj.add("MateChr");
             sj.add("MatePosStart");
@@ -91,51 +95,47 @@ public class AssemblyReadWriter
         {
             String assemblyInfo = format("%s", assembly.junction().toString());
 
-            for(AssemblySupport support : assembly.support())
+            for(SupportRead support : assembly.support())
             {
                 StringJoiner sj = new StringJoiner(TSV_DELIM);
 
                 sj.add(String.valueOf(assembly.id()));
                 sj.add(assemblyInfo);
 
-                final Read read = support.read();
-
-                sj.add(read.id());
+                sj.add(support.id());
                 sj.add(support.type().toString());
-                sj.add(String.valueOf(read.isReference()));
-                sj.add(read.chromosome());
-                sj.add(String.valueOf(read.alignmentStart()));
-                sj.add(String.valueOf(read.alignmentEnd()));
-                sj.add(read.cigarString());
-                sj.add(read.originalCigarString());
-                sj.add(String.valueOf(read.insertSize()));
+                sj.add(String.valueOf(support.isReference()));
+                sj.add(support.chromosome());
+                sj.add(String.valueOf(support.alignmentStart()));
+                sj.add(String.valueOf(support.alignmentEnd()));
+                sj.add(support.cigar());
+                sj.add(String.valueOf(support.insertSize()));
 
-                sj.add(read.mateChromosome());
-                sj.add(String.valueOf(read.mateAlignmentStart()));
-                sj.add(String.valueOf(read.mateAlignmentEnd()));
+                sj.add(support.mateChromosome());
+                sj.add(String.valueOf(support.mateAlignmentStart()));
+                sj.add(String.valueOf(support.mateAlignmentEnd()));
 
-                sj.add(String.valueOf(read.getFlags()));
-                sj.add(String.valueOf(read.firstInPair()));
-                sj.add(String.valueOf(read.negativeStrand()));
-                sj.add(String.valueOf(read.isUnmapped()));
-                sj.add(String.valueOf(read.isMateMapped()));
-                sj.add(String.valueOf(read.mateNegativeStrand()));
+                sj.add(String.valueOf(support.flags()));
+                sj.add(String.valueOf(support.isFlagSet(FIRST_OF_PAIR)));
+                sj.add(String.valueOf(support.isFlagSet(READ_REVERSE_STRAND)));
+                sj.add(String.valueOf(support.isFlagSet(READ_UNMAPPED)));
+                sj.add(String.valueOf(support.isFlagSet(MATE_UNMAPPED)));
+                sj.add(String.valueOf(support.isFlagSet(MATE_REVERSE_STRAND)));
 
-                sj.add(String.valueOf(read.bamRecord().getSupplementaryAlignmentFlag()));
+                sj.add(String.valueOf(support.isSupplementary()));
 
-                if(read.hasSupplementary())
+                if(support.supplementaryData() != null)
                 {
                     sj.add(format("%s:%d:%s",
-                            read.supplementaryData().Chromosome, read.supplementaryData().Position, read.supplementaryData().Cigar));
+                            support.supplementaryData().Chromosome, support.supplementaryData().Position, support.supplementaryData().Cigar));
                 }
                 else
                 {
                     sj.add("");
                 }
-                sj.add(String.valueOf(support.assemblyIndex()));
                 sj.add(String.valueOf(support.junctionMatches()));
                 sj.add(String.valueOf(support.mismatchCount()));
-                sj.add(String.valueOf(read.baseTrimCount()));
+                sj.add(String.valueOf(support.trimCount()));
 
                 mWriter.write(sj.toString());
                 mWriter.newLine();

@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.esvee.assembly.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
@@ -89,11 +89,11 @@ public class ExtensionSeqBuilder
     public List<RepeatInfo> repeatInfo() { return mExtensionRepeats; }
     public boolean isValid() { return mIsValid; }
 
-    public List<AssemblySupport> formAssemblySupport()
+    public List<SupportRead> formAssemblySupport()
     {
         return mReads.stream().filter(x -> x.Mismatches <= mMaxMismatches)
-                .map(x -> new AssemblySupport(
-                        x.read(), SupportType.JUNCTION, 0, x.junctionIndex(), x.matchedBases(), x.Mismatches))
+                .map(x -> new SupportRead(
+                        x.read(), SupportType.JUNCTION, x.junctionIndex(), x.matchedBases(), x.Mismatches))
                 .collect(Collectors.toList());
     }
 

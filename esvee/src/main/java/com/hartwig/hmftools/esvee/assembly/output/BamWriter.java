@@ -17,7 +17,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.assembly.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.IndelCoords;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
@@ -118,9 +118,9 @@ public class BamWriter
         int totalMapQuality = 0;
         Set<String> uniqueFragmentIds = Sets.newHashSet();
 
-        for(AssemblySupport support : assembly.support())
+        for(SupportRead support : assembly.support())
         {
-            Read read = support.read();
+            Read read = support.cachedRead();
             SAMRecord record = read.bamRecord();
 
             record.setAttribute(ASSEMBLY_ID_TAG, assemblyReadId);
@@ -198,7 +198,7 @@ public class BamWriter
 
         if(isLinkedIndel)
         {
-            IndelCoords indelCoords = assembly.initialRead().indelCoords();
+            IndelCoords indelCoords = assembly.indelCoords();
             int upperRefLength = linkedAssembly.refBaseLength();
 
             alignmentStart = assembly.minAlignedPosition();
@@ -223,7 +223,7 @@ public class BamWriter
         record.setAlignmentStart(alignmentStart);
         record.setCigarString(cigarString);
 
-        record.setFlags(assembly.initialRead().getFlags());
+        record.setFlags(assembly.support().get(0).flags());
 
         if(linkedAssembly != null)
         {

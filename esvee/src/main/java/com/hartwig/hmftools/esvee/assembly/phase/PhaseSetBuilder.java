@@ -17,8 +17,8 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.tryAssemblyFaci
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_REF;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REGION;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SHORT_INDEL;
-import static com.hartwig.hmftools.esvee.assembly.types.AssemblySupport.findMatchingFragmentSupport;
-import static com.hartwig.hmftools.esvee.assembly.types.AssemblySupport.hasMatchingFragment;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.findMatchingFragmentSupport;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragment;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.assembliesShareReads;
 
 import java.util.Collections;
@@ -36,7 +36,7 @@ import com.hartwig.hmftools.esvee.assembly.LocalSequenceMatcher;
 import com.hartwig.hmftools.esvee.assembly.RemoteRegionAssembler;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.assembly.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
@@ -78,8 +78,6 @@ public class PhaseSetBuilder
 
     public void buildPhaseSets()
     {
-        markShortLocalIndels();
-
         if(mAssemblies.size() == 2 && handleAssemblyPair())
             return;
 
@@ -120,24 +118,6 @@ public class PhaseSetBuilder
         }
 
         return false;
-    }
-
-    private void markShortLocalIndels()
-    {
-        // look for evidence that a local assembly with soft-clipp support is explained by a local short INDEL (length 10-31)
-        for(JunctionAssembly assembly : mAssemblies)
-        {
-            if(assembly.indel())
-                continue;
-
-            boolean hasSupportingIndel = assembly.support().stream()
-                    .anyMatch(x -> x.type() == SupportType.JUNCTION && IndelBuilder.convertedIndelCrossesJunction(assembly, x.read()));
-
-            if(hasSupportingIndel)
-            {
-                assembly.setOutcome(SHORT_INDEL);
-            }
-        }
     }
 
     private boolean formsLocalLink(final JunctionAssembly assembly)
@@ -182,16 +162,16 @@ public class PhaseSetBuilder
 
                 int sharedCount = 0;
 
-                for(AssemblySupport support : assembly1.support())
+                for(SupportRead support : assembly1.support())
                 {
-                    if(hasMatchingFragment(assembly2.support(), support.read()))
+                    if(hasMatchingFragment(assembly2.support(), support))
                         ++sharedCount;
                 }
 
                 // also check candidate reads
-                for(AssemblySupport support : assembly1.candidateSupport())
+                for(SupportRead support : assembly1.candidateSupport())
                 {
-                    if(hasMatchingFragment(assembly2.support(), support.read()))
+                    if(hasMatchingFragment(assembly2.support(), support))
                         ++sharedCount;
                 }
 
@@ -287,11 +267,11 @@ public class PhaseSetBuilder
         assembly2.setOutcome(LINKED);
 
         // look for shared reads between the assemblies, and factor in discordant reads which were only considered candidates until now
-        List<AssemblySupport> matchedCandidates1 = Lists.newArrayList();
-        List<AssemblySupport> matchedCandidates2 = Lists.newArrayList();
+        List<SupportRead> matchedCandidates1 = Lists.newArrayList();
+        List<SupportRead> matchedCandidates2 = Lists.newArrayList();
 
         // list is copied since matched candidates will be removed from repeated matching
-        List<AssemblySupport> candidateSupport2 = Lists.newArrayList(assembly2.candidateSupport());
+        List<SupportRead> candidateSupport2 = Lists.newArrayList(assembly2.candidateSupport());
 
         // find matching reads, and link reads to each other where possible
         checkMatchingCandidateSupport(assembly2, assembly1.candidateSupport(), candidateSupport2, matchedCandidates1, matchedCandidates2);
@@ -304,11 +284,11 @@ public class PhaseSetBuilder
 
     private static void checkMatchingCandidateSupport(
             final JunctionAssembly otherAssembly,
-            final List<AssemblySupport> candidateSupport, final List<AssemblySupport> otherCandidateSupport,
-            final List<AssemblySupport> matchedCandidates, final List<AssemblySupport> otherMatchedCandidates)
+            final List<SupportRead> candidateSupport, final List<SupportRead> otherCandidateSupport,
+            final List<SupportRead> matchedCandidates, final List<SupportRead> otherMatchedCandidates)
     {
         // consider each candidate support read to see if it has a matching read in the other assembly's candidates or junction reads
-        for(AssemblySupport support : candidateSupport)
+        for(SupportRead support : candidateSupport)
         {
             // add any junction mate reads local to the assembly
             if(support.type() == SupportType.JUNCTION_MATE)
@@ -318,9 +298,9 @@ public class PhaseSetBuilder
             }
 
             // now check for discordant reads with matching support in the other assembly
-            List<AssemblySupport> matchedSupport = findMatchingFragmentSupport(otherAssembly.support(), support.read());
+            List<SupportRead> matchedSupport = findMatchingFragmentSupport(otherAssembly.support(), support);
 
-            List<AssemblySupport> matchedCandidateSupport = findMatchingFragmentSupport(otherCandidateSupport, support.read());
+            List<SupportRead> matchedCandidateSupport = findMatchingFragmentSupport(otherCandidateSupport, support);
 
             // remove from other's candidates to avoid checking again
             matchedCandidateSupport.forEach(x -> otherCandidateSupport.remove(x));
@@ -331,21 +311,27 @@ public class PhaseSetBuilder
             if(!matchedSupport.isEmpty())
                 matchedCandidates.add(support);
 
-            for(AssemblySupport matched : matchedSupport)
+            /*
+            for(SupportRead matched : matchedSupport)
             {
-                support.read().makeReadLinks(matched.read());
+                support.cachedRead().makeReadLinks(matched.cachedRead());
             }
+            */
         }
     }
 
     private static void linkExistingSupport(final JunctionAssembly first, final JunctionAssembly second)
     {
+        // FIXME: without cached reads this must be either dropped or the refs added to SupportRead
+
+        /*
         // establishes read links with mates and supplementaries (ie the same fragment) once an assembly link has been made
-        for(AssemblySupport support : first.support())
+        for(SupportRead support : first.support())
         {
-            List<AssemblySupport> matchedSupport = findMatchingFragmentSupport(second.support(), support.read());
-            matchedSupport.forEach(x -> support.read().makeReadLinks(x.read()));
+            List<SupportRead> matchedSupport = findMatchingFragmentSupport(second.support(), support);
+            matchedSupport.forEach(x -> support.cachedRead().makeReadLinks(x.cachedRead()));
         }
+        */
     }
 
     private class SharedAssemblySupport implements Comparable<SharedAssemblySupport>
@@ -410,17 +396,17 @@ public class PhaseSetBuilder
             for(RemoteRegion remoteRegion : remoteRegions)
             {
                 // could take candidate discordant reads that map to the same region
-                List<Read> localReads = assembly.support().stream()
-                        .filter(x -> remoteRegion.readIds().contains(x.read().id()))
-                        .map(x -> x.read())
+                List<String> localReadIds = assembly.support().stream()
+                        .filter(x -> remoteRegion.readIds().contains(x.id()))
+                        .map(x -> x.id())
                         .collect(Collectors.toList());
 
                 assembly.candidateSupport().stream()
                         .filter(x -> x.type() == SupportType.CANDIDATE_DISCORDANT)
-                        .filter(x -> remoteRegion.readIds().contains(x.read().id()))
-                        .forEach(x -> localReads.add(x.read()));
+                        .filter(x -> remoteRegion.readIds().contains(x.id()))
+                        .forEach(x -> localReadIds.add(x.id()));
 
-                AssemblyLink assemblyLink = mRemoteRegionAssembler.tryRemoteAssemblyLink(assembly, remoteRegion, localReads);
+                AssemblyLink assemblyLink = mRemoteRegionAssembler.tryRemoteAssemblyLink(assembly, remoteRegion, localReadIds);
 
                 if(assemblyLink == null)
                     continue;

@@ -50,7 +50,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.assembly.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
@@ -201,7 +201,7 @@ public class VcfWriter implements AutoCloseable
         // TODO: modify post-alignment and homology sliding as required
         int breakendPosition = assembly.junction().Position;
 
-        double mapQualityTotal = assembly.support().stream().mapToInt(x -> x.read().mappingQuality()).sum();
+        double mapQualityTotal = assembly.support().stream().mapToInt(x -> x.cachedRead().mappingQuality()).sum();
         int averageMapQuality = (int)Math.round(mapQualityTotal / assembly.supportCount());
         double tempQualityScore = sampleDataList.stream().mapToDouble(x -> x.SplitFragments + x.DiscordantFragments).sum();
 
@@ -264,12 +264,13 @@ public class VcfWriter implements AutoCloseable
         int currentSampleIndex = 0;
         SampleData sampleData = null;
 
-        for(AssemblySupport support : assembly.support())
+        for(SupportRead support : assembly.support())
         {
             if(support.type() == SupportType.JUNCTION_MATE)
                 continue;
 
-            String readSampleId = support.read().sampleName();
+            int sampleIndex = support.cachedRead().sampleIndex();
+            String readSampleId = mSampleNames.get(sampleIndex);
 
             if(!currentSampleId.equals(readSampleId))
             {

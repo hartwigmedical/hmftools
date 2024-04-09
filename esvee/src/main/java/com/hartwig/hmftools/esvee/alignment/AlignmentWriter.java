@@ -171,8 +171,9 @@ public class AlignmentWriter
     public static final String FLD_MAP_QUAL = "MapQual";
     public static final String FLD_CIGAR = "Cigar";
     public static final String FLD_SCORE = "Score";
+    public static final String FLD_FLAGS = "Flags";
     public static final String FLD_NMATCHES = "NMatches";
-    public static final String FLD_LOC_TAG = "LocTag";
+    public static final String FLD_XA_TAG = "LocTag";
     public static final String FLD_MD_TAG = "MdTag";
 
     private BufferedWriter initialiseDetailedWriter(final AssemblyConfig config)
@@ -198,8 +199,9 @@ public class AlignmentWriter
             sj.add(FLD_CIGAR);
             sj.add("AlignedBases");
             sj.add(FLD_SCORE);
+            sj.add(FLD_FLAGS);
             sj.add(FLD_NMATCHES);
-            sj.add(FLD_LOC_TAG);
+            sj.add(FLD_XA_TAG);
             sj.add(FLD_MD_TAG);
 
             writer.write(sj.toString());
@@ -238,8 +240,9 @@ public class AlignmentWriter
                 sj.add(String.valueOf(alignedBases));
 
                 sj.add(String.valueOf(alignment.Score));
+                sj.add(String.valueOf(alignment.Flags));
                 sj.add(String.valueOf(alignment.NMatches));
-                sj.add(alignment.LocationInfo);
+                sj.add(alignment.XaTag);
                 sj.add(alignment.MdTag);
 
                 writer.write(sj.toString());

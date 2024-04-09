@@ -18,7 +18,7 @@ public class JunctionExtension
     private final int mRefBaseLength;
     private int mPopulatedBaseLength;
 
-    private final List<AssemblySupport> mSupport;
+    private final List<SupportRead> mSupport;
 
     private final List<RepeatInfo> mRepeatInfo;
 

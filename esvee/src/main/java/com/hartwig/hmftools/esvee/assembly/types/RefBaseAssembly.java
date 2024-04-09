@@ -28,7 +28,7 @@ public class RefBaseAssembly
 
     private int mReadMismatchesCount;
 
-    private final List<AssemblySupport> mSupport;
+    private final List<SupportRead> mSupport;
 
     public RefBaseAssembly(final JunctionAssembly assembly, final int extensionRefPosition, final RefGenomeInterface refGenome)
     {
@@ -107,7 +107,7 @@ public class RefBaseAssembly
     public byte[] baseQuals() { return mBaseQuals; }
     public int baseLength() { return mBases.length; }
 
-    public List<AssemblySupport> support() { return mSupport; }
+    public List<SupportRead> support() { return mSupport; }
     public int supportCount() { return mSupport.size(); }
     public int readMismatchesCount() { return mReadMismatchesCount; }
 
@@ -260,7 +260,7 @@ public class RefBaseAssembly
             mMaxAlignedPosition = max(mMaxAlignedPosition, read.alignmentEnd());
         }
 
-        mSupport.add(new AssemblySupport(read, supportType, assemblyIndex, 0, 0, mismatchCount));
+        mSupport.add(new SupportRead(read, supportType, 0, 0, mismatchCount));
     }
 
     public String toString()

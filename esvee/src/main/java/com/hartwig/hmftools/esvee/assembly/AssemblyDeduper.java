@@ -117,8 +117,8 @@ public class AssemblyDeduper
             return first.supportCount() > second.supportCount();
 
         // take the one with the most precise support
-        long preciseFirst = first.support().stream().filter(x -> recordSoftClipsAtJunction(x.read(), first.junction())).count();
-        long preciseSecond = second.support().stream().filter(x -> recordSoftClipsAtJunction(x.read(), second.junction())).count();
+        long preciseFirst = first.support().stream().filter(x -> recordSoftClipsAtJunction(x.cachedRead(), first.junction())).count();
+        long preciseSecond = second.support().stream().filter(x -> recordSoftClipsAtJunction(x.cachedRead(), second.junction())).count();
 
         return preciseFirst >= preciseSecond;
     }

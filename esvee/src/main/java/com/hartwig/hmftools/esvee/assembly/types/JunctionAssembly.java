@@ -12,7 +12,10 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.alignment.AlignmentOutcome.UNALIGNED;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.readQualFromJunction;
 import static com.hartwig.hmftools.esvee.assembly.ExtensionSeqBuilder.calcReadSequenceMismatches;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.convertedIndelCrossesJunction;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findInsertedBases;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_REF;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SHORT_INDEL;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REGION;
@@ -34,6 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.alignment.AlignmentOutcome;
+import com.hartwig.hmftools.esvee.assembly.IndelBuilder;
 import com.hartwig.hmftools.esvee.assembly.filters.FilterType;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 
@@ -41,7 +45,6 @@ public class JunctionAssembly
 {
     private int mAssemblyId;
     private final Junction mJunction;
-    private final Read mInitialRead;
 
     private int mJunctionSequenceIndex; // position of the junction in the read bases
 
@@ -49,11 +52,13 @@ public class JunctionAssembly
     private int mMinAlignedPosition;
     private int mMaxAlignedPosition;
 
+    private final IndelCoords mIndelCoords;
+
     private byte mBases[];
     private byte mBaseQuals[];
 
-    private final List<AssemblySupport> mSupport;
-    private final List<AssemblySupport> mCandidateSupport;
+    private final List<SupportRead> mSupport;
+    private final List<SupportRead> mCandidateSupport;
     private final List<RefSideSoftClip> mRefSideSoftClips;
 
     private final List<RepeatInfo> mRepeatInfo;
@@ -67,13 +72,15 @@ public class JunctionAssembly
     private AlignmentOutcome mAlignmentOutcome;
 
     // info only
+    private final String mInitialReadId;
     private int mMergedAssemblies;
     private int mMismatchReadCount;
 
     private final Set<FilterType> mFilters;
+    private final AssemblyStats mStats;
 
     public JunctionAssembly(
-            final Junction junction, final byte[] bases, final byte[] baseQualities, final List<AssemblySupport> assemblySupport,
+            final Junction junction, final byte[] bases, final byte[] baseQualities, final List<SupportRead> assemblySupport,
             final List<RepeatInfo> repeatInfo)
     {
         mJunction = junction;
@@ -84,9 +91,13 @@ public class JunctionAssembly
         Read maxJunctionBaseQualRead = null;
         int maxJunctionBaseQualTotal = 0;
 
-        for(AssemblySupport support : assemblySupport)
+        IndelCoords indelCoords = null;
+        String indelInsertedBases = "";
+
+        // FIXME: consider moving this out of the constructor and set prior - removes logic and possible dependence on Read being cached
+        for(SupportRead support : assemblySupport)
         {
-            Read read = support.read();
+            Read read = support.cachedRead();
 
             maxAlignedPosition = max(maxAlignedPosition, read.alignmentEnd());
             minAlignedPosition = minAlignedPosition == 0 ? read.alignmentStart() : min(minAlignedPosition, read.alignmentStart());
@@ -98,10 +109,20 @@ public class JunctionAssembly
                 maxJunctionBaseQualTotal = junctionBaseQualTotal;
                 maxJunctionBaseQualRead = read;
             }
+
+            if(read.indelCoords() != null && indelCoords == null)
+            {
+                indelCoords = read.indelCoords();
+
+                if(indelCoords.isInsert())
+                    indelCoords.setInsertedBases(findInsertedBases(read));
+            }
         }
 
-        mInitialRead = maxJunctionBaseQualRead != null ? maxJunctionBaseQualRead :
-                (!assemblySupport.isEmpty() ? assemblySupport.get(0).read() : null);
+        mIndelCoords = indelCoords;
+
+        mInitialReadId = maxJunctionBaseQualRead != null ? maxJunctionBaseQualRead.id() :
+                (!assemblySupport.isEmpty() ? assemblySupport.get(0).id() : "null");
 
         mBases = bases;
         mBaseQuals = baseQualities;
@@ -121,12 +142,12 @@ public class JunctionAssembly
         mAlignmentOutcome = UNALIGNED;
         mFilters = Sets.newHashSet();
         mMismatchReadCount = 0;
+        mStats = new AssemblyStats();
     }
 
     public void setId(int id) { mAssemblyId = id; }
     public int id() { return mAssemblyId; }
 
-    public Read initialRead() { return mInitialRead; }
     public Junction junction() { return mJunction; }
     public boolean isForwardJunction() { return mJunction.isForward(); }
 
@@ -157,8 +178,13 @@ public class JunctionAssembly
     public byte[] bases() { return mBases; }
     public byte[] baseQuals() { return mBaseQuals; }
 
-    public List<AssemblySupport> support() { return mSupport; }
+    public String initialReadId() { return mInitialReadId; }
+    public IndelCoords indelCoords() { return mIndelCoords; }
+
+    public List<SupportRead> support() { return mSupport; }
     public int supportCount() { return mSupport.size(); }
+
+    public AssemblyStats stats() { return mStats; }
 
     public boolean checkAddJunctionRead(final Read read, int permittedMismatches)
     {
@@ -207,19 +233,19 @@ public class JunctionAssembly
         if(mismatchCount > permittedMismatches)
             return false;
 
-        mSupport.add(new AssemblySupport(read, JUNCTION, assemblyIndex, readJunctionIndex, highQualMatchCount, mismatchCount));
+        addSupport(read, JUNCTION, readJunctionIndex, highQualMatchCount, mismatchCount);
         return true;
     }
 
     public int mismatchReadCount() { return mMismatchReadCount; }
     public void addMismatchReadCount(int count) { mMismatchReadCount += count; }
 
-    public void extendJunctionReadSupport(final Read read, final AssemblySupport existingSupport)
+    public void extendJunctionReadSupport(final Read read, final SupportRead existingSupport)
     {
         addRead(read, existingSupport.type(), existingSupport);
     }
 
-    private void addRead(final Read read, final SupportType type, @Nullable final AssemblySupport existingSupport)
+    private void addRead(final Read read, final SupportType type, @Nullable final SupportRead existingSupport)
     {
         int mismatchCount = 0;
         int highQualMatchCount = 0;
@@ -312,7 +338,7 @@ public class JunctionAssembly
 
         if(existingSupport == null)
         {
-            mSupport.add(new AssemblySupport(read, type, assemblyIndex, readJunctionIndex, highQualMatchCount, mismatchCount));
+            addSupport(read, type, readJunctionIndex, highQualMatchCount, mismatchCount);
         }
         else
         {
@@ -322,6 +348,22 @@ public class JunctionAssembly
             //        min(existingReadRange[SE_START], readIndexRange[SE_START]), max(existingReadRange[SE_END], readIndexRange[SE_END]));
 
             existingSupport.setReferenceMismatches(mismatchCount);
+        }
+    }
+
+    private void addSupport(final Read read, final SupportType type, final int readJunctionIndex, final int matches, final int mismatches)
+    {
+        boolean isIndelCrossingJunction = convertedIndelCrossesJunction(mJunction, read);
+        SupportType adjustedType = type == JUNCTION && isIndelCrossingJunction ? INDEL : type;
+        SupportRead support = new SupportRead(read, adjustedType, readJunctionIndex, matches, mismatches);
+
+        mSupport.add(support);
+
+        mStats.addRead(support, mJunction, read);
+
+        if(mOutcome != SHORT_INDEL && !indel() && adjustedType == INDEL)
+        {
+            setOutcome(SHORT_INDEL);
         }
     }
 
@@ -410,9 +452,9 @@ public class JunctionAssembly
             extendBases(refBaseExtension, mMinAlignedPosition, mMaxAlignedPosition, refBaseAssembly);
         }
 
-        for(AssemblySupport support : refBaseAssembly.support())
+        for(SupportRead support : refBaseAssembly.support())
         {
-            addRead(support.read(), support.type(), null);
+            addRead(support.cachedRead(), support.type(), null);
         }
 
         // use the ref assembly to fill in any missing bases
@@ -480,21 +522,22 @@ public class JunctionAssembly
         }
     }
 
-    public void removeSupportRead(final Read read)
+    public void removeSupportReads(final Set<String> readIds)
     {
-        for(int i = 0; i < mSupport.size(); ++i)
+        int index = 0;
+
+        while(index < mSupport.size())
         {
-            if(mSupport.get(i).read() == read)
-            {
-                mSupport.remove(i);
-                return;
-            }
+            if(readIds.contains(mSupport.get(index).id()))
+                mSupport.remove(index);
+            else
+                ++index;
         }
     }
 
     public boolean hasReadSupport(final Read read)
     {
-        return read != null && mSupport.stream().anyMatch(x -> x.read() == read);
+        return read != null && mSupport.stream().anyMatch(x -> x.cachedRead() == read);
     }
 
     // caching repeat info needs careful consideration since any extension of ref bases invalidates the values,
@@ -553,7 +596,7 @@ public class JunctionAssembly
 
     public JunctionAssembly(
             final JunctionAssembly initialAssembly, final RefSideSoftClip refSideSoftClip,
-            final List<AssemblySupport> initialSupport, final Set<Read> excludedReads)
+            final List<SupportRead> initialSupport, final Set<String> excludedReadIds)
     {
         // build a junction assembly from an initial junction where the ref bases are truncated due to branching (likely short TI)
         mJunction = initialAssembly.junction();
@@ -615,36 +658,36 @@ public class JunctionAssembly
         mMismatchReadCount = 0;
         mPhaseGroup = null;
 
-        Read initialRead = null;
+        mStats = new AssemblyStats();
 
-        for(AssemblySupport support : initialSupport)
+        SupportRead initialRead = null;
+
+        for(SupportRead support : initialSupport)
         {
-            if(excludedReads.contains(support.read()))
+            if(excludedReadIds.contains(support.id()))
                 continue;
 
-            // any reference mismatches aren't take since they were against the orginal assembly's ref bases
-            mSupport.add(new AssemblySupport(
-                    support.read(), support.type(), support.assemblyIndex(), support.junctionReadIndex(), support.junctionMatches(),
-                    support.junctionMismatches()));
+            mSupport.add(support);
 
-            if(support.read() == initialAssembly.initialRead())
-                initialRead = support.read();
+            mStats.addRead(support, mJunction, null);
+
+            if(support.id().equals(initialAssembly.initialReadId()))
+                initialRead = support;
         }
 
-        if(initialRead == null && !mSupport.isEmpty())
-            initialRead = mSupport.get(0).read();
-
-        mInitialRead = initialRead;
+        mInitialReadId = initialRead != null ? initialRead.id() : (!mSupport.isEmpty() ? mSupport.get(0).id() : "");
+        mIndelCoords = initialAssembly.indelCoords();
         mOutcome = initialAssembly.outcome();
         mAlignmentOutcome = initialAssembly.alignmentOutcome();
     }
 
     public void addCandidateSupport(final Read read, final SupportType type)
     {
-        mCandidateSupport.add(new AssemblySupport(read, type, 0, 0, 0, 0));
+        mCandidateSupport.add(new SupportRead(read, type, 0, 0, 0));
+        ++mStats.CandidateSupportCount;
     }
 
-    public List<AssemblySupport> candidateSupport() { return mCandidateSupport; }
+    public List<SupportRead> candidateSupport() { return mCandidateSupport; }
     public void clearCandidateSupport() { mCandidateSupport.clear(); }
 
     public Set<FilterType> filters() { return mFilters; }
@@ -732,7 +775,7 @@ public class JunctionAssembly
             final Junction junction, final byte[] bases, final byte[] quals, final int junctionIndex)
     {
         mJunction = junction;
-        mInitialRead = null;
+        mInitialReadId = null;
 
         mJunctionSequenceIndex = junctionIndex;
 
@@ -763,11 +806,15 @@ public class JunctionAssembly
         mOutcome = UNSET;
         mAlignmentOutcome = UNALIGNED;
         mMismatchReadCount = 0;
+        mStats = new AssemblyStats();
+        mIndelCoords = null;
     }
 
     @VisibleForTesting
     public void addJunctionRead(final Read read, boolean registerMismatches)
     {
-        mSupport.add(new AssemblySupport(read, JUNCTION, 0, 0, 0, 0));
+        SupportRead support = new SupportRead(read, JUNCTION, 0, 0, 0);
+        mSupport.add(support);
+        mStats.addRead(support, mJunction, read);
     }
 }

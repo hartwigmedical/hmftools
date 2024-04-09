@@ -7,7 +7,8 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_ASSEMBLY_IDS;
 import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_ASSEMLY_INFO;
 import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_CIGAR;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_LOC_TAG;
+import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_FLAGS;
+import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_XA_TAG;
 import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_MAP_QUAL;
 import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_MD_TAG;
 import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_NMATCHES;
@@ -76,10 +77,11 @@ public class AlignmentCache
             int refLocationIndex = fieldsIndexMap.get(FLD_REF_LOCATION);
             int seqCoordsIndex = fieldsIndexMap.get(FLD_SEQUENCE_COORDS);
             int scoreIndex = fieldsIndexMap.get(FLD_SCORE);
+            int flagIndex = fieldsIndexMap.get(FLD_FLAGS);
             int mqIndex = fieldsIndexMap.get(FLD_MAP_QUAL);
             int cigarIndex = fieldsIndexMap.get(FLD_CIGAR);
             int nmatchIndex = fieldsIndexMap.get(FLD_NMATCHES);
-            int locTagIndex = fieldsIndexMap.get(FLD_LOC_TAG);
+            int xaTagIndex = fieldsIndexMap.get(FLD_XA_TAG);
             int mdTagIndex = fieldsIndexMap.get(FLD_MD_TAG);
 
             List<AlignData> assemblyAlignments = null;
@@ -104,10 +106,11 @@ public class AlignmentCache
 
                     int score = Integer.parseInt(values[scoreIndex]);
                     int mapQual = Integer.parseInt(values[mqIndex]);
-                    int nMatches = Integer.parseInt(values[nmatchIndex]);
+                    int flags = Integer.parseInt(values[flagIndex]);
 
                     String cigar = values[cigarIndex];
-                    String locInfo = values[locTagIndex];
+                    int nMatches = Integer.parseInt(values[nmatchIndex]);
+                    String xaTag = values[xaTagIndex];
                     String mdTag = values[mdTagIndex];
 
                     if(!currentAssemblies.equals(assemblyInfo))
@@ -117,7 +120,7 @@ public class AlignmentCache
                         mAssemblyAlignmentData.put(assemblyInfo, assemblyAlignments);
                     }
 
-                    assemblyAlignments.add(new AlignData(refLocation, seqStart, seqEnd, mapQual, nMatches, score, cigar, locInfo, mdTag));
+                    assemblyAlignments.add(new AlignData(refLocation, seqStart, seqEnd, mapQual, score, flags, cigar, nMatches, xaTag, mdTag));
                 }
                 catch(Exception e)
                 {

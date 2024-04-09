@@ -35,7 +35,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
-import com.hartwig.hmftools.esvee.assembly.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
@@ -111,15 +111,15 @@ public class Alignment
         {
             JunctionAssembly assembly = (i == 0) ? assemblyLink.first() : assemblyLink.second();
 
-            for(AssemblySupport support : assembly.support())
+            for(SupportRead support : assembly.support())
             {
                 if(support.type() == SupportType.JUNCTION_MATE)
                     continue;
 
-                if(uniqueFrags.contains(support.read().id()))
+                if(uniqueFrags.contains(support.id()))
                     continue;
 
-                uniqueFrags.add(support.read().id());
+                uniqueFrags.add(support.id());
 
                 if(uniqueFrags.size() >= MIN_SUPPORT_COUNT)
                     return false;

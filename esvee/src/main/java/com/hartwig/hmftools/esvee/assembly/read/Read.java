@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.esvee.common.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
+import static com.hartwig.hmftools.esvee.common.SvConstants.BAM_HEADER_SAMPLE_INDEX_TAG;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -22,11 +22,13 @@ import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.util.StringUtil.bytesToString;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.esvee.assembly.types.IndelCoords;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -37,6 +39,9 @@ public class Read
     private final SAMRecord mRecord;
 
     // cached state and adjusted properties of the read
+    // private final String mOrigCigarString;
+    // private int mFlags;
+
     private final String mOrigCigarString;
     private String mCigarString;
     private List<CigarElement> mCigarElements;
@@ -250,8 +255,6 @@ public class Read
         return ReadUtils.getReadIndexAtReferencePosition(this, refPosition, allowExtrapolation);
     }
 
-    public Object getAttribute(final String name) { return mRecord.getAttribute(name); }
-
     public int numberOfEvents()
     {
         if(mNumberOfEvents != null)
@@ -290,7 +293,12 @@ public class Read
                 mateChromosome(), mateAlignmentStart(), mRecord.getFlags());
     }
 
-    public String sampleName() { return mRecord.getHeader().getAttribute(BAM_HEADER_SAMPLE_ID_TAG); }
+    public int sampleIndex()
+    {
+        String sampleIndex = mRecord.getHeader().getAttribute(BAM_HEADER_SAMPLE_INDEX_TAG);
+        return sampleIndex != null ? Integer.parseInt(sampleIndex) : 0;
+    }
+
     public boolean isReference() { return mIsReference; }
     public void markReference() { mIsReference = true; }
 

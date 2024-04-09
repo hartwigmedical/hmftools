@@ -14,13 +14,14 @@ public class AlignData
     public final int MapQual;
     public final int NMatches;
     public final int Score;
+    public final int Flags;
     public final String Cigar;
-    public final String LocationInfo;
+    public final String XaTag;
     public final String MdTag;
 
     public AlignData(
             final ChrBaseRegion refLocation, final int sequenceStart, final int sequenceEnd, final int mapQual,
-            final int nMatches, final int score, final String cigar, final String locationInfo, final String mdTag)
+            final int score, final int flags, final String cigar, final int nMatches, final String xaTag, final String mdTag)
     {
         RefLocation = refLocation;
         SequenceStart = sequenceStart;
@@ -28,8 +29,10 @@ public class AlignData
         MapQual = mapQual;
         NMatches = nMatches;
         Score = score;
+        Flags = flags;
+
         Cigar = cigar;
-        LocationInfo = locationInfo;
+        XaTag = xaTag;
         MdTag = mdTag;
     }
 
@@ -45,12 +48,12 @@ public class AlignData
         return new AlignData(
                 new ChrBaseRegion(chromosome, alignment.getRefStart(), alignment.getRefEnd()),
                 alignment.getSeqStart(), alignment.getSeqEnd(), alignment.getMapQual(), alignment.getAlignerScore(),
-                alignment.getNMismatches(), alignment.getCigar(), alignment.getXATag(), alignment.getMDTag());
+                alignment.getSamFlag(), alignment.getCigar(), alignment.getNMismatches(), alignment.getXATag(), alignment.getMDTag());
     }
 
     public String toString()
     {
-        return String.format("%s %s seq(%d-%d) score(%d) mq(%d)",
-                RefLocation, Cigar, SequenceStart, SequenceEnd, Score, MapQual);
+        return String.format("%s %s seq(%d-%d) score(%d) mq(%d) flags(%d)",
+                RefLocation, Cigar, SequenceStart, SequenceEnd, Score, MapQual, Flags);
     }
 }

@@ -1,19 +1,13 @@
 package com.hartwig.hmftools.esvee.assembly.output;
 
-import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.convertedIndelCrossesJunction;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.REMOTE_READ_TYPE_DISCORDANT_READ;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_SUPP;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportType.INDEL;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -24,7 +18,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.assembly.types.AssemblySupport;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
@@ -32,8 +26,6 @@ import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.RefSideSoftClip;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
-import com.hartwig.hmftools.esvee.assembly.read.Read;
-import com.hartwig.hmftools.esvee.assembly.read.ReadUtils;
 
 public final class AssemblyWriterUtils
 {
@@ -43,15 +35,6 @@ public final class AssemblyWriterUtils
         sj.add("RefSplitFrags");
         sj.add("DiscFrags");
         sj.add("RefDiscFrags");
-
-        sj.add("JuncSupps");
-        sj.add("JuncIndels");
-        sj.add("JuncMateConcord");
-        sj.add("JuncMateRefSide");
-        sj.add("JuncMateDiscordRemote");
-        sj.add("JuncMateDiscordRefSide");
-        sj.add("JuncMateUnmappedRemote");
-        sj.add("JuncMateUnmappedRefSide");
     }
 
     protected static void addSupportCounts(final JunctionAssembly assembly, final StringJoiner sj)
@@ -61,27 +44,13 @@ public final class AssemblyWriterUtils
         int discFrags = 0;
         int refSampleDiscFrags = 0;
 
-        int juncSupps = 0;
-        int juncMateConcordant = 0;
-        int juncMateDiscordantRemote = 0;
-        int juncMateDiscordantRefSide = 0;
-        int juncMateRefSide = 0;
-        int juncMateUnmappedRemote = 0;
-        int juncMateUnmappedRefSide = 0;
-        int indelReads = 0;
-
-        int juncUnlinkedMates = 0;
-        int juncUnlinkedSupps = 0;
-        int discUnlinkedMates = 0;
-
         Set<String> uniqueReadIds = Sets.newHashSet();
 
-        for(AssemblySupport support : assembly.support())
+        for(SupportRead read : assembly.support())
         {
-            boolean isReference = support.read().isReference();
-            Read read = support.read();
+            boolean isReference = read.isReference();
 
-            if(support.type().isSplitSupport())
+            if(read.type().isSplitSupport())
             {
                 if(!uniqueReadIds.contains(read.id()))
                 {
@@ -93,68 +62,15 @@ public final class AssemblyWriterUtils
                         ++refSampleJuncFrags;
                 }
 
-                if(support.type() == INDEL || convertedIndelCrossesJunction(assembly, read))
-                    ++indelReads;
-
-                if(read.isSupplementary())
-                {
-                    ++juncSupps;
-
-                    if(read.supplementaryRead() == null)
-                        ++juncUnlinkedSupps;
-                }
-                else
-                {
-                    // don't attempt to set mate info for supplementaries - these counts are for the primary reads (ie the fragment itself)
-                    boolean matePastJunction = (read.orientation() == POS_ORIENT) == assembly.isForwardJunction();
-
-                    if(read.isMateUnmapped())
-                    {
-                        if(matePastJunction)
-                            ++juncMateUnmappedRemote;
-                        else
-                            ++juncMateUnmappedRefSide;
-                    }
-                    else
-                    {
-                        if(isDiscordantFragment(read))
-                        {
-                            if(matePastJunction)
-                                ++juncMateDiscordantRemote;
-                            else
-                                ++juncMateDiscordantRefSide;
-                        }
-                        else
-                        {
-                            // check if the mate
-
-                            if((assembly.isForwardJunction() && read.mateAlignmentStart() > assembly.junction().Position)
-                            || (!assembly.isForwardJunction() && read.mateAlignmentEnd() < assembly.junction().Position))
-                            {
-                                ++juncMateConcordant;
-                            }
-                            else
-                            {
-                                ++juncMateRefSide;
-                            }
-                        }
-                    }
-
-                    if(read.isMateMapped() && !read.hasMateSet())
-                        ++juncUnlinkedMates;
-                }
             }
             else
             {
-                if(support.type() == DISCORDANT)
+                if(read.type() == DISCORDANT)
                 {
                     ++discFrags;
 
                     if(isReference)
                         ++refSampleDiscFrags;
-
-                    if(!read.isSupplementary() && !read.hasMateSet())
-                        ++discUnlinkedMates;
                 }
             }
         }
@@ -163,25 +79,9 @@ public final class AssemblyWriterUtils
         sj.add(String.valueOf(refSampleJuncFrags));
         sj.add(String.valueOf(discFrags));
         sj.add(String.valueOf(refSampleDiscFrags));
-
-        sj.add(String.valueOf(juncSupps));
-        sj.add(String.valueOf(indelReads));
-
-        sj.add(String.valueOf(juncMateConcordant));
-        sj.add(String.valueOf(juncMateRefSide));
-        sj.add(String.valueOf(juncMateDiscordantRemote));
-        sj.add(String.valueOf(juncMateDiscordantRefSide));
-        sj.add(String.valueOf(juncMateUnmappedRemote));
-        sj.add(String.valueOf(juncMateUnmappedRefSide));
-
-        /*
-        sj.add(String.valueOf(juncUnlinkedMates));
-        sj.add(String.valueOf(juncUnlinkedSupps));
-        sj.add(String.valueOf(discUnlinkedMates));
-            */
-
     }
 
+    /*
     protected static void addReadStatsHeader(final StringJoiner sj)
     {
         sj.add("SoftClipMatches");
@@ -211,9 +111,9 @@ public final class AssemblyWriterUtils
 
         int maxExtBaseMatchCount = 0;
 
-        for(AssemblySupport support : assembly.support())
+        for(SupportRead support : assembly.support())
         {
-            Read read = support.read();
+            Read read = support.cachedRead();
             nmCountTotal += read.numberOfEvents();
             mapQualTotal += read.mappingQuality();
             baseQualTotal += ReadUtils.avgBaseQuality(read);
@@ -258,6 +158,7 @@ public final class AssemblyWriterUtils
         double avgValue = count/readCount;
         return format("%d", round(avgValue));
     }
+    */
 
     protected static void addPhasingHeader(final StringJoiner sj)
     {
@@ -373,16 +274,16 @@ public final class AssemblyWriterUtils
 
         Set<String> uniqueReadIds = Sets.newHashSet();
 
-        for(AssemblySupport firstSupport : first.support())
+        for(SupportRead firstSupport : first.support())
         {
-            if(uniqueReadIds.contains(firstSupport.read().id()))
+            if(uniqueReadIds.contains(firstSupport.id()))
                 continue;
 
-            uniqueReadIds.add(firstSupport.read().id());
+            uniqueReadIds.add(firstSupport.id());
 
-            boolean isReference = firstSupport.read().isReference();
+            boolean isReference = firstSupport.isReference();
 
-            if(second.support().stream().anyMatch(x -> x.read().matchesFragment(firstSupport.read())))
+            if(second.support().stream().anyMatch(x -> x.matchesFragment(firstSupport)))
             {
                 ++matchedFrags;
 
@@ -398,18 +299,18 @@ public final class AssemblyWriterUtils
             }
         }
 
-        for(AssemblySupport secondSupport : second.support())
+        for(SupportRead secondSupport : second.support())
         {
-            if(uniqueReadIds.contains(secondSupport.read().id()))
+            if(uniqueReadIds.contains(secondSupport.id()))
                 continue;
 
-            uniqueReadIds.add(secondSupport.read().id());
+            uniqueReadIds.add(secondSupport.id());
 
-            if(first.support().stream().noneMatch(x -> x.read().matchesFragment(secondSupport.read())))
+            if(first.support().stream().noneMatch(x -> x.matchesFragment(secondSupport)))
             {
                 ++uniqueFrags;
 
-                if(secondSupport.read().isReference())
+                if(secondSupport.isReference())
                     ++uniqueRefFrags;
             }
         }

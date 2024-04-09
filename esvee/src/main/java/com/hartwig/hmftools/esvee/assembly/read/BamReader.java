@@ -4,7 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.common.CommonUtils.createBamSlicer;
-import static com.hartwig.hmftools.esvee.common.SvConstants.BAM_HEADER_SAMPLE_ID_TAG;
+import static com.hartwig.hmftools.esvee.common.SvConstants.BAM_HEADER_SAMPLE_INDEX_TAG;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,14 +40,13 @@ public class BamReader implements AutoCloseable
 
         for(int i = 0; i < combinedSampleId.size(); ++i)
         {
-            String sampleId = combinedSampleId.get(i);
             String bamFile = combinedBamFiles.get(i);
 
             SamReader samReader = SamReaderFactory.makeDefault()
                             .validationStringency(mConfig.BamStringency)
                             .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(bamFile));
 
-            samReader.getFileHeader().setAttribute(BAM_HEADER_SAMPLE_ID_TAG, sampleId);
+            samReader.getFileHeader().setAttribute(BAM_HEADER_SAMPLE_INDEX_TAG, i);
 
             mSamReaders.add(samReader);
         }
@@ -65,7 +64,7 @@ public class BamReader implements AutoCloseable
 
         for(SamReader reader : mSamReaders)
         {
-            String fileSampleId = reader.getFileHeader().getAttribute(BAM_HEADER_SAMPLE_ID_TAG);
+            String fileSampleId = reader.getFileHeader().getAttribute(BAM_HEADER_SAMPLE_INDEX_TAG);
             mCurrentIsReferenceSample = mConfig.ReferenceIds.contains(fileSampleId);
             mBamSlicer.slice(reader, new ChrBaseRegion(chromosome, positionStart, positionEnd), consumer);
         }
