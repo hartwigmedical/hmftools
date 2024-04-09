@@ -119,7 +119,6 @@ public class AssemblyWriter
             addSupportCounts(assembly, sj);
             assembly.stats().addReadTypeCounts(sj);
 
-            // addReadStats(assembly, sj);
             assembly.stats().addReadStats(sj);
             sj.add(String.valueOf(assembly.mismatchReadCount()));
 

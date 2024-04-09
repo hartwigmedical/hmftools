@@ -224,12 +224,7 @@ public class JunctionProcessor
                 ++assemblyCount;
                 junctionReadCount += assembly.supportCount();
                 candidateReadCount += assembly.candidateSupport().size();
-
-                // clear assembly read info for support fragments - candidates will be cleared after phasing
-                assembly.clearSupportCachedRead();
             }
-
-            junctionGroup.clearCandidateReads();
         }
 
         ReadStats combinedReadStats = new ReadStats();

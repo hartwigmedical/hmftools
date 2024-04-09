@@ -81,85 +81,6 @@ public final class AssemblyWriterUtils
         sj.add(String.valueOf(refSampleDiscFrags));
     }
 
-    /*
-    protected static void addReadStatsHeader(final StringJoiner sj)
-    {
-        sj.add("SoftClipMatches");
-        sj.add("SoftClipMismatches");
-        sj.add("SoftClip2ndMaxLength");
-        sj.add("RefBaseMismatches");
-        sj.add("BaseTrimCount");
-
-        sj.add("AvgNmCount");
-        sj.add("AvgIndelLength");
-        sj.add("AvgBaseQual");
-        sj.add("AvgMapQual");
-        sj.add("MismatchReads");
-    }
-
-    protected static void addReadStats(final JunctionAssembly assembly, final StringJoiner sj)
-    {
-        int nmCountTotal = 0;
-        int indelLengthTotal = 0;
-        int baseQualTotal = 0;
-        int mapQualTotal = 0;
-        int baseTrimTotal = 0;
-        int softClipMatchTotal = 0;
-        int softClipMismatchTotal = 0;
-        int refBaseMismatchTotal = 0;
-        int softClipSecondMaxLength = 0;
-
-        int maxExtBaseMatchCount = 0;
-
-        for(SupportRead support : assembly.support())
-        {
-            Read read = support.cachedRead();
-            nmCountTotal += read.numberOfEvents();
-            mapQualTotal += read.mappingQuality();
-            baseQualTotal += ReadUtils.avgBaseQuality(read);
-            indelLengthTotal += read.cigarElements().stream().filter(x -> x.getOperator().isIndel()).mapToInt(x -> x.getLength()).sum();
-            baseTrimTotal += read.baseTrimCount();
-
-            if(support.type().isSplitSupport())
-            {
-                softClipMatchTotal += support.junctionMatches();
-                softClipMismatchTotal += support.junctionMismatches();
-                refBaseMismatchTotal += support.referenceMismatches();
-
-                if(support.junctionMatches() > maxExtBaseMatchCount)
-                {
-                    softClipSecondMaxLength = maxExtBaseMatchCount; // promote the second highest
-                    maxExtBaseMatchCount = support.junctionMatches();
-                }
-                else if(support.junctionMatches() > softClipSecondMaxLength)
-                {
-                    softClipSecondMaxLength = support.junctionMatches();
-                }
-            }
-        }
-
-        sj.add(String.valueOf(softClipMatchTotal));
-        sj.add(String.valueOf(softClipMismatchTotal));
-        sj.add(String.valueOf(softClipSecondMaxLength));
-        sj.add(String.valueOf(refBaseMismatchTotal));
-        sj.add(String.valueOf(baseTrimTotal));
-
-        int supportCount = assembly.supportCount();
-
-        sj.add(statString(nmCountTotal, supportCount));
-        sj.add(statString(indelLengthTotal, supportCount));
-        sj.add(statString(baseQualTotal, supportCount));
-        sj.add(statString(mapQualTotal, supportCount));
-        sj.add(String.valueOf(assembly.mismatchReadCount()));
-    }
-
-    private static String statString(int count, double readCount)
-    {
-        double avgValue = count/readCount;
-        return format("%d", round(avgValue));
-    }
-    */
-
     protected static void addPhasingHeader(final StringJoiner sj)
     {
         sj.add("PhaseGroupId");
@@ -257,7 +178,7 @@ public final class AssemblyWriterUtils
         for(AssemblyLink link : assemblyLinks)
         {
             JunctionAssembly otherAssembly = link.otherAssembly(assembly);
-            sj.add(format("%s=%s", link.type(), otherAssembly.junction().coords()));
+            sj.add(otherAssembly.junction().coords());
         }
         return sj.toString();
     }

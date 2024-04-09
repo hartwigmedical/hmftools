@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ORIENTATION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 
@@ -197,6 +199,7 @@ public class AlignmentWriter
             sj.add(FLD_SEQUENCE_COORDS);
             sj.add(FLD_MAP_QUAL);
             sj.add(FLD_CIGAR);
+            sj.add(FLD_ORIENTATION);
             sj.add("AlignedBases");
             sj.add(FLD_SCORE);
             sj.add(FLD_FLAGS);
@@ -234,6 +237,7 @@ public class AlignmentWriter
                 sj.add(format("%d-%d", alignment.SequenceStart, alignment.SequenceEnd));
                 sj.add(String.valueOf(alignment.MapQual));
                 sj.add(String.valueOf(alignment.Cigar));
+                sj.add(String.valueOf(alignment.orientation()));
 
                 Cigar cigar = CigarUtils.cigarFromStr(alignment.Cigar);
                 int alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();

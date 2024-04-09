@@ -1,5 +1,11 @@
 package com.hartwig.hmftools.esvee.alignment;
 
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+
+import static htsjdk.samtools.SAMFlag.READ_REVERSE_STRAND;
+
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -34,6 +40,11 @@ public class AlignData
         Cigar = cigar;
         XaTag = xaTag;
         MdTag = mdTag;
+    }
+
+    public byte orientation()
+    {
+        return SamRecordUtils.isFlagSet(Flags, READ_REVERSE_STRAND) ? NEG_ORIENT : POS_ORIENT;
     }
 
     public static AlignData from(final BwaMemAlignment alignment, final RefGenomeVersion refGenomeVersion)

@@ -15,6 +15,7 @@ import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 
@@ -115,7 +116,7 @@ public class SupportRead
     public boolean isMateMapped() { return isFlagSet(READ_PAIRED) && !isFlagSet(MATE_UNMAPPED); }
     public boolean isDiscordant() { return mIsDiscordant; }
 
-    public boolean isFlagSet(final SAMFlag flag) { return (mFlags & flag.intValue()) != 0; }
+    public boolean isFlagSet(final SAMFlag flag) { return SamRecordUtils.isFlagSet(mFlags, flag); }
     public byte orientation() { return isFlagSet(READ_REVERSE_STRAND) ? NEG_ORIENT : POS_ORIENT; }
     public SupplementaryReadData supplementaryData() { return mSupplementaryData; }
     public int flags() { return mFlags; }

@@ -181,6 +181,7 @@ public class JunctionGroupAssembler extends ThreadTask
             {
                 if(mConfig.ProcessDiscordant)
                     discordantReads.processReads(junction, candidateReads);
+
                 continue;
             }
 
@@ -214,6 +215,12 @@ public class JunctionGroupAssembler extends ThreadTask
         }
 
         junctionGroup.addJunctionAssemblies(junctionGroupAssemblies);
+
+        // no longer needs to keep candidate reads since all have been assigned to assemblies
+        junctionGroup.clearCandidateReads();
+
+        // clear assembly read info for support fragments - candidates will be cleared after phasing
+        junctionGroupAssemblies.forEach(x -> x.clearSupportCachedRead());
 
         mCurrentJunctionGroup = null;
     }

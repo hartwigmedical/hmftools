@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMTag;
 
@@ -74,6 +75,8 @@ public final class SamRecordUtils
     }
 
     public static byte orientation(final SAMRecord read) { return !read.getReadNegativeStrandFlag() ? POS_ORIENT : NEG_ORIENT; }
+
+    public static boolean isFlagSet(final int flags, final SAMFlag flag) { return (flags & flag.intValue()) != 0; }
 
     public static int getBaseQuality(final char quality)
     {
