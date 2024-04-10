@@ -1,18 +1,12 @@
-package com.hartwig.hmftools.common.circos;
+package com.hartwig.hmftools.purple.plot;
 
-import static com.hartwig.hmftools.common.circos.CircosFileWriter.writeCircosFile;
+import static com.hartwig.hmftools.purple.plot.CircosFileWriter.writeCircosFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Collection;
-import java.util.function.Function;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
-
-import org.jetbrains.annotations.NotNull;
 
 public final class CircosSNPWriter
 {

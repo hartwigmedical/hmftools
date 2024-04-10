@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.circos;
+package com.hartwig.hmftools.purple.plot;
 
 import java.io.File;
 import java.io.IOException;

@@ -21,10 +21,16 @@ public class CircosExecution
 
     @Nullable
     public Integer generateCircos(
-            final String inputConfig, final String outputPath, final String outputFile,
-            final String errorPath) throws IOException, InterruptedException
+            final String inputConfig, final String outputPath, final String outputFile) throws IOException, InterruptedException
     {
-        final File redirectOutputFile = new File(errorPath + File.separator + outputFile + ".out");
+        String plotFilePath = outputPath + File.separator + outputFile;
+
+        // we have to delete existing plot file first, otherwise circos could silently fail
+        File plotFile = new File(plotFilePath);
+        if(plotFile.exists())
+        {
+            plotFile.delete();
+        }
 
         final List<String> command = List.of(
             executable,
@@ -37,20 +43,23 @@ public class CircosExecution
             outputFile);
 
         LOGGER.info(String.format("Generating " + outputFile + " via command: %s", String.join(" ", command)));
-        Process process = new ProcessBuilder(command).redirectOutput(redirectOutputFile).start();
+
+        // must redirect error stream to stdout, as circos print some errors to stdout
+        Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
         int result = process.waitFor();
 
         if(result != 0)
         {
-            System.err.print(new String(process.getErrorStream().readAllBytes()));
+            System.err.print(new String(process.getInputStream().readAllBytes()));
             LOGGER.error("Fatal error creating circos plot.");
             return 0;
         }
 
-        final File finalFile = new File(outputPath + File.separator + outputFile);
-        if(!finalFile.exists())
+        plotFile = new File(outputPath + File.separator + outputFile);
+        if(!plotFile.exists())
         {
-            LOGGER.error("Failed to create file {}", finalFile.toString());
+            System.err.print(new String(process.getInputStream().readAllBytes()));
+            LOGGER.error("Failed to create file {}", plotFile);
         }
 
         return 0;

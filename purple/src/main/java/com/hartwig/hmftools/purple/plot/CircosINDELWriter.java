@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.common.circos;
+package com.hartwig.hmftools.purple.plot;
 
-import static com.hartwig.hmftools.common.circos.CircosFileWriter.writeCircosFile;
+import static com.hartwig.hmftools.purple.plot.CircosFileWriter.writeCircosFile;
 
 import java.io.IOException;
 import java.util.Collection;
