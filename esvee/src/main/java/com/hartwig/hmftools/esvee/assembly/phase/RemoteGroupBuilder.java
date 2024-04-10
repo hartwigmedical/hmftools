@@ -72,7 +72,10 @@ public class RemoteGroupBuilder extends ThreadTask
 
     public void logStats()
     {
-        SV_LOGGER.info("remote phase group building stats: {}", mBuildStats);
+        if(mConfig.PerfDebug || mConfig.PerfLogTime > 0)
+        {
+            SV_LOGGER.debug("remote phase group building stats: {}", mBuildStats);
+        }
     }
 
     private static final int LOG_COUNT = 10000;
@@ -186,32 +189,11 @@ public class RemoteGroupBuilder extends ThreadTask
         if(overlappingRegion == null)
             return false;
 
-        List<String> firstReadIds = overlappingRegion.readIds().stream().collect(Collectors.toList());
-
-        if(!assembly.refSideSoftClips().isEmpty())
-        {
-            // if the assembly has candidate facing TI links, then add its own junction group - they will often share reads which are
-            // discordant in one and a junction read in the other
-            RefSideSoftClip refSideSoftClip = assembly.refSideSoftClips().get(0);
-
-            if(positionWithin(refSideSoftClip.Position, otherAssembly.minAlignedPosition(), otherAssembly.maxAlignedPosition()))
-            {
-                firstReadIds.addAll(refSideSoftClip.readIds());
-            }
-        }
-
-        if(!assembliesShareReads(firstReadIds, otherAssembly, REMOTE_PHASING_MIN_READS, mConfig.ApplyRemotePhasingReadCheckThreshold))
+        if(!assembliesShareReads(overlappingRegion, otherAssembly, REMOTE_PHASING_MIN_READS, mConfig.ApplyRemotePhasingReadCheckThreshold))
         {
             ++mBuildStats.AssemblyNonMatches;
             return false;
         }
-
-        /* no longer considered
-        if(isAssemblyLower(otherAssembly, assembly))
-        {
-            SV_LOGGER.warn("upper assembly({}) links lower({})", assembly, otherAssembly);
-        }
-        */
 
         ++mBuildStats.AssemblyMatches;
 
@@ -250,11 +232,11 @@ public class RemoteGroupBuilder extends ThreadTask
     }
 
     private boolean assembliesShareReads(
-            final List<String> firstReadIds, final JunctionAssembly second, int minSharedReads, boolean applyMatchThreshold)
+            final RemoteRegion firstRegion, final JunctionAssembly second, int minSharedReads, boolean applyMatchThreshold)
     {
         // tests matching reads in both the junction reads and any extension reads (ie discordant)
 
-        int firstReadCount = firstReadIds.size();
+        int firstReadCount = firstRegion.readIds().size();
         int secondReadCount = second.supportCount() + second.candidateSupport().size();
 
         int maxMatchChecks = applyMatchThreshold ?
@@ -263,7 +245,7 @@ public class RemoteGroupBuilder extends ThreadTask
         int currentChecks = 0;
         int matchedCount = 0;
 
-        for(String readId : firstReadIds)
+        for(String readId : firstRegion.readIds())
         {
             if(hasMatchingFragment(second.support(), readId, mBuildStats))
             {

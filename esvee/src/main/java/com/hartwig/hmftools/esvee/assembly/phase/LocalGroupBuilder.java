@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.esvee.assembly.phase;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DEL_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragment;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -14,9 +16,11 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionGroup;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
+import com.hartwig.hmftools.esvee.assembly.types.RefSideSoftClip;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 import com.hartwig.hmftools.esvee.assembly.output.PhaseGroupBuildWriter;
 
@@ -127,7 +131,7 @@ public class LocalGroupBuilder extends ThreadTask
                 if(posAssembly.phaseGroup() == null || negAssembly.phaseGroup() != posAssembly.phaseGroup())
                 {
                     // check local phasing criteria
-                    if(isLocalAssemblyCandidate(posAssembly, negAssembly))
+                    if(isLocalAssemblyCandidate(posAssembly, negAssembly) || isLocalFacingLinkCandidate(posAssembly, negAssembly))
                     {
                         PhaseGroupBuilder.linkToPhaseGroups(
                                 posAssembly.phaseGroup(), posAssembly, negAssembly, mPhaseGroupsSets, null,
@@ -143,5 +147,34 @@ public class LocalGroupBuilder extends ThreadTask
                 negAssembly = negJunctionAssemblies.get(nextNegIndex);
             }
         }
+    }
+
+    private static boolean isLocalFacingLinkCandidate(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        if(first.refSideSoftClips().isEmpty() && second.refSideSoftClips().isEmpty())
+            return false;
+
+        for(int i = 0; i <= 1; ++i)
+        {
+            JunctionAssembly assembly = (i == 0) ? first : second;
+            JunctionAssembly otherAssembly = (i == 0) ? second : first;
+
+            for(RefSideSoftClip refSideSoftClip : assembly.refSideSoftClips())
+            {
+                if(!positionWithin(refSideSoftClip.Position, otherAssembly.minAlignedPosition(), otherAssembly.maxAlignedPosition()))
+                    continue;
+
+                for(String readId : refSideSoftClip.readIds())
+                {
+                    if(otherAssembly.support().stream().anyMatch(x -> x.id().equals(readId)))
+                        return true;
+
+                    if(otherAssembly.candidateSupport().stream().anyMatch(x -> x.id().equals(readId)))
+                        return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

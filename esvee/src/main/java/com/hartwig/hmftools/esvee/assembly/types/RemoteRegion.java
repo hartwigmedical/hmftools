@@ -32,9 +32,12 @@ public class RemoteRegion extends ChrBaseRegion
     {
         super(region.Chromosome, region.start(), region.end());
         mOrientation = orientation;
+
         mReadIds = Sets.newHashSet(READ_ID_TRIMMER.trim(readId));
+
         mReadTypeCount = new int[REMOTE_READ_TYPE_DISCORDANT_READ+1];
         ++mReadTypeCount[readType];
+
         mSoftClipMapQualTotal = 0;
     }
 
@@ -42,6 +45,7 @@ public class RemoteRegion extends ChrBaseRegion
     {
         setStart(min(start(), posStart));
         setEnd(max(end(), posEnd));
+
         mReadIds.add(READ_ID_TRIMMER.trim(readId));
         ++mReadTypeCount[readType];
     }
