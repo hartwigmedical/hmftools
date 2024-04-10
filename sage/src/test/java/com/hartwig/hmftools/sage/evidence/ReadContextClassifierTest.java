@@ -19,7 +19,6 @@ import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
@@ -37,31 +36,50 @@ public class ReadContextClassifierTest
     }
 
     // TODO: Other types of variants.
+    private static final String VARIANT_CHROMOSOME = CHR_1;
+    private static final int VARIANT_POS = 100;
     private static final int READ_START_POS = 50;
-    private static final String REF_READ_STRING;
+    private static final String REF_READ_STRING = REF_BASES_200.substring(READ_START_POS - 1, READ_START_POS - 1 + READ_LENGTH);
+    private static final RefSequence REF_SEQUENCE = new RefSequence(1, REF_BASES_200.getBytes());
+
     private static final String SNV_READ_STRING;
     private static final VariantReadContext SNV_CONTEXT;
     static
     {
-        String chromosome = CHR_1;
-        int position = 100;
-        String refBases = REF_BASES_200;
-
-        String ref = String.valueOf(REF_BASES_200.charAt(position - 1));
+        String ref = String.valueOf(REF_BASES_200.charAt(VARIANT_POS - 1));
         String alt = swapDnaBase(ref);
 
-        REF_READ_STRING = refBases.substring(READ_START_POS - 1, READ_START_POS - 1 + READ_LENGTH);
-
-        int varReadIndex = position - READ_START_POS;
+        int varReadIndex = VARIANT_POS - READ_START_POS;
         StringBuilder readString = new StringBuilder(REF_READ_STRING);
         readString.setCharAt(varReadIndex, alt.charAt(0));
         SNV_READ_STRING = readString.toString();
         SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", SNV_READ_STRING, QUALITIES);
 
-        SimpleVariant variant = new SimpleVariant(chromosome, position, ref, alt);
-        RefSequence refSequence = new RefSequence(1, refBases.getBytes());
+        SimpleVariant variant = new SimpleVariant(VARIANT_CHROMOSOME, VARIANT_POS, ref, alt);
+
         VariantReadContextBuilder variantReadContextBuilder = new VariantReadContextBuilder(DEFAULT_READ_CONTEXT_FLANK_SIZE);
-        SNV_CONTEXT = variantReadContextBuilder.createMnvContext(variant, read, varReadIndex, refSequence);
+        SNV_CONTEXT = variantReadContextBuilder.createMnvContext(variant, read, varReadIndex, REF_SEQUENCE);
+    }
+
+    private static final String MNV_READ_STRING;
+    private static final VariantReadContext MNV_CONTEXT;
+    static
+    {
+        String ref = REF_BASES_200.substring(VARIANT_POS - 1, VARIANT_POS + 2);
+        StringBuilder altBuilder = new StringBuilder(ref);
+        altBuilder.setCharAt(0, swapDnaBase(altBuilder.charAt(0)));
+        altBuilder.setCharAt(2, swapDnaBase(altBuilder.charAt(2)));
+        String alt = altBuilder.toString();
+
+        int varReadIndex = VARIANT_POS - READ_START_POS;
+        StringBuilder readString = new StringBuilder(REF_READ_STRING);
+        readString.replace(varReadIndex, varReadIndex + 3, alt);
+        MNV_READ_STRING = readString.toString();
+        SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", MNV_READ_STRING, QUALITIES);
+
+        SimpleVariant variant = new SimpleVariant(VARIANT_CHROMOSOME, VARIANT_POS, ref, alt);
+        VariantReadContextBuilder variantReadContextBuilder = new VariantReadContextBuilder(DEFAULT_READ_CONTEXT_FLANK_SIZE);
+        MNV_CONTEXT = variantReadContextBuilder.createMnvContext(variant, read, varReadIndex, REF_SEQUENCE);
     }
 
     @Test
@@ -225,5 +243,159 @@ public class ReadContextClassifierTest
         ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
 
         assertEquals(ReadContextCounter.MatchType.FULL, matchType);
+    }
+
+    @Test
+    public void testNoMatchingBasesMnv()
+    {
+        StringBuilder readString = new StringBuilder(MNV_READ_STRING);
+        for(int i = 0; i < readString.length(); ++i)
+        {
+            readString.setCharAt(i, swapDnaBase(readString.charAt(i)));
+        }
+
+        SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
+        ReadContextClassifier classifier = new ReadContextClassifier(MNV_CONTEXT);
+        ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
+
+        assertEquals(ReadContextCounter.MatchType.NONE, matchType);
+    }
+
+    @Test
+    public void testFullMatchMnvCoreAndRightFlank()
+    {
+        StringBuilder readString = new StringBuilder(MNV_READ_STRING);
+        for(int pos = READ_START_POS; pos < MNV_CONTEXT.AlignmentStart + MNV_CONTEXT.leftFlankLength(); ++pos)
+        {
+            int idx = pos - READ_START_POS;
+            readString.setCharAt(idx, swapDnaBase(readString.charAt(idx)));
+        }
+
+        SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
+        ReadContextClassifier classifier = new ReadContextClassifier(MNV_CONTEXT);
+        ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
+
+        assertEquals(ReadContextCounter.MatchType.FULL, matchType);
+    }
+
+    @Test
+    public void testPartialMatchMnvPartialCoreAndPartialVariantAndLeftFlank()
+    {
+        // TODO: Partial core covers all of the variant bases?
+
+        StringBuilder readString = new StringBuilder(MNV_READ_STRING);
+        for(int pos = MNV_CONTEXT.VarReadIndex + MNV_CONTEXT.AlignmentStart + 2; pos < READ_START_POS + READ_LENGTH; ++pos)
+        {
+            int idx = pos - READ_START_POS;
+            readString.setCharAt(idx, swapDnaBase(readString.charAt(idx)));
+        }
+
+        SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
+        ReadContextClassifier classifier = new ReadContextClassifier(MNV_CONTEXT);
+        ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
+
+        assertEquals(ReadContextCounter.MatchType.NONE, matchType);
+    }
+
+    @Test
+    public void testPartialMatchMnvPartialCoreAndFullVariantAndLeftFlank()
+    {
+        // TODO: Partial core covers all of the variant bases?
+
+        StringBuilder readString = new StringBuilder(MNV_READ_STRING);
+        // TODO: init magic number.
+        for(int pos = MNV_CONTEXT.VarReadIndex + MNV_CONTEXT.AlignmentStart + 3; pos < READ_START_POS + READ_LENGTH; ++pos)
+        {
+            int idx = pos - READ_START_POS;
+            readString.setCharAt(idx, swapDnaBase(readString.charAt(idx)));
+        }
+
+        SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
+        ReadContextClassifier classifier = new ReadContextClassifier(MNV_CONTEXT);
+        ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
+
+        assertEquals(ReadContextCounter.MatchType.PARTIAL, matchType);
+    }
+
+    @Test
+    public void testCoreMatchMnv()
+    {
+        BaseRegion coreRegion = new BaseRegion(MNV_CONTEXT.AlignmentStart + MNV_CONTEXT.CoreIndexStart, MNV_CONTEXT.AlignmentStart + MNV_CONTEXT.CoreIndexEnd);
+        StringBuilder readString = new StringBuilder(MNV_READ_STRING);
+        for(int pos = READ_START_POS; pos < READ_START_POS + READ_LENGTH; ++pos)
+        {
+            if (coreRegion.containsPosition(pos))
+            {
+                continue;
+            }
+
+            int idx = pos - READ_START_POS;
+            readString.setCharAt(idx, swapDnaBase(readString.charAt(idx)));
+        }
+
+        SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
+        ReadContextClassifier classifier = new ReadContextClassifier(MNV_CONTEXT);
+        ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
+
+        assertEquals(ReadContextCounter.MatchType.CORE, matchType);
+    }
+
+    @Test
+    public void testRefMatchMnvPartialCoreAndPartialVariantAndLeftFlank()
+    {
+        StringBuilder readString = new StringBuilder(REF_READ_STRING);
+        // TODO: init magic number.
+        for(int pos = MNV_CONTEXT.VarReadIndex + MNV_CONTEXT.AlignmentStart + 2; pos < READ_START_POS + READ_LENGTH; ++pos)
+        {
+            int idx = pos - READ_START_POS;
+            readString.setCharAt(idx, swapDnaBase(readString.charAt(idx)));
+        }
+
+        SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
+        ReadContextClassifier classifier = new ReadContextClassifier(MNV_CONTEXT);
+        ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
+
+        assertEquals(ReadContextCounter.MatchType.NONE, matchType);
+    }
+
+    @Test
+    public void testRefMatchMnvPartialCoreAndFullVariantAndLeftFlank()
+    {
+        StringBuilder readString = new StringBuilder(REF_READ_STRING);
+        // TODO: init magic number.
+        for(int pos = MNV_CONTEXT.VarReadIndex + MNV_CONTEXT.AlignmentStart + 3; pos < READ_START_POS + READ_LENGTH; ++pos)
+        {
+            int idx = pos - READ_START_POS;
+            readString.setCharAt(idx, swapDnaBase(readString.charAt(idx)));
+        }
+
+        SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
+        ReadContextClassifier classifier = new ReadContextClassifier(MNV_CONTEXT);
+        ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
+
+        assertEquals(ReadContextCounter.MatchType.REF, matchType);
+    }
+
+    @Test
+    public void testRefMatchMnvCore()
+    {
+        BaseRegion coreRegion = new BaseRegion(MNV_CONTEXT.AlignmentStart + MNV_CONTEXT.CoreIndexStart, MNV_CONTEXT.AlignmentStart + MNV_CONTEXT.CoreIndexEnd);
+        StringBuilder readString = new StringBuilder(REF_READ_STRING);
+        for(int pos = READ_START_POS; pos < READ_START_POS + READ_LENGTH; ++pos)
+        {
+            if (coreRegion.containsPosition(pos))
+            {
+                continue;
+            }
+
+            int idx = pos - READ_START_POS;
+            readString.setCharAt(idx, swapDnaBase(readString.charAt(idx)));
+        }
+
+        SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", readString.toString(), QUALITIES);
+        ReadContextClassifier classifier = new ReadContextClassifier(MNV_CONTEXT);
+        ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
+
+        assertEquals(ReadContextCounter.MatchType.REF, matchType);
     }
 }

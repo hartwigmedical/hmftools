@@ -114,10 +114,10 @@ public class ReadContextClassifier
         String coreString = mVariantReadContext.coreStr();
 
         // check variant
-        int variantStartPos = mVariantReadContext.AlignmentStart + mVariantReadContext.VarReadIndex;
-        String readAtVariant = readString.substring(variantStartPos - read.getUnclippedStart(), variantStartPos - read.getUnclippedStart() + 1);
         String ref = mVariantReadContext.ref();
         String alt = mVariantReadContext.alt();
+        int variantStartPos = mVariantReadContext.AlignmentStart + mVariantReadContext.VarReadIndex;
+        String readAtVariant = readString.substring(variantStartPos - read.getUnclippedStart(), variantStartPos - read.getUnclippedStart() + alt.length());
         boolean matchesRef;
         if(readAtVariant.equals(ref))
         {
@@ -148,7 +148,7 @@ public class ReadContextClassifier
 
         // check right of variant
         boolean matchesRight = true;
-        for(int i = mVariantReadContext.VarReadIndex + 1; i <= mVariantReadContext.CoreIndexEnd; ++i)
+        for(int i = mVariantReadContext.VarReadIndex + alt.length(); i <= mVariantReadContext.CoreIndexEnd; ++i)
         {
             int coreIndex = i - mVariantReadContext.CoreIndexStart;
             int readIndex = coreIndex + coreStartPos - read.getUnclippedStart();
