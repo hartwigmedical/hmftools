@@ -4,15 +4,16 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 
 import javax.annotation.Nullable;
 
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
+
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 
 public class ReadContextClassifier
 {
     // TODO: Update this.
-    private final static int HIGH_BASE_QUAL_CUTOFF = 37;
+    public final static int HIGH_BASE_QUAL_CUTOFF = 37;
 
     private final VariantReadContext mVariantReadContext;
 
@@ -39,94 +40,186 @@ public class ReadContextClassifier
             return null;
         }
 
-        // alt matching
-        BaseRegion coreAndFlanksRegion = new BaseRegion(mVariantReadContext.AlignmentStart, mVariantReadContext.AlignmentEnd);
-        int leftMatchLength = maxLeftMatchLength(coreAndFlanksRegion, read, mVariantReadContext.ReadBases, mVariantReadContext.AlignmentStart);
-        if(leftMatchLength >= mVariantReadContext.leftFlankLength() + mVariantReadContext.coreLength())
+        CoreMatchType coreMatchType = coreMatch(read);
+        if(coreMatchType == null)
+        {
+            return ReadContextCounter.MatchType.NONE;
+        }
+
+        boolean matchesLeftFlank = isLeftFlankMatch(read);
+        boolean matchesRightFlank = isRightFlankMatch(read);
+        ReadContextCounter.MatchType matchType = getMatchType(coreMatchType.Extent, matchesLeftFlank, matchesRightFlank);
+
+        if(!coreMatchType.MatchesRef)
+        {
+            return matchType;
+        }
+
+        return matchType == ReadContextCounter.MatchType.NONE ? ReadContextCounter.MatchType.NONE : ReadContextCounter.MatchType.REF;
+    }
+
+    @NotNull
+    private static ReadContextCounter.MatchType getMatchType(final CoreMatchExtent coreMatchExtent, final boolean matchesLeftFlank, final boolean matchesRightFlank)
+    {
+        if(coreMatchExtent == CoreMatchExtent.FULL && (matchesLeftFlank || matchesRightFlank))
         {
             return ReadContextCounter.MatchType.FULL;
         }
 
-        int rightMatchLength = maxRightMatchLength(coreAndFlanksRegion, read, mVariantReadContext.ReadBases, mVariantReadContext.AlignmentStart);
-        if(rightMatchLength >= mVariantReadContext.rightFlankLength() + mVariantReadContext.coreLength())
-        {
-            return ReadContextCounter.MatchType.FULL;
-        }
-
-        if(leftMatchLength >= mVariantReadContext.leftFlankLength() + mVariantReadContext.VarReadIndex - mVariantReadContext.CoreIndexStart + 1)
+        if(matchesLeftFlank && coreMatchExtent == CoreMatchExtent.LEFT_PARTIAL)
         {
             return ReadContextCounter.MatchType.PARTIAL;
         }
 
-        if(rightMatchLength >= mVariantReadContext.rightFlankLength() + mVariantReadContext.CoreIndexEnd - mVariantReadContext.VarReadIndex + 1)
+        if(matchesRightFlank && coreMatchExtent == CoreMatchExtent.RIGHT_PARTIAL)
         {
             return ReadContextCounter.MatchType.PARTIAL;
         }
 
-        BaseRegion coreRegion = new BaseRegion(mVariantReadContext.AlignmentStart + mVariantReadContext.CoreIndexStart,mVariantReadContext.AlignmentStart + mVariantReadContext.CoreIndexEnd);
-        int coreMatchLength = maxLeftMatchLength(coreRegion, read, mVariantReadContext.ReadBases, mVariantReadContext.AlignmentStart);
-        if (coreMatchLength == coreRegion.baseLength())
+        if(coreMatchExtent  == CoreMatchExtent.FULL)
         {
             return ReadContextCounter.MatchType.CORE;
-        }
-
-        // TODO: Copy and paste.
-        // ref matching
-        int refLeftMatchLength = maxLeftMatchLength(coreAndFlanksRegion, read, mVariantReadContext.RefBases, mVariantReadContext.AlignmentStart);
-        if(refLeftMatchLength >= mVariantReadContext.leftFlankLength() + mVariantReadContext.VarReadIndex - mVariantReadContext.CoreIndexStart + 1)
-        {
-            return ReadContextCounter.MatchType.REF;
-        }
-
-        int refRightMatchLength = maxRightMatchLength(coreAndFlanksRegion, read, mVariantReadContext.RefBases, mVariantReadContext.AlignmentStart);
-        if(refRightMatchLength >= mVariantReadContext.rightFlankLength() + mVariantReadContext.CoreIndexEnd - mVariantReadContext.VarReadIndex + 1)
-        {
-            return ReadContextCounter.MatchType.REF;
-        }
-
-        int refCoreMatchLength = maxLeftMatchLength(coreRegion, read, mVariantReadContext.RefBases, mVariantReadContext.AlignmentStart);
-        if (refCoreMatchLength == coreRegion.baseLength())
-        {
-            return ReadContextCounter.MatchType.REF;
         }
 
         return ReadContextCounter.MatchType.NONE;
     }
 
-    private static int maxLeftMatchLength(final BaseRegion region, final SAMRecord read, final byte[] comparisonBases, int startPos)
+    // TODO: Do we need ALT_FULL?
+    // TODO: Rename?
+    private enum CoreMatchExtent
     {
-        byte[] readBases = read.getReadBases();
-        for(int pos = region.start(); pos <= region.end(); ++pos)
-        {
-            int comparisonIndex = pos - startPos;
-            int readIndex = pos - read.getUnclippedStart();
-            byte comparisonBase = comparisonBases[comparisonIndex];
-            byte readBase = readBases[readIndex];
-            if(comparisonBase != readBase)
-            {
-                return pos - region.start();
-            }
-        }
-
-        return region.baseLength();
+        LEFT_PARTIAL,
+        RIGHT_PARTIAL,
+        FULL,
     }
 
-    private static int maxRightMatchLength(final BaseRegion region, final SAMRecord read, final byte[] comparisonBases, int startPos)
+    private static class CoreMatchType
     {
-        byte[] readBases = read.getReadBases();
-        for(int pos = region.end(); pos >= region.start(); --pos)
+        public final CoreMatchExtent Extent;
+        public final boolean MatchesRef;
+
+        public CoreMatchType(final CoreMatchExtent extent, boolean matchesRef)
         {
-            int comparisonIndex = pos - startPos;
-            int readIndex = pos - read.getUnclippedStart();
-            byte comparisonBase = comparisonBases[comparisonIndex];
-            byte readBase = readBases[readIndex];
-            if(comparisonBase != readBase)
+            Extent = extent;
+            MatchesRef = matchesRef;
+        }
+    }
+
+
+    // TODO: Refactor and simplify.
+    @Nullable
+    private CoreMatchType coreMatch(final SAMRecord read)
+    {
+        String readString = read.getReadString();
+        String coreString = mVariantReadContext.coreStr();
+
+        // check variant
+        int variantStartPos = mVariantReadContext.AlignmentStart + mVariantReadContext.VarReadIndex;
+        String readAtVariant = readString.substring(variantStartPos - read.getUnclippedStart(), variantStartPos - read.getUnclippedStart() + 1);
+        String ref = mVariantReadContext.ref();
+        String alt = mVariantReadContext.alt();
+        boolean matchesRef;
+        if(readAtVariant.equals(ref))
+        {
+            matchesRef = true;
+        }
+        else if(readAtVariant.equals(alt))
+        {
+            matchesRef = false;
+        }
+        else
+        {
+            return null;
+        }
+
+        // check left of variant
+        boolean matchesLeft = true;
+        int coreStartPos = mVariantReadContext.AlignmentStart + mVariantReadContext.CoreIndexStart;
+        for(int i = mVariantReadContext.CoreIndexStart; i < mVariantReadContext.VarReadIndex; ++i)
+        {
+            int coreIndex = i - mVariantReadContext.CoreIndexStart;
+            int readIndex = coreIndex + coreStartPos - read.getUnclippedStart();
+            if(coreString.charAt(coreIndex) != readString.charAt(readIndex))
             {
-                return region.end() - pos;
+                matchesLeft = false;
+                break;
             }
         }
 
-        return region.baseLength();
+        // check right of variant
+        boolean matchesRight = true;
+        for(int i = mVariantReadContext.VarReadIndex + 1; i <= mVariantReadContext.CoreIndexEnd; ++i)
+        {
+            int coreIndex = i - mVariantReadContext.CoreIndexStart;
+            int readIndex = coreIndex + coreStartPos - read.getUnclippedStart();
+            if(coreString.charAt(coreIndex) != readString.charAt(readIndex))
+            {
+                matchesRight = false;
+                break;
+            }
+        }
+
+        if(matchesLeft && matchesRight)
+        {
+            return new CoreMatchType(CoreMatchExtent.FULL, matchesRef);
+        }
+
+        if (matchesLeft)
+        {
+            return new CoreMatchType(CoreMatchExtent.LEFT_PARTIAL, matchesRef);
+        }
+
+        if (matchesRight)
+        {
+            return new CoreMatchType(CoreMatchExtent.RIGHT_PARTIAL, matchesRef);
+        }
+
+        return null;
+    }
+
+    private boolean isLeftFlankMatch(final SAMRecord read)
+    {
+        String readString = read.getReadString();
+        byte[] baseQuals = read.getBaseQualities();
+        String leftFlankStr = mVariantReadContext.leftFlankStr();
+        for(int i = 0; i < leftFlankStr.length(); ++i)
+        {
+            int readIndex = i + mVariantReadContext.AlignmentStart - read.getUnclippedStart();
+            if(baseQuals[readIndex] < HIGH_BASE_QUAL_CUTOFF)
+            {
+                continue;
+            }
+
+            if(leftFlankStr.charAt(i) != readString.charAt(readIndex))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean isRightFlankMatch(final SAMRecord read)
+    {
+        String readString = read.getReadString();
+        byte[] baseQuals = read.getBaseQualities();
+        String rightFlankStr = mVariantReadContext.rightFlankStr();
+        int rightFlankStartPos = mVariantReadContext.AlignmentStart + mVariantReadContext.CoreIndexEnd + 1;
+        for(int i = 0; i < rightFlankStr.length(); ++i)
+        {
+            int readIndex = i + rightFlankStartPos - read.getUnclippedStart();
+            if(baseQuals[readIndex] < HIGH_BASE_QUAL_CUTOFF)
+            {
+                continue;
+            }
+
+            if(rightFlankStr.charAt(i) != readString.charAt(readIndex))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     //    public ReadMatchType processRead(final SAMRecord record, int numberOfEvents, @Nullable final FragmentData fragmentData)

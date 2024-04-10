@@ -5,10 +5,13 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
+import static com.hartwig.hmftools.sage.evidence.ReadContextClassifier.HIGH_BASE_QUAL_CUTOFF;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.sage.common.RefSequence;
@@ -16,6 +19,7 @@ import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
@@ -192,5 +196,34 @@ public class ReadContextClassifierTest
         ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
 
         assertEquals(ReadContextCounter.MatchType.REF, matchType);
+    }
+
+    @Test
+    public void testFullMatchSnvLowQualLeftFlankMismatches()
+    {
+        StringBuilder readString = new StringBuilder(SNV_READ_STRING);
+        byte[] qualities = Arrays.copyOf(QUALITIES, QUALITIES.length);
+        BaseRegion coreRegion = new BaseRegion(SNV_CONTEXT.AlignmentStart + SNV_CONTEXT.CoreIndexStart, SNV_CONTEXT.AlignmentStart + SNV_CONTEXT.CoreIndexEnd);
+        for(int pos = SNV_CONTEXT.AlignmentStart; pos <= SNV_CONTEXT.AlignmentEnd; ++pos)
+        {
+            if(coreRegion.containsPosition(pos))
+            {
+                continue;
+            }
+
+            int variantIndex = pos - SNV_CONTEXT.AlignmentStart;
+            int readIndex = pos - READ_START_POS;
+            readString.setCharAt(readIndex, swapDnaBase(readString.charAt(readIndex)));
+            if(variantIndex < SNV_CONTEXT.leftFlankLength())
+            {
+                qualities[readIndex] = HIGH_BASE_QUAL_CUTOFF - 1;
+            }
+        }
+
+        SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", readString.toString(), qualities);
+        ReadContextClassifier classifier = new ReadContextClassifier(SNV_CONTEXT);
+        ReadContextCounter.MatchType matchType = classifier.classifyRead(read);
+
+        assertEquals(ReadContextCounter.MatchType.FULL, matchType);
     }
 }
