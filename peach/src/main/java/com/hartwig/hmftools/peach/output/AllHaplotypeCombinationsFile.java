@@ -76,7 +76,7 @@ public class AllHaplotypeCombinationsFile
         return combination.getHaplotypeNameToCount()
                 .entrySet()
                 .stream()
-                .map(e -> String.format("(%s, %s)", e.getKey(), e.getValue()))
+                .map(e -> String.format("(%s,%s)", e.getKey(), e.getValue()))
                 .sorted()
                 .collect(Collectors.joining(COMBINATION_SEPARATOR));
     }
