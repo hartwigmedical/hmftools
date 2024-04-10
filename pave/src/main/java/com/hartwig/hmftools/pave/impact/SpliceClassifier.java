@@ -252,7 +252,7 @@ public final class SpliceClassifier
                 else
                 {
                     // -ve strand: exon start / splice acceptor is 30, A3-A1 is 31-33, insert must be 30 or more to impact
-                    if(variant.Position >= posRangeEnd || variant.EndPosition < posRangeStart) // one base earlier
+                    if(variant.Position >= posRangeEnd || variant.EndPosition <= posRangeStart) // one base earlier
                         return OUTSIDE_RANGE;
                 }
             }
@@ -359,4 +359,17 @@ public final class SpliceClassifier
 
         return refSpliceBases.equals(altSpliceBases) ? HOMOLOGY_SHIFT : BASE_SHIFT;
     }
+
+    public static boolean isInsertIntoExonStart(final VariantData variant, final ExonData exon, boolean posStrand)
+    {
+        if(!variant.isInsert())
+            return false;
+
+        // check if the inserted bases will be incorporated into the coding sequence
+        if(posStrand)
+            return variant.Position == exon.Start - 1;
+        else
+            return variant.Position == exon.End;
+    }
+
 }

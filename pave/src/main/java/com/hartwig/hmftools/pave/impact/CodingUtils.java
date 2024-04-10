@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.pave.PaveConstants.PROMOTOR_UPSTREAM_DISTANCE;
 import static com.hartwig.hmftools.pave.PaveConstants.PROMOTOR_UPSTREAM_GENE_IDS;
 import static com.hartwig.hmftools.pave.impact.ProteinUtils.getOpenCodonBases;
+import static com.hartwig.hmftools.pave.impact.SpliceClassifier.isInsertIntoExonStart;
 
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -147,7 +148,9 @@ public final class CodingUtils
 
                 final ExonData nextExon = i < transData.exons().size() - 1 ? transData.exons().get(i + 1) : null;
 
-                boolean withinExon = variant.altPositionsWithin(exon.Start, exon.End);
+                boolean withinExon = variant.altPositionsWithin(exon.Start, exon.End)
+                        || isInsertIntoExonStart(variant, exon, posStrand);
+
                 boolean overlapsExon = variant.altPositionsOverlap(exon.Start, exon.End);
 
                 if(skipExonPos > exon.End)
@@ -217,7 +220,8 @@ public final class CodingUtils
                         }
                     }
                 }
-                else if(nextExon != null && variant.altPositionsOverlap(nextExon.Start, nextExon.End))
+                else if(nextExon != null
+                && (variant.altPositionsOverlap(nextExon.Start, nextExon.End)) || isInsertIntoExonStart(variant, nextExon, posStrand))
                 {
                     // deal with next exon the next time around
                     continue;
@@ -270,7 +274,9 @@ public final class CodingUtils
 
                 final ExonData nextExon = i >= 1 ? transData.exons().get(i - 1) : null;
 
-                boolean withinExon = variant.altPositionsWithin(exon.Start, exon.End);
+                boolean withinExon = variant.altPositionsWithin(exon.Start, exon.End)
+                        || isInsertIntoExonStart(variant, exon, posStrand);
+
                 boolean overlapsExon = variant.altPositionsOverlap(exon.Start, exon.End);
 
                 if(skipExonPos < exon.Start)
@@ -344,7 +350,8 @@ public final class CodingUtils
                         }
                     }
                 }
-                else if(nextExon != null && variant.altPositionsOverlap(nextExon.Start, nextExon.End))
+                else if(nextExon != null
+                && (variant.altPositionsOverlap(nextExon.Start, nextExon.End)) || isInsertIntoExonStart(variant, nextExon, posStrand))
                 {
                     continue;
                 }
