@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.prep.types;
+package com.hartwig.hmftools.esvee.common;
 
 public class ReadIdTrimmer
 {

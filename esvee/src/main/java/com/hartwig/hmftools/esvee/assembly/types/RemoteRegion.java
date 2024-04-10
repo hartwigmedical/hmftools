@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REMOTE_REGION_WEAK_SUPP_PERCENT;
 
 import java.util.Collections;
@@ -18,7 +19,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 public class RemoteRegion extends ChrBaseRegion
 {
     private final byte mOrientation;
-    private final Set<String> mReadIds; // used to link with remote assemblies
+    private final Set<String> mReadIds; // used to link with remote assemblies, and note is trimmed to match ID in SupportRead
 
     public static final int REMOTE_READ_TYPE_JUNCTION_MATE = 0;
     public static final int REMOTE_READ_TYPE_JUNCTION_SUPP = 1;
@@ -31,7 +32,7 @@ public class RemoteRegion extends ChrBaseRegion
     {
         super(region.Chromosome, region.start(), region.end());
         mOrientation = orientation;
-        mReadIds = Sets.newHashSet(readId);
+        mReadIds = Sets.newHashSet(READ_ID_TRIMMER.trim(readId));
         mReadTypeCount = new int[REMOTE_READ_TYPE_DISCORDANT_READ+1];
         ++mReadTypeCount[readType];
         mSoftClipMapQualTotal = 0;
@@ -41,7 +42,7 @@ public class RemoteRegion extends ChrBaseRegion
     {
         setStart(min(start(), posStart));
         setEnd(max(end(), posEnd));
-        mReadIds.add(readId);
+        mReadIds.add(READ_ID_TRIMMER.trim(readId));
         ++mReadTypeCount[readType];
     }
 

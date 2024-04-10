@@ -120,6 +120,8 @@ public class PhaseGroupBuilder
 
         mergePerfCounters(perfCounters, remoteBuilderTasks.stream().collect(Collectors.toList()));
 
+        remoteBuilderTasks.forEach(x -> x.logStats());
+
         for(int i = 0; i < mPhaseGroups.size(); ++i)
         {
             mPhaseGroups.get(i).setId(i);
@@ -154,6 +156,12 @@ public class PhaseGroupBuilder
             final PhaseGroupBuildWriter writer, @Nullable final String linkType)
     {
         // not thread-safe but called with synchronisation when remote assemblies are linked
+
+        // for phased assemblies, the phase group scenarios are:
+        // - assemblies are already in the same phase group
+        // - no phase group exists for either so make a new one
+        // - the other assembly already has an existing phase group and this one doesn't so just add it
+        // - the other assembly already has an existing phase group, so does this one and so transfer this to the other
         if(phaseGroup == null)
         {
             if(otherAssembly.phaseGroup() != null)
@@ -203,51 +211,4 @@ public class PhaseGroupBuilder
             }
         }
     }
-
-    /* FIXME: needs to be made threadsafe
-
-        if(!mConfig.SkipDiscordant)
-        {
-            for(JunctionGroup otherJunctionGroup : linkedJunctionGroups)
-            {
-                // the linked junction group may have discordant read groups which are required by this assembly
-                for(DiscordantGroup discordantGroup : otherJunctionGroup.discordantGroups())
-                {
-                    // ignore any discordant group which actually shares the same reads
-                    if(discordantGroup.reads().stream().anyMatch(x -> assembly.hasReadSupport(x)))
-                        continue;
-
-                    // as above, check that remote regions overlap before checking reads
-                    boolean matched = false;
-
-                    for(RemoteRegion remoteRegion : assembly.remoteRegions())
-                    {
-                        if(remoteRegion.isSuppOnlyRegion())
-                            continue;
-
-                        if(!remoteRegion.overlaps(
-                                discordantGroup.chromosome(), discordantGroup.minAlignedPosition(), discordantGroup.maxAlignedPosition(),
-                                discordantGroup.orientation()))
-                        {
-                            continue;
-                        }
-
-                        if(remoteRegion.readIds().stream().anyMatch(x -> discordantGroup.hasFragment(x)))
-                        {
-                            matched = true;
-                            break;
-                        }
-                    }
-
-                    if(!matched)
-                        continue;
-
-                    if(phaseGroup == null)
-                        phaseGroup = new PhaseGroup(assembly, null);
-
-                    phaseGroup.addDiscordantGroup(discordantGroup);
-                }
-            }
-        }
-    */
 }

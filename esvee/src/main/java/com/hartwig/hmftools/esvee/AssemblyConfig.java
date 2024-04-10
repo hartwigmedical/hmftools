@@ -61,6 +61,7 @@ import com.hartwig.hmftools.esvee.alignment.AlignmentCache;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
 import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
 import org.apache.logging.log4j.LogManager;
@@ -114,6 +115,8 @@ public class AssemblyConfig
     public final String TruthsetFile;
     public final String AlignmentFile;
 
+    public final boolean ApplyRemotePhasingReadCheckThreshold;
+
     public static final String OUTPUT_VCF = "output_vcf";
     private static final String REF_GENOME_IMAGE = "ref_genome_image";
     private static final String DECOY_GENOME = "decoy_genome";
@@ -130,7 +133,11 @@ public class AssemblyConfig
     private static final String SPECIFIC_JUNCTIONS = "specific_junctions";
     private static final String ASSEMBLY_REF_BASE_WRITE_MAX = "asm_ref_base_write_max";
 
+    private static final String REMOTE_PHASING_READ_CHECK_THRESHOLD = "remote_phase_read_check_threshold";
+
     public static final Logger SV_LOGGER = LogManager.getLogger(AssemblyConfig.class);
+
+    public static ReadIdTrimmer READ_ID_TRIMMER;
 
     public AssemblyConfig(final ConfigBuilder configBuilder)
     {
@@ -268,6 +275,10 @@ public class AssemblyConfig
 
         if(RunAlignment || DecoyGenome != null)
             loadAlignerLibrary(null); // or load path from config
+
+        ApplyRemotePhasingReadCheckThreshold = configBuilder.hasFlag(REMOTE_PHASING_READ_CHECK_THRESHOLD);
+
+        READ_ID_TRIMMER = new ReadIdTrimmer(true);
     }
 
     public List<String> combinedSampleIds()
@@ -349,6 +360,8 @@ public class AssemblyConfig
         configBuilder.addInteger(
                 PHASE_PROCESSING_LIMIT, "Exclude phase groups above this size from extension and phase sets", 0);
 
+        configBuilder.addFlag(REMOTE_PHASING_READ_CHECK_THRESHOLD, "Apply remote phase building max read check threshold");
+
         TruthsetAnnotation.registerConfig(configBuilder);
         AlignmentCache.registerConfig(configBuilder);
         BamToolName.addConfig(configBuilder);
@@ -403,5 +416,9 @@ public class AssemblyConfig
         Threads = 0;
         TruthsetFile = null;
         AlignmentFile = null;
+
+        ApplyRemotePhasingReadCheckThreshold = false;
+
+        READ_ID_TRIMMER = new ReadIdTrimmer(false);
     }
 }

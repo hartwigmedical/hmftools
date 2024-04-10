@@ -328,6 +328,8 @@ public class VcfWriter implements AutoCloseable
         // neg orientation for DEL and DUP: ]10:89700299]GAGATTATACTTTGTGTAA
         // neg orientation for INV: [3:24566181[C
 
+        // FIXME: see Gripss method formPairedAltString() and share code if possible
+
         // position orientation for SG: extension sequence then '.'
         // negative orientation for SG: '.' then extension sequence
         byte[] refBase = { assembly.bases()[assembly.junctionIndex()] };

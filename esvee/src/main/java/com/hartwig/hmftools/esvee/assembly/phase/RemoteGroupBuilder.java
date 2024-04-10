@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.esvee.assembly.phase;
 
+import static java.lang.Math.min;
+import static java.lang.Math.round;
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REMOTE_PHASING_MIN_READS;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragment;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.assembly.phase.PhaseGroupBuilder.linkToPhaseGroups;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 
 import java.util.Collections;
 import java.util.List;
@@ -13,6 +16,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -25,9 +29,8 @@ import com.hartwig.hmftools.esvee.assembly.types.RefSideSoftClip;
 import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 import com.hartwig.hmftools.esvee.assembly.output.PhaseGroupBuildWriter;
-import com.hartwig.hmftools.esvee.assembly.read.Read;
 
-class RemoteGroupBuilder extends ThreadTask
+public class RemoteGroupBuilder extends ThreadTask
 {
     private final AssemblyConfig mConfig;
     private final PhaseGroupBuildWriter mWriter;
@@ -37,6 +40,8 @@ class RemoteGroupBuilder extends ThreadTask
     private final Set<PhaseGroup> mPhaseGroupsSets;
     private final List<PhaseGroup> mRemovedPhaseGroups;
     private final int mJunctionGroupCount;
+
+    private final RemoteBuildStats mBuildStats;
 
     public RemoteGroupBuilder(
             final AssemblyConfig config, final Queue<JunctionGroup> junctionGroups,
@@ -52,6 +57,7 @@ class RemoteGroupBuilder extends ThreadTask
         mJunctionGroupCount = junctionGroups.size();
         mPhaseGroupsSets = Sets.newHashSet();
         mRemovedPhaseGroups = Lists.newArrayList();
+        mBuildStats = new RemoteBuildStats();
     }
 
     public Set<PhaseGroup> phaseGroups()
@@ -62,6 +68,11 @@ class RemoteGroupBuilder extends ThreadTask
     public List<PhaseGroup> removedPhaseGroups()
     {
         return mRemovedPhaseGroups;
+    }
+
+    public void logStats()
+    {
+        SV_LOGGER.info("remote phase group building stats: {}", mBuildStats);
     }
 
     private static final int LOG_COUNT = 10000;
@@ -121,11 +132,6 @@ class RemoteGroupBuilder extends ThreadTask
             if(isFiltered(region))
                 continue;
 
-            // IDEA: first of all check the regions overlap, since for large junction groups there's a high chance they won't
-            // and then all reads need to be checked in each
-            // finds too many examples where they do share reads, maybe the 1K distance buffer is too small or they are sharing
-            // supplementaries whose remote regions were purged
-
             List<JunctionGroup> overlappingJunctions = findOverlappingJunctionGroups(junctionGroup, region);
 
             if(overlappingJunctions == null)
@@ -148,74 +154,268 @@ class RemoteGroupBuilder extends ThreadTask
 
         for(JunctionGroup otherJunctionGroup : linkedJunctionGroups)
         {
-            // the matching to other assemblies for each of this assembly's remote groups is purely for informational purposes
-            // but in time may be replaced by actual linking to all expected remote mate reads
-
             for(JunctionAssembly otherAssembly : otherJunctionGroup.junctionAssemblies())
             {
                 if(assembly == otherAssembly)
                     continue;
 
-                checkAssemblyPhasing(assembly, otherAssembly, mPhaseGroupsSets, mRemovedPhaseGroups, mWriter);
+                if(doCheckAssemblyPhasing(assembly, otherAssembly, false, null, null, null))
+                {
+                    ++mBuildStats.AssemblyChecks;
+                    ++mBuildStats.AssemblyPreLinked;
+                    return;
+                }
+
+                if(!canPhaseAssemblies(assembly, otherAssembly))
+                    continue;
+
+                doCheckAssemblyPhasing(assembly, otherAssembly, true, mPhaseGroupsSets, mRemovedPhaseGroups, mWriter);
             }
         }
     }
 
-    private synchronized static void checkAssemblyPhasing(
-            final JunctionAssembly assembly, final JunctionAssembly otherAssembly,
-            final Set<PhaseGroup> phaseGroups, final List<PhaseGroup> removedPhaseGroups, final PhaseGroupBuildWriter writer)
+    private boolean canPhaseAssemblies(final JunctionAssembly assembly, final JunctionAssembly otherAssembly)
     {
-        // this method is synchronised so that only task at a time can attempt set and update an assembly's phase group
-        // and the phase group itself
+        ++mBuildStats.AssemblyChecks;
 
-        // for assemblies sharing read, the phase group scenarios are:
-        // - assemblies are already in the same phase group
-        // - no phase group exists for either so make a new one
-        // - the other assembly already has an existing phase group and this one doesn't so just add it
-        // - the other assembly already has an existing phase group, so does this one and so transfer this to the other
+        RemoteRegion overlappingRegion = assembly.remoteRegions().stream()
+                .filter(x -> x.overlaps(
+                        otherAssembly.junction().Chromosome, otherAssembly.minAlignedPosition(), otherAssembly.maxAlignedPosition()))
+                .findFirst().orElse(null);
 
-        PhaseGroup phaseGroup = assembly.phaseGroup();
+        if(overlappingRegion == null)
+            return false;
 
-        if(phaseGroup != null && otherAssembly.phaseGroup() == phaseGroup) // already linked
-            return;
+        List<String> firstReadIds = overlappingRegion.readIds().stream().collect(Collectors.toList());
 
-        if(!assembliesShareReads(assembly, otherAssembly, REMOTE_PHASING_MIN_READS))
-            return;
+        if(!assembly.refSideSoftClips().isEmpty())
+        {
+            // if the assembly has candidate facing TI links, then add its own junction group - they will often share reads which are
+            // discordant in one and a junction read in the other
+            RefSideSoftClip refSideSoftClip = assembly.refSideSoftClips().get(0);
 
-        linkToPhaseGroups(phaseGroup, assembly, otherAssembly, phaseGroups, removedPhaseGroups, writer, "Remote");
+            if(positionWithin(refSideSoftClip.Position, otherAssembly.minAlignedPosition(), otherAssembly.maxAlignedPosition()))
+            {
+                firstReadIds.addAll(refSideSoftClip.readIds());
+            }
+        }
+
+        if(!assembliesShareReads(firstReadIds, otherAssembly, REMOTE_PHASING_MIN_READS, mConfig.ApplyRemotePhasingReadCheckThreshold))
+        {
+            ++mBuildStats.AssemblyNonMatches;
+            return false;
+        }
+
+        /* no longer considered
+        if(isAssemblyLower(otherAssembly, assembly))
+        {
+            SV_LOGGER.warn("upper assembly({}) links lower({})", assembly, otherAssembly);
+        }
+        */
+
+        ++mBuildStats.AssemblyMatches;
+
+        return true;
     }
 
-    private static boolean assembliesShareReads(final JunctionAssembly first, final JunctionAssembly second, int minSharedReads)
+    private synchronized static boolean doCheckAssemblyPhasing(
+            final JunctionAssembly assembly, final JunctionAssembly otherAssembly, boolean formLink,
+            final Set<PhaseGroup> phaseGroups, final List<PhaseGroup> removedPhaseGroups, final PhaseGroupBuildWriter writer)
+    {
+        if(formLink)
+        {
+            // check again if assemblies have been linked while this thread was checking if they needed to be
+            if(!assembliesAlreadyPhased(assembly, otherAssembly))
+            {
+                linkToPhaseGroups(assembly.phaseGroup(), assembly, otherAssembly, phaseGroups, removedPhaseGroups, writer, "Remote");
+            }
+
+            return true;
+        }
+        else
+        {
+            return assembliesAlreadyPhased(assembly, otherAssembly);
+        }
+    }
+
+    private static boolean assembliesAlreadyPhased(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        // this and the linking method may need to be managed with a lock
+        return first.phaseGroup() != null && first.phaseGroup() == second.phaseGroup();
+    }
+
+    private static boolean isAssemblyLower(final JunctionAssembly first, final JunctionAssembly second)
+    {
+        return first.junction().compareTo(second.junction()) < 0;
+    }
+
+    private boolean assembliesShareReads(
+            final List<String> firstReadIds, final JunctionAssembly second, int minSharedReads, boolean applyMatchThreshold)
     {
         // tests matching reads in both the junction reads and any extension reads (ie discordant)
+
+        int firstReadCount = firstReadIds.size();
+        int secondReadCount = second.supportCount() + second.candidateSupport().size();
+
+        int maxMatchChecks = applyMatchThreshold ?
+                calculateMaxFragmentCheckThreshold(firstReadCount, secondReadCount) : NO_FRAG_CHECK_THRESHOLD;
+
+        int currentChecks = 0;
+        int matchedCount = 0;
+
+        for(String readId : firstReadIds)
+        {
+            if(hasMatchingFragment(second.support(), readId, mBuildStats))
+            {
+                ++matchedCount;
+                ++mBuildStats.ReadMatches;
+
+                if(matchedCount >= minSharedReads)
+                    return true;
+
+                continue;
+            }
+
+            currentChecks += second.supportCount();
+
+            if(maxMatchChecks != NO_FRAG_CHECK_THRESHOLD && currentChecks > maxMatchChecks)
+            {
+                ++mBuildStats.ReadCheckLimited;
+                return false;
+            }
+
+            if(hasMatchingFragment(second.candidateSupport(), readId, mBuildStats))
+            {
+                ++matchedCount;
+                ++mBuildStats.ReadMatches;
+
+                if(matchedCount >= minSharedReads)
+                    return true;
+
+                continue;
+            }
+
+            currentChecks += second.candidateSupport().size();
+
+            if(maxMatchChecks != NO_FRAG_CHECK_THRESHOLD && currentChecks > maxMatchChecks)
+            {
+                ++mBuildStats.ReadCheckLimited;
+                return false;
+            }
+        }
+
+        return false;
+
+        /*
         Set<String> readsMatched = Sets.newHashSet();
 
         for(SupportRead support : first.support())
         {
-            if(support.type() == JUNCTION_MATE)
+            if(support.type() == JUNCTION_MATE) // exit since it's mate is local, and any supplementary will have been checked
                 break;
 
-            if(hasMatchingFragment(second.support(), support) || hasMatchingFragment(second.candidateSupport(), support))
+            // CHECK: revert to standard method without stats once performance established
+            if(hasMatchingFragment(second.support(), support, mBuildStats) || hasMatchingFragment(second.candidateSupport(), support, mBuildStats))
             {
                 readsMatched.add(support.id());
 
                 if(readsMatched.size() >= minSharedReads)
                     return true;
             }
+
+            currentChecks += secondSplits + secondCandidates;
+
+            if(maxMatchChecks != NO_FRAG_CHECK_THRESHOLD && currentChecks > maxMatchChecks)
+            {
+                ++mBuildStats.ReadCheckLimited;
+                return false;
+            }
         }
 
-        // search amongst candidates for a remote juncton read match
+        // search amongst candidates for a remote junction read match
         for(SupportRead support : first.candidateSupport())
         {
-            if(hasMatchingFragment(second.support(), support))
+            if(hasMatchingFragment(second.support(), support, mBuildStats))
             {
                 readsMatched.add(support.id());
 
                 if(readsMatched.size() >= minSharedReads)
                     return true;
             }
+
+            currentChecks += secondSplits;
+
+            if(maxMatchChecks != NO_FRAG_CHECK_THRESHOLD && currentChecks > maxMatchChecks)
+            {
+                ++mBuildStats.ReadCheckLimited;
+                return false;
+            }
         }
 
+        return false;
+         */
+    }
+
+    public static boolean hasMatchingFragment(
+            final List<SupportRead> support, final String readId, final RemoteBuildStats stats)
+    {
+        for(SupportRead supportRead : support)
+        {
+            ++stats.ReadChecks;
+
+            if(supportRead.id().equals(readId))
+            {
+                ++stats.ReadMatches;
+                return true;
+            }
+        }
+
+        stats.ReadNonMatches += support.size();
+        return false;
+    }
+
+    private static final int NO_FRAG_CHECK_THRESHOLD = -1;
+
+    private static int calculateMaxFragmentCheckThreshold(int firstReadCount, int secondReadCount)
+    {
+        long maxChecks = firstReadCount * secondReadCount;
+
+        if(maxChecks < 500)
+            return NO_FRAG_CHECK_THRESHOLD;
+
+        if(maxChecks <= 1000)
+            return (int)round(0.6 * maxChecks);
+
+        if(maxChecks <= 2000)
+            return (int)round(0.5 * maxChecks);
+
+        if(maxChecks <= 5000)
+            return (int)round(0.4 * maxChecks);
+
+        if(maxChecks <= 10000)
+            return (int)round(0.3 * maxChecks);
+
+        if(maxChecks <= 250000)
+            return (int)round(0.1 * maxChecks);
+
+        return 50000;
+    }
+
+    public static boolean hasMatchingFragment(
+            final List<SupportRead> support, final SupportRead read, final RemoteBuildStats stats)
+    {
+        for(SupportRead supportRead : support)
+        {
+            ++stats.ReadChecks;
+
+            if(supportRead.id().equals(read.id()))
+            {
+                ++stats.ReadMatches;
+                return true;
+            }
+        }
+
+        stats.ReadNonMatches += support.size();
         return false;
     }
 
@@ -276,5 +476,36 @@ class RemoteGroupBuilder extends ThreadTask
             return false;
 
         return mConfig.SpecificChrRegions.Regions.stream().noneMatch(x -> x.overlaps(region));
+    }
+
+    private static class RemoteBuildStats
+    {
+        public long AssemblyChecks;
+        public long AssemblyPreLinked;
+        public long AssemblyMatches;
+        public long AssemblyNonMatches;
+        public long ReadChecks;
+        public long ReadMatches;
+        public long ReadNonMatches;
+        public long ReadCheckLimited;
+
+        public RemoteBuildStats()
+        {
+            AssemblyChecks = 0;
+            AssemblyPreLinked = 0;
+            AssemblyMatches = 0;
+            AssemblyNonMatches = 0;
+            ReadChecks = 0;
+            ReadMatches = 0;
+            ReadNonMatches = 0;
+            ReadCheckLimited = 0;
+        }
+
+        public String toString()
+        {
+            return format("assembly(check=%d preLinked=%d matched=%d nonMatch=%d) reads(%d matched=%d nonMatch=%d limited=%d)",
+                    AssemblyChecks, AssemblyPreLinked, AssemblyMatches, AssemblyNonMatches,
+                    ReadChecks, ReadMatches, ReadNonMatches, ReadCheckLimited);
+        }
     }
 }

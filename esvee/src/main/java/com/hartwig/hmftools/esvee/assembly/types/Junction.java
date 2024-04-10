@@ -40,20 +40,6 @@ public class Junction implements Comparable<Junction>
 
     public final String mDetails;
 
-    /*
-    public final int junctionFragments();
-    public final int supportFragments();
-    public final int discordantFragments();
-    public final int lowMapQualityFragments();
-    public final int maxMapQuality();
-    public final int maxSoftClipLength();
-    public final boolean hasPolyAT();
-    public final boolean isIndel();
-    public final boolean isHotspot();
-    public final String softClipBases();
-    public final String initialReadId();
-    */
-
     public Junction(final String chromosome, final int position, final byte orientation)
     {
         this(chromosome, position, orientation, false, false, false);

@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.sv.SvUtils.isDiscordant;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 
 import static htsjdk.samtools.SAMFlag.MATE_UNMAPPED;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -71,7 +73,7 @@ public class SupportRead
     {
         mType = type;
 
-        mId = read.id();
+        mId = READ_ID_TRIMMER.trim(read.id());
         mChromosome = read.chromosome();
         mAlignmentStart = read.alignmentStart();
         mAlignmentEnd = read.alignmentEnd();

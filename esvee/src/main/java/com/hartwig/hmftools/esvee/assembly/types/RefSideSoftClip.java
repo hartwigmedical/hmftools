@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.flipOrientation;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.READ_SOFT_CLIP_JUNCTION_BUFFER;
 
@@ -18,7 +19,7 @@ public class RefSideSoftClip
     public final int Position;
     public final byte Orientation;
 
-    private final List<Read> mReads;
+    private final List<String> mReadIds;
     private int mMaxLength;
     private boolean mMatchedOriginal;
 
@@ -26,26 +27,28 @@ public class RefSideSoftClip
     {
         Position = position;
         Orientation = orientation;
-        mReads = Lists.newArrayList(read);
-        mMaxLength = readSoftClipLength;
+        mMaxLength = 0;
+        mReadIds = Lists.newArrayList();
         mMatchedOriginal = false;
+
+        addRead(read, readSoftClipLength);
     }
 
-    public List<Read> reads() { return mReads; }
+    public List<String> readIds() { return mReadIds; }
     public int maxLength() { return mMaxLength; }
-    public int readCount() { return mReads.size(); }
+    public int readCount() { return mReadIds.size(); }
 
     public void markMatchesOriginal() { mMatchedOriginal = true; }
     public boolean matchesOriginal() { return mMatchedOriginal; }
 
     public void addRead(final Read read, final int readSoftClipLength)
     {
-        mReads.add(read);
+        mReadIds.add(READ_ID_TRIMMER.trim(read.id()));
         mMaxLength = max(mMaxLength, readSoftClipLength);
     }
 
     public String toString() { return format("%d len(%d) reads(%d) %s",
-            Position, mMaxLength, mReads.size(), mMatchedOriginal ? "matchOrig" : ""); }
+            Position, mMaxLength, mReadIds.size(), mMatchedOriginal ? "matchOrig" : ""); }
 
     public static boolean checkAddRefSideSoftClip(final List<RefSideSoftClip> refSideSoftClips, final Junction junction, final Read read)
     {

@@ -365,13 +365,13 @@ public class RefBaseExtender
         List<SupportRead> allReads = Lists.newArrayList(assembly.support());
         allReads.addAll(nonJunctionReads);
 
-        Set<Read> softClippedReads = Sets.newHashSet();
-        refSideSoftClips.stream().filter(x -> !x.matchesOriginal()).forEach(x -> softClippedReads.addAll(x.reads()));
+        Set<String> softClippedReadIds = Sets.newHashSet();
+        refSideSoftClips.stream().filter(x -> !x.matchesOriginal()).forEach(x -> softClippedReadIds.addAll(x.readIds()));
 
         // find any supporting read or read mate which extends past the furthest soft-clip position
         for(SupportRead read : allReads)
         {
-            if(softClippedReads.stream().anyMatch(x -> x.id().equals(read.id())))
+            if(softClippedReadIds.stream().anyMatch(x -> x.equals(read.id())))
                 continue;
 
             boolean addRead = false;
@@ -403,7 +403,7 @@ public class RefBaseExtender
         List<Set<String>> excludedReadsList = Lists.newArrayListWithCapacity(finalAssemblyCount);
 
         // the original assembly cannot have any
-        excludedReadsList.add(softClippedReads.stream().map(x -> x.id()).collect(Collectors.toSet()));
+        excludedReadsList.add(softClippedReadIds);
 
         for(RefSideSoftClip refSideSoftClip : refSideSoftClips)
         {
@@ -419,7 +419,7 @@ public class RefBaseExtender
                 if(refSideSoftClip == other)
                     continue;
 
-                excludedReads.addAll(other.reads().stream().map(x -> x.id()).collect(Collectors.toSet()));
+                excludedReads.addAll(other.readIds());
             }
         }
 
