@@ -17,10 +17,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.circos.CircosExecution;
-import com.hartwig.hmftools.common.circos.CircosFileWriter;
-import com.hartwig.hmftools.common.circos.CircosINDELWriter;
-import com.hartwig.hmftools.common.circos.CircosLinkWriter;
-import com.hartwig.hmftools.common.circos.CircosSNPWriter;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
@@ -99,7 +95,7 @@ public class CircosCharts
         final String outputPath = mConfig.PlotDirectory;
         final String outputFile = mCurrentSampleId + "." + type + ".png";
 
-        return execution.generateCircos(inputConfig, outputPath, outputFile, mConfig.CircosDirectory);
+        return execution.generateCircos(inputConfig, outputPath, outputFile);
     }
 
     private String confFile(final String type)
