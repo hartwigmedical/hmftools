@@ -76,6 +76,12 @@ public class PhaseSetBuilder
 
     public void buildPhaseSets()
     {
+        if(mAssemblies.size() == 1)
+        {
+            handleSingleAssembly();
+            return;
+        }
+
         if(mAssemblies.size() == 2 && handleAssemblyPair())
             return;
 
@@ -116,6 +122,17 @@ public class PhaseSetBuilder
         }
 
         return false;
+    }
+
+    private void handleSingleAssembly()
+    {
+        // simpler routine without prioritising pairs, facing links or branching - return true if a link is found
+        JunctionAssembly assembly = mAssemblies.get(0);
+
+        if(formsLocalLink(assembly))
+            return;
+
+        extendRemoteAssemblies();
     }
 
     private boolean formsLocalLink(final JunctionAssembly assembly)

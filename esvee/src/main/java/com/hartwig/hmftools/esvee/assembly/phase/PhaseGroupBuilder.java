@@ -122,6 +122,18 @@ public class PhaseGroupBuilder
 
         remoteBuilderTasks.forEach(x -> x.logStats());
 
+        // add unphased assemblies to their own phase group
+        for(JunctionGroup junctionGroup : allJunctionGroups)
+        {
+            for(JunctionAssembly assembly : junctionGroup.junctionAssemblies())
+            {
+                if(assembly.phaseGroup() == null)
+                {
+                    mPhaseGroups.add(new PhaseGroup(assembly, null));
+                }
+            }
+        }
+
         for(int i = 0; i < mPhaseGroups.size(); ++i)
         {
             mPhaseGroups.get(i).setId(i);

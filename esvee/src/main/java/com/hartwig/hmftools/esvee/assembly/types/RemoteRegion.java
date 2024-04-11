@@ -120,6 +120,8 @@ public class RemoteRegion extends ChrBaseRegion
 
     public static void purgeWeakSupplementaryRegions(final List<RemoteRegion> regions)
     {
+        // purge any supplementary-only remote region if it's soft-clip read map-qual < 10% of the top other regions same value, OR
+        // if the number of reads it has is < 10% of the reads in a non-supp-only region
         int nonSuppSupport = 0;
         int maxSoftClipMapQual = 0;
         boolean hasSuppOnlyRegions = false;

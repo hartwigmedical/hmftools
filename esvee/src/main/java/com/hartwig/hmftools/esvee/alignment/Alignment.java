@@ -47,8 +47,8 @@ public class Alignment
 {
     private final AssemblyConfig mConfig;
 
-    private final AlignmentWriter mWriter;
     private final Aligner mAligner;
+    private final AlignmentWriter mWriter;
     private final AlignmentCache mAlignmentCache;
 
     public Alignment(final AssemblyConfig config, final Aligner aligner)
@@ -244,100 +244,9 @@ public class Alignment
         private void processAlignmentResults(
                 final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments, final String fullSequence)
         {
-            if(alignments.isEmpty())
-            {
-                assemblyAlignment.setOutcome(NO_RESULT);
-                return;
-            }
-
-            if(isSequenceLengthMatch(alignments.get(0), fullSequence.length()))
-            {
-                assemblyAlignment.setOutcome(NON_SV_MATCH);
-                return;
-            }
-
-            AlignmentOutcome topOutcomeFirst = NO_RESULT;
-            AlignmentOutcome topOutcomeSecond = NO_RESULT;
-
-            JunctionAssembly firstAssembly = assemblyAlignment.first();
-            JunctionAssembly secondAssembly = assemblyAlignment.second();
-
-            for(AlignData alignment : alignments)
-            {
-                topOutcomeFirst = assessTopAlignmentResult(firstAssembly, alignment, topOutcomeFirst);
-
-                if(secondAssembly != null)
-                    topOutcomeSecond = assessTopAlignmentResult(secondAssembly, alignment, topOutcomeSecond);
-            }
-
-            firstAssembly.setAlignmentOutcome(topOutcomeFirst);
-
-            if(secondAssembly != null)
-                secondAssembly.setAlignmentOutcome(topOutcomeSecond);
-        }
-
-        private static final int ALIGN_MATCH_JUNCTION_POS_BUFFER = 3;
-
-        private static final int ALIGN_MATCH_DIFF_ABS = 2;
-        private static final double ALIGN_MATCH_DIFF_PERC = 0.02;
-        private static final double ALIGN_MATCH_PERC = 1 - ALIGN_MATCH_DIFF_PERC;
-
-        private boolean isSequenceLengthMatch(final AlignData alignment, final int sequenceLength)
-        {
-            int fullSequenceLength = sequenceLength;
-            int alignmentLength = alignment.RefLocation.baseLength();
-
-            int fullMatchDiff = max(fullSequenceLength - alignmentLength, 0);
-
-            return fullMatchDiff <= ALIGN_MATCH_DIFF_ABS || fullMatchDiff / (double) fullSequenceLength <= ALIGN_MATCH_DIFF_PERC;
-        }
-
-        private AlignmentOutcome assessTopAlignmentResult(
-                final JunctionAssembly assembly, final AlignData alignment, final AlignmentOutcome existingOutcome)
-        {
-            AlignmentOutcome outcome = assessAlignmentResult(assembly, alignment);
-
-            if(outcome.exactMatch() && existingOutcome.exactMatch())
-                return MULTIPLE;
-
-            return outcome.ordinal() < existingOutcome.ordinal() ? outcome : existingOutcome;
-        }
-
-        private AlignmentOutcome assessAlignmentResult(final JunctionAssembly assembly, final AlignData alignment)
-        {
-            int assemblyRefLength = assembly.refBaseLength();
-
-            boolean sequenceLengthMatch = isSequenceLengthMatch(alignment, assemblyRefLength);
-
-            if(!assembly.junction().chromosome().equals(alignment.RefLocation.Chromosome))
-                return sequenceLengthMatch ? ALT_LOC_MATCH : NO_MATCH;
-
-            int assemblyPosStart = assembly.isForwardJunction() ? assembly.minAlignedPosition() : assembly.junction().Position;
-            int assemblyPosEnd = assembly.isForwardJunction() ? assembly.junction().Position : assembly.maxAlignedPosition();
-
-            if(!positionsOverlap(alignment.RefLocation.start(), alignment.RefLocation.end(), assemblyPosStart, assemblyPosEnd))
-                return sequenceLengthMatch ? ALT_LOC_MATCH : NO_MATCH;
-
-            boolean matchesJunctionPosition = false;
-
-            if(assembly.isForwardJunction())
-            {
-                if(abs(alignment.RefLocation.end() - assembly.junction().Position) <= ALIGN_MATCH_JUNCTION_POS_BUFFER)
-                    matchesJunctionPosition = true;
-            }
-            else
-            {
-                if(abs(alignment.RefLocation.start() - assembly.junction().Position) <= ALIGN_MATCH_JUNCTION_POS_BUFFER)
-                    matchesJunctionPosition = true;
-            }
-
-            if(!matchesJunctionPosition)
-                return sequenceLengthMatch ? ALT_LOC_MATCH : NO_MATCH;
-
-            int refBaseOverlap = min(alignment.RefLocation.end(), assemblyPosEnd) - max(alignment.RefLocation.start(), assemblyPosStart);
-            double refBaseOverlapPerc = refBaseOverlap / (double)assemblyRefLength;
-
-            return refBaseOverlapPerc >= ALIGN_MATCH_PERC ? MATCH : PARTIAL;
+            BreakendBuilder breakendBuilder = new BreakendBuilder(mConfig.RefGenome, assemblyAlignment);
+            breakendBuilder.formBreakends(alignments);
         }
     }
+
 }

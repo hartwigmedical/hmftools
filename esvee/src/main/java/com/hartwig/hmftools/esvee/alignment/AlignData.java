@@ -1,16 +1,24 @@
 package com.hartwig.hmftools.esvee.alignment;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
+import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.SAMFlag.READ_REVERSE_STRAND;
 
+import java.util.List;
+
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
+
+import htsjdk.samtools.CigarElement;
 
 public class AlignData
 {
@@ -24,6 +32,10 @@ public class AlignData
     public final String Cigar;
     public final String XaTag;
     public final String MdTag;
+
+    public final List<CigarElement> CigarElements;
+    public final int SoftClipLeft;
+    public final int SoftClipRight;
 
     public AlignData(
             final ChrBaseRegion refLocation, final int sequenceStart, final int sequenceEnd, final int mapQual,
@@ -40,12 +52,20 @@ public class AlignData
         Cigar = cigar;
         XaTag = xaTag;
         MdTag = mdTag;
+
+        CigarElements = CigarUtils.cigarElementsFromStr(cigar);
+
+        SoftClipLeft = CigarElements.get(0).getOperator() == S ? CigarElements.get(0).getLength() : 0;
+        int lastIndex = CigarElements.size() - 1;
+        SoftClipRight = CigarElements.get(lastIndex).getOperator() == S ? CigarElements.get(lastIndex).getLength() : 0;
     }
 
     public byte orientation()
     {
         return SamRecordUtils.isFlagSet(Flags, READ_REVERSE_STRAND) ? NEG_ORIENT : POS_ORIENT;
     }
+
+    public int maxSoftClipLength() { return max(SoftClipLeft, SoftClipRight); }
 
     public static AlignData from(final BwaMemAlignment alignment, final RefGenomeVersion refGenomeVersion)
     {

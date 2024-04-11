@@ -175,7 +175,8 @@ public class RemoteRegionAssembler
 
     private void processRecord(final SAMRecord record)
     {
-        boolean containedRead = mSourceReadIds.contains(record.getReadName());
+        // the read IDs have been trimmed, so has to match on what has been kept
+        boolean containedRead = mSourceReadIds.stream().anyMatch(x -> record.getReadName().contains(x));
 
         if(!containedRead)
             return;

@@ -54,18 +54,8 @@ public final class AssemblyConstants
     // output
     public static final int DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX = 200; // for TSV and VCF output, no function impact
 
-    // alignment - to check
+    // alignment
+    public static final int ALIGNMENT_MIN_SOFT_CLIP = 30;
 
-    // Not a MapQ. Ignore any alignments during extension that come from BWA with a score less than this
-    public static final int ALIGNER_MIN_SCORE = 20;
-
-    // If there is more than one candidate for extending an assembly alignment, ignore any that insert this many more bases than the best
-    public static final int ALIGNER_EXTENSION_INSERT_TOLERANCE = 16;
-
-    // We don't attempt to call the aligner if we have less than this many bases
-    public static final int ALIGNER_MIN_BASES = 20;
-
-    // When extending alignments, if we have a candidate match within this many bases of the existing neighbour, prioritise that alignment
-    public static final int ALIGNER_NEARBY_MAX_DISTANCE = 2000;
 
 }

@@ -8,8 +8,8 @@ public enum AlignmentOutcome
     PARTIAL,
     MULTIPLE,
     NO_MATCH,
-    NO_RESULT,
-    UNALIGNED;
+    NO_RESULT, // aligner returned no results or
+    NO_SET;
 
     public boolean exactMatch() { return this == MATCH || this == ALT_LOC_MATCH || this == NON_SV_MATCH; }
 }

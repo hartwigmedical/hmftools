@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
@@ -16,20 +17,27 @@ public class AssemblyAlignment
     private final List<JunctionAssembly> mAssemblies;
     private final AssemblyLink mAssemblyLink;
 
+    private final List<Breakend> mBreakends;
+
     public AssemblyAlignment(final JunctionAssembly assembly)
     {
         mAssemblies = List.of(assembly);
         mAssemblyLink = null;
+        mBreakends = Lists.newArrayList();
     }
 
     public AssemblyAlignment(final AssemblyLink assemblyLink)
     {
         mAssemblies = List.of(assemblyLink.first(), assemblyLink.second());
         mAssemblyLink = assemblyLink;
+        mBreakends = Lists.newArrayList();
     }
 
     public JunctionAssembly first() { return mAssemblies.get(0); }
     public JunctionAssembly second() { return mAssemblies.size() > 1 ? mAssemblies.get(1) : null; }
+
+    public List<Breakend> breakends() { return mBreakends; }
+    public void addBreakend(final Breakend breakend) { mBreakends.add(breakend); }
 
     public void setOutcome(final AlignmentOutcome outcome)
     {

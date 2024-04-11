@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentOutcome.UNALIGNED;
+import static com.hartwig.hmftools.esvee.alignment.AlignmentOutcome.NO_SET;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.readQualFromJunction;
 import static com.hartwig.hmftools.esvee.assembly.ExtensionSeqBuilder.calcReadSequenceMismatches;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.convertedIndelCrossesJunction;
@@ -37,7 +37,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.alignment.AlignmentOutcome;
-import com.hartwig.hmftools.esvee.assembly.IndelBuilder;
 import com.hartwig.hmftools.esvee.assembly.filters.FilterType;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 
@@ -139,7 +138,7 @@ public class JunctionAssembly
         mMergedAssemblies = 0;
         mPhaseGroup = null;
         mOutcome = UNSET;
-        mAlignmentOutcome = UNALIGNED;
+        mAlignmentOutcome = NO_SET;
         mFilters = Sets.newHashSet();
         mMismatchReadCount = 0;
         mStats = new AssemblyStats();
@@ -809,7 +808,7 @@ public class JunctionAssembly
         mFilters = Sets.newHashSet();
         mMergedAssemblies = 0;
         mOutcome = UNSET;
-        mAlignmentOutcome = UNALIGNED;
+        mAlignmentOutcome = NO_SET;
         mMismatchReadCount = 0;
         mStats = new AssemblyStats();
         mIndelCoords = null;
