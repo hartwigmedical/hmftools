@@ -243,18 +243,10 @@ public final class SpliceClassifier
             }
             else
             {
-                if(isDonorCandidate)
-                {
-                    // -ve strand: exon end / splice donor is 20, D-1 to D5 is 15-20, insert must be 15-19 to impact
-                    if(variant.Position >= posRangeEnd || variant.EndPosition <= posRangeStart)
-                        return OUTSIDE_RANGE;
-                }
-                else
-                {
-                    // -ve strand: exon start / splice acceptor is 30, A3-A1 is 31-33, insert must be 30 or more to impact
-                    if(variant.Position >= posRangeEnd || variant.EndPosition <= posRangeStart) // one base earlier
-                        return OUTSIDE_RANGE;
-                }
+                // -ve strand: exon end / splice donor is 20, D-1 to D5 is 15-20, insert must be 15-19 to impact
+                // -ve strand: exon start / splice acceptor is 30, A3-A1 is 31-33, insert must be 30 or more to impact
+                if(variant.Position >= posRangeEnd || variant.EndPosition <= posRangeStart)
+                    return OUTSIDE_RANGE;
             }
 
             // ignore inserting bases into the acceptor create matching homology - let the realigned variant dictate the net impact
