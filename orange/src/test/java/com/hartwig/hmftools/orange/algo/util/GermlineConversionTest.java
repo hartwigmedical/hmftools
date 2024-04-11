@@ -106,9 +106,9 @@ public class GermlineConversionTest
         PurpleGainLoss reportableSomaticGainLoss = TestPurpleGainLossFactory.builder().build();
         PurpleGainLoss reportableGermlineFullLoss = TestPurpleGainLossFactory.builder().build();
         PurpleLossOfHeterozygosity reportableGermlineLOH =
-                TestPurpleLossOfHeterozygosityFactory.builder().gene(TEST_GENE1).minCopies(0.8).build();
+                TestPurpleLossOfHeterozygosityFactory.builder().gene(TEST_GENE1).minCopies(0.8).maxCopies(2.0).build();
         PurpleGeneCopyNumber geneCopyNumberForGermlineLOH =
-                TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE1).minCopyNumber(2.0).minMinorAlleleCopyNumber(0.9).build();
+                TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE1).minCopyNumber(2.0).minMinorAlleleCopyNumber(0.9).maxCopyNumber(2.0).build();
         PurpleGeneCopyNumber suspectSomaticGeneCopyNumberWithLOH = TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE2).build();
 
         PurpleDriver somaticDriver = PurpleDriverTestFactory.builder().type(PurpleDriverType.AMP).build();
@@ -165,7 +165,7 @@ public class GermlineConversionTest
         assertEquals(2, converted.suspectGeneCopyNumbersWithLOH().size());
         assertTrue(converted.suspectGeneCopyNumbersWithLOH().contains(suspectSomaticGeneCopyNumberWithLOH));
         PurpleGeneCopyNumber convertedReportableGermlineLOH =
-                TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE1).minCopyNumber(0.8).minMinorAlleleCopyNumber(0.).build();
+                TestPurpleGeneCopyNumberFactory.builder().gene(TEST_GENE1).minCopyNumber(0.8).minMinorAlleleCopyNumber(0.).maxCopyNumber(2.0).build();
         assertTrue(converted.suspectGeneCopyNumbersWithLOH().contains(convertedReportableGermlineLOH));
 
         PurpleRecord unreliableConverted = GermlineConversion.convertPurpleGermline(false, purple);

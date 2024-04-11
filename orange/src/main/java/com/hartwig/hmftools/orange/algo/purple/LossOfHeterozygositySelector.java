@@ -83,6 +83,7 @@ final class LossOfHeterozygositySelector
                 .from(geneCopyNumber)
                 .minCopyNumber(adjustMinCopyNumberForGermlineImpact(geneCopyNumber, allGermlineDeletions))
                 .minMinorAlleleCopyNumber(0D)
+                .maxCopyNumber(adjustMaxCopyNumberForGermlineImpact(geneCopyNumber, allGermlineDeletions))
                 .build();
     }
 
@@ -100,6 +101,23 @@ final class LossOfHeterozygositySelector
         else
         {
             return geneCopyNumber.minCopyNumber();
+        }
+    }
+
+    private static double adjustMaxCopyNumberForGermlineImpact(@NotNull GeneCopyNumber geneCopyNumber,
+            @NotNull List<GermlineDeletion> allGermlineDeletions)
+    {
+        OptionalDouble maximumTumorCopyNumber = allGermlineDeletions.stream()
+                .filter(d1 -> isMatchingReportedGermlineDeletion(d1, geneCopyNumber.geneName(), GermlineStatus.HET_DELETION))
+                .mapToDouble(d -> d.TumorCopyNumber)
+                .max();
+        if(maximumTumorCopyNumber.isPresent())
+        {
+            return Math.max(maximumTumorCopyNumber.getAsDouble(), geneCopyNumber.maxCopyNumber());
+        }
+        else
+        {
+            return geneCopyNumber.maxCopyNumber();
         }
     }
 
