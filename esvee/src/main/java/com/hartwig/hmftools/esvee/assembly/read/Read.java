@@ -57,7 +57,6 @@ public class Read
 
     // fragment state
     private Read mMateRead;
-    private Read mSupplementaryRead;
     private boolean mSuppDataExtracted;
     private SupplementaryReadData mSupplementaryData;
 
@@ -84,7 +83,6 @@ public class Read
         mMateAlignmentEnd = null;
         mIsReference = false;
         mMateRead = null;
-        mSupplementaryRead = null;
         mSuppDataExtracted = false;
         mSupplementaryData = null;
         mCheckedIndelCoords = false;
@@ -135,7 +133,6 @@ public class Read
         mMateAlignmentEnd = mate.alignmentEnd();
     }
 
-    public boolean hasMateSet() { return mMateRead != null; }
     public Read mateRead() { return mMateRead; }
 
     public String id() { return mRecord.getReadName(); }
@@ -215,18 +212,10 @@ public class Read
 
     public boolean hasSupplementary() { return supplementaryData() != null; }
     public boolean isSupplementary() { return mRecord.getSupplementaryAlignmentFlag(); }
-    public void setSupplementaryRead(final Read mate) { mSupplementaryRead = mate; }
-    public Read supplementaryRead() { return mSupplementaryRead; }
 
     public void makeReadLinks(final Read other)
     {
-        if(mRecord.getSupplementaryAlignmentFlag() != other.bamRecord().getSupplementaryAlignmentFlag()
-        && firstInPair() == other.firstInPair())
-        {
-            mSupplementaryRead = other;
-            other.setSupplementaryRead(this);
-        }
-        else if(mRecord.getSupplementaryAlignmentFlag() == other.bamRecord().getSupplementaryAlignmentFlag()
+        if(mRecord.getSupplementaryAlignmentFlag() == other.bamRecord().getSupplementaryAlignmentFlag()
             && firstInPair() != other.firstInPair())
         {
             mMateRead = other;
@@ -279,11 +268,6 @@ public class Read
         }
 
         return mIndelCoords;
-    }
-
-    public boolean matchesFragment(final Read other)
-    {
-        return this == other || this == other.mateRead() || this == other.supplementaryRead() || id().equals(other.id());
     }
 
     public String toString()

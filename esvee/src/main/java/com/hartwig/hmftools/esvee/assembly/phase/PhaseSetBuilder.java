@@ -276,8 +276,6 @@ public class PhaseSetBuilder
 
     private void buildSplitLink(final JunctionAssembly assembly1, final JunctionAssembly assembly2, boolean allowBranching)
     {
-        linkExistingSupport(assembly1, assembly2);
-
         assembly1.setOutcome(LINKED);
         assembly2.setOutcome(LINKED);
 
@@ -325,28 +323,7 @@ public class PhaseSetBuilder
 
             if(!matchedSupport.isEmpty())
                 matchedCandidates.add(support);
-
-            /*
-            for(SupportRead matched : matchedSupport)
-            {
-                support.cachedRead().makeReadLinks(matched.cachedRead());
-            }
-            */
         }
-    }
-
-    private static void linkExistingSupport(final JunctionAssembly first, final JunctionAssembly second)
-    {
-        // FIXME: without cached reads this must be either dropped or the refs added to SupportRead
-
-        /*
-        // establishes read links with mates and supplementaries (ie the same fragment) once an assembly link has been made
-        for(SupportRead support : first.support())
-        {
-            List<SupportRead> matchedSupport = findMatchingFragmentSupport(second.support(), support);
-            matchedSupport.forEach(x -> support.cachedRead().makeReadLinks(x.cachedRead()));
-        }
-        */
     }
 
     private class SharedAssemblySupport implements Comparable<SharedAssemblySupport>
@@ -498,7 +475,6 @@ public class PhaseSetBuilder
                     if(assembliesShareReads(assembly, splitAssembly))
                     {
                         mFacingLinks.add(facingLink);
-                        linkExistingSupport(assembly, facingAssembly);
                         facingAssemblies.add(facingAssembly);
                         facingAssemblies.add(assembly);
                     }
