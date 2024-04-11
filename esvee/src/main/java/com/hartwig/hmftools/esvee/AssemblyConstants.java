@@ -56,6 +56,7 @@ public final class AssemblyConstants
 
     // alignment
     public static final int ALIGNMENT_MIN_SOFT_CLIP = 30;
+    public static final int ALIGNMENT_MAX_ZERO_QUALS = 5;
 
 
 }

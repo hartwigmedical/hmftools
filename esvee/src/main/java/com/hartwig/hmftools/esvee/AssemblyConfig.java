@@ -33,12 +33,13 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFil
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.alignment.BwaAligner.loadAlignerLibrary;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.fromConfig;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formOutputFile;
 import static com.hartwig.hmftools.esvee.common.SvConstants.ESVEE_FILE_ID;
 import static com.hartwig.hmftools.esvee.common.SvConstants.FILE_NAME_DELIM;
 import static com.hartwig.hmftools.esvee.common.SvConstants.PREP_FILE_ID;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_BAM;
-import static com.hartwig.hmftools.esvee.assembly.output.WriteType.READS;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.VCF;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTIONS_FILE_ID;
 
@@ -60,7 +61,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.alignment.AlignmentCache;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.output.WriteType;
-import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
 import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
@@ -185,27 +185,7 @@ public class AssemblyConfig
         RunAlignment = configBuilder.hasFlag(RUN_ALIGNMENT);
         ProcessDiscordant = configBuilder.hasFlag(PROCESS_DISCORDANT);
 
-        WriteTypes = Lists.newArrayList();
-
-        if(configBuilder.hasValue(WRITE_TYPES))
-        {
-            String writeTypesStr = configBuilder.getValue(WRITE_TYPES);
-
-            if(writeTypesStr.equals(WriteType.ALL))
-            {
-                Arrays.stream(WriteType.values()).filter(x -> x != READS).forEach(x -> WriteTypes.add(x));
-            }
-            else
-            {
-                String[] writeTypes = writeTypesStr.split(ITEM_DELIM, -1);
-                Arrays.stream(writeTypes).forEach(x -> WriteTypes.add(WriteType.valueOf(x)));
-            }
-        }
-        else
-        {
-            WriteTypes.add(VCF);
-            WriteTypes.add(ASSEMBLY_BAM);
-        }
+        WriteTypes = fromConfig(configBuilder.getValue(WRITE_TYPES));
 
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
 
@@ -253,7 +233,7 @@ public class AssemblyConfig
             SV_LOGGER.debug("loaded {} specific junctions", SpecificJunctions.size());
         }
 
-        if(WriteTypes.contains(READS) && !SpecificChrRegions.hasFilters() && SpecificJunctions.isEmpty())
+        if(WriteTypes.contains(ASSEMBLY_READ) && !SpecificChrRegions.hasFilters() && SpecificJunctions.isEmpty())
         {
             SV_LOGGER.warn("writing assembly reads to TSV without region filtering may result in large output files & impact performance");
         }

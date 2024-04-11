@@ -31,6 +31,8 @@ public class AssemblyAlignment
         mAssemblies = List.of(assemblyLink.first(), assemblyLink.second());
         mAssemblyLink = assemblyLink;
         mBreakends = Lists.newArrayList();
+
+        mAssemblies.forEach(x -> x.setAssemblyAlignmentInfo(info()));
     }
 
     public JunctionAssembly first() { return mAssemblies.get(0); }

@@ -37,12 +37,12 @@ public class AssemblyReadWriter
 
     private BufferedWriter initialiseWriter()
     {
-        if(!mConfig.WriteTypes.contains(WriteType.READS))
+        if(!mConfig.WriteTypes.contains(WriteType.ASSEMBLY_READ))
             return null;
 
         try
         {
-            BufferedWriter writer = createBufferedWriter(mConfig.outputFilename(WriteType.READS));
+            BufferedWriter writer = createBufferedWriter(mConfig.outputFilename(WriteType.ASSEMBLY_READ));
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 

@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
 
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
@@ -45,27 +46,9 @@ public class AssemblyLink
 
     public StructuralVariantType svType()
     {
-        if(!mFirst.junction().Chromosome.equals(mSecond.junction().Chromosome))
-            return BND;
-
-        if(mFirst.junction().Orientation != mSecond.junction().Orientation)
-        {
-            int posDiff = abs(mFirst.junction().Position - mSecond.junction().Position);
-
-            if(posDiff == 1 && !mInsertedBases.isEmpty())
-                return INS;
-
-            if(posDiff == 0)
-                return DUP;
-
-            boolean firstIsLower = mFirst.junction().Position < mSecond.junction().Position;
-
-            return (firstIsLower == mFirst.junction().isForward()) ? DEL : DUP;
-        }
-        else
-        {
-            return INV;
-        }
+        return formSvType(
+                mFirst.junction().Chromosome, mSecond.junction().Chromosome, mFirst.junction().Position, mSecond.junction().Position,
+                mFirst.junction().Orientation, mSecond.junction().Orientation, !mInsertedBases.isEmpty());
     }
 
     public boolean matches(final AssemblyLink other) { return matches(other.first(), other.second()); }

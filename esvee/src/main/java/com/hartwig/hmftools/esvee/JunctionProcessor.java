@@ -6,15 +6,14 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
-import static com.hartwig.hmftools.esvee.alignment.Alignment.skipAssemblyLink;
 import static com.hartwig.hmftools.esvee.alignment.Alignment.skipJunctionAssembly;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionGroup.buildJunctionGroups;
-import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLIES;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.JUNC_ASSEMBLY;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_BAM;
-import static com.hartwig.hmftools.esvee.assembly.output.WriteType.READS;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,7 +29,9 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.alignment.Alignment;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
+import com.hartwig.hmftools.esvee.alignment.Breakend;
 import com.hartwig.hmftools.esvee.alignment.BwaAligner;
+import com.hartwig.hmftools.esvee.assembly.output.BreakendWriter;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
@@ -167,7 +168,7 @@ public class JunctionProcessor
 
             writeAssemblyOutput(finalAssemblies);
 
-            writeVariantVcf(finalAssemblies);
+            writeVariants(assemblyAlignments);
 
             // note this is written after the VCF since writing reassigns the reads to the output BAM, there-by removing their association
             // with the BAM they were read from (ie as used in tumor vs ref counts)
@@ -317,8 +318,7 @@ public class JunctionProcessor
                 {
                     for(AssemblyLink assemblyLink : phaseSet.assemblyLinks())
                     {
-                        if(!skipAssemblyLink(assemblyLink))
-                            assemblyAlignments.add(new AssemblyAlignment(assemblyLink));
+                        assemblyAlignments.add(new AssemblyAlignment(assemblyLink));
                     }
                 }
 
@@ -340,12 +340,12 @@ public class JunctionProcessor
 
     private void writeAssemblyOutput(final List<JunctionAssembly> assemblies)
     {
-        if(mConfig.WriteTypes.contains(ASSEMBLIES) || mConfig.WriteTypes.contains(READS))
+        if(mConfig.WriteTypes.contains(JUNC_ASSEMBLY) || mConfig.WriteTypes.contains(ASSEMBLY_READ))
         {
             SV_LOGGER.debug("writing assembly TSV output");
 
-            AssemblyReadWriter readWriter = mConfig.WriteTypes.contains(READS) ? mResultsWriter.readWriter() : null;
-            AssemblyWriter assemblyWriter = mConfig.WriteTypes.contains(ASSEMBLIES) ? mResultsWriter.assemblyWriter() : null;
+            AssemblyReadWriter readWriter = mConfig.WriteTypes.contains(ASSEMBLY_READ) ? mResultsWriter.readWriter() : null;
+            AssemblyWriter assemblyWriter = mConfig.WriteTypes.contains(JUNC_ASSEMBLY) ? mResultsWriter.assemblyWriter() : null;
 
             for(JunctionAssembly assembly : assemblies)
             {
@@ -374,21 +374,31 @@ public class JunctionProcessor
         }
     }
 
-    private void writeVariantVcf(final List<JunctionAssembly> assemblies)
+    private void writeVariants(final List<AssemblyAlignment> assemblyAlignments)
     {
-        if(!mConfig.WriteTypes.contains(WriteType.VCF))
-            return;
-
-        SV_LOGGER.debug("writing variant VCF");
-
-        VcfWriter vcfWriter = new VcfWriter(mConfig);
-
-        for(JunctionAssembly assembly : assemblies)
+        if(mConfig.WriteTypes.contains(WriteType.VCF))
         {
-            vcfWriter.addVariant(assembly);
+            List<Breakend> breakends = Lists.newArrayList();
+            assemblyAlignments.forEach(x -> breakends.addAll(x.breakends()));
+            Collections.sort(breakends);
+
+            SV_LOGGER.debug("writing variant VCF with {} breakends");
+
+            VcfWriter vcfWriter = new VcfWriter(mConfig);
+
+            for(Breakend breakend : breakends)
+            {
+                vcfWriter.addBreakend(breakend);
+            }
+
+            vcfWriter.close();
         }
 
-        vcfWriter.close();
+        if(mConfig.WriteTypes.contains(WriteType.BREAKEND))
+        {
+            BreakendWriter breakendWriter = mResultsWriter.breakendWriter();
+            assemblyAlignments.forEach(x -> breakendWriter.writeBreakends((x)));
+        }
     }
 
     public void close()

@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_HOTSPOT_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_INDEL_JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_JUNCTION_FRAGS;
@@ -109,23 +110,7 @@ public class Junction implements Comparable<Junction>
     @Override
     public int compareTo(final Junction other)
     {
-        if(!Chromosome.equals(other.Chromosome))
-        {
-            int firstChrRank = HumanChromosome.chromosomeRank(Chromosome);
-            int secondChrRank = HumanChromosome.chromosomeRank(other.Chromosome);
-
-            return firstChrRank < secondChrRank ? -1 : 1;
-        }
-
-        if(Position == other.Position)
-        {
-            if(Orientation == other.Orientation)
-                return 0;
-
-            return Orientation == POS_STRAND ? -1 : 1;
-        }
-
-        return Position < other.Position ? -1 : 1;
+        return compareJunctions(Chromosome, other.Chromosome, Position, other.Position, Orientation, other.Orientation);
     }
 
     public static Map<String,List<Junction>> loadJunctions(

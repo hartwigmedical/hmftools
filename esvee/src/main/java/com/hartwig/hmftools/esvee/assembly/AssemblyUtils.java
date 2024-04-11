@@ -194,6 +194,8 @@ public final class AssemblyUtils
 
     public static byte[] createMinBaseQuals(final int length) { return createByteArray(length, (byte) (LOW_BASE_QUAL_THRESHOLD + 1)); }
 
+    public static boolean hasUnsetBases(final JunctionAssembly assembly) { return !findUnsetBases(assembly.bases()).isEmpty(); }
+
     public static void setAssemblyOutcome(final JunctionAssembly assembly)
     {
         if(assembly.outcome() != AssemblyOutcome.UNSET)

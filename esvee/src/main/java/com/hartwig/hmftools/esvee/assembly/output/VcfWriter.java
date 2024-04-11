@@ -39,22 +39,18 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT_DESC;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.alignment.Breakend;
+import com.hartwig.hmftools.esvee.alignment.BreakendSupport;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.assembly.types.LinkType;
-import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
-import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.filters.FilterType;
 
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -62,7 +58,6 @@ import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
@@ -118,8 +113,6 @@ public class VcfWriter implements AutoCloseable
     private void writeHeader()
     {
         // no longer written:
-        // new VCFFilterHeaderLine("GERMLINE", "This variant has support in the reference sample"),
-        // new VCFInfoHeaderLine("BEID_LEN", 1, VCFHeaderLineType.Integer, "The number of assemblies associated with this variant"),
 
         Set<VCFHeaderLine> metaData = Sets.newHashSet();
 
@@ -173,20 +166,18 @@ public class VcfWriter implements AutoCloseable
         mWriter.close();
     }
 
-    public void addVariant(final JunctionAssembly assembly)
+    public void addBreakend(final Breakend breakend)
     {
-        List<SampleData> sampleDataList = buildSampleData(assembly);
-
         List<Genotype> genotypes = Lists.newArrayList();
 
         for(int i = 0; i < mSampleNames.size(); ++i)
         {
             String sampleId = mSampleNames.get(i);
-            SampleData sampleData = sampleDataList.get(i);
-
-            genotypes.add(buildGenotype(assembly, sampleId, sampleData));
+            BreakendSupport breakendSupport = breakend.sampleSupport().get(i);
+            genotypes.add(buildGenotype(breakend, sampleId, breakendSupport));
         }
 
+        /*
         PhaseSet phaseSet = assembly.phaseSet();
         List<AssemblyLink> assemblyLinks = phaseSet != null ? phaseSet.findAssemblyLinks(assembly) : Collections.emptyList();
         AssemblyLink splitLink = assemblyLinks.stream().filter(x -> x.type() == LinkType.SPLIT).findFirst().orElse(null);
@@ -217,94 +208,15 @@ public class VcfWriter implements AutoCloseable
                 .genotypes(genotypes);
 
         mVariants.add(builder.make());
-
-        // builder.attribute(MAP)
-
-        /*
-
-        builder
-                .attribute(EVENT, callID)
-                // .attribute("CLASSIFICATION", call.Classification.toString())
-                .attribute(SVTYPE, variantCall.Classification.Type.toString())
-                // .attribute("GERMLINE_SUPPORT_CNT", variantCall.germlineSupport())
-                // .attribute("SOMATIC_SUPPORT_CNT", variantCall.somaticSupport())
-                .attribute(MAPQ, mapQ)
-                .attribute(OVERHANG, overhang)
-        ;
-
-        builder.attribute(BEID, assemblyNames);
-        builder.attribute(BEIDL, left ? assemblyLeftIndices : assemblyRightIndices);
-        builder.attribute(BEIDH, left ? assemblyRightIndices : assemblyLeftIndices);
-        builder.attribute(ANCHOR_SUPPORT_CIGAR, left ? anchorLeftCigars : anchorRightCigars);
-        builder.attribute(ANCHOR_SUPPORT_CIGAR_LENGTH, left ? anchorLeftCigarLengths : anchorRightCigarLengths);
-
-        builder.attribute(ASSEMBLY, assemblies);
          */
     }
 
-    private class SampleData
-    {
-        public int SplitFragments;
-        public int DiscordantFragments;
-
-        public SampleData()
-        {
-            SplitFragments = 0;
-            DiscordantFragments = 0;
-        }
-    }
-
-    private List<SampleData> buildSampleData(final JunctionAssembly assembly)
-    {
-        List<SampleData> sampleDataList = Lists.newArrayListWithExpectedSize(mSampleNames.size());
-
-        mSampleNames.forEach(x -> sampleDataList.add(new SampleData()));
-
-        String currentSampleId = "";
-        int currentSampleIndex = 0;
-        SampleData sampleData = null;
-
-        for(SupportRead support : assembly.support())
-        {
-            if(support.type() == SupportType.JUNCTION_MATE)
-                continue;
-
-            int sampleIndex = support.cachedRead().sampleIndex();
-            String readSampleId = mSampleNames.get(sampleIndex);
-
-            if(!currentSampleId.equals(readSampleId))
-            {
-                currentSampleId = readSampleId;
-                currentSampleIndex = getSampleIdIndex(readSampleId);
-                sampleData = sampleDataList.get(currentSampleIndex);
-            }
-
-            if(support.type().isSplitSupport())
-                ++sampleData.SplitFragments;
-            else
-                ++sampleData.DiscordantFragments;
-        }
-
-        return sampleDataList;
-    }
-
-    private int getSampleIdIndex(final String sampleId)
-    {
-        for(int i = 0; i < mSampleNames.size(); ++i)
-        {
-            if(mSampleNames.get(i).equals(sampleId))
-                return i;
-        }
-
-        return -1;
-    }
-
-    private Genotype buildGenotype(final JunctionAssembly assembly, final String sampleId, final SampleData sampleData)
+    private Genotype buildGenotype(final Breakend breakend, final String sampleId, final BreakendSupport breakendSupport)
     {
         GenotypeBuilder builder = new GenotypeBuilder(sampleId);
 
         int depth = 0; // set from full BAM in a separate process
-        int altSupport = sampleData.SplitFragments + sampleData.DiscordantFragments;
+        int altSupport = breakendSupport.SplitFragments + breakendSupport.DiscordantFragments;
 
         // ideas for more per-sample data:
         // - average read quality

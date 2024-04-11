@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.assembly.AssemblyUtils;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyStats;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
@@ -42,12 +43,12 @@ public class AssemblyWriter
 
     private BufferedWriter initialiseWriter()
     {
-        if(!mConfig.WriteTypes.contains(WriteType.ASSEMBLIES))
+        if(!mConfig.WriteTypes.contains(WriteType.JUNC_ASSEMBLY))
             return null;
 
         try
         {
-            BufferedWriter writer = createBufferedWriter(mConfig.outputFilename(WriteType.ASSEMBLIES));
+            BufferedWriter writer = createBufferedWriter(mConfig.outputFilename(WriteType.JUNC_ASSEMBLY));
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
@@ -74,7 +75,12 @@ public class AssemblyWriter
             sj.add("RefBaseTrimLength");
             sj.add("JunctionSequence");
             sj.add("RefBaseSequence");
-            sj.add("AlignResult");
+
+            if(mConfig.RunAlignment)
+            {
+                sj.add("AlignResult");
+                sj.add("AssemblyInfo");
+            }
 
             // extra detailed fields
             sj.add("InitialReadId");
@@ -134,7 +140,7 @@ public class AssemblyWriter
             sj.add(assembly.refBasesRepeatedTrimmed());
             sj.add(String.valueOf(assembly.refBaseTrimLength()));
 
-            if(assembly.hasUnsetBases())
+            if(AssemblyUtils.hasUnsetBases(assembly))
             {
                 sj.add("UNSET_BASES");
                 sj.add("UNSET_BASES");
@@ -147,7 +153,11 @@ public class AssemblyWriter
                 sj.add(assembly.formRefBaseSequence(refBaseLength)); // long enough to show most short TIs
             }
 
-            sj.add(String.valueOf(assembly.alignmentOutcome()));
+            if(mConfig.RunAlignment)
+            {
+                sj.add(String.valueOf(assembly.alignmentOutcome()));
+                sj.add(assembly.assemblyAlignmentInfo());
+            }
 
             sj.add(assembly.initialReadId());
 

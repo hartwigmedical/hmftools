@@ -67,13 +67,6 @@ public class Alignment
     public static boolean skipJunctionAssembly(final JunctionAssembly assembly)
     {
         // apply filters on what to bother aligning
-
-        if(assembly.refBaseTrimLength() < MIN_ALIGN_LENGTH)
-            return true;
-
-        if(assembly.extensionLength() < MIN_ALIGN_LENGTH)
-            return true;
-
         if(assembly.outcome() == AssemblyOutcome.DUP_BRANCHED
         || assembly.outcome() == AssemblyOutcome.DUP_SPLIT
         || assembly.outcome() == AssemblyOutcome.SECONDARY)
@@ -82,51 +75,7 @@ public class Alignment
             return true;
         }
 
-        if(assembly.supportCount() < MIN_SUPPORT_COUNT)
-            return true;
-
         return false;
-    }
-
-    public static boolean skipAssemblyLink(final AssemblyLink assemblyLink)
-    {
-        if(assemblyLink.type() != LinkType.SPLIT)
-            return true;
-
-        if(assemblyLink.svType() == DEL || assemblyLink.svType() == DUP)
-        {
-            if(assemblyLink.length() < PROXIMATE_DEL_LENGTH)
-                return true;
-        }
-
-        int combinedSequenceLength = assemblyLink.first().refBaseTrimLength() + assemblyLink.second().refBaseTrimLength()
-                + assemblyLink.insertedBases().length() - assemblyLink.overlapBases().length();
-
-        if(combinedSequenceLength < MIN_ALIGN_LENGTH)
-            return true;
-
-        Set<String> uniqueFrags = Sets.newHashSet();
-
-        for(int i = 0; i <= 1; ++i)
-        {
-            JunctionAssembly assembly = (i == 0) ? assemblyLink.first() : assemblyLink.second();
-
-            for(SupportRead support : assembly.support())
-            {
-                if(support.type() == SupportType.JUNCTION_MATE)
-                    continue;
-
-                if(uniqueFrags.contains(support.id()))
-                    continue;
-
-                uniqueFrags.add(support.id());
-
-                if(uniqueFrags.size() >= MIN_SUPPORT_COUNT)
-                    return false;
-            }
-        }
-
-        return true;
     }
 
     public void run(final List<AssemblyAlignment> assemblyAlignments, final List<PerformanceCounter> perfCounters)
@@ -245,8 +194,7 @@ public class Alignment
                 final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments, final String fullSequence)
         {
             BreakendBuilder breakendBuilder = new BreakendBuilder(mConfig.RefGenome, assemblyAlignment);
-            breakendBuilder.formBreakends(alignments);
+            breakendBuilder.formBreakends(alignments, fullSequence);
         }
     }
-
 }

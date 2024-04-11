@@ -82,10 +82,6 @@ public class AlignmentWriter
             sj.add("AlignScore");
             sj.add("AlignedBases");
 
-            sj.add("SecondCigar");
-            sj.add("SecondScore");
-            sj.add("SecondAlignedBases");
-
             sj.add("FullSequence");
 
             writer.write(sj.toString());
@@ -138,22 +134,6 @@ public class AlignmentWriter
             sj.add(topAlignment.Cigar);
             sj.add(String.valueOf(topAlignment.Score));
             sj.add(String.valueOf(alignedBases));
-
-            AlignData nextAlignment = alignmentResults.size() > 1 ? alignmentResults.get(1) : null;
-
-            if(nextAlignment != null)
-            {
-                cigar = CigarUtils.cigarFromStr(nextAlignment.Cigar);
-                alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
-
-                sj.add(nextAlignment.Cigar);
-                sj.add(String.valueOf(nextAlignment.Score));
-                sj.add(String.valueOf(alignedBases));
-            }
-            else
-            {
-                sj.add("").add("0").add("0");
-            }
 
             sj.add(fullSequence);
 

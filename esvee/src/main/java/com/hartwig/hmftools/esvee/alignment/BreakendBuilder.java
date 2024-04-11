@@ -3,12 +3,15 @@ package com.hartwig.hmftools.esvee.alignment;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.flipOrientation;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MAX_ZERO_QUALS;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_SOFT_CLIP;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 public class BreakendBuilder
@@ -22,34 +25,45 @@ public class BreakendBuilder
         mAssemblyAlignment = assemblyAlignment;
     }
 
-    public void formBreakends(final List<AlignData> alignments)
+    public void formBreakends(final List<AlignData> alignments, final String fullSequence)
     {
         if(alignments.isEmpty())
             return;
 
-        if(alignments.size() == 1)
-        {
-            if(alignments.get(0).maxSoftClipLength() < ALIGNMENT_MIN_SOFT_CLIP)
-                return;
+        List<AlignData> validAlignments = Lists.newArrayList();
+        List<AlignData> zeroQualAlignments = Lists.newArrayList();
 
-            formSingleBreakend(alignments);
-            return;
+        for(AlignData alignment : alignments)
+        {
+            if(alignment.MapQual > 0)
+                validAlignments.add(alignment);
+            else
+                zeroQualAlignments.add(alignment);
         }
 
-        int nonZeroMapQualCount = (int)alignments.stream().filter(x -> x.MapQual == 0).count();
-
-        if(alignments.stream().allMatch(x -> x.MapQual == 0))
+        if(validAlignments.isEmpty())
             return;
 
-        // otherwise handle multiple alignments
+        validAlignments.forEach(x -> x.setAdjustedSequenceCoords(fullSequence.length()));
 
+        if(validAlignments.size() == 1)
+        {
+            if(validAlignments.get(0).maxSoftClipLength() < ALIGNMENT_MIN_SOFT_CLIP)
+                return;
+
+            formSingleBreakend(validAlignments.get(0), fullSequence);
+        }
+        else
+        {
+            // otherwise handle multiple alignments
+            formMultipleBreakends(validAlignments, fullSequence);
+        }
+
+        setAlternativeAlignments(zeroQualAlignments);
     }
 
-    private void formSingleBreakend(final List<AlignData> alignments)
+    private void formSingleBreakend(final AlignData alignment, final String fullSequence)
     {
-        AlignData alignment = alignments.get(0);
-
-        String fullSequence = mAssemblyAlignment.fullSequence();
         int fullSequenceLength = fullSequence.length();
 
         int breakendPosition;
@@ -57,34 +71,107 @@ public class BreakendBuilder
         int softClipLength;
         String insertedBases;
 
-        if(alignment.SoftClipLeft >= alignment.SoftClipRight)
+        if(alignment.leftSoftClipLength() >= alignment.rightSoftClipLength())
         {
             breakendPosition = alignment.RefLocation.start();
             orientation = NEG_ORIENT;
-            softClipLength = alignment.SoftClipLeft;
+            softClipLength = alignment.leftSoftClipLength();
             insertedBases = fullSequence.substring(0, softClipLength);
         }
         else
         {
             breakendPosition = alignment.RefLocation.end();
             orientation = POS_ORIENT;
-            softClipLength = alignment.SoftClipRight;
+            softClipLength = alignment.rightSoftClipLength();
             insertedBases = fullSequence.substring(fullSequenceLength - softClipLength);
         }
 
-        Breakend breakend = new Breakend(alignment.RefLocation.Chromosome, breakendPosition, orientation, insertedBases, SGL);
+        Breakend breakend = new Breakend(alignment.RefLocation.Chromosome, breakendPosition, orientation, insertedBases, null   );
+
+        breakend.setAnchorLength(alignment.alignedBases());
 
         mAssemblyAlignment.addBreakend(breakend);
     }
 
-    private void formMultipleBreakends(final List<AlignData> alignments)
+    private void checkOuterSingle(final AlignData alignment, boolean checkStart, final String fullSequence)
+    {
+        byte orientation = alignment.orientation();
+
+        int softClipLength = checkStart ? alignment.leftSoftClipLength() : alignment.rightSoftClipLength();
+
+        if(softClipLength < ALIGNMENT_MIN_SOFT_CLIP)
+            return;
+
+        byte sglOrientation = flipOrientation(orientation);
+        int sglPosition = alignment.RefLocation.start();
+
+        int fullSequenceLength = fullSequence.length();
+        String insertSequence = checkStart ?
+                fullSequence.substring(0, softClipLength) : fullSequence.substring(fullSequenceLength - softClipLength);
+
+        Breakend sglBreakend = new Breakend(
+                alignment.RefLocation.Chromosome, sglPosition, sglOrientation, insertSequence, null);
+
+        sglBreakend.setAnchorLength(alignment.alignedBases());
+
+        mAssemblyAlignment.addBreakend(sglBreakend);
+    }
+
+    private void formMultipleBreakends(final List<AlignData> alignments, final String fullSequence)
     {
         // look for consecutive non-zero-MQ alignments from which to form breakends
-        Collections.sort(alignments, Comparator.comparingInt(x -> x.SequenceStart));
+        Collections.sort(alignments, Comparator.comparingInt(x -> x.adjustedSequenceStart()));
 
+        // check for a single at the start or end
+        checkOuterSingle(alignments.get(0), true, fullSequence);
 
+        for(int i = 0; i < alignments.size() - 1; ++i)
+        {
+            AlignData alignment = alignments.get(i);
 
+            byte orientation = alignment.orientation();
+            int breakendPosition = alignment.RefLocation.end();
+
+            HomologyData homology = null;
+            String insertedBases = "";
+
+            AlignData nextAlignment = alignments.get(i + 1);
+
+            if(alignment.adjustedSequenceEnd() >= nextAlignment.adjustedSequenceStart())
+            {
+                homology = HomologyData.determineHomology(alignment, nextAlignment, mRefGenome);
+            }
+            else
+            {
+                int insertSeqStart = alignment.adjustedSequenceEnd() + 1;
+                int insertSeqEnd = nextAlignment.adjustedSequenceStart();
+                insertedBases = fullSequence.substring(insertSeqStart, insertSeqEnd);
+            }
+
+            Breakend breakend = new Breakend(
+                    alignment.RefLocation.Chromosome, breakendPosition, orientation, insertedBases, homology);
+
+            breakend.setAnchorLength(alignment.alignedBases());
+
+            mAssemblyAlignment.addBreakend(breakend);
+
+            Breakend nextBreakend = new Breakend(
+                    nextAlignment.RefLocation.Chromosome, breakendPosition, orientation, insertedBases, homology);
+
+            nextBreakend.setAnchorLength(nextAlignment.alignedBases());
+
+            mAssemblyAlignment.addBreakend(nextBreakend);
+        }
+
+        checkOuterSingle(alignments.get(alignments.size() - 1), false, fullSequence);
     }
+
+    private void setAlternativeAlignments(final List<AlignData> zeroQualAlignments)
+    {
+        if(zeroQualAlignments.isEmpty() && zeroQualAlignments.size() <= ALIGNMENT_MAX_ZERO_QUALS)
+            mAssemblyAlignment.breakends().forEach(x -> x.setAlternativeAlignments(zeroQualAlignments));
+    }
+
 
     /* OLD LOGIC just for reference sake
 

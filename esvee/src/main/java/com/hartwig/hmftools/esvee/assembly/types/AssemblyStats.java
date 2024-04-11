@@ -4,9 +4,6 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.convertedIndelCrossesJunction;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.INDEL;
 
 import java.util.StringJoiner;
@@ -81,9 +78,6 @@ public class AssemblyStats
             if(supportRead.isSupplementary())
             {
                 ++JuncSupps;
-
-                // if(supportRead.supplementaryRead() == null)
-                //    ++juncUnlinkedSupps;
             }
             else
             {
@@ -121,24 +115,12 @@ public class AssemblyStats
                         }
                     }
                 }
-
-                // if(read.isMateMapped() && !read.hasMateSet())
-                //    ++juncUnlinkedMates;
-            }
-        }
-        else
-        {
-            if(supportRead.type() == DISCORDANT)
-            {
-                // if(!supportRead.isSupplementary() && !read.hasMateSet())
-                //    ++discUnlinkedMates;
             }
         }
 
         NmCountTotal += supportRead.numOfEvents();
         MapQualTotal += supportRead.mapQual();
         BaseTrimTotal += supportRead.trimCount();
-
 
         if(read != null)
         {
@@ -187,12 +169,6 @@ public class AssemblyStats
         sj.add(String.valueOf(JuncMateDiscordantRefSide));
         sj.add(String.valueOf(JuncMateUnmappedRemote));
         sj.add(String.valueOf(JuncMateUnmappedRefSide));
-
-        /*
-        sj.add(String.valueOf(JuncUnlinkedMates));
-        sj.add(String.valueOf(JuncUnlinkedSupps));
-        sj.add(String.valueOf(DiscUnlinkedMates));
-        */
     }
 
     public static void addReadStatsHeader(final StringJoiner sj)
@@ -228,5 +204,4 @@ public class AssemblyStats
         double avgValue = count/readCount;
         return format("%d", round(avgValue));
     }
-
 }

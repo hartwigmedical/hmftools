@@ -11,6 +11,7 @@ public class ResultsWriter
 {
     private final BufferedWriter mDecoyMatchWriter;
     private final AssemblyWriter mAssemblyWriter;
+    private final BreakendWriter mBreakendWriter;
     private final AssemblyReadWriter mReadWriter;
     private final PhaseGroupBuildWriter mPhaseGroupBuildWriter;
     private final BamWriter mBamWriter;
@@ -18,6 +19,7 @@ public class ResultsWriter
     public ResultsWriter(final AssemblyConfig config)
     {
         mAssemblyWriter = new AssemblyWriter(config);
+        mBreakendWriter = new BreakendWriter(config);
         mReadWriter = new AssemblyReadWriter(config);
         mPhaseGroupBuildWriter = new PhaseGroupBuildWriter(config);
         mBamWriter = new BamWriter(config);
@@ -26,6 +28,7 @@ public class ResultsWriter
 
     public BufferedWriter decoyMatchWriter() { return mDecoyMatchWriter; }
     public AssemblyWriter assemblyWriter() { return mAssemblyWriter; }
+    public BreakendWriter breakendWriter() { return mBreakendWriter; }
     public AssemblyReadWriter readWriter() { return mReadWriter; }
     public PhaseGroupBuildWriter phaseGroupBuildWriter() { return mPhaseGroupBuildWriter; }
     public BamWriter bamWriter() { return mBamWriter; }
@@ -33,6 +36,7 @@ public class ResultsWriter
     public void close()
     {
         mAssemblyWriter.close();
+        mBreakendWriter.close();
         mReadWriter.close();
         mPhaseGroupBuildWriter.close();
         mBamWriter.close();

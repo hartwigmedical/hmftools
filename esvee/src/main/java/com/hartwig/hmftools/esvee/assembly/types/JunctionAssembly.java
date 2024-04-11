@@ -69,13 +69,13 @@ public class JunctionAssembly
     private PhaseGroup mPhaseGroup;
     private AssemblyOutcome mOutcome;
     private AlignmentOutcome mAlignmentOutcome;
+    private String mAssemblyAlignmentInfo;
 
     // info only
     private final String mInitialReadId;
     private int mMergedAssemblies;
     private int mMismatchReadCount;
 
-    private final Set<FilterType> mFilters;
     private final AssemblyStats mStats;
 
     public JunctionAssembly(
@@ -91,7 +91,6 @@ public class JunctionAssembly
         int maxJunctionBaseQualTotal = 0;
 
         IndelCoords indelCoords = null;
-        String indelInsertedBases = "";
 
         // FIXME: consider moving this out of the constructor and set prior - removes logic and possible dependence on Read being cached
         for(SupportRead support : assemblySupport)
@@ -139,7 +138,7 @@ public class JunctionAssembly
         mPhaseGroup = null;
         mOutcome = UNSET;
         mAlignmentOutcome = NO_SET;
-        mFilters = Sets.newHashSet();
+        mAssemblyAlignmentInfo = null;
         mMismatchReadCount = 0;
         mStats = new AssemblyStats();
     }
@@ -598,6 +597,9 @@ public class JunctionAssembly
     public AlignmentOutcome alignmentOutcome() { return mAlignmentOutcome; }
     public void setAlignmentOutcome(final AlignmentOutcome outcome) { mAlignmentOutcome = outcome; }
 
+    public void setAssemblyAlignmentInfo(final String info) { mAssemblyAlignmentInfo = info; }
+    public String assemblyAlignmentInfo() { return mAssemblyAlignmentInfo != null ? mAssemblyAlignmentInfo : mJunction.coords(); }
+
     public JunctionAssembly(
             final JunctionAssembly initialAssembly, final RefSideSoftClip refSideSoftClip,
             final List<SupportRead> initialSupport, final Set<String> excludedReadIds)
@@ -657,7 +659,6 @@ public class JunctionAssembly
         mRefBaseTrimLength = initialAssembly.refBaseTrimLength();
         mRefSideSoftClips = Lists.newArrayList(refSideSoftClip);
         mRemoteRegions = Lists.newArrayList();
-        mFilters = Sets.newHashSet();
         mMergedAssemblies = 0;
         mMismatchReadCount = 0;
         mPhaseGroup = null;
@@ -694,18 +695,12 @@ public class JunctionAssembly
     public List<SupportRead> candidateSupport() { return mCandidateSupport; }
     public void clearCandidateSupport() { mCandidateSupport.clear(); }
 
-    public Set<FilterType> filters() { return mFilters; }
-    public boolean passing() { return mFilters.isEmpty(); }
-    public void addFilter(final FilterType filterType) { mFilters.add(filterType); }
-
     public String toString()
     {
         return format("junc(%s) coords(extLen=%d refBasePos=%d len=%d) juncIndex(%d) support(%d) mismatches(%d)",
                 mJunction, extensionLength(), refBasePosition(), baseLength(), mJunctionSequenceIndex,
                 mSupport.size(), mMismatchReadCount);
     }
-
-    public boolean hasUnsetBases() { return !findUnsetBases(mBases).isEmpty(); }
 
     public String formFullSequence() { return formJunctionSequence(refBaseLength()); }
 
@@ -805,7 +800,6 @@ public class JunctionAssembly
         mRefBaseTrimLength = 0;
         mRemoteRegions = Lists.newArrayList();
         mRefSideSoftClips = Lists.newArrayList();
-        mFilters = Sets.newHashSet();
         mMergedAssemblies = 0;
         mOutcome = UNSET;
         mAlignmentOutcome = NO_SET;

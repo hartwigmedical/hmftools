@@ -4,6 +4,12 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.BamToolName.fromPath;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.SvConstants.FILE_NAME_DELIM;
 
@@ -16,6 +22,8 @@ import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bam.BamToolName;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -47,6 +55,56 @@ public final class CommonUtils
         int fragmentSize = abs(read.getInferredInsertSize());
 
         return fragmentSize == 0 || fragmentSize >= fragmentLengthUpperBound;
+    }
+
+    public static int compareJunctions(
+            final String chr1, final String chr2, final int pos1, final int pos2, final byte orient1, final byte orient2)
+    {
+        if(!chr1.equals(chr2))
+        {
+            int firstChrRank = HumanChromosome.chromosomeRank(chr1);
+            int secondChrRank = HumanChromosome.chromosomeRank(chr2);
+
+            return firstChrRank < secondChrRank ? -1 : 1;
+        }
+
+        if(pos1 == pos2)
+        {
+            if(orient1 == orient2)
+                return 0;
+
+            return orient1 == POS_ORIENT ? -1 : 1;
+        }
+
+        return pos1 < pos2 ? -1 : 1;
+    }
+
+    public static StructuralVariantType formSvType(
+            final String chrStart, final String chrEnd, final int posStart, final int posEnd, final byte orientStart, final byte orientEnd,
+            final boolean hasInsertedBases)
+    {
+        if(!chrStart.equals(chrEnd))
+            return BND;
+
+        if(orientStart != orientEnd)
+        {
+            int posDiff = abs(posStart - posEnd);
+
+            if(posDiff == 1 && hasInsertedBases)
+                return INS;
+
+            if(posDiff == 0)
+                return DUP;
+
+            boolean firstIsLower = posStart < posEnd;
+            boolean firstIsForward = orientStart == POS_ORIENT;
+
+            return (firstIsLower == firstIsForward) ? DEL : DUP;
+        }
+        else
+        {
+            return INV;
+        }
     }
 
     public static String readToString(final SAMRecord read)

@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_EXTENSION_BA
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_REF_SIDE_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_SIDE_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.findUnsetBases;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRANCHED;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensions;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionFinder.findRemoteRegions;
@@ -323,7 +324,7 @@ public class RefBaseExtender
 
                 junctionAssembly.mergeRefBaseAssembly(refBaseAssembly);
 
-                if(junctionAssembly.hasUnsetBases())
+                if(AssemblyUtils.hasUnsetBases(junctionAssembly))
                     continue;
 
                 // same criteria as above
