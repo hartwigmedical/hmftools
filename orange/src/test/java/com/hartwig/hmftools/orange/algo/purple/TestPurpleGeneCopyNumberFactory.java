@@ -19,6 +19,7 @@ public final class TestPurpleGeneCopyNumberFactory
                 .chromosomeBand(Strings.EMPTY)
                 .gene(Strings.EMPTY)
                 .minCopyNumber(0)
+                .maxCopyNumber(0)
                 .minMinorAlleleCopyNumber(0);
     }
 }
