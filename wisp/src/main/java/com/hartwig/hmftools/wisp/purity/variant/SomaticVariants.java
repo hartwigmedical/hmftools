@@ -451,7 +451,7 @@ public class SomaticVariants
             }
 
             int runCode = RExecutor.executeFromClasspath(
-                    "plots/SomaticVafPlot.R", true, patientId, sampleId, summaryFile, somaticPeaksFile, config.PlotDir);
+                    "plots/SomaticVafPlot.R", patientId, sampleId, summaryFile, somaticPeaksFile, config.PlotDir);
 
             return runCode == 0;
         }
@@ -461,5 +461,4 @@ public class SomaticVariants
             return false;
         }
     }
-
 }

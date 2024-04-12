@@ -238,7 +238,7 @@ public class PurityConfig
         configBuilder.addConfigItem(SOMATIC_VCF, false, "Somatic VCF files, separated by ','", "");
         configBuilder.addConfigItem(SOMATIC_DIR, false, "Somatic VCF directory");
         configBuilder.addConfigItem(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
-        configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
+        configBuilder.addConfigItem(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
         configBuilder.addConfigItem(AMBER_DIR_CFG, false, AMBER_DIR_DESC);
         configBuilder.addConfigItem(COBALT_DIR_CFG, false, COBALT_DIR_DESC);
         configBuilder.addConfigItem(PLOT_DIR, false, "Plot output directory, defaults to sample or output dir");

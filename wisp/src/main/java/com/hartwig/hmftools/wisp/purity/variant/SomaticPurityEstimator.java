@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
+import static com.hartwig.hmftools.common.stats.PoissonCalcs.calcPoissonNoiseValue;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.HIGH_PROBABILITY;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SYNTHETIC_TUMOR_VAF;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.isRecomputed;
 import static com.hartwig.hmftools.wisp.purity.variant.LowCountModel.filterVariants;
@@ -109,6 +112,18 @@ public class SomaticPurityEstimator
                 purityCalcData.PurityRangeHigh = estimatedPurity(
                         tumorPurity, fragmentTotals.adjTumorVaf(), purityCalcData.Clonality.VafHigh, noiseRate);
             }
+        }
+        else
+        {
+            int alleleCount = fragmentTotals.sampleAdTotal();
+
+            double lowProbAlleleCount = calcPoissonNoiseValue(alleleCount, HIGH_PROBABILITY);
+            double sampleAdjVafLow = fragmentTotals.adjSampleVaf(lowProbAlleleCount - alleleCount);
+            purityCalcData.PurityRangeLow = estimatedPurity(tumorPurity, fragmentTotals.adjTumorVaf(), sampleAdjVafLow, noiseRate);
+
+            double highProbAlleleCount = calcPoissonNoiseValue(alleleCount, LOW_PROBABILITY);
+            double sampleAdjVafHigh = fragmentTotals.adjSampleVaf(highProbAlleleCount - alleleCount);
+            purityCalcData.PurityRangeHigh = estimatedPurity(tumorPurity, fragmentTotals.adjTumorVaf(), sampleAdjVafHigh, noiseRate);
         }
 
         // calculate a limit-of-detection (LOD), being the number of fragments that would return a 95% confidence of a tumor presence
