@@ -107,7 +107,6 @@ public class DiscordantGroup
         return mRemoteRegion.overlaps(remoteRegion());
     }
 
-
     public String toString()
     {
         return format("range(%s:%d-%d) orient(%d) reads(%d) remote(%s orient=%d)",

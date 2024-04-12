@@ -17,7 +17,7 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LE
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.esvee.assembly.types.IndelCoords;
+import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMFlag;

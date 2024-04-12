@@ -4,11 +4,13 @@ public class ReadIdTrimmer
 {
     private boolean mEnabled;
     private int mReadIdTrimIndex;
+    private String mTrimmedBases;
 
     public ReadIdTrimmer(boolean enabled)
     {
         mEnabled = enabled;
         mReadIdTrimIndex = -1;
+        mTrimmedBases = "";
     }
 
     public boolean enabled() { return mEnabled; }
@@ -28,6 +30,8 @@ public class ReadIdTrimmer
                 mEnabled = false;
                 return readId;
             }
+
+            mTrimmedBases = readId.substring(0, mReadIdTrimIndex);
         }
 
         if(mReadIdTrimIndex >= readId.length() || readId.charAt(mReadIdTrimIndex - 1) != READ_ID_DELIM)
@@ -39,6 +43,8 @@ public class ReadIdTrimmer
 
         return readId.substring(mReadIdTrimIndex);
     }
+
+    public String restore(final String trimmedReadId) { return mEnabled ? mTrimmedBases + trimmedReadId : trimmedReadId; }
 
     private static final char READ_ID_DELIM = ':';
 

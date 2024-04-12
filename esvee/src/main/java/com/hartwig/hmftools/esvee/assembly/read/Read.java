@@ -22,13 +22,11 @@ import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.util.StringUtil.bytesToString;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
-import com.hartwig.hmftools.esvee.assembly.types.IndelCoords;
-import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -39,9 +37,6 @@ public class Read
     private final SAMRecord mRecord;
 
     // cached state and adjusted properties of the read
-    // private final String mOrigCigarString;
-    // private int mFlags;
-
     private final String mOrigCigarString;
     private String mCigarString;
     private List<CigarElement> mCigarElements;
@@ -64,6 +59,7 @@ public class Read
     private IndelCoords mIndelCoords;
     private int mIndelImpliedAlignmentStart;
     private int mIndelImpliedAlignmentEnd;
+    private boolean mConvertedIndel;
 
     private boolean mIsReference;
     private int mTrimCount;
@@ -89,6 +85,7 @@ public class Read
         mIndelCoords = null;
         mIndelImpliedAlignmentStart = 0;
         mIndelImpliedAlignmentEnd = 0;
+        mConvertedIndel = false;
         mTrimCount = 0;
     }
 
@@ -408,12 +405,14 @@ public class Read
                 newReadStart += mCigarElements.get(0).getLength(); // move past the delete as well
 
             mCigarElements.set(0, new CigarElement(leftSoftClipBases, S));
+            mConvertedIndel = true;
         }
 
         if(rightSoftClipBases > 0)
         {
             mCigarElements.remove(mCigarElements.size() - 1);
             mCigarElements.set(mCigarElements.size() - 1, new CigarElement(rightSoftClipBases, S));
+            mConvertedIndel = true;
         }
 
         // revert since these no longer apply
@@ -424,5 +423,5 @@ public class Read
         setBoundaries(newReadStart);
     }
 
-    public boolean isConvertedIndel() { return mCigarString != null && mOrigCigarString.contains(CigarOperator.I.toString()); }
+    public boolean isConvertedIndel() { return mConvertedIndel; }
 }

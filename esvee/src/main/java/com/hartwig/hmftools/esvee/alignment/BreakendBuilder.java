@@ -161,6 +161,9 @@ public class BreakendBuilder
             nextBreakend.setAnchorLength(nextAlignment.alignedBases());
 
             mAssemblyAlignment.addBreakend(nextBreakend);
+
+            breakend.setOtherBreakend(nextBreakend);
+            nextBreakend.setOtherBreakend(breakend);
         }
 
         checkOuterSingle(alignments.get(alignments.size() - 1), false, fullSequence);

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.assembly.types;
+package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.String.format;
 

@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
-import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
+import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import org.jetbrains.annotations.Nullable;
 
