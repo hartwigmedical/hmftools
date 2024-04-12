@@ -50,18 +50,17 @@ public final class AssemblyWriterUtils
         {
             boolean isReference = read.isReference();
 
+            if(uniqueReadIds.contains(read.id()))
+                continue;
+
+            uniqueReadIds.add(read.id()); // since fragments are being counted
+
             if(read.type().isSplitSupport())
             {
-                if(!uniqueReadIds.contains(read.id()))
-                {
-                    uniqueReadIds.add(read.id()); // since fragments are being counted
+                ++juncFrags;
 
-                    ++juncFrags;
-
-                    if(isReference)
-                        ++refSampleJuncFrags;
-                }
-
+                if(isReference)
+                    ++refSampleJuncFrags;
             }
             else
             {

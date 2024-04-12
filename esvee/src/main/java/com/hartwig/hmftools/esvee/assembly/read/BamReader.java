@@ -62,10 +62,11 @@ public class BamReader implements AutoCloseable
         if(bamPosStart > bamPosEnd)
             return;
 
-        for(SamReader reader : mSamReaders)
+        for(int i = 0; i < mSamReaders.size(); ++i)
         {
-            String fileSampleId = reader.getFileHeader().getAttribute(BAM_HEADER_SAMPLE_INDEX_TAG);
-            mCurrentIsReferenceSample = mConfig.ReferenceIds.contains(fileSampleId);
+            SamReader reader = mSamReaders.get(i);
+
+            mCurrentIsReferenceSample = i >= mConfig.TumorIds.size();
             mBamSlicer.slice(reader, new ChrBaseRegion(chromosome, positionStart, positionEnd), consumer);
         }
     }

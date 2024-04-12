@@ -399,6 +399,7 @@ public class JunctionProcessor
             BreakendWriter breakendWriter = mResultsWriter.breakendWriter();
             assemblyAlignments.forEach(x -> breakendWriter.writeBreakends((x)));
         }
+
     }
 
     public void close()
