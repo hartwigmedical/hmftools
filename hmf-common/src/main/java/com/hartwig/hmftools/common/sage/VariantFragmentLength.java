@@ -56,7 +56,7 @@ public class VariantFragmentLength
     }
 
     public static void writeVariantFragmentLength(
-            final BufferedWriter writer, final String variantInfo, final String sampleId, final FragmentLengthCounts fragmentLengthData)
+            final BufferedWriter writer, final String sampleId, final String variantInfo, final FragmentLengthCounts fragmentLengthData)
             throws IOException
     {
         if(writer == null)
