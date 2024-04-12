@@ -141,7 +141,7 @@ public class SomaticPurityEstimator
 
     private static double medianVcn(final List<SomaticVariant> variants)
     {
-        List<Double> variantCopyNumbers = variants.stream().map(x -> new Double(x.variantCopyNumber())).collect(Collectors.toList());
+        List<Double> variantCopyNumbers = variants.stream().map(x -> x.variantCopyNumber()).collect(Collectors.toList());
         Collections.sort(variantCopyNumbers);
 
         int medIndex = variantCopyNumbers.size() / 2;

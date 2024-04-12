@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.sage.evidence;
+package com.hartwig.hmftools.common.sage;
 
 import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-public class FragmentLengthData
+public class FragmentLengthCounts
 {
     private final Map<Integer,int[]> mLengthCounts;
 
@@ -12,7 +12,7 @@ public class FragmentLengthData
     public static final int ALT_COUNT = 1;
     public static final int MAX_LENGTH = 500;
 
-    public FragmentLengthData()
+    public FragmentLengthCounts()
     {
         mLengthCounts = Maps.newHashMap();
     }
@@ -38,7 +38,7 @@ public class FragmentLengthData
             ++counts[REF_COUNT];
     }
 
-    public void merge(final FragmentLengthData other)
+    public void merge(final FragmentLengthCounts other)
     {
         for(Map.Entry<Integer,int[]> entry : other.lengthCounts().entrySet())
         {

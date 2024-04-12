@@ -58,6 +58,7 @@ import javax.annotation.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.UmiReadType;
+import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.old.ReadContext;
@@ -131,7 +132,7 @@ public class ReadContextCounter//  extends SimpleVariant
     private List<Integer> mLocalPhaseSets;
     private List<Integer> mLpsCounts;
     private int[] mUmiTypeCounts;
-    private FragmentLengthData mFragmentLengthData;
+    private FragmentLengthCounts mFragmentLengthData;
     private FragmentCoords mFragmentCoords;
 
     public ReadContextCounter(
@@ -198,7 +199,7 @@ public class ReadContextCounter//  extends SimpleVariant
         mLocalPhaseSets = null;
         mLpsCounts = null;
         mUmiTypeCounts = null;
-        mFragmentLengthData = mConfig.WriteFragmentLengths ? new FragmentLengthData() : null;
+        mFragmentLengthData = mConfig.WriteFragmentLengths ? new FragmentLengthCounts() : null;
         mFragmentCoords = mConfig.Quality.HighDepthMode ? new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS) : null;
     }
 
@@ -280,7 +281,7 @@ public class ReadContextCounter//  extends SimpleVariant
     public List<Integer> lpsCounts() { return mLpsCounts; }
 
     public int[] umiTypeCounts() { return mUmiTypeCounts; }
-    public FragmentLengthData fragmentLengths() { return mFragmentLengthData; }
+    public FragmentLengthCounts fragmentLengths() { return mFragmentLengthData; }
 
     public boolean exceedsMaxCoverage() { return mCounts.Total >= mMaxCoverage; }
 
