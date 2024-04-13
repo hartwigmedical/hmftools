@@ -31,10 +31,10 @@ public class AssemblyWriter
     private final TruthsetAnnotation mTruthsetAnnotation;
 
     // write info about assemblies
-    public AssemblyWriter(final AssemblyConfig config)
+    public AssemblyWriter(final AssemblyConfig config, final TruthsetAnnotation truthsetAnnotation)
     {
         mConfig = config;
-        mTruthsetAnnotation = new TruthsetAnnotation(mConfig.TruthsetFile);
+        mTruthsetAnnotation = truthsetAnnotation;
 
         mWriter = initialiseWriter();
     }

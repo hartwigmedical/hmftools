@@ -7,10 +7,10 @@ import java.util.stream.Collectors;
 
 public enum FilterType
 {
-    MULTIPLE_ASSEMBLIES("multipleAssemblies", "Variant is supported by multiple assemblies"),
-    MIN_OVERHANG("minOverhang", "Insufficient read distance over junction"),
-    MIN_QUALITY("minQuality", "Below min quality threshold"),
-    MIN_SUPPORT("minSupport", "Below min fragment support");
+    STRAND_BIAS("strandBias", "Outside valid strand bias range"),
+    MIN_QUALITY("minQual", "Below min quality threshold"),
+    DUPLICATE("dedup", "Duplicate of similar or matching breakend"),
+    MIN_TUMOR_SUPPORT("minTumorSupport", "Below tumor min fragment support");
 
     private final String mFilter;
     private final String mVcfDescription;

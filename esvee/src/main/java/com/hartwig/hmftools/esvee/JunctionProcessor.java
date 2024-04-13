@@ -31,6 +31,7 @@ import com.hartwig.hmftools.esvee.alignment.Alignment;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
 import com.hartwig.hmftools.esvee.alignment.BwaAligner;
+import com.hartwig.hmftools.esvee.alignment.Deduplication;
 import com.hartwig.hmftools.esvee.assembly.output.BreakendWriter;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
@@ -52,6 +53,7 @@ import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.output.VcfWriter;
 import com.hartwig.hmftools.esvee.assembly.read.ReadStats;
+import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
 public class JunctionProcessor
 {
@@ -165,6 +167,8 @@ public class JunctionProcessor
             gatherAssemblies(finalAssemblies, assemblyAlignments);
 
             runAlignment(assemblyAlignments);
+
+            new Deduplication().deduplicateBreakends(assemblyAlignments);
 
             writeAssemblyOutput(finalAssemblies);
 
@@ -400,7 +404,6 @@ public class JunctionProcessor
             BreakendWriter breakendWriter = mResultsWriter.breakendWriter();
             assemblyAlignments.forEach(x -> breakendWriter.writeBreakends((x)));
         }
-
     }
 
     public void close()

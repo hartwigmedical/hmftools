@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.esvee.assembly.phase;
 
-import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
@@ -8,7 +7,6 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REMOTE_PHASING_MIN_READS;
 import static com.hartwig.hmftools.esvee.assembly.phase.PhaseGroupBuilder.linkToPhaseGroups;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 
 import java.util.Collections;
 import java.util.List;
@@ -16,7 +14,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -287,55 +284,6 @@ public class RemoteGroupBuilder extends ThreadTask
         }
 
         return false;
-
-        /*
-        Set<String> readsMatched = Sets.newHashSet();
-
-        for(SupportRead support : first.support())
-        {
-            if(support.type() == JUNCTION_MATE) // exit since it's mate is local, and any supplementary will have been checked
-                break;
-
-            // CHECK: revert to standard method without stats once performance established
-            if(hasMatchingFragment(second.support(), support, mBuildStats) || hasMatchingFragment(second.candidateSupport(), support, mBuildStats))
-            {
-                readsMatched.add(support.id());
-
-                if(readsMatched.size() >= minSharedReads)
-                    return true;
-            }
-
-            currentChecks += secondSplits + secondCandidates;
-
-            if(maxMatchChecks != NO_FRAG_CHECK_THRESHOLD && currentChecks > maxMatchChecks)
-            {
-                ++mBuildStats.ReadCheckLimited;
-                return false;
-            }
-        }
-
-        // search amongst candidates for a remote junction read match
-        for(SupportRead support : first.candidateSupport())
-        {
-            if(hasMatchingFragment(second.support(), support, mBuildStats))
-            {
-                readsMatched.add(support.id());
-
-                if(readsMatched.size() >= minSharedReads)
-                    return true;
-            }
-
-            currentChecks += secondSplits;
-
-            if(maxMatchChecks != NO_FRAG_CHECK_THRESHOLD && currentChecks > maxMatchChecks)
-            {
-                ++mBuildStats.ReadCheckLimited;
-                return false;
-            }
-        }
-
-        return false;
-         */
     }
 
     public static boolean hasMatchingFragment(

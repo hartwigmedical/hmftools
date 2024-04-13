@@ -26,10 +26,10 @@ public class BreakendWriter
     private final BufferedWriter mWriter;
     private final TruthsetAnnotation mTruthsetAnnotation;
 
-    public BreakendWriter(final AssemblyConfig config)
+    public BreakendWriter(final AssemblyConfig config, final TruthsetAnnotation truthsetAnnotation)
     {
         mConfig = config;
-        mTruthsetAnnotation = new TruthsetAnnotation(mConfig.TruthsetFile);
+        mTruthsetAnnotation = truthsetAnnotation;
 
         mWriter = initialiseWriter();
     }
@@ -69,6 +69,10 @@ public class BreakendWriter
             sj.add("MapQual");
             sj.add("Score");
             sj.add("RepeatTrimLength");
+            sj.add("SplitFragments");
+            sj.add("RefSplitFragments");
+            sj.add("DiscFragments");
+            sj.add("RefDiscFragments");
             sj.add("AltAlignments");
 
             if(mTruthsetAnnotation.enabled())
@@ -151,6 +155,30 @@ public class BreakendWriter
                 sj.add(String.valueOf(segment.Alignment.MapQual));
                 sj.add(String.valueOf(segment.Alignment.Score));
                 sj.add(String.valueOf(segment.Alignment.repeatTrimmedLength()));
+
+                int tumorCount = mConfig.TumorIds.size();
+
+                int splitFrags = 0;
+                int refSplitFrags = 0;
+                int discFrags = 0;
+                int refDiscFrags = 0;
+
+                for(int i = 0; i < breakend.sampleSupport().size(); ++i)
+                {
+                    splitFrags += breakend.sampleSupport().get(i).SplitFragments;
+                    discFrags += breakend.sampleSupport().get(i).DiscordantFragments;
+
+                    if(i >= tumorCount)
+                    {
+                        refSplitFrags += breakend.sampleSupport().get(i).SplitFragments;
+                        refDiscFrags += breakend.sampleSupport().get(i).DiscordantFragments;
+                    }
+                }
+
+                sj.add(String.valueOf(splitFrags));
+                sj.add(String.valueOf(refSplitFrags));
+                sj.add(String.valueOf(discFrags));
+                sj.add(String.valueOf(refDiscFrags));
 
                 String altAlignmentsStr = breakend.alternativeAlignments().stream()
                         .map(x -> x.altAlignmentStr()).collect(Collectors.joining(";"));

@@ -3,11 +3,12 @@ package com.hartwig.hmftools.esvee.assembly.filters;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.hartwig.hmftools.esvee.alignment.Breakend;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 
 public final class SoftFilters
 {
-    public static Set<String> applyFilters(final JunctionAssembly assembly)
+    public static Set<String> applyFilters(final Breakend breakend)
     {
         final Set<String> filters = new HashSet<>();
 

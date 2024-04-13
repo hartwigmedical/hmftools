@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly.types;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
@@ -36,9 +38,8 @@ public class SupportRead
     private final int mAlignmentEnd;
     private final String mCigar;
 
-    // private final int mUnclippedStart;
-    // private final int mUnclippedEnd;
-    // private final int mNumberOfEvents;
+    private final int mUnclippedStart;
+    private final int mUnclippedEnd;
 
     private final String mMateChromosome;
     private final int mMateAlignmentStart;
@@ -52,9 +53,6 @@ public class SupportRead
 
     // fragment state
     private final SupplementaryReadData mSupplementaryData;
-    private IndelCoords mIndelCoords;
-    // private int mIndelImpliedAlignmentStart;
-    // private int mIndelImpliedAlignmentEnd;
     private final int mMapQual;
     private final int mNumOfEvents;
     private final int mTrimCount;
@@ -78,6 +76,12 @@ public class SupportRead
         mAlignmentEnd = read.alignmentEnd();
         mFlags = read.getFlags();
         mCigar = read.cigarString();
+
+        mUnclippedStart = read.indelImpliedAlignmentStart() > 0 ?
+                min(read.indelImpliedAlignmentStart(), read.unclippedStart()) : read.unclippedStart();
+
+        mUnclippedEnd = read.indelImpliedAlignmentEnd() > 0 ?
+                max(read.indelImpliedAlignmentEnd(), read.unclippedEnd()) : read.unclippedEnd();
 
         mMateChromosome = read.mateChromosome();
         mMateAlignmentStart = read.mateAlignmentStart();
@@ -105,6 +109,8 @@ public class SupportRead
     public String chromosome() { return mChromosome; }
     public int alignmentStart() { return mAlignmentStart; }
     public int alignmentEnd() { return mAlignmentEnd; }
+    public int unclippedStart() { return mUnclippedStart; }
+    public int unclippedEnd() { return mUnclippedEnd; }
     public String mateChromosome() { return mMateChromosome; }
     public int mateAlignmentStart() { return mMateAlignmentStart; }
     public int mateAlignmentEnd() { return mMateAlignmentEnd; }

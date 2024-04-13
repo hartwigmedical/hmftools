@@ -95,11 +95,6 @@ public class BreakendBuilder
         mAssemblyAlignment.addBreakend(breakend);
     }
 
-    private static byte segmentOrientation(final AlignData alignment, boolean linksEnd)
-    {
-        return (linksEnd == (alignment.orientation() == POS_ORIENT)) ? POS_ORIENT : NEG_ORIENT;
-    }
-
     private void checkOuterSingle(final AlignData alignment, boolean checkStart)
     {
         byte sglOrientation = segmentOrientation(alignment, checkStart);
@@ -191,6 +186,11 @@ public class BreakendBuilder
         }
 
         checkOuterSingle(alignments.get(alignments.size() - 1), false);
+    }
+
+    protected static byte segmentOrientation(final AlignData alignment, boolean linksEnd)
+    {
+        return (linksEnd == (alignment.orientation() == POS_ORIENT)) ? POS_ORIENT : NEG_ORIENT;
     }
 
     private void setAlternativeAlignments(final List<AlignData> zeroQualAlignments)

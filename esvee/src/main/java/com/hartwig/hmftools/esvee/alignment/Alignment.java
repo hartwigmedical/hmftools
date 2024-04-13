@@ -1,43 +1,28 @@
 package com.hartwig.hmftools.esvee.alignment;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DEL_LENGTH;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentOutcome.ALT_LOC_MATCH;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentOutcome.MATCH;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentOutcome.MULTIPLE;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentOutcome.NON_SV_MATCH;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentOutcome.NO_MATCH;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentOutcome.NO_RESULT;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentOutcome.PARTIAL;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
-import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
-import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
-import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.assembly.types.LinkType;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
 
@@ -60,9 +45,6 @@ public class Alignment
     }
 
     public void close() { mWriter.close(); }
-
-    private static final int MIN_ALIGN_LENGTH = MIN_VARIANT_LENGTH * 2;
-    private static final int MIN_SUPPORT_COUNT = 4;
 
     public static boolean skipJunctionAssembly(final JunctionAssembly assembly)
     {
@@ -193,6 +175,99 @@ public class Alignment
         {
             BreakendBuilder breakendBuilder = new BreakendBuilder(mConfig.RefGenome, assemblyAlignment);
             breakendBuilder.formBreakends(alignments);
+            allocateSupport(assemblyAlignment);
+        }
+
+        private void allocateSupport(final AssemblyAlignment assemblyAlignment)
+        {
+            List<String> combinedSampleIds = mConfig.combinedSampleIds();
+
+            Map<String,BreakendFragmentSupport> fragmentSupportMap = Maps.newHashMap();
+
+            for(Breakend breakend : assemblyAlignment.breakends())
+            {
+                // TODO: rather than use the genome position of a read vs the aligned breakend position, use its position in the assembly
+                List<BreakendSupport> sampleSupport = breakend.sampleSupport();
+
+                combinedSampleIds.forEach(x -> sampleSupport.add(new BreakendSupport()));
+
+                for(JunctionAssembly assembly : assemblyAlignment.assemblies())
+                {
+                    for(SupportRead read : assembly.support())
+                    {
+                        if(read.type() == SupportType.JUNCTION_MATE) // any reason to count towards strand bias?
+                            continue;
+
+                        if(!breakend.Chromosome.equals(read.chromosome()))
+                            continue;
+
+                        boolean isSplitFragment = false;
+                        boolean isDiscFragment = false;
+
+                        BreakendSupport support = sampleSupport.get(read.sampleIndex());
+
+                        if(read.unclippedStart() < breakend.Position && read.unclippedEnd() > breakend.Position)
+                        {
+                            isSplitFragment = true;
+                        }
+                        else
+                        {
+                            if(breakend.Orientation == POS_ORIENT)
+                                isDiscFragment = read.alignmentEnd() <= breakend.Position;
+                            else
+                                isDiscFragment = read.alignmentStart() >= breakend.Position;
+                        }
+
+                        if((!isSplitFragment && !isDiscFragment))
+                            continue;
+
+                        if(read.orientation() == POS_ORIENT)
+                            ++support.ForwardReads;
+                        else
+                            ++support.ReverseReads;
+
+                        BreakendFragmentSupport fragmentSupport = fragmentSupportMap.get(read.id());
+
+                        if(fragmentSupport == null)
+                        {
+                            fragmentSupport = new BreakendFragmentSupport(read.sampleIndex(), isSplitFragment, breakend);
+                            fragmentSupportMap.put(read.id(), fragmentSupport);
+                        }
+                        else
+                        {
+                            fragmentSupport.Breakends.add(breakend);
+                            fragmentSupport.IsSplit |= isSplitFragment;
+                        }
+                    }
+                }
+            }
+
+            for(BreakendFragmentSupport fragmentSupport : fragmentSupportMap.values())
+            {
+                for(Breakend breakend : fragmentSupport.Breakends)
+                {
+                    BreakendSupport support = breakend.sampleSupport().get(fragmentSupport.SampleIndex);
+
+                    if(fragmentSupport.IsSplit)
+                        ++support.SplitFragments;
+                    else
+                        ++support.DiscordantFragments;
+                }
+            }
+        }
+    }
+
+    private class BreakendFragmentSupport
+    {
+        public final int SampleIndex;
+        public boolean IsSplit;
+        public final List<Breakend> Breakends;
+
+        public BreakendFragmentSupport(final int sampleIndex, final boolean isSplit, final Breakend breakend)
+        {
+            SampleIndex = sampleIndex;
+            IsSplit = isSplit;
+            Breakends = Lists.newArrayList(breakend);
         }
     }
 }

@@ -50,6 +50,7 @@ public class AssemblyAlignment
 
     public int id() { return mId; }
 
+    public List<JunctionAssembly> assemblies() { return mAssemblies; }
     public JunctionAssembly first() { return mAssemblies.get(0); }
     public JunctionAssembly second() { return mAssemblies.size() > 1 ? mAssemblies.get(1) : null; }
 

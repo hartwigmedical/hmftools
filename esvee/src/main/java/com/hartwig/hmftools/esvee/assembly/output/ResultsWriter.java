@@ -6,6 +6,7 @@ import java.io.BufferedWriter;
 
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.alignment.DecoyChecker;
+import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
 public class ResultsWriter
 {
@@ -15,11 +16,13 @@ public class ResultsWriter
     private final AssemblyReadWriter mReadWriter;
     private final PhaseGroupBuildWriter mPhaseGroupBuildWriter;
     private final BamWriter mBamWriter;
+    private final TruthsetAnnotation mTruthsetAnnotation;
 
     public ResultsWriter(final AssemblyConfig config)
     {
-        mAssemblyWriter = new AssemblyWriter(config);
-        mBreakendWriter = new BreakendWriter(config);
+        mTruthsetAnnotation = new TruthsetAnnotation(config.TruthsetFile);
+        mAssemblyWriter = new AssemblyWriter(config, mTruthsetAnnotation);
+        mBreakendWriter = new BreakendWriter(config, mTruthsetAnnotation);
         mReadWriter = new AssemblyReadWriter(config);
         mPhaseGroupBuildWriter = new PhaseGroupBuildWriter(config);
         mBamWriter = new BamWriter(config);
