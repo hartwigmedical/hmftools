@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.esvee.alignment;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.flipOrientation;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MAX_ZERO_QUALS;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_SOFT_CLIP;
 
@@ -25,7 +23,7 @@ public class BreakendBuilder
         mAssemblyAlignment = assemblyAlignment;
     }
 
-    public void formBreakends(final List<AlignData> alignments, final String fullSequence)
+    public void formBreakends(final List<AlignData> alignments)
     {
         if(alignments.isEmpty())
             return;
@@ -44,27 +42,28 @@ public class BreakendBuilder
         if(validAlignments.isEmpty())
             return;
 
-        validAlignments.forEach(x -> x.setAdjustedSequenceCoords(fullSequence.length()));
+        validAlignments.forEach(x -> x.setFullSequenceData(mAssemblyAlignment.fullSequence(), mAssemblyAlignment.fullSequenceLength()));
 
         if(validAlignments.size() == 1)
         {
             if(validAlignments.get(0).maxSoftClipLength() < ALIGNMENT_MIN_SOFT_CLIP)
                 return;
 
-            formSingleBreakend(validAlignments.get(0), fullSequence);
+            formSingleBreakend(validAlignments.get(0));
         }
         else
         {
             // otherwise handle multiple alignments
-            formMultipleBreakends(validAlignments, fullSequence);
+            formMultipleBreakends(validAlignments);
         }
 
         setAlternativeAlignments(zeroQualAlignments);
     }
 
-    private void formSingleBreakend(final AlignData alignment, final String fullSequence)
+    private void formSingleBreakend(final AlignData alignment)
     {
-        int fullSequenceLength = fullSequence.length();
+        String fullSequence = mAssemblyAlignment.fullSequence();
+        int fullSequenceLength = mAssemblyAlignment.fullSequenceLength();
 
         int breakendPosition;
         byte orientation;
@@ -86,50 +85,64 @@ public class BreakendBuilder
             insertedBases = fullSequence.substring(fullSequenceLength - softClipLength);
         }
 
-        Breakend breakend = new Breakend(alignment.RefLocation.Chromosome, breakendPosition, orientation, insertedBases, null   );
+        Breakend breakend = new Breakend(alignment.RefLocation.Chromosome, breakendPosition, orientation, insertedBases, null);
 
-        breakend.setAnchorLength(alignment.alignedBases());
+        BreakendSegment segment = new BreakendSegment(
+                mAssemblyAlignment.id(), fullSequenceLength, alignment.adjustedSequenceStart(), orientation, 0, alignment);
+
+        breakend.addSegment(segment);
 
         mAssemblyAlignment.addBreakend(breakend);
     }
 
-    private void checkOuterSingle(final AlignData alignment, boolean checkStart, final String fullSequence)
+    private static byte segmentOrientation(final AlignData alignment, boolean linksEnd)
     {
-        byte orientation = alignment.orientation();
+        return (linksEnd == (alignment.orientation() == POS_ORIENT)) ? POS_ORIENT : NEG_ORIENT;
+    }
+
+    private void checkOuterSingle(final AlignData alignment, boolean checkStart)
+    {
+        byte sglOrientation = segmentOrientation(alignment, checkStart);
 
         int softClipLength = checkStart ? alignment.leftSoftClipLength() : alignment.rightSoftClipLength();
 
         if(softClipLength < ALIGNMENT_MIN_SOFT_CLIP)
             return;
 
-        byte sglOrientation = flipOrientation(orientation);
-        int sglPosition = alignment.RefLocation.start();
+        String fullSequence = mAssemblyAlignment.fullSequence();
+        int fullSequenceLength = mAssemblyAlignment.fullSequenceLength();
 
-        int fullSequenceLength = fullSequence.length();
+        int sglPosition = checkStart ? alignment.RefLocation.start() : alignment.RefLocation.end();
+
         String insertSequence = checkStart ?
                 fullSequence.substring(0, softClipLength) : fullSequence.substring(fullSequenceLength - softClipLength);
 
-        Breakend sglBreakend = new Breakend(
+        Breakend breakend = new Breakend(
                 alignment.RefLocation.Chromosome, sglPosition, sglOrientation, insertSequence, null);
 
-        sglBreakend.setAnchorLength(alignment.alignedBases());
+        BreakendSegment segment = new BreakendSegment(
+                mAssemblyAlignment.id(), fullSequenceLength, alignment.adjustedSequenceStart(), sglOrientation, 0, alignment);
 
-        mAssemblyAlignment.addBreakend(sglBreakend);
+        breakend.addSegment(segment);
+
+        mAssemblyAlignment.addBreakend(breakend);
     }
 
-    private void formMultipleBreakends(final List<AlignData> alignments, final String fullSequence)
+    private void formMultipleBreakends(final List<AlignData> alignments)
     {
         // look for consecutive non-zero-MQ alignments from which to form breakends
         Collections.sort(alignments, Comparator.comparingInt(x -> x.adjustedSequenceStart()));
 
+        String fullSequence = mAssemblyAlignment.fullSequence();
+
         // check for a single at the start or end
-        checkOuterSingle(alignments.get(0), true, fullSequence);
+        checkOuterSingle(alignments.get(0), true);
 
         for(int i = 0; i < alignments.size() - 1; ++i)
         {
             AlignData alignment = alignments.get(i);
 
-            byte orientation = alignment.orientation();
+            byte breakendOrientation = segmentOrientation(alignment, true);
             int breakendPosition = alignment.RefLocation.end();
 
             HomologyData homology = null;
@@ -149,24 +162,35 @@ public class BreakendBuilder
             }
 
             Breakend breakend = new Breakend(
-                    alignment.RefLocation.Chromosome, breakendPosition, orientation, insertedBases, homology);
-
-            breakend.setAnchorLength(alignment.alignedBases());
+                    alignment.RefLocation.Chromosome, breakendPosition, breakendOrientation, insertedBases, homology);
 
             mAssemblyAlignment.addBreakend(breakend);
 
-            Breakend nextBreakend = new Breakend(
-                    nextAlignment.RefLocation.Chromosome, breakendPosition, orientation, insertedBases, homology);
+            BreakendSegment segment = new BreakendSegment(
+                    mAssemblyAlignment.id(), mAssemblyAlignment.fullSequenceLength(), alignment.adjustedSequenceEnd(),
+                    breakendOrientation, i, alignment);
 
-            nextBreakend.setAnchorLength(nextAlignment.alignedBases());
+            breakend.addSegment(segment);
+
+            byte nextOrientation = segmentOrientation(nextAlignment, false);
+            int nextPosition = nextAlignment.RefLocation.start();
+
+            Breakend nextBreakend = new Breakend(
+                    nextAlignment.RefLocation.Chromosome, nextPosition, nextOrientation, insertedBases, homology);
 
             mAssemblyAlignment.addBreakend(nextBreakend);
+
+            BreakendSegment nextSegment = new BreakendSegment(
+                    mAssemblyAlignment.id(), mAssemblyAlignment.fullSequenceLength(), nextAlignment.adjustedSequenceStart(),
+                    nextOrientation, i + 1, nextAlignment);
+
+            nextBreakend.addSegment(nextSegment);
 
             breakend.setOtherBreakend(nextBreakend);
             nextBreakend.setOtherBreakend(breakend);
         }
 
-        checkOuterSingle(alignments.get(alignments.size() - 1), false, fullSequence);
+        checkOuterSingle(alignments.get(alignments.size() - 1), false);
     }
 
     private void setAlternativeAlignments(final List<AlignData> zeroQualAlignments)
@@ -174,107 +198,4 @@ public class BreakendBuilder
         if(zeroQualAlignments.isEmpty() && zeroQualAlignments.size() <= ALIGNMENT_MAX_ZERO_QUALS)
             mAssemblyAlignment.breakends().forEach(x -> x.setAlternativeAlignments(zeroQualAlignments));
     }
-
-
-    /* OLD LOGIC just for reference sake
-
-                if(alignments.isEmpty())
-            {
-                assemblyAlignment.setOutcome(NO_RESULT);
-                return;
-            }
-
-            if(isSequenceLengthMatch(alignments.get(0), fullSequence.length()))
-            {
-                assemblyAlignment.setOutcome(NON_SV_MATCH);
-                return;
-            }
-
-            AlignmentOutcome topOutcomeFirst = NO_RESULT;
-            AlignmentOutcome topOutcomeSecond = NO_RESULT;
-
-            JunctionAssembly firstAssembly = assemblyAlignment.first();
-            JunctionAssembly secondAssembly = assemblyAlignment.second();
-
-            for(AlignData alignment : alignments)
-            {
-                topOutcomeFirst = assessTopAlignmentResult(firstAssembly, alignment, topOutcomeFirst);
-
-                if(secondAssembly != null)
-                    topOutcomeSecond = assessTopAlignmentResult(secondAssembly, alignment, topOutcomeSecond);
-            }
-
-            firstAssembly.setAlignmentOutcome(topOutcomeFirst);
-
-            if(secondAssembly != null)
-                secondAssembly.setAlignmentOutcome(topOutcomeSecond);
-
-
-        private static final int ALIGN_MATCH_JUNCTION_POS_BUFFER = 3;
-
-        private static final int ALIGN_MATCH_DIFF_ABS = 2;
-        private static final double ALIGN_MATCH_DIFF_PERC = 0.02;
-        private static final double ALIGN_MATCH_PERC = 1 - ALIGN_MATCH_DIFF_PERC;
-
-        private boolean isSequenceLengthMatch(final AlignData alignment, final int sequenceLength)
-        {
-            int fullSequenceLength = sequenceLength;
-            int alignmentLength = alignment.RefLocation.baseLength();
-
-            int fullMatchDiff = max(fullSequenceLength - alignmentLength, 0);
-
-            return fullMatchDiff <= ALIGN_MATCH_DIFF_ABS || fullMatchDiff / (double) fullSequenceLength <= ALIGN_MATCH_DIFF_PERC;
-        }
-
-        private AlignmentOutcome assessTopAlignmentResult(
-                final JunctionAssembly assembly, final AlignData alignment, final AlignmentOutcome existingOutcome)
-        {
-            AlignmentOutcome outcome = assessAlignmentResult(assembly, alignment);
-
-            if(outcome.exactMatch() && existingOutcome.exactMatch())
-                return MULTIPLE;
-
-            return outcome.ordinal() < existingOutcome.ordinal() ? outcome : existingOutcome;
-        }
-
-        private AlignmentOutcome assessAlignmentResult(final JunctionAssembly assembly, final AlignData alignment)
-        {
-            int assemblyRefLength = assembly.refBaseLength();
-
-            boolean sequenceLengthMatch = isSequenceLengthMatch(alignment, assemblyRefLength);
-
-            if(!assembly.junction().chromosome().equals(alignment.RefLocation.Chromosome))
-                return sequenceLengthMatch ? ALT_LOC_MATCH : NO_MATCH;
-
-            int assemblyPosStart = assembly.isForwardJunction() ? assembly.minAlignedPosition() : assembly.junction().Position;
-            int assemblyPosEnd = assembly.isForwardJunction() ? assembly.junction().Position : assembly.maxAlignedPosition();
-
-            if(!positionsOverlap(alignment.RefLocation.start(), alignment.RefLocation.end(), assemblyPosStart, assemblyPosEnd))
-                return sequenceLengthMatch ? ALT_LOC_MATCH : NO_MATCH;
-
-            boolean matchesJunctionPosition = false;
-
-            if(assembly.isForwardJunction())
-            {
-                if(abs(alignment.RefLocation.end() - assembly.junction().Position) <= ALIGN_MATCH_JUNCTION_POS_BUFFER)
-                    matchesJunctionPosition = true;
-            }
-            else
-            {
-                if(abs(alignment.RefLocation.start() - assembly.junction().Position) <= ALIGN_MATCH_JUNCTION_POS_BUFFER)
-                    matchesJunctionPosition = true;
-            }
-
-            if(!matchesJunctionPosition)
-                return sequenceLengthMatch ? ALT_LOC_MATCH : NO_MATCH;
-
-            int refBaseOverlap = min(alignment.RefLocation.end(), assemblyPosEnd) - max(alignment.RefLocation.start(), assemblyPosStart);
-            double refBaseOverlapPerc = refBaseOverlap / (double)assemblyRefLength;
-
-            return refBaseOverlapPerc >= ALIGN_MATCH_PERC ? MATCH : PARTIAL;
-        }
-    }
-
-
-     */
 }

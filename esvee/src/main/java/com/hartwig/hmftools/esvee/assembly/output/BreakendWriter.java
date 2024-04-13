@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
+import com.hartwig.hmftools.esvee.alignment.BreakendSegment;
 import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
 public class BreakendWriter
@@ -47,6 +48,7 @@ public class BreakendWriter
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
             // sj.add("Id");
+            sj.add("AssemblyId");
             sj.add("AssemblyInfo");
 
             sj.add("Type").add("Chromosome").add("Position").add("Orientation");
@@ -58,7 +60,15 @@ public class BreakendWriter
 
             sj.add("Filters");
 
-            sj.add("AnchorLength");
+            sj.add("SequenceLength");
+            sj.add("SegmentCount");
+            sj.add("SequenceIndex");
+            sj.add("SegmentOrientation");
+            sj.add("SegmentIndex");
+            sj.add("AlignedBases");
+            sj.add("MapQual");
+            sj.add("Score");
+            sj.add("RepeatTrimLength");
             sj.add("AltAlignments");
 
             if(mTruthsetAnnotation.enabled())
@@ -83,12 +93,12 @@ public class BreakendWriter
 
         try
         {
-            StringJoiner sj = new StringJoiner(TSV_DELIM);
-
             String assemblyInfo = assemblyAlignment.info();
 
             for(Breakend breakend : assemblyAlignment.breakends())
             {
+                StringJoiner sj = new StringJoiner(TSV_DELIM);
+                sj.add(String.valueOf(assemblyAlignment.id()));
                 sj.add(assemblyInfo);
                 sj.add(String.valueOf(breakend.svType()));
                 sj.add(breakend.Chromosome);
@@ -128,7 +138,19 @@ public class BreakendWriter
 
                 sj.add(filtersAsStr(breakend.filters()));
 
-                sj.add(String.valueOf(breakend.anchorLength()));
+                // sj.add(String.valueOf(breakend.anchorLength()));
+                sj.add(String.valueOf(assemblyAlignment.fullSequenceLength()));
+
+                // for now just the first segment - no showing branching or duplicates
+                BreakendSegment segment = breakend.segments().get(0);
+                sj.add(String.valueOf(breakend.segments().size()));
+                sj.add(String.valueOf(segment.SequenceIndex));
+                sj.add(String.valueOf(segment.Orientation));
+                sj.add(String.valueOf(segment.Index));
+                sj.add(String.valueOf(segment.Alignment.alignedBases()));
+                sj.add(String.valueOf(segment.Alignment.MapQual));
+                sj.add(String.valueOf(segment.Alignment.Score));
+                sj.add(String.valueOf(segment.Alignment.repeatTrimmedLength()));
 
                 String altAlignmentsStr = breakend.alternativeAlignments().stream()
                         .map(x -> x.altAlignmentStr()).collect(Collectors.joining(";"));

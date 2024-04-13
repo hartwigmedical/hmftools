@@ -74,7 +74,7 @@ public class BamWriter
         mHeader.addReadGroup(new SAMReadGroupRecord(readGroupId));
 
         String sortedBam = config.outputFilename(ASSEMBLY_BAM);
-        mUnsortedBam = sortedBam.replaceAll(ASSEMBLY_BAM.fileId(), "unsorted." + ASSEMBLY_BAM);
+        mUnsortedBam = sortedBam.replaceAll(ASSEMBLY_BAM.fileId(), "unsorted." + ASSEMBLY_BAM.fileId());
         return new SAMFileWriterFactory().makeBAMWriter(mHeader, false, new File(mUnsortedBam));
     }
 

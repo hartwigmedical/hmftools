@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.alignment.AlignmentOutcome.NO_SET;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.calcTrimmedRefBaseLength;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.readQualFromJunction;
 import static com.hartwig.hmftools.esvee.assembly.ExtensionSeqBuilder.calcReadSequenceMismatches;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.convertedIndelCrossesJunction;
@@ -22,7 +23,6 @@ import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_R
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.UNSET;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.findUnsetBases;
-import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedRefBaseLength;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findRepeats;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
@@ -560,7 +560,7 @@ public class JunctionAssembly
             mRefBasesRepeatedTrimmed = formRefBaseSequence(MIN_VARIANT_LENGTH);
         }
 
-        mRefBaseTrimLength = calcTrimmedRefBaseLength(this, MIN_VARIANT_LENGTH);
+        mRefBaseTrimLength = calcTrimmedRefBaseLength(this);
     }
 
     public String refBasesRepeatedTrimmed() { return mRefBasesRepeatedTrimmed; }

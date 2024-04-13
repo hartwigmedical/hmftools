@@ -167,8 +167,6 @@ public class Alignment
 
         private void processAssembly(final AssemblyAlignment assemblyAlignment)
         {
-            String fullSequence = assemblyAlignment.fullSequence();
-
             List<AlignData> alignments;
 
             if(mAlignmentCache.enabled())
@@ -177,24 +175,24 @@ public class Alignment
             }
             else
             {
-                List<BwaMemAlignment> bwaAlignments = mAligner.alignSequence(fullSequence.getBytes());
+                List<BwaMemAlignment> bwaAlignments = mAligner.alignSequence(assemblyAlignment.fullSequence().getBytes());
 
                 alignments = bwaAlignments.stream()
                         .map(x -> AlignData.from(x, mConfig.RefGenVersion))
                         .filter(x -> x != null).collect(Collectors.toList());
             }
 
-            processAlignmentResults(assemblyAlignment, alignments, fullSequence);
+            processAlignmentResults(assemblyAlignment, alignments);
 
-            AlignmentWriter.writeAssemblyAlignment(mWriter.alignmentWriter(), assemblyAlignment, fullSequence, alignments);
+            AlignmentWriter.writeAssemblyAlignment(mWriter.alignmentWriter(), assemblyAlignment, alignments);
             AlignmentWriter.writeAlignmentDetails(mWriter.alignmentDetailsWriter(), assemblyAlignment, alignments);
         }
 
         private void processAlignmentResults(
-                final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments, final String fullSequence)
+                final AssemblyAlignment assemblyAlignment, final List<AlignData> alignments)
         {
             BreakendBuilder breakendBuilder = new BreakendBuilder(mConfig.RefGenome, assemblyAlignment);
-            breakendBuilder.formBreakends(alignments, fullSequence);
+            breakendBuilder.formBreakends(alignments);
         }
     }
 }

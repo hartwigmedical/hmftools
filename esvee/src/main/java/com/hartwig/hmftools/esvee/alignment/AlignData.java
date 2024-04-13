@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
@@ -18,6 +19,7 @@ import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 
@@ -45,6 +47,7 @@ public class AlignData
 
     private int mAdjustedSequenceStart;
     private int mAdjustedSequenceEnd;
+    private int mRepeatTrimmedLength;
 
     public AlignData(
             final ChrBaseRegion refLocation, final int sequenceStart, final int sequenceEnd, final int mapQual,
@@ -73,6 +76,7 @@ public class AlignData
 
         mAdjustedSequenceStart = sequenceStart;
         mAdjustedSequenceEnd = sequenceEnd;
+        mRepeatTrimmedLength = mAlignedBases;
     }
 
     public byte orientation()
@@ -84,14 +88,21 @@ public class AlignData
     public int leftSoftClipLength() { return mSoftClipLeft; }
     public int rightSoftClipLength() { return mSoftClipRight; }
     public int alignedBases() { return mAlignedBases; }
+    public int repeatTrimmedLength() { return mRepeatTrimmedLength; }
 
-    public void setAdjustedSequenceCoords(final int fullSequenceLength)
+    public void setFullSequenceData(final String fullSequence, final int fullSequenceLength)
     {
-        if(mOrientation == POS_ORIENT)
-            return;
+        if(mOrientation == NEG_ORIENT)
+        {
+            mAdjustedSequenceStart = fullSequenceLength - SequenceStart;
+            mAdjustedSequenceEnd = fullSequenceLength - SequenceEnd;
+        }
 
-        mAdjustedSequenceStart = fullSequenceLength - SequenceStart;
-        mAdjustedSequenceEnd = fullSequenceLength - SequenceEnd;
+        String alignedBases = fullSequence.substring(mAdjustedSequenceStart, mAdjustedSequenceEnd);
+        List<RepeatInfo> repeats = RepeatInfo.findRepeats(alignedBases.getBytes());
+
+        if(repeats != null)
+            mRepeatTrimmedLength = calcTrimmedBaseLength(0, alignedBases.length() - 1, repeats);
     }
 
     public int adjustedSequenceStart() { return mAdjustedSequenceStart; }
@@ -127,7 +138,8 @@ public class AlignData
 
     public String toString()
     {
-        return format("%s %s seq(%d-%d) score(%d) mq(%d) flags(%d)",
-                RefLocation, Cigar, SequenceStart, SequenceEnd, Score, MapQual, Flags);
+        return format("%s %s seq(%d-%d) score(%d) mq(%d) flags(%d) adjIndex(%d-%d) aligned(%d trim=%d)",
+                RefLocation, Cigar, SequenceStart, SequenceEnd, Score, MapQual, Flags,
+                mAdjustedSequenceStart, mAdjustedSequenceEnd, mAlignedBases, mRepeatTrimmedLength);
     }
 }

@@ -308,6 +308,7 @@ public class JunctionProcessor
             }
         }
 
+        int assemblyAlignmentId = 0;
         for(PhaseGroup phaseGroup : phaseGroups)
         {
             allAssemblies.addAll(phaseGroup.derivedAssemblies());
@@ -318,14 +319,14 @@ public class JunctionProcessor
                 {
                     for(AssemblyLink assemblyLink : phaseSet.assemblyLinks())
                     {
-                        assemblyAlignments.add(new AssemblyAlignment(assemblyLink));
+                        assemblyAlignments.add(new AssemblyAlignment(assemblyAlignmentId++, assemblyLink));
                     }
                 }
 
                 for(JunctionAssembly assembly : phaseGroup.assemblies())
                 {
                     if(assembly.phaseSet() == null && !skipJunctionAssembly(assembly))
-                        assemblyAlignments.add(new AssemblyAlignment(assembly));
+                        assemblyAlignments.add(new AssemblyAlignment(assemblyAlignmentId++, assembly));
                 }
             }
         }

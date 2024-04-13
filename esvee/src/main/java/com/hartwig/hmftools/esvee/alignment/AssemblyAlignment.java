@@ -3,37 +3,52 @@ package com.hartwig.hmftools.esvee.alignment;
 import static java.lang.String.format;
 
 import java.util.List;
-import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.assembly.types.JunctionSequence;
 
 public class AssemblyAlignment
 {
+    private final int mId;
     private final List<JunctionAssembly> mAssemblies;
     private final AssemblyLink mAssemblyLink;
 
+    private final String mFullSequence;
+    private final int mFullSequenceLength;
+
     private final List<Breakend> mBreakends;
 
-    public AssemblyAlignment(final JunctionAssembly assembly)
-    {
-        mAssemblies = List.of(assembly);
-        mAssemblyLink = null;
-        mBreakends = Lists.newArrayList();
-    }
+    public AssemblyAlignment(final int id, final JunctionAssembly assembly) { this(id, assembly, null); }
 
-    public AssemblyAlignment(final AssemblyLink assemblyLink)
+    public AssemblyAlignment(final int id, final AssemblyLink assemblyLink) { this(id, null, assemblyLink); }
+
+    private AssemblyAlignment(final int id, final JunctionAssembly assembly, final AssemblyLink assemblyLink)
     {
-        mAssemblies = List.of(assemblyLink.first(), assemblyLink.second());
-        mAssemblyLink = assemblyLink;
+        mId = id;
+
+        if(assembly != null)
+        {
+            mAssemblies = List.of(assembly);
+            mAssemblyLink = null;
+        }
+        else
+        {
+            mAssemblies = List.of(assemblyLink.first(), assemblyLink.second());
+            mAssemblyLink = assemblyLink;
+        }
+
         mBreakends = Lists.newArrayList();
 
         mAssemblies.forEach(x -> x.setAssemblyAlignmentInfo(info()));
+
+        mFullSequence = formFullSequence();
+        mFullSequenceLength = mFullSequence.length();
     }
+
+    public int id() { return mId; }
 
     public JunctionAssembly first() { return mAssemblies.get(0); }
     public JunctionAssembly second() { return mAssemblies.size() > 1 ? mAssemblies.get(1) : null; }
@@ -41,12 +56,15 @@ public class AssemblyAlignment
     public List<Breakend> breakends() { return mBreakends; }
     public void addBreakend(final Breakend breakend) { mBreakends.add(breakend); }
 
+    public String fullSequence() { return mFullSequence; }
+    public int fullSequenceLength() { return mFullSequenceLength; }
+
     public void setOutcome(final AlignmentOutcome outcome)
     {
         mAssemblies.forEach(x -> x.setAlignmentOutcome(outcome));
     }
 
-    public String ids()
+    public String assemblyIds()
     {
         if(mAssemblies.size() == 1)
             return String.valueOf(mAssemblies.get(0).id());
@@ -82,7 +100,7 @@ public class AssemblyAlignment
         return refBaseLength;
     }
 
-    public String fullSequence()
+    private String formFullSequence()
     {
         if(mAssemblies.size() == 1)
             return mAssemblies.get(0).formFullSequence();

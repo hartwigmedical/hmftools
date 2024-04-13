@@ -182,7 +182,6 @@ public class AssemblyConfig
             }
         }
 
-        RunAlignment = configBuilder.hasFlag(RUN_ALIGNMENT);
         ProcessDiscordant = configBuilder.hasFlag(PROCESS_DISCORDANT);
 
         WriteTypes = fromConfig(configBuilder.getValue(WRITE_TYPES));
@@ -198,6 +197,12 @@ public class AssemblyConfig
                 configBuilder.getValue(REF_GENOME_IMAGE) : RefGenomeFile + REF_GENOME_IMAGE_EXTENSION;
 
         DecoyGenome = configBuilder.getValue(DECOY_GENOME);
+
+        AlignmentFile = AlignmentCache.filename(configBuilder);
+        RunAlignment = configBuilder.hasFlag(RUN_ALIGNMENT) || !AlignmentFile.isEmpty();
+
+        if(RunAlignment || DecoyGenome != null)
+            loadAlignerLibrary(null); // or load path from config
 
         BamStringency = ValidationStringency.STRICT;
 
@@ -251,10 +256,6 @@ public class AssemblyConfig
         Threads = parseThreads(configBuilder);
 
         TruthsetFile = TruthsetAnnotation.filename(configBuilder);
-        AlignmentFile = AlignmentCache.filename(configBuilder);
-
-        if(RunAlignment || DecoyGenome != null)
-            loadAlignerLibrary(null); // or load path from config
 
         ApplyRemotePhasingReadCheckThreshold = configBuilder.hasFlag(REMOTE_PHASING_READ_CHECK_THRESHOLD);
 

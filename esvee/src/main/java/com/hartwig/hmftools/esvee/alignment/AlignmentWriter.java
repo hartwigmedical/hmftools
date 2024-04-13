@@ -16,17 +16,13 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
-import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.output.WriteType;
-
-import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 
 import htsjdk.samtools.Cigar;
 
 public class AlignmentWriter
 {
-    private final BwaMemAligner mAligner;
     private final BufferedWriter mWriter;
     private final BufferedWriter mDetailedWriter;
 
@@ -42,8 +38,6 @@ public class AlignmentWriter
             mWriter = null;
             mDetailedWriter = null;
         }
-
-        mAligner = null;
     }
 
     public BufferedWriter alignmentWriter() { return mWriter; }
@@ -97,8 +91,7 @@ public class AlignmentWriter
     }
 
     public synchronized static void writeAssemblyAlignment(
-            final BufferedWriter writer, final AssemblyAlignment assemblyAlignment, final String fullSequence,
-            final List<AlignData> alignmentResults)
+            final BufferedWriter writer, final AssemblyAlignment assemblyAlignment, final List<AlignData> alignmentResults)
     {
         if(writer == null)
             return;
@@ -107,12 +100,12 @@ public class AlignmentWriter
         {
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            sj.add(assemblyAlignment.ids());
+            sj.add(assemblyAlignment.assemblyIds());
             sj.add(assemblyAlignment.info());
             sj.add(String.valueOf(assemblyAlignment.svType()));
             sj.add(String.valueOf(assemblyAlignment.svLength()));
             sj.add(String.valueOf(assemblyAlignment.refBaseLength()));
-            sj.add(String.valueOf(fullSequence.length()));
+            sj.add(String.valueOf(assemblyAlignment.fullSequenceLength()));
             sj.add(assemblyAlignment.assemblyCigar());
 
             AlignData topAlignment = !alignmentResults.isEmpty() ? alignmentResults.get(0) : null;
@@ -120,7 +113,7 @@ public class AlignmentWriter
             if(topAlignment == null || topAlignment.Score == 0 || topAlignment.Cigar.isEmpty())
             {
                 sj.add("0").add("").add("0").add("0").add("").add("0").add("0");
-                sj.add(fullSequence);
+                sj.add(assemblyAlignment.fullSequence());
                 writer.write(sj.toString());
                 writer.newLine();
                 return;
@@ -135,7 +128,7 @@ public class AlignmentWriter
             sj.add(String.valueOf(topAlignment.Score));
             sj.add(String.valueOf(alignedBases));
 
-            sj.add(fullSequence);
+            sj.add(assemblyAlignment.fullSequence());
 
             writer.write(sj.toString());
             writer.newLine();
@@ -207,7 +200,7 @@ public class AlignmentWriter
 
         try
         {
-            String assemblyStr = format("%s\t%s", assemblyAlignment.ids(), assemblyAlignment.info());
+            String assemblyStr = format("%s\t%s", assemblyAlignment.assemblyIds(), assemblyAlignment.info());
 
             for(AlignData alignment : alignments)
             {

@@ -24,8 +24,8 @@ public class Breakend implements Comparable<Breakend>
 
     private Breakend mOtherBreakend;
 
-    private int mAnchorLength;
     private List<AlignData> mAlternativeAlignments;
+    private List<BreakendSegment> mSegments;
 
     private final List<BreakendSupport> mBreakendSupport; // one for each sample loaded, indexed as per config
     private final Set<FilterType> mFilters;
@@ -42,9 +42,9 @@ public class Breakend implements Comparable<Breakend>
         mOtherBreakend = null;
 
         mBreakendSupport = Lists.newArrayList();
+        mSegments = Lists.newArrayList();
 
         mAlternativeAlignments = null;
-        mAnchorLength = 0;
 
         mFilters = Sets.newHashSet();
     }
@@ -52,8 +52,8 @@ public class Breakend implements Comparable<Breakend>
     public Breakend otherBreakend() { return mOtherBreakend; }
     public void setOtherBreakend(final Breakend breakend) { mOtherBreakend = breakend; }
 
-    public int anchorLength() { return mAnchorLength; }
-    public void setAnchorLength(int length) { mAnchorLength = length; }
+    public List<BreakendSegment> segments() { return mSegments; }
+    public void addSegment(final BreakendSegment segment) { mSegments.add(segment); }
 
     public List<AlignData> alternativeAlignments() { return mAlternativeAlignments; }
     public void setAlternativeAlignments(final List<AlignData> altAlignments) { mAlternativeAlignments = altAlignments; }

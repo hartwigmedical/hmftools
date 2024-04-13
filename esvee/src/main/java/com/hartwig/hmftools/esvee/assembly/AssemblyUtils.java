@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SECONDARY;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SUPP_ONLY;
+import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragment;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.createByteArray;
@@ -195,6 +196,19 @@ public final class AssemblyUtils
     public static byte[] createMinBaseQuals(final int length) { return createByteArray(length, (byte) (LOW_BASE_QUAL_THRESHOLD + 1)); }
 
     public static boolean hasUnsetBases(final JunctionAssembly assembly) { return !findUnsetBases(assembly.bases()).isEmpty(); }
+
+    public static int calcTrimmedRefBaseLength(final JunctionAssembly assembly)
+    {
+        int refBaseLength = assembly.refBaseLength();
+
+        if(assembly.repeatInfo().isEmpty())
+            return refBaseLength;
+
+        int seqStart = assembly.isForwardJunction() ? assembly.junctionIndex() - refBaseLength + 1 : assembly.junctionIndex();
+        int seqEnd = assembly.isForwardJunction() ? assembly.junctionIndex() : assembly.junctionIndex() + refBaseLength - 1;
+
+        return calcTrimmedBaseLength(seqStart, seqEnd, assembly.repeatInfo());
+    }
 
     public static void setAssemblyOutcome(final JunctionAssembly assembly)
     {

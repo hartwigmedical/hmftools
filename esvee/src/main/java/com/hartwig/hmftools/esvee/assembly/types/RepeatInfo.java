@@ -273,19 +273,10 @@ public class RepeatInfo
         return refBasesTrimmed.toString();
     }
 
-    public static int calcTrimmedRefBaseLength(final JunctionAssembly assembly, final int maxSequenceLength)
+    public static int calcTrimmedBaseLength(final int seqStart, final int seqEnd, final List<RepeatInfo> repeats)
     {
-        int refBaseLength = assembly.refBaseLength();
-
-        if(assembly.repeatInfo().isEmpty())
-            return refBaseLength;
-
-        int seqStart = assembly.isForwardJunction() ? assembly.junctionIndex() - refBaseLength + 1 : assembly.junctionIndex();
-        int seqEnd = assembly.isForwardJunction() ? assembly.junctionIndex() : assembly.junctionIndex() + refBaseLength - 1;
-
         int currentIndex = seqStart;
 
-        List<RepeatInfo> repeats = assembly.repeatInfo();
         int currentRepeatIndex = 0;
         int trimmedBasesLength = 0;
         RepeatInfo currentRepeat = repeats.get(currentRepeatIndex);

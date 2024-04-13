@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.region.SpecificRegions.parseStandardFo
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_ASSEMBLY_IDS;
 import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_ASSEMLY_INFO;
 import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_CIGAR;
 import static com.hartwig.hmftools.esvee.alignment.AlignmentWriter.FLD_FLAGS;
@@ -72,7 +71,6 @@ public class AlignmentCache
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
 
-            int assIdIndex = fieldsIndexMap.get(FLD_ASSEMBLY_IDS);
             int assInfoIndex = fieldsIndexMap.get(FLD_ASSEMLY_INFO);
             int refLocationIndex = fieldsIndexMap.get(FLD_REF_LOCATION);
             int seqCoordsIndex = fieldsIndexMap.get(FLD_SEQUENCE_COORDS);
