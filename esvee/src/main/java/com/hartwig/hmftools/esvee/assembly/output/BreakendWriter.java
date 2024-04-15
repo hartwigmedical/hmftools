@@ -127,12 +127,12 @@ public class BreakendWriter
                 if(breakend.Homology != null)
                 {
                     sj.add(breakend.Homology.Homology);
-                    sj.add(format("%d-%d", breakend.Homology.ExactStart, breakend.Homology.ExactEnd));
-                    sj.add(format("%d-%d", breakend.Homology.InexactStart, breakend.Homology.InexactEnd));
+                    sj.add(format("%d,%d", breakend.Homology.ExactStart, breakend.Homology.ExactEnd));
+                    sj.add(format("%d,%d", breakend.Homology.InexactStart, breakend.Homology.InexactEnd));
                 }
                 else
                 {
-                    sj.add("").add("0-0").add("0-0");
+                    sj.add("").add("0,0").add("0,0");
                 }
 
                 sj.add(filtersAsStr(breakend.filters()));
@@ -178,8 +178,8 @@ public class BreakendWriter
 
                 sj.add(String.valueOf(breakend.calcQual()));
 
-                String altAlignmentsStr = breakend.alternativeAlignments().stream()
-                        .map(x -> x.altAlignmentStr()).collect(Collectors.joining(";"));
+                String altAlignmentsStr = breakend.alternativeAlignments() != null ?
+                        breakend.alternativeAlignments().stream().map(x -> x.altAlignmentStr()).collect(Collectors.joining(";")) : "";
                 sj.add(altAlignmentsStr);
 
                 if(mTruthsetAnnotation.enabled())

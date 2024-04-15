@@ -3,10 +3,7 @@ package com.hartwig.hmftools.esvee.alignment;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
 
@@ -119,8 +116,8 @@ public class Breakend implements Comparable<Breakend>
             // look for a read crossing a segment boundary
             for(BreakendSegment segment : mSegments)
             {
-                int segmentIndexStart = segment.Alignment.adjustedSequenceStart();
-                int segmentIndexEnd = segment.Alignment.adjustedSequenceEnd();
+                int segmentIndexStart = segment.Alignment.sequenceStart();
+                int segmentIndexEnd = segment.Alignment.sequenceEnd();
 
                 if(segmentIndexStart > 0 && readSeqStartIndex < segmentIndexStart && readSeqEndIndex > segmentIndexStart)
                     return true;

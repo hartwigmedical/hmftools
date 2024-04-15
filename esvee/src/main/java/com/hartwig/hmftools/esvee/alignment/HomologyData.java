@@ -26,9 +26,9 @@ public class HomologyData
     public static HomologyData determineHomology(
             final AlignData alignStart, final AlignData alignEnd, final RefGenomeInterface refGenome)
     {
-        int overlap = alignStart.adjustedSequenceEnd() - alignEnd.adjustedSequenceStart();
+        int overlap = alignStart.sequenceEnd() - alignEnd.sequenceStart() + 1;
 
-        if(overlap < 0)
+        if(overlap <= 0)
             return null;
 
         byte orientationStart = segmentOrientation(alignStart, true);
@@ -59,7 +59,7 @@ public class HomologyData
         }
 
         if(exactMatch == 0)
-            return null;
+            return new HomologyData("", 0, 0, 0, overlap);
 
         int exactMid = exactMatch / 2;
         int exactStart = exactMid;
@@ -68,7 +68,7 @@ public class HomologyData
         int inexactStart = 0;
         int inexactEnd = overlap - exactMatch;
 
-        return new HomologyData(sb.toString(), exactStart, exactEnd, inexactStart, inexactEnd);
+        return new HomologyData(sb.toString(), -exactStart, exactEnd, -inexactStart, inexactEnd);
     }
 
     private static String getOverlapBases(
@@ -77,12 +77,12 @@ public class HomologyData
         if(orientation == POS_ORIENT)
         {
             return refGenome.getBaseString(
-                    alignment.RefLocation.Chromosome, alignment.RefLocation.end() - overlap, alignment.RefLocation.end());
+                    alignment.RefLocation.Chromosome, alignment.RefLocation.end() - overlap + 1, alignment.RefLocation.end());
         }
         else
         {
             return refGenome.getBaseString(
-                    alignment.RefLocation.Chromosome, alignment.RefLocation.start(), alignment.RefLocation.start() + overlap);
+                    alignment.RefLocation.Chromosome, alignment.RefLocation.start(), alignment.RefLocation.start() + overlap - 1);
         }
     }
 }

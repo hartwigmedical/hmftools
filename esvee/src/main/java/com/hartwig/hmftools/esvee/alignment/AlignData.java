@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 
 import static htsjdk.samtools.CigarOperator.M;
@@ -28,8 +29,6 @@ import htsjdk.samtools.CigarElement;
 public class AlignData
 {
     public final ChrBaseRegion RefLocation;
-    public final int SequenceStart;
-    public final int SequenceEnd;
     public final int MapQual;
     public final int NMatches;
     public final int Score;
@@ -45,8 +44,10 @@ public class AlignData
     private final byte mOrientation;
     private final int mAlignedBases;
 
-    private int mAdjustedSequenceStart;
-    private int mAdjustedSequenceEnd;
+    private final int mRawSequenceStart;
+    private final int mRawSequenceEnd;
+    private int mSequenceStart;
+    private int mSequenceEnd;
     private int mRepeatTrimmedLength;
 
     public AlignData(
@@ -54,8 +55,8 @@ public class AlignData
             final int score, final int flags, final String cigar, final int nMatches, final String xaTag, final String mdTag)
     {
         RefLocation = refLocation;
-        SequenceStart = sequenceStart;
-        SequenceEnd = sequenceEnd;
+        mRawSequenceStart = sequenceStart;
+        mRawSequenceEnd = sequenceEnd;
         MapQual = mapQual;
         NMatches = nMatches;
         Score = score;
@@ -74,8 +75,8 @@ public class AlignData
         mOrientation = SamRecordUtils.isFlagSet(Flags, READ_REVERSE_STRAND) ? NEG_ORIENT : POS_ORIENT;
         mAlignedBases = mCigarElements.stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
 
-        mAdjustedSequenceStart = sequenceStart;
-        mAdjustedSequenceEnd = sequenceEnd;
+        mSequenceStart = sequenceStart;
+        mSequenceEnd = max(sequenceEnd - 1, 0);
         mRepeatTrimmedLength = mAlignedBases;
     }
 
@@ -89,17 +90,27 @@ public class AlignData
     public int rightSoftClipLength() { return mSoftClipRight; }
     public int alignedBases() { return mAlignedBases; }
     public int repeatTrimmedLength() { return mRepeatTrimmedLength; }
-    public int segmentLength() { return mAdjustedSequenceEnd - mAdjustedSequenceStart + 1; }
+    public int segmentLength() { return mSequenceEnd - mSequenceStart + 1; }
 
     public void setFullSequenceData(final String fullSequence, final int fullSequenceLength)
     {
         if(mOrientation == NEG_ORIENT)
         {
-            mAdjustedSequenceStart = fullSequenceLength - SequenceStart;
-            mAdjustedSequenceEnd = fullSequenceLength - SequenceEnd;
+            int newSequenceStart = (fullSequenceLength - 1) - mSequenceEnd;
+            int newSequenceEnd = (fullSequenceLength - 1) - mSequenceStart;
+
+            mSequenceStart = max(newSequenceStart, 0);
+            mSequenceEnd = newSequenceEnd;
         }
 
-        String alignedBases = fullSequence.substring(mAdjustedSequenceStart, mAdjustedSequenceEnd);
+        if(mSequenceStart < 0 || mSequenceStart > mSequenceEnd || mSequenceEnd > fullSequence.length())
+        {
+            SV_LOGGER.error("alignment({}) invalid subsequence request({}-{}) vs fullSequenceLength({})",
+                    toString(), fullSequenceLength);
+            return;
+        }
+
+        String alignedBases = fullSequence.substring(mSequenceStart, mSequenceEnd);
         List<RepeatInfo> repeats = RepeatInfo.findRepeats(alignedBases.getBytes());
 
         if(repeats != null)
@@ -108,8 +119,11 @@ public class AlignData
             mRepeatTrimmedLength = alignedBases.length();
     }
 
-    public int adjustedSequenceStart() { return mAdjustedSequenceStart; }
-    public int adjustedSequenceEnd() { return mAdjustedSequenceEnd; }
+    public int sequenceStart() { return mSequenceStart; }
+    public int sequenceEnd() { return mSequenceEnd; }
+
+    public int rawSequenceStart() { return mRawSequenceStart; }
+    public int rawSequenceEnd() { return mRawSequenceEnd; }
 
     public static AlignData from(final BwaMemAlignment alignment, final RefGenomeVersion refGenomeVersion)
     {
@@ -142,8 +156,8 @@ public class AlignData
 
     public String toString()
     {
-        return format("%s %s seq(%d-%d) score(%d) mq(%d) flags(%d) adjIndex(%d-%d) aligned(%d trim=%d)",
-                RefLocation, Cigar, SequenceStart, SequenceEnd, Score, MapQual, Flags,
-                mAdjustedSequenceStart, mAdjustedSequenceEnd, mAlignedBases, mRepeatTrimmedLength);
+        return format("%s %s seq(%d-%d adj=%d-%d) score(%d) mq(%d) flags(%d) aligned(%d trim=%d)",
+                RefLocation, Cigar, mRawSequenceStart, mRawSequenceEnd, mSequenceStart, mSequenceEnd, Score, MapQual, Flags,
+                mAlignedBases, mRepeatTrimmedLength);
     }
 }

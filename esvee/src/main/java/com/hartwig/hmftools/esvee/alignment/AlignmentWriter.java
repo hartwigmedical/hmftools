@@ -208,7 +208,7 @@ public class AlignmentWriter
                 StringJoiner sj = new StringJoiner(TSV_DELIM);
                 sj.add(assemblyStr);
                 sj.add(alignment.RefLocation.toString());
-                sj.add(format("%d-%d", alignment.SequenceStart, alignment.SequenceEnd));
+                sj.add(format("%d-%d", alignment.rawSequenceStart(), alignment.rawSequenceEnd()));
                 sj.add(String.valueOf(alignment.MapQual));
                 sj.add(String.valueOf(alignment.Cigar));
                 sj.add(String.valueOf(alignment.orientation()));

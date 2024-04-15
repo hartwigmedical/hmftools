@@ -88,7 +88,7 @@ public class BreakendBuilder
         Breakend breakend = new Breakend(alignment.RefLocation.Chromosome, breakendPosition, orientation, insertedBases, null);
 
         BreakendSegment segment = new BreakendSegment(
-                mAssemblyAlignment.id(), fullSequenceLength, alignment.adjustedSequenceStart(), orientation, 0, alignment);
+                mAssemblyAlignment.id(), fullSequenceLength, alignment.sequenceStart(), orientation, 0, alignment);
 
         breakend.addSegment(segment);
 
@@ -116,7 +116,7 @@ public class BreakendBuilder
                 alignment.RefLocation.Chromosome, sglPosition, sglOrientation, insertSequence, null);
 
         BreakendSegment segment = new BreakendSegment(
-                mAssemblyAlignment.id(), fullSequenceLength, alignment.adjustedSequenceStart(), sglOrientation, nextSegmentIndex, alignment);
+                mAssemblyAlignment.id(), fullSequenceLength, alignment.sequenceStart(), sglOrientation, nextSegmentIndex, alignment);
 
         breakend.addSegment(segment);
 
@@ -128,7 +128,7 @@ public class BreakendBuilder
     private void formMultipleBreakends(final List<AlignData> alignments)
     {
         // look for consecutive non-zero-MQ alignments from which to form breakends
-        Collections.sort(alignments, Comparator.comparingInt(x -> x.adjustedSequenceStart()));
+        Collections.sort(alignments, Comparator.comparingInt(x -> x.sequenceStart()));
 
         String fullSequence = mAssemblyAlignment.fullSequence();
 
@@ -150,14 +150,14 @@ public class BreakendBuilder
 
             AlignData nextAlignment = alignments.get(i + 1);
 
-            if(alignment.adjustedSequenceEnd() >= nextAlignment.adjustedSequenceStart())
+            if(alignment.sequenceEnd() >= nextAlignment.sequenceStart())
             {
                 homology = HomologyData.determineHomology(alignment, nextAlignment, mRefGenome);
             }
             else
             {
-                int insertSeqStart = alignment.adjustedSequenceEnd() + 1;
-                int insertSeqEnd = nextAlignment.adjustedSequenceStart();
+                int insertSeqStart = alignment.sequenceEnd() + 1;
+                int insertSeqEnd = nextAlignment.sequenceStart();
                 insertedBases = fullSequence.substring(insertSeqStart, insertSeqEnd);
             }
 
@@ -167,7 +167,7 @@ public class BreakendBuilder
             mAssemblyAlignment.addBreakend(breakend);
 
             BreakendSegment segment = new BreakendSegment(
-                    mAssemblyAlignment.id(), mAssemblyAlignment.fullSequenceLength(), alignment.adjustedSequenceEnd(),
+                    mAssemblyAlignment.id(), mAssemblyAlignment.fullSequenceLength(), alignment.sequenceEnd(),
                     breakendOrientation, nextSegmentIndex++, alignment);
 
             breakend.addSegment(segment);
@@ -181,7 +181,7 @@ public class BreakendBuilder
             mAssemblyAlignment.addBreakend(nextBreakend);
 
             BreakendSegment nextSegment = new BreakendSegment(
-                    mAssemblyAlignment.id(), mAssemblyAlignment.fullSequenceLength(), nextAlignment.adjustedSequenceStart(),
+                    mAssemblyAlignment.id(), mAssemblyAlignment.fullSequenceLength(), nextAlignment.sequenceStart(),
                     nextOrientation, nextSegmentIndex++, nextAlignment);
 
             nextBreakend.addSegment(nextSegment);

@@ -71,7 +71,8 @@ public class RemoteGroupBuilder extends ThreadTask
     {
         if(mConfig.PerfDebug || mConfig.PerfLogTime > 0)
         {
-            SV_LOGGER.debug("remote phase group building stats: {}", mBuildStats);
+            // now appears inconsequential
+            // SV_LOGGER.debug("remote phase group building stats: {}", mBuildStats);
         }
     }
 
@@ -223,11 +224,6 @@ public class RemoteGroupBuilder extends ThreadTask
         return first.phaseGroup() != null && first.phaseGroup() == second.phaseGroup();
     }
 
-    private static boolean isAssemblyLower(final JunctionAssembly first, final JunctionAssembly second)
-    {
-        return first.junction().compareTo(second.junction()) < 0;
-    }
-
     private boolean assembliesShareReads(
             final RemoteRegion firstRegion, final JunctionAssembly second, int minSharedReads, boolean applyMatchThreshold)
     {
@@ -286,8 +282,7 @@ public class RemoteGroupBuilder extends ThreadTask
         return false;
     }
 
-    public static boolean hasMatchingFragment(
-            final List<SupportRead> support, final String readId, final RemoteBuildStats stats)
+    public static boolean hasMatchingFragment(final List<SupportRead> support, final String readId, final RemoteBuildStats stats)
     {
         for(SupportRead supportRead : support)
         {
@@ -329,24 +324,6 @@ public class RemoteGroupBuilder extends ThreadTask
             return (int)round(0.1 * maxChecks);
 
         return 50000;
-    }
-
-    public static boolean hasMatchingFragment(
-            final List<SupportRead> support, final SupportRead read, final RemoteBuildStats stats)
-    {
-        for(SupportRead supportRead : support)
-        {
-            ++stats.ReadChecks;
-
-            if(supportRead.id().equals(read.id()))
-            {
-                ++stats.ReadMatches;
-                return true;
-            }
-        }
-
-        stats.ReadNonMatches += support.size();
-        return false;
     }
 
     private List<JunctionGroup> findOverlappingJunctionGroups(final JunctionGroup assemblyJunctionGroup, final RemoteRegion region)
