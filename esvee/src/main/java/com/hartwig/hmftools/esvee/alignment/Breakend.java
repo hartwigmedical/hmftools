@@ -58,7 +58,6 @@ public class Breakend implements Comparable<Breakend>
     public List<AlignData> alternativeAlignments() { return mAlternativeAlignments; }
     public void setAlternativeAlignments(final List<AlignData> altAlignments) { mAlternativeAlignments = altAlignments; }
 
-    public void addBreakendSupport(final BreakendSupport breakendSupport) { mBreakendSupport.add(breakendSupport); }
     public List<BreakendSupport> sampleSupport() { return mBreakendSupport; }
 
     public StructuralVariantType svType()
@@ -69,6 +68,17 @@ public class Breakend implements Comparable<Breakend>
         return formSvType(
                 Chromosome, mOtherBreakend.Chromosome, Position, mOtherBreakend.Position,
                 Orientation, mOtherBreakend.Orientation, !InsertedBases.isEmpty());
+    }
+
+    public int calcSvQual()
+    {
+        int breakendQual = calcQual();
+        return mOtherBreakend != null ? breakendQual + mOtherBreakend.calcQual() : breakendQual;
+    }
+
+    public int calcQual()
+    {
+        return mSegments.stream().mapToInt(x -> x.calcQual()).max().orElse(0);
     }
 
     public Set<FilterType> filters() { return mFilters; }

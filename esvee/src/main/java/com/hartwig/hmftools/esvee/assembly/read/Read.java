@@ -159,13 +159,11 @@ public class Read
     public byte[] getBases() { return mBases != null ? mBases : mRecord.getReadBases(); }
     public byte[] getBaseQuality() { return mBaseQuals != null ? mBaseQuals : mRecord.getBaseQualities(); }
     public int  basesLength() { return mBases != null ? mBases.length : mRecord.getReadBases().length; }
-    public int insertSize() { return mRecord.getInferredInsertSize(); }
 
     // flags
     public int getFlags() { return mRecord.getFlags(); }
     public boolean isUnmapped() { return mRecord.getReadUnmappedFlag(); }
     public boolean isPairedRead() { return mRecord.getReadPairedFlag(); }
-    public boolean isFirstOfPair() { return mRecord.getReadPairedFlag() && mRecord.getFirstOfPairFlag(); }
 
     public boolean positiveStrand() { return !mRecord.getReadNegativeStrandFlag(); }
     public boolean negativeStrand() { return mRecord.getReadNegativeStrandFlag(); }

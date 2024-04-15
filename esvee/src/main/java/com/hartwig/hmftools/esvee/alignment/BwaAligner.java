@@ -19,16 +19,16 @@ public class BwaAligner implements Aligner
 {
     private final BwaMemAligner mAligner;
 
-    public BwaAligner(final AssemblyConfig config)
+    public BwaAligner(final String refGenomeImageFile)
     {
-        if(!config.RefGenomeImageFile.isEmpty() && Files.exists(Paths.get(config.RefGenomeImageFile)))
+        if(!refGenomeImageFile.isEmpty() && Files.exists(Paths.get(refGenomeImageFile)))
         {
             BwaMemIndex index = null;
 
             // TEMP: until can resolve local ARM library issues
             try
             {
-                index = new BwaMemIndex(config.RefGenomeImageFile);
+                index = new BwaMemIndex(refGenomeImageFile);
             }
             catch(Exception e)
             {

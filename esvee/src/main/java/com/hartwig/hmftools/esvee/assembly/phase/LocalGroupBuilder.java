@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DEL_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.isLocalAssemblyCandidate;
-import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragment;
 
 import java.util.Collections;
 import java.util.Comparator;

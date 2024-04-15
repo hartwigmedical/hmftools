@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.alignment;
 
+import static java.lang.Math.min;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
 public class BreakendSegment
@@ -22,6 +24,12 @@ public class BreakendSegment
         Orientation = orientation;
         Index = index;
         Alignment = alignment;
+    }
+
+    public int calcQual()
+    {
+        double lengthFactor = (Alignment.Score - Alignment.repeatTrimmedLength())/100.0;
+        return (int)round(Alignment.MapQual * min(1, lengthFactor));
     }
 
     public String toString()

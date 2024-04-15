@@ -117,8 +117,9 @@ public class AlignData
 
         String chromosome = refGenomeVersion.versionedChromosome(HumanChromosome.values()[chrIndex].toString());
 
+        // note the +1 to the ref start position
         return new AlignData(
-                new ChrBaseRegion(chromosome, alignment.getRefStart(), alignment.getRefEnd()),
+                new ChrBaseRegion(chromosome, alignment.getRefStart() + 1, alignment.getRefEnd()),
                 alignment.getSeqStart(), alignment.getSeqEnd(), alignment.getMapQual(), alignment.getAlignerScore(),
                 alignment.getSamFlag(), alignment.getCigar(), alignment.getNMismatches(), alignment.getXATag(), alignment.getMDTag());
     }

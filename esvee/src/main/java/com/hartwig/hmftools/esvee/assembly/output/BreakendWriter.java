@@ -56,9 +56,13 @@ public class BreakendWriter
             sj.add("MateChr").add("MatePos").add("MateOrient");
             sj.add("InsertedBases").add("Homology").add("ConfidenceInterval").add("InexactOffset");
 
-            sj.add("SplitFrags").add("DiscFrags");
-
             sj.add("Filters");
+
+            sj.add("Qual");
+            sj.add("SplitFragments");
+            sj.add("RefSplitFragments");
+            sj.add("DiscFragments");
+            sj.add("RefDiscFragments");
 
             sj.add("SequenceLength");
             sj.add("SegmentCount");
@@ -69,10 +73,7 @@ public class BreakendWriter
             sj.add("MapQual");
             sj.add("Score");
             sj.add("RepeatTrimLength");
-            sj.add("SplitFragments");
-            sj.add("RefSplitFragments");
-            sj.add("DiscFragments");
-            sj.add("RefDiscFragments");
+            sj.add("BreakendQual");
             sj.add("AltAlignments");
 
             if(mTruthsetAnnotation.enabled())
@@ -134,27 +135,9 @@ public class BreakendWriter
                     sj.add("").add("0-0").add("0-0");
                 }
 
-                int totalSplitFrags = breakend.sampleSupport().stream().mapToInt(x -> x.SplitFragments).sum();
-                int totalDiscFrags = breakend.sampleSupport().stream().mapToInt(x -> x.DiscordantFragments).sum();
-
-                sj.add(String.valueOf(totalSplitFrags));
-                sj.add(String.valueOf(totalDiscFrags));
-
                 sj.add(filtersAsStr(breakend.filters()));
 
-                // sj.add(String.valueOf(breakend.anchorLength()));
-                sj.add(String.valueOf(assemblyAlignment.fullSequenceLength()));
-
-                // for now just the first segment - no showing branching or duplicates
-                BreakendSegment segment = breakend.segments().get(0);
-                sj.add(String.valueOf(breakend.segments().size()));
-                sj.add(String.valueOf(segment.SequenceIndex));
-                sj.add(String.valueOf(segment.Orientation));
-                sj.add(String.valueOf(segment.Index));
-                sj.add(String.valueOf(segment.Alignment.alignedBases()));
-                sj.add(String.valueOf(segment.Alignment.MapQual));
-                sj.add(String.valueOf(segment.Alignment.Score));
-                sj.add(String.valueOf(segment.Alignment.repeatTrimmedLength()));
+                sj.add(String.valueOf(breakend.calcSvQual()));
 
                 int tumorCount = mConfig.TumorIds.size();
 
@@ -179,6 +162,21 @@ public class BreakendWriter
                 sj.add(String.valueOf(refSplitFrags));
                 sj.add(String.valueOf(discFrags));
                 sj.add(String.valueOf(refDiscFrags));
+
+                sj.add(String.valueOf(assemblyAlignment.fullSequenceLength()));
+
+                // for now just the first segment - no showing branching or duplicates
+                BreakendSegment segment = breakend.segments().get(0);
+                sj.add(String.valueOf(breakend.segments().size()));
+                sj.add(String.valueOf(segment.SequenceIndex));
+                sj.add(String.valueOf(segment.Orientation));
+                sj.add(String.valueOf(segment.Index));
+                sj.add(String.valueOf(segment.Alignment.alignedBases()));
+                sj.add(String.valueOf(segment.Alignment.MapQual));
+                sj.add(String.valueOf(segment.Alignment.Score));
+                sj.add(String.valueOf(segment.Alignment.repeatTrimmedLength()));
+
+                sj.add(String.valueOf(breakend.calcQual()));
 
                 String altAlignmentsStr = breakend.alternativeAlignments().stream()
                         .map(x -> x.altAlignmentStr()).collect(Collectors.joining(";"));

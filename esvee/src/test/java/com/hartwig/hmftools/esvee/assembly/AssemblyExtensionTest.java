@@ -38,7 +38,6 @@ public class AssemblyExtensionTest
         String existingRefBases = refBases.substring(20, 41);
         JunctionAssembly assembly = new JunctionAssembly(posJunction, existingRefBases.getBytes(), baseQuals, 10);
 
-        // FIXME: provide mock ref genome
         RefBaseAssembly refBaseAssembly = new RefBaseAssembly(assembly, 40, null);
 
         assertEquals(21, refBaseAssembly.baseLength());

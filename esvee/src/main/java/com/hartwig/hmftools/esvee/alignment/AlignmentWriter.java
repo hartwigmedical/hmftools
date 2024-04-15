@@ -145,6 +145,7 @@ public class AlignmentWriter
     public static final String FLD_SEQUENCE_COORDS = "SequenceCoords";
     public static final String FLD_MAP_QUAL = "MapQual";
     public static final String FLD_CIGAR = "Cigar";
+    public static final String FLD_ALIGNED_BASES = "AlignedBases";
     public static final String FLD_SCORE = "Score";
     public static final String FLD_FLAGS = "Flags";
     public static final String FLD_NMATCHES = "NMatches";
@@ -173,7 +174,7 @@ public class AlignmentWriter
             sj.add(FLD_MAP_QUAL);
             sj.add(FLD_CIGAR);
             sj.add(FLD_ORIENTATION);
-            sj.add("AlignedBases");
+            sj.add(FLD_ALIGNED_BASES);
             sj.add(FLD_SCORE);
             sj.add(FLD_FLAGS);
             sj.add(FLD_NMATCHES);

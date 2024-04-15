@@ -14,9 +14,8 @@ import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRAN
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LINKED;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.extendRefBases;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.tryAssemblyFacing;
-import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_REF;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_REF_MATCH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REGION;
-import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SHORT_INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.findMatchingFragmentSupport;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragment;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.assembliesShareReads;
@@ -104,13 +103,11 @@ public class PhaseSetBuilder
         JunctionAssembly assembly1 = mAssemblies.get(0);
         JunctionAssembly assembly2 = mAssemblies.get(1);
 
-        if(assembly1.outcome() == SHORT_INDEL || assembly2.outcome() == SHORT_INDEL)
-        {
-            // other than genuine local assemblies ie well-formed DELs and DUPs within the short bounds, don't attempt to form links
-            // if there is evidence that the reads and assembly relate to local short indels
-            if(!isLocalAssemblyCandidate(assembly1, assembly2))
-                return false;
-        }
+        /*
+        // check for local assemblies first
+        if(!isLocalAssemblyCandidate(assembly1, assembly2))
+            return false;
+        */
 
         AssemblyLink assemblyLink = checkSplitLink(assembly1, assembly2);
 
@@ -142,10 +139,10 @@ public class PhaseSetBuilder
         if(localRefLink == null)
             return false;
 
-        assembly.setOutcome(LOCAL_REF);
+        assembly.setOutcome(LOCAL_REF_MATCH);
 
         JunctionAssembly localRefAssembly = localRefLink.otherAssembly(assembly);
-        localRefAssembly.setOutcome(LOCAL_REF);
+        localRefAssembly.setOutcome(LOCAL_REF_MATCH);
 
         mPhaseGroup.addDerivedAssembly(localRefAssembly);
         mSplitLinks.add(localRefLink);
@@ -171,9 +168,6 @@ public class PhaseSetBuilder
                     continue;
 
                 boolean isLocalLink = isLocalAssemblyCandidate(assembly1, assembly2);
-
-                if(!isLocalLink && (assembly1.outcome() == SHORT_INDEL || assembly2.outcome() == SHORT_INDEL))
-                    continue;
 
                 int sharedCount = 0;
 

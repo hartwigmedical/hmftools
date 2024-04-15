@@ -283,7 +283,7 @@ public class JunctionProcessor
             return;
 
         boolean useCache = mConfig.AlignmentFile != null;
-        Alignment alignment = new Alignment(mConfig, !useCache ? new BwaAligner(mConfig) : null);
+        Alignment alignment = new Alignment(mConfig, !useCache ? new BwaAligner(mConfig.RefGenomeImageFile) : null);
         alignment.run(assemblyAlignments, mPerfCounters);
         alignment.close();
     }

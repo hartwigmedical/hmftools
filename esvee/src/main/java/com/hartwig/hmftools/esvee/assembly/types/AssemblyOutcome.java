@@ -5,11 +5,10 @@ public enum AssemblyOutcome
     UNSET,
     NO_LINK,
     LINKED, // 2 assemblies linked in a standard SV
-    SHORT_INDEL, // the assembly
     SECONDARY, // an assembly linked to an assembly which was primarily linked to another
     DUP_SPLIT, // the initial junction sequence was split due to significant mismatches
     DUP_BRANCHED, // an
-    LOCAL_REF, // an assembly linked to a local ref-genome sequence
+    LOCAL_REF_MATCH, // an assembly linked to a local ref-genome sequence as a DEL or DUP
     REMOTE_REGION, // an assembly matched one or more of its remote region read sequences
     SUPP_ONLY; // the assmebly comprised supplementary reads only
 

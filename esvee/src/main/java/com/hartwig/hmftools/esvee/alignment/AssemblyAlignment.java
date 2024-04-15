@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 
 public class AssemblyAlignment
 {
@@ -104,7 +105,11 @@ public class AssemblyAlignment
     private String formFullSequence()
     {
         if(mAssemblies.size() == 1)
-            return mAssemblies.get(0).formFullSequence();
+        {
+            JunctionAssembly assembly = mAssemblies.get(0);
+            assembly.support().forEach(x -> x.setLinkedAssemblyIndex(x.junctionAssemblyIndex()));
+            return assembly.formFullSequence();
+        }
 
         // factor in orientation and overlapping or inserted bases
         JunctionAssembly first, second;
@@ -121,7 +126,7 @@ public class AssemblyAlignment
             else
             {
                 first = mAssemblyLink.second();
-                second = mAssemblyLink.second();
+                second = mAssemblyLink.first();
             }
         }
         else
@@ -139,7 +144,7 @@ public class AssemblyAlignment
         int overlapLength = mAssemblyLink.overlapBases().length();
         String insertedBases = mAssemblyLink.insertedBases();
 
-        int fullSequenceLength = first.baseLength() + second.baseLength() + insertedBases.length() - overlapLength;
+        int fullSequenceLength = first.refBaseLength() + second.refBaseLength() + insertedBases.length() - overlapLength;
 
         StringBuilder fullSequence = new StringBuilder(fullSequenceLength);
 
@@ -151,6 +156,37 @@ public class AssemblyAlignment
         String secondSequence = secondReversed ? Nucleotides.reverseComplementBases(second.formRefBaseSequence()) : second.formRefBaseSequence();
 
         fullSequence.append(overlapLength > 0 ? secondSequence.substring(overlapLength) : secondSequence);
+
+        // set full assembly indices for all supporting reads, so they can be tested
+        for(SupportRead read : first.support())
+        {
+            if(!firstReversed)
+            {
+                read.setLinkedAssemblyIndex(read.junctionAssemblyIndex());
+            }
+            else
+            {
+                int readEndIndex = read.junctionAssemblyIndex() + read.baseLength() - 1;
+                int invertedStartIndex = first.baseLength() - readEndIndex - 1;
+                read.setLinkedAssemblyIndex(invertedStartIndex);
+            }
+        }
+
+        int secondStartAdjustment = first.refBaseLength() + insertedBases.length() - overlapLength;
+
+        for(SupportRead read : second.support())
+        {
+            if(!secondReversed)
+            {
+                read.setLinkedAssemblyIndex(read.junctionAssemblyIndex() + secondStartAdjustment);
+            }
+            else
+            {
+                int readEndIndex = read.junctionAssemblyIndex() + read.baseLength() - 1;
+                int invertedIndexPosition = second.baseLength() - readEndIndex - 1;
+                read.setLinkedAssemblyIndex(invertedIndexPosition + secondStartAdjustment);
+            }
+        }
 
         return fullSequence.toString();
     }

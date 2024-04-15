@@ -82,6 +82,9 @@ public class PhaseSetTask extends ThreadTask
 
                 phaseSetBuilder.buildPhaseSets();
 
+                // now that all support has been added, set the supporting read indices for each assembly
+                phaseGroup.assemblies().forEach(x -> x.setReadIndices());
+
                 // also set phase set IDs
                 int phaseSetId = 0;
                 for(PhaseSet phaseSet : phaseGroup.phaseSets())

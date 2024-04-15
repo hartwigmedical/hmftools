@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly.types;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -20,7 +21,6 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
-import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -45,7 +45,7 @@ public class SupportRead
     private final int mMateAlignmentStart;
     private final int mMateAlignmentEnd;
     private final int mFlags;
-    private final int mInsertSize;
+    private final int mBaseLength;
 
     private final boolean mIsDiscordant;
     private final boolean mIsReference;
@@ -55,9 +55,12 @@ public class SupportRead
     private final SupplementaryReadData mSupplementaryData;
     private final int mMapQual;
     private final int mNumOfEvents;
+    private final int mInsertSize;
     private final int mTrimCount;
 
     private final int mJunctionReadIndex; // index within this read of the junction position
+    private int mJunctionAssemblyIndex; // index within this read's junction assembly if the read's start position
+    private int mLinkedAssemblyIndex; // index within this read's full linked assembly (if exists) if the read's start position
 
     // those past the junction
     private int mJunctionMatches;
@@ -90,8 +93,9 @@ public class SupportRead
         mSampleIndex = read.sampleIndex();
         mIsDiscordant = isDiscordantFragment(read);
         mSupplementaryData = read.supplementaryData();
+        mBaseLength = read.basesLength();
+        mInsertSize = abs(read.bamRecord().getInferredInsertSize());
         mTrimCount = read.baseTrimCount();
-        mInsertSize = read.insertSize();
         mMapQual = read.mappingQuality();
         mNumOfEvents = read.numberOfEvents();
 
@@ -99,6 +103,8 @@ public class SupportRead
         mJunctionMatches = matches;
         mJunctionMismatches = mismatches;
         mReferenceMismatches = 0;
+        mJunctionAssemblyIndex = -1;
+        mLinkedAssemblyIndex = -1;
 
         mRead = read;
     }
@@ -114,9 +120,19 @@ public class SupportRead
     public String mateChromosome() { return mMateChromosome; }
     public int mateAlignmentStart() { return mMateAlignmentStart; }
     public int mateAlignmentEnd() { return mMateAlignmentEnd; }
+    public int baseLength() { return mBaseLength; }
+    public int insertSize() { return mInsertSize; }
+    public int trimCount() { return mTrimCount; }
     public String cigar() { return mCigar; }
+    public byte orientation() { return isFlagSet(READ_REVERSE_STRAND) ? NEG_ORIENT : POS_ORIENT; }
+    public SupplementaryReadData supplementaryData() { return mSupplementaryData; }
+    public int mapQual() { return mMapQual; }
+    public int numOfEvents() { return mNumOfEvents; }
+
     public boolean isReference() { return mIsReference; }
     public int sampleIndex() { return mSampleIndex; }
+
+    public int flags() { return mFlags; }
     public boolean isSupplementary() { return isFlagSet(SUPPLEMENTARY_ALIGNMENT); }
     public boolean isPairedRead() { return isFlagSet(READ_PAIRED); }
     public boolean isMateUnmapped() { return isFlagSet(MATE_UNMAPPED); }
@@ -124,13 +140,6 @@ public class SupportRead
     public boolean isDiscordant() { return mIsDiscordant; }
 
     public boolean isFlagSet(final SAMFlag flag) { return SamRecordUtils.isFlagSet(mFlags, flag); }
-    public byte orientation() { return isFlagSet(READ_REVERSE_STRAND) ? NEG_ORIENT : POS_ORIENT; }
-    public SupplementaryReadData supplementaryData() { return mSupplementaryData; }
-    public int flags() { return mFlags; }
-    public int insertSize() { return mTrimCount; }
-    public int mapQual() { return mMapQual; }
-    public int numOfEvents() { return mNumOfEvents; }
-    public int trimCount() { return mTrimCount; }
 
     public boolean matchesFragment(final SupportRead other) { return mId.equals(other.id()); }
 
@@ -140,6 +149,12 @@ public class SupportRead
     public Read cachedRead() { return mRead; }
 
     public int junctionReadIndex() { return mJunctionReadIndex; }
+
+    public void setJunctionAssemblyIndex(int index) { mJunctionAssemblyIndex = index; }
+    public int junctionAssemblyIndex() { return mJunctionAssemblyIndex; }
+
+    public void setLinkedAssemblyIndex(int index) { mLinkedAssemblyIndex = index; }
+    public int linkedAssemblyIndex() { return mLinkedAssemblyIndex; }
 
     public int mismatchCount() { return mJunctionMismatches + mReferenceMismatches; }
     public int junctionMismatches() { return mJunctionMismatches; }
@@ -159,8 +174,8 @@ public class SupportRead
 
     public String toString()
     {
-        return format("type(%s) read(%s %d-%d %s) juncIndex(%d) hqMatch(%d) mismatch(junc=%d ref=%d)",
-                mType, mId, mAlignmentStart, mAlignmentEnd, mCigar,
-                mJunctionReadIndex, mJunctionMatches, mJunctionMismatches, mReferenceMismatches);
+        return format("type(%s) read(%s %d-%d %s) index(junc=%d asm=%d linked=%s) hqMatch(%d) mismatch(junc=%d ref=%d)",
+                mType, mId, mAlignmentStart, mAlignmentEnd, mCigar, mJunctionReadIndex, mJunctionAssemblyIndex, mLinkedAssemblyIndex,
+                mJunctionMatches, mJunctionMismatches, mReferenceMismatches);
     }
 }
