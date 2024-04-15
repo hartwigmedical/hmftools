@@ -89,6 +89,7 @@ public class AlignData
     public int rightSoftClipLength() { return mSoftClipRight; }
     public int alignedBases() { return mAlignedBases; }
     public int repeatTrimmedLength() { return mRepeatTrimmedLength; }
+    public int segmentLength() { return mAdjustedSequenceEnd - mAdjustedSequenceStart + 1; }
 
     public void setFullSequenceData(final String fullSequence, final int fullSequenceLength)
     {
@@ -103,6 +104,8 @@ public class AlignData
 
         if(repeats != null)
             mRepeatTrimmedLength = calcTrimmedBaseLength(0, alignedBases.length() - 1, repeats);
+        else
+            mRepeatTrimmedLength = alignedBases.length();
     }
 
     public int adjustedSequenceStart() { return mAdjustedSequenceStart; }

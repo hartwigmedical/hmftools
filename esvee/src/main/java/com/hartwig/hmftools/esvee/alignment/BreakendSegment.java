@@ -28,7 +28,8 @@ public class BreakendSegment
 
     public int calcQual()
     {
-        double lengthFactor = (Alignment.Score - Alignment.repeatTrimmedLength())/100.0;
+        int repeatAdjustment = Alignment.segmentLength() - Alignment.repeatTrimmedLength();
+        double lengthFactor = (Alignment.Score - repeatAdjustment)/100.0;
         return (int)round(Alignment.MapQual * min(1, lengthFactor));
     }
 

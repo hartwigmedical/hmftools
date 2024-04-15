@@ -95,14 +95,14 @@ public class BreakendBuilder
         mAssemblyAlignment.addBreakend(breakend);
     }
 
-    private void checkOuterSingle(final AlignData alignment, boolean checkStart)
+    private boolean checkOuterSingle(final AlignData alignment, boolean checkStart, int nextSegmentIndex)
     {
         byte sglOrientation = segmentOrientation(alignment, checkStart);
 
         int softClipLength = checkStart ? alignment.leftSoftClipLength() : alignment.rightSoftClipLength();
 
         if(softClipLength < ALIGNMENT_MIN_SOFT_CLIP)
-            return;
+            return false;
 
         String fullSequence = mAssemblyAlignment.fullSequence();
         int fullSequenceLength = mAssemblyAlignment.fullSequenceLength();
@@ -116,11 +116,13 @@ public class BreakendBuilder
                 alignment.RefLocation.Chromosome, sglPosition, sglOrientation, insertSequence, null);
 
         BreakendSegment segment = new BreakendSegment(
-                mAssemblyAlignment.id(), fullSequenceLength, alignment.adjustedSequenceStart(), sglOrientation, 0, alignment);
+                mAssemblyAlignment.id(), fullSequenceLength, alignment.adjustedSequenceStart(), sglOrientation, nextSegmentIndex, alignment);
 
         breakend.addSegment(segment);
 
         mAssemblyAlignment.addBreakend(breakend);
+
+        return true;
     }
 
     private void formMultipleBreakends(final List<AlignData> alignments)
@@ -130,8 +132,11 @@ public class BreakendBuilder
 
         String fullSequence = mAssemblyAlignment.fullSequence();
 
+        int nextSegmentIndex = 0;
+
         // check for a single at the start or end
-        checkOuterSingle(alignments.get(0), true);
+        if(checkOuterSingle(alignments.get(0), true, nextSegmentIndex))
+            nextSegmentIndex++;
 
         for(int i = 0; i < alignments.size() - 1; ++i)
         {
@@ -163,7 +168,7 @@ public class BreakendBuilder
 
             BreakendSegment segment = new BreakendSegment(
                     mAssemblyAlignment.id(), mAssemblyAlignment.fullSequenceLength(), alignment.adjustedSequenceEnd(),
-                    breakendOrientation, i, alignment);
+                    breakendOrientation, nextSegmentIndex++, alignment);
 
             breakend.addSegment(segment);
 
@@ -177,7 +182,7 @@ public class BreakendBuilder
 
             BreakendSegment nextSegment = new BreakendSegment(
                     mAssemblyAlignment.id(), mAssemblyAlignment.fullSequenceLength(), nextAlignment.adjustedSequenceStart(),
-                    nextOrientation, i + 1, nextAlignment);
+                    nextOrientation, nextSegmentIndex++, nextAlignment);
 
             nextBreakend.addSegment(nextSegment);
 
@@ -185,7 +190,7 @@ public class BreakendBuilder
             nextBreakend.setOtherBreakend(breakend);
         }
 
-        checkOuterSingle(alignments.get(alignments.size() - 1), false);
+        checkOuterSingle(alignments.get(alignments.size() - 1), false, nextSegmentIndex);
     }
 
     protected static byte segmentOrientation(final AlignData alignment, boolean linksEnd)

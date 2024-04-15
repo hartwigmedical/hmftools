@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.readQualFromJunc
 import static com.hartwig.hmftools.esvee.assembly.ExtensionSeqBuilder.calcReadSequenceMismatches;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.convertedIndelCrossesJunction;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findInsertedBases;
-import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_REF_MATCH;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REGION;
@@ -611,7 +611,7 @@ public class JunctionAssembly
 
     public void setOutcome(final AssemblyOutcome outcome)
     {
-        if(mOutcome != REMOTE_REGION && mOutcome != LOCAL_REF_MATCH) // persist classification for now
+        if(mOutcome != REMOTE_REGION && mOutcome != LOCAL_INDEL) // persist classification for now
             mOutcome = outcome;
     }
 

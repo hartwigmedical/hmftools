@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.DUP_BRAN
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LINKED;
 import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.extendRefBases;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.tryAssemblyFacing;
-import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_REF_MATCH;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REGION;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.findMatchingFragmentSupport;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragment;
@@ -139,10 +139,10 @@ public class PhaseSetBuilder
         if(localRefLink == null)
             return false;
 
-        assembly.setOutcome(LOCAL_REF_MATCH);
+        assembly.setOutcome(LOCAL_INDEL);
 
         JunctionAssembly localRefAssembly = localRefLink.otherAssembly(assembly);
-        localRefAssembly.setOutcome(LOCAL_REF_MATCH);
+        localRefAssembly.setOutcome(LOCAL_INDEL);
 
         mPhaseGroup.addDerivedAssembly(localRefAssembly);
         mSplitLinks.add(localRefLink);

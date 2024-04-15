@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -175,6 +176,29 @@ public class Alignment
         {
             BreakendBuilder breakendBuilder = new BreakendBuilder(mConfig.RefGenome, assemblyAlignment);
             breakendBuilder.formBreakends(alignments);
+
+            for(JunctionAssembly assembly : assemblyAlignment.assemblies())
+            {
+                boolean matched = false;
+
+                for(Breakend breakend : assemblyAlignment.breakends())
+                {
+                    if(breakend.matches(assembly.junction().Chromosome, assembly.junction().Position, assembly.junction().Orientation))
+                    {
+                        assembly.setAlignmentOutcome(AlignmentOutcome.MATCH);
+                        matched = true;
+                        break;
+                    }
+                }
+
+                if(!matched)
+                    assembly.setAlignmentOutcome(AlignmentOutcome.NO_MATCH);
+            }
+
+            if(assemblyAlignment.breakends().isEmpty())
+                assemblyAlignment.assemblies().forEach(x -> x.setAlignmentOutcome(AlignmentOutcome.NO_RESULT));
+
+
             allocateSupport(assemblyAlignment);
         }
 
@@ -186,7 +210,7 @@ public class Alignment
 
             for(Breakend breakend : assemblyAlignment.breakends())
             {
-                // TODO: rather than use the genome position of a read vs the aligned breakend position, use its position in the assembly
+                // rather than use the genome position of a read vs the aligned breakend position, use its position in the assembly
                 List<BreakendSupport> sampleSupport = breakend.sampleSupport();
 
                 combinedSampleIds.forEach(x -> sampleSupport.add(new BreakendSupport()));
@@ -206,17 +230,10 @@ public class Alignment
 
                         BreakendSupport support = sampleSupport.get(read.sampleIndex());
 
-                        if(read.unclippedStart() < breakend.Position && read.unclippedEnd() > breakend.Position)
-                        {
+                        if(breakend.readSpansJunction(read, false))
                             isSplitFragment = true;
-                        }
                         else
-                        {
-                            if(breakend.Orientation == POS_ORIENT)
-                                isDiscFragment = read.alignmentEnd() <= breakend.Position;
-                            else
-                                isDiscFragment = read.alignmentStart() >= breakend.Position;
-                        }
+                            isDiscFragment = true;
 
                         if((!isSplitFragment && !isDiscFragment))
                             continue;
