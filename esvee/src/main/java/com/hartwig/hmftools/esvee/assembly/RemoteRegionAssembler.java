@@ -75,9 +75,6 @@ public class RemoteRegionAssembler
 
         for(SupportRead support : assembly.support())
         {
-            // if(support.read().isReference()) // for now no reference support
-            //    return false;
-
             if(support.type() != SupportType.JUNCTION)
                 continue;
 
@@ -385,6 +382,9 @@ public class RemoteRegionAssembler
                 byte[] remoteRefBaseQuals = createMinBaseQuals(remoteRefBases.length);
 
                 remoteRefSeq = new JunctionSequence(remoteRefBases, remoteRefBaseQuals, mRemoteRegion.orientation(), initialRemoteRefSeq.Reversed);
+
+                if(mRemoteRegion.isForward())
+                    remoteJunctionIndex = remoteRefBases.length - 1;;
             }
         }
         else
@@ -415,7 +415,7 @@ public class RemoteRegionAssembler
         Junction remoteJunction = new Junction(mRemoteRegion.Chromosome, remoteJunctionPosition, mRemoteRegion.orientation());
 
         JunctionAssembly remoteAssembly = new JunctionAssembly(
-                remoteJunction, refGenomeBases, refBaseQuals, remoteSupport, Lists.newArrayList());
+                remoteJunction, remoteRefSeq.originalBases(), remoteRefSeq.originalBaseQuals(), remoteSupport, Lists.newArrayList());
 
         remoteAssembly.setJunctionIndex(remoteJunctionIndex);
 

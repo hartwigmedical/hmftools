@@ -142,6 +142,9 @@ public class JunctionSequence
         return mJunctionSeqIndexEnd;
     }
 
+    public byte[] originalBases() { return mOriginalBases; }
+    public byte[] originalBaseQuals() { return mOriginalBaseQuals; }
+
     public byte[] bases()
     {
         if(!Reversed)

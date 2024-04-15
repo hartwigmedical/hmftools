@@ -187,8 +187,8 @@ public class BwaTester
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        configBuilder.addPath(INPUT_FILE, true, "Input VCF");
-        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output BED");
+        configBuilder.addPath(INPUT_FILE, true, "Input regions and sequences");
+        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output file with alignment results");
         ConfigUtils.addLoggingOptions(configBuilder);
         addRefGenomeFile(configBuilder, true);
 

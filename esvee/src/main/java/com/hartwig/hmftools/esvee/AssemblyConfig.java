@@ -33,12 +33,13 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFil
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.alignment.BwaAligner.loadAlignerLibrary;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ALIGNMENT;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ALIGNMENT_DATA;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.fromConfig;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formOutputFile;
 import static com.hartwig.hmftools.esvee.common.SvConstants.ESVEE_FILE_ID;
 import static com.hartwig.hmftools.esvee.common.SvConstants.FILE_NAME_DELIM;
 import static com.hartwig.hmftools.esvee.common.SvConstants.PREP_FILE_ID;
-import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_BAM;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.VCF;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTIONS_FILE_ID;
@@ -182,10 +183,6 @@ public class AssemblyConfig
             }
         }
 
-        ProcessDiscordant = configBuilder.hasFlag(PROCESS_DISCORDANT);
-
-        WriteTypes = fromConfig(configBuilder.getValue(WRITE_TYPES));
-
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
@@ -204,6 +201,15 @@ public class AssemblyConfig
         if(RunAlignment || DecoyGenome != null)
             loadAlignerLibrary(null); // or load path from config
 
+        WriteTypes = fromConfig(configBuilder.getValue(WRITE_TYPES));
+
+        if(!RunAlignment)
+        {
+            WriteTypes.remove(ALIGNMENT);
+            WriteTypes.remove(ALIGNMENT_DATA);
+        }
+
+        ProcessDiscordant = configBuilder.hasFlag(PROCESS_DISCORDANT);
         BamStringency = ValidationStringency.STRICT;
 
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;

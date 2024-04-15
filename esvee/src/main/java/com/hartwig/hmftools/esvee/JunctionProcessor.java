@@ -6,8 +6,9 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
-import static com.hartwig.hmftools.esvee.alignment.Alignment.skipJunctionAssembly;
+import static com.hartwig.hmftools.esvee.alignment.Alignment.skipUnlinkedJunctionAssembly;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
+import static com.hartwig.hmftools.esvee.assembly.types.LinkType.FACING;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
 import static com.hartwig.hmftools.esvee.assembly.types.JunctionGroup.buildJunctionGroups;
@@ -53,7 +54,6 @@ import com.hartwig.hmftools.esvee.assembly.output.WriteType;
 import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.output.VcfWriter;
 import com.hartwig.hmftools.esvee.assembly.read.ReadStats;
-import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
 public class JunctionProcessor
 {
@@ -323,13 +323,14 @@ public class JunctionProcessor
                 {
                     for(AssemblyLink assemblyLink : phaseSet.assemblyLinks())
                     {
-                        assemblyAlignments.add(new AssemblyAlignment(assemblyAlignmentId++, assemblyLink));
+                        if(assemblyLink.type() != FACING)
+                            assemblyAlignments.add(new AssemblyAlignment(assemblyAlignmentId++, assemblyLink));
                     }
                 }
 
                 for(JunctionAssembly assembly : phaseGroup.assemblies())
                 {
-                    if(assembly.phaseSet() == null && !skipJunctionAssembly(assembly))
+                    if(assembly.phaseSet() == null && !skipUnlinkedJunctionAssembly(assembly))
                         assemblyAlignments.add(new AssemblyAlignment(assemblyAlignmentId++, assembly));
                 }
             }

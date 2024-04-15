@@ -48,12 +48,13 @@ public class BreakendWriter
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
             // sj.add("Id");
+            sj.add("PhaseGroupId");
             sj.add("AssemblyId");
             sj.add("AssemblyInfo");
 
             sj.add("Type").add("Chromosome").add("Position").add("Orientation");
 
-            sj.add("MateChr").add("MatePos").add("MateOrient");
+            sj.add("MateChr").add("MatePos").add("MateOrient").add("Length");
             sj.add("InsertedBases").add("Homology").add("ConfidenceInterval").add("InexactOffset");
 
             sj.add("Filters");
@@ -103,6 +104,7 @@ public class BreakendWriter
             for(Breakend breakend : assemblyAlignment.breakends())
             {
                 StringJoiner sj = new StringJoiner(TSV_DELIM);
+                sj.add(String.valueOf(assemblyAlignment.assemblies().get(0).phaseGroup().id()));
                 sj.add(String.valueOf(assemblyAlignment.id()));
                 sj.add(assemblyInfo);
                 sj.add(String.valueOf(breakend.svType()));
@@ -115,11 +117,12 @@ public class BreakendWriter
                     sj.add(breakend.otherBreakend().Chromosome);
                     sj.add(String.valueOf(breakend.otherBreakend().Position));
                     sj.add(String.valueOf(breakend.otherBreakend().Orientation));
+                    sj.add(String.valueOf(breakend.svLength()));
 
                 }
                 else
                 {
-                    sj.add("").add("").add("");
+                    sj.add("").add("").add("").add("0");
                 }
 
                 sj.add(breakend.InsertedBases);

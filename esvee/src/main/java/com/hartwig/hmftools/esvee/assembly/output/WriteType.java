@@ -15,7 +15,7 @@ public enum WriteType
     BREAKEND("breakend.tsv"),
     VCF("esvee.vcf.gz"),
     ALIGNMENT("alignment.tsv"),
-    ALIGNMENT_DETAILED("align_detailed.tsv"),
+    ALIGNMENT_DATA("align_detailed.tsv"),
     DECOY_MATCHES("decoy_matches.tsv"),
     PHASE_GROUP_BUILDING("phase_group_building.tsv");
 

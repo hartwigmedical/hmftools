@@ -178,6 +178,7 @@ public class AssemblyAlignment
         {
             if(!secondReversed)
             {
+                // FIXME: needs to factor in no extension bases
                 read.setLinkedAssemblyIndex(read.junctionAssemblyIndex() + secondStartAdjustment);
             }
             else
@@ -218,5 +219,8 @@ public class AssemblyAlignment
         return sb.toString();
     }
 
-    public String toString() { return info(); }
+    public String toString()
+    {
+        return format("%s length(%d) breakends(%d)", info(), mFullSequenceLength, mBreakends.size());
+    }
 }

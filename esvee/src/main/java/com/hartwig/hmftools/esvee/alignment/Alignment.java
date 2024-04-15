@@ -2,7 +2,6 @@ package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -47,12 +46,13 @@ public class Alignment
 
     public void close() { mWriter.close(); }
 
-    public static boolean skipJunctionAssembly(final JunctionAssembly assembly)
+    public static boolean skipUnlinkedJunctionAssembly(final JunctionAssembly assembly)
     {
         // apply filters on what to bother aligning
         if(assembly.outcome() == AssemblyOutcome.DUP_BRANCHED
         || assembly.outcome() == AssemblyOutcome.DUP_SPLIT
-        || assembly.outcome() == AssemblyOutcome.SECONDARY)
+        || assembly.outcome() == AssemblyOutcome.SECONDARY
+        || assembly.outcome() == AssemblyOutcome.REMOTE_REGION)
         {
             // since identical to or associated with other links
             return true;
@@ -263,11 +263,13 @@ public class Alignment
             {
                 for(Breakend breakend : fragmentSupport.Breakends)
                 {
+                    boolean allowDiscordantSupport = !breakend.isShortLocalDelDupIns();
+
                     BreakendSupport support = breakend.sampleSupport().get(fragmentSupport.SampleIndex);
 
                     if(fragmentSupport.IsSplit)
                         ++support.SplitFragments;
-                    else
+                    else if(allowDiscordantSupport)
                         ++support.DiscordantFragments;
                 }
             }

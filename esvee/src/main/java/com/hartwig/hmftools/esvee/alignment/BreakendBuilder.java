@@ -97,9 +97,10 @@ public class BreakendBuilder
 
     private boolean checkOuterSingle(final AlignData alignment, boolean checkStart, int nextSegmentIndex)
     {
-        byte sglOrientation = segmentOrientation(alignment, checkStart);
+        // switch the reference coord and CIGAR end being check if the segment was reverse aligned
+        boolean sqlRefEnd = alignment.orientation() == POS_ORIENT ? checkStart : !checkStart;
 
-        int softClipLength = checkStart ? alignment.leftSoftClipLength() : alignment.rightSoftClipLength();
+        int softClipLength = sqlRefEnd ? alignment.leftSoftClipLength() : alignment.rightSoftClipLength();
 
         if(softClipLength < ALIGNMENT_MIN_SOFT_CLIP)
             return false;
@@ -107,10 +108,12 @@ public class BreakendBuilder
         String fullSequence = mAssemblyAlignment.fullSequence();
         int fullSequenceLength = mAssemblyAlignment.fullSequenceLength();
 
-        int sglPosition = checkStart ? alignment.RefLocation.start() : alignment.RefLocation.end();
+        int sglPosition = sqlRefEnd ? alignment.RefLocation.start() : alignment.RefLocation.end();
 
         String insertSequence = checkStart ?
                 fullSequence.substring(0, softClipLength) : fullSequence.substring(fullSequenceLength - softClipLength);
+
+        byte sglOrientation = segmentOrientation(alignment, checkStart);
 
         Breakend breakend = new Breakend(
                 alignment.RefLocation.Chromosome, sglPosition, sglOrientation, insertSequence, null);
@@ -143,7 +146,7 @@ public class BreakendBuilder
             AlignData alignment = alignments.get(i);
 
             byte breakendOrientation = segmentOrientation(alignment, true);
-            int breakendPosition = alignment.RefLocation.end();
+            int breakendPosition = alignment.isForward() ? alignment.RefLocation.end() : alignment.RefLocation.start();
 
             HomologyData homology = null;
             String insertedBases = "";
@@ -173,7 +176,7 @@ public class BreakendBuilder
             breakend.addSegment(segment);
 
             byte nextOrientation = segmentOrientation(nextAlignment, false);
-            int nextPosition = nextAlignment.RefLocation.start();
+            int nextPosition = nextAlignment.isForward() ? nextAlignment.RefLocation.start() : nextAlignment.RefLocation.end();
 
             Breakend nextBreakend = new Breakend(
                     nextAlignment.RefLocation.Chromosome, nextPosition, nextOrientation, insertedBases, homology);

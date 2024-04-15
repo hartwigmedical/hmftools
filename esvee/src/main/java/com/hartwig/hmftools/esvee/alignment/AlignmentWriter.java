@@ -154,7 +154,7 @@ public class AlignmentWriter
 
     private BufferedWriter initialiseDetailedWriter(final AssemblyConfig config)
     {
-        if(!config.WriteTypes.contains(WriteType.ALIGNMENT_DETAILED))
+        if(!config.WriteTypes.contains(WriteType.ALIGNMENT_DATA))
             return null;
 
         if(config.OutputDir == null)
@@ -162,7 +162,7 @@ public class AlignmentWriter
 
         try
         {
-            BufferedWriter writer = createBufferedWriter(config.outputFilename(WriteType.ALIGNMENT_DETAILED));
+            BufferedWriter writer = createBufferedWriter(config.outputFilename(WriteType.ALIGNMENT_DATA));
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 

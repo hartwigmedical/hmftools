@@ -80,10 +80,9 @@ public class AlignData
         mRepeatTrimmedLength = mAlignedBases;
     }
 
-    public byte orientation()
-    {
-        return mOrientation;
-    }
+    public byte orientation() { return mOrientation; }
+    public boolean isForward() { return mOrientation == POS_ORIENT; }
+    public boolean isReverse() { return mOrientation == NEG_ORIENT; }
 
     public int maxSoftClipLength() { return max(mSoftClipLeft, mSoftClipRight); }
     public int leftSoftClipLength() { return mSoftClipLeft; }
@@ -96,7 +95,7 @@ public class AlignData
     {
         if(mOrientation == NEG_ORIENT)
         {
-            int newSequenceStart = (fullSequenceLength - 1) - mSequenceEnd;
+            int newSequenceStart = (fullSequenceLength - 1) - (mRawSequenceEnd - 1);
             int newSequenceEnd = (fullSequenceLength - 1) - mSequenceStart;
 
             mSequenceStart = max(newSequenceStart, 0);
@@ -156,8 +155,8 @@ public class AlignData
 
     public String toString()
     {
-        return format("%s %s seq(%d-%d adj=%d-%d) score(%d) mq(%d) flags(%d) aligned(%d trim=%d)",
-                RefLocation, Cigar, mRawSequenceStart, mRawSequenceEnd, mSequenceStart, mSequenceEnd, Score, MapQual, Flags,
-                mAlignedBases, mRepeatTrimmedLength);
+        return format("%s %s %s seq(%d-%d adj=%d-%d) score(%d) mq(%d) flags(%d) aligned(%d trim=%d)",
+                RefLocation, Cigar, mOrientation == POS_ORIENT ? "fwd" : "rev",  mRawSequenceStart, mRawSequenceEnd,
+                mSequenceStart, mSequenceEnd, Score, MapQual, Flags, mAlignedBases, mRepeatTrimmedLength);
     }
 }

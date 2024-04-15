@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.esvee.alignment;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.SHORT_DEL_DUP_INS_LENGTH;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
 
@@ -70,6 +75,24 @@ public class Breakend implements Comparable<Breakend>
         return formSvType(
                 Chromosome, mOtherBreakend.Chromosome, Position, mOtherBreakend.Position,
                 Orientation, mOtherBreakend.Orientation, !InsertedBases.isEmpty());
+    }
+
+    public int svLength()
+    {
+        if(mOtherBreakend == null || !mOtherBreakend.Chromosome.equals(Chromosome))
+            return 0;
+
+        return abs(Position - mOtherBreakend.Position);
+    }
+
+    public boolean isShortLocalDelDupIns()
+    {
+        StructuralVariantType type = svType();
+
+        if(type == DEL || type == DUP || type == INS)
+            return svLength() <= SHORT_DEL_DUP_INS_LENGTH;
+        else
+            return false;
     }
 
     public int calcSvQual()
