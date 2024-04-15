@@ -71,7 +71,7 @@ public class StructuralVariantPrep implements CategoryPrep
 
             for(SvDataType type : SvDataType.values())
             {
-                dataItems.add(new DataItem(DNA, ItemType.SV_COUNT, type.toString(), String.valueOf(svDataCounts[type.ordinal()])));
+                dataItems.add(new DataItem(DNA, ItemType.SV_COUNT, type.toString(), svDataCounts[type.ordinal()]));
             }
 
             return dataItems;
