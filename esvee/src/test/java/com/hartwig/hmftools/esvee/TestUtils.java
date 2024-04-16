@@ -50,6 +50,14 @@ public class TestUtils
     // index 0         10        20        30        40        50        60        70        80        90
           + "GTGGCCTTAAACGTCCCAAAATTTTGGGGACGTGGGGGCCCCCAAAATTTTACGTCCGGTTAAACGTTTTCCCGGGAAAACGTAACCGGTTGGCCAAGCT";
 
+    public static String REF_BASES_400 =
+            "AGTGTCGCGAATGCTGATTCGGAACCTTGATCGTGATGTCGATGGCTAGATCAAATCGTCTAGTGGCTAATGCTCGATCGATATGGCTTGATCGTGAGTC"
+    //       0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+    // index 0         10        20        30        40        50        60        70        80        90
+          + "GGGCTGATGATGTTGATCGTAGTGCTAGTGATCGTAGTTGCCAAATGCTGTTGCCCTGTAGCTGATTGGCTAGCTGTAGCTGATCGATGCAATCCGGTAG"
+          + "TGTAGCTGATCGCAGGTCGAACCTGGTGATCGATGTCGATCGACTGATGTAGTAGCTGATCGGATGCATGCGTAGCGATGCTAGCTGATCGATTGGCTAA"
+          + "GTCGCTTCCGGTATTTGCGTTCCGGGTTTTTTCCGAGCCTACCCCAGTTGGTTAAAAGGATATTATATATATGGCGGCTATATATGCGGTGTGTGTAACC";
+
     public static void loadRefGenomeBases(final MockRefGenome refGenome, final String testFilename)
     {
         List<String> lines = new BufferedReader(new InputStreamReader(
@@ -83,7 +91,9 @@ public class TestUtils
         int baseLength = assemblyBases.length();
         byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(baseLength);
 
-        return new JunctionAssembly(junction, assemblyBases.getBytes(), baseQuals, junctionIndex);
+        JunctionAssembly assembly = new JunctionAssembly(junction, assemblyBases.getBytes(), baseQuals, junctionIndex);
+        assembly.buildRepeatInfo();
+        return assembly;
     }
 
     public static Read createRead(final String readId, int readStart, final String readBases, final String cigar)
@@ -91,6 +101,20 @@ public class TestUtils
         SAMRecord record = SamRecordTestUtils.createSamRecord(
                 readId, CHR_1, readStart, readBases, cigar, CHR_1, readStart + 1000,
                 false, false, null);
+        return new Read(record);
+    }
+
+    public static Read createRead(
+            final String readId, final String chromosome, int readStart, final String readBases, final String cigar,
+            final String mateChr, int mateStart, boolean mateReversed)
+    {
+        SAMRecord record = SamRecordTestUtils.createSamRecord(
+                readId, chromosome, readStart, readBases, cigar, mateChr, mateStart,
+                false, false, null);
+
+        if(mateReversed)
+            record.setMateNegativeStrandFlag(true);
+
         return new Read(record);
     }
 
@@ -251,7 +275,7 @@ public class TestUtils
 
         while(currentLength < length)
         {
-            String nextSegment = REF_BASES_200.substring(currentIndex, currentIndex + maxSegmentLength)
+            String nextSegment = REF_BASES_400.substring(currentIndex, currentIndex + maxSegmentLength)
                     + MockRefGenome.generateRandomBases(10);
 
             if(nextSegment.length() + currentLength > length)
@@ -262,7 +286,7 @@ public class TestUtils
 
             ++currentIndex;
 
-            if(currentIndex + maxSegmentLength > REF_BASES_200.length())
+            if(currentIndex + maxSegmentLength > REF_BASES_400.length())
                 currentIndex = 0;
         }
 

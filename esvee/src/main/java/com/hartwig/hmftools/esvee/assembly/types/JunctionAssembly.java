@@ -223,8 +223,12 @@ public class JunctionAssembly
             }
         }
 
-        mismatchCount = calcReadSequenceMismatches(
-                mJunction.isForward(), mBases, mBaseQuals, mRepeatInfo, read, readJunctionIndex, permittedMismatches);
+        if(mismatchCount > permittedMismatches)
+        {
+            // test again taking repeats into consideration
+            mismatchCount = calcReadSequenceMismatches(
+                    mJunction.isForward(), mBases, mBaseQuals, mRepeatInfo, read, readJunctionIndex, permittedMismatches);
+        }
 
         if(mismatchCount > permittedMismatches)
             return false;
@@ -830,9 +834,11 @@ public class JunctionAssembly
     }
 
     @VisibleForTesting
-    public void addJunctionRead(final Read read, boolean registerMismatches)
+    public void addJunctionRead(final Read read)
     {
-        SupportRead support = new SupportRead(read, JUNCTION, 0, 0, 0);
+        int junctionReadIndex = mJunction.Position - read.unclippedStart();
+
+        SupportRead support = new SupportRead(read, JUNCTION, junctionReadIndex, read.basesLength(), 0);
         mSupport.add(support);
         mStats.addRead(support, mJunction, read);
     }

@@ -51,11 +51,11 @@ public class PhaseGroupTest
         JunctionAssembly posAssembly1 = new JunctionAssembly(posJunction1, assemblyBases.getBytes(), baseQuals, 50);
 
         Read read1 = createConcordantRead(READ_ID_GENERATOR.nextId(), 50, assemblyBases, "50M50S", 250);
-        posAssembly1.addJunctionRead(read1, false);
+        posAssembly1.addJunctionRead(read1);
 
         JunctionAssembly negAssembly1 = new JunctionAssembly(negJunction1, assemblyBases.getBytes(), baseQuals, 50);
         Read read2 = createConcordantRead(READ_ID_GENERATOR.nextId(), 200, assemblyBases, "50S50M", 10);
-        negAssembly1.addJunctionRead(read2, false);
+        negAssembly1.addJunctionRead(read2);
 
         JunctionAssembly posAssembly2 = new JunctionAssembly(posJunction2, assemblyBases.getBytes(), baseQuals, 50);
         JunctionAssembly negAssembly2 = new JunctionAssembly(negJunction2, assemblyBases.getBytes(), baseQuals, 50);
@@ -63,20 +63,20 @@ public class PhaseGroupTest
         JunctionAssembly posAssembly3 = new JunctionAssembly(posJunction3, assemblyBases.getBytes(), baseQuals, 50);
 
         Read read3 = createConcordantRead(READ_ID_GENERATOR.nextId(), 3950, assemblyBases, "50M50S", 4800);
-        posAssembly3.addJunctionRead(read3, false);
+        posAssembly3.addJunctionRead(read3);
 
         JunctionAssembly negAssembly3 = new JunctionAssembly(negJunction3, assemblyBases.getBytes(), baseQuals, 50);
         Read read4 = createConcordantRead(READ_ID_GENERATOR.nextId(), 4200, assemblyBases, "50S50M", 3500);
-        negAssembly3.addJunctionRead(read4, false);
+        negAssembly3.addJunctionRead(read4);
 
         JunctionAssembly posAssembly4 = new JunctionAssembly(posJunction4, assemblyBases.getBytes(), baseQuals, 50);
 
         Read read5 = createConcordantRead(READ_ID_GENERATOR.nextId(), 4550, assemblyBases, "50M50S", 4200);
-        posAssembly4.addJunctionRead(read5, false);
+        posAssembly4.addJunctionRead(read5);
 
         JunctionAssembly negAssembly4 = new JunctionAssembly(negJunction4, assemblyBases.getBytes(), baseQuals, 50);
         Read read6 = createConcordantRead(READ_ID_GENERATOR.nextId(), 4500, assemblyBases, "50S50M", 4200);
-        negAssembly4.addJunctionRead(read6, false);
+        negAssembly4.addJunctionRead(read6);
 
         Queue<JunctionGroup> junctionGroups = new ConcurrentLinkedQueue<>();
         PhaseGroupBuildWriter writer = new PhaseGroupBuildWriter(TEST_CONFIG);

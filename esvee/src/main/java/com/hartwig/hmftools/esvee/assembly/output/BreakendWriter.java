@@ -64,6 +64,8 @@ public class BreakendWriter
             sj.add("RefSplitFragments");
             sj.add("DiscFragments");
             sj.add("RefDiscFragments");
+            sj.add("ForwardReads");
+            sj.add("ReverseReads");
 
             sj.add("SequenceLength");
             sj.add("SegmentCount");
@@ -148,6 +150,8 @@ public class BreakendWriter
                 int refSplitFrags = 0;
                 int discFrags = 0;
                 int refDiscFrags = 0;
+                int forwardReads = 0;
+                int reverseReads = 0;
 
                 for(int i = 0; i < breakend.sampleSupport().size(); ++i)
                 {
@@ -159,12 +163,17 @@ public class BreakendWriter
                         refSplitFrags += breakend.sampleSupport().get(i).SplitFragments;
                         refDiscFrags += breakend.sampleSupport().get(i).DiscordantFragments;
                     }
+
+                    forwardReads += breakend.sampleSupport().get(i).ForwardReads;
+                    reverseReads += breakend.sampleSupport().get(i).ReverseReads;
                 }
 
                 sj.add(String.valueOf(splitFrags));
                 sj.add(String.valueOf(refSplitFrags));
                 sj.add(String.valueOf(discFrags));
                 sj.add(String.valueOf(refDiscFrags));
+                sj.add(String.valueOf(forwardReads));
+                sj.add(String.valueOf(reverseReads));
 
                 sj.add(String.valueOf(assemblyAlignment.fullSequenceLength()));
 

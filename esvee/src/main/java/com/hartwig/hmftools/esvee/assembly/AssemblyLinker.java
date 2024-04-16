@@ -225,8 +225,8 @@ public final class AssemblyLinker
                 firstReversed = true;
         }
 
-        firstSeq = new JunctionSequence(first, firstReversed, PHASED_ASSEMBLY_JUNCTION_OVERLAP);
-        secondSeq = new JunctionSequence(second, secondReversed, PHASED_ASSEMBLY_JUNCTION_OVERLAP);
+        firstSeq = new JunctionSequence(first, firstReversed);
+        secondSeq = new JunctionSequence(second, secondReversed);
 
         // start with a simple comparison looking for the first sequence around its junction in the second
         String firstJunctionSequence = firstSeq.junctionSequence();
@@ -310,7 +310,7 @@ public final class AssemblyLinker
             int firstIndexStart = firstJuncIndexStart + firstSeq.junctionSeqStartIndex();
             int firstIndexEnd = min(firstJuncIndexEnd + firstSeq.junctionSeqStartIndex(), firstSeq.BaseLength - 1);
 
-            if(secondIndexEnd - secondIndexStart  < minOverlapLength || firstIndexEnd - firstIndexStart  < minOverlapLength)
+            if(secondIndexEnd - secondIndexStart + 1 < minOverlapLength || firstIndexEnd - firstIndexStart + 1 < minOverlapLength)
                 continue;
 
             int mismatchCount = SequenceCompare.compareSequences(

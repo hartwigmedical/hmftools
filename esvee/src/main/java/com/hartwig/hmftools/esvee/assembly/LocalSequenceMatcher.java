@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.LOCAL_ASSEMBLY_REF_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_JUNCTION_OVERLAP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.formLink;
@@ -44,7 +45,7 @@ public class LocalSequenceMatcher
 
         byte[] refBaseQuals = createMinBaseQuals(refGenomeBases.length);
 
-        JunctionSequence assemblySeq = new JunctionSequence(assembly, false, -1);
+        JunctionSequence assemblySeq = new JunctionSequence(assembly, false, PHASED_ASSEMBLY_JUNCTION_OVERLAP, -1);
 
         byte localRefOrientation = assembly.isForwardJunction() ? NEG_ORIENT : POS_ORIENT;
         JunctionSequence localRefSeq = new JunctionSequence(refGenomeBases, refBaseQuals, localRefOrientation, false);
@@ -130,7 +131,7 @@ public class LocalSequenceMatcher
             int assemblyIndexStart = assemblyJuncIndexStart + assemblySeq.junctionSeqStartIndex();
             int assemblyIndexEnd = min(assemblyJuncIndexEnd + assemblySeq.junctionSeqStartIndex(), assemblySeq.BaseLength - 1);
 
-            if(refIndexEnd - refIndexStart  < minOverlapLength || assemblyIndexEnd - assemblyIndexStart  < minOverlapLength)
+            if(refIndexEnd - refIndexStart + 1 < minOverlapLength || assemblyIndexEnd - assemblyIndexStart + 1 < minOverlapLength)
                 continue;
 
             int mismatchCount = SequenceCompare.compareSequences(
@@ -181,14 +182,11 @@ public class LocalSequenceMatcher
 
         byte[] refGenomeBases = mRefGenome.getBases(assembly.junction().Chromosome, localRefSeqStart, localRefSeqEnd);
         byte[] refBaseQuals = createMinBaseQuals(refGenomeBases.length);
-        JunctionSequence localRefSeq = new JunctionSequence(refGenomeBases, refBaseQuals, localRefOrientation, false);
 
         JunctionAssembly localRefAssembly = new JunctionAssembly(
                 localRefJunction, refGenomeBases, refBaseQuals, Lists.newArrayList(), Lists.newArrayList());
 
         localRefAssembly.setJunctionIndex(localRefJunctionIndex);
-
-        // localRefAssembly.buildRepeatInfo();
 
         return new AssemblyLink(assembly, localRefAssembly, LinkType.SPLIT, localRefJunctionIndex, "", "");
     }

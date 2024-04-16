@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.codon.Nucleotides;
 public class JunctionSequence
 {
     public final boolean Reversed;
-        public final String FullSequence;
+    public final String FullSequence;
 
     public final int ExtensionLength;
     public final int RefBaseLength; // may be capped
@@ -35,7 +35,13 @@ public class JunctionSequence
     private byte[] mBases;
     private byte[] mBaseQuals;
 
-    public JunctionSequence(final JunctionAssembly assembly, final boolean reverseCompliment, final int maxJuncSeqExtensionLength)
+    public JunctionSequence(final JunctionAssembly assembly, final boolean reverseCompliment)
+    {
+        this(assembly, reverseCompliment, PHASED_ASSEMBLY_JUNCTION_OVERLAP, PHASED_ASSEMBLY_JUNCTION_OVERLAP);
+    }
+
+    public JunctionSequence(
+            final JunctionAssembly assembly, final boolean reverseCompliment, final int maxJuncSeqRefBaseLength, final int maxJuncSeqExtensionLength)
     {
         mOriginalBases = assembly.bases();
         mOriginalBaseQuals = assembly.baseQuals();
@@ -63,7 +69,7 @@ public class JunctionSequence
 
         // also make a shorter sequence centred around the junction
         int juncSeqExtLength = maxJuncSeqExtensionLength > 0 ? min(ExtensionLength, maxJuncSeqExtensionLength) : ExtensionLength;
-        int juncSeqRefLength = min(RefBaseLength, PHASED_ASSEMBLY_JUNCTION_OVERLAP);
+        int juncSeqRefLength = min(RefBaseLength, maxJuncSeqRefBaseLength);
 
         int juncIndexStart, juncIndexEnd;
 
@@ -132,11 +138,7 @@ public class JunctionSequence
         return FullSequence.substring(junctionSeqStartIndex(), junctionSeqEndIndex() + 1);
     }
 
-    public int junctionSeqStartIndex()
-    {
-        return mJunctionSeqIndexStart;
-    }
-
+    public int junctionSeqStartIndex() { return mJunctionSeqIndexStart; }
     public int junctionSeqEndIndex()
     {
         return mJunctionSeqIndexEnd;

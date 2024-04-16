@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFra
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -202,7 +203,7 @@ public class RemoteRegionAssembler
                 assemblyReversed = true;
         }
 
-        JunctionSequence assemblySeq = new JunctionSequence(assembly, assemblyReversed, -1);
+        JunctionSequence assemblySeq = new JunctionSequence(assembly, assemblyReversed, 0, -1);
 
         JunctionSequence remoteRefSeq = new JunctionSequence(refGenomeBases, refBaseQuals, mRemoteRegion.orientation(), remoteReversed);
 
@@ -280,7 +281,7 @@ public class RemoteRegionAssembler
             int firstIndexStart = firstJuncIndexStart + assemblySeq.junctionSeqStartIndex();
             int firstIndexEnd = min(firstJuncIndexEnd + assemblySeq.junctionSeqStartIndex(), assemblySeq.BaseLength - 1);
 
-            if(secondIndexEnd - secondIndexStart  < minOverlapLength || firstIndexEnd - firstIndexStart  < minOverlapLength)
+            if(secondIndexEnd - secondIndexStart + 1 < minOverlapLength || firstIndexEnd - firstIndexStart + 1 < minOverlapLength)
                 continue;
 
             int mismatchCount = SequenceCompare.compareSequences(
@@ -294,7 +295,7 @@ public class RemoteRegionAssembler
             // now that the index in the remote ref sequence has a match and it is clear where this is in the assembly's extension sequence,
             // the implied junction position in the remote can be determined
             return formLinkWithRemote(
-                    assembly, assemblySeq, remoteRefSeq, refGenomeBases, refBaseQuals, remoteRegionStart, remoteRegionEnd,
+                    assembly, assemblySeq, remoteRefSeq, refGenomeBases, remoteRegionStart, remoteRegionEnd,
                     firstIndexStart, secondIndexStart);
         }
 
@@ -303,21 +304,12 @@ public class RemoteRegionAssembler
 
     private AssemblyLink formLinkWithRemote(
             final JunctionAssembly assembly, final JunctionSequence assemblySeq, final JunctionSequence initialRemoteRefSeq,
-            final byte[] refGenomeBases, final byte[] refBaseQuals, final int remoteRegionStart, final  int remoteRegionEnd,
-            int firstIndexStart, int secondIndexStart)
+            final byte[] refGenomeBases, final int remoteRegionStart, final  int remoteRegionEnd,
+            int firstJuncSeqIndexStart, int secondIndexStart)
     {
         // use the start position of the match to infer where the junction may be in the remote location despite there not being any junction
         // spanning reads at that position
-        int assemblyMatchJunctionOffset;
-        if(assemblySeq.Reversed)
-        {
-            int assemblyJuncIndex = assembly.baseLength() - assembly.junctionIndex();
-            assemblyMatchJunctionOffset = firstIndexStart - assemblyJuncIndex;
-        }
-        else
-        {
-            assemblyMatchJunctionOffset = assembly.junctionIndex() - firstIndexStart;
-        }
+        int assemblyMatchJunctionOffset = firstJuncSeqIndexStart - assemblySeq.junctionSeqStartIndex();
 
         int remoteJunctionPosition, remoteJunctionIndex;
 
@@ -370,7 +362,7 @@ public class RemoteRegionAssembler
 
             if(secondIndexInFirst >= 0)
             {
-                firstIndexStart = assemblySeq.junctionSeqStartIndex();
+                firstJuncSeqIndexStart = assemblySeq.junctionSeqStartIndex();
 
                 if(!mRemoteRegion.isForward())
                     secondIndexStart = 0;
@@ -421,7 +413,14 @@ public class RemoteRegionAssembler
 
         remoteAssembly.buildRepeatInfo();
 
-        return formLink(assembly, remoteAssembly, assemblySeq, remoteRefSeq, firstIndexStart, secondIndexStart, false);
+        return formLink(assembly, remoteAssembly, assemblySeq, remoteRefSeq, firstJuncSeqIndexStart, secondIndexStart, false);
+    }
 
+    @VisibleForTesting
+    public void addMatchedReads(final List<Read> reads, final RemoteRegion remoteRegion)
+    {
+        mRemoteRegion = remoteRegion;
+        mMatchedRemoteReads.clear();
+        mMatchedRemoteReads.addAll(reads);
     }
 }
