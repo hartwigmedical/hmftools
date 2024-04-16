@@ -7,6 +7,9 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REMOTE_REGION_WEAK_SUPP_PERCENT;
+import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.DISCORDANT;
+import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.JUNCTION_MATE;
+import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.SUPPLEMENTARY;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -21,33 +24,29 @@ public class RemoteRegion extends ChrBaseRegion
     private final byte mOrientation;
     private final Set<String> mReadIds; // used to link with remote assemblies, and note is trimmed to match ID in SupportRead
 
-    public static final int REMOTE_READ_TYPE_JUNCTION_MATE = 0;
-    public static final int REMOTE_READ_TYPE_JUNCTION_SUPP = 1;
-    public static final int REMOTE_READ_TYPE_DISCORDANT_READ = 2;
-
     private final int[] mReadTypeCount;
     private int mSoftClipMapQualTotal; // from reads with supplementaries
 
-    public RemoteRegion(final ChrBaseRegion region, final byte orientation, final String readId, final int readType)
+    public RemoteRegion(final ChrBaseRegion region, final byte orientation, final String readId, final RemoteReadType readType)
     {
         super(region.Chromosome, region.start(), region.end());
         mOrientation = orientation;
 
         mReadIds = Sets.newHashSet(READ_ID_TRIMMER.trim(readId));
 
-        mReadTypeCount = new int[REMOTE_READ_TYPE_DISCORDANT_READ+1];
-        ++mReadTypeCount[readType];
+        mReadTypeCount = new int[RemoteReadType.values().length];
+        ++mReadTypeCount[readType.ordinal()];
 
         mSoftClipMapQualTotal = 0;
     }
 
-    public void addReadDetails(final String readId, final int posStart, final int posEnd, final int readType)
+    public void addReadDetails(final String readId, final int posStart, final int posEnd, final RemoteReadType readType)
     {
         setStart(min(start(), posStart));
         setEnd(max(end(), posEnd));
 
         mReadIds.add(READ_ID_TRIMMER.trim(readId));
-        ++mReadTypeCount[readType];
+        ++mReadTypeCount[readType.ordinal()];
     }
 
     public byte orientation() { return mOrientation; }
@@ -60,7 +59,7 @@ public class RemoteRegion extends ChrBaseRegion
 
     public int nonSuppReadCount()
     {
-        return mReadTypeCount[REMOTE_READ_TYPE_JUNCTION_MATE] + mReadTypeCount[REMOTE_READ_TYPE_DISCORDANT_READ];
+        return mReadTypeCount[JUNCTION_MATE.ordinal()] + mReadTypeCount[DISCORDANT.ordinal()];
     }
 
     public boolean isSuppOnlyRegion() { return nonSuppReadCount() == 0; }
@@ -78,8 +77,8 @@ public class RemoteRegion extends ChrBaseRegion
     public String toString()
     {
         return format("%s orient(%d) reads(%d) counts(mate=%d supp=%d disc=%d) softClipMapQual(%d)",
-                super.toString(), mOrientation, mReadIds.size(), mReadTypeCount[REMOTE_READ_TYPE_JUNCTION_MATE],
-                mReadTypeCount[REMOTE_READ_TYPE_JUNCTION_SUPP], mReadTypeCount[REMOTE_READ_TYPE_DISCORDANT_READ], mSoftClipMapQualTotal);
+                super.toString(), mOrientation, mReadIds.size(), mReadTypeCount[RemoteReadType.DISCORDANT.ordinal()],
+                mReadTypeCount[SUPPLEMENTARY.ordinal()], mReadTypeCount[DISCORDANT.ordinal()], mSoftClipMapQualTotal);
     }
 
     public static void mergeRegions(final List<RemoteRegion> regions)

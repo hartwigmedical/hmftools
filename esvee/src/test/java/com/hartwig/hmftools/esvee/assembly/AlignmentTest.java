@@ -6,7 +6,12 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
+import static com.hartwig.hmftools.esvee.alignment.HomologyData.determineHomology;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.setReadFlag;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
@@ -17,6 +22,7 @@ import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.alignment.AlignData;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.BreakendBuilder;
+import com.hartwig.hmftools.esvee.alignment.HomologyData;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -49,8 +55,29 @@ public class AlignmentTest
     @Test
     public void testHomology()
     {
+        AlignData alignmentStart = createAlignment(CHR_1, 100, 150, 0, 50, "51M");
+        AlignData alignmentEnd = createAlignment(CHR_1, 100, 150, 51, 100, "50M");
 
+        assertNull(determineHomology(alignmentStart, alignmentEnd, mRefGenome));
 
+        String basesStart = "TTCTAGTGTG";
+        HomologyData homology = determineHomology(basesStart, basesStart, basesStart.length());
+        assertNotNull(homology);
+        assertEquals(basesStart, homology.Homology);
+        assertEquals(-5, homology.ExactStart);
+        assertEquals(5, homology.ExactEnd);
+        assertEquals(0, homology.InexactStart);
+        assertEquals(0, homology.InexactEnd);
+
+        String basesEnd = "TTCTAAAAAA";
+
+        homology = determineHomology(basesStart, basesEnd, basesStart.length());
+        assertNotNull(homology);
+        assertEquals("TTCTA", homology.Homology);
+        assertEquals(-2, homology.ExactStart);
+        assertEquals(3, homology.ExactEnd);
+        assertEquals(0, homology.InexactStart);
+        assertEquals(5, homology.InexactEnd);
     }
 
     @Test

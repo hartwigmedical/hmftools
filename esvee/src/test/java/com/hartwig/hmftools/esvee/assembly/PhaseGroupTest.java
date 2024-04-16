@@ -1,23 +1,32 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_CONFIG;
+import static com.hartwig.hmftools.esvee.TestUtils.createAssembly;
 import static com.hartwig.hmftools.esvee.TestUtils.createConcordantRead;
+import static com.hartwig.hmftools.esvee.TestUtils.createRead;
+import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.DISCORDANT;
+import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.JUNCTION_MATE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.esvee.assembly.phase.RemoteGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionGroup;
@@ -25,6 +34,7 @@ import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.output.PhaseGroupBuildWriter;
 import com.hartwig.hmftools.esvee.assembly.phase.LocalGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
 
 import org.junit.Test;
 
@@ -112,5 +122,125 @@ public class PhaseGroupTest
         assertEquals(3, phaseGroup.assemblyCount());
         assertTrue(phaseGroup.assemblies().contains(negAssembly3));
         assertTrue(phaseGroup.assemblies().contains(negAssembly4));
+    }
+
+    @Test
+    public void testRemotePhaseGroupBuilding()
+    {
+        Queue<JunctionGroup> junctionGroups = new ConcurrentLinkedQueue<>();
+        PhaseGroupBuildWriter writer = new PhaseGroupBuildWriter(TEST_CONFIG);
+
+        Map<String,List<JunctionGroup>> junctionGroupMap = Maps.newHashMap();
+
+        String assemblyBases = REF_BASES_200.substring(0, 50);
+        JunctionAssembly assembly1 = createAssembly(CHR_1, 100, POS_ORIENT, assemblyBases, 25);
+        JunctionAssembly assembly2 = createAssembly(CHR_1, 500, POS_ORIENT, assemblyBases, 25);
+        JunctionAssembly assembly3 = createAssembly(CHR_1, 4100, POS_ORIENT, assemblyBases, 25);
+        JunctionAssembly assembly4 = createAssembly(CHR_1, 6100, POS_ORIENT, assemblyBases, 25);
+        JunctionAssembly assembly5 = createAssembly(CHR_1, 6500, POS_ORIENT, assemblyBases, 25);
+
+        JunctionGroup junctionGroup1 = new JunctionGroup(assembly1.junction());
+        junctionGroup1.addJunction(assembly2.junction());
+        junctionGroup1.addJunctionAssemblies(List.of(assembly1, assembly2));
+
+        JunctionGroup junctionGroup2 = new JunctionGroup(assembly3.junction());
+        junctionGroup2.addJunctionAssemblies(List.of(assembly3));
+
+        JunctionGroup junctionGroup3 = new JunctionGroup(assembly4.junction());
+        junctionGroup3.addJunction(assembly5.junction());
+        junctionGroup3.addJunctionAssemblies(List.of(assembly4, assembly5));
+
+        junctionGroupMap.put(CHR_1, List.of(junctionGroup1, junctionGroup2, junctionGroup3));
+
+        JunctionAssembly assembly6 = createAssembly(CHR_2, 100, NEG_ORIENT, assemblyBases, 25);
+        JunctionAssembly assembly7 = createAssembly(CHR_2, 500, NEG_ORIENT, assemblyBases, 25);
+        JunctionAssembly assembly8 = createAssembly(CHR_2, 4100, NEG_ORIENT, assemblyBases, 25);
+        JunctionAssembly assembly9 = createAssembly(CHR_2, 6100, NEG_ORIENT, assemblyBases, 25);
+        JunctionAssembly assembly10 = createAssembly(CHR_2, 6500, NEG_ORIENT, assemblyBases, 25);
+
+        JunctionGroup junctionGroup4 = new JunctionGroup(assembly6.junction());
+        junctionGroup4.addJunction(assembly7.junction());
+        junctionGroup4.addJunctionAssemblies(List.of(assembly6, assembly7));
+
+        JunctionGroup junctionGroup5 = new JunctionGroup(assembly8.junction());
+        junctionGroup5.addJunctionAssemblies(List.of(assembly1, assembly8));
+
+        JunctionGroup junctionGroup6 = new JunctionGroup(assembly9.junction());
+        junctionGroup6.addJunction(assembly10.junction());
+        junctionGroup6.addJunctionAssemblies(List.of(assembly9, assembly10));
+
+        junctionGroupMap.put(CHR_2, List.of(junctionGroup4, junctionGroup5, junctionGroup6));
+
+        junctionGroupMap.values().stream().forEach(x -> junctionGroups.addAll(x));
+
+        RemoteGroupBuilder remoteGroupBuilder = new RemoteGroupBuilder(TEST_CONFIG, junctionGroups, junctionGroupMap, writer);
+
+        remoteGroupBuilder.run();
+
+        Set<PhaseGroup> phaseGroups = remoteGroupBuilder.phaseGroups();
+
+        assertEquals(0, phaseGroups.size());
+
+        // now run again with links between the groups
+
+        String readId1 = READ_ID_GENERATOR.nextId();
+        String readId2 = READ_ID_GENERATOR.nextId();
+        String readId3 = READ_ID_GENERATOR.nextId();
+
+        // sufficient linking criteria
+        RemoteRegion region1 = new RemoteRegion(
+                new ChrBaseRegion(CHR_1, 6000, 6200), POS_ORIENT, readId1, DISCORDANT);
+        region1.addReadDetails(readId2, 6000, 6100, JUNCTION_MATE);
+
+        RemoteRegion region1b = new RemoteRegion(
+                new ChrBaseRegion(CHR_2, 6000, 6100), POS_ORIENT, readId3, DISCORDANT);
+        assembly1.addRemoteRegions(List.of(region1, region1b));
+
+        assembly4.addJunctionRead(createRead(readId1, 6000, assemblyBases, "50M"));
+        assembly4.addJunctionRead(createRead(readId2, 6000, assemblyBases, "50M"));
+
+        // insufficient read count overlap
+        assembly10.addJunctionRead(createRead(readId3, 6000, assemblyBases, "50M"));
+
+        // link between 3 assemblies
+        String readId4 = READ_ID_GENERATOR.nextId();
+        String readId5 = READ_ID_GENERATOR.nextId();
+        String readId6 = READ_ID_GENERATOR.nextId();
+        String readId7 = READ_ID_GENERATOR.nextId();
+
+        RemoteRegion region2 = new RemoteRegion(
+                new ChrBaseRegion(CHR_2, 4000, 4200), POS_ORIENT, readId4, DISCORDANT);
+        region2.addReadDetails(readId5, 4000, 4100, JUNCTION_MATE);
+        assembly3.addRemoteRegions(List.of(region2));
+
+        assembly8.addJunctionRead(createRead(readId4, 6000, assemblyBases, "50M"));
+        assembly8.addJunctionRead(createRead(readId5, 6000, assemblyBases, "50M"));
+
+        RemoteRegion region3 = new RemoteRegion(
+                new ChrBaseRegion(CHR_1, 450, 600), POS_ORIENT, readId6, DISCORDANT);
+        region3.addReadDetails(readId7, 450, 600, JUNCTION_MATE);
+        assembly8.addRemoteRegions(List.of(region3));
+
+        assembly2.addJunctionRead(createRead(readId6, 500, assemblyBases, "50M"));
+        assembly2.addJunctionRead(createRead(readId7, 500, assemblyBases, "50M"));
+
+
+        junctionGroupMap.values().stream().forEach(x -> junctionGroups.addAll(x));
+        remoteGroupBuilder = new RemoteGroupBuilder(TEST_CONFIG, junctionGroups, junctionGroupMap, writer);
+        remoteGroupBuilder.run();
+
+        phaseGroups = remoteGroupBuilder.phaseGroups();
+
+        assertEquals(2, phaseGroups.size());
+
+        PhaseGroup phaseGroup = phaseGroups.stream().filter(x -> x.assemblies().contains(assembly1)).findFirst().orElse(null);
+        assertNotNull(phaseGroup);
+        assertTrue(phaseGroup.assemblies().contains(assembly4));
+
+        phaseGroup = phaseGroups.stream().filter(x -> x.assemblies().contains(assembly3)).findFirst().orElse(null);
+        assertNotNull(phaseGroup);
+        assertEquals(3, phaseGroup.assemblyCount());
+        assertTrue(phaseGroup.assemblies().contains(assembly2));
+        assertTrue(phaseGroup.assemblies().contains(assembly8));
     }
 }

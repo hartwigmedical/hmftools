@@ -42,6 +42,11 @@ public class HomologyData
             basesEnd = Nucleotides.reverseComplementBases(basesEnd);
         }
 
+        return determineHomology(basesStart, basesEnd, overlap);
+    }
+
+    public static HomologyData determineHomology(final String basesStart, final String basesEnd, final int overlap)
+    {
         int exactMatch = 0;
         StringBuilder sb = new StringBuilder();
 

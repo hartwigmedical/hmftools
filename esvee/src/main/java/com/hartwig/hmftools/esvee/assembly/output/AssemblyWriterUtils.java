@@ -4,9 +4,6 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.REMOTE_READ_TYPE_DISCORDANT_READ;
-import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_MATE;
-import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.REMOTE_READ_TYPE_JUNCTION_SUPP;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
 
 import java.util.Collections;
@@ -18,6 +15,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.assembly.types.RemoteReadType;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
@@ -279,9 +277,9 @@ public final class AssemblyWriterUtils
 
         for(RemoteRegion region : assembly.remoteRegions())
         {
-            remoteJunctMate += region.readTypeCounts()[REMOTE_READ_TYPE_JUNCTION_MATE];
-            remoteJunctSupp += region.readTypeCounts()[REMOTE_READ_TYPE_JUNCTION_SUPP];
-            remoteDiscordant += region.readTypeCounts()[REMOTE_READ_TYPE_DISCORDANT_READ];
+            remoteJunctMate += region.readTypeCounts()[RemoteReadType.JUNCTION_MATE.ordinal()];
+            remoteJunctSupp += region.readTypeCounts()[RemoteReadType.SUPPLEMENTARY.ordinal()];
+            remoteDiscordant += region.readTypeCounts()[RemoteReadType.DISCORDANT.ordinal()];
         }
 
         sj.add(String.valueOf(remoteJunctMate));

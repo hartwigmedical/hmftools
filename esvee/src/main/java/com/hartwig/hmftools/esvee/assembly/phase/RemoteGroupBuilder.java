@@ -232,6 +232,9 @@ public class RemoteGroupBuilder extends ThreadTask
         int firstReadCount = firstRegion.readIds().size();
         int secondReadCount = second.supportCount() + second.candidateSupport().size();
 
+        if(firstReadCount < minSharedReads || secondReadCount < minSharedReads)
+            return false;
+
         int maxMatchChecks = applyMatchThreshold ?
                 calculateMaxFragmentCheckThreshold(firstReadCount, secondReadCount) : NO_FRAG_CHECK_THRESHOLD;
 

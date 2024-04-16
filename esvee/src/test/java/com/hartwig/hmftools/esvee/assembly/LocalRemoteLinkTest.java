@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.esvee.TestUtils.createAssembly;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.formTestRefSequence;
 import static com.hartwig.hmftools.esvee.assembly.RemoteRegionAssembler.isExtensionCandidateAssembly;
-import static com.hartwig.hmftools.esvee.assembly.types.RemoteRegion.REMOTE_READ_TYPE_DISCORDANT_READ;
+import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.DISCORDANT;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -110,7 +110,7 @@ public class LocalRemoteLinkTest
         Read remoteRead = createRead(READ_ID_GENERATOR.nextId(), 200, refGenome.getBaseString(CHR_2, 200, 300), "100M");
 
         RemoteRegion remoteRegion = new RemoteRegion(
-                new ChrBaseRegion(CHR_2, 200, 300), NEG_ORIENT, remoteRead.id(), REMOTE_READ_TYPE_DISCORDANT_READ);
+                new ChrBaseRegion(CHR_2, 200, 300), NEG_ORIENT, remoteRead.id(), DISCORDANT);
 
         remoteRegionAssembler.addMatchedReads(List.of(remoteRead), remoteRegion);
 
