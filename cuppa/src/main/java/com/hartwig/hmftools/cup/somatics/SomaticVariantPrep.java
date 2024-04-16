@@ -34,6 +34,8 @@ public class SomaticVariantPrep implements CategoryPrep
 {
     private final PrepConfig mConfig;
 
+    private static final String FLOAT_FORMAT_SIG_ALLOCATION = "%.1f";
+
     private final List<SomaticVariant> mVariants = new ArrayList<>();
     private final List<DataItem> mDataItems = new ArrayList<>();
 
@@ -87,14 +89,14 @@ public class SomaticVariantPrep implements CategoryPrep
 
             mTotalSnvCount += count;
 
-            DataItem dataItem = new DataItem(DNA, ItemType.SNV96, bucketName, String.valueOf(count));
+            DataItem dataItem = new DataItem(DNA, ItemType.SNV96, bucketName, count);
             mDataItems.add(dataItem);
         }
     }
 
     private void getSnvCount()
     {
-        DataItem dataItem = new DataItem(DNA, ItemType.TUMOR_MUTATIONAL_BURDEN, SampleTraitType.SNV_COUNT.getAlias(), String.valueOf(mTotalSnvCount));
+        DataItem dataItem = new DataItem(DNA, ItemType.TUMOR_MUTATIONAL_BURDEN, SampleTraitType.SNV_COUNT.getAlias(), mTotalSnvCount);
         mDataItems.add(dataItem);
     }
 
@@ -112,7 +114,7 @@ public class SomaticVariantPrep implements CategoryPrep
             int position = getPositionFromIndex(mPosFrequencies.chromosomePosIndex(), chromosome, b, mPosFrequencies.getBucketSize());
             String keyName = format("%s_%d", chromosome, position);
 
-            DataItem dataItem = new DataItem(DNA, ItemType.GEN_POS, keyName, String.valueOf(genPosCount[b]));
+            DataItem dataItem = new DataItem(DNA, ItemType.GEN_POS, keyName, genPosCount[b]);
             mDataItems.add(dataItem);
         }
     }
@@ -143,7 +145,7 @@ public class SomaticVariantPrep implements CategoryPrep
                 sigAllocation += reportedAllocations.get(SIG_NAME_13);
             }
 
-            DataItem dataItem = new DataItem(DNA, ItemType.SIGNATURE, entry.getValue(), format("%.1f", sigAllocation));
+            DataItem dataItem = new DataItem(DNA, ItemType.SIGNATURE, entry.getValue(), sigAllocation, FLOAT_FORMAT_SIG_ALLOCATION);
             mDataItems.add(dataItem);
         }
     }

@@ -6,18 +6,14 @@ import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.MSS;
 import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.HIGH;
 import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.UNKNOWN;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
@@ -42,6 +38,9 @@ public class FeaturePrep implements CategoryPrep
     private final PrepConfig mConfig;
 
     LinkedHashMap<DataItem.Index, DataItem> mDataItemsMap = new LinkedHashMap<>();
+
+    private static final double DRIVER_PRESENT_LIKELIHOOD = 1.0;
+    private static final String FLOAT_FORMAT_LIKELIHOOD = "%.4f";
 
     private static final String AMP_SUFFIX = ".amp";
     private static final String MUTATION_SUFFIX = ".mut";
@@ -118,7 +117,7 @@ public class FeaturePrep implements CategoryPrep
                     featureName += MUTATION_SUFFIX;
                 }
 
-                DataItem dataItem = new DataItem(DNA, ItemType.DRIVER, featureName, String.valueOf(likelihood));
+                DataItem dataItem = new DataItem(DNA, ItemType.DRIVER, featureName, likelihood, FLOAT_FORMAT_LIKELIHOOD);
                 addDataItem(dataItem);
             }
         }
@@ -154,8 +153,7 @@ public class FeaturePrep implements CategoryPrep
                 if(isMicrosatelliteStable && isRepeatIndelDriver)
                 {
                     String featureName = gene + INDEL_SUFFIX;
-                    String likelihood = "1.0";
-                    DataItem dataItem = new DataItem(DNA, ItemType.DRIVER, featureName, likelihood);
+                    DataItem dataItem = new DataItem(DNA, ItemType.DRIVER, featureName, DRIVER_PRESENT_LIKELIHOOD, FLOAT_FORMAT_LIKELIHOOD);
                     addDataItem(dataItem);
                 }
             }
@@ -202,8 +200,7 @@ public class FeaturePrep implements CategoryPrep
                     fusionName = fusion.name();
                 }
 
-                String likelihood = "1.0";
-                DataItem dataItem = new DataItem(DNA, ItemType.FUSION, fusionName, likelihood);
+                DataItem dataItem = new DataItem(DNA, ItemType.FUSION, fusionName, DRIVER_PRESENT_LIKELIHOOD, FLOAT_FORMAT_LIKELIHOOD);
                 addDataItem(dataItem);
             }
         }
@@ -231,10 +228,12 @@ public class FeaturePrep implements CategoryPrep
                 if(!annotatedVirus.reported())
                     continue;
 
+                // `virusDriverLikelihoodType() == UNKNOWN` does not mean that the likelihood is unknown, but that the virus is not a known
+                // carcinogenic virus (i.e. annotatedVirus.reported()==false)
                 double likelihood = (annotatedVirus.virusDriverLikelihoodType() == HIGH || annotatedVirus.virusDriverLikelihoodType() == UNKNOWN) ? 1 : 0.5;
                 String virusName = ViralInsertionType.fromVirusName(annotatedVirus.name()).toString();
 
-                DataItem dataItem = new DataItem(DNA, ItemType.VIRUS, virusName, String.valueOf(likelihood));
+                DataItem dataItem = new DataItem(DNA, ItemType.VIRUS, virusName, likelihood, FLOAT_FORMAT_LIKELIHOOD);
                 addDataItem(dataItem);
             }
         }

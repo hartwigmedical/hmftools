@@ -13,12 +13,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
-import com.hartwig.hmftools.common.rna.GeneExpressionFile;
 import com.hartwig.hmftools.cup.prep.CategoryPrep;
 import com.hartwig.hmftools.cup.prep.DataItem;
 import com.hartwig.hmftools.cup.prep.ItemType;
@@ -27,6 +25,7 @@ import com.hartwig.hmftools.cup.prep.PrepConfig;
 public class GeneExpressionPrep implements CategoryPrep
 {
     private final PrepConfig mConfig;
+    private static final String FLOAT_FORMAT_LOG_TPM = "%6.3e";
 
     public GeneExpressionPrep(final PrepConfig config)
     {
@@ -63,7 +62,7 @@ public class GeneExpressionPrep implements CategoryPrep
 
                 double logTpm = log(adjTpm + 1);
 
-                dataItems.add(new DataItem(RNA, ItemType.EXPRESSION, geneName, String.format(Locale.ENGLISH, "%6.3e", logTpm)));
+                dataItems.add(new DataItem(RNA, ItemType.EXPRESSION, geneName, logTpm, FLOAT_FORMAT_LOG_TPM));
             }
         }
         catch(IOException e)

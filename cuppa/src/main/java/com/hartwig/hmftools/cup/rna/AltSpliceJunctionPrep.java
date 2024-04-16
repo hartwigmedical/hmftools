@@ -87,7 +87,7 @@ public class AltSpliceJunctionPrep implements CategoryPrep
 
                 int fragCount = Integer.parseInt(items[fragCountIndex]);
 
-                dataItems.add(new DataItem(RNA, ItemType.ALT_SJ, asjKey, String.valueOf(fragCount)));
+                dataItems.add(new DataItem(RNA, ItemType.ALT_SJ, asjKey, fragCount));
             }
 
             if(dataItems.isEmpty())

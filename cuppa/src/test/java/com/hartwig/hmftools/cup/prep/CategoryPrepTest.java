@@ -62,8 +62,7 @@ public class CategoryPrepTest
         HashMap<String, String> dataItemsMap = makeDataItemsMap(dataItems);
         assertEquals(dataItemsMap.get("C>T_TCC"), "2");
         assertEquals(dataItemsMap.get("snv_count"), "8");
-        // TODO (LN): Fix formatting using fixed locale
-//        assertEquals(dataItemsMap.get("SIG_7_UV"), "6.4");
+        assertEquals(dataItemsMap.get("SIG_7_UV"), "6.4");
         assertEquals(dataItemsMap.get("1_1000000"), "1");
     }
 
@@ -101,14 +100,14 @@ public class CategoryPrepTest
         List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
 
         assertEquals(8, dataItems.size());
-        assertEquals(dataItems.get(0), new DataItem(DataSource.DNA, ItemType.DRIVER, "BRAF.mut", "1.0"));
-        assertEquals(dataItems.get(1), new DataItem(DataSource.DNA, ItemType.DRIVER, "MYC.amp", "1.0"));
-        assertEquals(dataItems.get(2), new DataItem(DataSource.DNA, ItemType.DRIVER, "CDKN2A.mut", "1.0"));
-        assertEquals(dataItems.get(3), new DataItem(DataSource.DNA, ItemType.DRIVER, "SFTPB.indel", "1.0"));
-        assertEquals(dataItems.get(4), new DataItem(DataSource.DNA, ItemType.FUSION, "TMPRSS2_ERG", "1.0"));
-        assertEquals(dataItems.get(5), new DataItem(DataSource.DNA, ItemType.FUSION, "BRAF_PROM3", "1.0"));
-        assertEquals(dataItems.get(6), new DataItem(DataSource.DNA, ItemType.FUSION, "FGFR2_PROM5", "1.0"));
-        assertEquals(dataItems.get(7), new DataItem(DataSource.DNA, ItemType.VIRUS, "MERKEL", "1.0"));
+        assertEquals(dataItems.get(0), new DataItem(DataSource.DNA, ItemType.DRIVER, "BRAF.mut", "1.0000"));
+        assertEquals(dataItems.get(1), new DataItem(DataSource.DNA, ItemType.DRIVER, "MYC.amp", "1.0000"));
+        assertEquals(dataItems.get(2), new DataItem(DataSource.DNA, ItemType.DRIVER, "CDKN2A.mut", "1.0000"));
+        assertEquals(dataItems.get(3), new DataItem(DataSource.DNA, ItemType.DRIVER, "SFTPB.indel", "1.0000"));
+        assertEquals(dataItems.get(4), new DataItem(DataSource.DNA, ItemType.FUSION, "TMPRSS2_ERG", "1.0000"));
+        assertEquals(dataItems.get(5), new DataItem(DataSource.DNA, ItemType.FUSION, "BRAF_PROM3", "1.0000"));
+        assertEquals(dataItems.get(6), new DataItem(DataSource.DNA, ItemType.FUSION, "FGFR2_PROM5", "1.0000"));
+        assertEquals(dataItems.get(7), new DataItem(DataSource.DNA, ItemType.VIRUS, "MERKEL", "1.0000"));
     }
 
     @Test

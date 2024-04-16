@@ -22,6 +22,8 @@ public class SampleTraitPrep implements CategoryPrep
 {
     private final PrepConfig mConfig;
 
+    private static final String FLOAT_FORMAT_MS_INDELS_TMB = "%.4f";
+
     public SampleTraitPrep(final PrepConfig config)
     {
         mConfig = config;
@@ -29,8 +31,6 @@ public class SampleTraitPrep implements CategoryPrep
 
     @Override
     public CategoryType categoryType() { return CategoryType.SAMPLE_TRAIT; }
-
-    private static String boolToIntString(final boolean boolValue) { return boolValue ? "1" : "0"; }
 
     @Override
     public List<DataItem> extractSampleData(final String sampleId)
@@ -46,17 +46,17 @@ public class SampleTraitPrep implements CategoryPrep
 
             dataItems.add(new DataItem(
                     DNA, ItemType.SAMPLE_TRAIT, GENDER.getAlias(),
-                    boolToIntString(purityContext.gender() == Gender.MALE)
+                    purityContext.gender() == Gender.MALE
             ));
 
             dataItems.add(new DataItem(
                     DNA, ItemType.TUMOR_MUTATIONAL_BURDEN, MS_INDELS_TMB.getAlias(),
-                    String.valueOf(purityContext.microsatelliteIndelsPerMb())
+                    purityContext.microsatelliteIndelsPerMb(), FLOAT_FORMAT_MS_INDELS_TMB
             ));
 
             dataItems.add(new DataItem(
                     DNA, ItemType.SAMPLE_TRAIT, WGD.getAlias(),
-                    boolToIntString(purityContext.wholeGenomeDuplication())
+                    purityContext.wholeGenomeDuplication()
             ));
 
             return dataItems;
