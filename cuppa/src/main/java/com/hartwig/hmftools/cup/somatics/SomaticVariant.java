@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATIC
 
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
@@ -58,7 +59,7 @@ public class SomaticVariant
 
     public static String generateFilename(final String baseDir, final String sampleId)
     {
-        return baseDir + sampleId + SOMATIC_VAR_FILE_ID;
+        return FileWriterUtils.checkAddDirSeparator(baseDir) + sampleId + SOMATIC_VAR_FILE_ID;
     }
 
     public static SomaticVariant fromContext(final VariantContext variantContext)
