@@ -18,9 +18,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.cup.prep.DataSource;
 import com.hartwig.hmftools.cup.prep.PrepConfig;
 
 import org.jetbrains.annotations.Nullable;
@@ -36,19 +38,32 @@ public class SomaticVariantsLoader
             final String sampleId,
             @Nullable final List<VariantType> variantTypes
     ){
-        List<SomaticVariant> variants = null;
-
-        if(!config.PurpleDir.isEmpty())
+        if(!config.PurpleDir.isEmpty() & config.SomaticVariantsDir.isEmpty())
         {
-            variants = loadFromVcf(config.purpleSomaticVcfFile(sampleId), variantTypes);
+            CUP_LOGGER.error("Config must have either purple_dir or somatic_variants_dir");
+            System.exit(1);
         }
-        else if(!config.SomaticVariantsDir.isEmpty())
+
+        File genericVariantsFile = new File(config.somaticVariantsGenericFile(sampleId));
+        File vcfFile = new File(config.purpleSomaticVcfFile(sampleId));
+
+        List<SomaticVariant> variants = null;
+        if(genericVariantsFile.isFile())
         {
-            variants = loadFromGenericFile(config.somaticVariantsGenericFile(sampleId), variantTypes);
+            if(vcfFile.isFile())
+            {
+                CUP_LOGGER.error("VCF and generic variants files both exist for sample({})", sampleId);
+            }
+
+            variants = loadFromGenericFile(genericVariantsFile.getAbsolutePath(), variantTypes);
+        }
+        else if(vcfFile.isFile())
+        {
+            variants = loadFromVcf(vcfFile.getAbsolutePath(), variantTypes);
         }
         else
         {
-            CUP_LOGGER.error("Either purple dir or somatic variants dir must be provided in config");
+            CUP_LOGGER.error("Failed to load somatic variants for sample({})", sampleId);
             System.exit(1);
         }
 
