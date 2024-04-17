@@ -70,7 +70,7 @@ public final class PeachGenotypeFile
         final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
 
         int geneIndex = fieldsIndexMap.get("gene");
-        int alleleIndex = fieldsIndexMap.get("allele");
+        int alleleIndex = fieldsIndexMap.get("haplotype");
         int alleleCountIndex = fieldsIndexMap.get("count");
         int functionIndex = fieldsIndexMap.get("function");
         int linkedDrugsIndex = fieldsIndexMap.get("linkedDrugs");
@@ -148,7 +148,7 @@ public final class PeachGenotypeFile
     private static String headerJavaPeach()
     {
         return new StringJoiner(TSV_DELIM).add("gene")
-                .add("allele")
+                .add("haplotype")
                 .add("count")
                 .add("function")
                 .add("linkedDrugs")

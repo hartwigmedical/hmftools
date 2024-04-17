@@ -98,7 +98,7 @@ public class PeachGenotypeFileTest
     {
         List<PeachGenotype> peachGenotypes = Collections.emptyList();
 
-        List<String> expectedLines = List.of("gene\tallele\tcount\tfunction\tlinkedDrugs\tprescriptionUrls");
+        List<String> expectedLines = List.of("gene\thaplotype\tcount\tfunction\tlinkedDrugs\tprescriptionUrls");
 
         assertEquals(expectedLines, PeachGenotypeFile.toLines(peachGenotypes));
     }
@@ -138,7 +138,7 @@ public class PeachGenotypeFileTest
         );
 
         List<String> expectedLines = List.of(
-                "gene\tallele\tcount\tfunction\tlinkedDrugs\tprescriptionUrls",
+                "gene\thaplotype\tcount\tfunction\tlinkedDrugs\tprescriptionUrls",
                 "GENE\t*1\t1\tReduced Function\tCapecitabine;otherDrug\tlink;otherLink",
                 "GENE2\t*3\t2\tNormal Function\tCapecitabine\tlink",
                 "GENE3\tUnresolved Haplotype\t2\tUnknown Function\tCapecitabine\tlink"
