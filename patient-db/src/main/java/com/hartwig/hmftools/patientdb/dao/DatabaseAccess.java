@@ -686,6 +686,7 @@ public class DatabaseAccess implements AutoCloseable
 
         LOGGER.info("Deleting gene copy numbers for sample: {}", sample);
         geneCopyNumberDAO.deleteGeneCopyNumberForSample(sample);
+        geneCopyNumberDAO.deleteGermlineDeletionsForSample(sample);
 
         LOGGER.info("Deleting somatic variants for sample: {}", sample);
         somaticVariantDAO.deleteSomaticVariantForSample(sample);

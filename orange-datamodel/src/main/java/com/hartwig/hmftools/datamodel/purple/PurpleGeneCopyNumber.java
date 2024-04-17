@@ -21,5 +21,7 @@ public interface PurpleGeneCopyNumber
 
     double minCopyNumber();
 
+    double maxCopyNumber();
+
     double minMinorAlleleCopyNumber();
 }

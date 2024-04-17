@@ -34,17 +34,7 @@ public class GeneDataCache
     private final Set<String> mDriverGeneNames;
     private final Map<String,List<String>> mOtherReportableTranscripts;
 
-    /*
-    private final boolean mUseIndexing;
-    private String mCurrentChromosome;
-    private List<GeneData> mCurrentChromosomeGenes;
-    private List<GeneData> mCurrentGenes; // in the current vacinity
-    private int mCurrentPosStrandGeneIndex;
-    private int mCurrentNegStrandGeneIndex;
-    */
-
-    public GeneDataCache(
-            final String ensemblDir, final RefGenomeVersion refGenVersion, final String driverGeneFile, boolean useIndexing)
+    public GeneDataCache(final String ensemblDir, final RefGenomeVersion refGenVersion, final String driverGeneFile)
     {
         mEnsemblDataCache = new EnsemblDataCache(ensemblDir, refGenVersion);
 
@@ -52,15 +42,6 @@ public class GeneDataCache
         mDriverGenes = Lists.newArrayList();
         mDriverGeneNames = Sets.newHashSet();
         mOtherReportableTranscripts = Maps.newHashMap();
-
-        /*
-        mUseIndexing = useIndexing;
-        mCurrentChromosome = null;
-        mCurrentChromosomeGenes = null;
-        mCurrentPosStrandGeneIndex = 0;
-        mCurrentNegStrandGeneIndex = 0;
-        mCurrentGenes = Lists.newArrayList();
-        */
     }
 
     public EnsemblDataCache getEnsemblCache() { return mEnsemblDataCache; }
@@ -188,17 +169,6 @@ public class GeneDataCache
 
             return genes;
         }
-
-        /*
-        if(mCurrentChromosome == null || !mCurrentChromosome.equals(chromosome))
-        {
-            mCurrentChromosome = chromosome;
-            mCurrentChromosomeGenes = mEnsemblDataCache.getChrGeneDataMap().get(chromosome);
-            mCurrentPosStrandGeneIndex = 0;
-            mCurrentNegStrandGeneIndex = 0;
-            mCurrentGenes.clear();
-        }
-        */
 
         if(cacheIndexing.ChromosomeGenes == null)
         {

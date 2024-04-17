@@ -8,8 +8,8 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESH
 
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.types.RepeatInfo;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 
 public final class SequenceCompare
 {
@@ -89,72 +89,10 @@ public final class SequenceCompare
 
         int lastRepeatSkipBases = 0;
 
-        /*
-        RepeatInfo firstCurrentRepeat = !firstRepeats.isEmpty() ? firstRepeats.get(0) : null;
-        int firstRepeatIndex = 0;
-        RepeatInfo secondCurrentRepeat = !secondRepeats.isEmpty() ? secondRepeats.get(0) : null;
-        int secondRepeatIndex = 0;
-        */
-
         while(firstIndex <= firstIndexEnd && secondIndex <= secondIndexEnd)
         {
             // the check for matching repeats is disabled since while logically a good idea, it is often throw out by prior mismatches
             // the solution may be to start the matching process from the other end
-            /*
-            if(firstCurrentRepeat != null && firstCurrentRepeat.Index < firstIndex)
-            {
-                while(firstCurrentRepeat.Index < firstIndex)
-                {
-                    ++firstRepeatIndex;
-                    if(firstRepeatIndex < firstRepeats.size())
-                    {
-                        firstCurrentRepeat = firstRepeats.get(firstRepeatIndex);
-                    }
-                    else
-                    {
-                        firstCurrentRepeat = null;
-                        break;
-                    }
-                }
-            }
-
-            if(secondCurrentRepeat != null && secondCurrentRepeat.Index < secondIndex)
-            {
-                while(secondCurrentRepeat.Index < secondIndex)
-                {
-                    ++secondRepeatIndex;
-                    if(secondRepeatIndex < secondRepeats.size())
-                    {
-                        secondCurrentRepeat = secondRepeats.get(secondRepeatIndex);
-                    }
-                    else
-                    {
-                        secondCurrentRepeat = null;
-                        break;
-                    }
-                }
-            }
-
-            if(firstCurrentRepeat != null && firstCurrentRepeat.Index == firstIndex
-            && secondCurrentRepeat != null && secondCurrentRepeat.Index == secondIndex)
-            {
-                if(firstCurrentRepeat.Count == secondCurrentRepeat.Count)
-                {
-                    int repeatLength = firstCurrentRepeat.length();
-                    firstIndex += repeatLength;
-                    secondIndex += repeatLength;
-                }
-                else
-                {
-                    firstIndex += firstCurrentRepeat.length();
-                    secondIndex += secondCurrentRepeat.length();
-                    ++mismatchCount;
-                }
-
-                continue;
-            }
-            */
-
             if(basesMatch(
                     firstBases[firstIndex], secondBases[secondIndex], firstBaseQuals[firstIndex], secondBaseQuals[secondIndex],
                     LOW_BASE_QUAL_THRESHOLD))

@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
 import static com.hartwig.hmftools.pave.impact.HgvsProtein.HGVS_SPLICE_UNKNOWN;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createMockGenome;
@@ -107,20 +108,43 @@ public class InsertCodingContextTest
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);
         assertEquals(INFRAME_INSERTION, impact.topEffect());
 
+        // insert just before exon start
+        pos = 29;
+        ref = refBases.substring(29, 30);
+        alt = ref + "A";
+        var = new VariantData(CHR_1, pos, ref, alt);
+
+        impact = classifier.classifyVariant(var, transDataPos);
+
+        assertEquals(7, impact.codingContext().CodingBase);
+        assertEquals(30, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(30, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals(2, impact.codingContext().ExonRank);
+
+        assertTrue(impact.codingContext().IsFrameShift);
+        assertTrue(impact.inSpliceRegion());
+        assertEquals(FRAMESHIFT, impact.topEffect());
+
         // repeat for negative strand
         TranscriptData transDataNeg = createNegTranscript();
 
-        // at exon boundary
+        // at exon boundary - inserted bases go into coding region
         pos = 80;
         ref = refBases.substring(80, 81);
-        alt = ref + "AAA";
+        alt = ref + "CGG";
         var = new VariantData(CHR_1, pos, ref, alt);
 
         impact = classifier.classifyVariant(var, transDataNeg);
 
         assertEquals(CODING, impact.codingContext().CodingType);
-        assertEquals(INTRONIC, impact.codingContext().RegionType);
+        assertEquals(EXONIC, impact.codingContext().RegionType);
         assertEquals(7, impact.codingContext().CodingBase);
+        assertEquals(80, impact.codingContext().CodingPositionRange[SE_START]);
+        assertEquals(80, impact.codingContext().CodingPositionRange[SE_END]);
+        assertEquals(4, impact.codingContext().ExonRank);
+
+        assertTrue(impact.inSpliceRegion());
+        assertEquals(INFRAME_INSERTION, impact.topEffect());
 
         // frameshift
         pos = 91;

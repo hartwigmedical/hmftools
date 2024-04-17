@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.gene;
 
+import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.region.Strand.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Strand.REVERSE;
@@ -44,7 +45,9 @@ public class TranscriptData
     public List<ExonData> exons() { return mExons; }
 
     public int length() { return TransEnd - TransStart; }
+
     public boolean posStrand() { return Strand == POS_STRAND; }
+    public boolean negStrand() { return Strand == NEG_STRAND; }
     public Strand strand() { return Strand == POS_STRAND ? FORWARD : REVERSE;  }
 
     public boolean nonCoding() { return CodingStart == null; }

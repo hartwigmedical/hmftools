@@ -11,8 +11,12 @@ public class SageConstants
     public static final int DEFAULT_MAX_PARTITION_SLICES = 10;
 
     public static final int DEFAULT_READ_LENGTH = 151;
+
+    // read context buiding
     public static final int DEFAULT_READ_CONTEXT_FLANK_SIZE = 10;
     public static final int MIN_CORE_DISTANCE = 2;
+    public static final int MAX_REPEAT_LENGTH = 5;
+    public static final int MIN_REPEAT_COUNT = 3;
 
     public static final int MIN_SECOND_CANDIDATE_FULL_READS = 3;
     public static final double MIN_SECOND_CANDIDATE_FULL_READS_PERC = 0.25;
@@ -67,8 +71,8 @@ public class SageConstants
     public static final int HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL = 8;
     public static final int HOTSPOT_MIN_RAW_ALT_BASE_QUAL = 150;
 
-    public static final double VAF_PROBABILITY_THRESHOLD = 10e-14;
-    public static final double VAF_PROBABILITY_THRESHOLD_HOTSPOT = 10e-9;
+    public static final double VAF_PROBABILITY_THRESHOLD = 1e-14;
+    public static final double VAF_PROBABILITY_THRESHOLD_HOTSPOT = 1e-9;
 
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 25;
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT = 18;

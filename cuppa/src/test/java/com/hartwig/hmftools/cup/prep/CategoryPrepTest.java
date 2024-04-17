@@ -1,8 +1,13 @@
 package com.hartwig.hmftools.cup.prep;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.cup.feature.FeaturePrep;
 import com.hartwig.hmftools.cup.rna.AltSpliceJunctionPrep;
@@ -12,12 +17,10 @@ import com.hartwig.hmftools.cup.svs.StructuralVariantPrep;
 import com.hartwig.hmftools.cup.traits.SampleTraitPrep;
 
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class CategoryPrepTest
 {
-    public final String selectedSampleId = "COLO829v003T";
+    public final String selectedSampleId = "TUMOR_SAMPLE";
 
     public final PrepConfig prepConfig = new TestPrepConfigBuilder()
             .sampleIds(List.of(selectedSampleId))
@@ -28,14 +31,23 @@ public class CategoryPrepTest
             .outputDir("/tmp/")
             .build();
 
+    private HashMap<String, String> makeDataItemsMap(List<DataItem> dataItems)
+    {
+        HashMap<String, String> dataItemsMap = new HashMap<>();
+        for(DataItem dataItem : dataItems)
+            dataItemsMap.put(dataItem.Index.Key, dataItem.Value);
+
+        return dataItemsMap;
+    }
+
     @Test
     public void canExtractSnvFeatures()
     {
         SomaticVariantPrep prep = new SomaticVariantPrep(prepConfig);
         List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
 
+        // Check that all required item types exist
         List<ItemType> itemTypesUnique = dataItems.stream().map(o -> o.Index.Type).distinct().collect(Collectors.toList());
-
         List<ItemType> itemTypesExpected = List.of(
                 ItemType.SNV96,
                 ItemType.TUMOR_MUTATIONAL_BURDEN,
@@ -46,6 +58,40 @@ public class CategoryPrepTest
         for(ItemType itemTypeExpected : itemTypesExpected){
             assertTrue(itemTypesUnique.contains(itemTypeExpected));
         }
+
+        // Check one value of each type
+        HashMap<String, String> dataItemsMap = makeDataItemsMap(dataItems);
+        assertEquals(dataItemsMap.get("C>T_TCC"), "2");
+        assertEquals(dataItemsMap.get("snv_count"), "8");
+        assertEquals(dataItemsMap.get("SIG_7_UV"), "6.4");
+
+        assertEquals(dataItemsMap.get("1_500000"), "1");
+        assertEquals(dataItemsMap.get("1_1000000"), "1");
+        assertEquals(dataItemsMap.get("7_55000000"), "1");
+    }
+
+    @Test
+    public void canExtractSnvFeaturesFromLiftoverGenericVariantsFiles()
+    {
+        PrepConfig prepConfig = new TestPrepConfigBuilder()
+                .sampleIds(List.of(selectedSampleId))
+                .categories(List.of(CategoryType.SNV))
+                .refGenomeVersion("V38")
+                .somaticVariantsDir(TestPrepConfigBuilder.TEST_SOMATIC_VARIANTS_DIR)
+                .build();
+
+        SomaticVariantPrep prep = new SomaticVariantPrep(prepConfig);
+        List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
+
+        // Check one value of each type
+        HashMap<String, String> dataItemsMap = makeDataItemsMap(dataItems);
+        assertEquals(dataItemsMap.get("C>T_TCC"), "2");
+        assertEquals(dataItemsMap.get("snv_count"), "8");
+        assertEquals(dataItemsMap.get("SIG_7_UV"), "6.4");
+
+        assertEquals(dataItemsMap.get("chr1_500000"), "1");
+        assertEquals(dataItemsMap.get("chr1_1000000"), "1");
+        assertEquals(dataItemsMap.get("chr7_55000000"), "1");
     }
 
     @Test
@@ -81,11 +127,15 @@ public class CategoryPrepTest
         FeaturePrep prep = new FeaturePrep(prepConfig);
         List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
 
-        assertEquals(7, dataItems.size());
-        assertEquals(dataItems.get(0), new DataItem(DataSource.DNA, ItemType.DRIVER, "TERT.mut", "1.0"));
-        assertEquals(dataItems.get(1), new DataItem(DataSource.DNA, ItemType.DRIVER, "BRAF.mut", "1.0"));
-        assertEquals(dataItems.get(2), new DataItem(DataSource.DNA, ItemType.DRIVER, "SF3B1.mut", "0.146"));
-        assertEquals(dataItems.get(3), new DataItem(DataSource.DNA, ItemType.DRIVER, "CDKN2A.mut", "1.0"));
+        assertEquals(8, dataItems.size());
+        assertEquals(dataItems.get(0), new DataItem(DataSource.DNA, ItemType.DRIVER, "BRAF.mut", "1.0000"));
+        assertEquals(dataItems.get(1), new DataItem(DataSource.DNA, ItemType.DRIVER, "MYC.amp", "1.0000"));
+        assertEquals(dataItems.get(2), new DataItem(DataSource.DNA, ItemType.DRIVER, "CDKN2A.mut", "1.0000"));
+        assertEquals(dataItems.get(3), new DataItem(DataSource.DNA, ItemType.DRIVER, "SFTPB.indel", "1.0000"));
+        assertEquals(dataItems.get(4), new DataItem(DataSource.DNA, ItemType.FUSION, "TMPRSS2_ERG", "1.0000"));
+        assertEquals(dataItems.get(5), new DataItem(DataSource.DNA, ItemType.FUSION, "BRAF_PROM3", "1.0000"));
+        assertEquals(dataItems.get(6), new DataItem(DataSource.DNA, ItemType.FUSION, "FGFR2_PROM5", "1.0000"));
+        assertEquals(dataItems.get(7), new DataItem(DataSource.DNA, ItemType.VIRUS, "MERKEL", "1.0000"));
     }
 
     @Test

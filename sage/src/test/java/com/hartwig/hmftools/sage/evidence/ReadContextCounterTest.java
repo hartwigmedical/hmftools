@@ -18,13 +18,13 @@ import static org.junit.Assert.assertEquals;
 import static htsjdk.samtools.SAMUtils.phredToFastq;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.old.IndexedBases;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
-import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.old.ReadContext;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 

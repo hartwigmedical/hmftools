@@ -167,9 +167,11 @@ public class SomaticSvCache
                     .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                     .build();
 
-            final StructuralRefContextEnrichment refEnricher = new StructuralRefContextEnrichment(mRefGenomeFile, writer::add);
+            StructuralRefContextEnrichment refEnricher = new StructuralRefContextEnrichment(mRefGenomeFile, writer::add);
 
-            writer.writeHeader(refEnricher.enrichHeader(mVcfHeader.get()));
+            VCFHeader header = mVcfHeader.get();
+            refEnricher.enrichHeader(header);
+            writer.writeHeader(header);
 
             VariantContextCollection enrichedCollection = getEnrichedCollection(purityAdjuster, copyNumbers, gender);
 
@@ -184,8 +186,6 @@ public class SomaticSvCache
 
                 refEnricher.accept(variant);
             }
-
-            refEnricher.flush();
 
             writer.close();
         }

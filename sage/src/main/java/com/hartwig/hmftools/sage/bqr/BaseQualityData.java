@@ -12,6 +12,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.qual.BqrKey;
+import com.hartwig.hmftools.common.qual.BqrReadType;
 
 public class BaseQualityData
 {

@@ -131,7 +131,7 @@ public class GeneratePanelDefinitionBed
 
                     if(regionType == RegionType.LOCATION)
                     {
-                        String[] locationInfo = values[1].split(":");
+                        String[] locationInfo = values[3].split(":");
                         String chromosome = locationInfo[0];
                         int position = Integer.parseInt(locationInfo[1]);
 
@@ -246,18 +246,28 @@ public class GeneratePanelDefinitionBed
             BufferedWriter writer = createBufferedWriter(mOutputFile, false);
 
             // no header
+            List<LabelledRegion> labelledRegions = Lists.newArrayList();
+
             for(RegionDefinition region : mRegions)
             {
                 if(region.Type == RegionType.LOCATION)
                 {
-                    writeRegion(
-                            writer, region.SpecificRegion.Chromosome, region.SpecificRegion.start(), region.SpecificRegion.end(),
-                            region.Label, false);
+                    labelledRegions.add(buildRegion(
+                            region.SpecificRegion.Chromosome, region.SpecificRegion.start(), region.SpecificRegion.end(),
+                            region.Label, false));
                 }
                 else
                 {
-                    writeGeneData(writer, region);
+                    labelledRegions.addAll(buildGeneDataRegions(writer, region));
                 }
+            }
+
+            Collections.sort(labelledRegions);
+
+            for(LabelledRegion region : labelledRegions)
+            {
+                writer.write(format("%s\t%d\t%d\t%s", region.chromosome(), region.start(), region.end(), region.Label));
+                writer.newLine();
             }
 
             writer.close();
@@ -270,27 +280,36 @@ public class GeneratePanelDefinitionBed
         GU_LOGGER.info("panel definition BED file generation complete");
     }
 
-    private void writeRegion(
-            final BufferedWriter writer, final String chromosome, final int posStart, final int posEnd,
-            final String label, final boolean isCoding) throws IOException
+    private class LabelledRegion extends ChrBaseRegion
     {
-        writer.write(format("%s\t%d\t%d\t%s",
-                chromosome, posStart, posEnd, isCoding ? label + "_CODING" : label));
+        public final String Label;
 
-        writer.newLine();
+        public LabelledRegion(final String chromosome, final int posStart, final int posEnd, final String label)
+        {
+            super(chromosome, posStart, posEnd);
+            Label = label;
+        }
     }
 
-    private void writeGeneData(final BufferedWriter writer, final RegionDefinition region) throws IOException
+    private LabelledRegion buildRegion(
+            final String chromosome, final int posStart, final int posEnd, final String label, final boolean isCoding)
+    {
+        return new LabelledRegion(chromosome, posStart, posEnd, isCoding ? label + "_CODING" : label);
+    }
+
+    private List<LabelledRegion> buildGeneDataRegions(final BufferedWriter writer, final RegionDefinition region) throws IOException
     {
         GeneData geneData = mEnsemblDataCache.getGeneDataByName(region.GeneName);
 
         if(geneData == null)
         {
             GU_LOGGER.error("unknown gene({}) label({})", region.GeneName, region.Label);
-            return;
+            Collections.emptyList();
         }
 
         List<TranscriptData> transcripts = mEnsemblDataCache.getTranscripts(geneData.GeneId);
+
+        List<LabelledRegion> regions = Lists.newArrayList();
 
         for(TranscriptData transData : transcripts)
         {
@@ -312,10 +331,11 @@ public class GeneratePanelDefinitionBed
                     promoterEnd = transData.TransEnd + PROMOTER_PROBE_BUFFER;
                 }
 
-                writeRegion(writer, geneData.Chromosome, promoterStart, promoterEnd, format("%s_PROMOTER", geneData.GeneName), false);
+                regions.add(buildRegion(
+                        geneData.Chromosome, promoterStart, promoterEnd, format("%s_PROMOTER", geneData.GeneName), false));
 
                 if(region.CodingTypes.size() == 1)
-                    return;
+                    return regions;
             }
 
             for(ExonData exon : transData.exons())
@@ -350,7 +370,8 @@ public class GeneratePanelDefinitionBed
                             utrEnd = exon.End;
                         }
 
-                        writeRegion(writer, geneData.Chromosome, utrStart, utrEnd, format("%s_%s", geneData.GeneName, utrType), false);
+                        regions.add(buildRegion(
+                                geneData.Chromosome, utrStart, utrEnd, format("%s_%s", geneData.GeneName, utrType), false));
                     }
                 }
 
@@ -361,12 +382,14 @@ public class GeneratePanelDefinitionBed
                         int codingStart = max(transData.CodingStart, exon.Start);
                         int codingEnd = min(transData.CodingEnd, exon.End);
 
-                        writeRegion(writer, geneData.Chromosome, codingStart, codingEnd, format("%s_exon%d", geneData.GeneName, exon.Rank),
-                                true);
+                        regions.add(buildRegion(
+                                geneData.Chromosome, codingStart, codingEnd, format("%s_exon%d", geneData.GeneName, exon.Rank), true));
                     }
                 }
             }
         }
+
+        return regions;
     }
 
     public static void main(@NotNull final String[] args)

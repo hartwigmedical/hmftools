@@ -33,13 +33,15 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFil
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.alignment.BwaAligner.loadAlignerLibrary;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ALIGNMENT;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ALIGNMENT_DATA;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.fromConfig;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formOutputFile;
 import static com.hartwig.hmftools.esvee.common.SvConstants.ESVEE_FILE_ID;
 import static com.hartwig.hmftools.esvee.common.SvConstants.FILE_NAME_DELIM;
 import static com.hartwig.hmftools.esvee.common.SvConstants.PREP_FILE_ID;
-import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLY_BAM;
-import static com.hartwig.hmftools.esvee.output.WriteType.READS;
-import static com.hartwig.hmftools.esvee.output.WriteType.VCF;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.VCF;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTIONS_FILE_ID;
 
 import java.nio.file.Files;
@@ -57,9 +59,10 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.esvee.types.Junction;
-import com.hartwig.hmftools.esvee.output.WriteType;
-import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.alignment.AlignmentCache;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.output.WriteType;
+import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
 import com.hartwig.hmftools.esvee.utils.TruthsetAnnotation;
 
 import org.apache.logging.log4j.LogManager;
@@ -90,6 +93,9 @@ public class AssemblyConfig
     public final String VcfFile;
     public final List<WriteType> WriteTypes;
 
+    public final boolean ProcessDiscordant;
+    public final boolean RunAlignment;
+
     public final String OutputDir;
     public final String OutputId;
     public final String BamToolPath;
@@ -103,30 +109,36 @@ public class AssemblyConfig
     private final boolean mCheckLogReadIds;
 
     public final int AssemblyRefBaseWriteMax;
-    public final boolean SkipDiscordant;
     public final int PhaseProcessingLimit;
 
     public final int Threads;
 
     public final String TruthsetFile;
+    public final String AlignmentFile;
+
+    public final boolean ApplyRemotePhasingReadCheckThreshold;
 
     public static final String OUTPUT_VCF = "output_vcf";
-    public static final String REF_GENOME_IMAGE = "ref_genome_image";
-    public static final String DECOY_GENOME = "decoy_genome";
+    private static final String REF_GENOME_IMAGE = "ref_genome_image";
+    private static final String DECOY_GENOME = "decoy_genome";
     public static final String JUNCTION_FILES = "junction_files";
-    public static final String SPECIFIC_JUNCTIONS = "specific_junctions";
 
-    public static final String WRITE_TYPES = "write_types";
-    public static final String PERF_LOG_TIME = "perf_log_time";
+    private static final String WRITE_TYPES = "write_types";
+    private static final String PERF_LOG_TIME = "perf_log_time";
 
-    public static final String SKIP_DISCORDANT = "skip_discordant";
-    public static final String PHASE_PROCESSING_LIMIT = "phase_process_limit";
-    public static final String LOG_PHASE_GROUP_LINKS = "phase_group_links";
-    public static final String RUN_LOCAL_PHASING = "run_local_phasing";
+    private static final String PROCESS_DISCORDANT = "discordant_pairs";
+    private static final String RUN_ALIGNMENT = "run_alignment";
 
-    public static final String ASSEMBLY_REF_BASE_WRITE_MAX = "asm_ref_base_write_max";
+    private static final String PHASE_PROCESSING_LIMIT = "phase_process_limit";
+    private static final String LOG_PHASE_GROUP_LINKS = "phase_group_links";
+    private static final String SPECIFIC_JUNCTIONS = "specific_junctions";
+    private static final String ASSEMBLY_REF_BASE_WRITE_MAX = "asm_ref_base_write_max";
+
+    private static final String REMOTE_PHASING_READ_CHECK_THRESHOLD = "remote_phase_read_check_threshold";
 
     public static final Logger SV_LOGGER = LogManager.getLogger(AssemblyConfig.class);
+
+    public static ReadIdTrimmer READ_ID_TRIMMER;
 
     public AssemblyConfig(final ConfigBuilder configBuilder)
     {
@@ -171,28 +183,6 @@ public class AssemblyConfig
             }
         }
 
-        WriteTypes = Lists.newArrayList();
-
-        if(configBuilder.hasValue(WRITE_TYPES))
-        {
-            String writeTypesStr = configBuilder.getValue(WRITE_TYPES);
-
-            if(writeTypesStr.equals(WriteType.ALL))
-            {
-                Arrays.stream(WriteType.values()).filter(x -> x != READS).forEach(x -> WriteTypes.add(x));
-            }
-            else
-            {
-                String[] writeTypes = writeTypesStr.split(ITEM_DELIM, -1);
-                Arrays.stream(writeTypes).forEach(x -> WriteTypes.add(WriteType.valueOf(x)));
-            }
-        }
-        else
-        {
-            WriteTypes.add(VCF);
-            WriteTypes.add(ASSEMBLY_BAM);
-        }
-
         BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
@@ -205,6 +195,21 @@ public class AssemblyConfig
 
         DecoyGenome = configBuilder.getValue(DECOY_GENOME);
 
+        AlignmentFile = AlignmentCache.filename(configBuilder);
+        RunAlignment = configBuilder.hasFlag(RUN_ALIGNMENT) || !AlignmentFile.isEmpty();
+
+        if(RunAlignment || DecoyGenome != null)
+            loadAlignerLibrary(null); // or load path from config
+
+        WriteTypes = fromConfig(configBuilder.getValue(WRITE_TYPES));
+
+        if(!RunAlignment)
+        {
+            WriteTypes.remove(ALIGNMENT);
+            WriteTypes.remove(ALIGNMENT_DATA);
+        }
+
+        ProcessDiscordant = configBuilder.hasFlag(PROCESS_DISCORDANT);
         BamStringency = ValidationStringency.STRICT;
 
         RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
@@ -239,7 +244,7 @@ public class AssemblyConfig
             SV_LOGGER.debug("loaded {} specific junctions", SpecificJunctions.size());
         }
 
-        if(WriteTypes.contains(READS) && !SpecificChrRegions.hasFilters() && SpecificJunctions.isEmpty())
+        if(WriteTypes.contains(ASSEMBLY_READ) && !SpecificChrRegions.hasFilters() && SpecificJunctions.isEmpty())
         {
             SV_LOGGER.warn("writing assembly reads to TSV without region filtering may result in large output files & impact performance");
         }
@@ -247,7 +252,6 @@ public class AssemblyConfig
         mLogReadIds = parseLogReadIds(configBuilder);
         mCheckLogReadIds = !mLogReadIds.isEmpty();
 
-        SkipDiscordant = configBuilder.hasFlag(SKIP_DISCORDANT);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
         PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
 
@@ -259,8 +263,9 @@ public class AssemblyConfig
 
         TruthsetFile = TruthsetAnnotation.filename(configBuilder);
 
-        if(DecoyGenome != null) // or running alignment
-            loadAlignerLibrary(null); // or load path from config
+        ApplyRemotePhasingReadCheckThreshold = configBuilder.hasFlag(REMOTE_PHASING_READ_CHECK_THRESHOLD);
+
+        READ_ID_TRIMMER = new ReadIdTrimmer(true);
     }
 
     public List<String> combinedSampleIds()
@@ -296,12 +301,6 @@ public class AssemblyConfig
             logReadId(record.getReadName(), caller);
     }
 
-    public void logReadId(final Read read, final String caller)
-    {
-        if(mCheckLogReadIds)
-            logReadId(read.id(), caller);
-    }
-
     private void logReadId(final String readId, final String caller)
     {
         // debugging only
@@ -326,6 +325,9 @@ public class AssemblyConfig
         configBuilder.addPath(REF_GENOME_IMAGE, false, REFERENCE_BAM_DESC);
         configBuilder.addPath(DECOY_GENOME, false, "Decoy genome image file");
 
+        configBuilder.addFlag(PROCESS_DISCORDANT, "Proces discordant-only groups");
+        configBuilder.addFlag(RUN_ALIGNMENT, "Run assembly alignment");
+
         String writeTypes = Arrays.stream(WriteType.values()).map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM));
         configBuilder.addConfigItem(WRITE_TYPES, false, "Write types from list: " + writeTypes);
 
@@ -336,7 +338,6 @@ public class AssemblyConfig
 
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addDecimal(PERF_LOG_TIME, "Log performance data for routine exceeding specified time (0 = disabled)", 0);
-        configBuilder.addFlag(SKIP_DISCORDANT, "Skip processing discordant-only groups");
         configBuilder.addFlag(LOG_PHASE_GROUP_LINKS, "Log assembly links to build phase groups");
 
         configBuilder.addInteger(
@@ -346,7 +347,10 @@ public class AssemblyConfig
         configBuilder.addInteger(
                 PHASE_PROCESSING_LIMIT, "Exclude phase groups above this size from extension and phase sets", 0);
 
+        configBuilder.addFlag(REMOTE_PHASING_READ_CHECK_THRESHOLD, "Apply remote phase building max read check threshold");
+
         TruthsetAnnotation.registerConfig(configBuilder);
+        AlignmentCache.registerConfig(configBuilder);
         BamToolName.addConfig(configBuilder);
 
         SpecificRegions.addSpecificChromosomesRegionsConfig(configBuilder);
@@ -374,6 +378,9 @@ public class AssemblyConfig
         RefGenomeImageFile = null;
         DecoyGenome = null;
 
+        ProcessDiscordant = true;
+        RunAlignment = true;
+
         BamStringency = ValidationStringency.SILENT;
 
         VcfFile = null;
@@ -392,9 +399,13 @@ public class AssemblyConfig
         mCheckLogReadIds = false;
 
         AssemblyRefBaseWriteMax = 0;
-        SkipDiscordant = true;
         PhaseProcessingLimit = 0;
         Threads = 0;
         TruthsetFile = null;
+        AlignmentFile = null;
+
+        ApplyRemotePhasingReadCheckThreshold = false;
+
+        READ_ID_TRIMMER = new ReadIdTrimmer(false);
     }
 }

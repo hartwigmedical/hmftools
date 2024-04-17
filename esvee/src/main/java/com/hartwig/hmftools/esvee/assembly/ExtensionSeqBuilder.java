@@ -4,12 +4,12 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
+import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.compareSequences;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.subsetArray;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
-import static com.hartwig.hmftools.esvee.read.ReadUtils.getReadIndexAtReferencePosition;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.getReadIndexAtReferencePosition;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,11 +18,11 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.esvee.types.AssemblySupport;
-import com.hartwig.hmftools.esvee.types.Junction;
-import com.hartwig.hmftools.esvee.types.RepeatInfo;
-import com.hartwig.hmftools.esvee.types.SupportType;
-import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
+import com.hartwig.hmftools.esvee.assembly.types.SupportType;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 public class ExtensionSeqBuilder
 {
@@ -89,11 +89,11 @@ public class ExtensionSeqBuilder
     public List<RepeatInfo> repeatInfo() { return mExtensionRepeats; }
     public boolean isValid() { return mIsValid; }
 
-    public List<AssemblySupport> formAssemblySupport()
+    public List<SupportRead> formAssemblySupport()
     {
         return mReads.stream().filter(x -> x.Mismatches <= mMaxMismatches)
-                .map(x -> new AssemblySupport(
-                        x.read(), SupportType.JUNCTION, 0, x.junctionIndex(), x.matchedBases(), x.Mismatches))
+                .map(x -> new SupportRead(
+                        x.read(), SupportType.JUNCTION, x.junctionIndex(), x.matchedBases(), x.Mismatches))
                 .collect(Collectors.toList());
     }
 

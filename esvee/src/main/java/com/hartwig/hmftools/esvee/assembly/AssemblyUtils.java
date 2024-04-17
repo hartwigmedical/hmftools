@@ -6,22 +6,24 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DEL_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
-import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.NO_LINK;
-import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.SECONDARY;
-import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.SUPP_ONLY;
-import static com.hartwig.hmftools.esvee.types.AssemblySupport.hasMatchingFragment;
-import static com.hartwig.hmftools.esvee.types.SupportType.JUNCTION_MATE;
-import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordantFragment;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SECONDARY;
+import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.SUPP_ONLY;
+import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragment;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.createByteArray;
+import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.types.AssemblyOutcome;
-import com.hartwig.hmftools.esvee.types.AssemblySupport;
-import com.hartwig.hmftools.esvee.types.Junction;
-import com.hartwig.hmftools.esvee.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 public final class AssemblyUtils
 {
@@ -36,12 +38,12 @@ public final class AssemblyUtils
 
         int maxDistanceFromJunction = 0;
 
-        AssemblySupport minNmSupport = null;
+        SupportRead minNmSupport = null;
         int minNmSupportMaxDistance = 0;
 
-        for(AssemblySupport support : assembly.support())
+        for(SupportRead support : assembly.support())
         {
-            Read read = support.read();
+            Read read = support.cachedRead();
             int readJunctionIndex = read.getReadIndexAtReferencePosition(junctionPosition, true);
 
             // for positive orientations, if read length is 10, and junction index is at 4, then extends with indices 0-3 ie 4
@@ -64,8 +66,8 @@ public final class AssemblyUtils
             maxDistanceFromJunction = max(maxDistanceFromJunction, readExtensionDistance);
 
             if(minNmSupport == null
-            || read.numberOfEvents() < minNmSupport.read().numberOfEvents()
-            || (read.numberOfEvents() == minNmSupport.read().numberOfEvents() && readExtensionDistance < minNmSupportMaxDistance))
+            || read.numberOfEvents() < minNmSupport.cachedRead().numberOfEvents()
+            || (read.numberOfEvents() == minNmSupport.cachedRead().numberOfEvents() && readExtensionDistance < minNmSupportMaxDistance))
             {
                 minNmSupport = support;
                 minNmSupportMaxDistance = readExtensionDistance;
@@ -77,15 +79,15 @@ public final class AssemblyUtils
         // order by NM to favour the ref where possible
         if(minNmSupport != null)
         {
-            assembly.extendJunctionReadSupport(minNmSupport.read(), minNmSupport);
+            assembly.extendJunctionReadSupport(minNmSupport.cachedRead(), minNmSupport);
         }
 
-        for(AssemblySupport support : assembly.support())
+        for(SupportRead support : assembly.support())
         {
             if(support == minNmSupport)
                 continue;
 
-            assembly.extendJunctionReadSupport(support.read(), support);
+            assembly.extendJunctionReadSupport(support.cachedRead(), support);
         }
     }
 
@@ -132,12 +134,12 @@ public final class AssemblyUtils
     public static boolean assembliesShareReads(final JunctionAssembly first, final JunctionAssembly second)
     {
         // tests matching reads in both the junction reads and any extension reads (ie discordant)
-        for(AssemblySupport support : first.support())
+        for(SupportRead support : first.support())
         {
             if(support.type() == JUNCTION_MATE)
                 continue;
 
-            if(hasMatchingFragment(second.support(), support.read()))
+            if(hasMatchingFragment(second.support(), support))
                 return true;
         }
 
@@ -166,18 +168,18 @@ public final class AssemblyUtils
         Junction lowerJunction = firstIsLower ? first.junction() : second.junction();
         Junction upperJunction = !firstIsLower ? first.junction() : second.junction();
 
-        if(lowerAssembly.support().stream().noneMatch(x -> isCrossingConcordantRead(x.read(), upperJunction, false)))
+        if(lowerAssembly.support().stream().noneMatch(x -> isCrossingConcordantRead(x, upperJunction, false)))
             return false;
 
-        if(upperAssembly.support().stream().noneMatch(x -> isCrossingConcordantRead(x.read(), lowerJunction, true)))
+        if(upperAssembly.support().stream().noneMatch(x -> isCrossingConcordantRead(x, lowerJunction, true)))
             return false;
 
         return true;
     }
 
-    private static boolean isCrossingConcordantRead(final Read read, final Junction junction, boolean requireLower)
+    private static boolean isCrossingConcordantRead(final SupportRead read, final Junction junction, boolean requireLower)
     {
-        if(isDiscordantFragment(read) || read.isMateUnmapped() || !read.isPairedRead())
+        if(read.isDiscordant() || read.isMateUnmapped() || !read.isPairedRead())
             return false;
 
         if(requireLower)
@@ -188,7 +190,24 @@ public final class AssemblyUtils
 
     public static boolean isSupplementaryOnly(final JunctionAssembly assembly)
     {
-        return assembly.support().stream().allMatch(x -> x.read().isSupplementary());
+        return assembly.support().stream().allMatch(x -> x.isSupplementary());
+    }
+
+    public static byte[] createMinBaseQuals(final int length) { return createByteArray(length, (byte) (LOW_BASE_QUAL_THRESHOLD + 1)); }
+
+    public static boolean hasUnsetBases(final JunctionAssembly assembly) { return !findUnsetBases(assembly.bases()).isEmpty(); }
+
+    public static int calcTrimmedRefBaseLength(final JunctionAssembly assembly)
+    {
+        int refBaseLength = assembly.refBaseLength();
+
+        if(assembly.repeatInfo().isEmpty())
+            return refBaseLength;
+
+        int seqStart = assembly.isForwardJunction() ? assembly.junctionIndex() - refBaseLength + 1 : assembly.junctionIndex();
+        int seqEnd = assembly.isForwardJunction() ? assembly.junctionIndex() : assembly.junctionIndex() + refBaseLength - 1;
+
+        return calcTrimmedBaseLength(seqStart, seqEnd, assembly.repeatInfo());
     }
 
     public static void setAssemblyOutcome(final JunctionAssembly assembly)

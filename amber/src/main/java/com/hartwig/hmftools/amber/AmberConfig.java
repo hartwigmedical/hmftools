@@ -68,6 +68,7 @@ public class AmberConfig
     public final String OutputDir;
     public final ValidationStringency BamStringency;
     public final int Threads;
+    public final boolean SkipBafSegmentation;
 
     public final List<String> SpecificChromosomes;
 
@@ -87,6 +88,7 @@ public class AmberConfig
     private static final String MAX_HIT_AT_PERC = "max_het_af_percent";
     private static final String WRITE_UNFILTERED_GERMLINE = "write_unfiltered_germline";
     private static final String POSITION_GAP = "position_gap";
+    private static final String SKIP_BAF_SEGMENTATION = "skip_baf_segmentation";
 
     public AmberConfig(final ConfigBuilder configBuilder)
     {
@@ -137,6 +139,8 @@ public class AmberConfig
         MaxHetAfPercent = configBuilder.getDecimal(MAX_HIT_AT_PERC);
         PositionGap = configBuilder.getInteger(POSITION_GAP);
 
+        SkipBafSegmentation = configBuilder.hasFlag(SKIP_BAF_SEGMENTATION);
+
         WriteUnfilteredGermline = configBuilder.hasFlag(WRITE_UNFILTERED_GERMLINE);
 
         OutputDir = parseOutputDir(configBuilder);
@@ -185,6 +189,8 @@ public class AmberConfig
         configBuilder.addDecimal(MAX_DEPTH_PERC, "Max percentage of median depth", DEFAULT_MAX_DEPTH_PERCENTAGE);
         configBuilder.addDecimal(MIN_HIT_AT_PERC, "Max heterozygous AF%", DEFAULT_MIN_HET_AF_PERCENTAGE);
         configBuilder.addDecimal(MAX_HIT_AT_PERC, "Max heterozygous AF%", DEFAULT_MAX_HET_AF_PERCENTAGE);
+
+        configBuilder.addFlag(SKIP_BAF_SEGMENTATION, "Skip BAF segmentation");
 
         configBuilder.addFlag(WRITE_UNFILTERED_GERMLINE, "Write all (unfiltered) germline points");
 

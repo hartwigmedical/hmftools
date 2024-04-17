@@ -10,7 +10,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
-import com.hartwig.hmftools.esvee.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
 
 import org.junit.Test;
 

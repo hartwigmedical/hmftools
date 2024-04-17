@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.candidate;
 
-import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.old.ReadContext;
 
 import org.jetbrains.annotations.Nullable;
 

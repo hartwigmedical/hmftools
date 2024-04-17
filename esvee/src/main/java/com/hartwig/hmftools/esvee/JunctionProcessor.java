@@ -3,18 +3,19 @@ package com.hartwig.hmftools.esvee;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.esvee.alignment.Alignment.skipUnlinkedJunctionAssembly;
+import static com.hartwig.hmftools.esvee.alignment.BreakendBuilder.formBreakendFacingLinks;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
-import static com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution.loadFragmentLengthBounds;
+import static com.hartwig.hmftools.esvee.assembly.types.LinkType.FACING;
+import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
-import static com.hartwig.hmftools.esvee.types.AssemblyOutcome.REMOTE_REF;
-import static com.hartwig.hmftools.esvee.types.JunctionGroup.buildJunctionGroups;
-import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLIES;
-import static com.hartwig.hmftools.esvee.output.WriteType.ASSEMBLY_BAM;
-import static com.hartwig.hmftools.esvee.output.WriteType.READS;
+import static com.hartwig.hmftools.esvee.assembly.types.JunctionGroup.buildJunctionGroups;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.JUNC_ASSEMBLY;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_BAM;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,27 +29,32 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.esvee.alignment.Alignment;
+import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
+import com.hartwig.hmftools.esvee.alignment.Breakend;
+import com.hartwig.hmftools.esvee.alignment.BwaAligner;
+import com.hartwig.hmftools.esvee.alignment.Deduplication;
+import com.hartwig.hmftools.esvee.assembly.output.BreakendWriter;
+import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
-import com.hartwig.hmftools.esvee.output.AssemblyReadWriter;
-import com.hartwig.hmftools.esvee.output.AssemblyWriter;
-import com.hartwig.hmftools.esvee.output.BamWriter;
-import com.hartwig.hmftools.esvee.phasing.PhaseGroupBuilder;
+import com.hartwig.hmftools.esvee.assembly.output.AssemblyReadWriter;
+import com.hartwig.hmftools.esvee.assembly.output.AssemblyWriter;
+import com.hartwig.hmftools.esvee.assembly.output.BamWriter;
+import com.hartwig.hmftools.esvee.assembly.phase.PhaseGroupBuilder;
 import com.hartwig.hmftools.esvee.assembly.JunctionGroupAssembler;
-import com.hartwig.hmftools.esvee.phasing.PhaseSetTask;
+import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetTask;
 import com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution;
-import com.hartwig.hmftools.esvee.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.types.AssemblyOutcome;
-import com.hartwig.hmftools.esvee.types.Junction;
-import com.hartwig.hmftools.esvee.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.types.JunctionGroup;
-import com.hartwig.hmftools.esvee.types.PhaseGroup;
-import com.hartwig.hmftools.esvee.types.PhaseSet;
-import com.hartwig.hmftools.esvee.types.ThreadTask;
-import com.hartwig.hmftools.esvee.output.ResultsWriter;
-import com.hartwig.hmftools.esvee.output.WriteType;
-import com.hartwig.hmftools.esvee.read.BamReader;
-import com.hartwig.hmftools.esvee.output.VcfWriter;
-import com.hartwig.hmftools.esvee.read.ReadStats;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionGroup;
+import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
+import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
+import com.hartwig.hmftools.esvee.assembly.output.ResultsWriter;
+import com.hartwig.hmftools.esvee.assembly.output.WriteType;
+import com.hartwig.hmftools.esvee.assembly.read.BamReader;
+import com.hartwig.hmftools.esvee.assembly.output.VcfWriter;
+import com.hartwig.hmftools.esvee.assembly.read.ReadStats;
 
 public class JunctionProcessor
 {
@@ -97,7 +103,7 @@ public class JunctionProcessor
         for(String junctionFile : mConfig.JunctionFiles)
         {
             Map<String,List<Junction>> newJunctionsMap = Junction.loadJunctions(
-                    junctionFile, mConfig.SpecificChrRegions, mConfig.SkipDiscordant);
+                    junctionFile, mConfig.SpecificChrRegions, mConfig.ProcessDiscordant);
 
             if(newJunctionsMap == null)
                 return false;
@@ -156,13 +162,29 @@ public class JunctionProcessor
 
             formPhaseGroups();
 
-            alignPhaseSets();
+            List<JunctionAssembly> finalAssemblies = Lists.newArrayList();
+            List<AssemblyAlignment> assemblyAlignments = Lists.newArrayList();
 
-            List<JunctionAssembly> finalAssemblies = prepareFinalAssemblies();
+            gatherAssemblies(finalAssemblies, assemblyAlignments);
+
+            runAlignment(assemblyAlignments);
+
+            List<Breakend> breakends = Lists.newArrayList();
+            assemblyAlignments.forEach(x -> breakends.addAll(x.breakends()));
+            Collections.sort(breakends);
+
+            for(int i = 0; i < breakends.size(); ++i)
+            {
+                breakends.get(i).setId(i);
+            }
+
+            formBreakendFacingLinks(breakends);
+
+            Deduplication.deduplicateBreakends(breakends);
 
             writeAssemblyOutput(finalAssemblies);
 
-            writeVariantVcf(finalAssemblies);
+            writeVariants(assemblyAlignments, breakends);
 
             // note this is written after the VCF since writing reassigns the reads to the output BAM, there-by removing their association
             // with the BAM they were read from (ie as used in tumor vs ref counts)
@@ -208,30 +230,36 @@ public class JunctionProcessor
         if(!runThreadTasks(threadTasks))
             System.exit(1);
 
-        int totalJunctionAssemblies = junctionGroups.stream().mapToInt(x -> x.junctionAssemblies().size()).sum();
-        int totalDiscordantGroups = junctionGroups.stream().mapToInt(x -> x.discordantGroups().size()).sum();
+        int assemblyCount = 0;
+        int junctionReadCount = 0;
+        int candidateReadCount = 0;
+
+        for(JunctionGroup junctionGroup : junctionGroups)
+        {
+            for(JunctionAssembly assembly : junctionGroup.junctionAssemblies())
+            {
+                ++assemblyCount;
+                junctionReadCount += assembly.supportCount();
+                candidateReadCount += assembly.candidateSupport().size();
+            }
+        }
 
         ReadStats combinedReadStats = new ReadStats();
         primaryAssemblyTasks.forEach(x -> combinedReadStats.merge(x.readStats()));
 
-        SV_LOGGER.info("created {} junction assemblies, {} discordant groups", totalJunctionAssemblies, totalDiscordantGroups);
+        SV_LOGGER.info("created {} junction assemblies reads(junc={} candidate={})",
+                assemblyCount, junctionReadCount, candidateReadCount);
+
+        SV_LOGGER.info("extracted read stats: {}", combinedReadStats);
 
         addPerfCounters(primaryAssemblyTasks.stream().collect(Collectors.toList()));
-
-        int totalCachedReads = junctionGroups.stream().mapToInt(x -> x.candidateReadCount()).sum();
-
-        SV_LOGGER.info("cached read count({}) from {} junction groups, stats: {}",
-                totalCachedReads, junctionGroups.size(), combinedReadStats);
     }
 
     private void formPhaseGroups()
     {
         PhaseGroupBuilder phaseGroupBuilder = new PhaseGroupBuilder(mConfig, mJunctionGroupMap, mResultsWriter.phaseGroupBuildWriter());
 
-        phaseGroupBuilder.buildGroups();
-
-        addPerfCounters(phaseGroupBuilder.localBuilderTasks());
-        addPerfCounters(phaseGroupBuilder.remoteBuilderTasks());
+        phaseGroupBuilder.buildGroups(mPerfCounters);
 
         List<PhaseGroup> phaseGroups = phaseGroupBuilder.phaseGroups();
 
@@ -250,47 +278,33 @@ public class JunctionProcessor
 
         addPerfCounters(phaseSetTasks.stream().collect(Collectors.toList()));
 
-        int totalRemoteReadSearch = phaseSetTasks.stream().mapToInt(x -> x.totalRemoteReadsSearch()).sum();
         int totalRemoteReadMatched = phaseSetTasks.stream().mapToInt(x -> x.totalRemoteReadsMatched()).sum();
 
-        SV_LOGGER.info("created {} phase sets, remote read(search={} matched={})",
-                phaseGroups.stream().mapToInt(x -> x.phaseSets().size()).sum(),
-                totalRemoteReadSearch, totalRemoteReadMatched);
+        SV_LOGGER.info("created {} phase sets, remote reads extracted({})",
+                phaseGroups.stream().mapToInt(x -> x.phaseSets().size()).sum(), totalRemoteReadMatched);
     }
 
     private void addPerfCounters(final List<ThreadTask> tasks)
     {
-        if(tasks.isEmpty())
+        mergePerfCounters(mPerfCounters, tasks);
+    }
+
+    private void runAlignment(final List<AssemblyAlignment> assemblyAlignments)
+    {
+        if(!mConfig.RunAlignment)
             return;
 
-        mPerfCounters.add(ThreadTask.mergePerfCounters(tasks));
+        boolean useCache = mConfig.AlignmentFile != null;
+        Alignment alignment = new Alignment(mConfig, !useCache ? new BwaAligner(mConfig.RefGenomeImageFile) : null);
+        alignment.run(assemblyAlignments, mPerfCounters);
+        alignment.close();
     }
 
-    private void alignPhaseSets()
+    private void gatherAssemblies(final List<JunctionAssembly> allAssemblies, final List<AssemblyAlignment> assemblyAlignments)
     {
-        /*
-        Alignment alignment = new Alignment(mConfig, new BwaAligner(mConfig));
-
-        for(PhaseGroup phaseGroup : phaseGroupBuilder.phaseGroups())
-        {
-            for(PhaseSet phaseSet : phaseGroup.phaseSets())
-            {
-                alignment.processPhaseSet(phaseSet);
-            }
-        }
-        */
-
-    }
-
-    private List<JunctionAssembly> prepareFinalAssemblies()
-    {
-        // assemblies are source from junction groups
-        // they could instead be sourced from phase groups, to automatically collect any branched or ref-remote assemblies
-
         int assemblyId = 0;
 
         Set<PhaseGroup> phaseGroups = Sets.newHashSet();
-        List<JunctionAssembly> allAssemblies = Lists.newArrayList();
 
         for(List<JunctionGroup> junctionGroups : mJunctionGroupMap.values())
         {
@@ -298,17 +312,40 @@ public class JunctionProcessor
             {
                 for(JunctionAssembly assembly : junctionGroup.junctionAssemblies())
                 {
+                    setAssemblyOutcome(assembly);
+
                     if(assembly.phaseGroup() != null)
+                    {
                         phaseGroups.add(assembly.phaseGroup());
+                    }
 
                     allAssemblies.add(assembly);
                 }
             }
         }
 
+        int assemblyAlignmentId = 0;
         for(PhaseGroup phaseGroup : phaseGroups)
         {
             allAssemblies.addAll(phaseGroup.derivedAssemblies());
+
+            if(mConfig.RunAlignment)
+            {
+                for(PhaseSet phaseSet : phaseGroup.phaseSets())
+                {
+                    for(AssemblyLink assemblyLink : phaseSet.assemblyLinks())
+                    {
+                        if(assemblyLink.type() != FACING)
+                            assemblyAlignments.add(new AssemblyAlignment(assemblyAlignmentId++, assemblyLink));
+                    }
+                }
+
+                for(JunctionAssembly assembly : phaseGroup.assemblies())
+                {
+                    if(assembly.phaseSet() == null && !skipUnlinkedJunctionAssembly(assembly))
+                        assemblyAlignments.add(new AssemblyAlignment(assemblyAlignmentId++, assembly));
+                }
+            }
         }
 
         Collections.sort(allAssemblies, Comparator.comparing(x -> x.junction()));
@@ -316,20 +353,17 @@ public class JunctionProcessor
         for(JunctionAssembly assembly : allAssemblies)
         {
             assembly.setId(assemblyId++);
-            setAssemblyOutcome(assembly);
         }
-
-        return allAssemblies;
     }
 
     private void writeAssemblyOutput(final List<JunctionAssembly> assemblies)
     {
-        if(mConfig.WriteTypes.contains(ASSEMBLIES) || mConfig.WriteTypes.contains(READS))
+        if(mConfig.WriteTypes.contains(JUNC_ASSEMBLY) || mConfig.WriteTypes.contains(ASSEMBLY_READ))
         {
             SV_LOGGER.debug("writing assembly TSV output");
 
-            AssemblyReadWriter readWriter = mConfig.WriteTypes.contains(READS) ? mResultsWriter.readWriter() : null;
-            AssemblyWriter assemblyWriter = mConfig.WriteTypes.contains(ASSEMBLIES) ? mResultsWriter.assemblyWriter() : null;
+            AssemblyReadWriter readWriter = mConfig.WriteTypes.contains(ASSEMBLY_READ) ? mResultsWriter.readWriter() : null;
+            AssemblyWriter assemblyWriter = mConfig.WriteTypes.contains(JUNC_ASSEMBLY) ? mResultsWriter.assemblyWriter() : null;
 
             for(JunctionAssembly assembly : assemblies)
             {
@@ -358,21 +392,27 @@ public class JunctionProcessor
         }
     }
 
-    private void writeVariantVcf(final List<JunctionAssembly> assemblies)
+    private void writeVariants(final List<AssemblyAlignment> assemblyAlignments, final List<Breakend> breakends)
     {
-        if(!mConfig.WriteTypes.contains(WriteType.VCF))
-            return;
-
-        SV_LOGGER.debug("writing variant VCF");
-
-        VcfWriter vcfWriter = new VcfWriter(mConfig);
-
-        for(JunctionAssembly assembly : assemblies)
+        if(mConfig.WriteTypes.contains(WriteType.VCF))
         {
-            vcfWriter.addVariant(assembly);
+            SV_LOGGER.debug("writing variant VCF with {} breakends");
+
+            VcfWriter vcfWriter = new VcfWriter(mConfig);
+
+            for(Breakend breakend : breakends)
+            {
+                vcfWriter.addBreakend(breakend);
+            }
+
+            vcfWriter.close();
         }
 
-        vcfWriter.close();
+        if(mConfig.WriteTypes.contains(WriteType.BREAKEND))
+        {
+            BreakendWriter breakendWriter = mResultsWriter.breakendWriter();
+            assemblyAlignments.forEach(x -> breakendWriter.writeBreakends((x)));
+        }
     }
 
     public void close()

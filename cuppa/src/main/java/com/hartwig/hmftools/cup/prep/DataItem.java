@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.cup.prep;
 
-import java.util.Comparator;
+import java.util.Locale;
 import java.util.Objects;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -15,10 +17,29 @@ public class DataItem implements Comparable<DataItem>
     public static final String FLD_KEY = "Key";
     public static final String FLD_VALUE = "Value";
 
-    public DataItem(final DataSource source, final ItemType type, final String key, final String value)
+    public DataItem(final DataSource source, final ItemType type, final String key, final int intValue)
     {
         Index = new Index(source, type, key);
-        Value = value;
+        Value = String.valueOf(intValue);
+    }
+
+    public DataItem(final DataSource source, final ItemType type, final String key, final boolean boolValue)
+    {
+        Index = new Index(source, type, key);
+        Value = boolValue ? "1" : "0";
+    }
+
+    public DataItem(final DataSource source, final ItemType type, final String key, final double doubleValue, String numberFormat)
+    {
+        Index = new Index(source, type, key);
+        Value = String.format(Locale.ENGLISH, numberFormat, doubleValue);
+    }
+
+    @VisibleForTesting
+    DataItem(final DataSource source, final ItemType type, final String key, final String stringValue)
+    {
+        Index = new Index(source, type, key);
+        Value = stringValue;
     }
 
     public static class Index implements Comparable<Index>

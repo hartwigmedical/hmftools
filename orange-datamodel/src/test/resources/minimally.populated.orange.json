@@ -274,6 +274,7 @@
         "chromosome": "12",
         "chromosomeBand": "p13",
         "minCopyNumber": 1.2,
+        "maxCopyNumber": 1.2,
         "minMinorAlleleCopyNumber": 0.4
       }
     ],
@@ -307,6 +308,7 @@
         "chromosome": "12",
         "chromosomeBand": "p13",
         "minCopyNumber": 1.2,
+        "maxCopyNumber": 1.2,
         "minMinorAlleleCopyNumber": 0.4
       }
     ]

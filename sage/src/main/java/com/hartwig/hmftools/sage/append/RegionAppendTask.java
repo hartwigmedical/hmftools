@@ -15,9 +15,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
-import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
-import com.hartwig.hmftools.sage.evidence.FragmentLengthData;
+import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
 import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
@@ -95,7 +94,7 @@ public class RegionAppendTask implements Callable
                 for(int s = 0; s < mConfig.Common.ReferenceIds.size(); ++s)
                 {
                     String sampleId = mConfig.Common.ReferenceIds.get(s);
-                    FragmentLengthData fragmentLengthData = sampleCounters.get(s).fragmentLengths();
+                    FragmentLengthCounts fragmentLengthData = sampleCounters.get(s).fragmentLengths();
                     mFragmentLengths.writeVariantFragmentLength(variantInfo, sampleId, fragmentLengthData);
                 }
             }

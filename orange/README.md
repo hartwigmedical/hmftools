@@ -231,7 +231,8 @@ investigate potential causes for QC failure.
 
 ## Version History and Download Links
 
-- Upcoming
+- [3.4.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.4.0)
+    - Produce ORANGE datamodel v2.4.0 (including max copy number for gene copy numbers)
     - Bugfix: ORANGE can now map stomach and esophageal squamous cell carcinomas to their rightful cohort. 
       - Note: Available in ORANGE [3.3.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.3.1)
     - Split pharmacogenetic haplotype into separate haplotype and genotype on front page and in table.

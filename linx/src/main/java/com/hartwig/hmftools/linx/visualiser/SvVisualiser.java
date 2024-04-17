@@ -329,7 +329,7 @@ public class SvVisualiser implements AutoCloseable
 
         final Object circosResult = new CircosExecution(
                 mConfig.CircosBin).generateCircos(mConfig.OutputConfPath + File.separator + confFileName,
-                mConfig.OutputPlotPath, outputFileName, mConfig.OutputConfPath);
+                mConfig.OutputPlotPath, outputFileName);
 
         if(plotFusion)
         {

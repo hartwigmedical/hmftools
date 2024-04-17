@@ -45,11 +45,10 @@ import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.vcf.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.candidate.Candidate;
-import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.old.ReadContext;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
-import com.hartwig.hmftools.sage.common.ReadContextFactory;
+import com.hartwig.hmftools.sage.old.ReadContextFactory;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.jetbrains.annotations.NotNull;

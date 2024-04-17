@@ -39,6 +39,7 @@ import com.hartwig.hmftools.cup.rna.RefGeneExpression;
 import com.hartwig.hmftools.cup.somatics.RefSomatics;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
+@Deprecated
 public class RefDataConfig
 {
     public final RefGenomeVersion RefGenVersion;

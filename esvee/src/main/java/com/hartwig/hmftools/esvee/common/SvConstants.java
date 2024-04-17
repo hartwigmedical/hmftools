@@ -7,7 +7,7 @@ public final class SvConstants
 
     public static final String FILE_NAME_DELIM = ".";
 
-    public static final String BAM_HEADER_SAMPLE_ID_TAG = "sampleId";
+    public static final String BAM_HEADER_SAMPLE_INDEX_TAG = "sampleId";
 
     // commonly used thresholds
     public static final int MIN_VARIANT_LENGTH = 32;

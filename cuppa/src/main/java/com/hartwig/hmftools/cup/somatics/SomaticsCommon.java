@@ -13,6 +13,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Matrix;
 
+@Deprecated
 public final class SomaticsCommon
 {
     public static final String INCLUDE_AID_APOBEC = "include_aid_apobec_gen_pos";

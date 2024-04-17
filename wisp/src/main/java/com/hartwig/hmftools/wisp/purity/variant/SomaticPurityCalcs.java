@@ -20,11 +20,11 @@ public final class SomaticPurityCalcs
 
     public static double calcLimitOfDetection(final FragmentTotals fragmentTotals, final double tumorPurity, final double noiseRate)
     {
-        double sampleDepthTotal = fragmentTotals.sampleDepthTotal();
+        double sampleDepthTotal = fragmentTotals.sampleAdjustedDepthTotal();
         double expectedNoiseFragments = noiseRate * sampleDepthTotal;
         double lodFragments = calcPoissonNoiseValue((int)round(expectedNoiseFragments), LOW_PROBABILITY);
         double lodSampleVaf = lodFragments / sampleDepthTotal;
-        return estimatedPurity(tumorPurity, fragmentTotals.rawTumorVaf(), lodSampleVaf, noiseRate);
+        return estimatedPurity(tumorPurity, fragmentTotals.adjTumorVaf(), lodSampleVaf, noiseRate);
     }
 
     public static double estimatedProbability(int alleleCount, double noise)

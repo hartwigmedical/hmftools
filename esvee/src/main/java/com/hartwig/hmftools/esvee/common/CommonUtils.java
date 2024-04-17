@@ -4,10 +4,13 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.BamToolName.fromPath;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
-import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.common.SvConstants.ESVEE_FILE_ID;
 import static com.hartwig.hmftools.esvee.common.SvConstants.FILE_NAME_DELIM;
 
 import java.io.IOException;
@@ -19,8 +22,8 @@ import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bam.BamToolName;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.esvee.prep.types.ReadFilterConfig;
-import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -52,6 +55,56 @@ public final class CommonUtils
         int fragmentSize = abs(read.getInferredInsertSize());
 
         return fragmentSize == 0 || fragmentSize >= fragmentLengthUpperBound;
+    }
+
+    public static int compareJunctions(
+            final String chr1, final String chr2, final int pos1, final int pos2, final byte orient1, final byte orient2)
+    {
+        if(!chr1.equals(chr2))
+        {
+            int firstChrRank = HumanChromosome.chromosomeRank(chr1);
+            int secondChrRank = HumanChromosome.chromosomeRank(chr2);
+
+            return firstChrRank < secondChrRank ? -1 : 1;
+        }
+
+        if(pos1 == pos2)
+        {
+            if(orient1 == orient2)
+                return 0;
+
+            return orient1 == POS_ORIENT ? -1 : 1;
+        }
+
+        return pos1 < pos2 ? -1 : 1;
+    }
+
+    public static StructuralVariantType formSvType(
+            final String chrStart, final String chrEnd, final int posStart, final int posEnd, final byte orientStart, final byte orientEnd,
+            final boolean hasInsertedBases)
+    {
+        if(!chrStart.equals(chrEnd))
+            return BND;
+
+        if(orientStart != orientEnd)
+        {
+            int posDiff = abs(posStart - posEnd);
+
+            if(posDiff == 1 && hasInsertedBases)
+                return INS;
+
+            if(posDiff == 0)
+                return DUP;
+
+            boolean firstIsLower = posStart < posEnd;
+            boolean firstIsForward = orientStart == POS_ORIENT;
+
+            return (firstIsLower == firstIsForward) ? DEL : DUP;
+        }
+        else
+        {
+            return INV;
+        }
     }
 
     public static String readToString(final SAMRecord read)
@@ -116,81 +169,10 @@ public final class CommonUtils
             deleteInterimFile(unsortedBam);
     }
 
-    public static void copyArray(final byte[] source, final byte[] dest, final int sourceIndexStart, final int destIndexStart)
-    {
-        int d = destIndexStart;
-        for(int s = sourceIndexStart; s < source.length && d < dest.length; ++s, ++d)
-        {
-            dest[d] = source[s];
-        }
-    }
-
-    public static byte[] copyArray(final byte[] source)
-    {
-        byte[] dest = new byte[source.length];
-
-        for(int i = 0; i < source.length; ++i)
-        {
-            dest[i] = source[i];
-        }
-
-        return dest;
-    }
-
-    public static byte[] subsetArray(final byte[] source, final int startIndex, final int endIndex)
-    {
-        byte[] dest = new byte[endIndex - startIndex + 1];
-
-        int newIndex = 0;
-        for(int index = startIndex; index <= endIndex; ++index, ++newIndex)
-        {
-            dest[newIndex] = source[index];
-        }
-
-        return dest;
-    }
-
-    public static int[] copyArray(final int[] source)
-    {
-        int[] dest = new int[source.length];
-
-        for(int i = 0; i < source.length; ++i)
-        {
-            dest[i] = source[i];
-        }
-
-        return dest;
-    }
-
-    public static byte[] addByteArray(final byte[] first, final byte[] second)
-    {
-        byte[] combined = new byte[first.length + second.length];
-
-        for(int i = 0; i < first.length; ++i)
-        {
-            combined[i] = first[i];
-        }
-
-        for(int i = 0; i < second.length; ++i)
-        {
-            combined[first.length + i] = second[i];
-        }
-
-        return combined;
-    }
-
     public static byte[] reverseBytes(final byte[] bases)
     {
         String reversed = Nucleotides.reverseComplementBases(new String(bases));
         return reversed.getBytes();
-    }
-
-    public static void initialise(final byte[] array, final byte value)
-    {
-        for(int i = 0; i < array.length; ++i)
-        {
-            array[i] = value;
-        }
     }
 
     public static byte[] createByteArray(final int length, final byte value)
@@ -204,13 +186,4 @@ public final class CommonUtils
 
         return array;
     }
-
-    public static void initialise(final int[] array, final int value)
-    {
-        for(int i = 0; i < array.length; ++i)
-        {
-            array[i] = value;
-        }
-    }
-
 }

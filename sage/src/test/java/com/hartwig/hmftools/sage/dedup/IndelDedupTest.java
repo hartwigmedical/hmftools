@@ -2,12 +2,10 @@ package com.hartwig.hmftools.sage.dedup;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
-import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.common.TestUtils.addLocalPhaseSet;
-import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.createVariant;
 import static com.hartwig.hmftools.sage.common.TestUtils.setTumorQuality;
 import static com.hartwig.hmftools.sage.dedup.IndelDeduper.buildAltBasesString;
@@ -22,19 +20,13 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.RegionTaskTester;
+import com.hartwig.hmftools.sage.old.IndexedBases;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
-import com.hartwig.hmftools.sage.pipeline.RegionTask;
 
 import org.junit.Test;
-
-import htsjdk.samtools.SAMRecord;
 
 public class IndelDedupTest
 {

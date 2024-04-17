@@ -24,7 +24,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
-import static com.hartwig.hmftools.wisp.purity.SampleData.ctDnaSamplesFromStr;
+import static com.hartwig.hmftools.wisp.purity.SampleData.sampleIdsFromStr;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND;
 
@@ -69,7 +69,7 @@ public class PurityConfig
 
     private static final String PATIENT_ID = "patient_id";
     private static final String TUMOR_ID = "tumor_id";
-    private static final String CTDNA_SAMPLES = "ctdna_samples";
+    private static final String SAMPLES = "samples";
     private static final String PURITY_METHODS = "purity_methods";
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String SOMATIC_DIR = "somatic_dir";
@@ -160,7 +160,7 @@ public class PurityConfig
     public boolean writeType(final WriteType writeType) { return WriteTypes.contains(writeType); }
     public boolean hasSyntheticTumor() { return PurpleDir == null || PurpleDir.isEmpty(); }
     public boolean multiplePatients() { return Samples.size() > 1; }
-    public boolean multipleSamples() { return multiplePatients() || Samples.stream().mapToInt(x -> x.CtDnaSamples.size()).sum() > 1; }
+    public boolean multipleSamples() { return multiplePatients() || Samples.stream().mapToInt(x -> x.SampleIds.size()).sum() > 1; }
     public boolean hasBatchControls() { return Samples.stream().anyMatch(x -> x.isBatchControl()); }
 
     public String getPurpleDir(final String sampleId) { return convertWildcardSamplePath(PurpleDir, sampleId); }
@@ -189,11 +189,11 @@ public class PurityConfig
             Samples.add(new SampleData(
                     configBuilder.getValue(PATIENT_ID),
                     configBuilder.getValue(TUMOR_ID),
-                    ctDnaSamplesFromStr(configBuilder.getValue(CTDNA_SAMPLES)), "", GcRatioMin > 0));
+                    sampleIdsFromStr(configBuilder.getValue(SAMPLES)), "", GcRatioMin > 0));
         }
 
-        CT_LOGGER.info("loaded {} patients and {} ctDNA samples",
-                Samples.size(), Samples.stream().mapToInt(x -> x.CtDnaSamples.size()).sum());
+        CT_LOGGER.info("loaded {} patients and {} samples",
+                Samples.size(), Samples.stream().mapToInt(x -> x.SampleIds.size()).sum());
     }
 
     public String formFilename(final FileType fileType)
@@ -204,13 +204,13 @@ public class PurityConfig
         {
             fileName += "wisp_cohort.";
         }
-        else if(Samples.get(0).CtDnaSamples.size() > 1)
+        else if(Samples.get(0).SampleIds.size() > 1)
         {
             fileName += format("%s.wisp.", Samples.get(0).PatientId);
         }
         else
         {
-            fileName += format("%s_%s.wisp.", Samples.get(0).PatientId, Samples.get(0).CtDnaSamples.get(0));
+            fileName += format("%s_%s.wisp.", Samples.get(0).PatientId, Samples.get(0).SampleIds.get(0));
         }
 
         fileName += fileType.fileId();
@@ -225,10 +225,10 @@ public class PurityConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(SAMPLE_ID_FILE, false, "Patient and sample data file: PatientId,TumorId,CtDnaSampleIds");
+        configBuilder.addConfigItem(SAMPLE_ID_FILE, false, "Patient and sample data file: PatientId,TumorId,SampleIds");
         configBuilder.addConfigItem(PATIENT_ID, false, "Patient ID");
         configBuilder.addConfigItem(TUMOR_ID, false, "Original tumor sample ID");
-        configBuilder.addConfigItem(CTDNA_SAMPLES, false, "List of ctDNA sample IDs separated by ','");
+        configBuilder.addConfigItem(SAMPLES, false, "List of sample IDs separated by ','");
 
         configBuilder.addConfigItem(
                 PURITY_METHODS, false,
@@ -238,7 +238,7 @@ public class PurityConfig
         configBuilder.addConfigItem(SOMATIC_VCF, false, "Somatic VCF files, separated by ','", "");
         configBuilder.addConfigItem(SOMATIC_DIR, false, "Somatic VCF directory");
         configBuilder.addConfigItem(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
-        configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
+        configBuilder.addConfigItem(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
         configBuilder.addConfigItem(AMBER_DIR_CFG, false, AMBER_DIR_DESC);
         configBuilder.addConfigItem(COBALT_DIR_CFG, false, COBALT_DIR_DESC);
         configBuilder.addConfigItem(PLOT_DIR, false, "Plot output directory, defaults to sample or output dir");

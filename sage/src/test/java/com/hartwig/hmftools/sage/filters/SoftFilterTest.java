@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.old.ReadContext;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;

@@ -40,10 +40,12 @@ public final class AssemblyConstants
     public static final int ASSEMBLY_EXTENSION_BASE_MISMATCH = 2;
     public static final int REF_SIDE_MIN_SOFT_CLIP_LENGTH = MIN_SOFT_CLIP_LENGTH;
 
+    public static final int LOCAL_ASSEMBLY_MATCH_DISTANCE = 500;
+    public static final int LOCAL_ASSEMBLY_REF_LENGTH = 100;
+
     // phasing
     public static final int REMOTE_PHASING_MIN_READS = 2;
     public static final double REMOTE_REGION_WEAK_SUPP_PERCENT = 0.1;
-    public static final int PHASED_ASSEMBLY_OVERLAP_BASES = 100;
     public static final int PHASED_ASSEMBLY_JUNCTION_OVERLAP = 50;
     public static final int PHASED_ASSEMBLY_MAX_TI = 1000;
     public static final int PROXIMATE_DEL_LENGTH = 1000;
@@ -52,23 +54,11 @@ public final class AssemblyConstants
     // output
     public static final int DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX = 200; // for TSV and VCF output, no function impact
 
-    // alignment - to check
+    // alignment
+    public static final int ALIGNMENT_MIN_SOFT_CLIP = 30;
+    public static final int ALIGNMENT_MAX_ZERO_QUALS = 5;
 
-    // Not a MapQ. Ignore any alignments during extension that come from BWA with a score less than this
-    public static final int ALIGNER_MIN_SCORE = 20;
+    public static final int SHORT_DEL_DUP_INS_LENGTH = 1000;
 
-    // If there is more than one candidate for extending an assembly alignment, ignore any that insert this many more bases than the best
-    public static final int ALIGNER_EXTENSION_INSERT_TOLERANCE = 16;
 
-    // We don't attempt to call the aligner if we have less than this many bases
-    public static final int ALIGNER_MIN_BASES = 20;
-
-    // When extending alignments, if we have a candidate match within this many bases of the existing neighbour, prioritise that alignment
-    public static final int ALIGNER_NEARBY_MAX_DISTANCE = 2000;
-
-    // The threshold below which a LOW_OVERHANG filter will be applied to the VCF
-    public static final int LOW_OVERHANG_THRESHOLD = 30;
-
-    // The threshold below which a LOW_QUALITY filter will be applied to the VCF
-    public static final int LOW_QUALITY_THRESHOLD = 40;
 }

@@ -48,5 +48,5 @@ public class PurityConstants
     public static final double AMBER_LOH_MIN_TUMOR_BAF = 0.55;
     public static final double AMBER_LOH_MIN_AF = 0.55;
 
-    public static final String PURPLE_CTDNA_SOMATIC_VCF_ID = ".purple.somatic.ctdna.";
+    public static final String PURPLE_APPENDED_SOMATIC_VCF_ID = ".purple.somatic.ctdna.";
 }

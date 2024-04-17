@@ -57,6 +57,7 @@ public final class PurpleConversion
                 .chromosome(geneCopyNumber.chromosome())
                 .chromosomeBand(geneCopyNumber.chromosomeBand())
                 .minCopyNumber(geneCopyNumber.minCopyNumber())
+                .maxCopyNumber(geneCopyNumber.maxCopyNumber())
                 .minMinorAlleleCopyNumber(geneCopyNumber.minMinorAlleleCopyNumber())
                 .build();
     }

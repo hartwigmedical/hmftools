@@ -12,56 +12,49 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERG
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.MATCH_SUBSEQUENCE_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.formLink;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.createByteArray;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.initialise;
-import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createMinBaseQuals;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
-import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordantFragment;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.esvee.AssemblyConfig;
-import com.hartwig.hmftools.esvee.read.BamReader;
-import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.types.AssemblySupport;
-import com.hartwig.hmftools.esvee.types.Junction;
-import com.hartwig.hmftools.esvee.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.types.JunctionSequence;
-import com.hartwig.hmftools.esvee.types.RemoteRegion;
-import com.hartwig.hmftools.esvee.types.SupportType;
-
-import org.checkerframework.checker.units.qual.A;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.esvee.assembly.read.BamReader;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionSequence;
+import com.hartwig.hmftools.esvee.assembly.types.RemoteRegion;
+import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 
 import htsjdk.samtools.SAMRecord;
 
 public class RemoteRegionAssembler
 {
-    private final AssemblyConfig mConfig;
+    private final RefGenomeInterface mRefGenome;
     private final BamReader mBamReader;
 
     private RemoteRegion mRemoteRegion;
-    private final Map<String,Read> mSourceReads;
+    private final Set<String> mSourceReadIds;
     private final List<Read> mMatchedRemoteReads;
 
     private int mTotalRemoteReadsSearch;
     private int mTotalRemoteReadsMatched;
 
-    public RemoteRegionAssembler(final AssemblyConfig config, final BamReader bamReader)
+    public RemoteRegionAssembler(final RefGenomeInterface refGenome, final BamReader bamReader)
     {
-        mConfig = config;
+        mRefGenome = refGenome;
         mBamReader = bamReader;
 
         mRemoteRegion = null;
-        mSourceReads = Maps.newHashMap();
+        mSourceReadIds = Sets.newHashSet();
         mMatchedRemoteReads = Lists.newArrayList();
 
         mTotalRemoteReadsSearch = 0;
@@ -81,13 +74,8 @@ public class RemoteRegionAssembler
         int secondExtBaseMatchCount = 0;
         int remoteJuncMates = 0;
 
-        for(AssemblySupport support : assembly.support())
+        for(SupportRead support : assembly.support())
         {
-            if(support.read().isReference()) // for now no reference support
-                return false;
-
-            Read read = support.read();
-
             if(support.type() != SupportType.JUNCTION)
                 continue;
 
@@ -101,12 +89,12 @@ public class RemoteRegionAssembler
                 secondExtBaseMatchCount = support.junctionMatches();
             }
 
-            if(read.isSupplementary() || read.isMateUnmapped())
+            if(support.isSupplementary() || support.isMateUnmapped())
                 continue;
 
-            boolean matePastJunction = (read.orientation() == POS_ORIENT) == assembly.isForwardJunction();
+            boolean matePastJunction = (support.orientation() == POS_ORIENT) == assembly.isForwardJunction();
 
-            if(isDiscordantFragment(read))
+            if(support.isDiscordant())
             {
                 if(matePastJunction)
                     ++remoteJuncMates;
@@ -114,8 +102,8 @@ public class RemoteRegionAssembler
             else
             {
                 // not local and concordant
-                if((assembly.isForwardJunction() && read.mateAlignmentStart() > assembly.junction().Position)
-                || (!assembly.isForwardJunction() && read.mateAlignmentEnd() < assembly.junction().Position))
+                if((assembly.isForwardJunction() && support.mateAlignmentStart() > assembly.junction().Position)
+                || (!assembly.isForwardJunction() && support.mateAlignmentEnd() < assembly.junction().Position))
                 {
                     return false;
                 }
@@ -139,23 +127,24 @@ public class RemoteRegionAssembler
     // private static final int REMOTE_REF_BASE_LENGTH_MAX = 300;
     // private static final int REMOTE_REF_BASE_EXTENSION_LENGTH = 100;
 
-    public AssemblyLink tryRemoteAssemblyLink(final JunctionAssembly assembly, final RemoteRegion remoteRegion, final List<Read> sourceReads)
+    public AssemblyLink tryRemoteAssemblyLink(
+            final JunctionAssembly assembly, final RemoteRegion remoteRegion, final List<String> sourceReadIds)
     {
         mRemoteRegion = remoteRegion;
 
         SV_LOGGER.trace("remote region({}) slice", mRemoteRegion);
 
         mMatchedRemoteReads.clear();
-        mSourceReads.clear();
+        mSourceReadIds.clear();
 
-        mTotalRemoteReadsSearch += sourceReads.size();
+        mTotalRemoteReadsSearch += sourceReadIds.size();
 
-        sourceReads.forEach(x -> mSourceReads.put(x.id(), x));
+        mSourceReadIds.addAll(sourceReadIds);
 
         mBamReader.sliceBam(mRemoteRegion.Chromosome, mRemoteRegion.start(), mRemoteRegion.end(), this::processRecord);
 
         SV_LOGGER.trace("remote region({}) sourcedReads(matched={} unmatched={})",
-                mRemoteRegion, mMatchedRemoteReads.size(), mSourceReads.size());
+                mRemoteRegion, mMatchedRemoteReads.size(), mSourceReadIds.size());
 
         mTotalRemoteReadsMatched += mMatchedRemoteReads.size();
 
@@ -166,7 +155,7 @@ public class RemoteRegionAssembler
         int remoteRegionStart = mMatchedRemoteReads.stream().mapToInt(x -> x.alignmentStart()).min().orElse(0);
         int remoteRegionEnd = mMatchedRemoteReads.stream().mapToInt(x -> x.alignmentEnd()).max().orElse(0);
 
-        byte[] refGenomeBases = mConfig.RefGenome.getBases(remoteRegion.Chromosome, remoteRegionStart, remoteRegionEnd);
+        byte[] refGenomeBases = mRefGenome.getBases(remoteRegion.Chromosome, remoteRegionStart, remoteRegionEnd);
 
         AssemblyLink assemblyLink = tryAssemblyRemoteRefOverlap(assembly, remoteRegionStart, remoteRegionEnd, refGenomeBases);
 
@@ -176,14 +165,18 @@ public class RemoteRegionAssembler
         SV_LOGGER.trace("assembly({}) links with remote region({}) matchedReads({})",
                 assembly, remoteRegion.toString(), mMatchedRemoteReads.size());
 
+        mSourceReadIds.clear();
+        mMatchedRemoteReads.clear();
+
         return assemblyLink;
     }
 
     private void processRecord(final SAMRecord record)
     {
-        Read sourceRead = mSourceReads.remove(record.getReadName());
+        // the read IDs have been trimmed, so has to match on what has been kept
+        boolean containedRead = mSourceReadIds.stream().anyMatch(x -> record.getReadName().contains(x));
 
-        if(sourceRead == null)
+        if(!containedRead)
             return;
 
         Read remoteRead = new Read(record);
@@ -210,7 +203,7 @@ public class RemoteRegionAssembler
                 assemblyReversed = true;
         }
 
-        JunctionSequence assemblySeq = new JunctionSequence(assembly, assemblyReversed, -1);
+        JunctionSequence assemblySeq = new JunctionSequence(assembly, assemblyReversed, 0, -1);
 
         JunctionSequence remoteRefSeq = new JunctionSequence(refGenomeBases, refBaseQuals, mRemoteRegion.orientation(), remoteReversed);
 
@@ -288,7 +281,7 @@ public class RemoteRegionAssembler
             int firstIndexStart = firstJuncIndexStart + assemblySeq.junctionSeqStartIndex();
             int firstIndexEnd = min(firstJuncIndexEnd + assemblySeq.junctionSeqStartIndex(), assemblySeq.BaseLength - 1);
 
-            if(secondIndexEnd - secondIndexStart  < minOverlapLength || firstIndexEnd - firstIndexStart  < minOverlapLength)
+            if(secondIndexEnd - secondIndexStart + 1 < minOverlapLength || firstIndexEnd - firstIndexStart + 1 < minOverlapLength)
                 continue;
 
             int mismatchCount = SequenceCompare.compareSequences(
@@ -302,7 +295,7 @@ public class RemoteRegionAssembler
             // now that the index in the remote ref sequence has a match and it is clear where this is in the assembly's extension sequence,
             // the implied junction position in the remote can be determined
             return formLinkWithRemote(
-                    assembly, assemblySeq, remoteRefSeq, refGenomeBases, refBaseQuals, remoteRegionStart, remoteRegionEnd,
+                    assembly, assemblySeq, remoteRefSeq, refGenomeBases, remoteRegionStart, remoteRegionEnd,
                     firstIndexStart, secondIndexStart);
         }
 
@@ -311,21 +304,12 @@ public class RemoteRegionAssembler
 
     private AssemblyLink formLinkWithRemote(
             final JunctionAssembly assembly, final JunctionSequence assemblySeq, final JunctionSequence initialRemoteRefSeq,
-            final byte[] refGenomeBases, final byte[] refBaseQuals, final int remoteRegionStart, final  int remoteRegionEnd,
-            int firstIndexStart, int secondIndexStart)
+            final byte[] refGenomeBases, final int remoteRegionStart, final  int remoteRegionEnd,
+            int firstJuncSeqIndexStart, int secondIndexStart)
     {
         // use the start position of the match to infer where the junction may be in the remote location despite there not being any junction
         // spanning reads at that position
-        int assemblyMatchJunctionOffset;
-        if(assemblySeq.Reversed)
-        {
-            int assemblyJuncIndex = assembly.baseLength() - assembly.junctionIndex();
-            assemblyMatchJunctionOffset = firstIndexStart - assemblyJuncIndex;
-        }
-        else
-        {
-            assemblyMatchJunctionOffset = assembly.junctionIndex() - firstIndexStart;
-        }
+        int assemblyMatchJunctionOffset = firstJuncSeqIndexStart - assemblySeq.junctionSeqStartIndex();
 
         int remoteJunctionPosition, remoteJunctionIndex;
 
@@ -369,18 +353,16 @@ public class RemoteRegionAssembler
                 inferredEnd = remoteRegionStart;
             }
 
-            String inferredRefBases = mConfig.RefGenome.getBaseString(mRemoteRegion.Chromosome, inferredStart, inferredEnd);
-            // byte[] inferredRefBaseQuals = createMinBaseQuals(inferredRefBasees.length);
+            String inferredRefBases = mRefGenome.getBaseString(mRemoteRegion.Chromosome, inferredStart, inferredEnd);
 
             // check for a simple match at the assembly's junction
             String assemblyJunctionSequence = assemblySeq.junctionSequence();
-            // int assemblyJunctionSeqLength = firstJunctionSequence.length();
 
             int secondIndexInFirst = assemblyJunctionSequence.indexOf(inferredRefBases);
 
             if(secondIndexInFirst >= 0)
             {
-                firstIndexStart = assemblySeq.junctionSeqStartIndex();
+                firstJuncSeqIndexStart = assemblySeq.junctionSeqStartIndex();
 
                 if(!mRemoteRegion.isForward())
                     secondIndexStart = 0;
@@ -388,10 +370,13 @@ public class RemoteRegionAssembler
                 int adjustedRemoteStart = mRemoteRegion.isForward() ? remoteRegionStart : inferredRemoteJunctionPosition;
                 int adjustedRemoteEnd = mRemoteRegion.isForward() ? inferredRemoteJunctionPosition : remoteRegionEnd;
 
-                byte[] remoteRefBases = mConfig.RefGenome.getBases(mRemoteRegion.Chromosome, adjustedRemoteStart, adjustedRemoteEnd);
+                byte[] remoteRefBases = mRefGenome.getBases(mRemoteRegion.Chromosome, adjustedRemoteStart, adjustedRemoteEnd);
                 byte[] remoteRefBaseQuals = createMinBaseQuals(remoteRefBases.length);
 
                 remoteRefSeq = new JunctionSequence(remoteRefBases, remoteRefBaseQuals, mRemoteRegion.orientation(), initialRemoteRefSeq.Reversed);
+
+                if(mRemoteRegion.isForward())
+                    remoteJunctionIndex = remoteRefBases.length - 1;;
             }
         }
         else
@@ -402,7 +387,7 @@ public class RemoteRegionAssembler
 
         }
 
-        List<AssemblySupport> remoteSupport = Lists.newArrayList();
+        List<SupportRead> remoteSupport = Lists.newArrayList();
 
         for(Read read : mMatchedRemoteReads)
         {
@@ -410,25 +395,32 @@ public class RemoteRegionAssembler
 
             int matchLength = read.basesLength();
 
-            AssemblySupport support = new AssemblySupport(
-                    read, spansJunction ? SupportType.JUNCTION : SupportType.DISCORDANT,
-                    0, 0, matchLength, 0);
+            SupportRead support = new SupportRead(
+                    read, spansJunction ? SupportType.JUNCTION : SupportType.DISCORDANT, 0, matchLength, 0);
 
             remoteSupport.add(support);
         }
 
+        // TODO: consider adjusting the start pos and sequence to the inferred remote junction, or let reads from other remote locations
+        // fill in this gap?
+
         Junction remoteJunction = new Junction(mRemoteRegion.Chromosome, remoteJunctionPosition, mRemoteRegion.orientation());
 
         JunctionAssembly remoteAssembly = new JunctionAssembly(
-                remoteJunction, refGenomeBases, refBaseQuals, remoteSupport, Lists.newArrayList());
+                remoteJunction, remoteRefSeq.originalBases(), remoteRefSeq.originalBaseQuals(), remoteSupport, Lists.newArrayList());
 
         remoteAssembly.setJunctionIndex(remoteJunctionIndex);
 
         remoteAssembly.buildRepeatInfo();
 
-        return formLink(assembly, remoteAssembly, assemblySeq, remoteRefSeq, firstIndexStart, secondIndexStart, false);
-
+        return formLink(assembly, remoteAssembly, assemblySeq, remoteRefSeq, firstJuncSeqIndexStart, secondIndexStart, false);
     }
 
-    private static byte[] createMinBaseQuals(final int length) { return createByteArray(length, (byte) (LOW_BASE_QUAL_THRESHOLD + 1)); }
+    @VisibleForTesting
+    public void addMatchedReads(final List<Read> reads, final RemoteRegion remoteRegion)
+    {
+        mRemoteRegion = remoteRegion;
+        mMatchedRemoteReads.clear();
+        mMatchedRemoteReads.addAll(reads);
+    }
 }

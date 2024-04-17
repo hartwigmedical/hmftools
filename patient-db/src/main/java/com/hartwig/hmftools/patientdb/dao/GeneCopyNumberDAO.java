@@ -169,7 +169,7 @@ public class GeneCopyNumberDAO
                 timestamp);
     }
 
-    void deleteGeneCopyNumberForSample(final String sample)
+    public void deleteGeneCopyNumberForSample(final String sample)
     {
         context.delete(GENECOPYNUMBER).where(GENECOPYNUMBER.SAMPLEID.eq(sample)).execute();
     }
@@ -231,7 +231,7 @@ public class GeneCopyNumberDAO
                 timestamp);
     }
 
-    private void deleteGermlineDeletionsForSample(final String sample)
+    public void deleteGermlineDeletionsForSample(final String sample)
     {
         context.delete(GERMLINEDELETION).where(GERMLINEDELETION.SAMPLEID.eq(sample)).execute();
     }

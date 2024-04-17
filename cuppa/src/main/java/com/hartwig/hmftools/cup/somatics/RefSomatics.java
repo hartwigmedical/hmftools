@@ -68,6 +68,7 @@ import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
 
+@Deprecated
 public class RefSomatics implements RefClassifier
 {
     private final RefDataConfig mConfig;

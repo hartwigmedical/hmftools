@@ -1,2 +1,0 @@
-chromosome	chromosomeBand	gene	transcript	isCanonical	driver	category	likelihoodMethod	driverLikelihood	missense	nonsense	splice	inframe	frameshift	biallelic	minCopyNumber	maxCopyNumber
-7	q34	BRAF	ENST00000288602	true	MUTATION	ONCO	HOTSPOT	1.0000	1	0	0	0	0	false	6.0257	6.0257

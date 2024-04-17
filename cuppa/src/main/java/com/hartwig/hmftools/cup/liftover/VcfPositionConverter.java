@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.U
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.isKnownIndel;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -17,6 +16,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.refgenome.CoordMapping;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -45,13 +45,13 @@ public class VcfPositionConverter implements Callable
     private List<CoordMapping> mChromosomeMappings;
 
     public VcfPositionConverter(
-            final String sampleId, final String vcfFile, final GenomeLiftoverCache mappingCache, final LiftoverConfig config)
+            final String sampleId, final String vcfFile, final LiftoverConfig config)
     {
         mSampleId = sampleId;
         mConfig = config;
 
         mVcfFile = vcfFile;
-        mMappingCache = mappingCache;
+        mMappingCache = new GenomeLiftoverCache(true);
         mMappingEnabled = mMappingCache.hasMappings();
         mCurentMappingIndex = 0;
         mCurrentMappingChromosome = "";
@@ -85,14 +85,8 @@ public class VcfPositionConverter implements Callable
 
                 SomaticVariant variant = SomaticVariant.fromContext(variantContext);
 
-                if(mConfig.ApplyFilters)
-                {
-                    if(variant.Type == VariantType.MNP)
-                        continue;
-
-                    if(variant.Type == VariantType.INDEL && !isKnownIndel(variant.Gene, variant.RepeatCount, variant.Type))
-                        continue;
-                }
+                if(mConfig.ApplyFilters && variant.Type == VariantType.MNP)
+                    continue;
 
                 int convertedPosition = mMappingEnabled ? convertPosition(variant.Chromosome, variant.Position) : variant.Position;
                 writeVariant(variant, convertedPosition);
@@ -111,7 +105,8 @@ public class VcfPositionConverter implements Callable
         return (long)0;
     }
 
-    private int convertPosition(final String chromosome, final int position)
+    @VisibleForTesting
+    int convertPosition(final String chromosome, final int position)
     {
         if(!mCurrentMappingChromosome.equals(chromosome))
         {

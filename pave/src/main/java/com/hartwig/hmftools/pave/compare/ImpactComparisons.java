@@ -29,7 +29,6 @@ public class ImpactComparisons
     private final ComparisonConfig mConfig;
     private final GeneDataCache mGeneDataCache;
     private final ComparisonWriter mWriter;
-    private final RefGenomeInterface mRefGenome;
 
     public ImpactComparisons(final ConfigBuilder configBuilder)
     {
@@ -37,9 +36,7 @@ public class ImpactComparisons
 
         mGeneDataCache = new GeneDataCache(
                 configBuilder.getValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion,
-                configBuilder.getValue(DRIVER_GENE_PANEL_OPTION), false);
-
-        mRefGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
+                configBuilder.getValue(DRIVER_GENE_PANEL_OPTION));
 
         mWriter = new ComparisonWriter(mGeneDataCache, mConfig);
     }
@@ -52,7 +49,7 @@ public class ImpactComparisons
             System.exit(1);
         }
 
-        if(mConfig.ReferenceVariantsFile == null)
+        if(mConfig.ReferenceVariantsFile == null && mConfig.SampleVCF == null)
         {
             PV_LOGGER.error("no ref variants file configured, exiting");
             System.exit(1);
@@ -78,7 +75,7 @@ public class ImpactComparisons
             for(int i = 0; i < min(mConfig.SampleIds.size(), mConfig.Threads); ++i)
             {
                 sampleTasks.add(new SampleComparisonTask(
-                        i, mConfig, mRefGenome, mWriter, mGeneDataCache, sampleVariantsCache));
+                        i, mConfig, mConfig.RefGenome, mWriter, mGeneDataCache, sampleVariantsCache));
             }
 
             int taskIndex = 0;
@@ -98,7 +95,7 @@ public class ImpactComparisons
         else
         {
             SampleComparisonTask sampleTask = new SampleComparisonTask(
-                    0, mConfig, mRefGenome, mWriter, mGeneDataCache, sampleVariantsCache);
+                    0, mConfig, mConfig.RefGenome, mWriter, mGeneDataCache, sampleVariantsCache);
 
             sampleTask.getSampleIds().addAll(mConfig.SampleIds);
 

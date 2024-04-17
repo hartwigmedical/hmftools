@@ -46,11 +46,11 @@ import com.hartwig.hmftools.esvee.prep.types.ReadFilterConfig;
 import com.hartwig.hmftools.esvee.prep.types.ReadFilterType;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
-import com.hartwig.hmftools.esvee.prep.types.ReadIdTrimmer;
+import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 import com.hartwig.hmftools.esvee.prep.types.RemoteJunction;
-import com.hartwig.hmftools.esvee.types.IndelCoords;
+import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import htsjdk.samtools.CigarElement;
 
