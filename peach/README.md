@@ -145,10 +145,6 @@ Name: `[sample_name].peach.qc.tsv`
 ## Algorithm
 TODO: how to handle 37 calls needs to go somewhere
 
-TODO: describe ignored variants
-
-TODO: describe handling of no call variants
-
 In broad strokes, PEACH does the following:
 * Extract relevant calls from the input VCF, where relevance is determined by the configured haplotypes.
 * For each gene:
@@ -216,9 +212,6 @@ It is not always possible to call a best haplotype combination.
 When this occurs, the "haplotype" `Unresolved Haplotype` is called instead.
 
 #### Peach QC status
-
-TODO: Write this
-
 PEACH also outputs a QC status per gene. They have the following meaning:
 
 | QC status                               | Meaning                                                                                                         |
@@ -232,7 +225,7 @@ PEACH also outputs a QC status per gene. They have the following meaning:
 Any genes with a`FAIL` status get the `Unresolved Haplotype` "haplotype" as the best called haplotype combination.
 
 ### Examples
-TODO: Fix example
+TODO: Fix examples
 
 The data in these examples will be the completely fictional.
 The examples will focus on fairly "standard" situations, and they will exclude all information that is not necessary to understand these situations.
