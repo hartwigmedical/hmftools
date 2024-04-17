@@ -18,18 +18,16 @@ public class AssemblyLink
     private final JunctionAssembly mSecond;
     private final LinkType mType;
 
-    private final int mFirstJunctionIndexInSecond; // the index in the second assembly of the first assembly's junction position/index
     private final String mInsertedBases;
     private final String mOverlapBases;
 
     public AssemblyLink(
             final JunctionAssembly first, final JunctionAssembly second, final LinkType type,
-            int firstJunctionIndexInSecond, final String insertedBases, final String overlapBases)
+            final String insertedBases, final String overlapBases)
     {
         mFirst = first;
         mSecond = second;
         mType = type;
-        mFirstJunctionIndexInSecond = firstJunctionIndexInSecond;
         mInsertedBases = insertedBases;
         mOverlapBases = overlapBases;
     }
@@ -37,7 +35,6 @@ public class AssemblyLink
     public LinkType type() { return mType; }
     public JunctionAssembly first() { return mFirst; }
     public JunctionAssembly second() { return mSecond; }
-    public int firstJunctionIndexInSecond() { return mFirstJunctionIndexInSecond; }
 
     public JunctionAssembly otherAssembly(final JunctionAssembly assembly) { return mFirst == assembly ? mSecond : mFirst; }
 

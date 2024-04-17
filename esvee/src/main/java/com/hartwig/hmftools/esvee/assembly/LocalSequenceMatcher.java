@@ -60,7 +60,7 @@ public class LocalSequenceMatcher
         if(assemblySeqIndexInRef >= 0)
         {
             // simple sequence match, so can form a link between these 2 assemblies
-            return formLocalLink(assembly, assemblySeq, localRegionStart, 0, assemblySeqIndexInRef);
+            return formLocalLink(assembly, assemblySeq, localRegionStart, assemblySeqIndexInRef);
         }
 
         int juncSeqStartIndex = 0;
@@ -144,15 +144,14 @@ public class LocalSequenceMatcher
 
             // now that the index in the remote ref sequence has a match and it is clear where this is in the assembly's extension sequence,
             // the implied junction position in the remote can be determined
-            return formLocalLink(assembly, assemblySeq, localRegionStart, assemblyIndexStart, refIndexStart);
+            return formLocalLink(assembly, assemblySeq, localRegionStart, refIndexStart);
         }
 
         return null;
     }
 
     private AssemblyLink formLocalLink(
-            final JunctionAssembly assembly, final JunctionSequence assemblySeq, final int localRegionStart,
-            int assemblyIndexStart, int localRefIndexStart)
+            final JunctionAssembly assembly, final JunctionSequence assemblySeq, final int localRegionStart, int localRefIndexStart)
     {
         // create a simple local assembly to contain this link info? depends perhaps on whether this will become an SV or not
         int localRefJunctionPos = localRegionStart + localRefIndexStart;
@@ -188,6 +187,6 @@ public class LocalSequenceMatcher
 
         localRefAssembly.setJunctionIndex(localRefJunctionIndex);
 
-        return new AssemblyLink(assembly, localRefAssembly, LinkType.SPLIT, localRefJunctionIndex, "", "");
+        return new AssemblyLink(assembly, localRefAssembly, LinkType.SPLIT, "", "");
     }
 }

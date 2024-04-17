@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.alignment;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.alignment.BreakendBuilder.segmentOrientation;
 
@@ -22,6 +24,8 @@ public class HomologyData
         InexactStart = inexactStart;
         InexactEnd = inexactEnd;
     }
+
+    public String toString() { return format("%s exact(%d,%d) inexact(%d,%d)", Homology, ExactStart, ExactEnd, InexactStart, ExactEnd); }
 
     public static HomologyData determineHomology(
             final AlignData alignStart, final AlignData alignEnd, final RefGenomeInterface refGenome)

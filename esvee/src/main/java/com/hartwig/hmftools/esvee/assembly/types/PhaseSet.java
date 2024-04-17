@@ -54,44 +54,8 @@ public class PhaseSet
         return mAssemblies.contains(assembly);
     }
 
-    public boolean hasMatchingAssemblyLink(final AssemblyLink link)
-    {
-        return mAssemblyLinks.stream().anyMatch(x -> x.matches(link));
-    }
-
-    public boolean hasMatchingAssembly(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
-    {
-        return mAssemblyLinks.stream().anyMatch(x -> x.matches(assembly1, assembly2));
-    }
-
     public List<AssemblyLink> assemblyLinks() { return mAssemblyLinks; }
     public List<JunctionAssembly> assemblies() { return mAssemblies; }
-
-    public byte[] buildFullAssembly()
-    {
-        if(mAssemblyLinks.size() != 1)
-            return null;
-
-        AssemblyLink assemblyLink = mAssemblyLinks.get(0);
-
-        JunctionAssembly first = assemblyLink.first();
-        JunctionAssembly second = assemblyLink.second();
-
-        if(first.isForwardJunction() && !second.isForwardJunction())
-        {
-            String firstRefSequence = first.formRefBaseSequence();
-
-            String secondSequence = second.formFullSequence();
-
-            String combinedSequence = firstRefSequence + secondSequence.substring(assemblyLink.firstJunctionIndexInSecond() + 1);
-
-            return combinedSequence.getBytes();
-        }
-        else
-        {
-            return null;
-        }
-    }
 
     public String toString() { return format("id(%d) links(%d)", mId, mAssemblyLinks.size()); }
 }

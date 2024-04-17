@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.assembly.output;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -47,7 +48,7 @@ public class BreakendWriter
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            // sj.add("Id");
+            sj.add("Id");
             sj.add("PhaseGroupId");
             sj.add("AssemblyId");
             sj.add("AssemblyInfo");
@@ -77,6 +78,9 @@ public class BreakendWriter
             sj.add("Score");
             sj.add("RepeatTrimLength");
             sj.add("BreakendQual");
+
+            sj.add("FacingBreakendIds");
+
             sj.add("AltAlignments");
 
             if(mTruthsetAnnotation.enabled())
@@ -106,6 +110,8 @@ public class BreakendWriter
             for(Breakend breakend : assemblyAlignment.breakends())
             {
                 StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+                sj.add(String.valueOf(breakend.id()));
                 sj.add(String.valueOf(assemblyAlignment.assemblies().get(0).phaseGroup().id()));
                 sj.add(String.valueOf(assemblyAlignment.id()));
                 sj.add(assemblyInfo);
@@ -190,8 +196,11 @@ public class BreakendWriter
 
                 sj.add(String.valueOf(breakend.calcQual()));
 
+                String facingBreakendIds = breakend.facingBreakends().stream().map(x -> String.valueOf(x.id())).collect(Collectors.joining(ITEM_DELIM));
+                sj.add(facingBreakendIds);
+
                 String altAlignmentsStr = breakend.alternativeAlignments() != null ?
-                        breakend.alternativeAlignments().stream().map(x -> x.altAlignmentStr()).collect(Collectors.joining(";")) : "";
+                        breakend.alternativeAlignments().stream().map(x -> x.altAlignmentStr()).collect(Collectors.joining(ITEM_DELIM)) : "";
                 sj.add(altAlignmentsStr);
 
                 if(mTruthsetAnnotation.enabled())

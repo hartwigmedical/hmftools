@@ -29,7 +29,12 @@ public class Breakend implements Comparable<Breakend>
     public final String InsertedBases;
     public final HomologyData Homology;
 
+    private int mId;
+    private final AssemblyAlignment mAssembly;
+
     private Breakend mOtherBreakend;
+
+    private final List<Breakend> mFacingBreakends;
 
     private List<AlignData> mAlternativeAlignments;
     private List<BreakendSegment> mSegments;
@@ -38,7 +43,8 @@ public class Breakend implements Comparable<Breakend>
     private final Set<FilterType> mFilters;
 
     public Breakend(
-            final String chromosome, final int position, final byte orientation, final String insertedBases, final HomologyData homology)
+            final AssemblyAlignment assembly, final String chromosome, final int position, final byte orientation,
+            final String insertedBases, final HomologyData homology)
     {
         Chromosome = chromosome;
         Position = position;
@@ -46,7 +52,11 @@ public class Breakend implements Comparable<Breakend>
         InsertedBases = insertedBases;
         Homology = homology;
 
+        mId = -1;
+        mAssembly = assembly;
         mOtherBreakend = null;
+
+        mFacingBreakends = Lists.newArrayList();
 
         mBreakendSupport = Lists.newArrayList();
         mSegments = Lists.newArrayList();
@@ -56,8 +66,16 @@ public class Breakend implements Comparable<Breakend>
         mFilters = Sets.newHashSet();
     }
 
+    public int id() { return mId; }
+    public void setId(int id) { mId = id; }
+
+    public AssemblyAlignment assembly() { return mAssembly; }
+
     public Breakend otherBreakend() { return mOtherBreakend; }
     public void setOtherBreakend(final Breakend breakend) { mOtherBreakend = breakend; }
+
+    public List<Breakend> facingBreakends() { return mFacingBreakends; }
+    public void addFacingBreakend(final Breakend breakend) { mFacingBreakends.add(breakend); }
 
     public List<BreakendSegment> segments() { return mSegments; }
     public void addSegment(final BreakendSegment segment) { mSegments.add(segment); }
@@ -66,6 +84,8 @@ public class Breakend implements Comparable<Breakend>
     public void setAlternativeAlignments(final List<AlignData> altAlignments) { mAlternativeAlignments = altAlignments; }
 
     public List<BreakendSupport> sampleSupport() { return mBreakendSupport; }
+
+    public boolean isSingle() { return mOtherBreakend == null; }
 
     public StructuralVariantType svType()
     {
@@ -94,6 +114,9 @@ public class Breakend implements Comparable<Breakend>
         else
             return false;
     }
+
+    public int minPosition() { return Position + (Homology != null ? Homology.ExactStart : 0); }
+    public int maxPosition() { return Position + (Homology != null ? Homology.ExactEnd : 0); }
 
     public int calcSvQual()
     {
@@ -166,7 +189,10 @@ public class Breakend implements Comparable<Breakend>
 
     public String toString()
     {
-        return format("%s:%d:%d %s", Chromosome, Position, Orientation, svType());
+        return format("%d: %s:%d:%d %s hom(%s) otherId(%d) segs(%d) alts(%d)",
+                mId, Chromosome, Position, Orientation, svType(), Homology != null ? Homology : "",
+                mOtherBreakend != null ? mOtherBreakend.id() : -1,
+                mSegments.size(), mAlternativeAlignments != null ? mAlternativeAlignments.size() : 0);
     }
 
     @Override

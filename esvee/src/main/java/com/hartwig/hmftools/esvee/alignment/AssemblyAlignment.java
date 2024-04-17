@@ -157,7 +157,7 @@ public class AssemblyAlignment
 
         fullSequence.append(overlapLength > 0 ? secondSequence.substring(overlapLength) : secondSequence);
 
-        // set full assembly indices for all supporting reads, so they can be tested
+        // set full assembly indices for all supporting reads, so they can be tested after alignment
         for(SupportRead read : first.support())
         {
             if(!firstReversed)
@@ -178,14 +178,14 @@ public class AssemblyAlignment
         {
             if(!secondReversed)
             {
-                // FIXME: needs to factor in no extension bases
-                read.setLinkedAssemblyIndex(read.junctionAssemblyIndex() + secondStartAdjustment);
+                // use the read's relative position to the its assembly's junction to set its position in the full assembly
+                read.setLinkedAssemblyIndex(secondStartAdjustment - read.junctionReadIndex());
             }
             else
             {
-                int readEndIndex = read.junctionAssemblyIndex() + read.baseLength() - 1;
-                int invertedIndexPosition = second.baseLength() - readEndIndex - 1;
-                read.setLinkedAssemblyIndex(invertedIndexPosition + secondStartAdjustment);
+                // it was index 3 vs length 10 (0-9), then inverted is 10 - 3 - 1 = 6
+                int invertedReadJunctionIndex = read.baseLength() - read.junctionAssemblyIndex() - 1;
+                read.setLinkedAssemblyIndex(secondStartAdjustment - invertedReadJunctionIndex);
             }
         }
 

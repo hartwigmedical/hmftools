@@ -1,16 +1,29 @@
 package com.hartwig.hmftools.esvee.alignment;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MAX_ZERO_QUALS;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_SOFT_CLIP;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
+import static com.hartwig.hmftools.esvee.assembly.types.LinkType.FACING;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.esvee.assembly.filters.FilterType;
+import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.LinkType;
+import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 
 public class BreakendBuilder
 {
@@ -85,7 +98,8 @@ public class BreakendBuilder
             insertedBases = fullSequence.substring(fullSequenceLength - softClipLength);
         }
 
-        Breakend breakend = new Breakend(alignment.RefLocation.Chromosome, breakendPosition, orientation, insertedBases, null);
+        Breakend breakend = new Breakend(
+                mAssemblyAlignment, alignment.RefLocation.Chromosome, breakendPosition, orientation, insertedBases, null);
 
         BreakendSegment segment = new BreakendSegment(
                 mAssemblyAlignment.id(), fullSequenceLength, alignment.sequenceStart(), orientation, 0, alignment);
@@ -116,7 +130,7 @@ public class BreakendBuilder
         byte sglOrientation = segmentOrientation(alignment, checkStart);
 
         Breakend breakend = new Breakend(
-                alignment.RefLocation.Chromosome, sglPosition, sglOrientation, insertSequence, null);
+                mAssemblyAlignment, alignment.RefLocation.Chromosome, sglPosition, sglOrientation, insertSequence, null);
 
         BreakendSegment segment = new BreakendSegment(
                 mAssemblyAlignment.id(), fullSequenceLength, alignment.sequenceStart(), sglOrientation, nextSegmentIndex, alignment);
@@ -157,7 +171,7 @@ public class BreakendBuilder
             {
                 homology = HomologyData.determineHomology(alignment, nextAlignment, mRefGenome);
             }
-            else
+            else if(alignment.sequenceEnd() < nextAlignment.sequenceStart() - 1)
             {
                 int insertSeqStart = alignment.sequenceEnd() + 1;
                 int insertSeqEnd = nextAlignment.sequenceStart();
@@ -165,7 +179,7 @@ public class BreakendBuilder
             }
 
             Breakend breakend = new Breakend(
-                    alignment.RefLocation.Chromosome, breakendPosition, breakendOrientation, insertedBases, homology);
+                    mAssemblyAlignment, alignment.RefLocation.Chromosome, breakendPosition, breakendOrientation, insertedBases, homology);
 
             mAssemblyAlignment.addBreakend(breakend);
 
@@ -179,7 +193,7 @@ public class BreakendBuilder
             int nextPosition = nextAlignment.isForward() ? nextAlignment.RefLocation.start() : nextAlignment.RefLocation.end();
 
             Breakend nextBreakend = new Breakend(
-                    nextAlignment.RefLocation.Chromosome, nextPosition, nextOrientation, insertedBases, homology);
+                    mAssemblyAlignment, nextAlignment.RefLocation.Chromosome, nextPosition, nextOrientation, insertedBases, homology);
 
             mAssemblyAlignment.addBreakend(nextBreakend);
 
@@ -203,7 +217,92 @@ public class BreakendBuilder
 
     private void setAlternativeAlignments(final List<AlignData> zeroQualAlignments)
     {
-        if(zeroQualAlignments.isEmpty() && zeroQualAlignments.size() <= ALIGNMENT_MAX_ZERO_QUALS)
+        if(!zeroQualAlignments.isEmpty() && zeroQualAlignments.size() <= ALIGNMENT_MAX_ZERO_QUALS)
             mAssemblyAlignment.breakends().forEach(x -> x.setAlternativeAlignments(zeroQualAlignments));
+    }
+
+    public static void formBreakendFacingLinks(final List<Breakend> breakends)
+    {
+        // may move this logic within breakend formation if assembly sequences cover chains of links
+        for(int i = 0; i < breakends.size() - 1; ++i)
+        {
+            Breakend breakend = breakends.get(i);
+
+            if(!breakend.passing())
+                continue;
+
+            for(int j = i + 1; j < breakends.size(); ++j)
+            {
+                Breakend nextBreakend = breakends.get(j);
+
+                if(!nextBreakend.passing())
+                    continue;
+
+                if(!breakend.Chromosome.equals(nextBreakend.Chromosome) || nextBreakend.Position - breakend.Position > PHASED_ASSEMBLY_MAX_TI)
+                    break;
+
+                if(inFacingLink(breakend, nextBreakend))
+                {
+                    breakend.addFacingBreakend(nextBreakend);
+                    nextBreakend.addFacingBreakend(breakend);
+                }
+            }
+        }
+    }
+
+    private static boolean inFacingLink(final Breakend lowerBreakend, final Breakend upperBreakend)
+    {
+        if(lowerBreakend.Orientation != NEG_ORIENT || upperBreakend.Orientation != POS_ORIENT)
+            return false;
+
+        PhaseSet lowerPhaseSet = lowerBreakend.assembly().assemblies().get(0).phaseSet();
+        PhaseSet upperPhaseSet = upperBreakend.assembly().assemblies().get(0).phaseSet();
+
+        if(lowerPhaseSet == null || lowerPhaseSet != upperPhaseSet)
+            return false;
+
+        // must have overlapping aligned segments
+        boolean foundOverlap = false;
+
+        for(BreakendSegment lowerSegment : lowerBreakend.segments())
+        {
+            for(BreakendSegment upperSegment : upperBreakend.segments())
+            {
+                if(lowerSegment.Alignment.RefLocation.overlaps(upperSegment.Alignment.RefLocation))
+                {
+                    foundOverlap = true;
+                    break;
+                }
+            }
+
+            if(foundOverlap)
+                break;
+        }
+
+        if(!foundOverlap)
+            return false;
+
+        boolean foundMatchingLink = false;
+
+        for(AssemblyLink assemblyLink : lowerPhaseSet.assemblyLinks())
+        {
+            if(assemblyLink.type() == FACING)
+            {
+                // facing link must overlap this region
+                Junction firstJunction = assemblyLink.first().junction();
+                Junction secondJunction = assemblyLink.second().junction();
+
+                int lowerLinkPosition = min(firstJunction.Position, secondJunction.Position);
+                int upperLinkPosition = max(firstJunction.Position, secondJunction.Position);
+
+                if(positionsOverlap(lowerBreakend.Position, upperBreakend.Position, lowerLinkPosition, upperLinkPosition))
+                {
+                    foundMatchingLink = true;
+                    break;
+                }
+            }
+        }
+
+        return foundMatchingLink;
     }
 }

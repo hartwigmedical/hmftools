@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.BAM_READ_JUNCTION_BUFFER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DISCORDANT_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.alignment.Alignment.skipUnlinkedJunctionAssembly;
+import static com.hartwig.hmftools.esvee.alignment.BreakendBuilder.formBreakendFacingLinks;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.setAssemblyOutcome;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.FACING;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
@@ -168,11 +169,22 @@ public class JunctionProcessor
 
             runAlignment(assemblyAlignments);
 
-            new Deduplication().deduplicateBreakends(assemblyAlignments);
+            List<Breakend> breakends = Lists.newArrayList();
+            assemblyAlignments.forEach(x -> breakends.addAll(x.breakends()));
+            Collections.sort(breakends);
+
+            for(int i = 0; i < breakends.size(); ++i)
+            {
+                breakends.get(i).setId(i);
+            }
+
+            formBreakendFacingLinks(breakends);
+
+            Deduplication.deduplicateBreakends(breakends);
 
             writeAssemblyOutput(finalAssemblies);
 
-            writeVariants(assemblyAlignments);
+            writeVariants(assemblyAlignments, breakends);
 
             // note this is written after the VCF since writing reassigns the reads to the output BAM, there-by removing their association
             // with the BAM they were read from (ie as used in tumor vs ref counts)
@@ -380,14 +392,10 @@ public class JunctionProcessor
         }
     }
 
-    private void writeVariants(final List<AssemblyAlignment> assemblyAlignments)
+    private void writeVariants(final List<AssemblyAlignment> assemblyAlignments, final List<Breakend> breakends)
     {
         if(mConfig.WriteTypes.contains(WriteType.VCF))
         {
-            List<Breakend> breakends = Lists.newArrayList();
-            assemblyAlignments.forEach(x -> breakends.addAll(x.breakends()));
-            Collections.sort(breakends);
-
             SV_LOGGER.debug("writing variant VCF with {} breakends");
 
             VcfWriter vcfWriter = new VcfWriter(mConfig);

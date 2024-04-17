@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.alignment;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -8,50 +10,31 @@ import com.hartwig.hmftools.esvee.assembly.filters.FilterType;
 
 public final class Deduplication
 {
-    private final List<Breakend> mDuplicateBreakends;
+    private static final int MAX_DEDUP_DISTANCE = 100; // logically is there a limit
 
-    public Deduplication()
+    public static void deduplicateBreakends(final List<Breakend> breakends)
     {
-        mDuplicateBreakends = Lists.newArrayList();
-    }
-
-    public void deduplicateBreakends(final List<AssemblyAlignment> assemblyAlignments)
-    {
-        List<AssemblyBreakend> assemblyBreakends = Lists.newArrayList();
-
-        for(AssemblyAlignment assemblyAlignment : assemblyAlignments)
+        for(int i = 0; i < breakends.size() - 1; ++i)
         {
-            for(Breakend breakend : assemblyAlignment.breakends())
-            {
-                assemblyBreakends.add(new AssemblyBreakend(assemblyAlignment, breakend));
-            }
-        }
+            Breakend breakend = breakends.get(i);
 
-        Collections.sort(assemblyBreakends);
-
-        for(int i = 0; i < assemblyBreakends.size() - 1; ++i)
-        {
-            AssemblyBreakend assemblyBreakend = assemblyBreakends.get(i);
-
-            if(!assemblyBreakend.BreakendRef.passing())
+            if(!breakend.passing())
                 continue;
 
-            for(int j = i + 1; j < assemblyBreakends.size(); ++j)
+            for(int j = i + 1; j < breakends.size(); ++j)
             {
-                AssemblyBreakend nextAssemblyBreakend = assemblyBreakends.get(j);
+                Breakend nextBreakend = breakends.get(j);
 
-                // FIXME: adjust search based on position-matching rules
-                if(isDuplicate(assemblyBreakend.BreakendRef, nextAssemblyBreakend.BreakendRef))
+                if(!breakend.Chromosome.equals(nextBreakend.Chromosome) || nextBreakend.Position - breakend.Position > MAX_DEDUP_DISTANCE)
+                    break;
+
+                if(isDuplicate(breakend, nextBreakend))
                 {
                     // keep breakend with most support
-                    if(keepFirst(assemblyBreakend.BreakendRef, nextAssemblyBreakend.BreakendRef))
-                        nextAssemblyBreakend.BreakendRef.addFilter(FilterType.DUPLICATE);
+                    if(keepFirst(breakend, nextBreakend))
+                        nextBreakend.addFilter(FilterType.DUPLICATE);
                     else
-                        assemblyBreakend.BreakendRef.addFilter(FilterType.DUPLICATE);
-                }
-                else
-                {
-                    break;
+                        breakend.addFilter(FilterType.DUPLICATE);
                 }
             }
         }
@@ -59,32 +42,23 @@ public final class Deduplication
 
     private static boolean isDuplicate(final Breakend first, final Breakend second)
     {
-        // CHECK: take confidence internal into consideration?
-        return first.Chromosome.equals(second) && first.Position == second.Position && first.Orientation == second.Orientation;
+        if(first.Orientation != second.Orientation)
+            return false;
+
+        return positionsOverlap(first.minPosition(), first.maxPosition(), second.minPosition(), second.maxPosition());
     }
 
     private static boolean keepFirst(final Breakend first, final Breakend second)
     {
+        if(first.isSingle() != second.isSingle())
+            return !first.isSingle();
+
         int firstSupport = first.sampleSupport().stream().mapToInt(x -> x.totalSupport()).sum();
         int secondSupport = second.sampleSupport().stream().mapToInt(x -> x.totalSupport()).sum();
-        return firstSupport >= secondSupport;
-    }
 
-    private class AssemblyBreakend implements Comparable<AssemblyBreakend>
-    {
-        public final AssemblyAlignment AssemblyAlignmentRef;
-        public final Breakend BreakendRef;
+        if(firstSupport != secondSupport)
+            return firstSupport > secondSupport;
 
-        public AssemblyBreakend(final AssemblyAlignment assemblyAlignment, final Breakend breakend)
-        {
-            AssemblyAlignmentRef = assemblyAlignment;
-            BreakendRef = breakend;
-        }
-
-        @Override
-        public int compareTo(final AssemblyBreakend other)
-        {
-            return BreakendRef.compareTo(other.BreakendRef);
-        }
+        return first.calcSvQual() >= second.calcSvQual();
     }
 }

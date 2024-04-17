@@ -722,8 +722,8 @@ public class JunctionAssembly
 
     public String toString()
     {
-        return format("junc(%s) coords(extLen=%d refBasePos=%d len=%d) juncIndex(%d) support(%d) mismatches(%d)",
-                mJunction, extensionLength(), refBasePosition(), baseLength(), mJunctionIndex,
+        return format("junc(%s) coords(extLen=%d refLen=%d refBasePos=%d len=%d juncIndex=%d) support(%d) mismatches(%d)",
+                mJunction, extensionLength(), refBaseLength(), refBasePosition(), baseLength(), mJunctionIndex,
                 mSupport.size(), mMismatchReadCount);
     }
 

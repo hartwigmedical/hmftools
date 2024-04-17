@@ -184,7 +184,7 @@ public class PhaseSetBuilder
                         ++sharedCount;
                 }
 
-                if(sharedCount > 1 || isLocalLink)
+                if(sharedCount > 0 || isLocalLink)
                     assemblySupportPairs.add(new SharedAssemblySupport(assembly1, assembly2, sharedCount, isLocalLink));
             }
         }

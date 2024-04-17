@@ -79,7 +79,7 @@ public final class AssemblyLinker
                 return null;
         }
 
-        return new AssemblyLink(lower, upper, LinkType.FACING, 0, "", "");
+        return new AssemblyLink(lower, upper, LinkType.FACING, "", "");
     }
 
     private static boolean refSideSoftClipMatchesJunction(final JunctionAssembly assembly, int otherJunctionPosition)
@@ -178,7 +178,7 @@ public final class AssemblyLinker
         String insertedBases = junctionOffsetDiff > 0 ? extraBases : "";
         String overlapBases = junctionOffsetDiff < 0 ? extraBases : "";
 
-        return new AssemblyLink(first, second, LinkType.SPLIT, firstJunctionIndexInSecond, insertedBases, overlapBases);
+        return new AssemblyLink(first, second, LinkType.SPLIT, insertedBases, overlapBases);
     }
 
     public static final int MATCH_SUBSEQUENCE_LENGTH = 10;
@@ -194,7 +194,7 @@ public final class AssemblyLinker
 
         String insertedBases = assembly1.indelCoords().insertedBases();
 
-        return new AssemblyLink(assembly1, assembly2, INDEL, 0, insertedBases, "");
+        return new AssemblyLink(assembly1, assembly2, INDEL, insertedBases, "");
     }
 
     public static AssemblyLink tryAssemblyOverlap(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
