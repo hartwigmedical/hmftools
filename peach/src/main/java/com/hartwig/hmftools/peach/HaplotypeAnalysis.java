@@ -3,6 +3,7 @@ package com.hartwig.hmftools.peach;
 import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -68,6 +70,11 @@ public class HaplotypeAnalysis
     @NotNull
     public PeachQCStatus getAnalysisStatus()
     {
+        if(eventIdToCount.values().stream().anyMatch(Objects::isNull))
+        {
+            return PeachQCStatus.FAIL_EVENT_WITH_UNKNOWN_COUNT;
+        }
+
         List<HaplotypeCombination> minimumCombinations = getMinimumCombinations();
         if(minimumCombinations.isEmpty())
         {
@@ -129,7 +136,8 @@ public class HaplotypeAnalysis
                 .collect(Collectors.toList());
     }
 
-    public int getEventCount(@NotNull String eventId)
+    @Nullable
+    public Integer getEventCount(@NotNull String eventId)
     {
         return eventIdToCount.get(eventId);
     }

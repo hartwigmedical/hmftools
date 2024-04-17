@@ -2,6 +2,7 @@ package com.hartwig.hmftools.peach.output;
 
 import static junit.framework.TestCase.assertEquals;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +48,16 @@ public class EventsPerGeneFileTest
                 "*9",
                 "*1"
         );
+        Map<String, Integer> fake4EventIdToCount = new HashMap<>();
+        fake4EventIdToCount.put("EVENT_1", null);
+        HaplotypeAnalysis fake4HaplotypeAnalysis = new HaplotypeAnalysis(
+                fake4EventIdToCount,
+                Collections.emptyList(),
+                "*9",
+                "*1"
+        );
         Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = Map.of(
+                "FAKE4", fake4HaplotypeAnalysis,
                 "FAKE3", fake3HaplotypeAnalysis,
                 "FAKE2", fake2HaplotypeAnalysis,
                 "FAKE1", fake1HaplotypeAnalysis
@@ -57,7 +67,8 @@ public class EventsPerGeneFileTest
                 EXPECTED_HEADER,
                 "FAKE2\tEVENT_1\t2",
                 "FAKE2\tEVENT_3\t1",
-                "FAKE3\tEVENT_1\t2"
+                "FAKE3\tEVENT_1\t2",
+                "FAKE4\tEVENT_1\tUNKNOWN"
         );
         assertEquals(expectedLines, outputLines);
     }

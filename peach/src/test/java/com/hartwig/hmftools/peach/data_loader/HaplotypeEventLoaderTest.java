@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.peach.panel.TestHaplotypePanelFactory.createD
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,13 +31,7 @@ public class HaplotypeEventLoaderTest
         Map<String, Integer> haplotypeEventsToCount = HaplotypeEventLoader.loadRelevantVariantHaplotypeEvents(
                 vcfPath, sampleName, relevantVariantPositions
         );
-        Map<String, Integer> expectedHaplotypeEventsToCount = Map.of(
-                "VAR_chr1_98205966_GATGA_G", 1,
-                "VAR_chr1_98205966_G_C", 1,
-                "VAR_chr1_98348885_G_A", 2,
-                "VAR_chr2_234668879_C_CAT", 2
-        );
-        assertEquals(expectedHaplotypeEventsToCount, haplotypeEventsToCount);
+        assertEquals(createExpectedHaplotypeEventsToCount(), haplotypeEventsToCount);
     }
 
     @Test
@@ -53,13 +48,7 @@ public class HaplotypeEventLoaderTest
         Map<String, Integer> haplotypeEventsToCount = HaplotypeEventLoader.loadRelevantVariantHaplotypeEvents(
                 vcfPath, sampleName, relevantVariantPositions
         );
-        Map<String, Integer> expectedHaplotypeEventsToCount = Map.of(
-                "VAR_chr1_98205966_GATGA_G", 1,
-                "VAR_chr1_98205966_G_C", 1,
-                "VAR_chr1_98348885_G_A", 2,
-                "VAR_chr2_234668879_C_CAT", 2
-        );
-        assertEquals(expectedHaplotypeEventsToCount, haplotypeEventsToCount);
+        assertEquals(createExpectedHaplotypeEventsToCount(), haplotypeEventsToCount);
     }
 
     @Test
@@ -72,12 +61,17 @@ public class HaplotypeEventLoaderTest
         Map<String, Integer> haplotypeEventsToCount = HaplotypeEventLoader.loadRelevantVariantHaplotypeEvents(
                 vcfPath, sampleName, panel.getRelevantVariantPositions()
         );
-        Map<String, Integer> expectedHaplotypeEventsToCount = Map.of(
-                "VAR_chr1_98205966_GATGA_G", 1,
-                "VAR_chr1_98205966_G_C", 1,
-                "VAR_chr1_98348885_G_A", 2,
-                "VAR_chr2_234668879_C_CAT", 2
-        );
-        assertEquals(expectedHaplotypeEventsToCount, haplotypeEventsToCount);
+        assertEquals(createExpectedHaplotypeEventsToCount(), haplotypeEventsToCount);
+    }
+
+    private Map<String, Integer> createExpectedHaplotypeEventsToCount()
+    {
+        Map<String, Integer> expectedHaplotypeEventsToCount = new HashMap<>();
+        expectedHaplotypeEventsToCount.put("VAR_chr1_98205966_GATGA_G", 1);
+        expectedHaplotypeEventsToCount.put("VAR_chr1_98205966_G_C", 1);
+        expectedHaplotypeEventsToCount.put("VAR_chr1_98348885_G_A", 2);
+        expectedHaplotypeEventsToCount.put("VAR_chr2_234668879_C_CAT", null);
+        expectedHaplotypeEventsToCount.put("VAR_chr2_234668880_A_G", 0);
+        return expectedHaplotypeEventsToCount;
     }
 }

@@ -52,11 +52,21 @@ public class QcStatusFileTest
                 "*9",
                 "*1"
         );
+        Map<String, Integer> eventIdToCount = new HashMap<>();
+        eventIdToCount.put("EVENT_5", 1);
+        eventIdToCount.put("EVENT_6", null);
+        HaplotypeAnalysis fake5HaplotypeAnalysis = new HaplotypeAnalysis(
+                eventIdToCount,
+                List.of(new HaplotypeCombination(Map.of("*3", 2, "*2", 1))),
+                "*9",
+                "*1"
+        );
         Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = Map.of(
                 "FAKE3", fake3HaplotypeAnalysis,
                 "FAKE2", fake2HaplotypeAnalysis,
                 "FAKE1", fake1HaplotypeAnalysis,
-                "FAKE4", fake4HaplotypeAnalysis
+                "FAKE4", fake4HaplotypeAnalysis,
+                "FAKE5", fake5HaplotypeAnalysis
         );
         List<String> outputLines = QcStatusFile.toLines(geneToHaplotypeAnalysis);
         List<String> expectedLines = List.of(
@@ -64,7 +74,8 @@ public class QcStatusFileTest
                 "FAKE1\tPASS",
                 "FAKE2\tFAIL_NO_UNIQUE_BEST_COMBINATION_FOUND",
                 "FAKE3\tFAIL_NO_COMBINATION_FOUND",
-                "FAKE4\tWARN_TOO_MANY_ALLELES_FOUND"
+                "FAKE4\tWARN_TOO_MANY_ALLELES_FOUND",
+                "FAKE5\tFAIL_EVENT_WITH_UNKNOWN_COUNT"
         );
         assertEquals(expectedLines, outputLines);
     }

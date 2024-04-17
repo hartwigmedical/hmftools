@@ -47,9 +47,9 @@ public class HaplotypeEventLoader
         Set<Integer> relevantPositionsInChromosome =
                 relevantVariantPositions.getOrDefault(HumanChromosome.fromString(variantContext.getContig()), Collections.emptySet());
         VariantHaplotypeEvent event = VariantHaplotypeEvent.fromVariantContext(variantContext);
-        int count = getEventCount(variantContext.getGenotype(sampleName).getType(), event.id());
+        Integer count = getEventCount(variantContext.getGenotype(sampleName).getType(), event.id());
 
-        boolean isRelevantEvent = !variantContext.isFiltered() && count != 0 && event.getCoveredPositions()
+        boolean isRelevantEvent = !variantContext.isFiltered() && event.getCoveredPositions()
                 .stream()
                 .anyMatch(relevantPositionsInChromosome::contains);
 
@@ -63,11 +63,12 @@ public class HaplotypeEventLoader
         }
     }
 
-    private static int getEventCount(@NotNull GenotypeType genotypeType, @NotNull String eventId)
+    private static Integer getEventCount(@NotNull GenotypeType genotypeType, @NotNull String eventId)
     {
         switch(genotypeType)
         {
             case NO_CALL:
+                return null;
             case HOM_REF:
                 return 0;
             case HET:

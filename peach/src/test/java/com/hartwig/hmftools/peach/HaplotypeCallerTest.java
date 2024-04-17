@@ -58,6 +58,92 @@ public class HaplotypeCallerTest
     }
 
     @Test
+    public void testHomozygousRefEvents()
+    {
+        HaplotypePanel haplotypePanel = createDefaultTestHaplotypePanel();
+        Map<String, Integer> eventIdToCount = Map.of(
+                "VAR_chr1_98348885_G_A", 0,  // relevant event
+                "VAR_chr1_98348885_G_T", 0 // overlapping irrelevant event
+        );
+        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, eventIdToCount);
+
+        HaplotypeAnalysis expectedDpydHaplotypeAnalysis = new HaplotypeAnalysis(
+                eventIdToCount,
+                List.of(new HaplotypeCombination(Map.of("*9A", 2))),
+                "*9A",
+                "*1"
+        );
+        HaplotypeAnalysis expectedUgt1A1HaplotypeAnalysis = new HaplotypeAnalysis(
+                new HashMap<>(),
+                List.of(new HaplotypeCombination(Map.of("*1", 2))),
+                "*1",
+                "*1"
+        );
+        assertEquals(2, geneToHaplotypeAnalysis.size());
+        assertTrue(geneToHaplotypeAnalysis.containsKey("DPYD"));
+        assertTrue(geneToHaplotypeAnalysis.containsKey("UGT1A1"));
+
+        assertEqualHaplotypeAnalysis(expectedDpydHaplotypeAnalysis, geneToHaplotypeAnalysis.get("DPYD"));
+        assertEqualHaplotypeAnalysis(expectedUgt1A1HaplotypeAnalysis, geneToHaplotypeAnalysis.get("UGT1A1"));
+    }
+
+    @Test
+    public void testNoCallRelevantEvent()
+    {
+        HaplotypePanel haplotypePanel = createDefaultTestHaplotypePanel();
+        Map<String, Integer> eventIdToCount = new HashMap<>();
+        eventIdToCount.put("VAR_chr1_98348885_G_T", null);
+        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, eventIdToCount);
+
+        HaplotypeAnalysis expectedDpydHaplotypeAnalysis = new HaplotypeAnalysis(
+                eventIdToCount,
+                new ArrayList<>(),
+                "*9A",
+                "*1"
+        );
+        HaplotypeAnalysis expectedUgt1A1HaplotypeAnalysis = new HaplotypeAnalysis(
+                new HashMap<>(),
+                List.of(new HaplotypeCombination(Map.of("*1", 2))),
+                "*1",
+                "*1"
+        );
+        assertEquals(2, geneToHaplotypeAnalysis.size());
+        assertTrue(geneToHaplotypeAnalysis.containsKey("DPYD"));
+        assertTrue(geneToHaplotypeAnalysis.containsKey("UGT1A1"));
+
+        assertEqualHaplotypeAnalysis(expectedDpydHaplotypeAnalysis, geneToHaplotypeAnalysis.get("DPYD"));
+        assertEqualHaplotypeAnalysis(expectedUgt1A1HaplotypeAnalysis, geneToHaplotypeAnalysis.get("UGT1A1"));
+    }
+
+    @Test
+    public void testNoCallOverlappingEvent()
+    {
+        HaplotypePanel haplotypePanel = createDefaultTestHaplotypePanel();
+        Map<String, Integer> eventIdToCount = new HashMap<>();
+        eventIdToCount.put("VAR_chr1_98348885_G_T", null);
+        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, eventIdToCount);
+
+        HaplotypeAnalysis expectedDpydHaplotypeAnalysis = new HaplotypeAnalysis(
+                eventIdToCount,
+                new ArrayList<>(),
+                "*9A",
+                "*1"
+        );
+        HaplotypeAnalysis expectedUgt1A1HaplotypeAnalysis = new HaplotypeAnalysis(
+                new HashMap<>(),
+                List.of(new HaplotypeCombination(Map.of("*1", 2))),
+                "*1",
+                "*1"
+        );
+        assertEquals(2, geneToHaplotypeAnalysis.size());
+        assertTrue(geneToHaplotypeAnalysis.containsKey("DPYD"));
+        assertTrue(geneToHaplotypeAnalysis.containsKey("UGT1A1"));
+
+        assertEqualHaplotypeAnalysis(expectedDpydHaplotypeAnalysis, geneToHaplotypeAnalysis.get("DPYD"));
+        assertEqualHaplotypeAnalysis(expectedUgt1A1HaplotypeAnalysis, geneToHaplotypeAnalysis.get("UGT1A1"));
+    }
+
+    @Test
     public void testWildTypes()
     {
         HaplotypePanel haplotypePanel = createDefaultTestHaplotypePanel();
