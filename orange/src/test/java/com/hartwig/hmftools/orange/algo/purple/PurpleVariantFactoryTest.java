@@ -5,8 +5,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -85,6 +87,7 @@ public class PurpleVariantFactoryTest
 
         PurpleTranscriptImpact canonicalImpact = purpleVariant.canonicalImpact();
         assertEquals("ENST00000504228", canonicalImpact.transcript());
+        assertTrue(canonicalImpact.reported());
         assertEquals("c.2187C>T", canonicalImpact.hgvsCodingImpact());
         assertEquals("p.Ser729=", canonicalImpact.hgvsProteinImpact());
         assertNull(canonicalImpact.affectedCodon());
@@ -96,6 +99,7 @@ public class PurpleVariantFactoryTest
         assertEquals(1, purpleOtherImpacts.size());
         PurpleTranscriptImpact purpleOtherImpact = purpleOtherImpacts.get(0);
         assertEquals("ENST00000264229", purpleOtherImpact.transcript());
+        assertTrue(purpleOtherImpact.reported());
         assertEquals("c.2187C>T", purpleOtherImpact.hgvsCodingImpact());
         assertEquals("p.Ser729=", purpleOtherImpact.hgvsProteinImpact());
         assertEquals(Set.of(PurpleVariantEffect.SYNONYMOUS), purpleOtherImpact.effects());
@@ -118,5 +122,86 @@ public class PurpleVariantFactoryTest
         assertEquals(2, purpleVariant.repeatCount());
         assertEquals(1, purpleVariant.subclonalLikelihood(), 0);
         assertEquals(List.of(1, 2, 3), purpleVariant.localPhaseSets());
+    }
+
+    @Test
+    public void testDetermineReportableTranscripts()
+    {
+        List<VariantTranscriptImpact> otherImpacts = List.of(
+                new VariantTranscriptImpact(
+                        "ENSG00000147889",
+                        "CDKN2A",
+                        "ENST00000579755",
+                        "frameshift",
+                        false,
+                        "c.246_247delCG",
+                        "p.Gly83fs"
+                ),
+                new VariantTranscriptImpact(
+                        "ENSG00000147889",
+                        "CDKN2A",
+                        "ENST00000304494",
+                        "frameshift",
+                        false,
+                        "c.203_204delCG",
+                        "p.Ala68fs"
+                )
+        );
+
+        PurpleVariantContext context = ImmutablePurpleVariantContext.builder()
+                .chromosome("9")
+                .position(21971153)
+                .totalReadCount(99)
+                .alleleReadCount(99)
+                .type(VariantType.INDEL)
+                .gene("CDKN2A")
+                .ref("CCG")
+                .alt("C")
+                .canonicalTranscript("ENST00000498124")
+                .canonicalEffect("frameshift_variant")
+                .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
+                .canonicalHgvsCodingImpact("c.203_204delCG")
+                .canonicalHgvsProteinImpact("p.Ala68fs")
+                .spliceRegion(false)
+                .worstCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
+                .otherImpacts(otherImpacts)
+                .hotspot(Hotspot.NEAR_HOTSPOT)
+                .reported(true)
+                .rnaDepth(null)
+                .adjustedCopyNumber(2.0)
+                .adjustedVAF(1.0101)
+                .minorAlleleCopyNumber(0.0)
+                .variantCopyNumber(2.02)
+                .biallelic(true)
+                .genotypeStatus(GenotypeStatus.HOM_REF)
+                .repeatCount(2)
+                .subclonalLikelihood(0.0)
+                .reportableTranscripts(Set.of("ENST00000498124", "ENST00000579755"))
+                .build();
+
+        PaveAlgo paveAlgo = new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache(), false);
+        PurpleVariant purpleVariant = new PurpleVariantFactory(paveAlgo).fromPurpleVariantContext(context);
+
+        assertEquals(PurpleVariantType.INDEL, purpleVariant.type());
+        assertEquals("CDKN2A", purpleVariant.gene());
+        PurpleTranscriptImpact canonicalImpact = purpleVariant.canonicalImpact();
+        assertEquals("ENST00000498124", canonicalImpact.transcript());
+        assertTrue(canonicalImpact.reported());
+
+        List<PurpleTranscriptImpact> purpleOtherImpacts =
+                purpleVariant.otherImpacts()
+                        .stream()
+                        .sorted(Comparator.comparing(PurpleTranscriptImpact::transcript))
+                        .collect(Collectors.toList());
+        assertEquals(2, purpleOtherImpacts.size());
+
+        PurpleTranscriptImpact firstImpact = purpleOtherImpacts.get(0);
+        assertEquals("ENST00000304494", firstImpact.transcript());
+        assertFalse(firstImpact.reported());
+
+        PurpleTranscriptImpact secondImpact = purpleOtherImpacts.get(1);
+        assertEquals("ENST00000579755", secondImpact.transcript());
+        assertTrue(secondImpact.reported());
+
     }
 }
