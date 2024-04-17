@@ -69,32 +69,32 @@ and the "GT" subfield for this sample should be included and filled in with dipl
 ### Haplotype TSV
 | Column    | Example                                       | Description                                                                                                                                                                                                                                   |
 |-----------|-----------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Gene      | `DPYD`                                        | Name of gene.                                                                                                                                                                                                                                 |
-| Haplotype | `*B3`                                         | Name of haplotype.                                                                                                                                                                                                                            |
-| Default   | `false`                                       | `true` if this is the haplotype of this gene in the reference genome. `false` otherwise.                                                                                                                                                      |
-| WildType  | `false`                                       | `true` if this haplotype is considered to be the wild type haplotype of this gene in the reference genome. `false` otherwise.                                                                                                                 |
-| Events    | `VAR_chr1_98039419_C_T;VAR_chr1_98045449_G_C` | If default haplotype: `;` separated list of strings describing events to ignore for haplotype calling in this gene. If non-default haplotype: `;` separated list of strings describing a combination of events that indicates this haplotype. |
+| gene      | `DPYD`                                        | Name of gene.                                                                                                                                                                                                                                 |
+| haplotype | `*B3`                                         | Name of haplotype.                                                                                                                                                                                                                            |
+| default   | `false`                                       | `true` if this is the haplotype of this gene in the reference genome. `false` otherwise.                                                                                                                                                      |
+| wildType  | `false`                                       | `true` if this haplotype is considered to be the wild type haplotype of this gene. `false` otherwise.                                                                                                                                         |
+| events    | `VAR_chr1_98039419_C_T;VAR_chr1_98045449_G_C` | If default haplotype: `;` separated list of strings describing events to ignore for haplotype calling in this gene. If non-default haplotype: `;` separated list of strings describing a combination of events that indicates this haplotype. |
 
-For every gene exactly one line should be marked as the default haplotype. One combination of gene and haplotype name should be marked as the wild type haplotype for this gene.
+For every gene exactly one line should be marked as the default haplotype. This is the haplotype that the reference genome has.
+
+One combination of gene and haplotype name should be marked as the wild type haplotype for this gene.
 
 ### Function TSV
 | Column    | Example            | Description                           |
 |-----------|--------------------|---------------------------------------|
-| Gene      | `DPYD`             | Name of gene.                         |
-| Haplotype | `*B3`              | Name of haplotype.                    |
-| Function  | `Reduced Function` | Description of function of haplotype. |
+| gene      | `DPYD`             | Name of gene.                         |
+| haplotype | `*B3`              | Name of haplotype.                    |
+| function  | `Reduced Function` | Description of function of haplotype. |
 
 ### Drug TSV
 | Column              | Example                                                    | Description                   |
 |---------------------|------------------------------------------------------------|-------------------------------|
-| Gene                | `DPYD`                                                     | Name of gene.                 |
-| DrugName            | `5-Fluorouracil`                                           | Name of drug.                 |
-| UrlPrescriptionInfo | `https://www.pharmgkb.org/guidelineAnnotation/PA166104939` | Url with prescription advice. |
+| gene                | `DPYD`                                                     | Name of gene.                 |
+| drugName            | `5-Fluorouracil`                                           | Name of drug.                 |
+| urlPrescriptionInfo | `https://www.pharmgkb.org/guidelineAnnotation/PA166104939` | Url with prescription advice. |
 
 
 ## Output
-TODO
-
 ### Events TSV
 Name: `[sample_name].peach.events.tsv`
 
@@ -104,66 +104,42 @@ Name: `[sample_name].peach.events.tsv`
 | count  | `2`                     | Number of times event was observed. |
 
 ### Gene Events TSV
+Name: `[sample_name].peach.gene.events.tsv`
+
 | Column | Example                 | Description                         |
 |--------|-------------------------|-------------------------------------|
 | gene   | `DPYD`                  | Name of gene.                       |
 | event  | `VAR_chr1_98039419_C_T` | Event ID of event linked to gene.   |
 | count  | `2`                     | Number of times event was observed. |
 
-### Haplotypes All TSV
+### All Haplotypes TSV
+Name: `[sample_name].peach.haplotypes.all.tsv`
+
 | Column           | Example  | Description                                                                                                                                                                 |
 |------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | gene             | `DPYD`   | Name of gene.                                                                                                                                                               |
 | combination      | `(*1,2)` | Combination of haplotypes that could explain the observed events for this gene. `;` separated list of pairs of haplotype names and number of times the haplotype is called. |
-| nonWildTypeCount | `0`      | Number of non wild type haplotypes in combination                                                                                                                           |
+| nonWildTypeCount | `0`      | Number of non wild type haplotypes in the combination .                                                                                                                     |
 
-### Haplotypes Best TSV
-| Column           | Example | Description                                                                                                                                                                 |
-|------------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| gene             | `DPYD`  | Name of gene.                                                                                                                                                               |
-| allele           | `*1`    | Number of non wild type haplotypes in combination                                                                                                                           |
-| count            | `2`     | Number of non wild type haplotypes in combination                                                                                                                           |
-| function         | `2`     | Number of non wild type haplotypes in combination                                                                                                                           |
-| linkedDrugs      | `2`     | Number of non wild type haplotypes in combination                                                                                                                           |
-| prescriptionUrls | `2`     | Number of non wild type haplotypes in combination                                                                                                                           |
+### Best Haplotypes TSV
+Name: `[sample_name].peach.haplotypes.best.tsv`
 
+| Column           | Example                                                          | Description                                                                                                            |
+|------------------|------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| gene             | `DPYD`                                                           | Name of gene.                                                                                                          |
+| haplotype        | `*1`                                                             | Name of haplotype.                                                                                                     |
+| count            | `2`                                                              | Number of times this haplotype has been called for this gene.                                                          |
+| function         | `Normal Function`                                                | Function of this haplotype. Empty if no `--function_file` argument was provided.                                       |
+| linkedDrugs      | `5-Fluorouracil`                                                 | `;` separated list of drugs for which this gene is relevant. Empty if no `--drugs_file` argument was provided.         |
+| prescriptionUrls | `https://www.pharmgkb.org/guidelineAnnotation/PA166104939;https` | `;` separated list of urls to prescription advice for related drugs. Empty if no `--drugs_file` argument was provided. |
 
-### Genotype TSV file
-Name: `[sample_t_id].peach.genotype.tsv`
+### QC TSV
+Name: `[sample_name].peach.qc.tsv`
 
-| Column                | Example Value                                                                    | Description                                                                                                                                              |
-|-----------------------|----------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| gene                  | DPYD                                                                             | Gene for which this haplotype is called.                                                                                                                 |
-| haplotype_zygosity    | *1_HOM                                                                           | Called haplotype including zygosity. If no haplotype could be called, has value "Unresolved Haplotype".                                                  |
-| function              | No function                                                                      | Functionality of this haplotype. Wild type has function "Normal Function". If no haplotype could be called, has value "Unknown Function".                |
-| linked_drugs          | 5-Fluoracil;Capecitabine                                                         | Drugs for which this haplotype is relevant, separated by ";".                                                                                            |
-| url_prescription_info | https://www.some_url.com/5-Fluoracil;https://www.some_other_url.com/Capecitabine | For each listed drug, a url with information on how to translate abnormal haplotype function into an appropriate treatment adjustment. Separated by ";". |
-| panel_version         | DPYDpanel_v1.3                                                                   | Name and version of panel JSON. Both are taken from fields in the JSON.                                                                                  |
-| repo_version          | 1.0                                                                              | Version of PEACH.                                                                                                                                        |
-| haplotype             | *1                                                                               | Called haplotype. If no haplotype could be called, has value "Unresolved Haplotype".                                                                     |
-| zygosity              | HOM                                                                              | Whether haplotype call is homozygous (HOM) or heterozygous (HET). If no haplotype could be called, has value "N/A".                                      |
-
-### Calls TSV file
-Name: `[sample_t_id].peach.calls.tsv`
-
-| Column                 | Example Value  | Description                                                                                                                                                                                             |
-|------------------------|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| gene                   | DPYD           | Gene to which the variant is related.                                                                                                                                                                   |
-| chromosome_v37         | 1              | Chromosome of variant wrt v37 reference genome.                                                                                                                                                         |
-| position_v37           | 98348885       | Position on chromosome wrt v37 reference genome. If unknown, has value "UNKNOWN".                                                                                                                       |
-| position_v38           | 97883329       | Position on chromosome wrt v38 reference genome. If unknown, has value "UNKNOWN".                                                                                                                       |
-| ref_v37                | G              | Reference allele wrt v37. If unknown, has value "UNKNOWN".                                                                                                                                              |
-| ref_v38                | A              | Reference allele wrt v38. If unknown, has value "UNKNOWN".                                                                                                                                              |
-| allele1                | A              | First of the called alleles. Order of alleles is lexicographical order.                                                                                                                                 |
-| allele2                | A              | Second of the called alleles. Order of alleles is lexicographical order.                                                                                                                                |
-| rsid                   | rs1801265      | Rs id(s) of variant. If more than one, then they are separated by ";". Taken from VCF if available. If not, taken from matching variant in panel JSON, if match exists. If not, has value ".".          |
-| variant_annotation_v37 | 85C>T          | Variant annotation wrt v37. See [Get_VCF Variant Calls](#get-vcf-variant-calls) and [Annotate Calls with Panel Information](#annotate-calls-with-panel-information) for details.                        |
-| filter_v37             | PASS           | Has value PASS, NO_CALL, UNKNOWN or INFERRED_PASS. See [Get_VCF Variant Calls](#get-vcf-variant-calls) and [Annotate Calls with Panel Information](#annotate-calls-with-panel-information) for details. |
-| variant_annotation_v38 | REF_CALL       | Variant annotation wrt v38. See [Get_VCF Variant Calls](#get-vcf-variant-calls) and [Annotate Calls with Panel Information](#annotate-calls-with-panel-information) for details.                        |
-| filter_v38             | NO_CALL        | Has value PASS, NO_CALL, UNKNOWN or INFERRED_PASS. See [Get_VCF Variant Calls](#get-vcf-variant-calls) and [Annotate Calls with Panel Information](#annotate-calls-with-panel-information) for details. |
-| panel_version          | DPYDpanel_v1.3 | Name and version of panel JSON. Both are taken from fields in the JSON.                                                                                                                                 |
-| repo_version           | 1.0            | Version of PEACH.                                                                                                                                                                                       |
-| chromosome_v38         | chr1           | Chromosome of variant wrt v38 reference genome.                                                                                                                                                         |
+| Column           | Example | Description                                                                                                                                            |
+|------------------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| gene             | `DPYD`  | Name of gene.                                                                                                                                          |
+| status           | `PASS`  | QC status of calls for this gene. Can be `PASS`, `FAIL_NO_COMBINATION_FOUND`, `FAIL_NO_UNIQUE_BEST_COMBINATION_FOUND` or `WARN_TOO_MANY_ALLELES_FOUND` |
 
 ## Algorithm
 TODO: how to handle 37 calls needs to go somewhere
@@ -171,7 +147,7 @@ TODO: how to handle 37 calls needs to go somewhere
 TODO: describe ignored variants
 
 In broad strokes, PEACH does the following:
-* Extract relevant calls from VCF, where relevance is determined by the configured relevant variants.
+* Extract relevant calls from VCF, where relevance is determined by the configured haplotypes.
 * For each gene:
   + Determine for each relevant variant whether the variant is homozygous ref, heterozygous or homozygous alt.
   + Determine the unique simplest combination of haplotypes that completely explains that combination of alt alleles and counts.
@@ -183,16 +159,19 @@ If no variant call is present in the input VCF for a configured variant, homozyg
 ### Get VCF Variant Calls
 TODO: clean this up
 
-The calls for the sample `sample_r_id` are extracted from the VCF, and they are compared to the variants in the config file.
+The calls for the sample `sample_r_id` are extracted from the input VCF, and they are compared to the variants in the config file.
 Calls are included when the following are all true:
 * Variant is PASS filtered.
 * At least one of the covered positions of the call matches at least one of the covered positions of the configured variants.
   In this comparison, the *covered positions* of a call or variant are the positions of the bases in the reference allele.
-* Variant is not homozygous ref.
+
+
 
 ### Infer Haplotypes
 
 TODO: be consistent and clear about the difference between default and wild-type allele.
+
+TODO: Properly explain what wild type is
 
 The goal is to find the simplest combination of haplotypes that explains the called variants.
 
@@ -339,11 +318,16 @@ TODO: Mention genotype vs variant calling
 TODO: Use phasing
 TODO: Other event types
 TODO: Take different germline copy numbers into consideration
-TODO: Assess tumor status
+TODO: Try to work on tumor-only
+TODO: Improve handling of uncertainty and unknown haplotypes
 
 ## Version History / Download Links
 * Upcoming
-  * Converted from Python to Java
+  * Converted from Python to Java.
+  * Significantly change formats of input and output files.
+    * Remove requirement to include both V37 and V38 coordinates in the resource files when calling on a V37 reference genome.
+  * Handle overlapping genes correctly.
+  * Allow overlapping variants with different ref bases (e.g. deletions and insertions at the same location, overlapping SNVs and MNVs, etc.).
 * [1.8](https://github.com/hartwigmedical/peach/releases/tag/v1.8)
   * Update supported Python version from 3.6 to 3.11.
 * [1.7](https://github.com/hartwigmedical/peach/releases/tag/v1.7)
