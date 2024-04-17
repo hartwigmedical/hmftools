@@ -55,10 +55,10 @@ public class AllHaplotypeCombinationsFileTest
         List<String> outputLines = AllHaplotypeCombinationsFile.toLines(geneToHaplotypeAnalysis);
         List<String> expectedLines = List.of(
                 EXPECTED_HEADER,
-                "FAKE1\t(*1, 2)\t0",
-                "FAKE2\t(*1, 1);(*2, 1)\t1",
-                "FAKE2\t(*9, 1);(2373C>T, 1)\t2",
-                "FAKE3\t(*9, 2)\t2"
+                "FAKE1\t(*1,2)\t0",
+                "FAKE2\t(*1,1);(*2,1)\t1",
+                "FAKE2\t(*9,1);(2373C>T,1)\t2",
+                "FAKE3\t(*9,2)\t2"
         );
         assertEquals(expectedLines, outputLines);
     }
