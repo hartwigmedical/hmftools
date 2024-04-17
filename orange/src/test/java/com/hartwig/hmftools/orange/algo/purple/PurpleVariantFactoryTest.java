@@ -99,7 +99,7 @@ public class PurpleVariantFactoryTest
         assertEquals(1, purpleOtherImpacts.size());
         PurpleTranscriptImpact purpleOtherImpact = purpleOtherImpacts.get(0);
         assertEquals("ENST00000264229", purpleOtherImpact.transcript());
-        assertTrue(purpleOtherImpact.reported());
+        assertFalse(purpleOtherImpact.reported());
         assertEquals("c.2187C>T", purpleOtherImpact.hgvsCodingImpact());
         assertEquals("p.Ser729=", purpleOtherImpact.hgvsProteinImpact());
         assertEquals(Set.of(PurpleVariantEffect.SYNONYMOUS), purpleOtherImpact.effects());
@@ -131,20 +131,20 @@ public class PurpleVariantFactoryTest
                 new VariantTranscriptImpact(
                         "ENSG00000147889",
                         "CDKN2A",
-                        "ENST00000579755",
-                        "frameshift",
-                        false,
-                        "c.246_247delCG",
-                        "p.Gly83fs"
-                ),
-                new VariantTranscriptImpact(
-                        "ENSG00000147889",
-                        "CDKN2A",
                         "ENST00000304494",
                         "frameshift",
                         false,
                         "c.203_204delCG",
                         "p.Ala68fs"
+                ),
+                new VariantTranscriptImpact(
+                        "ENSG00000147889",
+                        "CDKN2A",
+                        "ENST00000579755",
+                        "frameshift",
+                        false,
+                        "c.246_247delCG",
+                        "p.Gly83fs"
                 )
         );
 
