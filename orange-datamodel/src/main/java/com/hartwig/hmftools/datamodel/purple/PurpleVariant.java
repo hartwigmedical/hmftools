@@ -67,6 +67,8 @@ public interface PurpleVariant
     @Nullable
     List<Integer> localPhaseSets();
 
+    @Deprecated
+    @Value.Derived
     default boolean reported()
     {
         if(canonicalImpact().reported())
