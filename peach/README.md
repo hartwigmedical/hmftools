@@ -77,7 +77,8 @@ and the "GT" subfield for this sample should be included and filled in with dipl
 
 For every gene exactly one line should be marked as the default haplotype. This is the haplotype that the reference genome has.
 
-One combination of gene and haplotype name should be marked as the wild type haplotype for this gene.
+One combination of gene and haplotype name should be marked as the wild type haplotype for this gene. 
+PEACH prefers calling wild type haplotypes over non wild type haplotypes when multiple haplotype combinations are possible.
 
 ### Function TSV
 | Column    | Example            | Description                           |
@@ -98,19 +99,19 @@ One combination of gene and haplotype name should be marked as the wild type hap
 ### Events TSV
 Name: `[sample_name].peach.events.tsv`
 
-| Column | Example                 | Description                         |
-|--------|-------------------------|-------------------------------------|
-| event  | `VAR_chr1_98039419_C_T` | Event ID.                           |
-| count  | `2`                     | Number of times event was observed. |
+| Column | Example                 | Description                                                        |
+|--------|-------------------------|--------------------------------------------------------------------|
+| event  | `VAR_chr1_98039419_C_T` | Event ID.                                                          |
+| count  | `2`                     | Number of times event was observed. `UNKNOWN` if count is unknown. |
 
 ### Gene Events TSV
 Name: `[sample_name].peach.gene.events.tsv`
 
-| Column | Example                 | Description                         |
-|--------|-------------------------|-------------------------------------|
-| gene   | `DPYD`                  | Name of gene.                       |
-| event  | `VAR_chr1_98039419_C_T` | Event ID of event linked to gene.   |
-| count  | `2`                     | Number of times event was observed. |
+| Column | Example                 | Description                                                        |
+|--------|-------------------------|--------------------------------------------------------------------|
+| gene   | `DPYD`                  | Name of gene.                                                      |
+| event  | `VAR_chr1_98039419_C_T` | Event ID of event linked to gene.                                  |
+| count  | `2`                     | Number of times event was observed. `UNKNOWN` if count is unknown. |
 
 ### All Haplotypes TSV
 Name: `[sample_name].peach.haplotypes.all.tsv`
@@ -127,7 +128,7 @@ Name: `[sample_name].peach.haplotypes.best.tsv`
 | Column           | Example                                                          | Description                                                                                                            |
 |------------------|------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
 | gene             | `DPYD`                                                           | Name of gene.                                                                                                          |
-| haplotype        | `*1`                                                             | Name of haplotype.                                                                                                     |
+| haplotype        | `*1`                                                             | Name of haplotype. `Unresolved Haplotype` if no best haplotype could be determined.                                    |
 | count            | `2`                                                              | Number of times this haplotype has been called for this gene.                                                          |
 | function         | `Normal Function`                                                | Function of this haplotype. Empty if no `--function_file` argument was provided.                                       |
 | linkedDrugs      | `5-Fluorouracil`                                                 | `;` separated list of drugs for which this gene is relevant. Empty if no `--drugs_file` argument was provided.         |
@@ -136,87 +137,99 @@ Name: `[sample_name].peach.haplotypes.best.tsv`
 ### QC TSV
 Name: `[sample_name].peach.qc.tsv`
 
-| Column           | Example | Description                                                                                                                                            |
-|------------------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| gene             | `DPYD`  | Name of gene.                                                                                                                                          |
-| status           | `PASS`  | QC status of calls for this gene. Can be `PASS`, `FAIL_NO_COMBINATION_FOUND`, `FAIL_NO_UNIQUE_BEST_COMBINATION_FOUND` or `WARN_TOO_MANY_ALLELES_FOUND` |
+| Column           | Example | Description                                                                                                                                                                             |
+|------------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| gene             | `DPYD`  | Name of gene.                                                                                                                                                                           |
+| status           | `PASS`  | QC status of calls for this gene. Can be `PASS`, `FAIL_NO_COMBINATION_FOUND`, `FAIL_NO_UNIQUE_BEST_COMBINATION_FOUND`, `FAIL_EVENT_WITH_UNKNOWN_COUNT` or `WARN_TOO_MANY_ALLELES_FOUND` |
 
 ## Algorithm
 TODO: how to handle 37 calls needs to go somewhere
 
 TODO: describe ignored variants
 
+TODO: describe handling of no call variants
+
 In broad strokes, PEACH does the following:
-* Extract relevant calls from VCF, where relevance is determined by the configured haplotypes.
+* Extract relevant calls from the input VCF, where relevance is determined by the configured haplotypes.
 * For each gene:
   + Determine for each relevant variant whether the variant is homozygous ref, heterozygous or homozygous alt.
   + Determine the unique simplest combination of haplotypes that completely explains that combination of alt alleles and counts.
     If there is no unique simplest combination of haplotypes that completely explains the combination of alt alleles and counts, then declare "Unresolved Haplotype".
 * Create output files.
 
-If no variant call is present in the input VCF for a configured variant, homozygous ref is assumed.
+If no variant call is present in the input VCF for a configured variant, homozygous ref status is assumed.
 
-### Get VCF Variant Calls
-TODO: clean this up
-
+### Interpret VCF Variant Calls
 The calls for the sample `sample_r_id` are extracted from the input VCF, and they are compared to the variants in the config file.
 Calls are included when the following are all true:
 * Variant is PASS filtered.
 * At least one of the covered positions of the call matches at least one of the covered positions of the configured variants.
   In this comparison, the *covered positions* of a call or variant are the positions of the bases in the reference allele.
 
+For each selected call translate the genotype status to a count of occurrences as follows:
 
+| Genotype       | Count   |
+|----------------|---------|
+| Homozygous ref | 0       |
+| Heterozygous   | 1       |
+| Homozygous alt | 2       |
+| No call        | Unknown |
 
-### Infer Haplotypes
+Note that this assumes that the germline genome is diploid at the relevant sites.
 
-TODO: be consistent and clear about the difference between default and wild-type allele.
+### Determine Valid Haplotype Combinations
+Haplotype calling is done for one gene at a time.
 
-TODO: Properly explain what wild type is
+First, select all variants for which the following are both true:
+* the covered positions overlap with a variant relevant to one of the haplotypes configured for this gene. 
+* the variant is not in the list of ignored variants configured for this gene.
 
-The goal is to find the simplest combination of haplotypes that explains the called variants.
+If for one of these variant the count is unknown, no haplotypes will be called for this gene.
 
-Sometimes, more than one combination of haplotypes could explain the calls.
+If all relevant variants have a known count, use recursive descent to determine all combinations of non-default haplotypes that perfectly explain all of these variants and their observed counts.
+Non-default, since the default haplotype is the haplotype in the reference genome, and therefore cannot explain any observed variants.
+Then, for each haplotype combination with fewer than two called haplotypes, pad the combination with calls of the default haplotype until the combination has two haplotypes.
+
+### Determine the Best Haplotype Combination
+Depending on the configured haplotypes, it can be possible for there to be more than one haplotype combination that can explain the observed variants.
 As an example, consider the DPYD gene and two variants for that gene: c.1905+1G>A and c.1627A>G.
 Separately, these variants form the haplotypes *2A and *5, and the haplotype *2B consists of both of these variants together.
-A haplotype can contain multiple variants if these variants have a tendency to be inherited together.
-If each variant is called once and if all of these variants and haplotypes are included in the variant configuration, then, 
-to take this combined inheritance into account,
-PEACH prefers to call the haplotype combination as *2B_HET/*1_HET and not as *2A_HET/*5_HET.
-If you want PEACH to call *2A_HET/*5_HET instead of *2B_HET/*1_HET in this situation, then simply don't include *2B in the configuration.
+A haplotype can contain multiple variants if these variants have a tendency to be inherited together. 
+In this situation both `(*2A,1);(*5,1)` and `(*2B,1);(*1,1)` are valid haplotype combinations.
 
-To make this more precise, define the *length* of a haplotype combination as the total number of non-wild-type
-haplotypes in the combination, where homozygous haplotype calls are counted as 2.
-PEACH will always attempt to call the unique haplotype combination of minimum length that explain all the variant calls.
-If there are no haplotype combinations that explain all the variant calls,
-or if there is more than one combination of the same minimum length,
-then the haplotype combination for that gene is called as "Unresolved Haplotype".
+In the face of such ambiguity PEACH tries to call the "best" haplotype combination. 
+It prefers combinations of minimum length, 
+where the *length* of a haplotype combination is defined as the total number of non-wild-type haplotypes in the combination 
+if homozygous haplotype calls are counted as 2.
 
-The only valid haplotype combination of length 0 is the homozygous default haplotype.
-Valid haplotype combinations of length 1 always include precisely one heterozygous default haplotype call.
-Valid haplotype combinations of length at least 2 do not contain any calls for the default haplotype.
+The only valid haplotype combination of length 0 is the homozygous wild type haplotype.
+Valid haplotype combinations of length 1 always include precisely one wild-type and one non-wild-type haplotype call.
+Valid haplotype combinations of length at least 2 do not contain any wild-type haplotype calls
 
-Note that when at least one of the VCF calls overlaps with but is not identical to
-one of the variants in the configuration, then the haplotype combination "Unresolved Haplotype" will be called,
-because this variant will be an event that is not part of any haplotypes in the configuration.
+The reasoning behind this preference is that:
+* the wild type haplotype is the wild type because it is the most common.
+* if a haplotype involving multiple variants is configured, this is done because those variants tend to occur together.
 
-#### Haplotype Calling Algorithm
+In the example above the best haplotype combination would therefore be `(*2B,1);(*1,1)`.
 
-TODO: introduce and consistently use the concept of "best haplotype combination"
-
-TODO: Mention assumption of 2 haplotypes per gene.
-
-Haplotypes are called for each gene separately. First, collect the calls that are included in at least one non-default haplotype.
-Use recursive descent to determine all combinations of non-default haplotypes that perfectly explain all of these variants.
-If there are no such combinations, then no haplotype combination can be called for this gene.
-If such combinations do exist, then the next step is to determine the length of
-each valid haplotype combination. Find the minimum length of the valid haplotype combinations,
-and select the haplotype combinations whose length is equal to this minimum.
-If precisely one such haplotype combination exists, then this combination will be called for this gene.
-If more than one haplotype combination of minimum length exists, then no haplotype combination is called for this gene.
+It is not always possible to call a best haplotype combination. 
+When this occurs, the "haplotype" `Unresolved Haplotype` is called instead.
 
 #### Peach QC status
 
-TODO
+TODO: Write this
+
+PEACH also outputs a QC status per gene. They have the following meaning:
+
+| QC status                               | Meaning                                                                                                         |
+|-----------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| `PASS`                                  | No problems were encountered.                                                                                   |
+| `WARN_TOO_MANY_ALLELES_FOUND`           | Valid haplotype combinations exist, but all include more than 2 haplotypes calls.                               |
+| `FAIL_NO_COMBINATION_FOUND`             | No haplotype combinations could explain all observed variants.                                                  |
+| `FAIL_NO_UNIQUE_BEST_COMBINATION_FOUND` | There are multiple valid haplotype combinations, but none of them could be selected as the best.                |
+| `FAIL_EVENT_WITH_UNKNOWN_COUNT`         | No haplotype combinations could be called since one of the variants relevant for the gene had an unknown count. |
+
+Any genes with a`FAIL` status get the `Unresolved Haplotype` "haplotype" as the best called haplotype combination.
 
 ### Examples
 TODO: Fix example
