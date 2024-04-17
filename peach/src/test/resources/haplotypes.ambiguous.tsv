@@ -1,4 +1,4 @@
-Gene	Haplotype	Default	WildType	Events	
+gene	haplotype	default	wildType	events
 FAKE1	*1	true	true	
 FAKE1	*2	false	false	VAR_chr3_1234567_C_CAT;VAR_chr3_1234765_G_C
 FAKE1	*3	false	false	VAR_chr3_1234567_C_CAT

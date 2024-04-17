@@ -55,11 +55,11 @@ public class PanelLoader
 
         String header = lines.get(0);
         Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
-        int geneIndex = fieldsIndexMap.get("Gene");
-        int haplotypeIndex = fieldsIndexMap.get("Haplotype");
-        int defaultIndex = fieldsIndexMap.get("Default");
-        int wildTypeIndex = fieldsIndexMap.get("WildType");
-        int eventsIndex = fieldsIndexMap.get("Events");
+        int geneIndex = fieldsIndexMap.get("gene");
+        int haplotypeIndex = fieldsIndexMap.get("haplotype");
+        int defaultIndex = fieldsIndexMap.get("default");
+        int wildTypeIndex = fieldsIndexMap.get("wildType");
+        int eventsIndex = fieldsIndexMap.get("events");
 
         for(String line : lines.subList(1, lines.size()))
         {

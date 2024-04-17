@@ -1,4 +1,4 @@
-Gene	Haplotype	Default	WildType	Events
+gene	haplotype	default	wildType	events
 DPYD	*1	false	true	VAR_chr1_98348885_G_A
 DPYD	*2A	false	false	VAR_chr1_97915614_C_T;VAR_chr1_98348885_G_A
 DPYD	*7	false	false	VAR_chr1_98205966_GATGA_G;VAR_chr1_98348885_G_A

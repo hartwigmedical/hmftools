@@ -1,4 +1,4 @@
-Gene	DrugName	UrlPrescriptionInfo
+gene	drugName	urlPrescriptionInfo
 DPYD	5-Fluorouracil	https://www.pharmgkb.org/guidelineAnnotation/PA166104939
 DPYD	Capecitabine	https://www.pharmgkb.org/guidelineAnnotation/PA166104963
 DPYD	Tegafur	https://www.pharmgkb.org/guidelineAnnotation/PA166104944

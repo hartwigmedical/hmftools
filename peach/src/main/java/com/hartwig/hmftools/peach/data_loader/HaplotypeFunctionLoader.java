@@ -45,9 +45,9 @@ public class HaplotypeFunctionLoader
         {
             String[] splitLine = line.split(TSV_DELIM);
             HaplotypeFunction function = ImmutableHaplotypeFunction.builder()
-                    .geneName(splitLine[fieldsIndexMap.get("Gene")])
-                    .haplotypeName(splitLine[fieldsIndexMap.get("Haplotype")])
-                    .function(splitLine[fieldsIndexMap.get("Function")])
+                    .geneName(splitLine[fieldsIndexMap.get("gene")])
+                    .haplotypeName(splitLine[fieldsIndexMap.get("haplotype")])
+                    .function(splitLine[fieldsIndexMap.get("function")])
                     .build();
             functions.add(function);
         }

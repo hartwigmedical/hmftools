@@ -45,9 +45,9 @@ public class DrugInfoLoader
         {
             String[] splitLine = line.split(TSV_DELIM);
             DrugInfo drugInfo = ImmutableDrugInfo.builder()
-                    .drugName(splitLine[fieldsIndexMap.get("DrugName")])
-                    .geneName(splitLine[fieldsIndexMap.get("Gene")])
-                    .prescriptionInfoUrl(splitLine[fieldsIndexMap.get("UrlPrescriptionInfo")])
+                    .drugName(splitLine[fieldsIndexMap.get("drugName")])
+                    .geneName(splitLine[fieldsIndexMap.get("gene")])
+                    .prescriptionInfoUrl(splitLine[fieldsIndexMap.get("urlPrescriptionInfo")])
                     .build();
             drugInfos.add(drugInfo);
         }
