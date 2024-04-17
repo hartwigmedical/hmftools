@@ -51,6 +51,9 @@ public class VariantReadContext
     }
 
     // read context methods
+    public String ref() { return mVariant.ref(); }
+    public String alt() { return mVariant.alt(); }
+
     public int coreLength() { return CoreIndexEnd - CoreIndexStart + 1; }
     public int leftFlankLength() { return CoreIndexStart; }
     public int rightFlankLength() { return ReadBases.length - CoreIndexEnd - 1; }
