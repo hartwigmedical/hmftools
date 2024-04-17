@@ -31,6 +31,7 @@ import com.hartwig.hmftools.cup.ref.RefDataConfig;
 
 import org.apache.commons.cli.CommandLine;
 
+@Deprecated
 public class RefAltSpliceJunctions implements RefClassifier
 {
     private final RefDataConfig mConfig;

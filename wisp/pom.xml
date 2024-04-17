@@ -11,7 +11,7 @@
     <artifactId>wisp</artifactId>
     <packaging>jar</packaging>
     <version>${wisp.version}</version>
-    <name>HMF Tools - Wisp ctDNA</name>
+    <name>HMF Tools - Wisp</name>
 
     <dependencies>
         <dependency>

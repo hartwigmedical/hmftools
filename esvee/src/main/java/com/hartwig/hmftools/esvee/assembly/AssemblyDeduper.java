@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_JUNCTION_DISTANCE;
-import static com.hartwig.hmftools.esvee.read.ReadFilters.recordSoftClipsAtJunction;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAtJunction;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 
 public class AssemblyDeduper
 {
@@ -117,8 +117,8 @@ public class AssemblyDeduper
             return first.supportCount() > second.supportCount();
 
         // take the one with the most precise support
-        long preciseFirst = first.support().stream().filter(x -> recordSoftClipsAtJunction(x.read(), first.junction())).count();
-        long preciseSecond = second.support().stream().filter(x -> recordSoftClipsAtJunction(x.read(), second.junction())).count();
+        long preciseFirst = first.support().stream().filter(x -> recordSoftClipsAtJunction(x.cachedRead(), first.junction())).count();
+        long preciseSecond = second.support().stream().filter(x -> recordSoftClipsAtJunction(x.cachedRead(), second.junction())).count();
 
         return preciseFirst >= preciseSecond;
     }

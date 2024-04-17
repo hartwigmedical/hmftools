@@ -37,7 +37,7 @@ public class ResultsWriter
         final String filename = AmberBAFFile.generateAmberFilenameForWriting(mConfig.OutputDir, mConfig.getSampleId());
         AmberBAFFile.write(filename, result);
 
-        if(mConfig.TumorId != null)
+        if(mConfig.TumorId != null && !mConfig.SkipBafSegmentation)
         {
             AMB_LOGGER.info("applying pcf segmentation");
             new BAFSegmentation(mConfig.OutputDir).applySegmentation(mConfig.TumorId, filename);

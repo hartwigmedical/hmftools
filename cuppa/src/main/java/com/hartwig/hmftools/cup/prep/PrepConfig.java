@@ -26,13 +26,25 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.cup.CuppaConfig.CATEGORIES;
 import static com.hartwig.hmftools.cup.CuppaConfig.configCategories;
+import static com.hartwig.hmftools.cup.somatics.SomaticVariant.SOMATIC_VARIANTS_DIR_CFG;
+import static com.hartwig.hmftools.cup.somatics.SomaticVariant.SOMATIC_VARIANTS_DIR_DESC;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.linx.LinxCluster;
+import com.hartwig.hmftools.common.linx.LinxDriver;
+import com.hartwig.hmftools.common.linx.LinxFusion;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
+import com.hartwig.hmftools.common.rna.GeneExpressionFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
+import com.hartwig.hmftools.cup.somatics.SomaticVariant;
 
 public class PrepConfig
 {
@@ -52,6 +64,8 @@ public class PrepConfig
     public final String PurpleDir;
     public final String VirusDir;
     public final String IsofoxDir;
+    public final String SomaticVariantsDir;
+
     public final String AltSpliceJunctionSites;
 
     private static final String WRITE_FILE_BY_CATEGORY = "write_by_category";
@@ -80,6 +94,8 @@ public class PrepConfig
         VirusDir = configBuilder.getValue(VIRUS_DIR_CFG, SampleDataDir);
         IsofoxDir = configBuilder.getValue(ISOFOX_DIR_CFG, SampleDataDir);
 
+        SomaticVariantsDir = configBuilder.getValue(SOMATIC_VARIANTS_DIR_CFG, SampleDataDir);
+
         AltSpliceJunctionSites = configBuilder.getValue(REF_ALT_SJ_SITES);
 
         OutputDir = parseOutputDir(configBuilder);
@@ -92,16 +108,7 @@ public class PrepConfig
     public boolean isMultiSample() { return SampleIds.size() > 1; }
     public boolean isSingleSample() { return SampleIds.size() == 1; }
 
-    public String getLinxDataDir(final String sampleId) { return formSamplePath(sampleId, LinxDir); }
-    public String getPurpleDataDir(final String sampleId) { return formSamplePath(sampleId, PurpleDir); }
-    public String getVirusDataDir(final String sampleId) { return formSamplePath(sampleId, VirusDir); }
-    public String getIsofoxDataDir(final String sampleId) { return formSamplePath(sampleId, IsofoxDir); }
-
-    private static String formSamplePath(final String sampleId, final String samplePath)
-    {
-        return convertWildcardSamplePath(samplePath, sampleId);
-    }
-
+    // Add args to config builder
     public static void addPipelineDirectories(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
@@ -112,6 +119,8 @@ public class PrepConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
+        configBuilder.addPath(SOMATIC_VARIANTS_DIR_CFG, false, SOMATIC_VARIANTS_DIR_DESC);
+
         configBuilder.addConfigItem(CATEGORIES, false, "Categories to build ref data for");
 
         configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
@@ -128,6 +137,27 @@ public class PrepConfig
         addOutputOptions(configBuilder);
     }
 
+    // Generate input file paths by sample id
+    public String getLinxDataDir(final String sampleId) { return convertWildcardSamplePath(LinxDir, sampleId); }
+    public String getPurpleDataDir(final String sampleId) { return convertWildcardSamplePath(PurpleDir, sampleId); }
+    public String getVirusDataDir(final String sampleId) { return convertWildcardSamplePath(VirusDir, sampleId); }
+    public String getIsofoxDataDir(final String sampleId) { return convertWildcardSamplePath(IsofoxDir, sampleId); }
+    public String getSomaticVariantsDir(final String sampleId) { return convertWildcardSamplePath(SomaticVariantsDir, sampleId); }
+
+    public String purpleSomaticVcfFile(final String sampleId) { return PurpleCommon.purpleSomaticVcfFile(getPurpleDataDir(sampleId), sampleId); }
+    public String somaticVariantsGenericFile(final String sampleId) { return SomaticVariant.generateFilename(getSomaticVariantsDir(sampleId), sampleId); }
+    public String purpleSvFile(final String sampleId) { return PurpleCommon.purpleSomaticSvFile(getPurpleDataDir(sampleId), sampleId); }
+    public String purplePurityFile(final String sampleId) { return PurpleCommon.purplePurityFile(getPurpleDataDir(sampleId), sampleId); }
+    public String purpleQcFile(final String sampleId) { return PurpleCommon.purpleQcFile(getPurpleDataDir(sampleId), sampleId); }
+    public String purpleDriverCatalogFile(final String sampleId) { return DriverCatalogFile.generateSomaticFilename(getPurpleDataDir(sampleId), sampleId); }
+    public String linxDriverCatalogFile(final String sampleId) { return LinxDriver.generateCatalogFilename(getLinxDataDir(sampleId), sampleId, true); }
+    public String linxClusterFile(final String sampleId) { return LinxCluster.generateFilename(getLinxDataDir(sampleId), sampleId, false); }
+    public String linxFusionFile(final String sampleId) { return LinxFusion.generateFilename(getLinxDataDir(sampleId), sampleId); }
+    public String viralAnnotationFile(final String sampleId) { return AnnotatedVirusFile.generateFileName(getVirusDataDir(sampleId), sampleId); }
+    public String geneExpressionFile(final String sampleId) { return GeneExpressionFile.generateFilename(getIsofoxDataDir(sampleId), sampleId); }
+    public String altSpliceJunctionFile(final String sampleId) { return AltSpliceJunctionFile.generateFilename(getIsofoxDataDir(sampleId), sampleId); }
+
+    @VisibleForTesting
     public PrepConfig(
             final List<String> sampleIds,
             final List<CategoryType> categories,
@@ -141,6 +171,7 @@ public class PrepConfig
             final String purpleDir,
             final String virusDir,
             final String isofoxDir,
+            final String somaticVariantsDir,
             final String altSpliceJunctionSites
     )
     {
@@ -156,6 +187,7 @@ public class PrepConfig
         PurpleDir = purpleDir;
         VirusDir = virusDir;
         IsofoxDir = isofoxDir;
+        SomaticVariantsDir = somaticVariantsDir;
         AltSpliceJunctionSites = altSpliceJunctionSites;
     }
 }

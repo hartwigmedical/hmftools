@@ -12,21 +12,19 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_JUNCT
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
-import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findInsertedBases;
-import static com.hartwig.hmftools.esvee.types.LinkType.INDEL;
+import static com.hartwig.hmftools.esvee.assembly.types.LinkType.INDEL;
 
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.esvee.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.types.AssemblySupport;
-import com.hartwig.hmftools.esvee.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.types.JunctionSequence;
-import com.hartwig.hmftools.esvee.types.LinkType;
-import com.hartwig.hmftools.esvee.types.SupportType;
-import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionSequence;
+import com.hartwig.hmftools.esvee.assembly.types.LinkType;
+import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 
 public final class AssemblyLinker
 {
@@ -63,14 +61,14 @@ public final class AssemblyLinker
             // must share a junction read & mate in each
             boolean matched = false;
 
-            for(AssemblySupport support : first.support())
+            for(SupportRead support : first.support())
             {
                 if(!support.type().isSplitSupport())
                     continue;
 
                 if(second.support()
                         .stream().filter(x -> x.type() == SupportType.JUNCTION)
-                        .anyMatch(x -> x.read().matchesFragment(support.read())))
+                        .anyMatch(x -> x.matchesFragment(support)))
                 {
                     matched = true;
                     break;
@@ -81,7 +79,7 @@ public final class AssemblyLinker
                 return null;
         }
 
-        return new AssemblyLink(lower, upper, LinkType.FACING, 0, "", "");
+        return new AssemblyLink(lower, upper, LinkType.FACING, "", "");
     }
 
     private static boolean refSideSoftClipMatchesJunction(final JunctionAssembly assembly, int otherJunctionPosition)
@@ -130,7 +128,7 @@ public final class AssemblyLinker
         if(junctionOffsetDiff != 0)
         {
             // inserted bases for any same-orientation break could be reverse-complemented at either breakend,
-            // go with the convention of doing that for the higher breakend
+            // the convention is to do that for the higher breakend
             if(firstSeq.Reversed)
             {
                 // FIXME: doesn't handle overlaps, only inserts
@@ -180,7 +178,7 @@ public final class AssemblyLinker
         String insertedBases = junctionOffsetDiff > 0 ? extraBases : "";
         String overlapBases = junctionOffsetDiff < 0 ? extraBases : "";
 
-        return new AssemblyLink(first, second, LinkType.SPLIT, firstJunctionIndexInSecond, insertedBases, overlapBases);
+        return new AssemblyLink(first, second, LinkType.SPLIT, insertedBases, overlapBases);
     }
 
     public static final int MATCH_SUBSEQUENCE_LENGTH = 10;
@@ -191,18 +189,12 @@ public final class AssemblyLinker
             return null;
 
         // have already confirmed they share reads, so now just check the indel coords match
-        if(!assembly1.initialRead().indelCoords().matches(assembly2.initialRead().indelCoords()))
+        if(!assembly1.indelCoords().matches(assembly2.indelCoords()))
             return null;
 
-        String insertedBases = "";
-        Read indelRead = assembly1.initialRead();
+        String insertedBases = assembly1.indelCoords().insertedBases();
 
-        if(indelRead.indelCoords().isInsert())
-        {
-            insertedBases = findInsertedBases(indelRead);
-        }
-
-        return new AssemblyLink(assembly1, assembly2, INDEL, 0, insertedBases, "");
+        return new AssemblyLink(assembly1, assembly2, INDEL, insertedBases, "");
     }
 
     public static AssemblyLink tryAssemblyOverlap(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
@@ -233,8 +225,8 @@ public final class AssemblyLinker
                 firstReversed = true;
         }
 
-        firstSeq = new JunctionSequence(first, firstReversed, PHASED_ASSEMBLY_JUNCTION_OVERLAP);
-        secondSeq = new JunctionSequence(second, secondReversed, PHASED_ASSEMBLY_JUNCTION_OVERLAP);
+        firstSeq = new JunctionSequence(first, firstReversed);
+        secondSeq = new JunctionSequence(second, secondReversed);
 
         // start with a simple comparison looking for the first sequence around its junction in the second
         String firstJunctionSequence = firstSeq.junctionSequence();
@@ -318,7 +310,7 @@ public final class AssemblyLinker
             int firstIndexStart = firstJuncIndexStart + firstSeq.junctionSeqStartIndex();
             int firstIndexEnd = min(firstJuncIndexEnd + firstSeq.junctionSeqStartIndex(), firstSeq.BaseLength - 1);
 
-            if(secondIndexEnd - secondIndexStart  < minOverlapLength || firstIndexEnd - firstIndexStart  < minOverlapLength)
+            if(secondIndexEnd - secondIndexStart + 1 < minOverlapLength || firstIndexEnd - firstIndexStart + 1 < minOverlapLength)
                 continue;
 
             int mismatchCount = SequenceCompare.compareSequences(

@@ -20,7 +20,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
-import com.hartwig.hmftools.esvee.prep.types.ReadIdTrimmer;
+import com.hartwig.hmftools.esvee.common.ReadIdTrimmer;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 

@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.esvee.read.ReadUtils.isDiscordantFragment;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.types.DiscordantGroup;
-import com.hartwig.hmftools.esvee.types.Junction;
-import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.DiscordantGroup;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 public class DiscordantReads
 {

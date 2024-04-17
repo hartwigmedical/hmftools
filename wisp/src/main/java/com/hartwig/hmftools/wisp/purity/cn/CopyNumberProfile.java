@@ -87,7 +87,7 @@ public class CopyNumberProfile
 
             if(!Files.exists(Paths.get(cobaltFilename)))
             {
-                CT_LOGGER.warn("sample({}) missing Cobalt ctDNA GC ratios file: {}", sampleId, cobaltFilename);
+                CT_LOGGER.warn("sample({}) missing Cobalt sample GC ratios file: {}", sampleId, cobaltFilename);
                 return CnPurityResult.INVALID_RESULT;
 
             }

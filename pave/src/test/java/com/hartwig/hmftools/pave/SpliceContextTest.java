@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.pave.ImpactTestUtils.createMockGenome;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.generateAlt;
 import static com.hartwig.hmftools.pave.impact.SpliceClassifier.determineIndelSpliceImpact;
 import static com.hartwig.hmftools.pave.impact.SpliceImpactType.BASE_SHIFT;
+import static com.hartwig.hmftools.pave.impact.SpliceImpactType.OUTSIDE_RANGE;
 import static com.hartwig.hmftools.pave.impact.SpliceImpactType.REGION_DELETED;
 
 import static junit.framework.TestCase.assertEquals;
@@ -29,7 +30,6 @@ public class SpliceContextTest
 {
     private MockRefGenome mRefGenome = createMockGenome(41);
     private String mRefBases = mRefGenome.RefGenomeMap.get(CHR_1);
-    private ImpactClassifier mClassifier = new ImpactClassifier(mRefGenome);
 
     private boolean refAltSpliceBasesMatch(
             final VariantData variant, final RefGenomeInterface refGenome, final ExonData exon, boolean posStrand)
@@ -414,12 +414,12 @@ public class SpliceContextTest
         alt = mRefBases.substring(pos, pos + 4);
         var = new VariantData(CHR_1, pos, ref, alt);
 
-        assertFalse(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataNeg.posStrand()));
+        assertEquals(OUTSIDE_RANGE, determineIndelSpliceImpact(var, mRefGenome, exon, transDataNeg.posStrand()));
 
         alt = ref + generateAlt(mRefBases.substring(pos + 1, pos + 4));
         var = new VariantData(CHR_1, pos, ref, alt);
 
-        assertFalse(refAltSpliceBasesMatch(var, mRefGenome, exon, transDataNeg.posStrand()));
+        assertEquals(OUTSIDE_RANGE, determineIndelSpliceImpact(var, mRefGenome, exon, transDataNeg.posStrand()));
 
         // from A2 - first with A3 not changing to the required C
         pos = 32;

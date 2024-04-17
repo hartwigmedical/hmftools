@@ -1,13 +1,22 @@
 package com.hartwig.hmftools.cup.svs;
 
 import static com.hartwig.hmftools.common.cuppa.CategoryType.SV;
+import static com.hartwig.hmftools.common.cuppa.SvDataType.LINE;
+import static com.hartwig.hmftools.common.cuppa.SvDataType.MAX_COMPLEX_SIZE;
+import static com.hartwig.hmftools.common.cuppa.SvDataType.SIMPLE_DEL_20KB_1MB;
+import static com.hartwig.hmftools.common.cuppa.SvDataType.SIMPLE_DUP_100KB_5MB;
+import static com.hartwig.hmftools.common.cuppa.SvDataType.SIMPLE_DUP_32B_200B;
+import static com.hartwig.hmftools.common.cuppa.SvDataType.TELOMERIC_SGL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSvFile;
 import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
-import static com.hartwig.hmftools.cup.svs.SvDataLoader.extractSvCounts;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
@@ -41,16 +50,13 @@ public class StructuralVariantPrep implements CategoryPrep
     {
         List<DataItem> dataItems = Lists.newArrayList();
 
-        final String purpleDataDir = mConfig.getPurpleDataDir(sampleId);
-
         try
         {
-            final String svVcfFile = purpleSvFile(mConfig.PurpleDir, sampleId);
-            final String linxDataDir = mConfig.getLinxDataDir(sampleId);
-            final String clusterFile = LinxCluster.generateFilename(linxDataDir, sampleId, false);
-
             final List<StructuralVariantData> svDataList = Lists.newArrayList();
-            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(svVcfFile, new AlwaysPassFilter());
+            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(
+                    mConfig.purpleSvFile(sampleId),
+                    new AlwaysPassFilter()
+            );
             final List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
 
             int svId = 0;
@@ -59,23 +65,71 @@ public class StructuralVariantPrep implements CategoryPrep
                 svDataList.add(convertSvData(var, svId++));
             }
 
-            final List<LinxCluster> clusterList = LinxCluster.read(clusterFile);
+            final List<LinxCluster> clusterList = LinxCluster.read(mConfig.linxClusterFile(sampleId));
 
             final int[] svDataCounts = extractSvCounts(svDataList, clusterList);
 
             for(SvDataType type : SvDataType.values())
             {
-                dataItems.add(new DataItem(DNA, ItemType.SV_COUNT, type.toString(), String.valueOf(svDataCounts[type.ordinal()])));
+                dataItems.add(new DataItem(DNA, ItemType.SV_COUNT, type.toString(), svDataCounts[type.ordinal()]));
             }
 
             return dataItems;
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("sample({}) sample traits - failed to load purity file from dir{}): {}",
-                    sampleId, purpleDataDir, e.toString());
+            CUP_LOGGER.error("sample({}) failed to load structural variants from file{}): {}",
+                    sampleId,
+                    mConfig.purpleSvFile(sampleId),
+                    e.toString()
+            );
 
             return null;
         }
+    }
+
+    public static int[] extractSvCounts(final List<StructuralVariantData> allSVs, final List<LinxCluster> clusterList)
+    {
+        final int[] svCounts = new int[SvDataType.values().length];
+
+        int lineCount = clusterList.stream().filter(x -> x.resolvedType().equals("LINE")).mapToInt(x -> x.clusterCount()).sum();
+
+        // ensure only filtered SVs are considered
+        final List<StructuralVariantData> svDataList = allSVs.stream()
+                .filter(x -> x.filter().isEmpty() || x.filter().equals(PASS))
+                .collect(Collectors.toList());
+
+        int telomericSgls = (int)svDataList.stream()
+                .filter(x -> x.type() == SGL)
+                .filter(x -> x.insertSequenceRepeatClass().equals("Simple_repeat"))
+                .filter(x -> x.insertSequenceRepeatType().equals("(TTAGGG)n") || x.insertSequenceRepeatType().equals("(CCCTAA)n")).count();
+
+        int shortDels = (int)svDataList.stream()
+                .filter(x -> x.type() == DEL)
+                .mapToInt(x -> x.endPosition() - x.startPosition())
+                .filter(x -> x >= 2e4 && x <= 1e6).count();
+
+        int shortDups = (int)svDataList.stream()
+                .filter(x -> x.type() == DUP)
+                .mapToInt(x -> x.endPosition() - x.startPosition())
+                .filter(x -> x >= 32 && x <= 200).count();
+
+        int longDups = (int)svDataList.stream()
+                .filter(x -> x.type() == DUP)
+                .mapToInt(x -> x.endPosition() - x.startPosition())
+                .filter(x -> x >= 1e5 && x <= 5e6).count();
+
+        int maxEventSize = clusterList.stream()
+                .filter(x -> !x.resolvedType().equals("LINE"))
+                .mapToInt(x -> x.clusterCount()).max().orElse(0);
+
+        svCounts[LINE.ordinal()] = lineCount;
+        svCounts[SIMPLE_DEL_20KB_1MB.ordinal()] = shortDels;
+        svCounts[SIMPLE_DUP_32B_200B.ordinal()] = shortDups;
+        svCounts[SIMPLE_DUP_100KB_5MB.ordinal()] = longDups;
+        svCounts[MAX_COMPLEX_SIZE.ordinal()] = maxEventSize;
+        svCounts[TELOMERIC_SGL.ordinal()] = telomericSgls;
+
+        return svCounts;
     }
 }

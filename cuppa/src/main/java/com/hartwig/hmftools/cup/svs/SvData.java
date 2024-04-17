@@ -9,6 +9,7 @@ import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.cuppa.SvDataType;
 
+@Deprecated
 public class SvData
 {
     public final String SampleId;

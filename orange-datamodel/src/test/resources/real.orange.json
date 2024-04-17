@@ -653,6 +653,7 @@
         "chromosome": "1",
         "chromosomeBand": "p36.33",
         "minCopyNumber": 2.8109,
+        "maxCopyNumber": 2.8109,
         "minMinorAlleleCopyNumber": 0.813
       }
     ],

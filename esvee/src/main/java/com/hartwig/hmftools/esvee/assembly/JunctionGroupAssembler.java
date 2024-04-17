@@ -20,15 +20,15 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.alignment.DecoyChecker;
-import com.hartwig.hmftools.esvee.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.types.Junction;
-import com.hartwig.hmftools.esvee.types.JunctionGroup;
-import com.hartwig.hmftools.esvee.types.ThreadTask;
-import com.hartwig.hmftools.esvee.output.ResultsWriter;
-import com.hartwig.hmftools.esvee.read.BamReader;
-import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.read.ReadAdjustments;
-import com.hartwig.hmftools.esvee.read.ReadStats;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionGroup;
+import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
+import com.hartwig.hmftools.esvee.assembly.output.ResultsWriter;
+import com.hartwig.hmftools.esvee.assembly.read.BamReader;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.read.ReadAdjustments;
+import com.hartwig.hmftools.esvee.assembly.read.ReadStats;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -164,7 +164,7 @@ public class JunctionGroupAssembler extends ThreadTask
 
             JunctionAssembler junctionAssembler = new JunctionAssembler(junction);
 
-            // FIXME: doesn't seem to be making a big difference, but this is inefficient for long-range junction groups
+            // doesn't seem to be making a big difference, but this is inefficient for long-range junction groups
             // since both the junctions and reads are ordered. Could consider re-ordering by unclipped start and comparing to junction position
 
             int junctionBoundaryStart = junction.isForward() ? junction.Position - BAM_READ_JUNCTION_BUFFER : junction.Position;
@@ -179,7 +179,9 @@ public class JunctionGroupAssembler extends ThreadTask
 
             if(junction.DiscordantOnly)
             {
-                discordantReads.processReads(junction, candidateReads);
+                if(mConfig.ProcessDiscordant)
+                    discordantReads.processReads(junction, candidateReads);
+
                 continue;
             }
 
@@ -213,6 +215,12 @@ public class JunctionGroupAssembler extends ThreadTask
         }
 
         junctionGroup.addJunctionAssemblies(junctionGroupAssemblies);
+
+        // no longer needs to keep candidate reads since all have been assigned to assemblies
+        junctionGroup.clearCandidateReads();
+
+        // clear assembly read info for support fragments - candidates will be cleared after phasing
+        junctionGroupAssemblies.forEach(x -> x.clearSupportCachedRead());
 
         mCurrentJunctionGroup = null;
     }

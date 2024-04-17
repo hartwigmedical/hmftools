@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.phase;
 
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSimpleVariant;
@@ -22,8 +21,8 @@ import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
-import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.old.IndexedBases;
+import com.hartwig.hmftools.sage.old.ReadContext;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;

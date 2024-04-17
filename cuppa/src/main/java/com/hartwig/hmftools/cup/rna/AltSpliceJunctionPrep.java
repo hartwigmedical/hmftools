@@ -10,8 +10,6 @@ import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createField
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.prep.DataSource.RNA;
-import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_END;
-import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_START;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -23,7 +21,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.cup.prep.CategoryPrep;
 import com.hartwig.hmftools.cup.prep.DataItem;
 import com.hartwig.hmftools.cup.prep.ItemType;
@@ -55,7 +52,7 @@ public class AltSpliceJunctionPrep implements CategoryPrep
 
         List<DataItem> dataItems = Lists.newArrayList();
 
-        final String filename = AltSpliceJunctionFile.generateFilename(mConfig.getIsofoxDataDir(sampleId), sampleId);
+        final String filename = mConfig.altSpliceJunctionFile(sampleId);
 
         if(!Files.exists(Paths.get(filename)))
             return dataItems;
@@ -90,7 +87,7 @@ public class AltSpliceJunctionPrep implements CategoryPrep
 
                 int fragCount = Integer.parseInt(items[fragCountIndex]);
 
-                dataItems.add(new DataItem(RNA, ItemType.ALT_SJ, asjKey, String.valueOf(fragCount)));
+                dataItems.add(new DataItem(RNA, ItemType.ALT_SJ, asjKey, fragCount));
             }
 
             if(dataItems.isEmpty())
@@ -107,6 +104,9 @@ public class AltSpliceJunctionPrep implements CategoryPrep
             return null;
         }
     }
+
+    public static final String FLD_POS_START = "PosStart";
+    public static final String FLD_POS_END = "PosEnd";
 
     protected static boolean loadRefAltSjIndices(final String filename, final Map<String,Integer> refAsjIndexMap)
     {

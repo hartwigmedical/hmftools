@@ -7,19 +7,33 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
+import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
+import static com.hartwig.hmftools.esvee.TestUtils.createAssembly;
+import static com.hartwig.hmftools.esvee.TestUtils.createRead;
+import static com.hartwig.hmftools.esvee.TestUtils.formTestRefSequence;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.esvee.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.types.Junction;
-import com.hartwig.hmftools.esvee.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetBuilder;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.LinkType;
+import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
+import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 
 import org.junit.Test;
 
@@ -56,7 +70,6 @@ public class AssemblyLinksTest
         assertNotNull(link);
         assertTrue(link.insertedBases().isEmpty());
 
-        assertEquals(79, link.firstJunctionIndexInSecond());
         assertEquals(firstAssembly, link.first());
         assertEquals(secondAssembly, link.second());
         assertEquals(BND, link.svType());
@@ -80,7 +93,6 @@ public class AssemblyLinksTest
         assertEquals(INSERTED_BASES, link.insertedBases());
         assertEquals(firstAssembly, link.first());
         assertEquals(secondAssembly, link.second());
-        assertEquals(79, link.firstJunctionIndexInSecond());
         assertEquals(DEL, link.svType());
     }
 
@@ -120,7 +132,6 @@ public class AssemblyLinksTest
         assertNotNull(link);
         assertTrue(link.insertedBases().isEmpty());
 
-        assertEquals(79, link.firstJunctionIndexInSecond());
         assertEquals(firstAssembly, link.first());
         assertEquals(secondAssembly, link.second());
         assertEquals(DUP, link.svType());
@@ -136,7 +147,6 @@ public class AssemblyLinksTest
         assertNotNull(link);
         assertTrue(link.insertedBases().isEmpty());
 
-        assertEquals(79, link.firstJunctionIndexInSecond());
         assertEquals(firstAssembly, link.first());
         assertEquals(secondAssembly, link.second());
         assertEquals(DUP, link.svType());
@@ -169,7 +179,6 @@ public class AssemblyLinksTest
         assertNotNull(link);
         assertTrue(link.insertedBases().isEmpty());
 
-        assertEquals(79, link.firstJunctionIndexInSecond());
         assertEquals(firstAssembly, link.first());
         assertEquals(secondAssembly, link.second());
         assertEquals(DUP, link.svType());
@@ -204,7 +213,6 @@ public class AssemblyLinksTest
         assertNotNull(link);
         assertTrue(link.insertedBases().isEmpty());
 
-        assertEquals(100, link.firstJunctionIndexInSecond());
         assertEquals(firstAssembly, link.first());
         assertEquals(secondAssembly, link.second());
         assertEquals(INV, link.svType());
@@ -223,7 +231,6 @@ public class AssemblyLinksTest
         assertNotNull(link);
         assertEquals(INSERTED_BASES, link.insertedBases());
 
-        assertEquals(107, link.firstJunctionIndexInSecond());
         assertEquals(firstAssembly, link.first());
         assertEquals(secondAssembly, link.second());
         assertEquals(INV, link.svType());
@@ -258,7 +265,6 @@ public class AssemblyLinksTest
         assertNotNull(link);
         assertTrue(link.insertedBases().isEmpty());
 
-        assertEquals(79, link.firstJunctionIndexInSecond());
         assertEquals(firstAssembly, link.first());
         assertEquals(secondAssembly, link.second());
         assertEquals(INV, link.svType());
@@ -278,9 +284,140 @@ public class AssemblyLinksTest
         assertNotNull(link);
         assertEquals(INSERTED_BASES, link.insertedBases());
 
-        assertEquals(79, link.firstJunctionIndexInSecond());
         assertEquals(firstAssembly, link.first());
         assertEquals(secondAssembly, link.second());
         assertEquals(INV, link.svType());
+    }
+
+    @Test
+    public void testChainedLinks()
+    {
+        // similar to chromosome 3-10-12-3 in COLO - links are:
+        // chr1:100:1 -> chr2:50:-1
+        // chr2:50:-1 -> chr2:200:1
+        // chr2:200:1 -> chr3:200:1
+        // chr3:200:1 -> chr3:50:-1 (ie segment is reverse-linked)
+        // chr3:50:-1 -> chr1:250:-1
+
+        String refSequence = REF_BASES_400;
+
+        MockRefGenome refGenome = new MockRefGenome(true);
+        refGenome.RefGenomeMap.put(CHR_1, refSequence);
+        refGenome.RefGenomeMap.put(CHR_2, refSequence);
+        refGenome.RefGenomeMap.put(CHR_3, refSequence);
+
+        String refBases1 = REF_BASES_400.substring(1, 101);
+        String extBases1 = refGenome.getBaseString(CHR_2, 50, 150);
+        String assemblyBases1 = refBases1 + extBases1;
+
+        String posJuncReadCigar = "100M50S";
+        String negJuncReadCigar = "50S100M";
+        String juncReadBases = REF_BASES_400.substring(0, 150); // unused but needs to be the correct length
+
+        // chr1:100:1 - links to chr2:50:-1
+        JunctionAssembly assembly1 = createAssembly(CHR_1, 100, POS_ORIENT, assemblyBases1, refBases1.length() - 1);
+
+        Read juncRead = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 1, juncReadBases, posJuncReadCigar, CHR_2, 100, true);
+
+        assembly1.addJunctionRead(juncRead);
+
+        // chr2:50:-1 - links to chr1:100:1 and faces chr2:200:1
+        String refBases2 = REF_BASES_400.substring(50, 150);
+        String extBases2 = refGenome.getBaseString(CHR_1, 51, 101);
+        String assemblyBases2 = extBases2 + refBases2;
+
+        JunctionAssembly assembly2 = createAssembly(CHR_2, 50, NEG_ORIENT, assemblyBases2, extBases2.length());
+
+        assembly2.addJunctionRead(juncRead); // add prior so fragment IDs match & link
+
+        juncRead = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_2, 50, juncReadBases, negJuncReadCigar, CHR_3, 100, true);
+
+        assembly2.addJunctionRead(juncRead);
+
+        // chr2:200:1 - links to chr3:200:-1 inverted to faces chr2:50
+        String refBases3 = REF_BASES_400.substring(101, 201);
+        String extBases3 = refGenome.getBaseString(CHR_3, 151, 201);
+        String assemblyBases3 = refBases3 + Nucleotides.reverseComplementBases(extBases3);
+
+        JunctionAssembly assembly3 = createAssembly(CHR_2, 200, POS_ORIENT, assemblyBases3, refBases3.length() - 1);
+
+        assembly3.addJunctionRead(juncRead);
+
+        juncRead = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_2, 101, juncReadBases, posJuncReadCigar, CHR_3, 100, true);
+
+        assembly3.addJunctionRead(juncRead);
+
+        // chr3:200:1 - links to chr2:200:1 inverted and faces chr3:50:-1
+        String refBases4 = REF_BASES_400.substring(101, 201);
+        String extBases4 = refGenome.getBaseString(CHR_2, 151, 201);
+        String assemblyBases4 = refBases4 + Nucleotides.reverseComplementBases(extBases4);
+
+        JunctionAssembly assembly4 = createAssembly(CHR_3, 200, POS_ORIENT, assemblyBases4, refBases4.length() - 1);
+
+        assembly4.addJunctionRead(juncRead);
+        assembly1.addJunctionRead(juncRead);
+
+        juncRead = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_3, 101, juncReadBases, posJuncReadCigar, CHR_2, 100, true);
+
+        assembly4.addJunctionRead(juncRead);
+
+        // chr3:50:-1 - links to chr1:250:-1 inverted and faces chr3:200:1
+        String refBases5 = REF_BASES_400.substring(50, 150);
+        String extBases5 = refGenome.getBaseString(CHR_1, 250, 300);
+        String assemblyBases5 = Nucleotides.reverseComplementBases(extBases5) + refBases5;
+
+        JunctionAssembly assembly5 = createAssembly(CHR_3, 50, NEG_ORIENT, assemblyBases5, extBases5.length());
+
+        assembly5.addJunctionRead(juncRead);
+
+        juncRead = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_3, 50, juncReadBases, negJuncReadCigar, CHR_1, 300, true);
+
+        assembly5.addJunctionRead(juncRead);
+
+        // chr1:250:-1 - links to chr3:50:-1
+        String refBases6 = REF_BASES_400.substring(250, 350);
+        String extBases6 = refGenome.getBaseString(CHR_3, 50, 100);
+        String assemblyBases6 = Nucleotides.reverseComplementBases(extBases6) + refBases6;
+
+        JunctionAssembly assembly6 = createAssembly(CHR_1, 250, NEG_ORIENT, assemblyBases6, extBases6.length());
+
+        assembly6.addJunctionRead(juncRead);
+
+        juncRead = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 250, juncReadBases, negJuncReadCigar, CHR_3, 100, true);
+
+        assembly6.addJunctionRead(juncRead);
+        assembly4.addJunctionRead(juncRead); // for the facing link
+
+        PhaseGroup phaseGroup = new PhaseGroup(assembly1, assembly2);
+        phaseGroup.addAssembly(assembly3);
+        phaseGroup.addAssembly(assembly4);
+        phaseGroup.addAssembly(assembly5);
+        phaseGroup.addAssembly(assembly6);
+
+        PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(refGenome, new RemoteRegionAssembler(refGenome, null), phaseGroup);
+        phaseSetBuilder.buildPhaseSets();
+
+        assertEquals(1, phaseGroup.phaseSets().size());
+        PhaseSet phaseSet = phaseGroup.phaseSets().get(0);
+
+        assertEquals(5, phaseSet.assemblyLinks().size());
+
+        hasAssemblyLink(phaseSet.assemblyLinks(), assembly1, assembly2, LinkType.SPLIT);
+        hasAssemblyLink(phaseSet.assemblyLinks(), assembly2, assembly3, LinkType.FACING);
+        hasAssemblyLink(phaseSet.assemblyLinks(), assembly3, assembly4, LinkType.SPLIT);
+        hasAssemblyLink(phaseSet.assemblyLinks(), assembly4, assembly5, LinkType.FACING);
+        hasAssemblyLink(phaseSet.assemblyLinks(), assembly5, assembly6, LinkType.SPLIT);
+    }
+
+    private static boolean hasAssemblyLink(
+            final List<AssemblyLink> links, final JunctionAssembly assembly1, final JunctionAssembly assembly2, final LinkType linkType)
+    {
+        return links.stream().anyMatch(x -> x.type() == linkType && x.hasAssembly(assembly1) && x.hasAssembly(assembly2));
     }
 }

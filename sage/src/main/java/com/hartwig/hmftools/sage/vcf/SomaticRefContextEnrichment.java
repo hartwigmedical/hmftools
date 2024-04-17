@@ -8,10 +8,10 @@ import static com.hartwig.hmftools.common.variant.VariantUtils.relativePositionA
 
 import java.util.Optional;
 
-import com.hartwig.hmftools.sage.common.Microhomology;
+import com.hartwig.hmftools.sage.old.MicrohomologyContextBuilder;
 import com.hartwig.hmftools.common.variant.SageVcfTags;
-import com.hartwig.hmftools.sage.common.RepeatContext;
-import com.hartwig.hmftools.sage.common.RepeatContextFactory;
+import com.hartwig.hmftools.sage.old.RepeatContext;
+import com.hartwig.hmftools.sage.old.RepeatContextFactory;
 
 import org.apache.commons.math3.util.Pair;
 
@@ -78,8 +78,8 @@ public class SomaticRefContextEnrichment
             final String alt = variant.getAlternateAllele(0).getBaseString();
 
             final String microhomology = ref.length() > alt.length()
-                    ? Microhomology.microhomologyAtDelete(relativePosition, sequence, ref)
-                    : Microhomology.microhomologyAtInsert(relativePosition, sequence, alt);
+                    ? MicrohomologyContextBuilder.microhomologyAtDelete(relativePosition, sequence, ref)
+                    : MicrohomologyContextBuilder.microhomologyAtInsert(relativePosition, sequence, alt);
 
             if(!microhomology.isEmpty())
             {

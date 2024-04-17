@@ -84,6 +84,7 @@ public class FragmentTotals
     public int sampleAdTotal() { return mSampleAdTotal; }
     public int tumorDepthTotal() { return mTumorDepthTotal; }
     public int sampleDepthTotal() { return mSampleDepthTotal; }
+    public double sampleAdjustedDepthTotal() { return mSampleAdjustedDepthTotal; }
     public int sampleOneFragmentCount() { return mSampleOneFragmentCount; }
     public int sampleTwoPlusCount() { return mSampleTwoPlusCount; }
 

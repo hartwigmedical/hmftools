@@ -32,6 +32,7 @@ import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
 
+@Deprecated
 public class ResultsWriter
 {
     private final CuppaConfig mConfig;

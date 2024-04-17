@@ -11,6 +11,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.StringJoiner;
 
+import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.sage.SageConfig;
 
 import htsjdk.samtools.SAMRecord;

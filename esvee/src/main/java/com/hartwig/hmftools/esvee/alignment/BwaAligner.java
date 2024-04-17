@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.esvee.alignment;
 
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 
 import com.hartwig.hmftools.esvee.AssemblyConfig;
@@ -16,12 +19,23 @@ public class BwaAligner implements Aligner
 {
     private final BwaMemAligner mAligner;
 
-    public BwaAligner(final AssemblyConfig config)
+    public BwaAligner(final String refGenomeImageFile)
     {
-        if(!config.RefGenomeImageFile.isEmpty() && Files.exists(Paths.get(config.RefGenomeImageFile)))
+        if(!refGenomeImageFile.isEmpty() && Files.exists(Paths.get(refGenomeImageFile)))
         {
-            BwaMemIndex index = new BwaMemIndex(config.RefGenomeImageFile);
-            mAligner = new BwaMemAligner(index);
+            BwaMemIndex index = null;
+
+            // TEMP: until can resolve local ARM library issues
+            try
+            {
+                index = new BwaMemIndex(refGenomeImageFile);
+            }
+            catch(Exception e)
+            {
+                SV_LOGGER.error("failed to initialise BWA aligner: {}", e.toString());
+            }
+
+            mAligner = index != null ? new BwaMemAligner(index) : null;
         }
         else
         {
@@ -54,6 +68,9 @@ public class BwaAligner implements Aligner
     @Override
     public List<BwaMemAlignment> alignSequence(final byte[] bases)
     {
+        if(mAligner == null)
+            return Collections.emptyList();
+
         List<BwaMemAlignment> alignmentSet = mAligner.alignSeqs(List.of(bases)).get(0);
 
         return alignmentSet;

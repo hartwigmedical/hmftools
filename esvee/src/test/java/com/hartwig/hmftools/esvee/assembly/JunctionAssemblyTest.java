@@ -20,9 +20,9 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
-import com.hartwig.hmftools.esvee.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.types.Junction;
-import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 import org.junit.Test;
 
@@ -204,8 +204,8 @@ public class JunctionAssemblyTest
         Read sharedRead = createRead(TEST_READ_ID, 40, assemblyBases.substring(0, 30), "30M");
         Read sharedRead2 = createRead(TEST_READ_ID_2, 40, assemblyBases.substring(0, 30), "30M");
 
-        assemblies.forEach(x -> x.addJunctionRead(sharedRead, false));
-        assemblies.forEach(x -> x.addJunctionRead(sharedRead2, false));
+        assemblies.forEach(x -> x.addJunctionRead(sharedRead));
+        assemblies.forEach(x -> x.addJunctionRead(sharedRead2));
 
         // add 2 mismatches to each of the other assemblies
         assembly2.bases()[2] = getNextBase(assembly2.bases()[2]);

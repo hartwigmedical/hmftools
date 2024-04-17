@@ -40,6 +40,7 @@ import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 public class RefGeneExpression implements RefClassifier
 {
     private final RefDataConfig mConfig;

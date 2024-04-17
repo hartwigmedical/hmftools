@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.Arrays;
 
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
@@ -48,6 +49,13 @@ public class RefSequence
     }
 
     public byte base(int position) { return Bases[index(position)]; }
+
+    public byte[] baseRange(int posStart, int posEnd)
+    {
+        int indexStart = index(posStart);
+        int indexEnd = index(posEnd);
+        return Arrays.subsetArray(Bases, indexStart, indexEnd);
+    }
 
     public String indexBases(int start, int end)
     {

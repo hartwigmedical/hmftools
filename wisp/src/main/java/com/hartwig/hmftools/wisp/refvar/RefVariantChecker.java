@@ -44,18 +44,18 @@ public class RefVariantChecker
 {
     private final String mOutputDir;
     private final String mOutputId;
-    private final String mCtDnaVcfs;
+    private final String mSampleVcfs;
     private final String mPurpleDir;
 
     private final List<SampleData> mSamples;
 
     private final BufferedWriter mWriter;
 
-    private static final String CTDNA_VCFS = "ctdna_vcf";
+    private static final String SAMPLE_VCFS = "sample_vcf";
 
     public RefVariantChecker(final ConfigBuilder configBuilder)
     {
-        mCtDnaVcfs = configBuilder.getValue(CTDNA_VCFS);
+        mSampleVcfs = configBuilder.getValue(SAMPLE_VCFS);
         mPurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
         mOutputDir = parseOutputDir(configBuilder);
         mOutputId = configBuilder.getValue(OUTPUT_ID);
@@ -71,7 +71,7 @@ public class RefVariantChecker
             System.exit(1);
 
         CT_LOGGER.info("running probe variant selection for {} patients and {} samples",
-                mSamples.size(), mSamples.stream().mapToInt(x -> x.CtDnaSamples.size()).sum());
+                mSamples.size(), mSamples.stream().mapToInt(x -> x.SampleIds.size()).sum());
 
         for(SampleData sample : mSamples)
         {
@@ -97,20 +97,20 @@ public class RefVariantChecker
         loadPurpleVariants(purpleSomaticVcf, tumorChrVariantMap, sample.PatientId);
         loadPurpleVariants(purpleGermlineVcf, germlineChrVariantMap, sample.PatientId);
 
-        // now process each ctDNA sample in turn
-        for(String ctDnaSampleId : sample.CtDnaSamples)
+        // now process each sample in turn
+        for(String sampleId : sample.SampleIds)
         {
-            String ctDnaSampleVcf = convertWildcardSamplePath(mCtDnaVcfs, ctDnaSampleId);
+            String sampleVcf = convertWildcardSamplePath(mSampleVcfs, sampleId);
 
-            VcfFileReader sampleFileReader = new VcfFileReader(ctDnaSampleVcf);
+            VcfFileReader sampleFileReader = new VcfFileReader(sampleVcf);
 
             if(!sampleFileReader.fileValid())
             {
-                CT_LOGGER.error("failed to read ctDna vcf({})", ctDnaSampleVcf);
+                CT_LOGGER.error("failed to read sample vcf({})", sampleVcf);
                 continue;
             }
 
-            int ctdnaVarCount = 0;
+            int sampleVarCount = 0;
 
             for(VariantContext variantContext : sampleFileReader.iterator())
             {
@@ -122,14 +122,14 @@ public class RefVariantChecker
                 // if(variant.tier() != VariantTier.HOTSPOT && variant.tier() != VariantTier.PANEL)
                 //    continue;
 
-                ++ctdnaVarCount;
+                ++sampleVarCount;
 
                 VariantContextDecorator tumorVariant = findExistingVariant(variant, tumorChrVariantMap);
                 VariantContextDecorator germlineVariant = findExistingVariant(variant, germlineChrVariantMap);
 
-                writeVariant(sample.PatientId, ctDnaSampleId, variant, tumorVariant, germlineVariant);
+                writeVariant(sample.PatientId, sampleId, variant, tumorVariant, germlineVariant);
 
-                CT_LOGGER.info("patient({}) sample({}) processed {} variants", sample.PatientId, ctDnaSampleId, ctdnaVarCount);
+                CT_LOGGER.info("patient({}) sample({}) processed {} variants", sample.PatientId, sampleId, sampleVarCount);
             }
         }
     }
@@ -274,7 +274,7 @@ public class RefVariantChecker
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         addSampleIdFile(configBuilder, true);
-        configBuilder.addPath(CTDNA_VCFS, true, "CtDNA VCFs");
+        configBuilder.addPath(SAMPLE_VCFS, true, "Sample VCFs");
         configBuilder.addPath(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
         addOutputOptions(configBuilder, true);
         addLoggingOptions(configBuilder);

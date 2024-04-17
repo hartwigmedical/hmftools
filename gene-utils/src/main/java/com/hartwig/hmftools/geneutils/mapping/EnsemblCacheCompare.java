@@ -2,6 +2,8 @@ package com.hartwig.hmftools.geneutils.mapping;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
@@ -39,6 +41,7 @@ public class EnsemblCacheCompare
     private final EnsemblDataCache mGeneCacheRef;
     private final EnsemblDataCache mGeneCacheNew;
     private final List<String> mSpecificGeneNames;
+    private final RefGenomeVersion mRefGenomeVersion;
     private final BufferedWriter mWriter;
 
     public EnsemblCacheCompare(final ConfigBuilder configBuilder)
@@ -47,6 +50,8 @@ public class EnsemblCacheCompare
         String outputId = configBuilder.getValue(OUTPUT_ID);
         String ensemblDirRef = configBuilder.getValue(ENSEMBL_DIR_REF);
         String ensemblDirNew = configBuilder.getValue(ENSEMBL_DIR_NEW);
+
+        mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
 
         if(outputDir == null || ensemblDirRef == null || ensemblDirNew == null)
         {
@@ -64,10 +69,10 @@ public class EnsemblCacheCompare
         }
 
         // version makes no difference for transcript mapping since only appends 'chr' prefix
-        mGeneCacheRef = new EnsemblDataCache(ensemblDirRef, RefGenomeVersion.V37);
+        mGeneCacheRef = new EnsemblDataCache(ensemblDirRef, mRefGenomeVersion);
         mGeneCacheRef.setRequiredData(true, false, false, false);
 
-        mGeneCacheNew = new EnsemblDataCache(ensemblDirNew, RefGenomeVersion.V37);
+        mGeneCacheNew = new EnsemblDataCache(ensemblDirNew, mRefGenomeVersion);
         mGeneCacheNew.setRequiredData(true, false, false, false);
 
         if(!mSpecificGeneNames.isEmpty())
@@ -122,7 +127,7 @@ public class EnsemblCacheCompare
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
-            String chrStr = chromosome.toString();
+            String chrStr = mRefGenomeVersion.versionedChromosome(chromosome.toString());
             List<GeneData> geneDataListRef = mGeneCacheRef.getChrGeneDataMap().get(chrStr);
             List<GeneData> geneDataListNew = mGeneCacheNew.getChrGeneDataMap().get(chrStr);
 
@@ -179,18 +184,22 @@ public class EnsemblCacheCompare
         List<TranscriptData> transcriptsNew = mGeneCacheNew.getTranscriptDataMap().get(geneDataNew.GeneId);
 
         Set<String> processedNew = Sets.newHashSet();
+        TranscriptData canonicalTranscriptsRef = null;
+        TranscriptData canonicalTranscriptsNew = null;
 
         if(transcriptsRef != null)
         {
             for(TranscriptData transDataRef : transcriptsRef)
             {
+                if(transDataRef.IsCanonical)
+                    canonicalTranscriptsRef = transDataRef;
+
                 TranscriptData transDataNew = transcriptsNew != null ?
                         transcriptsNew.stream().filter(x -> x.TransName.equals(transDataRef.TransName)).findFirst().orElse(null) : null;
 
                 if(transDataNew == null)
                 {
                     writeTranscriptMismatch(geneDataRef, transDataRef, transDataNew, "");
-                    continue;
                 }
                 else
                 {
@@ -206,11 +215,21 @@ public class EnsemblCacheCompare
         {
             for(TranscriptData transDataNew : transcriptsNew)
             {
+                if(transDataNew.IsCanonical)
+                    canonicalTranscriptsNew = transDataNew;
+
                 if(processedNew.contains(transDataNew.TransName))
                     continue;
 
                 writeTranscriptMismatch(geneDataRef, null, transDataNew, "");
             }
+        }
+
+        // if canonical has changed, test its definition
+        if(canonicalTranscriptsRef != null && canonicalTranscriptsNew != null
+        && !canonicalTranscriptsRef.TransName.equals(canonicalTranscriptsNew.TransName))
+        {
+            compareTranscripts(geneDataRef, canonicalTranscriptsRef, canonicalTranscriptsNew);
         }
     }
 
@@ -329,11 +348,13 @@ public class EnsemblCacheCompare
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        configBuilder.addPath(ENSEMBL_DIR_REF, true, "Ensembl data cache dir for ref-genome v37");
-        configBuilder.addPath(ENSEMBL_DIR_NEW, true, "Ensembl data cache dir for ref-genome v38");
+        configBuilder.addPath(ENSEMBL_DIR_REF, true, "Ensembl data cache dir for ref");
+        configBuilder.addPath(ENSEMBL_DIR_NEW, true, "Ensembl data cache dir for new");
+        addRefGenomeVersion(configBuilder);
+
         configBuilder.addConfigItem(SPECIFIC_GENES, "Limit comparison to specific genes, separated by ','");
         addOutputOptions(configBuilder);
-        ConfigUtils.addLoggingOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
 

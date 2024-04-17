@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sage.vis;
 
 import java.util.List;
 
-import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.old.IndexedBases;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.Nullable;

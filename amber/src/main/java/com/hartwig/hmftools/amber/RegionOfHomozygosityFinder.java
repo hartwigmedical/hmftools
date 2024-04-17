@@ -1,23 +1,25 @@
 package com.hartwig.hmftools.amber;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.COORDS_37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates.COORDS_38;
 import static com.hartwig.hmftools.common.utils.collection.Multimaps.filterEntries;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.jetbrains.annotations.NotNull;
@@ -56,7 +58,8 @@ public class RegionOfHomozygosityFinder
 
     private static final int EXCLUDED_REGION_EXPAND_SIZE = 1_000_000;
     private static final int HALF_CENTROMERE_SIZE = 1_500_000;
-    private List<GenomeRegion> mExcludedRegions;
+
+    private final List<GenomeRegion> mExcludedRegions;
     private final RefGenomeVersion mRefGenomeVersion;
     private final double mMinDepthPercent;
     private final double mMaxDepthPercent;
@@ -65,10 +68,9 @@ public class RegionOfHomozygosityFinder
     private final int mSiteWindowSize;
     private final int mMaxHetInWindow;
 
-    public RegionOfHomozygosityFinder(RefGenomeVersion refGenomeVersion,
-            double minDepthPercent, double maxDepthPercent,
-            int minHomozygousRegionSize,
-            int minSnpLociCount, int siteWindowSize, int maxHetInWindow) throws IOException
+    public RegionOfHomozygosityFinder(
+            final RefGenomeVersion refGenomeVersion, double minDepthPercent, double maxDepthPercent,
+            int minHomozygousRegionSize, int minSnpLociCount, int siteWindowSize, int maxHetInWindow) throws IOException
     {
         mRefGenomeVersion = refGenomeVersion;
         mMinDepthPercent = minDepthPercent;
@@ -77,6 +79,8 @@ public class RegionOfHomozygosityFinder
         mMinSnpLociCount = minSnpLociCount;
         mSiteWindowSize = siteWindowSize;
         mMaxHetInWindow = maxHetInWindow;
+        mExcludedRegions = Lists.newArrayList();
+
         loadExcludedRegions();
     }
 
@@ -203,11 +207,10 @@ public class RegionOfHomozygosityFinder
     // 3. Exclude the p arm of chromosome 13,14,15,21 and 22.
     //
 
-    // load excluded regions from resource files
     public void loadExcludedRegions() throws IOException
     {
         String resourcePath = null;
-        switch (mRefGenomeVersion)
+        switch(mRefGenomeVersion)
         {
             case V37:
                 resourcePath = "rohExcluded.37.bed";
@@ -217,31 +220,22 @@ public class RegionOfHomozygosityFinder
                 break;
         }
 
-        List<GenomeRegion> excludedRegions = AmberUtils.loadBedFromResource(resourcePath);
+        List<ChrBaseRegion> excludedRegions = AmberUtils.loadBedFromResource(resourcePath);
 
-        // now add all of the centromere
-        RefGenomeCoordinates refCcoord;
+        // add a buffer around each centromere
+        RefGenomeCoordinates refCcoord = mRefGenomeVersion == RefGenomeVersion.V37 ? COORDS_37 : COORDS_38;
 
-        switch (mRefGenomeVersion)
+        for(Map.Entry<Chromosome, Integer> entry : refCcoord.Centromeres.entrySet())
         {
-            case V37:
-                refCcoord = RefGenomeCoordinates.COORDS_37;
-                break;
-            case V38:
-                refCcoord = RefGenomeCoordinates.COORDS_38;
-                break;
-            default:
-                refCcoord = RefGenomeCoordinates.COORDS_37;
-                break;
+            int centromerePosition = entry.getValue();
+
+            excludedRegions.add(new ChrBaseRegion(
+                    entry.getKey().toString(),
+                    centromerePosition - HALF_CENTROMERE_SIZE,
+                    centromerePosition + HALF_CENTROMERE_SIZE));
         }
 
-        for(Map.Entry<Chromosome, Integer> e : refCcoord.Centromeres.entrySet())
-        {
-            excludedRegions.add(GenomeRegions.create(e.getKey().toString(), e.getValue() - HALF_CENTROMERE_SIZE,
-                    e.getValue() + HALF_CENTROMERE_SIZE));
-        }
-
-        mExcludedRegions = excludedRegions;
+        excludedRegions.forEach(x -> mExcludedRegions.add(x.genomeRegion()));
     }
 
     private boolean overlapWithExcludedRegions(String chromosome, int position1, int position2)

@@ -1,0 +1,5 @@
+fivePrimeBreakendId	threePrimeBreakendId	name	reported	reportedType	reportableReasons	phased	likelihood	chainLength	chainLinks	chainTerminated	domainsKept	domainsLost	skippedExonsUp	skippedExonsDown	fusedExonUp	fusedExonDown	geneStart	geneContextStart	transcriptStart	geneEnd	geneContextEnd	transcriptEnd	junctionCopyNumber
+269	268	DMD_DMD	false	NONE	NOT_KNOWN	INFRAME	NA	0	0	false			0	0	67	70	DMD	Exon 67	ENST00000357033	DMD	Exon 70	ENST00000357033	0.9625
+1495	1493	TMPRSS2_ERG	true	KNOWN_PAIR	OK	INFRAME	HIGH	0	0	false	Pointed domain;Ets domain		0	0	2	4	TMPRSS2	Exon 2	ENST00000398585	ERG	Exon 4	ENST00000417133	1.025
+497	278	MIA2_BRAF	true	PROMISCUOUS_3	OK	INFRAME	HIGH	0	0	false	Protein kinase domain	Raf-like Ras-binding;Protein kinase C-like	0	0	23	10	MIA2	Exon 23	ENST00000341502	BRAF	Exon 10	ENST00000288602	1.8748
+137	136	FGFR2_CDYL	true	PROMISCUOUS_5	OK	INFRAME	HIGH	0	0	false		Chromo/chromo shadow domain	0	0	17	2	FGFR2	Exon 17	ENST00000457416	CDYL	Exon 2	ENST00000397588	1.7476

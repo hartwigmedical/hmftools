@@ -27,6 +27,7 @@ import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class NormalisationFileBuilder
@@ -112,19 +113,12 @@ public class NormalisationFileBuilder
         if(bedFile == null)
             return;
 
-        try
-        {
-            List<NamedBed> namedBedRecords = readBedFile(bedFile);
+        List<ChrBaseRegion> regions = ChrBaseRegion.loadChrBaseRegionList(bedFile);
 
-            addTargetRegions(namedBedRecords, mChrRegionData);
+            addTargetRegions(regions, mChrRegionData);
 
-            CB_LOGGER.info("loaded {} target regions from file({})",
-                    mChrRegionData.values().stream().mapToInt(x -> x.size()).sum(), bedFile);
-        }
-        catch (IOException e)
-        {
-            CB_LOGGER.error("failed to load target regions BED file: {}", e.toString());
-        }
+        CB_LOGGER.info("loaded {} target regions from file({})",
+                mChrRegionData.values().stream().mapToInt(x -> x.size()).sum(), bedFile);
     }
 
     private void setGcProfileData()

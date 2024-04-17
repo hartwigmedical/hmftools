@@ -37,6 +37,7 @@ import com.hartwig.hmftools.cup.svs.SvClassifier;
 
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 public class CupAnalyser
 {
     private final CuppaConfig mConfig;
