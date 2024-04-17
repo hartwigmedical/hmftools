@@ -55,6 +55,7 @@ public final class TestPurpleVariantFactory
                 .affectedCodon(null)
                 .affectedExon(null)
                 .inSpliceRegion(false)
-                .codingEffect(PurpleCodingEffect.UNDEFINED);
+                .codingEffect(PurpleCodingEffect.UNDEFINED)
+                .reported(false);
     }
 }

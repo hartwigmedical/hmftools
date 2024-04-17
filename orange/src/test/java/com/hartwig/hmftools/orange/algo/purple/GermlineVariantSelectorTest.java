@@ -23,7 +23,8 @@ public class GermlineVariantSelectorTest
     @Test
     public void canSelectInterestingUnreportedVariants()
     {
-        PurpleVariant reportedHotspot = TestPurpleVariantFactory.builder().hotspot(HotspotType.HOTSPOT).build();
+        PurpleVariant reportedHotspot = TestPurpleVariantFactory.builder().hotspot(HotspotType.HOTSPOT).build()
+                .withCanonicalImpact(TestPurpleVariantFactory.impactBuilder().reported(true).build());
         PurpleVariant unreportedHotspot = TestPurpleVariantFactory.builder().hotspot(HotspotType.HOTSPOT).build();
         PurpleVariant unreportedNearHotspot = TestPurpleVariantFactory.builder().hotspot(HotspotType.NEAR_HOTSPOT).build();
 
