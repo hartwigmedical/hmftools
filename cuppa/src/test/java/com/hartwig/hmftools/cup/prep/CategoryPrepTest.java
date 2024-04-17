@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.cup.feature.FeaturePrep;
 import com.hartwig.hmftools.cup.rna.AltSpliceJunctionPrep;
@@ -63,7 +64,34 @@ public class CategoryPrepTest
         assertEquals(dataItemsMap.get("C>T_TCC"), "2");
         assertEquals(dataItemsMap.get("snv_count"), "8");
         assertEquals(dataItemsMap.get("SIG_7_UV"), "6.4");
+
+        assertEquals(dataItemsMap.get("1_500000"), "1");
         assertEquals(dataItemsMap.get("1_1000000"), "1");
+        assertEquals(dataItemsMap.get("7_55000000"), "1");
+    }
+
+    @Test
+    public void canExtractSnvFeaturesFromLiftoverGenericVariantsFiles()
+    {
+        PrepConfig prepConfig = new TestPrepConfigBuilder()
+                .sampleIds(List.of(selectedSampleId))
+                .categories(List.of(CategoryType.SNV))
+                .refGenomeVersion("V38")
+                .somaticVariantsDir(TestPrepConfigBuilder.TEST_SOMATIC_VARIANTS_DIR)
+                .build();
+
+        SomaticVariantPrep prep = new SomaticVariantPrep(prepConfig);
+        List<DataItem> dataItems = prep.extractSampleData(selectedSampleId);
+
+        // Check one value of each type
+        HashMap<String, String> dataItemsMap = makeDataItemsMap(dataItems);
+        assertEquals(dataItemsMap.get("C>T_TCC"), "2");
+        assertEquals(dataItemsMap.get("snv_count"), "8");
+        assertEquals(dataItemsMap.get("SIG_7_UV"), "6.4");
+
+        assertEquals(dataItemsMap.get("chr1_500000"), "1");
+        assertEquals(dataItemsMap.get("chr1_1000000"), "1");
+        assertEquals(dataItemsMap.get("chr7_55000000"), "1");
     }
 
     @Test

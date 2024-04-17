@@ -106,7 +106,7 @@ public class VcfPositionConverter implements Callable
     }
 
     @VisibleForTesting
-    public int convertPosition(final String chromosome, final int position)
+    int convertPosition(final String chromosome, final int position)
     {
         if(!mCurrentMappingChromosome.equals(chromosome))
         {

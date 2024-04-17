@@ -22,6 +22,7 @@ public class TestPrepConfigBuilder
     public static final boolean TEST_WRITE_BY_CATEGORY = true;
     public static final String TEST_ALT_SPLICE_JUNCTION_SITES = Resources.getResource("alt_sj.selected_loci.minimal.tsv").getPath();
     public static final String TEST_SAMPLE_DATA_DIR = Resources.getResource("pipeline_output/").getPath();
+    public static final String TEST_SOMATIC_VARIANTS_DIR = Resources.getResource("liftover_output/").getPath();
 
     private List<String> SampleIds = TEST_SAMPLE_IDS;
     public RefGenomeVersion RefGenVersion = TEST_REF_GENOME_VERSION;
@@ -36,7 +37,7 @@ public class TestPrepConfigBuilder
     private String PurpleDir = SampleDataDir;
     private String VirusDir = SampleDataDir;
     private String IsofoxDir = SampleDataDir;
-    private String SomaticVariantsDir = SampleDataDir;
+    private String SomaticVariantsDir = TEST_SOMATIC_VARIANTS_DIR;
 
     private String AltSpliceJunctionSites = TEST_ALT_SPLICE_JUNCTION_SITES;
 
