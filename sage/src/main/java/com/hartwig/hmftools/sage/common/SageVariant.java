@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
-import com.hartwig.hmftools.sage.old.ReadContext;
 
 import org.jetbrains.annotations.Nullable;
 

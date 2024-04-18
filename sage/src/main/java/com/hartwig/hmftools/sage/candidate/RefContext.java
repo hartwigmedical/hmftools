@@ -7,7 +7,6 @@ import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
-import com.hartwig.hmftools.sage.old.ReadContext;
 
 public class RefContext implements GenomePosition
 {

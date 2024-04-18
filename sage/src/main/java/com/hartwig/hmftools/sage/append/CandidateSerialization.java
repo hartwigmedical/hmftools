@@ -17,8 +17,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
-import com.hartwig.hmftools.sage.old.IndexedBases;
-import com.hartwig.hmftools.sage.old.ReadContext;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
@@ -34,12 +32,13 @@ public final class CandidateSerialization
 {
     public static Candidate toCandidate(final VariantContext context)
     {
-        final IndexedBases readBases = readBases(context);
-        return toCandidate(context, readBases);
+        final VariantReadContext readContext = readBases(context);
+        return toCandidate(context, readContext);
     }
 
-    public static IndexedBases readBases(final VariantContext context)
+    public static VariantReadContext readBases(final VariantContext context)
     {
+        /* CLEAN-UP
         final int position = context.getStart();
 
         final String leftFlank = context.getAttributeAsString(READ_CONTEXT_LEFT_FLANK, Strings.EMPTY);
@@ -61,9 +60,12 @@ public final class CandidateSerialization
                 rightCoreIndex,
                 Math.max(leftFlank.length(), rightFlank.length()),
                 bases);
+        */
+
+        return null;
     }
 
-    public static Candidate toCandidate(final VariantContext context, final IndexedBases readBases)
+    public static Candidate toCandidate(final VariantContext context, final VariantReadContext readContext)
     {
         SimpleVariant variant = new SimpleVariant(
                 context.getContig(), context.getStart(),
@@ -76,7 +78,7 @@ public final class CandidateSerialization
 
         // CLEAN-UP: is this possible now?
         // ReadContext readContext = new ReadContext(context.getStart(), repeat, repeatCount, mh, readBases, false);
-        VariantReadContext readContext = null; // new VariantReadContext(variant, )
+        // VariantReadContext readContext = null; // new VariantReadContext(variant, )
 
         int maxDepth = 0;
         for(Genotype genotype : context.getGenotypes().immutable())

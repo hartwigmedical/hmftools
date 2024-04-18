@@ -7,9 +7,7 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.candidate.Candidate;
-import com.hartwig.hmftools.sage.old.IndexedBases;
-import com.hartwig.hmftools.sage.old.IndexedBasesTest;
-import com.hartwig.hmftools.sage.old.ReadContext;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
@@ -41,8 +39,8 @@ public class CandidateSerializationTest
     public static Candidate decode(String line)
     {
         VariantContext context = CODEC.decode(line);
-        IndexedBases indexedReadBases = CandidateSerialization.readBases(context);
-        return CandidateSerialization.toCandidate(context, indexedReadBases);
+        VariantReadContext readContext = CandidateSerialization.readBases(context);
+        return CandidateSerialization.toCandidate(context, readContext);
     }
 
     @Test
@@ -54,6 +52,8 @@ public class CandidateSerializationTest
         final String expectedMH = "ATGA";
         final int expectedIndex = 1;
         final int expositionPosition = 1000;
+
+        /* CLEAN-UP
         final IndexedBases readBases = IndexedBasesTest.createIndexedBases(expositionPosition, expectedIndex, "AA", "TA", "ACG", "CG", "TT");
 
         final ReadContext readContext = new ReadContext(
@@ -61,7 +61,6 @@ public class CandidateSerializationTest
 
         final SimpleVariant variant = new SimpleVariant(CHR_1, expositionPosition, "T", "C");
 
-        /* CLEAN-UP
         final Candidate candidate = new Candidate(expectedTier, variant, readContext, 2,0);
 
         final VariantContext serialized = toContext(candidate);

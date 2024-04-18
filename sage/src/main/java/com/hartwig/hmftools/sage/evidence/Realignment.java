@@ -5,9 +5,6 @@ import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 
-import com.hartwig.hmftools.sage.old.RepeatContextFactory;
-import com.hartwig.hmftools.sage.old.ReadContext;
-
 public class Realignment
 {
     private static final int MIN_REPEAT_COUNT = 4;
@@ -15,6 +12,7 @@ public class Realignment
 
     private static final Repeat NO_REPEAT = new Repeat(0, 0);
 
+    /*
     public static RealignedContext realignedAroundIndex(
             final ReadContext readContext, final int otherBaseIndex, final byte[] otherBases, int maxSize)
     {
@@ -26,6 +24,7 @@ public class Realignment
 
         return realigned(baseStartIndex, baseEndIndex, readContext.readBases(), otherStartIndex, otherBases, maxSize);
     }
+    */
 
     public static RealignedContext realigned(
             int baseStartIndex, int baseEndIndex, final byte[] bases, final int otherBaseIndex, final byte[] otherBases, int maxDistance)
@@ -118,7 +117,7 @@ public class Realignment
     {
         for(int i = 1; i <= MAX_REPEAT_SIZE; i++)
         {
-            int repeats = RepeatContextFactory.backwardRepeats(index - i, i, bases) + 1;
+            int repeats = backwardRepeats(index - i, i, bases) + 1;
 
             if(repeats >= MIN_REPEAT_COUNT)
                 return new Repeat(i, repeats);
@@ -126,6 +125,42 @@ public class Realignment
 
         return NO_REPEAT;
     }
+
+    private static int backwardRepeats(int index, int repeatLength, final byte[] readSequence)
+    {
+        for(int count = 1; ; count++)
+        {
+            if(!match(index, repeatLength, index - count * repeatLength, readSequence))
+            {
+                return count - 1;
+            }
+        }
+    }
+
+    public static boolean match(int repeatIndex, int repeatLength, int readIndex, byte[] readSequence)
+    {
+        return matchingBasesFromLeft(repeatIndex, repeatLength, readIndex, readSequence) == repeatLength;
+    }
+
+    private static int matchingBasesFromLeft(int repeatIndex, int repeatLength, int readIndex, byte[] readSequence)
+    {
+        for(int i = 0; i < repeatLength; i++)
+        {
+            if(outOfBounds(repeatIndex + i, readSequence) || outOfBounds(readIndex + i, readSequence)
+                    || readSequence[repeatIndex + i] != readSequence[readIndex + i])
+            {
+                return i;
+            }
+        }
+
+        return repeatLength;
+    }
+
+    private static boolean outOfBounds(int index, byte[] sequence)
+    {
+        return index < 0 || index >= sequence.length;
+    }
+
 
     private static class Repeat
     {

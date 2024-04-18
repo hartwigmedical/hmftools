@@ -2,37 +2,16 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
-import static com.hartwig.hmftools.sage.common.TestUtils.MOCK_REF_GENOME;
-import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
-import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
-import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
-import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 
 import static org.junit.Assert.assertEquals;
 
 import static htsjdk.samtools.SAMUtils.phredToFastq;
 
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.sage.old.IndexedBases;
-import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.common.RegionTaskTester;
-import com.hartwig.hmftools.sage.common.SageVariant;
-import com.hartwig.hmftools.sage.common.SimpleVariant;
-import com.hartwig.hmftools.sage.pipeline.RegionTask;
-import com.hartwig.hmftools.sage.old.ReadContext;
 import com.hartwig.hmftools.sage.common.VariantTier;
-import com.hartwig.hmftools.sage.quality.QualityCalculator;
-
-import org.apache.logging.log4j.util.Strings;
-import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
-import junit.framework.TestCase;
 
 public class ReadContextCounterTest
 {

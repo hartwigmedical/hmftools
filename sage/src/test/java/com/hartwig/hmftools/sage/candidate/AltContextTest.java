@@ -4,9 +4,6 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import static junit.framework.TestCase.assertEquals;
@@ -17,8 +14,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
-import com.hartwig.hmftools.sage.old.ReadContext;
-import com.hartwig.hmftools.sage.old.ReadContextTest;
 
 import org.junit.Test;
 

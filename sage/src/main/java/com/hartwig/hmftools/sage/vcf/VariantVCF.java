@@ -91,7 +91,6 @@ import htsjdk.variant.vcf.VCFStandardHeaderLines;
 public class VariantVCF implements AutoCloseable
 {
     private final VariantContextWriter mWriter;
-    private final SomaticRefContextEnrichment mRefContextEnrichment;
 
     public VariantVCF(
             final IndexedFastaSequenceFile reference, final SageConfig config,
@@ -104,8 +103,6 @@ public class VariantVCF implements AutoCloseable
                 .modifyOption(Options.USE_ASYNC_IO, false)
                 .setReferenceDictionary(sequenceDictionary)
                 .build();
-
-        mRefContextEnrichment = new SomaticRefContextEnrichment(reference);
 
         final List<String> samples = Lists.newArrayList();
         samples.addAll(referenceIds);
@@ -140,13 +137,10 @@ public class VariantVCF implements AutoCloseable
                 .setReferenceDictionary(reference.getSequenceDictionary())
                 .build();
         mWriter.writeHeader(newHeader);
-
-        mRefContextEnrichment = new SomaticRefContextEnrichment(reference);
     }
 
     public void write(final VariantContext context)
     {
-        mRefContextEnrichment.processVariant(context);
         mWriter.add(context);
     }
 

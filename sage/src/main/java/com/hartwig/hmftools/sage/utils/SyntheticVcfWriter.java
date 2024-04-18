@@ -44,10 +44,8 @@ import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
-import com.hartwig.hmftools.sage.vcf.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.candidate.Candidate;
-import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
@@ -73,7 +71,6 @@ public class SyntheticVcfWriter
 
     private final IndexedFastaSequenceFile mRefGenome;
     private final List<VariantData> mVariants;
-    private final SomaticRefContextEnrichment mRefContextEnrichment;
     private final VariantContextWriter mWriter;
 
     private static final String OUTPUT_VCF_FILE = "output_vcf_file";
@@ -88,7 +85,6 @@ public class SyntheticVcfWriter
         mRefGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
         mVariants = Lists.newArrayList();
 
-        mRefContextEnrichment = new SomaticRefContextEnrichment(mRefGenome);
         mWriter = initialiseVcf();
     }
 
@@ -217,7 +213,8 @@ public class SyntheticVcfWriter
         VersionInfo version = new VersionInfo("sage.version");
         VCFHeader header = VariantVCF.createHeader(version.version(), List.of(mSampleId), false);
 
-        mRefContextEnrichment.appendHeader(header);
+        // CLEAN-UP: something needs to set the tri-nuc, MH and Repeat headers and values if necessary
+        // mRefContextEnrichment.appendHeader(header);
 
         final SAMSequenceDictionary condensedDictionary = new SAMSequenceDictionary();
         for(SAMSequenceRecord sequence : sequenceDictionary.getSequences())
@@ -308,7 +305,9 @@ public class SyntheticVcfWriter
 
         VariantContext variantContext = builder.make();
 
-        mRefContextEnrichment.processVariant(variantContext);
+        // CLEAN-UP: set those 3 fields or ignore if only for passing SNVs??
+
+        // mRefContextEnrichment.processVariant(variantContext);
         mWriter.add(variantContext);
 
         SG_LOGGER.debug("variant({}) readContext({} - {} - {}) index({})",

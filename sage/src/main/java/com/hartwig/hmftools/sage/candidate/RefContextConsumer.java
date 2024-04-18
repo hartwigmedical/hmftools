@@ -31,8 +31,6 @@ import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
-import com.hartwig.hmftools.sage.old.ReadContext;
-import com.hartwig.hmftools.sage.old.ReadContextFactory;
 import com.hartwig.hmftools.sage.common.NumberEvents;
 import com.hartwig.hmftools.sage.select.ReadPanelStatus;
 
@@ -45,7 +43,6 @@ public class RefContextConsumer
     private final ChrBaseRegion mBounds;
     private final RefSequence mRefSequence;
     private final RefContextCache mRefContextCache;
-    private final ReadContextFactory mReadContextFactory;
     private final VariantReadContextBuilder mReadContextBuilder;
     private final Set<Integer> mHotspotPositions;
 
@@ -58,7 +55,6 @@ public class RefContextConsumer
         mBounds = bounds;
         mRefSequence = refSequence;
         mRefContextCache = refContextCache;
-        mReadContextFactory = new ReadContextFactory(config.ReadContextFlankLength);
         mReadContextBuilder = new VariantReadContextBuilder(config.ReadContextFlankLength);
         mConfig = config;
 
@@ -277,9 +273,6 @@ public class RefContextConsumer
 
         int baseQuality = baseQuality(readIndex, record, alt.length());
 
-        ReadContext readContextOld = findReadContext ?
-                mReadContextFactory.createInsertContext(alt, refPosition, readIndex, record.getReadBases(), mRefSequence) : null;
-
         SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, ref, alt);
 
         VariantReadContext readContext = mReadContextBuilder.createIndelContext(variant, record, readIndex, mRefSequence);
@@ -313,9 +306,6 @@ public class RefContextConsumer
         if(refContext != null)
         {
             int baseQuality = baseQuality(readIndex, record, 2);
-
-            ReadContext readContextOld = findReadContext ?
-                    mReadContextFactory.createDelContext(ref, refPosition, readIndex, record.getReadBases(), mRefSequence) : null;
 
             SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, ref, alt);
 
@@ -368,10 +358,6 @@ public class RefContextConsumer
                 int baseQuality = record.getBaseQualities()[readBaseIndex];
                 final String alt = String.valueOf((char) readByte);
 
-
-                ReadContext readContextOld = isWithinReadContext ?
-                        mReadContextFactory.createSNVContext(refPosition, readBaseIndex, record, mRefSequence) : null;
-
                 SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, ref, alt);
                 VariantReadContext readContext = mReadContextBuilder.createSnvMnvContext(variant, record, readBaseIndex, mRefSequence);
 
@@ -395,12 +381,6 @@ public class RefContextConsumer
                     // ie CA > TA is not a valid subset of CAC > TAT
                     if(mnvRef.charAt(mnvLength - 1) != mnvAlt.charAt(mnvLength - 1))
                     {
-                        ReadContext mnvReadContextOld = isWithinReadContext ? mReadContextFactory.createMNVContext(refPosition,
-                                readBaseIndex,
-                                mnvLength,
-                                record.getReadBases(),
-                                mRefSequence) : null;
-
                         SimpleVariant mnv = new SimpleVariant(record.getContig(), refPosition, mnvRef, mnvAlt);
 
                         VariantReadContext mnvReadContext = mReadContextBuilder.createSnvMnvContext(mnv, record, readBaseIndex, mRefSequence);
@@ -469,9 +449,6 @@ public class RefContextConsumer
         RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
 
         int baseQuality = baseQuality(readIndex, record, altRead.Alt.length());
-
-        // CLEAN-UP: and see others here too
-        ReadContext readContextOld = mReadContextFactory.createInsertContext(altRead.Alt, refPosition, readIndex, record.getReadBases(), refSequence);
 
         SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, altRead.Ref, altRead.Alt);
         VariantReadContext readContext = mReadContextBuilder.createIndelContext(variant, record, readIndex, mRefSequence);

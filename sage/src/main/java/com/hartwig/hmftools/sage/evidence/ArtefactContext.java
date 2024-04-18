@@ -6,7 +6,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
-import com.hartwig.hmftools.sage.old.IndexedBases;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 
 import htsjdk.samtools.SAMRecord;
@@ -33,12 +33,14 @@ public class ArtefactContext
         mRequiresCheck = mHomopolymerStartOffset[SE_START] != NO_BASE || mHomopolymerStartOffset[SE_END] != NO_BASE;
     }
 
-    public static ArtefactContext buildContext(final SimpleVariant variant, final IndexedBases indexedBases)
+    public static ArtefactContext buildContext(final VariantReadContext readContext)
     {
         // check for any single-base repeat of 8+ bases not covering the variant
-        String flankAndBases = indexedBases.fullString();
+        String flankAndBases = readContext.readBases();
 
-        int indexInBases = indexedBases.Index - indexedBases.LeftFlankIndex;
+        int indexInBases = readContext.VarReadIndex;
+
+        SimpleVariant variant = readContext.variant();
 
         // for SNVs and MNVs, restrict the search to within the variant bases
         int hpStartOffset = NO_INDEX;

@@ -15,8 +15,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
-import com.hartwig.hmftools.sage.old.IndexedBases;
-import com.hartwig.hmftools.sage.old.ReadContext;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -155,7 +153,7 @@ public final class VariantUtils
 
 
     // CLEAN-UP: old context and variant creation methods
-    @Deprecated
+    /*
     public static ReadContext createReadContext(
             int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, String readBases, String microhomology)
     {
@@ -189,4 +187,5 @@ public final class VariantUtils
 
         return new SageVariant(candidate, normalCounters, tumorCounters);
     }
+    */
 }
