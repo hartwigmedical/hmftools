@@ -4,11 +4,12 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBa
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
-import static com.hartwig.hmftools.sage.common.TestUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.findHomology;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -16,6 +17,8 @@ import htsjdk.samtools.SAMRecord;
 
 public class VariantReadContextTest
 {
+    private final static int TEST_FLANK_LENGTH = 5;
+
     @Test
     public void testSnvMnvVariantReadContext()
     {
@@ -26,15 +29,18 @@ public class VariantReadContextTest
         String readCigar = "40M";
         SAMRecord read = buildSamRecord(30, readCigar, readBases, baseQuals);
 
-        VariantReadContextBuilder builder = new VariantReadContextBuilder(5);
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(TEST_FLANK_LENGTH);
 
-        VariantReadContext readContext = builder.createMnvContext(var, read, 20, REF_SEQUENCE_200);
+        VariantReadContext readContext = builder.createSnvMnvContext(var, read, 20, REF_SEQUENCE_200);
 
+        assertTrue(readContext.isValid());
         assertEquals(43, readContext.AlignmentStart);
         assertEquals(57, readContext.AlignmentEnd);
         assertEquals(5, readContext.CoreIndexStart);
         assertEquals(7, readContext.VarReadIndex);
         assertEquals(9, readContext.CoreIndexEnd);
+        assertEquals(7, readContext.AltIndexLower);
+        assertEquals(7, readContext.AltIndexUpper);
         assertEquals("GTCACCGCTGTCTGT", readContext.refBases());
         assertEquals("GTCACCGATGTCTGT", readContext.readBases());
         assertEquals("15M", readContext.readCigar());
@@ -61,13 +67,16 @@ public class VariantReadContextTest
         readCigar = "15M3I10M3I15M";
         read = buildSamRecord(30, readCigar, readBases, baseQuals);
 
-        readContext = builder.createMnvContext(var, read, 23, REF_SEQUENCE_200);
+        readContext = builder.createSnvMnvContext(var, read, 23, REF_SEQUENCE_200);
 
+        assertTrue(readContext.isValid());
         assertEquals(44, readContext.AlignmentStart);
         assertEquals(55, readContext.AlignmentEnd);
         assertEquals(7, readContext.CoreIndexStart);
         assertEquals(9, readContext.VarReadIndex);
         assertEquals(11, readContext.CoreIndexEnd);
+        assertEquals(9, readContext.AltIndexLower);
+        assertEquals(9, readContext.AltIndexUpper);
         assertEquals("TCACCGCTGTCT", readContext.refBases());
         assertEquals("TGGGCACCGATGTCGGGT", readContext.readBases());
         assertEquals("1M2I10M3I1M", readContext.readCigar());
@@ -88,13 +97,16 @@ public class VariantReadContextTest
         readCigar = "50M";
         read = buildSamRecord(120, readCigar, readBases, baseQuals);
 
-        readContext = builder.createMnvContext(var, read, 23, REF_SEQUENCE_200);
+        readContext = builder.createSnvMnvContext(var, read, 23, REF_SEQUENCE_200);
 
+        assertTrue(readContext.isValid());
         assertEquals(131, readContext.AlignmentStart);
         assertEquals(157, readContext.AlignmentEnd);
         assertEquals(5, readContext.CoreIndexStart);
         assertEquals(12, readContext.VarReadIndex);
         assertEquals(21, readContext.CoreIndexEnd);
+        assertEquals(12, readContext.AltIndexLower);
+        assertEquals(13, readContext.AltIndexUpper);
         assertEquals("CACAGTGCGCGCTACACACACTGGCCT", readContext.refBases());
         assertEquals("CACAGTGCGCGCGCCACACACTGGCCT", readContext.readBases());
         assertEquals("27M", readContext.readCigar());
@@ -115,15 +127,18 @@ public class VariantReadContextTest
         String readCigar = "21M2D17M";
         SAMRecord read = buildSamRecord(30, readCigar, readBases, baseQuals);
 
-        VariantReadContextBuilder builder = new VariantReadContextBuilder(5);
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(TEST_FLANK_LENGTH);
 
         VariantReadContext readContext = builder.createIndelContext(var, read, 20, REF_SEQUENCE_200);
 
+        assertTrue(readContext.isValid());
         assertEquals(44, readContext.AlignmentStart);
         assertEquals(60, readContext.AlignmentEnd);
         assertEquals(5, readContext.CoreIndexStart);
         assertEquals(6, readContext.VarReadIndex);
         assertEquals(9, readContext.CoreIndexEnd);
+        assertEquals(5, readContext.AltIndexLower);
+        assertEquals(8, readContext.AltIndexUpper);
         assertEquals("TCACCGCTGTCTGTGAC", readContext.refBases());
         assertEquals("TCACCGCTCTGTGAC", readContext.readBases());
         assertEquals("7M2D8M", readContext.readCigar());
@@ -133,6 +148,44 @@ public class VariantReadContextTest
         assertEquals("GCTCT", readContext.coreStr());
         assertEquals("TCACC", readContext.leftFlankStr());
         assertEquals("GTGAC", readContext.rightFlankStr());
+
+        // CLEAN-UP: add more scenarios
+    }
+
+    @Test
+    public void testInsertVariantReadContext()
+    {
+        SimpleVariant var = createSimpleVariant(50, "C", "CTG");
+
+        String readBases = REF_BASES_200.substring(30, 51) + "TG" +  REF_BASES_200.substring(51, 70);
+        byte[] baseQuals = buildDefaultBaseQuals(readBases.length());
+        String readCigar = "21M2I17M";
+        SAMRecord read = buildSamRecord(30, readCigar, readBases, baseQuals);
+
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(TEST_FLANK_LENGTH);
+
+        VariantReadContext readContext = builder.createIndelContext(var, read, 20, REF_SEQUENCE_200);
+
+        assertTrue(readContext.isValid());
+        assertEquals(44, readContext.AlignmentStart);
+        assertEquals(59, readContext.AlignmentEnd);
+        assertEquals(5, readContext.CoreIndexStart);
+        assertEquals(6, readContext.VarReadIndex);
+        assertEquals(12, readContext.CoreIndexEnd);
+        assertEquals(5, readContext.AltIndexLower);
+        assertEquals(10, readContext.AltIndexUpper);
+        assertEquals("TCACCGCTGTCTGTGA", readContext.refBases());
+        assertEquals("TCACCGCTGTGTCTGTGA", readContext.readBases());
+        assertEquals("7M2I9M", readContext.readCigar());
+        assertEquals(8, readContext.coreLength());
+        assertEquals(5, readContext.leftFlankLength());
+        assertEquals(5, readContext.rightFlankLength());
+        assertEquals("TG", readContext.homologyBases());
+        assertEquals("GCTGTGTC", readContext.coreStr());
+        assertEquals("TCACC", readContext.leftFlankStr());
+        assertEquals("TGTGA", readContext.rightFlankStr());
+
+        // CLEAN-UP: add more scenarios
     }
 
     @Test

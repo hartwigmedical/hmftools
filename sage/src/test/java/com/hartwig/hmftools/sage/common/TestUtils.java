@@ -1,23 +1,17 @@
 package com.hartwig.hmftools.sage.common;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
-import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.candidate.Candidate;
-import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
-import com.hartwig.hmftools.sage.old.IndexedBases;
-import com.hartwig.hmftools.sage.old.ReadContext;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 
@@ -50,72 +44,27 @@ public class TestUtils
         return new SageConfig(false);
     }
 
-    public static SimpleVariant createSimpleVariant(int position)
-    {
-        return new SimpleVariant(CHR_1, position, "A", "C");
-    }
-
-    public static SimpleVariant createSimpleVariant(int position, final String ref, final String alt)
-    {
-        return new SimpleVariant(CHR_1, position, ref, alt);
-    }
-
-    public static SageVariant createVariant(int position, final String ref, final String alt)
-    {
-        String readBases = buildReadContextBases(alt);
-
-        // LF          L   I   RC          RF
-        // 0123456789  01  2  34  0123456789
-        int leftCoreIndex = DEFAULT_READ_CONTEXT_FLANK_SIZE;
-        int index = leftCoreIndex + MIN_CORE_DISTANCE;
-        int rightCoreIndex = index + alt.length() - 1 + MIN_CORE_DISTANCE;
-
-        IndexedBases indexBases = new IndexedBases(
-                position, index, leftCoreIndex, rightCoreIndex, DEFAULT_READ_CONTEXT_FLANK_SIZE, readBases.getBytes());
-
-        return createVariant(CHR_1, position, ref, alt, indexBases);
-    }
-
-    public static SageVariant createVariant(final ReadContextCounter readContextCounter)
-    {
-        Candidate candidate = new Candidate(
-                VariantTier.HIGH_CONFIDENCE, readContextCounter.variant(), readContextCounter.readContext(), 1, 1);
-
-        return new SageVariant(candidate, Collections.emptyList(), Lists.newArrayList(readContextCounter));
-    }
-
-    public static SageVariant createVariant(final String chromosome, int position, final String ref, final String alt, final IndexedBases indexBases)
-    {
-        SimpleVariant variant = new SimpleVariant(chromosome, position, ref, alt);
-
-        ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
-
-        ReadContextCounter readCounter = new ReadContextCounter(
-                0, variant, readContext, VariantTier.LOW_CONFIDENCE, 100, 1,
-                TEST_CONFIG, QUALITY_CALCULATOR, null);
-
-        List<ReadContextCounter> tumorCounters = Lists.newArrayList(readCounter);
-
-        Candidate candidate = new Candidate(
-                VariantTier.HIGH_CONFIDENCE, variant, tumorCounters.get(0).readContext(), 1, 1);
-
-        List<ReadContextCounter> normalCounters = Lists.newArrayList();
-
-        return new SageVariant(candidate, normalCounters, tumorCounters);
-    }
-
-    public static void setBaseQualities(final SAMRecord record, int baseQual)
-    {
-        for(int i = 0; i < record.getBaseQualities().length; ++i)
-        {
-            record.getBaseQualities()[i] = (byte)baseQual;
-        }
-    }
-
     public static void setTumorQuality(final SageVariant variant, int count, int quality)
     {
         variant.tumorReadCounters().get(0).readSupportCounts().Full = count;
         variant.tumorReadCounters().get(0).readSupportQualityCounts().Full = quality;
+    }
+
+    public static String buildCigarString(int alignedLength) { return format("%dM", alignedLength); }
+
+    public static String buildCigarString(int alignedLength, int leftSoftClip, int rightSoftClip)
+    {
+        StringBuilder sb = new StringBuilder();
+
+        if(leftSoftClip > 0)
+            sb.append(format("%dS", leftSoftClip));
+
+        sb.append(format("%dM", alignedLength));
+
+        if(rightSoftClip > 0)
+            sb.append(format("%dS", rightSoftClip));
+
+        return sb.toString();
     }
 
     public static void addLocalPhaseSet(final SageVariant variant, int lps, int readCount)
@@ -131,35 +80,6 @@ public class TestUtils
     public static void clearFilters(final SageVariant variant)
     {
         variant.filters().clear();
-    }
-
-    public static boolean hasFilter(final SageVariant variant, final String filter)
-    {
-        return variant.filters().contains(filter);
-    }
-
-    public static String buildReadContextBases(final String alt)
-    {
-        String flank = generateRandomBases(DEFAULT_READ_CONTEXT_FLANK_SIZE);
-        String core = generateRandomBases(MIN_CORE_DISTANCE);
-        return flank + core + alt + core + flank;
-    }
-
-    public static SimpleVariant createSimpleVariant(final String chromosome, int position, final String ref, final String alt)
-    {
-        return new SimpleVariant(chromosome, position, ref, alt);
-    }
-
-    public static ReadContext createReadContext(
-            int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, String readBases, String microhomology)
-    {
-        int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
-        int adjRightCentreIndex = Math.min(rightCentreIndex, readBases.length() - 1);
-        boolean incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
-
-        IndexedBases readBasesIndexed = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, 0, readBases.getBytes());
-
-        return new ReadContext(refPosition, "", 0, microhomology, readBasesIndexed, incompleteCore);
     }
 
     public static SAMRecord createSamRecord(
@@ -223,6 +143,4 @@ public class TestUtils
         record.setInferredInsertSize(600);
         return record;
     }
-
-
 }

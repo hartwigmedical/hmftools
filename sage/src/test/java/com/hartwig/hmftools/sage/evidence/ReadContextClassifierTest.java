@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.evidence.ReadContextClassifier.HIGH_BASE_QUAL_CUTOFF;
@@ -57,8 +57,8 @@ public class ReadContextClassifierTest
 
         SimpleVariant variant = new SimpleVariant(VARIANT_CHROMOSOME, VARIANT_POS, ref, alt);
 
-        VariantReadContextBuilder variantReadContextBuilder = new VariantReadContextBuilder(DEFAULT_READ_CONTEXT_FLANK_SIZE);
-        SNV_CONTEXT = variantReadContextBuilder.createMnvContext(variant, read, varReadIndex, REF_SEQUENCE);
+        VariantReadContextBuilder variantReadContextBuilder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+        SNV_CONTEXT = variantReadContextBuilder.createSnvMnvContext(variant, read, varReadIndex, REF_SEQUENCE);
     }
 
     private static final String MNV_READ_STRING;
@@ -78,8 +78,8 @@ public class ReadContextClassifierTest
         SAMRecord read = buildSamRecord(READ_START_POS, READ_LENGTH + "M", MNV_READ_STRING, QUALITIES);
 
         SimpleVariant variant = new SimpleVariant(VARIANT_CHROMOSOME, VARIANT_POS, ref, alt);
-        VariantReadContextBuilder variantReadContextBuilder = new VariantReadContextBuilder(DEFAULT_READ_CONTEXT_FLANK_SIZE);
-        MNV_CONTEXT = variantReadContextBuilder.createMnvContext(variant, read, varReadIndex, REF_SEQUENCE);
+        VariantReadContextBuilder variantReadContextBuilder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+        MNV_CONTEXT = variantReadContextBuilder.createSnvMnvContext(variant, read, varReadIndex, REF_SEQUENCE);
     }
 
     @Test

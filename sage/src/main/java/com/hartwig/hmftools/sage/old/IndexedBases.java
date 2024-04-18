@@ -108,11 +108,6 @@ public class IndexedBases
         return min(LeftCoreIndex, Bases.length - RightCoreIndex - 1);
     }
 
-    public byte[] trinucleotideContext(int position)
-    {
-        return new byte[] { base(position - 1), base(position), base(position + 1) };
-    }
-
     public boolean flanksComplete()
     {
         return leftFlankLength() == FlankSize && rightFlankLength() == FlankSize;

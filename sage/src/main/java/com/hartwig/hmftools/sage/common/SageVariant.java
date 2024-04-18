@@ -157,7 +157,7 @@ public class SageVariant
     public Set<String> filters() { return mFilters; }
     public String filtersStr() { return mFilters.stream().collect(Collectors.joining(",")); }
 
-    public ReadContext readContext() { return mTumorReadCounters.get(0).readContext(); }
+    public VariantReadContext readContext() { return mTumorReadCounters.get(0).readContext(); }
 
     public List<ReadContextCounter> normalReadCounters() { return mNormalReadCounters; }
     public List<ReadContextCounter> tumorReadCounters() { return mTumorReadCounters; }

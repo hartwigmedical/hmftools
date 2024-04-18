@@ -29,11 +29,11 @@ public final class SageVcfTags
 
     public static final String READ_CONTEXT_COUNT = "RC_CNT";
     public static final String READ_CONTEXT_COUNT_DESC =
-            "Read context counts [Full, Partial, Core, Realigned, Alt, Reference, Total]";
+            "Read context counts [Full, PartialCore, Core, Realigned, Reference, Total]";
 
     public static final String READ_CONTEXT_QUALITY = "RC_QUAL";
     public static final String READ_CONTEXT_QUALITY_DESC =
-            "Read context quality [Full, Partial, Core, Realigned, Alt, Reference, Total]";
+            "Read context quality [Full, PartialCore, Core, Realigned, Reference, Total]";
 
     public static final String UMI_TYPE_COUNTS = "UMI_CNT";
     public static final String UMI_TYPE_COUNTS_DESC =

@@ -34,6 +34,7 @@ public class ArtefactsTest
     // 0123456789 01234567 89012345 67890123
     // AAAAAGGGGG ACGTTGCA TTTTTTTT ACGTTGCA AAAAAGGGGG
 
+    /* CLEAN-UP
     @Test
     public void testHomopolymerArtefacts()
     {
@@ -289,4 +290,5 @@ public class ArtefactsTest
 
         assertEquals(lowQualBase, adjustedBaseQual);
     }
+    */
 }

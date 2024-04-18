@@ -133,5 +133,4 @@ public class RepeatInfo
 
         return new RepeatInfo(index, repeat, repeatLength);
     }
-
 }

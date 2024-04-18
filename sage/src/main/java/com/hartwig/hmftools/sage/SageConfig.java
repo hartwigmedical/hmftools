@@ -22,7 +22,7 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_PARTITION_SLIC
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH_PANEL;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_MAP_QUALITY;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_SLICE_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.VIS_VARIANT_BUFFER;
@@ -72,7 +72,7 @@ public class SageConfig
     public final int MinMapQuality;
     public final int MaxReadDepth;
     public final int MaxReadDepthPanel;
-    public final int ReadContextFlankSize;
+    public final int ReadContextFlankLength;
     public final int MaxPartitionSlices;
     public final ValidationStringency BamStringency;
     public final SequencingConfig Sequencing;
@@ -145,7 +145,7 @@ public class SageConfig
 
         BamStringency = BamUtils.validationStringency(configBuilder);
         RegionSliceSize = configBuilder.getInteger(SLICE_SIZE);
-        ReadContextFlankSize = configBuilder.getInteger(READ_CONTEXT_FLANK_SIZE);
+        ReadContextFlankLength = configBuilder.getInteger(READ_CONTEXT_FLANK_SIZE);
 
         MaxReadDepth = configBuilder.getInteger(MAX_READ_DEPTH);
         MaxReadDepthPanel = configBuilder.getInteger(MAX_READ_DEPTH_PANEL);
@@ -303,7 +303,7 @@ public class SageConfig
 
         // is this common?
         configBuilder.addInteger(
-                READ_CONTEXT_FLANK_SIZE, "Size of read context flank", DEFAULT_READ_CONTEXT_FLANK_SIZE);
+                READ_CONTEXT_FLANK_SIZE, "Size of read context flank", DEFAULT_FLANK_LENGTH);
 
         configBuilder.addInteger(MIN_MAP_QUALITY, "Min map quality to apply to non-hotspot variants", DEFAULT_MIN_MAP_QUALITY);
         configBuilder.addInteger(READ_LENGTH, "Read length, otherwise will sample from BAM", 0);
@@ -352,7 +352,7 @@ public class SageConfig
         MinMapQuality = DEFAULT_MIN_MAP_QUALITY;
         MaxReadDepth = DEFAULT_MAX_READ_DEPTH;
         MaxReadDepthPanel = DEFAULT_MAX_READ_DEPTH_PANEL;
-        ReadContextFlankSize = DEFAULT_READ_CONTEXT_FLANK_SIZE;
+        ReadContextFlankLength = DEFAULT_FLANK_LENGTH;
         mReadLength = DEFAULT_READ_LENGTH;
         MaxPartitionSlices = 1;
         RefGenomeFile = "refGenome";

@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.sage.SageConstants.MIN_SECOND_CANDIDATE_FULL_READS;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_SECOND_CANDIDATE_FULL_READS_PERC;
+import static com.hartwig.hmftools.sage.common.ReadContextMatcher.compareReadContexts;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,7 +15,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.old.ReadContext;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 
 import org.jetbrains.annotations.NotNull;
@@ -63,15 +64,18 @@ public class AltContext implements VariantHotspot
         mRawBaseQualityAlt += baseQuality;
     }
 
-    public void addReadContext(int numberOfEvents, final ReadContext newReadContext)
+    public void addReadContext(int numberOfEvents, final VariantReadContext newReadContext)
     {
-        int partialMatch = 0;
+        if(!newReadContext.isValid())
+            return;
+
         int coreMatch = 0;
         ReadContextCandidate fullMatchCandidate = null;
 
         for(ReadContextCandidate candidate : mReadContextCandidates)
         {
-            final ReadContextMatch match = candidate.readContext().indexedBases().matchAtPosition(newReadContext.indexedBases());
+            // ReadContextMatch match = candidate.readContext().indexedBases().matchAtPosition(newReadContext.indexedBases());
+            ReadContextMatch match = compareReadContexts(candidate.readContext(), newReadContext);
 
             switch(match)
             {
@@ -79,10 +83,7 @@ public class AltContext implements VariantHotspot
                     candidate.incrementFull(1, numberOfEvents);
                     fullMatchCandidate = candidate;
                     break;
-                case PARTIAL:
-                    candidate.PartialMatch++;
-                    partialMatch++;
-                    break;
+
                 case CORE:
                     candidate.CoreMatch++;
                     coreMatch++;
@@ -94,9 +95,9 @@ public class AltContext implements VariantHotspot
         {
             final ReadContextCandidate candidate = new ReadContextCandidate(numberOfEvents, newReadContext);
             candidate.CoreMatch += coreMatch;
-            candidate.PartialMatch += partialMatch;
             mReadContextCandidates.add(candidate);
         }
+        /* CLEAN-UP - no longer possible
         else if(newReadContext.maxFlankLength() > fullMatchCandidate.maxFlankLength())
         {
             mReadContextCandidates.remove(fullMatchCandidate);
@@ -106,12 +107,10 @@ public class AltContext implements VariantHotspot
             candidate.incrementFull(fullMatchCandidate.FullMatch, fullMatchCandidate.mMinNumberOfEvents);
             mReadContextCandidates.add(candidate);
         }
+        */
     }
 
-    public int readContextSupport()
-    {
-        return mCandidate.count();
-    }
+    public int readContextSupport() { return mCandidate.FullMatch; }
 
     public int minNumberOfEvents()
     {
@@ -133,9 +132,7 @@ public class AltContext implements VariantHotspot
         if(mReadContextCandidates.isEmpty())
             return;
 
-        mReadContextCandidates.removeIf(x -> x.readContext().hasIncompleteFlanks());
-
-        // sort by full, the partial then core read counts
+        // sort by full, then partial then core read counts
         Collections.sort(mReadContextCandidates);
 
         if(mReadContextCandidates.isEmpty())
@@ -145,18 +142,18 @@ public class AltContext implements VariantHotspot
 
         if(mReadContextCandidates.size() > 1)
         {
-            final String topCore = mReadContextCandidates.get(0).readContext().coreString();
-            double topCandidateRcThreshold = mReadContextCandidates.get(0).fullMatch() * MIN_SECOND_CANDIDATE_FULL_READS_PERC;
+            final String topCore = mReadContextCandidates.get(0).readContext().coreStr();
+            double topCandidateRcThreshold = mReadContextCandidates.get(0).FullMatch * MIN_SECOND_CANDIDATE_FULL_READS_PERC;
 
             // add a second if its core is different and it has sufficient support
             for(int i = 0; i < mReadContextCandidates.size(); ++i)
             {
                 ReadContextCandidate candidate = mReadContextCandidates.get(i);
 
-                if(candidate.fullMatch() < MIN_SECOND_CANDIDATE_FULL_READS || candidate.fullMatch() < topCandidateRcThreshold)
+                if(candidate.FullMatch < MIN_SECOND_CANDIDATE_FULL_READS || candidate.FullMatch < topCandidateRcThreshold)
                     break;
 
-                String coreStr = candidate.readContext().coreString();
+                String coreStr = candidate.readContext().coreStr();
                 if(coreStr.contains(topCore) || topCore.contains(coreStr))
                     continue;
 
@@ -168,7 +165,7 @@ public class AltContext implements VariantHotspot
         mReadContextCandidates.clear();
     }
 
-    public ReadContext readContext() { return mCandidate.readContext(); }
+    public VariantReadContext readContext() { return mCandidate.readContext(); }
 
     @Override
     public String ref() { return Ref; }
@@ -195,10 +192,10 @@ public class AltContext implements VariantHotspot
         return another instanceof VariantHotspot && equalTo((VariantHotspot) another);
     }
 
-    private boolean equalTo(final VariantHotspot another)
+    private boolean equalTo(final VariantHotspot other)
     {
-        return ref().equals(another.ref()) && alt().equals(another.alt()) && chromosome().equals(another.chromosome())
-                && position() == another.position();
+        return ref().equals(other.ref()) && alt().equals(other.alt()) && chromosome().equals(other.chromosome())
+                && position() == other.position();
     }
 
     @Override
@@ -220,56 +217,42 @@ public class AltContext implements VariantHotspot
 
     protected class ReadContextCandidate implements Comparable<ReadContextCandidate>
     {
-        private final ReadContext mReadContext;
-        public int FullMatch;
-        public int PartialMatch;
-        public int CoreMatch;
-        public int mMinNumberOfEvents;
+        private final VariantReadContext mReadContext;
 
-        ReadContextCandidate(int numberOfEvents, final ReadContext readContext)
+        public int FullMatch;
+        public int CoreMatch;
+        public int MinNumberOfEvents;
+
+        ReadContextCandidate(int numberOfEvents, final VariantReadContext readContext)
         {
             mReadContext = readContext;
-            mMinNumberOfEvents = numberOfEvents;
+            MinNumberOfEvents = numberOfEvents;
         }
 
         public void incrementFull(int count, int numberOfEvents)
         {
             FullMatch += count;
-            mMinNumberOfEvents = min(mMinNumberOfEvents, numberOfEvents);
+            MinNumberOfEvents = min(MinNumberOfEvents, numberOfEvents);
         }
 
-        public int count() { return FullMatch + PartialMatch; }
+        public int minNumberOfEvents() { return MinNumberOfEvents; }
 
-        public int minNumberOfEvents() { return mMinNumberOfEvents; }
-
-        public int maxFlankLength()
-        {
-            return mReadContext.maxFlankLength();
-        }
-
-        public ReadContext readContext() { return mReadContext; }
-
-        public int fullMatch() { return FullMatch; }
+        public VariantReadContext readContext() { return mReadContext; }
 
         @Override
-        public int compareTo(@NotNull final ReadContextCandidate o)
+        public int compareTo(@NotNull final ReadContextCandidate other)
         {
-            int fullCompare = -Integer.compare(FullMatch, o.FullMatch);
+            int fullCompare = -Integer.compare(FullMatch, other.FullMatch);
 
             if(fullCompare != 0)
                 return fullCompare;
 
-            int partialCompare = -Integer.compare(PartialMatch, o.PartialMatch);
-
-            if(partialCompare != 0)
-                return partialCompare;
-
-            return -Integer.compare(CoreMatch, o.CoreMatch);
+            return -Integer.compare(CoreMatch, other.CoreMatch);
         }
 
         public String toString()
         {
-            return String.format("matches(f=%d p=%d c=%d)", FullMatch, PartialMatch, CoreMatch);
+            return String.format("matches(full=%d core=%d)", FullMatch, CoreMatch);
         }
     }
 }

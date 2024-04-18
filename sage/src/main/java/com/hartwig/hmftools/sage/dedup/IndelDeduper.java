@@ -21,6 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.old.IndexedBases;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
@@ -166,8 +167,7 @@ public class IndelDeduper
         if(refBases == null || refBases.isEmpty())
             return;
 
-        IndexedBases indelReadContextBases = indel.ReadCounter.readContext().indexedBases();
-        String indelCoreFlankBases = indelReadContextBases.fullString();
+        String indelCoreFlankBases = indel.ReadCounter.readContext().readBases();
 
         mGroupIterations = 0;
 
@@ -448,22 +448,14 @@ public class IndelDeduper
             IndelScore = Variant.isIndel() ? indelScore() : 0;
 
             // flank positions are estimate since they aren't aware of other variants in their core and flanks
-            final IndexedBases indexedBases = ReadCounter.readContext().indexedBases();
+            VariantReadContext readContext = ReadCounter.readContext();
 
             // note that flank positions are estimates of position since they aren't aware of other INDELs in their context
-            int leftFlankFromIndex = indexedBases.Index - indexedBases.LeftFlankIndex;
-            FlankPosStart = variant.position() - leftFlankFromIndex;
+            FlankPosStart = readContext.AlignmentStart;
+            FlankPosEnd = readContext.AlignmentEnd;
 
-            int rightFlankFromIndex = indexedBases.RightFlankIndex - indexedBases.Index;
-
-            int insertedBaseCount = variant.isInsert() ? variant.alt().length() : 0;
-            FlankPosEnd = positionEnd() + rightFlankFromIndex - insertedBaseCount;
-
-            int leftCoreFromIndex = indexedBases.Index - indexedBases.LeftCoreIndex;
-            CorePosStart = variant.position() - leftCoreFromIndex;
-
-            int rightCoreFromIndex = indexedBases.RightCoreIndex - indexedBases.Index;
-            CorePosEnd = positionEnd() + rightCoreFromIndex - insertedBaseCount;
+            CorePosStart = readContext.corePositionStart();
+            CorePosEnd = readContext.corePositionEnd();
         }
 
         public String ref()

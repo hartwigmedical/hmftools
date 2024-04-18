@@ -53,7 +53,7 @@ public class Candidates
 
             Candidate matchingCandidate = candidates.stream()
                     .filter(x -> variantComparator.compare(x.variant(), newCandidate.variant()) == 0)
-                    .filter(x -> x.readContext().coreString().equals(newCandidate.readContext().coreString()))
+                    .filter(x -> x.readContext().coreStr().equals(newCandidate.readContext().coreStr()))
                     .findFirst().orElse(null);
 
             if(matchingCandidate != null)

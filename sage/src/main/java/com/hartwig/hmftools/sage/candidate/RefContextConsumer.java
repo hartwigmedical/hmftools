@@ -28,6 +28,9 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
+import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 import com.hartwig.hmftools.sage.old.ReadContext;
 import com.hartwig.hmftools.sage.old.ReadContextFactory;
 import com.hartwig.hmftools.sage.common.NumberEvents;
@@ -43,6 +46,7 @@ public class RefContextConsumer
     private final RefSequence mRefSequence;
     private final RefContextCache mRefContextCache;
     private final ReadContextFactory mReadContextFactory;
+    private final VariantReadContextBuilder mReadContextBuilder;
     private final Set<Integer> mHotspotPositions;
 
     private int mReadCount;
@@ -54,7 +58,8 @@ public class RefContextConsumer
         mBounds = bounds;
         mRefSequence = refSequence;
         mRefContextCache = refContextCache;
-        mReadContextFactory = new ReadContextFactory(config.ReadContextFlankSize);
+        mReadContextFactory = new ReadContextFactory(config.ReadContextFlankLength);
+        mReadContextBuilder = new VariantReadContextBuilder(config.ReadContextFlankLength);
         mConfig = config;
 
         mHotspotPositions = Sets.newHashSet();
@@ -264,16 +269,20 @@ public class RefContextConsumer
         int refIndex = mRefSequence.index(refPosition);
         boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
 
-        final String ref = new String(mRefSequence.Bases, refIndex, 1);
-        final String alt = new String(record.getReadBases(), readIndex, element.getLength() + 1);
+        String ref = new String(mRefSequence.Bases, refIndex, 1);
+        String alt = new String(record.getReadBases(), readIndex, element.getLength() + 1);
         boolean findReadContext = withinReadContext(readIndex, record);
 
         RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
 
         int baseQuality = baseQuality(readIndex, record, alt.length());
 
-        ReadContext readContext = findReadContext ?
+        ReadContext readContextOld = findReadContext ?
                 mReadContextFactory.createInsertContext(alt, refPosition, readIndex, record.getReadBases(), mRefSequence) : null;
+
+        SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, ref, alt);
+
+        VariantReadContext readContext = mReadContextBuilder.createIndelContext(variant, record, readIndex, mRefSequence);
 
         return new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
     }
@@ -303,10 +312,14 @@ public class RefContextConsumer
         final RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
         if(refContext != null)
         {
-            final int baseQuality = baseQuality(readIndex, record, 2);
+            int baseQuality = baseQuality(readIndex, record, 2);
 
-            final ReadContext readContext = findReadContext ?
+            ReadContext readContextOld = findReadContext ?
                     mReadContextFactory.createDelContext(ref, refPosition, readIndex, record.getReadBases(), mRefSequence) : null;
+
+            SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, ref, alt);
+
+            VariantReadContext readContext = mReadContextBuilder.createIndelContext(variant, record, readIndex, mRefSequence);
 
             return new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext);
         }
@@ -354,8 +367,13 @@ public class RefContextConsumer
 
                 int baseQuality = record.getBaseQualities()[readBaseIndex];
                 final String alt = String.valueOf((char) readByte);
-                final ReadContext readContext = isWithinReadContext ?
+
+
+                ReadContext readContextOld = isWithinReadContext ?
                         mReadContextFactory.createSNVContext(refPosition, readBaseIndex, record, mRefSequence) : null;
+
+                SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, ref, alt);
+                VariantReadContext readContext = mReadContextBuilder.createSnvMnvContext(variant, record, readBaseIndex, mRefSequence);
 
                 result.add(new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext));
 
@@ -370,18 +388,22 @@ public class RefContextConsumer
                     if(nextReadIndex >= alignmentLength)
                         break;
 
-                    final String mnvRef = new String(mRefSequence.Bases, refBaseIndex, mnvLength);
-                    final String mnvAlt = new String(record.getReadBases(), readBaseIndex, mnvLength);
+                    String mnvRef = new String(mRefSequence.Bases, refBaseIndex, mnvLength);
+                    String mnvAlt = new String(record.getReadBases(), readBaseIndex, mnvLength);
 
                     // Only check last base because some subsets may not be valid,
                     // ie CA > TA is not a valid subset of CAC > TAT
                     if(mnvRef.charAt(mnvLength - 1) != mnvAlt.charAt(mnvLength - 1))
                     {
-                        ReadContext mnvReadContext = isWithinReadContext ? mReadContextFactory.createMNVContext(refPosition,
+                        ReadContext mnvReadContextOld = isWithinReadContext ? mReadContextFactory.createMNVContext(refPosition,
                                 readBaseIndex,
                                 mnvLength,
                                 record.getReadBases(),
                                 mRefSequence) : null;
+
+                        SimpleVariant mnv = new SimpleVariant(record.getContig(), refPosition, mnvRef, mnvAlt);
+
+                        VariantReadContext mnvReadContext = mReadContextBuilder.createSnvMnvContext(mnv, record, readBaseIndex, mRefSequence);
 
                         result.add(new AltRead(refContext,
                                 mnvRef,
@@ -448,14 +470,11 @@ public class RefContextConsumer
 
         int baseQuality = baseQuality(readIndex, record, altRead.Alt.length());
 
-        ReadContext readContext = mReadContextFactory.createInsertContext(altRead.Alt, refPosition, readIndex, record.getReadBases(), refSequence);
+        // CLEAN-UP: and see others here too
+        ReadContext readContextOld = mReadContextFactory.createInsertContext(altRead.Alt, refPosition, readIndex, record.getReadBases(), refSequence);
 
-        /*
-        SG_LOGGER.trace("soft-clipped insert({}:{} {}>{}) indexes({}-{}-{}) read({}) softClip(len={} index={} on {})",
-                record.getContig(), refPosition, altRead.Ref, altRead.Alt,
-                readContext.indexedBases().LeftCoreIndex, readContext.indexedBases().Index, readContext.indexedBases().RightCoreIndex,
-                record.getReadName(), scLength, scReadIndex, onLeft ? "left" : "right");
-        */
+        SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, altRead.Ref, altRead.Alt);
+        VariantReadContext readContext = mReadContextBuilder.createIndelContext(variant, record, readIndex, mRefSequence);
 
         boolean sufficientMapQuality = record.getMappingQuality() >= mConfig.MinMapQuality;
 
@@ -539,7 +558,7 @@ public class RefContextConsumer
 
     private boolean withinReadContext(int readIndex, final SAMRecord record)
     {
-        return readIndex >= mConfig.ReadContextFlankSize && readIndex < record.getReadLength() - mConfig.ReadContextFlankSize;
+        return readIndex >= mConfig.ReadContextFlankLength && readIndex < record.getReadLength() - mConfig.ReadContextFlankLength;
     }
 
     @VisibleForTesting

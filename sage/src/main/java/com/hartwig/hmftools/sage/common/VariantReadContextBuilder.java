@@ -18,7 +18,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Arrays;
-import com.hartwig.hmftools.sage.old.ReadContext;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -32,7 +31,7 @@ public class VariantReadContextBuilder
         mFlankSize = flankSize;
     }
 
-    public VariantReadContext createMnvContext(
+    public VariantReadContext createSnvMnvContext(
             final SimpleVariant variant, final SAMRecord read, int varReadIndex, final RefSequence refSequence)
     {
         int readCoreStart = varReadIndex - MIN_CORE_DISTANCE;
@@ -104,6 +103,7 @@ public class VariantReadContextBuilder
         readFlankEnd = readCigarInfo.FlankIndexEnd;
 
         byte[] contextReadBases = Arrays.subsetArray(readBases, readFlankStart, readFlankEnd);
+
         byte[] refBases = refSequence.baseRange(readCigarInfo.AlignmentStart, readCigarInfo.AlignmentEnd);
 
         int readContextOffset = readFlankStart;

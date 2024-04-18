@@ -58,7 +58,7 @@ public class PhaseSetTask extends ThreadTask
         return phaseSetTasks;
     }
 
-    private static final int PHASE_GROUP_LOG_COUNT = 1000;
+    private static final int PHASE_GROUP_LOG_COUNT = 10000;
 
     @Override
     public void run()
