@@ -25,6 +25,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 
+import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class PurpleVariantFactoryTest
@@ -127,65 +128,18 @@ public class PurpleVariantFactoryTest
     @Test
     public void testDetermineReportableTranscripts()
     {
-        List<VariantTranscriptImpact> otherImpacts = List.of(
-                new VariantTranscriptImpact(
-                        "ENSG00000147889",
-                        "CDKN2A",
-                        "ENST00000304494",
-                        "frameshift",
-                        false,
-                        "c.203_204delCG",
-                        "p.Ala68fs"
-                ),
-                new VariantTranscriptImpact(
-                        "ENSG00000147889",
-                        "CDKN2A",
-                        "ENST00000579755",
-                        "frameshift",
-                        false,
-                        "c.246_247delCG",
-                        "p.Gly83fs"
-                )
-        );
-
-        PurpleVariantContext context = ImmutablePurpleVariantContext.builder()
-                .chromosome("9")
-                .position(21971153)
-                .totalReadCount(99)
-                .alleleReadCount(99)
-                .type(VariantType.INDEL)
-                .gene("CDKN2A")
-                .ref("CCG")
-                .alt("C")
-                .canonicalTranscript("ENST00000498124")
-                .canonicalEffect("frameshift_variant")
-                .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
-                .canonicalHgvsCodingImpact("c.203_204delCG")
-                .canonicalHgvsProteinImpact("p.Ala68fs")
-                .spliceRegion(false)
-                .worstCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
-                .otherImpacts(otherImpacts)
-                .hotspot(Hotspot.NEAR_HOTSPOT)
-                .reported(true)
-                .rnaDepth(null)
-                .adjustedCopyNumber(2.0)
-                .adjustedVAF(1.0101)
-                .minorAlleleCopyNumber(0.0)
-                .variantCopyNumber(2.02)
-                .biallelic(true)
-                .genotypeStatus(GenotypeStatus.HOM_REF)
-                .repeatCount(2)
-                .subclonalLikelihood(0.0)
-                .reportableTranscripts(Set.of("ENST00000498124", "ENST00000579755"))
+        ImmutablePurpleVariantContext context = contextBuilder()
+                .canonicalTranscript("canonical_transcript")
+                .reported(false)
+                .otherImpacts(List.of(impact("other_transcript1"), impact("other_transcript2")))
+                .reportableTranscripts(Set.of("canonical_transcript", "other_transcript1"))
                 .build();
 
         PaveAlgo paveAlgo = new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache(), false);
         PurpleVariant purpleVariant = new PurpleVariantFactory(paveAlgo).fromPurpleVariantContext(context);
 
-        assertEquals(PurpleVariantType.INDEL, purpleVariant.type());
-        assertEquals("CDKN2A", purpleVariant.gene());
         PurpleTranscriptImpact canonicalImpact = purpleVariant.canonicalImpact();
-        assertEquals("ENST00000498124", canonicalImpact.transcript());
+        assertEquals("canonical_transcript", canonicalImpact.transcript());
         assertTrue(canonicalImpact.reported());
 
         List<PurpleTranscriptImpact> purpleOtherImpacts =
@@ -196,12 +150,87 @@ public class PurpleVariantFactoryTest
         assertEquals(2, purpleOtherImpacts.size());
 
         PurpleTranscriptImpact firstImpact = purpleOtherImpacts.get(0);
-        assertEquals("ENST00000304494", firstImpact.transcript());
-        assertFalse(firstImpact.reported());
+        assertEquals("other_transcript1", firstImpact.transcript());
+        assertTrue(firstImpact.reported());
 
         PurpleTranscriptImpact secondImpact = purpleOtherImpacts.get(1);
-        assertEquals("ENST00000579755", secondImpact.transcript());
-        assertTrue(secondImpact.reported());
+        assertEquals("other_transcript2", secondImpact.transcript());
+        assertFalse(secondImpact.reported());
+    }
 
+    @Test
+    public void testCanonicalTranscriptNonReported()
+    {
+        ImmutablePurpleVariantContext context = contextBuilder()
+                .canonicalTranscript("canonical_transcript")
+                .reported(false)
+                .otherImpacts(List.of(impact("other_transcript1"), impact("other_transcript2")))
+                .reportableTranscripts(Set.of("other_transcript1"))
+                .build();
+
+        PaveAlgo paveAlgo = new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache(), false);
+        PurpleVariant purpleVariant = new PurpleVariantFactory(paveAlgo).fromPurpleVariantContext(context);
+
+        PurpleTranscriptImpact canonicalImpact = purpleVariant.canonicalImpact();
+        assertEquals("canonical_transcript", canonicalImpact.transcript());
+        assertFalse(canonicalImpact.reported());
+
+        List<PurpleTranscriptImpact> purpleOtherImpacts =
+                purpleVariant.otherImpacts()
+                        .stream()
+                        .sorted(Comparator.comparing(PurpleTranscriptImpact::transcript))
+                        .collect(Collectors.toList());
+        assertEquals(2, purpleOtherImpacts.size());
+
+        PurpleTranscriptImpact firstImpact = purpleOtherImpacts.get(0);
+        assertEquals("other_transcript1", firstImpact.transcript());
+        assertTrue(firstImpact.reported());
+
+        PurpleTranscriptImpact secondImpact = purpleOtherImpacts.get(1);
+        assertEquals("other_transcript2", secondImpact.transcript());
+        assertFalse(secondImpact.reported());
+    }
+
+    private VariantTranscriptImpact impact(String transcript)
+    {
+        return new VariantTranscriptImpact(
+                Strings.EMPTY,
+                Strings.EMPTY,
+                transcript,
+                Strings.EMPTY,
+                false,
+                Strings.EMPTY,
+                Strings.EMPTY
+        );
+    }
+
+    public static ImmutablePurpleVariantContext.Builder contextBuilder()
+    {
+        return ImmutablePurpleVariantContext.builder()
+                .chromosome(Strings.EMPTY)
+                .position(0)
+                .totalReadCount(0)
+                .alleleReadCount(0)
+                .type(VariantType.UNDEFINED)
+                .gene(Strings.EMPTY)
+                .ref(Strings.EMPTY)
+                .alt(Strings.EMPTY)
+                .canonicalTranscript(Strings.EMPTY)
+                .canonicalEffect(Strings.EMPTY)
+                .canonicalCodingEffect(CodingEffect.UNDEFINED)
+                .canonicalHgvsCodingImpact(Strings.EMPTY)
+                .canonicalHgvsProteinImpact(Strings.EMPTY)
+                .spliceRegion(false)
+                .worstCodingEffect(CodingEffect.UNDEFINED)
+                .hotspot(Hotspot.NON_HOTSPOT)
+                .reported(false)
+                .adjustedCopyNumber(0)
+                .adjustedVAF(0)
+                .minorAlleleCopyNumber(0)
+                .variantCopyNumber(0)
+                .biallelic(false)
+                .genotypeStatus(GenotypeStatus.UNKNOWN)
+                .repeatCount(0)
+                .subclonalLikelihood(0);
     }
 }

@@ -91,7 +91,19 @@ public class PurpleVariantFactory
                 .inSpliceRegion(purpleContext.spliceRegion())
                 .effects(purpleVariantEffects)
                 .codingEffect(PurpleConversion.convert(purpleContext.canonicalCodingEffect()))
-                .reported(purpleContext.reported())
+                .reported(isCanonicalTranscriptReported(purpleContext))
                 .build();
+    }
+
+    private boolean isCanonicalTranscriptReported(@NotNull PurpleVariantContext purpleContext)
+    {
+        if(purpleContext.reportableTranscripts().isEmpty())
+        {
+            return purpleContext.reported();
+        }
+        else
+        {
+            return purpleContext.reportableTranscripts().contains(purpleContext.canonicalTranscript());
+        }
     }
 }
