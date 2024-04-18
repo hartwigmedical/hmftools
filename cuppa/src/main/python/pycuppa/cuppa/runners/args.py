@@ -12,7 +12,9 @@ class DEFAULT_RUNNER_ARGS:
     compress_tsv_files: bool = False
     using_old_features_format: bool = False
 
+    ## TODO: genome_version required only to add gen_pos feature names with old features format. Deprecate when old format no longer used
     genome_version: int = 37
+
     min_samples_with_rna: int = 5
     excl_chroms: str | list[str] = ["ChrY", "Y"]
     excl_classes: str | list[str] = ["_Other","_Unknown"]
