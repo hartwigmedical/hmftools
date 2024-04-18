@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.cup.liftover;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
+import java.io.IOException;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -44,14 +46,13 @@ public class SnvLiftoverTest
     }
 
     @Test
-    public void canRunSnvLiftover()
+    public void canRunSnvLiftover() throws IOException
     {
         TMP_DIR.mkdir();
 
         SnvLiftover liftover = new SnvLiftover(buildConfig());
         liftover.run();
 
-        for(File file : TMP_DIR.listFiles()) file.delete();
-        TMP_DIR.delete();
+        FileUtils.deleteDirectory(TMP_DIR);
     }
 }
