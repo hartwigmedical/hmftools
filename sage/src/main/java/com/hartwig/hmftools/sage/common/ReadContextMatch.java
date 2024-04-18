@@ -7,8 +7,4 @@ public enum ReadContextMatch
     PARTIAL_CORE, // matches part of core and all of one flank
     FULL, // matches core and both flanks entirely
     REF, // matches the ref at least for the core
-
-    // Deprecated
-    CORE_PARTIAL,
-    PARTIAL;
 }

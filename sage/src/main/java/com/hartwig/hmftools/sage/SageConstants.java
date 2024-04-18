@@ -12,11 +12,12 @@ public class SageConstants
 
     public static final int DEFAULT_READ_LENGTH = 151;
 
-    // read context buiding
+    // read context building
     public static final int DEFAULT_FLANK_LENGTH = 10;
     public static final int MIN_CORE_DISTANCE = 2;
     public static final int MAX_REPEAT_LENGTH = 5;
     public static final int MIN_REPEAT_COUNT = 3;
+    public static final int CORE_LOW_QUAL_MISMATCH_FACTOR = 8;
 
     public static final int MIN_SECOND_CANDIDATE_FULL_READS = 3;
     public static final double MIN_SECOND_CANDIDATE_FULL_READS_PERC = 0.25;
@@ -38,7 +39,6 @@ public class SageConstants
 
     // read evidence
     public static final int MATCHING_BASE_QUALITY = 20;
-    public static final int CORE_LOW_QUAL_MISMATCH_BASE_LENGTH = 20;
     public static final double SC_READ_EVENTS_FACTOR = 12;
     public static final int REALIGN_READ_MIN_INDEL_LENGTH = 3;
     public static final int REALIGN_READ_CONTEXT_MIN_SEARCH_LENGTH = 20;

@@ -29,11 +29,9 @@ public class SageVisConstants
         MAX_READS_PER_TYPE = Maps.newEnumMap(ReadContextCounter.MatchType.class);
         MAX_READS_PER_TYPE.put(ReadContextCounter.MatchType.NONE, 5);
         MAX_READS_PER_TYPE.put(ReadContextCounter.MatchType.FULL, 40);
-        MAX_READS_PER_TYPE.put(ReadContextCounter.MatchType.PARTIAL, 10);
+        MAX_READS_PER_TYPE.put(ReadContextCounter.MatchType.PARTIAL_CORE, 10);
         MAX_READS_PER_TYPE.put(ReadContextCounter.MatchType.CORE, 10);
         MAX_READS_PER_TYPE.put(ReadContextCounter.MatchType.REALIGNED, 20);
-        MAX_READS_PER_TYPE.put(ReadContextCounter.MatchType.CORE_PARTIAL, 10);
         MAX_READS_PER_TYPE.put(ReadContextCounter.MatchType.REF, 20);
-        MAX_READS_PER_TYPE.put(ReadContextCounter.MatchType.ALT, 5);
     }
 }

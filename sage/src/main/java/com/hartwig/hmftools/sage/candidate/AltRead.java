@@ -60,16 +60,6 @@ public class AltRead
         return mReadContext.CoreIndexEnd;
     }
 
-    public void extend(final AltRead other)
-    {
-        /* CLEAN-UP: no longer required if built correctly in the first place
-        int leftIndex = Math.min(mReadContext.readBasesLeftCentreIndex(), other.mReadContext.readBasesLeftCentreIndex());
-        int rightIndex = Math.max(mReadContext.readBasesRightCentreIndex(), other.mReadContext.readBasesRightCentreIndex());
-
-        mReadContext.extendCore(leftIndex, rightIndex);
-        */
-    }
-
     public void updateRefContext()
     {
         mRefContext.processAltRead(Ref, Alt, BaseQuality, NumberOfEvents, mReadContext);

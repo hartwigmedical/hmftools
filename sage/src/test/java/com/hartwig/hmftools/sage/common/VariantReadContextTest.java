@@ -148,6 +148,8 @@ public class VariantReadContextTest
         assertEquals("GCTCT", readContext.coreStr());
         assertEquals("TCACC", readContext.leftFlankStr());
         assertEquals("GTGAC", readContext.rightFlankStr());
+        assertEquals(49, readContext.corePositionStart());
+        assertEquals(55, readContext.corePositionEnd());
 
         // CLEAN-UP: add more scenarios
     }
@@ -184,6 +186,9 @@ public class VariantReadContextTest
         assertEquals("GCTGTGTC", readContext.coreStr());
         assertEquals("TCACC", readContext.leftFlankStr());
         assertEquals("TGTGA", readContext.rightFlankStr());
+
+        assertEquals(49, readContext.corePositionStart());
+        assertEquals(54, readContext.corePositionEnd());
 
         // CLEAN-UP: add more scenarios
     }

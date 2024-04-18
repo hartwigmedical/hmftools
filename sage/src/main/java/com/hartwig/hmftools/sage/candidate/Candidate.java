@@ -22,9 +22,6 @@ public class Candidate
 
     public static Candidate fromAltContext(final VariantTier tier, final AltContext altContext)
     {
-        // CLEAN-UP
-        // SimpleVariant variant = new SimpleVariant(altContext.chromosome(), altContext.position(), altContext.Ref, altContext.Alt);
-
         return new Candidate(tier, altContext.readContext(), altContext.minNumberOfEvents(), altContext.readContextSupport());
     }
 

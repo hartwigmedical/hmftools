@@ -175,8 +175,7 @@ public class VariantVis
         String refBases = mRefGenome.getBaseString(mVariant.chromosome(), refPosStart, refPosEnd);
         mRefViewModel = BaseSeqViewModel.fromStr(refBases, refPosStart);
 
-        // CLEAN-UP
-        mContextViewModel = null; // BaseSeqViewModel.fromVariant(indexedBases, mVariant.ref(), mVariant.alt());
+        mContextViewModel = BaseSeqViewModel.fromVariant(mReadContext, mVariant.ref(), mVariant.alt());
 
         StringJoiner indexedBasesKeyBuilder = new StringJoiner("_");
         indexedBasesKeyBuilder.add(String.valueOf(mReadContext.VarReadIndex));

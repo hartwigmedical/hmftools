@@ -23,7 +23,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class RealignmentTest
 {
-    /* CLEAN-UP
+    /* REALIGN
     @Test
     public void testIndelRealignedLeft()
     {

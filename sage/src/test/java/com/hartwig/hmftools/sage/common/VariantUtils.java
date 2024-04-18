@@ -86,13 +86,6 @@ public final class VariantUtils
     // Read context counter
     public static ReadContextCounter createReadCounter(final int id, final VariantReadContext readContext)
     {
-        /* CLEAN-UP
-        SimpleVariant variant = createSimpleVariant(position);
-
-        IndexedBases indexBases = new IndexedBases(position, 10, "ACGTACGTACGT".getBytes());
-        ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
-        */
-
         return new ReadContextCounter(
                 id, readContext, VariantTier.LOW_CONFIDENCE,
                 100, 1, TEST_CONFIG, QUALITY_CALCULATOR, null);
@@ -102,19 +95,6 @@ public final class VariantUtils
     public static SageVariant createSageVariant(int position, final String ref, final String alt)
     {
         SimpleVariant variant = createSimpleVariant(position, ref, alt);
-
-        /* CLEAN-UP
-        String readBases = buildReadContextBases(alt);
-
-        // LF          L   I   RC          RF
-        // 0123456789  01  2  34  0123456789
-        int leftCoreIndex = DEFAULT_READ_CONTEXT_FLANK_SIZE;
-        int index = leftCoreIndex + MIN_CORE_DISTANCE;
-        int rightCoreIndex = index + alt.length() - 1 + MIN_CORE_DISTANCE;
-
-        IndexedBases indexBases = new IndexedBases(
-                position, index, leftCoreIndex, rightCoreIndex, DEFAULT_READ_CONTEXT_FLANK_SIZE, readBases.getBytes());
-        */
 
         VariantReadContext readContext = createReadContext(variant);
         return createSageVariant(readContext);

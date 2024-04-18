@@ -97,7 +97,7 @@ public class AltContext implements VariantHotspot
             candidate.CoreMatch += coreMatch;
             mReadContextCandidates.add(candidate);
         }
-        /* CLEAN-UP - no longer possible
+        /* in the past a longer-flanked candidate would be taken, but flanks are of a fixed length now and may in time be shortened
         else if(newReadContext.maxFlankLength() > fullMatchCandidate.maxFlankLength())
         {
             mReadContextCandidates.remove(fullMatchCandidate);

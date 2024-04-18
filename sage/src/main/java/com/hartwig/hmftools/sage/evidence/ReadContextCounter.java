@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.CORE;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.FULL;
-import static com.hartwig.hmftools.common.variant.VariantReadSupport.PARTIAL_CORE;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.REALIGNED;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.REF;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -287,11 +286,9 @@ public class ReadContextCounter
     public enum MatchType implements Comparable<MatchType>
     {
         FULL(0),
-        PARTIAL(1),
+        PARTIAL_CORE(1),
         CORE(2),
         REALIGNED(3),
-        CORE_PARTIAL(4),
-        ALT(5),
         REF(6),
         NONE(7);
 
@@ -417,8 +414,8 @@ public class ReadContextCounter
                         break;
 
                     case PARTIAL_CORE:
-                        readSupport = PARTIAL_CORE;
-                        matchType = MatchType.PARTIAL;
+                        readSupport = VariantReadSupport.PARTIAL_CORE;
+                        matchType = MatchType.PARTIAL_CORE;
                         break;
 
                     case CORE:
@@ -443,26 +440,12 @@ public class ReadContextCounter
                 addVariantVisRecord(record, matchType, qualityScores, fragmentData);
                 logReadEvidence(record, matchType, readIndex, quality);
 
-                /*
-                if(SG_LOGGER.isTraceEnabled() && sampleId != null)
-                {
-                    qualityCalc.logReadQualCalcs(this, readIndex, record, adjustedNumOfEvents);
-                }
-                */
-
                 if(rawContext.AltSupport || readSupport != null)
                     countAltSupportMetrics(record, fragmentData);
 
                 checkImproperCount(record);
                 return ALT_SUPPORT;
             }
-            /* CLEAN-UP
-            else if(match == ReadContextMatch.CORE_PARTIAL)
-            {
-                // if the core is partly overlapped then back out any attribution to a ref match
-                rawContext.updateSupport(false, rawContext.AltSupport);
-            }
-            */
         }
 
         boolean canRealign = abs(mVariant.indelLength()) >= REALIGN_READ_MIN_INDEL_LENGTH || readHasIndelInCore(record);
@@ -482,16 +465,18 @@ public class ReadContextCounter
 
             return ALT_SUPPORT;
         }
+        /* REALIGN
         else if(realignment.Type == CORE_PARTIAL)
         {
             matchType = MatchType.CORE_PARTIAL;
             rawContext.updateSupport(false, false);
         }
+        */
 
         registerRawSupport(rawContext, qualityScores.RecalibratedBaseQuality);
 
         // switch back to the old method to test for jitter
-        // CLEAN-UP
+        // REALIGN
         RealignedContext jitterRealign = RealignedContext.NONE;
                 // Realignment.realignedAroundIndex(mReadContext, readIndex, record.getReadBases(), getMaxRealignDistance(record));
 
@@ -537,7 +522,7 @@ public class ReadContextCounter
         if(rawContext.RefSupport)
             matchType = MatchType.REF;
         else if(rawContext.AltSupport)
-            matchType = MatchType.ALT;
+            matchType = MatchType.NONE;
 
         addVariantVisRecord(record, matchType, qualityScores, fragmentData);
         logReadEvidence(record, matchType, readIndex, quality);
@@ -548,15 +533,14 @@ public class ReadContextCounter
     private ReadContextMatch determineReadContextMatch(final SAMRecord record, int readIndex, boolean allowCoreVariation)
     {
         // CLEAN-UP: fix this for RNA
+        // better approaches would be to have the read matcher stop checking if it is in a N-section,
+        // or to avoid affecting all DNA samples, make a new SAMRecord with the Ns filled out sufficiently
+
         /*
         ReadIndexBases readIndexBases;
         if(record.getCigar().containsOperator(CigarOperator.N))
         {
             readIndexBases = SplitReadUtils.expandSplitRead(readIndex, record);
-        }
-        else
-        {
-            readIndexBases = new ReadIndexBases(readIndex, record.getReadBases());
         }
 
         final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
@@ -565,7 +549,7 @@ public class ReadContextCounter
                 allowCoreVariation ? mMaxCoreMismatches : 0);
         */
 
-        // CLEAN-UP: allowCoreVariation was not allowed for realignment - is that still a necessary condition?
+        // REALIGN: realignment did not allow low-qual mismatches or wildcards - is that still a necessary condition?
 
         return mReadContextMatcher.determineReadMatch(record, readIndex);
     }
@@ -576,7 +560,7 @@ public class ReadContextCounter
         mQualities.addSupport(support, (int)quality);
 
         boolean supportsVariant = support != null
-                && (support == FULL || support == PARTIAL_CORE || support == CORE || support == REALIGNED);
+                && (support == FULL || support == VariantReadSupport.PARTIAL_CORE || support == CORE || support == REALIGNED);
 
         if(mConfig.Sequencing.HasUMIs)
         {
@@ -819,7 +803,7 @@ public class ReadContextCounter
 
             if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL_CORE)
                 return new RealignedContext(RealignedType.EXACT, mReadContext.totalLength(), realignRightReadIndex);
-            // else if(match == ReadContextMatch.CORE_PARTIAL) // CLEAN-UP / CHECK
+            // else if(match == ReadContextMatch.CORE_PARTIAL) // REALIGN
             //    return new RealignedContext(RealignedType.CORE_PARTIAL, mReadContext.indexedBases().length(), realignRightReadIndex);
         }
 

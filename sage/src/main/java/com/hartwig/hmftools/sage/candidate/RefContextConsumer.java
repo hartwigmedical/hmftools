@@ -180,8 +180,6 @@ public class RefContextConsumer
 
         CigarTraversal.traverseCigar(record, handler);
 
-        checkCoreExtension(altReads);
-
         for(AltRead altRead : altReads)
         {
             altRead.updateRefContext();
@@ -560,53 +558,5 @@ public class RefContextConsumer
             quality = Math.min(quality, record.getBaseQualities()[i]);
         }
         return quality;
-    }
-
-    private void checkCoreExtension(final List<AltRead> altReads)
-    {
-        if(altReads.size() < 2)
-            return;
-
-        // if an SNV core overlaps an indel core, then extend the cores of both
-        for(int i = 0; i < altReads.size(); i++)
-        {
-            final AltRead snv = altReads.get(i);
-            if(!snv.isIndel() && snv.containsReadContext())
-            {
-                for(int j = altReads.size() - 1; j > i; j--)
-                {
-                    final AltRead nextIndel = altReads.get(j);
-                    if(nextIndel != null && nextIndel.isIndel() && nextIndel.containsReadContext())
-                    {
-                        if(nextIndel.leftCoreIndex() - nextIndel.length() <= snv.rightCoreIndex())
-                        {
-                            snv.extend(nextIndel);
-                            nextIndel.extend(snv);
-                        }
-                    }
-                }
-            }
-        }
-
-        for(int i = altReads.size() - 1; i >= 0; i--)
-        {
-            final AltRead snv = altReads.get(i);
-
-            if(!snv.isIndel() && snv.containsReadContext())
-            {
-                for(int j = 0; j < i; j++)
-                {
-                    final AltRead previousIndel = altReads.get(j);
-                    if(previousIndel != null && previousIndel.isIndel() && previousIndel.containsReadContext())
-                    {
-                        if(previousIndel.rightCoreIndex() + previousIndel.length() >= snv.leftCoreIndex())
-                        {
-                            previousIndel.extend(snv);
-                            snv.extend(previousIndel);
-                        }
-                    }
-                }
-            }
-        }
     }
 }

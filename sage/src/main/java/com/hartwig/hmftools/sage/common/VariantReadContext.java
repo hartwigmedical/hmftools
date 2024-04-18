@@ -24,7 +24,6 @@ public class VariantReadContext
 
     // read bases and info
     public final byte[] ReadBases;
-    public final List<CigarElement> ReadCigar;
     public final int CoreIndexStart; // in the read to the start of the core
     public final int VarReadIndex; // index in the read bases of the variant's position
     public final int CoreIndexEnd;
@@ -36,6 +35,7 @@ public class VariantReadContext
     public final int AltIndexUpper;
 
     private final SimpleVariant mVariant;
+    private final List<CigarElement> mReadCigar;
     private final String mReadCigarStr;
 
     private final ArtefactContext mArtefactContext;
@@ -52,13 +52,13 @@ public class VariantReadContext
         AlignmentEnd = alignmentEnd;
         RefBases = refBases;
         ReadBases = readBases;
-        ReadCigar = readCigar;
         CoreIndexStart = coreIndexStart;
         VarReadIndex = varReadIndex;
         CoreIndexEnd = coreIndexEnd;
         Homology = homology;
         MaxRepeat = maxRepeat;
 
+        mReadCigar = readCigar;
         mReadCigarStr = CigarUtils.cigarStringFromElements(readCigar);
 
         // CLEAN-UP
@@ -86,7 +86,6 @@ public class VariantReadContext
 
     public int refIndex() { return mVariant.Position - AlignmentStart; }
 
-    // CLEAN-UP: consider where to call this, eg as created for AltRead/Context or when evaluating candidates
     public boolean isValid()
     {
         if(CoreIndexStart <= 0 || CoreIndexEnd >= ReadBases.length - 1)
@@ -100,16 +99,6 @@ public class VariantReadContext
 
         if(AltIndexLower > AltIndexUpper)
             return false;
-
-        /*
-        // check that the ref core is covered
-        int refIndex = refIndex();
-        int refCoreIndexStart = refIndex - leftCoreLength();
-        int refCoreIndexEnd = refIndex + rightCoreLength();
-
-        if(refCoreIndexStart < 0 || refCoreIndexEnd >= RefBases.length)
-            return false;
-        */
 
         return true;
     }
@@ -132,10 +121,6 @@ public class VariantReadContext
 
     public final String trinucleotideStr() { return new String(trinucleotide()); }
     public final String readCigar() { return mReadCigarStr; }
-
-    // CLEAN-UP: these should use the read CIGAR to get an accurate core start and end
-    public int corePositionStart() { return mVariant.Position - leftCoreLength(); }
-    public int corePositionEnd() { return mVariant.Position + rightCoreLength(); }
 
     public ArtefactContext artefactContext() { return mArtefactContext; }
     public UltimaQualModel ultimaQualModel() { return mUltimaQualModel; }
@@ -171,6 +156,52 @@ public class VariantReadContext
 
             return min(readIndex, CoreIndexEnd);
         }
+    }
+
+    public int corePositionStart()
+    {
+        if(mReadCigar.size() == 1)
+            return mVariant.Position - leftCoreLength();
+
+        int position = findReadPositionFromIndex(CoreIndexStart);
+
+        return position > 0 ? position : mVariant.Position - leftCoreLength();
+    }
+
+    public int corePositionEnd()
+    {
+        if(mReadCigar.size() == 1)
+            return mVariant.Position + rightCoreLength();
+
+        int position = findReadPositionFromIndex(CoreIndexEnd);
+
+        return position > 0 ? position : mVariant.Position + rightCoreLength();
+    }
+
+    private int findReadPositionFromIndex(int readIndex)
+    {
+        int refPosition = AlignmentStart;
+        int index = 0;
+
+        for(CigarElement element : mReadCigar)
+        {
+            if(index + element.getLength() >= readIndex && element.getOperator().consumesReadBases())
+            {
+                if(element.getOperator().consumesReferenceBases())
+                    refPosition += readIndex - index;
+
+                return refPosition;
+            }
+
+            if(element.getOperator().consumesReferenceBases())
+                refPosition += element.getLength();
+
+            if(element.getOperator().consumesReadBases())
+                index += element.getLength();
+        }
+
+        // shouldn't occur
+        return -1;
     }
 
     public String toString()

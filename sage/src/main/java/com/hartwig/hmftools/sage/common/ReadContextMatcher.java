@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.common;
 import static java.lang.Math.abs;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_FACTOR;
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
@@ -23,9 +24,6 @@ public class ReadContextMatcher
 
     private final int[] mLowQualExclusionRange;
 
-    // CLEAN-UP move to constants once complete
-    public static final int CORE_LOW_QUAL_MISMATCH_FACTOR = 8;
-
     public static final byte WILDCARD_BASE = (byte) '.';
 
     public ReadContextMatcher(final VariantReadContext variantReadContext)
@@ -37,7 +35,7 @@ public class ReadContextMatcher
     {
         mContext = variantReadContext;
 
-        mMaxCoreLowQualMatches = allowMismatches ? 1 + (mContext.coreLength() / CORE_LOW_QUAL_MISMATCH_FACTOR) : 0;
+        mMaxCoreLowQualMatches = allowMismatches ? calcMaxLowQualMismatches(mContext.coreLength()) : 0;
         mAllowWildcardMatchInCore = allowMismatches ? mContext.variant().isSNV() && !mContext.hasHomology() : false;
 
         if(mContext.variant().isIndel())
@@ -48,6 +46,11 @@ public class ReadContextMatcher
         {
             mLowQualExclusionRange = new int[] { mContext.VarReadIndex, mContext.VarReadIndex + mContext.variant().alt().length() - 1 };
         }
+    }
+
+    private static int calcMaxLowQualMismatches(int segmentLength)
+    {
+        return 1 + (segmentLength / CORE_LOW_QUAL_MISMATCH_FACTOR);
     }
 
     public boolean coversVariant(final SAMRecord record, final int readIndex)
@@ -132,9 +135,11 @@ public class ReadContextMatcher
             int coreIndexStart = mContext.CoreIndexStart + leftTrim;
             int compareLength = mContext.coreLength() - leftTrim - rightTrim;
 
+            int maxLowQualMismatches = calcMaxLowQualMismatches(compareLength);
+
             if(matches(
                     mContext.ReadBases, readBases, readQuals, coreIndexStart, readIndexStart, compareLength,
-                    mMaxCoreLowQualMatches, mAllowWildcardMatchInCore, mLowQualExclusionRange))
+                    maxLowQualMismatches, mAllowWildcardMatchInCore, mLowQualExclusionRange))
             {
                 return ReadContextMatch.PARTIAL_CORE;
             }
