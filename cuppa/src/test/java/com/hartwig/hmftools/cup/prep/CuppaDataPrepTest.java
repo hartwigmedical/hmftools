@@ -5,11 +5,13 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import org.apache.commons.io.FileUtils;
 
 import org.junit.Test;
 
@@ -17,16 +19,8 @@ public class CuppaDataPrepTest
 {
     File TMP_DIR = new File(System.getProperty("java.io.tmpdir") + "/CuppaDataPrepTest/");
 
-    private void deleteTmpDir()
-    {
-        for(File file : TMP_DIR.listFiles())
-            file.delete();
-
-        TMP_DIR.delete();
-    }
-
     @Test
-    public void canRunSingleSamplePrep()
+    public void canRunSingleSamplePrep() throws IOException
     {
         TMP_DIR.mkdir();
 
@@ -63,11 +57,12 @@ public class CuppaDataPrepTest
         // Check output file exists
         File outputPath = new File(cuppaDataPrep.getOutputPath(null));
         assertTrue(outputPath.exists());
-        deleteTmpDir();
+
+        FileUtils.deleteDirectory(TMP_DIR);
     }
 
     @Test
-    public void canRunMultiSamplePrep()
+    public void canRunMultiSamplePrep() throws IOException
     {
         TMP_DIR.mkdir();
 
@@ -115,6 +110,6 @@ public class CuppaDataPrepTest
             assertTrue(outputFile.exists());
         }
 
-        deleteTmpDir();
+        FileUtils.deleteDirectory(TMP_DIR);
     }
 }
