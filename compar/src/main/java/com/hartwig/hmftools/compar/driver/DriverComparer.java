@@ -58,7 +58,7 @@ public class DriverComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
         final List<DriverCatalog> drivers = dbAccess.readDriverCatalog(sampleId);
 

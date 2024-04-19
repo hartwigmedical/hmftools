@@ -76,7 +76,7 @@ public class PurityComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
         final PurityContext purityContext = dbAccess.readPurityContext(sampleId);
 

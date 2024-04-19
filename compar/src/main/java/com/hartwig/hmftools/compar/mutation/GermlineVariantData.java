@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -33,11 +34,13 @@ public class GermlineVariantData implements ComparableItem
 {
     public final GermlineVariant Variant;
     public final Set<String> Filters;
+    private final GenomePositionImpl mComparisonGenomePosition;
 
-    public GermlineVariantData(final GermlineVariant variant)
+    public GermlineVariantData(final GermlineVariant variant, final GenomePositionImpl comparisonGenomePosition)
     {
         Variant = variant;
         Filters = Arrays.stream(variant.filter().split(";", -1)).collect(Collectors.toSet());
+        mComparisonGenomePosition = comparisonGenomePosition;
     }
 
     @Override
@@ -46,7 +49,23 @@ public class GermlineVariantData implements ComparableItem
     @Override
     public String key()
     {
-        return String.format("%s:%d %s>%s %s", Variant.chromosome(), Variant.position(), Variant.ref(), Variant.alt(), Variant.type());
+        if(mComparisonGenomePosition.position() != Variant.position())
+        {
+            return String.format(
+                    "%s:%d %s>%s %s liftover(%s:%d)",
+                    Variant.chromosome(),
+                    Variant.position(),
+                    Variant.ref(),
+                    Variant.alt(),
+                    Variant.type(),
+                    mComparisonGenomePosition.chromosome(),
+                    mComparisonGenomePosition.position()
+            );
+        }
+        else
+        {
+            return String.format("%s:%d %s>%s %s", Variant.chromosome(), Variant.position(), Variant.ref(), Variant.alt(), Variant.type());
+        }
     }
 
     @Override
@@ -68,7 +87,7 @@ public class GermlineVariantData implements ComparableItem
     {
         final GermlineVariantData otherVar = (GermlineVariantData) other;
 
-        if(!Variant.chromosome().equals(otherVar.Variant.chromosome()) || Variant.position() != otherVar.Variant.position())
+        if(!mComparisonGenomePosition.chromosome().equals(otherVar.Variant.chromosome()) || mComparisonGenomePosition.position() != otherVar.Variant.position())
             return false;
 
         if(!Variant.ref().equals(otherVar.Variant.ref()) || !Variant.alt().equals(otherVar.Variant.alt()))

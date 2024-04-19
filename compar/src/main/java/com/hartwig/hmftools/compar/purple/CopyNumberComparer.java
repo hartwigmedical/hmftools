@@ -57,7 +57,7 @@ public class CopyNumberComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
         final List<PurpleCopyNumber> copyNumbers = dbAccess.readCopynumbers(sampleId);
         List<ComparableItem> items = Lists.newArrayList();
