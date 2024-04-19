@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
@@ -130,9 +131,7 @@ public class JunctionAssembler
 
     private void buildIndelFrequencies(final Map<Integer,List<Read>> indelLengthReads, final Read read)
     {
-        int maxIndelLength = read.cigarElements().stream()
-                .filter(x -> x.getOperator().isIndel())
-                .mapToInt(x -> x.getLength()).max().orElse(0);
+        int maxIndelLength = maxIndelLength(read.cigarElements());
 
         if(maxIndelLength >= INDEL_TO_SC_MIN_SIZE_SOFTCLIP)
         {

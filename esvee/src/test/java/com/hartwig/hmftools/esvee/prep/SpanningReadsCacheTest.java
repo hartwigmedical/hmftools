@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.esvee.prep;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.esvee.TestUtils.readIdStr;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.PARTITION_SIZE;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.REGION_1;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.REGION_2;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.REGION_3;
-import static com.hartwig.hmftools.esvee.prep.TestUtils.createSamRecord;
-import static com.hartwig.hmftools.esvee.prep.TestUtils.readIdStr;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.JUNCTION;
 

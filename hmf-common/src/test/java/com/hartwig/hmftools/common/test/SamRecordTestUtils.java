@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 
+import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -166,5 +167,11 @@ public final class SamRecordTestUtils
         }
 
         return baseQuals;
+    }
+
+    public static int setReadFlag(int flags, final SAMFlag flag)
+    {
+        flags |= flag.intValue();
+        return flags;
     }
 }
