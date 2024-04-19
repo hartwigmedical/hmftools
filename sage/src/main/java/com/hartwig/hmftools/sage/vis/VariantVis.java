@@ -144,7 +144,7 @@ public class VariantVis
         int indelSize = mVariant.ref().length() - mVariant.alt().length();
         int coreStart = mReadContext.corePositionStart();
         int coreEnd = mReadContext.corePositionEnd() + indelSize;
-        int flankStart = coreStart + mReadContext.leftFlankLength();
+        int flankStart = coreStart - mReadContext.leftFlankLength();
         int flankEnd = coreEnd + mReadContext.rightFlankLength();
         mViewRegion = new BaseRegion(coreStart - SageVisConstants.READ_EXTEND_LENGTH, coreEnd + SageVisConstants.READ_EXTEND_LENGTH);
 

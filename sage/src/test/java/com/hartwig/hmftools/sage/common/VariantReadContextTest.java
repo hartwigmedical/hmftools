@@ -6,6 +6,9 @@ import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.findHomology;
+import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_LEFT_CORE;
+import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_RIGHT_CORE;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 
 import static org.junit.Assert.assertEquals;
@@ -139,8 +142,8 @@ public class VariantReadContextTest
         assertEquals(5, readContext.CoreIndexStart);
         assertEquals(6, readContext.VarReadIndex);
         assertEquals(9, readContext.CoreIndexEnd);
-        assertEquals(5, readContext.AltIndexLower);
-        assertEquals(8, readContext.AltIndexUpper);
+        assertEquals(6, readContext.AltIndexLower);
+        assertEquals(7, readContext.AltIndexUpper);
         assertEquals("TCACCGCTGTCTGTGAC", readContext.refBases());
         assertEquals("TCACCGCTCTGTGAC", readContext.readBases());
         assertEquals("7M2D8M", readContext.readCigar());
@@ -176,8 +179,8 @@ public class VariantReadContextTest
         assertEquals(5, readContext.CoreIndexStart);
         assertEquals(6, readContext.VarReadIndex);
         assertEquals(12, readContext.CoreIndexEnd);
-        assertEquals(5, readContext.AltIndexLower);
-        assertEquals(10, readContext.AltIndexUpper);
+        assertEquals(6, readContext.AltIndexLower);
+        assertEquals(9, readContext.AltIndexUpper);
         assertEquals("TCACCGCTGTCTGTGA", readContext.refBases());
         assertEquals("TCACCGCTGTGTCTGTGA", readContext.readBases());
         assertEquals("7M2I9M", readContext.readCigar());

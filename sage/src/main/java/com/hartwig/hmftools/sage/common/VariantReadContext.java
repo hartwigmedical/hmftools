@@ -65,8 +65,14 @@ public class VariantReadContext
         mArtefactContext = null; // ArtefactContext.buildContext(variant, readContext.indexedBases());
         mUltimaQualModel = null; // qualityCalculator.createUltimateQualModel(variant);
 
-        AltIndexLower = setAltIndex(true);
-        AltIndexUpper = setAltIndex(false);
+        AltIndexLower = VarReadIndex;
+
+        if(mVariant.isInsert())
+            AltIndexUpper = VarReadIndex + mVariant.Alt.length();
+        else if(mVariant.isDelete())
+            AltIndexUpper = VarReadIndex + 1;
+        else
+            AltIndexUpper = VarReadIndex + mVariant.Alt.length() - 1;
     }
 
     // read context methods
@@ -126,39 +132,6 @@ public class VariantReadContext
     public ArtefactContext artefactContext() { return mArtefactContext; }
     public UltimaQualModel ultimaQualModel() { return mUltimaQualModel; }
 
-    private int setAltIndex(boolean isLower)
-    {
-        // find the first base of difference (ref vs alt) up and down from the variant's position, and cap at the core indices
-        if(!mVariant.isIndel())
-        {
-            return isLower ? VarReadIndex : VarReadIndex + mVariant.Alt.length() - 1;
-        }
-
-        int refIndex = refIndex();
-        int readIndex = VarReadIndex;
-
-        if(isLower)
-        {
-            for(; readIndex >= CoreIndexStart & refIndex >= 0; --readIndex, --refIndex)
-            {
-                if(RefBases[refIndex] != ReadBases[readIndex])
-                    break;
-            }
-
-            return max(readIndex, CoreIndexStart);
-        }
-        else
-        {
-            for(; readIndex <= CoreIndexEnd & refIndex < RefBases.length; ++readIndex, ++refIndex)
-            {
-                if(RefBases[refIndex] != ReadBases[readIndex])
-                    break;
-            }
-
-            return min(readIndex, CoreIndexEnd);
-        }
-    }
-
     public int corePositionStart()
     {
         if(mReadCigar.size() == 1)
@@ -211,4 +184,43 @@ public class VariantReadContext
                 leftFlankStr(), coreStr(), rightFlankStr(), mReadCigarStr, AlignmentStart, AlignmentEnd,
                 CoreIndexStart, VarReadIndex, CoreIndexEnd, MaxRepeat != null ? MaxRepeat : "", Homology != null ? Homology : "");
     }
+
+    // CLEAN-UP: unused
+    private int setAltIndex(boolean isLower)
+    {
+        // find the first base of difference (ref vs alt) up and down from the variant's position, and cap at the core indices
+        if(!mVariant.isIndel())
+        {
+            return isLower ? VarReadIndex : VarReadIndex + mVariant.Alt.length() - 1;
+        }
+        else
+        {
+
+        }
+
+        int refIndex = refIndex();
+        int readIndex = VarReadIndex;
+
+        if(isLower)
+        {
+            for(; readIndex >= CoreIndexStart & refIndex >= 0; --readIndex, --refIndex)
+            {
+                if(RefBases[refIndex] != ReadBases[readIndex])
+                    break;
+            }
+
+            return max(readIndex, CoreIndexStart);
+        }
+        else
+        {
+            for(; readIndex <= CoreIndexEnd & refIndex < RefBases.length; ++readIndex, ++refIndex)
+            {
+                if(RefBases[refIndex] != ReadBases[readIndex])
+                    break;
+            }
+
+            return min(readIndex, CoreIndexEnd);
+        }
+    }
+
 }

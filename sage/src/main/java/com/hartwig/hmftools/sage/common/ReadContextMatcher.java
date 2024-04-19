@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.sage.common;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_FACTOR;
@@ -53,16 +55,11 @@ public class ReadContextMatcher
 
     public boolean coversVariant(final SAMRecord record, final int readIndex)
     {
-        // must cover from the first unambiguous ref vs alt bases on one side and the core in the opposite direction
-        int readLowerExtensionLength = readIndex;
-        int readUpperExtensionLength = record.getReadBases().length - readIndex - 1;
+        int requiredReadIndexLower = readIndex + mContext.VarReadIndex - mContext.AltIndexLower;
+        int requiredReadIndexUpper = readIndex + mContext.AltIndexUpper - mContext.VarReadIndex;
 
-        if(readLowerExtensionLength < mContext.VarReadIndex - mContext.AltIndexLower)
-            return false;
-        else if(readUpperExtensionLength < mContext.AltIndexUpper - mContext.VarReadIndex)
-            return false;
-        else
-            return true;
+        // must cover from the first unambiguous ref vs alt bases on one side and the core in the opposite direction
+        return requiredReadIndexLower >= 0 && requiredReadIndexUpper < record.getReadBases().length;
     }
 
     public ReadContextMatch determineReadMatch(final SAMRecord record, final int readIndex)
@@ -122,6 +119,10 @@ public class ReadContextMatcher
 
     private ReadContextMatch determineCoreMatch(final byte[] readBases, final byte[] readQuals, final int readIndex)
     {
+        // must cover the variant itself
+        if(readIndex > mContext.AltIndexLower && readBases.length - 1 < mContext.AltIndexUpper)
+            return NONE;
+
         int readIndexStart = readIndex - mContext.leftCoreLength();
         int readIndexEnd = readIndex + mContext.rightCoreLength();
 
@@ -288,15 +289,15 @@ public class ReadContextMatcher
 
     public double averageCoreQuality(final SAMRecord record, final int readIndex)
     {
-        // CLEAN-UP: soon to be replaced with new MSI model??
-        int readIndexStart = readIndex - mContext.leftCoreLength();
-        int readIndexEnd = readIndex + mContext.rightCoreLength();
+        int readIndexStart = max(readIndex - mContext.leftCoreLength(), 0);
+        int readIndexEnd = min(readIndex + mContext.rightCoreLength(), record.getReadBases().length - 1);
 
-        if(readIndexStart < 0 || readIndexEnd >= record.getReadBases().length)
+        int baseLength = readIndexEnd - readIndexStart + 1;
+
+        if(baseLength <= 0)
             return 0;
 
         double quality = 0;
-        int baseLength = readIndexEnd - readIndexStart + 1;
 
         for(int i = readIndexStart; i <= readIndexEnd; i++)
         {

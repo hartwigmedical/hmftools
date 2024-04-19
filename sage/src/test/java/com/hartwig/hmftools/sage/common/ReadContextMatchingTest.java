@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.sage.common.ReadContextMatch.REF;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
+import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_LEFT_CORE;
+import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_RIGHT_CORE;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 
@@ -44,8 +46,6 @@ public class ReadContextMatchingTest
         SAMRecord read = buildSamRecord(1, cigar, readBases, readQualities);
 
         assertTrue(matcher.coversVariant(read, 20));
-
-        assertTrue(matcher.coversVariant(read, 1));
         assertTrue(matcher.coversVariant(read, 0));
         assertTrue(matcher.coversVariant(read, 39));
 
@@ -55,10 +55,18 @@ public class ReadContextMatchingTest
         matcher = new ReadContextMatcher(readContext);
 
         assertTrue(matcher.coversVariant(read, 20));
-        assertTrue(matcher.coversVariant(read, 7));
-        assertFalse(matcher.coversVariant(read, 6));
+        assertTrue(matcher.coversVariant(read, 0));
         assertTrue(matcher.coversVariant(read, 36));
         assertFalse(matcher.coversVariant(read, 37));
+
+        var = createSimpleVariant(position, "ACGT", "A");
+        readContext = createReadContext(var, "AA", "GG");
+        matcher = new ReadContextMatcher(readContext);
+
+        assertTrue(matcher.coversVariant(read, 20));
+        assertTrue(matcher.coversVariant(read, 0));
+        assertTrue(matcher.coversVariant(read, 38));
+        assertFalse(matcher.coversVariant(read, 39));
     }
 
     @Test
@@ -180,4 +188,61 @@ public class ReadContextMatchingTest
         assertEquals(FULL, matcher.determineReadMatch(read, readVarIndex));
     }
 
+    @Test
+    public void testAverageCoreQuality()
+    {
+        String leftCore = TEST_LEFT_CORE;
+        String rightCore = TEST_RIGHT_CORE;
+        int position = 100;
+        String ref = "A";
+        String alt = "T";
+        SimpleVariant variant = createSimpleVariant(position, ref, alt);
+
+        VariantReadContext readContext = createReadContext(variant, leftCore, rightCore);
+        ReadContextMatcher matcher = new ReadContextMatcher(readContext);
+
+        String readBases = readContext.leftFlankStr() + leftCore + alt + rightCore + readContext.rightFlankStr();
+        byte[] readQualities = buildDefaultBaseQuals(readBases.length());
+        int readVarIndex = readContext.leftFlankLength() + leftCore.length();
+
+        readQualities[readVarIndex - 2] = 10;
+        readQualities[readVarIndex - 1] = 12;
+        readQualities[readVarIndex] = 14;
+        readQualities[readVarIndex + 1] = 16;
+        readQualities[readVarIndex + 2] = 18;
+
+        String cigar = buildCigarString(readBases.length());
+
+        SAMRecord read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
+
+        double average = matcher.averageCoreQuality(read, readVarIndex);
+        assertEquals(14, average, 0.01);
+
+        // now with partial cores
+        readBases = readContext.leftFlankStr() + leftCore + alt;
+        readQualities = buildDefaultBaseQuals(readBases.length());
+
+        readQualities[readVarIndex - 2] = 12;
+        readQualities[readVarIndex - 1] = 13;
+        readQualities[readVarIndex] = 14;
+
+        read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
+
+        average = matcher.averageCoreQuality(read, readVarIndex);
+        assertEquals(13, average, 0.01);
+
+        // partial on the left
+        readBases = alt + rightCore + readContext.rightFlankStr();
+        readQualities = buildDefaultBaseQuals(readBases.length());
+
+        readQualities[0] = 10;
+        readQualities[1] = 11;
+        readQualities[2] = 12;
+
+        readVarIndex = 0;
+        read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
+
+        average = matcher.averageCoreQuality(read, readVarIndex);
+        assertEquals(11, average, 0.01);
+    }
 }
