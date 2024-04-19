@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBa
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
+import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL_CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.REF;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
@@ -82,7 +83,7 @@ public class ReadContextMatchingTest
 
         assertEquals(REF, matcher.determineReadMatch(read, readVarIndex));
 
-        // core match
+        // full match
         readBases = readContext.leftFlankStr() + leftCore + alt + rightCore + readContext.rightFlankStr();
         read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
         assertEquals(FULL, matcher.determineReadMatch(read, readVarIndex));
@@ -112,13 +113,71 @@ public class ReadContextMatchingTest
         readBases = readContext.leftFlankStr() + leftCore + ref + rightCore + readContext.rightFlankStr();
         read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
         assertEquals(REF, matcher.determineReadMatch(read, readVarIndex));
+
+        // partial core
+        readBases = "AAAAA" + readContext.leftFlankStr() + leftCore + alt;
+        readVarIndex = readBases.length() - 1;
+        readQualities = buildDefaultBaseQuals(readBases.length());
+        read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
+        assertEquals(PARTIAL_CORE, matcher.determineReadMatch(read, readVarIndex));
+
+        // same again from the other side
+        readBases =  alt + rightCore + readContext.rightFlankStr() + "AAAAA";
+        readVarIndex = 0;
+        readQualities = buildDefaultBaseQuals(readBases.length());
+        read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
+        assertEquals(PARTIAL_CORE, matcher.determineReadMatch(read, readVarIndex));
     }
 
     @Test
     public void testFlankMatches()
     {
-        // CLEAN-UP
+        String leftCore = "AC";
+        String rightCore = "GT";
+        int position = 100;
+        String ref = "A";
+        String alt = "T";
+        SimpleVariant variant = createSimpleVariant(position, ref, alt);
+        VariantReadContext readContext = createReadContext(variant, leftCore, rightCore);
 
+        ReadContextMatcher matcher = new ReadContextMatcher(readContext);
+
+        String flankMismatch = "AAAAATTTTT";
+        String readBases = readContext.leftFlankStr() + leftCore + alt + rightCore + flankMismatch;
+        byte[] readQualities = buildDefaultBaseQuals(readBases.length());
+        int readVarIndex = readContext.leftFlankLength() + 2;
+        String cigar = buildCigarString(readBases.length());
+
+        SAMRecord read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
+
+        assertEquals(CORE, matcher.determineReadMatch(read, readVarIndex));
+
+        // low-qual mismatches in the flanks
+        readBases = flankMismatch + leftCore + alt + rightCore + flankMismatch;
+        readQualities = buildDefaultBaseQuals(readBases.length());
+
+        for(int i = 0; i < 10; ++i)
+        {
+            readQualities[i] = 10;
+        }
+
+        for(int i = readBases.length() - 11; i < readBases.length(); ++i)
+        {
+            readQualities[i] = 10;
+        }
+
+        read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
+
+        assertEquals(FULL, matcher.determineReadMatch(read, readVarIndex));
+
+        // missing flank still classifies as FULL if there are no mismatches
+        readBases = readContext.leftFlankStr() + leftCore + alt + rightCore;
+        readQualities = buildDefaultBaseQuals(readBases.length());
+        cigar = buildCigarString(readBases.length());
+
+        read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
+
+        assertEquals(FULL, matcher.determineReadMatch(read, readVarIndex));
     }
 
 }

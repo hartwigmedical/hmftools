@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
+import static com.hartwig.hmftools.sage.common.RepeatInfo.findMultiBaseRepeat;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
@@ -9,6 +10,7 @@ import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -348,7 +350,34 @@ public class VariantReadContextTest
 
      */
 
+    @Test
+    public void testRepeats()
+    {
+        //              0123456789
+        String bases = "AAACCTTTTT";
 
+        // first check limits
+        RepeatInfo repeatInfo = findMultiBaseRepeat(bases.getBytes(), 6, 1, 4);
+        assertNotNull(repeatInfo);
+        assertEquals("T", repeatInfo.Bases);
+        assertEquals(4, repeatInfo.Count);
+
+        repeatInfo = findMultiBaseRepeat(bases.getBytes(), 7, 1, 4);
+        assertNull(repeatInfo);
+
+        //       01234567890
+        bases = "AACGGTACGGT";
+
+        repeatInfo = findMultiBaseRepeat(bases.getBytes(), 1, 5, 2);
+        assertNotNull(repeatInfo);
+        assertEquals("ACGGT", repeatInfo.Bases);
+        assertEquals(2, repeatInfo.Count);
+        assertEquals(10, repeatInfo.length());
+        assertEquals(5, repeatInfo.repeatLength());
+
+        repeatInfo = findMultiBaseRepeat(bases.getBytes(), 2, 5, 2);
+        assertNull(repeatInfo);
+    }
 
     @Test
     public void testHomology()

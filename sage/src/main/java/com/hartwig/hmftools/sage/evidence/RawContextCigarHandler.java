@@ -97,7 +97,7 @@ public class RawContextCigarHandler implements CigarHandler
             if(mVariant.position() >= refPosition && mVariant.position() <= refPositionEnd)
             {
                 int alignmentEnd = record.getAlignmentEnd();
-                int actualIndex = record.getReadPositionAtReferencePosition(alignmentEnd) - 1 - alignmentEnd + (int) mVariant.position();
+                int actualIndex = record.getReadPositionAtReferencePosition(alignmentEnd) - 1 - alignmentEnd + mVariant.position();
 
                 mResult = RawContext.inSoftClip(actualIndex, false, 0);
             }

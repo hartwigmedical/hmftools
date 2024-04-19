@@ -99,7 +99,7 @@ public class RepeatInfo
 
     public static RepeatInfo findMultiBaseRepeat(final byte[] bases, int index, int repeatCount, final int minCount)
     {
-        if(index + minCount - 1 * repeatCount >= bases.length)
+        if(index + (minCount * repeatCount) - 1 >= bases.length)
             return null;
 
         int i = index + repeatCount;

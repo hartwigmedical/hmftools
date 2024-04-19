@@ -10,8 +10,6 @@ import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL_CORE;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
@@ -22,7 +20,7 @@ public class ReadContextMatcher
     private final int mMaxCoreLowQualMatches;
     private final boolean mAllowWildcardMatchInCore;
 
-    private final int[] mLowQualExclusionRange;
+    private final int[] mLowQualExclusionRange; // for SNV & MNVs, the indices covering the variant & excluding low-qual mismatches
 
     public static final byte WILDCARD_BASE = (byte) '.';
 
@@ -82,13 +80,28 @@ public class ReadContextMatcher
         if(coreMatch == NONE)
             return NONE;
 
-        boolean leftMatch = determineFlankMatch(readBases, readQuals, readIndex, true);
-        boolean rightMatch = determineFlankMatch(readBases, readQuals, readIndex, false);
+        BaseMatchType leftMatch = determineFlankMatch(readBases, readQuals, readIndex, true);
+        BaseMatchType rightMatch = determineFlankMatch(readBases, readQuals, readIndex, false);
 
-        if(coreMatch == PARTIAL_CORE && (leftMatch || rightMatch))
-            return PARTIAL_CORE;
+        if(rightMatch == BaseMatchType.MISMATCH || leftMatch == BaseMatchType.MISMATCH)
+            return CORE;
 
-        return (coreMatch == CORE && leftMatch && rightMatch) ? FULL : CORE;
+        // flanks either matched or were incomplete
+        if(coreMatch == PARTIAL_CORE)
+        {
+            if(leftMatch == BaseMatchType.MATCH || rightMatch == BaseMatchType.MATCH)
+                return PARTIAL_CORE;
+            else
+                return CORE;
+        }
+        else
+        {
+            // again only one flank needs to be complete to be full (since no mismatches were found)
+            if(leftMatch == BaseMatchType.MATCH || rightMatch == BaseMatchType.MATCH)
+                return FULL;
+            else
+                return CORE;
+        }
     }
 
     private boolean coreMatchesRef(final byte[] readBases, final byte[] readQuals, final int readIndex)
@@ -129,7 +142,7 @@ public class ReadContextMatcher
         else
         {
             int leftTrim = readIndexStart < 0 ? abs(readIndexStart) : 0;
-            int rightTrim = readIndexEnd >= readBases.length ? abs(readBases.length - readIndexEnd + 1) : 0;
+            int rightTrim = readIndexEnd >= readBases.length ? abs(readBases.length - readIndexEnd - 1) : 0;
 
             readIndexStart += leftTrim;
             int coreIndexStart = mContext.CoreIndexStart + leftTrim;
@@ -152,9 +165,15 @@ public class ReadContextMatcher
 
     private static final int ANY_LOW_BASE_MISMATCH = -1;
 
-    private boolean determineFlankMatch(final byte[] readBases, final byte[] readQuals, final int readIndex, boolean isLeft)
+    private enum BaseMatchType
     {
-        boolean isPartial = false;
+        MATCH,
+        INCOMPLETE,
+        MISMATCH;
+    }
+
+    private BaseMatchType determineFlankMatch(final byte[] readBases, final byte[] readQuals, final int readIndex, boolean isLeft)
+    {
         int readIndexStart, readIndexEnd, flankStartIndex, flankLength;
 
         if(isLeft)
@@ -172,37 +191,62 @@ public class ReadContextMatcher
             flankLength = mContext.rightFlankLength();
         }
 
+        boolean isPartial = false;
+
         if(readIndexStart < 0 || readIndexEnd >= readBases.length)
         {
+            isPartial = true;
+
             int leftTrim = readIndexStart < 0 ? abs(readIndexStart) : 0;
-            int rightTrim = readIndexEnd >= readBases.length ? abs(readBases.length - readIndexEnd + 1) : 0;
+            int rightTrim = readIndexEnd >= readBases.length ? abs(readBases.length - readIndexEnd - 1) : 0;
 
             flankLength -= leftTrim + rightTrim;
-            isPartial = true;
 
             readIndexStart += leftTrim;
             flankStartIndex += leftTrim;
         }
 
         if(flankLength <= 0)
-            return false;
+            return BaseMatchType.INCOMPLETE;
 
-        return matches(
+        boolean flankMatch = matches(
                 mContext.ReadBases, readBases, readQuals, flankStartIndex, readIndexStart, flankLength,
                 ANY_LOW_BASE_MISMATCH, false, mLowQualExclusionRange);
+
+        if(!flankMatch)
+            return BaseMatchType.MISMATCH;
+
+        return isPartial ? BaseMatchType.INCOMPLETE : BaseMatchType.MATCH;
     }
 
-    public static boolean matches(
+    private static boolean matches(
+            final byte[] bases, final byte[] readBases, final byte[] readQuals, final int baseIndexStart, final int readIndexStart,
+            final int compareLength, final int maxLowQualMismatches, final boolean allowWildcardMismatches,
+            final int[] lowQualExclusionRange)
+    {
+        return matchType(
+                bases, readBases, readQuals, baseIndexStart, readIndexStart, compareLength,
+                maxLowQualMismatches, allowWildcardMismatches, lowQualExclusionRange) == BaseMatchType.MATCH;
+    }
+
+    private static BaseMatchType matchType(
             final byte[] bases, final byte[] readBases, @Nullable final byte[] readQuals, final int baseIndexStart, final int readIndexStart,
             final int compareLength, final int maxLowQualMismatches, final boolean allowWildcardMismatches,
             @Nullable final int[] lowQualExclusionRange)
     {
         if(compareLength <= 0)
-            return false;
+            return BaseMatchType.MISMATCH;
+
+        // fail if asking to check bases beyond either array
+        int baseIndexEnd = baseIndexStart + compareLength - 1;
+        int readIndexEnd = readIndexStart + compareLength - 1;
+
+        if(baseIndexEnd >= bases.length || readIndexEnd >= readBases.length)
+            return BaseMatchType.INCOMPLETE;
 
         int mismatchCount = 0;
 
-        for(int i = baseIndexStart, j = readIndexStart; i < baseIndexStart + compareLength && j < readIndexStart + compareLength; ++i, ++j)
+        for(int i = baseIndexStart, j = readIndexStart; i <= baseIndexEnd && j <= readIndexEnd; ++i, ++j)
         {
             if(bases[i] == readBases[j])
                 continue;
@@ -211,10 +255,10 @@ public class ReadContextMatcher
                 continue;
 
             if(readQuals == null)
-                return false;
+                return BaseMatchType.MISMATCH;
 
             if(lowQualExclusionRange != null && i >= lowQualExclusionRange[0] && i <= lowQualExclusionRange[1])
-                return false;
+                return BaseMatchType.MISMATCH;
 
             if(readQuals[j] < MATCHING_BASE_QUALITY)
             {
@@ -224,15 +268,15 @@ public class ReadContextMatcher
                 ++mismatchCount;
 
                 if(mismatchCount > maxLowQualMismatches)
-                    return false;
+                    return BaseMatchType.MISMATCH;
             }
             else
             {
-                return false;
+                return BaseMatchType.MISMATCH;
             }
         }
 
-        return true;
+        return BaseMatchType.MATCH;
     }
 
     public static ReadContextMatch compareReadContexts(final VariantReadContext first, final VariantReadContext second)
@@ -240,12 +284,6 @@ public class ReadContextMatcher
         // compare the core and flanks for the 2 contexts, not allowing for mismatches
         ReadContextMatcher matcher = new ReadContextMatcher(first, false);
         return matcher.determineReadMatch(second.ReadBases, null, second.VarReadIndex);
-    }
-
-    @VisibleForTesting
-    public ReadContextMatch compareReadContexts(final VariantReadContext other)
-    {
-        return determineReadMatch(other.ReadBases, null, other.VarReadIndex);
     }
 
     public double averageCoreQuality(final SAMRecord record, final int readIndex)

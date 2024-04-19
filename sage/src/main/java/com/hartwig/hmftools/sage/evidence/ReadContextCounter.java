@@ -117,7 +117,6 @@ public class ReadContextCounter
     private long mMapQualityTotal;
     private long mAltMapQualityTotal;
 
-    private int mSoftClipInsertSupport;
     private int mMaxCandidateDeleteLength;
     private final ReadEdgeDistance mReadEdgeDistance;
 
@@ -172,7 +171,6 @@ public class ReadContextCounter
         mRecalibratedBaseQualityTotal = 0;
         mRawContextAltBaseQualityTotal = 0;
         mSupportAltBaseQualityTotal = 0;
-        mSoftClipInsertSupport = 0;
         mMaxCandidateDeleteLength = 0;
         mMapQualityTotal = 0;
         mAltMapQualityTotal = 0;
@@ -256,8 +254,6 @@ public class ReadContextCounter
         int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core;
         return supportCount > 0 ? mSupportAltBaseQualityTotal / (double)supportCount : 0;
     }
-
-    public int softClipInsertSupport() { return mSoftClipInsertSupport; }
 
     public void setMaxCandidateDeleteLength(int length) { mMaxCandidateDeleteLength = length; }
     public int maxCandidateDeleteLength() { return mMaxCandidateDeleteLength; }
@@ -353,9 +349,6 @@ public class ReadContextCounter
         boolean baseDeleted = rawContext.ReadIndexInDelete;
 
         mRawDepth += rawContext.DepthSupport ? 1 : 0;
-
-        if(rawContext.ReadIndexInSoftClip && rawContext.AltSupport)
-            ++mSoftClipInsertSupport;
 
         boolean covered = mReadContextMatcher.coversVariant(record, readIndex);
 
@@ -689,8 +682,8 @@ public class ReadContextCounter
         if(!record.getCigar().containsOperator(D) && !record.getCigar().containsOperator(I))
             return false;
 
-        int variantLeftCorePos = mVariant.position() - mReadContext.leftCoreLength();
-        int variantRightCorePos = mVariant.position() + mReadContext.rightCoreLength();
+        int variantLeftCorePos = mReadContext.corePositionStart();
+        int variantRightCorePos = mReadContext.corePositionEnd();
 
         int currentPos = record.getAlignmentStart() - 1;
 

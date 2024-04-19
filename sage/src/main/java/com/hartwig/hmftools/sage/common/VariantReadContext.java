@@ -91,7 +91,8 @@ public class VariantReadContext
         if(CoreIndexStart <= 0 || CoreIndexEnd >= ReadBases.length - 1)
             return false; // implies no flank
 
-        if(coreLength() < MIN_CORE_DISTANCE + 1) // incomplete core
+        int minCoreLength = mVariant.isIndel() ? MIN_CORE_DISTANCE * 2 : MIN_CORE_DISTANCE * 2 + 1;
+        if(coreLength() < minCoreLength)
             return false;
 
         if(VarReadIndex <= CoreIndexStart || CoreIndexEnd <= VarReadIndex) // invalid var index
