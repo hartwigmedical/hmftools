@@ -126,12 +126,12 @@ public class PurpleVariantFactoryTest
     }
 
     @Test
-    public void testDetermineReportableTranscripts()
+    public void testReportableTranscripts()
     {
-        ImmutablePurpleVariantContext context = contextBuilder()
+        ImmutablePurpleVariantContext context = TestPurpleVariantFactory.contextBuilder()
                 .canonicalTranscript("canonical_transcript")
                 .reported(false)
-                .otherImpacts(List.of(impact("other_transcript1"), impact("other_transcript2")))
+                .otherImpacts(List.of(transcriptImpact("other_transcript1"), transcriptImpact("other_transcript2")))
                 .reportableTranscripts(Set.of("canonical_transcript", "other_transcript1"))
                 .build();
 
@@ -159,12 +159,12 @@ public class PurpleVariantFactoryTest
     }
 
     @Test
-    public void testCanonicalTranscriptNonReported()
+    public void testCanonicalTranscriptNotReported()
     {
-        ImmutablePurpleVariantContext context = contextBuilder()
+        ImmutablePurpleVariantContext context = TestPurpleVariantFactory.contextBuilder()
                 .canonicalTranscript("canonical_transcript")
                 .reported(false)
-                .otherImpacts(List.of(impact("other_transcript1"), impact("other_transcript2")))
+                .otherImpacts(List.of(transcriptImpact("other_transcript1"), transcriptImpact("other_transcript2")))
                 .reportableTranscripts(Set.of("other_transcript1"))
                 .build();
 
@@ -191,7 +191,7 @@ public class PurpleVariantFactoryTest
         assertFalse(secondImpact.reported());
     }
 
-    private VariantTranscriptImpact impact(String transcript)
+    private VariantTranscriptImpact transcriptImpact(String transcript)
     {
         return new VariantTranscriptImpact(
                 Strings.EMPTY,
@@ -202,35 +202,5 @@ public class PurpleVariantFactoryTest
                 Strings.EMPTY,
                 Strings.EMPTY
         );
-    }
-
-    public static ImmutablePurpleVariantContext.Builder contextBuilder()
-    {
-        return ImmutablePurpleVariantContext.builder()
-                .chromosome(Strings.EMPTY)
-                .position(0)
-                .totalReadCount(0)
-                .alleleReadCount(0)
-                .type(VariantType.UNDEFINED)
-                .gene(Strings.EMPTY)
-                .ref(Strings.EMPTY)
-                .alt(Strings.EMPTY)
-                .canonicalTranscript(Strings.EMPTY)
-                .canonicalEffect(Strings.EMPTY)
-                .canonicalCodingEffect(CodingEffect.UNDEFINED)
-                .canonicalHgvsCodingImpact(Strings.EMPTY)
-                .canonicalHgvsProteinImpact(Strings.EMPTY)
-                .spliceRegion(false)
-                .worstCodingEffect(CodingEffect.UNDEFINED)
-                .hotspot(Hotspot.NON_HOTSPOT)
-                .reported(false)
-                .adjustedCopyNumber(0)
-                .adjustedVAF(0)
-                .minorAlleleCopyNumber(0)
-                .variantCopyNumber(0)
-                .biallelic(false)
-                .genotypeStatus(GenotypeStatus.UNKNOWN)
-                .repeatCount(0)
-                .subclonalLikelihood(0);
     }
 }
