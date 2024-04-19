@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.common.bam.BamOperations;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 
 import htsjdk.samtools.SAMFileHeader;
@@ -128,7 +129,9 @@ public class SliceWriter
 
             if(!mConfig.UnsortedBam)
             {
-                BT_LOGGER.debug("sorting sliced BAM");
+                // TODO
+                // BT_LOGGER.debug("indexing sliced BAM");
+                // BamOperations.indexBam(bamToolName(), bamToolPath(), finalBamFilename, mConfig.Threads)
             }
 
             mBamWriter.close();
