@@ -83,7 +83,7 @@ public class VariantReadContextBuilder
 
         final byte[] readBases = read.getReadBases();
 
-        Microhomology homology = findHomology(variant, read, varReadIndex, refSequence);
+        Microhomology homology = findHomology(variant, read, varReadIndex);
 
         if(homology != null)
             readCoreEnd += homology.Length;
@@ -285,7 +285,7 @@ public class VariantReadContextBuilder
         return new ReadCigarInfo(cigar, alignmentStart, alignmentEnd, finalIndexStart, finalIndexEnd);
     }
 
-    public static Microhomology findHomology(final SimpleVariant variant, final SAMRecord read, int varReadIndex, final RefSequence refSequence)
+    public static Microhomology findHomology(final SimpleVariant variant, final SAMRecord read, int varReadIndex)
     {
         if(!variant.isIndel())
             return null;
@@ -294,22 +294,26 @@ public class VariantReadContextBuilder
 
         StringBuilder homology = null;
         String indelBases = variant.isInsert() ? variant.alt().substring(1) : variant.ref().substring(1);
-        // final byte[] readBases = read.getReadBases();
-        int refBaseStartPos = variant.isInsert() ? variant.Position + 1 : variant.Position + indelAltLength + 1;
-        int refBaseIndex = refSequence.index(refBaseStartPos);
 
-        for(int i = 0; i < indelBases.length(); ++i, ++refBaseIndex)
+        final byte[] readBases = read.getReadBases();
+
+        // start looking in the read in the first base after the variant
+
+        int homReadIndexStart = variant.isInsert() ? varReadIndex + indelAltLength + 1 : varReadIndex + 1;
+        int homReadIndex = homReadIndexStart;
+
+        for(int i = 0; i < indelBases.length(); ++i, ++homReadIndex)
         {
-            byte readBase = (byte)indelBases.charAt(i);
-            byte refBase = refSequence.Bases[refBaseIndex];
+            byte indelBase = (byte)indelBases.charAt(i);
+            byte postIndelReadBase = readBases[homReadIndex];
 
-            if(readBase != refBase)
+            if(indelBase != postIndelReadBase)
                 break;
 
             if(homology == null)
                 homology = new StringBuilder();
 
-            homology.append((char)readBase);
+            homology.append((char)indelBase);
         }
 
         if(homology == null)
@@ -320,25 +324,29 @@ public class VariantReadContextBuilder
 
         if(homologyLength == indelAltLength)
         {
-            // continue searching for repeats of the homology to find the point of right-alignment
+            // continue searching for repeats of the homology to find the point of right-alignment, allow partials at the end
             boolean matched = true;
 
             while(matched)
             {
-                for(int i = 0; i < indelAltLength; ++i, ++refBaseIndex)
-                {
-                    byte homologyBase = (byte)homologyBases.charAt(0);
-                    byte refBase = refSequence.Bases[refBaseIndex];
+                int matchCount = 0;
 
-                    if(homologyBase != refBase)
+                for(int i = 0; i < indelAltLength; ++i, ++homReadIndex)
+                {
+                    byte homologyBase = (byte)homologyBases.charAt(i);
+                    byte postIndelReadBase = readBases[homReadIndex];
+
+                    if(homologyBase != postIndelReadBase)
                     {
                         matched = false;
                         break;
                     }
+
+                    ++matchCount;
                 }
 
-                if(matched)
-                    homologyLength += indelAltLength;
+                if(matchCount > 0)
+                    homologyLength += matchCount;
             }
         }
 

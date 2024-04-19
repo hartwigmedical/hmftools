@@ -175,25 +175,26 @@ public class VariantReadContextTest
 
         assertTrue(readContext.isValid());
         assertEquals(44, readContext.AlignmentStart);
-        assertEquals(59, readContext.AlignmentEnd);
+        assertEquals(60, readContext.AlignmentEnd);
         assertEquals(5, readContext.CoreIndexStart);
         assertEquals(6, readContext.VarReadIndex);
-        assertEquals(12, readContext.CoreIndexEnd);
+        assertEquals(13, readContext.CoreIndexEnd);
         assertEquals(6, readContext.AltIndexLower);
         assertEquals(9, readContext.AltIndexUpper);
-        assertEquals("TCACCGCTGTCTGTGA", readContext.refBases());
-        assertEquals("TCACCGCTGTGTCTGTGA", readContext.readBases());
-        assertEquals("7M2I9M", readContext.readCigar());
-        assertEquals(8, readContext.coreLength());
+        assertEquals("TCACCGCTGTCTGTGAC", readContext.refBases());
+        assertEquals("TCACCGCTGTGTCTGTGAC", readContext.readBases());
+        assertEquals("7M2I10M", readContext.readCigar());
+        assertEquals(9, readContext.coreLength());
         assertEquals(5, readContext.leftFlankLength());
         assertEquals(5, readContext.rightFlankLength());
         assertEquals("TG", readContext.homologyBases());
-        assertEquals("GCTGTGTC", readContext.coreStr());
+        assertEquals(3, readContext.Homology.Length);
+        assertEquals("GCTGTGTCT", readContext.coreStr());
         assertEquals("TCACC", readContext.leftFlankStr());
-        assertEquals("TGTGA", readContext.rightFlankStr());
+        assertEquals("GTGAC", readContext.rightFlankStr());
 
         assertEquals(49, readContext.corePositionStart());
-        assertEquals(54, readContext.corePositionEnd());
+        assertEquals(55, readContext.corePositionEnd());
 
         // CLEAN-UP: add more scenarios
     }
@@ -392,7 +393,7 @@ public class VariantReadContextTest
         String readCigar = "16M1I13M";
         SAMRecord read = buildSamRecord(10, readCigar, readBases, baseQuals);
 
-        Microhomology homology = findHomology(var, read, 16, REF_SEQUENCE_200);
+        Microhomology homology = findHomology(var, read, 16);
 
         assertNotNull(homology);
         assertEquals("T", homology.Bases);
@@ -405,7 +406,7 @@ public class VariantReadContextTest
         readCigar = "16M2I13M";
         read = buildSamRecord(10, readCigar, readBases, baseQuals);
 
-        homology = findHomology(var, read, 16, REF_SEQUENCE_200);
+        homology = findHomology(var, read, 16);
 
         assertNotNull(homology);
         assertEquals("TT", homology.Bases);
@@ -419,10 +420,38 @@ public class VariantReadContextTest
         readCigar = "15M3D11M";
         read = buildSamRecord(50, readCigar, readBases, baseQuals);
 
-        homology = findHomology(var, read, 15, REF_SEQUENCE_200);
+        homology = findHomology(var, read, 15);
 
         assertNotNull(homology);
         assertEquals("AAA", homology.Bases);
         assertEquals(3, homology.Length);
+
+        // checks read bases not ref bases to determine homology
+        var = createSimpleVariant(26, "A", "AAAA");
+        readBases = REF_BASES_200.substring(10, 26) + "AAAAAAAAAAAAAAAAAAAAATG";
+        baseQuals = buildDefaultBaseQuals(readBases.length());
+        readCigar = "16M3I20M";
+        read = buildSamRecord(10, readCigar, readBases, baseQuals);
+
+        homology = findHomology(var, read, 16);
+
+        assertNotNull(homology);
+        assertEquals("AAA", homology.Bases);
+        assertEquals(17, homology.Length);
+
+        // multiple copies and then finishes with a partial copy
+        // eg G(AACTC)AACTCAACTCAACCCTTT -> GAACTCAACTCAA(CTCAA)CCCTTT
+
+        var = createSimpleVariant(26, "G", "GAACTC");
+        readBases = REF_BASES_200.substring(10, 26) + "GAACTCAACTCAACTCAACCCTTT";
+        baseQuals = buildDefaultBaseQuals(readBases.length());
+        readCigar = "16M5I18M";
+        read = buildSamRecord(10, readCigar, readBases, baseQuals);
+
+        homology = findHomology(var, read, 16);
+
+        assertNotNull(homology);
+        assertEquals("AACTC", homology.Bases);
+        assertEquals(13, homology.Length);
     }
 }
