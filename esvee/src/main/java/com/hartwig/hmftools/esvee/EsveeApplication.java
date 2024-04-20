@@ -1,26 +1,28 @@
 package com.hartwig.hmftools.esvee;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.SvConstants.APP_NAME;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.APP_NAME;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class EsveeApplication
 {
-    private final SvConfig mConfig;
+    private final AssemblyConfig mConfig;
 
     public EsveeApplication(final ConfigBuilder configBuilder)
     {
-        mConfig = new SvConfig(configBuilder);
+        mConfig = new AssemblyConfig(configBuilder);
     }
 
     public void run()
     {
         long startTimeMs = System.currentTimeMillis();
 
-        SV_LOGGER.info("writing output to VCF({}) directory({})", filenamePart(mConfig.VcfFile), mConfig.OutputDir);
+        SV_LOGGER.info("writing to output directory({}){}",
+                mConfig.OutputDir, mConfig.OutputId != null ? format(" outputId(%s)", mConfig.OutputId) : "");
 
         JunctionProcessor junctionProcessor = new JunctionProcessor(mConfig);
 
@@ -40,7 +42,7 @@ public class EsveeApplication
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        SvConfig.registerConfig(configBuilder);
+        AssemblyConfig.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
 

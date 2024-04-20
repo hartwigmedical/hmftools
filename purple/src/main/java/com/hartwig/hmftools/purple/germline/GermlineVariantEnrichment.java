@@ -2,14 +2,11 @@ package com.hartwig.hmftools.purple.germline;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
-import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.purple.somatic.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.purple.config.ReferenceData;
@@ -21,7 +18,6 @@ import htsjdk.variant.vcf.VCFHeader;
 public class GermlineVariantEnrichment
 {
     private final GermlinePurityEnrichment mPurityEnrichment;
-    private final SomaticRefContextEnrichment mRefGenomeEnrichment;
     private final GermlineReportedEnrichment mReportableEnrichment;
     private final HotspotEnrichment mHotspotEnrichment;
     private final GermlineGenotypeEnrichment mGenotypeEnrichment;
@@ -33,7 +29,6 @@ public class GermlineVariantEnrichment
             final Multimap<Chromosome, VariantHotspot> germlineHotspots, final Set<String> somaticReportedGenes)
     {
         mReportableEnrichment = new GermlineReportedEnrichment(refData.DriverGenes.driverGenes(), somaticReportedGenes);
-        mRefGenomeEnrichment = new SomaticRefContextEnrichment(refData.RefGenome, null);
 
         mLowVafRescueEnrichment = new GermlineRescueLowVAF(referenceSample);
 
@@ -56,7 +51,6 @@ public class GermlineVariantEnrichment
 
         GermlineLowTumorVCNFilter.processVariant(variant);
 
-        mRefGenomeEnrichment.processVariant(variant.context());
         GermlinePathogenicEnrichment.processVariant(variant.context());
         mReportableEnrichment.processVariant(variant);
     }
@@ -66,15 +60,13 @@ public class GermlineVariantEnrichment
         mReportableEnrichment.flush();
     }
 
-    public VCFHeader enrichHeader(final VCFHeader template)
+    public void enrichHeader(final VCFHeader header)
     {
-        VCFHeader header = mPurityEnrichment.enrichHeader(template);
-        header = mHotspotEnrichment.enrichHeader(header);
-        header = mRefGenomeEnrichment.enrichHeader(header);
-
-        header = GermlineLowTumorVCNFilter.enrichHeader(header);
-        header = mReportableEnrichment.enrichHeader(header);
-        header = mGenotypeEnrichment.enrichHeader(header);
-        return GermlinePathogenicEnrichment.enrichHeader(header);
+        mPurityEnrichment.enrichHeader(header);
+        mHotspotEnrichment.enrichHeader(header);
+        GermlineLowTumorVCNFilter.enrichHeader(header);
+        mReportableEnrichment.enrichHeader(header);
+        mGenotypeEnrichment.enrichHeader(header);
+        GermlinePathogenicEnrichment.enrichHeader(header);
     }
 }

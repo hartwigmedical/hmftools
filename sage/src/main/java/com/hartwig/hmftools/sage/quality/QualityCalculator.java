@@ -4,18 +4,20 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.bqr.BqrConfig.useReadType;
 import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
 import static com.hartwig.hmftools.sage.evidence.ArtefactContext.NOT_APPLICABLE_BASE_QUAL;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.bqr.BqrReadType;
+import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
-import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.common.RefSequence;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 import htsjdk.samtools.SAMRecord;
@@ -24,20 +26,30 @@ public class QualityCalculator
 {
     private final QualityConfig mConfig;
     private final BqrRecordMap mQualityRecalibrationMap;
-    private final IndexedBases mRefBases;
+    private final RefSequence mRefBases;
     private final boolean mUseReadType;
     private final SequencingType mSequencingType;
+    private final UltimaQualCalculator mUltimaQualCalculator;
 
     private static final int MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY = 10;
+    private static final String NO_MODEL_NAME = "";
 
     public QualityCalculator(
-            final SageConfig config, final BqrRecordMap qualityRecalibrationMap, final IndexedBases refBases)
+            final SageConfig config, final BqrRecordMap qualityRecalibrationMap, final RefSequence refBases,
+            final RefGenomeInterface refGenome)
     {
         mConfig = config.Quality;
         mUseReadType = useReadType(config);
         mSequencingType = config.Sequencing.Type;
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mRefBases = refBases;
+
+        mUltimaQualCalculator = mSequencingType == SequencingType.ULTIMA ? new UltimaQualCalculator(refGenome) : null;
+    }
+
+    public UltimaQualModel createUltimateQualModel(final SimpleVariant variant)
+    {
+        return mUltimaQualCalculator != null ? mUltimaQualCalculator.buildContext(variant) : null;
     }
 
     public static int modifiedMapQuality(
@@ -81,7 +93,8 @@ public class QualityCalculator
     {
         double baseQuality;
 
-        if(readContextCounter.artefactContext() != null || readContextCounter.isIndel())
+        if(readContextCounter.isIndel() || readContextCounter.artefactContext() != null
+        || (readContextCounter.ultimaQualModel() != null && rawBaseQuality != ULTIMA_MAX_QUAL))
         {
             baseQuality = rawBaseQuality;
         }
@@ -106,26 +119,26 @@ public class QualityCalculator
 
         double modifiedQuality = max(0, min(modifiedMapQuality, modifiedBaseQuality));
 
-        return new QualityScores(rawBaseQuality, baseQuality, max(0, modifiedMapQuality), max(0.0, modifiedBaseQuality), modifiedQuality);
+        return new QualityScores(
+                rawBaseQuality, baseQuality, max(0, modifiedMapQuality), max(0.0, modifiedBaseQuality), modifiedQuality);
     }
 
     public static boolean isImproperPair(final SAMRecord record) { return record.getReadPairedFlag() && !record.getProperPairFlag(); }
 
     public static double rawBaseQuality(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
+        if(readContextCounter.ultimaQualModel() != null)
+            return readContextCounter.ultimaQualModel().calculateQual(record, readIndex);
+
         if(readContextCounter.artefactContext() != null)
         {
             byte adjustBaseQual = readContextCounter.artefactContext().findApplicableBaseQual(record, readIndex);
             if(adjustBaseQual != NOT_APPLICABLE_BASE_QUAL)
-            {
-                // SG_LOGGER.trace("var({}) read({}) artefactQual({})",
-                //        readContextCounter.variant(), record.getReadName(), adjustBaseQual);
                 return adjustBaseQual;
-            }
         }
 
         if(readContextCounter.isIndel())
-            return readContextCounter.readContext().avgCentreQuality(readIndex, record);
+            return readContextCounter.readContextMatcher().averageCoreQuality(record, readIndex);
 
         if(readContextCounter.isSnv())
             return record.getBaseQualities()[readIndex];
@@ -190,12 +203,8 @@ public class QualityCalculator
     private int readDistanceFromEdge(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
         // calculate the left and right core positions in the context of this read
-        int index = readContextCounter.readContext().readBasesPositionIndex();
-        int leftIndex = readContextCounter.readContext().readBasesLeftCentreIndex();
-        int rightIndex = readContextCounter.readContext().readBasesRightCentreIndex();
-
-        int leftOffset = index - leftIndex;
-        int rightOffset = rightIndex - index;
+        int leftOffset = readContextCounter.readContext().leftCoreLength();
+        int rightOffset = readContextCounter.readContext().rightCoreLength();
 
         int adjustedLeftIndex = readIndex - leftOffset;
         int adjustedRightIndex = readIndex + rightOffset;

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sage.vis;
 
 import java.util.List;
 
-import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.Nullable;
@@ -61,10 +61,10 @@ public class BaseSeqViewModel
         return new BaseSeqViewModel(bases, posStart, null, null);
     }
 
-    public static BaseSeqViewModel fromVariant(final IndexedBases indexedBases, final String ref, final String alt)
+    public static BaseSeqViewModel fromVariant(final VariantReadContext readContext, final String ref, final String alt)
     {
-        String rawBases = indexedBases.leftFlankString() + indexedBases.coreString() + indexedBases.rightFlankString();
-        int posStart = indexedBases.Position + indexedBases.LeftFlankIndex - indexedBases.Index;
+        String rawBases = readContext.readBases();
+        int posStart = readContext.variant().Position - readContext.VarReadIndex;
         if(ref.length() == alt.length())
         {
             return fromStr(rawBases, posStart);
@@ -77,9 +77,9 @@ public class BaseSeqViewModel
 
             // alt is single char
             List<BaseViewModel> bases = Lists.newArrayList();
-            for(int i = indexedBases.LeftFlankIndex; i <= indexedBases.Index; ++i)
+            for(int i = 0; i <= readContext.VarReadIndex; ++i)
             {
-                bases.add(new BaseViewModel(rawBases.charAt(i - indexedBases.LeftFlankIndex)));
+                bases.add(new BaseViewModel(rawBases.charAt(i)));
             }
 
             for(int i = 0; i < delLen; ++i)
@@ -87,9 +87,9 @@ public class BaseSeqViewModel
                 bases.add(BaseViewModel.createDelBase());
             }
 
-            for(int i = indexedBases.Index + 1; i <= indexedBases.RightFlankIndex; ++i)
+            for(int i = readContext.VarReadIndex + 1; i < readContext.totalLength(); ++i)
             {
-                bases.add(new BaseViewModel(rawBases.charAt(i - indexedBases.LeftFlankIndex)));
+                bases.add(new BaseViewModel(rawBases.charAt(i)));
             }
 
             return new BaseSeqViewModel(bases, posStart, null, null);
@@ -100,16 +100,16 @@ public class BaseSeqViewModel
 
         // ref is single char
         List<BaseViewModel> bases = Lists.newArrayList();
-        for(int i = indexedBases.LeftFlankIndex; i <= indexedBases.Index; ++i)
+        for(int i = 0; i <= readContext.VarReadIndex; ++i)
         {
-            bases.add(new BaseViewModel(rawBases.charAt(i - indexedBases.LeftFlankIndex)));
+            bases.add(new BaseViewModel(rawBases.charAt(i)));
         }
 
         bases.get(bases.size() - 1).incRightInsertCount(insLen);
 
-        for(int i = indexedBases.Index + insLen + 1; i <= indexedBases.RightFlankIndex; ++i)
+        for(int i = readContext.VarReadIndex + insLen + 1; i < readContext.totalLength(); ++i)
         {
-            bases.add(new BaseViewModel(rawBases.charAt(i - indexedBases.LeftFlankIndex)));
+            bases.add(new BaseViewModel(rawBases.charAt(i)));
         }
 
         return new BaseSeqViewModel(bases, posStart, null, null);

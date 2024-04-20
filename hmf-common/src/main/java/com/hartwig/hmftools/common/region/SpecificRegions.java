@@ -196,39 +196,53 @@ public class SpecificRegions
         if(specificRegionsStr == null || specificRegionsStr.isEmpty())
             return;
 
-        // expected format: chromosome:positionStart-positionEnd, separated by ';'
         final List<String> regionStrs = Arrays.stream(specificRegionsStr.split(ITEM_DELIM, -1)).collect(Collectors.toList());
         for(String regionStr : regionStrs)
         {
-            final String[] items = regionStr.split(SUB_ITEM_DELIM);
+            ChrBaseRegion region = null;
 
-            if(!(items.length == 3 || (items.length == 2 && items[1].contains(POS_ITEM_DELIM))))
+            try
+            {
+                region = parseStandardFormat(regionStr);
+            }
+            catch(Exception e)
             {
                 throw new ParseException(String.format("invalid specific region: %s", regionStr));
             }
 
-            String chromosome = items[0].intern();
-            int posStart;
-            int posEnd;
-
-            if(items.length == 3)
-            {
-                posStart = Integer.parseInt(items[1]);
-                posEnd = Integer.parseInt(items[2]);
-            }
-            else
-            {
-                String[] positions = items[1].split(POS_ITEM_DELIM, 2);
-                posStart = Integer.parseInt(positions[0]);
-                posEnd = Integer.parseInt(positions[1]);
-            }
-
-            ChrBaseRegion region = new ChrBaseRegion(chromosome, posStart, posEnd);
-
-            if(!region.isValid())
+            if(region == null || !region.isValid())
                 throw new ParseException(String.format("invalid specific region: %s", region));
 
             regions.add(region);
         }
+    }
+
+    public static ChrBaseRegion parseStandardFormat(final String regionStr)
+    {
+        // expected format: chr:posStart-posEnd, separated by ';' or chr:posStart:posEnd
+        final String[] items = regionStr.split(SUB_ITEM_DELIM);
+
+        if(!(items.length == 3 || (items.length == 2 && items[1].contains(POS_ITEM_DELIM))))
+        {
+            return null;
+        }
+
+        String chromosome = items[0].intern();
+        int posStart;
+        int posEnd;
+
+        if(items.length == 3)
+        {
+            posStart = Integer.parseInt(items[1]);
+            posEnd = Integer.parseInt(items[2]);
+        }
+        else
+        {
+            String[] positions = items[1].split(POS_ITEM_DELIM, 2);
+            posStart = Integer.parseInt(positions[0]);
+            posEnd = Integer.parseInt(positions[1]);
+        }
+
+        return new ChrBaseRegion(chromosome, posStart, posEnd);
     }
 }

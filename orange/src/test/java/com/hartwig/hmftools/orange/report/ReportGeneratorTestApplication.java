@@ -47,6 +47,7 @@ public class ReportGeneratorTestApplication
     private static final boolean REMOVE_UNREPORTED_VARIANTS = false;
     private static final boolean LIMIT_JSON_OUTPUT = false;
     private static final Set<PurpleQCStatus> OVERRIDE_QC_STATUS = null;
+    private static final boolean TUMOR_ONLY = false;
 
     public static void main(String[] args) throws Exception
     {
@@ -131,11 +132,9 @@ public class ReportGeneratorTestApplication
     @NotNull
     private static OrangeConfig buildConfig()
     {
-        return ImmutableOrangeConfig.builder()
-                .from(TestOrangeConfigFactory.createWGSConfigTumorNormal())
-                .limitJsonOutput(LIMIT_JSON_OUTPUT)
-                .outputDir(REPORT_BASE_DIR)
-                .build();
+        OrangeConfig baseConfig =
+                TUMOR_ONLY ? TestOrangeConfigFactory.createWGSConfigTumorOnly() : TestOrangeConfigFactory.createWGSConfigTumorNormal();
+        return ImmutableOrangeConfig.builder().from(baseConfig).limitJsonOutput(LIMIT_JSON_OUTPUT).outputDir(REPORT_BASE_DIR).build();
     }
 
     @NotNull

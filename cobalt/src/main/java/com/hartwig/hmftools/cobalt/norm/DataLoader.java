@@ -17,29 +17,30 @@ import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class DataLoader
 {
-    public static void addTargetRegions(final List<NamedBed> namedBedRecords, final Map<String,List<RegionData>> chrRegionData)
+    public static void addTargetRegions(final List<ChrBaseRegion> bedRegions, final Map<String,List<RegionData>> chrRegionData)
     {
         String currentChromosome = "";
         List<RegionData> regions = null;
 
-        for(NamedBed namedBed : namedBedRecords)
+        for(ChrBaseRegion region : bedRegions)
         {
-            if(!namedBed.chromosome().equals(currentChromosome))
+            if(!region.chromosome().equals(currentChromosome))
             {
-                currentChromosome = namedBed.chromosome();
+                currentChromosome = region.chromosome();
                 regions = Lists.newArrayList();
-                chrRegionData.put(namedBed.chromosome(), regions);
+                chrRegionData.put(region.chromosome(), regions);
             }
 
-            int startPosition = (int)(floor(namedBed.start()/(double)REGION_SIZE) * REGION_SIZE + 1);
+            int startPosition = (int)(floor(region.start()/(double)REGION_SIZE) * REGION_SIZE + 1);
             int endPosition = startPosition + REGION_SIZE - 1;
 
             addRegion(regions, startPosition);
 
-            while(endPosition < namedBed.end())
+            while(endPosition < region.end())
             {
                 startPosition += REGION_SIZE;
                 addRegion(regions, startPosition);

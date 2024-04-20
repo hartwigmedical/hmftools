@@ -55,33 +55,29 @@ public final class PurpleVcfTags
     public static final String REPORTABLE_TRANSCRIPTS_DELIM = "|";
 
 
-    public static VCFHeader addGermlineHeader(@NotNull final String purpleVersion, @NotNull final VCFHeader template)
+    public static void addGermlineHeader(@NotNull final String purpleVersion, @NotNull final VCFHeader header)
     {
-        template.addMetaDataLine(new VCFHeaderLine("purpleVersion", purpleVersion));
-        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_AF, 1, VCFHeaderLineType.Float, PURPLE_AF_DESC));
-        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN, 1, VCFHeaderLineType.Float, PURPLE_CN_DESC));
-        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_VARIANT_CN, 1, VCFHeaderLineType.Float, PURPLE_VARIANT_CN_DESC));
-        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_MINOR_ALLELE_CN_INFO, 1, VCFHeaderLineType.Float, PURPLE_MINOR_ALLELE_PLOIDY_DESC));
-        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_BIALLELIC_FLAG, 0, VCFHeaderLineType.Flag, PURPLE_BIALLELIC_DESC));
-        template.addMetaDataLine(new VCFInfoHeaderLine(REPORTED_FLAG, 0, VCFHeaderLineType.Flag, REPORTED_DESC));
-        template.addMetaDataLine(new VCFInfoHeaderLine(REPORTABLE_TRANSCRIPTS, 1, VCFHeaderLineType.String, REPORTABLE_TRANSCRIPTS_DESC));
-
-        return template;
+        header.addMetaDataLine(new VCFHeaderLine("purpleVersion", purpleVersion));
+        header.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_AF, 1, VCFHeaderLineType.Float, PURPLE_AF_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN, 1, VCFHeaderLineType.Float, PURPLE_CN_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_VARIANT_CN, 1, VCFHeaderLineType.Float, PURPLE_VARIANT_CN_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_MINOR_ALLELE_CN_INFO, 1, VCFHeaderLineType.Float, PURPLE_MINOR_ALLELE_PLOIDY_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_BIALLELIC_FLAG, 0, VCFHeaderLineType.Flag, PURPLE_BIALLELIC_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(REPORTED_FLAG, 0, VCFHeaderLineType.Flag, REPORTED_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(REPORTABLE_TRANSCRIPTS, 1, VCFHeaderLineType.String, REPORTABLE_TRANSCRIPTS_DESC));
     }
 
     @NotNull
-    public static VCFHeader addSomaticHeader(@NotNull final String purpleVersion, @NotNull final VCFHeader template)
+    public static void addSomaticHeader(@NotNull final String purpleVersion, @NotNull final VCFHeader header)
     {
-        template.addMetaDataLine(new VCFHeaderLine("purpleVersion", purpleVersion));
-        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_AF, 1, VCFHeaderLineType.Float, PURPLE_AF_DESC));
-        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN, 1, VCFHeaderLineType.Float, PURPLE_CN_DESC));
-        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_VARIANT_CN, 1, VCFHeaderLineType.Float, PURPLE_VARIANT_CN_DESC));
-        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_MINOR_ALLELE_CN_INFO, 1, VCFHeaderLineType.Float, PURPLE_MINOR_ALLELE_PLOIDY_DESC));
-        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_GERMLINE_INFO, 1, VCFHeaderLineType.String, PURPLE_GERMLINE_DESC));
-        template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_BIALLELIC_FLAG, 0, VCFHeaderLineType.Flag, PURPLE_BIALLELIC_DESC));
-        template.addMetaDataLine(new VCFInfoHeaderLine(REPORTED_FLAG, 0, VCFHeaderLineType.Flag, REPORTED_DESC));
-        template.addMetaDataLine(new VCFInfoHeaderLine(REPORTABLE_TRANSCRIPTS, 1, VCFHeaderLineType.String, REPORTABLE_TRANSCRIPTS_DESC));
-
-        return template;
+        header.addMetaDataLine(new VCFHeaderLine("purpleVersion", purpleVersion));
+        header.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_AF, 1, VCFHeaderLineType.Float, PURPLE_AF_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_CN, 1, VCFHeaderLineType.Float, PURPLE_CN_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_VARIANT_CN, 1, VCFHeaderLineType.Float, PURPLE_VARIANT_CN_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_MINOR_ALLELE_CN_INFO, 1, VCFHeaderLineType.Float, PURPLE_MINOR_ALLELE_PLOIDY_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_GERMLINE_INFO, 1, VCFHeaderLineType.String, PURPLE_GERMLINE_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_BIALLELIC_FLAG, 0, VCFHeaderLineType.Flag, PURPLE_BIALLELIC_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(REPORTED_FLAG, 0, VCFHeaderLineType.Flag, REPORTED_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(REPORTABLE_TRANSCRIPTS, 1, VCFHeaderLineType.String, REPORTABLE_TRANSCRIPTS_DESC));
     }
 }

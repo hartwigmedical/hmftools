@@ -38,7 +38,7 @@ public class ReferenceData
     {
         GeneDataCache = new GeneDataCache(
                 configBuilder.getValue(ENSEMBL_DATA_DIR), config.RefGenVersion,
-                configBuilder.getValue(DRIVER_GENE_PANEL_OPTION), true);
+                configBuilder.getValue(DRIVER_GENE_PANEL_OPTION));
 
         if(!GeneDataCache.loadCache(config.OnlyCanonical, false))
         {

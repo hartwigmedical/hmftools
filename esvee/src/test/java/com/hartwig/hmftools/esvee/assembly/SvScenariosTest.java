@@ -4,17 +4,13 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.createJunctionReads;
-import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.esvee.TestUtils.loadRefGenomeBases;
 
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
-import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
 
 import org.junit.Test;
 

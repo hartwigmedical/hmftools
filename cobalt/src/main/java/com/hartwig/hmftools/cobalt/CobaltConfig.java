@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
-import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
@@ -22,7 +22,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDi
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
-import com.hartwig.hmftools.common.samtools.BamUtils;
+import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.LogManager;
@@ -43,6 +43,7 @@ public class CobaltConfig
     private static final String MIN_MAPPING_QUALITY = "min_quality";
     private static final String PCF_GAMMA = "pcf_gamma";
     private static final String TARGET_REGION_NORM_FILE = "target_region";
+    private static final String INCLUDE_DUPLICATES = "include_duplicates";
 
 
     public final String ReferenceId;
@@ -61,6 +62,7 @@ public class CobaltConfig
     public final int PcfGamma;
 
     public final ValidationStringency BamStringency;
+    public final boolean IncludeDuplicates;
 
     public final String TumorOnlyDiploidBed;
     public final String TargetRegionPath;
@@ -83,6 +85,7 @@ public class CobaltConfig
         
         MinMappingQuality = configBuilder.getInteger(MIN_MAPPING_QUALITY);
         PcfGamma = configBuilder.getInteger(PCF_GAMMA);
+        IncludeDuplicates = configBuilder.hasFlag(INCLUDE_DUPLICATES);
 
         BamStringency = BamUtils.validationStringency(configBuilder);
         OutputDir = parseOutputDir(configBuilder);
@@ -105,6 +108,7 @@ public class CobaltConfig
 
         configBuilder.addInteger(MIN_MAPPING_QUALITY, "Min map quality", DEFAULT_MIN_MAPPING_QUALITY);
         configBuilder.addInteger(PCF_GAMMA, "Gamma value for copy number PCF", DEFAULT_PCF_GAMMA);
+        configBuilder.addFlag(INCLUDE_DUPLICATES, "Include duplicate reads in depth counts");
 
         addOutputDir(configBuilder);
         addThreadOptions(configBuilder);

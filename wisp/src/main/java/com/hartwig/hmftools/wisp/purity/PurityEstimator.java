@@ -29,6 +29,8 @@ import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
+import com.hartwig.hmftools.wisp.purity.cn.AmberLohCalcs;
+import com.hartwig.hmftools.wisp.purity.cn.AmberLohResult;
 import com.hartwig.hmftools.wisp.purity.cn.CnPurityResult;
 import com.hartwig.hmftools.wisp.purity.cn.CopyNumberProfile;
 import com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult;
@@ -164,15 +166,24 @@ public class PurityEstimator
                 copyNumberProfile = new CopyNumberProfile(mConfig, mResultsWriter, sample);
             }
 
-            for(String ctDnaSampleId : sample.CtDnaSamples)
+            AmberLohCalcs amberLohCalcs = null;
+            if(!sample.IsPanel && mConfig.PurityMethods.contains(PurityMethod.AMBER_LOH))
+            {
+                amberLohCalcs = new AmberLohCalcs(mConfig, mResultsWriter, sample);
+            }
+
+            for(String sampleId : sample.SampleIds)
             {
                 CnPurityResult cnPurityResult = copyNumberProfile != null ?
-                        copyNumberProfile.processSample(ctDnaSampleId, purityContext) : CnPurityResult.INVALID_RESULT;
+                        copyNumberProfile.processSample(sampleId, purityContext) : CnPurityResult.INVALID_RESULT;
 
                 SomaticPurityResult somaticPurityResult = somaticVariants != null ?
-                        somaticVariants.processSample(ctDnaSampleId, purityContext) : SomaticPurityResult.INVALID_RESULT;
+                        somaticVariants.processSample(sampleId, purityContext) : SomaticPurityResult.INVALID_RESULT;
 
-                mResultsWriter.writeSampleSummary(sample, ctDnaSampleId, purityContext, cnPurityResult, somaticPurityResult);
+                AmberLohResult lohResult = amberLohCalcs != null ?
+                        amberLohCalcs.processSample(sampleId, purityContext) : AmberLohResult.INVALID_RESULT;
+
+                mResultsWriter.writeSampleSummary(sample, sampleId, purityContext, cnPurityResult, somaticPurityResult, lohResult);
             }
         }
 
@@ -248,7 +259,7 @@ public class PurityEstimator
         {
             // CT_LOGGER.info("processing sample: {}", sample);
 
-            for(String sampleId : sample.CtDnaSamples)
+            for(String sampleId : sample.SampleIds)
             {
                 if(!sample.IsPanel && plotCopyNumber(mConfig.WriteTypes))
                 {

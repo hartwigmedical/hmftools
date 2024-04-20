@@ -60,13 +60,18 @@ import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
 public class StructuralVariantFactory
 {
-
     // Must match the small deldup threshold in Gripss
     private static final int SMALL_DELDUP_SIZE = 1000;
 
     public static final Pattern BREAKEND_REGEX = Pattern.compile("^(.*)([\\[\\]])(.+)[\\[\\]](.*)$");
     public static final Pattern SINGLE_BREAKEND_REGEX = Pattern.compile("^(([.].*)|(.*[.]))$");
-    private static final byte SINGLE_BREAKEND_BYTE = 46;
+
+    public static final char SINGLE_BREAKEND_CHAR = '.';
+    public static final String SINGLE_BREAKEND_STR = String.valueOf(SINGLE_BREAKEND_CHAR);
+    private static final byte SINGLE_BREAKEND_BYTE = (byte)SINGLE_BREAKEND_CHAR;
+
+    public static final char POS_ORIENTATION_CHAR = ']';
+    public static final char NEG_ORIENTATION_CHAR = '[';
 
     private final Map<String,VariantContext> mUnmatchedVariants;
     private final List<StructuralVariant> mCompleteVariants;
@@ -126,7 +131,7 @@ public class StructuralVariantFactory
     public static byte parseSingleOrientation(final VariantContext context)
     {
         final String alt = context.getAlternateAllele(0).getDisplayString();
-        return alt.startsWith(".") ? NEG_ORIENT : POS_ORIENT;
+        return alt.startsWith(SINGLE_BREAKEND_STR) ? NEG_ORIENT : POS_ORIENT;
     }
 
     public static byte parseSvOrientation(final VariantContext context)

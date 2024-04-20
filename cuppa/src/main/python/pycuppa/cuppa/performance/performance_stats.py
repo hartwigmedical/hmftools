@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from numpy._typing import NDArray
 
-from cuppa.constants import PAN_CANCER_CLASS_NAME, CUPPA_PREDICTION_INDEX_NAMES, CLF_GROUPS
+from cuppa.constants import PAN_CANCER_CLASS_NAME
 from cuppa.logger import LoggerMixin
 from cuppa.misc.utils import check_required_columns, bin_array
 
@@ -109,7 +109,7 @@ class PerformanceStatsBuilder(LoggerMixin):
         stats["recall"] = stats["n_correct"].astype(float) / stats["n_total"].astype(float)
         stats["precision"] = stats["n_correct"].astype(float) / stats["n_predicted"].astype(float)
 
-    COLUMN_ORDER = ["class", "clf_name", "n_total", "n_predicted", "n_correct", "recall", "precision"]
+    COLUMN_NAMES = ["class", "clf_name", "n_total", "n_predicted", "n_correct", "recall", "precision"]
 
     def _get_performance(self, _pred_summ_parsed: pd.DataFrame) -> pd.DataFrame:
 
@@ -122,7 +122,7 @@ class PerformanceStatsBuilder(LoggerMixin):
         stats["n_predicted"] = stats["n_predicted"].fillna(0).astype(int)
 
         ## Rearrange columns
-        stats = stats[self.COLUMN_ORDER]
+        stats = stats[self.COLUMN_NAMES]
 
         ## Force classifier order
         stats = stats.sort_values(["class", "clf_name"])
@@ -193,7 +193,7 @@ class PerformanceStats(pd.DataFrame, LoggerMixin):
         return PerformanceStats
 
     @property
-    def _is_by_prob_bin(self) -> bool:
+    def is_by_prob_bin(self) -> bool:
         return "prob_bin" in self.columns
 
     @property
@@ -220,35 +220,3 @@ class PerformanceStats(pd.DataFrame, LoggerMixin):
     def from_tsv(cls, path: str) -> PerformanceStats:
         df = pd.read_table(path)
         return cls.from_data_frame(df)
-
-    def to_cuppa_prediction_format(self, set_index: bool = True) -> pd.DataFrame:
-
-        if self._is_by_prob_bin:
-            self.logger.error("Cannot parse `cv_performance` when it is split by prob bin")
-
-        ## Long format --------------------------------
-        long = self.melt(id_vars=["class", "clf_name"], var_name="feat_name")
-
-        ## Force order
-        long["class"] = pd.Categorical(long["class"], self.classes)
-        long["clf_name"] = pd.Categorical(long["clf_name"], self.clf_names)
-
-        ## Wide format --------------------------------
-        wide = long.pivot(index=["clf_name", "feat_name"], columns="class")
-        wide.columns = wide.columns.droplevel(0)
-
-        ## Force required index names
-        wide = wide\
-            .reset_index()\
-            .reindex(CUPPA_PREDICTION_INDEX_NAMES + list(self.classes), axis=1)
-
-        ## Add row info
-        wide["data_type"] = "cv_performance"
-        wide["clf_group"] = pd.Series(CLF_GROUPS)[wide["clf_name"]].values
-
-        if set_index:
-            wide = wide.set_index(CUPPA_PREDICTION_INDEX_NAMES)
-
-        return wide
-
-

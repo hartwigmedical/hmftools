@@ -46,6 +46,7 @@ import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 import htsjdk.variant.vcf.VCFCodec;
 
+@Deprecated
 public class SomaticDataLoader
 {
     public static Matrix loadSampleCountsFromFile(final String filename, final Map<String,Integer> sampleCountsIndex)

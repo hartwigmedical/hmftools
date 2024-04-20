@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.gripss.GripssConfig.APP_NAME;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 
 import java.io.BufferedReader;
@@ -168,7 +169,6 @@ public class RepeatMaskTester
         if(svData.InsertSeqAlignments.isEmpty())
             return;
 
-
         RepeatMaskAnnotation rmAnnotation = mRmAnnotation.annotate(svData.InsertSequence, svData.InsertSeqAlignments);
 
         write(svData, rmAnnotation);
@@ -259,7 +259,7 @@ public class RepeatMaskTester
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         configBuilder.addPath(SV_DATA_FILE, true, "File with SV data");
         configBuilder.addPath(OUTPUT_FILE, true, "Output matching file");
         addThreadOptions(configBuilder);
@@ -267,13 +267,7 @@ public class RepeatMaskTester
 
         ConfigUtils.addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         GR_LOGGER.info("running Gripss repeat-mask annotation tester");
 

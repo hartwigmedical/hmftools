@@ -21,6 +21,8 @@ import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
@@ -149,7 +151,8 @@ public class SomaticSvCache
                 .make();
     }
 
-    public void write(final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, boolean passOnly)
+    public void write(
+            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, boolean passOnly, final Gender gender)
     {
         if(!mVcfHeader.isPresent())
             return;
@@ -164,11 +167,13 @@ public class SomaticSvCache
                     .setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                     .build();
 
-            final StructuralRefContextEnrichment refEnricher = new StructuralRefContextEnrichment(mRefGenomeFile, writer::add);
+            StructuralRefContextEnrichment refEnricher = new StructuralRefContextEnrichment(mRefGenomeFile, writer::add);
 
-            writer.writeHeader(refEnricher.enrichHeader(mVcfHeader.get()));
+            VCFHeader header = mVcfHeader.get();
+            refEnricher.enrichHeader(header);
+            writer.writeHeader(header);
 
-            VariantContextCollection enrichedCollection = getEnrichedCollection(purityAdjuster, copyNumbers);
+            VariantContextCollection enrichedCollection = getEnrichedCollection(purityAdjuster, copyNumbers, gender);
 
             Iterator<VariantContext> variantIter = enrichedCollection.iterator();
 
@@ -182,8 +187,6 @@ public class SomaticSvCache
                 refEnricher.accept(variant);
             }
 
-            refEnricher.flush();
-
             writer.close();
         }
         catch(Exception e)
@@ -192,7 +195,8 @@ public class SomaticSvCache
         }
     }
 
-    private VariantContextCollection getEnrichedCollection(final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers)
+    private VariantContextCollection getEnrichedCollection(
+            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final Gender gender)
     {
         StructuralVariantFactory svFactory = StructuralVariantFactory.build(x -> true);
         svFactory.setGenotypeOrdinals(mGenotypeIds.ReferenceOrdinal, mGenotypeIds.TumorOrdinal);
@@ -214,6 +218,15 @@ public class SomaticSvCache
 
         for(EnrichedStructuralVariant enrichedSV : enrichedVariants)
         {
+            if(gender == Gender.FEMALE)
+            {
+                if(HumanChromosome._Y.matches(enrichedSV.chromosome(true))
+                || (enrichedSV.end() != null && HumanChromosome._Y.matches(enrichedSV.chromosome(false))))
+                {
+                    continue;
+                }
+            }
+
             addEnrichedVariantContexts(enrichedCollection, enrichedSV);
         }
 

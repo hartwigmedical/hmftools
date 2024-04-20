@@ -116,7 +116,8 @@ public class GermlineVariants
                 mVersion, referenceId, tumorSample, mReferenceData, purityAdjuster, copyNumbers,
                 mReferenceData.GermlineHotspots, somaticReportedGenes);
 
-        VCFHeader header = enrichment.enrichHeader(vcfReader.getFileHeader());
+        VCFHeader header = vcfReader.getFileHeader();
+        enrichment.enrichHeader(header);
         writer.writeHeader(header);
 
         for(GermlineVariant variant : mVariants)

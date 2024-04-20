@@ -16,14 +16,10 @@ public class VariantDeduper
     private final DedupMixedGermlineSomatic mDedupMixedGermlineSomatic;
     private final IndelDeduper mIndelDeduper;
 
-    public VariantDeduper(
-            final List<TranscriptData> transcripts, final RefGenomeInterface refGenome, boolean runOldDedup, int readLength)
+    public VariantDeduper(final List<TranscriptData> transcripts, final RefGenomeInterface refGenome, int readLength)
     {
         mDedupMixedGermlineSomatic = new DedupMixedGermlineSomatic(transcripts);
         mIndelDeduper = new IndelDeduper(refGenome, readLength);
-
-        if(runOldDedup)
-            mIndelDeduper.setRunOldDedup();
     }
 
     public void processVariants(final List<SageVariant> variants)

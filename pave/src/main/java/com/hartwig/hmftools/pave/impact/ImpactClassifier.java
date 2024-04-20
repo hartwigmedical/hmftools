@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.pave.impact.HgvsProtein.HGVS_SPLICE_UNKNOWN;
 import static com.hartwig.hmftools.pave.impact.HgvsProtein.reportProteinImpact;
 import static com.hartwig.hmftools.pave.impact.PaveUtils.withinTransRange;
 import static com.hartwig.hmftools.pave.impact.SpliceClassifier.checkStraddlesSpliceRegion;
+import static com.hartwig.hmftools.pave.impact.SpliceClassifier.isInsertIntoExonStart;
 import static com.hartwig.hmftools.pave.impact.SpliceClassifier.isWithinSpliceRegion;
 
 import java.util.List;
@@ -86,7 +87,7 @@ public class ImpactClassifier
                 SpliceClassifier.classifyVariant(variant, transImpact, nextExon, mRefGenome);
             }
 
-            if(variant.altPositionsOverlap(exon.Start, exon.End))
+            if(variant.altPositionsOverlap(exon.Start, exon.End) || isInsertIntoExonStart(variant, exon, transData.posStrand()))
             {
                 classifyExonicPosition(variant, transImpact);
                 break;

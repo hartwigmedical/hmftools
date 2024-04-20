@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.common.codon.Nucleotides
-import com.hartwig.hmftools.common.samtools.SamRecordUtils
+import com.hartwig.hmftools.common.bam.SamRecordUtils
 import com.hartwig.hmftools.common.utils.IntPair
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.util.SequenceUtil

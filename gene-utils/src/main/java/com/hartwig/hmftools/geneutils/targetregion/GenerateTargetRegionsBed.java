@@ -51,13 +51,15 @@ public class GenerateTargetRegionsBed
     private final String mSourceDir;
     private final String mOutputFile;
     private final boolean mIncludeUTR;
+    private final boolean mCanonicalOnly;
 
     private static final String SPECIFIC_REGIONS_FILE = "specific_regions_file";
     private static final String CODING_GENE_FILE = "coding_genes_file";
     private static final String TRANS_TSL_FILE = "trans_tsl_file";
-    private static final String SOURCE_DIR = "source_dir";
-    private static final String OUTPUT_FILE = "output_file";
+    protected static final String SOURCE_DIR = "source_dir";
+    protected static final String OUTPUT_FILE = "output_file";
     private static final String INCLUDE_UTR = "include_utr";
+    private static final String CANONICAL_ONLY = "canonical_only";
 
     public GenerateTargetRegionsBed(final ConfigBuilder configBuilder)
     {
@@ -73,6 +75,7 @@ public class GenerateTargetRegionsBed
         mEnsemblDataCache.load(true);
 
         mIncludeUTR = configBuilder.hasFlag(INCLUDE_UTR);
+        mCanonicalOnly = configBuilder.hasFlag(CANONICAL_ONLY);
 
         mSourceDir = checkAddDirSeparator(configBuilder.getValue(SOURCE_DIR));
 
@@ -158,8 +161,14 @@ public class GenerateTargetRegionsBed
             if(transData.CodingStart == null)
                 continue;
 
-            if(!transData.IsCanonical && !mTranscriptValidTSLs.isEmpty() && !mTranscriptValidTSLs.contains(transData.TransId))
-                continue;
+            if(!transData.IsCanonical)
+            {
+                if(mCanonicalOnly)
+                    continue;
+
+                if(!mTranscriptValidTSLs.isEmpty() && !mTranscriptValidTSLs.contains(transData.TransId))
+                    continue;
+            }
 
             if(transData.BioType.equals("nonsense_mediated_decay"))
                 continue;
@@ -288,6 +297,8 @@ public class GenerateTargetRegionsBed
         configBuilder.addPath(SPECIFIC_REGIONS_FILE, false,"Additional regions beyond panel definition BED");
         configBuilder.addPath(TRANS_TSL_FILE, false, "Ensembl valid TSL transcript IDs");
         configBuilder.addFlag(INCLUDE_UTR, "Include UTR in bed regions");
+        configBuilder.addFlag(CANONICAL_ONLY, "Form from canonical transcripts only");
+
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output BED filename");
         addEnsemblDir(configBuilder, true);
         addRefGenomeVersion(configBuilder);

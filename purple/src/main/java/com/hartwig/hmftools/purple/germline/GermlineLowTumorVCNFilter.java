@@ -30,9 +30,8 @@ public final class GermlineLowTumorVCNFilter
         }
     }
 
-    public static VCFHeader enrichHeader(final VCFHeader template)
+    public static void enrichHeader(final VCFHeader header)
     {
-        template.addMetaDataLine(new VCFFilterHeaderLine(LOW_TUMOR_VCN_FILTER, "Germline variant has very low tumor variant copy number"));
-        return template;
+        header.addMetaDataLine(new VCFFilterHeaderLine(LOW_TUMOR_VCN_FILTER, "Germline variant has very low tumor variant copy number"));
     }
 }

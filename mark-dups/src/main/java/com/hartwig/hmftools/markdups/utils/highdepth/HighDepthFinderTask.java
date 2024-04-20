@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
 import htsjdk.samtools.SAMRecord;

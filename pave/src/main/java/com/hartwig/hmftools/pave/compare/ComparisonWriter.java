@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.pave.compare;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -7,6 +8,9 @@ import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.List;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.pave.impact.CodingContext;
@@ -17,95 +21,143 @@ import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 public class ComparisonWriter
 {
-    private final BufferedWriter mImpactWriter;
-    private final BufferedWriter mTransImpactWriter;
-    private final BufferedWriter mRefVariantWriter;
+    private final ComparisonConfig mConfig;
+    private final BufferedWriter mImpactDiffWriter;
+    // private final BufferedWriter mTransImpactWriter;
+    // private final BufferedWriter mRefVariantWriter;
     private final GeneDataCache mGeneDataCache;
 
     public ComparisonWriter(final GeneDataCache geneDataCache, final ComparisonConfig config)
     {
+        mConfig = config;
         mGeneDataCache = geneDataCache;
-        mImpactWriter = initialiseImpactWriter(config.OutputDir, config.OutputId);
-        mTransImpactWriter = config.WriteTransData ? initialiseTransWriter(config.OutputDir, config.OutputId) : null;
+        mImpactDiffWriter = initialiseDiffWriter();
 
-        mRefVariantWriter = config.ReferenceVariantsFile == null ? initialiseRefVariantWriter(config.OutputDir, config.OutputId) : null;
+        // mTransImpactWriter = config.WriteTransData ? initialiseTransWriter(config.OutputDir, config.OutputId) : null;
+        /// mRefVariantWriter = config.ReferenceVariantsFile == null ? initialiseRefVariantWriter(config.OutputDir, config.OutputId) : null;
     }
 
     public void close()
     {
-        closeBufferedWriter(mImpactWriter);
-        closeBufferedWriter(mTransImpactWriter);
-        closeBufferedWriter(mRefVariantWriter);
+        closeBufferedWriter(mImpactDiffWriter);
+        // closeBufferedWriter(mTransImpactWriter);
+        // closeBufferedWriter(mRefVariantWriter);
     }
 
-    private static String formFilename(final String outputDir, final String outputId, final String fileType)
+    private String formFilename(final String fileType)
     {
-        if(outputId != null)
-            return outputDir + "pave_compare_" + fileType + "_" +  outputId + TSV_EXTENSION;
-        else
-            return outputDir + "pave_compare_" + fileType + TSV_EXTENSION;
+        String filename = mConfig.OutputDir + "pave_compare." + fileType;
+
+        if(mConfig.OutputId != null)
+            filename += "." +  mConfig.OutputId;
+
+        filename += TSV_EXTENSION;
+        return filename;
     }
 
-    public synchronized void writeVariantData(
-            final String sampleId, final VariantData variant, final VariantImpact variantImpact, final RefVariantData refVariant, boolean hasDiff)
-    {
-        writeImpactData(sampleId, variant, variantImpact, refVariant);
-        writeTransImpactData(sampleId, variant, refVariant);
-
-        if(hasDiff)
-            writeRefVariant(sampleId, refVariant);
-    }
-
-    private BufferedWriter initialiseImpactWriter(final String outputDir, final String outputId)
+    private BufferedWriter initialiseDiffWriter()
     {
         try
         {
-            String fileName = formFilename(outputDir, outputId, "impacts");
+            String fileName = formFilename("diffs");
 
             PV_LOGGER.info("writing impact comparison file: {}", fileName);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            writer.write("SampleId\t");
-            writer.write(VariantData.tsvHeader());
-            writer.write("\tGeneName\tIsDriver\tCanonEffects\tCanonCodingEffect\tHgvsCoding\tHgvsProtein");
-            writer.write("\tWorstCodingEffect\tReported\tGenesAffected");
-            writer.write("\tOrigGeneName\tOrigCanonEffects\tOrigCanonCodingEffect");
-            writer.write("\tOrigWorstCodingEffect\tOrigHgvsCoding\tOrigHgvsProtein\tOrigReported");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+            if(!mConfig.singleSample())
+                sj.add("SampleId");
+
+            sj.add(VariantData.tsvHeader());
+
+            if(mConfig.LiftoverCache != null)
+                sj.add("PositionV37");
+
+            sj.add("GeneName").add("IsDriver").add("Diffs");
+            sj.add("IsReportedRef").add("IsReportedNew");
+            sj.add("CanonicalEffectsRef").add("CanonicalEffectsNew");
+            sj.add("WorstCodingEffectRef").add("WorstCodingEffectNew");
+            sj.add("CanonicalCodingEffectRef").add("CanonicalCodingEffectNew");
+            sj.add("HgvsCodingRef").add("HgvsCodingNew");
+            sj.add("HgvsProteinRef").add("HgvsProteinNew");
+
+            writer.write(sj.toString());
             writer.newLine();
 
             return writer;
         }
         catch(IOException e)
         {
-            PV_LOGGER.error("failed to initialise CSV file output: {}", e.toString());
+            PV_LOGGER.error("failed to initialise diff file output: {}", e.toString());
             return null;
         }
     }
 
-    private void writeImpactData(
-            final String sampleId, final VariantData variant, final VariantImpact variantImpact, final RefVariantData refVariant)
+    public synchronized void writeVariantDiff(
+            final String sampleId, final VariantData variant, final VariantImpact variantImpact, final RefVariantData refVariant,
+            final boolean isDriverGene, final List<String> diffs)
     {
-        if(mImpactWriter == null)
+        if(mImpactDiffWriter == null)
             return;
 
         try
         {
-            mImpactWriter.write(String.format("%s\t%s\t%s",
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+            if(!mConfig.singleSample())
+                sj.add(sampleId);
+
+            sj.add(variant.tsvData());
+
+            if(mConfig.LiftoverCache != null)
+                sj.add(String.valueOf(refVariant.liftedPosition() != null ? refVariant.liftedPosition() : -1));
+
+            String diffsStr = diffs.stream().collect(Collectors.joining(";"));
+
+            sj.add(variantImpact.CanonicalGeneName).add(String.valueOf(isDriverGene)).add(diffsStr);
+
+            sj.add(String.valueOf(refVariant.Reported)).add(String.valueOf(variant.reported()));
+            sj.add(refVariant.CanonicalEffect).add(variantImpact.CanonicalEffect);
+            sj.add(String.valueOf(refVariant.WorstCodingEffect)).add(String.valueOf(variantImpact.WorstCodingEffect));
+            sj.add(String.valueOf(refVariant.CanonicalCodingEffect)).add(String.valueOf(variantImpact.CanonicalCodingEffect));
+            sj.add(refVariant.HgvsCodingImpact).add(variantImpact.CanonicalHgvsCoding);
+            sj.add(refVariant.HgvsProteinImpact).add(variantImpact.CanonicalHgvsProtein);
+
+            mImpactDiffWriter.write(sj.toString());
+            mImpactDiffWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            PV_LOGGER.error("failed to initialise diff file output: {}", e.toString());
+        }
+    }
+
+    /*
+    private void writeImpactData(
+            final String sampleId, final VariantData variant, final VariantImpact variantImpact, final RefVariantData refVariant)
+    {
+        if(mImpactDiffWriter == null)
+            return;
+
+        try
+        {
+            mImpactDiffWriter.write(String.format("%s\t%s\t%s",
                     sampleId, variant.tsvData(), variantImpact.CanonicalGeneName));
 
             boolean isDriver = mGeneDataCache.isDriverPanelGene(variantImpact.CanonicalGeneName);
 
-            mImpactWriter.write(String.format("\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d",
+            mImpactDiffWriter.write(String.format("\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d",
                     isDriver, variantImpact.CanonicalEffect, variantImpact.CanonicalCodingEffect,
                     variantImpact.CanonicalHgvsCoding, variantImpact.CanonicalHgvsProtein,
                     variantImpact.WorstCodingEffect, variant.reported(), variantImpact.GenesAffected));
 
-            mImpactWriter.write(String.format("\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
+            mImpactDiffWriter.write(String.format("\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
                     refVariant.Gene, refVariant.CanonicalEffect, refVariant.CanonicalCodingEffect, refVariant.WorstCodingEffect,
                     refVariant.HgvsCodingImpact, refVariant.HgvsProteinImpact, refVariant.Reported));
 
-            mImpactWriter.newLine();
+            mImpactDiffWriter.newLine();
         }
         catch(IOException e)
         {
@@ -229,5 +281,5 @@ public class ComparisonWriter
             return;
         }
     }
-
+    */
 }

@@ -1,23 +1,20 @@
 package com.hartwig.hmftools.sage.candidate;
 
-import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
 public class Candidate
 {
     private final VariantTier mTier;
-    private final SimpleVariant mVariant;
+    private VariantReadContext mReadContext;
 
     private int mMinNumberOfEvents;
     private int mReadContextSupport;
-    private ReadContext mReadContext;
 
-    public Candidate(
-            final VariantTier tier, final SimpleVariant variant, final ReadContext readContext, int minNumberOfEvents, int readContextSupport)
+    public Candidate(final VariantTier tier, final VariantReadContext readContext, int minNumberOfEvents, int readContextSupport)
     {
         mTier = tier;
-        mVariant = variant;
         mReadContext = readContext;
         mMinNumberOfEvents = minNumberOfEvents;
         mReadContextSupport = readContextSupport;
@@ -25,10 +22,7 @@ public class Candidate
 
     public static Candidate fromAltContext(final VariantTier tier, final AltContext altContext)
     {
-        SimpleVariant variant = new SimpleVariant(altContext.chromosome(), altContext.position(), altContext.Ref, altContext.Alt);
-
-        return new Candidate(
-                tier, variant, altContext.readContext(), altContext.minNumberOfEvents(), altContext.readContextSupport());
+        return new Candidate(tier, altContext.readContext(), altContext.minNumberOfEvents(), altContext.readContextSupport());
     }
 
     public void update(final AltContext altContext)
@@ -43,16 +37,11 @@ public class Candidate
     }
 
     public VariantTier tier() { return mTier; }
-
-    public SimpleVariant variant() { return mVariant; }
-
-    public ReadContext readContext() { return mReadContext; }
-
+    public SimpleVariant variant() { return mReadContext.variant(); }
+    public VariantReadContext readContext() { return mReadContext; }
     public int minNumberOfEvents() { return mMinNumberOfEvents; }
+    public String chromosome() { return mReadContext.variant().Chromosome; }
+    public int position() { return mReadContext.variant().Position; }
 
-    public String chromosome() { return mVariant.chromosome(); }
-
-    public int position() { return mVariant.position(); }
-
-    public String toString() { return String.format("var(%s) tier(%s)", mVariant, mTier); }
+    public String toString() { return String.format("var(%s) tier(%s)", mReadContext.variant(), mTier); }
 }

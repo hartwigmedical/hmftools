@@ -9,23 +9,21 @@ import static java.util.Map.entry;
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_INFO_DELIM;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getOrientationString;
-import static com.hartwig.hmftools.common.utils.Doubles.round;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_INFO_DELIM;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getOrientationString;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.read.NumberEvents.rawNM;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_BASE_QUAL;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_MAP_QUALITY;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_NM_COUNT;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.FRAG_STRAND_BIAS;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_STRAND_BIAS;
+import static com.hartwig.hmftools.sage.common.NumberEvents.rawNM;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vis.ColorUtil.DARK_BLUE;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.FINAL_QUAL_COL;
 import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MAP_QUAL_COL;
@@ -83,8 +81,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
@@ -119,7 +116,7 @@ public class VariantVis
     private final SimpleVariant mVariant;
     private final VariantTier mVariantTier;
     private final EnumMap<ReadContextCounter.MatchType, List<ReadEvidenceRecord>> mReadEvidenceRecordsByType;
-    private final ReadContext mReadContext;
+    private final VariantReadContext mReadContext;
     private final BaseRegion mViewRegion;
     private final Map<Integer, List<SvgRender.BoxBorder>> mContextBorders;
     private final BaseSeqViewModel mRefViewModel;
@@ -133,7 +130,7 @@ public class VariantVis
     private int mReadCount;
 
     public VariantVis(
-            final SageConfig config, final String sample, final SimpleVariant variant, final ReadContext readContext,
+            final SageConfig config, final String sample, final SimpleVariant variant, final VariantReadContext readContext,
             final VariantTier variantTier)
     {
         mConfig = config.Visualiser;
@@ -144,16 +141,15 @@ public class VariantVis
         mReadContext = readContext;
         mVariantKey = mVariant.chromosome() + "_" + mVariant.position() + "_" + mVariant.ref() + "_" + mVariant.alt();
 
-        IndexedBases indexedBases = mReadContext.indexedBases();
         int indelSize = mVariant.ref().length() - mVariant.alt().length();
-        int coreStart = indexedBases.corePositionStart();
-        int coreEnd = indexedBases.corePositionEnd() + indelSize;
-        int flankStart = coreStart + indexedBases.LeftFlankIndex - indexedBases.LeftCoreIndex;
-        int flankEnd = coreEnd + indexedBases.RightFlankIndex - indexedBases.RightCoreIndex;
+        int coreStart = mReadContext.corePositionStart();
+        int coreEnd = mReadContext.corePositionEnd() + indelSize;
+        int flankStart = coreStart - mReadContext.leftFlankLength();
+        int flankEnd = coreEnd + mReadContext.rightFlankLength();
         mViewRegion = new BaseRegion(coreStart - SageVisConstants.READ_EXTEND_LENGTH, coreEnd + SageVisConstants.READ_EXTEND_LENGTH);
 
         mContextBorders = Map.ofEntries(
-                entry(mReadContext.Position,
+                entry(mVariant.Position,
                         Lists.newArrayList(
                                 new SvgRender.BoxBorder(SvgRender.BorderLocation.LEFT, Color.BLACK),
                                 new SvgRender.BoxBorder(SvgRender.BorderLocation.RIGHT, Color.BLACK))),
@@ -178,14 +174,15 @@ public class VariantVis
         mRefGenome = loadRefGenome(config.RefGenomeFile);
         String refBases = mRefGenome.getBaseString(mVariant.chromosome(), refPosStart, refPosEnd);
         mRefViewModel = BaseSeqViewModel.fromStr(refBases, refPosStart);
-        mContextViewModel = BaseSeqViewModel.fromVariant(indexedBases, mVariant.ref(), mVariant.alt());
+
+        mContextViewModel = BaseSeqViewModel.fromVariant(mReadContext, mVariant.ref(), mVariant.alt());
 
         StringJoiner indexedBasesKeyBuilder = new StringJoiner("_");
-        indexedBasesKeyBuilder.add(String.valueOf(indexedBases.Index));
-        indexedBasesKeyBuilder.add(String.valueOf(indexedBases.LeftCoreIndex));
-        indexedBasesKeyBuilder.add(String.valueOf(indexedBases.RightCoreIndex));
-        indexedBasesKeyBuilder.add(String.valueOf(indexedBases.FlankSize));
-        indexedBasesKeyBuilder.add(new String(indexedBases.Bases));
+        indexedBasesKeyBuilder.add(String.valueOf(mReadContext.VarReadIndex));
+        indexedBasesKeyBuilder.add(String.valueOf(mReadContext.CoreIndexStart));
+        indexedBasesKeyBuilder.add(String.valueOf(mReadContext.CoreIndexEnd));
+        indexedBasesKeyBuilder.add(String.valueOf(mReadContext.leftFlankLength()));
+        indexedBasesKeyBuilder.add(new String(mReadContext.ReadBases));
         mIndexedBasesKey = indexedBasesKeyBuilder.toString();
 
         mReadCountByType = Maps.newEnumMap(ReadContextCounter.MatchType.class);
@@ -295,7 +292,7 @@ public class VariantVis
 
         List<String> headers = Lists.newArrayList("SAMPLE", "QUAL", "AD", ALLELE_FREQUENCY_KEY, "DP");
         headers.addAll(SORTED_MATCH_TYPES.stream().map(ReadContextCounter.MatchType::name).collect(Collectors.toList()));
-        headers.addAll(Lists.newArrayList(AVG_BASE_QUAL, AVG_MAP_QUALITY, AVG_NM_COUNT, FRAG_STRAND_BIAS, READ_STRAND_BIAS, "JIT"));
+        headers.addAll(Lists.newArrayList(AVG_BASE_QUAL, AVG_MAP_QUALITY, FRAG_STRAND_BIAS, READ_STRAND_BIAS, "JIT"));
 
         List<DomContent> headerColumns = Lists.newArrayList();
         for(int i = 0; i < headers.size(); i++)
@@ -336,7 +333,6 @@ public class VariantVis
             int depth = counter.depth();
             int altSupport = counter.altSupport();
             int avgAltMapQuality = altSupport > 0 ? (int) Math.round(counter.altMapQualityTotal() / (double) altSupport) : 0;
-            double avgAltNmCount = altSupport > 0 ? round(counter.altNmCountTotal() / (double) altSupport, 1) : 0;
 
             List<TdTag> columnElems = Lists.newArrayList(
                     td(sampleId),
@@ -355,7 +351,6 @@ public class VariantVis
             columnElems.addAll(Lists.newArrayList(
                     td(String.valueOf((int) counter.averageAltBaseQuality())),
                     td(format("%d", avgAltMapQuality)),
-                    td(format("%.1f", avgAltNmCount)),
                     td(format("%.2f", counter.fragmentStrandBiasAlt().bias())),
                     td(format("%.2f", counter.readStrandBiasAlt().bias())),
                     td(String.valueOf(counter.jitter()[2]))));
@@ -422,7 +417,7 @@ public class VariantVis
 
         if(fragment == null)
         {
-            records.add(new ReadEvidenceRecord(read, null, matchType, modifiedQualities, mReadContext.Position));
+            records.add(new ReadEvidenceRecord(read, null, matchType, modifiedQualities, mVariant.Position));
             return;
         }
 
@@ -433,17 +428,17 @@ public class VariantVis
         boolean secondIsVisible = mViewRegion.overlaps(secondUnclippedRegion);
         if(firstIsVisible && !secondIsVisible)
         {
-            records.add(new ReadEvidenceRecord(fragment.First, null, matchType, modifiedQualities, mReadContext.Position));
+            records.add(new ReadEvidenceRecord(fragment.First, null, matchType, modifiedQualities, mVariant.Position));
             return;
         }
 
         if(!firstIsVisible && secondIsVisible)
         {
-            records.add(new ReadEvidenceRecord(fragment.Second, null, matchType, modifiedQualities, mReadContext.Position));
+            records.add(new ReadEvidenceRecord(fragment.Second, null, matchType, modifiedQualities, mVariant.Position));
             return;
         }
 
-        records.add(new ReadEvidenceRecord(read, fragment, matchType, modifiedQualities, mReadContext.Position));
+        records.add(new ReadEvidenceRecord(read, fragment, matchType, modifiedQualities, mVariant.Position));
     }
 
     private DomContent renderVariantInfo(int totalTumorQuality, int maxDistanceFromEdge, final Set<String> filters)
@@ -454,24 +449,23 @@ public class VariantVis
         DomContent horizontalSpacer = div().withStyle(horizontalSpacerStyle.toString());
 
         String repeatStr = "NO REPEAT";
-        if(mReadContext.RepeatCount > 0)
+        if(mReadContext.MaxRepeat != null)
         {
-            repeatStr = format("REPEAT = %dx%s", mReadContext.RepeatCount, mReadContext.Repeat);
+            repeatStr = format("REPEAT = %dx%s", mReadContext.MaxRepeat.Count, mReadContext.MaxRepeat.Bases);
         }
 
         String filterStr = "FILTER = PASS";
         if(!filters.isEmpty())
             filterStr = "FILTER = " + filters.stream().collect(Collectors.joining(","));
 
-        IndexedBases indexedBases = mReadContext.indexedBases();
         List<DomContent> contextElems = Lists.newArrayList();
         contextElems.add(span("CONTEXT = "));
-        contextElems.add(span(indexedBases.leftFlankString()));
-        contextElems.add(span(indexedBases.coreString()).withStyle(coreStyle.toString()));
-        contextElems.add(span(indexedBases.rightFlankString()));
+        contextElems.add(span(mReadContext.leftFlankStr()));
+        contextElems.add(span(mReadContext.coreStr()).withStyle(coreStyle.toString()));
+        contextElems.add(span(mReadContext.rightFlankStr()));
 
         DomContent variantInfoRow = tr(
-                td(mVariant.chromosome() + ":" + mReadContext.Position),
+                td(mVariant.chromosome() + ":" + mVariant.Position),
                 td(horizontalSpacer),
                 td(mVariant.ref() + " > " + mVariant.alt()),
                 td(horizontalSpacer),

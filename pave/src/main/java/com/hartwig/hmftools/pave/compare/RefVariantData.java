@@ -1,16 +1,25 @@
 package com.hartwig.hmftools.pave.compare;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 
+import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.pave.VariantData;
 
-import org.checkerframework.checker.units.qual.A;
+import htsjdk.variant.variantcontext.VariantContext;
 
 public class RefVariantData
 {
@@ -36,7 +45,7 @@ public class RefVariantData
     public final boolean Reported;
     public final boolean IsHotspot;
 
-    // repeatCount, localPhaseSet, localRealignmentSet, reported
+    private Integer mLiftedPosition; // if liftover has been run
 
     public RefVariantData(
             final String chromosome, final int position, final String ref, final String alt, final VariantType type,
@@ -47,6 +56,7 @@ public class RefVariantData
     {
         Chromosome = chromosome;
         Position = position;
+        mLiftedPosition = null;
         Ref = ref;
         Alt = alt;
         Type = type;
@@ -66,6 +76,9 @@ public class RefVariantData
         IsHotspot = isHotspot;
     }
 
+    public void setLiftedPosition(final int position) { mLiftedPosition = position; }
+    public Integer liftedPosition() { return mLiftedPosition; }
+
     public static RefVariantData fromSomatic(final SomaticVariant variant)
     {
         int localPhaseSet = variant.topLocalPhaseSet() != null ? variant.topLocalPhaseSet() : NO_LOCAL_PHASE_SET;
@@ -76,6 +89,55 @@ public class RefVariantData
                 variant.canonicalHgvsCodingImpact(), variant.canonicalHgvsProteinImpact(),
                 variant.microhomology(), variant.repeatSequence(), variant.repeatCount(),
                 localPhaseSet, variant.reported(), variant.isHotspot());
+    }
+
+    public static List<RefVariantData> loadVariantsFromVcf(final String filename, final ComparisonConfig config)
+    {
+        VcfFileReader vcfFileReader = new VcfFileReader(filename);
+
+        if(!vcfFileReader.fileValid())
+        {
+            PV_LOGGER.error("failed to read VCF({})", filename);
+            return null;
+        }
+
+        List<RefVariantData> variants = Lists.newArrayList();
+
+        for(VariantContext variantContext : vcfFileReader.iterator())
+        {
+            if(variantContext.isFiltered())
+                continue;
+            VariantContextDecorator variant = new VariantContextDecorator(variantContext);
+
+            String chromosome = variant.chromosome();
+            int position = variant.position();
+            Integer liftedPosition = null;
+
+            if(config.LiftoverCache != null)
+            {
+                liftedPosition = position;
+                position = config.LiftoverCache.convertPositionTo38(chromosome, position);
+                chromosome = config.RefGenVersion.versionedChromosome(chromosome);
+            }
+
+            VariantImpact impact = variant.variantImpact();
+
+            int localPhaseSet = variant.localPhaseSet() != null ? variant.localPhaseSet() : NO_LOCAL_PHASE_SET;
+
+            RefVariantData refVariant = new RefVariantData(
+                    chromosome, position, variant.ref(), variant.alt(), variant.type(), variant.gene(),
+                    impact.CanonicalEffect, impact.CanonicalCodingEffect, impact.WorstCodingEffect,
+                    impact.CanonicalHgvsCoding, impact.CanonicalHgvsProtein,
+                    variant.microhomology(), variant.repeatSequence(), variant.repeatCount(),
+                    localPhaseSet, variant.reported(), variant.isHotspot());
+
+            if(liftedPosition != null)
+                refVariant.setLiftedPosition(liftedPosition);
+
+            variants.add(refVariant);
+        }
+
+        return variants;
     }
 
     public boolean matches(final VariantData variant)
@@ -92,7 +154,7 @@ public class RefVariantData
 
     public static String tsvHeader()
     {
-        StringJoiner sj = new StringJoiner("\t");
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add("sampleId");
         sj.add("chromosome");
         sj.add("position");
@@ -116,7 +178,7 @@ public class RefVariantData
 
     public String tsvData(final String sampleId)
     {
-        StringJoiner sj = new StringJoiner("\t");
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(sampleId);
         sj.add(Chromosome);
         sj.add(String.valueOf(Position));

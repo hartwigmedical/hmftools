@@ -2,14 +2,11 @@ package com.hartwig.hmftools.common.circos;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import htsjdk.samtools.util.CollectionUtil;
 
 public class CircosExecution
 {
@@ -24,34 +21,45 @@ public class CircosExecution
 
     @Nullable
     public Integer generateCircos(
-            final String inputConfig, final String outputPath, final String outputFile,
-            final String errorPath) throws IOException, InterruptedException
+            final String inputConfig, final String outputPath, final String outputFile) throws IOException, InterruptedException
     {
-        final File redirectErrorFile = new File(errorPath + File.separator + outputFile + ".error");
-        final File redirectOutputFile = new File(errorPath + File.separator + outputFile + ".out");
+        String plotFilePath = outputPath + File.separator + outputFile;
 
-        final String[] command = new String[8];
-        command[0] = executable;
-        command[1] = "-nosvg";
-        command[2] = "-conf";
-        command[3] = new File(inputConfig).getAbsolutePath();
-        command[4] = "-outputdir";
-        command[5] = new File(outputPath).getAbsolutePath();
-        command[6] = "-outputfile";
-        command[7] = outputFile;
+        // we have to delete existing plot file first, otherwise circos could silently fail
+        File plotFile = new File(plotFilePath);
+        if(plotFile.exists())
+        {
+            plotFile.delete();
+        }
 
-        LOGGER.info(String.format("Generating " + outputFile + " via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
-        int result = new ProcessBuilder(command).redirectError(redirectErrorFile).redirectOutput(redirectOutputFile).start().waitFor();
+        final List<String> command = List.of(
+            executable,
+            "-nosvg",
+            "-conf",
+            new File(inputConfig).getAbsolutePath(),
+            "-outputdir",
+            new File(outputPath).getAbsolutePath(),
+            "-outputfile",
+            outputFile);
+
+        LOGGER.info(String.format("Generating " + outputFile + " via command: %s", String.join(" ", command)));
+
+        // must redirect error stream to stdout, as circos print some errors to stdout
+        Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
+        int result = process.waitFor();
+
         if(result != 0)
         {
-            LOGGER.error("Fatal error creating circos plot. Examine error file " + redirectErrorFile.toString() + " for details.");
+            System.err.print(new String(process.getInputStream().readAllBytes()));
+            LOGGER.error("Fatal error creating circos plot.");
             return 0;
         }
 
-        final File finalFile = new File(outputPath + File.separator + outputFile);
-        if(!finalFile.exists())
+        plotFile = new File(outputPath + File.separator + outputFile);
+        if(!plotFile.exists())
         {
-            LOGGER.error("Failed to create file {}", finalFile.toString());
+            System.err.print(new String(process.getInputStream().readAllBytes()));
+            LOGGER.error("Failed to create file {}", plotFile);
         }
 
         return 0;

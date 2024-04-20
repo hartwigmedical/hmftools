@@ -110,8 +110,8 @@ public class GermlinePurityEnrichment
         }
     }
 
-    public VCFHeader enrichHeader(final VCFHeader template)
+    public void enrichHeader(final VCFHeader header)
     {
-        return PurpleVcfTags.addGermlineHeader(mVersion, template);
+        PurpleVcfTags.addGermlineHeader(mVersion, header);
     }
 }

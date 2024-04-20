@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.sage.phase;
 
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
-import static com.hartwig.hmftools.sage.common.TestUtils.createSimpleVariant;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createSageVariant;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
 import static com.hartwig.hmftools.sage.phase.VariantPhaser.mergeByExtension;
 import static com.hartwig.hmftools.sage.phase.VariantPhaser.mergeMatching;
@@ -21,12 +22,10 @@ import java.util.Set;
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.sage.candidate.Candidate;
-import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
+import com.hartwig.hmftools.sage.common.VariantUtils;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
-import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 import org.junit.Test;
@@ -423,6 +422,9 @@ public class PhasingGroupsTest
     private SageVariant createVariant(int position)
     {
         SimpleVariant variant = createSimpleVariant(position);
+        return createSageVariant(variant.Position, variant.ref(), variant.alt());
+
+        /*
 
         List<ReadContextCounter> tumorCounters = Lists.newArrayList(createReadCounter(position));
 
@@ -431,22 +433,14 @@ public class PhasingGroupsTest
 
         List<ReadContextCounter> normalCounters = Lists.newArrayList();
         return new SageVariant(candidate, normalCounters, tumorCounters);
+        */
     }
 
     private ReadContextCounter createReadCounter(int position)
     {
-        return createReadCounter(mNextReadCounterId++, position);
-    }
-
-    private ReadContextCounter createReadCounter(int id, int position)
-    {
         SimpleVariant variant = createSimpleVariant(position);
-
-        IndexedBases indexBases = new IndexedBases(position, 10, "ACGTACGTACGT".getBytes());
-        ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
-
-        return new ReadContextCounter(
-                id, variant, readContext, VariantTier.LOW_CONFIDENCE,
-                100, 1, TEST_CONFIG, QUALITY_CALCULATOR, null);
+        VariantReadContext readContext = createReadContext(variant);
+        return VariantUtils.createReadCounter(mNextReadCounterId++, readContext);
     }
+
 }

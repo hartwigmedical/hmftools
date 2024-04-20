@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.bamtools.common;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
 import java.util.List;
 

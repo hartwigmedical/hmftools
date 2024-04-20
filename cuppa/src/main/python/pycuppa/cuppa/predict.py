@@ -1,4 +1,5 @@
-from cuppa.runners import PredictionRunner, RunnerArgParser
+from cuppa.runners.args import RunnerArgParser
+from cuppa.runners.prediction_runner import PredictionRunner
 
 if __name__ == "__main__":
     kwargs = RunnerArgParser().get_kwargs_predict()

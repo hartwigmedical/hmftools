@@ -65,8 +65,8 @@ public class CopyNumberProfile
 
         try
         {
-            mCopyNumbers.addAll(PurpleCopyNumberFile.read(
-                    PurpleCopyNumberFile.generateFilenameForReading(mConfig.getPurpleDir(sample.TumorId), mSample.TumorId)));
+            String cnFile = PurpleCopyNumberFile.generateFilenameForReading(mConfig.getPurpleDir(sample.TumorId), mSample.TumorId);
+            mCopyNumbers.addAll(PurpleCopyNumberFile.read(cnFile));
         }
         catch(Exception e)
         {
@@ -87,7 +87,7 @@ public class CopyNumberProfile
 
             if(!Files.exists(Paths.get(cobaltFilename)))
             {
-                CT_LOGGER.warn("sample({}) missing Cobalt ctDNA GC ratios file: {}", sampleId, cobaltFilename);
+                CT_LOGGER.warn("sample({}) missing Cobalt sample GC ratios file: {}", sampleId, cobaltFilename);
                 return CnPurityResult.INVALID_RESULT;
 
             }

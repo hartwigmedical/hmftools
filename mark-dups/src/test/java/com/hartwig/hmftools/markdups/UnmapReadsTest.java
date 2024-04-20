@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.markdups;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_NAME;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.ALIGNMENTS_DELIM;
-import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_POS_STRAND;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SupplementaryReadData.ALIGNMENTS_DELIM;
+import static com.hartwig.hmftools.common.bam.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
@@ -23,7 +23,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.markdups.common.HighDepthRegion;
@@ -250,6 +250,22 @@ public class UnmapReadsTest
 
         assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
         assertFalse(checkTransformRead(read, CHR_1));
+        assertFalse(read.getReadUnmappedFlag());
+        assertFalse(read.getMateUnmappedFlag());
+        assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+    }
+
+    @Test
+    public void testSupplementaryNotUnmappedChimeric2()
+    {
+        SupplementaryReadData suppReadData = new SupplementaryReadData(CHR_5, 10000, SUPP_POS_STRAND, READ_CIGAR, 60);
+
+        SAMRecord read = SamRecordTestUtils.createSamRecord(
+                READ_ID, CHR_2, 100, READ_BASES, READ_CIGAR, CHR_2, 200, false, true,
+                suppReadData, true, READ_BASES);
+
+        assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+        assertFalse(checkTransformRead(read, CHR_2));
         assertFalse(read.getReadUnmappedFlag());
         assertFalse(read.getMateUnmappedFlag());
         assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
@@ -562,7 +578,8 @@ public class UnmapReadsTest
         // Note that the suppReadData for a supplementary read refers to the associated primary read.
         SupplementaryReadData suppReadData = new SupplementaryReadData(CHR_3, 550, SUPP_POS_STRAND, READ_CIGAR, 60);
 
-        SAMRecord read = SamRecordTestUtils.createSamRecordUnpaired(READ_ID, CHR_2, 100, READ_BASES, READ_CIGAR, false, true, suppReadData);
+        SAMRecord read = SamRecordTestUtils.createSamRecordUnpaired(
+                READ_ID, CHR_2, 100, READ_BASES, READ_CIGAR, false, true, suppReadData);
 
         // Note that when we are unmapping a supplementary we do not bother unsetting all of its properties, because we will drop an unmapped
         // supplementary read immediately.

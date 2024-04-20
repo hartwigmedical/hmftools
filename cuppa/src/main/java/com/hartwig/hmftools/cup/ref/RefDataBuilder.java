@@ -20,6 +20,7 @@ import com.hartwig.hmftools.cup.svs.RefSvData;
 
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 public class RefDataBuilder
 {
     private final RefDataConfig mConfig;

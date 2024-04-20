@@ -2,7 +2,7 @@ package com.hartwig.hmftools.markdups.consensus;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 
 import static htsjdk.samtools.CigarOperator.S;
 

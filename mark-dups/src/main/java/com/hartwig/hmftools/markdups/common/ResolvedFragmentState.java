@@ -2,11 +2,7 @@ package com.hartwig.hmftools.markdups.common;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-
-import java.util.List;
-
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 
 import htsjdk.samtools.SAMRecord;
 

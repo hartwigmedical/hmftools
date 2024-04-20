@@ -4,15 +4,12 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PLURALS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAMS_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -25,7 +22,7 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_PARTITION_SLIC
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH_PANEL;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_MAP_QUALITY;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_SLICE_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.VIS_VARIANT_BUFFER;
@@ -43,7 +40,7 @@ import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
-import com.hartwig.hmftools.common.samtools.BamUtils;
+import com.hartwig.hmftools.common.bam.BamUtils;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.sage.bqr.BqrConfig;
@@ -68,14 +65,14 @@ public class SageConfig
     public final String OutputFile;
     public final FilterConfig Filter;
     public final QualityConfig Quality;
-    public final BqrConfig QualityRecalibration;
+    public final BqrConfig BQR;
     public final boolean IncludeMT;
     public final boolean SyncFragments;
     public final int RegionSliceSize;
     public final int MinMapQuality;
     public final int MaxReadDepth;
     public final int MaxReadDepthPanel;
-    public final int ReadContextFlankSize;
+    public final int ReadContextFlankLength;
     public final int MaxPartitionSlices;
     public final ValidationStringency BamStringency;
     public final SequencingConfig Sequencing;
@@ -148,7 +145,7 @@ public class SageConfig
 
         BamStringency = BamUtils.validationStringency(configBuilder);
         RegionSliceSize = configBuilder.getInteger(SLICE_SIZE);
-        ReadContextFlankSize = configBuilder.getInteger(READ_CONTEXT_FLANK_SIZE);
+        ReadContextFlankLength = configBuilder.getInteger(READ_CONTEXT_FLANK_SIZE);
 
         MaxReadDepth = configBuilder.getInteger(MAX_READ_DEPTH);
         MaxReadDepthPanel = configBuilder.getInteger(MAX_READ_DEPTH_PANEL);
@@ -160,7 +157,7 @@ public class SageConfig
 
         Filter = new FilterConfig(configBuilder);
         Quality = new QualityConfig(configBuilder);
-        QualityRecalibration = new BqrConfig(configBuilder);
+        BQR = new BqrConfig(configBuilder);
 
         MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
 
@@ -290,7 +287,7 @@ public class SageConfig
         return false;
     }
 
-    public boolean bqrRecordWritingOnly() { return QualityRecalibration.WriteReads; }
+    public boolean bqrRecordWritingOnly() { return BQR.WriteReads; }
 
     public boolean logPerfStats() { return PerfWarnTime > 0; }
 
@@ -306,7 +303,7 @@ public class SageConfig
 
         // is this common?
         configBuilder.addInteger(
-                READ_CONTEXT_FLANK_SIZE, "Size of read context flank", DEFAULT_READ_CONTEXT_FLANK_SIZE);
+                READ_CONTEXT_FLANK_SIZE, "Size of read context flank", DEFAULT_FLANK_LENGTH);
 
         configBuilder.addInteger(MIN_MAP_QUALITY, "Min map quality to apply to non-hotspot variants", DEFAULT_MIN_MAP_QUALITY);
         configBuilder.addInteger(READ_LENGTH, "Read length, otherwise will sample from BAM", 0);
@@ -348,14 +345,14 @@ public class SageConfig
         ReferenceBams = Lists.newArrayList();
         Filter = new FilterConfig();
         Quality = new QualityConfig(highDepthMode);
-        QualityRecalibration = new BqrConfig();
+        BQR = new BqrConfig();
         SpecificChrRegions = new SpecificRegions();
         IncludeMT = false;
         RegionSliceSize = DEFAULT_SLICE_SIZE;
         MinMapQuality = DEFAULT_MIN_MAP_QUALITY;
         MaxReadDepth = DEFAULT_MAX_READ_DEPTH;
         MaxReadDepthPanel = DEFAULT_MAX_READ_DEPTH_PANEL;
-        ReadContextFlankSize = DEFAULT_READ_CONTEXT_FLANK_SIZE;
+        ReadContextFlankLength = DEFAULT_FLANK_LENGTH;
         mReadLength = DEFAULT_READ_LENGTH;
         MaxPartitionSlices = 1;
         RefGenomeFile = "refGenome";

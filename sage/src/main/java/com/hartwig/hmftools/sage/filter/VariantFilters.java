@@ -275,7 +275,7 @@ public class VariantFilters
         if(!mHighDepthMode)
             return false;
 
-        int maxRepeats = primaryTumor.readContext().RepeatCount; // repeat count not available yet
+        int maxRepeats = primaryTumor.readContext().maxRepeatCount(); // repeat count not available yet
 
         if(primaryTumor.isIndel())
         {
@@ -287,7 +287,7 @@ public class VariantFilters
 
             double vafLimit = (maxRepeats - JITTER_INDEL_MAX_REPEATS) * JITTER_INDEL_VAF_THRESHOLD;
 
-            if(indelBases.equals(primaryTumor.readContext().Microhomology))
+            if(indelBases.equals(primaryTumor.readContext().homologyBases()))
             {
                 vafLimit *= indelBases.length();
             }

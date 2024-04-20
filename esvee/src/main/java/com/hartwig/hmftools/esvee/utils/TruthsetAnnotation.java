@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getByteValue;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
-import static com.hartwig.hmftools.esvee.SvConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,7 +21,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
+import com.hartwig.hmftools.esvee.alignment.Breakend;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 
 public class TruthsetAnnotation
 {
@@ -41,12 +42,22 @@ public class TruthsetAnnotation
 
     public String findTruthsetAnnotation(final JunctionAssembly assembly)
     {
-        List<TruthsetBreakend> breakends = mChrBreakendMap.get(assembly.junction().Chromosome);
+        return findAnnotation(assembly.junction().Chromosome, assembly.junction().Position, assembly.junction().Orientation);
+    }
+
+    public String findTruthsetAnnotation(final Breakend breakend)
+    {
+        return findAnnotation(breakend.Chromosome, breakend.Position, breakend.Orientation);
+    }
+
+    private String findAnnotation(final String chromosome, final int position, final byte orientation)
+    {
+        List<TruthsetBreakend> breakends = mChrBreakendMap.get(chromosome);
 
         if(breakends == null)
             return NO_TRUTHSET_MATCH;
 
-        TruthsetBreakend match = breakends.stream().filter(x -> x.matches(assembly)).findFirst().orElse(null);
+        TruthsetBreakend match = breakends.stream().filter(x -> x.matches(position, orientation)).findFirst().orElse(null);
 
         return match != null ? match.asTsv() : NO_TRUTHSET_MATCH;
     }
@@ -100,7 +111,7 @@ public class TruthsetAnnotation
                         getByteValue(fieldsIndexMap, "JunctionOrientation", values),
                         fragments,
                         cipos,
-                        mapFromStr(values[fieldsIndexMap.get("SvType")]));
+                        StructuralVariantType.valueOf(values[fieldsIndexMap.get("SvType")]));
 
                 breakends.add(truthsetBreakend);
             }
@@ -121,17 +132,6 @@ public class TruthsetAnnotation
     }
 
     public static String NO_TRUTHSET_MATCH = "NA\t0\tNA";
-
-    private static StructuralVariantType mapFromStr(final String typeStr)
-    {
-        if(typeStr.equals("TRANSLOCATION")) return StructuralVariantType.BND;
-        if(typeStr.equals("INVERSION")) return StructuralVariantType.INV;
-        if(typeStr.equals("DUPLICATION")) return StructuralVariantType.DUP;
-        if(typeStr.equals("DELETION")) return StructuralVariantType.DEL;
-        if(typeStr.equals("INSERTION")) return StructuralVariantType.INS;
-
-        return StructuralVariantType.SGL;
-    }
 
     private class TruthsetBreakend
     {
@@ -154,12 +154,12 @@ public class TruthsetAnnotation
             Type = type;
         }
 
-        public boolean matches(final JunctionAssembly assembly)
+        public boolean matches(final int position, final byte orientation)
         {
-            if(Orientation != assembly.junction().Orientation)
+            if(Orientation != orientation)
                 return false;
 
-            return positionWithin(assembly.junction().Position, Position + Cipos[0], Position + Cipos[1]);
+            return positionWithin(position, Position + Cipos[0], Position + Cipos[1]);
         }
 
         public String asTsv()

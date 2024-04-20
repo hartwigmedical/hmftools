@@ -3,22 +3,20 @@ package com.hartwig.hmftools.sage.append;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_DEPTH;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_EVENTS;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_INDEX;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_LEFT_FLANK;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_MICRO_HOMOLOGY;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_REPEAT_SEQUENCE;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_RIGHT_FLANK;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_DEPTH;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_EVENTS;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INDEX;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_LEFT_FLANK;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_MICRO_HOMOLOGY;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_REPEAT_SEQUENCE;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_RIGHT_FLANK;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.sage.candidate.Candidate;
-import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.ReadContext;
-import com.hartwig.hmftools.sage.common.RefSequence;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
@@ -32,14 +30,15 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public final class CandidateSerialization
 {
-    public static Candidate toCandidate(final VariantContext context, final RefSequence refGenome)
+    public static Candidate toCandidate(final VariantContext context)
     {
-        final IndexedBases readBases = readBases(context);
-        return toCandidate(context, readBases, refGenome.alignment());
+        final VariantReadContext readContext = readBases(context);
+        return toCandidate(context, readContext);
     }
 
-    public static IndexedBases readBases(final VariantContext context)
+    public static VariantReadContext readBases(final VariantContext context)
     {
+        /* CLEAN-UP
         final int position = context.getStart();
 
         final String leftFlank = context.getAttributeAsString(READ_CONTEXT_LEFT_FLANK, Strings.EMPTY);
@@ -61,9 +60,12 @@ public final class CandidateSerialization
                 rightCoreIndex,
                 Math.max(leftFlank.length(), rightFlank.length()),
                 bases);
+        */
+
+        return null;
     }
 
-    public static Candidate toCandidate(final VariantContext context, final IndexedBases readBases, final IndexedBases refBases)
+    public static Candidate toCandidate(final VariantContext context, final VariantReadContext readContext)
     {
         SimpleVariant variant = new SimpleVariant(
                 context.getContig(), context.getStart(),
@@ -74,7 +76,9 @@ public final class CandidateSerialization
         final String repeat = context.getAttributeAsString(READ_CONTEXT_REPEAT_SEQUENCE, Strings.EMPTY);
         final String mh = context.getAttributeAsString(READ_CONTEXT_MICRO_HOMOLOGY, Strings.EMPTY);
 
-        final ReadContext readContext = new ReadContext(context.getStart(), repeat, repeatCount, mh, readBases, false);
+        // CLEAN-UP: is this possible now?
+        // ReadContext readContext = new ReadContext(context.getStart(), repeat, repeatCount, mh, readBases, false);
+        // VariantReadContext readContext = null; // new VariantReadContext(variant, )
 
         int maxDepth = 0;
         for(Genotype genotype : context.getGenotypes().immutable())
@@ -83,35 +87,35 @@ public final class CandidateSerialization
             maxDepth = Math.max(maxDepth, getGenotypeAttributeAsInt(genotype, RAW_DEPTH, 0));
         }
 
-        return new Candidate(tier, variant, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0);
+        return new Candidate(tier, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0);
     }
 
     public static VariantContextBuilder toContext(final Candidate candidate)
     {
         final List<Allele> alleles = createAlleles(candidate.variant());
-        final ReadContext readContext = candidate.readContext();
+        final VariantReadContext readContext = candidate.readContext();
 
         final VariantContextBuilder builder = new VariantContextBuilder().chr(candidate.chromosome())
                 .source("SAGE")
                 .start(candidate.position())
                 .attribute(TIER, candidate.tier())
                 .attribute(READ_CONTEXT, candidate.readContext().toString())
-                .attribute(READ_CONTEXT_LEFT_FLANK, candidate.readContext().leftFlankString())
-                .attribute(READ_CONTEXT_RIGHT_FLANK, candidate.readContext().rightFlankString())
-                .attribute(READ_CONTEXT_INDEX, readContext.readBasesPositionIndex() - readContext.readBasesLeftCentreIndex())
+                .attribute(READ_CONTEXT_LEFT_FLANK, candidate.readContext().leftFlankStr())
+                .attribute(READ_CONTEXT_RIGHT_FLANK, candidate.readContext().rightFlankStr())
+                .attribute(READ_CONTEXT_INDEX, readContext.VarReadIndex)
                 .attribute(READ_CONTEXT_EVENTS, candidate.minNumberOfEvents())
                 .computeEndFromAlleles(alleles, (int) candidate.position())
                 .alleles(alleles);
 
-        if(!readContext.microhomology().isEmpty())
+        if(!readContext.hasHomology())
         {
-            builder.attribute(READ_CONTEXT_MICRO_HOMOLOGY, readContext.microhomology());
+            builder.attribute(READ_CONTEXT_MICRO_HOMOLOGY, readContext.Homology.Bases);
         }
 
-        if(readContext.RepeatCount > 0)
+        if(readContext.MaxRepeat != null)
         {
-            builder.attribute(READ_CONTEXT_REPEAT_COUNT, readContext.RepeatCount)
-                    .attribute(READ_CONTEXT_REPEAT_SEQUENCE, readContext.Repeat);
+            builder.attribute(READ_CONTEXT_REPEAT_COUNT, readContext.MaxRepeat.Count)
+                    .attribute(READ_CONTEXT_REPEAT_SEQUENCE, readContext.MaxRepeat.Bases);
         }
 
         return builder;

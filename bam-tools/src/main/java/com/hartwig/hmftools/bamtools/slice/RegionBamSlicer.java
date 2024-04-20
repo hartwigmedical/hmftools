@@ -1,15 +1,15 @@
 package com.hartwig.hmftools.bamtools.slice;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
 import java.io.File;
 import java.util.concurrent.Callable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.bam.BamSlicer;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;

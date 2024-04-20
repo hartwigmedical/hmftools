@@ -2,9 +2,9 @@ package com.hartwig.hmftools.sage.bqr;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.extractUmiType;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.extractUmiType;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.sequencing.SequencingType.ULTIMA;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.ULTIMA_MAX_QUAL;
 import static com.hartwig.hmftools.common.sequencing.UltimaBamUtils.extractConsensusType;
@@ -20,14 +20,15 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.samtools.CigarHandler;
-import com.hartwig.hmftools.common.samtools.CigarTraversal;
+import com.hartwig.hmftools.common.bam.BamSlicer;
+import com.hartwig.hmftools.common.bam.CigarHandler;
+import com.hartwig.hmftools.common.bam.CigarTraversal;
+import com.hartwig.hmftools.common.qual.BqrKey;
+import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.RefSequence;
 
 import htsjdk.samtools.CigarElement;
@@ -43,10 +44,12 @@ public class BqrRegionReader implements CigarHandler
     private final SamReader mBamReader;
     private final BaseQualityResults mResults;
     private final BqrRecordWriter mRecordWriter;
+    private final boolean mWritePositionData;
     private final boolean mWriteReadData;
 
     private ChrBaseRegion mRegion;
-    private IndexedBases mIndexedBases;
+    private RefSequence mRefSequence;
+    private final Set<Integer> mKnownVariants;
 
     private final Set<BqrKeyCounter> mQualityCounts; // summarised counts with position removed
     private final Map<BqrKey,Integer> mKeyCountsMap;
@@ -77,7 +80,8 @@ public class BqrRegionReader implements CigarHandler
         mRefGenome = refGenome;
         mResults = results;
         mRecordWriter = recordWriter;
-        mWriteReadData = mRecordWriter.enabled();
+        mWriteReadData = mConfig.BQR.WriteReads;
+        mWritePositionData = mConfig.BQR.WritePositions;
 
         mUseReadType = useReadType(mConfig);
         mCurrentReadType = BqrReadType.NONE;
@@ -85,6 +89,7 @@ public class BqrRegionReader implements CigarHandler
 
         mBaseQualityData = null;
         mQualityCounts = Sets.newHashSet();
+        mKnownVariants = Sets.newHashSet();
         mKeyCountsMap = Maps.newHashMap();
         mPurgeIndex = 0;
         mMaxIndex = 0;
@@ -93,18 +98,19 @@ public class BqrRegionReader implements CigarHandler
         mReadCounter = 0;
     }
 
-    public void initialise(final ChrBaseRegion region)
+    public void initialise(final ChrBaseRegion region, final Set<Integer> knownVariants)
     {
         mRegion = region;
+        mKnownVariants.clear();
+        mKnownVariants.addAll(knownVariants);
 
         if(mRefGenome != null)
         {
-            final RefSequence refSequence = new RefSequence(mRegion, mRefGenome);
-            mIndexedBases = refSequence.alignment();
+            mRefSequence = new RefSequence(mRegion, mRefGenome);
         }
         else
         {
-            mIndexedBases = null;
+            mRefSequence = null;
         }
 
         if(mBaseQualityData == null || mBaseQualityData.length != region.baseLength())
@@ -160,7 +166,12 @@ public class BqrRegionReader implements CigarHandler
     {
         for(int i = mPurgeIndex; i <= mMaxIndex; ++i)
         {
-            buildSummaryData(mBaseQualityData[i]);
+            BaseQualityDataCollection bqDataCollection = mBaseQualityData[i];
+
+            if(bqDataCollection == null)
+                continue;
+
+            buildSummaryData(bqDataCollection);
         }
 
         for(Map.Entry<BqrKey,Integer> entry : mKeyCountsMap.entrySet())
@@ -175,7 +186,32 @@ public class BqrRegionReader implements CigarHandler
     private void buildSummaryData(final BaseQualityDataCollection bqDataCollection)
     {
         if(bqDataCollection != null)
+        {
+            if(mWritePositionData)
+            {
+                for(Map.Entry<BqrReadType,BaseQualityData> entry : bqDataCollection.DataMap.entrySet())
+                {
+                    BqrReadType readType = entry.getKey();
+
+                    if(readType != BqrReadType.DUAL)
+                        continue;
+
+                    BaseQualityData bqData = entry.getValue();
+
+                    if(bqData.hasIndel())
+                        continue;
+
+                    for(AltQualityCount altQualityCount : bqData.altQualityCounts())
+                    {
+                        mRecordWriter.writePositionData(
+                                mRegion.Chromosome, bqDataCollection.Position, bqData.Ref, altQualityCount.Alt,
+                                bqData.TrinucleotideContext, altQualityCount.Quality, readType, altQualityCount.Count);
+                    }
+                }
+            }
+
             bqDataCollection.DataMap.values().forEach(x -> buildSummaryData(x));
+        }
     }
 
     private void buildSummaryData(final BaseQualityData bqData)
@@ -200,7 +236,7 @@ public class BqrRegionReader implements CigarHandler
         if(mBamReader == null)
             return;
 
-        BamSlicer slicer = new BamSlicer(mConfig.QualityRecalibration.MinMapQuality);
+        BamSlicer slicer = new BamSlicer(mConfig.BQR.MinMapQuality);
 
         try
         {
@@ -296,8 +332,8 @@ public class BqrRegionReader implements CigarHandler
         if(!mRegion.containsPosition(position))
             return;
 
-        byte ref = mIndexedBases.base(position);
-        byte[] trinucleotideContext = mIndexedBases.trinucleotideContext(position);
+        byte ref = mRefSequence.base(position);
+        byte[] trinucleotideContext = mRefSequence.trinucleotideContext(position);
         BaseQualityData bqData = getOrCreateBaseQualData(position, ref, trinucleotideContext, mCurrentReadType);
         bqData.setHasIndel();
     }
@@ -321,16 +357,19 @@ public class BqrRegionReader implements CigarHandler
             if(mMaxReadEndPosition > 0 && position > mMaxReadEndPosition)
                 break;
 
+            if(mKnownVariants.contains(position))
+                continue;
+
             int readIndex = startReadIndex + i;
 
-            byte ref = mIndexedBases.base(position);
+            byte ref = mRefSequence.base(position);
             byte alt = record.getReadBases()[readIndex];
             byte quality = record.getBaseQualities()[readIndex];
 
             if(mSequencingType == ULTIMA && quality != ULTIMA_MAX_QUAL)
                 continue;
 
-            byte[] trinucleotideContext = mIndexedBases.trinucleotideContext(position);
+            byte[] trinucleotideContext = mRefSequence.trinucleotideContext(position);
 
             if(alt == N || !isValid(trinucleotideContext))
                 continue;
@@ -339,7 +378,7 @@ public class BqrRegionReader implements CigarHandler
             baseQualityData.processReadBase(alt, quality);
 
             if(mWriteReadData && ref != alt)
-                mRecordWriter.writeRecordData(record, position, readIndex, ref, alt, trinucleotideContext, quality);
+                mRecordWriter.writeRecordData(record, position, readIndex, ref, alt, trinucleotideContext, quality, mCurrentReadType);
         }
     }
 

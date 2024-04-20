@@ -5,36 +5,29 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.addConsensusReadAttribute;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getFivePrimeUnclippedPosition;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
-import static com.hartwig.hmftools.common.samtools.UmiReadType.DUAL;
-import static com.hartwig.hmftools.common.samtools.UmiReadType.SINGLE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.addConsensusReadAttribute;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.getFivePrimeUnclippedPosition;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.orientation;
+import static com.hartwig.hmftools.common.bam.UmiReadType.DUAL;
+import static com.hartwig.hmftools.common.bam.UmiReadType.SINGLE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
-import static com.hartwig.hmftools.markdups.common.Constants.CONSENSUS_PREFIX;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
-import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM;
-import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM_STR;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
-
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
-import com.hartwig.hmftools.common.samtools.UmiReadType;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.bam.UmiReadType;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReadInfo;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 

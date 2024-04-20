@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 
+@Deprecated
 public interface CuppaClassifier
 {
     CategoryType categoryType();

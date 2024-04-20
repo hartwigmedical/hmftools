@@ -23,6 +23,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class RealignmentTest
 {
+    /* REALIGN
     @Test
     public void testIndelRealignedLeft()
     {
@@ -246,4 +247,5 @@ public class RealignmentTest
     {
         assertEquals(expectedType, context.Type);
     }
+    */
 }

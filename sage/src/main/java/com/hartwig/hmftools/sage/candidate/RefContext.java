@@ -6,7 +6,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 public class RefContext implements GenomePosition
 {
@@ -27,12 +27,12 @@ public class RefContext implements GenomePosition
         return mAlts != null ? mAlts.values() : null;
     }
 
-    public void processAltRead(final String ref, final String alt, int baseQuality, int numberOfEvents, final ReadContext readContext)
+    public void processAltRead(final String ref, final String alt, int baseQuality, int numberOfEvents, final VariantReadContext readContext)
     {
         final AltContext altContext = getOrCreateAltContext(ref, alt);
         altContext.incrementAltRead(baseQuality);
 
-        if(readContext != null && !readContext.hasIncompleteCore())
+        if(readContext != null)
         {
             altContext.addReadContext(numberOfEvents, readContext);
         }

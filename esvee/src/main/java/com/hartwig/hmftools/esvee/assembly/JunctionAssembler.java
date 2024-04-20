@@ -1,41 +1,36 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.esvee.SvConstants.MIN_INDEL_LENGTH;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_LENGTH;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
-import static com.hartwig.hmftools.esvee.SvConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.esvee.common.AssemblyUtils.buildFromJunctionReads;
-import static com.hartwig.hmftools.esvee.common.AssemblyUtils.expandReferenceBases;
+import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.INDEL_TO_SC_MIN_SIZE_SOFTCLIP;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_SUPPORT_MISMATCH;
+import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findIndelExtensionReads;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.expandReferenceBases;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.readJunctionExtensionLength;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAtJunction;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.esvee.SvConfig;
-import com.hartwig.hmftools.esvee.common.IndelCoords;
-import com.hartwig.hmftools.esvee.common.JunctionAssembly;
-import com.hartwig.hmftools.esvee.common.Direction;
-import com.hartwig.hmftools.esvee.common.Junction;
-import com.hartwig.hmftools.esvee.read.Read;
-import com.hartwig.hmftools.esvee.read.ReadFilters;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.read.ReadFilters;
 
 public class JunctionAssembler
 {
-    private final SvConfig mConfig;
-
     private final Junction mJunction;
-
     private final List<Read> mNonJunctionReads;
-    private final List<Read> mFilteredReads;
 
-    private int mNextAssemblyNumber = 1;
-
-    public JunctionAssembler(final SvConfig config, final Junction junction)
+    public JunctionAssembler(final Junction junction)
     {
-        mConfig = config;
         mJunction = junction;
-        mFilteredReads = Lists.newArrayList();
         mNonJunctionReads = Lists.newArrayList();
     }
 
@@ -43,116 +38,89 @@ public class JunctionAssembler
 
     public List<JunctionAssembly> processJunction(final List<Read> rawReads)
     {
-        if(mJunction.IndelBased)
-            return processIndelJunction(rawReads);
+        // find prominent reads to establish the extension sequence, taking any read meeting min soft-clip lengths
+        // and repetitive indels
+
+        int consensusMismatch = PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH;
 
         List<Read> junctionReads = Lists.newArrayList();
+        List<Read> extensionReads = Lists.newArrayList();
 
-        for(Read read : rawReads)
+        if(mJunction.IndelBased)
         {
-            if(!ReadFilters.recordSoftClipsNearJunction(read, mJunction))
-            {
-                mNonJunctionReads.add(read);
-                continue;
-            }
-
-            if(!ReadFilters.isAboveBaseQualAvgPastJunctionThreshold(read, mJunction))
-            {
-                mFilteredReads.add(read);
-                continue;
-            }
-
-            junctionReads.add(read);
+            findIndelExtensionReads(mJunction, rawReads, extensionReads, junctionReads, mNonJunctionReads);
         }
-
-        // CHECK: is read realignment to the specific junction required?
-
-        if(junctionReads.size() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
-            return List.of();
-
-        List<JunctionAssembly> initialAssemblies = createInitialAssemblies(junctionReads);
-
-        // filters
-
-        // by soft-clip length
-        List<JunctionAssembly> filteredAssemblies = initialAssemblies.stream()
-                .filter(x -> x.extensionLength() >= PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
-                .collect(Collectors.toList());
-
-        filteredAssemblies.forEach(x -> x.buildRepeatInfo());
-
-        // dedup assemblies for this junction based on overlapping read support
-        AssemblyDeduper.dedupJunctionAssemblies(filteredAssemblies);
-
-        return filteredAssemblies;
-    }
-
-    private List<JunctionAssembly> createInitialAssemblies(final List<Read> junctionReads)
-    {
-        JunctionAssembly junctionSequence = buildFromJunctionReads(mJunction, junctionReads, true);
-
-        // CHECK: why keep these if less than the 32 soft-clip length, since will be dropped anyway
-        if(junctionSequence.baseLength() < PRIMARY_ASSEMBLY_MIN_LENGTH)
-            return Collections.emptyList();
-
-        // no filtering of the initial sequence and instead rely on the sequence splitting to do this with all initial mismatches preserved
-        AssemblyMismatchSplitter splitter = new AssemblyMismatchSplitter(junctionSequence);
-        List<JunctionAssembly> junctionSequences = splitter.splitOnMismatches(PRIMARY_ASSEMBLY_MIN_LENGTH);
-
-        // extend these sequences in the direction away from the junction
-        junctionSequences.forEach(x -> expandReferenceBases(x));
-
-        return junctionSequences;
-    }
-
-    public List<JunctionAssembly> processIndelJunction(final List<Read> rawReads)
-    {
-        List<Read> indelReads = Lists.newArrayList();
-        List<Read> shortIndelReads = Lists.newArrayList();
-        List<Read> softClippedReads = Lists.newArrayList();
-
-        for(Read read : rawReads)
+        else
         {
-            IndelCoords indelCoords = read.indelCoords();
+            Map<Integer, List<Read>> indelLengthReads = Maps.newHashMap();
 
-            if(indelCoords != null)
-            {
-                // must match junction exactly to be considered for support
-                if(!indelCoords.matchesJunction(mJunction.Position, mJunction.Orientation))
-                    continue;
+            // the only difference for indel-based junctions is that only the long indels are used to build the consensus extension
 
-                if(indelCoords.Length >= MIN_INDEL_LENGTH)
-                    indelReads.add(read);
-                else
-                    shortIndelReads.add(read);
-            }
-            else
+            for(Read read : rawReads)
             {
-                if(!ReadFilters.recordSoftClipsNearJunction(read, mJunction))
+                if(!ReadFilters.recordSoftClipsAndCrossesJunction(read, mJunction))
                 {
                     mNonJunctionReads.add(read);
                     continue;
                 }
 
-                if(!ReadFilters.isAboveBaseQualAvgPastJunctionThreshold(read, mJunction))
+                if(recordSoftClipsAtJunction(read, mJunction)
+                        && readJunctionExtensionLength(read, mJunction) >= PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
                 {
-                    mFilteredReads.add(read);
-                    continue;
+                    extensionReads.add(read);
                 }
 
-                softClippedReads.add(read);
+                if((mJunction.isForward() && read.indelImpliedAlignmentEnd() > 0)
+                || (mJunction.isReverse() && read.indelImpliedAlignmentStart() > 0))
+                {
+                    buildIndelFrequencies(indelLengthReads, read);
+                }
+
+                junctionReads.add(read);
             }
+
+            List<Read> dominantIndelReads = findMaxFrequencyIndelReads(indelLengthReads);
+
+            extensionReads.addAll(dominantIndelReads);
         }
 
-        // CHECK: is read realignment to the specific junction required?
-
-        if(indelReads.size() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
-            return List.of();
-
-        JunctionAssembly assembly = IndelBuilder.buildFromIndelReads(mJunction, indelReads, shortIndelReads, softClippedReads);
-
-        if(assembly.supportCount() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+        if(extensionReads.size() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
             return Collections.emptyList();
+
+        ExtensionSeqBuilder extensionSeqBuilder = new ExtensionSeqBuilder(mJunction, extensionReads, consensusMismatch);
+
+        if(!extensionSeqBuilder.isValid())
+            return Collections.emptyList();
+
+        List<SupportRead> assemblySupport = extensionSeqBuilder.formAssemblySupport();
+
+        if(assemblySupport.size() < PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
+            return Collections.emptyList();
+
+        JunctionAssembly assembly = new JunctionAssembly(
+                mJunction, extensionSeqBuilder.extensionBases(), extensionSeqBuilder.baseQualitiies(), assemblySupport,
+                extensionSeqBuilder.repeatInfo());
+
+        // test other reads against this new assembly
+        int supportMismatch = PRIMARY_ASSEMBLY_SUPPORT_MISMATCH;
+
+        int mismatchCount = extensionSeqBuilder.mismatches();
+
+        for(Read read : junctionReads)
+        {
+            if(assemblySupport.stream().anyMatch(x -> x.cachedRead() == read))
+                continue;
+
+            if(!assembly.checkAddJunctionRead(read, supportMismatch))
+                ++mismatchCount;
+        }
+
+        assembly.addMismatchReadCount(mismatchCount);
+
+        // deal with mismatch reads by forming a new assembly if they are significant
+
+        // dedup assemblies for this junction based on overlapping read support
+        // AssemblyDeduper.dedupJunctionAssemblies(filteredAssemblies);
 
         expandReferenceBases(assembly);
 
@@ -161,10 +129,40 @@ public class JunctionAssembler
         return Lists.newArrayList(assembly);
     }
 
-    private String nextAssemblyName()
+    private void buildIndelFrequencies(final Map<Integer,List<Read>> indelLengthReads, final Read read)
     {
-        // consider naming based on initial length and support? try to make typically deterministic
-        return String.format("%s:%s%s:%s", mJunction.Chromosome, mJunction.Position,
-                mJunction.direction() == Direction.FORWARDS ? "F" : "R", mNextAssemblyNumber++);
+        int maxIndelLength = maxIndelLength(read.cigarElements());
+
+        if(maxIndelLength >= INDEL_TO_SC_MIN_SIZE_SOFTCLIP)
+        {
+            List<Read> lengthReads = indelLengthReads.get(maxIndelLength);
+            if(lengthReads == null)
+            {
+                lengthReads = Lists.newArrayList();
+                indelLengthReads.put(maxIndelLength, lengthReads);
+            }
+
+            lengthReads.add(read);
+        }
+    }
+
+    private static List<Read> findMaxFrequencyIndelReads(final Map<Integer,List<Read>> indelLengthReads)
+    {
+        if(indelLengthReads.isEmpty())
+            return Collections.emptyList();
+
+        int maxFrequency = 0;
+        int indelLength = 0;
+
+        for(Map.Entry<Integer,List<Read>> entry : indelLengthReads.entrySet())
+        {
+            if(entry.getValue().size() > maxFrequency)
+            {
+                indelLength = entry.getKey();
+                maxFrequency = entry.getValue().size();
+            }
+        }
+
+        return indelLengthReads.get(indelLength);
     }
 }

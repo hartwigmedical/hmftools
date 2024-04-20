@@ -2,8 +2,8 @@ package com.hartwig.hmftools.markdups.write;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UMI_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.PRIMARY;
@@ -11,11 +11,12 @@ import static com.hartwig.hmftools.markdups.common.FragmentStatus.PRIMARY;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyser;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
+import com.hartwig.hmftools.markdups.common.DuplicateGroup;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
-import com.hartwig.hmftools.markdups.common.DuplicateGroup;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -28,17 +29,19 @@ public abstract class BamWriter
     protected final String mFilename;
     protected final SAMFileWriter mSamFileWriter;
     protected final ReadDataWriter mReadDataWriter;
+    private final JitterAnalyser mJitterAnalyser;
 
     protected final AtomicLong mNonConsensusReadCount;
     protected final AtomicLong mConsensusReadCount;
 
-    public BamWriter(
-            final String filename, final MarkDupsConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter)
+    public BamWriter(final String filename, final MarkDupsConfig config, final ReadDataWriter readDataWriter,
+            final SAMFileWriter samFileWriter, @Nullable final JitterAnalyser jitterAnalyser)
     {
         mFilename = filename;
         mConfig = config;
         mSamFileWriter = samFileWriter;
         mReadDataWriter = readDataWriter;
+        mJitterAnalyser = jitterAnalyser;
 
         mNonConsensusReadCount = new AtomicLong(0);
         mConsensusReadCount = new AtomicLong(0);
@@ -78,7 +81,7 @@ public abstract class BamWriter
         {
             if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
             {
-                writeRecord(read);
+                processRecord(read);
                 mConsensusReadCount.incrementAndGet();
 
                 mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), 0, group.umiId());
@@ -94,6 +97,16 @@ public abstract class BamWriter
     }
 
     protected abstract void writeRecord(final SAMRecord read);
+
+    protected final void processRecord(final SAMRecord read)
+    {
+        if(mJitterAnalyser != null && mJitterAnalyser.bamSlicerFilter().passesFilters(read))
+        {
+            mJitterAnalyser.processRead(read);
+        }
+
+        writeRecord(read);
+    }
 
     public abstract void close();
 
@@ -137,7 +150,7 @@ public abstract class BamWriter
             read.setDuplicateReadFlag(true); // overwrite any existing status
         }
 
-        writeRecord(read);
+        processRecord(read);
     }
 
     public String toString()

@@ -12,6 +12,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.qual.BqrKey;
+import com.hartwig.hmftools.common.qual.BqrReadType;
 
 public class BaseQualityData
 {
@@ -31,6 +33,8 @@ public class BaseQualityData
         mHasIndel = false;
         mAltQualityCounts = Lists.newArrayList();
     }
+
+    public List<AltQualityCount> altQualityCounts() { return mAltQualityCounts; }
 
     public void processReadBase(byte alt, byte quality)
     {
@@ -98,19 +102,4 @@ public class BaseQualityData
                 (char)Ref, new String(TrinucleotideContext), ReadType, mAltQualityCounts.size());
     }
 
-    private class AltQualityCount
-    {
-        public final byte Alt;
-        public final byte Quality;
-        public int Count;
-
-        public AltQualityCount(final byte alt, final byte quality)
-        {
-            Alt = alt;
-            Quality = quality;
-            Count = 1;
-        }
-
-        public String toString() { return String.format("alt(%s) qual(%d) count(%d)", (char)Alt, (int)Quality, Count); }
-    }
 }

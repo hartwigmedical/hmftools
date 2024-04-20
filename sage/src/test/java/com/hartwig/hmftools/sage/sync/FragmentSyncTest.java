@@ -1,26 +1,26 @@
 package com.hartwig.hmftools.sage.sync;
 
-import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
+import static com.hartwig.hmftools.sage.common.TestUtils.MOCK_REF_GENOME;
 import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
-import static com.hartwig.hmftools.sage.common.TestUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.sync.CombinedSyncData.formFragmentRead;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
+import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 
-import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
@@ -191,16 +191,18 @@ public class FragmentSyncTest
         String refBase = REF_BASES.substring(position, position + 1);
         String altBase = getNextBase(refBase);
 
-        SimpleVariant variant = new SimpleVariant(CHR_1, position, refBase, altBase);
+        SimpleVariant variant = createSimpleVariant(position, refBase, altBase);
 
         String readBases = REF_BASES.substring(8, position) + altBase + REF_BASES.substring(position + 1, 33);
-        final ReadContext readContext = createReadContext(position, 12, 10, 14, readBases, Strings.EMPTY);
 
-        final IndexedBases REF_INDEXED_BASES = new IndexedBases(1, 0, REF_BASES.getBytes());
-        final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG, RECALIBRATION, REF_INDEXED_BASES);
+        VariantReadContext readContext = createReadContext(position, refBase, altBase);
+
+        final RefSequence refSequence = new RefSequence(1, REF_BASES.getBytes());
+
+        final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG, RECALIBRATION, refSequence, MOCK_REF_GENOME);
 
         final ReadContextCounter readContextCounter = new ReadContextCounter(
-                1, variant, readContext, VariantTier.PANEL, 100, 0,
+                1, readContext, VariantTier.PANEL, 100, 0,
                 TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         String READ_ID = "READ_01";

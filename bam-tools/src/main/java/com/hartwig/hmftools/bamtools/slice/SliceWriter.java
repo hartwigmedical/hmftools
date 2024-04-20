@@ -3,9 +3,8 @@ package com.hartwig.hmftools.bamtools.slice;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE_TYPE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
@@ -14,7 +13,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.bam.BamOperations;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
@@ -129,7 +129,9 @@ public class SliceWriter
 
             if(!mConfig.UnsortedBam)
             {
-                BT_LOGGER.debug("sorting sliced BAM");
+                // TODO
+                // BT_LOGGER.debug("indexing sliced BAM");
+                // BamOperations.indexBam(bamToolName(), bamToolPath(), finalBamFilename, mConfig.Threads)
             }
 
             mBamWriter.close();

@@ -2,26 +2,25 @@ package com.hartwig.hmftools.sage.vcf;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.Doubles.round;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_BASE_QUAL;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_MAP_QUALITY;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_NM_COUNT;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.LOCAL_PHASE_SET_READ_COUNT;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.MAX_READ_EDGE_DISTANCE;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.MIXED_SOMATIC_GERMLINE;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.OLD_INDEL_DEDUP_FLAG;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_ALLELIC_BASE_QUALITY;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_ALLELIC_DEPTH;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_DEPTH;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_IMPROPER_PAIR;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_JITTER;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.FRAG_STRAND_BIAS;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_STRAND_BIAS;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_MAP_QUALITY;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.LOCAL_PHASE_SET_READ_COUNT;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_BASE_QUALITY;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_DEPTH;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_DEPTH;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_IMPROPER_PAIR;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.TOTAL_RAW_BASE_QUAL;
 
 import java.util.List;
 
@@ -82,12 +81,14 @@ public final class VariantContextFactory
             builder.attribute(MIXED_SOMATIC_GERMLINE, variant.mixedGermlineImpact());
         }
 
-        if(variant.dedupIndelDiff())
-        {
-            builder.attribute(OLD_INDEL_DEDUP_FLAG, true);
-        }
+        ReadContextCounter primaryRcCounter = variant.tumorReadCounters().get(0);
 
-        builder.attribute(MAX_READ_EDGE_DISTANCE, variant.tumorReadCounters().get(0).readEdgeDistance().maxAltDistanceFromUnclippedEdge());
+        builder.attribute(MAX_READ_EDGE_DISTANCE, primaryRcCounter.readEdgeDistance().maxAltDistanceFromUnclippedEdge());
+
+        if(primaryRcCounter.ultimaQualModel() != null)
+        {
+            builder.attribute(QUAL_MODEL_TYPE, primaryRcCounter.ultimaQualModel().type().toString());
+        }
 
         final VariantContext context = builder.make();
         if(context.isNotFiltered())
@@ -108,9 +109,6 @@ public final class VariantContextFactory
         int avgMapQuality = depth > 0 ? (int)Math.round(counter.mapQualityTotal() / (double)depth) : 0;
         int avgAltMapQuality = altSupport > 0 ? (int)Math.round(counter.altMapQualityTotal() / (double)altSupport) : 0;
 
-        double avgNmCount = depth > 0 ? round(counter.nmCountTotal() / (double)depth, 1) : 0;
-        double avgAltNmCount = altSupport > 0 ? round(counter.altNmCountTotal() / (double)altSupport, 1) : 0;
-
         builder.DP(depth)
                 .AD(new int[] { counter.refSupport(), altSupport })
                 .attribute(READ_CONTEXT_QUALITY, counter.quality())
@@ -118,9 +116,8 @@ public final class VariantContextFactory
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPairCount())
                 .attribute(READ_CONTEXT_JITTER, counter.jitter())
                 .attribute(AVG_MAP_QUALITY, new int[] { avgMapQuality, avgAltMapQuality })
-                .attribute(AVG_NM_COUNT, new double[] { avgNmCount, avgAltNmCount })
-                .attribute(RAW_ALLELIC_DEPTH, new int[] { counter.rawRefSupport(), counter.rawAltSupport() })
-                .attribute(RAW_ALLELIC_BASE_QUALITY, new int[] { counter.rawRefBaseQualityTotal(), counter.rawAltBaseQualityTotal() })
+                .attribute(RAW_SUPPORT_DEPTH, new int[] { counter.rawRefSupport(), counter.rawAltSupport() })
+                .attribute(RAW_SUPPORT_BASE_QUALITY, new int[] { counter.rawRefBaseQualityTotal(), counter.rawAltBaseQualityTotal() })
                 .attribute(RAW_DEPTH, counter.rawDepth())
                 .attribute(
                         FRAG_STRAND_BIAS, format("%.3f,%.3f", counter.fragmentStrandBiasRef().bias(), counter.fragmentStrandBiasAlt().bias()))
@@ -133,6 +130,11 @@ public final class VariantContextFactory
         if(counter.umiTypeCounts() != null)
         {
             builder.attribute(UMI_TYPE_COUNTS, counter.umiTypeCounts());
+        }
+
+        if(counter.ultimaQualModel() != null)
+        {
+            builder.attribute(TOTAL_RAW_BASE_QUAL, counter.rawContextAltBaseQualityTotal());
         }
 
         return builder.make();

@@ -3,9 +3,9 @@ package com.hartwig.hmftools.teal.breakend
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
-import com.hartwig.hmftools.common.samtools.CigarUtils
-import com.hartwig.hmftools.common.samtools.CigarUtils.*
-import com.hartwig.hmftools.common.samtools.SamRecordUtils
+import com.hartwig.hmftools.common.bam.CigarUtils
+import com.hartwig.hmftools.common.bam.CigarUtils.*
+import com.hartwig.hmftools.common.bam.SamRecordUtils
 import com.hartwig.hmftools.teal.ReadGroup
 import com.hartwig.hmftools.teal.TealUtils
 import com.hartwig.hmftools.teal.util.TelomereMatcher

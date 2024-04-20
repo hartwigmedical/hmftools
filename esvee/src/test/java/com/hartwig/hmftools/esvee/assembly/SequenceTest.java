@@ -1,12 +1,19 @@
 package com.hartwig.hmftools.esvee.assembly;
 
-import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_BASE_QUAL;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
-import static com.hartwig.hmftools.esvee.common.RepeatInfo.findDualBaseRepeat;
-import static com.hartwig.hmftools.esvee.common.RepeatInfo.findDualDualRepeat;
-import static com.hartwig.hmftools.esvee.common.RepeatInfo.findRepeats;
-import static com.hartwig.hmftools.esvee.common.RepeatInfo.findSingleBaseRepeat;
-import static com.hartwig.hmftools.esvee.common.RepeatInfo.findTripleBaseRepeat;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
+import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
+import static com.hartwig.hmftools.esvee.TestUtils.createRead;
+import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.buildTrimmedRefBaseSequence;
+import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findDualBaseRepeat;
+import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findDualDualRepeat;
+import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findMultiBaseRepeat;
+import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findRepeats;
+import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findSingleBaseRepeat;
+import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.findTripleBaseRepeat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -14,7 +21,11 @@ import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.common.RepeatInfo;
+import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.esvee.assembly.types.Junction;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
+import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
+import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 import org.junit.Test;
 
@@ -24,11 +35,29 @@ public class SequenceTest
     public void testRepeatTypes()
     {
         // single base repeats
-        //              01234567890123456789
-        String bases = "AAACCTTTTGAAAAAATGC";
+        //              0123456789
+        String bases = "AAACCTTTTT";
 
-        RepeatInfo repeatInfo = findSingleBaseRepeat(bases.getBytes(), 0);
+        // first check limits
+        RepeatInfo repeatInfo = findSingleBaseRepeat(bases.getBytes(), 5);
+        assertNotNull(repeatInfo);
+        assertEquals("T", repeatInfo.Bases);
+        assertEquals(5, repeatInfo.Count);
+
+        repeatInfo = findSingleBaseRepeat(bases.getBytes(), 6);
+        assertNotNull(repeatInfo);
+        assertEquals("T", repeatInfo.Bases);
+        assertEquals(4, repeatInfo.Count);
+
+        repeatInfo = findSingleBaseRepeat(bases.getBytes(), 7);
         assertNull(repeatInfo);
+
+        //       01234567890123456789
+        bases = "AAACCTTTTGAAAAAATGC";
+
+        repeatInfo = findSingleBaseRepeat(bases.getBytes(), 0);
+        assertNull(repeatInfo);
+
 
         repeatInfo = findSingleBaseRepeat(bases.getBytes(), 5);
         assertNotNull(repeatInfo);
@@ -56,12 +85,15 @@ public class SequenceTest
         //       012345678901234567890123456789
         bases = "ATGATGGGCCATGATGATGATG";
         repeatInfo = findTripleBaseRepeat(bases.getBytes(), 0);
+        repeatInfo = findMultiBaseRepeat(bases.getBytes(), 0, 3);
+
         assertNotNull(repeatInfo);
         assertEquals("ATG", repeatInfo.Bases);
         assertEquals(2, repeatInfo.Count);
         assertEquals(0, repeatInfo.Index);
 
         repeatInfo = findTripleBaseRepeat(bases.getBytes(), 10);
+        repeatInfo = findMultiBaseRepeat(bases.getBytes(), 10, 3);
         assertNotNull(repeatInfo);
         assertEquals("ATG", repeatInfo.Bases);
         assertEquals(4, repeatInfo.Count);
@@ -77,6 +109,13 @@ public class SequenceTest
         assertEquals("CCTT", repeatInfo.Bases);
         assertEquals(3, repeatInfo.Count);
         assertEquals(8, repeatInfo.Index);
+
+        // five-base repeat
+        bases = "ACTGTACTGTACTGTACTGTAATTGGTTGGAAGGT";
+        repeatInfo = findMultiBaseRepeat(bases.getBytes(), 0, 5);
+        assertNotNull(repeatInfo);
+        assertEquals("ACTGT", repeatInfo.Bases);
+        assertEquals(4, repeatInfo.Count);
 
         // test them all together
         //       0123456789012345678901234567890123456789
@@ -160,7 +199,7 @@ public class SequenceTest
         byte[] firstBaseQuals = buildDefaultBaseQuals(firstBases.length());
 
         List<RepeatInfo> secondRepeats = findRepeats(secondBases.getBytes());
-        assertEquals(5, secondRepeats.size());
+        assertEquals(6, secondRepeats.size());
 
         byte[] secondBaseQuals = buildDefaultBaseQuals(secondBases.length());
 
@@ -171,6 +210,46 @@ public class SequenceTest
                 secondBases.getBytes(), secondBaseQuals, 0, secondBaseQuals.length - 1, secondRepeats, -1);
 
         assertEquals(8, mismatches);
+    }
+
+    @Test
+    public void testAssemblyRefBasesTrimmed()
+    {
+        Junction posJunction = new Junction(CHR_1, 60, POS_ORIENT);
+
+        String extensionSequence = "ACGTTCGTAAAAAAGGGGGGACGTACGTCCCC";
+        String refBaseSequence = "ACGTAGAGAGAGACGTCCCCACGG";
+        String assemblySequence = refBaseSequence + extensionSequence;
+        byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(assemblySequence.length());
+
+        Read read1 = createRead(READ_ID_GENERATOR.nextId(), 37, assemblySequence, "24M32S");
+        Read read1b = cloneRead(read1, READ_ID_GENERATOR.nextId());
+
+        String softClipRef = "GGGGGGGG";
+        Read read2 = createRead(
+                READ_ID_GENERATOR.nextId(), 41,
+                softClipRef + refBaseSequence + extensionSequence.substring(0, 20), "12S20M20S");
+
+        JunctionAssembly assembly = new JunctionAssembler(posJunction).processJunction(List.of(read1, read1b, read2)).get(0);
+
+        // expandReferenceBases(assembly);
+        // assembly.buildRepeatInfo();
+
+        assertEquals("ACGT_AG4_ACGT_C4_ACGG", assembly.refBasesRepeatedTrimmed()); // 4 + 4 + 4 + 2 + 4
+        assertEquals(18, assembly.refBaseTrimLength());
+
+        String refBasesTrimmed = buildTrimmedRefBaseSequence(assembly, 12);
+        assertEquals("ACGT_AG4_ACGT", refBasesTrimmed);
+
+        Junction negJunction = new Junction(CHR_1, 60, NEG_ORIENT);
+
+        assemblySequence = extensionSequence + refBaseSequence;
+
+        assembly = new JunctionAssembly(negJunction, assemblySequence.getBytes(), baseQuals, extensionSequence.length());
+
+        assembly.buildRepeatInfo();
+
+        assertEquals("ACGT_AG4_ACGT_C4_ACGG", assembly.refBasesRepeatedTrimmed());
     }
 }
 

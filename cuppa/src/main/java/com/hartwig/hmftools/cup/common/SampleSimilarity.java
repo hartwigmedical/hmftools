@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cup.common;
 
 import java.util.List;
 
+@Deprecated
 public class SampleSimilarity
 {
     public final String SampleId;

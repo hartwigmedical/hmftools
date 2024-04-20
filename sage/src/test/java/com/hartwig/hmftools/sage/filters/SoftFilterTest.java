@@ -1,14 +1,16 @@
 package com.hartwig.hmftools.sage.filters;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
+import static com.hartwig.hmftools.sage.common.TestUtils.MOCK_REF_GENOME;
 import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
-import static com.hartwig.hmftools.sage.common.TestUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
-import static com.hartwig.hmftools.sage.common.TestUtils.createVariant;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
+import static com.hartwig.hmftools.sage.common.VariantUtils.sageVariantFromReadContextCounter;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.FRAGMENT_COORDS;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL;
@@ -22,8 +24,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
+import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
@@ -32,7 +34,6 @@ import com.hartwig.hmftools.sage.filter.VariantFilters;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 
-import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
@@ -40,8 +41,11 @@ import htsjdk.samtools.SAMRecord;
 public class SoftFilterTest
 {
     private static final String REF_BASES = "X" + generateRandomBases(100);
-    private static final IndexedBases REF_INDEXED_BASES = new IndexedBases(1, 0, REF_BASES.getBytes());
-    private static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG, RECALIBRATION, REF_INDEXED_BASES);
+
+    private static final RefSequence REF_SEQUENCE = new RefSequence(1, REF_BASES.getBytes());
+
+    private static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(
+            TEST_CONFIG, RECALIBRATION, REF_SEQUENCE, MOCK_REF_GENOME);
 
     private static final String TEST_READ_ID = "READ_01";
     private static final String TEST_CIGAR = "30M";
@@ -68,7 +72,7 @@ public class SoftFilterTest
 
         ReadContextCounter readContextCounter = createSnvReadContextCounter(position);
 
-        // all reads have the variant near the end of the read, thereby failing the max edge distance filter
+        // all reads have the variant near the end of the read, and so fail the max edge distance filter
 
         String altBase = readContextCounter.alt();
 
@@ -100,7 +104,7 @@ public class SoftFilterTest
         assertEquals(7, readContextCounter.readEdgeDistance().maxAltDistanceFromUnclippedEdge());
         assertEquals(48, readContextCounter.readEdgeDistance().maxDistanceFromUnclippedEdge());
 
-        SageVariant variant = createVariant(readContextCounter);
+        SageVariant variant = sageVariantFromReadContextCounter(readContextCounter);
 
         FILTERS.applySoftFilters(variant);
 
@@ -148,7 +152,7 @@ public class SoftFilterTest
         assertEquals(1, readContextCounter.fragmentCoords().lowerCount());
         assertEquals(2, readContextCounter.fragmentCoords().upperCount());
 
-        SageVariant variant = createVariant(readContextCounter);
+        SageVariant variant = sageVariantFromReadContextCounter(readContextCounter);
 
         FILTERS.applySoftFilters(variant);
 
@@ -189,14 +193,13 @@ public class SoftFilterTest
 
         SimpleVariant variant = new SimpleVariant(CHR_1, variantPosition, refBase, altBase);
 
-        // use minimum core with +/-2
-        String readBases = REF_BASES.substring(
-                variantPosition - 2, variantPosition) + altBase + REF_BASES.substring(variantPosition + 1, variantPosition + 3);
+        String leftCore = REF_BASES.substring(variantPosition - MIN_CORE_DISTANCE, variantPosition);
+        String rightCore = REF_BASES.substring(variantPosition + 1, variantPosition + 1 + MIN_CORE_DISTANCE);
 
-        final ReadContext readContext = createReadContext(variantPosition, 2, 0, 4, readBases, Strings.EMPTY);
+        VariantReadContext readContext = createReadContext(variant, leftCore, rightCore);
 
         return new ReadContextCounter(
-                1, variant, readContext, VariantTier.PANEL, 100, 0,
+                1, readContext, VariantTier.PANEL, 100, 0,
                 HIGH_QUAL_CONFIG, QUALITY_CALCULATOR, null);
     }
 }

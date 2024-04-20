@@ -25,7 +25,7 @@ import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.dedup.VariantDeduper;
-import com.hartwig.hmftools.sage.evidence.FragmentLengthData;
+import com.hartwig.hmftools.common.sage.FragmentLengthCounts;
 import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
@@ -74,7 +74,7 @@ public class RegionTask
         mCandidateState = new CandidateStage(config, hotspots, panelRegions, highConfidenceRegions, coverage, samSlicerFactory);
         mEvidenceStage = new EvidenceStage(config.Common, refGenome, qualityRecalibrationMap, phaseSetCounter, samSlicerFactory);
 
-        mVariantDeduper = new VariantDeduper(transcripts, mRefGenome, mConfig.OldIndelDedup, mConfig.Common.getReadLength());
+        mVariantDeduper = new VariantDeduper(transcripts, mRefGenome, mConfig.Common.getReadLength());
 
         mSageVariants = Lists.newArrayList();
         mPassingPhaseSets = Sets.newHashSet();
@@ -220,7 +220,7 @@ public class RegionTask
                 for(int s = 0; s < mConfig.TumorIds.size(); ++s)
                 {
                     String sampleId = mConfig.TumorIds.get(s);
-                    FragmentLengthData fragmentLengthData = variant.tumorReadCounters().get(s).fragmentLengths();
+                    FragmentLengthCounts fragmentLengthData = variant.tumorReadCounters().get(s).fragmentLengths();
                     mFragmentLengths.writeVariantFragmentLength(variantInfo, sampleId, fragmentLengthData);
                 }
             }

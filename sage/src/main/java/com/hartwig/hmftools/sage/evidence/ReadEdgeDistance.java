@@ -4,8 +4,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
-import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 
 import com.hartwig.hmftools.sage.sync.FragmentData;
 

@@ -1,62 +1,46 @@
 package com.hartwig.hmftools.common.variant;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public final class SageVcfTags
 {
     public static final String TIER = "TIER";
-    private static final String TIER_DESCRIPTION = "Tier: [HOTSPOT, PANEL, HIGH_CONFIDENCE, LOW_CONFIDENCE]";
+    public static final String TIER_DESC = "Tier: [HOTSPOT, PANEL, HIGH_CONFIDENCE, LOW_CONFIDENCE]";
 
     public static final String LOCAL_PHASE_SET = "LPS";
-    private static final String PHASE_DESCRIPTION = "Local Phase Set";
+    public static final String LOCAL_PHASE_SET_DESC = "Local Phase Set";
 
     public static final String READ_CONTEXT_REPEAT_COUNT = "RC_REPC";
-    private static final String READ_CONTEXT_REPEAT_COUNT_DESCRIPTION = "Repeat count at read context";
+    public static final String READ_CONTEXT_REPEAT_COUNT_DESC = "Repeat count at read context";
 
     public static final String MICROHOMOLOGY_FLAG = "MH";
-    private static final String MICROHOMOLOGY_FLAG_DESCRIPTION = "Microhomology";
+    public static final String MICROHOMOLOGY_FLAG_DESCRIPTION = "Microhomology";
 
     public static final String TRINUCLEOTIDE_FLAG = "TNC";
-    private static final String TRINUCLEOTIDE_FLAG_DESCRIPTION = "Tri-nucleotide context";
+    public static final String TRINUCLEOTIDE_FLAG_DESCRIPTION = "Tri-nucleotide context";
 
     public static final String REPEAT_COUNT_FLAG = "REP_C";
-    private static final String REPEAT_COUNT_DESCRIPTION = "Repeat sequence count";
+    public static final String REPEAT_COUNT_DESCRIPTION = "Repeat sequence count";
 
     public static final String REPEAT_SEQUENCE_FLAG = "REP_S";
-    private static final String REPEAT_FLAG_DESCRIPTION = "Repeat sequence";
+    public static final String REPEAT_FLAG_DESCRIPTION = "Repeat sequence";
 
     public static final String READ_CONTEXT_COUNT = "RC_CNT";
-    public static final String READ_CONTEXT_COUNT_DESCRIPTION =
-            "Read context counts [Full, Partial, Core, Realigned, Alt, Reference, Total]";
+    public static final String READ_CONTEXT_COUNT_DESC =
+            "Read context counts [Full, PartialCore, Core, Realigned, Reference, Total]";
 
     public static final String READ_CONTEXT_QUALITY = "RC_QUAL";
-    public static final String READ_CONTEXT_QUALITY_DESCRIPTION =
-            "Read context quality [Full, Partial, Core, Realigned, Alt, Reference, Total]";
+    public static final String READ_CONTEXT_QUALITY_DESC =
+            "Read context quality [Full, PartialCore, Core, Realigned, Reference, Total]";
 
     public static final String UMI_TYPE_COUNTS = "UMI_CNT";
-    public static final String UMI_TYPE_COUNTS_DESCRIPTION =
+    public static final String UMI_TYPE_COUNTS_DESC =
             "UMI type counts [TotalNone,TotalSingle,TotalDualStrand,AltNone,AltSingle,AltDualStrand]";
     public static final int UMI_TYPE_COUNT = 6;
 
     public static final String LIST_SEPARATOR = ",";
-
-    public static VCFHeader addMetaData(@NotNull final VCFHeader header)
-    {
-        header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));
-
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                LOCAL_PHASE_SET, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
-
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                READ_CONTEXT_REPEAT_COUNT, 1, VCFHeaderLineType.Integer, READ_CONTEXT_REPEAT_COUNT_DESCRIPTION));
-
-        return header;
-    }
 
     public static VCFHeader addRefContextHeader(final VCFHeader template)
     {

@@ -29,7 +29,7 @@ import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.read.NumberEvents;
+import com.hartwig.hmftools.sage.common.NumberEvents;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 import com.hartwig.hmftools.sage.sync.FragmentSync;
 import com.hartwig.hmftools.sage.sync.FragmentSyncReadHandler;
@@ -103,7 +103,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         mRefSequence = new RefSequence(regionBounds, mRefGenome);
 
         BqrRecordMap qrMap = mQualityRecalibrationMap.get(sample);
-        QualityCalculator qualityCalculator = new QualityCalculator(mConfig, qrMap, mRefSequence.IndexedBases);
+        QualityCalculator qualityCalculator = new QualityCalculator(mConfig, qrMap, mRefSequence, mRefGenome);
 
         mReadCounters = mFactory.create(candidates, mConfig, qualityCalculator, sample);
         mLastCandidateIndex = 0;

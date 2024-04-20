@@ -3,7 +3,7 @@ package com.hartwig.hmftools.sage.evidence;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.hartwig.hmftools.sage.bqr.BqrReadType;
+import com.hartwig.hmftools.common.qual.BqrReadType;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 
 public class BqrQualCache

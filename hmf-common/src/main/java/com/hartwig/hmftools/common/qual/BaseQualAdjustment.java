@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.common.qual;
 
+import static java.lang.Math.log10;
+import static java.lang.Math.pow;
+import static java.lang.Math.round;
+
 public class BaseQualAdjustment
 {
     public static final byte BASE_QUAL_MINIMUM = 1; // zero is not handled by some downstream tools
@@ -29,5 +33,15 @@ public class BaseQualAdjustment
         }
 
         return (byte)STANDARD_BASE_QUALS[0];
+    }
+
+    public static double phredQualToProbability(byte quality)
+    {
+        return pow(10, -quality/10);
+    }
+
+    public static byte probabilityToPhredQual(double probability)
+    {
+        return (byte)round(-10 * log10(probability));
     }
 }

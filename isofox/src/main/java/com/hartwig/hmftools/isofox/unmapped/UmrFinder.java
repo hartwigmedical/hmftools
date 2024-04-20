@@ -25,7 +25,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.samtools.ClippedSide;
+import com.hartwig.hmftools.common.bam.ClippedSide;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;

@@ -18,7 +18,6 @@ public class SageVariant
     private final List<ReadContextCounter> mTumorReadCounters;
 
     private int mMixedImpact;
-    private boolean mDedupIndelDiff; // temp during switch to new method
 
     public SageVariant(
             final Candidate candidate,  final List<ReadContextCounter> normalCounters, final List<ReadContextCounter> tumorReadCounters)
@@ -27,7 +26,6 @@ public class SageVariant
         mNormalReadCounters = normalCounters;
         mTumorReadCounters = tumorReadCounters;
         mFilters = Sets.newHashSet();
-        mDedupIndelDiff = false;
     }
 
     public Candidate candidate()
@@ -148,9 +146,6 @@ public class SageVariant
 
     public boolean isPassing() { return mFilters.isEmpty(); }
 
-    public boolean dedupIndelDiff() { return mDedupIndelDiff; }
-    public void markDedupIndelDiff() { mDedupIndelDiff = true; }
-
     public boolean isTumorEmpty() { return mTumorReadCounters.isEmpty(); }
     public boolean isNormalEmpty() { return mNormalReadCounters.isEmpty(); }
 
@@ -161,7 +156,7 @@ public class SageVariant
     public Set<String> filters() { return mFilters; }
     public String filtersStr() { return mFilters.stream().collect(Collectors.joining(",")); }
 
-    public ReadContext readContext() { return mTumorReadCounters.get(0).readContext(); }
+    public VariantReadContext readContext() { return mTumorReadCounters.get(0).readContext(); }
 
     public List<ReadContextCounter> normalReadCounters() { return mNormalReadCounters; }
     public List<ReadContextCounter> tumorReadCounters() { return mTumorReadCounters; }

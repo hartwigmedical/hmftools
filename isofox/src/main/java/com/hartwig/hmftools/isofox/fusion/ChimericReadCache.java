@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
-import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarFromStr;
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;

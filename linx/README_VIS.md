@@ -65,7 +65,7 @@ The CIRCOS panel shows either the complete set of rearrangements in a cluster or
 A visualisation guide is shown below:
 
 <p align="center">
-    <img src="../extended-docs/linx/legend.png" width="500" alt="Visualisation Guide">
+    <img src="./docs/legend.png" width="500" alt="Visualisation Guide">
 </p>
 
 There are 6 tracks showing from innermost to outermost:
@@ -93,7 +93,7 @@ An example of the chromosome view is shown below indicating the cluster includes
 and a small slither of chromosome 15 on the Q arm:
 
 <p align="center">
-    <img src="../extended-docs/linx/chr7.png" width="600" alt="Chromosome View">
+    <img src="./docs/chr7.png" width="600" alt="Chromosome View">
 </p>
 
 ## Fusion Panel
@@ -114,7 +114,7 @@ For example in the following TMPRSS2-ERG fusion, exons 3, 4 & 5 are faded and th
 these exons are skipped in order to make a viable in frame protein, despite the break end occurring after the 5th exon:
 
 <p align="center">
-    <img src="../extended-docs/linx/fusion1.png" width="700" alt="Fusion">
+    <img src="./docs/fusion1.png" width="700" alt="Fusion">
 </p>
 
 
@@ -123,21 +123,21 @@ Since the 1st exon of a gene has no splice acceptor, Linx predicts the 1st exon 
 connecting to the start of exon 2 which also begins in the 5’UTR region of PLAG1:
 
 <p align="center">
-    <img src="../extended-docs/linx/fusion2.png" width="700" alt="Fusion">
+    <img src="./docs/fusion2.png" width="700" alt="Fusion">
 </p>
 
 Even when no exons are skipped, a protein domain may be partially disrupted if it extends to an exon the other side of the breakpoint. 
 In the below example, you can see the SH2 protein domain extends before exon 16 and is faded and disrupted:
 
 <p align="center">
-    <img src="../extended-docs/linx/fusion3.png" width="700" alt="Fusion">
+    <img src="./docs/fusion3.png" width="700" alt="Fusion">
 </p>
 
 Whilst fusions are normally intronic, rare exonic to exonic fusions do occur. The below figure shows a CIC-FOX04 example where the 2 exons
 are directly fused:
 
 <p align="center">
-    <img src="../extended-docs/linx/fusion4.png" width="700" alt="Fusion">
+    <img src="./docs/fusion4.png" width="700" alt="Fusion">
 </p>
 
 
@@ -290,7 +290,7 @@ java -cp sv-linx.jar com.hartwig.hmftools.linx.visualiser.SvVisualiser \
 The default parameters are configured to produce an image that is suitable for display on a single page as shown in this SS18-SSX1 fusion example:
 
 <p align="center">
-    <img src="../extended-docs/linx/default.png" width="800" alt="default">
+    <img src="./docs/default.png" width="800" alt="default">
 </p>
 
 ## Reduced Footprint
@@ -310,10 +310,10 @@ for the larger font, we reduce the relative size of the segment track and increa
 ```
 
 <p align="center">
-    <img src="../extended-docs/linx/small1.png" width="400" alt="Small">
-    <img src="../extended-docs/linx/small2.png" width="400" alt="Small">
-    <img src="../extended-docs/linx/small3.png" width="400" alt="Small">
-    <img src="../extended-docs/linx/small4.png" width="400" alt="Small">
+    <img src="./docs/small1.png" width="400" alt="Small">
+    <img src="./docs/small2.png" width="400" alt="Small">
+    <img src="./docs/small3.png" width="400" alt="Small">
+    <img src="./docs/small4.png" width="400" alt="Small">
 </p>
 
 Starting at the top-left corner and going clockwise, the figures shows 
@@ -330,8 +330,8 @@ The following examples have similar configurations to the smaller images above b
 -interpolate_cna_positions
 ```
 <p align="center">
-    <img src="../extended-docs/linx/line1.png" width="400" alt="Line">
-    <img src="../extended-docs/linx/line2.png" width="400" alt="Line">
+    <img src="./docs/line1.png" width="400" alt="Line">
+    <img src="./docs/line2.png" width="400" alt="Line">
 </p>
 
 In the second picture, we have reduced the emphasis on the copy number alternation by interpolating their positions rather than including 
@@ -349,12 +349,12 @@ track, decreases the relative size of the segment track and increases the max nu
 ```
 
 <p align="center">
-    <img src="../extended-docs/linx/tmprss2erg.png" width="600" alt="TMPRSS2-ERG">
+    <img src="./docs/tmprss2erg.png" width="600" alt="TMPRSS2-ERG">
 </p>
 
 # Breakage Fusion Bridge Demonstration
 The following animation demonstrates the cycle of breaks, replications, fusions and deletes that can lead to a breakage fusion bridge.
 
  <p align="center">
-     <img src="../extended-docs/linx/bfb.gif" width="600" alt="BreakageFusionBridge">
+     <img src="./docs/bfb.gif" width="600" alt="BreakageFusionBridge">
  </p>

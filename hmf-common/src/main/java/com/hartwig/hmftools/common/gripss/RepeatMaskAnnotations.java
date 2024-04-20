@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.gripss;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 
 import java.io.BufferedReader;
@@ -13,6 +14,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.logging.log4j.LogManager;
@@ -41,13 +43,28 @@ public class RepeatMaskAnnotations
 
     public List<RepeatMaskData> findMatches(final String chromosome, final BaseRegion region)
     {
+        return findMatches(chromosome, region.start(), region.end());
+    }
+
+    public List<RepeatMaskData> findMatches(final ChrBaseRegion region)
+    {
+        return findMatches(region.Chromosome, region.start(), region.end());
+    }
+
+    private static final int SMALL_LINEAR_SEARCH_SIZE = 50;
+
+    public List<RepeatMaskData> findMatches(final String chromosome, final int regionStart, final int regionEnd)
+    {
         List<RepeatMaskData> regions = mChrDataMap.get(chromosome);
 
         if(regions == null)
             return Lists.newArrayList();
 
-        if(regions.size() < 100)
-            return regions.stream().filter(x -> x.Region.overlaps(region)).collect(Collectors.toList());
+        if(regions.size() < SMALL_LINEAR_SEARCH_SIZE)
+        {
+            return regions.stream()
+                    .filter(x -> positionsOverlap(x.Region.start(), x.Region.end(), regionStart, regionEnd)).collect(Collectors.toList());
+        }
 
         // use a binary search since the number of entries is typically > 100K per chromosome
         int currentIndex = regions.size() / 2;
@@ -60,7 +77,7 @@ public class RepeatMaskAnnotations
         {
             RepeatMaskData rmData = regions.get(currentIndex);
 
-            if(region.end() < rmData.Region.start())
+            if(regionEnd < rmData.Region.start())
             {
                 if(lowerIndex + 1 == currentIndex)
                     break;
@@ -68,7 +85,7 @@ public class RepeatMaskAnnotations
                 upperIndex = currentIndex;
                 currentIndex = (lowerIndex + upperIndex) / 2;
             }
-            else if(region.start() > rmData.Region.end())
+            else if(regionStart > rmData.Region.end())
             {
                 // search higher
                 if(currentIndex + 1 == upperIndex)
@@ -77,7 +94,7 @@ public class RepeatMaskAnnotations
                 lowerIndex = currentIndex;
                 currentIndex = (lowerIndex + upperIndex) / 2;
             }
-            else if(rmData.Region.overlaps(region))
+            else if(positionsOverlap(rmData.Region.start(), rmData.Region.end(), regionStart, regionEnd))
             {
                 matchedRegions.add(rmData);
                 break;
@@ -95,7 +112,7 @@ public class RepeatMaskAnnotations
             {
                 RepeatMaskData rmData = regions.get(index);
 
-                if(!rmData.Region.overlaps(region))
+                if(!positionsOverlap(rmData.Region.start(), rmData.Region.end(), regionStart, regionEnd))
                     break;
 
                 matchedRegions.add(rmData);

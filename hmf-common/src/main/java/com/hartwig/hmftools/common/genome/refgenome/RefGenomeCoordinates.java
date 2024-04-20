@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.genome.refgenome;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -21,7 +23,8 @@ public enum RefGenomeCoordinates
     public final Map<Chromosome,Integer> Lengths;
     public final Map<Chromosome,Integer> Centromeres;
 
-    private static final String FIELD_SEPARATOR = "\t";
+    public static final double GENOME_LENGTH_V37 = 3.088e10;
+    public static final double GENOME_LENGTH_V38 = 3.096e10;
 
     RefGenomeCoordinates(@NotNull final Map<Chromosome,Integer> lengths, @NotNull final Map<Chromosome,Integer> centromeres)
     {
@@ -66,7 +69,7 @@ public enum RefGenomeCoordinates
         final Map<Chromosome,Integer> result = Maps.newHashMap();
         for (final String line : lines)
         {
-            final String[] values = line.split(FIELD_SEPARATOR);
+            final String[] values = line.split(TSV_DELIM);
             result.put(HumanChromosome.fromString(values[0]), Integer.valueOf(values[1]));
         }
 

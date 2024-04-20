@@ -47,10 +47,9 @@ public class GermlineReportedEnrichment
         mBuffer.add(variant);
     }
 
-    public static VCFHeader enrichHeader(final VCFHeader template)
+    public static void enrichHeader(final VCFHeader header)
     {
-        template.addMetaDataLine(new VCFInfoHeaderLine(REPORTED_FLAG, 0, VCFHeaderLineType.Flag, REPORTED_DESC));
-        return template;
+        header.addMetaDataLine(new VCFInfoHeaderLine(REPORTED_FLAG, 0, VCFHeaderLineType.Flag, REPORTED_DESC));
     }
 
     public void flush()

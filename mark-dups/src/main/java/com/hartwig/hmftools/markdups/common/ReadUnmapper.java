@@ -10,12 +10,12 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.region.ChrBaseRegion.getChromosomeFieldIndex;
 import static com.hartwig.hmftools.common.region.ChrBaseRegion.getPositionEndFieldIndex;
 import static com.hartwig.hmftools.common.region.ChrBaseRegion.getPositionStartFieldIndex;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_INDEX;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_NAME;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UNMAP_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_INDEX;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.Constants.UNMAP_CHIMERIC_FRAGMENT_LENGTH_MAX;
 import static com.hartwig.hmftools.markdups.common.Constants.UNMAP_MAX_NON_OVERLAPPING_BASES;
@@ -34,7 +34,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.file.FileDelimiters;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 
@@ -307,14 +307,28 @@ public class ReadUnmapper
 
     private boolean checkUnmapSupplementaryRead(final SAMRecord read)
     {
-        if(checkUnmapSupplementaryAlignments(read))
-            return true;
+        // a supplementary should be dropped if its primary satisfies the unmapping criteria
+        List<SupplementaryReadData> alignments = SupplementaryReadData.extractAlignments(read);
 
-        // We don't want to drop supplementaries based on chimeric read criteria, since this is a criteria for a primary read and its
-        // primary mate. However, when checking if we are unmapping a supplementary based on whether its primary is unmapped, we do check
-        // the chimeric read criteria.
-        if(read.getReadPairedFlag() && isSupplementaryChimericRead(read))
-            return true;
+        if(alignments == null)
+            return false;
+
+        for(SupplementaryReadData suppData : alignments)
+        {
+            RegionMatchType matchType = supplementaryMaxDepthRegionOverlap(suppData);
+
+            if(matchType == RegionMatchType.NONE)
+                continue;
+
+            if(matchType == RegionMatchType.HIGH_DEPTH)
+                return true;
+
+            if(getSoftClipCountFromCigarStr(suppData.Cigar) >= UNMAP_MIN_SOFT_CLIP)
+                return true;
+
+            if(isSupplementaryChimericRead(read, suppData))
+                return true;
+        }
 
         return false;
     }
@@ -631,19 +645,8 @@ public class ReadUnmapper
         return false;
     }
 
-    private static boolean isSupplementaryChimericRead(final SAMRecord record)
+    private static boolean isSupplementaryChimericRead(final SAMRecord record, SupplementaryReadData suppReadData)
     {
-        // check whether the primary read (detailed in the supp attribute) is chimeric with the mate - note the primary is always mapped
-        SupplementaryReadData suppReadData = SupplementaryReadData.extractAlignment(record);
-
-        // rarely supplementary read data is missing
-        if(suppReadData == null)
-        {
-            return false;
-        }
-
-        // insert size is not populated for supplementaries
-
         if(record.getMateUnmappedFlag())
             return true;
 
@@ -722,7 +725,10 @@ public class ReadUnmapper
 
     private static void setUnmapCoordsAttribute(final SAMRecord read, final String chromosome, final int position)
     {
-        read.setAttribute(UNMAP_ATTRIBUTE, chromosome + UNMAPP_COORDS_DELIM + position);
+        // some alt contigs have the delimiter in their name, hence the replace
+        read.setAttribute(
+                UNMAP_ATTRIBUTE,
+                chromosome.replaceAll(UNMAPP_COORDS_DELIM, "") + UNMAPP_COORDS_DELIM + position);
     }
 
     public static void unmapMateAlignment(final SAMRecord read, final boolean readUnmapped, final boolean unmapRead)

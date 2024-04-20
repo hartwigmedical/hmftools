@@ -51,7 +51,7 @@ public class PaveConfig
     public final List<ChrBaseRegion> SpecificRegions;
     public final int Threads;
 
-    private static final String VCF_FILE = "vcf_file";
+    public static final String VCF_FILE = "vcf_file";
     private static final String OUTPUT_VCF_FILE = "output_vcf_file";
 
     public static final String PON_FILE = "pon_file";

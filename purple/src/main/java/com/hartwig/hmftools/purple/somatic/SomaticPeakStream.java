@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.purple.somatic;
 
-import static java.lang.String.format;
-
 import static com.google.common.collect.Lists.newArrayList;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.CLONALITY_BIN_WIDTH;
@@ -15,8 +13,6 @@ import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.purple.fitting.ModifiableWeightedPloidy;
 import com.hartwig.hmftools.purple.fitting.PeakModelData;
 import com.hartwig.hmftools.purple.fitting.PeakModelFactory;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
-import com.hartwig.hmftools.purple.config.SomaticFitConfig;
 
 public class SomaticPeakStream
 {

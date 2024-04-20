@@ -2,16 +2,17 @@ package com.hartwig.hmftools.cup.prep;
 
 public enum ItemType
 {
+    SIGNATURE,
     SNV96,
     GEN_POS,
-    SIGNATURE,
 
     TUMOR_MUTATIONAL_BURDEN,
+
     SAMPLE_TRAIT,
+    SV_COUNT,
+    VIRUS,
     FUSION,
     DRIVER,
-    VIRUS,
-    SV_COUNT,
 
     EXPRESSION,
     ALT_SJ;

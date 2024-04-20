@@ -2,12 +2,13 @@ package com.hartwig.hmftools.markdups;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.bam.BamToolName.BAMTOOL_PATH;
+import static com.hartwig.hmftools.common.bam.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
@@ -22,9 +23,9 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSIO
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
+import static com.hartwig.hmftools.markdups.MarkDupsJitterAnalyserConfig.MICROSATELLITE_OUTPUT_DIR;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_PARTITION_SIZE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
@@ -32,7 +33,6 @@ import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_READ_LENGTH
 import static com.hartwig.hmftools.markdups.common.Constants.UNMAP_MIN_HIGH_DEPTH;
 import static com.hartwig.hmftools.markdups.write.ReadOutput.NONE;
 
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -40,12 +40,14 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.bam.BamToolName;
+import com.hartwig.hmftools.common.bam.BamUtils;
+import com.hartwig.hmftools.common.basequal.jitter.JitterAnalyserConfig;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.region.SpecificRegions;
-import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.markdups.common.FilterReadsType;
@@ -87,8 +89,7 @@ public class MarkDupsConfig
     public final boolean NoMateCigar;
     public final int Threads;
 
-    public final String SamToolsPath;
-    public final String SambambaPath;
+    public final String BamToolPath;
 
     // debug
     public final boolean KeepInterimBams;
@@ -100,6 +101,9 @@ public class MarkDupsConfig
     public final boolean RunChecks;
     public final boolean DropDuplicates;
     public final boolean LogFinalCache;
+    public final int WriteReadBaseLength;
+
+    public final MarkDupsJitterAnalyserConfig JitterAnalyser;
 
     private boolean mIsValid;
     private int mReadLength;
@@ -108,9 +112,9 @@ public class MarkDupsConfig
     public static final String APP_NAME = "MarkDups";
 
     // config strings
-    private  static final String INPUT_BAM = "input_bam";
-    private  static final String BAM_FILE = "bam_file";
-    private  static final String OUTPUT_BAM = "output_bam";
+    private static final String INPUT_BAM = "input_bam";
+    private static final String BAM_FILE = "bam_file";
+    private static final String OUTPUT_BAM = "output_bam";
     private static final String PARTITION_SIZE = "partition_size";
     private static final String BUFFER_SIZE = "buffer_size";
     private static final String READ_OUTPUTS = "read_output";
@@ -118,8 +122,6 @@ public class MarkDupsConfig
     private static final String FORM_CONSENSUS = "form_consensus";
     private static final String READ_LENGTH = "read_length";
 
-    private static final String SAMTOOLS_PATH = "samtools";
-    private static final String SAMBAMBA_PATH = "sambamba";
     private static final String UNMAP_REGIONS = "unmap_regions";
     private static final String WRITE_STATS = "write_stats";
     private static final String DROP_DUPLICATES = "drop_duplicates";
@@ -130,6 +132,7 @@ public class MarkDupsConfig
     private static final String RUN_CHECKS = "run_checks";
     private static final String LOG_FINAL_CACHE = "log_final_cache";
     private static final String SPECIFIC_REGION_FILTER_TYPE = "specific_region_filter";
+    private static final String WRITE_READ_BASE_LENGTH = "write_read_base_length";
 
     public MarkDupsConfig(final ConfigBuilder configBuilder)
     {
@@ -171,7 +174,7 @@ public class MarkDupsConfig
 
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
-        if(SampleId == null|| OutputDir == null || RefGenomeFile == null)
+        if(SampleId == null || OutputDir == null || RefGenomeFile == null)
         {
             MD_LOGGER.error("missing config: sample({}) refGenome({}) outputDir({})",
                     SampleId != null, RefGenomeFile != null, OutputDir != null);
@@ -189,8 +192,7 @@ public class MarkDupsConfig
 
         mReadLength = configBuilder.getInteger(READ_LENGTH);
 
-        SambambaPath = configBuilder.getValue(SAMBAMBA_PATH);
-        SamToolsPath = configBuilder.getValue(SAMTOOLS_PATH);
+        BamToolPath = configBuilder.getValue(BAMTOOL_PATH);
 
         NoMateCigar = configBuilder.hasFlag(NO_MATE_CIGAR);
         UMIs = UmiConfig.from(configBuilder);
@@ -237,6 +239,9 @@ public class MarkDupsConfig
         RunChecks = configBuilder.hasFlag(RUN_CHECKS);
         LogFinalCache = configBuilder.hasFlag(LOG_FINAL_CACHE);
         DropDuplicates = configBuilder.hasFlag(DROP_DUPLICATES);
+        WriteReadBaseLength = configBuilder.getInteger(WRITE_READ_BASE_LENGTH);
+
+        JitterAnalyser = configBuilder.hasValue(MICROSATELLITE_OUTPUT_DIR) ? new MarkDupsJitterAnalyserConfig(configBuilder) : null;
 
         if(RunChecks)
         {
@@ -267,7 +272,7 @@ public class MarkDupsConfig
         return filename;
     }
 
-    public static void addConfig(final ConfigBuilder configBuilder)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addPath(BAM_FILE, false, "BAM filename, deprecated, use 'input_bam' instead");
@@ -285,8 +290,8 @@ public class MarkDupsConfig
 
         configBuilder.addFlag(NO_WRITE_BAM, "BAM not written, producing only TSV reads and/or statistics");
         configBuilder.addFlag(KEEP_INTERIM_BAMS, "Do no delete per-thread BAMs");
-        configBuilder.addPath(SAMTOOLS_PATH, false, "Path to samtools for sort");
-        configBuilder.addPath(SAMBAMBA_PATH, false, "Path to sambamba for merge");
+
+        BamToolName.addConfig(configBuilder);
 
         configBuilder.addFlag(FORM_CONSENSUS, "Form consensus reads from duplicate groups without UMIs");
         configBuilder.addFlag(NO_MATE_CIGAR, "Mate CIGAR not set by aligner, make no attempt to use it");
@@ -305,10 +310,15 @@ public class MarkDupsConfig
         configBuilder.addFlag(RUN_CHECKS, "Run duplicate mismatch checks");
         configBuilder.addFlag(LOG_FINAL_CACHE, "Log cached fragments on completion");
         configBuilder.addConfigItem(SPECIFIC_REGION_FILTER_TYPE, "Used with specific regions, to filter mates or supps");
+
+        configBuilder.addInteger(WRITE_READ_BASE_LENGTH, "Number of read bases to write with read data", 0);
+
+        MarkDupsJitterAnalyserConfig.registerConfig(configBuilder);
     }
 
     public MarkDupsConfig(
-            int partitionSize, int bufferSize, final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi, boolean formConsensus)
+            int partitionSize, int bufferSize, final RefGenomeInterface refGenome, boolean umiEnabled, boolean duplexUmi,
+            boolean formConsensus)
     {
         mIsValid = true;
         SampleId = "";
@@ -332,8 +342,7 @@ public class MarkDupsConfig
         SpecificChrRegions = new SpecificRegions();
         SpecificRegionsFilterType = FilterReadsType.MATE_AND_SUPP;
 
-        SamToolsPath = null;
-        SambambaPath = null;
+        BamToolPath = null;
 
         UnmapRegions = new ReadUnmapper(Maps.newHashMap());
 
@@ -349,5 +358,19 @@ public class MarkDupsConfig
         WriteStats = false;
         LogFinalCache = true;
         DropDuplicates = false;
+        WriteReadBaseLength = 0;
+
+        JitterAnalyser = null;
+    }
+
+    public JitterAnalyserConfig toJitterAnalyserConfig()
+    {
+        if(JitterAnalyser == null)
+        {
+            return null;
+        }
+
+        return new JitterAnalyserConfig(SampleId, RefGenVersion, RefGenomeFile, JitterAnalyser.RefGenomeMicrosatelliteFile,
+                JitterAnalyser.OutputDir, JitterAnalyser.MinMapQuality, JitterAnalyser.MaxSitesPerType, Threads);
     }
 }

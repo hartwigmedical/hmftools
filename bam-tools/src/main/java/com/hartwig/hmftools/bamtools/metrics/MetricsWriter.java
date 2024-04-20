@@ -10,20 +10,40 @@ import static com.hartwig.hmftools.bamtools.metrics.FilterType.LOW_MAP_QUAL;
 import static com.hartwig.hmftools.bamtools.metrics.FilterType.MATE_UNMAPPED;
 import static com.hartwig.hmftools.bamtools.metrics.FilterType.MAX_COVERAGE;
 import static com.hartwig.hmftools.bamtools.metrics.FilterType.OVERLAPPED;
+import static com.hartwig.hmftools.bamtools.metrics.OffTargetFragments.writeOverlapCounts;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
 import com.hartwig.hmftools.common.metrics.ImmutableBamMetricsSummary;
-import com.hartwig.hmftools.common.metrics.TargetRegionMetrics;
 
-public final class MetricsWriter
+public class MetricsWriter
 {
+    private BufferedWriter mTargetRegionsWriter;
+    private BufferedWriter mOffTargetHighFragmentOverlapWriter;
+
+    public MetricsWriter(final MetricsConfig config)
+    {
+        mTargetRegionsWriter = !config.TargetRegions.isEmpty() ? TargetRegionStats.initialiseWriter(config) : null;
+
+        mOffTargetHighFragmentOverlapWriter = !config.TargetRegions.isEmpty() && config.HighFragmentOverlapThreshold > 0 ?
+                OffTargetFragments.initialiseEnrichedRegionWriter(config) : null;
+    }
+
+    public BufferedWriter targetRegionsWriter() { return mTargetRegionsWriter; }
+    public BufferedWriter offTargetHighFragmentOverlapWriter() { return mOffTargetHighFragmentOverlapWriter; }
+
+    public void close()
+    {
+        closeBufferedWriter(mTargetRegionsWriter);
+        closeBufferedWriter(mOffTargetHighFragmentOverlapWriter);
+    }
+
     public static void writeResults(final CombinedStats combinedStats, final MetricsConfig config)
     {
         if(config.WriteOldStyle)
@@ -36,7 +56,7 @@ public final class MetricsWriter
             writeMetrics(combinedStats.coverageMetrics(), combinedStats.readCounts(), config);
             writeCoverageFrequency(combinedStats.coverageMetrics(), config);
             writeFragmentLengths(combinedStats.fragmentLengths(), config);
-            writeTargetRegionStats(combinedStats.targetRegions(), config);
+            writeOverlapCounts(config, combinedStats.offTargetOverlapCounts());
 
             // TODO - write new format flag stats, or merge into metrics summary
         }
@@ -64,7 +84,7 @@ public final class MetricsWriter
 
             BamMetricsSummary summary = ImmutableBamMetricsSummary.builder()
                     .totalRegionBases(totalBaseCount)
-                    .totalReads(readCounts.TotalReads)
+                    .totalReads(readCounts.Total)
                     .duplicateReads(readCounts.Duplicates)
                     .dualStrandReads(readCounts.DualStrand)
                     .meanCoverage(metrics.statistics().Mean)
@@ -169,23 +189,6 @@ public final class MetricsWriter
         catch(IOException e)
         {
             BT_LOGGER.error("failed to write frag lengths file: {}", e.toString());
-        }
-    }
-
-    private static void writeTargetRegionStats(final List<TargetRegionStats> targetRegionStats, final MetricsConfig config)
-    {
-        if(config.TargetRegions.isEmpty())
-            return;
-
-        try
-        {
-            // write summary metrics
-            String filename = TargetRegionMetrics.generateFilename(config.OutputDir, config.SampleId);
-            TargetRegionMetrics.write(filename, targetRegionStats.stream().map(x -> x.convert()).collect(Collectors.toList()));
-        }
-        catch(IOException e)
-        {
-            BT_LOGGER.error("failed to write target regions file: {}", e.toString());
         }
     }
 }

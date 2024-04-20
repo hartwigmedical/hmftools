@@ -44,13 +44,9 @@ public abstract class PurpleCopyNumber implements GenomeRegion
         return averageTumorCopyNumber() - minorAlleleCopyNumber();
     }
 
-    public int length()
-    {
-        return end() - start() + 1;
-    }
+    public int length() { return end() - start() + 1; }
 
     public abstract int minStart();
-
     public abstract int maxStart();
 
     public boolean svSupport()

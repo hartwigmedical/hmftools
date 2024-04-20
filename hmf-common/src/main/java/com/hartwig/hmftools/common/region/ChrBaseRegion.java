@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.region;
 
-import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.INVALID_CHR_RANK;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
@@ -79,6 +78,11 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
 
     public boolean isValid() { return HumanChromosome.contains(Chromosome) && hasValidPositions(); }
     public boolean hasValidPositions() { return mStart > 0 & mEnd >= mStart; }
+
+    public BaseRegion baseRegion()
+    {
+        return new BaseRegion(mStart, mEnd);
+    }
 
     public boolean overlaps(final ChrBaseRegion other)
     {
@@ -199,6 +203,8 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
             entry.getValue().forEach(x -> regions.add(new ChrBaseRegion(entry.getKey(), x.start(), x.end())));
         }
 
+        checkMergeOverlaps(regions, true);
+
         return regions;
     }
 
@@ -276,7 +282,6 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
             return null;
         }
     }
-
 
     public static void checkMergeOverlaps(final List<ChrBaseRegion> regions, boolean checkSorted)
     {

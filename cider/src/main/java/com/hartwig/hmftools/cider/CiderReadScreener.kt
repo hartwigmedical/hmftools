@@ -7,8 +7,8 @@ import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
 import com.hartwig.hmftools.common.genome.region.Strand
-import com.hartwig.hmftools.common.samtools.CigarUtils
-import com.hartwig.hmftools.common.samtools.SamRecordUtils
+import com.hartwig.hmftools.common.bam.CigarUtils
+import com.hartwig.hmftools.common.bam.SamRecordUtils
 import com.hartwig.hmftools.common.utils.IntPair
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.util.CoordMath

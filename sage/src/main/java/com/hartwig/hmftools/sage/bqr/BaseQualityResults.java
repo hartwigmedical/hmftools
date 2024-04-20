@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.bqr;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.qual.BqrKey;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
 public class BaseQualityResults

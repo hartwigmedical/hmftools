@@ -2,12 +2,10 @@ package com.hartwig.hmftools.purple.sv;
 
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_CONTEXT_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_CONTEXT_FLAG;
-import static com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment.relativePositionAndRef;
+import static com.hartwig.hmftools.common.variant.VariantUtils.relativePositionAndRef;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.function.Consumer;
-
-import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichment;
 
 import org.apache.commons.math3.util.Pair;
 
@@ -17,7 +15,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class StructuralRefContextEnrichment implements VariantContextEnrichment
+public class StructuralRefContextEnrichment
 {
     private static final int REF_CONTEXT_DISTANCE = 10;
 
@@ -30,15 +28,11 @@ public class StructuralRefContextEnrichment implements VariantContextEnrichment
         mConsumer = consumer;
     }
 
-    @Override
-    public VCFHeader enrichHeader(final VCFHeader template)
+    public void enrichHeader(final VCFHeader template)
     {
         template.addMetaDataLine(new VCFInfoHeaderLine(REF_CONTEXT_FLAG, 1, VCFHeaderLineType.String, REF_CONTEXT_DESC));
-
-        return template;
     }
 
-    @Override
     public void accept(final VariantContext context)
     {
         if(context.hasAttribute(REF_CONTEXT_FLAG))
@@ -55,9 +49,6 @@ public class StructuralRefContextEnrichment implements VariantContextEnrichment
         }
         mConsumer.accept(context);
     }
-
-    @Override
-    public void flush() { }
 
     private void addRefContext(final VariantContext variant, final Pair<Integer, String> relativePositionAndRef)
     {
