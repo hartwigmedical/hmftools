@@ -26,6 +26,7 @@ import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 
 import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class PurpleVariantFactoryTest
@@ -128,7 +129,7 @@ public class PurpleVariantFactoryTest
     @Test
     public void testReportableTranscripts()
     {
-        ImmutablePurpleVariantContext context = TestPurpleVariantFactory.contextBuilder()
+        PurpleVariantContext context = TestPurpleVariantFactory.contextBuilder()
                 .canonicalTranscript("canonical_transcript")
                 .reported(false)
                 .otherImpacts(List.of(transcriptImpact("other_transcript1"), transcriptImpact("other_transcript2")))
@@ -138,6 +139,7 @@ public class PurpleVariantFactoryTest
         PaveAlgo paveAlgo = new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache(), false);
         PurpleVariant purpleVariant = new PurpleVariantFactory(paveAlgo).fromPurpleVariantContext(context);
 
+        assertTrue(purpleVariant.reported());
         PurpleTranscriptImpact canonicalImpact = purpleVariant.canonicalImpact();
         assertEquals("canonical_transcript", canonicalImpact.transcript());
         assertTrue(canonicalImpact.reported());
@@ -161,7 +163,7 @@ public class PurpleVariantFactoryTest
     @Test
     public void testCanonicalTranscriptNotReported()
     {
-        ImmutablePurpleVariantContext context = TestPurpleVariantFactory.contextBuilder()
+        PurpleVariantContext context = TestPurpleVariantFactory.contextBuilder()
                 .canonicalTranscript("canonical_transcript")
                 .reported(false)
                 .otherImpacts(List.of(transcriptImpact("other_transcript1"), transcriptImpact("other_transcript2")))
@@ -171,6 +173,7 @@ public class PurpleVariantFactoryTest
         PaveAlgo paveAlgo = new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache(), false);
         PurpleVariant purpleVariant = new PurpleVariantFactory(paveAlgo).fromPurpleVariantContext(context);
 
+        assertTrue(purpleVariant.reported());
         PurpleTranscriptImpact canonicalImpact = purpleVariant.canonicalImpact();
         assertEquals("canonical_transcript", canonicalImpact.transcript());
         assertFalse(canonicalImpact.reported());
@@ -191,7 +194,8 @@ public class PurpleVariantFactoryTest
         assertFalse(secondImpact.reported());
     }
 
-    private VariantTranscriptImpact transcriptImpact(String transcript)
+    @NotNull
+    private static VariantTranscriptImpact transcriptImpact(@NotNull String transcript)
     {
         return new VariantTranscriptImpact(
                 Strings.EMPTY,

@@ -187,7 +187,7 @@ public class PurpleVariantContextLoader
     }
 
     @NotNull
-    private static List<String> extractReportableTranscripts(VariantContext context)
+    private static List<String> extractReportableTranscripts(@NotNull VariantContext context)
     {
         return context.hasAttribute(REPORTABLE_TRANSCRIPTS)
                 ? Arrays.asList(context.getAttributeAsString(REPORTABLE_TRANSCRIPTS, "")

@@ -231,7 +231,7 @@ investigate potential causes for QC failure.
 
 ## Version History and Download Links
 
-- [upcoming]
+- Upcoming
     - Add PurpleTranscriptImpact.reported and make PurpleVariant.reported a derived field. This
       uses the REPORTABLE_TRANSCRIPTS vcf field introduced in PURPLE 4.0.
 - [3.4.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.4.0)
