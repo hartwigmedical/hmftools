@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.sage.common;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
+import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.findPositionEnd;
+import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.findPositionStart;
 
 import java.util.List;
 
@@ -33,6 +33,9 @@ public class VariantReadContext
 
     public final int AltIndexLower; // the first lower base relative to the index where the ref and alt differ
     public final int AltIndexUpper;
+
+    public final int CorePositionStart;
+    public final int CorePositionEnd;
 
     private final SimpleVariant mVariant;
     private final List<CigarElement> mReadCigar;
@@ -73,6 +76,9 @@ public class VariantReadContext
             AltIndexUpper = VarReadIndex + 1;
         else
             AltIndexUpper = VarReadIndex + mVariant.Alt.length() - 1;
+
+        CorePositionStart = findPositionStart(mVariant.Position, leftCoreLength(), AlignmentStart, mReadCigar, CoreIndexStart);
+        CorePositionEnd = findPositionEnd(mVariant.Position, rightCoreLength(), AlignmentStart, mReadCigar, CoreIndexEnd);
     }
 
     // read context methods
@@ -132,95 +138,10 @@ public class VariantReadContext
     public ArtefactContext artefactContext() { return mArtefactContext; }
     public UltimaQualModel ultimaQualModel() { return mUltimaQualModel; }
 
-    public int corePositionStart()
-    {
-        if(mReadCigar.size() == 1)
-            return mVariant.Position - leftCoreLength();
-
-        int position = findReadPositionFromIndex(CoreIndexStart);
-
-        return position > 0 ? position : mVariant.Position - leftCoreLength();
-    }
-
-    public int corePositionEnd()
-    {
-        if(mReadCigar.size() == 1)
-            return mVariant.Position + rightCoreLength();
-
-        int position = findReadPositionFromIndex(CoreIndexEnd);
-
-        return position > 0 ? position : mVariant.Position + rightCoreLength();
-    }
-
-    private int findReadPositionFromIndex(int readIndex)
-    {
-        int refPosition = AlignmentStart;
-        int index = 0;
-
-        for(CigarElement element : mReadCigar)
-        {
-            if(index + element.getLength() >= readIndex && element.getOperator().consumesReadBases())
-            {
-                if(element.getOperator().consumesReferenceBases())
-                    refPosition += readIndex - index;
-
-                return refPosition;
-            }
-
-            if(element.getOperator().consumesReferenceBases())
-                refPosition += element.getLength();
-
-            if(element.getOperator().consumesReadBases())
-                index += element.getLength();
-        }
-
-        // shouldn't occur
-        return -1;
-    }
-
     public String toString()
     {
         return format("%s-%s-%s %s pos(%d-%d) index(%d-%d-%d) repeat(%s) homology(%s)",
                 leftFlankStr(), coreStr(), rightFlankStr(), mReadCigarStr, AlignmentStart, AlignmentEnd,
                 CoreIndexStart, VarReadIndex, CoreIndexEnd, MaxRepeat != null ? MaxRepeat : "", Homology != null ? Homology : "");
     }
-
-    // CLEAN-UP: unused
-    private int setAltIndex(boolean isLower)
-    {
-        // find the first base of difference (ref vs alt) up and down from the variant's position, and cap at the core indices
-        if(!mVariant.isIndel())
-        {
-            return isLower ? VarReadIndex : VarReadIndex + mVariant.Alt.length() - 1;
-        }
-        else
-        {
-
-        }
-
-        int refIndex = refIndex();
-        int readIndex = VarReadIndex;
-
-        if(isLower)
-        {
-            for(; readIndex >= CoreIndexStart & refIndex >= 0; --readIndex, --refIndex)
-            {
-                if(RefBases[refIndex] != ReadBases[readIndex])
-                    break;
-            }
-
-            return max(readIndex, CoreIndexStart);
-        }
-        else
-        {
-            for(; readIndex <= CoreIndexEnd & refIndex < RefBases.length; ++readIndex, ++refIndex)
-            {
-                if(RefBases[refIndex] != ReadBases[readIndex])
-                    break;
-            }
-
-            return min(readIndex, CoreIndexEnd);
-        }
-    }
-
 }

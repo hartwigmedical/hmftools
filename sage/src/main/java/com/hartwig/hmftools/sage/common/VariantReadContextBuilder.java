@@ -352,4 +352,54 @@ public class VariantReadContextBuilder
 
         return new Microhomology(homologyBases, homologyLength);
     }
+
+    public static final int INVALID_INDEX_POS = -1;
+
+    public static int findPositionStart(
+            int variantPosition, int leftCoreLength, int alignmentStart, final List<CigarElement> readCigar, int readIndex)
+    {
+        if(readCigar.size() == 1)
+            return variantPosition - leftCoreLength;
+
+        int position = findReadPositionFromIndex(alignmentStart, readCigar, readIndex);
+
+        return position > 0 ? position : variantPosition - leftCoreLength;
+    }
+
+    public static int findPositionEnd(
+            int variantPosition, int rightCoreLength, int alignmentStart, final List<CigarElement> readCigar, int readIndex)
+    {
+        if(readCigar.size() == 1)
+            return variantPosition + rightCoreLength;
+
+        int position = findReadPositionFromIndex(alignmentStart, readCigar, readIndex);
+
+        return position > 0 ? position : variantPosition + rightCoreLength;
+    }
+
+    public static int findReadPositionFromIndex(int alignmentStart, final List<CigarElement> readCigar, int readIndex)
+    {
+        int refPosition = alignmentStart;
+        int index = 0;
+
+        for(CigarElement element : readCigar)
+        {
+            if(index + element.getLength() >= readIndex && element.getOperator().consumesReadBases())
+            {
+                if(element.getOperator().consumesReferenceBases())
+                    refPosition += readIndex - index;
+
+                return refPosition;
+            }
+
+            if(element.getOperator().consumesReferenceBases())
+                refPosition += element.getLength();
+
+            if(element.getOperator().consumesReadBases())
+                index += element.getLength();
+        }
+
+        // shouldn't occur
+        return INVALID_INDEX_POS;
+    }
 }

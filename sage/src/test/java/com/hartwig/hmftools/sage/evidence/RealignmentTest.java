@@ -2,7 +2,14 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
+import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
+import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
+import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
+import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.evidence.Realignment.realigned;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
@@ -13,8 +20,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.sage.common.ReadContextMatch;
+import com.hartwig.hmftools.sage.common.ReadContextMatcher;
+import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
+import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
 
 import org.junit.Test;
@@ -23,6 +36,46 @@ import htsjdk.samtools.SAMRecord;
 
 public class RealignmentTest
 {
+    @Test
+    public void testIndelRealignedLeft()
+    {
+        String refBases = "X" + generateRandomBases(187)
+                + "CTACCCAAATCTTATAAAATGGCCCCACCCATATCTCCCTTCGCTGACTCTCTATTCGGACTCAGCCCGCCTGCACCCAGGTGAAATAAACAGCCTTGTT"
+                + "GCACACACACACACACACACACACAAAGAATTCATTGCTCTTAGCTTTTGCACTGTTTCCTTTTTTAGACCTTCCTACATAAGTATTTGTGTATATGTCTGTATTT";
+
+        RefSequence refSequence = new RefSequence(0, refBases.getBytes());
+
+        String varBuildReadBases = "CCTGCACCCAGTTGAAATAAACAGCCTTGTTGCACACACACACACACACACACACACACACACACACACAAAGAATTCATTGCTCTTAGCTTTTGCACTGTTTCC"
+                + "TTTTTTAGACCTTCCTACATAAGTATTTGTGTATATGTCTGTATTT";
+
+        String readCigar = "32M14I105M";
+
+        SimpleVariant var = createSimpleVariant(312, "A", "ACACACACACACACA"); // var(chr1:312 A>ACACACACACACACA)
+
+        SAMRecord varBuildRead = buildSamRecord(257, readCigar, varBuildReadBases);
+
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+
+        VariantReadContext readContext = builder.createIndelContext(var, varBuildRead, 33, refSequence);
+
+        assertEquals(12, readContext.VarReadIndex);
+
+        String realignReadBases = "CTACCCAAATCTTATAAAATGGCCCCACCCATATCTCCCTTCGCTGACTCTCTATTCGGACTCAGCCCGCCTGCACCCAGGTGAAATAAACAGCCTTGTTGC"
+                + "ACACACACACACACACACACACACACACACACACACAAAGAATTCATTG";
+
+        String realignReadCigar = "125M26S";
+
+        SAMRecord realignRead1 = buildSamRecord(188, realignReadCigar, realignReadBases);
+
+        int realignedReadIndexPosition = Realignment.realignedReadIndexPosition(readContext, realignRead1);
+
+        ReadContextMatcher matcher = new ReadContextMatcher(readContext);
+
+        // ReadContextMatch matchType = matcher.determineReadMatch(realignRead1, realignedReadIndexPosition);
+
+        // assertEquals(FULL, matchType);
+    }
+
     /* REALIGN
     @Test
     public void testIndelRealignedLeft()

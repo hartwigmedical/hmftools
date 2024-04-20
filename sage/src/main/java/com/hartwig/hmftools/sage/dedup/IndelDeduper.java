@@ -453,8 +453,8 @@ public class IndelDeduper
             FlankPosStart = readContext.AlignmentStart;
             FlankPosEnd = readContext.AlignmentEnd;
 
-            CorePosStart = readContext.corePositionStart();
-            CorePosEnd = readContext.corePositionEnd();
+            CorePosStart = readContext.CorePositionStart;
+            CorePosEnd = readContext.CorePositionEnd;
         }
 
         public String ref()

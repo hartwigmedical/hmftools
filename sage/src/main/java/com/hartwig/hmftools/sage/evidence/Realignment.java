@@ -5,12 +5,52 @@ import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 
+import com.hartwig.hmftools.sage.common.VariantReadContext;
+
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.SAMRecord;
+
 public class Realignment
 {
-    private static final int MIN_REPEAT_COUNT = 4;
-    public static final int MAX_REPEAT_SIZE = 5;
+    public static final int INVALID_INDEX = -1;
 
+    public static int realignedReadIndexPosition(final VariantReadContext readContext, final SAMRecord record)
+    {
+        int variantCoreEndPosition = readContext.CorePositionEnd;
+
+        if(variantCoreEndPosition < record.getAlignmentStart() || variantCoreEndPosition > record.getAlignmentEnd())
+            return INVALID_INDEX;
+
+        int refPosition = record.getAlignmentStart();
+        int index = 0;
+
+        for(CigarElement element : record.getCigar().getCigarElements())
+        {
+            if(refPosition + element.getLength() >= variantCoreEndPosition && element.getOperator().consumesReferenceBases())
+            {
+                if(element.getOperator().consumesReadBases())
+                    index += variantCoreEndPosition - refPosition;
+
+                break;
+            }
+
+            if(element.getOperator().consumesReferenceBases())
+                refPosition += element.getLength();
+
+            if(element.getOperator().consumesReadBases())
+                index += element.getLength();
+        }
+
+        // - look L->R from RI - core_len - 10 (flank length) against leftFlank + Core + rightFlank
+        int adjustedReadIndex = index - readContext.coreLength() - readContext.leftFlankLength();
+        return adjustedReadIndex;
+    }
+
+
+    // REALIGN: old logic to be removed
+    public static final int MAX_REPEAT_SIZE = 5;
     private static final Repeat NO_REPEAT = new Repeat(0, 0);
+    private static final int MIN_REPEAT_COUNT = 4;
 
     /*
     public static RealignedContext realignedAroundIndex(
@@ -160,7 +200,6 @@ public class Realignment
     {
         return index < 0 || index >= sequence.length;
     }
-
 
     private static class Repeat
     {

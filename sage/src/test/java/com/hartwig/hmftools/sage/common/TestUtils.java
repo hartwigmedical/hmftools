@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 
 import java.util.Collections;
 import java.util.List;
@@ -121,18 +122,23 @@ public class TestUtils
         return record;
     }
 
-    public static SAMRecord buildSamRecord(final int alignmentStart, final String cigar, final String readString, final String qualities)
+    public static SAMRecord buildSamRecord(final int alignmentStart, final String cigar, final String readBases, final String qualities)
     {
-        return buildSamRecord(alignmentStart, cigar, readString, qualities.getBytes());
+        return buildSamRecord(alignmentStart, cigar, readBases, qualities.getBytes());
     }
 
-    public static SAMRecord buildSamRecord(final int alignmentStart, final String cigar, final String readString, final byte[] qualities)
+    public static SAMRecord buildSamRecord(final int alignmentStart, final String cigar, final String readString)
+    {
+        return buildSamRecord(alignmentStart, cigar, readString, buildDefaultBaseQuals(readString.length()));
+    }
+
+    public static SAMRecord buildSamRecord(final int alignmentStart, final String cigar, final String readBases, final byte[] qualities)
     {
         final SAMRecord record = new SAMRecord(null);
         record.setReferenceName(CHR_1);
         record.setAlignmentStart(alignmentStart);
         record.setCigarString(cigar);
-        record.setReadString(readString);
+        record.setReadString(readBases);
         record.setReadNegativeStrandFlag(false);
         record.setBaseQualities(qualities);
         record.setMappingQuality(20);

@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static java.lang.Math.max;
+
+import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
@@ -10,6 +14,7 @@ import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftC
 import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.SplitReadUtils;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -244,5 +249,61 @@ public class RawContextCigarHandler implements CigarHandler
 
         int lowQualCount = scLength - aboveQual;
         return lowQualCount >= MAX_SOFT_CLIP_LOW_QUAL_COUNT;
+    }
+
+    public static RawContext createRawContextFromCoreMatch(
+            final VariantReadContext readContext, final int maxCandidateDeleteLength, final SAMRecord record)
+    {
+        // check for an exact core match by which to centre the read
+        if(maxCandidateDeleteLength < 5)
+            return RawContext.INVALID_CONTEXT;
+
+        int scLenLeft = leftSoftClipLength(record);
+        int scLenRight = rightSoftClipLength(record);
+
+        if(max(scLenLeft, scLenRight) < 5)
+            return RawContext.INVALID_CONTEXT;
+
+        String variantCore = readContext.coreStr();
+        int coreStartIndex = record.getReadString().indexOf(variantCore);
+        if(coreStartIndex < 1)
+            return RawContext.INVALID_CONTEXT;
+
+        int coreEndIndex = coreStartIndex + variantCore.length() - 1;
+        boolean isValidRead = false;
+        int baseQuality = 0;
+
+        if(scLenLeft > scLenRight)
+        {
+            // the core match must span from the left soft-clipping into the matched bases
+            int readRightCorePosition = record.getReferencePositionAtReadPosition(coreEndIndex + 1);
+
+            if(readRightCorePosition > readContext.variant().position() && coreStartIndex < scLenLeft)
+            {
+                isValidRead = true;
+                baseQuality = record.getBaseQualities()[scLenLeft];
+            }
+        }
+        else
+        {
+            // the core match must span from the matched bases into the right soft-clipping
+            int readLeftCorePosition = record.getReferencePositionAtReadPosition(coreStartIndex + 1);
+            int postCoreIndexDiff = record.getReadBases().length - coreEndIndex;
+
+            if(readLeftCorePosition > 0 && readLeftCorePosition < readContext.variant().position() && postCoreIndexDiff < scLenRight)
+            {
+                isValidRead = true;
+                baseQuality = record.getBaseQualities()[record.getReadBases().length - scLenRight];
+            }
+        }
+
+        if(!isValidRead)
+            return RawContext.INVALID_CONTEXT;
+
+        int readIndex = coreStartIndex + readContext.VarReadIndex - readContext.CoreIndexStart;
+
+        return new RawContext(
+                readIndex, false, false, true,
+                true, false, true, baseQuality);
     }
 }
