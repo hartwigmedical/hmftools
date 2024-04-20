@@ -33,9 +33,14 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_DEPTH_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_BASE_QUALITY;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_BASE_QUALITY_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_DEPTH;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_DEPTH_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_VS_CONTEXT_DIFFS;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_VS_CONTEXT_DIFFS_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_AF_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_EVENTS;
@@ -191,9 +196,10 @@ public class VariantVCF implements AutoCloseable
 
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_JITTER, 3, VCFHeaderLineType.Integer, READ_CONTEXT_JITTER_DESC));
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_MAP_QUALITY_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(RAW_SUPPORT_DEPTH, 2, VCFHeaderLineType.Integer, "Raw allelic depth"));
-        header.addMetaDataLine(new VCFFormatHeaderLine(RAW_SUPPORT_BASE_QUALITY, 2, VCFHeaderLineType.Integer, "Raw allelic base quality"));
-        header.addMetaDataLine(new VCFFormatHeaderLine(RAW_DEPTH, 1, VCFHeaderLineType.Integer, "Raw read depth"));
+        header.addMetaDataLine(new VCFFormatHeaderLine(RAW_SUPPORT_DEPTH, 2, VCFHeaderLineType.Integer, RAW_SUPPORT_DEPTH_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(RAW_SUPPORT_BASE_QUALITY, 2, VCFHeaderLineType.Integer, RAW_SUPPORT_BASE_QUALITY_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(RAW_DEPTH, 1, VCFHeaderLineType.Integer, RAW_DEPTH_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(RAW_VS_CONTEXT_DIFFS, 2, VCFHeaderLineType.Integer, RAW_VS_CONTEXT_DIFFS_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 READ_CONTEXT_COUNT, VariantReadSupport.values().length, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESC));

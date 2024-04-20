@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.findPos
 import java.util.List;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
+import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.evidence.ArtefactContext;
 import com.hartwig.hmftools.sage.quality.UltimaQualModel;
@@ -38,13 +39,15 @@ public class VariantReadContext
     public final int CorePositionEnd;
 
     private final SimpleVariant mVariant;
+
     private final List<CigarElement> mReadCigar;
     private final String mReadCigarStr;
+    private final int mUnclippedPosStart;
 
     private final ArtefactContext mArtefactContext;
     private final UltimaQualModel mUltimaQualModel;
 
-    public  VariantReadContext(
+    public VariantReadContext(
             final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases,
             final byte[] readBases, final List<CigarElement> readCigar,
             final int coreIndexStart, final int varReadIndex, final int coreIndexEnd,
@@ -63,6 +66,8 @@ public class VariantReadContext
 
         mReadCigar = readCigar;
         mReadCigarStr = CigarUtils.cigarStringFromElements(readCigar);
+
+        mUnclippedPosStart = AlignmentStart - CigarUtils.leftSoftClipLength(readCigar);
 
         // CLEAN-UP
         mArtefactContext = null; // ArtefactContext.buildContext(variant, readContext.indexedBases());
@@ -96,7 +101,7 @@ public class VariantReadContext
     public int rightLength() { return ReadBases.length - VarReadIndex; } // distance to last base
     public int totalLength() { return ReadBases.length; }
 
-    public int refIndex() { return mVariant.Position - AlignmentStart; }
+    public int refIndex() { return mVariant.Position - mUnclippedPosStart; }
 
     public boolean isValid()
     {

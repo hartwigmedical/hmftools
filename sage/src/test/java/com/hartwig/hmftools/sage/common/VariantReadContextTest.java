@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.RepeatInfo.findMultiBaseRepeat;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
@@ -68,9 +69,9 @@ public class VariantReadContextTest
 
         readBases = REF_BASES_200.substring(30, 45) + "GGG" + REF_BASES_200.substring(45, 50) + "A"
                 + REF_BASES_200.substring(51, 55) + "GGG" + REF_BASES_200.substring(55, 70);
-        baseQuals = buildDefaultBaseQuals(readBases.length());
+
         readCigar = "15M3I10M3I15M";
-        read = buildSamRecord(30, readCigar, readBases, baseQuals);
+        read = buildSamRecord(30, readCigar, readBases);
 
         readContext = builder.createSnvMnvContext(var, read, 23, REF_SEQUENCE_200);
 
@@ -128,9 +129,8 @@ public class VariantReadContextTest
         SimpleVariant var = createSimpleVariant(50, "CTG", "C");
 
         String readBases = REF_BASES_200.substring(30, 51) + REF_BASES_200.substring(53, 70);
-        byte[] baseQuals = buildDefaultBaseQuals(readBases.length());
         String readCigar = "21M2D17M";
-        SAMRecord read = buildSamRecord(30, readCigar, readBases, baseQuals);
+        SAMRecord read = buildSamRecord(30, readCigar, readBases);
 
         VariantReadContextBuilder builder = new VariantReadContextBuilder(TEST_FLANK_LENGTH);
 
@@ -156,7 +156,54 @@ public class VariantReadContextTest
         assertEquals(49, readContext.CorePositionStart);
         assertEquals(55, readContext.CorePositionEnd);
 
-        // CLEAN-UP: add more scenarios
+        // test 2: read context spans into the soft-clip bases on the left
+        String refBases = REF_BASES_200.substring(57, 59);
+        String altBase = refBases.substring(0, 1);
+        var = createSimpleVariant(57, refBases, altBase);
+
+        readBases = REF_BASES_200.substring(1, 58) + REF_BASES_200.substring(59, 79);
+        readCigar = "49S8M1D20M"; // so del occurs 49 + 8 = 57 bases into the read
+        read = buildSamRecord(50, readCigar, readBases);
+
+        builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH); // full flank so it extends into the soft-clip
+        readContext = builder.createIndelContext(var, read, 57, REF_SEQUENCE_200);
+
+        assertTrue(readContext.isValid());
+        assertEquals(50, readContext.AlignmentStart);
+        assertEquals(71, readContext.AlignmentEnd);
+        assertEquals(10, readContext.CoreIndexStart);
+        assertEquals(11, readContext.VarReadIndex);
+        assertEquals(13, readContext.CoreIndexEnd);
+        assertEquals(11, readContext.AltIndexLower);
+        assertEquals(12, readContext.AltIndexUpper);
+        assertEquals(readContext.ReadBases.length + 1, readContext.RefBases.length);
+        assertEquals("3S8M1D13M", readContext.readCigar());
+        assertEquals("TACT", readContext.coreStr());
+        assertEquals("CCGCTGTCTG", readContext.leftFlankStr());
+        assertEquals("CGGAAAAAAA", readContext.rightFlankStr());
+
+        // test 3: del spanning into the right soft-clip
+        refBases = REF_BASES_200.substring(30, 33);
+        altBase = refBases.substring(0, 1);
+        var = createSimpleVariant(30, refBases, altBase);
+
+        readBases = REF_BASES_200.substring(1, 31) + REF_BASES_200.substring(33, 53);
+        readCigar = "30M2D5M15S";
+        read = buildSamRecord(1, readCigar, readBases);
+
+        builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH); // full flank so it extends into the soft-clip
+        readContext = builder.createIndelContext(var, read, 29, REF_SEQUENCE_200);
+
+        assertTrue(readContext.isValid());
+        assertEquals(16, readContext.AlignmentStart);
+        assertEquals(37, readContext.AlignmentEnd);
+        assertEquals(10, readContext.CoreIndexStart);
+        assertEquals(14, readContext.VarReadIndex);
+        assertEquals(16, readContext.CoreIndexEnd);
+        assertEquals(14, readContext.AltIndexLower);
+        assertEquals(15, readContext.AltIndexUpper);
+        assertEquals(readContext.ReadBases.length + 2, readContext.RefBases.length);
+        assertEquals("15M2D5M7S", readContext.readCigar());
     }
 
     @Test
@@ -165,9 +212,8 @@ public class VariantReadContextTest
         SimpleVariant var = createSimpleVariant(50, "C", "CTG");
 
         String readBases = REF_BASES_200.substring(30, 51) + "TG" +  REF_BASES_200.substring(51, 70);
-        byte[] baseQuals = buildDefaultBaseQuals(readBases.length());
         String readCigar = "21M2I17M";
-        SAMRecord read = buildSamRecord(30, readCigar, readBases, baseQuals);
+        SAMRecord read = buildSamRecord(30, readCigar, readBases);
 
         VariantReadContextBuilder builder = new VariantReadContextBuilder(TEST_FLANK_LENGTH);
 

@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.sage.evidence.RealignedContext.NONE;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
+
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.I;
 
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
@@ -45,6 +50,29 @@ public class Realignment
         int adjustedReadIndex = index - readContext.coreLength() - readContext.leftFlankLength();
         return adjustedReadIndex;
     }
+
+    public static RealignedContext realignedAroundIndex(final VariantReadContext readContext, final int readIndex, final SAMRecord record)
+    {
+        int baseStartIndex = 0;
+        int baseEndIndex = readContext.totalLength() - 1;
+
+        int leftOffset = readContext.leftLength();
+        int otherStartIndex = readIndex - leftOffset;
+
+        int maxAlignDistance = getMaxRealignDistance(readContext, record);
+
+        return realigned(baseStartIndex, baseEndIndex, readContext.ReadBases, otherStartIndex, record.getReadBases(), maxAlignDistance);
+    }
+
+    private static int getMaxRealignDistance(final VariantReadContext readContext, final SAMRecord record)
+    {
+        // returns the larger of (read indel length total + largest core) or (max repeat size  = 5), + 1
+        int indelLength = record.getCigar().getCigarElements().stream()
+                .filter(x -> x.getOperator() == I || x.getOperator() == D).mapToInt(x -> x.getLength()).sum();
+
+        return max(indelLength + max(readContext.leftCoreLength(), readContext.rightCoreLength()), Realignment.MAX_REPEAT_SIZE) + 1;
+    }
+
 
 
     // REALIGN: old logic to be removed

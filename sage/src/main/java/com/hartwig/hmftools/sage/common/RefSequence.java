@@ -54,6 +54,10 @@ public class RefSequence
     {
         int indexStart = index(posStart);
         int indexEnd = index(posEnd);
+
+        if(indexStart < 0 || indexEnd < indexStart || indexEnd >= Bases.length)
+            return null;
+
         return Arrays.subsetArray(Bases, indexStart, indexEnd);
     }
 

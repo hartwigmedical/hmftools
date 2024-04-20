@@ -44,7 +44,7 @@ public class SageConstants
     public static final int REALIGN_READ_CONTEXT_MIN_SEARCH_LENGTH = 20;
     public static final int REALIGN_READ_CONTEXT_MIN_SEARCH_BUFFER = 5;
 
-    public static final int SC_INSERT_MIN_SC_LENGTH = 12;
+    public static final int SC_INSERT_REF_TEST_LENGTH = 12;
     public static final int SC_INSERT_MIN_LENGTH = 5;
     public static final int MIN_INSERT_ALIGNMENT_OVERLAP = 5;
 

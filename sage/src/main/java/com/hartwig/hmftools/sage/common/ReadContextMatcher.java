@@ -64,12 +64,12 @@ public class ReadContextMatcher
 
     public ReadContextMatch determineReadMatch(final SAMRecord record, final int readIndex)
     {
-        return determineReadMatch(record.getReadBases(), record.getBaseQualities(), readIndex);
+        return determineReadMatch(record.getReadBases(), record.getBaseQualities(), readIndex, false);
     }
 
-    public ReadContextMatch determineReadMatch(final byte[] readBases, final byte[] readQuals, final int readIndex)
+    public ReadContextMatch determineReadMatch(final byte[] readBases, final byte[] readQuals, final int readIndex, boolean skipRefMatch)
     {
-        if(coreMatchesRef(readBases, readQuals, readIndex))
+        if(!skipRefMatch && coreMatchesRef(readBases, readQuals, readIndex))
             return ReadContextMatch.REF;
 
         ReadContextMatch coreMatch = determineCoreMatch(readBases, readQuals, readIndex);
@@ -284,7 +284,7 @@ public class ReadContextMatcher
     {
         // compare the core and flanks for the 2 contexts, not allowing for mismatches
         ReadContextMatcher matcher = new ReadContextMatcher(first, false);
-        return matcher.determineReadMatch(second.ReadBases, null, second.VarReadIndex);
+        return matcher.determineReadMatch(second.ReadBases, null, second.VarReadIndex, true);
     }
 
     public double averageCoreQuality(final SAMRecord record, final int readIndex)

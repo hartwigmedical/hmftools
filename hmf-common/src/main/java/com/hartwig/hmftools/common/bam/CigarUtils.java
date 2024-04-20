@@ -121,6 +121,11 @@ public final class CigarUtils
         return (firstElement != null && firstElement.getOperator() == CigarOperator.S) ? firstElement.getLength() : 0;
     }
 
+    public static int leftSoftClipLength(final List<CigarElement> elements)
+    {
+        return elements.get(0).getOperator() == CigarOperator.S ? elements.get(0).getLength() : 0;
+    }
+
     public static int rightSoftClipLength(final Cigar cigar)
     {
         CigarElement lastElement = cigar.getLastCigarElement();

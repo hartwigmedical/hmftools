@@ -31,11 +31,6 @@ public class AltRead
         mReadContext = readContext;
     }
 
-    public boolean containsReadContext()
-    {
-        return mReadContext != null;
-    }
-
     public int position()
     {
         return mRefContext.position();
@@ -49,15 +44,6 @@ public class AltRead
     public int length()
     {
         return Math.abs(Ref.length() - Alt.length());
-    }
-
-    public int rightCoreIndex()
-    {
-        return mReadContext.CoreIndexStart;
-    }
-    public int leftCoreIndex()
-    {
-        return mReadContext.CoreIndexEnd;
     }
 
     public void updateRefContext()

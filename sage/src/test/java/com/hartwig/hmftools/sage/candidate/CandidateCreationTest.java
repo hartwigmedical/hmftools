@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.candidate;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.sage.common.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 
 import static junit.framework.TestCase.assertEquals;
@@ -15,6 +16,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
 
 import org.junit.Assert;
@@ -61,7 +63,7 @@ public class CandidateCreationTest
     }
 
     @Test
-    public void testSoftClipInsertProd1()
+    public void testSoftClipInsertProdExample()
     {
         ChrBaseRegion region = new ChrBaseRegion(CHR_1, 1, 150);
 
@@ -79,19 +81,19 @@ public class CandidateCreationTest
 
         List<SAMRecord> reads = Lists.newArrayList(
                 createSamRecord(
-                        "36996", CHR_1,  45,
+                        READ_ID_GENERATOR.nextId(), CHR_1,  45,
                         "TGGCCAGCCAGTCAGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCTGCCTG",
                         "44S57M"),
                 createSamRecord(
-                        "8077", CHR_1,  45,
+                        READ_ID_GENERATOR.nextId(), CHR_1,  45,
                         "GCCAGCCAGTCAGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCACCCTGCT",
                         "42S59M"),
                 createSamRecord(
-                        "19351", CHR_1,  45,
+                        READ_ID_GENERATOR.nextId(), CHR_1,  45,
                         "CGCCAGGCAGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCTGCCTGCTCTC",
                         "39S62M"),
                 createSamRecord(
-                        "24001", CHR_1,  45,
+                        READ_ID_GENERATOR.nextId(), CHR_1,  45,
                         "AGCCGAAGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCGGCTCCATGCTGCTCCCCGCCGCCCGCTGCCTGCTCTCCCCCTCTC",
                         "31S70M"));
 
@@ -102,14 +104,21 @@ public class CandidateCreationTest
         tester.TumorSamSlicer.ReadRecords.addAll(reads); // repeat to get over qual thresholds
         tester.TumorSamSlicer.ReadRecords.addAll(reads);
 
-        /* CLEAN-UP
-
         task.run();
 
         SageVariant var = task.getVariants().stream().filter(x -> x.position() == 44 && x.isIndel()).findFirst().orElse(null);
 
         Assert.assertNotNull(var);
-        assertEquals(12, var.tumorReadCounters().get(0).softClipInsertSupport());
-        */
+
+        assertEquals(44, var.position());
+        assertEquals("A", var.ref());
+        assertEquals("AGGCTCCATGCTGCTCCCCGCCGCC", var.alt());
+
+        VariantReadContext readContext = var.readContext();
+        assertEquals(10, readContext.CoreIndexStart);
+        assertEquals(11, readContext.VarReadIndex);
+        assertEquals(11, readContext.VarReadIndex);
+        assertEquals("36S57M", readContext.readCigar());
+        assertEquals(48, readContext.Homology.Length);
     }
 }

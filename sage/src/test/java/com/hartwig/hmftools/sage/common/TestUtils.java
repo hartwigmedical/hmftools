@@ -12,6 +12,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
@@ -26,6 +27,8 @@ public class TestUtils
     public static final BqrRecordMap RECALIBRATION = new BqrRecordMap(Collections.emptyList());
 
     public static final MockRefGenome MOCK_REF_GENOME = new MockRefGenome();
+
+    public static final ReadIdGenerator READ_ID_GENERATOR = new ReadIdGenerator();
 
     public static final String REF_BASES_200 =
         //             10        20        30        40        50        60        70        80        90
@@ -135,6 +138,7 @@ public class TestUtils
     public static SAMRecord buildSamRecord(final int alignmentStart, final String cigar, final String readBases, final byte[] qualities)
     {
         final SAMRecord record = new SAMRecord(null);
+        record.setReadName(READ_ID_GENERATOR.nextId());
         record.setReferenceName(CHR_1);
         record.setAlignmentStart(alignmentStart);
         record.setCigarString(cigar);

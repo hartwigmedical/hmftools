@@ -217,4 +217,11 @@ public final class SamRecordUtils
 
         return format("%s1%s2", firstStr, secondStr);
     }
+
+    public static String readToString(final SAMRecord read)
+    {
+        return format("id(%s) coords(%s:%d-%d) cigar(%s) mate(%s:%d) flags(%d)",
+                read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(),
+                read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
+    }
 }

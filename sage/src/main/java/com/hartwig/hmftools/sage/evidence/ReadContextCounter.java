@@ -219,6 +219,7 @@ public class ReadContextCounter
     public StrandBiasData readStrandBiasRef() { return mRefReadStrandBias; }
     public int improperPairCount() { return mImproperPairCount; }
 
+    public RawCounters rawCounters() { return mRawCounters; }
     public int rawDepth() { return mRawCounters.RawDepth; }
     public int rawAltSupport() { return mRawCounters.RawAltSupport; }
     public int rawRefSupport() { return mRawCounters.RawRefSupport; }
@@ -424,10 +425,7 @@ public class ReadContextCounter
 
         registerRawSupport(rawContext, qualityScores.RecalibratedBaseQuality);
 
-        // switch back to the old method to test for jitter
-        // REALIGN
-        RealignedContext jitterRealign = RealignedContext.NONE;
-                // Realignment.realignedAroundIndex(mReadContext, readIndex, record.getReadBases(), getMaxRealignDistance(record));
+        RealignedContext jitterRealign = Realignment.realignedAroundIndex(mReadContext, readIndex, record);
 
         if(rawContext.ReadIndexInSoftClip && !rawContext.AltSupport)
         {
@@ -456,6 +454,7 @@ public class ReadContextCounter
         }
         else if(rawContext.AltSupport)
         {
+            // CLEAN-UP: consider using read context match type instead of raw context
             // readSupport = OTHER_ALT; // CLEAN-UP
 
             mAltMapQualityTotal += record.getMappingQuality();
@@ -656,17 +655,6 @@ public class ReadContextCounter
             else
                 mFragmentCoords.addRead(record, null);
         }
-    }
-
-    private int getMaxRealignDistance(final SAMRecord record)
-    {
-        int leftOffset = mReadContext.leftCoreLength();
-        int rightOffset = mReadContext.rightCoreLength();
-
-        int indelLength = record.getCigar().getCigarElements().stream()
-                .filter(x -> x.getOperator() == I || x.getOperator() == D).mapToInt(x -> x.getLength()).sum();
-
-        return Math.max(indelLength + Math.max(leftOffset, rightOffset), Realignment.MAX_REPEAT_SIZE) + 1;
     }
 
     private void checkImproperCount(final SAMRecord record)

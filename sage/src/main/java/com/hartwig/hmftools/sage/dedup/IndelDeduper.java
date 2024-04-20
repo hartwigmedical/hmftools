@@ -449,7 +449,6 @@ public class IndelDeduper
             // flank positions are estimate since they aren't aware of other variants in their core and flanks
             VariantReadContext readContext = ReadCounter.readContext();
 
-            // note that flank positions are estimates of position since they aren't aware of other INDELs in their context
             FlankPosStart = readContext.AlignmentStart;
             FlankPosEnd = readContext.AlignmentEnd;
 

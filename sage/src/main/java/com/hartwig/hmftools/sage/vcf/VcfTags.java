@@ -33,8 +33,16 @@ public final class VcfTags
     public static final String READ_CONTEXT_IMPROPER_PAIR_DESC = "Read context improper pair count";
 
     public static final String RAW_DEPTH = "RDP";
+    public static final String RAW_DEPTH_DESC = "Raw read depth";
+
     public static final String RAW_SUPPORT_DEPTH = "RAD";
+    public static final String RAW_SUPPORT_DEPTH_DESC = "Raw allelic depth";
+
     public static final String RAW_SUPPORT_BASE_QUALITY = "RABQ";
+    public static final String RAW_SUPPORT_BASE_QUALITY_DESC = "Raw allelic base quality";
+
+    public static final String RAW_VS_CONTEXT_DIFFS = "RC_DIFFS";
+    public static final String RAW_VS_CONTEXT_DIFFS_DESC = "Diffs between raw context and read context matching (ref,alt)";
 
     public static final String AVG_MAP_QUALITY = "AMQ";
     public static final String AVG_MAP_QUALITY_DESC = "Average map quality count (all,alt)";
