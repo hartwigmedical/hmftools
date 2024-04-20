@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsSt
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -95,7 +96,9 @@ public class CobaltApplication
 
             if (mConfig.TargetRegionPath != null)
             {
-                CsvReadOptions options = CsvReadOptions.builder(mConfig.TargetRegionPath).separator('\t').build();
+                CsvReadOptions options = CsvReadOptions.builder(mConfig.TargetRegionPath)
+                        .separator('\t')
+                        .columnTypesPartial(Map.of("chromosome", ColumnType.STRING)).build();
                 Table targetRegionEnrichment = Table.read().usingOptions(options);
                 chromosomePosCodec.addEncodedChrPosColumn(targetRegionEnrichment, true);
                 ratioSupplier.setTargetRegionEnrichment(targetRegionEnrichment);
