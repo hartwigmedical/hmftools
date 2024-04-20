@@ -14,6 +14,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 
+import htsjdk.samtools.SAMSequenceRecord;
+
 public class PartitionUtils
 {
     public static List<ChrBaseRegion> partitionChromosome(
@@ -37,6 +39,12 @@ public class PartitionUtils
         RefGenomeCoordinates refGenomeCoords = refGenomeVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
         int chromosomeLength = refGenomeCoords.length(stripChrPrefix(chromosome));
         return buildPartitions(refGenomeVersion.versionedChromosome(chromosome), chromosomeLength, partitionSize);
+    }
+
+    public static List<ChrBaseRegion> partitionChromosome(final SAMSequenceRecord refSequence, int partitionSize)
+    {
+        int chromosomeLength = refSequence.getSequenceLength();
+        return buildPartitions(refSequence.getContig(), chromosomeLength, partitionSize);
     }
 
     public static List<ChrBaseRegion> partitionSpecificRegions(final List<ChrBaseRegion> specificRegions, int partitionSize)
