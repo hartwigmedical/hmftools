@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.bamtools.bamtofastq;
 
 import static com.hartwig.hmftools.bamtools.bamtofastq.BamToFastqConfig.BFQ_LOGGER;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 
 import java.io.IOException;
 import java.util.Queue;
@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.bam.BamSlicer;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;

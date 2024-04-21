@@ -2,8 +2,8 @@ package com.hartwig.hmftools.bamtools.bamtofastq;
 
 import java.util.function.Consumer;
 
+import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
