@@ -23,6 +23,7 @@ public class ReadContextMatcher
     private final boolean mAllowWildcardMatchInCore;
 
     private final int[] mLowQualExclusionRange; // for SNV & MNVs, the indices covering the variant & excluding low-qual mismatches
+    private final int[] mLowQualExclusionRangeRef;
 
     public static final byte WILDCARD_BASE = (byte) '.';
 
@@ -41,10 +42,14 @@ public class ReadContextMatcher
         if(mContext.variant().isIndel())
         {
             mLowQualExclusionRange = null;
+            mLowQualExclusionRangeRef = null;
         }
         else
         {
-            mLowQualExclusionRange = new int[] { mContext.VarReadIndex, mContext.VarReadIndex + mContext.variant().alt().length() - 1 };
+            int altLength = mContext.variant().alt().length();
+            mLowQualExclusionRange = new int[] { mContext.VarReadIndex, mContext.VarReadIndex + altLength - 1 };
+            int refIndex = mContext.leftCoreLength();
+            mLowQualExclusionRangeRef = new int[] { refIndex, refIndex + altLength - 1 };
         }
     }
 
@@ -103,18 +108,19 @@ public class ReadContextMatcher
 
     private boolean coreMatchesRef(final byte[] readBases, final byte[] readQuals, final int readIndex)
     {
-        int refIndex = mContext.refIndex();
-        int refCoreIndexStart = refIndex - mContext.leftCoreLength();
+        int refIndexStart = 0;
 
         int readIndexStart = readIndex - mContext.leftCoreLength();
-        int readIndexEnd = readIndex + mContext.rightCoreLength();
+        int readIndexEnd = readIndexStart + mContext.RefBases.length - 1;
+
+        int compareLength = mContext.RefBases.length;
 
         if(readIndexStart < 0 || readIndexEnd >= readBases.length)
             return false;
 
         return matches(
-                mContext.RefBases, readBases, readQuals, refCoreIndexStart, readIndexStart, mContext.coreLength(),
-                mMaxCoreLowQualMatches, mAllowWildcardMatchInCore, mLowQualExclusionRange);
+                mContext.RefBases, readBases, readQuals, refIndexStart, readIndexStart, compareLength,
+                mMaxCoreLowQualMatches, mAllowWildcardMatchInCore, mLowQualExclusionRangeRef);
     }
 
     private ReadContextMatch determineCoreMatch(final byte[] readBases, final byte[] readQuals, final int readIndex)

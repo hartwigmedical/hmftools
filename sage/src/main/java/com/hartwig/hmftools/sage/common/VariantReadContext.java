@@ -18,10 +18,10 @@ import htsjdk.samtools.CigarElement;
 
 public class VariantReadContext
 {
-    public final int AlignmentStart;
+    public final int AlignmentStart; // alignments of the flanks using read bases
     public final int AlignmentEnd;
 
-    public final byte[] RefBases;
+    public final byte[] RefBases; // capture for the core only
 
     // read bases and info
     public final byte[] ReadBases;
@@ -101,7 +101,8 @@ public class VariantReadContext
     public int rightLength() { return ReadBases.length - VarReadIndex; } // distance to last base
     public int totalLength() { return ReadBases.length; }
 
-    public int refIndex() { return mVariant.Position - mUnclippedPosStart; }
+    public int refIndexOld() { return mVariant.Position - mUnclippedPosStart; }
+    public int refIndex() { return leftCoreLength(); }
 
     public boolean isValid()
     {
@@ -145,8 +146,8 @@ public class VariantReadContext
 
     public String toString()
     {
-        return format("%s-%s-%s %s pos(%d-%d) index(%d-%d-%d) repeat(%s) homology(%s)",
-                leftFlankStr(), coreStr(), rightFlankStr(), mReadCigarStr, AlignmentStart, AlignmentEnd,
+        return format("%s read(%s-%s-%s %s) pos(%d-%d) index(%d-%d-%d) repeat(%s) homology(%s)",
+                mVariant, leftFlankStr(), coreStr(), rightFlankStr(), mReadCigarStr, AlignmentStart, AlignmentEnd,
                 CoreIndexStart, VarReadIndex, CoreIndexEnd, MaxRepeat != null ? MaxRepeat : "", Homology != null ? Homology : "");
     }
 }

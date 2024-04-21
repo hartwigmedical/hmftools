@@ -2,14 +2,12 @@ package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
+import static com.hartwig.hmftools.sage.common.ReadContextMatch.REF;
 import static com.hartwig.hmftools.sage.common.RepeatInfo.findMultiBaseRepeat;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.findHomology;
-import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_LEFT_CORE;
-import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_RIGHT_CORE;
-import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 
 import static org.junit.Assert.assertEquals;
@@ -28,6 +26,7 @@ public class VariantReadContextTest
     @Test
     public void testSnvMnvVariantReadContext()
     {
+        // test 1: most simple case with no repeats or homology
         SimpleVariant var = createSimpleVariant(50, "C", "A");
 
         String readBases = REF_BASES_200.substring(30, 50) + "A" + REF_BASES_200.substring(51, 70);
@@ -47,7 +46,7 @@ public class VariantReadContextTest
         assertEquals(9, readContext.CoreIndexEnd);
         assertEquals(7, readContext.AltIndexLower);
         assertEquals(7, readContext.AltIndexUpper);
-        assertEquals("GTCACCGCTGTCTGT", readContext.refBases());
+        assertEquals("CGCTG", readContext.refBases());
         assertEquals("GTCACCGATGTCTGT", readContext.readBases());
         assertEquals("15M", readContext.readCigar());
         assertEquals("GCT", readContext.trinucleotideStr());
@@ -57,7 +56,11 @@ public class VariantReadContextTest
         assertEquals("CGATG", readContext.coreStr());
         assertEquals("GTCAC", readContext.leftFlankStr());
         assertEquals("TCTGT", readContext.rightFlankStr());
+        assertNull(readContext.Homology);
+        assertNull(readContext.MaxRepeat);
 
+
+        // test 2:
         // Read bases and cigar:
         // 15M index 0-14, pos 30-44
         // 3I index 15-17, from pos 44
@@ -83,7 +86,7 @@ public class VariantReadContextTest
         assertEquals(11, readContext.CoreIndexEnd);
         assertEquals(9, readContext.AltIndexLower);
         assertEquals(9, readContext.AltIndexUpper);
-        assertEquals("TCACCGCTGTCT", readContext.refBases());
+        assertEquals("CGCTG", readContext.refBases());
         assertEquals("TGGGCACCGATGTCGGGT", readContext.readBases());
         assertEquals("1M2I10M3I1M", readContext.readCigar());
         assertEquals(5, readContext.coreLength());
@@ -93,7 +96,7 @@ public class VariantReadContextTest
         assertEquals("TGGGCAC", readContext.leftFlankStr());
         assertEquals("TCGGGT", readContext.rightFlankStr());
 
-        // with transitional repeats near the core
+        // test 3: with transitional repeats near the core
 
         // TGCGCGC TA CACACACT -> TGCGCGC GC CACACACT
         var = createSimpleVariant(143, "TA", "GC");
@@ -113,13 +116,52 @@ public class VariantReadContextTest
         assertEquals(21, readContext.CoreIndexEnd);
         assertEquals(12, readContext.AltIndexLower);
         assertEquals(13, readContext.AltIndexUpper);
-        assertEquals("CACAGTGCGCGCTACACACACTGGCCT", readContext.refBases());
+        assertEquals("TGCGCGCTACACACACT", readContext.refBases());
         assertEquals("CACAGTGCGCGCGCCACACACTGGCCT", readContext.readBases());
         assertEquals("27M", readContext.readCigar());
         assertEquals(17, readContext.coreLength());
         assertEquals(5, readContext.leftFlankLength());
         assertEquals(5, readContext.rightFlankLength());
         assertEquals("TGCGCGCGCCACACACT", readContext.coreStr());
+    }
+
+    @Test
+    public void testSnvComplex()
+    {
+        String refBases = REF_BASES_200.substring(0, 50) +
+        //       50        60        70
+        //       0        90123456789012345        4
+        //                             T
+                "CTTTTTTTTTATTTTTTTTTTTCTTTTTTTTGAGA" + REF_BASES_200.substring(100, 150);
+
+        RefSequence refSequence = new RefSequence(0, refBases.getBytes());
+
+        String readBases = refBases.substring(40, 72) + "T" + refBases.substring(73, 100);
+
+        String readCigar = "60M";
+        SAMRecord read = buildSamRecord(40, readCigar, readBases);
+
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+
+        SimpleVariant var = createSimpleVariant(72, "C", "T");
+        VariantReadContext readContext = builder.createSnvMnvContext(var, read, 32, refSequence);
+
+        assertTrue(readContext.isValid());
+        assertEquals(50, readContext.AlignmentStart);
+        assertEquals(84, readContext.AlignmentEnd);
+        assertEquals(10, readContext.CoreIndexStart);
+        assertEquals(22, readContext.VarReadIndex);
+        assertEquals(24, readContext.CoreIndexEnd);
+        assertEquals(12, readContext.refIndex());
+        assertEquals("ATTTTTTTTTTTCTT", readContext.refBases());
+        assertEquals("CTTTTTTTTTATTTTTTTTTTTTTTTTTTTTGAGA", readContext.readBases());
+
+        // test a core match
+        String readRefBases = refBases.substring(40, 100);
+        SAMRecord refRead = buildSamRecord(40, readCigar, readRefBases);
+
+        ReadContextMatcher matcher = new ReadContextMatcher(readContext);
+        assertEquals(REF, matcher.determineReadMatch(refRead, 32));
     }
 
     @Test
@@ -144,7 +186,7 @@ public class VariantReadContextTest
         assertEquals(9, readContext.CoreIndexEnd);
         assertEquals(6, readContext.AltIndexLower);
         assertEquals(7, readContext.AltIndexUpper);
-        assertEquals("TCACCGCTGTCTGTGAC", readContext.refBases());
+        assertEquals("GCTGT", readContext.refBases());
         assertEquals("TCACCGCTCTGTGAC", readContext.readBases());
         assertEquals("7M2D8M", readContext.readCigar());
         assertEquals(5, readContext.coreLength());
@@ -176,7 +218,6 @@ public class VariantReadContextTest
         assertEquals(13, readContext.CoreIndexEnd);
         assertEquals(11, readContext.AltIndexLower);
         assertEquals(12, readContext.AltIndexUpper);
-        assertEquals(readContext.ReadBases.length + 1, readContext.RefBases.length);
         assertEquals("3S8M1D13M", readContext.readCigar());
         assertEquals("TACT", readContext.coreStr());
         assertEquals("CCGCTGTCTG", readContext.leftFlankStr());
@@ -202,7 +243,6 @@ public class VariantReadContextTest
         assertEquals(16, readContext.CoreIndexEnd);
         assertEquals(14, readContext.AltIndexLower);
         assertEquals(15, readContext.AltIndexUpper);
-        assertEquals(readContext.ReadBases.length + 2, readContext.RefBases.length);
         assertEquals("15M2D5M7S", readContext.readCigar());
     }
 
@@ -227,7 +267,7 @@ public class VariantReadContextTest
         assertEquals(13, readContext.CoreIndexEnd);
         assertEquals(6, readContext.AltIndexLower);
         assertEquals(9, readContext.AltIndexUpper);
-        assertEquals("TCACCGCTGTCTGTGAC", readContext.refBases());
+        assertEquals("GCTGTCTGT", readContext.refBases());
         assertEquals("TCACCGCTGTGTCTGTGAC", readContext.readBases());
         assertEquals("7M2I10M", readContext.readCigar());
         assertEquals(9, readContext.coreLength());

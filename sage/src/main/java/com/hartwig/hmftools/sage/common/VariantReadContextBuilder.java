@@ -82,12 +82,18 @@ public class VariantReadContextBuilder
         readFlankEnd = readCigarInfo.FlankIndexEnd;
 
         byte[] contextReadBases = Arrays.subsetArray(readBases, readFlankStart, readFlankEnd);
-        byte[] refBases = refSequence.baseRange(readCigarInfo.UnclippedStart, readCigarInfo.UnclippedEnd);
 
         int readContextOffset = readFlankStart;
         int coreIndexStart = readCoreStart - readContextOffset;
         int readVarIndex = varReadIndex - readContextOffset;
         int coreIndexEnd = readCoreEnd - readContextOffset;
+
+        // ref bases are the core width around the variant's position
+        int leftCoreLength = readVarIndex - coreIndexStart;
+        int coreLength = coreIndexEnd - coreIndexStart + 1;
+        int refPosStart = variant.Position - leftCoreLength;
+        int refPosEnd = refPosStart + coreLength - 1;
+        byte[] refBases = refSequence.baseRange(refPosStart, refPosEnd);
 
         int alignmentStart = max(read.getAlignmentStart(), readCigarInfo.UnclippedStart);
         int alignmentEnd = min(read.getAlignmentEnd(), readCigarInfo.UnclippedEnd);
@@ -140,12 +146,19 @@ public class VariantReadContextBuilder
 
         byte[] contextReadBases = Arrays.subsetArray(readBases, readFlankStart, readFlankEnd);
 
-        byte[] refBases = refSequence.baseRange(readCigarInfo.UnclippedStart, readCigarInfo.UnclippedEnd);
+        // byte[] refBases = refSequence.baseRange(readCigarInfo.UnclippedStart, readCigarInfo.UnclippedEnd);
 
         int readContextOffset = readFlankStart;
         int coreIndexStart = readCoreStart - readContextOffset;
         int readVarIndex = varReadIndex - readContextOffset;
         int coreIndexEnd = readCoreEnd - readContextOffset;
+
+        // ref bases are the core width around the variant's position
+        int leftCoreLength = readVarIndex - coreIndexStart;
+        int coreLength = coreIndexEnd - coreIndexStart + 1;
+        int refPosStart = variant.Position - leftCoreLength;
+        int refPosEnd = refPosStart + coreLength - 1;
+        byte[] refBases = refSequence.baseRange(refPosStart, refPosEnd);
 
         int alignmentStart = max(read.getAlignmentStart(), readCigarInfo.UnclippedStart);
         int alignmentEnd = min(read.getAlignmentEnd(), readCigarInfo.UnclippedEnd);

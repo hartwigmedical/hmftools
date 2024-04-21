@@ -68,7 +68,7 @@ public final class VariantUtils
         int coreIndexStart = leftFlank.length();
         int varReadIndex = coreIndexStart + leftCore.length();
         int coreIndexEnd = varReadIndex + variant.alt().length() - 1 + rightCore.length();
-        String refBases = leftFlank + leftCore + variant.ref() + rightCore + rightFlank;
+        String refBases = leftCore + variant.ref() + rightCore;
         String readBases = leftFlank + leftCore + variant.alt() + rightCore + rightFlank;
 
         int alignmentStart = variant.Position - varReadIndex;
