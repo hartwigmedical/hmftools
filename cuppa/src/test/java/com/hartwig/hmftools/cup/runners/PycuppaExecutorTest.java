@@ -40,11 +40,3 @@ public class PycuppaExecutorTest
     }
 }
 
-//String argString = new StringJoiner(" ")
-//        .add("--classifier_path").add("/Users/lnguyen/Hartwig/cloud_source_repos/common-resources-public/cuppa/37/cuppa_classifier.37.pickle.gz")
-//        .add("--features_path").add("/Users/lnguyen/Hartwig/hartwigmedical/hmftools/cuppa/src/main/python/pycuppa/resources/mock_data/input_data/new_format/COLO829v003T.cuppa_data.tsv.gz")
-//        .add("--output_dir").add("/Users/lnguyen/Desktop/pycuppa_output")
-//        .toString();
-//
-//executor.predict(argString);
-
