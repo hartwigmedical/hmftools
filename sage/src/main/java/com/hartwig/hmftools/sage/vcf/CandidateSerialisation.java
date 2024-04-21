@@ -1,10 +1,11 @@
-package com.hartwig.hmftools.sage.append;
+package com.hartwig.hmftools.sage.vcf;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_DEPTH;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CORE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_EVENTS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INDEX;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_LEFT_FLANK;
@@ -21,15 +22,54 @@ import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
-public final class CandidateSerialization
+public final class CandidateSerialisation
 {
+    public static VariantContextBuilder toContext(final Candidate candidate)
+    {
+        final List<Allele> alleles = createAlleles(candidate.variant());
+
+        final VariantReadContext readContext = candidate.readContext();
+
+        final VariantContextBuilder builder = new VariantContextBuilder().chr(candidate.chromosome())
+                .source("SAGE")
+                .start(candidate.position())
+                .attribute(TIER, candidate.tier())
+                .attribute(READ_CONTEXT_CORE, readContext.coreStr())
+                .attribute(READ_CONTEXT_LEFT_FLANK, readContext.leftFlankStr())
+                .attribute(READ_CONTEXT_RIGHT_FLANK, readContext.rightFlankStr())
+                .attribute(READ_CONTEXT_INDEX, readContext.VarReadIndex)
+                .attribute(READ_CONTEXT_EVENTS, candidate.minNumberOfEvents())
+                .attribute(TRINUCLEOTIDE_CONTEXT, readContext.trinucleotideStr())
+                .computeEndFromAlleles(alleles, candidate.position())
+                .alleles(alleles);
+
+        if(readContext.hasHomology())
+        {
+            builder.attribute(READ_CONTEXT_MICRO_HOMOLOGY, readContext.homologyBases());
+        }
+
+        if(readContext.MaxRepeat != null)
+        {
+            builder.attribute(READ_CONTEXT_REPEAT_COUNT, readContext.MaxRepeat.Count);
+            builder.attribute(READ_CONTEXT_REPEAT_SEQUENCE, readContext.MaxRepeat.Bases);
+        }
+
+        return builder;
+    }
+
+    private static List<Allele> createAlleles(final SimpleVariant variant)
+    {
+        final Allele ref = Allele.create(variant.ref(), true);
+        final Allele alt = Allele.create(variant.alt(), false);
+        return Lists.newArrayList(ref, alt);
+    }
+
     public static Candidate toCandidate(final VariantContext context)
     {
         final VariantReadContext readContext = readBases(context);
@@ -88,44 +128,5 @@ public final class CandidateSerialization
         }
 
         return new Candidate(tier, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0);
-    }
-
-    public static VariantContextBuilder toContext(final Candidate candidate)
-    {
-        final List<Allele> alleles = createAlleles(candidate.variant());
-        final VariantReadContext readContext = candidate.readContext();
-
-        final VariantContextBuilder builder = new VariantContextBuilder().chr(candidate.chromosome())
-                .source("SAGE")
-                .start(candidate.position())
-                .attribute(TIER, candidate.tier())
-                .attribute(READ_CONTEXT, candidate.readContext().toString())
-                .attribute(READ_CONTEXT_LEFT_FLANK, candidate.readContext().leftFlankStr())
-                .attribute(READ_CONTEXT_RIGHT_FLANK, candidate.readContext().rightFlankStr())
-                .attribute(READ_CONTEXT_INDEX, readContext.VarReadIndex)
-                .attribute(READ_CONTEXT_EVENTS, candidate.minNumberOfEvents())
-                .computeEndFromAlleles(alleles, (int) candidate.position())
-                .alleles(alleles);
-
-        if(!readContext.hasHomology())
-        {
-            builder.attribute(READ_CONTEXT_MICRO_HOMOLOGY, readContext.Homology.Bases);
-        }
-
-        if(readContext.MaxRepeat != null)
-        {
-            builder.attribute(READ_CONTEXT_REPEAT_COUNT, readContext.MaxRepeat.Count)
-                    .attribute(READ_CONTEXT_REPEAT_SEQUENCE, readContext.MaxRepeat.Bases);
-        }
-
-        return builder;
-    }
-
-    @NotNull
-    private static List<Allele> createAlleles(final SimpleVariant variant)
-    {
-        final Allele ref = Allele.create(variant.ref(), true);
-        final Allele alt = Allele.create(variant.alt(), false);
-        return Lists.newArrayList(ref, alt);
     }
 }

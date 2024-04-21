@@ -23,6 +23,7 @@ import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.EvidenceStage;
 import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.vcf.CandidateSerialisation;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.Genotype;
@@ -73,7 +74,7 @@ public class RegionAppendTask implements Callable
         SG_LOGGER.trace("{}: region({}) finding evidence", mTaskId, mRegion);
 
         List<Candidate> candidates = mOriginalVariants.stream()
-                .map(x -> CandidateSerialization.toCandidate(x)).collect(Collectors.toList());
+                .map(x -> CandidateSerialisation.toCandidate(x)).collect(Collectors.toList());
 
         ReadContextCounters readContextCounters = mEvidenceStage.findEvidence
                 (mRegion, "reference", mConfig.Common.ReferenceIds, candidates, false);

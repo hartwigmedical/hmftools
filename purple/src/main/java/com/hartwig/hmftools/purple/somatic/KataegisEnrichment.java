@@ -2,7 +2,7 @@ package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.KATAEGIS_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.KATAEGIS_FLAG_DESCRIPTION;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -47,7 +47,7 @@ public class KataegisEnrichment
         final boolean altMatch = context.getAlternateAlleles().stream()
                 .anyMatch(x -> x.getBaseString().equals("T") || x.getBaseString().equals("G"));
 
-        final String triContext = context.getAttributeAsString(TRINUCLEOTIDE_FLAG, Strings.EMPTY);
+        final String triContext = context.getAttributeAsString(TRINUCLEOTIDE_CONTEXT, Strings.EMPTY);
         final boolean triMatch = triContext.startsWith("TC");
 
         return variant.isPass() && triMatch && altMatch;
@@ -60,7 +60,7 @@ public class KataegisEnrichment
         final boolean altMatch = context.getAlternateAlleles().stream()
                 .anyMatch(x -> x.getBaseString().equals("C") || x.getBaseString().equals("A"));
 
-        final String triContext = context.getAttributeAsString(TRINUCLEOTIDE_FLAG, Strings.EMPTY);
+        final String triContext = context.getAttributeAsString(TRINUCLEOTIDE_CONTEXT, Strings.EMPTY);
         final boolean triMatch = triContext.endsWith("GA");
 
         return variant.isPass() && triMatch && altMatch;

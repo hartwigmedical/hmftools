@@ -49,9 +49,9 @@ public class VariantData
 
     // other key data
     private int mLocalPhaseSetId;
-    public String mMicrohomology;
-    public int mRepeatCount;
-    public String mRepeatSequence;
+    private String mMicrohomology;
+    private int mRepeatCount;
+    private String mRepeatSequence;
 
     private final int mIndelBaseDiff;
 

@@ -273,7 +273,7 @@ public class RefContextConsumer
 
         SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, ref, alt);
 
-        VariantReadContext readContext = mReadContextBuilder.createIndelContext(variant, record, readIndex, mRefSequence);
+        VariantReadContext readContext = mReadContextBuilder.createContext(variant, record, readIndex, mRefSequence);
 
         if(readContext == null)
             return null;
@@ -309,7 +309,7 @@ public class RefContextConsumer
 
             SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, ref, alt);
 
-            VariantReadContext readContext = mReadContextBuilder.createIndelContext(variant, record, readIndex, mRefSequence);
+            VariantReadContext readContext = mReadContextBuilder.createContext(variant, record, readIndex, mRefSequence);
 
             if(readContext == null)
                 return null;
@@ -361,7 +361,7 @@ public class RefContextConsumer
                 final String alt = String.valueOf((char) readByte);
 
                 SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, ref, alt);
-                VariantReadContext readContext = mReadContextBuilder.createSnvMnvContext(variant, record, readBaseIndex, mRefSequence);
+                VariantReadContext readContext = mReadContextBuilder.createContext(variant, record, readBaseIndex, mRefSequence);
 
                 if(readContext != null)
                     result.add(new AltRead(refContext, ref, alt, baseQuality, numberOfEvents, sufficientMapQuality, readContext));
@@ -386,7 +386,7 @@ public class RefContextConsumer
                     {
                         SimpleVariant mnv = new SimpleVariant(record.getContig(), refPosition, mnvRef, mnvAlt);
 
-                        VariantReadContext mnvReadContext = mReadContextBuilder.createSnvMnvContext(mnv, record, readBaseIndex, mRefSequence);
+                        VariantReadContext mnvReadContext = mReadContextBuilder.createContext(mnv, record, readBaseIndex, mRefSequence);
 
                         if(readContext != null)
                         {
@@ -453,7 +453,7 @@ public class RefContextConsumer
         int baseQuality = baseQuality(readIndex, record, altRead.Alt.length());
 
         SimpleVariant variant = new SimpleVariant(record.getContig(), refPosition, altRead.Ref, altRead.Alt);
-        VariantReadContext readContext = mReadContextBuilder.createIndelContext(variant, record, readIndex, mRefSequence);
+        VariantReadContext readContext = mReadContextBuilder.createContext(variant, record, readIndex, mRefSequence);
 
         if(readContext == null)
             return null;

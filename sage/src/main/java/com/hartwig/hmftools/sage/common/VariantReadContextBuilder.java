@@ -39,10 +39,7 @@ public class VariantReadContextBuilder
     {
         try
         {
-            if(isIndel)
-                return createIndelContext(variant, read, varReadIndex, refSequence);
-            else
-                return createSnvMnvContext(variant, read, varReadIndex, refSequence);
+            return createContext(variant, read, varReadIndex, refSequence);
         }
         catch(Exception e)
         {
@@ -53,79 +50,40 @@ public class VariantReadContextBuilder
         }
     }
 
-    public VariantReadContext createSnvMnvContext(
-            final SimpleVariant variant, final SAMRecord read, int varReadIndex, final RefSequence refSequence)
-    {
-        int readCoreStart = varReadIndex - MIN_CORE_DISTANCE;
-        int readCoreEnd = varReadIndex + variant.Alt.length() - 1 + MIN_CORE_DISTANCE;
-
-        if(readCoreStart < 0 || readCoreEnd >= read.getReadBases().length)
-            return null;
-
-        final byte[] readBases = read.getReadBases();
-
-        RepeatBoundaryInfo repeatBoundaryInfo = findRepeatBoundaries(readCoreStart, readCoreEnd, readBases);
-
-        readCoreStart = repeatBoundaryInfo.CoreStart;
-        readCoreEnd = repeatBoundaryInfo.CoreEnd;
-
-        int readFlankStart = max(readCoreStart - mFlankSize, 0);
-        int readFlankEnd = min(readCoreEnd + mFlankSize, readBases.length - 1);
-
-        if(readFlankStart < 0 || readFlankEnd >= read.getReadBases().length)
-            return null;
-
-        // build a CIGAR from the read to cover this range
-        ReadCigarInfo readCigarInfo = buildReadCigar(read, readFlankStart, readFlankEnd);
-
-        readFlankStart = readCigarInfo.FlankIndexStart;
-        readFlankEnd = readCigarInfo.FlankIndexEnd;
-
-        byte[] contextReadBases = Arrays.subsetArray(readBases, readFlankStart, readFlankEnd);
-
-        int readContextOffset = readFlankStart;
-        int coreIndexStart = readCoreStart - readContextOffset;
-        int readVarIndex = varReadIndex - readContextOffset;
-        int coreIndexEnd = readCoreEnd - readContextOffset;
-
-        // ref bases are the core width around the variant's position
-        int leftCoreLength = readVarIndex - coreIndexStart;
-        int coreLength = coreIndexEnd - coreIndexStart + 1;
-        int refPosStart = variant.Position - leftCoreLength;
-        int refPosEnd = refPosStart + coreLength - 1;
-        byte[] refBases = refSequence.baseRange(refPosStart, refPosEnd);
-
-        int alignmentStart = max(read.getAlignmentStart(), readCigarInfo.UnclippedStart);
-        int alignmentEnd = min(read.getAlignmentEnd(), readCigarInfo.UnclippedEnd);
-
-        return new VariantReadContext(
-                variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar,
-                coreIndexStart, readVarIndex, coreIndexEnd, null, repeatBoundaryInfo.MaxRepeat);
-    }
-
-    public VariantReadContext createIndelContext(
-            final SimpleVariant variant, final SAMRecord read, int varReadIndex, final RefSequence refSequence)
+    public VariantReadContext createContext(
+            final SimpleVariant variant, final SAMRecord read, int varIndexInRead, final RefSequence refSequence)
     {
         /* Routine:
+            - start with a basic core around the variant
             - test for homology and right-align if required
             - continue in each direction until repeat ends
-            - add 2 bases then flank
+            - add core bases then flank
+            - extra ref bases to cover the core length
         */
 
-        // note that for indels only the 2 ref bases on each side are part of the core
-        int readCoreStart = varReadIndex - MIN_CORE_DISTANCE + 1;
+        int readCoreStart, readCoreEnd;
+        Microhomology homology = null;
 
-        int readCoreEnd = varReadIndex + (variant.isInsert() ? variant.indelLength() + 1 : 1) + MIN_CORE_DISTANCE - 1;
+        if(variant.isIndel())
+        {
+            readCoreStart = varIndexInRead - MIN_CORE_DISTANCE + 1;
+            readCoreEnd = varIndexInRead + (variant.isInsert() ? variant.indelLength() + 1 : 1) + MIN_CORE_DISTANCE - 1;
+
+            homology = findHomology(variant, read, varIndexInRead);
+
+            if(homology != null)
+                readCoreEnd += homology.Length;
+        }
+        else
+        {
+            readCoreStart = varIndexInRead - MIN_CORE_DISTANCE;
+            readCoreEnd = varIndexInRead + variant.Alt.length() - 1 + MIN_CORE_DISTANCE;
+        }
 
         if(readCoreStart < 0 || readCoreEnd >= read.getReadBases().length)
             return null;
 
         final byte[] readBases = read.getReadBases();
-
-        Microhomology homology = findHomology(variant, read, varReadIndex);
-
-        if(homology != null)
-            readCoreEnd += homology.Length;
 
         RepeatBoundaryInfo repeatBoundaryInfo = findRepeatBoundaries(readCoreStart, readCoreEnd, readBases);
 
@@ -146,11 +104,9 @@ public class VariantReadContextBuilder
 
         byte[] contextReadBases = Arrays.subsetArray(readBases, readFlankStart, readFlankEnd);
 
-        // byte[] refBases = refSequence.baseRange(readCigarInfo.UnclippedStart, readCigarInfo.UnclippedEnd);
-
         int readContextOffset = readFlankStart;
         int coreIndexStart = readCoreStart - readContextOffset;
-        int readVarIndex = varReadIndex - readContextOffset;
+        int readVarIndex = varIndexInRead - readContextOffset;
         int coreIndexEnd = readCoreEnd - readContextOffset;
 
         // ref bases are the core width around the variant's position

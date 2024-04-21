@@ -26,7 +26,6 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.TOTAL_RAW_BASE_QUAL;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.evidence.RawCounters;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.common.SageVariant;
@@ -62,10 +61,11 @@ public final class VariantContextFactory
 
     private static VariantContext createContext(final SageVariant variant, final List<Genotype> genotypes)
     {
-        final VariantContextBuilder builder = CandidateSerialization.toContext(variant.candidate())
-                .log10PError(variant.totalQuality() / -10d)
-                .genotypes(genotypes)
-                .filters(variant.filters());
+        VariantContextBuilder builder = CandidateSerialisation.toContext(variant.candidate());
+
+        builder.log10PError(variant.totalQuality() / -10d);
+        builder.genotypes(genotypes);
+        builder.filters(variant.filters());
 
         if(variant.hasLocalPhaseSets())
         {

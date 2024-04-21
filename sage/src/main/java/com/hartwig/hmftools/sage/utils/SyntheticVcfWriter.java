@@ -44,7 +44,7 @@ import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
-import com.hartwig.hmftools.sage.append.CandidateSerialization;
+import com.hartwig.hmftools.sage.vcf.CandidateSerialisation;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
@@ -298,7 +298,7 @@ public class SyntheticVcfWriter
 
         Candidate candidate = new Candidate(VariantTier.PANEL, readContext, 0, 0);
 
-        VariantContextBuilder builder = CandidateSerialization.toContext(candidate)
+        VariantContextBuilder builder = CandidateSerialisation.toContext(candidate)
                 .log10PError(0)
                 .genotypes(genotype)
                 .filters(PASS);

@@ -56,7 +56,7 @@ public class RealignmentTest
 
         VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
 
-        VariantReadContext readContext = builder.createIndelContext(var, varBuildRead, 33, refSequence);
+        VariantReadContext readContext = builder.createContext(var, varBuildRead, 33, refSequence);
 
         assertEquals(12, readContext.VarReadIndex);
 

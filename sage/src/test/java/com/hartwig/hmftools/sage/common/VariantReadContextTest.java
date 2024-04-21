@@ -36,7 +36,7 @@ public class VariantReadContextTest
 
         VariantReadContextBuilder builder = new VariantReadContextBuilder(TEST_FLANK_LENGTH);
 
-        VariantReadContext readContext = builder.createSnvMnvContext(var, read, 20, REF_SEQUENCE_200);
+        VariantReadContext readContext = builder.createContext(var, read, 20, REF_SEQUENCE_200);
 
         assertTrue(readContext.isValid());
         assertEquals(43, readContext.AlignmentStart);
@@ -76,7 +76,7 @@ public class VariantReadContextTest
         readCigar = "15M3I10M3I15M";
         read = buildSamRecord(30, readCigar, readBases);
 
-        readContext = builder.createSnvMnvContext(var, read, 23, REF_SEQUENCE_200);
+        readContext = builder.createContext(var, read, 23, REF_SEQUENCE_200);
 
         assertTrue(readContext.isValid());
         assertEquals(44, readContext.AlignmentStart);
@@ -106,7 +106,7 @@ public class VariantReadContextTest
         readCigar = "50M";
         read = buildSamRecord(120, readCigar, readBases, baseQuals);
 
-        readContext = builder.createSnvMnvContext(var, read, 23, REF_SEQUENCE_200);
+        readContext = builder.createContext(var, read, 23, REF_SEQUENCE_200);
 
         assertTrue(readContext.isValid());
         assertEquals(131, readContext.AlignmentStart);
@@ -144,7 +144,7 @@ public class VariantReadContextTest
         VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
 
         SimpleVariant var = createSimpleVariant(72, "C", "T");
-        VariantReadContext readContext = builder.createSnvMnvContext(var, read, 32, refSequence);
+        VariantReadContext readContext = builder.createContext(var, read, 32, refSequence);
 
         assertTrue(readContext.isValid());
         assertEquals(50, readContext.AlignmentStart);
@@ -176,7 +176,7 @@ public class VariantReadContextTest
 
         VariantReadContextBuilder builder = new VariantReadContextBuilder(TEST_FLANK_LENGTH);
 
-        VariantReadContext readContext = builder.createIndelContext(var, read, 20, REF_SEQUENCE_200);
+        VariantReadContext readContext = builder.createContext(var, read, 20, REF_SEQUENCE_200);
 
         assertTrue(readContext.isValid());
         assertEquals(44, readContext.AlignmentStart);
@@ -208,7 +208,7 @@ public class VariantReadContextTest
         read = buildSamRecord(50, readCigar, readBases);
 
         builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH); // full flank so it extends into the soft-clip
-        readContext = builder.createIndelContext(var, read, 57, REF_SEQUENCE_200);
+        readContext = builder.createContext(var, read, 57, REF_SEQUENCE_200);
 
         assertTrue(readContext.isValid());
         assertEquals(50, readContext.AlignmentStart);
@@ -233,7 +233,7 @@ public class VariantReadContextTest
         read = buildSamRecord(1, readCigar, readBases);
 
         builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH); // full flank so it extends into the soft-clip
-        readContext = builder.createIndelContext(var, read, 29, REF_SEQUENCE_200);
+        readContext = builder.createContext(var, read, 29, REF_SEQUENCE_200);
 
         assertTrue(readContext.isValid());
         assertEquals(16, readContext.AlignmentStart);
@@ -257,7 +257,7 @@ public class VariantReadContextTest
 
         VariantReadContextBuilder builder = new VariantReadContextBuilder(TEST_FLANK_LENGTH);
 
-        VariantReadContext readContext = builder.createIndelContext(var, read, 20, REF_SEQUENCE_200);
+        VariantReadContext readContext = builder.createContext(var, read, 20, REF_SEQUENCE_200);
 
         assertTrue(readContext.isValid());
         assertEquals(44, readContext.AlignmentStart);

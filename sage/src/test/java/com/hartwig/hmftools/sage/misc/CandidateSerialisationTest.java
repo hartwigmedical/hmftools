@@ -1,14 +1,11 @@
 package com.hartwig.hmftools.sage.misc;
 
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.sage.append.CandidateSerialization;
+import com.hartwig.hmftools.sage.vcf.CandidateSerialisation;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
-import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +19,7 @@ import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderVersion;
 
-public class CandidateSerializationTest
+public class CandidateSerialisationTest
 {
     private static final VCFCodec CODEC = createTestCodec();
 
@@ -39,8 +36,8 @@ public class CandidateSerializationTest
     public static Candidate decode(String line)
     {
         VariantContext context = CODEC.decode(line);
-        VariantReadContext readContext = CandidateSerialization.readBases(context);
-        return CandidateSerialization.toCandidate(context, readContext);
+        VariantReadContext readContext = CandidateSerialisation.readBases(context);
+        return CandidateSerialisation.toCandidate(context, readContext);
     }
 
     @Test
@@ -89,7 +86,7 @@ public class CandidateSerializationTest
 
     private static VariantContext toContext(Candidate candidate)
     {
-        VariantContextBuilder builder = CandidateSerialization.toContext(candidate);
+        VariantContextBuilder builder = CandidateSerialisation.toContext(candidate);
 
         Genotype genotype = new GenotypeBuilder("SAMPLE").DP(1000).make();
         builder.genotypes(genotype);
