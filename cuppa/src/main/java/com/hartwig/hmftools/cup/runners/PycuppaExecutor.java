@@ -29,13 +29,13 @@ public class PycuppaExecutor
     private static final File PYCUPPA_TMP_DIR = new File(TMP_DIR + "/pycuppa/");
     private static final File PYCUPPA_RESOURCE_DIR = new File(Resources.getResource("pycuppa/").getPath());
 
-    public final File mVirtualEnvDir;
+    public final File mVirtualEnvPath;
     private final File mVirtualEnvActivator;
 
-    public PycuppaExecutor(String virtualEnvDir)
+    public PycuppaExecutor(String virtualEnvPath)
     {
-        mVirtualEnvDir = new File(virtualEnvDir);
-        mVirtualEnvActivator = new File(mVirtualEnvDir + "/bin/activate");
+        mVirtualEnvPath = new File(virtualEnvPath);
+        mVirtualEnvActivator = new File(mVirtualEnvPath + "/bin/activate");
     }
 
     private static String getShellPath() throws FileNotFoundException
@@ -79,7 +79,10 @@ public class PycuppaExecutor
 
             exitCode = process.waitFor();
             if(exitCode > 0)
+            {
+                stdout.forEach(CUP_LOGGER::error);
                 throw new RuntimeException();
+            }
         }
         catch(Exception e)
         {
@@ -97,20 +100,15 @@ public class PycuppaExecutor
 
     private void createVirtualEnvIfMissing()
     {
-        if(mVirtualEnvDir.exists())
+        if(mVirtualEnvActivator.exists())
         {
-            if(!mVirtualEnvActivator.exists())
-            {
-                CUP_LOGGER.error("dir({}) exists but is not a python virtual environment", mVirtualEnvDir);
-                System.exit(1);
-            }
-
-            // CUP_LOGGER.debug("Using existing python virtual environment: " + mVirtualEnvDir);
-            return;
+            CUP_LOGGER.debug("Using existing python virtual environment at: " + mVirtualEnvPath);
         }
-
-        runBashCommand("python3 -m venv " + mVirtualEnvDir, Level.DEBUG);
-        CUP_LOGGER.info("Created python virtual environment at: " + mVirtualEnvDir);
+        else
+        {
+            runBashCommand("python3 -m venv " + mVirtualEnvPath, Level.DEBUG);
+            CUP_LOGGER.info("Created python virtual environment at: " + mVirtualEnvPath);
+        }
     }
 
     private static void extractPycuppaToTmpDir() throws IOException, URISyntaxException
@@ -166,7 +164,7 @@ public class PycuppaExecutor
 
         try
         {
-            CUP_LOGGER.info("Installing pycuppa to virtual environment: " + mVirtualEnvDir);
+            CUP_LOGGER.info("Installing pycuppa to virtual environment: " + mVirtualEnvPath);
 
             extractPycuppaToTmpDir();
             runBashCommandInVirtualEnv("pip --disable-pip-version-check install " + PYCUPPA_TMP_DIR, Level.DEBUG);
