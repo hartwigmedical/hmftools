@@ -125,10 +125,6 @@ public class ReadContextMatcher
 
     private ReadContextMatch determineCoreMatch(final byte[] readBases, final byte[] readQuals, final int readIndex)
     {
-        // must cover the variant itself
-        if(readIndex > mContext.AltIndexLower && readBases.length - 1 < mContext.AltIndexUpper)
-            return NONE;
-
         int readIndexStart = readIndex - mContext.leftCoreLength();
         int readIndexEnd = readIndex + mContext.rightCoreLength();
 

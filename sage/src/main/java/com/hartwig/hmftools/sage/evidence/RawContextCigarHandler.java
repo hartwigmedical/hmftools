@@ -266,7 +266,7 @@ public class RawContextCigarHandler implements CigarHandler
 
         String variantCore = readContext.coreStr();
         int coreStartIndex = record.getReadString().indexOf(variantCore);
-        if(coreStartIndex < 1)
+        if(coreStartIndex < 0)
             return RawContext.INVALID_CONTEXT;
 
         int coreEndIndex = coreStartIndex + variantCore.length() - 1;

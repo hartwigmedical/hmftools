@@ -54,6 +54,7 @@ public class VariantReadContextBuilder
         {
             SG_LOGGER.error("var({}) error building readContext, varReadIndex({}) read({}) error: {}",
                     variant, varReadIndex, readToString(read), e.toString());
+            e.printStackTrace();
 
             return null;
         }
@@ -378,4 +379,29 @@ public class VariantReadContextBuilder
         // shouldn't occur
         return INVALID_INDEX_POS;
     }
+
+    public static int determineUpperAltIndex(
+            final SimpleVariant variant, final byte[] readBases, final byte[] refBases,
+            final int varReadIndex, final int varRefIndex, final int coreIndexEnd)
+    {
+        // find the first base of difference (ref vs alt) up and down from the variant's position, and cap at the core indices
+        if(!variant.isIndel())
+        {
+            return varReadIndex + variant.Alt.length() - 1;
+        }
+
+        int refIndex = varRefIndex;
+        int readIndex = varReadIndex;
+
+        for(; readIndex <= coreIndexEnd & refIndex < refBases.length; ++readIndex, ++refIndex)
+        {
+            if(refBases[refIndex] != readBases[readIndex])
+                break;
+        }
+
+        int upperRefIndex = variant.isInsert() ? varReadIndex + variant.Alt.length() : varReadIndex + 1;
+
+        return max(min(readIndex, coreIndexEnd), upperRefIndex);
+    }
+
 }

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.common;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
+import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.determineUpperAltIndex;
 import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.findPositionEnd;
 import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.findPositionStart;
 
@@ -42,7 +43,6 @@ public class VariantReadContext
 
     private final List<CigarElement> mReadCigar;
     private final String mReadCigarStr;
-    private final int mUnclippedPosStart;
 
     private final ArtefactContext mArtefactContext;
     private final UltimaQualModel mUltimaQualModel;
@@ -67,20 +67,22 @@ public class VariantReadContext
         mReadCigar = readCigar;
         mReadCigarStr = CigarUtils.cigarStringFromElements(readCigar);
 
-        mUnclippedPosStart = AlignmentStart - CigarUtils.leftSoftClipLength(readCigar);
-
         // CLEAN-UP
         mArtefactContext = null; // ArtefactContext.buildContext(variant, readContext.indexedBases());
         mUltimaQualModel = null; // qualityCalculator.createUltimateQualModel(variant);
 
         AltIndexLower = VarReadIndex;
 
+        AltIndexUpper = determineUpperAltIndex(variant, ReadBases, RefBases, VarReadIndex, refIndex(), CoreIndexEnd);
+
+        /*
         if(mVariant.isInsert())
             AltIndexUpper = VarReadIndex + mVariant.Alt.length();
         else if(mVariant.isDelete())
             AltIndexUpper = VarReadIndex + 1;
         else
             AltIndexUpper = VarReadIndex + mVariant.Alt.length() - 1;
+        */
 
         CorePositionStart = findPositionStart(mVariant.Position, leftCoreLength(), AlignmentStart, mReadCigar, CoreIndexStart);
         CorePositionEnd = findPositionEnd(mVariant.Position, rightCoreLength(), AlignmentStart, mReadCigar, CoreIndexEnd);
@@ -101,7 +103,6 @@ public class VariantReadContext
     public int rightLength() { return ReadBases.length - VarReadIndex; } // distance to last base
     public int totalLength() { return ReadBases.length; }
 
-    public int refIndexOld() { return mVariant.Position - mUnclippedPosStart; }
     public int refIndex() { return leftCoreLength(); }
 
     public boolean isValid()
@@ -146,8 +147,9 @@ public class VariantReadContext
 
     public String toString()
     {
-        return format("%s read(%s-%s-%s %s) pos(%d-%d) index(%d-%d-%d) repeat(%s) homology(%s)",
+        return format("%s read(%s-%s-%s %s) pos(%d-%d) index(%d-%d-%d) repeat(%s) homology(%s) alt(%d-%d) ref(%s)",
                 mVariant, leftFlankStr(), coreStr(), rightFlankStr(), mReadCigarStr, AlignmentStart, AlignmentEnd,
-                CoreIndexStart, VarReadIndex, CoreIndexEnd, MaxRepeat != null ? MaxRepeat : "", Homology != null ? Homology : "");
+                CoreIndexStart, VarReadIndex, CoreIndexEnd, MaxRepeat != null ? MaxRepeat : "", Homology != null ? Homology : "",
+                AltIndexLower, AltIndexUpper, refBases());
     }
 }

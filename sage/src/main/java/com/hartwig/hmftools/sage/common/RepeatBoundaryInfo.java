@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.common;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -31,7 +32,7 @@ public class RepeatBoundaryInfo
         RepeatInfo maxRepeat = null;
         RepeatInfo secondRepeat = null;
 
-        int searchIndexStart = requiredIndexStart - REPEAT_SEARCH_LENGTH;
+        int searchIndexStart = max(0, requiredIndexStart - REPEAT_SEARCH_LENGTH);
 
         int index = searchIndexStart;
 
