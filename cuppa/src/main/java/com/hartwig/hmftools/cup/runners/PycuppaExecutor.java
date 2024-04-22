@@ -56,12 +56,15 @@ public class PycuppaExecutor
         return shellPath;
     }
 
-    public static List<String> runBashCommand(String command, Level logLevel)
+    public static List<String> runBashCommand(String command, Level stdoutLogLevel, boolean logCommand)
     {
         List<String> stdout = new ArrayList<>();
         int exitCode = 0;
         try
         {
+            if(logCommand)
+                CUP_LOGGER.info("Running bash command: " + command);
+
             ProcessBuilder processBuilder = new ProcessBuilder(getShellPath(), "-c", command);
             processBuilder.redirectErrorStream(true); // Merge stdout and stderr
 
@@ -73,8 +76,8 @@ public class PycuppaExecutor
             {
                 stdout.add(line);
 
-                if(logLevel != Level.OFF) // Added if clause because logging still prints at Level.OFF
-                    CUP_LOGGER.log(logLevel, line);
+                if(stdoutLogLevel != Level.OFF) // Added if clause because logging still prints at Level.OFF
+                    CUP_LOGGER.log(stdoutLogLevel, line);
             }
 
             exitCode = process.waitFor();
@@ -93,9 +96,9 @@ public class PycuppaExecutor
         return stdout;
     }
 
-    public List<String> runBashCommandInVirtualEnv(String command, Level logLevel)
+    public List<String> runBashCommandInVirtualEnv(String command, Level logLevel, boolean logCommand)
     {
-        return runBashCommand(String.format("source %s && %s && deactivate", mVirtualEnvActivator, command), logLevel);
+        return runBashCommand(String.format("source %s && %s && deactivate", mVirtualEnvActivator, command), logLevel, logCommand);
     }
 
     private void createVirtualEnvIfMissing()
@@ -106,7 +109,7 @@ public class PycuppaExecutor
         }
         else
         {
-            runBashCommand("python3 -m venv " + mVirtualEnvPath, Level.DEBUG);
+            runBashCommand("python3 -m venv " + mVirtualEnvPath, Level.DEBUG, true);
             CUP_LOGGER.info("Created python virtual environment at: " + mVirtualEnvPath);
         }
     }
@@ -133,7 +136,7 @@ public class PycuppaExecutor
 
             // Unzip with `jar` rather than `unzip` to avoid unzipping the whole jar
             String extractCommand = String.format("cd %s && jar -xf %s pycuppa", TMP_DIR, cuppaJarPath);
-            runBashCommand(extractCommand, Level.DEBUG);
+            runBashCommand(extractCommand, Level.DEBUG, true);
         }
 
         if(!PYCUPPA_TMP_DIR.exists())
@@ -142,7 +145,7 @@ public class PycuppaExecutor
 
     private boolean pycuppaInstalled()
     {
-        List<String> pipOutput = runBashCommandInVirtualEnv("pip --disable-pip-version-check list", Level.OFF);
+        List<String> pipOutput = runBashCommandInVirtualEnv("pip --disable-pip-version-check list", Level.OFF, false);
 
         boolean pycuppaExists = false;
         for(String line : pipOutput)
@@ -165,9 +168,8 @@ public class PycuppaExecutor
         try
         {
             CUP_LOGGER.info("Installing pycuppa to virtual environment: " + mVirtualEnvPath);
-
             extractPycuppaToTmpDir();
-            runBashCommandInVirtualEnv("pip --disable-pip-version-check install " + PYCUPPA_TMP_DIR, Level.DEBUG);
+            runBashCommandInVirtualEnv("pip --disable-pip-version-check install " + PYCUPPA_TMP_DIR, Level.DEBUG, true);
         }
         catch(Exception e)
         {
