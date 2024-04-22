@@ -110,13 +110,17 @@ public class RawContextCigarHandler implements CigarHandler
     }
 
     @Override
-    public void handleAlignment(final SAMRecord record, final CigarElement element, boolean beforeIndel, int readIndex, int refPosition)
+    public void handleAlignment(final SAMRecord record, final CigarElement element, int readIndex, int refPosition)
     {
         if(mResult != null)
             return;
 
-        // check carefully when element is followed by an INDEL
+        // when the variant is an indel, its position will be at the last aligned base of the previous M element
+        // in this case these need to be ignored for the purpose of establishing raw support for the variant
         int refPositionEnd = refPosition + element.getLength() - 1;
+
+        if(mVariant.isIndel())
+            --refPositionEnd;
 
         if(refPosition <= mVariant.position() && mVariant.position() <= refPositionEnd)
         {

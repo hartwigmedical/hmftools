@@ -74,7 +74,6 @@ public class AltContext implements VariantHotspot
 
         for(ReadContextCandidate candidate : mReadContextCandidates)
         {
-            // ReadContextMatch match = candidate.readContext().indexedBases().matchAtPosition(newReadContext.indexedBases());
             ReadContextMatch match = compareReadContexts(candidate.readContext(), newReadContext);
 
             switch(match)
@@ -97,30 +96,12 @@ public class AltContext implements VariantHotspot
             candidate.CoreMatch += coreMatch;
             mReadContextCandidates.add(candidate);
         }
-        /* in the past a longer-flanked candidate would be taken, but flanks are of a fixed length now and may in time be shortened
-        else if(newReadContext.maxFlankLength() > fullMatchCandidate.maxFlankLength())
-        {
-            mReadContextCandidates.remove(fullMatchCandidate);
-            final ReadContextCandidate candidate = new ReadContextCandidate(numberOfEvents, newReadContext);
-            candidate.CoreMatch += fullMatchCandidate.CoreMatch;
-            candidate.PartialMatch += fullMatchCandidate.PartialMatch;
-            candidate.incrementFull(fullMatchCandidate.FullMatch, fullMatchCandidate.mMinNumberOfEvents);
-            mReadContextCandidates.add(candidate);
-        }
-        */
     }
 
     public int readContextSupport() { return mCandidate.FullMatch; }
-
     public int minNumberOfEvents()
     {
         return mCandidate.minNumberOfEvents();
-    }
-
-    @VisibleForTesting
-    List<ReadContextCandidate> interimReadContexts()
-    {
-        return mReadContextCandidates;
     }
 
     public boolean hasValidCandidate() { return mCandidate != null; }

@@ -23,7 +23,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.bam.CigarHandler;
-import com.hartwig.hmftools.common.bam.CigarTraversal;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.RefSequence;
@@ -82,7 +81,7 @@ public class RefContextConsumer
         if(reachedDepthLimit(readStart, panelStatus) || reachedDepthLimit(readEnd, panelStatus))
             return;
 
-        int numberOfEvents = !record.getSupplementaryAlignmentFlag() ? NumberEvents.calc(record, mRefSequence) : 0;
+        int numberOfEvents = !record.getSupplementaryAlignmentFlag() ? NumberEvents.    calc(record, mRefSequence) : 0;
         int scEvents = (int)NumberEvents.calcSoftClipAdjustment(record);
         int adjustedMapQual = calcAdjustedMapQualLessEventsPenalty(record, numberOfEvents);
         boolean readExceedsQuality = adjustedMapQual > 0;
@@ -104,7 +103,7 @@ public class RefContextConsumer
         {
             @Override
             public void handleAlignment(
-                    final SAMRecord record, final CigarElement element, boolean beforeIndel, final int readIndex, final int refPosition)
+                    final SAMRecord record, final CigarElement element, final int readIndex, final int refPosition)
             {
                 if(record.isSecondaryOrSupplementary())
                     return;
@@ -178,7 +177,7 @@ public class RefContextConsumer
             }
         };
 
-        CigarTraversal.traverseCigar(record, handler);
+        CigarHandler.traverseCigar(record, handler);
 
         for(AltRead altRead : altReads)
         {
@@ -265,7 +264,6 @@ public class RefContextConsumer
 
         String ref = new String(mRefSequence.Bases, refIndex, 1);
         String alt = new String(record.getReadBases(), readIndex, element.getLength() + 1);
-        boolean findReadContext = withinReadContext(readIndex, record);
 
         RefContext refContext = mRefContextCache.getOrCreateRefContext(record.getContig(), refPosition);
 

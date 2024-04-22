@@ -280,58 +280,6 @@ public class ReadContextCounterTest
         TestCase.assertEquals(3, var6.tumorReadCounters().get(0).readSupportCounts().Full);
         TestCase.assertEquals(0, var6.tumorReadCounters().get(0).readSupportCounts().Partial);
     }
-
-    @Test
-    public void testSnvBeforeInsert()
-    {
-        // create an SNV directly before a 1-base insert - confirm impact on read contexts and how reads are handled
-        int pos = 117;
-
-        String flankBases = "AAAAAGGGGG";
-
-        String refBases = flankBases + "ACGTTCCAACCTTGCA" + flankBases;
-        //            10                20          30
-        // 0123456789 0123456 7      8 9012345  6789012345
-        // AAAAAGGGGG ACGTTCC A>G insT ACCTTGCA AAAAAGGGGG
-
-        SimpleVariant variant = new SimpleVariant(CHR_1, pos, "A", "G");
-
-        int varIndex = 17;
-        String readContextBases = refBases.substring(0, varIndex) + "G" + "T" + refBases.substring(varIndex + 1);
-
-        IndexedBases indexBases = new IndexedBases(
-                pos, varIndex, varIndex - 2, 22, flankBases.length(), readContextBases.getBytes());
-
-        ReadContext readContext = new ReadContext(pos, "", 0, "", indexBases, false);
-
-        RefSequence refSequence = new RefSequence(100, refBases.getBytes());
-
-        QualityCalculator qualityCalculator = new QualityCalculator(TEST_CONFIG, RECALIBRATION, refSequence, MOCK_REF_GENOME);
-
-        ReadContextCounter rcCounter = new ReadContextCounter(
-                1, variant, readContext, VariantTier.PANEL, 100, 0,
-                TEST_CONFIG, qualityCalculator, null);
-
-        String readBases = readContextBases;
-        byte[] baseQuals = buildDefaultBaseQuals(readBases.length());
-        String cigar = format("%dM",readBases.length());
-
-        // the read's alignment start with the first base of the read context
-        SAMRecord record = buildSamRecord(100, cigar, readContextBases, new String(baseQuals));
-
-        rcCounter.processRead(record, 1, null);
-
-        assertEquals(1, rcCounter.altSupport());
-
-        cigar = "18M1I17M";
-
-        record = buildSamRecord(100, cigar, readContextBases, new String(baseQuals));
-
-        rcCounter.processRead(record, 1, null);
-
-        // CLEAN-UP: address this in CigarTraversal - fix for v3.5
-        // assertEquals(1, rcCounter.altSupport());
-    }
     */
 
 }

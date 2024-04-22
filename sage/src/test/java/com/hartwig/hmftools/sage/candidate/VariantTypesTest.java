@@ -116,10 +116,10 @@ public class VariantTypesTest
         // extend the read to the end of the sequence so it's past the section of repeats
         String readBases = refBases.substring(readStartPos, varPosition + 1) + insertedBases + refBases.substring(varPosition + 1, 81);
 
-        SAMRecord read1 = createSamRecord("READ_01", CHR_1, readStartPos, readBases, "34M11I46M");
-        tester.TumorSamSlicer.ReadRecords.add(read1);
-        tester.TumorSamSlicer.ReadRecords.add(read1);
-        tester.TumorSamSlicer.ReadRecords.add(read1);
+        SAMRecord read = createSamRecord("READ_01", CHR_1, readStartPos, readBases, "34M11I46M");
+        tester.TumorSamSlicer.ReadRecords.add(read);
+        tester.TumorSamSlicer.ReadRecords.add(read);
+        tester.TumorSamSlicer.ReadRecords.add(read);
 
         task.run();
 
