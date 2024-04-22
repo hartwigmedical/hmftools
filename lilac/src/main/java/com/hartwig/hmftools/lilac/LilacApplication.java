@@ -200,14 +200,14 @@ public class LilacApplication
                 mRefData.LociPositionFinder);
 
         if(mRefBamReader == null)
-            mRefBamReader = new BamRecordReader(referenceBam, mConfig.RefGenome, mRefData.HlaTranscriptData, mNucleotideFragFactory);
+            mRefBamReader = new BamRecordReader(referenceBam, mConfig, mRefData.HlaTranscriptData, mNucleotideFragFactory);
 
         if(mTumorBamReader == null)
         {
             if(mConfig.tumorOnly())
                 mTumorBamReader = mRefBamReader;
             else if(!mConfig.TumorBam.isEmpty())
-                mTumorBamReader = new BamRecordReader(mConfig.TumorBam, mConfig.RefGenome, mRefData.HlaTranscriptData, mNucleotideFragFactory);
+                mTumorBamReader = new BamRecordReader(mConfig.TumorBam, mConfig, mRefData.HlaTranscriptData, mNucleotideFragFactory);
         }
 
         mRefNucleotideFrags.addAll(mNucleotideGeneEnrichment.enrich(mRefBamReader.findGeneFragments()));
