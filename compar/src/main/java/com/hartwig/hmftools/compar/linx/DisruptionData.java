@@ -23,6 +23,7 @@ public class DisruptionData implements ComparableItem
     public final LinxBreakend Breakend;
     private final GenomePositionImpl mComparisonStartGenomePosition;
     private final GenomePositionImpl mComparisonEndGenomePosition;
+    private final boolean mCheckTranscript;
 
     protected static final String FLD_REGION_TYPE = "RegionType";
     protected static final String FLD_CODING_CONTEXT = "CodingContext";
@@ -30,12 +31,14 @@ public class DisruptionData implements ComparableItem
     protected static final String FLD_NEXT_SPLICE = "NextSpliceExonRank";
 
     public DisruptionData(final StructuralVariantData svData, final LinxBreakend breakend,
-            final GenomePositionImpl comparisonStartGenomePosition, final GenomePositionImpl comparisonEndGenomePosition)
+            final GenomePositionImpl comparisonStartGenomePosition, final GenomePositionImpl comparisonEndGenomePosition,
+            final boolean checkTranscript)
     {
         SvData = svData;
         Breakend = breakend;
         mComparisonStartGenomePosition = comparisonStartGenomePosition;
         mComparisonEndGenomePosition = comparisonEndGenomePosition;
+        mCheckTranscript = checkTranscript;
     }
 
     @Override
@@ -92,7 +95,10 @@ public class DisruptionData implements ComparableItem
         if(otherSv.SvData.startOrientation() != SvData.startOrientation() || otherSv.SvData.endOrientation() != SvData.endOrientation())
             return false;
 
-        if(!otherSv.Breakend.transcriptId().equals(Breakend.transcriptId()))
+        if(!otherSv.Breakend.gene().equals(Breakend.gene()))
+            return false;
+
+        if(mCheckTranscript && !otherSv.Breakend.transcriptId().equals(Breakend.transcriptId()))
             return false;
 
         return true;
