@@ -20,9 +20,9 @@ public class SomaticVariantSelectorTest
     @Test
     public void canSelectUnreportedNearHotspots()
     {
-        PurpleVariant hotspot = TestPurpleVariantFactory.builder().hotspot(HotspotType.HOTSPOT).reported(false).build();
-        PurpleVariant nearHotspot = TestPurpleVariantFactory.builder().hotspot(HotspotType.NEAR_HOTSPOT).reported(false).build();
-        PurpleVariant nonHotspot = TestPurpleVariantFactory.builder().hotspot(HotspotType.NON_HOTSPOT).reported(false).build();
+        PurpleVariant hotspot = TestPurpleVariantFactory.builder().hotspot(HotspotType.HOTSPOT).build();
+        PurpleVariant nearHotspot = TestPurpleVariantFactory.builder().hotspot(HotspotType.NEAR_HOTSPOT).build();
+        PurpleVariant nonHotspot = TestPurpleVariantFactory.builder().hotspot(HotspotType.NON_HOTSPOT).build();
 
         List<PurpleVariant> variants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(hotspot, nearHotspot, nonHotspot),
@@ -37,9 +37,9 @@ public class SomaticVariantSelectorTest
     @Test
     public void canSelectVariantsWithReportedPhaseSet()
     {
-        PurpleVariant withMatch = TestPurpleVariantFactory.builder().gene("gene").reported(false).addLocalPhaseSets(1).build();
-        PurpleVariant withoutMatch = TestPurpleVariantFactory.builder().gene("gene").reported(false).addLocalPhaseSets(2).build();
-        PurpleVariant withoutPhase = TestPurpleVariantFactory.builder().gene("gene").reported(false).build();
+        PurpleVariant withMatch = TestPurpleVariantFactory.builder().gene("gene").addLocalPhaseSets(1).build();
+        PurpleVariant withoutMatch = TestPurpleVariantFactory.builder().gene("gene").addLocalPhaseSets(2).build();
+        PurpleVariant withoutPhase = TestPurpleVariantFactory.builder().gene("gene").build();
 
         PurpleVariant withPhase = TestPurpleVariantFactory.builder().addLocalPhaseSets(1).build();
         PurpleVariant noPhase = TestPurpleVariantFactory.builder().localPhaseSets(null).build();
@@ -58,13 +58,13 @@ public class SomaticVariantSelectorTest
     {
         String cuppaGene = SomaticVariantSelector.CUPPA_GENES.iterator().next();
         PurpleVariant cuppaRelevant =
-                TestPurpleVariantFactory.builder().gene(cuppaGene).type(PurpleVariantType.INDEL).repeatCount(4).reported(false).build();
+                TestPurpleVariantFactory.builder().gene(cuppaGene).type(PurpleVariantType.INDEL).repeatCount(4).build();
 
         PurpleVariant cuppaTooManyRepeats =
-                TestPurpleVariantFactory.builder().gene(cuppaGene).type(PurpleVariantType.INDEL).repeatCount(10).reported(false).build();
+                TestPurpleVariantFactory.builder().gene(cuppaGene).type(PurpleVariantType.INDEL).repeatCount(10).build();
 
         PurpleVariant wrongGene =
-                TestPurpleVariantFactory.builder().gene("wrong gene").type(PurpleVariantType.INDEL).repeatCount(4).reported(false).build();
+                TestPurpleVariantFactory.builder().gene("wrong gene").type(PurpleVariantType.INDEL).repeatCount(4).build();
 
         List<PurpleVariant> variants = SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(cuppaRelevant,
                 cuppaTooManyRepeats,

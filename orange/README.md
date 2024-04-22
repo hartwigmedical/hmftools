@@ -231,14 +231,17 @@ investigate potential causes for QC failure.
 
 ## Version History and Download Links
 
+- Upcoming
+    - Add PurpleTranscriptImpact.reported and make PurpleVariant.reported a derived field. This
+      uses the REPORTABLE_TRANSCRIPTS vcf field introduced in PURPLE 4.0.
 - [3.4.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.4.0)
     - Produce ORANGE datamodel v2.4.0 (including max copy number for gene copy numbers)
-    - Bugfix: ORANGE can now map stomach and esophageal squamous cell carcinomas to their rightful cohort. 
-      - Note: Available in ORANGE [3.3.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.3.1)
+    - Bugfix: ORANGE can now map stomach and esophageal squamous cell carcinomas to their rightful cohort.
+        - Note: Available in ORANGE [3.3.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.3.1)
 - [3.3.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.3.0)
     - Clonal likelihood is set to 0 or 1 based on variant copy number when converting germline variants to somatic
     - Bugfix: Fix bug in germline MVLH parsing that caused them to be underestimated by a factor 100.
-    - Restrict germline MVLH table on PDF and related field in JSON to genes handled by SAGE germline.  
+    - Restrict germline MVLH table on PDF and related field in JSON to genes handled by SAGE germline.
 - [3.2.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.2.0)
     - Support new ORANGE-datamodel (v2.3.0).
     - Support germline deletions heterozygous in the tumor:
