@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.bamtofastq;
+package com.hartwig.hmftools.bamtools.btofmc;
 
 import java.util.function.Consumer;
 

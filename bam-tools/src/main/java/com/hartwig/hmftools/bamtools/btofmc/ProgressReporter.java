@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.bamtools.bamtofastq;
+package com.hartwig.hmftools.bamtools.btofmc;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.bamtools.bamtofastq.BamToFastqConfig.BFQ_LOGGER;
+import static com.hartwig.hmftools.bamtools.btofmc.BamToFastqConfig.BFQ_LOGGER;
 
 import java.io.Closeable;
 import java.util.concurrent.Executors;
@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.inject.Inject;
-import com.hartwig.hmftools.bamtools.bamtofastq.BindingAnnotations.TotalRegionCount;
+import com.hartwig.hmftools.bamtools.btofmc.BindingAnnotations.TotalRegionCount;
 
 // TODO NEXT: TEST
 public class ProgressReporter implements Closeable

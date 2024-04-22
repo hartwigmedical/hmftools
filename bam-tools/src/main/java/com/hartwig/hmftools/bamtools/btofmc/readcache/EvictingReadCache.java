@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.bamtools.bamtofastq.readcache;
+package com.hartwig.hmftools.bamtools.btofmc.readcache;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.bamtools.bamtofastq.BamToFastqConfig.BFQ_LOGGER;
+import static com.hartwig.hmftools.bamtools.btofmc.BamToFastqConfig.BFQ_LOGGER;
 
 import java.util.Collections;
 import java.util.Comparator;

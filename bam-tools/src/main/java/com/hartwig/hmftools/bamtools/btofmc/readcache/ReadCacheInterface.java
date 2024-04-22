@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.bamtofastq.readcache;
+package com.hartwig.hmftools.bamtools.btofmc.readcache;
 
 import java.util.function.Consumer;
 

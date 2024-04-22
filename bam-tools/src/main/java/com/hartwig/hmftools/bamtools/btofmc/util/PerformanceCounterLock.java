@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.bamtofastq.util;
+package com.hartwig.hmftools.bamtools.btofmc.util;
 
 import static java.lang.String.format;
 

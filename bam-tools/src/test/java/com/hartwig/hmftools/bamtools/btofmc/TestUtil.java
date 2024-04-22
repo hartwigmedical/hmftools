@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.bamtofastq;
+package com.hartwig.hmftools.bamtools.btofmc;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CHROMOSOME_NAME;

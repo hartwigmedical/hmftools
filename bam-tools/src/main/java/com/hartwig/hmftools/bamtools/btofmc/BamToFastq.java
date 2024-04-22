@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.bamtools.bamtofastq;
+package com.hartwig.hmftools.bamtools.btofmc;
 
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.bamtools.bamtofastq.BamToFastqConfig.BFQ_LOGGER;
-import static com.hartwig.hmftools.bamtools.bamtofastq.BamToFastqConfig.addConfig;
+import static com.hartwig.hmftools.bamtools.btofmc.BamToFastqConfig.BFQ_LOGGER;
+import static com.hartwig.hmftools.bamtools.btofmc.BamToFastqConfig.addConfig;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -17,8 +17,8 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-import com.hartwig.hmftools.bamtools.bamtofastq.readcache.ReadCacheInterface;
-import com.hartwig.hmftools.bamtools.bamtofastq.writer.PairedFastqWriterInterface;
+import com.hartwig.hmftools.bamtools.btofmc.readcache.ReadCacheInterface;
+import com.hartwig.hmftools.bamtools.btofmc.writer.PairedFastqWriterInterface;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.jetbrains.annotations.Nullable;

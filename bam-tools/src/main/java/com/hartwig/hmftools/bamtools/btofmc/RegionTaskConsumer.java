@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.bamtools.bamtofastq;
+package com.hartwig.hmftools.bamtools.btofmc;
 
-import static com.hartwig.hmftools.bamtools.bamtofastq.BamToFastqConfig.BFQ_LOGGER;
+import static com.hartwig.hmftools.bamtools.btofmc.BamToFastqConfig.BFQ_LOGGER;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 
 import java.io.IOException;

@@ -1,12 +1,12 @@
-package com.hartwig.hmftools.bamtools.bamtofastq;
+package com.hartwig.hmftools.bamtools.btofmc;
 
-import static com.hartwig.hmftools.bamtools.bamtofastq.RegionTask.UNMAPPED_READS;
-import static com.hartwig.hmftools.bamtools.bamtofastq.RegionTask.createChrRegion;
-import static com.hartwig.hmftools.bamtools.bamtofastq.TestUtil.consensusSamRecord;
-import static com.hartwig.hmftools.bamtools.bamtofastq.TestUtil.duplicateSamRecord;
-import static com.hartwig.hmftools.bamtools.bamtofastq.TestUtil.mappedPrimarySamRecord;
-import static com.hartwig.hmftools.bamtools.bamtofastq.TestUtil.supplementarySamRecord;
-import static com.hartwig.hmftools.bamtools.bamtofastq.TestUtil.unmappedSamRecord;
+import static com.hartwig.hmftools.bamtools.btofmc.RegionTask.UNMAPPED_READS;
+import static com.hartwig.hmftools.bamtools.btofmc.RegionTask.createChrRegion;
+import static com.hartwig.hmftools.bamtools.btofmc.TestUtil.consensusSamRecord;
+import static com.hartwig.hmftools.bamtools.btofmc.TestUtil.duplicateSamRecord;
+import static com.hartwig.hmftools.bamtools.btofmc.TestUtil.mappedPrimarySamRecord;
+import static com.hartwig.hmftools.bamtools.btofmc.TestUtil.supplementarySamRecord;
+import static com.hartwig.hmftools.bamtools.btofmc.TestUtil.unmappedSamRecord;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 
 import static org.junit.Assert.assertEquals;
@@ -29,7 +29,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.Stage;
 import com.google.inject.TypeLiteral;
-import com.hartwig.hmftools.bamtools.bamtofastq.util.MockSamReader;
+import com.hartwig.hmftools.bamtools.btofmc.util.MockSamReader;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.commons.compress.utils.Lists;

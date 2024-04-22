@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.bamtofastq.writer;
+package com.hartwig.hmftools.bamtools.btofmc.writer;
 
 import java.io.Closeable;
 import java.io.IOException;

@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.bamtools.bamtofastq.writer;
+package com.hartwig.hmftools.bamtools.btofmc.writer;
 
 import static com.google.common.io.CharStreams.nullWriter;
-import static com.hartwig.hmftools.bamtools.bamtofastq.BamToFastqConfig.BFQ_LOGGER;
-import static com.hartwig.hmftools.bamtools.bamtofastq.BindingAnnotations.Fastq1;
-import static com.hartwig.hmftools.bamtools.bamtofastq.BindingAnnotations.Fastq2;
+import static com.hartwig.hmftools.bamtools.btofmc.BamToFastqConfig.BFQ_LOGGER;
+import static com.hartwig.hmftools.bamtools.btofmc.BindingAnnotations.Fastq1;
+import static com.hartwig.hmftools.bamtools.btofmc.BindingAnnotations.Fastq2;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 
 import java.io.BufferedWriter;
@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
 import com.google.common.io.CharSink;
 import com.google.common.io.Closer;
 import com.google.inject.Inject;
-import com.hartwig.hmftools.bamtools.bamtofastq.BamToFastqConfig;
+import com.hartwig.hmftools.bamtools.btofmc.BamToFastqConfig;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
 import org.apache.commons.lang3.tuple.Pair;

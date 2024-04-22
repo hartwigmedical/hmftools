@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.bamtofastq;
+package com.hartwig.hmftools.bamtools.btofmc;
 
 import static java.lang.Math.max;
 
@@ -21,16 +21,16 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.util.Providers;
-import com.hartwig.hmftools.bamtools.bamtofastq.BindingAnnotations.Fastq1;
-import com.hartwig.hmftools.bamtools.bamtofastq.BindingAnnotations.Fastq2;
-import com.hartwig.hmftools.bamtools.bamtofastq.BindingAnnotations.TotalRegionCount;
-import com.hartwig.hmftools.bamtools.bamtofastq.readcache.ConcurrentPartitionedReadCache;
-import com.hartwig.hmftools.bamtools.bamtofastq.readcache.LockableReadCache;
-import com.hartwig.hmftools.bamtools.bamtofastq.readcache.ReadCache;
-import com.hartwig.hmftools.bamtools.bamtofastq.readcache.ReadCacheInterface;
-import com.hartwig.hmftools.bamtools.bamtofastq.writer.ConcurrentPairedFastqWriter;
-import com.hartwig.hmftools.bamtools.bamtofastq.writer.NoSyncPairedFastqWriter;
-import com.hartwig.hmftools.bamtools.bamtofastq.writer.PairedFastqWriterInterface;
+import com.hartwig.hmftools.bamtools.btofmc.BindingAnnotations.Fastq1;
+import com.hartwig.hmftools.bamtools.btofmc.BindingAnnotations.Fastq2;
+import com.hartwig.hmftools.bamtools.btofmc.BindingAnnotations.TotalRegionCount;
+import com.hartwig.hmftools.bamtools.btofmc.readcache.ConcurrentPartitionedReadCache;
+import com.hartwig.hmftools.bamtools.btofmc.readcache.LockableReadCache;
+import com.hartwig.hmftools.bamtools.btofmc.readcache.ReadCache;
+import com.hartwig.hmftools.bamtools.btofmc.readcache.ReadCacheInterface;
+import com.hartwig.hmftools.bamtools.btofmc.writer.ConcurrentPairedFastqWriter;
+import com.hartwig.hmftools.bamtools.btofmc.writer.NoSyncPairedFastqWriter;
+import com.hartwig.hmftools.bamtools.btofmc.writer.PairedFastqWriterInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.commons.compress.utils.Lists;

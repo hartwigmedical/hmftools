@@ -1,15 +1,15 @@
-package com.hartwig.hmftools.bamtools.bamtofastq.readcache;
+package com.hartwig.hmftools.bamtools.btofmc.readcache;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.bamtools.bamtofastq.BamToFastqConfig.BFQ_LOGGER;
+import static com.hartwig.hmftools.bamtools.btofmc.BamToFastqConfig.BFQ_LOGGER;
 
 import java.util.Map;
 import java.util.function.BiConsumer;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import com.hartwig.hmftools.bamtools.bamtofastq.BamToFastqConfig;
+import com.hartwig.hmftools.bamtools.btofmc.BamToFastqConfig;
 
 import htsjdk.samtools.SAMRecord;
 

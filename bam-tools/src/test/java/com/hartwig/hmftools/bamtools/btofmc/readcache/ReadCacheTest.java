@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.bamtools.bamtofastq.readcache;
+package com.hartwig.hmftools.bamtools.btofmc.readcache;
 
-import static com.hartwig.hmftools.bamtools.bamtofastq.TestUtil.mappedPrimarySamRecord;
-import static com.hartwig.hmftools.bamtools.bamtofastq.TestUtil.pairedMappedPrimarySamRecords;
+import static com.hartwig.hmftools.bamtools.btofmc.TestUtil.mappedPrimarySamRecord;
+import static com.hartwig.hmftools.bamtools.btofmc.TestUtil.pairedMappedPrimarySamRecords;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 
@@ -17,8 +17,8 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.Stage;
 import com.google.inject.TypeLiteral;
-import com.hartwig.hmftools.bamtools.bamtofastq.BamToFastqConfig;
-import com.hartwig.hmftools.bamtools.bamtofastq.TestUtil.ReadPairCollector;
+import com.hartwig.hmftools.bamtools.btofmc.BamToFastqConfig;
+import com.hartwig.hmftools.bamtools.btofmc.TestUtil.ReadPairCollector;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;

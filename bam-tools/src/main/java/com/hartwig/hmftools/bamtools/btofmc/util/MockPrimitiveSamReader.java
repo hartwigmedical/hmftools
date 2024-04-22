@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.bamtofastq.util;
+package com.hartwig.hmftools.bamtools.btofmc.util;
 
 import static com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome.MT_LENGTH;
 

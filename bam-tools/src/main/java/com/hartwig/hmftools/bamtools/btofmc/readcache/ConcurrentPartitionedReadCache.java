@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.bamtools.bamtofastq.readcache;
+package com.hartwig.hmftools.bamtools.btofmc.readcache;
 
 import static java.lang.Math.max;
 
@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import com.hartwig.hmftools.bamtools.bamtofastq.BamToFastqConfig;
+import com.hartwig.hmftools.bamtools.btofmc.BamToFastqConfig;
 
 import org.apache.commons.lang3.NotImplementedException;
 

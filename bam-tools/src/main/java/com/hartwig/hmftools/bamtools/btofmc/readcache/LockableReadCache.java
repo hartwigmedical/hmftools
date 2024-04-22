@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.bamtools.bamtofastq.readcache;
+package com.hartwig.hmftools.bamtools.btofmc.readcache;
 
 import java.util.function.Supplier;
 
 import com.google.inject.Inject;
-import com.hartwig.hmftools.bamtools.bamtofastq.BamToFastqConfig;
-import com.hartwig.hmftools.bamtools.bamtofastq.util.PerformanceCounterLock;
+import com.hartwig.hmftools.bamtools.btofmc.BamToFastqConfig;
+import com.hartwig.hmftools.bamtools.btofmc.util.PerformanceCounterLock;
 
 import htsjdk.samtools.SAMRecord;
 
