@@ -54,7 +54,7 @@ class ConfusionMatrix(LoggerMixin):
         n_clfs = self.pred_summ.clf_names.__len__()
 
         if n_clfs == 1:
-            self.clf_name = self.pred_summ["clf_name"][0]
+            self.clf_name = self.pred_summ["clf_name"].iloc[0]
             return None
 
         if self.clf_name is None and n_clfs > 1:
