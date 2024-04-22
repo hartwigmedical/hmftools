@@ -3,8 +3,6 @@ package com.hartwig.hmftools.cup.runners;
 import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.cup.prep.CuppaDataPrep;
-import com.hartwig.hmftools.cup.prep.PrepConfig;
 
 import org.apache.logging.log4j.Level;
 
@@ -31,19 +29,25 @@ public class PredictionRunner
 
     public void predict()
     {
-        mPycuppaExecutor.runBashCommandInVirtualEnv("python3 -m cuppa.predict", Level.ERROR);
+        String[] command = new String[] {
+                "python3 -m cuppa.predict",
+                "--sample_id", mConfig.SampleId,
+                "--classifier_path", mConfig.ClassifierPath,
+                "--features_path", mConfig.FeaturesPath,
+                "--output_dir", mConfig.OutputDir,
+        };
+
+        mPycuppaExecutor.runBashCommandInVirtualEnv(String.join(" ", command), Level.INFO);
+    }
+
+    public void printUsage()
+    {
+        // TODO: Add usage for java component
+        mPycuppaExecutor.runBashCommandInVirtualEnv("python3 -m cuppa.predict", Level.OFF);
     }
 
     public static void main(String[] args)
     {
-        args = new String[] {
-                "-sample","COLO829v003T",
-                "-classifier_path", "/Users/lnguyen/Hartwig/cloud_source_repos/common-resources-public/cuppa/37/cuppa_classifier.37.pickle.gz",
-                "-features_path", "/Users/lnguyen/Hartwig/hartwigmedical/hmftools/cuppa/src/main/python/pycuppa/resources/mock_data/input_data/new_format/COLO829v003T.cuppa_data.tsv.gz",
-                "-output_dir", "/Users/lnguyen/Desktop/pycuppa_output",
-                "-virtual_env_path", "/Users/lnguyen/Desktop/pycuppa_env_test"
-        };
-
         ConfigBuilder config = new ConfigBuilder(APP_NAME);
         PredictionConfig.registerConfig(config);
         config.checkAndParseCommandLine(args);
