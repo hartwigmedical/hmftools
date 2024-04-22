@@ -9,18 +9,39 @@ import org.junit.Test;
 
 public class PredictionRunnerTest
 {
+    private static final String SAMPLE_ID = "TUMOR_SAMPLE";
+    private static final String SAMPLE_DATA_DIR = "/Users/lnguyen/Hartwig/hartwigmedical/hmftools/cuppa/src/test/resources/pipeline_output/TUMOR_SAMPLE";
+    private static final String CLASSIFIER_PATH = "/Users/lnguyen/Hartwig/cloud_source_repos/common-resources-public/cuppa/37/cuppa_classifier.37.pickle.gz";
+    private static final String OUTPUT_DIR = "/Users/lnguyen/Desktop/pycuppa_output/";
+    private static final String VIRTUAL_ENV_PATH = "/Users/lnguyen/Desktop/pycuppa_env_test";
+
     @Ignore
     @Test
-    public void callingPredictionRunnerWithoutArgsShowsUsage()
+    public void canPredictFromInputFeatures()
     {
         Configurator.setLevel(CUP_LOGGER.getName(), Level.DEBUG);
 
         String[] args = new String[] {
                 "-sample","COLO829v003T",
-                "-classifier_path", "/Users/lnguyen/Hartwig/cloud_source_repos/common-resources-public/cuppa/37/cuppa_classifier.37.pickle.gz",
+                "-classifier_path", CLASSIFIER_PATH,
                 "-features_path", "/Users/lnguyen/Hartwig/hartwigmedical/hmftools/cuppa/src/main/python/pycuppa/resources/mock_data/input_data/new_format/COLO829v003T.cuppa_data.tsv.gz",
-                "-output_dir", "/Users/lnguyen/Desktop/pycuppa_output",
-                "-virtual_env_path", "/Users/lnguyen/Desktop/pycuppa_env_test"
+                "-output_dir", OUTPUT_DIR,
+                "-virtual_env_path", VIRTUAL_ENV_PATH
+        };
+
+        PredictionRunner.main(args);
+    }
+
+    @Ignore
+    @Test
+    public void canPredictFromPipelineOutput()
+    {
+        String[] args = new String[] {
+                "-sample",SAMPLE_ID,
+                "-sample_data_dir", SAMPLE_DATA_DIR,
+                "-classifier_path", CLASSIFIER_PATH,
+                "-output_dir", OUTPUT_DIR,
+                "-virtual_env_path", VIRTUAL_ENV_PATH
         };
 
         PredictionRunner.main(args);
