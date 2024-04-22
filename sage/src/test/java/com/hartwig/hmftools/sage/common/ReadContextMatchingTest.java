@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL_CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.REF;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
+import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.TEST_LEFT_CORE;
@@ -135,6 +137,33 @@ public class ReadContextMatchingTest
         readQualities = buildDefaultBaseQuals(readBases.length());
         read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
         assertEquals(PARTIAL_CORE, matcher.determineReadMatch(read, readVarIndex));
+    }
+
+    @Test
+    public void testIndelMatches()
+    {
+        // basic del ref match
+
+        int position = 50;
+        SimpleVariant var = createSimpleVariant(
+                position, REF_BASES_200.substring(position, position + 5), REF_BASES_200.substring(position, position + 1));
+
+        String readBases = REF_BASES_200.substring(30, position + 1) + REF_BASES_200.substring(position + 5, 70);
+        String readCigar = "21M2D17M";
+        SAMRecord read = buildSamRecord(30, readCigar, readBases);
+
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
+
+        VariantReadContext readContext = builder.createContext(var, read, 20, REF_SEQUENCE_200);
+
+        // assertEquals(10, readContext.RefBases.length);
+
+        ReadContextMatcher matcher = new ReadContextMatcher(readContext);
+
+        String refBases = REF_BASES_200.substring(30, 70);
+        SAMRecord refRead = buildSamRecord(30, "40M", refBases);
+
+        assertEquals(REF, matcher.determineReadMatch(refRead, 20));
     }
 
     @Test

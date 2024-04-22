@@ -125,15 +125,27 @@ public class VariantReadContextBuilder
         int readVarIndex = varIndexInRead - readContextOffset;
         int coreIndexEnd = readCoreEnd - readContextOffset;
 
+        int alignmentStart = max(read.getAlignmentStart(), readCigarInfo.UnclippedStart);
+        int alignmentEnd = min(read.getAlignmentEnd(), readCigarInfo.UnclippedEnd);
+
         // ref bases are the core width around the variant's position
         int leftCoreLength = readVarIndex - coreIndexStart;
         int coreLength = coreIndexEnd - coreIndexStart + 1;
         int refPosStart = variant.Position - leftCoreLength;
-        int refPosEnd = refPosStart + coreLength - 1;
-        byte[] refBases = refSequence.baseRange(refPosStart, refPosEnd);
+        int refPosEnd;
 
-        int alignmentStart = max(read.getAlignmentStart(), readCigarInfo.UnclippedStart);
-        int alignmentEnd = min(read.getAlignmentEnd(), readCigarInfo.UnclippedEnd);
+        if(variant.isDelete())
+        {
+            // ensure is long enough to cover the ref bases prior to deletion
+            int rightCoreLength = coreIndexEnd - readVarIndex;
+            refPosEnd = findPositionEnd(variant.Position, rightCoreLength, alignmentStart, readCigarInfo.Cigar, coreIndexEnd);
+        }
+        else
+        {
+            refPosEnd = refPosStart + coreLength - 1;
+        }
+
+        byte[] refBases = refSequence.baseRange(refPosStart, refPosEnd);
 
         return new VariantReadContext(
                 variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar,

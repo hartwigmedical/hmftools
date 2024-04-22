@@ -75,15 +75,6 @@ public class VariantReadContext
 
         AltIndexUpper = determineUpperAltIndex(variant, ReadBases, RefBases, VarReadIndex, refIndex(), CoreIndexEnd);
 
-        /*
-        if(mVariant.isInsert())
-            AltIndexUpper = VarReadIndex + mVariant.Alt.length();
-        else if(mVariant.isDelete())
-            AltIndexUpper = VarReadIndex + 1;
-        else
-            AltIndexUpper = VarReadIndex + mVariant.Alt.length() - 1;
-        */
-
         CorePositionStart = findPositionStart(mVariant.Position, leftCoreLength(), AlignmentStart, mReadCigar, CoreIndexStart);
         CorePositionEnd = findPositionEnd(mVariant.Position, rightCoreLength(), AlignmentStart, mReadCigar, CoreIndexEnd);
     }

@@ -237,7 +237,7 @@ public class VariantReadContextTest
         assertEquals(9, readContext.CoreIndexEnd);
         assertEquals(6, readContext.AltIndexLower);
         assertEquals(8, readContext.AltIndexUpper);
-        assertEquals("GCTGT", readContext.refBases());
+        assertEquals("GCTGTCT", readContext.refBases());
         assertEquals("TCACCGCTCTGTGAC", readContext.readBases());
         assertEquals("7M2D8M", readContext.readCigar());
         assertEquals(5, readContext.coreLength());
