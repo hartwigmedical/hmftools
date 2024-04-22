@@ -46,8 +46,8 @@ public class Realignment
                 index += element.getLength();
         }
 
-        // - look L->R from RI - core_len - 10 (flank length) against leftFlank + Core + rightFlank
-        int adjustedReadIndex = index - readContext.coreLength() - readContext.leftFlankLength();
+        // convert back to the variant's index location
+        int adjustedReadIndex = index - readContext.rightCoreLength();
         return adjustedReadIndex;
     }
 

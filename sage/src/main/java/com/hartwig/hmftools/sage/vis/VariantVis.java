@@ -113,13 +113,14 @@ public class VariantVis
     {
         switch(type)
         {
-            case FULL: return 5;
-            case PARTIAL_CORE: return 4;
-            case REALIGNED: return 3;
-            case CORE: return 2;
-            case REF: return 1;
-            case NONE: return 0;
-            default: return 0;
+            case FULL: return 0;
+            case PARTIAL_CORE: return 1;
+            case REALIGNED: return 2;
+            case CORE: return 3;
+            case REF: return 3;
+            case NONE:
+            default:
+                return 5;
         }
     }
 

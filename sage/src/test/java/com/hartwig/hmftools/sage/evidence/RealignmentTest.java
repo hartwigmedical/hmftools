@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
+import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
@@ -37,46 +38,48 @@ import htsjdk.samtools.SAMRecord;
 public class RealignmentTest
 {
     @Test
-    public void testIndelRealignedLeft()
+    public void testIndelRealignment()
     {
-        String refBases = "X" + generateRandomBases(187)
-                + "CTACCCAAATCTTATAAAATGGCCCCACCCATATCTCCCTTCGCTGACTCTCTATTCGGACTCAGCCCGCCTGCACCCAGGTGAAATAAACAGCCTTGTT"
-                + "GCACACACACACACACACACACACAAAGAATTCATTGCTCTTAGCTTTTGCACTGTTTCCTTTTTTAGACCTTCCTACATAAGTATTTGTGTATATGTCTGTATTT";
+        String refBases = "X" + REF_BASES_200.substring(0, 100)
+                // 0123456789012345678901234567890123456789
+                //             ->
+                + "GTTGTTGTTGTCGTTGTTGTTGTTGGTTTTTCTGAGACAGAGTC" + REF_BASES_200.substring(0, 100);
 
         RefSequence refSequence = new RefSequence(0, refBases.getBytes());
 
-        String varBuildReadBases = "CCTGCACCCAGTTGAAATAAACAGCCTTGTTGCACACACACACACACACACACACACACACACACACACAAAGAATTCATTGCTCTTAGCTTTTGCACTGTTTCC"
-                + "TTTTTTAGACCTTCCTACATAAGTATTTGTGTATATGTCTGTATTT";
+        String insertedBases = "TTGTTGTTGTTGGTTTTTC";
 
-        String readCigar = "32M14I105M";
+        String varBuildReadBases = refBases.substring(91, 101) + refBases.substring(101, 114) + insertedBases + refBases.substring(114, 150);
 
-        SimpleVariant var = createSimpleVariant(312, "A", "ACACACACACACACA"); // var(chr1:312 A>ACACACACACACACA)
+        String readCigar = "33M19I36M";
 
-        SAMRecord varBuildRead = buildSamRecord(257, readCigar, varBuildReadBases);
+        SAMRecord varBuildRead = buildSamRecord(91, readCigar, varBuildReadBases);
+        String ref = refBases.substring(113, 114);
 
         VariantReadContextBuilder builder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
 
-        VariantReadContext readContext = builder.createContext(var, varBuildRead, 33, refSequence);
+        SimpleVariant var = createSimpleVariant(113, ref, ref + insertedBases);
+        VariantReadContext readContext = builder.createContext(var, varBuildRead, 22, refSequence);
 
-        assertEquals(12, readContext.VarReadIndex);
+        assertEquals(113, readContext.variant().position());
+        assertEquals(11, readContext.VarReadIndex);
+        assertEquals("CGTTGTTGTTGTTGGTTTTTCTTGTTGTTGTTGGTTTTTCTGA", readContext.coreStr());
 
-        String realignReadBases = "CTACCCAAATCTTATAAAATGGCCCCACCCATATCTCCCTTCGCTGACTCTCTATTCGGACTCAGCCCGCCTGCACCCAGGTGAAATAAACAGCCTTGTTGC"
-                + "ACACACACACACACACACACACACACACACACACACAAAGAATTCATTG";
-
-        String realignReadCigar = "125M26S";
-
-        SAMRecord realignRead1 = buildSamRecord(188, realignReadCigar, realignReadBases);
-
-        int realignedReadIndexPosition = Realignment.realignedReadIndexPosition(readContext, realignRead1);
+        // variant is at read index 41 when should be 22
+        int realignedStartPos = 72;
+        readCigar = buildCigarString(varBuildReadBases.length());
+        SAMRecord realignedRead = buildSamRecord(realignedStartPos, readCigar, varBuildReadBases);
 
         ReadContextMatcher matcher = new ReadContextMatcher(readContext);
 
-        // ReadContextMatch matchType = matcher.determineReadMatch(realignRead1, realignedReadIndexPosition);
+        int realignedReadIndex = Realignment.realignedReadIndexPosition(readContext, realignedRead);
+        ReadContextMatch matchType = matcher.determineReadMatch(realignedRead, realignedReadIndex);
 
-        // assertEquals(FULL, matchType);
+        assertEquals(FULL, matchType);
     }
 
     /* REALIGN
+
     @Test
     public void testIndelRealignedLeft()
     {

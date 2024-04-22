@@ -361,7 +361,7 @@ public class ReadContextCounter
         double quality = qualityScores.ModifiedQuality;
 
         // Check if FULL, PARTIAL, OR CORE
-        ReadContextMatch matchType = !baseDeleted  ? determineReadContextMatch(record, readIndex, true) : NONE;
+        ReadContextMatch matchType = !baseDeleted ? determineReadContextMatch(record, readIndex, true) : NONE;
 
         // TEMP: record differences in raw vs accurate matching
         if(matchType.SupportsAlt != rawContext.AltSupport)
@@ -398,7 +398,7 @@ public class ReadContextCounter
 
         boolean canRealign = abs(mVariant.indelLength()) >= REALIGN_READ_MIN_INDEL_LENGTH || readHasIndelInCore(record);
 
-        RealignedContext realignment = canRealign ? checkRealignment(record) : RealignedContext.NONE;
+        RealignedContext realignment = canRealign ? checkRealignment(record, readIndex) : RealignedContext.NONE;
 
         if(realignment.Type == EXACT)
         {
@@ -600,21 +600,21 @@ public class ReadContextCounter
         return false;
     }
 
-    private RealignedContext checkRealignment(final SAMRecord record)
+    private RealignedContext checkRealignment(final SAMRecord record, int readIndex)
     {
         // do a comparison of the bases going from this calculated RI - coreLength - flankLength vs the variant's full read base sequence
 
         // the read index corresponding to the ref position at the end of the core
 
-        int coreEndPositionReadIndex = Realignment.realignedReadIndexPosition(mReadContext, record);
+        int realignedReadIndex = Realignment.realignedReadIndexPosition(mReadContext, record);
 
-        if(coreEndPositionReadIndex < 0 || coreEndPositionReadIndex >= record.getReadBases().length)
+        if(realignedReadIndex < 0 || realignedReadIndex >= record.getReadBases().length)
             return RealignedContext.NONE;
 
-        ReadContextMatch match = determineReadContextMatch(record, coreEndPositionReadIndex, true);
+        ReadContextMatch match = determineReadContextMatch(record, realignedReadIndex, true);
 
         if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL_CORE)
-            return new RealignedContext(EXACT, mReadContext.totalLength(), coreEndPositionReadIndex);
+            return new RealignedContext(EXACT, mReadContext.totalLength(), realignedReadIndex);
 
         return RealignedContext.NONE;
     }

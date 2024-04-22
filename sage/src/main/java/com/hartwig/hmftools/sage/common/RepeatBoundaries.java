@@ -10,13 +10,13 @@ import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.common.RepeatInfo.extendRepeatLower;
 import static com.hartwig.hmftools.sage.common.RepeatInfo.findMultiBaseRepeat;
 
-public class RepeatBoundaryInfo
+public class RepeatBoundaries
 {
     public final int LowerIndex;
     public final int UpperIndex;
     public final RepeatInfo MaxRepeat;
 
-    public RepeatBoundaryInfo(final int lowerIndex, final int upperIndex, final RepeatInfo maxRepeat)
+    public RepeatBoundaries(final int lowerIndex, final int upperIndex, final RepeatInfo maxRepeat)
     {
         LowerIndex = lowerIndex;
         UpperIndex = upperIndex;
@@ -26,7 +26,7 @@ public class RepeatBoundaryInfo
     // set an initial search length long enough to find a min count of the longest repeat
     private static final int REPEAT_SEARCH_LENGTH = MAX_REPEAT_LENGTH * MIN_REPEAT_COUNT;
 
-    public static RepeatBoundaryInfo findRepeatBoundaries(
+    public static RepeatBoundaries findRepeatBoundaries(
             final byte[] bases, final int requiredIndexStart, final int requiredIndexEnd, final int maxLength, final int minCount)
     {
         RepeatInfo maxRepeat = null;
@@ -86,7 +86,7 @@ public class RepeatBoundaryInfo
         int lowerRepeatIndex = maxRepeat.Index;
         int upperRepeatIndex = secondRepeat != null ? secondRepeat.endIndex() : maxRepeat.endIndex();
 
-        return new RepeatBoundaryInfo(lowerRepeatIndex - 1, upperRepeatIndex + 1, maxRepeat);
+        return new RepeatBoundaries(lowerRepeatIndex - 1, upperRepeatIndex + 1, maxRepeat);
     }
 
     public String toString()

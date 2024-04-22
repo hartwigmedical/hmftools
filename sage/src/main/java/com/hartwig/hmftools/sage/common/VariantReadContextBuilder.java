@@ -95,15 +95,15 @@ public class VariantReadContextBuilder
 
         final byte[] readBases = read.getReadBases();
 
-        RepeatBoundaryInfo repeatBoundaryInfo = findRepeatBoundaries(readCoreStart, readCoreEnd, readBases);
+        RepeatBoundaries repeatBoundaries = findRepeatBoundaries(readCoreStart, readCoreEnd, readBases);
 
         RepeatInfo maxRepeat = null;
 
-        if(repeatBoundaryInfo != null)
+        if(repeatBoundaries != null)
         {
-            readCoreStart = min(readCoreStart, repeatBoundaryInfo.LowerIndex);
-            readCoreEnd = max(readCoreEnd, repeatBoundaryInfo.UpperIndex);
-            maxRepeat = repeatBoundaryInfo.MaxRepeat;
+            readCoreStart = min(readCoreStart, repeatBoundaries.LowerIndex);
+            readCoreEnd = max(readCoreEnd, repeatBoundaries.UpperIndex);
+            maxRepeat = repeatBoundaries.MaxRepeat;
         }
 
         int readFlankStart = max(readCoreStart - mFlankSize, 0);
@@ -152,9 +152,9 @@ public class VariantReadContextBuilder
                 coreIndexStart, readVarIndex, coreIndexEnd, homology, maxRepeat);
     }
 
-    private RepeatBoundaryInfo findRepeatBoundaries(int readCoreStart, int readCoreEnd, final byte[] readBases)
+    private RepeatBoundaries findRepeatBoundaries(int readCoreStart, int readCoreEnd, final byte[] readBases)
     {
-        return RepeatBoundaryInfo.findRepeatBoundaries(readBases, readCoreStart, readCoreEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT);
+        return RepeatBoundaries.findRepeatBoundaries(readBases, readCoreStart, readCoreEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT);
     }
 
     private class ReadCigarInfo
