@@ -91,9 +91,10 @@ public class VariantTypesTest
 
         VariantReadContext readContext = var.candidate().readContext();
         assertTrue(readContext.isValid());
-        assertEquals(47, readContext.coreLength());
+        assertEquals(14, readContext.coreLength());
         assertNotNull(readContext.MaxRepeat);
-        assertEquals(12, readContext.MaxRepeat.length());
+        assertEquals("AAAC", readContext.MaxRepeat.Bases);
+        assertEquals(24, readContext.MaxRepeat.length());
     }
 
     @Test

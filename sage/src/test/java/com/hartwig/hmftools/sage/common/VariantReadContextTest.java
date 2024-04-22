@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.sage.common.ReadContextMatch.REF;
 import static com.hartwig.hmftools.sage.common.RepeatInfo.findMultiBaseRepeat;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
+import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.findHomology;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
@@ -109,20 +110,22 @@ public class VariantReadContextTest
         readContext = builder.createContext(var, read, 23, REF_SEQUENCE_200);
 
         assertTrue(readContext.isValid());
+        assertNotNull(readContext.MaxRepeat);
+        assertEquals("GC", readContext.MaxRepeat.Bases);
+        assertEquals(4, readContext.MaxRepeat.Count);
         assertEquals(131, readContext.AlignmentStart);
-        assertEquals(157, readContext.AlignmentEnd);
+        assertEquals(156, readContext.AlignmentEnd);
         assertEquals(5, readContext.CoreIndexStart);
         assertEquals(12, readContext.VarReadIndex);
-        assertEquals(21, readContext.CoreIndexEnd);
+        assertEquals(20, readContext.CoreIndexEnd);
         assertEquals(12, readContext.AltIndexLower);
         assertEquals(13, readContext.AltIndexUpper);
-        assertEquals("TGCGCGCTACACACACT", readContext.refBases());
-        assertEquals("CACAGTGCGCGCGCCACACACTGGCCT", readContext.readBases());
-        assertEquals("27M", readContext.readCigar());
-        assertEquals(17, readContext.coreLength());
+        assertEquals("TGCGCGCTACACACAC", readContext.refBases());
+        assertEquals("TGCGCGCGCCACACAC", readContext.coreStr());
+        assertEquals("26M", readContext.readCigar());
+        assertEquals(16, readContext.coreLength());
         assertEquals(5, readContext.leftFlankLength());
         assertEquals(5, readContext.rightFlankLength());
-        assertEquals("TGCGCGCGCCACACACT", readContext.coreStr());
     }
 
     @Test
@@ -148,20 +151,68 @@ public class VariantReadContextTest
 
         assertTrue(readContext.isValid());
         assertEquals(50, readContext.AlignmentStart);
-        assertEquals(84, readContext.AlignmentEnd);
+        assertEquals(91, readContext.AlignmentEnd);
         assertEquals(10, readContext.CoreIndexStart);
         assertEquals(22, readContext.VarReadIndex);
-        assertEquals(24, readContext.CoreIndexEnd);
+        assertEquals(31, readContext.CoreIndexEnd);
         assertEquals(12, readContext.refIndex());
-        assertEquals("ATTTTTTTTTTTCTT", readContext.refBases());
-        assertEquals("CTTTTTTTTTATTTTTTTTTTTTTTTTTTTTGAGA", readContext.readBases());
+        assertEquals("ATTTTTTTTTTTCTTTTTTTTG", readContext.refBases());
+        assertEquals("CTTTTTTTTTATTTTTTTTTTTTTTTTTTTTGAGAGAGGCAA", readContext.readBases());
 
-        // test a core match
+        // test 1: a core match
         String readRefBases = refBases.substring(40, 100);
         SAMRecord refRead = buildSamRecord(40, readCigar, readRefBases);
 
         ReadContextMatcher matcher = new ReadContextMatcher(readContext);
         assertEquals(REF, matcher.determineReadMatch(refRead, 32));
+    }
+
+    @Test
+    public void testVariantRepeatContexts()
+    {
+        final String refBases =
+            //             10        20        30        40        50
+            //   0123456789012345678901234567890123456789012345678901
+                "CGCAATATTCGGGTGGGAGTGACCCGATTTACCCGGTGCGTTCGTCACCGCTGTCT";
+
+        RefSequence refSequence = new RefSequence(0, refBases.getBytes());
+
+        // test 1: a repeat starting at the variant
+        String readBases = refBases.substring(0, 21) + "C" + refBases.substring(22, 51);
+
+        String readCigar = buildCigarString(readBases.length());
+        SAMRecord read = buildSamRecord(1, readCigar, readBases);
+
+        SimpleVariant var = createSimpleVariant(21, "A", "C");
+
+        VariantReadContextBuilder builder = new VariantReadContextBuilder(5);
+        VariantReadContext readContext = builder.createContext(var, read, 21, refSequence);
+
+        assertTrue(readContext.isValid());
+        assertEquals(5, readContext.CoreIndexStart);
+        assertNotNull(readContext.MaxRepeat);
+        assertEquals("C", readContext.MaxRepeat.Bases);
+        assertEquals(4, readContext.MaxRepeat.Count);
+        assertEquals(7, readContext.VarReadIndex);
+        assertEquals(11, readContext.CoreIndexEnd);
+
+        // test 2 : repeats before and after but only the first is used
+        var = createSimpleVariant(30, "A", "C");
+
+        readBases = refBases.substring(0, 30) + var.alt() + refBases.substring(31, 51);
+
+        readCigar = buildCigarString(readBases.length());
+        read = buildSamRecord(1, readCigar, readBases);
+
+        readContext = builder.createContext(var, read, 30, refSequence);
+
+        assertTrue(readContext.isValid());
+        assertEquals(5, readContext.CoreIndexStart);
+        assertNotNull(readContext.MaxRepeat);
+        assertEquals("C", readContext.MaxRepeat.Bases);
+        assertEquals(4, readContext.MaxRepeat.Count);
+        assertEquals(7, readContext.VarReadIndex);
+        assertEquals(11, readContext.CoreIndexEnd);
     }
 
     @Test

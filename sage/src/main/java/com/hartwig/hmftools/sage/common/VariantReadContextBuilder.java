@@ -35,11 +35,20 @@ public class VariantReadContextBuilder
     }
 
     public VariantReadContext createContext(
-            final SimpleVariant variant, final SAMRecord read, int varReadIndex, final RefSequence refSequence, boolean isIndel)
+            final SimpleVariant variant, final SAMRecord read, int varReadIndex, final RefSequence refSequence)
     {
         try
         {
-            return createContext(variant, read, varReadIndex, refSequence);
+            VariantReadContext readContext = buildContext(variant, read, varReadIndex, refSequence);
+
+            if(readContext == null)
+                return null;
+
+            // enforce full flanks
+            if(readContext.leftFlankLength() < mFlankSize || readContext.rightFlankLength() < mFlankSize)
+                return null;
+
+            return readContext;
         }
         catch(Exception e)
         {
@@ -50,7 +59,7 @@ public class VariantReadContextBuilder
         }
     }
 
-    public VariantReadContext createContext(
+    private VariantReadContext buildContext(
             final SimpleVariant variant, final SAMRecord read, int varIndexInRead, final RefSequence refSequence)
     {
         /* Routine:
@@ -87,8 +96,14 @@ public class VariantReadContextBuilder
 
         RepeatBoundaryInfo repeatBoundaryInfo = findRepeatBoundaries(readCoreStart, readCoreEnd, readBases);
 
-        readCoreStart = repeatBoundaryInfo.CoreStart;
-        readCoreEnd = repeatBoundaryInfo.CoreEnd;
+        RepeatInfo maxRepeat = null;
+
+        if(repeatBoundaryInfo != null)
+        {
+            readCoreStart = min(readCoreStart, repeatBoundaryInfo.LowerIndex);
+            readCoreEnd = max(readCoreEnd, repeatBoundaryInfo.UpperIndex);
+            maxRepeat = repeatBoundaryInfo.MaxRepeat;
+        }
 
         int readFlankStart = max(readCoreStart - mFlankSize, 0);
         int readFlankEnd = min(readCoreEnd + mFlankSize, readBases.length - 1);
@@ -121,65 +136,12 @@ public class VariantReadContextBuilder
 
         return new VariantReadContext(
                 variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar,
-                coreIndexStart, readVarIndex, coreIndexEnd, homology, repeatBoundaryInfo.MaxRepeat);
+                coreIndexStart, readVarIndex, coreIndexEnd, homology, maxRepeat);
     }
 
-    private class RepeatBoundaryInfo
+    private RepeatBoundaryInfo findRepeatBoundaries(int readCoreStart, int readCoreEnd, final byte[] readBases)
     {
-        public final int CoreStart;
-        public final int CoreEnd;
-        public final RepeatInfo MaxRepeat;
-
-        public RepeatBoundaryInfo(final int coreStart, final int coreEnd, final RepeatInfo maxRepeat)
-        {
-            CoreStart = coreStart;
-            CoreEnd = coreEnd;
-            MaxRepeat = maxRepeat;
-        }
-
-        public String toString()
-        {
-            return format("core(%d-%d) repeat(%s)", CoreStart, CoreEnd, MaxRepeat != null ? MaxRepeat : "");
-        }
-    }
-
-    // set an initial search length long enough to find a min count of the longest repeat
-    private static final int REPEAT_SEARCH_LENGTH = MAX_REPEAT_LENGTH * MIN_REPEAT_COUNT;
-
-    private RepeatBoundaryInfo findRepeatBoundaries(int lowerRefIndex, int upperRefIndex, final byte[] readBases)
-    {
-        int repeatSearchStart = max(lowerRefIndex - REPEAT_SEARCH_LENGTH, 0);
-
-        RepeatInfo lowerRepeat = RepeatInfo.findMaxRepeat(
-                readBases, repeatSearchStart, readBases.length - 1,
-                MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT, true, lowerRefIndex);
-
-        int coreStart = lowerRefIndex;
-        int coreEnd = upperRefIndex;
-
-        RepeatInfo maxRepeat = lowerRepeat;
-
-        if(lowerRepeat != null)
-        {
-            coreStart = lowerRepeat.Index - 1;
-        }
-
-        if(lowerRepeat == null || lowerRepeat.endIndex() <= upperRefIndex)
-        {
-            RepeatInfo upperRepeat = RepeatInfo.findMaxRepeat(
-                    readBases, upperRefIndex, readBases.length - 1,
-                    MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT, true, upperRefIndex);
-
-            if(upperRepeat != null)
-            {
-                coreEnd = upperRepeat.endIndex() + 1;
-
-                if(maxRepeat == null || upperRepeat.repeatLength() > maxRepeat.repeatLength())
-                    maxRepeat = upperRepeat;
-            }
-        }
-
-        return new RepeatBoundaryInfo(coreStart, coreEnd, maxRepeat);
+        return RepeatBoundaryInfo.findRepeatBoundaries(readBases, readCoreStart, readCoreEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT);
     }
 
     private class ReadCigarInfo
@@ -316,7 +278,7 @@ public class VariantReadContextBuilder
         int homReadIndexStart = variant.isInsert() ? varReadIndex + indelAltLength + 1 : varReadIndex + 1;
         int homReadIndex = homReadIndexStart;
 
-        for(int i = 0; i < indelBases.length(); ++i, ++homReadIndex)
+        for(int i = 0; i < indelBases.length() && homReadIndex < readBases.length; ++i, ++homReadIndex)
         {
             byte indelBase = (byte)indelBases.charAt(i);
             byte postIndelReadBase = readBases[homReadIndex];
@@ -345,7 +307,7 @@ public class VariantReadContextBuilder
             {
                 int matchCount = 0;
 
-                for(int i = 0; i < indelAltLength; ++i, ++homReadIndex)
+                for(int i = 0; i < indelAltLength && homReadIndex < readBases.length; ++i, ++homReadIndex)
                 {
                     byte homologyBase = (byte)homologyBases.charAt(i);
                     byte postIndelReadBase = readBases[homReadIndex];
