@@ -1,58 +1,85 @@
 package com.hartwig.hmftools.cup.runners;
 
+import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
 
+import java.io.File;
+
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.cup.prep.CuppaDataPrep;
+import com.hartwig.hmftools.cup.prep.PrepConfig;
 
 import org.apache.logging.log4j.Level;
 
 public class PredictionRunner
 {
-    public final PredictionConfig mConfig;
-    public final PycuppaExecutor mPycuppaExecutor;
+    public final PrepConfig mPrepConfig;
+    public final PycuppaPredictConfig mPycuppaConfig;
 
-    public PredictionRunner(final PredictionConfig predictionConfig)
-    {
-        mConfig = predictionConfig;
-
-        mPycuppaExecutor = new PycuppaExecutor(mConfig.VirtualEnvPath);
-        mPycuppaExecutor.initialize();
-    }
+    private String mFeaturesPath;
 
     public PredictionRunner(final ConfigBuilder configBuilder)
     {
-        mConfig = new PredictionConfig(configBuilder);
+        mPrepConfig = new PrepConfig(configBuilder);
+        mPycuppaConfig = new PycuppaPredictConfig(configBuilder);
+    }
 
-        mPycuppaExecutor = new PycuppaExecutor(mConfig.VirtualEnvPath);
-        mPycuppaExecutor.initialize();
+    public void createOutputDirIfNotExist()
+    {
+        File outputDir = new File(mPrepConfig.OutputDir);
+        if(!outputDir.exists())
+        {
+            CUP_LOGGER.info("Creating output dir: " + outputDir);
+            outputDir.mkdir();
+        }
+    }
+
+    public void extractFeatures()
+    {
+        if(!mPycuppaConfig.FeaturesPath.isEmpty())
+        {
+            CUP_LOGGER.info("Using pre-extracted features at: " + mPycuppaConfig.FeaturesPath);
+            mFeaturesPath =  mPycuppaConfig.FeaturesPath;
+            return;
+        }
+
+        CuppaDataPrep prep = new CuppaDataPrep(mPrepConfig);
+        prep.run();
+
+        mFeaturesPath = prep.getOutputPath(null);
     }
 
     public void predict()
     {
+        PycuppaExecutor pycuppaExecutor = new PycuppaExecutor(mPycuppaConfig.VirtualEnvPath);
+        pycuppaExecutor.initialize();
+
         String[] command = new String[] {
                 "python3 -m cuppa.predict",
-                "--sample_id", mConfig.SampleId,
-                "--classifier_path", mConfig.ClassifierPath,
-                "--features_path", mConfig.FeaturesPath,
-                "--output_dir", mConfig.OutputDir,
+
+                "--sample_id", mPycuppaConfig.SampleId,
+                "--classifier_path", mPycuppaConfig.ClassifierPath,
+                "--output_dir", mPycuppaConfig.OutputDir,
+
+                "--features_path", mFeaturesPath
         };
 
-        mPycuppaExecutor.runBashCommandInVirtualEnv(String.join(" ", command), Level.INFO);
-    }
-
-    public void printUsage()
-    {
-        // TODO: Add usage for java component
-        mPycuppaExecutor.runBashCommandInVirtualEnv("python3 -m cuppa.predict", Level.OFF);
+        pycuppaExecutor.runBashCommandInVirtualEnv(String.join(" ", command), Level.INFO, true);
     }
 
     public static void main(String[] args)
     {
         ConfigBuilder config = new ConfigBuilder(APP_NAME);
-        PredictionConfig.registerConfig(config);
+
+        config.disableWarnOnRepeatedRegos();
+        PrepConfig.registerConfig(config);
+        PycuppaPredictConfig.registerConfig(config);
+
         config.checkAndParseCommandLine(args);
 
         PredictionRunner runner = new PredictionRunner(config);
+        runner.createOutputDirIfNotExist();
+        runner.extractFeatures();
         runner.predict();
     }
 }
