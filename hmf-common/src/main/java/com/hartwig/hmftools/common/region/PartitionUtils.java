@@ -77,7 +77,7 @@ public class PartitionUtils
         return partitions;
     }
 
-    private static List<ChrBaseRegion> buildPartitions(final String chromosome, int maxPosition, int partitionSize)
+    public static List<ChrBaseRegion> buildPartitions(final String chromosome, int maxPosition, int partitionSize)
     {
         final List<ChrBaseRegion> partitions = Lists.newArrayList();
 
