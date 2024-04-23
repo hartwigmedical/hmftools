@@ -45,7 +45,7 @@ public class BamToFastq
         // partition all chromosomes
         Queue<ChrBaseRegion> partitions = new ConcurrentLinkedQueue<>();
 
-        // loop through BAM header not human chromosomes
+        // TO-DO: loop through BAM header instead of human chromosomes
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
@@ -120,8 +120,6 @@ public class BamToFastq
         processUnmappedReads();
 
         mWriterCache.close();
-
-        // combinedStats.logStats();
 
         BT_LOGGER.info("BamToFastq complete, mins({})", runTimeMinsStr(startTimeMs));
     }
