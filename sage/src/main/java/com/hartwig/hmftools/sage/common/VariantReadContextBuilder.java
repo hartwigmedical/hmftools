@@ -136,9 +136,10 @@ public class VariantReadContextBuilder
 
         if(variant.isDelete())
         {
-            // ensure is long enough to cover the ref bases prior to deletion
+            // ensure is long enough to cover the ref bases prior to deletion, so find the core position end in the ref
             int rightCoreLength = coreIndexEnd - readVarIndex;
-            refPosEnd = findPositionEnd(variant.Position, rightCoreLength, alignmentStart, readCigarInfo.Cigar, coreIndexEnd);
+            int rightCoreLengthExtension = max(rightCoreLength - MIN_CORE_DISTANCE, 0);
+            refPosEnd = variant.positionEnd() + 1 + rightCoreLengthExtension;
         }
         else
         {
@@ -311,7 +312,7 @@ public class VariantReadContextBuilder
         String homologyBases = homology.toString();
         int homologyLength = homologyBases.length();
 
-        if(homologyLength == indelAltLength)
+        if(homologyLength == indelAltLength && homReadIndex < readBases.length)
         {
             // continue searching for repeats of the homology to find the point of right-alignment, allow partials at the end
             boolean matched = true;
@@ -336,6 +337,8 @@ public class VariantReadContextBuilder
 
                 if(matchCount > 0)
                     homologyLength += matchCount;
+                else
+                    break;
             }
         }
 
