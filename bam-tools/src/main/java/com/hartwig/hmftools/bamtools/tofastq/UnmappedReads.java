@@ -35,8 +35,6 @@ public class UnmappedReads
         mThreadedWriter = mConfig.SplitMode != FileSplitMode.READ_GROUP ? mWriterCache.getThreadedWriter() : null;
     }
 
-    public int unmappedReadCount() { return mUnmappedReadCount; }
-
     public void run()
     {
         SamReader samReader = mConfig.BamFile != null ?
@@ -55,10 +53,15 @@ public class UnmappedReads
 
         if(!mUnmatchedReads.isEmpty())
         {
-            BT_LOGGER.info("writing {} unpaired & unmapped reads", mUnmatchedReads.size());
+            BT_LOGGER.info("writing {} unmapped & unpaired reads", mUnmatchedReads.size());
             mUnmatchedReads.values().forEach(x -> mWriterCache.writeUnpairedRead(x));
 
             mUnmatchedReads.clear();
+        }
+
+        if(mUnmappedReadCount > 0)
+        {
+            BT_LOGGER.info("processed {} unmapped reads", mUnmappedReadCount);
         }
     }
 

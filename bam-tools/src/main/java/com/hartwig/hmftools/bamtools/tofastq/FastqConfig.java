@@ -44,7 +44,7 @@ public class FastqConfig
     private static final String FILE_SPLIT_MODE = "split_mode";
     private static final String WRITE_UNZIPPED = "write_unzipped";
 
-    private static final int DEFAULT_PARTITION_SIZE = 10_000_000;
+    private static final int DEFAULT_PARTITION_SIZE = 1_000_000;
 
     public FastqConfig(final ConfigBuilder configBuilder)
     {
