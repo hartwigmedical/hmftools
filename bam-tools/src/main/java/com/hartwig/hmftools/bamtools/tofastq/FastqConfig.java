@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE_DESC;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTITION_SIZE;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
 import static com.hartwig.hmftools.common.bam.BamUtils.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
@@ -32,6 +33,7 @@ public class FastqConfig
 
     public final String OutputDir;
     public final String OutputId;
+    public final boolean WriteUnzipped;
     public final FileSplitMode SplitMode;
     public final int Threads;
     public final int PartitionSize;
@@ -40,6 +42,9 @@ public class FastqConfig
     public final boolean PerfDebug;
 
     private static final String FILE_SPLIT_MODE = "split_mode";
+    private static final String WRITE_UNZIPPED = "write_unzipped";
+
+    private static final int DEFAULT_PARTITION_SIZE = 10_000_000;
 
     public FastqConfig(final ConfigBuilder configBuilder)
     {
@@ -68,10 +73,11 @@ public class FastqConfig
         BT_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         BT_LOGGER.info("output({})", OutputDir);
 
-        PartitionSize = DEFAULT_CHR_PARTITION_SIZE;
+        PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
         Threads = parseThreads(configBuilder);
+        WriteUnzipped = configBuilder.hasFlag(WRITE_UNZIPPED);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
         SplitMode = FileSplitMode.valueOf(configBuilder.getValue(FILE_SPLIT_MODE));
     }
@@ -98,8 +104,10 @@ public class FastqConfig
 
         configBuilder.addPath(BAM_FILE, true, BAM_FILE_DESC);
 
-        configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addConfigItem(FILE_SPLIT_MODE, "File split mode, NONE, READ_GROUP (default), THREAD");
+        configBuilder.addInteger(PARTITION_SIZE, "Partition split size", DEFAULT_PARTITION_SIZE);
+        configBuilder.addFlag(WRITE_UNZIPPED, "Write fastq file(s) unzipped");
+        configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);

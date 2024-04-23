@@ -9,16 +9,22 @@ import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromos
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 
 public class BamToFastq
 {
@@ -117,14 +123,10 @@ public class BamToFastq
         if(mConfig.SpecificChrRegions.hasFilters())
             return;
 
-        // TO-DO: these are likely paired as well
+        UnmappedReads unmappedReads = new UnmappedReads(mConfig, mWriterCache);
+        unmappedReads.run();
 
-        /*
-        bamReader.queryUnmappedReads((final SAMRecord record) ->
-        {
-            fastqWriter.processUnpairedRead(record);
-        });
-         */
+        BT_LOGGER.info("processed {} unmapped reads", unmappedReads.unmappedReadCount());
     }
 
     public static void main(final String[] args)

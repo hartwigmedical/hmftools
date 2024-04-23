@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -47,7 +48,8 @@ public class PartitionReader extends Thread
     private final Map<String,List<SAMRecord>> mRemoteUnmatchedReads;
     private final Map<String,SAMRecord> mLocalUnmatchedReads;
 
-    private int mPartitionRecordCount;
+    private int mPartitionLocalCount;
+    private int mPartitionRemoteCount;
     private final PerformanceCounter mPerfCounter;
 
     public PartitionReader(
@@ -75,7 +77,8 @@ public class PartitionReader extends Thread
         mLocalUnmatchedReads = Maps.newHashMap();
         mRemoteUnmatchedReads = Maps.newHashMap();
 
-        mPartitionRecordCount = 0;
+        mPartitionLocalCount = 0;
+        mPartitionRemoteCount = 0;
 
         mPerfCounter = new PerformanceCounter("PartitionReader");
     }
@@ -153,12 +156,14 @@ public class PartitionReader extends Thread
 
         perfCountersStop();
 
-        BT_LOGGER.debug("partition({}) complete, reads({})", mCurrentRegion, mPartitionRecordCount);
+        BT_LOGGER.debug("partition({}) complete, reads(local={} remote={})",
+                mCurrentRegion, mPartitionLocalCount, mPartitionRemoteCount);
 
         if(mConfig.PerfDebug)
             mCurrentPartitionData.logCacheCounts();
 
-        mPartitionRecordCount = 0;
+        mPartitionLocalCount = 0;
+        mPartitionRemoteCount = 0;
     }
 
     private void processSamRecord(final SAMRecord read)
@@ -171,6 +176,7 @@ public class PartitionReader extends Thread
 
         if(!read.getReadPairedFlag())
         {
+            ++mPartitionLocalCount;
             mWriterCache.processUnpairedRead(read, mThreadedWriter);
             return;
         }
@@ -179,6 +185,7 @@ public class PartitionReader extends Thread
 
         if(mate != null)
         {
+            ++mPartitionLocalCount;
             mWriterCache.processReadPair(read, mate, mThreadedWriter);
             return;
         }
@@ -188,14 +195,14 @@ public class PartitionReader extends Thread
 
         if(hasLocalMate)
         {
+            ++mPartitionLocalCount;
             mLocalUnmatchedReads.put(read.getReadName(), read);
             return;
         }
 
         // cache if local otherwise put into remote pending list
         processRemoteRead(read);
-
-        ++mPartitionRecordCount;
+        ++mPartitionRemoteCount;
     }
 
     public String getBasePartition(final SAMRecord read)
@@ -219,8 +226,6 @@ public class PartitionReader extends Thread
     private void processRemoteRead(final SAMRecord read)
     {
         String basePartition = getBasePartition(read);
-
-        // ++mStats.InterPartition;
 
         // cache this read and send through as groups when the partition is complete
         List<SAMRecord> pendingFragments = mRemoteUnmatchedReads.get(basePartition);
@@ -261,6 +266,23 @@ public class PartitionReader extends Thread
         }
 
         mRemoteUnmatchedReads.clear();
+
+        if(!mLocalUnmatchedReads.isEmpty())
+        {
+            BT_LOGGER.warn("partition({}) has {} unmatched local reads", mCurrentRegion, mLocalUnmatchedReads.size());
+
+            List<SAMRecord> localReads = mLocalUnmatchedReads.values().stream().collect(Collectors.toList());
+            PartitionData partitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
+
+            List<ReadPair> matchedPairs = partitionData.processUnpairedReads(localReads);
+
+            for(ReadPair readPair : matchedPairs)
+            {
+                mWriterCache.processReadPair(readPair.First, readPair.Second, mThreadedWriter);
+            }
+
+            mLocalUnmatchedReads.clear();
+        }
     }
 
     private void perfCountersStart()

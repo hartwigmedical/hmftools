@@ -53,16 +53,18 @@ public class FastqWriterCache
         {
             String readGroupId = readGroupRecord.getId();
             String filename = mConfig.formFilePrefix(readGroupId);
-            FastqWriter fastqWriter = new FastqWriter(filename);
+            FastqWriter fastqWriter = new FastqWriter(filename, mConfig.WriteUnzipped);
             mReadGroupWriters.put(readGroupId, fastqWriter);
         }
     }
 
+    public FastqWriter getThreadedWriter() { return mThreadedWriters.get(0); }
+
     public FastqWriter createThreadedWriter()
     {
-        String fileId = mConfig.Threads >  1 ? format("t%d", mThreadedWriters.size()) : "";
+        String fileId = mConfig.Threads > 1 ? format("t%d", mThreadedWriters.size()) : "";
         String filename = mConfig.formFilePrefix(fileId);
-        FastqWriter fastqWriter = new FastqWriter(filename);
+        FastqWriter fastqWriter = new FastqWriter(filename, mConfig.WriteUnzipped);
         mThreadedWriters.add(fastqWriter);
         return fastqWriter;
     }

@@ -23,16 +23,27 @@ public class FastqWriter
 
     private final List<SAMRecord> mUnpairedReads;
 
-    public FastqWriter(final String filePrefix)
+    private static final String ZIPPED_SUFFIX = ".fastq.gz";
+    private static final String UNZIPPED_SUFFIX = ".fastq";
+
+    public FastqWriter(final String filePrefix, boolean writeUnzipped)
     {
         mFilePrefix = filePrefix;
         mUnpairedReads = Lists.newArrayList();
 
-        String fastqR1 = mFilePrefix + ".R1.fastq.gz";
+        String fastqR1 = formFilename(mFilePrefix, true, writeUnzipped);
         mWriterR1 = initialise(fastqR1);
 
-        String fastqR2 = mFilePrefix + ".R2.fastq.gz";
+        String fastqR2 = formFilename(mFilePrefix, false, writeUnzipped);
         mWriterR2 = initialise(fastqR2);
+    }
+
+    private String formFilename(final String filePrefix, final boolean isR1, boolean writeUnzipped)
+    {
+        String filename = filePrefix + ".";
+        filename += isR1 ? "R1" : "R2";
+        filename += writeUnzipped ? UNZIPPED_SUFFIX : ZIPPED_SUFFIX;
+        return filename;
     }
 
     private BufferedWriter initialise(final String filename)
