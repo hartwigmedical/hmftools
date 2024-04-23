@@ -30,7 +30,7 @@ public class PartitionData
     private long mLockAcquireTime;
     private boolean mPerfChecks;
 
-    private static final int LOG_CACHE_COUNT = 50000;
+    private static final int LOG_CACHE_COUNT = 250000;
 
     public PartitionData(final String chrPartition)
     {
@@ -56,9 +56,6 @@ public class PartitionData
     {
         return chromosome + CHR_PARTITION_DELIM;
     }
-
-    public void togglePerfChecks() { mPerfChecks = true; }
-    public double totalLockTimeMs() { return mLockAcquireTime / NANO_IN_MILLISECOND; }
 
     public List<ReadPair> processUnpairedReads(final List<SAMRecord> unmatchedReads)
     {
@@ -115,6 +112,9 @@ public class PartitionData
         mLock.lock();
         mLockAcquireTime += System.nanoTime() - startTime;
     }
+
+    public void togglePerfChecks() { mPerfChecks = true; }
+    public double totalLockTimeMs() { return mLockAcquireTime / NANO_IN_MILLISECOND; }
 
     public String toString()
     {

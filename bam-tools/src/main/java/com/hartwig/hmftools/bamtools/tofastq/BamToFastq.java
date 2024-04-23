@@ -79,13 +79,21 @@ public class BamToFastq
 
         BT_LOGGER.info("all partition tasks complete");
 
+
         mWriterCache.writeUnpairedReads();
 
         List<SAMRecord> unmatchedReads = Lists.newArrayList();
+        int totalPartitionCacheLockTime = 0;
 
         for(PartitionData partitionData : partitionDataStore.partitions())
         {
             unmatchedReads.addAll(partitionData.unmatchedReads());
+            totalPartitionCacheLockTime += partitionData.totalLockTimeMs();
+        }
+
+        if(mConfig.PerfDebug)
+        {
+            BT_LOGGER.debug("partition store lock time({}ms)", totalPartitionCacheLockTime);
         }
 
         if(!unmatchedReads.isEmpty())
