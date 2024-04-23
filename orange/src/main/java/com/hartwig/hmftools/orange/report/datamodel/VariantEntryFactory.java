@@ -108,7 +108,7 @@ public final class VariantEntryFactory
         return reportedVariantsForGene;
     }
 
-    @NotNull
+    @Nullable
     @VisibleForTesting
     static PurpleTranscriptImpact findTranscriptImpact(@NotNull PurpleVariant variant, @NotNull String transcriptToFind)
     {

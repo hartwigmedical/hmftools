@@ -34,4 +34,6 @@ public interface PurpleTranscriptImpact
 
     @NotNull
     PurpleCodingEffect codingEffect();
+
+    boolean reported();
 }

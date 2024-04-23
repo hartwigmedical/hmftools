@@ -41,8 +41,6 @@ public interface PurpleVariant
     @NotNull
     HotspotType hotspot();
 
-    boolean reported();
-
     @NotNull
     PurpleAllelicDepth tumorDepth();
 
@@ -68,4 +66,17 @@ public interface PurpleVariant
 
     @Nullable
     List<Integer> localPhaseSets();
+
+    @Value.Derived
+    default boolean reported()
+    {
+        if(canonicalImpact().reported())
+        {
+            return true;
+        }
+        else
+        {
+            return otherImpacts().stream().anyMatch(PurpleTranscriptImpact::reported);
+        }
+    }
 }

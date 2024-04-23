@@ -117,7 +117,8 @@
           "effects": [
             "MISSENSE"
           ],
-          "codingEffect": "MISSENSE"
+          "codingEffect": "MISSENSE",
+          "reported": true
         },
         "otherImpacts": [],
         "hotspot": "NON_HOTSPOT",
@@ -156,7 +157,8 @@
           "effects": [
             "MISSENSE"
           ],
-          "codingEffect": "MISSENSE"
+          "codingEffect": "MISSENSE",
+          "reported": true
         },
         "otherImpacts": [],
         "hotspot": "NON_HOTSPOT",
@@ -196,7 +198,8 @@
             "SPLICE_DONOR",
             "INTRONIC"
           ],
-          "codingEffect": "SPLICE"
+          "codingEffect": "SPLICE",
+          "reported": true
         },
         "otherImpacts": [],
         "hotspot": "HOTSPOT",
@@ -239,7 +242,8 @@
             "SPLICE_DONOR",
             "INTRONIC"
           ],
-          "codingEffect": "SPLICE"
+          "codingEffect": "SPLICE",
+          "reported": true
         },
         "otherImpacts": [],
         "hotspot": "HOTSPOT",

@@ -145,7 +145,7 @@ public final class PurpleConversion
     }
 
     @NotNull
-    public static PurpleTranscriptImpact convert(@NotNull VariantTranscriptImpact impact)
+    public static PurpleTranscriptImpact convert(@NotNull VariantTranscriptImpact impact, boolean reported)
     {
         List<VariantEffect> effectsList = VariantEffect.effectsToList(impact.Effects);
         List<PurpleVariantEffect> purpleEffects = ConversionUtil.mapToList(effectsList, PurpleConversion::convert);
@@ -158,6 +158,7 @@ public final class PurpleConversion
                 .inSpliceRegion(impact.SpliceRegion)
                 .effects(purpleEffects)
                 .codingEffect(purpleCodingEffect)
+                .reported(reported)
                 .build();
     }
 }
