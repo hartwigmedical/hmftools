@@ -4,31 +4,37 @@ from cuppa.sample_data.cuppa_features import CuppaFeaturesPaths, FeatureLoaderOl
 
 class TestCuppaFeaturesPaths:
 
+    def test_can_find_files_in_dir_by_pattern(self):
+        match_files = CuppaFeaturesPaths.find_files_in_dir_by_pattern(
+            directory=MockInputData.dir_new_format,
+            pattern="cuppa_data.cohort.snv.*.tsv",
+        )
+        assert match_files.tolist() == ['cuppa_data.cohort.snv.tsv.gz']
+
+
     def test_can_infer_old_features_format_paths_from_dir(self):
-        paths = CuppaFeaturesPaths.from_dir(MockInputData.dir_old_format, basenames_mode="old")
+        paths = CuppaFeaturesPaths.from_dir(MockInputData.dir_old_format, file_format="old")
         assert True
 
     def test_can_infer_new_features_format_paths_from_dir(self):
-        ## TODO: Add test for new cohort level features format
-        pass
-
+        paths = CuppaFeaturesPaths.from_dir(MockInputData.dir_new_format, file_format="new")
 
 class TestFeatureLoaderOld:
 
     def test_can_load_dna_features(self):
-        paths = CuppaFeaturesPaths.from_dir(MockInputData.dir_old_format, basenames_mode="old")
+        paths = CuppaFeaturesPaths.from_dir(MockInputData.dir_old_format, file_format="old")
         loader = FeatureLoaderOld(paths)
         loader.load_dna_features()
         assert True
 
     def test_can_load_rna_features(self):
-        paths = CuppaFeaturesPaths.from_dir(MockInputData.dir_old_format, basenames_mode="old")
+        paths = CuppaFeaturesPaths.from_dir(MockInputData.dir_old_format, file_format="old")
         loader = FeatureLoaderOld(paths)
         loader.load_rna_features()
         assert True
 
     def test_can_load_from_directory(self):
-        paths = CuppaFeaturesPaths.from_dir(MockInputData.dir_old_format, basenames_mode="old")
+        paths = CuppaFeaturesPaths.from_dir(MockInputData.dir_old_format, file_format="old")
         loader = FeatureLoaderOld(paths)
         features = loader.load_features()
 
@@ -49,7 +55,7 @@ class TestFeatureLoaderNew:
     #from cuppa.tests.sample_data.test_cuppa_features import TestFeatureLoaderNew
     #self = TestFeatureLoaderNew
 
-    def test_can_load_from_tsv(self):
+    def test_can_load_single_sample_from_tsv(self):
 
         loader = FeatureLoaderNew(
             MockInputData.path_tsv_new_format,
