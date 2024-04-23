@@ -17,7 +17,8 @@ from cuppa.visualization.visualization import CuppaVisData
 
 class MockInputData:
     path_tsv_new_format = os.path.join(MOCK_DATA_DIR, "input_data/new_format/COLO829v003T.cuppa_data.tsv.gz")
-    dir_old_format = os.path.join(MOCK_DATA_DIR, "input_data/old_format")
+    dir_old_format = os.path.join(MOCK_DATA_DIR, "input_data/old_format/")
+    dir_new_format = os.path.join(MOCK_DATA_DIR, "input_data/new_format/cohort/")
 
 
 class MockTrainingData:
