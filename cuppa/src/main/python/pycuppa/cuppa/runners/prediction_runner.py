@@ -76,7 +76,7 @@ class PredictionRunner(LoggerMixin):
     def get_X(self) -> None:
 
         if self.using_old_features_format:
-            paths = CuppaFeaturesPaths.from_dir(self.features_path, basenames_mode="old")
+            paths = CuppaFeaturesPaths.from_dir(self.features_path, file_format="old")
             loader = FeatureLoaderOld(
                 paths=paths,
                 genome_version=self.genome_version,
