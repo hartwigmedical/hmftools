@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.bamtools.tofastq.FastqConfig.CHR_UNMAPPED;
 import static com.hartwig.hmftools.bamtools.tofastq.FastqConfig.registerConfig;
 import static com.hartwig.hmftools.common.region.PartitionUtils.buildPartitions;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
@@ -137,7 +138,7 @@ public class BamToFastq
 
     private void processUnmappedReads()
     {
-        if(mConfig.SpecificChrRegions.hasFilters())
+        if(mConfig.SpecificChrRegions.hasFilters() && !mConfig.SpecificChrRegions.Chromosomes.contains(CHR_UNMAPPED))
             return;
 
         UnmappedReads unmappedReads = new UnmappedReads(mConfig, mWriterCache);

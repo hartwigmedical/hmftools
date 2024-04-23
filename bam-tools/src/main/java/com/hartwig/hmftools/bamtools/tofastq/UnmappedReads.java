@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.bamtools.tofastq;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 
@@ -23,6 +25,7 @@ public class UnmappedReads
     private final Map<String,SAMRecord> mUnmatchedReads;
 
     private int mUnmappedReadCount;
+    private int mLastCachedCount;
 
     public UnmappedReads(final FastqConfig config, final FastqWriterCache writerCache)
     {
@@ -31,6 +34,7 @@ public class UnmappedReads
 
         mUnmatchedReads = Maps.newHashMap();
         mUnmappedReadCount = 0;
+        mLastCachedCount = 0;
 
         mThreadedWriter = mConfig.SplitMode != FileSplitMode.READ_GROUP ? mWriterCache.getThreadedWriter() : null;
     }
@@ -65,6 +69,8 @@ public class UnmappedReads
         }
     }
 
+    private static final int LOG_COUNT = 100_000;
+
     private void processSamRecord(final SAMRecord read)
     {
         if(read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
@@ -83,5 +89,13 @@ public class UnmappedReads
         }
 
         mUnmatchedReads.put(read.getReadName(), read);
+
+        int cacheDiff = abs(mLastCachedCount - mUnmatchedReads.size());
+
+        if(cacheDiff >= LOG_COUNT)
+        {
+            mLastCachedCount = mUnmatchedReads.size();
+            BT_LOGGER.debug("unmapped read cache({}), processed({})", mUnmatchedReads.size(), mUnmappedReadCount);
+        }
     }
 }

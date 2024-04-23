@@ -59,7 +59,13 @@ public class FastqWriterCache
         }
     }
 
-    public FastqWriter getThreadedWriter() { return mWriters.get(0); }
+    public FastqWriter getThreadedWriter()
+    {
+        if(mWriters.isEmpty())
+            return createThreadedWriter();
+
+        return mWriters.get(0);
+    }
 
     public FastqWriter createThreadedWriter()
     {
