@@ -22,14 +22,14 @@ public class FastqWriterCache
     private final FastqConfig mConfig;
 
     private final Map<String,FastqWriter> mReadGroupWriters;
-    private final List<FastqWriter> mThreadedWriters;
+    private final List<FastqWriter> mWriters;
 
     public FastqWriterCache(final FastqConfig config)
     {
         mConfig = config;
 
         mReadGroupWriters = Maps.newHashMap();
-        mThreadedWriters = Lists.newArrayList();
+        mWriters = Lists.newArrayList();
 
         if(mConfig.SplitMode == FileSplitMode.READ_GROUP)
         {
@@ -55,17 +55,18 @@ public class FastqWriterCache
             String filePrefix = mConfig.OutputDir + readGroupId;
             FastqWriter fastqWriter = new FastqWriter(filePrefix, mConfig.WriteUnzipped);
             mReadGroupWriters.put(readGroupId, fastqWriter);
+            mWriters.add(fastqWriter);
         }
     }
 
-    public FastqWriter getThreadedWriter() { return mThreadedWriters.get(0); }
+    public FastqWriter getThreadedWriter() { return mWriters.get(0); }
 
     public FastqWriter createThreadedWriter()
     {
-        String fileId = mConfig.Threads > 1 ? format("t%d", mThreadedWriters.size()) : "";
+        String fileId = mConfig.Threads > 1 ? format("t%d", mWriters.size()) : "";
         String filePrefix = mConfig.formFilePrefix(fileId);
         FastqWriter fastqWriter = new FastqWriter(filePrefix, mConfig.WriteUnzipped);
-        mThreadedWriters.add(fastqWriter);
+        mWriters.add(fastqWriter);
         return fastqWriter;
     }
 
@@ -77,17 +78,8 @@ public class FastqWriterCache
             return;
         }
 
-        if(mConfig.SplitMode == FileSplitMode.READ_GROUP)
-        {
-            FastqWriter writer = mReadGroupWriters.get(first.getReadGroup().getReadGroupId());
-
-            if(writer != null)
-                writer.processReadPairSync(first, second);
-        }
-        else
-        {
-            mThreadedWriters.get(0).processReadPairSync(first, second);
-        }
+        FastqWriter writer = getWriter(first);
+        writer.processReadPairSync(first, second);
     }
 
     public void processUnpairedRead(final SAMRecord read, @Nullable final FastqWriter fastqWriter)
@@ -98,28 +90,29 @@ public class FastqWriterCache
             return;
         }
 
-        if(mConfig.SplitMode == FileSplitMode.READ_GROUP)
-        {
-            FastqWriter writer = mReadGroupWriters.get(read.getReadGroup().getReadGroupId());
+        FastqWriter writer = getWriter(read);
+        writer.processUnpairedRead(read);
+    }
 
-            if(writer != null)
-                writer.processUnpairedRead(read);
-        }
-        else
-        {
-            mThreadedWriters.get(0).processUnpairedRead(read);
-        }
+    public void writeUnpairedRead(final SAMRecord read)
+    {
+        FastqWriter writer = getWriter(read);
+        writer.writeUnpairedRead(read);
+    }
+
+    private FastqWriter getWriter(final SAMRecord read)
+    {
+        return mConfig.SplitMode == FileSplitMode.READ_GROUP ?
+                mReadGroupWriters.get(read.getReadGroup().getReadGroupId()) : mWriters.get(0);
+    }
+
+    public void writeUnpairedReads()
+    {
+        mWriters.forEach(x -> x.writeUnpairedReads());
     }
 
     public void close()
     {
-        if(!mThreadedWriters.isEmpty())
-        {
-            mThreadedWriters.forEach(x -> x.close());
-        }
-        else
-        {
-            mReadGroupWriters.values().forEach(x -> x.close());
-        }
+        mWriters.forEach(x -> x.close());
     }
 }

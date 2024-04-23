@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.bamtools.tofastq;
 
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 
 import java.io.File;
@@ -52,9 +53,13 @@ public class UnmappedReads
             }
         }
 
-        mUnmatchedReads.values().forEach(x -> mWriterCache.processUnpairedRead(x, mThreadedWriter));
+        if(!mUnmatchedReads.isEmpty())
+        {
+            BT_LOGGER.info("writing {} unpaired & unmapped reads", mUnmatchedReads.size());
+            mUnmatchedReads.values().forEach(x -> mWriterCache.writeUnpairedRead(x));
 
-        mUnmatchedReads.clear();
+            mUnmatchedReads.clear();
+        }
     }
 
     private void processSamRecord(final SAMRecord read)

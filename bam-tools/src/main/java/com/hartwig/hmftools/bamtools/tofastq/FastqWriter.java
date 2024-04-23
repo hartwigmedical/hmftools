@@ -89,7 +89,27 @@ public class FastqWriter
 
     public synchronized void processUnpairedRead(final SAMRecord read)
     {
+        // cache until all paired reads have been written
         mUnpairedReads.add(read);
+    }
+
+    public void writeUnpairedRead(final SAMRecord read)
+    {
+        writeFastqRecord(read, mWriterR1);
+    }
+
+    public void writeUnpairedReads()
+    {
+        if(!mUnpairedReads.isEmpty())
+        {
+            for(SAMRecord read : mUnpairedReads)
+            {
+                // write these to the first fastq file only
+                writeFastqRecord(read, mWriterR1);
+            }
+
+            mUnpairedReads.clear();
+        }
     }
 
     private void writeFastqRecord(final SAMRecord read, BufferedWriter writer)
@@ -151,15 +171,6 @@ public class FastqWriter
 
     public void close()
     {
-        if(!mUnpairedReads.isEmpty())
-        {
-            for(SAMRecord read : mUnpairedReads)
-            {
-                // write these to the first fastq file only
-                writeFastqRecord(read, mWriterR1);
-            }
-        }
-
         closeBufferedWriter(mWriterR1);
         closeBufferedWriter(mWriterR2);
     }

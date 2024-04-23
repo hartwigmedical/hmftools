@@ -79,6 +79,8 @@ public class BamToFastq
 
         BT_LOGGER.info("all partition tasks complete");
 
+        mWriterCache.writeUnpairedReads();
+
         List<SAMRecord> unmatchedReads = Lists.newArrayList();
 
         for(PartitionData partitionData : partitionDataStore.partitions())
