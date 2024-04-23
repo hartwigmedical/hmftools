@@ -5,26 +5,23 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.tofastq.FastqConfig.registerConfig;
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 public class BamToFastq
 {
@@ -82,16 +79,25 @@ public class BamToFastq
 
         BT_LOGGER.info("all partition tasks complete");
 
-        int totalUnwrittenReads = 0;
+        List<SAMRecord> unmatchedReads = Lists.newArrayList();
 
         for(PartitionData partitionData : partitionDataStore.partitions())
         {
-            totalUnwrittenReads += partitionData.unmatchedReadsMap().size();
+            unmatchedReads.addAll(partitionData.unmatchedReads());
         }
 
-        if(totalUnwrittenReads > 0)
+        if(!unmatchedReads.isEmpty())
         {
-            BT_LOGGER.info("unmatched read count {}", totalUnwrittenReads);
+            // TO-DO: what to do with these? suggest a bug somewhere
+
+            BT_LOGGER.info("unmatched read count {}", unmatchedReads.size());
+
+            for(int i = 0; i < unmatchedReads.size(); ++i)
+            {
+                SAMRecord read = unmatchedReads.get(i);
+
+                BT_LOGGER.warn("unmatched read: {}", readToString(read));
+            }
         }
 
         PerformanceCounter combinedPerfCounter = partitionReaders.get(0).perfCounter();
@@ -108,6 +114,8 @@ public class BamToFastq
 
         // free up any processing state
         partitionReaders.clear();
+
+        System.gc();
 
         processUnmappedReads();
 

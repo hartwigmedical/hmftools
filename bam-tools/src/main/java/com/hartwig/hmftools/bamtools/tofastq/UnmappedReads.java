@@ -53,6 +53,8 @@ public class UnmappedReads
         }
 
         mUnmatchedReads.values().forEach(x -> mWriterCache.processUnpairedRead(x, mThreadedWriter));
+
+        mUnmatchedReads.clear();
     }
 
     private void processSamRecord(final SAMRecord read)

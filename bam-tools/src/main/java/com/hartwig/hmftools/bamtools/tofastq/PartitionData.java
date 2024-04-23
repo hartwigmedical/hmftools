@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -40,6 +41,8 @@ public class PartitionData
         mLockAcquireTime = 0;
         mPerfChecks = false;
     }
+
+    public List<SAMRecord> unmatchedReads() { return mUnmatchedPairs.values().stream().collect(Collectors.toList()); }
 
     private static final String CHR_PARTITION_DELIM = "_";
 
