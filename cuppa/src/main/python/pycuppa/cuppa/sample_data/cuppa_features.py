@@ -18,8 +18,7 @@ class CuppaFeaturesPaths(pd.Series, LoggerMixin):
     def __init__(self, paths: dict[str, str] | pd.Series):
         super().__init__(paths)
 
-    BASENAMES_OLD = dict(
-        #metadata="cup_ref_sample_data.csv",
+    PATTERNS_OLD = dict(
         gen_pos="cup_ref_sample_pos_freq_counts.csv",
         snv96="cup_ref_snv_counts.csv",
         driver_fusion_virus="cup_ref_cohort_feature_data.csv",
@@ -31,71 +30,65 @@ class CuppaFeaturesPaths(pd.Series, LoggerMixin):
         alt_sj="cup_ref_alt_sj_sample.csv",
     )
 
-    BASENAMES_NEW = dict(
-        gen_pos="gen_pos.tsv",
-        snv96="snv96.tsv",
-        event="event.tsv",
-        sig="sig.tsv",
+    PATTERNS_NEW = dict(
+        snv="cuppa_data.cohort.snv.*.tsv",
+        sv="cuppa_data.cohort.sv.*.tsv",
+        trait="cuppa_data.cohort.sample_trait.*.tsv",
+        driver_fusion_virus="cuppa_data.cohort.feature.*.tsv",
 
-        gene_exp="gene_exp.tsv",
-        alt_sj="alt_sj.tsv",
+        gene_exp="cuppa_data.cohort.gene_exp.*.tsv",
+        alt_sj="cuppa_data.cohort.alt_sj.*.tsv",
     )
 
-    OPTIONAL_BASENAME_KEYS = ("gene_exp", "alt_sj")
+    OPTIONAL_PATTERN_KEYS = ("gene_exp", "alt_sj")
+
+    @staticmethod
+    def find_files_in_dir_by_pattern(directory: str, pattern: str) -> pd.Series:
+        files = pd.Series(os.listdir(directory))
+        matched_files = files[files.str.match(pattern)]
+        return matched_files
 
     @classmethod
     def from_dir(
         cls,
         directory: str,
-        basenames_mode: Literal["old", "new"] = "new"
+        file_format: Literal["old", "new"] = "new"
     ) -> "CuppaFeaturesPaths":
 
-        if basenames_mode == "new":
-            basenames_expected = cls.BASENAMES_NEW
-        elif basenames_mode == "old":
-            basenames_expected = cls.BASENAMES_OLD
+        logger = cls.get_class_logger(cls)
+
+        if file_format == "new":
+            patterns_expected = cls.PATTERNS_NEW
+        elif file_format == "old":
+            patterns_expected = cls.PATTERNS_OLD
         else:
-            cls.get_class_logger(cls).error("`basenames_mode` must be 'old' or 'new'")
+            cls.get_class_logger(cls).error("`file_format` must be 'old' or 'new'")
             raise ValueError
 
-        basenames = {}
-        basenames_missing = {}
+        patterns_missing = {}
         paths = {}
 
-        for key, basename in basenames_expected.items():
+        for key, pattern in patterns_expected.items():
 
-            basename_gz = basename + ".gz"
-            path = os.path.join(directory, basename_gz)
-            if os.path.exists(path):
-                basenames[key] = basename_gz
-                paths[key] = path
-                continue
+            matched_files = cls.find_files_in_dir_by_pattern(directory, pattern)
 
-            path = os.path.join(directory, basename)
-            if os.path.exists(path):
-                basenames[key] = basename
-                paths[key] = path
-                continue
+            if len(matched_files) == 0:
+                patterns_missing[key] = pattern
 
-            basenames_missing[key] = basename
+                if key in cls.OPTIONAL_PATTERN_KEYS:
+                    logger.warning("Missing optional input file type '%s' with pattern '%s'" % (key, pattern))
+                else:
+                    logger.error("Missing required input file type '%s' with pattern '%s'" % (key, pattern))
 
-        if len(basenames_missing)==0:
-            return CuppaFeaturesPaths(paths)
+            if len(matched_files) > 1:
+                logger.warning("Pattern '%s' matched multiple files. Using the first: %s" % (pattern, ', '.join(matched_files)))
 
+            matched_file = os.path.join(directory, matched_files.iloc[0])
 
-        required_basenames_missing = {}
-        logger = cls.get_class_logger(cls)
-        for key, basename in basenames_missing.items():
+            paths[key] = matched_file
 
-            if key in cls.OPTIONAL_BASENAME_KEYS:
-                logger.warning("Missing optional input file for %s: %s" % (key, basename))
-                continue
-
-            logger.error("Missing required input file for %s: %s" % (key, basename))
-            required_basenames_missing[key] = basename
-
-        if len(required_basenames_missing) > 0:
-            logger.info("Could not load paths to features. Maybe set basenames_mode='old'?")
+        if len(patterns_missing) > 0:
+            logger.info("Could not load paths to features. If using old features format, use `file_format='old'`")
             raise Exception
 
         return CuppaFeaturesPaths(paths)
@@ -201,11 +194,11 @@ class FeatureLoaderNew(LoggerMixin):
         self.excl_chroms = excl_chroms
         self.verbose = verbose
 
-    REQUIRED_COLS = ["Source","Category","Key","Value"]
+    INDEX_COLS = ["Source", "Category", "Key"]
 
     def load_file(self) -> pd.DataFrame:
         df = pd.read_table(self.path)
-        check_required_columns(df, self.REQUIRED_COLS)
+        check_required_columns(df, self.INDEX_COLS)
 
         if self.verbose:
             self.logger.info("Loaded file from: " + self.path)
