@@ -159,9 +159,6 @@ public class PartitionReader extends Thread
         BT_LOGGER.debug("partition({}) complete, reads(local={} remote={})",
                 mCurrentRegion, mPartitionLocalCount, mPartitionRemoteCount);
 
-        if(mConfig.PerfDebug)
-            mCurrentPartitionData.logCacheCounts();
-
         mPartitionLocalCount = 0;
         mPartitionRemoteCount = 0;
     }

@@ -100,21 +100,7 @@ public class PartitionData
 
         mLastCacheCount = cacheCount;
 
-        BT_LOGGER.debug("partition({}) unmatchedReads({})", mChrPartition, mUnmatchedPairs.size());
-    }
-
-    public void logCacheCounts()
-    {
-        try
-        {
-            acquireLock();
-
-            BT_LOGGER.debug("partition({}) unmatchedReads({})", mChrPartition, mUnmatchedPairs.size());
-        }
-        finally
-        {
-            mLock.unlock();
-        }
+        BT_LOGGER.debug("partition({}) cached unmatchedReads({})", mChrPartition, mUnmatchedPairs.size());
     }
 
     private void acquireLock()
