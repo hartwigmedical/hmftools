@@ -159,7 +159,7 @@ class MockTrainingDataBuilder(LoggerMixin):
     def load_features(self) -> CuppaFeatures:
         self.logger.info("Loading features from: " + self.features_dir)
 
-        features_paths = CuppaFeaturesPaths.from_dir(self.features_dir, basenames_mode="old")
+        features_paths = CuppaFeaturesPaths.from_dir(self.features_dir, file_format="old")
 
         features_loader = FeatureLoaderOld(
             paths = features_paths,

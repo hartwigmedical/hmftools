@@ -141,7 +141,7 @@ class TrainingRunner(LoggerMixin):
             ## TODO: add DNA and RNA sample selection
 
 
-        paths = CuppaFeaturesPaths.from_dir(self.features_path, basenames_mode="old")
+        paths = CuppaFeaturesPaths.from_dir(self.features_path, file_format="old")
 
         loader = FeatureLoaderOld(
             paths=paths,
