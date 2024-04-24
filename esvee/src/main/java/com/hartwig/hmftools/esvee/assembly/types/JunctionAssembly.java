@@ -276,7 +276,15 @@ public class JunctionAssembly
         else
         {
             readIndexRange = new int[] { 0, read.getBases().length - 1 }; // take the whole read for ref-side reads
+
+            readJunctionIndex = INVALID_INDEX;
+
+            /*
             readJunctionIndex = read.getReadIndexAtReferencePosition(mJunction.Position, false);
+
+            if(readJunctionIndex == INVALID_INDEX)
+                return;
+            */
 
             if(mJunction.isForward())
             {
@@ -406,7 +414,17 @@ public class JunctionAssembly
 
         int baseOffset = isForwardJunction ? refBaseExtensionDistance : 0;
 
-        int refBaseOffset = refBaseAssembly != null && isForwardJunction ? 0 : extensionLength();
+        int refBaseOffset = 0;
+
+        if(refBaseAssembly != null && isForwardJunction)
+        {
+            // skip over bases which weren't supported by reads
+            refBaseOffset = refBaseAssembly.baseLength() - refBaseAssembly.validRefBaseLength();
+        }
+        else
+        {
+            refBaseOffset = extensionLength();
+        }
 
         mBases = new byte[newBaseLength];
         mBaseQuals = new byte[newBaseLength];
@@ -423,8 +441,9 @@ public class JunctionAssembly
             {
                 if(i < baseOffset)
                 {
-                    if(refBaseAssembly != null && i < refBaseAssembly.bases().length)
-                        mBases[i] = refBaseAssembly.bases()[i];
+                    int refBaseIndex = i + refBaseOffset;
+                    if(refBaseAssembly != null && refBaseIndex < refBaseAssembly.bases().length)
+                        mBases[i] = refBaseAssembly.bases()[refBaseIndex];
                     else
                         mBases[i] = 0;
 
@@ -482,8 +501,6 @@ public class JunctionAssembly
             // once added, clear the cached data read
             support.clearCachedRead();
         }
-
-        // use the ref assembly to fill in any missing bases
 
         List<int[]> emptyBaseRanges = findUnsetBases(mBases);
 

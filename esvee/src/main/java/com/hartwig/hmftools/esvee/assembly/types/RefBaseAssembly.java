@@ -162,7 +162,7 @@ public class RefBaseAssembly
 
         while(index >= 0 && index < mBases.length)
         {
-            if(mBases[index] != 0)
+            if(mBases[index] != 0 && mBaseQuals[index] >= LOW_BASE_QUAL_THRESHOLD)
                 ++validRefBaseCount;
             else
                 break;
@@ -173,7 +173,11 @@ public class RefBaseAssembly
                 ++index;
         }
 
-        return validRefBaseCount;
+        // and cap at the max observed read's position
+        int maxSupportedLength = mJunction.isForward() ?
+                mJunction.Position - mMinAlignedPosition + 1 : mMaxAlignedPosition - mJunction.Position;
+
+        return min(maxSupportedLength, validRefBaseCount);
     }
 
     private int[] getReadAssemblyStartIndices(final Read read)

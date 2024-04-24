@@ -196,7 +196,7 @@ public class AssemblyConfig
         DecoyGenome = configBuilder.getValue(DECOY_GENOME);
 
         AlignmentFile = AlignmentCache.filename(configBuilder);
-        RunAlignment = configBuilder.hasFlag(RUN_ALIGNMENT) || !AlignmentFile.isEmpty();
+        RunAlignment = configBuilder.hasFlag(RUN_ALIGNMENT) || AlignmentFile != null;
 
         if(RunAlignment || DecoyGenome != null)
             loadAlignerLibrary(null); // or load path from config
