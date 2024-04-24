@@ -1,15 +1,17 @@
 package com.hartwig.hmftools.bamtools.tofastq;
 
-import static java.lang.Math.abs;
-
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.BamSlicer;
+
+import org.apache.logging.log4j.Level;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
@@ -18,6 +20,8 @@ import htsjdk.samtools.SamReaderFactory;
 
 public class UnmappedReads
 {
+    private static final int NUM_READS_PER_MB = 600;
+
     private final FastqConfig mConfig;
     private final FastqWriterCache mWriterCache;
     private final FastqWriter mThreadedWriter;
@@ -41,26 +45,50 @@ public class UnmappedReads
 
     public void run()
     {
-        SamReader samReader = mConfig.BamFile != null ?
-                SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
-
-        BamSlicer bamSlicer = new BamSlicer(0, true, false, false);
-        bamSlicer.setKeepUnmapped();
-
-        try(final SAMRecordIterator iterator = samReader.queryUnmapped())
+        try(SamReader samReader = SamReaderFactory.makeDefault()
+                .referenceSequence(new File(mConfig.RefGenomeFile))
+                .open(new File(mConfig.BamFile)))
         {
-            while(iterator.hasNext())
+            BamSlicer bamSlicer = new BamSlicer(0, true, false, false);
+            bamSlicer.setKeepUnmapped();
+
+            // first we find out how many unmapped reads there are, and then calculate how many
+            // passes we need
+            int numUnmappedReads = 0;
+            try(final SAMRecordIterator iterator = samReader.queryUnmapped())
             {
-                processSamRecord(iterator.next());
+                while(iterator.hasNext())
+                {
+                    iterator.next();
+                    ++numUnmappedReads;
+                }
+            }
+            int numPasses = calcNumPassesRequired(numUnmappedReads);
+
+            // now we do the passes
+            for(int i = 0; i < numPasses; ++i)
+            {
+                try(final SAMRecordIterator iterator = samReader.queryUnmapped())
+                {
+                    while(iterator.hasNext())
+                    {
+                        processSamRecord(iterator.next(), numPasses, i);
+                    }
+                }
+
+                if(!mUnmatchedReads.isEmpty())
+                {
+                    BT_LOGGER.info("writing {} unmapped & unpaired reads", mUnmatchedReads.size());
+                    mUnmatchedReads.values().forEach(mWriterCache::writeUnpairedRead);
+                    mUnmatchedReads.clear();
+                }
+
+                BT_LOGGER.printf(Level.INFO, "pass #%d, processed %,d unmapped reads", i + 1, mUnmappedReadCount);
             }
         }
-
-        if(!mUnmatchedReads.isEmpty())
+        catch(IOException e)
         {
-            BT_LOGGER.info("writing {} unmapped & unpaired reads", mUnmatchedReads.size());
-            mUnmatchedReads.values().forEach(x -> mWriterCache.writeUnpairedRead(x));
-
-            mUnmatchedReads.clear();
+            throw new UncheckedIOException(e);
         }
 
         if(mUnmappedReadCount > 0)
@@ -69,15 +97,23 @@ public class UnmappedReads
         }
     }
 
-    private static final int LOG_COUNT = 100_000;
+    private static final int LOG_COUNT = 1_000_000;
 
-    private void processSamRecord(final SAMRecord read)
+    private void processSamRecord(final SAMRecord read, int numTotalPasses, int passIndex)
     {
-        if(read.getSupplementaryAlignmentFlag() || read.isSecondaryAlignment())
+        if(read.isSecondaryOrSupplementary())
             return;
 
         if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // unexpected
             return;
+
+        // use the hashcode of the read name to decide if we need to process it now
+        // this way we limit the number of reads we process to avoid running out of
+        // memory
+        if((read.getReadName().hashCode() % numTotalPasses) != passIndex)
+        {
+            return;
+        }
 
         ++mUnmappedReadCount;
         SAMRecord mate = mUnmatchedReads.remove(read.getReadName());
@@ -90,12 +126,29 @@ public class UnmappedReads
 
         mUnmatchedReads.put(read.getReadName(), read);
 
-        int cacheDiff = abs(mLastCachedCount - mUnmatchedReads.size());
+        int cacheDiff = Math.abs(mLastCachedCount - mUnmatchedReads.size());
 
         if(cacheDiff >= LOG_COUNT)
         {
             mLastCachedCount = mUnmatchedReads.size();
-            BT_LOGGER.debug("unmapped read cache({}), processed({})", mUnmatchedReads.size(), mUnmappedReadCount);
+            BT_LOGGER.printf(Level.DEBUG, "unmapped read cache(%,d), processed(%,d)", mUnmatchedReads.size(), mUnmappedReadCount);
         }
+    }
+
+    // in order to avoid running out of memory, we want to limit the number of reads we process each time
+    // depending on how much memory we have.
+    static int calcNumPassesRequired(int numUnmappedReads)
+    {
+        int maxMemoryMB = (int)(Runtime.getRuntime().maxMemory() / (1024 * 1024));
+
+        // we need about 1MB per 600 reads
+        int numPasses = Math.max(numUnmappedReads / (maxMemoryMB * NUM_READS_PER_MB), 1);
+
+        int numReadsPerPass = numUnmappedReads / numPasses;
+
+        BT_LOGGER.printf(Level.INFO, "found %,d unmapped reads, maxMem(%,dMB), num passes(%d), num reads per pass(%,d)",
+                numUnmappedReads, maxMemoryMB, numPasses, numReadsPerPass);
+
+        return numPasses;
     }
 }

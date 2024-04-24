@@ -118,7 +118,7 @@ public class FastqWriter
         {
             writer.write('@');
             writer.write(read.getReadName());
-            writer.newLine();
+            writer.write('\n'); // must use this instead of newline, otherwise would write \r\n in windows
 
             String readBases = read.getReadString();
             if(read.getReadNegativeStrandFlag())
@@ -146,10 +146,10 @@ public class FastqWriter
             }
 
             writer.write(readBases);
-            writer.newLine();
+            writer.write('\n');
 
             writer.write('+');
-            writer.newLine();
+            writer.write('\n');
 
             String baseQuals = read.getBaseQualityString();
             if(read.getReadNegativeStrandFlag())
@@ -160,7 +160,7 @@ public class FastqWriter
             }
 
             writer.write(baseQuals);
-            writer.newLine();
+            writer.write('\n');
         }
         catch(IOException e)
         {
