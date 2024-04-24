@@ -98,7 +98,7 @@ public class DisruptionData implements ComparableItem
         if(!otherSv.Breakend.gene().equals(Breakend.gene()))
             return false;
 
-        if(mCheckTranscript && !otherSv.Breakend.transcriptId().equals(Breakend.transcriptId()))
+        if((otherSv.mCheckTranscript || mCheckTranscript) && !otherSv.Breakend.transcriptId().equals(Breakend.transcriptId()))
             return false;
 
         return true;

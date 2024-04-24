@@ -120,7 +120,7 @@ public class DisruptionComparer implements ItemComparer
                         var.startChromosome(), var.startPosition(), sourceName, mConfig.RequiresLiftover, mConfig.LiftoverCache);
                 GenomePositionImpl comparisonEndGenomePosition = determineComparisonGenomePosition(
                         var.endChromosome(), var.endPosition(), sourceName, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-                boolean checkTranscript = mConfig.AlternateTranscriptDriverGenes.contains(breakend.gene());
+                boolean checkTranscript = mConfig.AlternateTranscriptDriverGenes.contains(breakend.gene()) || !breakend.canonical();
                 DisruptionData disruptionData =
                         new DisruptionData(var, breakend, comparisonStartGenomePosition, comparisonEndGenomePosition, checkTranscript);
                 items.add(disruptionData);
