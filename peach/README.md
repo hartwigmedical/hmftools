@@ -234,90 +234,55 @@ For details on non-standard situations, see the more detailed subsections of the
 Suppose that the config contains the following variants and haplotypes for the fictional gene FAKE,
 and that FAKE is the only gene in the config.
 
-| Rs Id | Reference Allele V37 | Reference Allele V38 | V38 Annotation for Reference Sequence Difference |
-|-------|----------------------|----------------------|--------------------------------------------------|
-| rs1   | A                    | A                    | N/A                                              |
-| rs2   | TA                   | GC                   | c.6543GC>TA                                      |
-| rs3   | GG                   | GG                   | N/A                                              |
-
-| Haplotype      | Variants (Rs Id: Variant Allele wrt v38) |
-|----------------|------------------------------------------|
-| *1 (wild type) | None                                     |
-| *2             | rs1: T                                   |
-| *3             | rs2: TA                                  |
-| *4             | rs3: G                                   |
-| *5             | rs1: T, rs3: G                           |
+| gene | haplotype | default | wildType | events                              |
+|------|-----------|---------|----------|-------------------------------------|
+| FAKE | *2        | true    | false    | VAR_chr1_400_T_C                    |
+| FAKE | *1        | false   | true     | VAR_chr1_100_A_T                    |
+| FAKE | *3        | false   | false    | VAR_chr1_100_A_T;VAR_chr1_200_GC_TA |
+| FAKE | *4        | false   | false    | VAR_chr1_300_GG_G                   |
+| FAKE | *5        | false   | false    | VAR_chr1_100_A_T;VAR_chr1_300_GG_G  |
 
 #### No Calls
-If there are no calls wrt v37 in the VCF, then the dual calls are:
-
-| Rs Id | Allele1 | Allele2 | Variant Annotation V37 | Filter V37 | Variant Annotation V38 | Filter V38    |
-|-------|---------|---------|------------------------|------------|------------------------|---------------|
-| rs1   | A       | A       | REF_CALL               | NO_CALL    | REF_CALL               | NO_CALL       |
-| rs2   | TA      | TA      | REF_CALL               | NO_CALL    | c.6543GC>TA            | INFERRED_PASS |
-| rs3   | GG      | GG      | REF_CALL               | NO_CALL    | REF_CALL               | NO_CALL       |
-
-The only valid haplotype combination that explains these variants is *3_HOM,
-so this is the haplotype combination that is called for FAKE.
+If there are no relevant events called, then the only valid haplotype combination that explains these variants is `(*2,2)`.
+This is automatically also the best haplotype combination that is called for FAKE.
 
 #### Homozygous Wild Type
-Suppose that the v37 calls are the following:
+Suppose that the called events are the following:
 
-| Rs Id | Allele1 | Allele2 | Variant Annotation V37 | Filter V37 |
-|-------|---------|---------|------------------------|------------|
-| rs1   | A       | A       | c.8483A>T              | PASS       |
-| rs2   | GC      | GC      | c.6543TA>GC            | PASS       |
-| rs3   | GG      | GG      | c.4838GG>G             | PASS       |
+| events             | count |
+|--------------------|-------|
+| VAR_chr1_100_A_T   | 2     |
+| VAR_chr1_200_GC_TA | 0     |
+| VAR_chr1_300_GG_G  | 0     |
+| VAR_chr1_400_T_C   | 1     |
 
-In this case, the dual calls are:
-
-| Rs Id | Allele1 | Allele2 | Variant Annotation V37 | Filter V37 | Variant Annotation V38 | Filter V38 |
-|-------|---------|---------|------------------------|------------|------------------------|------------|
-| rs1   | A       | A       | REF_CALL               | PASS       | REF_CALL               | PASS       |
-| rs2   | GC      | GC      | c.6543TA>GC            | PASS       | REF_CALL               | PASS       |
-| rs3   | GG      | GG      | REF_CALL               | PASS       | REF_CALL               | PASS       |
-
-The only valid haplotype combination is *1_HOM, so this haplotype combination is called for FAKE.
+The call at position 400 is ignored. 
+The only haplotype combination that can explain the two variants at position 100 by themselves is `(*1,2)`.
+This is automatically also the best haplotype combination that is called for FAKE.
 
 #### Heterozygous Wild Type
-Suppose that the v37 calls are the following:
+Suppose that the called events are the following:
 
-| Rs Id | Allele1 | Allele2 | Variant Annotation V37 | Filter V37 |
-|-------|---------|---------|------------------------|------------|
-| rs1   | A       | A       | c.8483A>T              | PASS       |
-| rs2   | TA      | GC      | c.6543TA>GC            | PASS       |
-| rs3   | GG      | GG      | c.4838GG>G             | PASS       |
-
-The dual calls are:
-
-| Rs Id | Allele1 | Allele2 | Variant Annotation V37 | Filter V37 | Variant Annotation V38 | Filter V38 |
-|-------|---------|---------|------------------------|------------|------------------------|------------|
-| rs1   | A       | A       | REF_CALL               | PASS       | REF_CALL               | PASS       |
-| rs2   | GC      | TA      | c.6543TA>GC            | PASS       | c.6543GC>TA            | PASS       |
-| rs3   | GG      | GG      | REF_CALL               | PASS       | REF_CALL               | PASS       |
-
-The only valid haplotype combination for FAKE is *3_HET/*1_HET, so this haplotype combination is called.
+| events             | count |
+|--------------------|-------|
+| VAR_chr1_100_A_T   | 2     |
+| VAR_chr1_200_GC_TA | 1     |
+| VAR_chr1_300_GG_G  | 0     |
+| VAR_chr1_400_T_C   | 0     |
+The only haplotype combination that can explain the two variants at position 100 by themselves is `(*1,1);(*3,1)`.
+This is automatically also the best haplotype combination that is called for FAKE.
 
 #### Multiple Valid Haplotypes
-Suppose that the v37 calls are the following:
+Suppose that the called events are the following:
 
-| Rs Id | Allele1 | Allele2 | Variant Annotation V37 | Filter V37 |
-|-------|---------|---------|------------------------|------------|
-| rs1   | A       | T       | c.8483A>T              | PASS       |
-| rs2   | GC      | GC      | c.6543TA>GC            | PASS       |
-| rs3   | G       | G       | c.4838GG>G             | PASS       |
+| events             | count |
+|--------------------|-------|
+| VAR_chr1_100_A_T   | 2     |
+| VAR_chr1_200_GC_TA | 0     |
+| VAR_chr1_300_GG_G  | 2     |
+| VAR_chr1_400_T_C   | 0     |
 
-The resulting dual calls are:
 
-| Rs Id | Allele1 | Allele2 | Variant Annotation V37 | Filter V37 | Variant Annotation V38 | Filter V38 |
-|-------|---------|---------|------------------------|------------|------------------------|------------|
-| rs1   | A       | T       | c.8483A>T              | PASS       | c.8483A>T              | PASS       |
-| rs2   | GC      | GC      | c.6543TA>GC            | PASS       | REF_CALL               | PASS       |
-| rs3   | G       | G       | c.4838GG>G             | PASS       | c.4838GG>G             | PASS       |
-
-The valid haplotype combinations are *2_HET/*4_HOM and *4_HET/*5_HET.
-These combinations have lengths 3 and 2, respectively, so the second combination is preferred.
-The called haplotype combination for FAKE is *4_HET/*5_HET.
 
 ## Known issues / points for improvement
 TODO: Mention genotype vs variant calling
