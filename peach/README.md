@@ -120,6 +120,7 @@ Name: `[sample_name].peach.haplotypes.all.tsv`
 |------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | gene             | `DPYD`   | Name of gene.                                                                                                                                                               |
 | combination      | `(*1,2)` | Combination of haplotypes that could explain the observed events for this gene. `;` separated list of pairs of haplotype names and number of times the haplotype is called. |
+| count            | `2`      | Number of haplotypes in the combination .                                                                                                                                   |
 | nonWildTypeCount | `0`      | Number of non wild type haplotypes in the combination .                                                                                                                     |
 
 ### Best Haplotypes TSV
@@ -293,7 +294,7 @@ Suppose that the called events are the following:
 
 The possible combinations are `(*5,1);(*2;1)` and `(*1,1);(*4,1)`.
 In both combinations there are two haplotype calls, so the preference comes down to the number of wild-type haplotypes called.
-The best haplotype is therefore `(*1,1);(*4,1)`.
+The best haplotype combination is therefore `(*1,1);(*4,1)`.
 
 ## Known issues / points for improvement
 TODO: Mention genotype vs variant calling

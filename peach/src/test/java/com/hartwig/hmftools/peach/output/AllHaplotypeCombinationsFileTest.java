@@ -13,7 +13,7 @@ import org.junit.Test;
 
 public class AllHaplotypeCombinationsFileTest
 {
-    private static final String EXPECTED_HEADER = "gene\tcombination\tnonWildTypeCount";
+    private static final String EXPECTED_HEADER = "gene\tcombination\tcount\tnonWildTypeCount";
 
     @Test
     public void testEmpty()
@@ -56,11 +56,11 @@ public class AllHaplotypeCombinationsFileTest
         List<String> outputLines = AllHaplotypeCombinationsFile.toLines(geneToHaplotypeAnalysis);
         List<String> expectedLines = List.of(
                 EXPECTED_HEADER,
-                "FAKE1\t(*1,2)\t0",
-                "FAKE2\t(*1,1);(*3,1)\t1",
-                "FAKE2\t(*9,1);(2373C>T,1)\t2",
-                "FAKE2\t(*1,2);(*2,1)\t1",
-                "FAKE3\t(*9,2)\t2"
+                "FAKE1\t(*1,2)\t2\t0",
+                "FAKE2\t(*1,1);(*3,1)\t2\t1",
+                "FAKE2\t(*9,1);(2373C>T,1)\t2\t2",
+                "FAKE2\t(*1,2);(*2,1)\t3\t1",
+                "FAKE3\t(*9,2)\t2\t2"
         );
         assertEquals(expectedLines, outputLines);
     }

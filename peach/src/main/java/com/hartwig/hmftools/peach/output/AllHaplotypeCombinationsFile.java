@@ -45,7 +45,7 @@ public class AllHaplotypeCombinationsFile
     @NotNull
     private static String header()
     {
-        return new StringJoiner(TSV_DELIM).add("gene").add("combination").add("nonWildTypeCount").toString();
+        return new StringJoiner(TSV_DELIM).add("gene").add("combination").add("count").add("nonWildTypeCount").toString();
     }
 
     @NotNull
@@ -68,6 +68,7 @@ public class AllHaplotypeCombinationsFile
     {
         return new StringJoiner(TSV_DELIM).add(gene)
                 .add(getHaplotypeCombinationString(combination))
+                .add(Integer.toString(combination.getHaplotypeCount()))
                 .add(Integer.toString(combination.getHaplotypeCountWithout(wildTypeHaplotypeName)))
                 .toString();
     }
