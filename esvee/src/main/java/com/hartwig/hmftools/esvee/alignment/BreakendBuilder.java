@@ -264,7 +264,8 @@ public class BreakendBuilder
 
             if(alignment.sequenceEnd() >= nextAlignment.sequenceStart())
             {
-                homology = HomologyData.determineHomology(alignment, nextAlignment, mRefGenome);
+                String assemblyOverlapBases = mAssemblyAlignment.overlapBases();
+                homology = HomologyData.determineHomology(assemblyOverlapBases, alignment, nextAlignment, mRefGenome);
             }
             else if(alignment.sequenceEnd() < nextAlignment.sequenceStart() - 1)
             {
@@ -272,6 +273,9 @@ public class BreakendBuilder
                 int insertSeqEnd = nextAlignment.sequenceStart();
                 insertedBases = fullSequence.substring(insertSeqStart, insertSeqEnd);
             }
+
+            if(homology != null)
+                breakendPosition += homology.positionOffset();
 
             Breakend breakend = new Breakend(
                     mAssemblyAlignment, alignment.RefLocation.Chromosome, breakendPosition, breakendOrientation, insertedBases, homology);
@@ -286,6 +290,9 @@ public class BreakendBuilder
 
             byte nextOrientation = segmentOrientation(nextAlignment, false);
             int nextPosition = nextAlignment.isForward() ? nextAlignment.RefLocation.start() : nextAlignment.RefLocation.end();
+
+            if(homology != null)
+                nextPosition += homology.positionOffset();
 
             Breakend nextBreakend = new Breakend(
                     mAssemblyAlignment, nextAlignment.RefLocation.Chromosome, nextPosition, nextOrientation, insertedBases, homology);

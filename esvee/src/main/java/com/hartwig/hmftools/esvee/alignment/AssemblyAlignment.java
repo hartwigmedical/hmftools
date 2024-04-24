@@ -61,6 +61,8 @@ public class AssemblyAlignment
     public String fullSequence() { return mFullSequence; }
     public int fullSequenceLength() { return mFullSequenceLength; }
 
+    public String overlapBases() { return mAssemblyLink != null ? mAssemblyLink.overlapBases() : ""; }
+
     public void setOutcome(final AlignmentOutcome outcome)
     {
         mAssemblies.forEach(x -> x.setAlignmentOutcome(outcome));

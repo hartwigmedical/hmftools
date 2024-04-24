@@ -76,25 +76,87 @@ public class AlignmentTest
         AlignData alignmentStart = createAlignment(CHR_1, 100, 150, 0, 50, "51M");
         AlignData alignmentEnd = createAlignment(CHR_1, 100, 150, 51, 100, "50M");
 
-        assertNull(determineHomology(alignmentStart, alignmentEnd, mRefGenome));
 
-        String basesStart = "TTCTAGTGTG";
-        HomologyData homology = determineHomology(basesStart, basesStart, basesStart.length());
+        String assemblyOverlap = "";
+
+        assertNull(determineHomology(assemblyOverlap, alignmentStart, alignmentEnd, mRefGenome));
+
+        String basesStart = "TTCTTCTTCTC";
+        String basesEnd = basesStart;
+        assemblyOverlap = basesStart;
+
+        // test 1: exact match
+        HomologyData homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
         assertNotNull(homology);
         assertEquals(basesStart, homology.Homology);
-        assertEquals(-5, homology.ExactStart);
+        assertEquals(-6, homology.ExactStart);
         assertEquals(5, homology.ExactEnd);
-        assertEquals(0, homology.InexactStart);
-        assertEquals(0, homology.InexactEnd);
+        assertEquals(-6, homology.InexactStart);
+        assertEquals(5, homology.InexactEnd);
+        assertEquals(6, homology.positionOffset());
 
-        String basesEnd = "TTCTAAAAAA";
-
-        homology = determineHomology(basesStart, basesEnd, basesStart.length());
-        assertNotNull(homology);
-        assertEquals("TTCTA", homology.Homology);
-        assertEquals(-2, homology.ExactStart);
-        assertEquals(3, homology.ExactEnd);
+        // test 2: first base now no longer matches
+        basesStart = "GTCTTCTTCTC";
+        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+        assertEquals("", homology.Homology);
+        assertEquals(0, homology.ExactStart);
+        assertEquals(0, homology.ExactEnd);
         assertEquals(0, homology.InexactStart);
+        assertEquals(11, homology.InexactEnd);
+
+        // test 3: first base matches, range of lowest mismatches is 0-1
+        basesStart = "TGCATCTTCTC";
+        assemblyOverlap = "TTCATCTTCTC";
+        basesEnd = assemblyOverlap;
+        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+        assertEquals("T", homology.Homology);
+        assertEquals(-1, homology.ExactStart);
+        assertEquals(0, homology.ExactEnd);
+        assertEquals(-1, homology.InexactStart);
+        assertEquals(10, homology.InexactEnd);
+
+        // test 4: second base has mismatch
+        basesStart = "TTGATCTTCTC";
+        assemblyOverlap = "TTCATCTTCTC";
+        basesEnd = assemblyOverlap;
+        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+        assertEquals("TT", homology.Homology);
+        assertEquals(-1, homology.ExactStart);
+        assertEquals(1, homology.ExactEnd);
+        assertEquals(-1, homology.InexactStart);
+        assertEquals(10, homology.InexactEnd);
+
+        // test 5: min mismatches in range 4-6
+        basesStart = "TTCATCGTCTC";
+        assemblyOverlap = "TTCATCTTCTC";
+        basesEnd = "TTCTTCTTCTC";
+        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+        assertEquals("TTC", homology.Homology);
+        assertEquals(-1, homology.ExactStart);
+        assertEquals(1, homology.ExactEnd);
+        assertEquals(-5, homology.InexactStart);
+        assertEquals(6, homology.InexactEnd);
+
+        // test 6: ref sequences match but have the same difference from the assembly
+        basesStart = "TTCATGTTCTC";
+        assemblyOverlap = "TTCATCTTCTC";
+        basesEnd = basesStart;
+        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+        assertEquals(basesStart, homology.Homology);
+        assertEquals(-6, homology.ExactStart);
+        assertEquals(5, homology.ExactEnd);
+        assertEquals(-6, homology.InexactStart);
+        assertEquals(5, homology.InexactEnd);
+
+        // test 7:
+        basesStart = "TTCATGTTCTC";
+        assemblyOverlap = "TTCATCTTCTC";
+        basesEnd = "TTCATATTCTC";
+        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+        assertEquals("TTCAT", homology.Homology);
+        assertEquals(-6, homology.ExactStart);
+        assertEquals(5, homology.ExactEnd);
+        assertEquals(-6, homology.InexactStart);
         assertEquals(5, homology.InexactEnd);
     }
 
