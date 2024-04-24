@@ -194,15 +194,10 @@ A haplotype can contain multiple variants if these variants have a tendency to b
 In this situation both `(*2A,1);(*5,1)` and `(*2B,1);(*1,1)` are valid haplotype combinations.
 
 In the face of such ambiguity PEACH tries to call the "best" haplotype combination. 
-It prefers combinations of minimum length, 
-where the *length* of a haplotype combination is defined as the total number of non-wild-type haplotypes in the combination 
-if homozygous haplotype calls are counted as 2.
+First, the preference is for the total number of called haplotypes to be as close as possible to the expected value (2).
+Second, wild type haplotype calls are preferred over non-wild type haplotypes calls.
 
-The only valid haplotype combination of length 0 is the homozygous wild type haplotype.
-Valid haplotype combinations of length 1 always include precisely one wild-type and one non-wild-type haplotype call.
-Valid haplotype combinations of length at least 2 do not contain any wild-type haplotype calls
-
-The reasoning behind this preference is that:
+The reasoning behind this second preference is that:
 * the wild type haplotype is the wild type because it is the most common.
 * if a haplotype involving multiple variants is configured, this is done because those variants tend to occur together.
 
@@ -269,10 +264,11 @@ Suppose that the called events are the following:
 | VAR_chr1_200_GC_TA | 1     |
 | VAR_chr1_300_GG_G  | 0     |
 | VAR_chr1_400_T_C   | 0     |
+
 The only haplotype combination that can explain the two variants at position 100 by themselves is `(*1,1);(*3,1)`.
 This is automatically also the best haplotype combination that is called for FAKE.
 
-#### Multiple Valid Haplotypes
+#### Multiple Valid Haplotypes 1
 Suppose that the called events are the following:
 
 | events             | count |
@@ -282,7 +278,22 @@ Suppose that the called events are the following:
 | VAR_chr1_300_GG_G  | 2     |
 | VAR_chr1_400_T_C   | 0     |
 
+The possible combinations are `(*5,2)`, `(*5,1);(*1,1);(*4,1)` and `(*1,2);(*4,2)`. 
+The combination `(*5,2)` is considered to be the best since the total number of haplotypes called is as expected (2).
 
+#### Multiple Valid Haplotypes 2
+Suppose that the called events are the following:
+
+| events             | count |
+|--------------------|-------|
+| VAR_chr1_100_A_T   | 1     |
+| VAR_chr1_200_GC_TA | 0     |
+| VAR_chr1_300_GG_G  | 1     |
+| VAR_chr1_400_T_C   | 0     |
+
+The possible combinations are `(*5,1);(*2;1)` and `(*1,1);(*4,1)`.
+In both combinations there are two haplotype calls, so the preference comes down to the number of wild-type haplotypes called.
+The best haplotype is therefore `(*1,1);(*4,1)`.
 
 ## Known issues / points for improvement
 TODO: Mention genotype vs variant calling

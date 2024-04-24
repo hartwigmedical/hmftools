@@ -8,8 +8,15 @@ import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.collect.ImmutableList;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.peach.data_loader.PanelLoader;
+import com.hartwig.hmftools.peach.event.HaplotypeEvent;
+import com.hartwig.hmftools.peach.event.VariantHaplotypeEvent;
+import com.hartwig.hmftools.peach.haplotype.DefaultHaplotype;
 import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
+import com.hartwig.hmftools.peach.haplotype.NonDefaultHaplotype;
+import com.hartwig.hmftools.peach.panel.GeneHaplotypePanel;
 import com.hartwig.hmftools.peach.panel.HaplotypePanel;
 
 import java.util.ArrayList;
@@ -365,7 +372,7 @@ public class HaplotypeCallerTest
     }
 
     @Test
-    public void testAmbiguousCallingPreferFewerHaplotypes()
+    public void testAmbiguousCallingPreferFewerNonWildTypeHaplotypes()
     {
         HaplotypePanel haplotypePanel = PanelLoader.loadHaplotypePanel(getTestResourcePath("haplotypes.ambiguous.tsv"));
         Map<String, Integer> eventIdToCount = Map.of(
@@ -392,6 +399,48 @@ public class HaplotypeCallerTest
         assertEqualHaplotypeAnalysis(expectedHaplotypeAnalysis, geneToHaplotypeAnalysis.get("FAKE1"));
         assertTrue(expectedHaplotypeAnalysis.hasBestHaplotypeCombination());
         assertEquals(new HaplotypeCombination(Map.of("*2", 1, "*3", 1)), expectedHaplotypeAnalysis.getBestHaplotypeCombination());
+    }
+
+    @Test
+    public void testAmbiguousCallingPreferFewerHaplotypes()
+    {
+        // strictly prefer two non-wild type haplotypes over two wild type and two non-wild type haplotypes.
+        HaplotypeEvent event1 = new VariantHaplotypeEvent(HumanChromosome._1, 100, "A", "C");
+        HaplotypeEvent event2 = new VariantHaplotypeEvent(HumanChromosome._1, 200, "A", "ATT");
+        DefaultHaplotype defaultHaplotype = new DefaultHaplotype("*2", false, ImmutableList.of());
+        ImmutableList<NonDefaultHaplotype> nonDefaultHaplotypes = ImmutableList.of(
+                new NonDefaultHaplotype("*1", true, ImmutableList.of(event1)),
+                new NonDefaultHaplotype("*3", true, ImmutableList.of(event2)),
+                new NonDefaultHaplotype("*4", true, ImmutableList.of(event1, event2))
+        );
+        GeneHaplotypePanel geneHaplotypePanel = new GeneHaplotypePanel(defaultHaplotype, nonDefaultHaplotypes, "*1");
+        HaplotypePanel haplotypePanel = new HaplotypePanel(Map.of("FAKE1", geneHaplotypePanel));
+
+        Map<String, Integer> eventIdToCount = Map.of(
+                event1.id(), 2,
+                event2.id(), 2
+        );
+        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, eventIdToCount);
+
+        HaplotypeAnalysis expectedHaplotypeAnalysis = new HaplotypeAnalysis(
+                Map.of(
+                        "VAR_chr1_100_A_C", 2,
+                        "VAR_chr1_200_A_ATT", 2
+                ),
+                List.of(
+                        new HaplotypeCombination(Map.of("*1", 2, "*3", 2)),
+                        new HaplotypeCombination(Map.of("*1", 1, "*3", 1, "*4", 1)),
+                        new HaplotypeCombination(Map.of("*4", 2))
+                ),
+                "*2",
+                "*1"
+        );
+        assertEquals(1, geneToHaplotypeAnalysis.size());
+        assertTrue(geneToHaplotypeAnalysis.containsKey("FAKE1"));
+
+        assertEqualHaplotypeAnalysis(expectedHaplotypeAnalysis, geneToHaplotypeAnalysis.get("FAKE1"));
+        assertTrue(expectedHaplotypeAnalysis.hasBestHaplotypeCombination());
+        assertEquals(new HaplotypeCombination(Map.of("*4", 2)), expectedHaplotypeAnalysis.getBestHaplotypeCombination());
     }
 
     @Test
