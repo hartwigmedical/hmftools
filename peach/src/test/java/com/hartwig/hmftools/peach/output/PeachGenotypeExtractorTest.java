@@ -12,6 +12,7 @@ import java.util.Map;
 import com.hartwig.hmftools.common.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.peach.HaplotypeAnalysis;
+import com.hartwig.hmftools.peach.PeachQCStatus;
 import com.hartwig.hmftools.peach.data_loader.DrugInfoLoader;
 import com.hartwig.hmftools.peach.data_loader.HaplotypeFunctionLoader;
 import com.hartwig.hmftools.peach.effect.DrugInfo;
@@ -137,7 +138,9 @@ public class PeachGenotypeExtractorTest
                         Map.of("EVENT_DPYD_1", 1),
                         List.of(new HaplotypeCombination(Map.of("*2A", 2))),
                         "*1",
-                        "*1"
+                        "*1",
+                        PeachQCStatus.PASS,
+                        new HaplotypeCombination(Map.of("*2A", 2))
                 )
         );
         geneToHaplotypeAnalysis.put(
@@ -146,7 +149,9 @@ public class PeachGenotypeExtractorTest
                         Map.of("EVENT_UGT1A1_1", 1),
                         List.of(new HaplotypeCombination(Map.of("*28", 1, "*1", 1))),
                         "*1",
-                        "*1"
+                        "*1",
+                        PeachQCStatus.PASS,
+                        new HaplotypeCombination(Map.of("*28", 1, "*1", 1))
                 )
         );
 
@@ -219,7 +224,9 @@ public class PeachGenotypeExtractorTest
                 new HashMap<>(),
                 List.of(new HaplotypeCombination(Map.of("*1", 2))),
                 "*1",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*1", 2))
         );
         HaplotypeAnalysis fake2HaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of("EVENT_1", 1, "EVENT_3", 2),
@@ -228,13 +235,17 @@ public class PeachGenotypeExtractorTest
                         new HaplotypeCombination(Map.of("*2", 1, "*5", 1))
                 ),
                 "*9",
-                "*1"
+                "*1",
+                PeachQCStatus.FAIL_NO_UNIQUE_BEST_COMBINATION_FOUND,
+                null
         );
         HaplotypeAnalysis fake3HaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of("EVENT_1", 2),
                 List.of(new HaplotypeCombination(Map.of("*4", 1, "*3", 1))),
                 "*9",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*4", 1, "*3", 1))
         );
         return Map.of("FAKE3", fake3HaplotypeAnalysis, "FAKE2", fake2HaplotypeAnalysis, "FAKE1", fake1HaplotypeAnalysis);
     }

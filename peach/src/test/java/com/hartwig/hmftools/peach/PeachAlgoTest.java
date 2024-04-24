@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.peach.panel.TestHaplotypePanelFactory.createD
 
 import static junit.framework.TestCase.assertEquals;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
@@ -28,7 +27,7 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class HaplotypeCallerTest
+public class PeachAlgoTest
 {
     @Test
     public void testNoPanelOrEvents()
@@ -48,13 +47,17 @@ public class HaplotypeCallerTest
                 new HashMap<>(),
                 List.of(new HaplotypeCombination(Map.of("*9A", 2))),
                 "*9A",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*9A", 2))
         );
         HaplotypeAnalysis expectedUgt1A1HaplotypeAnalysis = new HaplotypeAnalysis(
                 new HashMap<>(),
                 List.of(new HaplotypeCombination(Map.of("*1", 2))),
                 "*1",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*1", 2))
         );
         assertEquals(2, geneToHaplotypeAnalysis.size());
         assertTrue(geneToHaplotypeAnalysis.containsKey("DPYD"));
@@ -78,13 +81,17 @@ public class HaplotypeCallerTest
                 eventIdToCount,
                 List.of(new HaplotypeCombination(Map.of("*9A", 2))),
                 "*9A",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*9A", 2))
         );
         HaplotypeAnalysis expectedUgt1A1HaplotypeAnalysis = new HaplotypeAnalysis(
                 new HashMap<>(),
                 List.of(new HaplotypeCombination(Map.of("*1", 2))),
                 "*1",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*1", 2))
         );
         assertEquals(2, geneToHaplotypeAnalysis.size());
         assertTrue(geneToHaplotypeAnalysis.containsKey("DPYD"));
@@ -106,13 +113,17 @@ public class HaplotypeCallerTest
                 eventIdToCount,
                 new ArrayList<>(),
                 "*9A",
-                "*1"
+                "*1",
+                PeachQCStatus.FAIL_EVENT_WITH_UNKNOWN_COUNT,
+                null
         );
         HaplotypeAnalysis expectedUgt1A1HaplotypeAnalysis = new HaplotypeAnalysis(
                 new HashMap<>(),
                 List.of(new HaplotypeCombination(Map.of("*1", 2))),
                 "*1",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*1", 2))
         );
         assertEquals(2, geneToHaplotypeAnalysis.size());
         assertTrue(geneToHaplotypeAnalysis.containsKey("DPYD"));
@@ -134,13 +145,17 @@ public class HaplotypeCallerTest
                 eventIdToCount,
                 new ArrayList<>(),
                 "*9A",
-                "*1"
+                "*1",
+                PeachQCStatus.FAIL_EVENT_WITH_UNKNOWN_COUNT,
+                null
         );
         HaplotypeAnalysis expectedUgt1A1HaplotypeAnalysis = new HaplotypeAnalysis(
                 new HashMap<>(),
                 List.of(new HaplotypeCombination(Map.of("*1", 2))),
                 "*1",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*1", 2))
         );
         assertEquals(2, geneToHaplotypeAnalysis.size());
         assertTrue(geneToHaplotypeAnalysis.containsKey("DPYD"));
@@ -161,13 +176,17 @@ public class HaplotypeCallerTest
                 Map.of("VAR_chr1_98348885_G_A", 2),
                 List.of(new HaplotypeCombination(Map.of("*1", 2))),
                 "*9A",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*1", 2))
         );
         HaplotypeAnalysis expectedUgt1A1HaplotypeAnalysis = new HaplotypeAnalysis(
                 new HashMap<>(),
                 List.of(new HaplotypeCombination(Map.of("*1", 2))),
                 "*1",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*1", 2))
         );
         assertEquals(2, geneToHaplotypeAnalysis.size());
         assertTrue(geneToHaplotypeAnalysis.containsKey("DPYD"));
@@ -200,7 +219,9 @@ public class HaplotypeCallerTest
                 ),
                 List.of(new HaplotypeCombination(Map.of("*7", 1, "*B3", 1))),
                 "*9A",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*7", 1, "*B3", 1))
         );
         HaplotypeAnalysis expectedUgt1A1HaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of(
@@ -209,7 +230,9 @@ public class HaplotypeCallerTest
                 ),
                 List.of(new HaplotypeCombination(Map.of("*28", 1, "*36", 1))),
                 "*1",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*28", 1, "*36", 1))
         );
         assertEquals(2, geneToHaplotypeAnalysis.size());
         assertTrue(geneToHaplotypeAnalysis.containsKey("DPYD"));
@@ -230,20 +253,20 @@ public class HaplotypeCallerTest
         Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, eventIdToCount);
 
         HaplotypeAnalysis expectedDpydHaplotypeAnalysis = new HaplotypeAnalysis(
-                Map.of(
-                        "VAR_chr1_98348885_G_A", 1
-                ),
+                Map.of("VAR_chr1_98348885_G_A", 1),
                 List.of(new HaplotypeCombination(Map.of("*9A", 1, "*1", 1))),
                 "*9A",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*9A", 1, "*1", 1))
         );
         HaplotypeAnalysis expectedUgt1A1HaplotypeAnalysis = new HaplotypeAnalysis(
-                Map.of(
-                        "VAR_chr2_234669144_G_A", 1
-                ),
+                Map.of("VAR_chr2_234669144_G_A", 1),
                 List.of(new HaplotypeCombination(Map.of("*1", 1, "*6", 1))),
                 "*1",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*1", 1, "*6", 1))
         );
         assertEquals(2, geneToHaplotypeAnalysis.size());
         assertTrue(geneToHaplotypeAnalysis.containsKey("DPYD"));
@@ -271,7 +294,9 @@ public class HaplotypeCallerTest
                 ),
                 List.of(new HaplotypeCombination(Map.of("*2A", 1, "*9A", 1))),
                 "*9A",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*2A", 1, "*9A", 1))
         );
         HaplotypeAnalysis expectedUgt1A1HaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of(
@@ -279,7 +304,9 @@ public class HaplotypeCallerTest
                 ),
                 List.of(new HaplotypeCombination(Map.of("*1", 1, "*37", 1))),
                 "*1",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*1", 1, "*37", 1))
         );
         assertEquals(2, geneToHaplotypeAnalysis.size());
         assertTrue(geneToHaplotypeAnalysis.containsKey("DPYD"));
@@ -307,7 +334,9 @@ public class HaplotypeCallerTest
                 ),
                 List.of(new HaplotypeCombination(Map.of("*13", 2))),
                 "*9A",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*13", 2))
         );
         HaplotypeAnalysis expectedUgt1A1HaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of(
@@ -315,7 +344,46 @@ public class HaplotypeCallerTest
                 ),
                 List.of(new HaplotypeCombination(Map.of("*28", 2))),
                 "*1",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*28", 2))
+        );
+        assertEquals(2, geneToHaplotypeAnalysis.size());
+        assertTrue(geneToHaplotypeAnalysis.containsKey("DPYD"));
+        assertTrue(geneToHaplotypeAnalysis.containsKey("UGT1A1"));
+
+        assertEqualHaplotypeAnalysis(expectedDpydHaplotypeAnalysis, geneToHaplotypeAnalysis.get("DPYD"));
+        assertEqualHaplotypeAnalysis(expectedUgt1A1HaplotypeAnalysis, geneToHaplotypeAnalysis.get("UGT1A1"));
+    }
+
+    @Test
+    public void testTooManyAllelesUgt1a1()
+    {
+        HaplotypePanel haplotypePanel = createDefaultTestHaplotypePanel();
+        Map<String, Integer> eventIdToCount = Map.of(
+                "VAR_chr2_234668879_C_CAT", 2,
+                "VAR_chr2_234669144_G_A", 2
+        );
+        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = determineGeneToHaplotypeAnalysis(haplotypePanel, eventIdToCount);
+
+        HaplotypeAnalysis expectedDpydHaplotypeAnalysis = new HaplotypeAnalysis(
+                Map.of(),
+                List.of(new HaplotypeCombination(Map.of("*9A", 2))),
+                "*9A",
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*9A", 2))
+        );
+        HaplotypeAnalysis expectedUgt1A1HaplotypeAnalysis = new HaplotypeAnalysis(
+                Map.of(
+                        "VAR_chr2_234668879_C_CAT", 2,
+                        "VAR_chr2_234669144_G_A", 2
+                ),
+                List.of(new HaplotypeCombination(Map.of("*28", 2, "*6", 2))),
+                "*1",
+                "*1",
+                PeachQCStatus.WARN_TOO_MANY_ALLELES_FOUND,
+                new HaplotypeCombination(Map.of("*28", 2, "*6", 2))
         );
         assertEquals(2, geneToHaplotypeAnalysis.size());
         assertTrue(geneToHaplotypeAnalysis.containsKey("DPYD"));
@@ -342,7 +410,9 @@ public class HaplotypeCallerTest
                 ),
                 List.of(new HaplotypeCombination(Map.of("*2", 1, "*4", 1))),
                 "*1",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*2", 1, "*4", 1))
         );
         HaplotypeAnalysis expectedFake2HaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of(
@@ -350,7 +420,9 @@ public class HaplotypeCallerTest
                 ),
                 List.of(new HaplotypeCombination(Map.of("*2", 1, "*1", 1))),
                 "*1",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*2", 1, "*1", 1))
         );
         HaplotypeAnalysis expectedFake3HaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of(
@@ -359,7 +431,9 @@ public class HaplotypeCallerTest
                 ),
                 new ArrayList<>(),
                 "*1",
-                "*1"
+                "*1",
+                PeachQCStatus.FAIL_NO_COMBINATION_FOUND,
+                null
         );
         assertEquals(3, geneToHaplotypeAnalysis.size());
         assertTrue(geneToHaplotypeAnalysis.containsKey("FAKE1"));
@@ -391,14 +465,14 @@ public class HaplotypeCallerTest
                         new HaplotypeCombination(Map.of("*3", 2, "*4", 1))
                 ),
                 "*1",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*2", 1, "*3", 1))
         );
         assertEquals(1, geneToHaplotypeAnalysis.size());
         assertTrue(geneToHaplotypeAnalysis.containsKey("FAKE1"));
 
         assertEqualHaplotypeAnalysis(expectedHaplotypeAnalysis, geneToHaplotypeAnalysis.get("FAKE1"));
-        assertTrue(expectedHaplotypeAnalysis.hasBestHaplotypeCombination());
-        assertEquals(new HaplotypeCombination(Map.of("*2", 1, "*3", 1)), expectedHaplotypeAnalysis.getBestHaplotypeCombination());
     }
 
     @Test
@@ -433,14 +507,14 @@ public class HaplotypeCallerTest
                         new HaplotypeCombination(Map.of("*4", 2))
                 ),
                 "*2",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*4", 2))
         );
         assertEquals(1, geneToHaplotypeAnalysis.size());
         assertTrue(geneToHaplotypeAnalysis.containsKey("FAKE1"));
 
         assertEqualHaplotypeAnalysis(expectedHaplotypeAnalysis, geneToHaplotypeAnalysis.get("FAKE1"));
-        assertTrue(expectedHaplotypeAnalysis.hasBestHaplotypeCombination());
-        assertEquals(new HaplotypeCombination(Map.of("*4", 2)), expectedHaplotypeAnalysis.getBestHaplotypeCombination());
     }
 
     @Test
@@ -466,13 +540,14 @@ public class HaplotypeCallerTest
                         new HaplotypeCombination(Map.of("*3", 1, "*4", 1, "*5", 1))
                 ),
                 "*1",
-                "*1"
+                "*1",
+                PeachQCStatus.FAIL_NO_UNIQUE_BEST_COMBINATION_FOUND,
+                null
         );
         assertEquals(1, geneToHaplotypeAnalysis.size());
         assertTrue(geneToHaplotypeAnalysis.containsKey("FAKE1"));
 
         assertEqualHaplotypeAnalysis(expectedHaplotypeAnalysis, geneToHaplotypeAnalysis.get("FAKE1"));
-        assertFalse(expectedHaplotypeAnalysis.hasBestHaplotypeCombination());
     }
 
     @Test
@@ -495,22 +570,22 @@ public class HaplotypeCallerTest
                         new HaplotypeCombination(Map.of("*3", 1, "*4", 1))
                 ),
                 "*1",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*2", 1, "*1", 1))
         );
         assertEquals(1, geneToHaplotypeAnalysis.size());
         assertTrue(geneToHaplotypeAnalysis.containsKey("FAKE1"));
 
         assertEqualHaplotypeAnalysis(expectedHaplotypeAnalysis, geneToHaplotypeAnalysis.get("FAKE1"));
-        assertTrue(expectedHaplotypeAnalysis.hasBestHaplotypeCombination());
-        assertEquals(new HaplotypeCombination(Map.of("*2", 1, "*1", 1)), expectedHaplotypeAnalysis.getBestHaplotypeCombination());
     }
 
     @NotNull
     private static Map<String, HaplotypeAnalysis> determineGeneToHaplotypeAnalysis(@NotNull HaplotypePanel haplotypePanel,
             @NotNull Map<String, Integer> eventIdToCount)
     {
-        HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
-        return caller.getGeneToHaplotypeAnalysis(eventIdToCount);
+        PeachAlgo algo = new PeachAlgo(haplotypePanel);
+        return algo.getGeneToHaplotypeAnalysis(eventIdToCount);
     }
 
     private void assertEqualHaplotypeAnalysis(@NotNull HaplotypeAnalysis expected, @NotNull HaplotypeAnalysis actual)
@@ -524,6 +599,8 @@ public class HaplotypeCallerTest
             assertEquals(String.format("Compare event counts of %s", eventId), expected.getEventCount(eventId), actual.getEventCount(eventId));
         }
         assertEqualHaplotypeCombinations(expected.getHaplotypeCombinations(), actual.getHaplotypeCombinations());
+        assertEquals(expected.getQcStatus(), actual.getQcStatus());
+        assertEquals(expected.getBestHaplotypeCombination(), actual.getBestHaplotypeCombination());
     }
 
     private void assertEqualHaplotypeCombinations(@NotNull List<HaplotypeCombination> expected, @NotNull List<HaplotypeCombination> actual)

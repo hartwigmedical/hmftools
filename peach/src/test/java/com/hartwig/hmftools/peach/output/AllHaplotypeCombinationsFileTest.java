@@ -3,6 +3,7 @@ package com.hartwig.hmftools.peach.output;
 import static junit.framework.TestCase.assertEquals;
 
 import com.hartwig.hmftools.peach.HaplotypeAnalysis;
+import com.hartwig.hmftools.peach.PeachQCStatus;
 import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
 
 import java.util.HashMap;
@@ -28,7 +29,9 @@ public class AllHaplotypeCombinationsFileTest
                 new HashMap<>(),
                 List.of(new HaplotypeCombination(Map.of("*1", 2))),
                 "*1",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*1", 2))
         );
         HaplotypeAnalysis fake2HaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of("EVENT_1", 1, "EVENT_3", 2),
@@ -38,7 +41,9 @@ public class AllHaplotypeCombinationsFileTest
                         new HaplotypeCombination(Map.of("*3", 1, "*1", 1))
                 ),
                 "*9",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*3", 1, "*1", 1))
         );
         HaplotypeAnalysis fake3HaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of("EVENT_1", 2),
@@ -46,7 +51,17 @@ public class AllHaplotypeCombinationsFileTest
                         new HaplotypeCombination(Map.of("*9", 2))
                 ),
                 "*9",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*9", 2))
+        );
+        HaplotypeAnalysis fake4HaplotypeAnalysis = new HaplotypeAnalysis(
+                Map.of("EVENT_1", 2),
+                List.of(),
+                "*9",
+                "*1",
+                PeachQCStatus.FAIL_NO_UNIQUE_BEST_COMBINATION_FOUND,
+                null
         );
         Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = Map.of(
                 "FAKE3", fake3HaplotypeAnalysis,

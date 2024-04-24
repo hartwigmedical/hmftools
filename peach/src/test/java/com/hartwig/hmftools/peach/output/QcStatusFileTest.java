@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.peach.HaplotypeAnalysis;
+import com.hartwig.hmftools.peach.PeachQCStatus;
 import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
 
 import org.junit.Test;
@@ -29,7 +30,9 @@ public class QcStatusFileTest
                 new HashMap<>(),
                 List.of(new HaplotypeCombination(Map.of("*1", 2))),
                 "*1",
-                "*1"
+                "*1",
+                PeachQCStatus.PASS,
+                new HaplotypeCombination(Map.of("*1", 2))
         );
         HaplotypeAnalysis fake2HaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of("EVENT_3", 1, "EVENT_1", 2),
@@ -38,19 +41,25 @@ public class QcStatusFileTest
                         new HaplotypeCombination(Map.of("*2", 1, "*5", 1))
                 ),
                 "*9",
-                "*1"
+                "*1",
+                PeachQCStatus.FAIL_NO_UNIQUE_BEST_COMBINATION_FOUND,
+                null
         );
         HaplotypeAnalysis fake3HaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of("EVENT_1", 2),
                 new ArrayList<>(),
                 "*9",
-                "*1"
+                "*1",
+                PeachQCStatus.FAIL_NO_COMBINATION_FOUND,
+                null
         );
         HaplotypeAnalysis fake4HaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of("EVENT_5", 1, "EVENT_6", 2),
                 List.of(new HaplotypeCombination(Map.of("*3", 2, "*2", 1))),
                 "*9",
-                "*1"
+                "*1",
+                PeachQCStatus.WARN_TOO_MANY_ALLELES_FOUND,
+                new HaplotypeCombination(Map.of("*3", 2, "*2", 1))
         );
         Map<String, Integer> eventIdToCount = new HashMap<>();
         eventIdToCount.put("EVENT_5", 1);
@@ -59,7 +68,9 @@ public class QcStatusFileTest
                 eventIdToCount,
                 List.of(new HaplotypeCombination(Map.of("*3", 2, "*2", 1))),
                 "*9",
-                "*1"
+                "*1",
+                PeachQCStatus.FAIL_EVENT_WITH_UNKNOWN_COUNT,
+                null
         );
         Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = Map.of(
                 "FAKE3", fake3HaplotypeAnalysis,

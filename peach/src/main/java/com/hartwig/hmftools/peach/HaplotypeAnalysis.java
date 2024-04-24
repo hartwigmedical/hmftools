@@ -1,21 +1,16 @@
 package com.hartwig.hmftools.peach;
 
-import static com.hartwig.hmftools.peach.PeachUtils.GERMLINE_TOTAL_COPY_NUMBER;
-
 import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class HaplotypeAnalysis
 {
@@ -27,14 +22,21 @@ public class HaplotypeAnalysis
     private final String defaultHaplotypeName;
     @NotNull
     private final String wildTypeHaplotypeName;
+    @NotNull
+    private final PeachQCStatus qcStatus;
+    @Nullable
+    private final HaplotypeCombination bestHaplotypeCombination;
 
     public HaplotypeAnalysis(@NotNull Map<String, Integer> eventIdToCount, @NotNull List<HaplotypeCombination> haplotypeCombinations,
-            @NotNull String defaultHaplotypeName, @NotNull String wildTypeHaplotypeName)
+            @NotNull String defaultHaplotypeName, @NotNull String wildTypeHaplotypeName, @NotNull PeachQCStatus qcStatus,
+            @Nullable HaplotypeCombination bestHaplotypeCombination)
     {
         this.eventIdToCount = new HashMap<>(eventIdToCount);
         this.haplotypeCombinations = new ArrayList<>(haplotypeCombinations);
         this.defaultHaplotypeName = defaultHaplotypeName;
         this.wildTypeHaplotypeName = wildTypeHaplotypeName;
+        this.qcStatus = qcStatus;
+        this.bestHaplotypeCombination = bestHaplotypeCombination;
     }
 
     @Override
@@ -70,83 +72,15 @@ public class HaplotypeAnalysis
     }
 
     @NotNull
-    public PeachQCStatus getAnalysisStatus()
+    public PeachQCStatus getQcStatus()
     {
-        if(eventIdToCount.values().stream().anyMatch(Objects::isNull))
-        {
-            return PeachQCStatus.FAIL_EVENT_WITH_UNKNOWN_COUNT;
-        }
-
-        List<HaplotypeCombination> bestCombinations = getBestCombinations();
-        if(bestCombinations.isEmpty())
-        {
-            return PeachQCStatus.FAIL_NO_COMBINATION_FOUND;
-        }
-        else if(bestCombinations.size() != 1)
-        {
-            return PeachQCStatus.FAIL_NO_UNIQUE_BEST_COMBINATION_FOUND;
-        }
-        else if(bestCombinations.get(0).getHaplotypeCount() > 2)
-        {
-            return PeachQCStatus.WARN_TOO_MANY_ALLELES_FOUND;
-        }
-        else
-        {
-            return PeachQCStatus.PASS;
-        }
+        return qcStatus;
     }
 
-    public boolean hasBestHaplotypeCombination()
-    {
-        PeachQCStatus status = getAnalysisStatus();
-        switch(status)
-        {
-            case PASS:
-            case WARN_TOO_MANY_ALLELES_FOUND:
-                return true;
-            case FAIL_NO_COMBINATION_FOUND:
-            case FAIL_NO_UNIQUE_BEST_COMBINATION_FOUND:
-                return false;
-            default:
-                throw new RuntimeException(String.format("Unrecognized QC status encountered: %s", status));
-        }
-    }
-
-    @NotNull
+    @Nullable
     public HaplotypeCombination getBestHaplotypeCombination()
     {
-        if(!hasBestHaplotypeCombination())
-        {
-            throw new RuntimeException(String.format("Gene does not have a best haplotype combination: status=%s", getAnalysisStatus()));
-        }
-
-        return getBestCombinations().get(0);
-    }
-
-    @NotNull
-    private List<HaplotypeCombination> getBestCombinations()
-    {
-        if(haplotypeCombinations.isEmpty())
-        {
-            return Collections.emptyList();
-        }
-
-        int minimumHaplotypeCountDeviation =
-                haplotypeCombinations.stream().mapToInt(c -> Math.abs(c.getHaplotypeCount() - GERMLINE_TOTAL_COPY_NUMBER)).min().getAsInt();
-        List<HaplotypeCombination> candidates = haplotypeCombinations.stream()
-                .filter(c -> Math.abs(c.getHaplotypeCount() - GERMLINE_TOTAL_COPY_NUMBER) == minimumHaplotypeCountDeviation)
-                .collect(Collectors.toList());
-
-        if(candidates.size() <= 1)
-        {
-            return candidates;
-        }
-
-        int minimumNonWildTypeCount =
-                candidates.stream().mapToInt(c -> c.getHaplotypeCountWithout(wildTypeHaplotypeName)).min().getAsInt();
-        return candidates.stream()
-                .filter(c -> c.getHaplotypeCountWithout(wildTypeHaplotypeName) == minimumNonWildTypeCount)
-                .collect(Collectors.toList());
+        return bestHaplotypeCombination;
     }
 
     @Nullable

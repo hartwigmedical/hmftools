@@ -43,6 +43,6 @@ public class QcStatusFile
     @NotNull
     private static String toLine(@NotNull String gene, @NotNull HaplotypeAnalysis analysis)
     {
-        return new StringJoiner(TSV_DELIM).add(gene).add(analysis.getAnalysisStatus().toString()).toString();
+        return new StringJoiner(TSV_DELIM).add(gene).add(analysis.getQcStatus().toString()).toString();
     }
 }

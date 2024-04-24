@@ -63,8 +63,8 @@ public class PeachApplication
                     HaplotypeEventLoader.loadRelevantVariantHaplotypeEvents(config.vcfFile, config.sampleName, haplotypePanel.getRelevantVariantPositions());
 
             PCH_LOGGER.info("call haplotypes");
-            HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
-            Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = caller.getGeneToHaplotypeAnalysis(eventIdToCount);
+            PeachAlgo algo = new PeachAlgo(haplotypePanel);
+            Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = algo.getGeneToHaplotypeAnalysis(eventIdToCount);
 
             writeOutputFiles(eventIdToCount, geneToHaplotypeAnalysis, drugInfoStore, haplotypeFunctionStore);
         }

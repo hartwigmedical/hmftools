@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.peach.HaplotypeAnalysis;
 import com.hartwig.hmftools.peach.effect.DrugInfoStore;
 import com.hartwig.hmftools.peach.effect.HaplotypeFunctionStore;
+import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -38,9 +39,10 @@ public class PeachGenotypeExtractor
     private static List<PeachGenotype> extractPeachGenotypesForGene(@NotNull String gene, @NotNull HaplotypeAnalysis analysis,
             @Nullable DrugInfoStore drugInfoStore, @Nullable HaplotypeFunctionStore haplotypeFunctionStore)
     {
-        if(analysis.hasBestHaplotypeCombination())
+        HaplotypeCombination bestHaplotypeCombination = analysis.getBestHaplotypeCombination();
+        if(bestHaplotypeCombination != null)
         {
-            return analysis.getBestHaplotypeCombination()
+            return bestHaplotypeCombination
                     .getHaplotypeNameToCount()
                     .entrySet()
                     .stream()
