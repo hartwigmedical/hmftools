@@ -149,7 +149,7 @@ public class AlignData
 
     public List<AlternativeAlignment> altAlignments()
     {
-        if(XaTag.isEmpty())
+        if(XaTag == null || XaTag.isEmpty())
             return Collections.emptyList();
 
         List<AlternativeAlignment> alternativeAlignments = AlternativeAlignment.convertLocationTag(XaTag);

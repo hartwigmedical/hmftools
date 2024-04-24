@@ -162,7 +162,7 @@ public class RefBaseAssembly
 
         while(index >= 0 && index < mBases.length)
         {
-            if(mBases[index] != 0 && mBaseQuals[index] >= LOW_BASE_QUAL_THRESHOLD)
+            if(mBases[index] != 0) //  no check on base qual or actual read base support, despite possible gaps
                 ++validRefBaseCount;
             else
                 break;

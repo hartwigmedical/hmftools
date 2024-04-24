@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_SOFT_CLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
 import static com.hartwig.hmftools.esvee.assembly.types.LinkType.FACING;
@@ -37,6 +38,24 @@ public class BreakendBuilder
     }
 
     public void formBreakends(final List<AlignData> alignments)
+    {
+        try
+        {
+            doFormBreakends(alignments);
+        }
+        catch(Exception e)
+        {
+            SV_LOGGER.error("assemblyAlign({}) error: {}", mAssemblyAlignment, e.toString());
+            e.printStackTrace();
+
+            for(AlignData alignData : alignments)
+            {
+                SV_LOGGER.debug("alignment({})", alignData);
+            }
+        }
+    }
+
+    private void doFormBreakends(final List<AlignData> alignments)
     {
         if(alignments.isEmpty())
             return;
