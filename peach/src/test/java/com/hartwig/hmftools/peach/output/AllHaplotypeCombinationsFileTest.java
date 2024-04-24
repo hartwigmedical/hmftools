@@ -34,7 +34,8 @@ public class AllHaplotypeCombinationsFileTest
                 Map.of("EVENT_1", 1, "EVENT_3", 2),
                 List.of(
                         new HaplotypeCombination(Map.of("2373C>T", 1, "*9", 1)),
-                        new HaplotypeCombination(Map.of("*2", 1, "*1", 1))
+                        new HaplotypeCombination(Map.of("*2", 1, "*1", 2)),
+                        new HaplotypeCombination(Map.of("*3", 1, "*1", 1))
                 ),
                 "*9",
                 "*1"
@@ -56,8 +57,9 @@ public class AllHaplotypeCombinationsFileTest
         List<String> expectedLines = List.of(
                 EXPECTED_HEADER,
                 "FAKE1\t(*1,2)\t0",
-                "FAKE2\t(*1,1);(*2,1)\t1",
+                "FAKE2\t(*1,1);(*3,1)\t1",
                 "FAKE2\t(*9,1);(2373C>T,1)\t2",
+                "FAKE2\t(*1,2);(*2,1)\t1",
                 "FAKE3\t(*9,2)\t2"
         );
         assertEquals(expectedLines, outputLines);

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.peach.output;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.peach.PeachUtils.GERMLINE_TOTAL_COPY_NUMBER;
 
 import com.hartwig.hmftools.peach.HaplotypeAnalysis;
 import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
@@ -52,7 +53,8 @@ public class AllHaplotypeCombinationsFile
     {
         String wildTypeName = analysis.getWildTypeHaplotypeName();
         Comparator<HaplotypeCombination> combinationComparator =
-                Comparator.comparingInt((HaplotypeCombination c) -> c.getHaplotypeCountWithout(wildTypeName))
+                Comparator.comparingInt((HaplotypeCombination c) -> Math.abs(c.getHaplotypeCount() - GERMLINE_TOTAL_COPY_NUMBER))
+                        .thenComparing((HaplotypeCombination c) -> c.getHaplotypeCountWithout(wildTypeName))
                         .thenComparing(AllHaplotypeCombinationsFile::getHaplotypeCombinationString);
         return analysis.getHaplotypeCombinations()
                 .stream()
