@@ -51,9 +51,6 @@ public class PredictionRunner
 
     public void predict()
     {
-        PycuppaExecutor pycuppaExecutor = new PycuppaExecutor(mPycuppaConfig.VirtualEnvPath);
-        pycuppaExecutor.initialize();
-
         String[] command = new String[] {
                 "python3 -m cuppa.predict",
 
@@ -64,7 +61,8 @@ public class PredictionRunner
                 "--features_path", mFeaturesPath
         };
 
-        pycuppaExecutor.runBashCommandInVirtualEnv(String.join(" ", command), Level.INFO, true);
+        PythonEnvironment pythonEnvironment = new PythonEnvironment(PycuppaInstaller.PYTHON_VERSION, mPycuppaConfig.VirtualEnvPath);
+        new PythonCommand(pythonEnvironment, String.join(" ", command)).logLevel(Level.INFO).showCommand().run();
     }
 
     public static void main(String[] args)
