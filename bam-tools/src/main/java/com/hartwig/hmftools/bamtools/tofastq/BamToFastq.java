@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.bamtools.tofastq;
 
-import static java.lang.Math.min;
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.tofastq.FastqConfig.CHR_UNMAPPED;
@@ -10,15 +7,19 @@ import static com.hartwig.hmftools.bamtools.tofastq.FastqConfig.registerConfig;
 import static com.hartwig.hmftools.common.region.PartitionUtils.buildPartitions;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
-import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -39,94 +40,67 @@ public class BamToFastq
         mWriterCache = new FastqWriterCache(mConfig);
     }
 
-    public void run()
+    public void run() throws ExecutionException, InterruptedException
     {
         BT_LOGGER.info("starting BamToFastq");
 
         long startTimeMs = System.currentTimeMillis();
 
-        PartitionDataStore partitionDataStore = new PartitionDataStore(mConfig);
-
         // partition all chromosomes
-        Queue<ChrBaseRegion> partitions = new ConcurrentLinkedQueue<>();
+        List<ChrBaseRegion> partitions = createPartitions();
 
-        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
-                .open(new File(mConfig.BamFile));
+        final RemoteReadHandler remoteReadHandler = new RemoteReadHandler(mConfig, mWriterCache);
 
-        final SAMFileHeader fileHeader = samReader.getFileHeader();
+        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("thread-%02d").build();
+        ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
 
-        for(final SAMSequenceRecord sequenceRecord : fileHeader.getSequenceDictionary().getSequences())
-        {
-            String chromosome = sequenceRecord.getSequenceName();
-
-            if(mConfig.SpecificChrRegions.excludeChromosome(chromosome))
-                continue;
-
-            List<ChrBaseRegion> chrPartitions = Lists.newArrayList();
-
-            if(!mConfig.SpecificChrRegions.Regions.isEmpty())
-            {
-                chrPartitions.addAll(partitionChromosome(
-                        chromosome, mConfig.RefGenVersion, mConfig.SpecificChrRegions.Regions, mConfig.PartitionSize));
-            }
-            else
-            {
-                chrPartitions.addAll(buildPartitions(chromosome, sequenceRecord.getEnd(), mConfig.PartitionSize));
-            }
-
-            partitions.addAll(chrPartitions);
-        }
-
-        List<PartitionReader> partitionReaders = Lists.newArrayList();
-        List<Thread> workers = new ArrayList<>();
-
+        final ThreadData threadData = new ThreadData(mConfig, mWriterCache, remoteReadHandler);
         int partitionCount = partitions.size();
 
-        for(int i = 0; i < min(partitionCount, mConfig.Threads); ++i)
+        BT_LOGGER.debug("splitting {} partitions across {} threads", partitionCount, mConfig.Threads);
+
+        final List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+        if(!mConfig.SpecificChrRegions.hasFilters() || mConfig.SpecificChrRegions.Chromosomes.contains(CHR_UNMAPPED))
         {
-            PartitionReader partitionThread = new PartitionReader(mConfig, partitions, mWriterCache, partitionDataStore);
-            partitionReaders.add(partitionThread);
-            workers.add(partitionThread);
+            // write all unmapped reads to hash bams
+            futures.add(CompletableFuture.runAsync(remoteReadHandler::cacheAllUnmappedReads, executorService));
         }
 
-        BT_LOGGER.debug("splitting {} partitions across {} threads", partitionCount, partitionReaders.size());
+        // submit each partition to the thread pool
+        for(ChrBaseRegion chrBaseRegion : partitions)
+        {
+            Runnable task = () -> threadData.getPartitionReader().processRegion(chrBaseRegion);
+            futures.add(CompletableFuture.runAsync(task, executorService));
+        }
 
-        if(!runThreadTasks(workers))
-            System.exit(1);
+        // wait for completion
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).get();
 
         BT_LOGGER.info("all partition tasks complete");
 
-        BT_LOGGER.debug("processing partition cache unmatched reads");
-
-        partitionDataStore.processUnmatchedReads(mWriterCache);
-
-        // free up any processing state
-        partitionReaders.clear();
-
         System.gc();
 
-        BT_LOGGER.debug("processing unmapped reads");
+        BT_LOGGER.debug("processing cached unmatched reads");
+        remoteReadHandler.writeRemoteReadsToFastq(executorService, threadData);
 
-        processUnmappedReads();
+        // threading work all done by this point
+        executorService.shutdown();
+        threadData.close();
 
         BT_LOGGER.debug("writing unpaired reads");
-
         mWriterCache.writeUnpairedReads();
-
         mWriterCache.close();
 
         if(mConfig.PerfDebug)
         {
-            double totalPartitionCacheLockTime = partitionDataStore.partitions().stream().mapToDouble(x -> x.totalLockTimeMs()/1000).sum();
-            BT_LOGGER.debug("partition store lock time({}}s)", format("%.3f",totalPartitionCacheLockTime));
+            PerformanceCounter combinedPerfCounter = threadData.getPartitionReaders().get(0).perfCounter();
 
-            PerformanceCounter combinedPerfCounter = partitionReaders.get(0).perfCounter();
-
-            if(partitionReaders.size() > 1)
+            if(threadData.getPartitionReaders().size() > 1)
             {
-                for(int i = 1; i < partitionReaders.size(); ++i)
+                for(int i = 1; i < threadData.getPartitionReaders().size(); ++i)
                 {
-                    combinedPerfCounter.merge(partitionReaders.get(i).perfCounter());
+                    combinedPerfCounter.merge(threadData.getPartitionReaders().get(i).perfCounter());
                 }
             }
 
@@ -136,21 +110,59 @@ public class BamToFastq
         BT_LOGGER.info("BamToFastq complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private void processUnmappedReads()
+    private List<ChrBaseRegion> createPartitions()
     {
-        if(mConfig.SpecificChrRegions.hasFilters() && !mConfig.SpecificChrRegions.Chromosomes.contains(CHR_UNMAPPED))
-            return;
+        final SAMFileHeader fileHeader;
+        try(SamReader samReader = SamReaderFactory.makeDefault()
+                .referenceSequence(new File(mConfig.RefGenomeFile))
+                .open(new File(mConfig.BamFile)))
+        {
+            fileHeader = samReader.getFileHeader();
+        }
+        catch(IOException e)
+        {
+            throw new UncheckedIOException(e);
+        }
 
-        UnmappedReads unmappedReads = new UnmappedReads(mConfig, mWriterCache);
-        unmappedReads.run();
+        List<ChrBaseRegion> partitions = new ArrayList<>();
+
+        for(final SAMSequenceRecord sequenceRecord : fileHeader.getSequenceDictionary().getSequences())
+        {
+            String chromosome = sequenceRecord.getSequenceName();
+
+            if(mConfig.SpecificChrRegions.excludeChromosome(chromosome))
+                continue;
+
+            if(!mConfig.SpecificChrRegions.Regions.isEmpty())
+            {
+                partitions.addAll(partitionChromosome(
+                        chromosome, mConfig.RefGenVersion, mConfig.SpecificChrRegions.Regions, mConfig.PartitionSize));
+            }
+            else
+            {
+                partitions.addAll(buildPartitions(chromosome, sequenceRecord.getEnd(), mConfig.PartitionSize));
+            }
+        }
+
+        return partitions;
     }
 
-    public static void main(final String[] args)
+    public static void main(final String[] args) throws ExecutionException, InterruptedException
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
+
+        // set all thread exception handler
+        // we must do this otherwise unhandled exception in other threads will cause the program
+        // to hang and never return. This will cause the VM to hang around forever.
+        Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) ->
+        {
+            BT_LOGGER.error("[{}]: uncaught exception: {}", t, e);
+            e.printStackTrace(System.err);
+            System.exit(1);
+        });
 
         BamToFastq bamToFastq = new BamToFastq(configBuilder);
         bamToFastq.run();

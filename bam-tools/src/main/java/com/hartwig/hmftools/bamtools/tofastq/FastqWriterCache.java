@@ -3,6 +3,8 @@ package com.hartwig.hmftools.bamtools.tofastq;
 import static java.lang.String.format;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Map;
 
@@ -17,7 +19,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class FastqWriterCache
+public class FastqWriterCache implements AutoCloseable
 {
     private final FastqConfig mConfig;
 
@@ -44,10 +46,17 @@ public class FastqWriterCache
     private void createReadGroupWriters()
     {
         // create from BAM header
-        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
-                .open(new File(mConfig.BamFile));
-
-        final SAMFileHeader fileHeader = samReader.getFileHeader();
+        final SAMFileHeader fileHeader;
+        try(SamReader samReader = SamReaderFactory.makeDefault()
+                .referenceSequence(new File(mConfig.RefGenomeFile))
+                .open(new File(mConfig.BamFile)))
+        {
+            fileHeader = samReader.getFileHeader();
+        }
+        catch(IOException e)
+        {
+            throw new UncheckedIOException(e);
+        }
 
         for(SAMReadGroupRecord readGroupRecord : fileHeader.getReadGroups())
         {
@@ -59,7 +68,7 @@ public class FastqWriterCache
         }
     }
 
-    public FastqWriter getThreadedWriter()
+    public synchronized FastqWriter getThreadedWriter()
     {
         if(mWriters.isEmpty())
             return createThreadedWriter();
@@ -67,7 +76,7 @@ public class FastqWriterCache
         return mWriters.get(0);
     }
 
-    public FastqWriter createThreadedWriter()
+    public synchronized FastqWriter createThreadedWriter()
     {
         String fileId = mConfig.Threads > 1 ? format("t%d", mWriters.size()) : "";
         String filePrefix = mConfig.formFilePrefix(fileId);
@@ -117,6 +126,7 @@ public class FastqWriterCache
         mWriters.forEach(x -> x.writeUnpairedReads());
     }
 
+    @Override
     public void close()
     {
         mWriters.forEach(x -> x.close());

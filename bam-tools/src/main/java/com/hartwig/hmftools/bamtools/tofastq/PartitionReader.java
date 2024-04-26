@@ -3,49 +3,40 @@ package com.hartwig.hmftools.bamtools.tofastq;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.bamtools.tofastq.PartitionData.formChromosomePartition;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.io.UncheckedIOException;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Queue;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+
+import org.apache.commons.lang3.Validate;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class PartitionReader extends Thread
+public class PartitionReader implements AutoCloseable
 {
     private final FastqConfig mConfig;
 
-    private final PartitionDataStore mPartitionDataStore;
+    private final RemoteReadHandler mRemoteReadHandler;
 
     private final FastqWriterCache mWriterCache;
-    private final FastqWriter mThreadedWriter;
 
-    private final Queue<ChrBaseRegion> mPartitions;
-    private final int mTotalPartitionCount;
+    public final FastqWriter mThreadedWriter;
 
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
 
     private ChrBaseRegion mCurrentRegion;
-
-    private String mCurrentStrPartition;
-    private PartitionData mCurrentPartitionData;
-
-    private final Map<String,List<SAMRecord>> mRemoteUnmatchedReads;
     private final Map<String,SAMRecord> mLocalUnmatchedReads;
 
     private int mPartitionLocalCount;
@@ -53,29 +44,24 @@ public class PartitionReader extends Thread
     private final PerformanceCounter mPerfCounter;
 
     public PartitionReader(
-            final FastqConfig config, final Queue<ChrBaseRegion> partitions,
-            final FastqWriterCache writerCache, final PartitionDataStore partitionDataStore)
+            final FastqConfig config, final FastqWriterCache writerCache, final RemoteReadHandler remoteReadHandler,
+            @Nullable FastqWriter threadedWriter)
     {
         mConfig = config;
-        mPartitionDataStore = partitionDataStore;
+        mRemoteReadHandler = remoteReadHandler;
 
         mWriterCache = writerCache;
 
-        mThreadedWriter = mConfig.SplitMode == FileSplitMode.THREAD ? writerCache.createThreadedWriter() : null;
+        mThreadedWriter = threadedWriter;
 
-        mPartitions = partitions;
-        mTotalPartitionCount = partitions.size();
-
-        mSamReader = mConfig.BamFile != null ?
-                SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
+        mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
 
         mBamSlicer = new BamSlicer(0, true, false, false);
         mBamSlicer.setKeepUnmapped();
 
         mCurrentRegion = null;
 
-        mLocalUnmatchedReads = Maps.newHashMap();
-        mRemoteUnmatchedReads = Maps.newHashMap();
+        mLocalUnmatchedReads = new HashMap<>();
 
         mPartitionLocalCount = 0;
         mPartitionRemoteCount = 0;
@@ -86,46 +72,15 @@ public class PartitionReader extends Thread
     private static final int LOG_COUNT = 100;
 
     @Override
-    public void run()
+    public void close()
     {
-        if(mPartitions.isEmpty())
-            return;
-
-        while(true)
-        {
-            try
-            {
-                ChrBaseRegion region = mPartitions.remove();
-
-                int remainingCount = mPartitions.size();
-                int processedCount = mTotalPartitionCount - remainingCount;
-
-                if(processedCount > 0 && (processedCount % LOG_COUNT) == 0)
-                {
-                    BT_LOGGER.debug("processing partition({}), remaining({})", region, remainingCount);
-                }
-
-                processRegion(region);
-            }
-            catch(NoSuchElementException e)
-            {
-                BT_LOGGER.trace("all tasks complete");
-                break;
-            }
-            catch(Exception e)
-            {
-                e.printStackTrace();
-                System.exit(1);
-            }
-        }
-
         try
         {
             mSamReader.close();
         }
         catch(IOException e)
         {
-            BT_LOGGER.error("failed to close bam file: {}", e.toString());
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -137,13 +92,7 @@ public class PartitionReader extends Thread
 
         perfCountersStart();
 
-        mCurrentStrPartition = formChromosomePartition(region.Chromosome, mCurrentRegion.start(), mConfig.PartitionSize);
-        mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
-
-        if(mBamSlicer != null)
-        {
-            mBamSlicer.slice(mSamReader, mCurrentRegion, this::processSamRecord);
-        }
+        mBamSlicer.slice(mSamReader, mCurrentRegion, this::processSamRecord);
 
         postProcessRegion();
     }
@@ -187,9 +136,10 @@ public class PartitionReader extends Thread
             return;
         }
 
-        boolean hasLocalMate = read.getReferenceIndex() == read.getMateReferenceIndex()
+        boolean hasLocalMate =read.getReferenceIndex().equals(read.getMateReferenceIndex())
                 && mCurrentRegion.containsPosition(read.getMateAlignmentStart());
 
+        // cache if local otherwise put into remote pending list
         if(hasLocalMate)
         {
             ++mPartitionLocalCount;
@@ -197,85 +147,25 @@ public class PartitionReader extends Thread
             return;
         }
 
-        // cache if local otherwise put into remote pending list
-        processRemoteRead(read);
+        // pass any remote read to the remote read handler
+        mRemoteReadHandler.cacheRemoteRead(read);
         ++mPartitionRemoteCount;
-    }
-
-    public String getBasePartition(final SAMRecord read)
-    {
-        // take the lower of the read and its mate
-        boolean readLowerPos;
-        if(read.getReferenceIndex() == read.getMateReferenceIndex())
-        {
-            readLowerPos = read.getAlignmentStart() < read.getMateAlignmentStart();
-        }
-        else
-        {
-            readLowerPos = read.getReferenceIndex() < read.getMateReferenceIndex();
-        }
-
-        return readLowerPos ?
-                formChromosomePartition(read.getReferenceName(), read.getAlignmentStart(), mConfig.PartitionSize)
-                : formChromosomePartition(read.getMateReferenceName(), read.getMateAlignmentStart(), mConfig.PartitionSize);
-    }
-
-    private void processRemoteRead(final SAMRecord read)
-    {
-        String basePartition = getBasePartition(read);
-
-        // cache this read and send through as groups when the partition is complete
-        List<SAMRecord> pendingFragments = mRemoteUnmatchedReads.get(basePartition);
-
-        if(pendingFragments == null)
-        {
-            pendingFragments = Lists.newArrayList();
-            mRemoteUnmatchedReads.put(basePartition, pendingFragments);
-        }
-
-        pendingFragments.add(read);
     }
 
     private void processPendingIncompletes()
     {
-        if(mRemoteUnmatchedReads.isEmpty())
-            return;
-
-        if(mRemoteUnmatchedReads.size() > 10000)
-        {
-            BT_LOGGER.debug("partition({}) processing {} remote reads from {} remote partitions",
-                    mCurrentRegion, mRemoteUnmatchedReads.values().stream().mapToInt(x -> x.size()).sum(), mRemoteUnmatchedReads.size());
-        }
-
-        for(Map.Entry<String,List<SAMRecord>> entry : mRemoteUnmatchedReads.entrySet())
-        {
-            String basePartition = entry.getKey();
-            List<SAMRecord> reads = entry.getValue();
-
-            PartitionData partitionData = mPartitionDataStore.getOrCreatePartitionData(basePartition);
-
-            List<ReadPair> matchedPairs = partitionData.processUnpairedReads(reads);
-
-            for(ReadPair readPair : matchedPairs)
-            {
-                mWriterCache.processReadPair(readPair.First, readPair.Second, mThreadedWriter);
-            }
-        }
-
-        mRemoteUnmatchedReads.clear();
-
+        // any local unmatched read needs to be logged, and passed to remote read handler
         if(!mLocalUnmatchedReads.isEmpty())
         {
             BT_LOGGER.warn("partition({}) has {} unmatched local reads", mCurrentRegion, mLocalUnmatchedReads.size());
 
-            List<SAMRecord> localReads = mLocalUnmatchedReads.values().stream().collect(Collectors.toList());
-            PartitionData partitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
-
-            List<ReadPair> matchedPairs = partitionData.processUnpairedReads(localReads);
-
-            for(ReadPair readPair : matchedPairs)
+            for(SAMRecord read : mLocalUnmatchedReads.values())
             {
-                mWriterCache.processReadPair(readPair.First, readPair.Second, mThreadedWriter);
+                Validate.isTrue(read.getReadPairedFlag());
+                BT_LOGGER.error("unmatched local paired read: {}", read);
+
+                // shouldn't happen, pass it to remote read handler
+                mRemoteReadHandler.cacheRemoteRead(read);
             }
 
             mLocalUnmatchedReads.clear();
@@ -300,7 +190,4 @@ public class PartitionReader extends Thread
 
     @VisibleForTesting
     public void flushPendingIncompletes() { processPendingIncompletes(); }
-
-    @VisibleForTesting
-    public PartitionDataStore partitionDataStore() { return mPartitionDataStore; }
 }

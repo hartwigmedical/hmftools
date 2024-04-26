@@ -8,9 +8,9 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.ArrayList;
 import java.util.List;
-
-import com.google.common.collect.Lists;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -29,7 +29,7 @@ public class FastqWriter
     public FastqWriter(final String filePrefix, boolean writeUnzipped)
     {
         mFilePrefix = filePrefix;
-        mUnpairedReads = Lists.newArrayList();
+        mUnpairedReads = new ArrayList<>();
 
         String fastqR1 = formFilename(mFilePrefix, true, writeUnzipped);
         mWriterR1 = initialise(fastqR1);
@@ -104,6 +104,11 @@ public class FastqWriter
         {
             for(SAMRecord read : mUnpairedReads)
             {
+                if(read.getReadPairedFlag())
+                {
+                    BT_LOGGER.error("mate not found for paired read: {}", read);
+                }
+
                 // write these to the first fastq file only
                 writeFastqRecord(read, mWriterR1);
             }
@@ -165,7 +170,7 @@ public class FastqWriter
         catch(IOException e)
         {
             BT_LOGGER.error("failed to write read({}): {}", readToString(read), e.toString());
-            System.exit(1);
+            throw new UncheckedIOException(e);
         }
     }
 
