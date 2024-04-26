@@ -21,6 +21,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePar
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 
+import java.util.Objects;
+
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -77,8 +79,8 @@ public class FastqConfig
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
 
-        SpecificChrRegions = SpecificRegions.from(configBuilder);
-        Threads = parseThreads(configBuilder);
+        SpecificChrRegions = Objects.requireNonNull(SpecificRegions.from(configBuilder));
+        Threads = Math.max(parseThreads(configBuilder), 1);
         WriteUnzipped = configBuilder.hasFlag(WRITE_UNZIPPED);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
         SplitMode = FileSplitMode.valueOf(configBuilder.getValue(FILE_SPLIT_MODE));

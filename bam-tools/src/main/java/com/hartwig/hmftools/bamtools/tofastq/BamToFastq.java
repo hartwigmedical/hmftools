@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -61,11 +62,7 @@ public class BamToFastq
 
         final List<CompletableFuture<Void>> futures = new ArrayList<>();
 
-        if(!mConfig.SpecificChrRegions.hasFilters() || mConfig.SpecificChrRegions.Chromosomes.contains(CHR_UNMAPPED))
-        {
-            // write all unmapped reads to hash bams
-            futures.add(CompletableFuture.runAsync(remoteReadHandler::cacheAllUnmappedReads, executorService));
-        }
+        addCacheUnmappedReadFutures(futures, remoteReadHandler, executorService);
 
         // submit each partition to the thread pool
         for(ChrBaseRegion chrBaseRegion : partitions)
@@ -79,9 +76,7 @@ public class BamToFastq
 
         BT_LOGGER.info("all partition tasks complete");
 
-        System.gc();
-
-        BT_LOGGER.debug("processing cached unmatched reads");
+        BT_LOGGER.debug("processing cached remote reads");
         remoteReadHandler.writeRemoteReadsToFastq(executorService, threadData);
 
         // threading work all done by this point
@@ -94,16 +89,12 @@ public class BamToFastq
 
         if(mConfig.PerfDebug)
         {
-            PerformanceCounter combinedPerfCounter = threadData.getPartitionReaders().get(0).perfCounter();
-
-            if(threadData.getPartitionReaders().size() > 1)
+            Iterator<PartitionReader> itr = threadData.getAllThreadPartitionReaders().iterator();
+            PerformanceCounter combinedPerfCounter = itr.next().perfCounter();
+            while(itr.hasNext())
             {
-                for(int i = 1; i < threadData.getPartitionReaders().size(); ++i)
-                {
-                    combinedPerfCounter.merge(threadData.getPartitionReaders().get(i).perfCounter());
-                }
+                combinedPerfCounter.merge(itr.next().perfCounter());
             }
-
             combinedPerfCounter.logStats();
         }
 
@@ -145,6 +136,21 @@ public class BamToFastq
         }
 
         return partitions;
+    }
+
+    private void addCacheUnmappedReadFutures(final List<CompletableFuture<Void>> futures, final RemoteReadHandler remoteReadHandler,
+            final ExecutorService executorService)
+    {
+        if(!mConfig.SpecificChrRegions.hasFilters() || mConfig.SpecificChrRegions.Chromosomes.contains(CHR_UNMAPPED))
+        {
+            // write all unmapped reads to hash bams
+            int numTasks = Math.max(mConfig.Threads / 10, 1);
+            for(int i = 0; i < numTasks; ++i)
+            {
+                final int taskId = i;
+                futures.add(CompletableFuture.runAsync(() -> remoteReadHandler.cacheAllUnmappedReads(numTasks, taskId), executorService));
+            }
+        }
     }
 
     public static void main(final String[] args) throws ExecutionException, InterruptedException

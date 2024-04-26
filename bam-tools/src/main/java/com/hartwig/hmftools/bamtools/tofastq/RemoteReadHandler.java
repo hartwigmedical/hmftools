@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.logging.log4j.Level;
 
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
@@ -46,7 +47,7 @@ public class RemoteReadHandler
     public void writeRemoteReadsToFastq(ExecutorService executorService, final ThreadData threadData)
             throws ExecutionException, InterruptedException
     {
-        // must close and finalise all hashbams writers
+        // must close and finalise all hashbam writers
         mHashBamWriter.close();
 
         final List<CompletableFuture<Void>> futures = new ArrayList<>();
@@ -105,7 +106,7 @@ public class RemoteReadHandler
             }
         }
 
-        BT_LOGGER.printf(Level.DEBUG, "hash bam %s, processed %,d unmatched reads", hashBam.getName(), numReads);
+        BT_LOGGER.printf(Level.DEBUG, "processed %,d remote reads in %s", numReads, hashBam.getName());
     }
 
     private void processSamRecord(final SAMRecord read, Map<String,SAMRecord> unmatchedReads, FastqWriter fastqWriter)
@@ -115,6 +116,13 @@ public class RemoteReadHandler
 
         if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // unexpected
             return;
+
+        // check for hard clip
+        if(read.getCigar().containsOperator(CigarOperator.HARD_CLIP))
+        {
+            BT_LOGGER.error("read: {}, hard clip found, require extra logic to handle", read);
+            throw new RuntimeException("hard clip found on read");
+        }
 
         if(!read.getReadPairedFlag())
         {
@@ -135,7 +143,7 @@ public class RemoteReadHandler
     }
 
     // Write all the unmapped reads into the hash bams
-    public void cacheAllUnmappedReads()
+    public void cacheAllUnmappedReads(int numTasks, int taskId)
     {
         BT_LOGGER.info("start writing unmapped reads to {} hash bams", mHashBamWriter.numHashBams());
 
@@ -143,11 +151,18 @@ public class RemoteReadHandler
                 .referenceSequence(new File(mConfig.RefGenomeFile))
                 .open(new File(mConfig.BamFile)))
         {
+            int readCount = 0;
             try(final SAMRecordIterator iterator = samReader.queryUnmapped())
             {
                 while(iterator.hasNext())
                 {
                     final SAMRecord read = iterator.next();
+                    readCount++;
+
+                    if((readCount / 100_000) % numTasks != taskId)
+                    {
+                        continue;
+                    }
 
                     if(!read.isSecondaryOrSupplementary() && !read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
                     {
@@ -156,7 +171,7 @@ public class RemoteReadHandler
                 }
             }
 
-            BT_LOGGER.info("finished writing unmapped reads to {} hash bams", mHashBamWriter.numHashBams());
+            BT_LOGGER.info("finished writing {} unmapped reads to {} hash bams", readCount, mHashBamWriter.numHashBams());
         }
         catch(IOException e)
         {

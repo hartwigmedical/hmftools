@@ -2,7 +2,6 @@ package com.hartwig.hmftools.bamtools.tofastq;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
-import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
@@ -11,6 +10,8 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.hartwig.hmftools.common.codon.Nucleotides;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -128,26 +129,7 @@ public class FastqWriter
             String readBases = read.getReadString();
             if(read.getReadNegativeStrandFlag())
             {
-                StringBuilder readBasesBuilder = new StringBuilder(readBases);
-
-                int left = 0;
-                int right = readBasesBuilder.length() - 1;
-                while(left < right)
-                {
-                    char leftCh = swapDnaBase(readBasesBuilder.charAt(right));
-                    char rightCh = swapDnaBase(readBasesBuilder.charAt(left));
-                    readBasesBuilder.setCharAt(left, leftCh);
-                    readBasesBuilder.setCharAt(right, rightCh);
-                    ++left;
-                    --right;
-                }
-
-                if(left == right)
-                {
-                    readBasesBuilder.setCharAt(left, swapDnaBase((readBasesBuilder.charAt(left))));
-                }
-
-                readBases = readBasesBuilder.toString();
+                readBases = Nucleotides.reverseComplementBases(readBases);
             }
 
             writer.write(readBases);

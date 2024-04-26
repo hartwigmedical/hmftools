@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -119,6 +120,13 @@ public class PartitionReader implements AutoCloseable
 
         if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // drop any consensus reads
             return;
+
+        // check for hard clip
+        if(read.getCigar().containsOperator(CigarOperator.HARD_CLIP))
+        {
+            BT_LOGGER.error("read: {}, hard clip found, require extra logic to handle", read);
+            throw new RuntimeException("hard clip found on read");
+        }
 
         if(!read.getReadPairedFlag())
         {

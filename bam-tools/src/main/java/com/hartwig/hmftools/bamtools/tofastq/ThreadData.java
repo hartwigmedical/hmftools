@@ -11,7 +11,7 @@ public class ThreadData implements AutoCloseable
     private final ThreadLocal<PartitionReader> mPartitionReaders;
     private final List<PartitionReader> mPartitionReaderList = Collections.synchronizedList(new ArrayList<>());
 
-    public List<PartitionReader> getPartitionReaders()
+    public List<PartitionReader> getAllThreadPartitionReaders()
     {
         return mPartitionReaderList;
     }

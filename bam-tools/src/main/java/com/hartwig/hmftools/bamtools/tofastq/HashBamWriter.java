@@ -43,15 +43,16 @@ public class HashBamWriter implements AutoCloseable
             SAMFileHeader samHeader = samReader.getFileHeader();
             samHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
 
-            BT_LOGGER.info("creating {} hash bams", NUM_HASH_BAMS);
-
             // create a temp directory to house the files
-            String tempDir = Files.createTempDirectory(Paths.get(mConfig.BamFile).getFileName() + "_hash_").toString();
+            String tempDir = Files.createTempDirectory(
+                    Paths.get(mConfig.BamFile).getFileName().toString().replace('.', '_') + "_hashbams_")
+                    .toString();
+
+            BT_LOGGER.info("creating {} hash bams in {}", NUM_HASH_BAMS, tempDir);
 
             for(int i = 0; i < NUM_HASH_BAMS; ++i)
             {
                 File tempBamFile = new File(tempDir, String.format("%d.hash.bam", i));
-                tempBamFile.deleteOnExit();
                 mHashBamWriters[i] = new SAMFileWriterFactory().makeBAMWriter(samHeader, false, tempBamFile);
                 mHashBams[i] = tempBamFile;
             }
@@ -68,19 +69,19 @@ public class HashBamWriter implements AutoCloseable
         }
     }
 
+    private static int hashBamIndex(final String readName)
+    {
+        return Math.abs(readName.hashCode()) % NUM_HASH_BAMS;
+    }
+
     public void writeToHashBam(SAMRecord read)
     {
         // we put the lock on individual sam writer
-        SAMFileWriter bamWriter = mHashBamWriters[getHashBamIndex(read.getReadName())];
+        SAMFileWriter bamWriter = mHashBamWriters[hashBamIndex(read.getReadName())];
         synchronized(bamWriter)
         {
             bamWriter.addAlignment(read);
         }
-    }
-
-    private static int getHashBamIndex(final String readName)
-    {
-        return Math.abs(readName.hashCode()) % NUM_HASH_BAMS;
     }
 
     @Override
