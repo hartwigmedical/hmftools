@@ -7,13 +7,13 @@ import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -140,7 +140,7 @@ public final class LinxDataLoader
     @NotNull
     private static List<LinxFusion> selectReportableFusions(@NotNull List<LinxFusion> fusions)
     {
-        List<LinxFusion> reportableFusions = Lists.newArrayList();
+        List<LinxFusion> reportableFusions = new ArrayList<>();
         for(LinxFusion fusion : fusions)
         {
             if(fusion.reported())
@@ -154,7 +154,7 @@ public final class LinxDataLoader
     @NotNull
     private static List<LinxBreakend> selectReportableBreakends(@NotNull List<LinxBreakend> breakends)
     {
-        List<LinxBreakend> reportableBreakends = Lists.newArrayList();
+        List<LinxBreakend> reportableBreakends = new ArrayList<>();
         for(LinxBreakend breakend : breakends)
         {
             if(breakend.reportedDisruption())
@@ -169,7 +169,7 @@ public final class LinxDataLoader
     private static List<LinxGermlineSv> selectReportableGermlineSvs(
             @NotNull List<LinxGermlineSv> germlineSvs, @NotNull List<LinxBreakend> reportableGermlineBreakends)
     {
-        List<LinxGermlineSv> reportableGermlineSvs = Lists.newArrayList();
+        List<LinxGermlineSv> reportableGermlineSvs = new ArrayList<>();
 
         if(reportableGermlineBreakends == null)
         {

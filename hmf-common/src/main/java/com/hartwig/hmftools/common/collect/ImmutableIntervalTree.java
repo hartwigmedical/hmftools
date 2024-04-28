@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -11,7 +12,6 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
 
-import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 
 // see https://en.wikipedia.org/wiki/Interval_tree for an explanation of this data structure
@@ -25,8 +25,8 @@ public class ImmutableIntervalTree<T>
 
     public ImmutableIntervalTree(final Collection<Pair<BaseRegion, T>> entries)
     {
-        mCentreSortedByLeft = Lists.newArrayList();
-        mCentreSortedByRight = Lists.newArrayList();
+        mCentreSortedByLeft = new ArrayList<>();
+        mCentreSortedByRight = new ArrayList<>();
         if(entries.isEmpty())
         {
             mLeft = null;
@@ -35,8 +35,8 @@ public class ImmutableIntervalTree<T>
             return;
         }
 
-        List<Pair<BaseRegion, T>> left = Lists.newArrayList();
-        List<Pair<BaseRegion, T>> right = Lists.newArrayList();
+        List<Pair<BaseRegion, T>> left = new ArrayList<>();
+        List<Pair<BaseRegion, T>> right = new ArrayList<>();
 
         Integer leftmost = null;
         Integer rightmost = null;
@@ -158,7 +158,7 @@ public class ImmutableIntervalTree<T>
 
     public List<Pair<BaseRegion, T>> containedIntervals(final BaseRegion queryInterval)
     {
-        List<Pair<BaseRegion, T>> acc = Lists.newArrayList();
+        List<Pair<BaseRegion, T>> acc = new ArrayList<>();
         collectContainedIntervals(queryInterval, acc);
         return acc;
     }

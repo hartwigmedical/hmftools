@@ -11,9 +11,8 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.compress.utils.Lists;
 
 public class TranscriptUtils
 {
@@ -240,7 +239,7 @@ public class TranscriptUtils
     public static List<int[]> getCodingBaseRanges(final TranscriptData transData, int startPosition, boolean searchUp, int requiredBases)
     {
         // returns ranges of coding bases starting from a given position for a specified number of bases up or down from there
-        final List<int[]> codingBaseRanges = Lists.newArrayList();
+        final List<int[]> codingBaseRanges = new ArrayList<>();
 
         if(transData.nonCoding())
             return codingBaseRanges;
