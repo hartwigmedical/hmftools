@@ -19,7 +19,7 @@ public class PythonCommand extends ShellCommand
             throw new IllegalStateException("Invalid python command: " + command);
         }
 
-        String bashCommand =  String.format("source %s/bin/activate && %s && deactivate", pythonEnvironment.mVirtualEnvPath, command);
+        String bashCommand =  String.format("source %s/bin/activate && %s && deactivate", pythonEnvironment.virtualEnvPath(), command);
         return new ProcessBuilder("bash", "-c", bashCommand);
     }
 
