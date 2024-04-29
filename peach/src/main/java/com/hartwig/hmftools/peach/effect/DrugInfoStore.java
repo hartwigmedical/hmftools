@@ -17,6 +17,7 @@ public class DrugInfoStore
         this.drugInfos = drugInfos;
     }
 
+    @NotNull
     public Set<String> getRelevantDrugNames(@NotNull String geneName)
     {
         return drugInfos.stream().filter(i -> i.geneName().equals(geneName)).map(DrugInfo::drugName).collect(Collectors.toSet());

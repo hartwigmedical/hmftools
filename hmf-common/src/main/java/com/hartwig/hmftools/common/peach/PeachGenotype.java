@@ -33,7 +33,7 @@ public abstract class PeachGenotype
     public String panelVersion()
     {
         return "";
-    };
+    }
 
     @Deprecated
     @NotNull
@@ -41,7 +41,7 @@ public abstract class PeachGenotype
     public String repoVersion()
     {
         return "";
-    };
+    }
 
     @Deprecated
     @NotNull

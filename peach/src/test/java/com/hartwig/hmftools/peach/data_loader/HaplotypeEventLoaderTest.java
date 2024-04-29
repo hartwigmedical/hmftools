@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.peach.panel.HaplotypePanel;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class HaplotypeEventLoaderTest
@@ -64,6 +65,7 @@ public class HaplotypeEventLoaderTest
         assertEquals(createExpectedHaplotypeEventsToCount(), haplotypeEventsToCount);
     }
 
+    @NotNull
     private Map<String, Integer> createExpectedHaplotypeEventsToCount()
     {
         Map<String, Integer> expectedHaplotypeEventsToCount = new HashMap<>();

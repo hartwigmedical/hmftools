@@ -24,8 +24,8 @@ import org.jetbrains.annotations.Nullable;
 public class PeachGenotypeExtractor
 {
     @NotNull
-    public static List<PeachGenotype> extract(final @NotNull Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis,
-            final @Nullable DrugInfoStore drugInfoStore, final @Nullable HaplotypeFunctionStore haplotypeFunctionStore)
+    public static List<PeachGenotype> extract(@NotNull Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis,
+            final @Nullable DrugInfoStore drugInfoStore, @Nullable HaplotypeFunctionStore haplotypeFunctionStore)
     {
         return geneToHaplotypeAnalysis.entrySet()
                 .stream()

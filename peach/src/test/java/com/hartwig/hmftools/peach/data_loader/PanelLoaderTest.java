@@ -12,6 +12,7 @@ import com.hartwig.hmftools.peach.haplotype.DefaultHaplotype;
 import com.hartwig.hmftools.peach.haplotype.NonDefaultHaplotype;
 import com.hartwig.hmftools.peach.panel.HaplotypePanel;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class PanelLoaderTest
@@ -43,21 +44,21 @@ public class PanelLoaderTest
         assertEqualNonDefaultHaplotypes(expectedSecondDpydNonDefaultHaplotype, panel.getNonDefaultHaplotypes("DPYD").get(1));
     }
 
-    private static void assertEqualDefaultHaplotypes(DefaultHaplotype expected, DefaultHaplotype actual)
+    private static void assertEqualDefaultHaplotypes(@NotNull DefaultHaplotype expected, @NotNull DefaultHaplotype actual)
     {
         assertEquals(expected.getName(), actual.getName());
         assertEquals(expected.isWildType(), actual.isWildType());
         assertEqualHaplotypeEventLists(expected.eventsToIgnore, actual.eventsToIgnore);
     }
 
-    private static void assertEqualNonDefaultHaplotypes(NonDefaultHaplotype expected, NonDefaultHaplotype actual)
+    private static void assertEqualNonDefaultHaplotypes(@NotNull NonDefaultHaplotype expected, @NotNull NonDefaultHaplotype actual)
     {
         assertEquals(expected.getName(), actual.getName());
         assertEquals(expected.isWildType(), actual.isWildType());
         assertEqualHaplotypeEventLists(expected.events, actual.events);
     }
 
-    private static void assertEqualHaplotypeEventLists(ImmutableList<HaplotypeEvent> expected, ImmutableList<HaplotypeEvent> actual)
+    private static void assertEqualHaplotypeEventLists(@NotNull ImmutableList<HaplotypeEvent> expected, @NotNull ImmutableList<HaplotypeEvent> actual)
     {
         assertEquals(expected.size(), actual.size());
         for(int i = 0; i < expected.size(); i++)
@@ -66,7 +67,7 @@ public class PanelLoaderTest
         }
     }
 
-    private static void assertEqualHaplotypeEvents(HaplotypeEvent expected, HaplotypeEvent actual)
+    private static void assertEqualHaplotypeEvents(@NotNull HaplotypeEvent expected, @NotNull HaplotypeEvent actual)
     {
         assertEquals(expected.id(), actual.id());
     }

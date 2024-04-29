@@ -65,8 +65,8 @@ public class PeachAlgo
     }
 
     @NotNull
-    private static List<HaplotypeCombination> selectBestCombinations(List<HaplotypeCombination> haplotypeCombinations,
-            String wildTypeHaplotypeName)
+    private static List<HaplotypeCombination> selectBestCombinations(@NotNull List<HaplotypeCombination> haplotypeCombinations,
+            @NotNull String wildTypeHaplotypeName)
     {
         if(haplotypeCombinations.isEmpty())
         {
@@ -92,7 +92,8 @@ public class PeachAlgo
     }
 
     @NotNull
-    private static PeachQCStatus determineQcStatus(Map<String, Integer> eventIdToCount, List<HaplotypeCombination> bestHaplotypeCombinations)
+    private static PeachQCStatus determineQcStatus(@NotNull Map<String, Integer> eventIdToCount,
+            @NotNull List<HaplotypeCombination> bestHaplotypeCombinations)
     {
         if(eventIdToCount.values().stream().anyMatch(Objects::isNull))
         {
@@ -116,7 +117,7 @@ public class PeachAlgo
         }
     }
 
-    public static boolean hasBestHaplotypeCombination(PeachQCStatus status)
+    public static boolean hasBestHaplotypeCombination(@NotNull PeachQCStatus status)
     {
         switch(status)
         {
@@ -133,8 +134,8 @@ public class PeachAlgo
     }
 
     @NotNull
-    private static <T, K, U> Collector<T, ?, Map<K, U>> toMapWithNull(Function<? super T, ? extends K> keyMapper,
-            Function<? super T, ? extends U> valueMapper)
+    private static <T, K, U> Collector<T, ?, Map<K, U>> toMapWithNull(@NotNull Function<? super T, ? extends K> keyMapper,
+            @NotNull Function<? super T, ? extends U> valueMapper)
     {
         // builtin toMap Collector cannot handle null values
         // source for this code: https://stackoverflow.com/questions/24630963/nullpointerexception-in-collectors-tomap-with-null-entry-values/32648397#32648397

@@ -18,6 +18,7 @@ public class VariantHaplotypeEvent implements HaplotypeEvent
 {
     public static final String EVENT_TYPE_STRING = "VAR";
     public static final int ID_FIELD_COUNT = 5;
+
     @NotNull
     public final Chromosome chromosome;
     public final int position;

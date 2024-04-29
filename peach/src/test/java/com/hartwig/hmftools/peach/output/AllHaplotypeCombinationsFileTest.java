@@ -47,9 +47,7 @@ public class AllHaplotypeCombinationsFileTest
         );
         HaplotypeAnalysis fake3HaplotypeAnalysis = new HaplotypeAnalysis(
                 Map.of("EVENT_1", 2),
-                List.of(
-                        new HaplotypeCombination(Map.of("*9", 2))
-                ),
+                List.of(new HaplotypeCombination(Map.of("*9", 2))),
                 "*9",
                 "*1",
                 PeachQCStatus.PASS,

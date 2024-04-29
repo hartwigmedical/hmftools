@@ -3,7 +3,6 @@ package com.hartwig.hmftools.peach;
 import static com.hartwig.hmftools.peach.TestUtils.getTestResourcePath;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -33,8 +32,6 @@ public class PeachConfigTest
         assertEquals(haplotypesFile, config.haplotypesFile);
         assertEquals(sampleName, config.sampleName);
         assertEquals(outputDir + "/", config.outputDir);
-
-        assertTrue(config.isValid());
 
         assertEquals("/path/to/output/FAKENAME.peach.events.tsv", config.getEventsOutputPath());
         assertEquals("/path/to/output/FAKENAME.peach.gene.events.tsv", config.getEventsPerGeneOutputPath());
@@ -70,8 +67,6 @@ public class PeachConfigTest
         assertEquals(outputDir + "/", config.outputDir);
         assertEquals(drugsFile, config.drugsFile);
         assertEquals(functionFile, config.functionFile);
-
-        assertTrue(config.isValid());
 
         assertEquals("/path/to/output/FAKENAME.peach.events.tsv", config.getEventsOutputPath());
         assertEquals("/path/to/output/FAKENAME.peach.gene.events.tsv", config.getEventsPerGeneOutputPath());

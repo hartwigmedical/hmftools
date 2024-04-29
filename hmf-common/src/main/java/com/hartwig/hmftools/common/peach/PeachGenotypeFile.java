@@ -45,7 +45,7 @@ public final class PeachGenotypeFile
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<PeachGenotype> genotypes) throws IOException
+    public static void write(@NotNull final String filename, @NotNull final List<PeachGenotype> genotypes) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(genotypes));
     }
@@ -65,7 +65,7 @@ public final class PeachGenotypeFile
     }
 
     @NotNull
-    private static List<PeachGenotype> fromLinesJavaPeach(final @NotNull List<String> lines)
+    private static List<PeachGenotype> fromLinesJavaPeach(@NotNull final List<String> lines)
     {
         final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
 
@@ -98,7 +98,7 @@ public final class PeachGenotypeFile
     }
 
     @NotNull
-    private static List<PeachGenotype> fromLinesPythonPeach(final @NotNull List<String> lines)
+    private static List<PeachGenotype> fromLinesPythonPeach(@NotNull final List<String> lines)
     {
         final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
 
@@ -136,7 +136,7 @@ public final class PeachGenotypeFile
 
     @NotNull
     @VisibleForTesting
-    static List<String> toLines(@NotNull List<PeachGenotype> genotypes)
+    static List<String> toLines(@NotNull final List<PeachGenotype> genotypes)
     {
         List<String> lines = new ArrayList<>();
         lines.add(headerJavaPeach());
@@ -157,7 +157,7 @@ public final class PeachGenotypeFile
     }
 
     @NotNull
-    private static String toLine(PeachGenotype genotype)
+    private static String toLine(@NotNull final PeachGenotype genotype)
     {
         return new StringJoiner(TSV_DELIM).add(genotype.gene())
                 .add(genotype.allele())

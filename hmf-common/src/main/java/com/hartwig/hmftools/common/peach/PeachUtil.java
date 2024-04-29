@@ -14,7 +14,7 @@ public class PeachUtil
     public static final String NOT_APPLICABLE_ZYGOSITY_STRING = "N/A";
 
     @NotNull
-    public static String convertToHaplotypeString(@NotNull String allele, int alleleCount)
+    public static String convertToHaplotypeString(@NotNull final String allele, int alleleCount)
     {
         if(allele.equals(UNKNOWN_ALLELE_STRING))
         {
@@ -26,7 +26,7 @@ public class PeachUtil
         }
     }
 
-    public static int convertZygosityToAlleleCount(@NotNull String zygosity)
+    public static int convertZygosityToAlleleCount(@NotNull final String zygosity)
     {
         if(zygosity.equals(HETEROZYGOUS_ZYGOSITY_STRING))
         {
