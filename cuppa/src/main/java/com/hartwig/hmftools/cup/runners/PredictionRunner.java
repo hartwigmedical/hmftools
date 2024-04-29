@@ -43,6 +43,7 @@ public class PredictionRunner
             return;
         }
 
+        CUP_LOGGER.info("Extracting features to: " + mPycuppaConfig.FeaturesPath);
         CuppaDataPrep prep = new CuppaDataPrep(mPrepConfig);
         prep.run();
 
@@ -61,7 +62,7 @@ public class PredictionRunner
                 "--features_path", mFeaturesPath
         };
 
-        PythonEnvironment pythonEnvironment = new PythonEnvironment(PycuppaInstaller.PYTHON_VERSION, mPycuppaConfig.VirtualEnvPath);
+        PythonEnvironment pythonEnvironment = new PythonEnvironment(PycuppaInstaller.PYTHON_VERSION, PycuppaInstaller.PYCUPPA_VENV_NAME, true);
         new PythonCommand(pythonEnvironment, String.join(" ", command)).logLevel(Level.INFO).showCommand().run();
     }
 

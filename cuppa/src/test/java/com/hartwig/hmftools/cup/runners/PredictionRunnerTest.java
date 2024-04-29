@@ -13,7 +13,7 @@ public class PredictionRunnerTest
     private static final String SAMPLE_DATA_DIR = "/Users/lnguyen/Hartwig/hartwigmedical/hmftools/cuppa/src/test/resources/pipeline_output/TUMOR_SAMPLE";
     private static final String CLASSIFIER_PATH = "/Users/lnguyen/Hartwig/cloud_source_repos/common-resources-public/cuppa/37/cuppa_classifier.37.pickle.gz";
     private static final String OUTPUT_DIR = "/Users/lnguyen/Desktop/pycuppa_output/";
-    private static final String VIRTUAL_ENV_PATH = "/Users/lnguyen/Desktop/pycuppa_env_test";
+    private static final String VIRTUAL_ENV_PATH = "/Users/lnguyen/Desktop/pycuppa_venv_test";
 
     @Ignore
     @Test
