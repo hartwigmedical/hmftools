@@ -15,18 +15,15 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_BASE_QUALITY;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_DEPTH;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_VS_CONTEXT_DIFFS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_IMPROPER_PAIR;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.TOTAL_RAW_BASE_QUAL;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sage.evidence.RawCounters;
+import com.hartwig.hmftools.sage.evidence.VariantReadCounters;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.common.SageVariant;
 
@@ -111,7 +108,7 @@ public final class VariantContextFactory
         int avgMapQuality = depth > 0 ? (int)Math.round(counter.mapQualityTotal() / (double)depth) : 0;
         int avgAltMapQuality = altSupport > 0 ? (int)Math.round(counter.altMapQualityTotal() / (double)altSupport) : 0;
 
-        RawCounters rawCounters = counter.rawCounters();
+        VariantReadCounters rawCounters = counter.rawCounters();
 
         builder.DP(depth)
                 .AD(new int[] { counter.refSupport(), altSupport })
@@ -120,10 +117,8 @@ public final class VariantContextFactory
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPairCount())
                 .attribute(READ_CONTEXT_JITTER, counter.jitter())
                 .attribute(AVG_MAP_QUALITY, new int[] { avgMapQuality, avgAltMapQuality })
-                .attribute(RAW_SUPPORT_DEPTH, new int[] { counter.rawRefSupport(), counter.rawAltSupport() })
-                .attribute(RAW_SUPPORT_BASE_QUALITY, new int[] { counter.rawRefBaseQualityTotal(), counter.rawAltBaseQualityTotal() })
+                .attribute(RAW_SUPPORT_BASE_QUALITY, new int[] { counter.refRawBaseQualityTotal(), counter.altRawBaseQualityTotal() })
                 .attribute(RAW_DEPTH, counter.rawDepth())
-                .attribute(RAW_VS_CONTEXT_DIFFS, new int[] { rawCounters.RawVsMatchRefDiffs, rawCounters.RawVsMatchAltDiffs })
                 .attribute(
                         FRAG_STRAND_BIAS, format("%.3f,%.3f", counter.fragmentStrandBiasRef().bias(), counter.fragmentStrandBiasAlt().bias()))
                 .attribute(
@@ -135,11 +130,6 @@ public final class VariantContextFactory
         if(counter.umiTypeCounts() != null)
         {
             builder.attribute(UMI_TYPE_COUNTS, counter.umiTypeCounts());
-        }
-
-        if(counter.ultimaQualModel() != null)
-        {
-            builder.attribute(TOTAL_RAW_BASE_QUAL, counter.rawContextAltBaseQualityTotal());
         }
 
         return builder.make();

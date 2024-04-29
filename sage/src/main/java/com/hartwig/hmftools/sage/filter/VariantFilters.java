@@ -64,13 +64,13 @@ public class VariantFilters
         if(readCounter.tier().equals(VariantTier.HOTSPOT))
             return true;
 
-        if(readCounter.rawAltBaseQualityTotal() < mConfig.HardMinTumorRawBaseQuality)
+        if(readCounter.altRawBaseQualityTotal() < mConfig.HardMinTumorRawBaseQuality)
         {
             ++mFilterCounts[HARD_FC_RAW_BASE_QUAL];
             return false;
         }
 
-        if(readCounter.rawAltSupport() < mConfig.HardMinTumorRawAltSupport)
+        if(readCounter.altSupport() < mConfig.HardMinTumorRawAltSupport)
         {
             ++mFilterCounts[HARD_FC_RAW_ALT_SUPPORT];
             return false;
@@ -215,7 +215,7 @@ public class VariantFilters
         return tier == VariantTier.HOTSPOT
                 && primaryTumor.altSupport() >= HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL
                 && Doubles.greaterOrEqual(primaryTumor.vaf(), HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL)
-                && primaryTumor.rawAltBaseQualityTotal() >= HOTSPOT_MIN_RAW_ALT_BASE_QUAL;
+                && primaryTumor.altRawBaseQualityTotal() >= HOTSPOT_MIN_RAW_ALT_BASE_QUAL;
     }
 
     // each of the following filters returns true if a variant does not pass the test
@@ -233,7 +233,7 @@ public class VariantFilters
     {
         int rawDepth = primaryTumor.rawDepth();
 
-        double rawBaseQualAvg = (primaryTumor.rawRefBaseQualityTotal() + primaryTumor.rawAltBaseQualityTotal()) / (double)rawDepth;
+        double rawBaseQualAvg = (primaryTumor.refRawBaseQualityTotal() + primaryTumor.altRawBaseQualityTotal()) / (double)rawDepth;
         double bqrBaseQualAvg = primaryTumor.recalibratedBaseQualityTotal() / (double)rawDepth;
         double minBaseQualAvg = min(rawBaseQualAvg, bqrBaseQualAvg);
 
@@ -382,10 +382,10 @@ public class VariantFilters
     {
         double normalVaf = normal.vaf();
 
-        if(!primaryTumor.isIndel() && normal.rawAltBaseQualityTotal() > 0 && normal.rawAltBaseQualityTotal() < NORMAL_RAW_ALT_BQ_MAX
-        && normal.rawAltSupport() == normal.altSupport())
+        if(!primaryTumor.isIndel() && normal.altRawBaseQualityTotal() > 0 && normal.altRawBaseQualityTotal() < NORMAL_RAW_ALT_BQ_MAX
+        && normal.altSupport() == normal.altSupport())
         {
-            double normalRawBqVaf = normal.rawAltBaseQualityTotal() / (double)(normal.rawAltBaseQualityTotal() + normal.rawRefBaseQualityTotal());
+            double normalRawBqVaf = normal.altRawBaseQualityTotal() / (double)(normal.altRawBaseQualityTotal() + normal.refRawBaseQualityTotal());
             normalVaf = min(normalVaf, normalRawBqVaf);
         }
 
@@ -396,8 +396,8 @@ public class VariantFilters
             final SoftFilterConfig config, final ReadContextCounter normal, final ReadContextCounter primaryTumor)
     {
         boolean isLongInsert = primaryTumor.isIndel() && normal.alt().length() > LONG_GERMLINE_INSERT_LENGTH;
-        double tumorQual = isLongInsert ? primaryTumor.tumorQuality() : primaryTumor.rawAltBaseQualityTotal();
-        double germlineQual = isLongInsert ? normal.tumorQuality() : normal.rawAltBaseQualityTotal();
+        double tumorQual = isLongInsert ? primaryTumor.tumorQuality() : primaryTumor.altRawBaseQualityTotal();
+        double germlineQual = isLongInsert ? normal.tumorQuality() : normal.altRawBaseQualityTotal();
 
         return Doubles.positive(tumorQual) && Doubles.greaterThan(germlineQual / tumorQual, config.MaxGermlineRelativeQual);
     }

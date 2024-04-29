@@ -60,7 +60,7 @@ public class RawContextCigarHandler implements CigarHandler
         boolean altSupport = mIsInsert && element.getLength() >= mVariant.alt().length() && matchesString(record, readIndex, mVariant.alt());
         int baseQuality = altSupport ? avgBaseQuality(readIndex, record, mVariant.alt().length()) : 0;
 
-        mResult = RawContext.inSoftClip(readIndex, altSupport, baseQuality);
+        mResult = new RawContext(readIndex, false, false, true, baseQuality);
     }
 
     @Override
@@ -95,7 +95,7 @@ public class RawContextCigarHandler implements CigarHandler
             if(!altSupport)
                 return;
 
-            mResult = RawContext.inSoftClip(readVariantStartPos, altSupport, baseQuality);
+            mResult = new RawContext(readVariantStartPos, false, false, true, baseQuality);
         }
         else
         {
@@ -104,7 +104,7 @@ public class RawContextCigarHandler implements CigarHandler
                 int alignmentEnd = record.getAlignmentEnd();
                 int actualIndex = record.getReadPositionAtReferencePosition(alignmentEnd) - 1 - alignmentEnd + mVariant.position();
 
-                mResult = RawContext.inSoftClip(actualIndex, false, 0);
+                mResult = new RawContext(actualIndex, false, false, true, 0);
             }
         }
     }
@@ -128,12 +128,7 @@ public class RawContextCigarHandler implements CigarHandler
             int variantReadIndex = readIndex + readIndexOffset;
 
             int baseQuality = record.getBaseQualities()[variantReadIndex];
-
-            // this logic is inadequate for INDELs but is handled in the index matching routine instead - ie to reverse any incorrect
-            // ref support here
-            boolean altSupport = mIsSNV && refPositionEnd >= mVariant.end() && matchesString(record, variantReadIndex, mVariant.alt());
-            boolean refSupport = !altSupport && matchesFirstBase(record, variantReadIndex, mVariant.ref(), true);
-            mResult = RawContext.alignment(variantReadIndex, altSupport, refSupport, baseQuality);
+            mResult = new RawContext(variantReadIndex, false, false, false, baseQuality);
         }
     }
 
@@ -147,7 +142,7 @@ public class RawContextCigarHandler implements CigarHandler
         {
             boolean altSupport = mIsInsert && e.getLength() == mVariant.alt().length() - 1 && matchesString(record, readIndex, mVariant.alt());
             int baseQuality = altSupport ? avgBaseQuality(readIndex, record, mVariant.alt().length()) : 0;
-            mResult = RawContext.indel(readIndex, altSupport, baseQuality);
+            mResult = new RawContext(readIndex, false, false, false, baseQuality);
         }
     }
 
@@ -164,11 +159,11 @@ public class RawContextCigarHandler implements CigarHandler
                     && matchesFirstBase(record, readIndex, mVariant.ref(), false);
 
             int baseQuality = altSupport ? avgBaseQuality(readIndex, record, 2) : 0;
-            mResult = RawContext.indel(readIndex, altSupport, baseQuality);
+            mResult = new RawContext(readIndex, false, false, false, baseQuality);
         }
         else if(positionWithin(mVariant.position(), refPosition, refPositionEnd))
         {
-            mResult = RawContext.inDelete(readIndex);
+            mResult = new RawContext(readIndex, true, false, false, 0);
         }
     }
 
@@ -183,7 +178,7 @@ public class RawContextCigarHandler implements CigarHandler
             int refPositionEnd = refPosition + e.getLength();
             if(refPositionEnd >= mVariant.position())
             {
-                mResult = RawContext.inSkipped(readIndex);
+                mResult = new RawContext(readIndex, false, true, false, 0);
             }
         }
 
@@ -306,8 +301,6 @@ public class RawContextCigarHandler implements CigarHandler
 
         int readIndex = coreStartIndex + readContext.VarReadIndex - readContext.CoreIndexStart;
 
-        return new RawContext(
-                readIndex, false, false, true,
-                true, false, true, baseQuality);
+        return new RawContext(readIndex, false, false, true, baseQuality);
     }
 }

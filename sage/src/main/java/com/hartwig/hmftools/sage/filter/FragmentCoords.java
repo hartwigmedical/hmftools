@@ -20,7 +20,6 @@ public class FragmentCoords
     private final Set<String> mLowerCoords;
     private final Set<String> mUpperCoords;
 
-
     public FragmentCoords(int maxCounts)
     {
         mMaxCounts = maxCounts;

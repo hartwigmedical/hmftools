@@ -91,7 +91,7 @@ public class ReadContextCounter
     private final boolean mIsIndel;
     private final BqrQualCache mBqrQualCache;
 
-    // counts of various
+    // counts and quals by support type
     private final ReadSupportCounts mQualities;
     private final ReadSupportCounts mCounts;
 
@@ -103,12 +103,7 @@ public class ReadContextCounter
     private final JitterData mJitterData;
     private int mImproperPairCount;
 
-    private final RawCounters mRawCounters;
-    private int mRecalibratedBaseQualityTotal;
-    private double mSupportAltBaseQualityTotal;
-
-    private long mMapQualityTotal;
-    private long mAltMapQualityTotal;
+    private final VariantReadCounters mReadCounters;
 
     private int mMaxCandidateDeleteLength;
     private final ReadEdgeDistance mReadEdgeDistance;
@@ -156,12 +151,8 @@ public class ReadContextCounter
 
         mImproperPairCount = 0;
 
-        mRawCounters = new RawCounters();
-        mRecalibratedBaseQualityTotal = 0;
-        mSupportAltBaseQualityTotal = 0;
+        mReadCounters = new VariantReadCounters();
         mMaxCandidateDeleteLength = 0;
-        mMapQualityTotal = 0;
-        mAltMapQualityTotal = 0;
 
         mReadEdgeDistance = new ReadEdgeDistance(calcAdjustedVariantPosition(mVariant.position(), indelLength()));
 
@@ -189,7 +180,19 @@ public class ReadContextCounter
     public int altSupport() { return mCounts.altSupport(); }
     public int strongAltSupport() { return mCounts.strongSupport(); }
     public int refSupport() { return mCounts.Ref; }
+
+    // only difference between these next two is a read that isn't ALT or REF but covers the variant
     public int depth() { return mCounts.Total; }
+    public int rawDepth() { return mReadCounters.Depth; }
+
+    public VariantReadCounters rawCounters() { return mReadCounters; }
+
+    public int altRawBaseQualityTotal() { return mReadCounters.AltRawBaseQualityTotal; }
+    public int refRawBaseQualityTotal() { return mReadCounters.RefRawBaseQualityTotal; }
+    public int recalibratedBaseQualityTotal() { return mReadCounters.RecalibratedBaseQualityTotal; }
+
+    public long mapQualityTotal() { return mReadCounters.MapQualityTotal; }
+    public long altMapQualityTotal() { return mReadCounters.AltMapQualityTotal; }
 
     public double vaf()
     {
@@ -219,18 +222,6 @@ public class ReadContextCounter
     public StrandBiasData readStrandBiasRef() { return mRefReadStrandBias; }
     public int improperPairCount() { return mImproperPairCount; }
 
-    public RawCounters rawCounters() { return mRawCounters; }
-    public int rawDepth() { return mRawCounters.RawDepth; }
-    public int rawAltSupport() { return mRawCounters.RawAltSupport; }
-    public int rawRefSupport() { return mRawCounters.RawRefSupport; }
-    public int rawAltBaseQualityTotal() { return mRawCounters.RawAltBaseQualityTotal; }
-    public int rawContextAltBaseQualityTotal() { return mRawCounters.RawContextAltBaseQualityTotal; }
-    public int rawRefBaseQualityTotal() { return mRawCounters.RawRefBaseQualityTotal; }
-    public int recalibratedBaseQualityTotal() { return mRecalibratedBaseQualityTotal; }
-
-    public long mapQualityTotal() { return mMapQualityTotal; }
-    public long altMapQualityTotal() { return mAltMapQualityTotal; }
-
     public ReadEdgeDistance readEdgeDistance() { return mReadEdgeDistance; }
     public int minNumberOfEvents() { return mMinNumberOfEvents; }
 
@@ -241,7 +232,7 @@ public class ReadContextCounter
     {
         // excludes realigned
         int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core;
-        return supportCount > 0 ? mSupportAltBaseQualityTotal / (double)supportCount : 0;
+        return supportCount > 0 ? mReadCounters.SupportAltBaseQualityTotal / (double)supportCount : 0;
     }
 
     public void setMaxCandidateDeleteLength(int length) { mMaxCandidateDeleteLength = length; }
@@ -295,12 +286,6 @@ public class ReadContextCounter
 
         if(rawContext.ReadIndex < 0 && !ignoreSoftClipAdapter(record))
         {
-            if(rawContext.DepthSupport || rawContext.AltSupport || rawContext.RefSupport)
-            {
-                SG_LOGGER.error("rawContext missing readIndex but with support(depth={} ref={} alt={}",
-                        rawContext.DepthSupport, rawContext.AltSupport, rawContext.RefSupport);
-            }
-
             // search for a core match within soft-clipped bases, checking if a proximate DEL may explain the soft-clipping
             rawContext = createRawContextFromCoreMatch(mReadContext, mMaxCandidateDeleteLength, record);
 
@@ -320,16 +305,15 @@ public class ReadContextCounter
         int readIndex = rawContext.ReadIndex;
         boolean baseDeleted = rawContext.ReadIndexInDelete;
 
-        mRawCounters.RawDepth += rawContext.DepthSupport ? 1 : 0;
-
         boolean covered = mReadContextMatcher.coversVariant(record, readIndex);
 
         if(!covered)
         {
-            registerRawSupport(rawContext, 0);
             addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
             return NON_CORE;
         }
+
+        ++mReadCounters.Depth;
 
         double adjustedNumOfEvents = numberOfEvents;
 
@@ -348,8 +332,9 @@ public class ReadContextCounter
 
         if(mConfig.Quality.HighDepthMode && rawBaseQuality < mConfig.Quality.HighBaseQualLimit)
         {
-            if(rawContext.AltSupport)
-                countAltSupportMetrics(record, fragmentData);
+            // TODO: check if strand bias and frag coords need to be updated in this scenario - cannot now rely on raw AltSupport
+            // if(rawContext.AltSupport)
+            //     countAltSupportMetrics(record, fragmentData);
 
             addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
             return UNRELATED;
@@ -363,34 +348,23 @@ public class ReadContextCounter
         // Check if FULL, PARTIAL, OR CORE
         ReadContextMatch matchType = !baseDeleted ? determineReadContextMatch(record, readIndex, true) : NONE;
 
-        // TEMP: record differences in raw vs accurate matching
-        if(matchType.SupportsAlt != rawContext.AltSupport)
-            ++mRawCounters.RawVsMatchAltDiffs;
-        if(matchType.SupportsRef != rawContext.RefSupport)
-            ++mRawCounters.RawVsMatchRefDiffs;
-
         if(matchType.SupportsAlt)
         {
             VariantReadSupport readSupport = matchType.toReadSupport();
 
             registerReadSupport(record, readSupport, quality);
 
-            mMapQualityTotal += record.getMappingQuality();
-            mAltMapQualityTotal += record.getMappingQuality();
+            mReadCounters.MapQualityTotal += record.getMappingQuality();
+            mReadCounters.AltMapQualityTotal += record.getMappingQuality();
+            mReadCounters.SupportAltBaseQualityTotal += rawBaseQuality;
 
-            mSupportAltBaseQualityTotal += rawBaseQuality;
-            mRawCounters.RawContextAltBaseQualityTotal += rawContext.BaseQuality;
+            mReadCounters.RecalibratedBaseQualityTotal += qualityScores.RecalibratedBaseQuality;
 
-            registerRawSupport(rawContext, qualityScores.RecalibratedBaseQuality);
-
-            if(rawContext.AltSupport)
-                mReadEdgeDistance.update(record, fragmentData, true);
+            mReadEdgeDistance.update(record, fragmentData, true);
 
             addVariantVisRecord(record, matchType, qualityScores, fragmentData);
             logReadEvidence(record, matchType, readIndex, quality);
-
-            if(rawContext.AltSupport || readSupport != null)
-                countAltSupportMetrics(record, fragmentData);
+            countAltSupportMetrics(record, fragmentData);
 
             checkImproperCount(record);
             return ALT_SUPPORT;
@@ -405,29 +379,23 @@ public class ReadContextCounter
             matchType = ReadContextMatch.REALIGNED;
             registerReadSupport(record, REALIGNED, quality);
 
-            mMapQualityTotal += record.getMappingQuality();
-            mAltMapQualityTotal += record.getMappingQuality();
+            mReadCounters.MapQualityTotal += record.getMappingQuality();
+            mReadCounters.AltMapQualityTotal += record.getMappingQuality();
 
             addVariantVisRecord(record, matchType, qualityScores, fragmentData);
             logReadEvidence(record, matchType, readIndex,quality);
-            rawContext.updateSupport(false, rawContext.AltSupport);
-            registerRawSupport(rawContext, qualityScores.RecalibratedBaseQuality);
+
+            // TODO: check if should contribute to any base qual totals
+            // registerRawSupport(rawContext, qualityScores.RecalibratedBaseQuality);
 
             return ALT_SUPPORT;
         }
-        /* REALIGN
-        else if(realignment.Type == CORE_PARTIAL)
-        {
-            matchType = MatchType.CORE_PARTIAL;
-            rawContext.updateSupport(false, false);
-        }
-        */
 
-        registerRawSupport(rawContext, qualityScores.RecalibratedBaseQuality);
+        mReadCounters.RecalibratedBaseQualityTotal += qualityScores.RecalibratedBaseQuality;
 
         RealignedContext jitterRealign = Realignment.realignedAroundIndex(mReadContext, readIndex, record);
 
-        if(rawContext.ReadIndexInSoftClip && !rawContext.AltSupport)
+        if(rawContext.ReadIndexInSoftClip)
         {
             if(jitterRealign.Type != LENGTHENED && jitterRealign.Type != SHORTENED)
             {
@@ -436,30 +404,18 @@ public class ReadContextCounter
             }
         }
 
-        ReadMatchType readMatchType = UNRELATED;
-
-        mMapQualityTotal += record.getMappingQuality();
+        mReadCounters.MapQualityTotal += record.getMappingQuality();
 
         VariantReadSupport readSupport = null;
 
-        if(rawContext.RefSupport)
+        if(matchType == ReadContextMatch.REF)
         {
             readSupport = REF;
-            readMatchType = REF_SUPPORT;
 
             mRefFragmentStrandBias.registerFragment(record);
-            mRefReadStrandBias.registerRead(record, fragmentData, mVariant);
+            mRefReadStrandBias.registerRead(record, fragmentData, this);
 
             mReadEdgeDistance.update(record, fragmentData, false);
-        }
-        else if(rawContext.AltSupport)
-        {
-            // CLEAN-UP: consider using read context match type instead of raw context
-            // readSupport = OTHER_ALT; // CLEAN-UP
-
-            mAltMapQualityTotal += record.getMappingQuality();
-
-            countAltSupportMetrics(record, fragmentData);
         }
 
         registerReadSupport(record, readSupport, quality);
@@ -467,15 +423,10 @@ public class ReadContextCounter
         // add to jitter penalty as a function of the number of repeats found
         mJitterData.update(jitterRealign, mConfig.Quality);
 
-        if(rawContext.RefSupport)
-            matchType = ReadContextMatch.REF;
-        else if(rawContext.AltSupport)
-            matchType = ReadContextMatch.NONE;
-
         addVariantVisRecord(record, matchType, qualityScores, fragmentData);
         logReadEvidence(record, matchType, readIndex, quality);
 
-        return readMatchType;
+        return matchType == ReadContextMatch.REF ? REF_SUPPORT : UNRELATED;
     }
 
     private ReadContextMatch determineReadContextMatch(final SAMRecord record, int readIndex, boolean allowCoreVariation)
@@ -536,12 +487,6 @@ public class ReadContextCounter
 
         if(supportsVariant)
             ++mUmiTypeCounts[umiReadType.ordinal() + 3];
-    }
-
-    private void registerRawSupport(final RawContext rawContext, double recalibratedBaseQuality)
-    {
-        mRawCounters.registerRawSupport(rawContext);
-        mRecalibratedBaseQualityTotal += recalibratedBaseQuality;
     }
 
     private void addVariantVisRecord(
@@ -645,7 +590,7 @@ public class ReadContextCounter
 
     private void countAltSupportMetrics(final SAMRecord record, final FragmentData fragmentData)
     {
-        mAltReadStrandBias.registerRead(record, fragmentData, mVariant);
+        mAltReadStrandBias.registerRead(record, fragmentData, this);
         mAltFragmentStrandBias.registerFragment(record);
 
         if(mFragmentCoords != null)

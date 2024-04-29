@@ -193,9 +193,8 @@ public class FragmentSyncTest
 
         SimpleVariant variant = createSimpleVariant(position, refBase, altBase);
 
-        String readBases = REF_BASES.substring(8, position) + altBase + REF_BASES.substring(position + 1, 33);
-
-        VariantReadContext readContext = createReadContext(position, refBase, altBase);
+        VariantReadContext readContext = createReadContext(
+                variant, REF_BASES.substring(position - 2, position), REF_BASES.substring(position + 1, position + 2));
 
         final RefSequence refSequence = new RefSequence(1, REF_BASES.getBytes());
 

@@ -24,7 +24,6 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_BASE_QUALITY;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_IMPROPER_PAIR;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
 
@@ -280,7 +279,6 @@ public class SyntheticVcfWriter
                 .attribute(READ_CONTEXT_COUNT, 0)
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, 0)
                 .attribute(READ_CONTEXT_JITTER, 0)
-                .attribute(RAW_SUPPORT_DEPTH, new int[] { 0, 0 })
                 .attribute(RAW_SUPPORT_BASE_QUALITY, new int[] { 0, 0 })
                 .attribute(RAW_DEPTH, 0)
                 .attribute(FRAG_STRAND_BIAS, 0)
