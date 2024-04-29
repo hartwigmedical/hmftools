@@ -161,6 +161,8 @@ public class PartitionReader implements Consumer<List<Fragment>>
         if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // drop any consensus reads from previous MarkDup-generated BAMs runs
             return;
 
+        read.setDuplicateReadFlag(false);
+
         if(mConfig.SpecificRegionsFilterType != NONE && readOutsideSpecifiedRegions(
                 read, mConfig.SpecificChrRegions.Regions, mConfig.SpecificChrRegions.Chromosomes, mConfig.SpecificRegionsFilterType))
         {

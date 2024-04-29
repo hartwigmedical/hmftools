@@ -5,8 +5,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -23,6 +25,8 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 
+import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class PurpleVariantFactoryTest
@@ -85,6 +89,7 @@ public class PurpleVariantFactoryTest
 
         PurpleTranscriptImpact canonicalImpact = purpleVariant.canonicalImpact();
         assertEquals("ENST00000504228", canonicalImpact.transcript());
+        assertTrue(canonicalImpact.reported());
         assertEquals("c.2187C>T", canonicalImpact.hgvsCodingImpact());
         assertEquals("p.Ser729=", canonicalImpact.hgvsProteinImpact());
         assertNull(canonicalImpact.affectedCodon());
@@ -96,6 +101,7 @@ public class PurpleVariantFactoryTest
         assertEquals(1, purpleOtherImpacts.size());
         PurpleTranscriptImpact purpleOtherImpact = purpleOtherImpacts.get(0);
         assertEquals("ENST00000264229", purpleOtherImpact.transcript());
+        assertFalse(purpleOtherImpact.reported());
         assertEquals("c.2187C>T", purpleOtherImpact.hgvsCodingImpact());
         assertEquals("p.Ser729=", purpleOtherImpact.hgvsProteinImpact());
         assertEquals(Set.of(PurpleVariantEffect.SYNONYMOUS), purpleOtherImpact.effects());
@@ -118,5 +124,87 @@ public class PurpleVariantFactoryTest
         assertEquals(2, purpleVariant.repeatCount());
         assertEquals(1, purpleVariant.subclonalLikelihood(), 0);
         assertEquals(List.of(1, 2, 3), purpleVariant.localPhaseSets());
+    }
+
+    @Test
+    public void testReportableTranscripts()
+    {
+        PurpleVariantContext context = TestPurpleVariantFactory.contextBuilder()
+                .canonicalTranscript("canonical_transcript")
+                .reported(false)
+                .otherImpacts(List.of(transcriptImpact("other_transcript1"), transcriptImpact("other_transcript2")))
+                .reportableTranscripts(Set.of("canonical_transcript", "other_transcript1"))
+                .build();
+
+        PaveAlgo paveAlgo = new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache(), false);
+        PurpleVariant purpleVariant = new PurpleVariantFactory(paveAlgo).fromPurpleVariantContext(context);
+
+        assertTrue(purpleVariant.reported());
+        PurpleTranscriptImpact canonicalImpact = purpleVariant.canonicalImpact();
+        assertEquals("canonical_transcript", canonicalImpact.transcript());
+        assertTrue(canonicalImpact.reported());
+
+        List<PurpleTranscriptImpact> purpleOtherImpacts =
+                purpleVariant.otherImpacts()
+                        .stream()
+                        .sorted(Comparator.comparing(PurpleTranscriptImpact::transcript))
+                        .collect(Collectors.toList());
+        assertEquals(2, purpleOtherImpacts.size());
+
+        PurpleTranscriptImpact firstImpact = purpleOtherImpacts.get(0);
+        assertEquals("other_transcript1", firstImpact.transcript());
+        assertTrue(firstImpact.reported());
+
+        PurpleTranscriptImpact secondImpact = purpleOtherImpacts.get(1);
+        assertEquals("other_transcript2", secondImpact.transcript());
+        assertFalse(secondImpact.reported());
+    }
+
+    @Test
+    public void testCanonicalTranscriptNotReported()
+    {
+        PurpleVariantContext context = TestPurpleVariantFactory.contextBuilder()
+                .canonicalTranscript("canonical_transcript")
+                .reported(false)
+                .otherImpacts(List.of(transcriptImpact("other_transcript1"), transcriptImpact("other_transcript2")))
+                .reportableTranscripts(Set.of("other_transcript1"))
+                .build();
+
+        PaveAlgo paveAlgo = new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache(), false);
+        PurpleVariant purpleVariant = new PurpleVariantFactory(paveAlgo).fromPurpleVariantContext(context);
+
+        assertTrue(purpleVariant.reported());
+        PurpleTranscriptImpact canonicalImpact = purpleVariant.canonicalImpact();
+        assertEquals("canonical_transcript", canonicalImpact.transcript());
+        assertFalse(canonicalImpact.reported());
+
+        List<PurpleTranscriptImpact> purpleOtherImpacts =
+                purpleVariant.otherImpacts()
+                        .stream()
+                        .sorted(Comparator.comparing(PurpleTranscriptImpact::transcript))
+                        .collect(Collectors.toList());
+        assertEquals(2, purpleOtherImpacts.size());
+
+        PurpleTranscriptImpact firstImpact = purpleOtherImpacts.get(0);
+        assertEquals("other_transcript1", firstImpact.transcript());
+        assertTrue(firstImpact.reported());
+
+        PurpleTranscriptImpact secondImpact = purpleOtherImpacts.get(1);
+        assertEquals("other_transcript2", secondImpact.transcript());
+        assertFalse(secondImpact.reported());
+    }
+
+    @NotNull
+    private static VariantTranscriptImpact transcriptImpact(@NotNull String transcript)
+    {
+        return new VariantTranscriptImpact(
+                Strings.EMPTY,
+                Strings.EMPTY,
+                transcript,
+                Strings.EMPTY,
+                false,
+                Strings.EMPTY,
+                Strings.EMPTY
+        );
     }
 }

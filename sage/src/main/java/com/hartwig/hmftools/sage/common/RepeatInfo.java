@@ -25,16 +25,16 @@ public class RepeatInfo
     public String toString() { return format("%d: %s-%d", Index, Bases, Count); }
 
     public static RepeatInfo findMaxRepeat(
-            final byte[] bases, final int indexStart, final int indexEnd,
+            final byte[] bases, final int searchIndexStart, final int searchIndexEnd,
             final int maxLength, final int minCount, boolean extendLower, final int requiredIndex)
     {
         RepeatInfo maxRepeat = null;
 
-        int index = indexStart;
+        int index = searchIndexStart;
 
         int minTotalRepeatLength = minCount; // being a single-base repeat
 
-        while(index <= min(bases.length - minTotalRepeatLength, indexEnd))
+        while(index <= min(bases.length - minTotalRepeatLength, searchIndexEnd))
         {
             for(int repeatLength = 1; repeatLength <= maxLength; ++repeatLength)
             {
@@ -60,7 +60,7 @@ public class RepeatInfo
         return maxRepeat;
     }
 
-    private static RepeatInfo extendRepeatLower(final RepeatInfo repeatInfo, final byte[] bases)
+    protected static RepeatInfo extendRepeatLower(final RepeatInfo repeatInfo, final byte[] bases)
     {
         int extraCount = 0;
 
@@ -99,7 +99,7 @@ public class RepeatInfo
 
     public static RepeatInfo findMultiBaseRepeat(final byte[] bases, int index, int repeatCount, final int minCount)
     {
-        if(index + minCount - 1 * repeatCount >= bases.length)
+        if(index + (minCount * repeatCount) - 1 >= bases.length)
             return null;
 
         int i = index + repeatCount;
@@ -133,5 +133,4 @@ public class RepeatInfo
 
         return new RepeatInfo(index, repeat, repeatLength);
     }
-
 }

@@ -4,14 +4,12 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -153,12 +151,8 @@ public class PrepRead
     {
         if(!mCheckedIndelCoords)
         {
-            int[] indelCoords = CigarUtils.findIndelCoords(start(), cigar().getCigarElements(), MIN_INDEL_SUPPORT_LENGTH);
-
-            if(indelCoords != null)
-                mIndelCoords = new IndelCoords(indelCoords[SE_START], indelCoords[SE_END], maxIndelLength(cigar().getCigarElements()));
-
             mCheckedIndelCoords = true;
+            mIndelCoords = findIndelCoords(start(), cigar().getCigarElements(), MIN_INDEL_SUPPORT_LENGTH);
         }
 
         return mIndelCoords;

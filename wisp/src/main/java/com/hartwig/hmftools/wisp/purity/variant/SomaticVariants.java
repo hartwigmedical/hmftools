@@ -101,12 +101,17 @@ public class SomaticVariants
 
         if(mConfig.SomaticVcf.isEmpty())
         {
-            somaticVcf = mConfig.SomaticDir + mSample.TumorId + PurityConstants.PURPLE_APPENDED_SOMATIC_VCF_ID;
+            String vcfFilename = mConfig.SomaticDir + mSample.TumorId + PurityConstants.PURPLE_APPENDED_SOMATIC_VCF_ID;
 
             if(!mSample.VcfTag.isEmpty())
-                somaticVcf += mSample.VcfTag + ".";
+                vcfFilename += mSample.VcfTag + ".";
 
-            somaticVcf += "vcf.gz";
+            vcfFilename += "vcf.gz";
+
+            if(Files.exists(Paths.get(vcfFilename)))
+                somaticVcf = vcfFilename;
+            else
+                somaticVcf = mConfig.SomaticDir + mSample.TumorId + PurityConstants.PURPLE_APPENDED_SOMATIC_VCF_ID + "vcf.gz";
         }
         else
         {

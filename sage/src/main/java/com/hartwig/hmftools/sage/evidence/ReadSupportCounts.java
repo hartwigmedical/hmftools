@@ -9,20 +9,18 @@ import com.hartwig.hmftools.common.variant.VariantReadSupport;
 public class ReadSupportCounts
 {
     public int Full;
-    public int Partial;
+    public int PartialCore;
     public int Core;
     public int Realigned;
-    public int OtherAlt;
     public int Ref;
     public int Total;
 
     public ReadSupportCounts()
     {
         Full = 0;
-        Partial = 0;
+        PartialCore = 0;
         Core = 0;
         Realigned = 0;
-        OtherAlt = 0;
         Ref = 0;
         Total = 0;
     }
@@ -39,8 +37,8 @@ public class ReadSupportCounts
                     Full += count;
                     break;
 
-                case PARTIAL:
-                    Partial += count;
+                case PARTIAL_CORE:
+                    PartialCore += count;
                     break;
 
                 case CORE:
@@ -54,16 +52,12 @@ public class ReadSupportCounts
                 case REF:
                     Ref += count;
                     break;
-
-                case OTHER_ALT:
-                    OtherAlt += count;
-                    break;
             }
         }
     }
 
-    public int altSupport() { return Full + Partial + Core + OtherAlt + Realigned; }
-    public int strongSupport() { return Full + Partial + Realigned; }
+    public int altSupport() { return Full + PartialCore + Core + Realigned; }
+    public int strongSupport() { return Full + PartialCore + Realigned; }
 
     public void applyRatio(double ratio)
     {
@@ -71,16 +65,15 @@ public class ReadSupportCounts
             return;
 
         Full = (int)round(Full * ratio);
-        Partial = (int)round(Partial * ratio);
+        PartialCore = (int)round(PartialCore * ratio);
         Core = (int)round(Core * ratio);
         Realigned = (int)round(Realigned * ratio);
-        OtherAlt = (int)round(OtherAlt * ratio);
         Ref = (int)round(Ref * ratio);
         Total = (int)round(Total * ratio);
     }
 
     public int[] toArray()
     {
-        return new int[] { Full, Partial, Core, Realigned, OtherAlt, Ref, Total };
+        return new int[] { Full, PartialCore, Core, Realigned, Ref, Total };
     }
 }

@@ -81,8 +81,11 @@ public class SampleData
                 boolean isPanel = isPanelIndex != null && isPanelIndex < values.length ?
                         Boolean.parseBoolean(values[isPanelIndex]) : false;
 
-                samples.add(new SampleData(
-                        values[patientIndex], values[tumorIndex], sampleIdsFromStr(values[sampleIdsIndex]), vcfTag, isPanel));
+                String patientId = values[patientIndex];
+                String tumorId = values[tumorIndex];
+                List<String> sampleIds = sampleIdsFromStr(values[sampleIdsIndex]);
+
+                samples.add(new SampleData(patientId, tumorId, sampleIds, vcfTag, isPanel));
             }
         }
         catch (IOException e)

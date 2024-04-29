@@ -36,7 +36,7 @@ public class Breakend implements Comparable<Breakend>
 
     private final List<Breakend> mFacingBreakends;
 
-    private List<AlignData> mAlternativeAlignments;
+    private List<AlternativeAlignment> mAlternativeAlignments;
     private List<BreakendSegment> mSegments;
 
     private final List<BreakendSupport> mBreakendSupport; // one for each sample loaded, indexed as per config
@@ -80,8 +80,8 @@ public class Breakend implements Comparable<Breakend>
     public List<BreakendSegment> segments() { return mSegments; }
     public void addSegment(final BreakendSegment segment) { mSegments.add(segment); }
 
-    public List<AlignData> alternativeAlignments() { return mAlternativeAlignments; }
-    public void setAlternativeAlignments(final List<AlignData> altAlignments) { mAlternativeAlignments = altAlignments; }
+    public List<AlternativeAlignment> alternativeAlignments() { return mAlternativeAlignments; }
+    public void setAlternativeAlignments(final List<AlternativeAlignment> altAlignments) { mAlternativeAlignments = altAlignments; }
 
     public List<BreakendSupport> sampleSupport() { return mBreakendSupport; }
 

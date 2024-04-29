@@ -18,7 +18,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.sage.ReferenceData.loadRefGenome;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.vcf.VariantContextFactory.NO_CALL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.FRAG_STRAND_BIAS;
@@ -42,13 +42,11 @@ import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.vcf.SomaticRefContextEnrichment;
-import com.hartwig.hmftools.sage.append.CandidateSerialization;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
+import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
+import com.hartwig.hmftools.sage.vcf.CandidateSerialisation;
 import com.hartwig.hmftools.sage.candidate.Candidate;
-import com.hartwig.hmftools.sage.old.ReadContext;
-import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
-import com.hartwig.hmftools.sage.old.ReadContextFactory;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
 import org.jetbrains.annotations.NotNull;
@@ -73,7 +71,6 @@ public class SyntheticVcfWriter
 
     private final IndexedFastaSequenceFile mRefGenome;
     private final List<VariantData> mVariants;
-    private final SomaticRefContextEnrichment mRefContextEnrichment;
     private final VariantContextWriter mWriter;
 
     private static final String OUTPUT_VCF_FILE = "output_vcf_file";
@@ -88,7 +85,6 @@ public class SyntheticVcfWriter
         mRefGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
         mVariants = Lists.newArrayList();
 
-        mRefContextEnrichment = new SomaticRefContextEnrichment(mRefGenome);
         mWriter = initialiseVcf();
     }
 
@@ -125,11 +121,6 @@ public class SyntheticVcfWriter
             Ref = ref;
             Alt = alt;
         }
-
-        public boolean isInsert() { return Alt.length() > Ref.length();}
-        public boolean isDelete() { return Alt.length() < Ref.length();}
-        public boolean isSnv() { return Alt.length() == Ref.length() && Alt.length() == 1;}
-        public boolean isMnv() { return Alt.length() == Ref.length() && Alt.length() > 1;}
 
         @Override
         public int compareTo(@NotNull final VariantData other)
@@ -222,7 +213,8 @@ public class SyntheticVcfWriter
         VersionInfo version = new VersionInfo("sage.version");
         VCFHeader header = VariantVCF.createHeader(version.version(), List.of(mSampleId), false);
 
-        mRefContextEnrichment.appendHeader(header);
+        // CLEAN-UP: something needs to set the tri-nuc, MH and Repeat headers and values if necessary
+        // mRefContextEnrichment.appendHeader(header);
 
         final SAMSequenceDictionary condensedDictionary = new SAMSequenceDictionary();
         for(SAMSequenceRecord sequence : sequenceDictionary.getSequences())
@@ -239,9 +231,9 @@ public class SyntheticVcfWriter
         return writer;
     }
 
-    private ReadContext buildReadContext(final VariantData variant)
+    private VariantReadContext buildReadContext(final VariantData variant)
     {
-        ReadContextFactory readContextFactory = new ReadContextFactory(DEFAULT_READ_CONTEXT_FLANK_SIZE);
+        VariantReadContextBuilder readContextBuilder = new VariantReadContextBuilder(DEFAULT_FLANK_LENGTH);
 
         int readFlankLength = 25;
         int refLocationStart = variant.Position - readFlankLength;
@@ -258,14 +250,15 @@ public class SyntheticVcfWriter
 
         int readIndex = readFlankLength;
 
-        ReadContext readContext;
+        VariantReadContext readContext = null;
 
+        /* CLEAN=UP
         if(variant.isDelete())
-            readContext = readContextFactory.createDelContext(variant.Ref, variant.Position, readIndex, readBases.getBytes(), refSequence);
+            readContext =  readContextBuilder.createIndelContext(variant.Ref, variant.Position, readIndex, readBases.getBytes(), refSequence);
         else if(variant.isInsert())
-            readContext = readContextFactory.createInsertContext(variant.Alt, variant.Position, readIndex, readBases.getBytes(), refSequence);
+            readContext = readContextBuilder.createInsertContext(variant.Alt, variant.Position, readIndex, readBases.getBytes(), refSequence);
         else
-            readContext = readContextFactory.createMNVContext(variant.Position, readIndex, variant.Ref.length(), readBases.getBytes(), refSequence);
+            readContext = readContextBuilder.createMNVContext(variant.Position, readIndex, variant.Ref.length(), readBases.getBytes(), refSequence);
 
         if(readContext.hasIncompleteCore() || readContext.hasIncompleteFlanks())
         {
@@ -273,6 +266,7 @@ public class SyntheticVcfWriter
                     variant, readContext.toString(), readContext.indexedBases().toString());
             return null;
         }
+        */
 
         return readContext;
     }
@@ -295,28 +289,29 @@ public class SyntheticVcfWriter
                 .alleles(NO_CALL)
                 .make();
 
-        SimpleVariant variantHotspot = new SimpleVariant(variant.Chromosome, variant.Position, variant.Ref, variant.Alt);
+        // SimpleVariant simpledVariant = new SimpleVariant(variant.Chromosome, variant.Position, variant.Ref, variant.Alt);
 
-        ReadContext readContext = buildReadContext(variant);
+        VariantReadContext readContext = buildReadContext(variant);
 
         if(readContext == null)
             return;
 
-        Candidate candidate = new Candidate(VariantTier.PANEL, variantHotspot, readContext, 0, 0);
+        Candidate candidate = new Candidate(VariantTier.PANEL, readContext, 0, 0);
 
-        VariantContextBuilder builder = CandidateSerialization.toContext(candidate)
+        VariantContextBuilder builder = CandidateSerialisation.toContext(candidate)
                 .log10PError(0)
                 .genotypes(genotype)
                 .filters(PASS);
 
         VariantContext variantContext = builder.make();
 
-        mRefContextEnrichment.processVariant(variantContext);
+        // CLEAN-UP: set those 3 fields or ignore if only for passing SNVs??
+
+        // mRefContextEnrichment.processVariant(variantContext);
         mWriter.add(variantContext);
 
         SG_LOGGER.debug("variant({}) readContext({} - {} - {}) index({})",
-                variant, readContext.leftFlankString(), readContext.coreString(), readContext.rightFlankString(),
-                readContext.indexedBases().toString());
+                variant, readContext.leftFlankStr(), readContext.coreStr(), readContext.rightFlankStr(), readContext.toString());
     }
 
     public static void main(final String[] args)

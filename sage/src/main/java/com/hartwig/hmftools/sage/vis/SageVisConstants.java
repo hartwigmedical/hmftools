@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.vis;
 import java.util.EnumMap;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 public class SageVisConstants
@@ -22,18 +23,16 @@ public class SageVisConstants
     public static final int INSERT_SIZE_CUTTOFF = 1000;
 
     public static final int MAX_READ_UPPER_LIMIT = 1000;
-    public static final EnumMap<ReadContextCounter.MatchType, Integer> MAX_READS_PER_TYPE;
+    public static final EnumMap<ReadContextMatch, Integer> MAX_READS_PER_TYPE;
 
     static
     {
-        MAX_READS_PER_TYPE = Maps.newEnumMap(ReadContextCounter.MatchType.class);
-        MAX_READS_PER_TYPE.put(ReadContextCounter.MatchType.NONE, 5);
-        MAX_READS_PER_TYPE.put(ReadContextCounter.MatchType.FULL, 40);
-        MAX_READS_PER_TYPE.put(ReadContextCounter.MatchType.PARTIAL, 10);
-        MAX_READS_PER_TYPE.put(ReadContextCounter.MatchType.CORE, 10);
-        MAX_READS_PER_TYPE.put(ReadContextCounter.MatchType.REALIGNED, 20);
-        MAX_READS_PER_TYPE.put(ReadContextCounter.MatchType.CORE_PARTIAL, 10);
-        MAX_READS_PER_TYPE.put(ReadContextCounter.MatchType.REF, 20);
-        MAX_READS_PER_TYPE.put(ReadContextCounter.MatchType.ALT, 5);
+        MAX_READS_PER_TYPE = Maps.newEnumMap(ReadContextMatch.class);
+        MAX_READS_PER_TYPE.put(ReadContextMatch.NONE, 5);
+        MAX_READS_PER_TYPE.put(ReadContextMatch.FULL, 40);
+        MAX_READS_PER_TYPE.put(ReadContextMatch.PARTIAL_CORE, 10);
+        MAX_READS_PER_TYPE.put(ReadContextMatch.CORE, 10);
+        MAX_READS_PER_TYPE.put(ReadContextMatch.REALIGNED, 20);
+        MAX_READS_PER_TYPE.put(ReadContextMatch.REF, 20);
     }
 }

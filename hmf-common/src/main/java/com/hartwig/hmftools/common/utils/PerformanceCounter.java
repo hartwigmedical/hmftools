@@ -41,8 +41,13 @@ public class PerformanceCounter
 
     public PerformanceCounter(final String name)
     {
+        this(name, true);
+    }
+
+    public PerformanceCounter(final String name, boolean trackTimes)
+    {
         mName = name;
-        mTrackTimes = true;
+        mTrackTimes = trackTimes;
         mIsRunning = false;
         mStartTime = 0;
         mPausedTime = 0;
@@ -75,6 +80,8 @@ public class PerformanceCounter
     public List<NamedTime> getNamedTimes() { return mNamedTimes; }
 
     public void setTrackTimes() { mTrackTimes = true; }
+
+    public void unsetTrackTimes() { mTrackTimes = false; }
 
     public void start()
     {

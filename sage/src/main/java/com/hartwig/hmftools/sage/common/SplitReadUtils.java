@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.sage.common;
 
+import static com.hartwig.hmftools.sage.common.ReadContextMatcher.WILDCARD_BASE;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.CigarHandler;
-import com.hartwig.hmftools.common.bam.CigarTraversal;
-import com.hartwig.hmftools.sage.old.IndexedBases;
 import com.hartwig.hmftools.sage.evidence.ReadIndexBases;
 
 import org.jetbrains.annotations.NotNull;
@@ -42,7 +42,7 @@ public final class SplitReadUtils
             }
         };
 
-        CigarTraversal.traverseCigar(record, handler);
+        CigarHandler.traverseCigar(record, handler);
 
         if(indexes.isEmpty())
         {
@@ -64,7 +64,7 @@ public final class SplitReadUtils
             // Create skipped reference substitute
             for(int j = 0; j < MAX_SKIPPED_REFERENCE_REGIONS; j++)
             {
-                dest[destPos++] = IndexedBases.MATCH_WILDCARD;
+                dest[destPos++] = WILDCARD_BASE;
             }
         }
 

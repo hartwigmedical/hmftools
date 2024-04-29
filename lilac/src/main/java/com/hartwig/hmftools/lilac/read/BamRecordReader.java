@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.FragmentUtils;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
@@ -54,11 +55,14 @@ public class BamRecordReader implements BamReader
     public static final int MAX_DISTANCE = 1000;
 
     public BamRecordReader(
-            final String bamFile, final String refGenome, final Map<String,TranscriptData> transcripts, final NucleotideFragmentFactory factory)
+            final String bamFile, final LilacConfig config, final Map<String,TranscriptData> transcripts, final NucleotideFragmentFactory factory)
     {
         mBamFile = bamFile;
 
-        SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault().referenceSequence(new File(refGenome));
+        SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault()
+                .validationStringency(config.BamStringency)
+                .referenceSequence(new File(config.RefGenome));
+
         mSamReader = samReaderFactory.open(new File(mBamFile));
         mBamSlicer = new BamSlicer(MIN_MAPPING_QUALITY);
 

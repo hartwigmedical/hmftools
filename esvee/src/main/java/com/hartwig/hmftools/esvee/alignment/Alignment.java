@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.esvee.alignment;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
@@ -13,11 +15,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome;
@@ -198,7 +202,6 @@ public class Alignment
             if(assemblyAlignment.breakends().isEmpty())
                 assemblyAlignment.assemblies().forEach(x -> x.setAlignmentOutcome(AlignmentOutcome.NO_RESULT));
 
-
             allocateSupport(assemblyAlignment);
         }
 
@@ -252,8 +255,7 @@ public class Alignment
                         }
                         else
                         {
-                            fragmentSupport.Breakends.add(breakend);
-                            fragmentSupport.IsSplit |= isSplitFragment;
+                            fragmentSupport.addBreakend(breakend, isSplitFragment);
                         }
                     }
                 }
@@ -273,6 +275,32 @@ public class Alignment
                         ++support.DiscordantFragments;
                 }
             }
+
+            // for pairs of breakends, set their support to the maximum of each type
+            Set<Breakend> processedBreakends = Sets.newHashSet();
+            for(Breakend breakend : assemblyAlignment.breakends())
+            {
+                if(breakend.isSingle() || processedBreakends.contains(breakend))
+                    continue;
+
+                processedBreakends.add(breakend);
+
+                Breakend otherBreakend = breakend.otherBreakend();
+
+                for(int i = 0; i < breakend.sampleSupport().size(); ++i)
+                {
+                    BreakendSupport support = breakend.sampleSupport().get(i);
+                    BreakendSupport otherSupport = otherBreakend.sampleSupport().get(i);
+
+                    int maxSplitFragments = max(support.SplitFragments, otherSupport.SplitFragments);
+                    support.SplitFragments = maxSplitFragments;
+                    otherSupport.SplitFragments = maxSplitFragments;
+
+                    int maxDiscFragments = max(support.DiscordantFragments, otherSupport.DiscordantFragments);
+                    support.DiscordantFragments = maxDiscFragments;
+                    otherSupport.DiscordantFragments = maxDiscFragments;
+                }
+            }
         }
     }
 
@@ -280,13 +308,21 @@ public class Alignment
     {
         public final int SampleIndex;
         public boolean IsSplit;
-        public final List<Breakend> Breakends;
+        public final Set<Breakend> Breakends;
 
         public BreakendFragmentSupport(final int sampleIndex, final boolean isSplit, final Breakend breakend)
         {
             SampleIndex = sampleIndex;
             IsSplit = isSplit;
-            Breakends = Lists.newArrayList(breakend);
+            Breakends = Sets.newHashSet(breakend);
         }
+
+        public void addBreakend(final Breakend breakend, boolean isSplit)
+        {
+            Breakends.add(breakend);
+            IsSplit |= isSplit;
+        }
+
+        public String toString() { return format("%d: %s breakends(%d)", SampleIndex, IsSplit ? "split" : "disc", Breakends.size()); }
     }
 }

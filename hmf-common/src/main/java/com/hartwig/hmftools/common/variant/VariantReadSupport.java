@@ -3,10 +3,9 @@ package com.hartwig.hmftools.common.variant;
 public enum VariantReadSupport
 {
     FULL,
-    PARTIAL,
-    CORE,
+    PARTIAL_CORE,
     REALIGNED,
-    OTHER_ALT,
+    CORE,
     REF,
     TOTAL;
 }

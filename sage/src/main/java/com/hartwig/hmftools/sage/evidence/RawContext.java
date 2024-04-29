@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static java.lang.String.format;
 
-import com.hartwig.hmftools.common.bam.CigarTraversal;
+import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 
 import htsjdk.samtools.SAMRecord;
@@ -46,7 +46,7 @@ public class RawContext
     public static RawContext create(final SimpleVariant variant, final SAMRecord record)
     {
         RawContextCigarHandler handler = new RawContextCigarHandler(variant);
-        CigarTraversal.traverseCigar(record, handler);
+        CigarHandler.traverseCigar(record, handler);
         RawContext result = handler.result();
         return result == null ? INVALID_CONTEXT : result;
     }

@@ -138,7 +138,7 @@ public class QualityCalculator
         }
 
         if(readContextCounter.isIndel())
-            return readContextCounter.readContext().avgCentreQuality(readIndex, record);
+            return readContextCounter.readContextMatcher().averageCoreQuality(record, readIndex);
 
         if(readContextCounter.isSnv())
             return record.getBaseQualities()[readIndex];
@@ -203,12 +203,8 @@ public class QualityCalculator
     private int readDistanceFromEdge(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
         // calculate the left and right core positions in the context of this read
-        int index = readContextCounter.readContext().readBasesPositionIndex();
-        int leftIndex = readContextCounter.readContext().readBasesLeftCentreIndex();
-        int rightIndex = readContextCounter.readContext().readBasesRightCentreIndex();
-
-        int leftOffset = index - leftIndex;
-        int rightOffset = rightIndex - index;
+        int leftOffset = readContextCounter.readContext().leftCoreLength();
+        int rightOffset = readContextCounter.readContext().rightCoreLength();
 
         int adjustedLeftIndex = readIndex - leftOffset;
         int adjustedRightIndex = readIndex + rightOffset;

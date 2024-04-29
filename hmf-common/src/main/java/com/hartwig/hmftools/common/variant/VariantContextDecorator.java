@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_MINOR_ALL
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY_FLAG;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.localPhaseSetsStr;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
@@ -253,7 +253,7 @@ public class VariantContextDecorator implements GenomePosition
 
     public String trinucleotideContext()
     {
-        return mContext.getAttributeAsString(TRINUCLEOTIDE_FLAG, Strings.EMPTY);
+        return mContext.getAttributeAsString(TRINUCLEOTIDE_CONTEXT, Strings.EMPTY);
     }
 
     public double mappability()

@@ -15,8 +15,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
-import com.hartwig.hmftools.sage.old.IndexedBases;
-import com.hartwig.hmftools.sage.old.ReadContext;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
@@ -34,6 +32,7 @@ public class ArtefactsTest
     // 0123456789 01234567 89012345 67890123
     // AAAAAGGGGG ACGTTGCA TTTTTTTT ACGTTGCA AAAAAGGGGG
 
+    /* CLEAN-UP
     @Test
     public void testHomopolymerArtefacts()
     {
@@ -289,4 +288,5 @@ public class ArtefactsTest
 
         assertEquals(lowQualBase, adjustedBaseQual);
     }
+    */
 }

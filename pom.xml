@@ -61,7 +61,7 @@
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
 
         <amber.version>4.0</amber.version>
-        <bam-tools.version>1.3</bam-tools.version>
+        <bam-tools.version>1.4</bam-tools.version>
         <cider.version>1.0.2</cider.version>
         <cobalt.version>2.0</cobalt.version>
         <compar.version>1.2</compar.version>
@@ -69,12 +69,12 @@
         <cuppa.version>2.1.1</cuppa.version>
         <esvee.version>1.0</esvee.version>
         <fastq-tools.version>1.0</fastq-tools.version>
-        <gene-utils.version>1.1</gene-utils.version>
-        <gripss.version>3.0</gripss.version>
+        <gene-utils.version>1.2</gene-utils.version>
+        <gripss.version>2.4</gripss.version>
         <health-checker.version>3.5</health-checker.version>
         <hmf-id-generator.version>3.1</hmf-id-generator.version>
         <isofox.version>1.7.1</isofox.version>
-        <lilac.version>1.6</lilac.version>
+        <lilac.version>1.7</lilac.version>
         <linx.version>2.0</linx.version>
         <mark-dups.version>1.2</mark-dups.version>
         <neo.version>1.2</neo.version>

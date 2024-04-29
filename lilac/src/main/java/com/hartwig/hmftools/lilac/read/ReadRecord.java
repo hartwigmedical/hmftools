@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bam.CigarHandler;
-import com.hartwig.hmftools.common.bam.CigarTraversal;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -244,7 +243,7 @@ public class ReadRecord
             }
         };
 
-        CigarTraversal.traverseCigar(record, cigarHandler);
+        CigarHandler.traverseCigar(record, cigarHandler);
         return indels;
     }
 

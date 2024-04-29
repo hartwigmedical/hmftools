@@ -81,8 +81,8 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.old.IndexedBases;
-import com.hartwig.hmftools.sage.old.ReadContext;
+import com.hartwig.hmftools.sage.common.ReadContextMatch;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
@@ -105,9 +105,24 @@ public class VariantVis
     private static final DomContent JQUERY_SCRIPT =
             rawHtml("<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js\"></script>");
 
-    private static final List<ReadContextCounter.MatchType> SORTED_MATCH_TYPES = Arrays.stream(ReadContextCounter.MatchType.values())
-            .sorted(Comparator.comparingInt(x -> x.SortKey))
+    private static final List<ReadContextMatch> SORTED_MATCH_TYPES = Arrays.stream(ReadContextMatch.values())
+            .sorted(Comparator.comparingInt(x -> visSortKey(x)))
             .collect(Collectors.toList());
+
+    public static int visSortKey(final ReadContextMatch type)
+    {
+        switch(type)
+        {
+            case FULL: return 0;
+            case PARTIAL_CORE: return 1;
+            case REALIGNED: return 2;
+            case CORE: return 3;
+            case REF: return 3;
+            case NONE:
+            default:
+                return 5;
+        }
+    }
 
     private static Map<String, SortedSet<String>> VARIANT_INDEXED_BASES_MAP = Maps.newConcurrentMap();
 
@@ -116,13 +131,13 @@ public class VariantVis
     private final String mSample;
     private final SimpleVariant mVariant;
     private final VariantTier mVariantTier;
-    private final EnumMap<ReadContextCounter.MatchType, List<ReadEvidenceRecord>> mReadEvidenceRecordsByType;
-    private final ReadContext mReadContext;
+    private final EnumMap<ReadContextMatch, List<ReadEvidenceRecord>> mReadEvidenceRecordsByType;
+    private final VariantReadContext mReadContext;
     private final BaseRegion mViewRegion;
     private final Map<Integer, List<SvgRender.BoxBorder>> mContextBorders;
     private final BaseSeqViewModel mRefViewModel;
     private final BaseSeqViewModel mContextViewModel;
-    private final EnumMap<ReadContextCounter.MatchType, Integer> mReadCountByType;
+    private final EnumMap<ReadContextMatch, Integer> mReadCountByType;
     private final String mVariantKey;
     private final String mIndexedBasesKey;
     private final RefGenomeSource mRefGenome;
@@ -131,27 +146,26 @@ public class VariantVis
     private int mReadCount;
 
     public VariantVis(
-            final SageConfig config, final String sample, final SimpleVariant variant, final ReadContext readContext,
+            final SageConfig config, final String sample, final SimpleVariant variant, final VariantReadContext readContext,
             final VariantTier variantTier)
     {
         mConfig = config.Visualiser;
         mSample = sample;
         mVariant = variant;
         mVariantTier = variantTier;
-        mReadEvidenceRecordsByType = Maps.newEnumMap(ReadContextCounter.MatchType.class);
+        mReadEvidenceRecordsByType = Maps.newEnumMap(ReadContextMatch.class);
         mReadContext = readContext;
         mVariantKey = mVariant.chromosome() + "_" + mVariant.position() + "_" + mVariant.ref() + "_" + mVariant.alt();
 
-        IndexedBases indexedBases = mReadContext.indexedBases();
         int indelSize = mVariant.ref().length() - mVariant.alt().length();
-        int coreStart = indexedBases.corePositionStart();
-        int coreEnd = indexedBases.corePositionEnd() + indelSize;
-        int flankStart = coreStart + indexedBases.LeftFlankIndex - indexedBases.LeftCoreIndex;
-        int flankEnd = coreEnd + indexedBases.RightFlankIndex - indexedBases.RightCoreIndex;
+        int coreStart = mReadContext.CorePositionStart;
+        int coreEnd = mReadContext.CorePositionEnd;
+        int flankStart = coreStart - mReadContext.leftFlankLength();
+        int flankEnd = coreEnd + mReadContext.rightFlankLength();
         mViewRegion = new BaseRegion(coreStart - SageVisConstants.READ_EXTEND_LENGTH, coreEnd + SageVisConstants.READ_EXTEND_LENGTH);
 
         mContextBorders = Map.ofEntries(
-                entry(mReadContext.Position,
+                entry(mVariant.Position,
                         Lists.newArrayList(
                                 new SvgRender.BoxBorder(SvgRender.BorderLocation.LEFT, Color.BLACK),
                                 new SvgRender.BoxBorder(SvgRender.BorderLocation.RIGHT, Color.BLACK))),
@@ -176,17 +190,18 @@ public class VariantVis
         mRefGenome = loadRefGenome(config.RefGenomeFile);
         String refBases = mRefGenome.getBaseString(mVariant.chromosome(), refPosStart, refPosEnd);
         mRefViewModel = BaseSeqViewModel.fromStr(refBases, refPosStart);
-        mContextViewModel = BaseSeqViewModel.fromVariant(indexedBases, mVariant.ref(), mVariant.alt());
+
+        mContextViewModel = BaseSeqViewModel.fromVariant(mReadContext, mVariant.ref(), mVariant.alt());
 
         StringJoiner indexedBasesKeyBuilder = new StringJoiner("_");
-        indexedBasesKeyBuilder.add(String.valueOf(indexedBases.Index));
-        indexedBasesKeyBuilder.add(String.valueOf(indexedBases.LeftCoreIndex));
-        indexedBasesKeyBuilder.add(String.valueOf(indexedBases.RightCoreIndex));
-        indexedBasesKeyBuilder.add(String.valueOf(indexedBases.FlankSize));
-        indexedBasesKeyBuilder.add(new String(indexedBases.Bases));
+        indexedBasesKeyBuilder.add(String.valueOf(mReadContext.VarReadIndex));
+        indexedBasesKeyBuilder.add(String.valueOf(mReadContext.CoreIndexStart));
+        indexedBasesKeyBuilder.add(String.valueOf(mReadContext.CoreIndexEnd));
+        indexedBasesKeyBuilder.add(String.valueOf(mReadContext.leftFlankLength()));
+        indexedBasesKeyBuilder.add(new String(mReadContext.ReadBases));
         mIndexedBasesKey = indexedBasesKeyBuilder.toString();
 
-        mReadCountByType = Maps.newEnumMap(ReadContextCounter.MatchType.class);
+        mReadCountByType = Maps.newEnumMap(ReadContextMatch.class);
         mReadCount = 0;
 
         SortedSet<String> indexedBasesKeySet = VARIANT_INDEXED_BASES_MAP.get(mVariantKey);
@@ -292,7 +307,7 @@ public class VariantVis
         List<DomContent> rows = Lists.newArrayList();
 
         List<String> headers = Lists.newArrayList("SAMPLE", "QUAL", "AD", ALLELE_FREQUENCY_KEY, "DP");
-        headers.addAll(SORTED_MATCH_TYPES.stream().map(ReadContextCounter.MatchType::name).collect(Collectors.toList()));
+        headers.addAll(SORTED_MATCH_TYPES.stream().map(ReadContextMatch::name).collect(Collectors.toList()));
         headers.addAll(Lists.newArrayList(AVG_BASE_QUAL, AVG_MAP_QUALITY, FRAG_STRAND_BIAS, READ_STRAND_BIAS, "JIT"));
 
         List<DomContent> headerColumns = Lists.newArrayList();
@@ -343,7 +358,7 @@ public class VariantVis
                     td(String.valueOf(depth)));
 
             VariantVis variantVis = counter.variantVis();
-            for(ReadContextCounter.MatchType matchType : SORTED_MATCH_TYPES)
+            for(ReadContextMatch matchType : SORTED_MATCH_TYPES)
             {
                 int count = variantVis.mReadCountByType.getOrDefault(matchType, 0);
                 columnElems.add(td(String.valueOf(count)));
@@ -403,7 +418,8 @@ public class VariantVis
         return filename + "_" + format(formatStr, variantFileNum) + ".html";
     }
 
-    public void addEvidence(final SAMRecord read, @Nullable final FragmentData fragment, final ReadContextCounter.MatchType matchType,
+    public void addEvidence(
+            final SAMRecord read, @Nullable final FragmentData fragment, final ReadContextMatch matchType,
             @Nullable final QualityCalculator.QualityScores modifiedQualities)
     {
         ++mReadCount;
@@ -418,7 +434,7 @@ public class VariantVis
 
         if(fragment == null)
         {
-            records.add(new ReadEvidenceRecord(read, null, matchType, modifiedQualities, mReadContext.Position));
+            records.add(new ReadEvidenceRecord(read, null, matchType, modifiedQualities, mVariant.Position));
             return;
         }
 
@@ -429,17 +445,17 @@ public class VariantVis
         boolean secondIsVisible = mViewRegion.overlaps(secondUnclippedRegion);
         if(firstIsVisible && !secondIsVisible)
         {
-            records.add(new ReadEvidenceRecord(fragment.First, null, matchType, modifiedQualities, mReadContext.Position));
+            records.add(new ReadEvidenceRecord(fragment.First, null, matchType, modifiedQualities, mVariant.Position));
             return;
         }
 
         if(!firstIsVisible && secondIsVisible)
         {
-            records.add(new ReadEvidenceRecord(fragment.Second, null, matchType, modifiedQualities, mReadContext.Position));
+            records.add(new ReadEvidenceRecord(fragment.Second, null, matchType, modifiedQualities, mVariant.Position));
             return;
         }
 
-        records.add(new ReadEvidenceRecord(read, fragment, matchType, modifiedQualities, mReadContext.Position));
+        records.add(new ReadEvidenceRecord(read, fragment, matchType, modifiedQualities, mVariant.Position));
     }
 
     private DomContent renderVariantInfo(int totalTumorQuality, int maxDistanceFromEdge, final Set<String> filters)
@@ -450,24 +466,23 @@ public class VariantVis
         DomContent horizontalSpacer = div().withStyle(horizontalSpacerStyle.toString());
 
         String repeatStr = "NO REPEAT";
-        if(mReadContext.RepeatCount > 0)
+        if(mReadContext.MaxRepeat != null)
         {
-            repeatStr = format("REPEAT = %dx%s", mReadContext.RepeatCount, mReadContext.Repeat);
+            repeatStr = format("REPEAT = %dx%s", mReadContext.MaxRepeat.Count, mReadContext.MaxRepeat.Bases);
         }
 
         String filterStr = "FILTER = PASS";
         if(!filters.isEmpty())
             filterStr = "FILTER = " + filters.stream().collect(Collectors.joining(","));
 
-        IndexedBases indexedBases = mReadContext.indexedBases();
         List<DomContent> contextElems = Lists.newArrayList();
         contextElems.add(span("CONTEXT = "));
-        contextElems.add(span(indexedBases.leftFlankString()));
-        contextElems.add(span(indexedBases.coreString()).withStyle(coreStyle.toString()));
-        contextElems.add(span(indexedBases.rightFlankString()));
+        contextElems.add(span(mReadContext.leftFlankStr()));
+        contextElems.add(span(mReadContext.coreStr()).withStyle(coreStyle.toString()));
+        contextElems.add(span(mReadContext.rightFlankStr()));
 
         DomContent variantInfoRow = tr(
-                td(mVariant.chromosome() + ":" + mReadContext.Position),
+                td(mVariant.chromosome() + ":" + mVariant.Position),
                 td(horizontalSpacer),
                 td(mVariant.ref() + " > " + mVariant.alt()),
                 td(horizontalSpacer),
@@ -530,7 +545,7 @@ public class VariantVis
                 tr(td("context").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(renderContext()));
         tableRows.add(contextRow);
 
-        for(ReadContextCounter.MatchType matchType : SORTED_MATCH_TYPES)
+        for(ReadContextMatch matchType : SORTED_MATCH_TYPES)
         {
             List<ReadEvidenceRecord> records = mReadEvidenceRecordsByType.get(matchType);
             if(records == null || records.isEmpty())
@@ -720,9 +735,9 @@ public class VariantVis
 
     private void downsampleReadEvidenceRecords()
     {
-        for(Map.Entry<ReadContextCounter.MatchType, List<ReadEvidenceRecord>> entry : mReadEvidenceRecordsByType.entrySet())
+        for(Map.Entry<ReadContextMatch, List<ReadEvidenceRecord>> entry : mReadEvidenceRecordsByType.entrySet())
         {
-            ReadContextCounter.MatchType matchType = entry.getKey();
+            ReadContextMatch matchType = entry.getKey();
             List<ReadEvidenceRecord> records = entry.getValue();
 
             int maxReads = SageVisConstants.MAX_READS_PER_TYPE.get(matchType);

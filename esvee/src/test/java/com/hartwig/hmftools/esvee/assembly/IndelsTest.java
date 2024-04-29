@@ -6,20 +6,66 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
+import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import org.junit.Test;
 
+import htsjdk.samtools.CigarElement;
+
 public class IndelsTest
 {
+    @Test
+    public void testIndelCoords()
+    {
+        int readStart = 100;
+
+        String cigar = "20M2I20M";
+        List<CigarElement> cigarElements = CigarUtils.cigarElementsFromStr(cigar);
+
+        // too short
+        IndelCoords indelCoords = findIndelCoords(readStart, cigarElements, 10);
+        assertNull(indelCoords);
+
+        // valid delete
+        cigar = "20M10D20M"; // 100-119 M, 120-129 D, 130-139 M
+        cigarElements = CigarUtils.cigarElementsFromStr(cigar);
+        indelCoords = findIndelCoords(readStart, cigarElements, 10);
+        assertNotNull(indelCoords);
+        assertEquals(10, indelCoords.Length);
+        assertEquals(119, indelCoords.PosStart);
+        assertEquals(130, indelCoords.PosEnd);
+
+        // valid insert
+        cigar = "20M10I20M"; // 100-119 M, 10 I @ 119, 120-129 M
+        cigarElements = CigarUtils.cigarElementsFromStr(cigar);
+        indelCoords = findIndelCoords(readStart, cigarElements, 10);
+        assertNotNull(indelCoords);
+        assertEquals(10, indelCoords.Length);
+        assertEquals(119, indelCoords.PosStart);
+        assertEquals(120, indelCoords.PosEnd);
+
+        // multiple, chooses the longest
+        cigar = "10M10I10M15D10M20I10M25D20M"; // 100-109 M, 10 I @ 109 110-119 M, 120-134 D, 135-144M, 20 I @ 144, 145-154M, 155-179 D, 180-199M
+        cigarElements = CigarUtils.cigarElementsFromStr(cigar);
+        indelCoords = findIndelCoords(readStart, cigarElements, 10);
+        assertNotNull(indelCoords);
+        assertEquals(25, indelCoords.Length);
+        assertEquals(154, indelCoords.PosStart);
+        assertEquals(180, indelCoords.PosEnd);
+    }
+
     @Test
     public void testLongDeleteAssemblies()
     {

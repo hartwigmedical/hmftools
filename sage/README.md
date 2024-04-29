@@ -73,16 +73,18 @@ The cardinality of `reference` must match `reference_bam`.
 
 The following arguments control the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) logic.
 
-Argument | Default | Description 
----|-------|---
-disable_bqr | false | Disable base quality recalibration
-write_bqr_data | NA    | Write BQR calculations - for information purposes, or to re-use if Sage is run again with 'load_bqr_files'
-load_bqr | NA    | Reload previously generated BQR files to avoid re-running this stage, or if running on a sliced BAM
-write_bqr_plot | NA    | Generate base-quality recalibration plots (requires R)
+Argument | Default   | Description 
+---|-----------|---
+bqr_disable | false     | Disable base quality recalibration
+bqr_load | false     | Reload previously generated BQR files to avoid re-running this stage, or if running on a sliced BAM
+bqr_write_plot | false     | Generate base-quality recalibration plots (requires R)
 bqr_sample_size | 2,000,000 | Sample size of each autosome
-bqr_max_alt_count | 3     | Max support of variant before it is considered likely to be real and not a sequencing error
-bqr_max_alt_percent | 0.05   | Max percentage of reads supporting a variant before it is considered likely to be real and not a sequencing error
-bqr_min_map_qual | 10    | Min mapping quality of bam record
+bqr_min_map_qual | 10        | Min mapping quality of bam record
+bqr_write_positions | false     | Write positional data as contributes to BQR
+bqr_write_reads | false     | Write detailed read data as contributes to BQR
+bqr_full_bam | false     | Run BQR over full BAM
+bqr_use_panel | false     | Run BQR over panel only
+bqr_exclude_known | false     | In append mode, exclude known variants
 
 ## Optional Quality Arguments
 
@@ -103,8 +105,8 @@ Argument | Default | Description
 ---|---------|---
 threads | 1       | Number of threads to use
 log_level | INFO    | Also DEBUG and TRACE
-specific_chr | None    | Limit sage to list of chromosomes, separated by ';'
-specific_regions | None    | Limit sage to list of regions, separated by ';' in the form chromosome:positionStart:positionEnd
+specific_chr | None    | Limit Sage to list of chromosomes, separated by ';'
+specific_regions | None    | Limit Sage to list of regions, separated by ';' in the form chromosome:positionStart-positionEnd
 perf_warn_time | None    | Log a warning if any region (ie 100K partition by default) takes more than X seconds to complete  
 log_evidence_reads | False   | For each variant, print a line with each read's match type and various intermediate calculations
 

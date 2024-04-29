@@ -15,6 +15,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.alignment.AlternativeAlignment;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
 import com.hartwig.hmftools.esvee.alignment.BreakendSegment;
@@ -199,9 +200,7 @@ public class BreakendWriter
                 String facingBreakendIds = breakend.facingBreakends().stream().map(x -> String.valueOf(x.id())).collect(Collectors.joining(ITEM_DELIM));
                 sj.add(facingBreakendIds);
 
-                String altAlignmentsStr = breakend.alternativeAlignments() != null ?
-                        breakend.alternativeAlignments().stream().map(x -> x.altAlignmentStr()).collect(Collectors.joining(ITEM_DELIM)) : "";
-                sj.add(altAlignmentsStr);
+                sj.add(AlternativeAlignment.altAlignmentsStr(breakend.alternativeAlignments()));
 
                 if(mTruthsetAnnotation.enabled())
                     sj.add(mTruthsetAnnotation.findTruthsetAnnotation(breakend));

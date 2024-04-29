@@ -82,7 +82,6 @@ public class SomaticVariantEnrichment implements Callable
 
     public static void populateHeader(final VCFHeader header, final String purpleVersion)
     {
-        SageVcfTags.addRefContextHeader(header);
         KataegisEnrichment.enrichHeader(header);
         SubclonalLikelihoodEnrichment.enrichHeader(header);
         HotspotEnrichment.enrichHeader(header);

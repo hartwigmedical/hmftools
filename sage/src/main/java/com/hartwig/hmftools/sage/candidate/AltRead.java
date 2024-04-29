@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.candidate;
 
-import com.hartwig.hmftools.sage.old.ReadContext;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -15,11 +15,11 @@ public class AltRead
     private final RefContext mRefContext;
 
     @Nullable
-    private ReadContext mReadContext;
+    private VariantReadContext mReadContext;
 
     public AltRead(
             final RefContext refContext, final String ref, final String alt, final int baseQuality, final int numberOfEvents,
-            final boolean sufficientMapQuality, final ReadContext readContext)
+            final boolean sufficientMapQuality, final VariantReadContext readContext)
     {
         mRefContext = refContext;
         Ref = ref;
@@ -29,11 +29,6 @@ public class AltRead
         SufficientMapQuality = sufficientMapQuality;
 
         mReadContext = readContext;
-    }
-
-    public boolean containsReadContext()
-    {
-        return mReadContext != null;
     }
 
     public int position()
@@ -49,23 +44,6 @@ public class AltRead
     public int length()
     {
         return Math.abs(Ref.length() - Alt.length());
-    }
-
-    public int rightCoreIndex()
-    {
-        return mReadContext.readBasesRightCentreIndex();
-    }
-    public int leftCoreIndex()
-    {
-        return mReadContext.readBasesLeftCentreIndex();
-    }
-
-    public void extend(final AltRead other)
-    {
-        int leftIndex = Math.min(mReadContext.readBasesLeftCentreIndex(), other.mReadContext.readBasesLeftCentreIndex());
-        int rightIndex = Math.max(mReadContext.readBasesRightCentreIndex(), other.mReadContext.readBasesRightCentreIndex());
-
-        mReadContext.extendCore(leftIndex, rightIndex);
     }
 
     public void updateRefContext()

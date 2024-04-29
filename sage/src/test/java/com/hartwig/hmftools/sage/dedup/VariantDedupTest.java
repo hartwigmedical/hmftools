@@ -5,17 +5,14 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.sage.common.TestUtils.addLocalPhaseSet;
 import static com.hartwig.hmftools.sage.common.TestUtils.clearFilters;
-import static com.hartwig.hmftools.sage.common.TestUtils.createVariant;
-import static com.hartwig.hmftools.sage.common.TestUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.common.TestUtils.setTumorQuality;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createSageVariant;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_GERMLINE_DEPTH;
 import static com.hartwig.hmftools.sage.dedup.VariantDeduper.longerContainsShorter;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-
-import static junit.framework.TestCase.assertEquals;
 
 import java.util.List;
 
@@ -52,8 +49,8 @@ public class VariantDedupTest
         // must overlap, be phased and passing
 
         // ATG -> CGA
-        SageVariant var1 = createVariant(10, "AT", "CG");
-        SageVariant var2 = createVariant(11, "TG", "GA");
+        SageVariant var1 = createSageVariant(10, "AT", "CG");
+        SageVariant var2 = createSageVariant(11, "TG", "GA");
 
         setTumorQuality(var1, 5, 1000);
         setTumorQuality(var2, 4, 900);
@@ -88,8 +85,8 @@ public class VariantDedupTest
         clearFilters(variants);
 
         // dedup shorter if has same number of changed bases
-        var1 = createVariant(10, "ATG", "CTA");
-        var2 = createVariant(12, "GC", "AT");
+        var1 = createSageVariant(10, "ATG", "CTA");
+        var2 = createSageVariant(12, "GC", "AT");
         addLocalPhaseSet(var1, 1, 1);
         addLocalPhaseSet(var2, 1, 1);
 
@@ -103,8 +100,8 @@ public class VariantDedupTest
         clearFilters(variants);
 
         // dedup longer assuming all bases have changed
-        var1 = createVariant(10, "AAG", "CTA");
-        var2 = createVariant(12, "GC", "AT");
+        var1 = createSageVariant(10, "AAG", "CTA");
+        var2 = createSageVariant(12, "GC", "AT");
         addLocalPhaseSet(var1, 1, 1);
         addLocalPhaseSet(var2, 1, 1);
 
@@ -120,10 +117,10 @@ public class VariantDedupTest
     public void testMnvSnvDedup()
     {
         // ATG -> CGA
-        SageVariant var1 = createVariant(10, "ATG", "CGA");
-        SageVariant var2 = createVariant(10, "A", "C");
-        SageVariant var3 = createVariant(11, "T", "G");
-        SageVariant var4 = createVariant(12, "G", "A");
+        SageVariant var1 = createSageVariant(10, "ATG", "CGA");
+        SageVariant var2 = createSageVariant(10, "A", "C");
+        SageVariant var3 = createSageVariant(11, "T", "G");
+        SageVariant var4 = createSageVariant(12, "G", "A");
 
         // must be same LPS
         addLocalPhaseSet(var1, 1, 1);
@@ -141,14 +138,14 @@ public class VariantDedupTest
         assertFalse(var4.isPassing());
 
         // more complicated example with variants interspersed
-        var1 = createVariant(10, "A", "G"); // no match
-        var2 = createVariant(10, "ATG", "CGA");
-        SageVariant var7 = createVariant(11, "TGA", "CCC");
-        var3 = createVariant(11, "T", "A");
-        var4 = createVariant(11, "T", "G"); // dedup with first MNV
-        SageVariant var5 = createVariant(12, "G", "T");
-        SageVariant var6 = createVariant(12, "G", "A"); // deup with first MNV
-        SageVariant var8 = createVariant(13, "A", "C");
+        var1 = createSageVariant(10, "A", "G"); // no match
+        var2 = createSageVariant(10, "ATG", "CGA");
+        SageVariant var7 = createSageVariant(11, "TGA", "CCC");
+        var3 = createSageVariant(11, "T", "A");
+        var4 = createSageVariant(11, "T", "G"); // dedup with first MNV
+        SageVariant var5 = createSageVariant(12, "G", "T");
+        SageVariant var6 = createSageVariant(12, "G", "A"); // deup with first MNV
+        SageVariant var8 = createSageVariant(13, "A", "C");
 
         // must be same LPS
         addLocalPhaseSet(var2, 1, 1);
@@ -175,9 +172,9 @@ public class VariantDedupTest
     public void testMixedGermline()
     {
         // ATG -> CGA
-        SageVariant var1 = createVariant(10, "ATG", "CGA");
-        SageVariant var2 = createVariant(10, "A", "C");
-        SageVariant var3 = createVariant(12, "G", "A"); // marked as germline
+        SageVariant var1 = createSageVariant(10, "ATG", "CGA");
+        SageVariant var2 = createSageVariant(10, "A", "C");
+        SageVariant var3 = createSageVariant(12, "G", "A"); // marked as germline
 
         // must be same LPS
         addLocalPhaseSet(var1, 1, 1);
@@ -201,9 +198,9 @@ public class VariantDedupTest
         assertFalse(var3.isPassing());
 
         // test again with the MNV spanning a codon so the SNV is kept
-        var1 = createVariant(11, "ATG", "CGA");
-        var2 = createVariant(12, "T", "G"); // marked as germline
-        var3 = createVariant(13, "G", "A");
+        var1 = createSageVariant(11, "ATG", "CGA");
+        var2 = createSageVariant(12, "T", "G"); // marked as germline
+        var3 = createSageVariant(13, "G", "A");
 
         // must be same LPS
         addLocalPhaseSet(var1, 1, 1);

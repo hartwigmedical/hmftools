@@ -4,6 +4,12 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
+import static htsjdk.samtools.CigarOperator.D;
+
+import java.util.List;
+
+import htsjdk.samtools.CigarElement;
+
 public class IndelCoords
 {
     public final int PosStart;
@@ -39,5 +45,44 @@ public class IndelCoords
     public String toString()
     {
         return format("%s(%d - %d) len(%d)", isDelete() ? "delete" : "insert", PosStart, PosEnd, Length);
+    }
+
+
+    public static IndelCoords findIndelCoords(final int readStart, final List<CigarElement> cigarElements, int minIndelLength)
+    {
+        int maxIndelLength = 0;
+
+        // find the location of the internal delete or insert matching the max indel length
+        int indelStartPos = readStart - 1;
+        int indelEndPos = 0;
+
+        int refPosition = readStart;
+
+        for(CigarElement element : cigarElements)
+        {
+            if(element.getOperator().isIndel())
+            {
+                if(element.getLength() > maxIndelLength)
+                {
+                    maxIndelLength = element.getLength();
+
+                    // indel start is the last ref base, indel end is the next ref base
+                    indelStartPos = refPosition - 1;
+
+                    if(element.getOperator() == D)
+                        indelEndPos = indelStartPos + element.getLength() + 1;
+                    else
+                        indelEndPos = indelStartPos + 1;
+                }
+            }
+
+            if(element.getOperator().consumesReferenceBases())
+                refPosition += element.getLength();
+        }
+
+        if(indelEndPos <= indelStartPos || maxIndelLength < minIndelLength)
+            return null;
+
+        return new IndelCoords(indelStartPos, indelEndPos, maxIndelLength);
     }
 }

@@ -121,6 +121,11 @@ public final class CigarUtils
         return (firstElement != null && firstElement.getOperator() == CigarOperator.S) ? firstElement.getLength() : 0;
     }
 
+    public static int leftSoftClipLength(final List<CigarElement> elements)
+    {
+        return elements.get(0).getOperator() == CigarOperator.S ? elements.get(0).getLength() : 0;
+    }
+
     public static int rightSoftClipLength(final Cigar cigar)
     {
         CigarElement lastElement = cigar.getLastCigarElement();
@@ -185,7 +190,7 @@ public final class CigarUtils
             }
 
             int digit = c - '0';
-            if (digit >= 0 && digit <= 9)
+            if(digit >= 0 && digit <= 9)
             {
                 elementLength = elementLength * 10 + digit;
             }
@@ -205,51 +210,4 @@ public final class CigarUtils
                 .filter(x -> x.getOperator() == CigarOperator.D || x.getOperator() == CigarOperator.I)
                 .mapToInt(x -> x.getLength()).max().orElse(0);
     }
-
-    public static int[] findIndelCoords(final int readStart, final List<CigarElement> cigarElements, int minIndelLength)
-    {
-        int maxIndelLength = maxIndelLength(cigarElements);
-
-        if(maxIndelLength < minIndelLength)
-            return null;
-
-        // find the location of the internal delete or insert matching the max indel length
-        int indelStartPos = readStart - 1;
-        int indelEndPos = 0;
-        for(CigarElement element : cigarElements)
-        {
-            if(element.getOperator() == M)
-            {
-                indelStartPos += element.getLength();
-            }
-            else if(element.getOperator() == D)
-            {
-                if(element.getLength() == maxIndelLength)
-                {
-                    indelEndPos = indelStartPos + element.getLength() + 1;
-                    break;
-                }
-
-                indelStartPos += element.getLength();
-            }
-            else if(element.getOperator() == I)
-            {
-                if(element.getLength() == maxIndelLength)
-                {
-                    indelEndPos = indelStartPos + 1;
-                    break;
-                }
-            }
-            else
-            {
-                continue;
-            }
-        }
-
-        if(indelEndPos <= indelStartPos)
-            return null;
-
-        return new int[] { indelStartPos, indelEndPos };
-    }
-
 }

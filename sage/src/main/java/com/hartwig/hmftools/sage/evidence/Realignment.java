@@ -1,20 +1,86 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.sage.evidence.RealignedContext.NONE;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 
-import com.hartwig.hmftools.sage.old.RepeatContextFactory;
-import com.hartwig.hmftools.sage.old.ReadContext;
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.I;
+
+import com.hartwig.hmftools.sage.common.VariantReadContext;
+
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.SAMRecord;
 
 public class Realignment
 {
-    private static final int MIN_REPEAT_COUNT = 4;
+    public static final int INVALID_INDEX = -1;
+
+    public static int realignedReadIndexPosition(final VariantReadContext readContext, final SAMRecord record)
+    {
+        int variantCoreEndPosition = readContext.CorePositionEnd;
+
+        if(variantCoreEndPosition < record.getAlignmentStart() || variantCoreEndPosition > record.getAlignmentEnd())
+            return INVALID_INDEX;
+
+        int refPosition = record.getAlignmentStart();
+        int index = 0;
+
+        for(CigarElement element : record.getCigar().getCigarElements())
+        {
+            if(refPosition + element.getLength() >= variantCoreEndPosition && element.getOperator().consumesReferenceBases())
+            {
+                if(element.getOperator().consumesReadBases())
+                    index += variantCoreEndPosition - refPosition;
+
+                break;
+            }
+
+            if(element.getOperator().consumesReferenceBases())
+                refPosition += element.getLength();
+
+            if(element.getOperator().consumesReadBases())
+                index += element.getLength();
+        }
+
+        // convert back to the variant's index location
+        int adjustedReadIndex = index - readContext.rightCoreLength();
+        return adjustedReadIndex;
+    }
+
+    public static RealignedContext realignedAroundIndex(final VariantReadContext readContext, final int readIndex, final SAMRecord record)
+    {
+        int baseStartIndex = 0;
+        int baseEndIndex = readContext.totalLength() - 1;
+
+        int leftOffset = readContext.leftLength();
+        int otherStartIndex = readIndex - leftOffset;
+
+        int maxAlignDistance = getMaxRealignDistance(readContext, record);
+
+        return realigned(baseStartIndex, baseEndIndex, readContext.ReadBases, otherStartIndex, record.getReadBases(), maxAlignDistance);
+    }
+
+    private static int getMaxRealignDistance(final VariantReadContext readContext, final SAMRecord record)
+    {
+        // returns the larger of (read indel length total + largest core) or (max repeat size  = 5), + 1
+        int indelLength = record.getCigar().getCigarElements().stream()
+                .filter(x -> x.getOperator() == I || x.getOperator() == D).mapToInt(x -> x.getLength()).sum();
+
+        return max(indelLength + max(readContext.leftCoreLength(), readContext.rightCoreLength()), Realignment.MAX_REPEAT_SIZE) + 1;
+    }
+
+
+
+    // REALIGN: old logic to be removed
     public static final int MAX_REPEAT_SIZE = 5;
-
     private static final Repeat NO_REPEAT = new Repeat(0, 0);
+    private static final int MIN_REPEAT_COUNT = 4;
 
+    /*
     public static RealignedContext realignedAroundIndex(
             final ReadContext readContext, final int otherBaseIndex, final byte[] otherBases, int maxSize)
     {
@@ -26,6 +92,7 @@ public class Realignment
 
         return realigned(baseStartIndex, baseEndIndex, readContext.readBases(), otherStartIndex, otherBases, maxSize);
     }
+    */
 
     public static RealignedContext realigned(
             int baseStartIndex, int baseEndIndex, final byte[] bases, final int otherBaseIndex, final byte[] otherBases, int maxDistance)
@@ -118,13 +185,48 @@ public class Realignment
     {
         for(int i = 1; i <= MAX_REPEAT_SIZE; i++)
         {
-            int repeats = RepeatContextFactory.backwardRepeats(index - i, i, bases) + 1;
+            int repeats = backwardRepeats(index - i, i, bases) + 1;
 
             if(repeats >= MIN_REPEAT_COUNT)
                 return new Repeat(i, repeats);
         }
 
         return NO_REPEAT;
+    }
+
+    private static int backwardRepeats(int index, int repeatLength, final byte[] readSequence)
+    {
+        for(int count = 1; ; count++)
+        {
+            if(!match(index, repeatLength, index - count * repeatLength, readSequence))
+            {
+                return count - 1;
+            }
+        }
+    }
+
+    public static boolean match(int repeatIndex, int repeatLength, int readIndex, byte[] readSequence)
+    {
+        return matchingBasesFromLeft(repeatIndex, repeatLength, readIndex, readSequence) == repeatLength;
+    }
+
+    private static int matchingBasesFromLeft(int repeatIndex, int repeatLength, int readIndex, byte[] readSequence)
+    {
+        for(int i = 0; i < repeatLength; i++)
+        {
+            if(outOfBounds(repeatIndex + i, readSequence) || outOfBounds(readIndex + i, readSequence)
+                    || readSequence[repeatIndex + i] != readSequence[readIndex + i])
+            {
+                return i;
+            }
+        }
+
+        return repeatLength;
+    }
+
+    private static boolean outOfBounds(int index, byte[] sequence)
+    {
+        return index < 0 || index >= sequence.length;
     }
 
     private static class Repeat

@@ -5,8 +5,12 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.setReadFlag;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
@@ -16,20 +20,22 @@ import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_RANDOM_100;
 import static com.hartwig.hmftools.esvee.TestUtils.createAssembly;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.alignment.HomologyData.determineHomology;
-import static com.hartwig.hmftools.esvee.prep.TestUtils.setReadFlag;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.util.Collections;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.alignment.AlignData;
+import com.hartwig.hmftools.esvee.alignment.AlternativeAlignment;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
 import com.hartwig.hmftools.esvee.alignment.BreakendBuilder;
@@ -70,25 +76,87 @@ public class AlignmentTest
         AlignData alignmentStart = createAlignment(CHR_1, 100, 150, 0, 50, "51M");
         AlignData alignmentEnd = createAlignment(CHR_1, 100, 150, 51, 100, "50M");
 
-        assertNull(determineHomology(alignmentStart, alignmentEnd, mRefGenome));
 
-        String basesStart = "TTCTAGTGTG";
-        HomologyData homology = determineHomology(basesStart, basesStart, basesStart.length());
+        String assemblyOverlap = "";
+
+        assertNull(determineHomology(assemblyOverlap, alignmentStart, alignmentEnd, mRefGenome));
+
+        String basesStart = "TTCTTCTTCTC";
+        String basesEnd = basesStart;
+        assemblyOverlap = basesStart;
+
+        // test 1: exact match
+        HomologyData homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
         assertNotNull(homology);
         assertEquals(basesStart, homology.Homology);
-        assertEquals(-5, homology.ExactStart);
+        assertEquals(-6, homology.ExactStart);
         assertEquals(5, homology.ExactEnd);
-        assertEquals(0, homology.InexactStart);
-        assertEquals(0, homology.InexactEnd);
+        assertEquals(-6, homology.InexactStart);
+        assertEquals(5, homology.InexactEnd);
+        assertEquals(6, homology.positionOffset());
 
-        String basesEnd = "TTCTAAAAAA";
-
-        homology = determineHomology(basesStart, basesEnd, basesStart.length());
-        assertNotNull(homology);
-        assertEquals("TTCTA", homology.Homology);
-        assertEquals(-2, homology.ExactStart);
-        assertEquals(3, homology.ExactEnd);
+        // test 2: first base now no longer matches
+        basesStart = "GTCTTCTTCTC";
+        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+        assertEquals("", homology.Homology);
+        assertEquals(0, homology.ExactStart);
+        assertEquals(0, homology.ExactEnd);
         assertEquals(0, homology.InexactStart);
+        assertEquals(11, homology.InexactEnd);
+
+        // test 3: first base matches, range of lowest mismatches is 0-1
+        basesStart = "TGCATCTTCTC";
+        assemblyOverlap = "TTCATCTTCTC";
+        basesEnd = assemblyOverlap;
+        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+        assertEquals("T", homology.Homology);
+        assertEquals(-1, homology.ExactStart);
+        assertEquals(0, homology.ExactEnd);
+        assertEquals(-1, homology.InexactStart);
+        assertEquals(10, homology.InexactEnd);
+
+        // test 4: second base has mismatch
+        basesStart = "TTGATCTTCTC";
+        assemblyOverlap = "TTCATCTTCTC";
+        basesEnd = assemblyOverlap;
+        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+        assertEquals("TT", homology.Homology);
+        assertEquals(-1, homology.ExactStart);
+        assertEquals(1, homology.ExactEnd);
+        assertEquals(-1, homology.InexactStart);
+        assertEquals(10, homology.InexactEnd);
+
+        // test 5: min mismatches in range 4-6
+        basesStart = "TTCATCGTCTC";
+        assemblyOverlap = "TTCATCTTCTC";
+        basesEnd = "TTCTTCTTCTC";
+        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+        assertEquals("TTC", homology.Homology);
+        assertEquals(-1, homology.ExactStart);
+        assertEquals(1, homology.ExactEnd);
+        assertEquals(-5, homology.InexactStart);
+        assertEquals(6, homology.InexactEnd);
+
+        // test 6: ref sequences match but have the same difference from the assembly
+        basesStart = "TTCATGTTCTC";
+        assemblyOverlap = "TTCATCTTCTC";
+        basesEnd = basesStart;
+        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+        assertEquals(basesStart, homology.Homology);
+        assertEquals(-6, homology.ExactStart);
+        assertEquals(5, homology.ExactEnd);
+        assertEquals(-6, homology.InexactStart);
+        assertEquals(5, homology.InexactEnd);
+
+        // test 7:
+        basesStart = "TTCATGTTCTC";
+        assemblyOverlap = "TTCATCTTCTC";
+        basesEnd = "TTCATATTCTC";
+        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+        assertEquals("TTCAT", homology.Homology);
+        assertEquals(-6, homology.ExactStart);
+        assertEquals(5, homology.ExactEnd);
+        assertEquals(-6, homology.InexactStart);
         assertEquals(5, homology.InexactEnd);
     }
 
@@ -223,10 +291,10 @@ public class AlignmentTest
 
         BreakendBuilder breakendBuilder = new BreakendBuilder(mRefGenome, assemblyAlignment);
 
-        AlignData alignment1 = createAlignment(CHR_1, 101, 200, 0, 150, "100M50S");
-        AlignData alignment2 = createAlignment(CHR_2, 250, 349, 150, 300, "50S100M");
+        AlignData alignment1 = createAlignment(CHR_1, 101, 200, 0, 100, "100M50S");
+        AlignData alignment2 = createAlignment(CHR_2, 250, 349, 100, 200, "50S100M");
 
-        List<AlignData> alignments = List.of(alignment1, alignment2);
+        List<AlignData> alignments = Lists.newArrayList(alignment1, alignment2);
 
         breakendBuilder.formBreakends(alignments);
 
@@ -241,20 +309,136 @@ public class AlignmentTest
         Breakend second = assemblyAlignment.breakends().get(1);
         assertEquals(250, second.Position);
         assertEquals(NEG_ORIENT, second.Orientation);
+
+        // test again for a DUP with inserted bases and SGLs on both ends
+        assemblyAlignment = createAssemblyAlignment(
+                CHR_1, 100, NEG_ORIENT, CHR_1, 350, POS_ORIENT, "AAAA");
+
+        breakendBuilder = new BreakendBuilder(mRefGenome, assemblyAlignment);
+
+        String altAlignment1 = "1,+1000000,100M,0;1,-1500000,50M50S,0";
+        String altAlignment2 = "2,+2000000,100M,0";
+
+        alignment1 = createAlignment(CHR_1, 251, 350, 0, 100, "100M50S");
+
+        AlignData zeroAlignment1 = createAlignment(
+                CHR_2, 1000, 1100, false, 0, 0, 100, 102, "100M", altAlignment1);
+
+        AlignData zeroAlignment2 = createAlignment(
+                CHR_2, 2000, 2100, false, 0, 0, 102, 104, "100M", altAlignment2);
+
+        alignment2 = createAlignment(CHR_1, 100, 199, 104, 204, "50S100M");
+
+        alignments = Lists.newArrayList(alignment1, alignment2, zeroAlignment1, zeroAlignment2);
+
+        breakendBuilder.formBreakends(alignments);
+
+        assertEquals(2, assemblyAlignment.breakends().size());
+
+        Collections.sort(assemblyAlignment.breakends());
+
+        first = assemblyAlignment.breakends().get(0);
+        assertEquals(DUP, first.svType());
+        assertEquals(100, first.Position);
+        assertEquals(NEG_ORIENT, first.Orientation);
+        assertEquals(5, first.alternativeAlignments().size());
+        assertNull(first.Homology);
+
+        second = assemblyAlignment.breakends().get(1);
+        assertEquals(350, second.Position);
+        assertEquals(POS_ORIENT, second.Orientation);
+        assertEquals(5, second.alternativeAlignments().size());
+
+
+        // test outer singles also with alt alignments
+        assemblyAlignment = createAssemblyAlignment(
+                CHR_1, 200, POS_ORIENT, CHR_1, 250, NEG_ORIENT, "");
+
+        breakendBuilder = new BreakendBuilder(mRefGenome, assemblyAlignment);
+
+        zeroAlignment1 = createAlignment(
+                CHR_2, 3000, 3100, false, 0, 0, 0, 2, "50S2M", altAlignment1);
+
+        alignment1 = createAlignment(CHR_1, 101, 200, 2, 101, "50S100M50S");
+
+        alignment2 = createAlignment(CHR_1, 250, 349, 101, 199, "50S100M50S");
+
+        zeroAlignment2 = createAlignment(
+                CHR_2, 4000, 4100, false, 0, 0, 199, 200, "2M50S", altAlignment2);
+
+        alignments = Lists.newArrayList(alignment1, alignment2, zeroAlignment1, zeroAlignment2);
+
+        breakendBuilder.formBreakends(alignments);
+
+        assertEquals(4, assemblyAlignment.breakends().size());
+
+        Collections.sort(assemblyAlignment.breakends());
+
+        Breakend breakend = assemblyAlignment.breakends().get(0);
+        assertEquals(SGL, breakend.svType());
+        assertEquals(101, breakend.Position);
+        assertEquals(NEG_ORIENT, breakend.Orientation);
+        assertEquals(50, breakend.InsertedBases.length());
+        assertEquals(3, breakend.alternativeAlignments().size());
+
+        breakend = assemblyAlignment.breakends().get(1);
+        assertEquals(DEL, breakend.svType());
+        assertEquals(200, breakend.Position);
+        assertEquals(POS_ORIENT, breakend.Orientation);
+        assertNull(breakend.Homology);
+
+        breakend = assemblyAlignment.breakends().get(2);
+        assertEquals(DEL, breakend.svType());
+        assertEquals(250, breakend.Position);
+        assertEquals(NEG_ORIENT, breakend.Orientation);
+
+        breakend = assemblyAlignment.breakends().get(3);
+        assertEquals(SGL, breakend.svType());
+        assertEquals(349, breakend.Position);
+        assertEquals(POS_ORIENT, breakend.Orientation);
+        assertEquals(50, breakend.InsertedBases.length());
+        assertEquals(2, breakend.alternativeAlignments().size());
+    }
+
+    @Test
+    public void testIndelTypes()
+    {
+        // first a DEL
+        AssemblyAlignment assemblyAlignment = createAssemblyAlignment(
+                CHR_1, 200, POS_ORIENT, CHR_1, 251, NEG_ORIENT, "");
+
+        BreakendBuilder breakendBuilder = new BreakendBuilder(mRefGenome, assemblyAlignment);
+
+        AlignData alignment = createAlignment(CHR_1, 101, 350, 0, 200, "100M50D100M");
+
+        List<AlignData> alignments = Lists.newArrayList(alignment);
+
+        breakendBuilder.formBreakends(alignments);
+
+        assertEquals(2, assemblyAlignment.breakends().size());
+
+        Breakend first = assemblyAlignment.breakends().get(0);
+        assertEquals(DEL, first.svType());
+        assertEquals(200, first.Position);
+        assertEquals(POS_ORIENT, first.Orientation);
+        assertNull(first.Homology);
+
+        Breakend second = assemblyAlignment.breakends().get(1);
+        assertEquals(251, second.Position);
+        assertEquals(NEG_ORIENT, second.Orientation);
     }
 
     private static AlignData createAlignment(
             final String chromosome, int posStart, int posEnd, int segStart, int segEnd, final String cigar)
     {
         int score = segEnd - segStart + 1;
-        return createAlignment(chromosome, posStart, posEnd, false, DEFAULT_MAP_QUAL, score, segStart, segEnd, cigar);
+        return createAlignment(chromosome, posStart, posEnd, false, DEFAULT_MAP_QUAL, score, segStart, segEnd, cigar, "");
     }
 
     private static AlignData createAlignment(
             final String chromosome, int posStart, int posEnd, boolean reversed, int mapQual, int score, int segStart, int segEnd,
-            final String cigar)
+            final String cigar, final String xaTag)
     {
-        String xaTag = "";
         String mdTag = "";
 
         int flags = 0;
@@ -262,6 +446,7 @@ public class AlignmentTest
         if(reversed)
             flags = setReadFlag(flags, SAMFlag.READ_REVERSE_STRAND);
 
+        // note: as per BWA conventions 1 will be subtracted from the segment end
         return new AlignData(
                 new ChrBaseRegion(chromosome, posStart, posEnd), segStart, segEnd, mapQual,score, flags, cigar, DEFAULT_NM, xaTag, mdTag);
     }

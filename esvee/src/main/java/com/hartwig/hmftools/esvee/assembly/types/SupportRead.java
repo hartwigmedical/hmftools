@@ -58,7 +58,7 @@ public class SupportRead
     private final int mInsertSize;
     private final int mTrimCount;
 
-    private final int mJunctionReadIndex; // index within this read of the junction position
+    private final int mJunctionReadIndex; // index within this read of the junction position, or -1 for non junction reads
     private int mJunctionAssemblyIndex; // index within this read's junction assembly if the read's start position
     private int mLinkedAssemblyIndex; // index within this read's full linked assembly (if exists) if the read's start position
 

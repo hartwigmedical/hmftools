@@ -14,15 +14,17 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeFile;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegionList;
-import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegions;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.bam.BamUtils.deriveRefGenomeVersion;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 
 import java.util.List;
 
@@ -72,10 +74,24 @@ public class SliceConfig
     {
         mIsValid = true;
 
-        OutputPrefix = configBuilder.getValue(OUTPUT_PREFIX);
         BamFile = configBuilder.getValue(BAM_FILE);
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
-        OutputDir = parseOutputDir(configBuilder);
+
+        OutputDir = configBuilder.hasValue(OUTPUT_DIR) ? parseOutputDir(configBuilder) : pathFromFile(BamFile);
+
+        if(configBuilder.hasValue(OUTPUT_PREFIX))
+        {
+            OutputPrefix = configBuilder.getValue(OUTPUT_PREFIX);
+        }
+        else
+        {
+            String filename = filenamePart(BamFile);
+            int extIndex = filename.lastIndexOf(".");
+            String bamFileName = filename.substring(0, extIndex);
+
+            OutputPrefix = bamFileName + ".slice";
+        }
+
         WriteReads = configBuilder.hasFlag(WRITE_READS);
         WriteBam = configBuilder.hasFlag(WRITE_BAM) || !WriteReads;
         UnsortedBam = configBuilder.hasFlag(UNSORTED_BAM);
@@ -135,7 +151,6 @@ public class SliceConfig
         String outputFile = OutputDir + OutputPrefix + fileType.extension();
         return outputFile;
     }
-
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {

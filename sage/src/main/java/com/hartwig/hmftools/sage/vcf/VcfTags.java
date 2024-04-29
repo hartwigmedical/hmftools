@@ -3,10 +3,18 @@ package com.hartwig.hmftools.sage.vcf;
 public final class VcfTags
 {
     public static final String VERSION_META_DATA = "sageVersion";
-    public static final String READ_CONTEXT = "RC";
+
+    public static final String READ_CONTEXT_CORE = "RC";
+    public static final String READ_CONTEXT_CORE_DESC = "Read context core";
+
     public static final String READ_CONTEXT_LEFT_FLANK = "RC_LF";
+    public static final String READ_CONTEXT_LEFT_FLANK_DESC = "Read context left flank";
+
     public static final String READ_CONTEXT_RIGHT_FLANK = "RC_RF";
+    public static final String READ_CONTEXT_RIGHT_FLANK_DESC = "Read context right flank";
+
     public static final String READ_CONTEXT_INDEX = "RC_IDX";
+    public static final String READ_CONTEXT_INDEX_DESC = "Index in the read context of the variant";
 
     public static final String DEDUP_MNV_FILTER = "dedupMnv";
     public static final String DEDUP_MIXED_GERMLINE_SOMATIC_FILTER = "dedupMixedGermlineSomatic";
@@ -33,8 +41,16 @@ public final class VcfTags
     public static final String READ_CONTEXT_IMPROPER_PAIR_DESC = "Read context improper pair count";
 
     public static final String RAW_DEPTH = "RDP";
+    public static final String RAW_DEPTH_DESC = "Raw read depth";
+
     public static final String RAW_SUPPORT_DEPTH = "RAD";
+    public static final String RAW_SUPPORT_DEPTH_DESC = "Raw allelic depth";
+
     public static final String RAW_SUPPORT_BASE_QUALITY = "RABQ";
+    public static final String RAW_SUPPORT_BASE_QUALITY_DESC = "Raw allelic base quality";
+
+    public static final String RAW_VS_CONTEXT_DIFFS = "RC_DIFFS";
+    public static final String RAW_VS_CONTEXT_DIFFS_DESC = "Diffs between raw context and read context matching (ref,alt)";
 
     public static final String AVG_MAP_QUALITY = "AMQ";
     public static final String AVG_MAP_QUALITY_DESC = "Average map quality count (all,alt)";

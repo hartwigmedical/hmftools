@@ -31,9 +31,7 @@ public class ReadContextCounterFactory
         for(Candidate candidate : candidates)
         {
             readCounters.add(new ReadContextCounter(
-                    readId++,
-                    candidate.variant(), candidate.readContext(), candidate.tier(),
-                    maxCoverage(candidate), candidate.minNumberOfEvents(),
+                    readId++, candidate.readContext(), candidate.tier(), maxCoverage(candidate), candidate.minNumberOfEvents(),
                     config, qualityCalculator, sampleId));
         }
 

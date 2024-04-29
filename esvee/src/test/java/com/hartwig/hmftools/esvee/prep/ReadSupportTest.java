@@ -8,10 +8,10 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_MAP_QU
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
+import static com.hartwig.hmftools.esvee.TestUtils.buildFlags;
+import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.esvee.TestUtils.readIdStr;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.READ_FILTERS;
-import static com.hartwig.hmftools.esvee.prep.TestUtils.buildFlags;
-import static com.hartwig.hmftools.esvee.prep.TestUtils.createSamRecord;
-import static com.hartwig.hmftools.esvee.prep.TestUtils.readIdStr;
 import static com.hartwig.hmftools.esvee.prep.JunctionTracker.hasOtherJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.JunctionTracker.hasExactJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.INSERT_MAP_OVERLAP;
@@ -188,7 +188,7 @@ public class ReadSupportTest
     public void testDistantSupportingReads()
     {
         // first negative orientation
-        PrepRead junctionRead = PrepRead.from(TestUtils.createSamRecord(
+        PrepRead junctionRead = PrepRead.from(createSamRecord(
                 READ_ID_GENERATOR.nextId(), CHR_1, 230, REF_BASES.substring(0, 100), "30S70M"));
 
         JunctionData junctionData = new JunctionData(230, NEG_ORIENT, junctionRead);
@@ -210,7 +210,7 @@ public class ReadSupportTest
         assertFalse(hasOtherJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // other junction side
-        junctionRead = PrepRead.from(TestUtils.createSamRecord(
+        junctionRead = PrepRead.from(createSamRecord(
                 READ_ID_GENERATOR.nextId(), CHR_1, 1500, REF_BASES.substring(0, 100), "70M30S"));
 
         junctionData = new JunctionData(1500, POS_ORIENT, junctionRead);
@@ -295,8 +295,6 @@ public class ReadSupportTest
             final String readId, int readStart, boolean firstInPair, boolean reversed)
     {
         return PrepRead.from(createSamRecord(
-                readId, CHR_1, readStart, "", "100M",
-                buildFlags(firstInPair, reversed, false),
-                DEFAULT_MAP_QUAL, DEFAULT_BASE_QUAL));
+                readId, CHR_1, readStart, "", "100M", buildFlags(firstInPair, reversed, false), DEFAULT_MAP_QUAL, DEFAULT_BASE_QUAL));
     }
 }

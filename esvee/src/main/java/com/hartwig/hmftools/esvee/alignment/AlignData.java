@@ -12,8 +12,8 @@ import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 import static htsjdk.samtools.SAMFlag.READ_REVERSE_STRAND;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
@@ -105,7 +105,7 @@ public class AlignData
         if(mSequenceStart < 0 || mSequenceStart > mSequenceEnd || mSequenceEnd > fullSequence.length())
         {
             SV_LOGGER.error("alignment({}) invalid subsequence request({}-{}) vs fullSequenceLength({})",
-                    toString(), fullSequenceLength);
+                    toString(), mSequenceStart, mSequenceEnd, fullSequenceLength);
             return;
         }
 
@@ -124,6 +124,13 @@ public class AlignData
     public int rawSequenceStart() { return mRawSequenceStart; }
     public int rawSequenceEnd() { return mRawSequenceEnd; }
 
+    public List<CigarElement> cigarElements() { return mCigarElements; }
+
+    public int maxIndelLength()
+    {
+        return mCigarElements.stream().filter(x -> x.getOperator().isIndel()).mapToInt(x -> x.getLength()).max().orElse(0);
+    }
+
     public static AlignData from(final BwaMemAlignment alignment, final RefGenomeVersion refGenomeVersion)
     {
         int chrIndex = alignment.getRefId();
@@ -140,17 +147,17 @@ public class AlignData
                 alignment.getSamFlag(), alignment.getCigar(), alignment.getNMismatches(), alignment.getXATag(), alignment.getMDTag());
     }
 
-    public String altAlignmentStr()
+    public List<AlternativeAlignment> altAlignments()
     {
-        // in form expected by Linx and other downstream components: 4:9973661|-|26S37M11S|19
-        // make common class for this
-        StringJoiner sj = new StringJoiner("|");
-        sj.add(RefLocation.Chromosome);
-        sj.add(String.valueOf(RefLocation.start()));
-        sj.add(orientation() == POS_ORIENT ? "+" : "-");
-        sj.add(Cigar);
-        sj.add(String.valueOf(MapQual));
-        return sj.toString();
+        if(XaTag == null || XaTag.isEmpty())
+            return Collections.emptyList();
+
+        List<AlternativeAlignment> alternativeAlignments = AlternativeAlignment.convertLocationTag(XaTag);
+
+        alternativeAlignments.add(
+                0, new AlternativeAlignment(RefLocation.Chromosome, RefLocation.start(), orientation(), Cigar, MapQual));
+
+        return alternativeAlignments;
     }
 
     public String toString()

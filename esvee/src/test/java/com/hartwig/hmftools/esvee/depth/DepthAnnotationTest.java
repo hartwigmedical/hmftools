@@ -5,9 +5,8 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
-import static com.hartwig.hmftools.esvee.prep.TestUtils.setReadFlag;
+import static com.hartwig.hmftools.common.test.SamRecordTestUtils.setReadFlag;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -17,9 +16,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
-import com.hartwig.hmftools.esvee.depth.DepthConfig;
-import com.hartwig.hmftools.esvee.depth.DepthTask;
-import com.hartwig.hmftools.esvee.depth.VariantInfo;
 
 import org.junit.Assert;
 import org.junit.Test;

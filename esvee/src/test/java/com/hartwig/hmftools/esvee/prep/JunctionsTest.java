@@ -7,17 +7,15 @@ import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
+import static com.hartwig.hmftools.esvee.TestUtils.buildFlags;
+import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.BLACKLIST_LOCATIONS;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.HOTSPOT_CACHE;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.REGION_1;
-import static com.hartwig.hmftools.esvee.prep.TestUtils.buildFlags;
-import static com.hartwig.hmftools.esvee.prep.TestUtils.createSamRecord;
-import static com.hartwig.hmftools.esvee.prep.TestUtils.readIdStr;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.JUNCTION;
 import static com.hartwig.hmftools.esvee.prep.types.ReadType.NO_SUPPORT;
-import static com.hartwig.hmftools.esvee.prep.types.ReadType.SUPPORT;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -31,7 +29,6 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.prep.types.JunctionData;
 import com.hartwig.hmftools.esvee.prep.types.ReadGroup;
 import com.hartwig.hmftools.esvee.prep.types.PrepRead;
-import com.hartwig.hmftools.esvee.prep.types.ReadGroupStatus;
 import com.hartwig.hmftools.esvee.prep.types.ReadType;
 
 import org.apache.commons.compress.utils.Lists;

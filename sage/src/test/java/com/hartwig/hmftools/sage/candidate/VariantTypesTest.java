@@ -4,12 +4,16 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
 
 import org.junit.Test;
@@ -72,7 +76,6 @@ public class VariantTypesTest
         // extend the read to the end of the sequence so it's past the section of repeats
         String readBases = refBases.substring(readStartPos, 111) + insertedBases + refBases.substring(111, 151);
 
-        // 71 = G, 67 = C, 65 = A, 84 = T
         SAMRecord read1 = createSamRecord("READ_01", CHR_1, readStartPos, readBases, "30M8I40M");
         tester.TumorSamSlicer.ReadRecords.add(read1);
         tester.TumorSamSlicer.ReadRecords.add(read1);
@@ -85,8 +88,13 @@ public class VariantTypesTest
         assertEquals(110, var.position());
         assertEquals("C", var.ref());
         assertEquals("C" + insertedBases, var.alt());
-        assertFalse(var.candidate().readContext().hasIncompleteCore());
-        assertEquals(40, var.candidate().readContext().indexedBases().coreLength());
+
+        VariantReadContext readContext = var.candidate().readContext();
+        assertTrue(readContext.isValid());
+        assertEquals(14, readContext.coreLength());
+        assertNotNull(readContext.MaxRepeat);
+        assertEquals("AAAC", readContext.MaxRepeat.Bases);
+        assertEquals(24, readContext.MaxRepeat.length());
     }
 
     @Test
@@ -101,16 +109,17 @@ public class VariantTypesTest
         String refBases = TEST_REF_BASES;
         tester.RefGenome.RefGenomeMap.put(CHR_1, refBases + generateRandomBases(1500)); // need to cover the ref sequence buffer
 
-        String insertedBases = "AACCTGGGGGG";
+        String insertedBases = "GGGGGGAACCT";
         int readStartPos = 1;
+        int varPosition = 34;
 
         // extend the read to the end of the sequence so it's past the section of repeats
-        String readBases = refBases.substring(readStartPos, 39) + insertedBases + refBases.substring(39, 81);
+        String readBases = refBases.substring(readStartPos, varPosition + 1) + insertedBases + refBases.substring(varPosition + 1, 81);
 
-        SAMRecord read1 = createSamRecord("READ_01", CHR_1, readStartPos, readBases, "38M11I42M");
-        tester.TumorSamSlicer.ReadRecords.add(read1);
-        tester.TumorSamSlicer.ReadRecords.add(read1);
-        tester.TumorSamSlicer.ReadRecords.add(read1);
+        SAMRecord read = createSamRecord("READ_01", CHR_1, readStartPos, readBases, "34M11I46M");
+        tester.TumorSamSlicer.ReadRecords.add(read);
+        tester.TumorSamSlicer.ReadRecords.add(read);
+        tester.TumorSamSlicer.ReadRecords.add(read);
 
         task.run();
 
@@ -118,11 +127,13 @@ public class VariantTypesTest
         SageVariant var = task.getVariants().get(0);
 
         // no left alignment
-        assertEquals(38, var.position());
+        assertEquals(varPosition, var.position());
         assertEquals("G", var.ref());
         assertEquals("G" + insertedBases, var.alt());
-        assertFalse(var.candidate().readContext().hasIncompleteCore());
-        assertEquals(39, var.candidate().readContext().indexedBases().coreLength());
+        VariantReadContext readContext = var.candidate().readContext();
+        assertTrue(readContext.isValid());
+        assertEquals(21, readContext.coreLength());
+        assertEquals("GGGGG", readContext.homologyBases());
     }
 
 }

@@ -35,11 +35,29 @@ public class SequenceTest
     public void testRepeatTypes()
     {
         // single base repeats
-        //              01234567890123456789
-        String bases = "AAACCTTTTGAAAAAATGC";
+        //              0123456789
+        String bases = "AAACCTTTTT";
 
-        RepeatInfo repeatInfo = findSingleBaseRepeat(bases.getBytes(), 0);
+        // first check limits
+        RepeatInfo repeatInfo = findSingleBaseRepeat(bases.getBytes(), 5);
+        assertNotNull(repeatInfo);
+        assertEquals("T", repeatInfo.Bases);
+        assertEquals(5, repeatInfo.Count);
+
+        repeatInfo = findSingleBaseRepeat(bases.getBytes(), 6);
+        assertNotNull(repeatInfo);
+        assertEquals("T", repeatInfo.Bases);
+        assertEquals(4, repeatInfo.Count);
+
+        repeatInfo = findSingleBaseRepeat(bases.getBytes(), 7);
         assertNull(repeatInfo);
+
+        //       01234567890123456789
+        bases = "AAACCTTTTGAAAAAATGC";
+
+        repeatInfo = findSingleBaseRepeat(bases.getBytes(), 0);
+        assertNull(repeatInfo);
+
 
         repeatInfo = findSingleBaseRepeat(bases.getBytes(), 5);
         assertNotNull(repeatInfo);
