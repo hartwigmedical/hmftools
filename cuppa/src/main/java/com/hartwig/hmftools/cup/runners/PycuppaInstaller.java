@@ -18,12 +18,13 @@ public class PycuppaInstaller
     private static final File TMP_DIR = new File(System.getProperty("java.io.tmpdir"));
     private static final File PYCUPPA_TMP_DIR = new File(TMP_DIR + "/pycuppa/");
     private static final File PYCUPPA_RESOURCE_DIR = new File(Resources.getResource("pycuppa/").getPath());
+    public static final String PYCUPPA_VENV_NAME = "pycuppa_venv";
 
     public final PythonEnvironment mPythonEnvironment;
 
-    public PycuppaInstaller(String virtualEnvPath)
+    public PycuppaInstaller()
     {
-        mPythonEnvironment = new PythonEnvironment(PYTHON_VERSION, virtualEnvPath);
+        mPythonEnvironment = new PythonEnvironment(PYTHON_VERSION, PYCUPPA_VENV_NAME, false);
     }
 
     private void removePycuppaTmpDir()
@@ -95,7 +96,7 @@ public class PycuppaInstaller
     {
         try
         {
-            mPythonEnvironment.initialize(true);
+            mPythonEnvironment.initialize();
 
             if(!pycuppaInstalled())
             {
@@ -105,12 +106,12 @@ public class PycuppaInstaller
             }
             else
             {
-                CUP_LOGGER.warn("Skipping installing pycuppa as it already exists in the virtual environment: " + mPythonEnvironment.mVirtualEnvPath);
+                CUP_LOGGER.warn("Skipping installing pycuppa as it already exists in the virtual environment: " + mPythonEnvironment.mVirtualEnvName);
             }
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("Failed to install pycuppa to virtual env({}): ", mPythonEnvironment.mVirtualEnvPath, e);
+            CUP_LOGGER.error("Failed to install pycuppa to virtual env({}): ", mPythonEnvironment.mVirtualEnvName, e);
             System.exit(1);
         }
         finally
@@ -123,7 +124,7 @@ public class PycuppaInstaller
     public static void main(String[] args)
     {
         Configurator.setLevel(CUP_LOGGER.getName(), Level.DEBUG);
-        PycuppaInstaller installer = new PycuppaInstaller(args[0]);
+        PycuppaInstaller installer = new PycuppaInstaller();
         installer.install();
     }
 }
