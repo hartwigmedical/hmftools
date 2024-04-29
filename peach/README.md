@@ -8,34 +8,40 @@ germline VCF, and infers the simplest combination of haplotypes that explains th
 An earlier Python version of this tool is available [here](https://github.com/hartwigmedical/peach).
 
 ## Contents
-TODO: fix this later
-
 * [Installation](#installation)
 * [Arguments](#arguments)
+  + [Example Usage](#example-usage)
   + [Mandatory Arguments](#mandatory-arguments)
   + [Optional Arguments](#optional-arguments)
 * [Input](#input)
   + [VCF](#vcf)
-  + [Config files](#config-files)
+  + [Haplotype TSV](#haplotype-tsv)
+  + [Function TSV](#function-tsv)
+  + [Drug TSV](#drug-tsv)
 * [Output](#output)
-  + [Genotype TSV file](#genotype-tsv-file)
-  + [Calls TSV file](#calls-tsv-file)
+  + [Events TSV](#events-tsv)
+  + [Gene Events TSV](#gene-events-tsv)
+  + [All Haplotypes TSV](#all-haplotypes-tsv)
+  + [Best Haplotypes TSV](#best-haplotypes-tsv)
+  + [GQC TSV](#qc-tsv)
 * [Algorithm](#algorithm)
-  + [Get_VCF Variant Calls](#get-vcf-variant-calls)
-  + [Infer Haplotypes](#infer-haplotypes)
+  + [Interpret VCF Variant Calls](#interpret-vcf-variant-calls)
+  + [Determine Valid Haplotype Combinations](#determine-valid-haplotype-combinations)
+  + [Determine the Best Haplotype Combination](#determine-the-best-haplotype-combination)
+  + [each QC status](#peach-qc-status)
   + [Examples](#examples)
-* [Known issues / points for improvement](#known-issues--points-for-improvement)
+* [Known Issues / Points for Improvement](#known-issues--points-for-improvement)
 * [Version History / Download Links](#version-history--download-links)
 
 ## Installation
-To install, download the latest compiled jar file from the [download links](#version-history-and-download-links).
+To install, download the latest compiled jar file from the [download links](#version-history--download-links).
 
 PEACH requires Java 11+.
 
-TODO: Config files
+TODO: Add link to config files
 
 ## Arguments
-#### Example Usage
+### Example Usage
 ```
 java -jar "/path/to/peach.jar" \
   -vcf_file "/path/to/input.vcf.gz" \
@@ -72,13 +78,13 @@ and the "GT" subfield for this sample should be included and filled in with dipl
 | gene      | `DPYD`                                        | Name of gene.                                                                                                                                                                                                                                 |
 | haplotype | `*B3`                                         | Name of haplotype.                                                                                                                                                                                                                            |
 | default   | `false`                                       | `true` if this is the haplotype of this gene in the reference genome. `false` otherwise.                                                                                                                                                      |
-| wildType  | `false`                                       | `true` if this haplotype is considered to be the wild type haplotype of this gene. `false` otherwise.                                                                                                                                         |
+| wildType  | `false`                                       | `true` if this haplotype is considered to be the wild-type haplotype of this gene. `false` otherwise.                                                                                                                                         |
 | events    | `VAR_chr1_98039419_C_T;VAR_chr1_98045449_G_C` | If default haplotype: `;` separated list of strings describing events to ignore for haplotype calling in this gene. If non-default haplotype: `;` separated list of strings describing a combination of events that indicates this haplotype. |
 
 For every gene exactly one line should be marked as the default haplotype. This is the haplotype that the reference genome has.
 
-One combination of gene and haplotype name should be marked as the wild type haplotype for this gene. 
-PEACH prefers calling wild type haplotypes over non wild type haplotypes when multiple haplotype combinations are possible.
+One combination of gene and haplotype name should be marked as the wild-type haplotype for this gene. 
+PEACH prefers calling wild-type haplotypes over non-wild-type haplotypes when multiple haplotype combinations are possible.
 
 ### Function TSV
 | Column    | Example            | Description                           |
@@ -121,7 +127,7 @@ Name: `[sample_name].peach.haplotypes.all.tsv`
 | gene             | `DPYD`   | Name of gene.                                                                                                                                                               |
 | combination      | `(*1,2)` | Combination of haplotypes that could explain the observed events for this gene. `;` separated list of pairs of haplotype names and number of times the haplotype is called. |
 | count            | `2`      | Number of haplotypes in the combination .                                                                                                                                   |
-| nonWildTypeCount | `0`      | Number of non wild type haplotypes in the combination .                                                                                                                     |
+| nonWildTypeCount | `0`      | Number of non-wild-type haplotypes in the combination .                                                                                                                     |
 
 ### Best Haplotypes TSV
 Name: `[sample_name].peach.haplotypes.best.tsv`
@@ -144,8 +150,6 @@ Name: `[sample_name].peach.qc.tsv`
 | status           | `PASS`  | QC status of calls for this gene. Can be `PASS`, `FAIL_NO_COMBINATION_FOUND`, `FAIL_NO_UNIQUE_BEST_COMBINATION_FOUND`, `FAIL_EVENT_WITH_UNKNOWN_COUNT` or `WARN_TOO_MANY_ALLELES_FOUND` |
 
 ## Algorithm
-TODO: how to handle 37 calls needs to go somewhere
-
 In broad strokes, PEACH does the following:
 * Extract relevant calls from the input VCF, where relevance is determined by the configured haplotypes.
 * For each gene:
@@ -196,18 +200,18 @@ In this situation both `(*2A,1);(*5,1)` and `(*2B,1);(*1,1)` are valid haplotype
 
 In the face of such ambiguity PEACH tries to call the "best" haplotype combination. 
 First, the preference is for the total number of called haplotypes to be as close as possible to the expected value (2).
-Second, wild type haplotype calls are preferred over non-wild type haplotypes calls.
+Second, wild-type haplotype calls are preferred over non-wild-type haplotypes calls.
 
 The reasoning behind this second preference is that:
-* the wild type haplotype is the wild type because it is the most common.
+* the wild-type haplotype is the wild-type because it is the most common.
 * if a haplotype involving multiple variants is configured, this is done because those variants tend to occur together.
 
 In the example above the best haplotype combination would therefore be `(*2B,1);(*1,1)`.
 
-It is not always possible to call a best haplotype combination. 
+It is not always possible to select a haplotype combination as best. 
 When this occurs, the "haplotype" `Unresolved Haplotype` is called instead.
 
-#### Peach QC status
+### Peach QC status
 PEACH also outputs a QC status per gene. They have the following meaning:
 
 | QC status                               | Meaning                                                                                                         |
@@ -221,8 +225,6 @@ PEACH also outputs a QC status per gene. They have the following meaning:
 Any genes with a`FAIL` status get the `Unresolved Haplotype` "haplotype" as the best called haplotype combination.
 
 ### Examples
-TODO: Fix examples
-
 The data in these examples will be the completely fictional.
 The examples will focus on fairly "standard" situations, and they will exclude all information that is not necessary to understand these situations.
 For details on non-standard situations, see the more detailed subsections of the [Algorithm](#algorithm) section.
@@ -242,7 +244,7 @@ and that FAKE is the only gene in the config.
 If there are no relevant events called, then the only valid haplotype combination that explains these variants is `(*2,2)`.
 This is automatically also the best haplotype combination that is called for FAKE.
 
-#### Homozygous Wild Type
+#### Homozygous Wild-type
 Suppose that the called events are the following:
 
 | events             | count |
@@ -256,7 +258,7 @@ The call at position 400 is ignored.
 The only haplotype combination that can explain the two variants at position 100 by themselves is `(*1,2)`.
 This is automatically also the best haplotype combination that is called for FAKE.
 
-#### Heterozygous Wild Type
+#### Heterozygous Wild-type
 Suppose that the called events are the following:
 
 | events             | count |
@@ -296,13 +298,18 @@ The possible combinations are `(*5,1);(*2;1)` and `(*1,1);(*4,1)`.
 In both combinations there are two haplotype calls, so the preference comes down to the number of wild-type haplotypes called.
 The best haplotype combination is therefore `(*1,1);(*4,1)`.
 
-## Known issues / points for improvement
-TODO: Mention genotype vs variant calling
-TODO: Use phasing
-TODO: Other event types
-TODO: Take different germline copy numbers into consideration
-TODO: Try to work on tumor-only
-TODO: Improve handling of uncertainty and unknown haplotypes
+## Known Issues / Points for Improvement
+* Missing calls are implicitly assumed to represent alleles matching the reference genome. 
+This matches the expectation for VCFs from variant calling.
+It would be better to remove this implicit assumption and require input VCFs to be genotyped (i.e. contain calls for all relevant positions even when ref).
+* Phasing information in the input VCF is currently unused.
+* Haplotypes can contain events other than small variants, such as fusions, amplifications and deletions.
+These are currently not implemented.
+* Germline copy numbers are currently assumed to be 2 for all genes. This is not always true in practice.
+* Haplotypes can only be called when all the required events are present the expected number of times. 
+Fuzzier matching could potentially better handle uncertainty in the calling in the input files.
+* Selection of the best haplotype combination when there are multiple options makes assumptions that don't necessarily hold.
+A more careful approach could be beneficial.
 
 ## Version History / Download Links
 * Upcoming
