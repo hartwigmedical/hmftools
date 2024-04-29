@@ -28,6 +28,7 @@ public abstract class PeachGenotype
     public abstract String urlPrescriptionInfo();
 
     @Deprecated
+    @NotNull
     @Value.Default
     public String panelVersion()
     {
@@ -35,12 +36,14 @@ public abstract class PeachGenotype
     };
 
     @Deprecated
+    @NotNull
     @Value.Default
     public String repoVersion()
     {
         return "";
     };
 
+    @Deprecated
     @NotNull
     @Value.Derived
     public String haplotype()

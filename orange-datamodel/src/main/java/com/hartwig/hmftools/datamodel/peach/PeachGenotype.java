@@ -32,8 +32,10 @@ public interface PeachGenotype
     String urlPrescriptionInfo();
 
     @Deprecated
+    @NotNull
     String panelVersion();
 
     @Deprecated
+    @NotNull
     String repoVersion();
 }
