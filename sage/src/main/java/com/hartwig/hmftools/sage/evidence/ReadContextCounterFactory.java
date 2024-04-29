@@ -30,6 +30,9 @@ public class ReadContextCounterFactory
 
         for(Candidate candidate : candidates)
         {
+            if(qualityCalculator.ultimaEnabled())
+                candidate.readContext().setUltimaQualModel(qualityCalculator.createUltimaQualModel(candidate.variant()));
+
             readCounters.add(new ReadContextCounter(
                     readId++, candidate.readContext(), candidate.tier(), maxCoverage(candidate), candidate.minNumberOfEvents(),
                     config, qualityCalculator, sampleId));

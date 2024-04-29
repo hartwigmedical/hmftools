@@ -44,8 +44,8 @@ public class VariantReadContext
     private final List<CigarElement> mReadCigar;
     private final String mReadCigarStr;
 
-    private final ArtefactContext mArtefactContext;
-    private final UltimaQualModel mUltimaQualModel;
+    private ArtefactContext mArtefactContext;
+    private UltimaQualModel mUltimaQualModel;
 
     public VariantReadContext(
             final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases,
@@ -67,16 +67,15 @@ public class VariantReadContext
         mReadCigar = readCigar;
         mReadCigarStr = CigarUtils.cigarStringFromElements(readCigar);
 
-        // CLEAN-UP
-        mArtefactContext = null; // ArtefactContext.buildContext(variant, readContext.indexedBases());
-        mUltimaQualModel = null; // qualityCalculator.createUltimateQualModel(variant);
-
         AltIndexLower = VarReadIndex;
 
         AltIndexUpper = determineUpperAltIndex(variant, ReadBases, RefBases, VarReadIndex, refIndex(), CoreIndexEnd);
 
         CorePositionStart = findPositionStart(mVariant.Position, leftCoreLength(), AlignmentStart, mReadCigar, CoreIndexStart);
         CorePositionEnd = findPositionEnd(mVariant.Position, rightCoreLength(), AlignmentStart, mReadCigar, CoreIndexEnd);
+
+        mArtefactContext = null;
+        mUltimaQualModel = null;
     }
 
     // read context methods
@@ -134,7 +133,10 @@ public class VariantReadContext
     public final String readCigar() { return mReadCigarStr; }
 
     public ArtefactContext artefactContext() { return mArtefactContext; }
+    public void setArtefactContext(final ArtefactContext context) { mArtefactContext = context; }
+
     public UltimaQualModel ultimaQualModel() { return mUltimaQualModel; }
+    public void setUltimaQualModel(final UltimaQualModel model) { mUltimaQualModel = model; }
 
     public String toString()
     {

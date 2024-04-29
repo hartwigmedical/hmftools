@@ -47,7 +47,9 @@ public class QualityCalculator
         mUltimaQualCalculator = mSequencingType == SequencingType.ULTIMA ? new UltimaQualCalculator(refGenome) : null;
     }
 
-    public UltimaQualModel createUltimateQualModel(final SimpleVariant variant)
+    public boolean ultimaEnabled() { return mUltimaQualCalculator != null; }
+
+    public UltimaQualModel createUltimaQualModel(final SimpleVariant variant)
     {
         return mUltimaQualCalculator != null ? mUltimaQualCalculator.buildContext(variant) : null;
     }

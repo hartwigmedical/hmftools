@@ -21,6 +21,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Arrays;
+import com.hartwig.hmftools.sage.evidence.ArtefactContext;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -47,6 +48,8 @@ public class VariantReadContextBuilder
             // enforce full flanks
             if(readContext.leftFlankLength() < mFlankSize || readContext.rightFlankLength() < mFlankSize)
                 return null;
+
+            readContext.setArtefactContext(ArtefactContext.buildContext(readContext));
 
             return readContext;
         }

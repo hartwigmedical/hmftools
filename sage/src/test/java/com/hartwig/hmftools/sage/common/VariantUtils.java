@@ -56,6 +56,16 @@ public final class VariantUtils
     }
 
     public static VariantReadContext createReadContext(
+            final SimpleVariant variant, final String readBases, int leftCoreIndex, int varIndex, int rightCoreIndex)
+    {
+        String leftFlank = readBases.substring(0, leftCoreIndex);
+        String leftCore = readBases.substring(leftCoreIndex, varIndex);
+        String rightCore = readBases.substring(varIndex + 1, rightCoreIndex + 1);
+        String rightFlank = readBases.substring(rightCoreIndex + 1);
+        return createReadContext(variant, leftCore, rightCore, leftFlank, rightFlank);
+    }
+
+    public static VariantReadContext createReadContext(
             final SimpleVariant variant, final String leftCore, final String rightCore)
     {
         return createReadContext(variant, leftCore, rightCore, TEST_LEFT_FLANK, TEST_RIGHT_FLANK);

@@ -746,5 +746,4 @@ public class ReadContextCounter
 
         return -1;
     }
-
 }
