@@ -13,68 +13,119 @@ import org.apache.logging.log4j.Level;
 public class PythonEnvironment
 {
     public static final String DEFAULT_PYTHON_VERSION = "3.9.4";
-    public static final File PYENV_PATH = new File(System.getProperty("user.home") + "/.pyenv");
+
+    private static final File PYENV_DIR = new File(System.getProperty("user.home") + "/.pyenv");
+    private static final File PYENV_PATH = new File(PYENV_DIR + "/libexec/pyenv");
 
     public final String mPythonVersion;
-    public final File mVirtualEnvPath;
+    public final File mVirtualEnvName;
+    public final boolean mQuietInitialize;
 
-    public PythonEnvironment(String pythonVersion, String virtualEnvPath)
+    public PythonEnvironment(String pythonVersion, String virtualEnvName, boolean quietInitialize)
     {
-        mVirtualEnvPath = new File(virtualEnvPath);
+        mVirtualEnvName = new File(virtualEnvName);
         mPythonVersion = pythonVersion;
+        mQuietInitialize = quietInitialize;
     }
 
-    private File pyenvPythonPath()
-    {
-        return new File(String.format("%s/versions/%s/bin/python", PYENV_PATH, mPythonVersion));
-    }
+    public File virtualEnvPath() { return new File(String.format("%s/versions/%s/envs/%s", PYENV_DIR, mPythonVersion, mVirtualEnvName)); }
 
-    public File pythonPath()
-    {
-        return new File(String.format("%s/bin/python", mVirtualEnvPath));
-    }
+    public File pythonPath() { return new File(virtualEnvPath() + "/bin/python"); }
 
     @VisibleForTesting
-    void installPyenv(boolean warnExisting)
+    void installPyenv()
     {
-        if(!PYENV_PATH.exists())
+        if(!PYENV_DIR.exists())
         {
-            String command = "curl -L https://raw.githubusercontent.com/yyuu/pyenv-installer/master/bin/pyenv-installer | bash";
+            String command;
+
+            command = "curl https://pyenv.run | bash"; // This also installs pyenv-virtualenv to $HOME/.pyenv/plugins/pyenv-virtualenv
             CUP_LOGGER.info("Installing pyenv with command: " + command);
             new BashCommand(command).logLevel(Level.DEBUG).run();
         }
-        else if(warnExisting)
+        else if(!mQuietInitialize)
         {
-            CUP_LOGGER.warn("Skipping installing pyenv as it exists at: " + PYENV_PATH);
+            CUP_LOGGER.warn("Skipping installing pyenv as it exists at: " + PYENV_DIR);
+        }
+
+        if(!PYENV_DIR.exists())
+        {
+            CUP_LOGGER.error("Failed to install pyenv to " + PYENV_DIR);
+            System.exit(1);
         }
     }
 
     @VisibleForTesting
-    void installPython(boolean warnExisting)
+    void addPyenvPathsToRcFile()
     {
-        if(!pyenvPythonPath().exists())
+        String shellPath = new BashCommand("echo $SHELL").logLevel(null).run().getStdout().get(0);
+        String shellName = new File(shellPath).getName();
+        File RcFilePath = new File(String.format("%s/.%src", System.getProperty("user.home"), shellName));
+
+        if(!RcFilePath.isFile())
         {
-            String command = String.format("%s/bin/pyenv install %s", PYENV_PATH, mPythonVersion);
+            CUP_LOGGER.error("Fail to find rc file({}) to add pyenv paths. Using pyenv in interactive shell will not work", RcFilePath);
+            System.exit(1);
+        }
+
+        try
+        {
+            String lines = String.join("\n",
+                "# Pyenv paths",
+                "export PYENV_ROOT="+ PYENV_DIR,
+                "[[ -d $PYENV_ROOT/bin ]] && export PATH=\"$PYENV_ROOT/bin:$PATH\"",
+                "eval \"$(pyenv init -)\"",
+                "eval \"$(pyenv virtualenv-init -)\""
+            );
+
+            boolean linesExist = FileUtils.readFileToString(RcFilePath, "UTF-8").contains(lines);
+            if(!linesExist)
+            {
+                String command;
+
+                CUP_LOGGER.info("Adding pyenv paths to rc file: " + RcFilePath);
+                command = String.format("echo -e '\n%s' >> %s", lines, RcFilePath);
+                new BashCommand(command).logLevel(null).run();
+            }
+            else if(!mQuietInitialize)
+            {
+                CUP_LOGGER.warn("Skipping adding pyenv paths to rc file: " + RcFilePath);
+            }
+        }
+        catch(Exception e)
+        {
+            CUP_LOGGER.error("Failed to update rc file({}): {}", RcFilePath, e);
+            System.exit(1);
+        }
+    }
+
+    @VisibleForTesting
+    void installPython()
+    {
+        File pythonPathInPyenv = new File(String.format("%s/versions/%s/bin/python", PYENV_DIR, mPythonVersion));
+
+        if(!pythonPathInPyenv.exists())
+        {
+            String command = String.format("%s install %s", PYENV_PATH, mPythonVersion);
             CUP_LOGGER.info("Installing python version {} with command: {}", mPythonVersion, command);
             new BashCommand(command).logLevel(Level.DEBUG).run();
         }
-        else if(warnExisting)
+        else if(!mQuietInitialize)
         {
-            CUP_LOGGER.warn("Skipping installing python {} as it exists at: {}", mPythonVersion, pyenvPythonPath());
+            CUP_LOGGER.warn("Skipping installing python {} as it exists at: {}", mPythonVersion, pythonPathInPyenv);
         }
     }
 
     @VisibleForTesting
-    void createVirtualEnvironment(boolean warnExisting)
+    void createVirtualEnvironment()
     {
-        String command = String.format("%s -m venv %s", pyenvPythonPath(), mVirtualEnvPath);
-
         if(!pythonPath().exists())
         {
+            String command = String.format("%s virtualenv %s %s", PYENV_PATH, mPythonVersion, mVirtualEnvName);
             CUP_LOGGER.info("Creating python virtual environment with command: " + command);
             new BashCommand(command).logLevel(Level.DEBUG).run();
         }
-        else if(warnExisting)
+        else if(!mQuietInitialize)
         {
             CUP_LOGGER.warn("Skipping creating python virtual environment as binary exists at: " + pythonPath());
         }
@@ -83,30 +134,20 @@ public class PythonEnvironment
     @VisibleForTesting
     void removeExistingPyenv()
     {
-        CUP_LOGGER.info("Removing existing pyenv at: " + PYENV_PATH);
+        CUP_LOGGER.info("Removing existing pyenv at: " + PYENV_DIR);
         try {
-            FileUtils.deleteDirectory(PYENV_PATH);
+            FileUtils.deleteDirectory(PYENV_DIR);
         } catch(IOException e) {
             CUP_LOGGER.warn("Failed to remove pyenv: " + e);
         }
     }
 
-    @VisibleForTesting
-    void removeExistingVirtualEnv()
+    public PythonEnvironment initialize()
     {
-        CUP_LOGGER.info("Removing existing virtual environment at: " + mVirtualEnvPath);
-        try {
-            FileUtils.deleteDirectory(mVirtualEnvPath);
-        } catch(IOException e) {
-            CUP_LOGGER.warn("Failed to virtual environment: " + e);
-        }
-    }
-
-    public PythonEnvironment initialize(boolean warnExisting)
-    {
-        installPyenv(warnExisting);
-        installPython(warnExisting);
-        createVirtualEnvironment(warnExisting);
+        installPyenv();
+        addPyenvPathsToRcFile();
+        installPython();
+        createVirtualEnvironment();
         return this;
     }
 
@@ -127,8 +168,8 @@ public class PythonEnvironment
     @VisibleForTesting
     public static void main(String[] args)
     {
-        PythonEnvironment env = new PythonEnvironment(args[0], args[1]);
-        env.initialize(true);
+        PythonEnvironment env = new PythonEnvironment(args[0], args[1], false);
+        env.initialize();
     }
 }
 
