@@ -7,15 +7,23 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDi
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class PeachConfig
 {
+    @NotNull
     public final String vcfFile;
+    @NotNull
     public final String sampleName;
+    @NotNull
     public final String haplotypesFile;
-    public final String drugsFile;
-    public final String functionFile;
+    @NotNull
     public final String outputDir;
+    @Nullable
+    public final String drugsFile;
+    @Nullable
+    public final String functionFile;
+
     private static final String VCF_FILE = "vcf_file";
     private static final String SAMPLE_NAME = "sample_name";
     private static final String HAPLOTYPES_FILE = "haplotypes_file";
@@ -24,18 +32,23 @@ public class PeachConfig
 
     public PeachConfig(@NotNull ConfigBuilder configBuilder)
     {
-        vcfFile = configBuilder.getValue(VCF_FILE);
-        haplotypesFile = configBuilder.getValue(HAPLOTYPES_FILE);
-        sampleName = configBuilder.getValue(SAMPLE_NAME);
+        String nullableVcfFile = configBuilder.getValue(VCF_FILE);
+        String nullableHaplotypesFile = configBuilder.getValue(HAPLOTYPES_FILE);
+        String nullableSampleName = configBuilder.getValue(SAMPLE_NAME);
+        String nullableOutputDir = parseOutputDir(configBuilder);
+
+        if(nullableVcfFile == null || nullableHaplotypesFile == null || nullableSampleName == null || nullableOutputDir == null)
+        {
+            throw new IllegalArgumentException("invalid config");
+        }
+
+        vcfFile = nullableVcfFile;
+        haplotypesFile = nullableHaplotypesFile;
+        sampleName = nullableSampleName;
+        outputDir = nullableOutputDir;
+
         drugsFile = configBuilder.hasValue(DRUGS_FILE) ? configBuilder.getValue(DRUGS_FILE) : null;
         functionFile = configBuilder.hasValue(FUNCTION_FILE) ? configBuilder.getValue(FUNCTION_FILE) : null;
-
-        outputDir = parseOutputDir(configBuilder);
-    }
-
-    public boolean isValid()
-    {
-        return vcfFile != null && sampleName != null && haplotypesFile != null && outputDir != null;
     }
 
     public static void addOptions(@NotNull ConfigBuilder configBuilder)

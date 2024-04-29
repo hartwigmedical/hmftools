@@ -41,10 +41,6 @@ public class PeachApplication
     {
         try
         {
-            if(!config.isValid())
-            {
-                throw new IllegalArgumentException("invalid config");
-            }
             PCH_LOGGER.info("running PEACH");
 
             PCH_LOGGER.info("creating output directory");
@@ -133,8 +129,6 @@ public class PeachApplication
 
     private void createOutputDirectory()
     {
-        // Output directory cannot be null in valid config
-        assert config.outputDir != null;
         File outputDirectory = new File(config.outputDir);
         if(!outputDirectory.exists() && !outputDirectory.mkdirs())
         {
