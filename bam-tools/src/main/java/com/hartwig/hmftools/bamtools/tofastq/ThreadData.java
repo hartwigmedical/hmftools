@@ -3,12 +3,16 @@ package com.hartwig.hmftools.bamtools.tofastq;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 // a simple class to manage thread local data
-public class ThreadData implements AutoCloseable
+public class ThreadData
 {
-    private final ThreadLocal<FastqWriter> mFastqWriters;
-    private final ThreadLocal<PartitionReader> mPartitionReaders;
+    private final AtomicInteger mNextId = new AtomicInteger();
+    private final ThreadLocal<FastqWriterCache> mThreadFastqWriterCache;
+    private final ThreadLocal<PartitionReader> mThreadPartitionReader;
+
+    private final List<FastqWriterCache> mFastqWriterCacheList = Collections.synchronizedList(new ArrayList<>());
     private final List<PartitionReader> mPartitionReaderList = Collections.synchronizedList(new ArrayList<>());
 
     public List<PartitionReader> getAllThreadPartitionReaders()
@@ -16,13 +20,18 @@ public class ThreadData implements AutoCloseable
         return mPartitionReaderList;
     }
 
-    public ThreadData(final FastqConfig config, final FastqWriterCache writerCache, final RemoteReadHandler remoteReadHandler)
+    public ThreadData(final ToFastqConfig config, final RemoteReadHandler remoteReadHandler)
     {
-        mFastqWriters = ThreadLocal.withInitial(() -> config.SplitMode == FileSplitMode.THREAD ? writerCache.createThreadedWriter() : null);
+        mThreadFastqWriterCache = ThreadLocal.withInitial(() -> {
+            // we need to assign a unique id
+            FastqWriterCache fastqWriterCache = new FastqWriterCache(config, String.format("t%d", mNextId.incrementAndGet()));
+            mFastqWriterCacheList.add(fastqWriterCache);
+            return fastqWriterCache;
+        });
 
         // make a PartitionReader per thread
-        mPartitionReaders = ThreadLocal.withInitial(() -> {
-            PartitionReader partitionReader = new PartitionReader(config, writerCache, remoteReadHandler, getFastqWriter());
+        mThreadPartitionReader = ThreadLocal.withInitial(() -> {
+            PartitionReader partitionReader = new PartitionReader(config, getFastqWriterCache(), remoteReadHandler);
             mPartitionReaderList.add(partitionReader);
             return partitionReader;
         });
@@ -30,20 +39,32 @@ public class ThreadData implements AutoCloseable
 
     public PartitionReader getPartitionReader()
     {
-        return mPartitionReaders.get();
+        return mThreadPartitionReader.get();
     }
 
-    public FastqWriter getFastqWriter()
+    public FastqWriterCache getFastqWriterCache()
     {
-        return mFastqWriters.get();
+        return mThreadFastqWriterCache.get();
     }
 
-    @Override
-    public void close()
+    public List<FastqWriterCache> getAllThreadFastqWriterCaches()
+    {
+        return mFastqWriterCacheList;
+    }
+
+    public void closePartitionReaders()
     {
         for(PartitionReader partitionReader : mPartitionReaderList)
         {
             partitionReader.close();
+        }
+    }
+
+    public void closeFastqWriters()
+    {
+        for(FastqWriterCache fastqWriterCache : mFastqWriterCacheList)
+        {
+            fastqWriterCache.close();
         }
     }
 }

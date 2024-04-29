@@ -2,16 +2,21 @@ package com.hartwig.hmftools.bamtools.tofastq;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.bamtools.tofastq.FastqConfig.CHR_UNMAPPED;
-import static com.hartwig.hmftools.bamtools.tofastq.FastqConfig.registerConfig;
+import static com.hartwig.hmftools.bamtools.tofastq.ToFastqConfig.CHR_UNMAPPED;
+import static com.hartwig.hmftools.bamtools.tofastq.ToFastqConfig.registerConfig;
+import static com.hartwig.hmftools.bamtools.tofastq.ToFastqUtils.R1;
+import static com.hartwig.hmftools.bamtools.tofastq.ToFastqUtils.R2;
+import static com.hartwig.hmftools.bamtools.tofastq.ToFastqUtils.UNPAIRED;
+import static com.hartwig.hmftools.bamtools.tofastq.ToFastqUtils.formFilename;
+import static com.hartwig.hmftools.bamtools.tofastq.ToFastqUtils.mergeFastqs;
 import static com.hartwig.hmftools.common.region.PartitionUtils.buildPartitions;
 import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -19,26 +24,26 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.stream.Collectors;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
+import org.apache.logging.log4j.Level;
+
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 public class BamToFastq
 {
-    private final FastqConfig mConfig;
-    private final FastqWriterCache mWriterCache;
+    private final ToFastqConfig mConfig;
 
     public BamToFastq(final ConfigBuilder configBuilder)
     {
-        mConfig = new FastqConfig(configBuilder);
-        mWriterCache = new FastqWriterCache(mConfig);
+        mConfig = new ToFastqConfig(configBuilder);
     }
 
     public void run() throws ExecutionException, InterruptedException
@@ -50,15 +55,14 @@ public class BamToFastq
         // partition all chromosomes
         List<ChrBaseRegion> partitions = createPartitions();
 
-        final RemoteReadHandler remoteReadHandler = new RemoteReadHandler(mConfig, mWriterCache);
+        final RemoteReadHandler remoteReadHandler = new RemoteReadHandler(mConfig);
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("thread-%02d").build();
         ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
 
-        final ThreadData threadData = new ThreadData(mConfig, mWriterCache, remoteReadHandler);
-        int partitionCount = partitions.size();
+        final ThreadData threadData = new ThreadData(mConfig, remoteReadHandler);
 
-        BT_LOGGER.debug("splitting {} partitions across {} threads", partitionCount, mConfig.Threads);
+        BT_LOGGER.debug("splitting {} partitions across {} threads", partitions.size(), mConfig.Threads);
 
         final List<CompletableFuture<Void>> futures = new ArrayList<>();
 
@@ -79,13 +83,17 @@ public class BamToFastq
         BT_LOGGER.debug("processing cached remote reads");
         remoteReadHandler.writeRemoteReadsToFastq(executorService, threadData);
 
+        threadData.closePartitionReaders();
+        threadData.closeFastqWriters();
+
+        // might need to combine the fastq files of all the threads
+        mergeThreadFastqFiles(threadData.getAllThreadFastqWriterCaches(), executorService);
+
         // threading work all done by this point
         executorService.shutdown();
-        threadData.close();
 
-        BT_LOGGER.debug("writing unpaired reads");
-        mWriterCache.writeUnpairedReads();
-        mWriterCache.close();
+        // get the total number of reads
+        long totalReads = threadData.getAllThreadFastqWriterCaches().stream().mapToLong(FastqWriterCache::numReadsWritten).sum();
 
         if(mConfig.PerfDebug)
         {
@@ -98,15 +106,14 @@ public class BamToFastq
             combinedPerfCounter.logStats();
         }
 
-        BT_LOGGER.info("BamToFastq complete, mins({})", runTimeMinsStr(startTimeMs));
+        BT_LOGGER.printf(Level.INFO, "BamToFastq complete, total reads(%,d), time taken(%s mins)",
+                totalReads, runTimeMinsStr(startTimeMs));
     }
 
     private List<ChrBaseRegion> createPartitions()
     {
         final SAMFileHeader fileHeader;
-        try(SamReader samReader = SamReaderFactory.makeDefault()
-                .referenceSequence(new File(mConfig.RefGenomeFile))
-                .open(new File(mConfig.BamFile)))
+        try(SamReader samReader = ToFastqUtils.openSamReader(mConfig))
         {
             fileHeader = samReader.getFileHeader();
         }
@@ -148,8 +155,70 @@ public class BamToFastq
             for(int i = 0; i < numTasks; ++i)
             {
                 final int taskId = i;
-                futures.add(CompletableFuture.runAsync(() -> remoteReadHandler.cacheAllUnmappedReads(numTasks, taskId), executorService));
+                Runnable task = () -> remoteReadHandler.cacheAllUnmappedReads(numTasks, taskId);
+                futures.add(CompletableFuture.runAsync(task, executorService));
             }
+        }
+    }
+
+    // since each thread write to their own set of FASTQ files, we might need to merge them together
+    private void mergeThreadFastqFiles(Collection<FastqWriterCache> fastqWriterCaches, ExecutorService executorService)
+            throws ExecutionException, InterruptedException
+    {
+        // gather all the tasks
+        final List<Runnable> tasks = new ArrayList<>();
+
+        switch(mConfig.SplitMode)
+        {
+            case NONE:
+            {
+                BT_LOGGER.info("start merging fastqs");
+                String filePrefix = mConfig.formFilePrefix("", "");
+                String r1Fastq = formFilename(filePrefix, R1);
+                String r2Fastq = formFilename(filePrefix, R2);
+                String unpairedFastq = formFilename(filePrefix, UNPAIRED);
+
+                // gather all the fastq writers
+                final List<FastqWriter> fastqWriters = fastqWriterCaches.stream().map(FastqWriterCache::getFastqWriter)
+                        .collect(Collectors.toList());
+
+                tasks.add(() -> mergeFastqs(fastqWriters.stream().map(FastqWriter::getFastqR1), r1Fastq, false));
+                tasks.add(() -> mergeFastqs(fastqWriters.stream().map(FastqWriter::getFastqR2), r2Fastq, false));
+                tasks.add(() -> mergeFastqs(fastqWriters.stream().map(FastqWriter::getFastqUnpaired), unpairedFastq, true));
+                break;
+            }
+            case READ_GROUP:
+            {
+                BT_LOGGER.info("start merging fastqs by read groups");
+                for(String readGroupId : ToFastqUtils.getReadGroupIds(mConfig))
+                {
+                    String filePrefix = mConfig.formFilePrefix("", readGroupId);
+                    String r1Fastq = formFilename(filePrefix, R1);
+                    String r2Fastq = formFilename(filePrefix, R2);
+                    String unpairedFastq = formFilename(filePrefix, UNPAIRED);
+
+                    // gather all the fastq writers
+                    List<FastqWriter> fastqWriters = fastqWriterCaches.stream().map(o -> o.getReadGroupFastqWriter(readGroupId))
+                            .collect(Collectors.toList());
+
+                    tasks.add(() -> mergeFastqs(fastqWriters.stream().map(FastqWriter::getFastqR1), r1Fastq, false));
+                    tasks.add(() -> mergeFastqs(fastqWriters.stream().map(FastqWriter::getFastqR2), r2Fastq, false));
+                    tasks.add(() -> mergeFastqs(fastqWriters.stream().map(FastqWriter::getFastqUnpaired), unpairedFastq, true));
+                }
+                break;
+            }
+            case THREAD:
+                // do not need to do anything
+        }
+
+        if(!tasks.isEmpty())
+        {
+            final List<CompletableFuture<Void>> futures = new ArrayList<>();
+            // submit all to thread pool
+            tasks.forEach(o -> futures.add(CompletableFuture.runAsync(o, executorService)));
+            // wait for completion
+            CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).get();
+            BT_LOGGER.info("finished merging fastqs");
         }
     }
 
@@ -165,7 +234,7 @@ public class BamToFastq
         // to hang and never return. This will cause the VM to hang around forever.
         Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) ->
         {
-            BT_LOGGER.error("[{}]: uncaught exception: {}", t, e);
+            BT_LOGGER.fatal("[{}]: uncaught exception: {}", t, e);
             e.printStackTrace(System.err);
             System.exit(1);
         });

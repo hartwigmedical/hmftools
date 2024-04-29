@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.HashMap;
@@ -17,22 +16,18 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
 import org.apache.commons.lang3.Validate;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 public class PartitionReader implements AutoCloseable
 {
-    private final FastqConfig mConfig;
+    private final ToFastqConfig mConfig;
 
     private final RemoteReadHandler mRemoteReadHandler;
 
     private final FastqWriterCache mWriterCache;
-
-    public final FastqWriter mThreadedWriter;
 
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
@@ -44,18 +39,14 @@ public class PartitionReader implements AutoCloseable
     private int mPartitionRemoteCount;
     private final PerformanceCounter mPerfCounter;
 
-    public PartitionReader(
-            final FastqConfig config, final FastqWriterCache writerCache, final RemoteReadHandler remoteReadHandler,
-            @Nullable FastqWriter threadedWriter)
+    public PartitionReader(final ToFastqConfig config, final FastqWriterCache writerCache, final RemoteReadHandler remoteReadHandler)
     {
         mConfig = config;
         mRemoteReadHandler = remoteReadHandler;
 
         mWriterCache = writerCache;
 
-        mThreadedWriter = threadedWriter;
-
-        mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
+        mSamReader = ToFastqUtils.openSamReader(mConfig);
 
         mBamSlicer = new BamSlicer(0, true, false, false);
         mBamSlicer.setKeepUnmapped();
@@ -131,7 +122,7 @@ public class PartitionReader implements AutoCloseable
         if(!read.getReadPairedFlag())
         {
             ++mPartitionLocalCount;
-            mWriterCache.processUnpairedRead(read, mThreadedWriter);
+            mWriterCache.writeUnpairedRead(read);
             return;
         }
 
@@ -140,7 +131,7 @@ public class PartitionReader implements AutoCloseable
         if(mate != null)
         {
             ++mPartitionLocalCount;
-            mWriterCache.processReadPair(read, mate, mThreadedWriter);
+            mWriterCache.writeReadPair(read, mate);
             return;
         }
 

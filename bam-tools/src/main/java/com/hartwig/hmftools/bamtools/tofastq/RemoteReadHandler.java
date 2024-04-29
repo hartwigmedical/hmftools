@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.logging.log4j.Level;
 
@@ -25,17 +25,17 @@ import htsjdk.samtools.SamReaderFactory;
 
 public class RemoteReadHandler
 {
-    private final FastqConfig mConfig;
-    private final FastqWriterCache mWriterCache;
+    private static final int UNMAPPED_READ_CHUNK_SIZE = 100_000;
+
+    private final ToFastqConfig mConfig;
 
     private final HashBamWriter mHashBamWriter;
 
-    private final AtomicInteger mUnmappedReadCount = new AtomicInteger();
+    private final AtomicLong mRemoteReadCount = new AtomicLong();
 
-    public RemoteReadHandler(final FastqConfig config, final FastqWriterCache writerCache)
+    public RemoteReadHandler(final ToFastqConfig config)
     {
         mConfig = config;
-        mWriterCache = writerCache;
         mHashBamWriter = new HashBamWriter(config);
     }
 
@@ -61,15 +61,12 @@ public class RemoteReadHandler
         // wait for completion
         CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).get();
 
-        if(mUnmappedReadCount.get() > 0)
-        {
-            BT_LOGGER.printf(Level.INFO, "processed %,d total unmatched reads", mUnmappedReadCount.get());
-        }
+        BT_LOGGER.printf(Level.INFO, "processed %,d total remote reads", mRemoteReadCount.get());
     }
 
     private void processHashBam(final ThreadData threadData, final File hashBam)
     {
-        FastqWriter fastqWriter = threadData.getFastqWriter();
+        FastqWriterCache fastqWriterCache = threadData.getFastqWriterCache();
 
         int numReads = 0;
 
@@ -81,7 +78,7 @@ public class RemoteReadHandler
             {
                 while(iterator.hasNext())
                 {
-                    processSamRecord(iterator.next(), unmatchedReads, fastqWriter);
+                    processSamRecord(iterator.next(), unmatchedReads, fastqWriterCache);
                     ++numReads;
                 }
             }
@@ -102,19 +99,16 @@ public class RemoteReadHandler
                 {
                     BT_LOGGER.error("mate not found for paired read: {}", read);
                 }
-                mWriterCache.writeUnpairedRead(read);
+                fastqWriterCache.writeUnpairedRead(read);
             }
         }
 
         BT_LOGGER.printf(Level.DEBUG, "processed %,d remote reads in %s", numReads, hashBam.getName());
     }
 
-    private void processSamRecord(final SAMRecord read, Map<String,SAMRecord> unmatchedReads, FastqWriter fastqWriter)
+    private void processSamRecord(final SAMRecord read, Map<String,SAMRecord> unmatchedReads, FastqWriterCache fastqWriterCache)
     {
-        if(read.isSecondaryOrSupplementary())
-            return;
-
-        if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // unexpected
+        if(ToFastqUtils.canIgnoreRead(read))
             return;
 
         // check for hard clip
@@ -126,16 +120,16 @@ public class RemoteReadHandler
 
         if(!read.getReadPairedFlag())
         {
-            mWriterCache.processUnpairedRead(read, fastqWriter);
+            fastqWriterCache.writeUnpairedRead(read);
             return;
         }
 
-        mUnmappedReadCount.incrementAndGet();
+        mRemoteReadCount.incrementAndGet();
         SAMRecord mate = unmatchedReads.remove(read.getReadName());
 
         if(mate != null)
         {
-            mWriterCache.processReadPair(read, mate, fastqWriter);
+            fastqWriterCache.writeReadPair(read, mate);
             return;
         }
 
@@ -145,11 +139,10 @@ public class RemoteReadHandler
     // Write all the unmapped reads into the hash bams
     public void cacheAllUnmappedReads(int numTasks, int taskId)
     {
-        BT_LOGGER.info("start writing unmapped reads to {} hash bams", mHashBamWriter.numHashBams());
+        BT_LOGGER.info("start writing unmapped reads to {} hash bams (task {} of {})",
+                mHashBamWriter.numHashBams(), taskId, numTasks);
 
-        try(SamReader samReader = SamReaderFactory.makeDefault()
-                .referenceSequence(new File(mConfig.RefGenomeFile))
-                .open(new File(mConfig.BamFile)))
+        try(SamReader samReader = ToFastqUtils.openSamReader(mConfig))
         {
             int readCount = 0;
             try(final SAMRecordIterator iterator = samReader.queryUnmapped())
@@ -159,8 +152,9 @@ public class RemoteReadHandler
                     final SAMRecord read = iterator.next();
                     readCount++;
 
-                    if((readCount / 100_000) % numTasks != taskId)
+                    if((readCount / UNMAPPED_READ_CHUNK_SIZE) % numTasks != taskId)
                     {
+                        // we divide the reads by 100k chunks between threads
                         continue;
                     }
 
@@ -171,7 +165,8 @@ public class RemoteReadHandler
                 }
             }
 
-            BT_LOGGER.info("finished writing {} unmapped reads to {} hash bams", readCount, mHashBamWriter.numHashBams());
+            BT_LOGGER.printf(Level.INFO, "finished writing %,d unmapped reads to %d hash bams (task %d of %d)",
+                    readCount, mHashBamWriter.numHashBams(), taskId, numTasks);
         }
         catch(IOException e)
         {

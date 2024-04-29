@@ -14,14 +14,13 @@ import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 // a class to write reads into bam files hashed by the read names
 public class HashBamWriter implements AutoCloseable
 {
     private static final int NUM_HASH_BAMS = 256;
 
-    private final FastqConfig mConfig;
+    private final ToFastqConfig mConfig;
 
     private final File[] mHashBams = new File[NUM_HASH_BAMS];
     private final SAMFileWriter[] mHashBamWriters = new SAMFileWriter[NUM_HASH_BAMS];
@@ -33,12 +32,10 @@ public class HashBamWriter implements AutoCloseable
         return mHashBams;
     }
 
-    public HashBamWriter(final FastqConfig config)
+    public HashBamWriter(final ToFastqConfig config)
     {
         mConfig = config;
-        try(SamReader samReader = SamReaderFactory.makeDefault()
-                .referenceSequence(new File(mConfig.RefGenomeFile))
-                .open(new File(mConfig.BamFile)))
+        try(SamReader samReader = ToFastqUtils.openSamReader(mConfig))
         {
             SAMFileHeader samHeader = samReader.getFileHeader();
             samHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
@@ -52,9 +49,9 @@ public class HashBamWriter implements AutoCloseable
 
             for(int i = 0; i < NUM_HASH_BAMS; ++i)
             {
-                File tempBamFile = new File(tempDir, String.format("%d.hash.bam", i));
-                mHashBamWriters[i] = new SAMFileWriterFactory().makeBAMWriter(samHeader, false, tempBamFile);
-                mHashBams[i] = tempBamFile;
+                File hashBamFile = new File(tempDir, String.format("%d.hash.bam", i));
+                mHashBamWriters[i] = new SAMFileWriterFactory().makeBAMWriter(samHeader, false, hashBamFile, 1);
+                mHashBams[i] = hashBamFile;
             }
 
             // add a hook to delete the temp directory on exit
@@ -76,7 +73,7 @@ public class HashBamWriter implements AutoCloseable
 
     public void writeToHashBam(SAMRecord read)
     {
-        // we put the lock on individual sam writer
+        // we put the lock on individual bam writer
         SAMFileWriter bamWriter = mHashBamWriters[hashBamIndex(read.getReadName())];
         synchronized(bamWriter)
         {
