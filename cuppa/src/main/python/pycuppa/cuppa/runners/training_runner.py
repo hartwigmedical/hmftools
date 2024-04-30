@@ -14,7 +14,7 @@ from cuppa.runners.args import DEFAULT_RUNNER_ARGS
 from cuppa.compose.pipeline import PipelineCrossValidator
 from cuppa.logger import LoggerMixin, reset_logging_basic_config
 from cuppa.performance.confusion_matrix import ConfusionMatrix
-from cuppa.sample_data.cuppa_features import CuppaFeaturesPaths, FeatureLoaderOld, FeatureLoaderNew, CuppaFeatures
+from cuppa.sample_data.cuppa_features import CuppaFeaturesPaths, FeatureLoaderOld, FeatureLoader, CuppaFeatures
 from cuppa.sample_data.sample_metadata import SampleMetadata, TrainingSampleSelector
 from cuppa.performance.performance_stats import PerformanceStats
 
@@ -134,7 +134,7 @@ class TrainingRunner(LoggerMixin):
     def get_X(self) -> None:
 
         if not self.using_old_features_format:
-            loader = FeatureLoaderNew(self.features_path)
+            loader = FeatureLoader(self.features_path)
             X = loader.load()
             self.X = X
             return None
