@@ -42,8 +42,8 @@ public class ReadContextMatcher
 
         if(mContext.variant().isIndel())
         {
-            mLowQualExclusionRange = null;
-            mLowQualExclusionRangeRef = null;
+            mLowQualExclusionRange = new int[] { mContext.AltIndexUpper, mContext.AltIndexUpper };
+            mLowQualExclusionRangeRef = mLowQualExclusionRange;
         }
         else
         {
