@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.variant.impact;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -7,9 +8,7 @@ import javax.annotation.Nullable;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
 
-import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 public class AltTranscriptReportableInfo
 {
@@ -35,7 +34,7 @@ public class AltTranscriptReportableInfo
 
     public static List<AltTranscriptReportableInfo> parseAltTranscriptInfo(final String otherReportableEffects)
     {
-        List<AltTranscriptReportableInfo> altTransInfos = Lists.newArrayList();
+        List<AltTranscriptReportableInfo> altTransInfos = new ArrayList<>();
 
         String[] altTransInfoItems = otherReportableEffects.split(VAR_IMPACT_OTHER_REPORT_DELIM, -1);
 

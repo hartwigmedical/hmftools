@@ -24,6 +24,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -37,7 +38,6 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public class EnrichedRegionRepeatMasks
@@ -73,7 +73,7 @@ public class EnrichedRegionRepeatMasks
 
         List<RegionData> regions = loadRegions();
 
-        List<AnnotationTask> annotationTasks = Lists.newArrayList();
+        List<AnnotationTask> annotationTasks = new ArrayList<>();
 
         for(int i = 0; i < mThreads; ++i)
         {
@@ -114,7 +114,7 @@ public class EnrichedRegionRepeatMasks
 
     private List<RegionData> loadRegions()
     {
-        List<RegionData> regions = Lists.newArrayList();
+        List<RegionData> regions = new ArrayList<>();
 
         try
         {
@@ -171,7 +171,7 @@ public class EnrichedRegionRepeatMasks
         public AnnotationTask(int taskId)
         {
             mTaskId = taskId;
-            Regions = Lists.newArrayList();
+            Regions = new ArrayList<>();
         }
 
         @Override

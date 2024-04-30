@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.bamtools.tofastq;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.bamtools.tofastq.ToFastqUtils.R1;
+import static com.hartwig.hmftools.bamtools.tofastq.ToFastqUtils.R2;
+import static com.hartwig.hmftools.bamtools.tofastq.ToFastqUtils.UNPAIRED;
+import static com.hartwig.hmftools.bamtools.tofastq.ToFastqUtils.formFilename;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -8,73 +12,57 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
 public class FastqWriter
 {
-    private final String mFilePrefix;
+    private final String mFastqR1;
+    private final String mFastqR2;
+
+    private final String mFastqUnpaired;
 
     private final BufferedWriter mWriterR1;
     private final BufferedWriter mWriterR2;
 
-    private final List<SAMRecord> mUnpairedReads;
+    @Nullable private BufferedWriter mWriterUnpaired;
 
-    private static final String ZIPPED_SUFFIX = ".fastq.gz";
-    private static final String UNZIPPED_SUFFIX = ".fastq";
+    public String getFastqR1() { return mFastqR1; }
 
-    public FastqWriter(final String filePrefix, boolean writeUnzipped)
+    public String getFastqR2() { return mFastqR2; }
+
+    @Nullable
+    public String getFastqUnpaired() { return mFastqUnpaired; }
+
+    public FastqWriter(final String filePrefix)
     {
-        mFilePrefix = filePrefix;
-        mUnpairedReads = new ArrayList<>();
+        mFastqR1 = formFilename(filePrefix, R1);
+        mWriterR1 = initialise(mFastqR1);
 
-        String fastqR1 = formFilename(mFilePrefix, true, writeUnzipped);
-        mWriterR1 = initialise(fastqR1);
+        mFastqR2 = formFilename(filePrefix, R2);
+        mWriterR2 = initialise(mFastqR2);
 
-        String fastqR2 = formFilename(mFilePrefix, false, writeUnzipped);
-        mWriterR2 = initialise(fastqR2);
-    }
-
-    private String formFilename(final String filePrefix, final boolean isR1, boolean writeUnzipped)
-    {
-        String filename = filePrefix + ".";
-        filename += isR1 ? "R1" : "R2";
-        filename += writeUnzipped ? UNZIPPED_SUFFIX : ZIPPED_SUFFIX;
-        return filename;
+        mFastqUnpaired = formFilename(filePrefix, UNPAIRED);
     }
 
     private BufferedWriter initialise(final String filename)
     {
         try
         {
-            BufferedWriter writer = createBufferedWriter(filename);
-
-            return writer;
+            return createBufferedWriter(filename);
         }
         catch(IOException e)
         {
-            BT_LOGGER.error("failed to initialise fastq file({}): {}", filename, e.toString());
-            System.exit(1);
+            BT_LOGGER.error("failed to initialise fastq file({}): {}", filename, e);
+            throw new UncheckedIOException(e);
         }
-
-        return null;
     }
 
-    public synchronized void processReadPairSync(final SAMRecord first, final SAMRecord second)
-    {
-        processReadPair(first, second);
-    }
-
-    public void processReadPairNoSync(final SAMRecord first, final SAMRecord second)
-    {
-        processReadPair(first, second);
-    }
-
-    private void processReadPair(final SAMRecord first, final SAMRecord second)
+    public void writeReadPair(final SAMRecord first, final SAMRecord second)
     {
         if(first.getFirstOfPairFlag())
         {
@@ -88,34 +76,21 @@ public class FastqWriter
         }
     }
 
-    public synchronized void processUnpairedRead(final SAMRecord read)
-    {
-        // cache until all paired reads have been written
-        mUnpairedReads.add(read);
-    }
-
     public void writeUnpairedRead(final SAMRecord read)
     {
-        writeFastqRecord(read, mWriterR1);
-    }
-
-    public void writeUnpairedReads()
-    {
-        if(!mUnpairedReads.isEmpty())
+        if(mWriterUnpaired == null)
         {
-            for(SAMRecord read : mUnpairedReads)
-            {
-                if(read.getReadPairedFlag())
-                {
-                    BT_LOGGER.error("mate not found for paired read: {}", read);
-                }
-
-                // write these to the first fastq file only
-                writeFastqRecord(read, mWriterR1);
-            }
-
-            mUnpairedReads.clear();
+            // do not create the unpaired one until needed
+            mWriterUnpaired = initialise(mFastqUnpaired);
         }
+        if(read.getReadPairedFlag())
+        {
+            BT_LOGGER.error("mate not found for paired read: {}", read);
+            throw new RuntimeException("mate not found for paired read");
+        }
+
+        // write to the unpaired fastq
+        writeFastqRecord(read, mWriterUnpaired);
     }
 
     private void writeFastqRecord(final SAMRecord read, BufferedWriter writer)
@@ -160,5 +135,7 @@ public class FastqWriter
     {
         closeBufferedWriter(mWriterR1);
         closeBufferedWriter(mWriterR2);
+        if(mWriterUnpaired != null)
+            closeBufferedWriter(mWriterUnpaired);
     }
 }
