@@ -178,87 +178,89 @@ class CuppaFeatures(pd.DataFrame, LoggerMixin):
         return CuppaFeatures(features)
 
 
-class FeatureLoaderNew(LoggerMixin):
-
+class FeatureLoader(LoggerMixin):
     def __init__(
         self,
         path: str,
         sample_id: str | None = None,
-        excl_chroms: Iterable[str] | None = ["ChrY", "Y"],
-        fill_value: int | float = NA_FILL_VALUE,
-        verbose: bool = True
+        excl_chroms: Iterable[str] | None = ["ChrY", "Y"], ## TODO: move this logic to java
+        na_fill_value: int | float = NA_FILL_VALUE,
     ):
         self.path = path
         self.sample_id = sample_id
-        self.fill_value = fill_value
         self.excl_chroms = excl_chroms
-        self.verbose = verbose
+        self.na_fill_value = na_fill_value
 
-    INDEX_COLS = ["Source", "Category", "Key"]
+        self.df: pd.DataFrame = None
 
-    def load_file(self) -> pd.DataFrame:
+    FLD_SOURCE = "Source"
+    FLD_CATEGORY = "Category"
+    FLD_KEY = "Key"
+    FLD_VALUE = "Value"
+
+    INDEX_COLS = [FLD_SOURCE, FLD_CATEGORY, FLD_KEY]
+
+    @property
+    def is_multi_sample(self) -> bool:
+        if os.path.isdir(self.path):
+            return True
+        else:
+            header = pd.read_table(self.path, nrows=0).columns
+            return len(header) > len(self.INDEX_COLS)+1
+
+    def _read_single_sample_data(self) -> pd.DataFrame:
         df = pd.read_table(self.path)
         check_required_columns(df, self.INDEX_COLS)
 
-        if self.verbose:
-            self.logger.info("Loaded file from: " + self.path)
+        if self.sample_id is None:
+            self.logger.error("`sample_id` must be provided when features are for one sample")
+            raise ValueError
+
+        df.rename(columns={self.FLD_VALUE: self.sample_id}, inplace=True)
 
         return df
 
-    def add_sample_ids(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _read_multi_sample_data(self) -> pd.DataFrame:
+        paths = CuppaFeaturesPaths.from_dir(self.path)
+        dfs = {}
+        for data_type, path in paths.items():
+            self.logger.debug("Loading file: " + os.path.basename(path))
+            df = pd.read_table(path)
+            check_required_columns(df, self.INDEX_COLS)
+            dfs[data_type] = pd.read_table(path)
 
-        if "SampleId" in df.columns:
-            return df
+        df_merged = pd.concat(dfs.values())
 
-        if self.sample_id is not None:
-            df["SampleId"] = self.sample_id
-            return df
+        return df_merged
 
-        df["SampleId"] = "SAMPLE_1"
-        self.logger.warning("No `sample_id` provided. Using `sample_id`='SAMPLE_1'")
-        return df
+    def _read_files(self) -> None:
+        if self.is_multi_sample:
+            self.logger.info("Loading multi-sample data from dir: " + self.path)
+            self.df = self._read_multi_sample_data()
+        else:
+            self.logger.info("Loading single sample data file: " + self.path)
+            self.df = self._read_single_sample_data()
 
-    def filter_gen_pos_chroms(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _assert_no_duplicate_features(self) -> None:
+        duplicated_keys = self.df[self.FLD_KEY][self.df[self.FLD_KEY].duplicated()]
+        if len(duplicated_keys):
+            self.logger.error("The following features are duplicated: ", ", ".join(duplicated_keys.unique()))
+            raise AssertionError
+
+    def _filter_gen_pos_chroms(self) -> None:
 
         if self.excl_chroms is None:
-            return df
+            return
 
         regex = "^(" + "|".join(self.excl_chroms) + ")"
-        is_excluded_feature = (df["Category"] == "gen_pos") & df["Key"].str.match(regex)
+        is_excluded_feature = (self.df[self.FLD_CATEGORY] == "gen_pos") & self.df[self.FLD_KEY].str.match(regex)
 
-        if self.verbose:
-            df_excluded = df[is_excluded_feature]
-            if len(df_excluded) > 0:
-                self.logger.info(
-                    "Removed %i gen_pos bin(s) in %i sample(s) with the regex '%s'",
-                    len(df_excluded["Key"].unique()),
-                    len(df_excluded["SampleId"].unique()),
-                    regex
-                )
-
-        return df[~is_excluded_feature]
-
-    def dedup_drivers(self, df: pd.DataFrame) -> pd.DataFrame:
-        df = df.sort_values(by="Value", ascending=False)
-
-        columns_orig = df.columns
-
-        sample_feature_keys = pd.Series(df[["SampleId","Category","Key"]].itertuples(index=False))
-        df.loc[:,"is_dup_feature"] = sample_feature_keys.duplicated().values
-        df.loc[:,"is_driver"] = df["Category"] == "event.driver"
-
-        df_dup = df.query("is_dup_feature & is_driver")
-        if len(df_dup) > 0:
-            self.logger.warning(
-                "Removed %i duplicate driver(s) from %i sample(s) (kept highest impact driver)",
-                len(df_dup), len(df_dup["SampleId"].unique())
+        if sum(is_excluded_feature) > 0:
+            self.logger.debug(
+                "Removed %i gen_pos bin(s) with the regex '%s'",
+                sum(is_excluded_feature), regex
             )
-
-        is_excluded_feature = df["is_dup_feature"] & df["is_driver"]
-        df = df[~is_excluded_feature]
-
-        df = df.sort_index()
-        return df[columns_orig]
+            self.df = self.df[~is_excluded_feature]
 
     MAPPINGS_SIGS = dict(
         SIG_1="Age (SBS1)",
@@ -271,50 +273,40 @@ class FeatureLoaderNew(LoggerMixin):
         SIG_17="ROS/5FU (SBS17)",
     )
 
-    EXCLUDED_SIGS = (
-        "Age (SBS1)",
-        "POLE (SBS10)",
-        "Temozolomide (SBS11)"
-    )
+    EXCLUDED_SIGS = ("SIG_1", "SIG_10_POLE", "SIG_11") ## TODO: Move this logic to java
 
-    def parse_signatures(self, df: pd.DataFrame) -> pd.DataFrame:
-        df["Key"] = df["Key"].replace(self.MAPPINGS_SIGS)
-        df = df[~df["Key"].isin(self.EXCLUDED_SIGS)]
-        return df
+    def _parse_signatures(self) -> None:
+        self.df = self.df[~self.df[self.FLD_KEY].isin(self.EXCLUDED_SIGS)]
+        self.df[self.FLD_KEY].replace(self.MAPPINGS_SIGS, inplace=True)
 
-    def reshape_long_to_wide(self, df: pd.DataFrame):
+    def _assign_feature_names(self) -> None:
+        feature_names = self.df[self.FLD_CATEGORY] + "." + self.df[self.FLD_KEY]
+        self.df.drop(columns=self.INDEX_COLS, inplace=True)
+        self.df.index = feature_names
 
-        df["FeatureNames"] = df["Category"] + "." + df["Key"]
+    def _print_stats(self) -> None:
 
-        df_wide = df.pivot_table(index="SampleId", columns="FeatureNames", values="Value")
-        df_wide = df_wide[df["FeatureNames"].unique()] ## Preserve original feature order
+        n_samples = self.df.shape[1]
+        n_features = self.df.shape[0]
 
-        df_wide.index.name = "sample_id"
-        df_wide.columns.name = None
+        if self.is_multi_sample:
+            self.logger.debug(f"Loaded {n_features} features from {n_samples} samples")
+        else:
+            self.logger.debug(f"Loaded {n_features} features from sample({self.sample_id})")
 
-        df_wide = df_wide.fillna(self.fill_value)
+    def load(self) -> CuppaFeatures:
+        self._read_files()
+        self._assert_no_duplicate_features()
+        self._filter_gen_pos_chroms()
+        self._parse_signatures()
+        self._assign_feature_names()
+        self._print_stats()
 
-        return df_wide
-
-    def load(self) -> pd.DataFrame:
-        df = self.load_file()
-        df = self.add_sample_ids(df)
-
-        df = self.filter_gen_pos_chroms(df)
-        df = self.dedup_drivers(df)
-        df = self.parse_signatures(df)
-
-        features = self.reshape_long_to_wide(df)
-
-        n_samples = len(df["SampleId"].unique())
-        n_features = features.shape[1]
-        if self.verbose:
-            if n_samples == 0:
-                self.logger.info("Loaded %i features from sample_id: %s" % (n_features, df["SampleId"][0]))
-            else:
-                self.logger.info("Loaded %i features from %i samples" % (n_features, n_samples))
-
-        return CuppaFeatures(features)
+        return CuppaFeatures(
+            self.df
+            .fillna(self.na_fill_value)
+            .transpose()
+        )
 
 
 class FeatureLoaderOld(LoggerMixin):
