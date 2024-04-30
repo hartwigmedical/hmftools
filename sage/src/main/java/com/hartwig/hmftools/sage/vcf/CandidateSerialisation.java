@@ -1,11 +1,7 @@
 package com.hartwig.hmftools.sage.vcf;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_MICROHOMOLOGY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
@@ -15,12 +11,9 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
-import static com.hartwig.hmftools.sage.common.ReadCigarInfo.buildReadCigar;
 import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.getRefBaseCoordinates;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_ALIGNMENT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CIGAR;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CIGAR_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CORE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_EVENTS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_INDEX;
@@ -38,18 +31,15 @@ import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.Microhomology;
-import com.hartwig.hmftools.sage.common.ReadCigarInfo;
 import com.hartwig.hmftools.sage.common.RepeatInfo;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
-import com.hartwig.hmftools.sage.common.VariantReadContextBuilder;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
 import org.apache.logging.log4j.util.Strings;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.variant.variantcontext.Allele;
-import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
@@ -160,13 +150,6 @@ public final class CandidateSerialisation
         VariantReadContext readContext = new VariantReadContext(
                 variant, readAlignmentStart, readAlignmentEnd, refBases, readBases.getBytes(), readCigar,
                 coreIndexStart, varReadIndex, coreIndexEnd, homology, maxRepeat);
-
-        int maxDepth = 0;
-        for(Genotype genotype : context.getGenotypes().immutable())
-        {
-            maxDepth = Math.max(maxDepth, genotype.getDP());
-            maxDepth = Math.max(maxDepth, getGenotypeAttributeAsInt(genotype, RAW_DEPTH, 0));
-        }
 
         return new Candidate(tier, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0);
     }

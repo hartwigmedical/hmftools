@@ -22,9 +22,7 @@ import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_S
 import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
-import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
-import static com.hartwig.hmftools.sage.evidence.RawContextCigarHandler.createRawContextFromCoreMatch;
 import static com.hartwig.hmftools.sage.evidence.ReadEdgeDistance.calcAdjustedVariantPosition;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.CHIMERIC;
@@ -103,7 +101,7 @@ public class ReadContextCounter
     private final JitterData mJitterData;
     private int mImproperPairCount;
 
-    private final VariantReadCounters mReadCounters;
+    private final QualCounters mQualCounters;
 
     private int mMaxCandidateDeleteLength;
     private final ReadEdgeDistance mReadEdgeDistance;
@@ -151,7 +149,7 @@ public class ReadContextCounter
 
         mImproperPairCount = 0;
 
-        mReadCounters = new VariantReadCounters();
+        mQualCounters = new QualCounters();
         mMaxCandidateDeleteLength = 0;
 
         mReadEdgeDistance = new ReadEdgeDistance(calcAdjustedVariantPosition(mVariant.position(), indelLength()));
@@ -181,18 +179,15 @@ public class ReadContextCounter
     public int strongAltSupport() { return mCounts.strongSupport(); }
     public int refSupport() { return mCounts.Ref; }
 
-    // only difference between these next two is a read that isn't ALT or REF but covers the variant still counts towards 'raw' depth
     public int depth() { return mCounts.Total; }
-    public int rawDepth() { return mReadCounters.Depth; }
 
-    public VariantReadCounters rawCounters() { return mReadCounters; }
+    public QualCounters qualCounters() { return mQualCounters; }
 
-    public int altRawBaseQualityTotal() { return mReadCounters.AltRawBaseQualityTotal; }
-    public int refRawBaseQualityTotal() { return mReadCounters.RefRawBaseQualityTotal; }
-    public int recalibratedBaseQualityTotal() { return mReadCounters.RecalibratedBaseQualityTotal; }
+    public int baseQualityTotal() { return mQualCounters.BaseQualityTotal; }
+    public int altBaseQualityTotal() { return mQualCounters.AltBaseQualityTotal; }
 
-    public long mapQualityTotal() { return mReadCounters.MapQualityTotal; }
-    public long altMapQualityTotal() { return mReadCounters.AltMapQualityTotal; }
+    public long mapQualityTotal() { return mQualCounters.MapQualityTotal; }
+    public long altMapQualityTotal() { return mQualCounters.AltMapQualityTotal; }
 
     public double vaf()
     {
@@ -232,7 +227,7 @@ public class ReadContextCounter
     {
         // excludes realigned
         int supportCount = mCounts.Full + mCounts.PartialCore + mCounts.Core;
-        return supportCount > 0 ? mReadCounters.SupportAltBaseQualityTotal / (double)supportCount : 0;
+        return supportCount > 0 ? mQualCounters.AltBaseQualityTotal / (double)supportCount : 0;
     }
 
     public void setMaxCandidateDeleteLength(int length) { mMaxCandidateDeleteLength = length; }
@@ -278,12 +273,13 @@ public class ReadContextCounter
 
         RawContext rawContext = RawContext.create(mVariant, record);
 
-        if(mConfig.Quality.HighDepthMode && rawContext.ReadIndexInSoftClip)
+        if(mConfig.Quality.HighDepthMode && rawContext.PositionType == VariantReadPositionType.SOFT_CLIP)
         {
             addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
             return SOFT_CLIP;
         }
 
+        /* need to check if the soft-clip bases cover the variant and allow for realignment
         if(rawContext.ReadIndex < 0 && !ignoreSoftClipAdapter(record))
         {
             // search for a core match within soft-clipped bases, checking if a proximate DEL may explain the soft-clipping
@@ -295,15 +291,15 @@ public class ReadContextCounter
                 return UNRELATED;
             }
         }
+        */
 
-        if(rawContext.ReadIndexInSkipped)
+        if(rawContext.PositionType == VariantReadPositionType.SKIPPED)
         {
             addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
             return IN_SPLIT;
         }
 
         int readIndex = rawContext.ReadIndex;
-        boolean baseDeleted = rawContext.ReadIndexInDelete;
 
         boolean covered = mReadContextMatcher.coversVariant(record, readIndex);
 
@@ -312,8 +308,6 @@ public class ReadContextCounter
             addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
             return NON_CORE;
         }
-
-        ++mReadCounters.Depth;
 
         double adjustedNumOfEvents = numberOfEvents;
 
@@ -346,7 +340,8 @@ public class ReadContextCounter
         double quality = qualityScores.ModifiedQuality;
 
         // Check if FULL, PARTIAL, OR CORE
-        ReadContextMatch matchType = !baseDeleted ? determineReadContextMatch(record, readIndex, true) : NONE;
+        ReadContextMatch matchType = rawContext.PositionType != VariantReadPositionType.DELETED ?
+                determineReadContextMatch(record, readIndex, true) : NONE;
 
         if(matchType.SupportsAlt)
         {
@@ -354,11 +349,10 @@ public class ReadContextCounter
 
             registerReadSupport(record, readSupport, quality);
 
-            mReadCounters.MapQualityTotal += record.getMappingQuality();
-            mReadCounters.AltMapQualityTotal += record.getMappingQuality();
-            mReadCounters.SupportAltBaseQualityTotal += rawBaseQuality;
-
-            mReadCounters.RecalibratedBaseQualityTotal += qualityScores.RecalibratedBaseQuality;
+            mQualCounters.MapQualityTotal += record.getMappingQuality();
+            mQualCounters.AltMapQualityTotal += record.getMappingQuality();
+            mQualCounters.AltBaseQualityTotal += qualityScores.RecalibratedBaseQuality;
+            mQualCounters.BaseQualityTotal += qualityScores.RecalibratedBaseQuality;
 
             mReadEdgeDistance.update(record, fragmentData, true);
 
@@ -379,8 +373,8 @@ public class ReadContextCounter
             matchType = ReadContextMatch.REALIGNED;
             registerReadSupport(record, REALIGNED, quality);
 
-            mReadCounters.MapQualityTotal += record.getMappingQuality();
-            mReadCounters.AltMapQualityTotal += record.getMappingQuality();
+            mQualCounters.MapQualityTotal += record.getMappingQuality();
+            mQualCounters.AltMapQualityTotal += record.getMappingQuality();
 
             addVariantVisRecord(record, matchType, qualityScores, fragmentData);
             logReadEvidence(record, matchType, readIndex,quality);
@@ -391,11 +385,11 @@ public class ReadContextCounter
             return ALT_SUPPORT;
         }
 
-        mReadCounters.RecalibratedBaseQualityTotal += qualityScores.RecalibratedBaseQuality;
+        mQualCounters.BaseQualityTotal += qualityScores.RecalibratedBaseQuality;
 
         RealignedContext jitterRealign = Realignment.realignedAroundIndex(mReadContext, readIndex, record);
 
-        if(rawContext.ReadIndexInSoftClip)
+        if(rawContext.PositionType == VariantReadPositionType.SOFT_CLIP)
         {
             if(jitterRealign.Type != LENGTHENED && jitterRealign.Type != SHORTENED)
             {
@@ -404,7 +398,7 @@ public class ReadContextCounter
             }
         }
 
-        mReadCounters.MapQualityTotal += record.getMappingQuality();
+        mQualCounters.MapQualityTotal += record.getMappingQuality();
 
         VariantReadSupport readSupport = null;
 

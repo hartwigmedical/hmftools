@@ -69,7 +69,7 @@ public class SageConstants
 
     public static final double HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL = 0.08;
     public static final int HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL = 8;
-    public static final int HOTSPOT_MIN_RAW_ALT_BASE_QUAL = 150;
+    public static final int HOTSPOT_MIN_ALT_BASE_QUAL = 150;
 
     public static final double VAF_PROBABILITY_THRESHOLD = 1e-14;
     public static final double VAF_PROBABILITY_THRESHOLD_HOTSPOT = 1e-9;

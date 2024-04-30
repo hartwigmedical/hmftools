@@ -40,12 +40,6 @@ public final class VcfTags
     public static final String READ_CONTEXT_IMPROPER_PAIR = "RC_IPC";
     public static final String READ_CONTEXT_IMPROPER_PAIR_DESC = "Read context improper pair count";
 
-    public static final String RAW_DEPTH = "RDP";
-    public static final String RAW_DEPTH_DESC = "Raw read depth";
-
-    public static final String RAW_SUPPORT_BASE_QUALITY = "RABQ";
-    public static final String RAW_SUPPORT_BASE_QUALITY_DESC = "Raw allelic base quality";
-
     public static final String AVG_MAP_QUALITY = "AMQ";
     public static final String AVG_MAP_QUALITY_DESC = "Average map quality count (all,alt)";
 
@@ -59,7 +53,7 @@ public final class VcfTags
     public static final String READ_STRAND_BIAS_DESC = "Read strand bias - percentage of forward-orientation reads (ref,alt)";
 
     public static final String AVG_BASE_QUAL = "ABQ";
-    public static final String AVG_BASE_QUAL_DESC = "Average calculated base quality";
+    public static final String AVG_BASE_QUAL_DESC = "Average calculated base quality (all,alt)";
 
     public static final String MIXED_SOMATIC_GERMLINE = "MSG";
     public static final String MIXED_SOMATIC_GERMLINE_DESC = "Mixed Somatic and Germline variants";
