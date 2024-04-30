@@ -1,11 +1,6 @@
 package com.hartwig.hmftools.sage.evidence;
 
-import static java.lang.Math.max;
-
-import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
-import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_SOFT_CLIP_HIGH_QUAL_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_SOFT_CLIP_MIN_BASE_QUAL;
@@ -18,7 +13,6 @@ import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.SOFT_CL
 import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.SplitReadUtils;
-import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;

@@ -279,19 +279,12 @@ public class ReadContextCounter
             return SOFT_CLIP;
         }
 
-        /* need to check if the soft-clip bases cover the variant and allow for realignment
-        if(rawContext.ReadIndex < 0 && !ignoreSoftClipAdapter(record))
+        // TODO: need to check if the soft-clip bases cover the variant and allow for realignment
+        if(rawContext.ReadIndex < 0)
         {
-            // search for a core match within soft-clipped bases, checking if a proximate DEL may explain the soft-clipping
-            rawContext = createRawContextFromCoreMatch(mReadContext, mMaxCandidateDeleteLength, record);
-
-            if(rawContext.ReadIndex < 0)
-            {
-                addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
-                return UNRELATED;
-            }
+            addVariantVisRecord(record, ReadContextMatch.NONE, null, fragmentData);
+            return UNRELATED;
         }
-        */
 
         if(rawContext.PositionType == VariantReadPositionType.SKIPPED)
         {
@@ -364,7 +357,8 @@ public class ReadContextCounter
             return ALT_SUPPORT;
         }
 
-        boolean canRealign = abs(mVariant.indelLength()) >= REALIGN_READ_MIN_INDEL_LENGTH || readHasIndelInCore(record);
+        boolean canRealign = matchType != ReadContextMatch.REF
+                && (abs(mVariant.indelLength()) >= REALIGN_READ_MIN_INDEL_LENGTH || readHasIndelInCore(record));
 
         RealignedContext realignment = canRealign ? checkRealignment(record, readIndex) : RealignedContext.NONE;
 
@@ -378,9 +372,6 @@ public class ReadContextCounter
 
             addVariantVisRecord(record, matchType, qualityScores, fragmentData);
             logReadEvidence(record, matchType, readIndex,quality);
-
-            // TODO: check if should contribute to any base qual totals
-            // registerRawSupport(rawContext, qualityScores.RecalibratedBaseQuality);
 
             return ALT_SUPPORT;
         }

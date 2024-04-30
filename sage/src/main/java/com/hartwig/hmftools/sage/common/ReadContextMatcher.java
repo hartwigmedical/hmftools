@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_FACTOR;
+import static com.hartwig.hmftools.sage.SageConstants.FLANK_LOW_QUAL_MISMATCHES;
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
@@ -36,7 +37,7 @@ public class ReadContextMatcher
     {
         mContext = variantReadContext;
 
-        mMaxCoreLowQualMatches = allowMismatches ? calcMaxLowQualMismatches(mContext.coreLength()) : 0;
+        mMaxCoreLowQualMatches = allowMismatches ? calcMaxLowQualCoreMismatches() : 0;
         mAllowWildcardMatchInCore = allowMismatches ? mContext.variant().isSNV() && !mContext.hasHomology() : false;
 
         if(mContext.variant().isIndel())
@@ -51,6 +52,33 @@ public class ReadContextMatcher
             int refIndex = mContext.leftCoreLength();
             mLowQualExclusionRangeRef = new int[] { refIndex, refIndex + altLength - 1 };
         }
+    }
+
+    private int calcMaxLowQualCoreMismatches()
+    {
+        int coreLength = mContext.coreLength();
+
+        if(mContext.MaxRepeat != null)
+        {
+            // determine how many times the repeat bases are in the core
+            int coreRepeatCount = 0;
+            String coreStr = mContext.coreStr();
+            int repeatIndex = coreStr.indexOf(mContext.MaxRepeat.Bases);
+
+            while(repeatIndex >= 0)
+            {
+                ++coreRepeatCount;
+                repeatIndex = coreStr.indexOf(mContext.MaxRepeat.Bases, repeatIndex + 1);
+            }
+
+            if(coreRepeatCount > 2)
+            {
+                int trimmedRepeat = (coreRepeatCount - 2) * mContext.MaxRepeat.repeatLength();
+                coreLength = coreLength - trimmedRepeat;
+            }
+        }
+
+        return calcMaxLowQualMismatches(coreLength);
     }
 
     private static int calcMaxLowQualMismatches(int segmentLength)
@@ -151,7 +179,7 @@ public class ReadContextMatcher
             int coreIndexStart = mContext.CoreIndexStart + leftTrim;
             int compareLength = mContext.coreLength() - leftTrim - rightTrim;
 
-            int maxLowQualMismatches = calcMaxLowQualMismatches(compareLength);
+            int maxLowQualMismatches = min(mMaxCoreLowQualMatches, calcMaxLowQualMismatches(compareLength));
 
             if(matches(
                     mContext.ReadBases, readBases, readQuals, coreIndexStart, readIndexStart, compareLength,
@@ -165,8 +193,6 @@ public class ReadContextMatcher
             }
         }
     }
-
-    private static final int ANY_LOW_BASE_MISMATCH = -1;
 
     private enum BaseMatchType
     {
@@ -214,7 +240,7 @@ public class ReadContextMatcher
 
         boolean flankMatch = matches(
                 mContext.ReadBases, readBases, readQuals, flankStartIndex, readIndexStart, flankLength,
-                ANY_LOW_BASE_MISMATCH, false, mLowQualExclusionRange);
+                FLANK_LOW_QUAL_MISMATCHES, false, mLowQualExclusionRange);
 
         if(!flankMatch)
             return BaseMatchType.MISMATCH;
@@ -265,9 +291,6 @@ public class ReadContextMatcher
 
             if(readQuals[j] < MATCHING_BASE_QUALITY)
             {
-                if(maxLowQualMismatches == ANY_LOW_BASE_MISMATCH)
-                    continue;
-
                 ++mismatchCount;
 
                 if(mismatchCount > maxLowQualMismatches)
