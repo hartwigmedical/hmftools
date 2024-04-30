@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_MINOR_ALLELE_CN_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.localPhaseSetsStr;
@@ -233,12 +233,12 @@ public class VariantContextDecorator implements GenomePosition
 
     public int repeatCount()
     {
-        return mContext.getAttributeAsInt(SageVcfTags.REPEAT_COUNT_FLAG, 0);
+        return mContext.getAttributeAsInt(SageVcfTags.REPEAT_COUNT, 0);
     }
 
     public String repeatSequence()
     {
-        return mContext.getAttributeAsString(SageVcfTags.REPEAT_SEQUENCE_FLAG, Strings.EMPTY);
+        return mContext.getAttributeAsString(SageVcfTags.REPEAT_SEQUENCE, Strings.EMPTY);
     }
 
     public Hotspot hotspot()
@@ -268,7 +268,7 @@ public class VariantContextDecorator implements GenomePosition
 
     public String microhomology()
     {
-        return mContext.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY);
+        return mContext.getAttributeAsString(MICROHOMOLOGY, Strings.EMPTY);
     }
 
     public boolean isPathogenic()

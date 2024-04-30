@@ -16,6 +16,12 @@ public final class VcfTags
     public static final String READ_CONTEXT_INDEX = "RC_IDX";
     public static final String READ_CONTEXT_INDEX_DESC = "Index in the read context of the variant";
 
+    public static final String READ_CONTEXT_CIGAR = "RC_CIGAR";
+    public static final String READ_CONTEXT_CIGAR_DESC = "Read context CIGAR of the variant";
+
+    public static final String READ_CONTEXT_ALIGNMENT = "RC_ALIGNMENT";
+    public static final String READ_CONTEXT_ALIGNMENT_DESC = "Read context alignment of the variant";
+
     public static final String DEDUP_MNV_FILTER = "dedupMnv";
     public static final String DEDUP_MIXED_GERMLINE_SOMATIC_FILTER = "dedupMixedGermlineSomatic";
     public static final String DEDUP_SNV_MNV_FILTER = "dedupSnvMnv";
@@ -27,12 +33,6 @@ public final class VcfTags
 
     public static final String READ_CONTEXT_EVENTS = "RC_NM";
     public static final String READ_CONTEXT_EVENTS_DESC = "Minimum number of events in read";
-
-    public static final String READ_CONTEXT_REPEAT_SEQUENCE = "RC_REPS";
-    public static final String READ_CONTEXT_REPEAT_SEQUENCE_DESC = "Repeat sequence at read context";
-
-    public static final String READ_CONTEXT_MICRO_HOMOLOGY = "RC_MH";
-    public static final String READ_CONTEXT_MICRO_HOMOLOGY_DESC = "Micro-homology at read context";
 
     public static final String READ_CONTEXT_AF_DESC =
             "Allelic frequency calculated from read context counts as (Full + Partial + Core + Realigned + Alt) / Coverage";

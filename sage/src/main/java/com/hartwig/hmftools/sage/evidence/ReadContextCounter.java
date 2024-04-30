@@ -181,7 +181,7 @@ public class ReadContextCounter
     public int strongAltSupport() { return mCounts.strongSupport(); }
     public int refSupport() { return mCounts.Ref; }
 
-    // only difference between these next two is a read that isn't ALT or REF but covers the variant
+    // only difference between these next two is a read that isn't ALT or REF but covers the variant still counts towards 'raw' depth
     public int depth() { return mCounts.Total; }
     public int rawDepth() { return mReadCounters.Depth; }
 

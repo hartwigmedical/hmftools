@@ -24,7 +24,7 @@ public class RepeatBoundaries
     }
 
     // set an initial search length long enough to find a min count of the longest repeat
-    private static final int REPEAT_SEARCH_LENGTH = MAX_REPEAT_LENGTH * MIN_REPEAT_COUNT;
+    protected static final int REPEAT_SEARCH_LENGTH = MAX_REPEAT_LENGTH * MIN_REPEAT_COUNT;
 
     public static RepeatBoundaries findRepeatBoundaries(
             final byte[] bases, final int requiredIndexStart, final int requiredIndexEnd, final int maxLength, final int minCount)

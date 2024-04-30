@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT;
 import static com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.writeImpactDetails;
 
 import java.util.List;
@@ -48,7 +48,7 @@ public final class TestUtils
     {
         VariantContext context = createDefaultContext(type);
 
-        context.getCommonInfo().putAttribute(REPEAT_COUNT_FLAG, repeatCount);
+        context.getCommonInfo().putAttribute(REPEAT_COUNT, repeatCount);
 
         if(hotspot == HOTSPOT)
             context.getCommonInfo().putAttribute(HOTSPOT_FLAG, true);

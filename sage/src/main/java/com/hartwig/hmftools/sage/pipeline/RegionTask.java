@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.pipeline;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.common.RepeatInfo.setReferenceMaxRepeatInfo;
 
 import java.util.List;
 import java.util.Map;
@@ -155,6 +156,7 @@ public class RegionTask
                 final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getFilteredReadCounters(candidateIndex);
 
                 SageVariant sageVariant = new SageVariant(candidate, normalReadCounters, tumorReadCounters);
+                setReferenceMaxRepeatInfo(sageVariant, refSequence);
                 mSageVariants.add(sageVariant);
 
                 // apply filters

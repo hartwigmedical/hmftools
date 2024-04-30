@@ -36,7 +36,9 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_MICROHOMOLOGY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.utils.VariantData.comparePositions;
@@ -45,8 +47,6 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.MAX_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CORE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_LEFT_FLANK;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_MICRO_HOMOLOGY;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_RIGHT_FLANK;
 
 import com.google.common.collect.Lists;
@@ -304,7 +304,7 @@ public class SageCompareVcfs
         compareAttributeField(origVar, newVar, READ_CONTEXT_LEFT_FLANK, FieldType.STRING);
         compareAttributeField(origVar, newVar, READ_CONTEXT_RIGHT_FLANK, FieldType.STRING);
         compareAttributeField(origVar, newVar, READ_CONTEXT_JITTER, FieldType.STRING); // will still work for int arrays but could change
-        compareAttributeField(origVar, newVar, READ_CONTEXT_MICRO_HOMOLOGY, FieldType.STRING);
+        compareAttributeField(origVar, newVar, READ_CONTEXT_MICROHOMOLOGY, FieldType.STRING);
         compareAttributeField(origVar, newVar, READ_CONTEXT_REPEAT_SEQUENCE, FieldType.STRING);
         compareAttributeField(origVar, newVar, READ_CONTEXT_REPEAT_COUNT, FieldType.EXACT_INT);
 

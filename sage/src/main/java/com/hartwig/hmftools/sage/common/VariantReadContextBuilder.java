@@ -5,8 +5,9 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.bam.CigarUtils.cigarStringFromElements;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
@@ -82,7 +83,7 @@ public class VariantReadContextBuilder
             readCoreStart = varIndexInRead - MIN_CORE_DISTANCE + 1;
             readCoreEnd = varIndexInRead + (variant.isInsert() ? variant.indelLength() + 1 : 1) + MIN_CORE_DISTANCE - 1;
 
-            homology = findHomology(variant, read, varIndexInRead);
+            homology = Microhomology.findHomology(variant, read, varIndexInRead);
 
             if(homology != null)
                 readCoreEnd += homology.Length;
@@ -116,7 +117,7 @@ public class VariantReadContextBuilder
             return null;
 
         // build a CIGAR from the read to cover this range
-        ReadCigarInfo readCigarInfo = buildReadCigar(read, readFlankStart, readFlankEnd);
+        ReadCigarInfo readCigarInfo = ReadCigarInfo.buildReadCigar(read, readFlankStart, readFlankEnd);
 
         readFlankStart = readCigarInfo.FlankIndexStart;
         readFlankEnd = readCigarInfo.FlankIndexEnd;
@@ -134,13 +135,25 @@ public class VariantReadContextBuilder
         // ref bases are the core width around the variant's position
         int leftCoreLength = readVarIndex - coreIndexStart;
         int coreLength = coreIndexEnd - coreIndexStart + 1;
+        int rightCoreLength = coreIndexEnd - readVarIndex;
+
+        int[] refPosCoords = getRefBaseCoordinates(variant, coreLength, leftCoreLength, rightCoreLength);
+
+        byte[] refBases = refSequence.baseRange(refPosCoords[SE_START], refPosCoords[SE_END]);
+
+        return new VariantReadContext(
+                variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar,
+                coreIndexStart, readVarIndex, coreIndexEnd, homology, maxRepeat);
+    }
+
+    public static int[] getRefBaseCoordinates(final SimpleVariant variant, int coreLength, int leftCoreLength, int rightCoreLength)
+    {
         int refPosStart = variant.Position - leftCoreLength;
         int refPosEnd;
 
         if(variant.isDelete())
         {
             // ensure is long enough to cover the ref bases prior to deletion, so find the core position end in the ref
-            int rightCoreLength = coreIndexEnd - readVarIndex;
             int rightCoreLengthExtension = max(rightCoreLength - MIN_CORE_DISTANCE, 0);
             refPosEnd = variant.positionEnd() + 1 + rightCoreLengthExtension;
         }
@@ -149,203 +162,12 @@ public class VariantReadContextBuilder
             refPosEnd = refPosStart + coreLength - 1;
         }
 
-        byte[] refBases = refSequence.baseRange(refPosStart, refPosEnd);
-
-        return new VariantReadContext(
-                variant, alignmentStart, alignmentEnd, refBases, contextReadBases, readCigarInfo.Cigar,
-                coreIndexStart, readVarIndex, coreIndexEnd, homology, maxRepeat);
+        return new int[] { refPosStart, refPosEnd };
     }
 
     private RepeatBoundaries findRepeatBoundaries(int readCoreStart, int readCoreEnd, final byte[] readBases)
     {
         return RepeatBoundaries.findRepeatBoundaries(readBases, readCoreStart, readCoreEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT);
-    }
-
-    private class ReadCigarInfo
-    {
-        public List<CigarElement> Cigar;
-        public final int UnclippedStart;  // note: these are unclipped values
-        public final int UnclippedEnd;
-
-        // stored for the scenario where an indel in the flanks pushes out the alignment beyond the standard flank length
-        public final int FlankIndexStart;
-        public final int FlankIndexEnd;
-
-        public ReadCigarInfo(
-                final List<CigarElement> cigar, final int unclippedStart, final int unclippedEnd,
-                final int flankIndexStart, final int flankIndexEnd)
-        {
-            Cigar = cigar;
-            UnclippedStart = unclippedStart;
-            UnclippedEnd = unclippedEnd;
-            FlankIndexStart = flankIndexStart;
-            FlankIndexEnd = flankIndexEnd;
-        }
-
-        public String toString()
-        {
-            return format("%s align(%d-%d) flankIndex(%d-%d)",
-                    cigarStringFromElements(Cigar), UnclippedStart, UnclippedEnd, FlankIndexStart, FlankIndexEnd);
-        }
-    }
-
-    private ReadCigarInfo buildReadCigar(final SAMRecord read, int indexStart, int indexEnd)
-    {
-        // builds a cigar around the specified index boundaries and calculates the corresponding alignment positions
-        List<CigarElement> cigar = Lists.newArrayList();
-
-        int readIndex = 0;
-        int refPosition = read.getAlignmentStart();
-        int unclippedPosStart = 0;
-        int unclippedPosEnd = 0;
-
-        int finalIndexStart = indexStart;
-        int finalIndexEnd = indexEnd;
-
-        for(CigarElement element : read.getCigar().getCigarElements())
-        {
-            if(readIndex == 0 && element.getOperator() == S)
-            {
-                // set to unclipped ref position so the alignment can capture corresponding ref bases
-                refPosition -= element.getLength();
-            }
-
-            int elementEndIndex = readIndex + element.getLength() - 1;
-
-            if(elementEndIndex >= indexStart)
-            {
-                int elementStart = max(readIndex, indexStart);
-                int elementEnd = min(elementEndIndex, indexEnd);
-
-                cigar.add(new CigarElement(elementEnd - elementStart + 1, element.getOperator()));
-
-                if(unclippedPosStart == 0)
-                {
-                    if(element.getOperator() == I)
-                    {
-                        // handles an insert that pushes the alignment out - always take the prior alignment base and reduce index start
-                        // eg looking to find the alignment boundary for index start 12 for 10M5I1350M, alignment start == 100
-                        // so at the insert element, read index = 10, ref pos = 110 (pointing at next ref base)
-                        int extraIndexStart = indexStart - readIndex + 1;
-                        cigar.add(0, new CigarElement(1, M));
-
-                        finalIndexStart -= extraIndexStart;
-                        unclippedPosStart = max(refPosition - 1, read.getAlignmentStart());
-                    }
-                    else if(element.getOperator() == D)
-                    {
-                        unclippedPosStart = max(refPosition - 1, read.getAlignmentStart());
-                    }
-                    else
-                    {
-                        unclippedPosStart = refPosition + (indexStart - readIndex);
-                    }
-                }
-
-                if(unclippedPosEnd == 0 && elementEndIndex >= indexEnd)
-                {
-                    if(element.getOperator() == I)
-                    {
-                        // similar extension to the above
-                        int extraIndexEnd = elementEndIndex + 1 - indexEnd;
-                        cigar.add(new CigarElement(1, M));
-
-                        finalIndexEnd += extraIndexEnd;
-
-                        unclippedPosEnd = refPosition; // already pointing at the next M (aligned) base
-                    }
-                    else if(element.getOperator() == D)
-                    {
-                        unclippedPosEnd = refPosition + element.getLength();
-                    }
-                    else
-                    {
-                        unclippedPosEnd = refPosition + (indexEnd - readIndex); // unclipped so not bound by the read's alignment
-                    }
-                }
-            }
-
-            if(element.getOperator().consumesReadBases())
-                readIndex += element.getLength();
-
-            if(element.getOperator().consumesReferenceBases() || element.getOperator() == S)
-                refPosition += element.getLength();
-
-            if(readIndex > indexEnd)
-                break;
-        }
-
-        return new ReadCigarInfo(cigar, unclippedPosStart, unclippedPosEnd, finalIndexStart, finalIndexEnd);
-    }
-
-    public static Microhomology findHomology(final SimpleVariant variant, final SAMRecord read, int varReadIndex)
-    {
-        if(!variant.isIndel())
-            return null;
-
-        int indelAltLength = abs(variant.indelLength());
-
-        StringBuilder homology = null;
-        String indelBases = variant.isInsert() ? variant.alt().substring(1) : variant.ref().substring(1);
-
-        final byte[] readBases = read.getReadBases();
-
-        // start looking in the read in the first base after the variant
-
-        int homReadIndexStart = variant.isInsert() ? varReadIndex + indelAltLength + 1 : varReadIndex + 1;
-        int homReadIndex = homReadIndexStart;
-
-        for(int i = 0; i < indelBases.length() && homReadIndex < readBases.length; ++i, ++homReadIndex)
-        {
-            byte indelBase = (byte)indelBases.charAt(i);
-            byte postIndelReadBase = readBases[homReadIndex];
-
-            if(indelBase != postIndelReadBase)
-                break;
-
-            if(homology == null)
-                homology = new StringBuilder();
-
-            homology.append((char)indelBase);
-        }
-
-        if(homology == null)
-            return null;
-
-        String homologyBases = homology.toString();
-        int homologyLength = homologyBases.length();
-
-        if(homologyLength == indelAltLength && homReadIndex < readBases.length)
-        {
-            // continue searching for repeats of the homology to find the point of right-alignment, allow partials at the end
-            boolean matched = true;
-
-            while(matched)
-            {
-                int matchCount = 0;
-
-                for(int i = 0; i < indelAltLength && homReadIndex < readBases.length; ++i, ++homReadIndex)
-                {
-                    byte homologyBase = (byte)homologyBases.charAt(i);
-                    byte postIndelReadBase = readBases[homReadIndex];
-
-                    if(homologyBase != postIndelReadBase)
-                    {
-                        matched = false;
-                        break;
-                    }
-
-                    ++matchCount;
-                }
-
-                if(matchCount > 0)
-                    homologyLength += matchCount;
-                else
-                    break;
-            }
-        }
-
-        return new Microhomology(homologyBases, homologyLength);
     }
 
     public static final int INVALID_INDEX_POS = -1;

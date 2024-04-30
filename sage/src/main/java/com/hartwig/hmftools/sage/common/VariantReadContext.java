@@ -46,6 +46,7 @@ public class VariantReadContext
 
     private ArtefactContext mArtefactContext;
     private UltimaQualModel mUltimaQualModel;
+    private RepeatInfo mMaxRefRepeat; // maximun repeat in the reference
 
     public VariantReadContext(
             final SimpleVariant variant, final int alignmentStart, final int alignmentEnd, final byte[] refBases,
@@ -76,6 +77,7 @@ public class VariantReadContext
 
         mArtefactContext = null;
         mUltimaQualModel = null;
+        mMaxRefRepeat = null;
     }
 
     // read context methods
@@ -137,6 +139,9 @@ public class VariantReadContext
 
     public UltimaQualModel ultimaQualModel() { return mUltimaQualModel; }
     public void setUltimaQualModel(final UltimaQualModel model) { mUltimaQualModel = model; }
+
+    public RepeatInfo refMaxRepeat() { return mMaxRefRepeat; }
+    public void setRefMaxRepeat(final RepeatInfo repeatInfo) { mMaxRefRepeat = repeatInfo; }
 
     public String toString()
     {
