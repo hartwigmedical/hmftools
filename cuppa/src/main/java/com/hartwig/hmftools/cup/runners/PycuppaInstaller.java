@@ -3,7 +3,6 @@ package com.hartwig.hmftools.cup.runners;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 
 import java.io.File;
-import java.util.List;
 
 import com.google.common.io.Resources;
 
@@ -18,13 +17,15 @@ public class PycuppaInstaller
     private static final File TMP_DIR = new File(System.getProperty("java.io.tmpdir"));
     private static final File PYCUPPA_TMP_DIR = new File(TMP_DIR + "/pycuppa/");
     private static final File PYCUPPA_RESOURCE_DIR = new File(Resources.getResource("pycuppa/").getPath());
-    public static final String PYCUPPA_VENV_NAME = "pycuppa_venv";
 
-    public final PythonEnv mPythonEnvironment;
+    public static final String PYCUPPA_VENV_NAME = "pycuppa_venv";
+    public static final String PYCUPPA_PKG_NAME = "pycuppa";
+
+    public final PythonEnv mPythonEnv;
 
     public PycuppaInstaller()
     {
-        mPythonEnvironment = new PythonEnv(PYTHON_VERSION, PYCUPPA_VENV_NAME);
+        mPythonEnv = new PythonEnv(PYTHON_VERSION, PYCUPPA_VENV_NAME);
     }
 
     private void removePycuppaTmpDir()
@@ -34,7 +35,7 @@ public class PycuppaInstaller
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("Failed to remove tmp dir({}): ", PYCUPPA_TMP_DIR, e);
+            CUP_LOGGER.error("Failed to remove tmp dir: {}", PYCUPPA_TMP_DIR, e);
             System.exit(1);
         }
     }
@@ -45,14 +46,14 @@ public class PycuppaInstaller
         {
             if(PYCUPPA_TMP_DIR.exists())
             {
-                CUP_LOGGER.debug("Removing existing pycuppa tmp dir: " + PYCUPPA_TMP_DIR);
+                CUP_LOGGER.debug("Removing existing tmp dir: {}", PYCUPPA_TMP_DIR);
                 removePycuppaTmpDir();
             }
 
             if(PYCUPPA_RESOURCE_DIR.exists())
             {
                 // This clause allows PycuppaExecutor to work when run from intellij
-                CUP_LOGGER.debug("Copying pycuppa from resource path({}) to tmp dir({})", PYCUPPA_RESOURCE_DIR, PYCUPPA_TMP_DIR);
+                CUP_LOGGER.debug("Copying {} from resource path({}) to tmp dir({})", PYCUPPA_PKG_NAME, PYCUPPA_RESOURCE_DIR, PYCUPPA_TMP_DIR);
                 FileUtils.copyDirectory(PYCUPPA_RESOURCE_DIR, PYCUPPA_TMP_DIR);
             }
             else
@@ -60,63 +61,43 @@ public class PycuppaInstaller
                 String cuppaJarPath = new File( PythonEnv.class.getProtectionDomain().getCodeSource().getLocation().toURI() ).getPath();
 
                 // Unzip with `jar` rather than `unzip` to avoid unzipping the whole jar
-                String command = String.format("cd %s && jar -xf %s pycuppa", TMP_DIR, cuppaJarPath);
+                String command = String.format("cd %s && jar -xf %s %s", TMP_DIR, cuppaJarPath, PYCUPPA_PKG_NAME);
 
-                CUP_LOGGER.debug("Extracting pycuppa from cuppa jar using command: " + command);
+                CUP_LOGGER.debug("Extracting {} from cuppa jar using command: {}", PYCUPPA_PKG_NAME, command);
                 new BashCommand(command).logLevel(Level.DEBUG).showCommand().run();
             }
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("Failed to extract pycuppa to tmp dir({})", PYCUPPA_TMP_DIR, e);
+            CUP_LOGGER.error("Failed to extract {} to tmp dir: {}", PYCUPPA_PKG_NAME, PYCUPPA_TMP_DIR);
             System.exit(1);
         }
-    }
-
-    private boolean pycuppaInstalled()
-    {
-        boolean pycuppaExists = false;
-
-        List<String> stdout = new PythonEnvCommand(mPythonEnvironment, "python -m pip --disable-pip-version-check list")
-                .logLevel(null).run().getStdout();
-
-        for(String line : stdout)
-        {
-            if(line.startsWith("pycuppa"))
-            {
-                pycuppaExists = true;
-                break;
-            }
-        }
-
-        return pycuppaExists;
     }
 
     public void install()
     {
         try
         {
-            mPythonEnvironment.initialize();
+            mPythonEnv.initialize();
 
-            if(!pycuppaInstalled())
+            if(!mPythonEnv.packageInstalled(PYCUPPA_PKG_NAME))
             {
                 extractPycuppaToTmpDir();
-                mPythonEnvironment.pipUpgrade();
-                mPythonEnvironment.pipInstall(PYCUPPA_TMP_DIR.getPath());
+                mPythonEnv.pipInstall(PYCUPPA_TMP_DIR.getPath(), true);
             }
             else
             {
-                CUP_LOGGER.warn("Skipping installing pycuppa as it already exists in the virtual environment: " + mPythonEnvironment.mVirtualEnvName);
+                CUP_LOGGER.warn("Skipping installing {} as it already exists in virtual env({})", PYCUPPA_PKG_NAME, mPythonEnv.mVirtualEnvName);
             }
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("Failed to install pycuppa to virtual env({}): ", mPythonEnvironment.mVirtualEnvName, e);
+            CUP_LOGGER.error("Failed to install {} to virtual env({}): ", PYCUPPA_PKG_NAME, mPythonEnv.mVirtualEnvName);
             System.exit(1);
         }
         finally
         {
-            CUP_LOGGER.debug("Removing pycuppa tmp dir: " + PYCUPPA_TMP_DIR);
+            CUP_LOGGER.debug("Removing tmp dir: " + PYCUPPA_TMP_DIR);
             removePycuppaTmpDir();
         }
     }
