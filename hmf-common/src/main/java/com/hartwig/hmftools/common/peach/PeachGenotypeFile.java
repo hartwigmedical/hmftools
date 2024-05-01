@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.peach;
 import static com.hartwig.hmftools.common.peach.PeachUtil.convertZygosityToAlleleCount;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,6 +39,14 @@ public final class PeachGenotypeFile
             .add(PYTHON_HAPLOTYPE_ONLY_COLUMN_NAME)
             .add(PYTHON_ZYGOSITY_ONLY_COLUMN_NAME)
             .toString();
+
+    private static final String FILE_EXTENSION = ".peach.haplotypes.best.tsv";
+
+    @NotNull
+    public static String generateFileName(@NotNull String outputDir, @NotNull String sampleId)
+    {
+        return checkAddDirSeparator(outputDir) + sampleId + FILE_EXTENSION;
+    }
 
     @NotNull
     public static List<PeachGenotype> read(@NotNull final String filename) throws IOException

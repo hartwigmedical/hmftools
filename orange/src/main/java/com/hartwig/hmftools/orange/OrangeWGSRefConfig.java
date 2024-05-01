@@ -34,6 +34,7 @@ import java.io.File;
 
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
+import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.sage.SageCommon;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -144,7 +145,7 @@ public interface OrangeWGSRefConfig
             builder.linxGermlineDataDirectory(linxGermlineDir);
 
             String peachDir = pathResolver.resolveMandatoryToolDirectory(PEACH_DIR_CFG, PEACH_DIR);
-            String peachGenotypeTsv = optionalPath(peachDir + File.separator + refSampleId + ".peach.haplotypes.best.tsv");
+            String peachGenotypeTsv = optionalPath(PeachGenotypeFile.generateFileName(peachDir, refSampleId));
             if (peachGenotypeTsv == null)
             {
                 peachGenotypeTsv = mandatoryPath(peachDir + File.separator + tumorSampleId + ".peach.genotype.tsv");

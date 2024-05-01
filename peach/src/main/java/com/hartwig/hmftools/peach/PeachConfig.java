@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.peach;
 
+import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
 import org.jetbrains.annotations.NotNull;
@@ -65,30 +67,30 @@ public class PeachConfig
     @NotNull
     public String getEventsOutputPath()
     {
-        return outputDir + sampleName + ".peach.events.tsv";
+        return checkAddDirSeparator(outputDir) + sampleName + ".peach.events.tsv";
     }
 
     @NotNull
     public String getEventsPerGeneOutputPath()
     {
-        return outputDir + sampleName + ".peach.gene.events.tsv";
+        return checkAddDirSeparator(outputDir) + sampleName + ".peach.gene.events.tsv";
     }
 
     @NotNull
     public String getAllHaplotypeCombinationsOutputPath()
     {
-        return outputDir + sampleName + ".peach.haplotypes.all.tsv";
+        return checkAddDirSeparator(outputDir) + sampleName + ".peach.haplotypes.all.tsv";
     }
 
     @NotNull
     public String getBestHaplotypeCombinationsOutputPath()
     {
-        return outputDir + sampleName + ".peach.haplotypes.best.tsv";
+        return PeachGenotypeFile.generateFileName(outputDir, sampleName);
     }
 
     @NotNull
     public String getQcStatusOutputPath()
     {
-        return outputDir + sampleName + ".peach.qc.tsv";
+        return checkAddDirSeparator(outputDir) + sampleName + ".peach.qc.tsv";
     }
 }
