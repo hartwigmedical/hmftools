@@ -172,6 +172,38 @@ public class PythonEnv
         return initialize(false);
     }
 
+    private String pipList()
+    {
+        return new PythonEnvCommand(this, "pip --disable-pip-version-check list")
+                .logLevel(null).run().getStdoutAsString();
+    }
+
+    public boolean packageInstalled(String packageName)
+    {
+        String stdout = pipList();
+        return stdout.contains(packageName);
+    }
+
+    public boolean packagesInstalled(String[] packageNames)
+    {
+        String stdout = pipList();
+
+        List<String> missingPackages = new ArrayList<>();
+        for(String packageName : packageNames)
+        {
+            if(!stdout.contains(packageName))
+                missingPackages.add(packageName);
+        }
+
+        if(missingPackages.size() > 0)
+        {
+            CUP_LOGGER.warn("Python environment is missing the following packages: " + String.join(", ", missingPackages));
+            return false;
+        }
+
+        return true;
+    }
+
     public void pipUpgrade()
     {
         String command = "pip install --upgrade pip";
