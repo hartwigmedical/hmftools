@@ -141,22 +141,21 @@ public class PythonEnv
     }
 
     @VisibleForTesting
-    void removeExistingPyenv()
+    static void removeExistingPyenv()
     {
         CUP_LOGGER.info("Removing existing pyenv at: " + PYENV_DIR);
-        try {
+        try
+        {
             FileUtils.deleteDirectory(PYENV_DIR);
-        } catch(IOException e) {
+        }
+        catch(IOException e)
+        {
             CUP_LOGGER.warn("Failed to remove pyenv: " + e);
         }
     }
 
-    @VisibleForTesting
-    PythonEnv initialize(boolean removePyenv)
+    public PythonEnv initialize()
     {
-        if(removePyenv)
-            removeExistingPyenv();
-
         if(pythonPath().exists())
             return this;
 
@@ -165,11 +164,6 @@ public class PythonEnv
         installPython();
         createVirtualEnvironment();
         return this;
-    }
-
-    public PythonEnv initialize()
-    {
-        return initialize(false);
     }
 
     private String pipList()
@@ -184,8 +178,26 @@ public class PythonEnv
         return stdout.contains(packageName);
     }
 
-    public boolean packagesInstalled(String[] packageNames)
+    public void pipInstall(String args, boolean upgradePip)
     {
+        String command = "pip install " + args;
+        if(upgradePip)
+            command = "pip install --upgrade pip && " + command;
+
+        CUP_LOGGER.info("Installing packages with command: " + command);
+        new PythonEnvCommand(this, command).logLevel(Level.DEBUG).run();
+    }
+
+    public void pipInstall(String args){ pipInstall(args, true); }
+
+    public PythonEnv checkRequiredPackages(String[] packageNames)
+    {
+        if(!pythonPath().exists())
+        {
+            CUP_LOGGER.error("Missing or invalid python virtual environment: " + virtualEnvPath());
+            System.exit(1);
+        }
+
         String stdout = pipList();
 
         List<String> missingPackages = new ArrayList<>();
@@ -197,24 +209,16 @@ public class PythonEnv
 
         if(missingPackages.size() > 0)
         {
-            CUP_LOGGER.warn("Python environment is missing the following packages: " + String.join(", ", missingPackages));
-            return false;
+            CUP_LOGGER.error("Python virtual environment({}) missing the following packages: {}",
+                    virtualEnvPath(), String.join(", ", missingPackages));
+            System.exit(1);
         }
 
-        return true;
+        return this;
     }
 
-    public void pipUpgrade()
+    public PythonEnv checkRequiredPackage(String packageName)
     {
-        String command = "pip install --upgrade pip";
-        CUP_LOGGER.info("Upgrading pip with command: " + command);
-        new PythonEnvCommand(this, command).showCommand().logLevel(Level.DEBUG).run();
-    }
-
-    public void pipInstall(String args)
-    {
-        String command = "pip install " + args;
-        CUP_LOGGER.info("Installing packages with command: " + command);
-        new PythonEnvCommand(this, command).showCommand().logLevel(Level.DEBUG).run();
+        return checkRequiredPackages(new String[]{packageName});
     }
 }
