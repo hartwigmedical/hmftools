@@ -134,5 +134,16 @@ public abstract class ShellCommand
         return stdout;
     }
 
-    public List<String> getStdout(){ return mStdout; }
+    public List<String> getStdout()
+    {
+        if(mStdout.size()==0)
+            CUP_LOGGER.warn("stdout is empty for command({})", mProcessBuilder.command());
+
+        return mStdout;
+    }
+
+    public String getStdoutAsString()
+    {
+        return String.join("\n", getStdout());
+    }
 }
