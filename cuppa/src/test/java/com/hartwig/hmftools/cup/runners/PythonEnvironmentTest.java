@@ -31,9 +31,7 @@ public class PythonEnvironmentTest
     @Test
     public void canInitializeEnvironment()
     {
-        boolean overwrite = true;
-        if(overwrite) ENV.removeExistingPyenv();
-
+        PythonEnv.removeExistingPyenv();
         ENV.initialize();
         assertTrue(ENV.pythonPath().exists());
     }
@@ -41,8 +39,7 @@ public class PythonEnvironmentTest
     @Test
     public void canInstallPycuppa()
     {
-        ENV.pipUpgrade();
-        ENV.pipInstall(PYCUPPA_DIR);
+        ENV.pipInstall(PYCUPPA_DIR, true);
     }
 
     @Test
