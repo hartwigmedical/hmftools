@@ -43,7 +43,6 @@ public class PredictionRunner
             return;
         }
 
-        CUP_LOGGER.info("Extracting features to: " + mPycuppaConfig.FeaturesPath);
         CuppaDataPrep prep = new CuppaDataPrep(mPrepConfig);
         prep.run();
 
