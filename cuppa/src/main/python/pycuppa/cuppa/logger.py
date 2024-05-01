@@ -42,8 +42,8 @@ def reset_logging_basic_config(
     ## Apply config
     logging.basicConfig(
         level=level,
-        format='%(asctime)s %(threadName)s %(levelname)s | %(name)s.%(funcName)s | %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
+        format='%(asctime)s.%(msecs)03d [%(threadName)s] %(levelname)s %(name)s.%(funcName)s | %(message)s',
+        datefmt='%H:%M:%S',
         handlers=handlers
     )
 
