@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
@@ -250,7 +251,9 @@ public class Alignment
 
                         if(fragmentSupport == null)
                         {
-                            fragmentSupport = new BreakendFragmentSupport(read.sampleIndex(), isSplitFragment, breakend);
+                            int inferredFragLength = assemblyAlignment.calcInferredFragmentLength(assembly, read);
+
+                            fragmentSupport = new BreakendFragmentSupport(read.sampleIndex(), isSplitFragment, breakend, inferredFragLength);
                             fragmentSupportMap.put(read.id(), fragmentSupport);
                         }
                         else
@@ -260,6 +263,11 @@ public class Alignment
                     }
                 }
             }
+
+            // assign each read preferably as split over discordant
+
+            int inferredFragmentCount = 0;
+            int inferredFragmentTotal = 0;
 
             for(BreakendFragmentSupport fragmentSupport : fragmentSupportMap.values())
             {
@@ -274,7 +282,15 @@ public class Alignment
                     else if(allowDiscordantSupport)
                         ++support.DiscordantFragments;
                 }
+
+                if(fragmentSupport.InferredFragmentLength > 0)
+                {
+                    ++inferredFragmentCount;
+                    inferredFragmentTotal += fragmentSupport.InferredFragmentLength;
+                }
             }
+
+            int averageInferredFragLength = inferredFragmentCount > 0 ? (int)round(inferredFragmentTotal / (double)inferredFragmentCount) : 0;
 
             // for pairs of breakends, set their support to the maximum of each type
             Set<Breakend> processedBreakends = Sets.newHashSet();
@@ -282,6 +298,8 @@ public class Alignment
             {
                 if(breakend.isSingle() || processedBreakends.contains(breakend))
                     continue;
+
+                breakend.setAverageInferredFragmentLength(averageInferredFragLength);
 
                 processedBreakends.add(breakend);
 
@@ -309,12 +327,14 @@ public class Alignment
         public final int SampleIndex;
         public boolean IsSplit;
         public final Set<Breakend> Breakends;
+        public final int InferredFragmentLength;
 
-        public BreakendFragmentSupport(final int sampleIndex, final boolean isSplit, final Breakend breakend)
+        public BreakendFragmentSupport(final int sampleIndex, final boolean isSplit, final Breakend breakend, final int inferredFragLength)
         {
             SampleIndex = sampleIndex;
             IsSplit = isSplit;
             Breakends = Sets.newHashSet(breakend);
+            InferredFragmentLength = inferredFragLength;
         }
 
         public void addBreakend(final Breakend breakend, boolean isSplit)

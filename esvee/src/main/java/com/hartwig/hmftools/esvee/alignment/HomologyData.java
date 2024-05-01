@@ -28,10 +28,6 @@ public class HomologyData
         InexactEnd = inexactEnd;
     }
 
-    public int positionOffset() { return abs(InexactStart); }
-
-    // public static final HomologyData NONE = new HomologyData("", 0, 0, 0, 0);
-
     public String toString() { return format("%s exact(%d,%d) inexact(%d,%d)", Homology, ExactStart, ExactEnd, InexactStart, ExactEnd); }
 
     public static HomologyData determineHomology(
@@ -66,7 +62,7 @@ public class HomologyData
         if(assemblyOverlap.equals(refBasesStart))
         {
             int halfOverlap = overlap / 2;
-            int exactStart = (halfOverlap % 2) == 0 ? halfOverlap : halfOverlap + 1; // round up if an odd length
+            int exactStart = (overlap % 2) == 0 ? halfOverlap : halfOverlap + 1; // round up if an odd length
             int exactEnd = overlap - exactStart;
             return new HomologyData(assemblyOverlap, -exactStart, exactEnd, -exactStart, exactEnd);
         }

@@ -40,6 +40,7 @@ public class Breakend implements Comparable<Breakend>
     private List<BreakendSegment> mSegments;
 
     private final List<BreakendSupport> mBreakendSupport; // one for each sample loaded, indexed as per config
+    private int mAverageInferredFragmentLength;
     private final Set<FilterType> mFilters;
 
     public Breakend(
@@ -64,6 +65,7 @@ public class Breakend implements Comparable<Breakend>
         mAlternativeAlignments = null;
 
         mFilters = Sets.newHashSet();
+        mAverageInferredFragmentLength = 0;
     }
 
     public int id() { return mId; }
@@ -84,6 +86,9 @@ public class Breakend implements Comparable<Breakend>
     public void setAlternativeAlignments(final List<AlternativeAlignment> altAlignments) { mAlternativeAlignments = altAlignments; }
 
     public List<BreakendSupport> sampleSupport() { return mBreakendSupport; }
+
+    public int averageInferredFragmentLength() { return mAverageInferredFragmentLength; }
+    public void setAverageInferredFragmentLength(final int length) { mAverageInferredFragmentLength = length; }
 
     public boolean isSingle() { return mOtherBreakend == null; }
 

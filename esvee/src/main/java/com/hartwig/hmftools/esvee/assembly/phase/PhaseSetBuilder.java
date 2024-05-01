@@ -104,12 +104,6 @@ public class PhaseSetBuilder
         JunctionAssembly assembly1 = mAssemblies.get(0);
         JunctionAssembly assembly2 = mAssemblies.get(1);
 
-        /*
-        // check for local assemblies first
-        if(!isLocalAssemblyCandidate(assembly1, assembly2))
-            return false;
-        */
-
         AssemblyLink assemblyLink = checkSplitLink(assembly1, assembly2);
 
         if(assemblyLink != null)

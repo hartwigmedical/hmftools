@@ -93,7 +93,6 @@ public class AlignmentTest
         assertEquals(5, homology.ExactEnd);
         assertEquals(-6, homology.InexactStart);
         assertEquals(5, homology.InexactEnd);
-        assertEquals(6, homology.positionOffset());
 
         // test 2: first base now no longer matches
         basesStart = "GTCTTCTTCTC";
@@ -158,6 +157,17 @@ public class AlignmentTest
         assertEquals(5, homology.ExactEnd);
         assertEquals(-6, homology.InexactStart);
         assertEquals(5, homology.InexactEnd);
+
+        // test 8: with an even number of bases
+        basesStart = "AA";
+        assemblyOverlap = basesStart;
+        basesEnd = basesStart;
+        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+        assertEquals(basesStart, homology.Homology);
+        assertEquals(-1, homology.ExactStart);
+        assertEquals(1, homology.ExactEnd);
+        assertEquals(-1, homology.InexactStart);
+        assertEquals(1, homology.InexactEnd);
     }
 
     private static void addAssemblyRead(final JunctionAssembly assembly, int junctionOffset)

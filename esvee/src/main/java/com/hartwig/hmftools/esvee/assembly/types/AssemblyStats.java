@@ -25,7 +25,7 @@ public class AssemblyStats
     public int JuncMateUnmappedRefSide;
     public int IndelReads;
 
-    // read qualitites
+    // read qualities
     public int NmCountTotal;
     public int IndelLengthTotal;
     public int BaseQualTotal;

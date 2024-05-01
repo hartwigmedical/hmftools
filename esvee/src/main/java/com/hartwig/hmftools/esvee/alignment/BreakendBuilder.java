@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.alignment;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -293,8 +294,15 @@ public class BreakendBuilder
                 insertedBases = fullSequence.substring(insertSeqStart, insertSeqEnd);
             }
 
+            byte nextOrientation = segmentOrientation(nextAlignment, false);
+            int nextPosition = nextAlignment.isForward() ? nextAlignment.RefLocation.start() : nextAlignment.RefLocation.end();
+
             if(homology != null)
-                breakendPosition += homology.positionOffset();
+            {
+                // shift breakend positions where there is overlap, and move breakends back into the ref bases by the inexact homology
+                breakendPosition += homologyPositionAdjustment(homology.InexactStart, breakendOrientation);
+                nextPosition += homologyPositionAdjustment(homology.InexactEnd, nextOrientation);
+            }
 
             Breakend breakend = new Breakend(
                     mAssemblyAlignment, alignment.RefLocation.Chromosome, breakendPosition, breakendOrientation, insertedBases, homology);
@@ -306,12 +314,6 @@ public class BreakendBuilder
                     breakendOrientation, nextSegmentIndex++, alignment);
 
             breakend.addSegment(segment);
-
-            byte nextOrientation = segmentOrientation(nextAlignment, false);
-            int nextPosition = nextAlignment.isForward() ? nextAlignment.RefLocation.start() : nextAlignment.RefLocation.end();
-
-            if(homology != null)
-                nextPosition += homology.positionOffset();
 
             Breakend nextBreakend = new Breakend(
                     mAssemblyAlignment, nextAlignment.RefLocation.Chromosome, nextPosition, nextOrientation, insertedBases, homology);
@@ -337,6 +339,11 @@ public class BreakendBuilder
         }
 
         checkOuterSingle(alignments.get(alignments.size() - 1), false, nextSegmentIndex, zeroQualAlignments);
+    }
+
+    private static int homologyPositionAdjustment(final int inexact, final byte orientation)
+    {
+        return orientation == POS_ORIENT ? -abs(inexact) : abs(inexact);
     }
 
     protected static byte segmentOrientation(final AlignData alignment, boolean linksEnd)
