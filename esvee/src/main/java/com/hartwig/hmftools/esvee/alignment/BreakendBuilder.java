@@ -83,7 +83,7 @@ public class BreakendBuilder
             // check for cigar-based INDELs and SGLs with soft-clips
             boolean formsIndel = formIndelBreakends(singleAlignment);
 
-            if(!formsIndel && singleAlignment.maxSoftClipLength() < ALIGNMENT_MIN_SOFT_CLIP)
+            if(!formsIndel && singleAlignment.maxSoftClipLength() >= ALIGNMENT_MIN_SOFT_CLIP)
             {
                 formSingleBreakend(validAlignments.get(0), zeroQualAlignments);
             }
