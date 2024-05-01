@@ -44,10 +44,12 @@ public class VariantFilters
 
     private final int[] mFilterCounts;
 
-    public static int HARD_FC_RAW_BASE_QUAL = 0;
-    public static int HARD_FC_RAW_ALT_SUPPORT = 1;
-    public static int HARD_FC_TUMOR_QUAL = 2;
-    public static int HARD_FC_TUMOR_VAF = 3;
+    private enum HardFilterType
+    {
+        RAW_ALT_SUPPORT,
+        TUMOR_QUAL,
+        TUMOR_VAF;
+    }
 
     private static final StrandBiasCalcs mStrandBiasCalcs = new StrandBiasCalcs();
 
@@ -56,7 +58,7 @@ public class VariantFilters
         mConfig = config.Filter;
         mHighDepthMode = config.Quality.HighDepthMode;
         mReadEdgeDistanceThreshold = (int)(config.getReadLength() * MAX_READ_EDGE_DISTANCE_PERC);
-        mFilterCounts = new int[HARD_FC_TUMOR_VAF+1];
+        mFilterCounts = new int[HardFilterType.values().length];
     }
 
     public boolean passesHardFilters(final ReadContextCounter readCounter)
@@ -64,27 +66,21 @@ public class VariantFilters
         if(readCounter.tier().equals(VariantTier.HOTSPOT))
             return true;
 
-        if(readCounter.altBaseQualityTotal() < mConfig.HardMinTumorRawBaseQuality)
-        {
-            ++mFilterCounts[HARD_FC_RAW_BASE_QUAL];
-            return false;
-        }
-
         if(readCounter.altSupport() < mConfig.HardMinTumorRawAltSupport)
         {
-            ++mFilterCounts[HARD_FC_RAW_ALT_SUPPORT];
+            ++mFilterCounts[HardFilterType.RAW_ALT_SUPPORT.ordinal()];
             return false;
         }
 
         if(readCounter.tumorQuality() < mConfig.HardMinTumorQual)
         {
-            ++mFilterCounts[HARD_FC_TUMOR_QUAL];
+            ++mFilterCounts[HardFilterType.TUMOR_QUAL.ordinal()];
             return false;
         }
 
         if(readCounter.vaf() < mConfig.HardMinTumorVaf)
         {
-            ++mFilterCounts[HARD_FC_TUMOR_VAF];
+            ++mFilterCounts[HardFilterType.TUMOR_VAF.ordinal()];
             return false;
         }
 
@@ -93,9 +89,10 @@ public class VariantFilters
 
     public String filterCountsStr()
     {
-        return String.format("bq=%d alt=%d qual=%d vaf=%d",
-                mFilterCounts[HARD_FC_RAW_BASE_QUAL], mFilterCounts[HARD_FC_RAW_ALT_SUPPORT],
-                mFilterCounts[HARD_FC_TUMOR_QUAL], mFilterCounts[HARD_FC_TUMOR_VAF]);
+        return String.format("alt=%d qual=%d vaf=%d",
+                mFilterCounts[HardFilterType.RAW_ALT_SUPPORT.ordinal()],
+                mFilterCounts[HardFilterType.TUMOR_QUAL.ordinal()],
+                mFilterCounts[HardFilterType.TUMOR_VAF.ordinal()]);
     }
 
     public boolean enabled() { return !mConfig.DisableSoftFilter; }

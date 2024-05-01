@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.getRefBaseCoordinates;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_ALIGNMENT;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CIGAR;
@@ -129,6 +130,8 @@ public final class CandidateSerialisation
         }
         else
         {
+            // pre v3.5 the var index was only with reference to the CORE, not including the flanks
+            varReadIndex += leftFlank.length();
             readCigar = recreateReadCigar(variant, varReadIndex, readBases.length());
             readAlignmentStart = variant.Position - varReadIndex;
             readAlignmentEnd = readAlignmentStart + readBases.length() - 1 - variant.indelLength();
