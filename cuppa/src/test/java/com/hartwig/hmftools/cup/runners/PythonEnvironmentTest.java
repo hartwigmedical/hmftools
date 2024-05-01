@@ -9,12 +9,16 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Ignore;
 import org.junit.Test;
 
+/*
+Ignore these tests as building cuppa with maven might fail on other machines due to failure to install python, pyenv, pycuppa, and required
+python packages
+ */
+@Ignore
 public class PythonEnvironmentTest
 {
-    private static final PythonEnvironment ENV = new PythonEnvironment(
-            PythonEnvironment.DEFAULT_PYTHON_VERSION,
-            "pycuppa_venv",
-            false
+    private static final PythonEnv ENV = new PythonEnv(
+            PythonEnv.DEFAULT_PYTHON_VERSION,
+            "pycuppa_venv"
     );
 
     private static final String PYCUPPA_DIR = "/Users/lnguyen/Hartwig/hartwigmedical/hmftools/cuppa/src/main/python/pycuppa";
@@ -24,22 +28,16 @@ public class PythonEnvironmentTest
         Configurator.setLevel(CUP_LOGGER.getName(), Level.DEBUG);
     }
 
-    @Ignore
     @Test
     public void canInitializeEnvironment()
     {
         boolean overwrite = true;
         if(overwrite) ENV.removeExistingPyenv();
 
-        ENV.installPyenv();
-        ENV.addPyenvPathsToRcFile();
-        ENV.installPython();
-        ENV.createVirtualEnvironment();
-
+        ENV.initialize();
         assertTrue(ENV.pythonPath().exists());
     }
 
-    @Ignore
     @Test
     public void canInstallPycuppa()
     {
@@ -47,7 +45,6 @@ public class PythonEnvironmentTest
         ENV.pipInstall(PYCUPPA_DIR);
     }
 
-    @Ignore
     @Test
     public void canInitializeEnvironmentFromJar()
     {

@@ -24,7 +24,7 @@ public class PycuppaInstaller
 
     public PycuppaInstaller()
     {
-        mPythonEnvironment = new PythonEnv(PYTHON_VERSION, PYCUPPA_VENV_NAME, false);
+        mPythonEnvironment = new PythonEnv(PYTHON_VERSION, PYCUPPA_VENV_NAME);
     }
 
     private void removePycuppaTmpDir()
