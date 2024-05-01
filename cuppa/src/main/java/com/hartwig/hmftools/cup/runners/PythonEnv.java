@@ -19,13 +19,11 @@ public class PythonEnv
 
     public final String mPythonVersion;
     public final File mVirtualEnvName;
-    public final boolean mQuietInitialize;
 
-    public PythonEnv(String pythonVersion, String virtualEnvName, boolean quietInitialize)
+    public PythonEnv(String pythonVersion, String virtualEnvName)
     {
         mVirtualEnvName = new File(virtualEnvName);
         mPythonVersion = pythonVersion;
-        mQuietInitialize = quietInitialize;
     }
 
     public File virtualEnvPath() { return new File(String.format("%s/versions/%s/envs/%s", PYENV_DIR, mPythonVersion, mVirtualEnvName)); }
@@ -43,7 +41,7 @@ public class PythonEnv
             CUP_LOGGER.info("Installing pyenv with command: " + command);
             new BashCommand(command).logLevel(Level.DEBUG).run();
         }
-        else if(!mQuietInitialize)
+        else
         {
             CUP_LOGGER.warn("Skipping installing pyenv as it exists at: " + PYENV_DIR);
         }
@@ -87,7 +85,7 @@ public class PythonEnv
                 command = String.format("echo -e '\n%s' >> %s", lines, RcFilePath);
                 new BashCommand(command).logLevel(null).run();
             }
-            else if(!mQuietInitialize)
+            else
             {
                 CUP_LOGGER.warn("Skipping adding pyenv paths to rc file: " + RcFilePath);
             }
@@ -110,7 +108,7 @@ public class PythonEnv
             CUP_LOGGER.info("Installing python version {} with command: {}", mPythonVersion, command);
             new BashCommand(command).logLevel(Level.DEBUG).run();
         }
-        else if(!mQuietInitialize)
+        else
         {
             CUP_LOGGER.warn("Skipping installing python {} as it exists at: {}", mPythonVersion, pythonPathInPyenv);
         }
@@ -125,7 +123,7 @@ public class PythonEnv
             CUP_LOGGER.info("Creating python virtual environment with command: " + command);
             new BashCommand(command).logLevel(Level.DEBUG).run();
         }
-        else if(!mQuietInitialize)
+        else
         {
             CUP_LOGGER.warn("Skipping creating python virtual environment as binary exists at: " + pythonPath());
         }
@@ -144,6 +142,9 @@ public class PythonEnv
 
     public PythonEnv initialize()
     {
+        if(pythonPath().exists())
+            return this;
+
         installPyenv();
         addPyenvPathsToRcFile();
         installPython();
@@ -165,115 +166,3 @@ public class PythonEnv
         new PythonEnvCommand(this, command).showCommand().logLevel(Level.DEBUG).run();
     }
 }
-
-
-/* setup_python_v3_9_0.sh
-#!/usr/bin/env bash
-
-source message_functions || exit 1
-
-VER="3.9.0"
-
-info "Installing pyenv..."
-curl -L https://raw.githubusercontent.com/yyuu/pyenv-installer/master/bin/pyenv-installer | bash
-ls -l ~/.pyenv/
-
-info "Initialising pyenv..."
-~/.pyenv/bin/pyenv install ${VER}
-~/.pyenv/versions/${VER}/bin/pip install --upgrade pip
-
-info "Switching to new ${VER} version"
-export PATH="$HOME/.pyenv/versions/${VER}/bin:$PATH"
- */
-
-
-/* do_run_cuppa.sh
-#!/usr/bin/env bash
-
-source metadata_functions || exit 1
-source message_functions || exit 1
-source locate_files || exit 1
-source io_functions || exit 1
-
-run_dir=$1 && shift
-cuppa_jar=$1 && shift
-cuppa_output_dir=$1 && shift
-cuppa_mode=$1 && shift
-
-if [[ -z "${run_dir}" || -z "${cuppa_jar}" || -z "${cuppa_output_dir}" || -z "${cuppa_mode}" ]]; then
-    error "Missing params. Exiting"
-fi
-
-if [[ ${cuppa_mode} == "ALL" && ! -d "${run_dir}/isofox" ]]; then
-    error "Cannot run cuppa mode ALL in case there is no isofox data! Please run dna-only"
-fi
-
-tumor_sample=$(load_tumor_sample_from_metadata ${run_dir})
-
-tmp_sample_data_dir="${run_dir}/cuppa_sample_data_tmp"
-
-info "Creating and populating sample data dir '${tmp_sample_data_dir}'"
-create_or_cleanup_dir ${tmp_sample_data_dir}
-cp -r ${run_dir}/purple/* "${tmp_sample_data_dir}/"
-cp -r ${run_dir}/linx/* "${tmp_sample_data_dir}/"
-cp -r ${run_dir}/virus_interpreter/* "${tmp_sample_data_dir}/"
-
-if [[ -d "${run_dir}/isofox" ]]; then
-    cp -r ${run_dir}/isofox/* "${tmp_sample_data_dir}/"
-fi
-
-create_or_cleanup_dir "${cuppa_output_dir}"
-
-info "Running CuppaDataPrep with mode ${cuppa_mode} on ${run_dir}"
-java -Xmx4G -cp ${cuppa_jar} com.hartwig.hmftools.cup.prep.CuppaDataPrep \
-    -sample "${tumor_sample}" \
-    -categories "${cuppa_mode}" \
-    -ref_genome_version "V37" \
-    -ref_alt_sj_sites "$(locate_cuppa_ref_alt_sj_sites)" \
-    -sample_data_dir "${tmp_sample_data_dir}" \
-    -output_dir "${cuppa_output_dir}" \
-    "$@"
-
-info "Removing temporary data dir '${tmp_sample_data_dir}'"
-rm -r ${tmp_sample_data_dir}
-
-python_version=$(python3 --version)
-if [[ "${python_version}" != "Python 3.9.0" ]]; then
-    info "Adding python 3.9.0 to PATH"
-    export PATH="$HOME/.pyenv/versions/3.9.0/bin:$PATH"
-
-    python_version=$(python3 --version)
-    if [[ "${python_version}" != "Python 3.9.0" ]]; then
-        error "Could not locate Python 3.9.0! Please run 'setup_python_v3_9_0' first. Exiting."
-    fi
-fi
-
-info "Setting up pycuppa"
-pycuppa_base_dir="${HOME}"
-pycuppa_dir="${pycuppa_base_dir}/pycuppa"
-create_or_cleanup_dir "${pycuppa_dir}"
-unzip ${cuppa_jar} pycuppa/* -d "${pycuppa_base_dir}"
-
-info "Setting up pycuppa venv"
-pycuppa_venv="${pycuppa_base_dir}/pycuppa_venv"
-create_or_cleanup_dir ${pycuppa_venv}
-python3 -m venv ${pycuppa_venv}
-source ${pycuppa_venv}/bin/activate
-
-info "Installing pycuppa tool into venv"
-pip3 install --upgrade pip
-pip3 install "${pycuppa_dir}"
-
-info "Running pycuppa DNA on ${run_dir}"
-python3 -m cuppa.predict \
-    --sample_id ${tumor_sample} \
-    --features_path "$(locate_cuppa_features_tsv ${cuppa_output_dir})" \
-    --classifier_path "$(locate_cuppa_classifier_pickle)" \
-    --cv_predictions_path "$(locate_cuppa_cv_predictions)" \
-    --output_dir "${cuppa_output_dir}"
-
-info "Regenerating CUPPA R visualization for ${sample} in ${cuppa_output_dir} using pilot visualizer"
-Rscript --vanilla $(locate_pilot_cuppa_visualizer) \
-    "$(locate_cuppa_vis_data_tsv ${cuppa_output_dir})" \
-    "${cuppa_output_dir}/${tumor_sample}.cuppa.pilot.vis.png"
- */
