@@ -20,11 +20,11 @@ public class PycuppaInstaller
     private static final File PYCUPPA_RESOURCE_DIR = new File(Resources.getResource("pycuppa/").getPath());
     public static final String PYCUPPA_VENV_NAME = "pycuppa_venv";
 
-    public final PythonEnvironment mPythonEnvironment;
+    public final PythonEnv mPythonEnvironment;
 
     public PycuppaInstaller()
     {
-        mPythonEnvironment = new PythonEnvironment(PYTHON_VERSION, PYCUPPA_VENV_NAME, false);
+        mPythonEnvironment = new PythonEnv(PYTHON_VERSION, PYCUPPA_VENV_NAME, false);
     }
 
     private void removePycuppaTmpDir()
@@ -57,7 +57,7 @@ public class PycuppaInstaller
             }
             else
             {
-                String cuppaJarPath = new File( PythonEnvironment.class.getProtectionDomain().getCodeSource().getLocation().toURI() ).getPath();
+                String cuppaJarPath = new File( PythonEnv.class.getProtectionDomain().getCodeSource().getLocation().toURI() ).getPath();
 
                 // Unzip with `jar` rather than `unzip` to avoid unzipping the whole jar
                 String command = String.format("cd %s && jar -xf %s pycuppa", TMP_DIR, cuppaJarPath);

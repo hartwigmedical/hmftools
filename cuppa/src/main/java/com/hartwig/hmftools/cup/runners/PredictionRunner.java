@@ -62,7 +62,7 @@ public class PredictionRunner
                 "--features_path", mFeaturesPath
         };
 
-        PythonEnvironment pythonEnvironment = new PythonEnvironment(PycuppaInstaller.PYTHON_VERSION, PycuppaInstaller.PYCUPPA_VENV_NAME, true);
+        PythonEnv pythonEnvironment = new PythonEnv(PycuppaInstaller.PYTHON_VERSION, PycuppaInstaller.PYCUPPA_VENV_NAME, true);
         new PythonEnvCommand(pythonEnvironment, String.join(" ", command)).logLevel(Level.INFO).showCommand().run();
     }
 
