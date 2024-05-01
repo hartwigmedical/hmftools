@@ -77,7 +77,7 @@ public class PycuppaInstaller
     {
         boolean pycuppaExists = false;
 
-        List<String> stdout = new PythonCommand(mPythonEnvironment, "python -m pip --disable-pip-version-check list")
+        List<String> stdout = new PythonEnvCommand(mPythonEnvironment, "python -m pip --disable-pip-version-check list")
                 .logLevel(null).run().getStdout();
 
         for(String line : stdout)

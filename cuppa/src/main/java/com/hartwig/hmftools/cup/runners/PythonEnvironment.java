@@ -155,21 +155,14 @@ public class PythonEnvironment
     {
         String command = "python -m pip install --upgrade pip";
         CUP_LOGGER.info("Upgrading pip with command: " + command);
-        new PythonCommand(this, command).showCommand().logLevel(Level.DEBUG).run();
+        new PythonEnvCommand(this, command).showCommand().logLevel(Level.DEBUG).run();
     }
 
     public void pipInstall(String args)
     {
         String command = "python -m pip install " + args;
         CUP_LOGGER.info("Installing packages with command: " + command);
-        new PythonCommand(this, command).showCommand().logLevel(Level.DEBUG).run();
-    }
-
-    @VisibleForTesting
-    public static void main(String[] args)
-    {
-        PythonEnvironment env = new PythonEnvironment(args[0], args[1], false);
-        env.initialize();
+        new PythonEnvCommand(this, command).showCommand().logLevel(Level.DEBUG).run();
     }
 }
 
