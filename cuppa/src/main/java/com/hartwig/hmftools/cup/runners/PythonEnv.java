@@ -10,7 +10,7 @@ import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Level;
 
-public class PythonEnvironment
+public class PythonEnv
 {
     public static final String DEFAULT_PYTHON_VERSION = "3.9.4";
 
@@ -21,7 +21,7 @@ public class PythonEnvironment
     public final File mVirtualEnvName;
     public final boolean mQuietInitialize;
 
-    public PythonEnvironment(String pythonVersion, String virtualEnvName, boolean quietInitialize)
+    public PythonEnv(String pythonVersion, String virtualEnvName, boolean quietInitialize)
     {
         mVirtualEnvName = new File(virtualEnvName);
         mPythonVersion = pythonVersion;
@@ -142,7 +142,7 @@ public class PythonEnvironment
         }
     }
 
-    public PythonEnvironment initialize()
+    public PythonEnv initialize()
     {
         installPyenv();
         addPyenvPathsToRcFile();

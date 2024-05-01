@@ -7,12 +7,12 @@ import org.apache.logging.log4j.core.config.Configurator;
 
 public class PythonEnvCommand extends ShellCommand
 {
-    public PythonEnvCommand(PythonEnvironment pythonEnvironment, String command)
+    public PythonEnvCommand(PythonEnv pythonEnvironment, String command)
     {
         super(createProcessBuilder(pythonEnvironment, command));
     }
 
-    public static ProcessBuilder createProcessBuilder(PythonEnvironment pythonEnvironment, String command)
+    public static ProcessBuilder createProcessBuilder(PythonEnv pythonEnvironment, String command)
     {
         String bashCommand =  String.format("source %s/bin/activate && %s && deactivate", pythonEnvironment.virtualEnvPath(), command);
         return new ProcessBuilder("bash", "-c", bashCommand);
