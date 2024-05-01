@@ -8,8 +8,6 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.AssemblyConfig;
-
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemIndex;
@@ -25,7 +23,6 @@ public class BwaAligner implements Aligner
         {
             BwaMemIndex index = null;
 
-            // TEMP: until can resolve local ARM library issues
             try
             {
                 index = new BwaMemIndex(refGenomeImageFile);
@@ -43,20 +40,39 @@ public class BwaAligner implements Aligner
         }
     }
 
-    public static void loadAlignerLibrary(@Nullable final String bwaLibPath)
+    public static void loadAlignerLibrary(@Nullable final String bwaLibraryPath)
     {
         final var props = System.getProperties();
-        String candidateBWAPath = bwaLibPath != null ? bwaLibPath : "libbwa." + props.getProperty("os.arch") + osExtension();
 
-        if(System.getProperty("LIBBWA_PATH") == null && new File(candidateBWAPath).exists())
+        if(bwaLibraryPath != null)
+        {
+            System.setProperty("LIBBWA_PATH", new File(bwaLibraryPath).getAbsolutePath());
+            return;
+        }
+
+        String osName = System.getProperty("os.name");
+        String osLibExtension = osExtension(osName);
+        String osArchitecture = System.getProperty("os.arch");
+
+        String candidateBWAPath = null;
+
+        if(osName.contains("Mac") && osArchitecture.equals("aarch64"))
+        {
+            // candidateBWAPath = Resources.getResource("libbwa.Darwin.dylib").getPath();
+        }
+        else
+        {
+            candidateBWAPath = "libbwa." + props.getProperty("os.arch") + osLibExtension;
+        }
+
+        if(System.getProperty("LIBBWA_PATH") == null && candidateBWAPath != null && new File(candidateBWAPath).exists())
         {
             System.setProperty("LIBBWA_PATH", new File(candidateBWAPath).getAbsolutePath());
         }
     }
 
-    private static String osExtension()
+    private static String osExtension(final String osName)
     {
-        final String osName = System.getProperty("os.name");
         if(osName.contains("Mac"))
             return ".dylib";
         else if(osName.contains("Win"))
@@ -74,21 +90,5 @@ public class BwaAligner implements Aligner
         List<BwaMemAlignment> alignmentSet = mAligner.alignSeqs(List.of(bases)).get(0);
 
         return alignmentSet;
-
-        /*
-        @Nullable
-        final BwaMemAlignment best = alignmentSet.stream()
-                .filter(alignment -> alignment.getRefStart() != -1)
-                .max(Comparator.comparingInt(BwaMemAlignment::getMapQual)
-                        .thenComparingInt(BwaMemAlignment::getAlignerScore)
-                        .thenComparing(Comparator.comparingInt(BwaMemAlignment::getNMismatches).reversed()))
-                .orElse(null);
-        if(best == null)
-            return List.of(com.hartwig.hmftools.esvee.old.Alignment.unmapped(sequence.getLength()));
-
-        if(SAMFlag.getFlags(best.getSamFlag()).contains(SAMFlag.READ_UNMAPPED))
-            return List.of(com.hartwig.hmftools.esvee.old.Alignment.unmapped(sequence.getLength()));
-        */
     }
-
 }

@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.BWA_LIB_PATH;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.APP_NAME;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_GENOME_IMAGE_EXTENSION;
@@ -73,7 +74,9 @@ public class BwaTester
         mInputFile = configBuilder.getValue(INPUT_FILE);
         mOutputFile = configBuilder.getValue(OUTPUT_FILE);
 
-        loadAlignerLibrary(null);
+        String bwaLibPath = configBuilder.getValue(BWA_LIB_PATH);
+
+        loadAlignerLibrary(bwaLibPath);
 
         String refGenomeImageFile = refGenomeFile + REF_GENOME_IMAGE_EXTENSION;
         mAligner = new BwaAligner(refGenomeImageFile);
@@ -189,6 +192,8 @@ public class BwaTester
 
         configBuilder.addPath(INPUT_FILE, true, "Input regions and sequences");
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output file with alignment results");
+        configBuilder.addPath(BWA_LIB_PATH, false, "Path to BWA library");
+
         ConfigUtils.addLoggingOptions(configBuilder);
         addRefGenomeFile(configBuilder, true);
 

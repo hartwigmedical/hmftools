@@ -33,8 +33,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFil
 import static com.hartwig.hmftools.esvee.AssemblyConstants.DEFAULT_ASSEMBLY_REF_BASE_WRITE_MAX;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REF_GENOME_IMAGE_EXTENSION;
 import static com.hartwig.hmftools.esvee.alignment.BwaAligner.loadAlignerLibrary;
-import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ALIGNMENT;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ALIGNMENT_DATA;
+import static com.hartwig.hmftools.esvee.assembly.output.WriteType.BREAKEND;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.fromConfig;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formOutputFile;
 import static com.hartwig.hmftools.esvee.common.SvConstants.ESVEE_FILE_ID;
@@ -121,6 +121,7 @@ public class AssemblyConfig
     public static final String OUTPUT_VCF = "output_vcf";
     private static final String REF_GENOME_IMAGE = "ref_genome_image";
     private static final String DECOY_GENOME = "decoy_genome";
+    public static final String BWA_LIB_PATH = "bwa_lib";
     public static final String JUNCTION_FILES = "junction_files";
 
     private static final String WRITE_TYPES = "write_types";
@@ -195,19 +196,16 @@ public class AssemblyConfig
 
         DecoyGenome = configBuilder.getValue(DECOY_GENOME);
 
-        AlignmentFile = AlignmentCache.filename(configBuilder);
-        RunAlignment = configBuilder.hasFlag(RUN_ALIGNMENT) || AlignmentFile != null;
-
-        if(RunAlignment || DecoyGenome != null)
-            loadAlignerLibrary(null); // or load path from config
-
         WriteTypes = fromConfig(configBuilder.getValue(WRITE_TYPES));
 
-        if(!RunAlignment)
-        {
-            WriteTypes.remove(ALIGNMENT);
-            WriteTypes.remove(ALIGNMENT_DATA);
-        }
+        AlignmentFile = AlignmentCache.filename(configBuilder);
+        RunAlignment = configBuilder.hasFlag(RUN_ALIGNMENT) || AlignmentFile != null
+                || WriteTypes.contains(BREAKEND) ||  WriteTypes.contains(ALIGNMENT_DATA);
+
+        String bwaLibPath = configBuilder.getValue(BWA_LIB_PATH);
+
+        if(RunAlignment || DecoyGenome != null)
+            loadAlignerLibrary(bwaLibPath);
 
         ProcessDiscordant = configBuilder.hasFlag(PROCESS_DISCORDANT);
         BamStringency = ValidationStringency.STRICT;
@@ -327,6 +325,7 @@ public class AssemblyConfig
 
         configBuilder.addFlag(PROCESS_DISCORDANT, "Proces discordant-only groups");
         configBuilder.addFlag(RUN_ALIGNMENT, "Run assembly alignment");
+        configBuilder.addPath(BWA_LIB_PATH, false, "Path to BWA library");
 
         String writeTypes = Arrays.stream(WriteType.values()).map(x -> x.toString()).collect(Collectors.joining(ITEM_DELIM));
         configBuilder.addConfigItem(WRITE_TYPES, false, "Write types from list: " + writeTypes);
