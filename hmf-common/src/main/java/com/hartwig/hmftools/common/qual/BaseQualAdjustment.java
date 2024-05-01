@@ -45,8 +45,5 @@ public class BaseQualAdjustment
         return (byte)round(probabilityToPhredQual(probability));
     }
 
-    public static double probabilityToPhredQual(double probability)
-    {
-        return -10 * log10(probability);
-    }
+    public static double probabilityToPhredQual(double probability) { return -10 * log10(probability); }
 }
