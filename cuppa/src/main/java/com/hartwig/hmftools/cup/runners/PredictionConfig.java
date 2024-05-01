@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-public class PycuppaPredictConfig
+public class PredictionConfig
 {
     public final String SampleId;
     public final String ClassifierPath;
@@ -18,7 +18,7 @@ public class PycuppaPredictConfig
     public static final String CLASSIFIER_PATH = "classifier_path";
     public static final String FEATURES_PATH = "features_path";
 
-    public PycuppaPredictConfig(ConfigBuilder configBuilder)
+    public PredictionConfig(ConfigBuilder configBuilder)
     {
         SampleId = configBuilder.getValue(SAMPLE);
         ClassifierPath = configBuilder.getValue(CLASSIFIER_PATH);

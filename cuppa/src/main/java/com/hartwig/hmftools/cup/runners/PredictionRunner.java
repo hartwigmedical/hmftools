@@ -14,14 +14,14 @@ import org.apache.logging.log4j.Level;
 public class PredictionRunner
 {
     public final PrepConfig mPrepConfig;
-    public final PycuppaPredictConfig mPycuppaConfig;
+    public final PredictionConfig mPycuppaConfig;
 
     private String mFeaturesPath;
 
     public PredictionRunner(final ConfigBuilder configBuilder)
     {
         mPrepConfig = new PrepConfig(configBuilder);
-        mPycuppaConfig = new PycuppaPredictConfig(configBuilder);
+        mPycuppaConfig = new PredictionConfig(configBuilder);
     }
 
     public void createOutputDirIfNotExist()
@@ -72,7 +72,7 @@ public class PredictionRunner
 
         config.disableWarnOnRepeatedRegos();
         PrepConfig.registerConfig(config);
-        PycuppaPredictConfig.registerConfig(config);
+        PredictionConfig.registerConfig(config);
 
         config.checkAndParseCommandLine(args);
 
