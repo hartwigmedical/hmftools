@@ -3,7 +3,10 @@ package com.hartwig.hmftools.cup.runners;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -54,20 +57,31 @@ public class PythonEnv
     }
 
     @VisibleForTesting
-    void addPyenvPathsToRcFile()
+    File getRcFilePath() throws FileNotFoundException
     {
-        String shellPath = new BashCommand("echo $SHELL").logLevel(null).run().getStdout().get(0);
-        String shellName = new File(shellPath).getName();
-        File RcFilePath = new File(String.format("%s/.%src", System.getProperty("user.home"), shellName));
+        String[] basenamesToTry = {".zshrc", ".bashrc"};
 
-        if(!RcFilePath.isFile())
+        String pathToRcFile = null;
+        for(String basename : basenamesToTry)
         {
-            CUP_LOGGER.error("Fail to find rc file({}) to add pyenv paths. Using pyenv in interactive shell will not work", RcFilePath);
-            System.exit(1);
+            String path = System.getProperty("user.home") + "/" + basename;
+            if(new File(path).isFile())
+                pathToRcFile = path;
         }
 
+        if(pathToRcFile == null)
+            throw new FileNotFoundException("Failed to locate one of the following rc files: " + String.join(", ", basenamesToTry));
+
+        return new File(pathToRcFile);
+    }
+
+    @VisibleForTesting
+    void addPyenvPathsToRcFile()
+    {
         try
         {
+            File RcFilePath = getRcFilePath();
+
             String lines = String.join("\n",
                 "# Pyenv paths",
                 "export PYENV_ROOT="+ PYENV_DIR,
@@ -79,10 +93,8 @@ public class PythonEnv
             boolean linesExist = FileUtils.readFileToString(RcFilePath, "UTF-8").contains(lines);
             if(!linesExist)
             {
-                String command;
-
                 CUP_LOGGER.info("Adding pyenv paths to rc file: " + RcFilePath);
-                command = String.format("echo -e '\n%s' >> %s", lines, RcFilePath);
+                String command = String.format("echo -e '\n%s' >> %s", lines, RcFilePath);
                 new BashCommand(command).logLevel(null).run();
             }
             else
@@ -90,10 +102,9 @@ public class PythonEnv
                 CUP_LOGGER.warn("Skipping adding pyenv paths to rc file: " + RcFilePath);
             }
         }
-        catch(Exception e)
+        catch(IOException e)
         {
-            CUP_LOGGER.error("Failed to update rc file({}): {}", RcFilePath, e);
-            System.exit(1);
+            CUP_LOGGER.warn("Failed to add pyenv paths to rc file (using pyenv in interactive shell will not work): " + e);
         }
     }
 
@@ -140,8 +151,12 @@ public class PythonEnv
         }
     }
 
-    public PythonEnv initialize()
+    @VisibleForTesting
+    PythonEnv initialize(boolean removePyenv)
     {
+        if(removePyenv)
+            removeExistingPyenv();
+
         if(pythonPath().exists())
             return this;
 
@@ -152,16 +167,21 @@ public class PythonEnv
         return this;
     }
 
+    public PythonEnv initialize()
+    {
+        return initialize(false);
+    }
+
     public void pipUpgrade()
     {
-        String command = "python -m pip install --upgrade pip";
+        String command = "pip install --upgrade pip";
         CUP_LOGGER.info("Upgrading pip with command: " + command);
         new PythonEnvCommand(this, command).showCommand().logLevel(Level.DEBUG).run();
     }
 
     public void pipInstall(String args)
     {
-        String command = "python -m pip install " + args;
+        String command = "pip install " + args;
         CUP_LOGGER.info("Installing packages with command: " + command);
         new PythonEnvCommand(this, command).showCommand().logLevel(Level.DEBUG).run();
     }
