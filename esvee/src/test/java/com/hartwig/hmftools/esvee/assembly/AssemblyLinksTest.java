@@ -400,7 +400,8 @@ public class AssemblyLinksTest
         Read discRead1 = createRead(
                 READ_ID_GENERATOR.nextId(), CHR_1, 20, REF_BASES_400.substring(20, 70), discCigar, CHR_3, 100, true);
         Read discRead2 = createRead(
-                discRead1.id(), CHR_3, 100, REF_BASES_400.substring(100, 150), discCigar, CHR_1, 20, true);
+                discRead1.id(), CHR_3, 100, REF_BASES_400.substring(100, 150), discCigar, CHR_1, 20, false);
+        discRead2.bamRecord().setReadNegativeStrandFlag(true);
 
         assembly1.addCandidateSupport(discRead1, SupportType.CANDIDATE_DISCORDANT);
         assembly5.addCandidateSupport(discRead2, SupportType.CANDIDATE_DISCORDANT);
@@ -408,7 +409,8 @@ public class AssemblyLinksTest
         Read discRead3 = createRead(
                 READ_ID_GENERATOR.nextId(), CHR_2, 100, REF_BASES_400.substring(100, 150), discCigar, CHR_1, 300, true);
         Read discRead4 = createRead(
-                discRead3.id(), CHR_1, 300, REF_BASES_400.substring(300, 350), discCigar, CHR_2, 100, true);
+                discRead3.id(), CHR_1, 300, REF_BASES_400.substring(300, 350), discCigar, CHR_2, 100, false);
+        discRead4.bamRecord().setReadNegativeStrandFlag(true);
 
         assembly3.addCandidateSupport(discRead3, SupportType.CANDIDATE_DISCORDANT);
         assembly6.addCandidateSupport(discRead4, SupportType.CANDIDATE_DISCORDANT);
