@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.compar.common.Category;
@@ -21,8 +21,8 @@ public class DisruptionData implements ComparableItem
 {
     public final StructuralVariantData SvData;
     public final LinxBreakend Breakend;
-    private final GenomePositionImpl mComparisonStartGenomePosition;
-    private final GenomePositionImpl mComparisonEndGenomePosition;
+    private final BasePosition mComparisonPositionStart;
+    private final BasePosition mComparisonPositionEnd;
     private final boolean mCheckTranscript;
 
     protected static final String FLD_REGION_TYPE = "RegionType";
@@ -30,14 +30,14 @@ public class DisruptionData implements ComparableItem
     protected static final String FLD_GENE_ORIENT = "GeneOrientation";
     protected static final String FLD_NEXT_SPLICE = "NextSpliceExonRank";
 
-    public DisruptionData(final StructuralVariantData svData, final LinxBreakend breakend,
-            final GenomePositionImpl comparisonStartGenomePosition, final GenomePositionImpl comparisonEndGenomePosition,
-            final boolean checkTranscript)
+    public DisruptionData(
+            final StructuralVariantData svData, final LinxBreakend breakend, final BasePosition comparisonPositionStart,
+            final BasePosition comparisonPositionEnd, final boolean checkTranscript)
     {
         SvData = svData;
         Breakend = breakend;
-        mComparisonStartGenomePosition = comparisonStartGenomePosition;
-        mComparisonEndGenomePosition = comparisonEndGenomePosition;
+        mComparisonPositionStart = comparisonPositionStart;
+        mComparisonPositionEnd = comparisonPositionEnd;
         mCheckTranscript = checkTranscript;
     }
 
@@ -47,19 +47,17 @@ public class DisruptionData implements ComparableItem
     @Override
     public String key()
     {
-        if(mComparisonStartGenomePosition.position() != SvData.startPosition() || mComparisonEndGenomePosition.position() != SvData.endPosition())
+        if(mComparisonPositionStart.Position != SvData.startPosition() || mComparisonPositionEnd.Position != SvData.endPosition())
         {
-            return String.format("%s %d_%s %s:%d-%s:%d liftover(%s:%d-%s:%d)",
-                    Breakend.gene(), SvData.id(), SvData.type(),
-                    SvData.startChromosome(), SvData.startPosition(), SvData.endChromosome(), SvData.endPosition(),
-                    mComparisonStartGenomePosition.chromosome(), mComparisonStartGenomePosition.position(),
-                    mComparisonEndGenomePosition.chromosome(), mComparisonEndGenomePosition.position());
+            return String.format("%s %d_%s %s:%d-%s:%d liftover(%s-%s)",
+                    Breakend.gene(), SvData.id(), SvData.type(), SvData.startChromosome(), SvData.startPosition(),
+                    SvData.endChromosome(), SvData.endPosition(), mComparisonPositionStart, mComparisonPositionEnd);
         }
         else
         {
             return String.format("%s %d_%s %s:%d-%s:%d",
-                    Breakend.gene(), SvData.id(), SvData.type(),
-                    SvData.startChromosome(), SvData.startPosition(), SvData.endChromosome(), SvData.endPosition());
+                    Breakend.gene(), SvData.id(), SvData.type(), SvData.startChromosome(), SvData.startPosition(),
+                    SvData.endChromosome(), SvData.endPosition());
         }
     }
 
@@ -86,10 +84,12 @@ public class DisruptionData implements ComparableItem
         if(otherSv.SvData.type() != SvData.type())
             return false;
 
-        if(!otherSv.SvData.startChromosome().equals(mComparisonStartGenomePosition.chromosome()) || !otherSv.SvData.endChromosome().equals(mComparisonEndGenomePosition.chromosome()))
+        if(!otherSv.SvData.startChromosome().equals(mComparisonPositionStart.Chromosome)
+        || !otherSv.SvData.endChromosome().equals(mComparisonPositionEnd.Chromosome))
             return false;
 
-        if(otherSv.SvData.startPosition() != mComparisonStartGenomePosition.position() || otherSv.SvData.endPosition() != mComparisonEndGenomePosition.position())
+        if(otherSv.SvData.startPosition() != mComparisonPositionStart.Position
+        || otherSv.SvData.endPosition() != mComparisonPositionEnd.Position)
             return false;
 
         if(otherSv.SvData.startOrientation() != SvData.startOrientation() || otherSv.SvData.endOrientation() != SvData.endOrientation())

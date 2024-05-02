@@ -17,9 +17,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineSv;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
@@ -93,11 +93,14 @@ public class GermlineSvComparer implements ItemComparer
                 for(LinxGermlineSv germlineSv : germlineSvs)
                 {
                     boolean isReported = germlineBreakends.stream().anyMatch(x -> x.svId() == germlineSv.SvId);
-                    GenomePositionImpl comparisonStartGenomePosition = determineComparisonGenomePosition(
+
+                    BasePosition comparisonStartPosition = determineComparisonGenomePosition(
                             germlineSv.ChromosomeStart, germlineSv.PositionStart, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-                    GenomePositionImpl comparisonEndGenomePosition = determineComparisonGenomePosition(
+
+                    BasePosition comparisonEndPosition = determineComparisonGenomePosition(
                             germlineSv.ChromosomeEnd, germlineSv.PositionEnd, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-                    items.add(new GermlineSvData(germlineSv, isReported, comparisonStartGenomePosition, comparisonEndGenomePosition));
+
+                    items.add(new GermlineSvData(germlineSv, isReported, comparisonStartPosition, comparisonEndPosition));
                 }
             }
             else
@@ -116,11 +119,14 @@ public class GermlineSvComparer implements ItemComparer
                     LinxGermlineSv germlineSv = germlineSvs.get(i);
                     String[] values = rawGermlineSvs.get(i).split(TSV_DELIM, -1);
                     boolean isReported = Boolean.parseBoolean(values[reportedIndex]);
-                    GenomePositionImpl comparisonStartGenomePosition = determineComparisonGenomePosition(
+
+                    BasePosition comparisonPositionStart = determineComparisonGenomePosition(
                             germlineSv.ChromosomeStart, germlineSv.PositionStart, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-                    GenomePositionImpl comparisonEndGenomePosition = determineComparisonGenomePosition(
+
+                    BasePosition comparisonPositionEnd = determineComparisonGenomePosition(
                             germlineSv.ChromosomeEnd, germlineSv.PositionEnd, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-                    items.add(new GermlineSvData(germlineSv, isReported, comparisonStartGenomePosition, comparisonEndGenomePosition));
+
+                    items.add(new GermlineSvData(germlineSv, isReported, comparisonPositionStart, comparisonPositionEnd));
                 }
             }
 

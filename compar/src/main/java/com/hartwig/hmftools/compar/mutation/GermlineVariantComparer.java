@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLIN
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.GermlineVariantFactory;
 import com.hartwig.hmftools.compar.common.Category;
@@ -73,9 +73,9 @@ public class GermlineVariantComparer implements ItemComparer
         for (Record record : result)
         {
             GermlineVariant variant = GermlineVariantDAO.buildFromRecord(record);
-            GenomePositionImpl comparisonGenomePosition = determineComparisonGenomePosition(
+            BasePosition comparisonPosition = determineComparisonGenomePosition(
                     variant.chromosome(), variant.position(), sourceName, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-            variants.add(new GermlineVariantData(variant, comparisonGenomePosition));
+            variants.add(new GermlineVariantData(variant, comparisonPosition));
         }
 
         return variants;
@@ -95,9 +95,9 @@ public class GermlineVariantComparer implements ItemComparer
             {
                 if(!variant.isFiltered())
                 {
-                    GenomePositionImpl comparisonGenomePosition = determineComparisonGenomePosition(
+                    BasePosition comparisonPosition = determineComparisonGenomePosition(
                             variant.chromosome(), variant.position(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-                    comparableItems.add(new GermlineVariantData(variant, comparisonGenomePosition));
+                    comparableItems.add(new GermlineVariantData(variant, comparisonPosition));
                 }
             }
 

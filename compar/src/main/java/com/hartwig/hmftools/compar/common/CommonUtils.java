@@ -19,10 +19,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
-import com.hartwig.hmftools.common.genome.position.ImmutableGenomePositionImpl;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.ItemComparer;
@@ -231,7 +230,8 @@ public class CommonUtils
                 .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
     }
 
-    public static GenomePositionImpl determineComparisonGenomePosition(final String chromosome, final int position, String fileSource,
+    public static BasePosition determineComparisonGenomePosition(
+            final String chromosome, final int position, final String fileSource,
             final boolean requiresLiftover, final GenomeLiftoverCache liftoverCache)
     {
         if(requiresLiftover && liftoverCache.hasMappings())
@@ -241,12 +241,10 @@ public class CommonUtils
 
             if(newPosition != UNMAPPED_POSITION)
             {
-                return ImmutableGenomePositionImpl.builder()
-                        .chromosome(destVersion.versionedChromosome(chromosome))
-                        .position(newPosition)
-                        .build();
+                return new BasePosition(destVersion.versionedChromosome(chromosome), newPosition);
             }
         }
-        return ImmutableGenomePositionImpl.builder().chromosome(chromosome).position(position).build();
+
+        return new BasePosition(chromosome, position);
     }
 }

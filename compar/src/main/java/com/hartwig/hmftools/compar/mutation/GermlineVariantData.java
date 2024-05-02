@@ -22,7 +22,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
@@ -34,13 +34,13 @@ public class GermlineVariantData implements ComparableItem
 {
     public final GermlineVariant Variant;
     public final Set<String> Filters;
-    private final GenomePositionImpl mComparisonGenomePosition;
+    private final BasePosition mComparisonPosition;
 
-    public GermlineVariantData(final GermlineVariant variant, final GenomePositionImpl comparisonGenomePosition)
+    public GermlineVariantData(final GermlineVariant variant, final BasePosition comparisonPosition)
     {
         Variant = variant;
         Filters = Arrays.stream(variant.filter().split(";", -1)).collect(Collectors.toSet());
-        mComparisonGenomePosition = comparisonGenomePosition;
+        mComparisonPosition = comparisonPosition;
     }
 
     @Override
@@ -49,18 +49,10 @@ public class GermlineVariantData implements ComparableItem
     @Override
     public String key()
     {
-        if(mComparisonGenomePosition.position() != Variant.position())
+        if(mComparisonPosition.Position != Variant.position())
         {
-            return String.format(
-                    "%s:%d %s>%s %s liftover(%s:%d)",
-                    Variant.chromosome(),
-                    Variant.position(),
-                    Variant.ref(),
-                    Variant.alt(),
-                    Variant.type(),
-                    mComparisonGenomePosition.chromosome(),
-                    mComparisonGenomePosition.position()
-            );
+            return String.format("%s:%d %s>%s %s liftover(%s)",
+                    Variant.chromosome(), Variant.position(), Variant.ref(), Variant.alt(), Variant.type(), mComparisonPosition);
         }
         else
         {
@@ -87,7 +79,7 @@ public class GermlineVariantData implements ComparableItem
     {
         final GermlineVariantData otherVar = (GermlineVariantData) other;
 
-        if(!mComparisonGenomePosition.chromosome().equals(otherVar.Variant.chromosome()) || mComparisonGenomePosition.position() != otherVar.Variant.position())
+        if(!mComparisonPosition.Chromosome.equals(otherVar.Variant.chromosome()) || mComparisonPosition.Position != otherVar.Variant.position())
             return false;
 
         if(!Variant.ref().equals(otherVar.Variant.ref()) || !Variant.alt().equals(otherVar.Variant.alt()))
@@ -147,6 +139,4 @@ public class GermlineVariantData implements ComparableItem
         values.add(String.format("%s", variant.otherReportedEffects()));
         values.add(String.format("%.0f", variant.qual()));
     }
-
-
 }

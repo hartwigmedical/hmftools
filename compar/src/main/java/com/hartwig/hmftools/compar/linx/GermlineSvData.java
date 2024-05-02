@@ -8,8 +8,8 @@ import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
 import com.hartwig.hmftools.common.linx.LinxGermlineSv;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
 import com.hartwig.hmftools.compar.common.DiffThresholds;
@@ -20,18 +20,19 @@ public class GermlineSvData implements ComparableItem
 {
     public final LinxGermlineSv SvData;
     private final boolean mIsReported;
-    private final GenomePositionImpl mComparisonStartGenomePosition;
-    private final GenomePositionImpl mComparisonEndGenomePosition;
+    private final BasePosition mComparisonStartPosition;
+    private final BasePosition mComparisonEndPosition;
 
     protected static final String FLD_GERMLINE_FRAGS = "GermlineFragments";
 
-    public GermlineSvData(final LinxGermlineSv svData, boolean isReported, final GenomePositionImpl comparisonStartGenomePosition,
-            final GenomePositionImpl comparisonEndGenomePosition)
+    public GermlineSvData(
+            final LinxGermlineSv svData, boolean isReported, final BasePosition comparisonStartPosition,
+            final BasePosition comparisonEndPosition)
     {
         SvData = svData;
         mIsReported = isReported;
-        mComparisonStartGenomePosition = comparisonStartGenomePosition;
-        mComparisonEndGenomePosition = comparisonEndGenomePosition;
+        mComparisonStartPosition = comparisonStartPosition;
+        mComparisonEndPosition = comparisonEndPosition;
     }
 
     @Override
@@ -40,13 +41,12 @@ public class GermlineSvData implements ComparableItem
     @Override
     public String key()
     {
-        if(mComparisonStartGenomePosition.position() != SvData.PositionStart || mComparisonEndGenomePosition.position() != SvData.PositionEnd)
+        if(mComparisonStartPosition.Position != SvData.PositionStart || mComparisonEndPosition.Position != SvData.PositionEnd)
         {
-            return String.format("%s:%s %s:%d:%d-%s:%d%d %s liftover(%s:%d-%s:%d)",
+            return String.format("%s:%s %s:%d:%d-%s:%d%d %s liftover(%s-%s)",
                     SvData.EventId, SvData.Type, SvData.ChromosomeStart, SvData.PositionStart, SvData.OrientStart,
                     SvData.ChromosomeEnd, SvData.PositionEnd, SvData.OrientEnd, SvData.GeneName,
-                    mComparisonStartGenomePosition.chromosome(), mComparisonStartGenomePosition.position(),
-                    mComparisonEndGenomePosition.chromosome(), mComparisonEndGenomePosition.position());
+                    mComparisonStartPosition, mComparisonEndPosition);
         }
         else
         {
@@ -79,10 +79,12 @@ public class GermlineSvData implements ComparableItem
         if(otherSv.SvData.Type != SvData.Type)
             return false;
 
-        if(!otherSv.SvData.ChromosomeStart.equals(mComparisonStartGenomePosition.chromosome()) || !otherSv.SvData.ChromosomeEnd.equals(mComparisonEndGenomePosition.chromosome()))
+        if(!otherSv.SvData.ChromosomeStart.equals(mComparisonStartPosition.Chromosome)
+        || !otherSv.SvData.ChromosomeEnd.equals(mComparisonEndPosition.Chromosome))
             return false;
 
-        if(otherSv.SvData.PositionStart != mComparisonStartGenomePosition.position() || otherSv.SvData.PositionEnd != mComparisonEndGenomePosition.position())
+        if(otherSv.SvData.PositionStart != mComparisonStartPosition.Position
+        || otherSv.SvData.PositionEnd != mComparisonEndPosition.Position)
             return false;
 
         if(otherSv.SvData.OrientStart != SvData.OrientStart || otherSv.SvData.OrientEnd != SvData.OrientEnd)

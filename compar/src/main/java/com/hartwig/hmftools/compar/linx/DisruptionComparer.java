@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
@@ -116,13 +116,15 @@ public class DisruptionComparer implements ItemComparer
             {
                 breakends.remove(breakend);
 
-                GenomePositionImpl comparisonStartGenomePosition = determineComparisonGenomePosition(
+                BasePosition comparisonPositionStart = determineComparisonGenomePosition(
                         var.startChromosome(), var.startPosition(), sourceName, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-                GenomePositionImpl comparisonEndGenomePosition = determineComparisonGenomePosition(
+                BasePosition comparisonPositionEnd = determineComparisonGenomePosition(
                         var.endChromosome(), var.endPosition(), sourceName, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+
                 boolean checkTranscript = !breakend.canonical();
-                DisruptionData disruptionData =
-                        new DisruptionData(var, breakend, comparisonStartGenomePosition, comparisonEndGenomePosition, checkTranscript);
+
+                DisruptionData disruptionData = new DisruptionData(
+                        var, breakend, comparisonPositionStart, comparisonPositionEnd, checkTranscript);
                 items.add(disruptionData);
             }
         }

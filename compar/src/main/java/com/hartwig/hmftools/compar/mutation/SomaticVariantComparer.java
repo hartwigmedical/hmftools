@@ -24,9 +24,9 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -322,9 +322,9 @@ public class SomaticVariantComparer implements ItemComparer
         for(Record record : results)
         {
             final SomaticVariantData variant = SomaticVariantData.fromRecord(record);
-            GenomePositionImpl comparisonGenomePosition = determineComparisonGenomePosition(
+            BasePosition comparisonPosition = determineComparisonGenomePosition(
                     variant.Chromosome, variant.Position, sourceName, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-            variant.setComparisonCoordinates(comparisonGenomePosition.chromosome(), comparisonGenomePosition.position());
+            variant.setComparisonCoordinates(comparisonPosition.Chromosome, comparisonPosition.Position);
             variants.add(variant);
         }
 
@@ -365,9 +365,9 @@ public class SomaticVariantComparer implements ItemComparer
             if(mConfig.RestrictToDrivers && !mConfig.DriverGenes.contains(variant.Gene))
                 continue;
 
-            GenomePositionImpl comparisonGenomePosition = determineComparisonGenomePosition(
+            BasePosition comparisonPosition = determineComparisonGenomePosition(
                     variant.Chromosome, variant.Position, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
-            variant.setComparisonCoordinates(comparisonGenomePosition.chromosome(), comparisonGenomePosition.position());
+            variant.setComparisonCoordinates(comparisonPosition.Chromosome, comparisonPosition.Position);
 
             variants.add(variant);
         }
