@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.esvee.assembly.ExtensionSeqBuilder.calcReadSe
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.convertedIndelCrossesJunction;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.findInsertedBases;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REGION;
@@ -245,6 +246,8 @@ public class JunctionAssembly
         addRead(read, existingSupport.type(), existingSupport);
     }
 
+    public void addDiscordantSupport(final SupportRead support) { addRead(support.cachedRead(), DISCORDANT, null); }
+
     private void addRead(final Read read, final SupportType type, @Nullable final SupportRead existingSupport)
     {
         int mismatchCount = 0;
@@ -278,13 +281,6 @@ public class JunctionAssembly
             readIndexRange = new int[] { 0, read.getBases().length - 1 }; // take the whole read for ref-side reads
 
             readJunctionIndex = INVALID_INDEX;
-
-            /*
-            readJunctionIndex = read.getReadIndexAtReferencePosition(mJunction.Position, false);
-
-            if(readJunctionIndex == INVALID_INDEX)
-                return;
-            */
 
             if(mJunction.isForward())
             {
@@ -350,11 +346,6 @@ public class JunctionAssembly
         }
         else
         {
-            // not set since not used for now
-            //int[] existingReadRange = existingSupport.readIndexRange();
-            // existingSupport.setReadIndexRange(
-            //        min(existingReadRange[SE_START], readIndexRange[SE_START]), max(existingReadRange[SE_END], readIndexRange[SE_END]));
-
             existingSupport.setReferenceMismatches(mismatchCount);
         }
     }

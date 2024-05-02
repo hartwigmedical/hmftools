@@ -34,6 +34,7 @@ import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
+import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 
 import org.junit.Test;
 
@@ -185,7 +186,7 @@ public class AssemblyLinksTest
         assertEquals(overlapBases, link.overlapBases());
     }
 
-        @Test
+    @Test
     public void testAssemblyPositiveInversionSplits()
     {
         String firstRefBases = REF_BASES_200.substring(0, 100);
@@ -394,6 +395,24 @@ public class AssemblyLinksTest
         assembly6.addJunctionRead(juncRead);
         assembly4.addJunctionRead(juncRead); // for the facing link
 
+        // add a bunch of discordant reads as candidates to check they are assigned as support correctly
+        String discCigar = "50M";
+        Read discRead1 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 20, REF_BASES_400.substring(20, 70), discCigar, CHR_3, 100, true);
+        Read discRead2 = createRead(
+                discRead1.id(), CHR_3, 100, REF_BASES_400.substring(100, 150), discCigar, CHR_1, 20, true);
+
+        assembly1.addCandidateSupport(discRead1, SupportType.CANDIDATE_DISCORDANT);
+        assembly5.addCandidateSupport(discRead2, SupportType.CANDIDATE_DISCORDANT);
+
+        Read discRead3 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_2, 100, REF_BASES_400.substring(100, 150), discCigar, CHR_1, 300, true);
+        Read discRead4 = createRead(
+                discRead3.id(), CHR_1, 300, REF_BASES_400.substring(300, 350), discCigar, CHR_2, 100, true);
+
+        assembly3.addCandidateSupport(discRead3, SupportType.CANDIDATE_DISCORDANT);
+        assembly6.addCandidateSupport(discRead4, SupportType.CANDIDATE_DISCORDANT);
+
         PhaseGroup phaseGroup = new PhaseGroup(assembly1, assembly2);
         phaseGroup.addAssembly(assembly3);
         phaseGroup.addAssembly(assembly4);
@@ -413,6 +432,13 @@ public class AssemblyLinksTest
         hasAssemblyLink(phaseSet.assemblyLinks(), assembly3, assembly4, LinkType.SPLIT);
         hasAssemblyLink(phaseSet.assemblyLinks(), assembly4, assembly5, LinkType.FACING);
         hasAssemblyLink(phaseSet.assemblyLinks(), assembly5, assembly6, LinkType.SPLIT);
+
+        assertEquals(3, assembly1.supportCount());
+        assertEquals(2, assembly2.supportCount());
+        assertEquals(1, assembly1.support().stream().filter(x -> x.type() == SupportType.DISCORDANT).count());
+        assertEquals(1, assembly5.support().stream().filter(x -> x.type() == SupportType.DISCORDANT).count());
+        assertEquals(1, assembly3.support().stream().filter(x -> x.type() == SupportType.DISCORDANT).count());
+        assertEquals(1, assembly6.support().stream().filter(x -> x.type() == SupportType.DISCORDANT).count());
     }
 
     private static boolean hasAssemblyLink(

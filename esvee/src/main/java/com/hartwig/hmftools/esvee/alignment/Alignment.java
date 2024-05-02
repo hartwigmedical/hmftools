@@ -210,6 +210,7 @@ public class Alignment
         {
             List<String> combinedSampleIds = mConfig.combinedSampleIds();
 
+            // build up a map of read ID to the set of breakends it supports, and the top type of support (split then discordant)
             Map<String,BreakendFragmentSupport> fragmentSupportMap = Maps.newHashMap();
 
             for(Breakend breakend : assemblyAlignment.breakends())
@@ -239,7 +240,7 @@ public class Alignment
                         else
                             isDiscFragment = true;
 
-                        if((!isSplitFragment && !isDiscFragment))
+                        if(!isSplitFragment && !isDiscFragment)
                             continue;
 
                         if(read.orientation() == POS_ORIENT)
@@ -264,11 +265,28 @@ public class Alignment
                 }
             }
 
-            // assign each read preferably as split over discordant
-
             int inferredFragmentCount = 0;
             int inferredFragmentTotal = 0;
 
+            for(Map.Entry<String,BreakendFragmentSupport> entry : fragmentSupportMap.entrySet())
+            {
+                BreakendFragmentSupport fragmentSupport = entry.getValue();
+
+                if(fragmentSupport.InferredFragmentLength > 0)
+                {
+                    ++inferredFragmentCount;
+                    inferredFragmentTotal += fragmentSupport.InferredFragmentLength;
+                }
+            }
+
+            int averageInferredFragLength = inferredFragmentCount > 0 ? (int)round(inferredFragmentTotal / (double)inferredFragmentCount) : 0;
+
+            for(Breakend breakend : assemblyAlignment.breakends())
+            {
+                breakend.setAverageInferredFragmentLength(averageInferredFragLength);
+            }
+
+            // count fragments to both breakends if it is in either
             for(BreakendFragmentSupport fragmentSupport : fragmentSupportMap.values())
             {
                 for(Breakend breakend : fragmentSupport.Breakends)
@@ -281,42 +299,19 @@ public class Alignment
                         ++support.SplitFragments;
                     else if(allowDiscordantSupport)
                         ++support.DiscordantFragments;
-                }
 
-                if(fragmentSupport.InferredFragmentLength > 0)
-                {
-                    ++inferredFragmentCount;
-                    inferredFragmentTotal += fragmentSupport.InferredFragmentLength;
-                }
-            }
+                    Breakend otherBreakend = breakend.otherBreakend();
 
-            int averageInferredFragLength = inferredFragmentCount > 0 ? (int)round(inferredFragmentTotal / (double)inferredFragmentCount) : 0;
+                    if(otherBreakend != null && !fragmentSupport.Breakends.contains(otherBreakend))
+                    {
+                        BreakendSupport otherSupport = otherBreakend.sampleSupport().get(fragmentSupport.SampleIndex);
 
-            // for pairs of breakends, set their support to the maximum of each type
-            Set<Breakend> processedBreakends = Sets.newHashSet();
-            for(Breakend breakend : assemblyAlignment.breakends())
-            {
-                if(breakend.isSingle() || processedBreakends.contains(breakend))
-                    continue;
-
-                breakend.setAverageInferredFragmentLength(averageInferredFragLength);
-
-                processedBreakends.add(breakend);
-
-                Breakend otherBreakend = breakend.otherBreakend();
-
-                for(int i = 0; i < breakend.sampleSupport().size(); ++i)
-                {
-                    BreakendSupport support = breakend.sampleSupport().get(i);
-                    BreakendSupport otherSupport = otherBreakend.sampleSupport().get(i);
-
-                    int maxSplitFragments = max(support.SplitFragments, otherSupport.SplitFragments);
-                    support.SplitFragments = maxSplitFragments;
-                    otherSupport.SplitFragments = maxSplitFragments;
-
-                    int maxDiscFragments = max(support.DiscordantFragments, otherSupport.DiscordantFragments);
-                    support.DiscordantFragments = maxDiscFragments;
-                    otherSupport.DiscordantFragments = maxDiscFragments;
+                        // assign each read preferably as split over discordant
+                        if(fragmentSupport.IsSplit)
+                            ++otherSupport.SplitFragments;
+                        else if(allowDiscordantSupport)
+                            ++otherSupport.DiscordantFragments;
+                    }
                 }
             }
         }
