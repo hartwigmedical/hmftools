@@ -8,9 +8,11 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.SHORT_DEL_DUP_INS_LENGTH;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
+import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
 
 import java.util.List;
 import java.util.Set;
@@ -190,6 +192,41 @@ public class Breakend implements Comparable<Breakend>
             return positionWithin(position, Position + Homology.InexactStart, Position + Homology.InexactEnd);
         else
             return Position == position;
+    }
+
+    public boolean isRelatedDiscordantRead(final int readStart, final int readEnd, final byte readOrientation)
+    {
+        if(readOrientation != Orientation)
+            return false;
+
+        if(Orientation == POS_ORIENT)
+            return readEnd <= Position && readStart >= Position - DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
+        else
+            return readStart >= Position && readEnd <= Position + DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
+    }
+
+    public int calcInferredFragmentLength(final SupportRead read)
+    {
+        // sum the aligned bases relative to the junction positions to infer a fragment length around the junction
+        if(mOtherBreakend == null)
+            return 0;
+
+        // this read relates to the breakend, but confirm that its mate does too
+        if(!mOtherBreakend.Chromosome.equals(read.mateChromosome()))
+            return 0;
+
+        if(!mOtherBreakend.isRelatedDiscordantRead(read.mateAlignmentStart(), read.mateAlignmentEnd(), read.mateOrientation()))
+            return 0;
+
+        int junctionDistance = Orientation == POS_ORIENT ? Position - read.alignmentStart() : read.alignmentEnd() - Position;
+
+        int otherJunctionDistance = mOtherBreakend.Orientation == POS_ORIENT ?
+                mOtherBreakend.Position - read.mateAlignmentStart() : read.mateAlignmentEnd() - mOtherBreakend.Position;
+
+        if(otherJunctionDistance >= DEFAULT_DISCORDANT_FRAGMENT_LENGTH)
+            return 0;
+
+        return junctionDistance + otherJunctionDistance;
     }
 
     public String toString()

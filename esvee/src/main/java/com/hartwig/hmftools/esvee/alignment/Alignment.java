@@ -236,9 +236,13 @@ public class Alignment
                         BreakendSupport support = sampleSupport.get(read.sampleIndex());
 
                         if(breakend.readSpansJunction(read, false))
+                        {
                             isSplitFragment = true;
-                        else
+                        }
+                        else if(breakend.isRelatedDiscordantRead(read.alignmentStart(), read.alignmentEnd(), read.orientation()))
+                        {
                             isDiscFragment = true;
+                        }
 
                         if(!isSplitFragment && !isDiscFragment)
                             continue;
@@ -252,7 +256,7 @@ public class Alignment
 
                         if(fragmentSupport == null)
                         {
-                            int inferredFragLength = assemblyAlignment.calcInferredFragmentLength(assembly, read);
+                            int inferredFragLength = breakend.calcInferredFragmentLength(read);
 
                             fragmentSupport = new BreakendFragmentSupport(read.sampleIndex(), isSplitFragment, breakend, inferredFragLength);
                             fragmentSupportMap.put(read.id(), fragmentSupport);

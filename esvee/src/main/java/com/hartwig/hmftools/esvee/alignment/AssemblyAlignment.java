@@ -223,31 +223,6 @@ public class AssemblyAlignment
         return sb.toString();
     }
 
-    public int calcInferredFragmentLength(final JunctionAssembly assembly, final SupportRead read)
-    {
-        // sum the aligned bases relative to the junction positions to infer a fragment length around the junction
-        if(mAssemblyLink == null)
-            return 0;
-
-        JunctionAssembly otherAssembly = mAssemblyLink.otherAssembly(assembly);
-
-        if(!positionsOverlap(
-                otherAssembly.minAlignedPosition(), otherAssembly.maxAlignedPosition(), read.mateAlignmentStart(), read.mateAlignmentEnd()))
-        {
-            return 0;
-        }
-
-        int fragmentLength = assembly.isForwardJunction() ?
-                assembly.junction().Position - read.alignmentStart() : read.alignmentEnd() - assembly.junction().Position;
-
-
-        fragmentLength += otherAssembly.isForwardJunction() ?
-                otherAssembly.junction().Position - read.mateAlignmentStart() : read.mateAlignmentEnd() - otherAssembly.junction().Position;
-
-        return fragmentLength;
-    }
-
-
     public String toString()
     {
         return format("%s length(%d) breakends(%d)", info(), mFullSequenceLength, mBreakends.size());

@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 
+import static htsjdk.samtools.SAMFlag.MATE_REVERSE_STRAND;
 import static htsjdk.samtools.SAMFlag.MATE_UNMAPPED;
 import static htsjdk.samtools.SAMFlag.READ_PAIRED;
 import static htsjdk.samtools.SAMFlag.READ_REVERSE_STRAND;
@@ -125,6 +126,7 @@ public class SupportRead
     public int trimCount() { return mTrimCount; }
     public String cigar() { return mCigar; }
     public byte orientation() { return isFlagSet(READ_REVERSE_STRAND) ? NEG_ORIENT : POS_ORIENT; }
+    public byte mateOrientation() { return isFlagSet(MATE_REVERSE_STRAND) ? NEG_ORIENT : POS_ORIENT; }
     public SupplementaryReadData supplementaryData() { return mSupplementaryData; }
     public int mapQual() { return mMapQual; }
     public int numOfEvents() { return mNumOfEvents; }
