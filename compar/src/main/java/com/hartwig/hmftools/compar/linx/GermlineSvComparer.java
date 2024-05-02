@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.compar.common.Category.GERMLINE_SV;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
 import static com.hartwig.hmftools.compar.linx.GermlineSvData.FLD_GERMLINE_FRAGS;
 
 import java.io.IOException;
@@ -16,6 +17,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.position.GenomePositionImpl;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 import com.hartwig.hmftools.compar.common.Category;
@@ -60,7 +62,7 @@ public class GermlineSvComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
         // final List<StructuralVariantData> svDataList = dbAccess.readStructuralVariantGe(sampleId);
         // currently unsupported
@@ -91,7 +93,11 @@ public class GermlineSvComparer implements ItemComparer
                 for(LinxGermlineSv germlineSv : germlineSvs)
                 {
                     boolean isReported = germlineBreakends.stream().anyMatch(x -> x.svId() == germlineSv.SvId);
-                    items.add(new GermlineSvData(germlineSv, isReported));
+                    GenomePositionImpl comparisonStartGenomePosition = determineComparisonGenomePosition(
+                            germlineSv.ChromosomeStart, germlineSv.PositionStart, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                    GenomePositionImpl comparisonEndGenomePosition = determineComparisonGenomePosition(
+                            germlineSv.ChromosomeEnd, germlineSv.PositionEnd, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                    items.add(new GermlineSvData(germlineSv, isReported, comparisonStartGenomePosition, comparisonEndGenomePosition));
                 }
             }
             else
@@ -110,7 +116,11 @@ public class GermlineSvComparer implements ItemComparer
                     LinxGermlineSv germlineSv = germlineSvs.get(i);
                     String[] values = rawGermlineSvs.get(i).split(TSV_DELIM, -1);
                     boolean isReported = Boolean.parseBoolean(values[reportedIndex]);
-                    items.add(new GermlineSvData(germlineSv, isReported));
+                    GenomePositionImpl comparisonStartGenomePosition = determineComparisonGenomePosition(
+                            germlineSv.ChromosomeStart, germlineSv.PositionStart, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                    GenomePositionImpl comparisonEndGenomePosition = determineComparisonGenomePosition(
+                            germlineSv.ChromosomeEnd, germlineSv.PositionEnd, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                    items.add(new GermlineSvData(germlineSv, isReported, comparisonStartGenomePosition, comparisonEndGenomePosition));
                 }
             }
 
