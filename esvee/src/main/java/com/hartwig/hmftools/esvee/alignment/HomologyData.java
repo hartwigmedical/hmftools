@@ -157,10 +157,8 @@ public class HomologyData
 
         int rangeLength = longestRangeEnd - longestRangeStart + 1;
 
-        boolean hasEventLength = (rangeLength % 2) == 0;
         int halfRange = rangeLength / 2;
         int exactStart = max(halfRange, 1); // round up if an odd length
-        // int exactStart = (rangeLength % 2) == 0 ? halfRange : halfRange + 1; // round up if an odd length
         int exactEnd = rangeLength - exactStart - 1;
 
         int inexactStart = longestRangeStart + halfRange;

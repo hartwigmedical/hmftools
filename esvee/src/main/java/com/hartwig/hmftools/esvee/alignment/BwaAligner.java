@@ -49,13 +49,21 @@ public class BwaAligner implements Aligner
         }
     }
 
+    private static final String LIBBWA_PATH = "LIBBWA_PATH"; // as expected by the BWA library
+    private static final String LIBBWA_PREFIX = "libbwa.";
+
+    private static final String MAC_OS = "Mac";
+    private static final String MAC_ARCH = "aarch64";
+    private static final String MAC_BWA_LIB = "libbwa.Darwin.dylib";
+
     public static void loadAlignerLibrary(@Nullable final String bwaLibraryPath)
     {
-        final var props = System.getProperties();
+        if(System.getProperty(LIBBWA_PATH) != null)
+            return;
 
         if(bwaLibraryPath != null)
         {
-            System.setProperty("LIBBWA_PATH", new File(bwaLibraryPath).getAbsolutePath());
+            System.setProperty(LIBBWA_PATH, new File(bwaLibraryPath).getAbsolutePath());
             return;
         }
 
@@ -65,18 +73,18 @@ public class BwaAligner implements Aligner
 
         String candidateBWAPath = null;
 
-        if(osName.contains("Mac") && osArchitecture.equals("aarch64"))
+        if(osName.contains(MAC_OS) && osArchitecture.equals(MAC_ARCH))
         {
-            // candidateBWAPath = Resources.getResource("libbwa.Darwin.dylib").getPath();
+            candidateBWAPath = MAC_BWA_LIB;
         }
         else
         {
-            candidateBWAPath = "libbwa." + props.getProperty("os.arch") + osLibExtension;
+            candidateBWAPath = LIBBWA_PREFIX + osArchitecture + osLibExtension;
         }
 
-        if(System.getProperty("LIBBWA_PATH") == null && candidateBWAPath != null && new File(candidateBWAPath).exists())
+        if(Files.exists(Paths.get(candidateBWAPath)))
         {
-            System.setProperty("LIBBWA_PATH", new File(candidateBWAPath).getAbsolutePath());
+            System.setProperty(LIBBWA_PATH, new File(candidateBWAPath).getAbsolutePath());
         }
     }
 
