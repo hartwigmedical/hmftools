@@ -6,12 +6,12 @@ import java.util.function.Consumer;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.region.BasePosition;
 
 import org.jetbrains.annotations.NotNull;
 
 @NotThreadSafe
-public class PositionSelector<P extends GenomePosition>
+public class PositionSelector<P extends BasePosition>
 {
     @NotNull
     private final List<P> mPositions;
@@ -30,17 +30,17 @@ public class PositionSelector<P extends GenomePosition>
             return Optional.empty();
         }
 
-        int currentCompare = Long.compare(current().position(), position);
+        int currentCompare = Long.compare(current().Position, position);
         while(currentCompare >= 0 && mIndex > 0)
         {
             mIndex--;
-            currentCompare = Long.compare(current().position(), position);
+            currentCompare = Long.compare(current().Position, position);
         }
 
         while(currentCompare < 0 && mIndex < mPositions.size() - 1)
         {
             mIndex++;
-            currentCompare = Long.compare(current().position(), position);
+            currentCompare = Long.compare(current().Position, position);
         }
 
         return currentCompare == 0 ? Optional.of(current()) : Optional.empty();
@@ -67,7 +67,7 @@ public class PositionSelector<P extends GenomePosition>
 
     private boolean inRegion(P current, int start, int end)
     {
-        return current.position() >= start && current.position() <= end;
+        return current.Position >= start && current.Position <= end;
     }
 
     @NotNull

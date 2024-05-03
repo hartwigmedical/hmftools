@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.BasePosition;
 
 public final class HlaCommon
 {
@@ -33,6 +34,11 @@ public final class HlaCommon
     public static boolean containsPosition(final GenomePosition position)
     {
         return containsPosition(position.chromosome(), position.position());
+    }
+
+    public static boolean containsPosition(final BasePosition position)
+    {
+        return containsPosition(position.Chromosome, position.Position);
     }
 
     public static boolean containsPosition(final String chromosome, final int position)

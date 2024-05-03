@@ -13,8 +13,8 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MQ_RATIO_FACTOR;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_EDGE_FACTOR;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_EDGE_FIXED_PENALTY;
 
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.hla.HlaCommon;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class QualityConfig
@@ -80,7 +80,7 @@ public class QualityConfig
         HighBaseQualLimit = HighDepthMode ? DEFAULT_HIGH_DEPTH_BASE_QUAL : 0;
     }
 
-    public boolean isHighlyPolymorphic(final GenomePosition position)
+    public boolean isHighlyPolymorphic(final BasePosition position)
     {
         return HlaCommon.containsPosition(position);
     }

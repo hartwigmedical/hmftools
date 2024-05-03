@@ -7,13 +7,11 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.variant.VariantType;
 
-public class SimpleVariant implements GenomePosition
+public class SimpleVariant extends BasePosition
 {
-    public final String Chromosome;
-    public final int Position;
     public final String Ref;
     public final String Alt;
     public final VariantType Type;
@@ -22,8 +20,7 @@ public class SimpleVariant implements GenomePosition
 
     public SimpleVariant(final String chromosome, final int position, final String ref, final String alt)
     {
-        Chromosome = chromosome;
-        Position = position;
+        super(chromosome, position);
         Ref = ref;
         Alt = alt;
 
@@ -39,10 +36,7 @@ public class SimpleVariant implements GenomePosition
         }
     }
 
-    @Override
     public String chromosome() { return Chromosome; }
-
-    @Override
     public int position() { return Position; }
 
     public int positionEnd()

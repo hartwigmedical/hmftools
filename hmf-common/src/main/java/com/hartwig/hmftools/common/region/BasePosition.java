@@ -18,7 +18,7 @@ public class BasePosition implements Comparable<BasePosition>
     @Override
     public int compareTo(final BasePosition other)
     {
-        if(!Chromosome.equals(other.Chromosome))
+        if(Chromosome.equals(other.Chromosome))
         {
             if(Position != other.Position)
                 return Position < other.Position ? -1 : 1;
