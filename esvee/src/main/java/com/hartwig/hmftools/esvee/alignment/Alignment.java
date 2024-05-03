@@ -7,7 +7,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
 
@@ -188,7 +187,7 @@ public class Alignment
 
                 for(Breakend breakend : assemblyAlignment.breakends())
                 {
-                    if(breakend.matches(assembly.junction().Chromosome, assembly.junction().Position, assembly.junction().Orientation))
+                    if(breakend.matches(assembly.junction().Chromosome, assembly.junction().Position, assembly.junction().Orient))
                     {
                         assembly.setAlignmentOutcome(AlignmentOutcome.MATCH);
                         matched = true;
@@ -247,7 +246,7 @@ public class Alignment
                         if(!isSplitFragment && !isDiscFragment)
                             continue;
 
-                        if(read.orientation() == POS_ORIENT)
+                        if(read.orientation().isForward())
                             ++support.ForwardReads;
                         else
                             ++support.ReverseReads;

@@ -36,7 +36,6 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT_DESC;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +44,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
@@ -281,7 +281,7 @@ public class VcfWriter implements AutoCloseable
 
             // TODO: see previous comment about using correct breakend position
             String otherBreakendInfo = formOtherBreakendInfo(
-                    otherAssembly.junction().Chromosome, otherAssembly.junction().Position, otherAssembly.junction().Orientation);
+                    otherAssembly.junction().Chromosome, otherAssembly.junction().Position, otherAssembly.junction().Orient);
 
             if(assembly.isForwardJunction())
             {
@@ -323,10 +323,10 @@ public class VcfWriter implements AutoCloseable
         return List.of(refAllele, altAllele);
     }
 
-    private static String formOtherBreakendInfo(final String chromosome, final int position, final byte orientation)
+    private static String formOtherBreakendInfo(final String chromosome, final int position, final Orientation orientation)
     {
         // ]3:26664499]
-        char orientationChar = orientation == POS_ORIENT ? POS_ORIENTATION_CHAR : NEG_ORIENTATION_CHAR;
+        char orientationChar = orientation.isForward() ? POS_ORIENTATION_CHAR : NEG_ORIENTATION_CHAR;
         return format("%c%s:%d%c", orientationChar, chromosome, position, orientationChar);
     }
 }

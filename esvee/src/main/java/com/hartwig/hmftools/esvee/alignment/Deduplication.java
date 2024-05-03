@@ -2,10 +2,8 @@ package com.hartwig.hmftools.esvee.alignment;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 
-import java.util.Collections;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.assembly.filters.FilterType;
 
 public final class Deduplication
@@ -42,7 +40,7 @@ public final class Deduplication
 
     private static boolean isDuplicate(final Breakend first, final Breakend second)
     {
-        if(first.Orientation != second.Orientation)
+        if(first.Orient != second.Orient)
             return false;
 
         return positionsOverlap(first.minPosition(), first.maxPosition(), second.minPosition(), second.maxPosition());

@@ -148,7 +148,7 @@ public final class AssemblyUtils
 
     public static boolean isLocalAssemblyCandidate(final JunctionAssembly first, final JunctionAssembly second)
     {
-        if(!first.junction().chromosome().equals(second.junction().chromosome()))
+        if(!first.junction().Chromosome.equals(second.junction().Chromosome))
             return false;
 
         // assemblies must have DEL or DUP orientations, be within threshold distances of each other

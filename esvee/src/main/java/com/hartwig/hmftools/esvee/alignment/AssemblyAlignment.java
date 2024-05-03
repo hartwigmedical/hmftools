@@ -2,8 +2,6 @@ package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -120,7 +118,7 @@ public class AssemblyAlignment
         boolean firstReversed = false;
         boolean secondReversed = false;
 
-        if(mAssemblyLink.first().junction().Orientation != mAssemblyLink.second().junction().Orientation)
+        if(mAssemblyLink.first().junction().Orient != mAssemblyLink.second().junction().Orient)
         {
             if(mAssemblyLink.first().junction().isForward())
             {

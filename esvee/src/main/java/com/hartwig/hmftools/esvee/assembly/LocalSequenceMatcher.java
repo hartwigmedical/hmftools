@@ -3,14 +3,13 @@ package com.hartwig.hmftools.esvee.assembly;
 import static java.lang.Math.floor;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.LOCAL_ASSEMBLY_REF_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_JUNCTION_OVERLAP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.MATCH_SUBSEQUENCE_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.formLink;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createMinBaseQuals;
 
 import java.util.List;
@@ -19,6 +18,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -47,7 +47,7 @@ public class LocalSequenceMatcher
 
         JunctionSequence assemblySeq = new JunctionSequence(assembly, false, PHASED_ASSEMBLY_JUNCTION_OVERLAP, -1);
 
-        byte localRefOrientation = assembly.isForwardJunction() ? NEG_ORIENT : POS_ORIENT;
+        Orientation localRefOrientation = assembly.junction().Orient.opposite();
         JunctionSequence localRefSeq = new JunctionSequence(refGenomeBases, refBaseQuals, localRefOrientation, false);
 
         // start with a simple comparison looking for the first sequence around its junction in the second
@@ -157,19 +157,19 @@ public class LocalSequenceMatcher
         int localRefJunctionPos = localRegionStart + localRefIndexStart;
 
         int localRefSeqStart, localRefSeqEnd, localRefJunctionIndex;
-        byte localRefOrientation;
+        Orientation localRefOrientation;
 
         if(assembly.isForwardJunction())
         {
             // the local assembly has the opposite, so in this case negative orientation
-            localRefOrientation = NEG_ORIENT;
+            localRefOrientation = REVERSE;
             localRefSeqStart = localRefJunctionPos;
             localRefSeqEnd = localRefJunctionPos + LOCAL_ASSEMBLY_REF_LENGTH - 1;
             localRefJunctionIndex = 0;
         }
         else
         {
-            localRefOrientation = POS_ORIENT;
+            localRefOrientation = FORWARD;
             localRefSeqStart = localRefJunctionPos - LOCAL_ASSEMBLY_REF_LENGTH + 1;
             localRefSeqEnd = localRefJunctionPos;
             localRefJunctionIndex = LOCAL_ASSEMBLY_REF_LENGTH - 1;

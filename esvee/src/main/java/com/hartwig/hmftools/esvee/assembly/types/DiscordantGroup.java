@@ -13,6 +13,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 
@@ -20,7 +21,7 @@ public class DiscordantGroup
 {
     private final String mChromosome;
     private final Set<Integer> mJunctionPositions; // for info sake only
-    private final byte mOrientation;
+    private final Orientation mOrientation;
     private final List<Read> mReads;
 
     private final ChrBaseRegion mRemoteRegion;
@@ -35,7 +36,7 @@ public class DiscordantGroup
     {
         mJunctionPositions = Sets.newHashSet(junction.Position);
         mChromosome = junction.Chromosome;
-        mOrientation = junction.Orientation;
+        mOrientation = junction.Orient;
 
         mReads = Lists.newArrayList(read);
         mRemoteRegion = new ChrBaseRegion(read.mateChromosome(), read.mateAlignmentStart(), read.mateAlignmentEnd());
@@ -49,7 +50,7 @@ public class DiscordantGroup
     public List<Read> reads() { return mReads; }
 
     public String chromosome() { return mChromosome; }
-    public byte orientation() { return mOrientation; }
+    public Orientation orientation() { return mOrientation; }
 
     public int minAlignedPosition() { return mMinAlignedPosition; }
     public int maxAlignedPosition() { return mMaxAlignedPosition; }

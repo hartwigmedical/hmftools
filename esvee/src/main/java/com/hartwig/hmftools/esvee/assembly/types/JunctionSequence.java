@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 
 public class JunctionSequence
 {
@@ -97,7 +98,7 @@ public class JunctionSequence
         }
     }
 
-    public JunctionSequence(final byte[] bases, final byte[] baseQuals, final byte orientation,final boolean reverseCompliment)
+    public JunctionSequence(final byte[] bases, final byte[] baseQuals, final Orientation orientation,final boolean reverseCompliment)
     {
         mOriginalBases = bases;
         mOriginalBaseQuals = baseQuals;
@@ -112,7 +113,7 @@ public class JunctionSequence
         ExtensionLength = bases.length;
         BaseLength = RefBaseLength + ExtensionLength;
 
-        mJunctionIndex = orientation == NEG_ORIENT ? 0 : bases.length - 1; // better to not set this??
+        mJunctionIndex = orientation.isReverse() ? 0 : bases.length - 1; // better to not set this??
 
         if(!Reversed)
         {

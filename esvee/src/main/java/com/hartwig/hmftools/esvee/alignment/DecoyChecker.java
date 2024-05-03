@@ -137,7 +137,7 @@ public class DecoyChecker
 
             sj.add(assembly.junction().Chromosome);
             sj.add(String.valueOf(assembly.junction().Position));
-            sj.add(String.valueOf(assembly.junction().Orientation));
+            sj.add(String.valueOf(assembly.junction().Orient));
             sj.add(String.valueOf(assembly.extensionLength() + assembly.refBaseLength()));
             sj.add(topAlignment.getCigar());
             sj.add(String.valueOf(alignedBases));

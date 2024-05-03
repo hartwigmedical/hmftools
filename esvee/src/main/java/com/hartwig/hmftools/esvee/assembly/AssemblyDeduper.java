@@ -77,7 +77,7 @@ public class AssemblyDeduper
                 JunctionAssembly newAssembly = newAssemblies.get(newIndex);
 
                 if(newAssembly.junction() == assembly.junction()
-                || newAssembly.junction().Orientation != assembly.junction().Orientation)
+                || newAssembly.junction().Orient != assembly.junction().Orient)
                 {
                     ++newIndex;
                     continue;

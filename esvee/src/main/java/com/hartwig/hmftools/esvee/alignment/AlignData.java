@@ -3,8 +3,8 @@ package com.hartwig.hmftools.esvee.alignment;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 
@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 
@@ -41,7 +42,7 @@ public class AlignData
     private final int mSoftClipLeft;
     private final int mSoftClipRight;
 
-    private final byte mOrientation;
+    private final Orientation mOrientation;
     private final int mAlignedBases;
 
     private final int mRawSequenceStart;
@@ -72,7 +73,7 @@ public class AlignData
         int lastIndex = mCigarElements.size() - 1;
         mSoftClipRight = mCigarElements.get(lastIndex).getOperator() == S ? mCigarElements.get(lastIndex).getLength() : 0;
 
-        mOrientation = SamRecordUtils.isFlagSet(Flags, READ_REVERSE_STRAND) ? NEG_ORIENT : POS_ORIENT;
+        mOrientation = SamRecordUtils.isFlagSet(Flags, READ_REVERSE_STRAND) ? REVERSE : FORWARD;
         mAlignedBases = mCigarElements.stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
 
         mSequenceStart = sequenceStart;
@@ -80,9 +81,9 @@ public class AlignData
         mRepeatTrimmedLength = mAlignedBases;
     }
 
-    public byte orientation() { return mOrientation; }
-    public boolean isForward() { return mOrientation == POS_ORIENT; }
-    public boolean isReverse() { return mOrientation == NEG_ORIENT; }
+    public Orientation orientation() { return mOrientation; }
+    public boolean isForward() { return mOrientation.isForward(); }
+    public boolean isReverse() { return mOrientation.isReverse(); }
 
     public int maxSoftClipLength() { return max(mSoftClipLeft, mSoftClipRight); }
     public int leftSoftClipLength() { return mSoftClipLeft; }
@@ -93,7 +94,7 @@ public class AlignData
 
     public void setFullSequenceData(final String fullSequence, final int fullSequenceLength)
     {
-        if(mOrientation == NEG_ORIENT)
+        if(mOrientation.isReverse())
         {
             int newSequenceStart = (fullSequenceLength - 1) - (mRawSequenceEnd - 1);
             int newSequenceEnd = (fullSequenceLength - 1) - mSequenceStart;
@@ -163,7 +164,7 @@ public class AlignData
     public String toString()
     {
         return format("%s %s %s seq(%d-%d adj=%d-%d) score(%d) mq(%d) flags(%d) aligned(%d trim=%d)",
-                RefLocation, Cigar, mOrientation == POS_ORIENT ? "fwd" : "rev",  mRawSequenceStart, mRawSequenceEnd,
+                RefLocation, Cigar, mOrientation.isForward() ? "fwd" : "rev",  mRawSequenceStart, mRawSequenceEnd,
                 mSequenceStart, mSequenceEnd, Score, MapQual, Flags, mAlignedBases, mRepeatTrimmedLength);
     }
 }

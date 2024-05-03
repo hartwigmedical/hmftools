@@ -1,15 +1,14 @@
 package com.hartwig.hmftools.esvee.alignment;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.alignment.BreakendBuilder.segmentOrientation;
 
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 
 public class HomologyData
 {
@@ -38,10 +37,10 @@ public class HomologyData
         if(overlap <= 0 || assemblyOverlap.isEmpty())
             return null;
 
-        byte orientationStart = segmentOrientation(alignStart, true);
+        Orientation orientationStart = segmentOrientation(alignStart, true);
         String basesStart = getOverlapBases(alignStart, orientationStart, overlap, refGenome);
 
-        byte orientationEnd = segmentOrientation(alignEnd, false);
+        Orientation orientationEnd = segmentOrientation(alignEnd, false);
         String basesEnd = getOverlapBases(alignEnd, orientationEnd, overlap, refGenome);
 
         if(orientationStart == orientationEnd)
@@ -168,9 +167,9 @@ public class HomologyData
     }
 
     private static String getOverlapBases(
-            final AlignData alignment, final byte orientation, final int overlap, final RefGenomeInterface refGenome)
+            final AlignData alignment, final Orientation orientation, final int overlap, final RefGenomeInterface refGenome)
     {
-        if(orientation == POS_ORIENT)
+        if(orientation.isForward())
         {
             return refGenome.getBaseString(
                     alignment.RefLocation.Chromosome, alignment.RefLocation.end() - overlap + 1, alignment.RefLocation.end());

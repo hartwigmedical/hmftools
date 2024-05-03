@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.assembly.AlignmentTest.createAssemblyAlignment;
 
@@ -32,16 +32,16 @@ public class BreakendTest
         refGenome.RefGenomeMap.put(CHR_2, REF_BASES_200);
 
         AssemblyAlignment assemblyAlignment = createAssemblyAlignment(
-                refGenome, CHR_1, 100, POS_ORIENT, CHR_2, 50, NEG_ORIENT, "");
+                refGenome, CHR_1, 100, FORWARD, CHR_2, 50, REVERSE, "");
 
-        Breakend breakend1 = new Breakend(assemblyAlignment, CHR_1, 100, POS_ORIENT, "", null);
-        Breakend breakend2 = new Breakend(assemblyAlignment, CHR_1, 100, NEG_ORIENT, "", null);
+        Breakend breakend1 = new Breakend(assemblyAlignment, CHR_1, 100, FORWARD, "", null);
+        Breakend breakend2 = new Breakend(assemblyAlignment, CHR_1, 100, REVERSE, "", null);
 
-        Breakend breakend3 = new Breakend(assemblyAlignment, CHR_1, 100, POS_ORIENT, "", null);
+        Breakend breakend3 = new Breakend(assemblyAlignment, CHR_1, 100, FORWARD, "", null);
 
         HomologyData homology = new HomologyData("AAA", -3, 3, -3, 3);
-        Breakend breakend4 = new Breakend(assemblyAlignment, CHR_1, 102, POS_ORIENT, "", homology);
-        Breakend breakend5 = new Breakend(assemblyAlignment, CHR_1, 104, POS_ORIENT, "", homology);
+        Breakend breakend4 = new Breakend(assemblyAlignment, CHR_1, 102, FORWARD, "", homology);
+        Breakend breakend5 = new Breakend(assemblyAlignment, CHR_1, 104, FORWARD, "", homology);
 
         List<Breakend> breakends = Lists.newArrayList(breakend1, breakend2, breakend3, breakend4, breakend5);
         Collections.sort(breakends);

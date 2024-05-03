@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.AssemblyLinker;
 import com.hartwig.hmftools.esvee.assembly.LocalSequenceMatcher;
 import com.hartwig.hmftools.esvee.assembly.RemoteRegionAssembler;
@@ -591,9 +592,9 @@ public class PhaseSetBuilder
             final PhaseSet phaseSet, final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
         int assemblyIndex1 = phaseSet.assemblyIndex(assembly1);
-        byte assemblyOrientation1 = phaseSet.assemblyOrientation(assembly1);
+        Orientation assemblyOrientation1 = phaseSet.assemblyOrientation(assembly1);
         int assemblyIndex2 = phaseSet.assemblyIndex(assembly2);
-        byte assemblyOrientation2 = phaseSet.assemblyOrientation(assembly2);
+        Orientation assemblyOrientation2 = phaseSet.assemblyOrientation(assembly2);
 
         for(int i = 0; i <= 1; ++i)
         {

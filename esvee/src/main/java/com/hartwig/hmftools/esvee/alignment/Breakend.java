@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.SHORT_DEL_DUP_INS_LENGTH;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
@@ -19,6 +18,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.assembly.filters.FilterType;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
@@ -27,7 +27,7 @@ public class Breakend implements Comparable<Breakend>
 {
     public final String Chromosome;
     public final int Position;
-    public final byte Orientation;
+    public final Orientation Orient;
     public final String InsertedBases;
     public final HomologyData Homology;
 
@@ -46,12 +46,12 @@ public class Breakend implements Comparable<Breakend>
     private final Set<FilterType> mFilters;
 
     public Breakend(
-            final AssemblyAlignment assembly, final String chromosome, final int position, final byte orientation,
+            final AssemblyAlignment assembly, final String chromosome, final int position, final Orientation orientation,
             final String insertedBases, final HomologyData homology)
     {
         Chromosome = chromosome;
         Position = position;
-        Orientation = orientation;
+        Orient = orientation;
         InsertedBases = insertedBases;
         Homology = homology;
 
@@ -101,7 +101,7 @@ public class Breakend implements Comparable<Breakend>
 
         return formSvType(
                 Chromosome, mOtherBreakend.Chromosome, Position, mOtherBreakend.Position,
-                Orientation, mOtherBreakend.Orientation, !InsertedBases.isEmpty());
+                Orient, mOtherBreakend.Orient, !InsertedBases.isEmpty());
     }
 
     public int svLength()
@@ -183,9 +183,9 @@ public class Breakend implements Comparable<Breakend>
         }
     }
 
-    public boolean matches(final String chromosome, final int position, final byte orientation)
+    public boolean matches(final String chromosome, final int position, final Orientation orientation)
     {
-        if(!Chromosome.equals(chromosome) || Orientation != orientation)
+        if(!Chromosome.equals(chromosome) || Orient != orientation)
             return false;
 
         if(Homology != null)
@@ -194,12 +194,12 @@ public class Breakend implements Comparable<Breakend>
             return Position == position;
     }
 
-    public boolean isRelatedDiscordantRead(final int readStart, final int readEnd, final byte readOrientation)
+    public boolean isRelatedDiscordantRead(final int readStart, final int readEnd, final Orientation readOrientation)
     {
-        if(readOrientation != Orientation)
+        if(readOrientation != Orient)
             return false;
 
-        if(Orientation == POS_ORIENT)
+        if(Orient.isForward())
             return readEnd <= Position && readStart >= Position - DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
         else
             return readStart >= Position && readEnd <= Position + DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
@@ -218,9 +218,9 @@ public class Breakend implements Comparable<Breakend>
         if(!mOtherBreakend.isRelatedDiscordantRead(read.mateAlignmentStart(), read.mateAlignmentEnd(), read.mateOrientation()))
             return 0;
 
-        int junctionDistance = Orientation == POS_ORIENT ? Position - read.alignmentStart() : read.alignmentEnd() - Position;
+        int junctionDistance = Orient.isForward() ? Position - read.alignmentStart() : read.alignmentEnd() - Position;
 
-        int otherJunctionDistance = mOtherBreakend.Orientation == POS_ORIENT ?
+        int otherJunctionDistance = mOtherBreakend.Orient.isForward() ?
                 mOtherBreakend.Position - read.mateAlignmentStart() : read.mateAlignmentEnd() - mOtherBreakend.Position;
 
         if(otherJunctionDistance >= DEFAULT_DISCORDANT_FRAGMENT_LENGTH)
@@ -232,7 +232,7 @@ public class Breakend implements Comparable<Breakend>
     public String toString()
     {
         return format("%d: %s:%d:%d %s hom(%s) otherId(%d) segs(%d) alts(%d)",
-                mId, Chromosome, Position, Orientation, svType(), Homology != null ? Homology : "",
+                mId, Chromosome, Position, Orient, svType(), Homology != null ? Homology : "",
                 mOtherBreakend != null ? mOtherBreakend.id() : -1,
                 mSegments.size(), mAlternativeAlignments != null ? mAlternativeAlignments.size() : 0);
     }
@@ -240,6 +240,6 @@ public class Breakend implements Comparable<Breakend>
     @Override
     public int compareTo(final Breakend other)
     {
-        return compareJunctions(Chromosome, other.Chromosome, Position, other.Position, Orientation, other.Orientation);
+        return compareJunctions(Chromosome, other.Chromosome, Position, other.Position, Orient, other.Orient);
     }
 }

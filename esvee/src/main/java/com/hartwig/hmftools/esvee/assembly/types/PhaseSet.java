@@ -2,20 +2,18 @@ package com.hartwig.hmftools.esvee.assembly.types;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.flipOrientation;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 
 public class PhaseSet
 {
     private int mId;
     private final List<AssemblyLink> mAssemblyLinks;
     private final List<JunctionAssembly> mAssemblies;
-    private final List<Byte> mAssemblyOrientations;
+    private final List<Orientation> mAssemblyOrientations;
 
     public PhaseSet(final AssemblyLink link)
     {
@@ -40,8 +38,8 @@ public class PhaseSet
         {
             mAssemblies.add(link.first());
             mAssemblies.add(link.second());
-            mAssemblyOrientations.add(link.first().junction().Orientation);
-            mAssemblyOrientations.add(link.second().junction().Orientation);
+            mAssemblyOrientations.add(link.first().junction().Orient);
+            mAssemblyOrientations.add(link.second().junction().Orient);
             return;
         }
 
@@ -60,19 +58,19 @@ public class PhaseSet
 
     private void addAssembly(final JunctionAssembly assembly, int index, boolean isFacingLink)
     {
-        byte linkOrientation;
+        Orientation linkOrientation;
 
         if(mAssemblies.isEmpty() || !isFacingLink)
         {
-            linkOrientation = assembly.junction().Orientation;
+            linkOrientation = assembly.junction().Orient;
         }
         else
         {
             // opposite to the facing assembly it links with
             if(index == 0)
-                linkOrientation = flipOrientation(mAssemblies.get(0).junction().Orientation);
+                linkOrientation = mAssemblies.get(0).junction().Orient.opposite();
             else
-                linkOrientation = flipOrientation(mAssemblies.get(mAssemblies.size() - 1).junction().Orientation);
+                linkOrientation = mAssemblies.get(mAssemblies.size() - 1).junction().Orient.opposite();
         }
 
         mAssemblies.add(index, assembly);
@@ -110,7 +108,7 @@ public class PhaseSet
         return -1;
     }
 
-    public byte assemblyOrientation(final JunctionAssembly assembly)
+    public Orientation assemblyOrientation(final JunctionAssembly assembly)
     {
         for(int i = 0; i < mAssemblies.size(); ++i)
         {
@@ -119,32 +117,32 @@ public class PhaseSet
 
         }
 
-        return -1;
+        return null;
     }
 
     public static boolean readsFaceInPhaseSet(
-            final JunctionAssembly assembly1, int assemblyIndex1, byte assemblyOrientation1, final SupportRead read1,
-            final JunctionAssembly assembly2, int assemblyIndex2, byte assemblyOrientation2, final SupportRead read2)
+            final JunctionAssembly assembly1, int assemblyIndex1, Orientation assemblyOrientation1, final SupportRead read1,
+            final JunctionAssembly assembly2, int assemblyIndex2, Orientation assemblyOrientation2, final SupportRead read2)
     {
         if(read1 == null || read2 == null)
             return false;
 
-        byte adjustedReadOrientation1 = assembly1.junction().Orientation == assemblyOrientation1 ?
-                read1.orientation() : flipOrientation(read1.orientation());
+        Orientation adjustedReadOrientation1 = assembly1.junction().Orient == assemblyOrientation1 ?
+                read1.orientation() : read1.orientation().opposite();
 
-        byte adjustedReadOrientation2 = assembly2.junction().Orientation == assemblyOrientation2 ?
-                read2.orientation() : flipOrientation(read2.orientation());
+        Orientation adjustedReadOrientation2 = assembly2.junction().Orient == assemblyOrientation2 ?
+                read2.orientation() : read2.orientation().opposite();
 
         if(adjustedReadOrientation1 == adjustedReadOrientation2)
             return false;
 
         if(assemblyIndex1 < assemblyIndex2)
         {
-            return adjustedReadOrientation1 == POS_ORIENT;
+            return adjustedReadOrientation1.isForward();
         }
         else
         {
-            return adjustedReadOrientation2 == POS_ORIENT;
+            return adjustedReadOrientation2.isForward();
         }
     }
 

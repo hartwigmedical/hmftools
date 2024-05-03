@@ -120,13 +120,13 @@ public class BreakendWriter
                 sj.add(String.valueOf(breakend.svType()));
                 sj.add(breakend.Chromosome);
                 sj.add(String.valueOf(breakend.Position));
-                sj.add(String.valueOf(breakend.Orientation));
+                sj.add(String.valueOf(breakend.Orient));
 
                 if(breakend.otherBreakend() != null)
                 {
                     sj.add(breakend.otherBreakend().Chromosome);
                     sj.add(String.valueOf(breakend.otherBreakend().Position));
-                    sj.add(String.valueOf(breakend.otherBreakend().Orientation));
+                    sj.add(String.valueOf(breakend.otherBreakend().Orient));
                     sj.add(String.valueOf(breakend.svLength()));
 
                 }
@@ -189,7 +189,7 @@ public class BreakendWriter
                 BreakendSegment segment = breakend.segments().get(0);
                 sj.add(String.valueOf(breakend.segments().size()));
                 sj.add(String.valueOf(segment.SequenceIndex));
-                sj.add(String.valueOf(segment.Orientation));
+                sj.add(String.valueOf(segment.Orient));
                 sj.add(String.valueOf(segment.Index));
                 sj.add(String.valueOf(segment.Alignment.alignedBases()));
                 sj.add(String.valueOf(segment.Alignment.MapQual));

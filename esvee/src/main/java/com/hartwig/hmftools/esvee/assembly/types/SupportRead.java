@@ -5,8 +5,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 
@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 import org.jetbrains.annotations.Nullable;
@@ -125,8 +126,8 @@ public class SupportRead
     public int insertSize() { return mInsertSize; }
     public int trimCount() { return mTrimCount; }
     public String cigar() { return mCigar; }
-    public byte orientation() { return isFlagSet(READ_REVERSE_STRAND) ? NEG_ORIENT : POS_ORIENT; }
-    public byte mateOrientation() { return isFlagSet(MATE_REVERSE_STRAND) ? NEG_ORIENT : POS_ORIENT; }
+    public Orientation orientation() { return isFlagSet(READ_REVERSE_STRAND) ? REVERSE : FORWARD; }
+    public Orientation mateOrientation() { return isFlagSet(MATE_REVERSE_STRAND) ? REVERSE : FORWARD; }
     public SupplementaryReadData supplementaryData() { return mSupplementaryData; }
     public int mapQual() { return mMapQual; }
     public int numOfEvents() { return mNumOfEvents; }

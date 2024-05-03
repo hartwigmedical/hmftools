@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseComplementBases;
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
@@ -8,14 +10,11 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
 import static com.hartwig.hmftools.esvee.TestUtils.createAssembly;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
-import static com.hartwig.hmftools.esvee.TestUtils.formTestRefSequence;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -49,8 +48,8 @@ public class AssemblyLinksTest
         String secondRefBases = REF_BASES_200.substring(100, 200);
 
         // first a basic exact match junction
-        Junction posJunction = new Junction(CHR_1, 100, POS_ORIENT);
-        Junction negJunction = new Junction(CHR_2, 200, NEG_ORIENT);
+        Junction posJunction = new Junction(CHR_1, 100, FORWARD);
+        Junction negJunction = new Junction(CHR_2, 200, REVERSE);
 
         int extensionLength = 80;
         String firstExtensionBases =  secondRefBases.substring(0, extensionLength); // first 80 bases of second's ref, exact match and no insert
@@ -76,8 +75,8 @@ public class AssemblyLinksTest
         assertEquals(BND, link.svType());
 
         // DEL with inserted bases
-        posJunction = new Junction(CHR_1, 500, POS_ORIENT);
-        negJunction = new Junction(CHR_1, 1000, NEG_ORIENT);
+        posJunction = new Junction(CHR_1, 500, FORWARD);
+        negJunction = new Junction(CHR_1, 1000, REVERSE);
 
         int insertedBaseLength = INSERTED_BASES.length();
         firstAssemblyBases = firstRefBases + INSERTED_BASES + firstExtensionBases;
@@ -104,8 +103,8 @@ public class AssemblyLinksTest
         String secondRefBases = REF_BASES_200.substring(100, 200);
 
         // first a basic exact match junction
-        Junction posJunction = new Junction(CHR_1, 100, POS_ORIENT);
-        Junction negJunction = new Junction(CHR_2, 200, NEG_ORIENT);
+        Junction posJunction = new Junction(CHR_1, 100, FORWARD);
+        Junction negJunction = new Junction(CHR_2, 200, REVERSE);
 
         int extensionLength = 80;
         String firstExtensionBases =
@@ -122,8 +121,8 @@ public class AssemblyLinksTest
 
         AssemblyLinker assemblyLinker = new AssemblyLinker();
 
-        posJunction = new Junction(CHR_1, 1000, POS_ORIENT);
-        negJunction = new Junction(CHR_1, 500, NEG_ORIENT);
+        posJunction = new Junction(CHR_1, 1000, FORWARD);
+        negJunction = new Junction(CHR_1, 500, REVERSE);
 
         firstAssembly = new JunctionAssembly(posJunction, firstAssemblyBases.getBytes(), baseQuals, 99);
         secondAssembly = new JunctionAssembly(negJunction, secondAssemblyBases.getBytes(), baseQuals, 80);
@@ -156,8 +155,8 @@ public class AssemblyLinksTest
         // first assembly: ref bases + shared overlap + extension (being 20 bases into the ref bases of the second)
         // second assembly: extension (being ref bases 20-80 of first) + overlap + ref bases
 
-        posJunction = new Junction(CHR_1, 1000, POS_ORIENT);
-        negJunction = new Junction(CHR_1, 500, NEG_ORIENT);
+        posJunction = new Junction(CHR_1, 1000, FORWARD);
+        negJunction = new Junction(CHR_1, 500, REVERSE);
 
         extensionLength = 60;
 
@@ -193,8 +192,8 @@ public class AssemblyLinksTest
         String secondRefBases = REF_BASES_200.substring(100, 200);
 
         // local inversion
-        Junction firstJunction = new Junction(CHR_1, 100, POS_ORIENT);
-        Junction secondJunction = new Junction(CHR_1, 200, POS_ORIENT);
+        Junction firstJunction = new Junction(CHR_1, 100, FORWARD);
+        Junction secondJunction = new Junction(CHR_1, 200, FORWARD);
 
         String firstExtensionBases = reverseComplementBases(secondRefBases.substring(20, 100));
         String firstAssemblyBases = firstRefBases + firstExtensionBases;
@@ -244,8 +243,8 @@ public class AssemblyLinksTest
         String secondRefBases = REF_BASES_200.substring(100, 200);
 
         // a negative inversion
-        Junction firstJunction = new Junction(CHR_1, 100, NEG_ORIENT);
-        Junction secondJunction = new Junction(CHR_1, 200, NEG_ORIENT);
+        Junction firstJunction = new Junction(CHR_1, 100, REVERSE);
+        Junction secondJunction = new Junction(CHR_1, 200, REVERSE);
 
         int extensionLength = 80;
         String firstExtensionBases = reverseComplementBases(secondRefBases.substring(0, extensionLength)); // the first 80 bases
@@ -316,7 +315,7 @@ public class AssemblyLinksTest
         String juncReadBases = REF_BASES_400.substring(0, 150); // unused but needs to be the correct length
 
         // chr1:100:1 - links to chr2:50:-1
-        JunctionAssembly assembly1 = createAssembly(CHR_1, 100, POS_ORIENT, assemblyBases1, refBases1.length() - 1);
+        JunctionAssembly assembly1 = createAssembly(CHR_1, 100, FORWARD, assemblyBases1, refBases1.length() - 1);
 
         Read juncRead = createRead(
                 READ_ID_GENERATOR.nextId(), CHR_1, 1, juncReadBases, posJuncReadCigar, CHR_2, 100, true);
@@ -328,7 +327,7 @@ public class AssemblyLinksTest
         String extBases2 = refGenome.getBaseString(CHR_1, 51, 101);
         String assemblyBases2 = extBases2 + refBases2;
 
-        JunctionAssembly assembly2 = createAssembly(CHR_2, 50, NEG_ORIENT, assemblyBases2, extBases2.length());
+        JunctionAssembly assembly2 = createAssembly(CHR_2, 50, REVERSE, assemblyBases2, extBases2.length());
 
         assembly2.addJunctionRead(juncRead); // add prior so fragment IDs match & link
 
@@ -342,7 +341,7 @@ public class AssemblyLinksTest
         String extBases3 = refGenome.getBaseString(CHR_3, 151, 201);
         String assemblyBases3 = refBases3 + Nucleotides.reverseComplementBases(extBases3);
 
-        JunctionAssembly assembly3 = createAssembly(CHR_2, 200, POS_ORIENT, assemblyBases3, refBases3.length() - 1);
+        JunctionAssembly assembly3 = createAssembly(CHR_2, 200, FORWARD, assemblyBases3, refBases3.length() - 1);
 
         assembly3.addJunctionRead(juncRead);
 
@@ -356,7 +355,7 @@ public class AssemblyLinksTest
         String extBases4 = refGenome.getBaseString(CHR_2, 151, 201);
         String assemblyBases4 = refBases4 + Nucleotides.reverseComplementBases(extBases4);
 
-        JunctionAssembly assembly4 = createAssembly(CHR_3, 200, POS_ORIENT, assemblyBases4, refBases4.length() - 1);
+        JunctionAssembly assembly4 = createAssembly(CHR_3, 200, FORWARD, assemblyBases4, refBases4.length() - 1);
 
         assembly4.addJunctionRead(juncRead);
         assembly1.addJunctionRead(juncRead);
@@ -371,7 +370,7 @@ public class AssemblyLinksTest
         String extBases5 = refGenome.getBaseString(CHR_1, 250, 300);
         String assemblyBases5 = Nucleotides.reverseComplementBases(extBases5) + refBases5;
 
-        JunctionAssembly assembly5 = createAssembly(CHR_3, 50, NEG_ORIENT, assemblyBases5, extBases5.length());
+        JunctionAssembly assembly5 = createAssembly(CHR_3, 50, REVERSE, assemblyBases5, extBases5.length());
 
         assembly5.addJunctionRead(juncRead);
 
@@ -385,7 +384,7 @@ public class AssemblyLinksTest
         String extBases6 = refGenome.getBaseString(CHR_3, 50, 100);
         String assemblyBases6 = Nucleotides.reverseComplementBases(extBases6) + refBases6;
 
-        JunctionAssembly assembly6 = createAssembly(CHR_1, 250, NEG_ORIENT, assemblyBases6, extBases6.length());
+        JunctionAssembly assembly6 = createAssembly(CHR_1, 250, REVERSE, assemblyBases6, extBases6.length());
 
         assembly6.addJunctionRead(juncRead);
 

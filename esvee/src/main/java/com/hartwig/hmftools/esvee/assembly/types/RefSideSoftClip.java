@@ -12,21 +12,22 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.READ_SOFT_CLIP_JUNCTI
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 
 public class RefSideSoftClip
 {
     public final int Position;
-    public final byte Orientation;
+    public final Orientation Orient;
 
     private final List<String> mReadIds;
     private int mMaxLength;
     private boolean mMatchedOriginal;
 
-    public RefSideSoftClip(final int position, final byte orientation, final Read read, final int readSoftClipLength)
+    public RefSideSoftClip(final int position, final Orientation orientation, final Read read, final int readSoftClipLength)
     {
         Position = position;
-        Orientation = orientation;
+        Orient = orientation;
         mMaxLength = 0;
         mReadIds = Lists.newArrayList();
         mMatchedOriginal = false;
@@ -76,7 +77,7 @@ public class RefSideSoftClip
 
         if(existing == null)
         {
-            refSideSoftClips.add(new RefSideSoftClip(softClipPosition, flipOrientation(junction.Orientation), read, refSideSoftClipLength));
+            refSideSoftClips.add(new RefSideSoftClip(softClipPosition, junction.Orient.opposite(), read, refSideSoftClipLength));
         }
         else
         {

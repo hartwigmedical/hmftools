@@ -8,7 +8,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_JUNCTION_OVERLAP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_REF_SIDE_SOFT_CLIPS;
@@ -33,7 +32,7 @@ public final class AssemblyLinker
         if(!first.junction().Chromosome.equals(second.junction().Chromosome))
             return null;
 
-        if(first.junction().Orientation == second.junction().Orientation)
+        if(first.junction().Orient == second.junction().Orient)
             return null;
 
         JunctionAssembly lower = first.junction().Position < second.junction().Position ? first : second;
@@ -209,7 +208,7 @@ public final class AssemblyLinker
         boolean firstReversed = false;
         boolean secondReversed = false;
 
-        if(assembly1.junction().Orientation != assembly2.junction().Orientation)
+        if(assembly1.junction().Orient != assembly2.junction().Orient)
         {
             first = assembly1.junction().isForward() ? assembly1 : assembly2;
             second = assembly1.junction().isReverse() ? assembly1 : assembly2;

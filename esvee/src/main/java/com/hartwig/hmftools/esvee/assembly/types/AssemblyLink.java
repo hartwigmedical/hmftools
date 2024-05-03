@@ -3,11 +3,6 @@ package com.hartwig.hmftools.esvee.assembly.types;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
 
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
@@ -45,7 +40,7 @@ public class AssemblyLink
     {
         return formSvType(
                 mFirst.junction().Chromosome, mSecond.junction().Chromosome, mFirst.junction().Position, mSecond.junction().Position,
-                mFirst.junction().Orientation, mSecond.junction().Orientation, !mInsertedBases.isEmpty());
+                mFirst.junction().Orient, mSecond.junction().Orient, !mInsertedBases.isEmpty());
     }
 
     public boolean matches(final AssemblyLink other) { return matches(other.first(), other.second()); }
