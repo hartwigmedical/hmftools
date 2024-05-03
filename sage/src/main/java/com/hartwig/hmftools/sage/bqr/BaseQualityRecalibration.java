@@ -250,8 +250,6 @@ public class BaseQualityRecalibration
 
             result.add(new BqrRecord(key, entry.getValue(), recalibratedQual));
 
-            // double recalQualMin = recalibratedQual(refCount, 1);
-
             // add alt entries for any which sample has no results
             for(int i = 0; i < DNA_BASE_BYTES.length; ++i)
             {
