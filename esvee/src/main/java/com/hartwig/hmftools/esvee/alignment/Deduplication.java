@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 
 import java.util.List;
 
-import com.hartwig.hmftools.esvee.assembly.filters.FilterType;
+import com.hartwig.hmftools.esvee.common.FilterType;
 
 public final class Deduplication
 {

@@ -316,6 +316,8 @@ public class BreakendBuilder
 
             breakend.addSegment(segment);
 
+            // TODO: should inserted bases be reversed for same-orientation breakends??
+
             Breakend nextBreakend = new Breakend(
                     mAssemblyAlignment, nextAlignment.RefLocation.Chromosome, nextPosition, nextOrientation, insertedBases, homology);
 

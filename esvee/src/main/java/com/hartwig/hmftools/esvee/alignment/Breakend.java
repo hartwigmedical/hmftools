@@ -20,8 +20,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.esvee.assembly.filters.FilterType;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
+import com.hartwig.hmftools.esvee.common.FilterType;
 
 public class Breakend implements Comparable<Breakend>
 {
@@ -133,7 +133,7 @@ public class Breakend implements Comparable<Breakend>
 
     public int calcQual()
     {
-        return mSegments.stream().mapToInt(x -> x.calcQual()).max().orElse(0);
+        return 0; // mSegments.stream().mapToInt(x -> x.calcQual()).max().orElse(0);
     }
 
     public Set<FilterType> filters() { return mFilters; }

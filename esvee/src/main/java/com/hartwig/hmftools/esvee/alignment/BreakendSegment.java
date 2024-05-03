@@ -28,12 +28,7 @@ public class BreakendSegment
         Alignment = alignment;
     }
 
-    public int calcQual()
-    {
-        int repeatAdjustment = Alignment.segmentLength() - Alignment.repeatTrimmedLength();
-        double lengthFactor = (Alignment.Score - repeatAdjustment)/100.0;
-        return (int)round(Alignment.MapQual * min(1, lengthFactor));
-    }
+    public String uniqueId() { return format("%d_%d", AssemblyAlignmentId, Index); }
 
     public String toString()
     {

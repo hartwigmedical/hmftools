@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.svtools.cohort;
 
-import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.INFERRED;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;

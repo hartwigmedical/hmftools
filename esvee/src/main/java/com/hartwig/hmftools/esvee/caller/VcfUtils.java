@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.esvee.caller;
 
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEID;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEIDL;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_AS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BASRP;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BASSR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BSC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_CAS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_RAS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.BEID;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.BEIDL;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_AS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BASRP;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BASSR;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BSC;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_CAS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_RAS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SGL_FRAG_COUNT;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 
 import java.util.List;
@@ -29,19 +29,6 @@ public class VcfUtils
 
         List<Integer> values = variantContext.getAttributeAsIntList(attribute, 0);
         return new Interval(values.get(0), values.get(1));
-    }
-
-    public static int sglFragmentCount(final Genotype genotype)
-    {
-        int bsc = getGenotypeAttributeAsInt(genotype, GRIDSS_BSC, 0);
-        int basrp = getGenotypeAttributeAsInt(genotype, GRIDSS_BASRP, 0);
-        int bassr = getGenotypeAttributeAsInt(genotype, GRIDSS_BASSR, 0);
-        int bvf = getGenotypeAttributeAsInt(genotype, SGL_FRAG_COUNT, 0);
-
-        if(bsc == 0 && basrp == 0 && bassr == 0)
-            return 0;
-        else
-            return bvf;
     }
 
     public static List<String> parseAssemblies(final VariantContext variantContext)

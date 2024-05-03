@@ -18,7 +18,7 @@ import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
 import com.hartwig.hmftools.esvee.alignment.Deduplication;
 import com.hartwig.hmftools.esvee.alignment.HomologyData;
-import com.hartwig.hmftools.esvee.assembly.filters.FilterType;
+import com.hartwig.hmftools.esvee.common.FilterType;
 
 import org.junit.Test;
 

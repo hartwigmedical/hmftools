@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.esvee.caller;
 
-import static com.hartwig.hmftools.common.sv.SvVcfTags.LINKED_BY_DELIM;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.LINKED_BY_DELIM;
 
 import java.util.List;
 import java.util.Map;

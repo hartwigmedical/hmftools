@@ -3,8 +3,8 @@ package com.hartwig.hmftools.esvee.caller;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.caller.FilterType.DEDUP;
-import static com.hartwig.hmftools.esvee.caller.FilterType.PON;
+import static com.hartwig.hmftools.esvee.common.FilterType.DUPLICATE;
+import static com.hartwig.hmftools.esvee.common.FilterType.PON;
 
 import java.util.List;
 import java.util.Map;
@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.esvee.caller.annotation.PonCache;
+import com.hartwig.hmftools.esvee.common.FilterType;
 
 public class FilterCache
 {
@@ -111,7 +112,7 @@ public class FilterCache
             }
         }
 
-        duplicateBreakends.forEach(x -> addBreakendFilter(x, DEDUP));
+        duplicateBreakends.forEach(x -> addBreakendFilter(x, DUPLICATE));
         mDuplicateBreakends.addAll(duplicateBreakends);
     }
 

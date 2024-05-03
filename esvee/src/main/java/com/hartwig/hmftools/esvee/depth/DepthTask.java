@@ -14,8 +14,7 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANOS_IN_SECOND;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
@@ -184,9 +183,7 @@ public class DepthTask implements Callable
                 genotype.getExtendedAttributes().put(refVcfTag, sampleCounts.RefSupport);
                 genotype.getExtendedAttributes().put(refPairVcfTag, sampleCounts.RefPairSupport);
 
-                int variantFrags = variantInfo.IsSgl ?
-                        getGenotypeAttributeAsInt(genotype, SGL_FRAG_COUNT, 0) :
-                        getGenotypeAttributeAsInt(genotype, SV_FRAG_COUNT, 0);
+                int variantFrags = getGenotypeAttributeAsInt(genotype, TOTAL_FRAGS, 0);
 
                 double total = variantFrags + sampleCounts.total();
                 double af = variantFrags / total;

@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.assembly.filters.FilterType.filtersAsStr;
+import static com.hartwig.hmftools.esvee.common.FilterType.filtersAsStr;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

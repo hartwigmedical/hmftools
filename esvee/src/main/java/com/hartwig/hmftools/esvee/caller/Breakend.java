@@ -1,28 +1,23 @@
 package com.hartwig.hmftools.esvee.caller;
 
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.CIRPOS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BAQ;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.esvee.caller.VcfUtils.parseAssemblies;
-import static com.hartwig.hmftools.esvee.caller.VcfUtils.sglFragmentCount;
-import static com.hartwig.hmftools.esvee.common.VariantAltInsertCoords.parseRefAlt;
+import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.parseRefAlt;
 
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
-import com.hartwig.hmftools.esvee.common.VariantAltInsertCoords;
+import com.hartwig.hmftools.common.sv.VariantAltInsertCoords;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -51,13 +46,11 @@ public class Breakend
     public final Orientation OtherOrientation;
 
     public final Interval ConfidenceInterval;
-    public final Interval RemoteConfidenceInterval;
     public final Interval InexactHomology;
     public final boolean IsLineInsertion;
 
     private final SvData mSvData;
     private final List<String> mAssemblies;
-    private boolean mReligned;
     public double mAllelicFrequency;
     private int mChrLocationIndex;
 
@@ -76,24 +69,12 @@ public class Breakend
         RefGenotype = refGenotype;
         TumorGenotype = tumorGenotype;
 
-        // NOTE: SvData is only partially constructed so be careful which fields are used
-        boolean isSgl = mSvData.type() == SGL;
-
-        if(refGenotype != null)
-        {
-            ReferenceFragments = isSgl ? sglFragmentCount(refGenotype) : getGenotypeAttributeAsInt(refGenotype, SV_FRAG_COUNT, 0);
-        }
-        else
-        {
-            ReferenceFragments = 0;
-        }
-
-        TumorFragments = isSgl ? sglFragmentCount(tumorGenotype) : getGenotypeAttributeAsInt(tumorGenotype, SV_FRAG_COUNT, 0);
+        ReferenceFragments = refGenotype != null ? getGenotypeAttributeAsInt(refGenotype, TOTAL_FRAGS, 0) : 0;
+        TumorFragments = getGenotypeAttributeAsInt(tumorGenotype, TOTAL_FRAGS, 0);
 
         setAllelicFrequency();
 
         ConfidenceInterval = VcfUtils.confidenceInterval(context, CIPOS);
-        RemoteConfidenceInterval = VcfUtils.confidenceInterval(context, CIRPOS);
 
         Ref = context.getAlleles().get(0).getDisplayString();
 
@@ -107,15 +88,7 @@ public class Breakend
 
         IsLineInsertion = isMobileLineElement(orientation.asByte(), InsertSequence);
 
-        if(mSvData.type() == SGL)
-        {
-            final String qualTag = IsLineInsertion ? GRIDSS_BQ : GRIDSS_BAQ;
-            Qual = getGenotypeAttributeAsDouble(tumorGenotype, qualTag, 0);
-        }
-        else
-        {
-            Qual = getGenotypeAttributeAsDouble(tumorGenotype, QUAL, 0);
-        }
+        Qual = getGenotypeAttributeAsDouble(tumorGenotype, QUAL, 0);
 
         if(context.hasAttribute(IHOMPOS))
         {
@@ -128,7 +101,6 @@ public class Breakend
         }
 
         mAssemblies = parseAssemblies(context);
-        mReligned = false;
         mChrLocationIndex = -1;
     }
 
@@ -142,16 +114,6 @@ public class Breakend
         return new Breakend(
                 svData, isStart, variantContext, svLeg.chromosome(), svLeg.position(), Orientation.fromByte(svLeg.orientation()),
                 refGenotype, tumorGenotype);
-    }
-
-    public static Breakend realigned(final Breakend original, final VariantContext newContext, final int newPosition)
-    {
-        Breakend newBreakend = new Breakend(
-                original.sv(), original.IsStart, newContext, original.Chromosome, newPosition, original.Orient,
-                original.RefGenotype, original.TumorGenotype);
-
-        newBreakend.markRealigned();
-        return newBreakend;
     }
 
     public final SvData sv() { return mSvData; }
@@ -177,7 +139,6 @@ public class Breakend
     // convenience
     public boolean isSgl() { return mSvData.isSgl(); }
     public StructuralVariantType type() { return mSvData.type(); }
-    public boolean imprecise() { return mSvData.imprecise(); }
 
     public int insertSequenceLength() { return InsertSequence.length(); }
 
@@ -185,9 +146,6 @@ public class Breakend
     public int maxPosition() { return Position + ConfidenceInterval.End; }
 
     public List<String> getAssemblies() { return mAssemblies; }
-
-    public void markRealigned() { mReligned = true; }
-    public boolean realigned() { return mReligned; }
 
     public void setChrLocationIndex(int index) { mChrLocationIndex = index; }
     public int chrLocationIndex() { return mChrLocationIndex; }

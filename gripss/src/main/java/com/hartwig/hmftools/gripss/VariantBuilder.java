@@ -6,6 +6,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
+import com.hartwig.hmftools.common.sv.gridss.GridssSvFactory;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
@@ -21,7 +22,7 @@ public class VariantBuilder
     private final HardFilters mHardFilters;
     private final HotspotCache mHotspotCache;
     private final TargetRegions mTargetRegions;
-    private final StructuralVariantFactory mSvFactory;
+    private final GridssSvFactory mSvFactory;
     private final Set<String> mHotspotCandidateVcfIds;
     private final Set<String> mHardFilteredVcfIds;
 
@@ -34,7 +35,7 @@ public class VariantBuilder
         mHotspotCache = hotspotCache;
         mTargetRegions = targetRegions;
 
-        mSvFactory = new StructuralVariantFactory(new CompoundFilter(false));
+        mSvFactory = new GridssSvFactory(new CompoundFilter(false));
         mHardFilteredVcfIds = Sets.newHashSet();
         mHotspotCandidateVcfIds = Sets.newHashSet();
         mHardFilteredCount = 0;
@@ -90,7 +91,7 @@ public class VariantBuilder
             return new SvData(sv, genotypeIds);
         }
 
-        String mateId = StructuralVariantFactory.mateId(variant);
+        String mateId = GridssSvFactory.mateId(variant);
 
         if(mateId == null)
             return null;

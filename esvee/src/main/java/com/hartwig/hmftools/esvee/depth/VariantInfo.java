@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.isSingleBr
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.parseSingleOrientation;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.parseSvOrientation;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 
 import java.util.List;
 
@@ -49,17 +49,10 @@ public class VariantInfo
         for(int i = 0; i < genotypeIds.size(); ++i)
         {
             Integer genotypeIndex = genotypeIds.get(i);
-            int sampleFragments = genotypeFragments(variant, genotypeIndex);
+            int sampleFragments = getGenotypeAttributeAsInt(variant.getGenotype(genotypeIndex), TOTAL_FRAGS, 0);
             int refFragsCap = vafCap > 0 ? (int) (max(sampleFragments, 1) / vafCap) : 0;
             SampleSupportCounts[i] = new RefSupportCounts(refFragsCap);
         }
-    }
-
-    private static int genotypeFragments(final VariantContext variant, int genotypeIndex)
-    {
-        Object sglFrags = variant.getGenotype(genotypeIndex).getExtendedAttribute(SV_FRAG_COUNT);
-        Object svFrags = variant.getGenotype(genotypeIndex).getExtendedAttribute(SGL_FRAG_COUNT);
-        return max(sglFrags != null ? Integer.parseInt(sglFrags.toString()) : 0, svFrags != null ? Integer.parseInt(svFrags.toString()) : 0);
     }
 
     public RefSupportCounts totalSupport()

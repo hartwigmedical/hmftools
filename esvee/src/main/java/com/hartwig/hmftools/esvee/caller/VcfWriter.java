@@ -1,25 +1,25 @@
 package com.hartwig.hmftools.esvee.caller;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.EVENT_TYPE;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.EVENT_TYPE_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.LOCAL_LINKED_BY;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.LOCAL_LINKED_BY_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_COUNT;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.REALIGN;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.REALIGN_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.REMOTE_LINKED_BY;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.REMOTE_LINKED_BY_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.TAF;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.TAF_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_CLASS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_TYPE;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT_TYPE;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT_TYPE_DESC;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.LOCAL_LINKED_BY;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.LOCAL_LINKED_BY_DESC;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.REALIGN;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.REALIGN_DESC;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.REMOTE_LINKED_BY;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.REMOTE_LINKED_BY_DESC;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.TAF;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.TAF_DESC;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
-import static com.hartwig.hmftools.esvee.caller.FilterType.HARD_FILTERED;
-import static com.hartwig.hmftools.esvee.caller.FilterType.PON;
+import static com.hartwig.hmftools.esvee.common.FilterType.HARD_FILTERED;
+import static com.hartwig.hmftools.esvee.common.FilterType.PON;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +29,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.esvee.caller.annotation.RepeatMaskAnnotation;
+import com.hartwig.hmftools.esvee.common.FilterType;
 
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.variant.variantcontext.Genotype;

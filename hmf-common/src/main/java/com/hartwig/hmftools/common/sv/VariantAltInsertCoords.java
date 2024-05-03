@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.esvee.common;
+package com.hartwig.hmftools.common.sv;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.BREAKEND_REGEX;
 
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
 
@@ -15,6 +15,16 @@ public class VariantAltInsertCoords
     public final String Chromsome;
     public final int Position;
     public final Orientation Orient;
+
+    public static final Pattern BREAKEND_REGEX = Pattern.compile("^(.*)([\\[\\]])(.+)[\\[\\]](.*)$");
+    public static final Pattern SINGLE_BREAKEND_REGEX = Pattern.compile("^(([.].*)|(.*[.]))$");
+
+    public static final char SINGLE_BREAKEND_CHAR = '.';
+    public static final String SINGLE_BREAKEND_STR = String.valueOf(SINGLE_BREAKEND_CHAR);
+    public static final byte SINGLE_BREAKEND_BYTE = (byte)SINGLE_BREAKEND_CHAR;
+
+    public static final String POS_ORIENTATION_CHAR = "]";
+    public static final String NEG_ORIENTATION_CHAR = "[";
 
     public VariantAltInsertCoords(
             final String alt, final String insertSequence, final String chromsome, final int position, final Orientation orientation)
@@ -66,7 +76,7 @@ public class VariantAltInsertCoords
                 }
 
                 String orientStr = match.group(2);
-                orientation = orientStr.equals("]") ? FORWARD : REVERSE;
+                orientation = orientStr.equals(POS_ORIENTATION_CHAR) ? FORWARD : REVERSE;
 
                 String[] chrPos = match.group(3).split(":");
                 chromosome = chrPos[0];
@@ -80,7 +90,13 @@ public class VariantAltInsertCoords
     public static String formPairedAltString(
             final String alt, final String insertSequence, final String chromosome, int position, Orientation orientStart, Orientation orientEnd)
     {
-        if(orientStart.isForward() && orientEnd.isForward())
+        // pos orientation for DEL and DUP: AGAGATTATACTTTGTGTA[10:89712341[
+        // pos orientation for INV: G]3:26664499]
+
+        // neg orientation for DEL and DUP: ]10:89700299]GAGATTATACTTTGTGTAA
+        // neg orientation for INV: [3:24566181[C
+
+        if(orientStart.isForward() && orientEnd.isReverse())
             return String.format("%s%s[%s:%d[", alt, insertSequence, chromosome, position);
         else if(orientStart.isForward() && orientEnd.isForward())
             return String.format("%s%s]%s:%d]", alt, insertSequence, chromosome, position);
@@ -90,11 +106,23 @@ public class VariantAltInsertCoords
             return String.format("]%s:%d]%s%s", chromosome, position, insertSequence, alt);
     }
 
+    public static String formPairedAltString(
+            final String alt, final String insertSequence, final String chromosome, int position, byte orientStart, byte orientEnd)
+    {
+        return formPairedAltString(
+                alt, insertSequence, chromosome, position, Orientation.fromByte(orientStart), Orientation.fromByte(orientEnd));
+    }
+
     public static String formSingleAltString(final String alt, final String insertSequence, Orientation orientation)
     {
         if(orientation.isForward())
             return String.format("%s%s.", alt, insertSequence);
         else
             return String.format(".%s%s", insertSequence, alt);
+    }
+
+    public static String formSingleAltString(final String alt, final String insertSequence, byte orientation)
+    {
+        return formSingleAltString(alt, insertSequence, Orientation.fromByte(orientation));
     }
 }
