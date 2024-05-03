@@ -144,7 +144,9 @@ public class AmberLohCalcs
             List<Double> lohSiteImpliedPurities = Lists.newArrayList();
             int totalLohSupportCount = 0;
             int totalLohSiteCount = 0;
+            int totalLohRegionCount = 0;
             double totalLohCopyNumber = 0;
+            double totalRegionAf = 0;
 
             for(RegionData regionData : regionDataList)
             {
@@ -153,6 +155,7 @@ public class AmberLohCalcs
                 if(regionAverageAf >= AMBER_LOH_MIN_AF)
                     continue;
 
+                ++totalLohRegionCount;
                 double regionImpliedPurity = regionData.impliedPurity();
                 double regionCopyNumber = regionData.CopyNumber.averageTumorCopyNumber();
 
@@ -162,6 +165,7 @@ public class AmberLohCalcs
                 {
                     totalLohSupportCount += siteData.Support;
                     totalLohCopyNumber += regionCopyNumber;
+                    totalRegionAf += regionAverageAf;
 
                     lohSiteAFs.add(regionAverageAf);
                     lohSiteImpliedPurities.add(regionImpliedPurity);
@@ -178,7 +182,10 @@ public class AmberLohCalcs
 
             int medianIndex = lohSiteAFs.size() / 2;
             double lohEstimatedPurity = lohSiteImpliedPurities.get(medianIndex);
+
             double lohMedianAf = lohSiteAFs.get(medianIndex);
+
+            double lohMeanAf = totalRegionAf / (double)lohSiteAFs.size();
 
             double lohMeanCN = totalLohCopyNumber / totalLohSiteCount;
 
@@ -187,7 +194,8 @@ public class AmberLohCalcs
             double lohProbability = poissonDistribution.cumulativeProbability(observed);
 
             return new AmberLohResult(
-                    totalLohSiteCount, lohEstimatedPurity, lohPercent, lohMeanCN, lohMedianAf, lohProbability, totalLohSupportCount);
+                    totalLohRegionCount, totalLohSiteCount, lohEstimatedPurity, lohPercent, lohMeanCN, lohMedianAf, lohMeanAf,
+                    lohProbability, totalLohSupportCount);
         }
         catch(Exception e)
         {
