@@ -174,24 +174,38 @@ public class BaseQualityRecalibrationTest
         byte aBase = DNA_BASE_BYTES[0];
         byte cBase = DNA_BASE_BYTES[1];
         byte gBase = DNA_BASE_BYTES[2];
-        byte qual = 37;
+
+        byte qualHigh = 37;
 
         byte[] triNucContext1 = new byte[] {gBase, aBase, gBase};
         byte[] triNucContext2 = new byte[] {gBase, cBase, gBase};
 
-        BqrKey aRefKey = new BqrKey(aBase, aBase, triNucContext1, qual, BqrReadType.NONE);
-        BqrKey cRefKey = new BqrKey(cBase, cBase, triNucContext2, qual, BqrReadType.NONE);
-        BqrKey cAltKey = new BqrKey(aBase, cBase, triNucContext1, qual, BqrReadType.NONE);
+        BqrKey aRefKey = new BqrKey(aBase, aBase, triNucContext1, qualHigh, BqrReadType.NONE);
+        BqrKey cRefKey = new BqrKey(cBase, cBase, triNucContext2, qualHigh, BqrReadType.NONE);
+        BqrKey cAltKey = new BqrKey(aBase, cBase, triNucContext1, qualHigh, BqrReadType.NONE);
 
         allQualityCounts.put(aRefKey, 1000);
         allQualityCounts.put(cRefKey, 4000);
         allQualityCounts.put(cAltKey, 10);
 
+        byte qualLow = 10;
+        BqrKey aRefKeyLow = new BqrKey(aBase, aBase, triNucContext1, qualLow, BqrReadType.NONE);
+        BqrKey cRefKeyLow = new BqrKey(cBase, cBase, triNucContext2, qualLow, BqrReadType.NONE);
+        BqrKey cAltKeyLow = new BqrKey(aBase, cBase, triNucContext1, qualLow, BqrReadType.NONE);
+
+        allQualityCounts.put(aRefKeyLow, 2000);
+        allQualityCounts.put(cRefKeyLow, 2000);
+        allQualityCounts.put(cAltKeyLow, 2000);
+
         List<BqrRecord> bqrRecords = convertToRecords(allQualityCounts);
 
-        assertEquals(8, bqrRecords.size());
+        assertEquals(16, bqrRecords.size());
 
-        BqrRecord rec1 = bqrRecords.stream().filter(x -> x.Key == cAltKey).findFirst().orElse(null);
-        assertEquals(20, rec1.RecalibratedQuality, 0.1);
+        BqrRecord rec1 = bqrRecords.stream().filter(x -> x.Key.equals(cAltKey)).findFirst().orElse(null);
+        assertEquals(35.2, rec1.RecalibratedQuality, 0.1);
+
+        BqrKey aAltKey = new BqrKey(aBase, gBase, triNucContext1, qualHigh, BqrReadType.NONE);
+        BqrRecord rec2 = bqrRecords.stream().filter(x -> x.Key.equals(aAltKey)).findFirst().orElse(null);
+        assertEquals(37, rec2.RecalibratedQuality, 0.1);
     }
 }
