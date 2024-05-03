@@ -401,7 +401,7 @@ public class VariantFilters
             String ref = variant.getAlleles().get(0).getDisplayString();
             final VariantAltInsertCoords altInsertCoords = parseRefAlt(variant.getAlleles().get(1).getDisplayString(), ref);
 
-            boolean isLineInsertion = isMobileLineElement(altInsertCoords.Orientation, altInsertCoords.InsertSequence);
+            boolean isLineInsertion = isMobileLineElement(altInsertCoords.Orient.asByte(), altInsertCoords.InsertSequence);
 
             final String qualTag = isLineInsertion ? GRIDSS_BQ : GRIDSS_BAQ;
             qual = getGenotypeAttributeAsDouble(tumorGenotype, qualTag, 0);

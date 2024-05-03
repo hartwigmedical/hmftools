@@ -5,6 +5,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
@@ -15,8 +17,6 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANOS_IN_SECOND;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
@@ -30,6 +30,7 @@ import java.util.concurrent.Callable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.BamSlicer;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
@@ -471,8 +472,8 @@ public class DepthTask implements Callable
             }
 
             // check for an exact SC match
-            if((variant.Orientation == NEG_ORIENT && positionWithin(readStart, variant.PositionMin, variant.PositionMax) && leftSoftClipped(read))
-            || (variant.Orientation == POS_ORIENT && positionWithin(readEnd, variant.PositionMin, variant.PositionMax)) && rightSoftClipped(read))
+            if((variant.Orient.isReverse() && positionWithin(readStart, variant.PositionMin, variant.PositionMax) && leftSoftClipped(read))
+            || (variant.Orient.isForward() && positionWithin(readEnd, variant.PositionMin, variant.PositionMax)) && rightSoftClipped(read))
             {
                 SV_LOGGER.trace("var({}) pos({}-{}) read({}-{}) id({}) at junction",
                         variant.Position, variant.PositionMin, variant.PositionMax, readStart, readEnd, read.getReadName());
@@ -482,15 +483,15 @@ public class DepthTask implements Callable
 
             if(!isSupplementary && readGroup.Reads.size() > 1)
             {
-                byte orientation = !read.getReadNegativeStrandFlag() ? POS_ORIENT : NEG_ORIENT;
+                Orientation orientation = !read.getReadNegativeStrandFlag() ? FORWARD : REVERSE;
 
-                if(orientation == POS_ORIENT && readEnd <= max(variant.Position, variant.PositionMax) && !hasLowerPosRead
+                if(orientation.isForward() && readEnd <= max(variant.Position, variant.PositionMax) && !hasLowerPosRead
                 && abs(read.getInferredInsertSize()) < DEFAULT_MAX_FRAGMENT_LENGTH)
                 {
                     hasLowerPosRead = true;
                     strandCount += read.getReadNegativeStrandFlag() ? -1 : 1;
                 }
-                else if(orientation == NEG_ORIENT && readStart >= min(variant.Position, variant.PositionMin) && !hasUpperPosRead
+                else if(orientation.isReverse() && readStart >= min(variant.Position, variant.PositionMin) && !hasUpperPosRead
                 && abs(read.getInferredInsertSize()) < DEFAULT_MAX_FRAGMENT_LENGTH)
                 {
                     hasUpperPosRead = true;

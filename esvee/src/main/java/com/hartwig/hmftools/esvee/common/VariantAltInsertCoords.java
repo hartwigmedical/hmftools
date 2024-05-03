@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.esvee.common;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.BREAKEND_REGEX;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.regex.Matcher;
+
+import com.hartwig.hmftools.common.genome.region.Orientation;
 
 public class VariantAltInsertCoords
 {
@@ -12,16 +14,16 @@ public class VariantAltInsertCoords
     public final String InsertSequence;
     public final String Chromsome;
     public final int Position;
-    public final byte Orientation;
+    public final Orientation Orient;
 
     public VariantAltInsertCoords(
-            final String alt, final String insertSequence, final String chromsome, final int position, final byte orientation)
+            final String alt, final String insertSequence, final String chromsome, final int position, final Orientation orientation)
     {
         Alt = alt;
         InsertSequence = insertSequence;
         Chromsome = chromsome;
         Position = position;
-        Orientation = orientation;
+        Orient = orientation;
     }
 
     public static VariantAltInsertCoords parseRefAlt(final String altString, final String ref)
@@ -30,19 +32,19 @@ public class VariantAltInsertCoords
         String chromosome = "";
         String insertSeq = "";
         int position = 0;
-        byte orientation = 0;
+        Orientation orientation = null;
 
         if(altString.startsWith("."))
         {
             alt = altString.substring(altString.length() - 1);
             insertSeq = altString.substring(ref.length(), altString.length() - 1);
-            orientation = NEG_ORIENT;
+            orientation = REVERSE;
         }
         else if(altString.endsWith("."))
         {
             alt = altString.substring(0, 1);
             insertSeq = altString.substring(1, altString.length() - ref.length());
-            orientation = POS_ORIENT;
+            orientation = FORWARD;
         }
         else
         {
@@ -64,7 +66,7 @@ public class VariantAltInsertCoords
                 }
 
                 String orientStr = match.group(2);
-                orientation = orientStr.equals("]") ? POS_ORIENT : NEG_ORIENT;
+                orientation = orientStr.equals("]") ? FORWARD : REVERSE;
 
                 String[] chrPos = match.group(3).split(":");
                 chromosome = chrPos[0];
@@ -76,21 +78,21 @@ public class VariantAltInsertCoords
     }
 
     public static String formPairedAltString(
-            final String alt, final String insertSequence, final String chromosome, int position, byte orientStart, byte orientEnd)
+            final String alt, final String insertSequence, final String chromosome, int position, Orientation orientStart, Orientation orientEnd)
     {
-        if(orientStart == POS_ORIENT && orientEnd == NEG_ORIENT)
+        if(orientStart.isForward() && orientEnd.isForward())
             return String.format("%s%s[%s:%d[", alt, insertSequence, chromosome, position);
-        else if(orientStart == POS_ORIENT && orientEnd == POS_ORIENT)
+        else if(orientStart.isForward() && orientEnd.isForward())
             return String.format("%s%s]%s:%d]", alt, insertSequence, chromosome, position);
-        else if(orientStart == NEG_ORIENT && orientEnd == NEG_ORIENT)
+        else if(orientStart.isReverse() && orientEnd.isReverse())
             return String.format("[%s:%d[%s%s", chromosome, position, insertSequence, alt);
         else
             return String.format("]%s:%d]%s%s", chromosome, position, insertSequence, alt);
     }
 
-    public static String formSingleAltString(final String alt, final String insertSequence, byte orientation)
+    public static String formSingleAltString(final String alt, final String insertSequence, Orientation orientation)
     {
-        if(orientation == POS_ORIENT)
+        if(orientation.isForward())
             return String.format("%s%s.", alt, insertSequence);
         else
             return String.format(".%s%s", insertSequence, alt);

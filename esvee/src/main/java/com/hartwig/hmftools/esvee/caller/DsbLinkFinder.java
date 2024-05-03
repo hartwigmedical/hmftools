@@ -45,7 +45,7 @@ public final class DsbLinkFinder
             final Set<Breakend> duplicateBreakends)
     {
         List<Breakend> nearbyBreakends = dataCache.selectOthersNearby(breakend, MAX_DSB_DISTANCE, MAX_DSB_SEEK_DISTANCE).stream()
-                .filter(x -> x.Orientation != breakend.Orientation)
+                .filter(x -> x.Orient != breakend.Orient)
                 .filter(x -> !duplicateBreakends.contains(x))
                 .filter(x -> dsbLinks.getBreakendLinks(x) == null)
                 .collect(Collectors.toList());
@@ -57,7 +57,7 @@ public final class DsbLinkFinder
 
         // check the other breakend can only make a DSB with this breakend and not others too
         List<Breakend> otherNearbyBreakends = dataCache.selectOthersNearby(otherBreakend, MAX_DSB_DISTANCE, MAX_DSB_SEEK_DISTANCE).stream()
-                .filter(x -> x.Orientation != otherBreakend.Orientation)
+                .filter(x -> x.Orient != otherBreakend.Orient)
                 .filter(x -> !duplicateBreakends.contains(x))
                 .collect(Collectors.toList());
 

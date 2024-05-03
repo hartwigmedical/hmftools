@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
+
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class VariantInfo
@@ -20,7 +22,7 @@ public class VariantInfo
     public final int PositionMin;
     public final int PositionMax;
     public final boolean IsSgl;
-    public final byte Orientation;
+    public final Orientation Orient;
 
     public final RefSupportCounts[] SampleSupportCounts;
 
@@ -28,7 +30,7 @@ public class VariantInfo
     {
         Position = variant.getStart();
         IsSgl = isSingleBreakend(variant);
-        Orientation = IsSgl ? parseSingleOrientation(variant) : parseSvOrientation(variant);
+        Orient = Orientation.fromByte(IsSgl ? parseSingleOrientation(variant) : parseSvOrientation(variant));
 
         final int[] homology = { 0, 0 };
 

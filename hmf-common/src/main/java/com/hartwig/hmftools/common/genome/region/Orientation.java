@@ -14,6 +14,7 @@ public enum Orientation
     public boolean isForward() { return this == FORWARD; }
     public boolean isReverse() { return this == REVERSE; }
 
+    // byte methods for backwards compatibility
     public byte asByte() { return this == FORWARD ? ORIENT_FWD : ORIENT_REV; }
 
     public static Orientation fromByte(byte orientation)
@@ -26,10 +27,14 @@ public enum Orientation
                 return Orientation.REVERSE;
         }
 
-        throw new IllegalArgumentException("Invalid direction: " + orientation);
+        throw new IllegalArgumentException("Invalid orientation: " + orientation);
     }
 
-    public static Orientation fromStr(final String orientation) { return fromChar(orientation.charAt(0)); }
+    public static Orientation fromByteStr(final String orientationStr) { return fromByte(Byte.parseByte(orientationStr)); }
+
+    public boolean equalsByte(final byte orientation) { return (orientation == ORIENT_FWD) == (this == FORWARD); }
+    public boolean isForward(final byte orientation) { return orientation == ORIENT_FWD; }
+    public boolean isReverse(final byte orientation) { return orientation == ORIENT_FWD; }
 
     public static Orientation fromChar(char orientation)
     {
@@ -41,7 +46,7 @@ public enum Orientation
                 return Orientation.REVERSE;
         }
 
-        throw new IllegalArgumentException("Invalid strand: " + orientation);
+        throw new IllegalArgumentException("Invalid orientation: " + orientation);
     }
 
     public char asChar() { return this == FORWARD ? ORIENT_POS_CHAR : ORIENT_NEG_CHAR; }

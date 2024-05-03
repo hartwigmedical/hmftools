@@ -1,28 +1,29 @@
 package com.hartwig.hmftools.esvee.caller.annotation;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BaseRegion;
 
 public class PonSglRegion implements Comparable<PonSglRegion>
 {
     public final BaseRegion Region;
-    public final Byte Orient;
+    public final Orientation Orient;
     public final int PonCount;
 
-    public PonSglRegion(final BaseRegion region, final Byte orient, final int ponCount)
+    public PonSglRegion(final BaseRegion region, final Orientation orient, final int ponCount)
     {
         Region = region;
         Orient = orient;
         PonCount = ponCount;
     }
 
-    public boolean matches(final BaseRegion svRegion, byte orientation)
+    public boolean matches(final BaseRegion svRegion, Orientation orientation)
     {
         return Region.overlaps(svRegion) && Orient == orientation;
     }
 
     public String toString()
     {
-        return String.format("region(%s) orient(%d) pon(%d)", Region, Orient, PonCount);
+        return String.format("region(%s) orient(%d) pon(%d)", Region, Orient.asByte(), PonCount);
     }
 
     @Override

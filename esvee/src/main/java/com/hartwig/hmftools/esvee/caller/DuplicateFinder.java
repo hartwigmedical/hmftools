@@ -87,7 +87,7 @@ public class DuplicateFinder
 
     private static boolean isDuplicateCandidate(final Breakend breakend, final Breakend otherBreakend)
     {
-        return breakend.Orientation == otherBreakend.Orientation && (!otherBreakend.imprecise() || isExactPosition(breakend, otherBreakend));
+        return breakend.Orient == otherBreakend.Orient && (!otherBreakend.imprecise() || isExactPosition(breakend, otherBreakend));
     }
 
     private static boolean isExactPosition(final Breakend breakend, final Breakend otherBreakend)

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.esvee.assembly.types;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.genome.region.Orientation.fromStr;
+import static com.hartwig.hmftools.common.genome.region.Orientation.fromByteStr;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ORIENTATION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
@@ -146,7 +146,7 @@ public class Junction implements Comparable<Junction>
 
                 String chromosome = values[chrIndex];
                 int position = Integer.parseInt(values[posIndex]);
-                Orientation orientation = fromStr(values[orientIndex]);
+                Orientation orientation = fromByteStr(values[orientIndex]);
 
                 if(!specificRegions.includeChromosome(chromosome))
                     continue;
@@ -196,7 +196,7 @@ public class Junction implements Comparable<Junction>
 
         String chromosome = values[0];
         int position = Integer.parseInt(values[1]);
-        Orientation orientation = fromStr(values[2]);
+        Orientation orientation = fromByteStr(values[2]);
 
         boolean discordantOnly = false;
         boolean indelBased = false;

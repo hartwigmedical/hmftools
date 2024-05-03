@@ -295,7 +295,7 @@ public class JunctionAssemblyTest
         //               TTTTCCTTGG TTGGCCAATT GATCGATCGATCGATCGATCTTGGCCAATT (1st sequence, designated since longest / high-qual SC)
         // 2nd-asm index   01234567 8901234567890 12345678
 
-        Junction junction = new Junction(CHR_1, 20, NEG_ORIENT);
+        Junction junction = new Junction(CHR_1, 20, REVERSE);
 
         // read 1 defines the first sequence
         Read read1 = createRead("READ_01", 20, "AACCGGGG" + refBases.substring(20, 32), "8S12M");

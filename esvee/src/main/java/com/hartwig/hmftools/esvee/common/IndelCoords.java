@@ -2,8 +2,6 @@ package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-
 import static htsjdk.samtools.CigarOperator.D;
 
 import java.util.List;

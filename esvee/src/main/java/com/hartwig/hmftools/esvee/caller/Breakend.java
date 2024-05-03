@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.esvee.caller.VcfUtils.parseAssemblies;
@@ -20,6 +19,7 @@ import static com.hartwig.hmftools.esvee.common.VariantAltInsertCoords.parseRefA
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.common.VariantAltInsertCoords;
@@ -33,7 +33,7 @@ public class Breakend
     public final VariantContext Context;
     public final String Chromosome;
     public final int Position;
-    public final byte Orientation;
+    public final Orientation Orient;
     public final boolean IsStart; // the start breakend in an SV, or true if a SGL
 
     public final double Qual;
@@ -48,7 +48,7 @@ public class Breakend
     public final String InsertSequence;
     public final String OtherChromosome;
     public final int OtherPosition;
-    public final byte OtherOrientation;
+    public final Orientation OtherOrientation;
 
     public final Interval ConfidenceInterval;
     public final Interval RemoteConfidenceInterval;
@@ -63,14 +63,14 @@ public class Breakend
 
     public Breakend(
             final SvData svData, final boolean isStart, final VariantContext context, final String chromosome, final int position,
-            final byte orientation, final Genotype refGenotype, final Genotype tumorGenotype)
+            final Orientation orientation, final Genotype refGenotype, final Genotype tumorGenotype)
     {
         mSvData = svData;
         VcfId = context.getID();
         Context = context;
         Chromosome = chromosome;
         Position = position;
-        Orientation = orientation;
+        Orient = orientation;
         IsStart = isStart;
 
         RefGenotype = refGenotype;
@@ -103,9 +103,9 @@ public class Breakend
         InsertSequence = altInsertCoords.InsertSequence;
         OtherChromosome = altInsertCoords.Chromsome;
         OtherPosition = altInsertCoords.Position;
-        OtherOrientation = altInsertCoords.Orientation;
+        OtherOrientation = altInsertCoords.Orient;
 
-        IsLineInsertion = isMobileLineElement(orientation, InsertSequence);
+        IsLineInsertion = isMobileLineElement(orientation.asByte(), InsertSequence);
 
         if(mSvData.type() == SGL)
         {
@@ -140,13 +140,14 @@ public class Breakend
         final Genotype refGenotype = referenceOrdinal >= 0 ? variantContext.getGenotype(referenceOrdinal) : null;
 
         return new Breakend(
-                svData, isStart, variantContext, svLeg.chromosome(), svLeg.position(), svLeg.orientation(), refGenotype, tumorGenotype);
+                svData, isStart, variantContext, svLeg.chromosome(), svLeg.position(), Orientation.fromByte(svLeg.orientation()),
+                refGenotype, tumorGenotype);
     }
 
     public static Breakend realigned(final Breakend original, final VariantContext newContext, final int newPosition)
     {
         Breakend newBreakend = new Breakend(
-                original.sv(), original.IsStart, newContext, original.Chromosome, newPosition, original.Orientation,
+                original.sv(), original.IsStart, newContext, original.Chromosome, newPosition, original.Orient,
                 original.RefGenotype, original.TumorGenotype);
 
         newBreakend.markRealigned();
@@ -177,7 +178,6 @@ public class Breakend
     public boolean isSgl() { return mSvData.isSgl(); }
     public StructuralVariantType type() { return mSvData.type(); }
     public boolean imprecise() { return mSvData.imprecise(); }
-    public boolean posOrient() { return Orientation == POS_ORIENT; }
 
     public int insertSequenceLength() { return InsertSequence.length(); }
 
@@ -194,6 +194,6 @@ public class Breakend
 
     public String toString()
     {
-        return String.format("%s:%s pos(%s:%d:%d)", VcfId, type(), Chromosome, Position, Orientation);
+        return String.format("%s:%s pos(%s:%d:%d)", VcfId, type(), Chromosome, Position, Orient);
     }
 }

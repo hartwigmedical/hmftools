@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.SHORT_CALLING_SIZE;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
@@ -88,8 +89,8 @@ public class SvData
     public int posStart() { return mBreakends[SE_START].Position; }
     public int posEnd() { return !isSgl() ? mBreakends[SE_END].Position : -1; }
 
-    public byte orientStart() { return mBreakends[SE_START].Orientation; }
-    public byte orientEnd() { return !isSgl() ? mBreakends[SE_END].Orientation : 0; }
+    public Orientation orientStart() { return mBreakends[SE_START].Orient; }
+    public Orientation orientEnd() { return !isSgl() ? mBreakends[SE_END].Orient : null; }
 
     public StructuralVariantType type() { return mType; }
     public boolean isSgl() { return mType == SGL; }

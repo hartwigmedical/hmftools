@@ -4,9 +4,9 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.List;
 import java.util.Set;
@@ -25,7 +25,7 @@ public class DiscordantGroup
     private final List<Read> mReads;
 
     private final ChrBaseRegion mRemoteRegion;
-    private final byte mRemoteOrientation;
+    private final Orientation mRemoteOrientation;
 
     private int mMinAlignedPosition;
     private int mMaxAlignedPosition;
@@ -40,7 +40,7 @@ public class DiscordantGroup
 
         mReads = Lists.newArrayList(read);
         mRemoteRegion = new ChrBaseRegion(read.mateChromosome(), read.mateAlignmentStart(), read.mateAlignmentEnd());
-        mRemoteOrientation = read.matePositiveStrand() ? POS_ORIENT : NEG_ORIENT;
+        mRemoteOrientation = read.matePositiveStrand() ? FORWARD : REVERSE;
 
         mMinAlignedPosition = read.alignmentStart();
         mMaxAlignedPosition = read.alignmentEnd();
@@ -56,7 +56,7 @@ public class DiscordantGroup
     public int maxAlignedPosition() { return mMaxAlignedPosition; }
 
     public ChrBaseRegion remoteRegion() { return mRemoteRegion; }
-    public byte remoteOrientation() { return mRemoteOrientation; }
+    public Orientation remoteOrientation() { return mRemoteOrientation; }
 
     public PhaseGroup phaseGroup() { return mPhaseGroup; }
     public void setPhaseGroup(final PhaseGroup phaseGroup) { mPhaseGroup = phaseGroup; }
@@ -66,7 +66,7 @@ public class DiscordantGroup
         if(read.orientation() != mOrientation)
             return false;
 
-        if(read.matePositiveStrand() != (mRemoteOrientation == POS_ORIENT))
+        if(read.matePositiveStrand() != (mRemoteOrientation.isForward()))
             return false;
 
         // no buffer applied since will rely on a final merge for this

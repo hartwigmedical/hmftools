@@ -149,16 +149,6 @@ public class Breakend implements Comparable<Breakend>
                 return true;
 
             return false;
-
-            /*
-            // check if discordant
-            if(Orientation == POS_ORIENT && read.alignmentEnd() <= Position)
-                return true;
-            else if(Orientation == NEG_ORIENT && read.alignmentStart() >= Position)
-                return true;
-            else
-                return false;
-            */
         }
         else
         {
