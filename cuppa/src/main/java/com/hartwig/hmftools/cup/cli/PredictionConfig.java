@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cup.runners;
+package com.hartwig.hmftools.cup.cli;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
