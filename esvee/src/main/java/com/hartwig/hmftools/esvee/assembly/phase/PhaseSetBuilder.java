@@ -647,7 +647,6 @@ public class PhaseSetBuilder
         }
     }
 
-
     private void cleanupAssemblies()
     {
         mAssemblies.forEach(x -> x.clearCandidateSupport()); // no longer required
