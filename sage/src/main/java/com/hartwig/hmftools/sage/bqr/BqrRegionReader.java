@@ -312,18 +312,14 @@ public class BqrRegionReader implements CigarHandler
     @Override
     public void handleInsert(final SAMRecord record, final CigarElement e, final int readIndex, final int refPos)
     {
-        // need to add one because indel is actually AFTER this by convention
-        int indelPos = refPos + 1;
-        handleAlignment(record, SINGLE, readIndex, refPos);
-        markIndelPosition(indelPos);
+        // note: ref position here is the last base of the previous aligned element - likewise for deletes
+        markIndelPosition(refPos);
     }
 
     @Override
     public void handleDelete(final SAMRecord record, final CigarElement e, final int readIndex, final int refPos)
     {
-        int indelPos = refPos + 1;
-        handleAlignment(record, SINGLE, readIndex, refPos);
-        markIndelPosition(indelPos);
+        markIndelPosition(refPos);
     }
 
     private void markIndelPosition(int position)
