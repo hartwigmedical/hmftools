@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cup.runners;
+package com.hartwig.hmftools.cup.cli;
 
 public class BashCommand extends ShellCommand
 {

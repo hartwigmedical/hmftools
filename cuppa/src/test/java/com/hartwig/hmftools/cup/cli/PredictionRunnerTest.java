@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cup.runners;
+package com.hartwig.hmftools.cup.cli;
 
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 
