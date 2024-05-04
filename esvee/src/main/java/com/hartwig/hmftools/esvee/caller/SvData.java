@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.SHORT_CALLING_SIZE;
@@ -37,7 +36,8 @@ public class SvData
 
     public SvData(final StructuralVariant sv, final GenotypeIds genotypeIds)
     {
-        mId = sv.startContext().getAttributeAsString(EVENT, sv.id());
+        // is this used for anything
+        mId = "NONE";// sv.startContext().getAttributeAsString(EVENT, sv.id());
 
         mReferenceOrdinal = genotypeIds.ReferenceOrdinal;
 
@@ -70,15 +70,6 @@ public class SvData
         mInsertSequence = sv.insertSequence();
         mPonCount = 0;
         mRmAnnotation = null;
-    }
-
-    public void onPositionsUpdated()
-    {
-        mIsShortLocal = (mType == DEL || mType == DUP || mType == INS) && length() < SHORT_CALLING_SIZE;
-
-        mBreakends[SE_START].setAllelicFrequency();
-        if(mBreakends[SE_END] != null)
-            mBreakends[SE_END].setAllelicFrequency();
     }
 
     public String id() { return mId; }

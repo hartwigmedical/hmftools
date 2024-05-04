@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.esvee.caller;
 
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.LINKED_BY_DELIM;
-
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -77,7 +75,7 @@ public class LinkStore
         if(links == null || links.isEmpty())
             return "";
 
-        StringJoiner sj = new StringJoiner(LINKED_BY_DELIM);
+        StringJoiner sj = new StringJoiner(",");
         links.forEach(x -> sj.add(x.Id));
         return sj.toString();
     }

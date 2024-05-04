@@ -7,16 +7,6 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_COUNT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_CLASS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_TYPE;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT_TYPE;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT_TYPE_DESC;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.LOCAL_LINKED_BY;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.LOCAL_LINKED_BY_DESC;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.REALIGN;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.REALIGN_DESC;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.REMOTE_LINKED_BY;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.REMOTE_LINKED_BY_DESC;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.TAF;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.TAF_DESC;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.esvee.common.FilterType.HARD_FILTERED;
 import static com.hartwig.hmftools.esvee.common.FilterType.PON;
@@ -107,6 +97,7 @@ public class VcfWriter
             newHeader.addMetaDataLine(new VCFFilterHeaderLine(filter.vcfTag(), filter.vcfDesc()));
         }
 
+        /*
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(REALIGN, 1, VCFHeaderLineType.Flag, REALIGN_DESC));
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(EVENT_TYPE, 1, VCFHeaderLineType.String, EVENT_TYPE_DESC));
 
@@ -118,6 +109,7 @@ public class VcfWriter
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
                 REMOTE_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, REMOTE_LINKED_BY_DESC));
+        */
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(HOTSPOT, 1, VCFHeaderLineType.Flag, HOTSPOT_DESC));
 
@@ -185,11 +177,15 @@ public class VcfWriter
 
         VariantContextBuilder builder = new VariantContextBuilder(breakend.Context).genotypes(genotypes).filters();
 
-        builder.log10PError(breakend.Qual / -10.0)
-                .attribute(TAF, String.format("%.4f", breakend.allelicFrequency()))
-                .attribute(HOTSPOT, mFilterCache.isHotspot(breakend.sv()))
-                .attribute(EVENT_TYPE, breakend.type());
+        builder.log10PError(breakend.Qual / -10.0);
 
+        // builder.attribute(TAF, String.format("%.4f", breakend.allelicFrequency()))
+        builder.attribute(HOTSPOT, mFilterCache.isHotspot(breakend.sv()));
+        // builder.attribute(EVENT_TYPE, breakend.type());
+
+        // TODO
+
+        /*
         if(!localLinks.isEmpty())
             builder.attribute(LOCAL_LINKED_BY, localLinks);
         else
@@ -199,6 +195,7 @@ public class VcfWriter
             builder.attribute(REMOTE_LINKED_BY, remoteLinks);
         else
             builder.attribute(REMOTE_LINKED_BY, "");
+        */
 
         if(sv.ponCount() > 0)
             builder.attribute(PON_COUNT, breakend.sv().ponCount());

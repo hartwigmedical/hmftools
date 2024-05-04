@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.gripss.pon;
-
-import static java.lang.String.format;
+package com.hartwig.hmftools.esvee.utils;
 
 import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
@@ -10,7 +8,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT_ID;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT_ID;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.flipOrientation;
-import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -22,6 +20,9 @@ import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.esvee.caller.annotation.PonCache;
+import com.hartwig.hmftools.esvee.caller.annotation.PonSvRegion;
+import com.hartwig.hmftools.esvee.caller.annotation.PonSglRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -64,26 +65,26 @@ public class PonLiftOver
     {
         if(!mPonCache.hasValidData() || mOutputSglFile == null || mOutputSvFile == null)
         {
-            GR_LOGGER.error("invalid inputs");
+            SV_LOGGER.error("invalid inputs");
             System.exit(1);
         }
 
-        GR_LOGGER.info("Gripss PON lift-over");
+        SV_LOGGER.info("Gripss PON lift-over");
 
         writeSvPonFile();
         writeSglPonFile();
 
-        GR_LOGGER.info("converted {} entries, failed liftover({}) maxLengthDiff({})",
+        SV_LOGGER.info("converted {} entries, failed liftover({}) maxLengthDiff({})",
                 mConverted, mFailedLiftover, mFailedMaxLengthDiff);
 
-        GR_LOGGER.info("Gripss PON lift-over complete");
+        SV_LOGGER.info("Gripss PON lift-over complete");
     }
 
     private static final int LOG_COUNT = 1000000;
 
     private void writeSvPonFile()
     {
-        GR_LOGGER.info("lifting over SV PON file to: {}", mOutputSvFile);
+        SV_LOGGER.info("lifting over SV PON file to: {}", mOutputSvFile);
 
         try
         {
@@ -117,8 +118,8 @@ public class PonLiftOver
                         continue;
                     }
 
-                    byte orientStart = region.OrientStart;
-                    byte orientEnd = region.OrientEnd;
+                    byte orientStart = region.OrientStart.asByte();
+                    byte orientEnd = region.OrientEnd.asByte();
 
                     // check for changes to direction for SVs
                     if(posStartStart > posStartEnd)
@@ -156,18 +157,18 @@ public class PonLiftOver
 
                     if(chrDestStart.equals(chrDestEnd) && posStartStart > posEndStart)
                     {
-                        GR_LOGGER.trace("swapping start region({}:{}-{}) with end region({}:{}-{})",
+                        SV_LOGGER.trace("swapping start region({}:{}-{}) with end region({}:{}-{})",
                                 chrDestStart, posStartStart, posStartEnd, chrDestEnd, posEndStart, posEndEnd);
 
                         // swap coords if the start region is now after the end region
-                        writer.write(format("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%s\t%s",
+                        writer.write(String.format("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%s\t%s",
                                 chrDestStart, posEndStart, posEndEnd, chrDestEnd, posStartStart, posStartEnd, ".",
                                 region.PonCount, orientToId(orientEnd), orientToId(orientStart)));
                     }
                     else
                     {
                         // fields: ChrStart,PosStartBegin,PosStartEnd,ChrEnd,PosEndBegin,PosEndEnd,Unknown,PonCount,OrientStart,OrientEnd
-                        writer.write(format("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%s\t%s",
+                        writer.write(String.format("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%s\t%s",
                                 chrDestStart, posStartStart, posStartEnd, chrDestEnd, posEndStart, posEndEnd, ".",
                                 region.PonCount, orientToId(orientStart), orientToId(orientEnd)));
                     }
@@ -178,7 +179,7 @@ public class PonLiftOver
 
                     if((mConverted % LOG_COUNT) == 0)
                     {
-                        GR_LOGGER.debug("converted {} entries", mConverted);
+                        SV_LOGGER.debug("converted {} entries", mConverted);
                     }
                 }
             }
@@ -187,14 +188,14 @@ public class PonLiftOver
         }
         catch(IOException e)
         {
-            GR_LOGGER.error("failed to write SV PON output file: {}", e.toString());
+            SV_LOGGER.error("failed to write SV PON output file: {}", e.toString());
             System.exit(1);
         }
     }
 
     private void writeSglPonFile()
     {
-        GR_LOGGER.info("lifting over SGL PON file to: {}", mOutputSvFile);
+        SV_LOGGER.info("lifting over SGL PON file to: {}", mOutputSvFile);
 
         try
         {
@@ -216,7 +217,7 @@ public class PonLiftOver
                 {
                     int posStartStart = mLiftoverCache.convertPosition(chrSourceStart, region.Region.start(), mDestinationVersion);
                     int posStartEnd = mLiftoverCache.convertPosition(chrSourceStart, region.Region.end(), mDestinationVersion);
-                    byte orientStart = region.Orient;
+                    byte orientStart = region.Orient.asByte();
 
                     if(posStartStart == UNMAPPED_POSITION || posStartEnd == UNMAPPED_POSITION)
                     {
@@ -247,7 +248,7 @@ public class PonLiftOver
                     }
 
                     // fields: Chr,PosBegin,PosEnd,Unknown,PonCount,Orientation
-                    writer.write(format("%s\t%d\t%d\t%s\t%d\t%s",
+                    writer.write(String.format("%s\t%d\t%d\t%s\t%d\t%s",
                             chrDestStart, posStartStart, posStartEnd, ".", region.PonCount, orientToId(orientStart)));
 
                     writer.newLine();
@@ -256,7 +257,7 @@ public class PonLiftOver
 
                     if((mConverted % LOG_COUNT) == 0)
                     {
-                        GR_LOGGER.debug("converted {} entries", mConverted);
+                        SV_LOGGER.debug("converted {} entries", mConverted);
                     }
                 }
             }
@@ -265,7 +266,7 @@ public class PonLiftOver
         }
         catch(IOException e)
         {
-            GR_LOGGER.error("failed to write SGL PON output file: {}", e.toString());
+            SV_LOGGER.error("failed to write SGL PON output file: {}", e.toString());
             System.exit(1);
         }
     }

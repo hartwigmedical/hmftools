@@ -5,8 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SGL_FRAG_COUNT;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SV_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
@@ -131,8 +130,8 @@ public class BlacklistExplorer
                     + variantContext.getAttributeAsInt(REF_DEPTH_PAIR, 0);
 
             Genotype tumor = variantContext.getGenotype(1);
-            int tumorFrags = getGenotypeAttributeAsInt(tumor, SV_FRAG_COUNT, 0)
-                    + getGenotypeAttributeAsInt(tumor, SGL_FRAG_COUNT, 0);
+
+            int tumorFrags = getGenotypeAttributeAsInt(tumor, TOTAL_FRAGS, 0);
 
             mWriter.write(format(",%.1f,%d,%d,%s",
                     variantContext.getPhredScaledQual(), tumorFrags, refDepth, filtersStr));

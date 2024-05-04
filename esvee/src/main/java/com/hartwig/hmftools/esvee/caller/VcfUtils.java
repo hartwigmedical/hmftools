@@ -1,14 +1,5 @@
 package com.hartwig.hmftools.esvee.caller;
 
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.BEID;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.BEIDL;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_AS;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BASRP;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BASSR;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BSC;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_CAS;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_RAS;
-import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SGL_FRAG_COUNT;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 
 import java.util.List;
@@ -35,6 +26,9 @@ public class VcfUtils
     {
         List<String> assemblies = Lists.newArrayList();
 
+        // TODO: interpret new field(s)
+
+        /*
         int assemblyCount = variantContext.getAttributeAsInt(GRIDSS_AS, 0)
                 + variantContext.getAttributeAsInt(GRIDSS_RAS, 0)
                 + variantContext.getAttributeAsInt(GRIDSS_CAS, 0);
@@ -52,6 +46,7 @@ public class VcfUtils
                 }
             }
         }
+        */
 
         return assemblies;
     }

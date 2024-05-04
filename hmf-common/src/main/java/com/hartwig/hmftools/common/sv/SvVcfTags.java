@@ -18,9 +18,6 @@ public final class SvVcfTags
     public static final String IHOMPOS = "IHOMPOS";
     public static final String IHOMPOS_DESC = "Position of inexact homology";
 
-    public static final String QUAL = "QUAL";
-    public static final String QUAL_DESC = "Breakend quality";
-
     public static final String INSALN = "INSALN";
     public static final String INSALN_DESC = "Alternative alignment locations of insert sequence";
 
