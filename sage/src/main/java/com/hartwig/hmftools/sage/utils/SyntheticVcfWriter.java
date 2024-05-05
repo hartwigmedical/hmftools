@@ -13,10 +13,12 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
+import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.sage.ReferenceData.loadRefGenome;
+import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
 import static com.hartwig.hmftools.sage.vcf.VariantContextFactory.NO_CALL;
@@ -208,7 +210,7 @@ public class SyntheticVcfWriter
                 .setReferenceDictionary(sequenceDictionary)
                 .build();
 
-        VersionInfo version = new VersionInfo("sage.version");
+        VersionInfo version = fromAppName(APP_NAME);
         VCFHeader header = VariantVCF.createHeader(version.version(), List.of(mSampleId), false);
 
         // CLEAN-UP: something needs to set the tri-nuc, MH and Repeat headers and values if necessary

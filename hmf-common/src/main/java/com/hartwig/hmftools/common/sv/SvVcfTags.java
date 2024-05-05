@@ -54,6 +54,10 @@ public final class SvVcfTags
     public static final String SEGRL = "SEGRL";
     public static final String SEGRL_DESC = "Repeat length of segment with highest QUAL contribution";
 
+    // NOTE: this is used by Linx to form assembly TIs
+    public static final String ASSEMBLY_LINKS = "ASMLNKS";
+    public static final String ASSEMBLY_LINKS_DESC = "Id(s) of breakend(s) linked by assembly";
+
     public static final String TOTAL_FRAGS = "VF";
     public static final String TOTAL_FRAGS_DESC = "Total variant fragments supporting the breakend";
 
@@ -79,30 +83,19 @@ public final class SvVcfTags
     public static final String ALLELE_FRACTION = "AF";
     public static final String ALLELE_FRACTION_DESC = "Allele frequency of the breakend";
 
+    public static final String VCF_ITEM_DELIM = ",";
 
-    /*
-    // also set by Gripss when run with Gridss
-    public static final String LOCAL_LINKED_BY = "LOCAL_LINKED_BY";
-    public static final String LOCAL_LINKED_BY_DESC = "Breakend linking information";
-
-    public static final String REMOTE_LINKED_BY = "REMOTE_LINKED_BY";
-    public static final String REMOTE_LINKED_BY_DESC = "Partner breakend linking information";
-
-    public static final String LINKED_BY_DELIM = ",";
-    */
-
-
-    // set by Gripss
+    // set by Esvee caller (formerly Gripss)
     public static final String PON_FILTER_PON = "PON";
     public static final String PON_COUNT = "PON_COUNT";
 
     public static final String HOTSPOT = "HOTSPOT";
     public static final String HOTSPOT_DESC = "Variant is a hotspot";
 
-    public static final String UNTEMPLATED_SEQUENCE_REPEAT_CLASS = "INSRMRC";
-    public static final String UNTEMPLATED_SEQUENCE_REPEAT_TYPE = "INSRMRT";
-    public static final String UNTEMPLATED_SEQUENCE_REPEAT_ORIENTATION = "INSRMRO";
-    public static final String UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE = "INSRMP";
+    public static final String REPEAT_MASK_REPEAT_CLASS = "INSRMRC";
+    public static final String REPEAT_MASK_REPEAT_TYPE = "INSRMRT";
+    public static final String REPEAT_MASK_REPEAT_ORIENTATION = "INSRMRO";
+    public static final String REPEAT_MASK_REPEAT_COVERAGE = "INSRMP";
 
 
     // set by Purple

@@ -192,9 +192,6 @@ public class Read
     public boolean isMateMapped() { return mRecord.getReadPairedFlag() && !mRecord.getMateUnmappedFlag(); }
     public boolean isMateUnmapped() { return mRecord.getReadPairedFlag() && mRecord.getMateUnmappedFlag(); }
 
-    public boolean matePositiveStrand() { return mateOrientation().isForward(); }
-    public boolean mateNegativeStrand() { return mateOrientation().isReverse(); }
-
     public Orientation mateOrientation()
     {
         if(!mRecord.getReadPairedFlag())

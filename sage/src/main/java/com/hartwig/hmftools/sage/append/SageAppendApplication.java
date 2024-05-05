@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.append;
 
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.appendHeader;
@@ -57,7 +58,7 @@ public class SageAppendApplication
 
     public SageAppendApplication(final ConfigBuilder configBuilder)
     {
-        final VersionInfo version = new VersionInfo("sage.version");
+        final VersionInfo version = fromAppName(APP_NAME);
         mConfig = new SageAppendConfig(version.version(), configBuilder);
         mFragmentLengths = new FragmentLengths(mConfig.Common);
 

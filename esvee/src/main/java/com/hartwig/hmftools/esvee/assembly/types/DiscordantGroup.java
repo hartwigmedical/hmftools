@@ -40,7 +40,7 @@ public class DiscordantGroup
 
         mReads = Lists.newArrayList(read);
         mRemoteRegion = new ChrBaseRegion(read.mateChromosome(), read.mateAlignmentStart(), read.mateAlignmentEnd());
-        mRemoteOrientation = read.matePositiveStrand() ? FORWARD : REVERSE;
+        mRemoteOrientation = read.mateOrientation();
 
         mMinAlignedPosition = read.alignmentStart();
         mMaxAlignedPosition = read.alignmentEnd();
@@ -66,7 +66,7 @@ public class DiscordantGroup
         if(read.orientation() != mOrientation)
             return false;
 
-        if(read.matePositiveStrand() != (mRemoteOrientation.isForward()))
+        if(read.mateOrientation().isForward() != (mRemoteOrientation.isForward()))
             return false;
 
         // no buffer applied since will rely on a final merge for this

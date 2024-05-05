@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.version.VersionInfo.appVersionFile;
+import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
@@ -35,7 +37,7 @@ public class SageApplication implements AutoCloseable
 
     private SageApplication(final ConfigBuilder configBuilder)
     {
-        final VersionInfo version = new VersionInfo("sage.version");
+        final VersionInfo version = fromAppName(APP_NAME);
         mConfig = new SageCallConfig(version.version(), configBuilder);
 
         if(!mConfig.isValid())

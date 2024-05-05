@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.cobalt.CobaltConstants.WINDOW_SIZE;
 import static com.hartwig.hmftools.cobalt.CobaltUtils.rowToCobaltRatio;
 import static com.hartwig.hmftools.cobalt.RatioSegmentation.applyRatioSegmentation;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 
 import java.io.File;
 import java.io.IOException;
@@ -129,7 +130,7 @@ public class CobaltApplication
 
             applyRatioSegmentation(executorService, mConfig.OutputDir, outputFilename, mConfig.ReferenceId, mConfig.TumorId, mConfig.PcfGamma);
 
-            final VersionInfo version = new VersionInfo("cobalt.version");
+            final VersionInfo version = fromAppName(APP_NAME);
             version.write(mConfig.OutputDir);
         }
         catch(Exception e)

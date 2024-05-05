@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
@@ -22,6 +23,7 @@ import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.common.FilterType;
+import com.hartwig.hmftools.esvee.common.QualCalcs;
 
 public class Breakend implements Comparable<Breakend>
 {
@@ -133,7 +135,17 @@ public class Breakend implements Comparable<Breakend>
 
     public int calcQual()
     {
-        return 0; // mSegments.stream().mapToInt(x -> x.calcQual()).max().orElse(0);
+        int maxSegmentQual = 0;
+
+        for(BreakendSegment segment : mSegments)
+        {
+            int repeatAdjustment = segment.Alignment.segmentLength() - segment.Alignment.repeatTrimmedLength();
+            int segmentQual = QualCalcs.calcQual(repeatAdjustment, segment.Alignment.Score, segment.Alignment.MapQual);
+
+            maxSegmentQual = max(segmentQual, maxSegmentQual);
+        }
+
+        return maxSegmentQual;
     }
 
     public Set<FilterType> filters() { return mFilters; }

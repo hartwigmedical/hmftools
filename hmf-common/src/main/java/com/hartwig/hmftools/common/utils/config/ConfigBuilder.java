@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigItemType.FLAG;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.INTEGER;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.PATH;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.STRING;
+import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -391,7 +392,7 @@ public class ConfigBuilder
 
     private void printAppVersion(boolean asLog)
     {
-        VersionInfo versionInfo = mAppName != null ? new VersionInfo(format("%s.version", mAppName.toLowerCase())) : null;
+        VersionInfo versionInfo = mAppName != null ? fromAppName(mAppName) : null;
 
         if(versionInfo != null)
         {

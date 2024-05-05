@@ -3,7 +3,9 @@ package com.hartwig.hmftools.lilac;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_FRAGMENTS;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_AA;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_COVERAGE;
@@ -242,7 +244,7 @@ public class ResultsWriter
 
         if(mVcfWriter == null)
         {
-            final VersionInfo version = new VersionInfo("lilac.version");
+            final VersionInfo version = fromAppName(APP_NAME);
 
             mVcfWriter = new LilacVCF(
                     mConfig.formFileId(LILAC_FILE_SOMATIC_VCF),

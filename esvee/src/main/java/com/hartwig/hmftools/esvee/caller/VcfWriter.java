@@ -4,18 +4,21 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_COUNT;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_CLASS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_TYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_CLASS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_COVERAGE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_TYPE;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.VCF_ZIP_EXTENSION;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.esvee.common.FilterType.HARD_FILTERED;
 import static com.hartwig.hmftools.esvee.common.FilterType.PON;
+import static com.hartwig.hmftools.esvee.common.SvConstants.ESVEE_FILE_ID;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.esvee.caller.annotation.RepeatMaskAnnotation;
@@ -31,7 +34,6 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
-import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
@@ -42,7 +44,7 @@ public class VcfWriter
     private final SvDataCache mDataCache;
     private final FilterCache mFilterCache;
 
-    private final VariantContextWriter mUnfilteredWriter;
+    // private final VariantContextWriter mUnfilteredWriter;
     private final VariantContextWriter mFilteredWriter;
 
     public VcfWriter(
@@ -55,9 +57,10 @@ public class VcfWriter
         mDataCache = dataCache;
 
         String fileSampleId = config.GermlineMode && !config.ReferenceId.isEmpty() ? config.ReferenceId : config.SampleId;
-        final String suffix = config.OutputId != null ? "." + config.OutputId + ".vcf.gz" : ".vcf.gz";
-        final String unfilteredVcf = config.OutputDir + fileSampleId + ".gripss" + suffix;
-        final String filteredVcf = config.OutputDir + fileSampleId + ".gripss.filtered" + suffix;
+        final String suffix = config.OutputId != null ? "." + config.OutputId + VCF_ZIP_EXTENSION : VCF_ZIP_EXTENSION;
+
+        // final String unfilteredVcf = config.OutputDir + fileSampleId + ".gripss" + suffix;
+        final String filteredVcf = config.OutputDir + fileSampleId + ESVEE_FILE_ID + suffix;
 
         mFilteredWriter = new VariantContextWriterBuilder()
                 .setReferenceDictionary(vcfHeader.getSequenceDictionary())
@@ -65,14 +68,16 @@ public class VcfWriter
                 .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
                 .build();
 
+        /*
         mUnfilteredWriter = new VariantContextWriterBuilder()
                 .setReferenceDictionary(vcfHeader.getSequenceDictionary())
                 .setOutputFile(unfilteredVcf)
                 .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
                 .build();
+        */
 
         writeHeader(mFilteredWriter, vcfHeader, gripssVersion);
-        writeHeader(mUnfilteredWriter, vcfHeader, gripssVersion);
+        // writeHeader(mUnfilteredWriter, vcfHeader, gripssVersion);
     }
 
     private void writeHeader(final VariantContextWriter writer, final VCFHeader vcfHeader, final String gripssVersion)
@@ -97,32 +102,18 @@ public class VcfWriter
             newHeader.addMetaDataLine(new VCFFilterHeaderLine(filter.vcfTag(), filter.vcfDesc()));
         }
 
-        /*
-        newHeader.addMetaDataLine(new VCFInfoHeaderLine(REALIGN, 1, VCFHeaderLineType.Flag, REALIGN_DESC));
-        newHeader.addMetaDataLine(new VCFInfoHeaderLine(EVENT_TYPE, 1, VCFHeaderLineType.String, EVENT_TYPE_DESC));
-
-        newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                TAF, 1, VCFHeaderLineType.Float,TAF_DESC));
-
-        newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                LOCAL_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, LOCAL_LINKED_BY_DESC));
-
-        newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                REMOTE_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, REMOTE_LINKED_BY_DESC));
-        */
-
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(HOTSPOT, 1, VCFHeaderLineType.Flag, HOTSPOT_DESC));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(PON_COUNT, 1, VCFHeaderLineType.Integer, "PON count if in PON"));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                UNTEMPLATED_SEQUENCE_REPEAT_CLASS, 1, VCFHeaderLineType.String, "Inserted sequence repeatmasker repeat class"));
+                REPEAT_MASK_REPEAT_CLASS, 1, VCFHeaderLineType.String, "Inserted sequence repeatmasker repeat class"));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                UNTEMPLATED_SEQUENCE_REPEAT_TYPE, 1, VCFHeaderLineType.String, "Inserted sequence repeatmasker repeat type"));
+                REPEAT_MASK_REPEAT_TYPE, 1, VCFHeaderLineType.String, "Inserted sequence repeatmasker repeat type"));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE, 1, VCFHeaderLineType.Float,
+                REPEAT_MASK_REPEAT_COVERAGE, 1, VCFHeaderLineType.Float,
                 "Portion of inserted sequence whose alignment overlaps the repeatmasker repeat"));
 
         writer.writeHeader(newHeader);
@@ -132,14 +123,11 @@ public class VcfWriter
     {
         final Map<SvData,List<FilterType>> svFiltersMap = Maps.newHashMap(); // to avoid collating SV filters twice
 
-        for(SAMSequenceRecord seqRecord : vcfHeader.getSequenceDictionary().getSequences())
+        for(HumanChromosome chromosome : HumanChromosome.values())
         {
-            String chromosome = seqRecord.getContig();
+            String chrStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
 
-            if(mConfig.RefGenVersion == V38)
-                chromosome = RefGenomeFunctions.enforceChrPrefix(chromosome);
-
-            List<Breakend> breakendList = mDataCache.getBreakendMap().get(chromosome);
+            List<Breakend> breakendList = mDataCache.getBreakendMap().get(chrStr);
 
             if(breakendList == null)
                 continue;
@@ -179,23 +167,7 @@ public class VcfWriter
 
         builder.log10PError(breakend.Qual / -10.0);
 
-        // builder.attribute(TAF, String.format("%.4f", breakend.allelicFrequency()))
         builder.attribute(HOTSPOT, mFilterCache.isHotspot(breakend.sv()));
-        // builder.attribute(EVENT_TYPE, breakend.type());
-
-        // TODO
-
-        /*
-        if(!localLinks.isEmpty())
-            builder.attribute(LOCAL_LINKED_BY, localLinks);
-        else
-            builder.attribute(LOCAL_LINKED_BY, "");
-
-        if(!remoteLinks.isEmpty())
-            builder.attribute(REMOTE_LINKED_BY, remoteLinks);
-        else
-            builder.attribute(REMOTE_LINKED_BY, "");
-        */
 
         if(sv.ponCount() > 0)
             builder.attribute(PON_COUNT, breakend.sv().ponCount());
@@ -205,12 +177,12 @@ public class VcfWriter
             final RepeatMaskAnnotation rmAnnotation = sv.getRmAnnotation();
 
             // remove any previously set
-            builder.rmAttribute(UNTEMPLATED_SEQUENCE_REPEAT_CLASS);
-            builder.rmAttribute(UNTEMPLATED_SEQUENCE_REPEAT_TYPE);
-            builder.rmAttribute(UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE);
-            builder.attribute(UNTEMPLATED_SEQUENCE_REPEAT_CLASS, rmAnnotation.RmData.ClassType);
-            builder.attribute(UNTEMPLATED_SEQUENCE_REPEAT_TYPE, rmAnnotation.RmData.Repeat);
-            builder.attribute(UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE, rmAnnotation.Coverage);
+            builder.rmAttribute(REPEAT_MASK_REPEAT_CLASS);
+            builder.rmAttribute(REPEAT_MASK_REPEAT_TYPE);
+            builder.rmAttribute(REPEAT_MASK_REPEAT_COVERAGE);
+            builder.attribute(REPEAT_MASK_REPEAT_CLASS, rmAnnotation.RmData.ClassType);
+            builder.attribute(REPEAT_MASK_REPEAT_TYPE, rmAnnotation.RmData.Repeat);
+            builder.attribute(REPEAT_MASK_REPEAT_COVERAGE, rmAnnotation.Coverage);
         }
 
         List<FilterType> svFilters;
@@ -245,13 +217,13 @@ public class VcfWriter
             mFilteredWriter.add(variantContext);
         }
 
-        mUnfilteredWriter.add(variantContext);
+        // mUnfilteredWriter.add(variantContext);
     }
 
     public void close()
     {
         mFilteredWriter.close();
-        mUnfilteredWriter.close();
+        // mUnfilteredWriter.close();
     }
 
 }

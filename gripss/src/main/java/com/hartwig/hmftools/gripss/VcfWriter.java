@@ -4,9 +4,9 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_COUNT;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_CLASS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_TYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_CLASS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_COVERAGE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_TYPE;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.ALT_PATH;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.ALT_PATH_DESC;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.EVENT_TYPE;
@@ -136,13 +136,13 @@ public class VcfWriter
                 RESCUE_INFO, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, RESCUE_INFO_DESC));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                UNTEMPLATED_SEQUENCE_REPEAT_CLASS, 1, VCFHeaderLineType.String, "Inserted sequence repeatmasker repeat class"));
+                REPEAT_MASK_REPEAT_CLASS, 1, VCFHeaderLineType.String, "Inserted sequence repeatmasker repeat class"));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                UNTEMPLATED_SEQUENCE_REPEAT_TYPE, 1, VCFHeaderLineType.String, "Inserted sequence repeatmasker repeat type"));
+                REPEAT_MASK_REPEAT_TYPE, 1, VCFHeaderLineType.String, "Inserted sequence repeatmasker repeat type"));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE, 1, VCFHeaderLineType.Float,
+                REPEAT_MASK_REPEAT_COVERAGE, 1, VCFHeaderLineType.Float,
                 "Portion of inserted sequence whose alignment overlaps the repeatmasker repeat"));
 
         writer.writeHeader(newHeader);
@@ -227,12 +227,12 @@ public class VcfWriter
             final RepeatMaskAnnotation rmAnnotation = sv.getRmAnnotation();
 
             // remove any previously set
-            builder.rmAttribute(UNTEMPLATED_SEQUENCE_REPEAT_CLASS);
-            builder.rmAttribute(UNTEMPLATED_SEQUENCE_REPEAT_TYPE);
-            builder.rmAttribute(UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE);
-            builder.attribute(UNTEMPLATED_SEQUENCE_REPEAT_CLASS, rmAnnotation.RmData.ClassType);
-            builder.attribute(UNTEMPLATED_SEQUENCE_REPEAT_TYPE, rmAnnotation.RmData.Repeat);
-            builder.attribute(UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE, rmAnnotation.Coverage);
+            builder.rmAttribute(REPEAT_MASK_REPEAT_CLASS);
+            builder.rmAttribute(REPEAT_MASK_REPEAT_TYPE);
+            builder.rmAttribute(REPEAT_MASK_REPEAT_COVERAGE);
+            builder.attribute(REPEAT_MASK_REPEAT_CLASS, rmAnnotation.RmData.ClassType);
+            builder.attribute(REPEAT_MASK_REPEAT_TYPE, rmAnnotation.RmData.Repeat);
+            builder.attribute(REPEAT_MASK_REPEAT_COVERAGE, rmAnnotation.Coverage);
         }
 
         List<FilterType> svFilters;

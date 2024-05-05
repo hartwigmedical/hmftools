@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.esvee.caller;
 
-import static com.hartwig.hmftools.esvee.caller.CallerConstants.MAX_DSB_DISTANCE;
-import static com.hartwig.hmftools.esvee.caller.CallerConstants.MAX_DSB_SEEK_DISTANCE;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MAX_DSB_DISTANCE;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MAX_DSB_SEEK_DISTANCE;
 
 import java.util.List;
 import java.util.Set;

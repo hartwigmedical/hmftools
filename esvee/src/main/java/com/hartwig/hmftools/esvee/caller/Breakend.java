@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.caller;
 
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASSEMBLY_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
@@ -9,9 +10,9 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
-import static com.hartwig.hmftools.esvee.caller.VcfUtils.parseAssemblies;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.parseRefAlt;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;
@@ -50,7 +51,7 @@ public class Breakend
     public final boolean IsLineInsertion;
 
     private final SvData mSvData;
-    private final List<String> mAssemblies;
+    private final List<String> mLinkedAssemblyIds;
     public double mAllelicFrequency;
     private int mChrLocationIndex;
 
@@ -74,7 +75,7 @@ public class Breakend
 
         setAllelicFrequency();
 
-        ConfidenceInterval = VcfUtils.confidenceInterval(context, CIPOS);
+        ConfidenceInterval = Interval.fromCiposTag(context.getAttributeAsIntList(CIPOS, 0));
 
         Ref = context.getAlleles().get(0).getDisplayString();
 
@@ -100,7 +101,11 @@ public class Breakend
             InexactHomology = new Interval();
         }
 
-        mAssemblies = parseAssemblies(context);
+        if(context.hasAttribute(ASSEMBLY_LINKS))
+            mLinkedAssemblyIds = context.getAttributeAsStringList(ASSEMBLY_LINKS, "");
+        else
+            mLinkedAssemblyIds = Collections.emptyList();
+
         mChrLocationIndex = -1;
     }
 
@@ -145,13 +150,13 @@ public class Breakend
     public int minPosition() { return Position + ConfidenceInterval.Start; }
     public int maxPosition() { return Position + ConfidenceInterval.End; }
 
-    public List<String> getAssemblies() { return mAssemblies; }
+    public List<String> getAssemblies() { return mLinkedAssemblyIds; }
 
     public void setChrLocationIndex(int index) { mChrLocationIndex = index; }
     public int chrLocationIndex() { return mChrLocationIndex; }
 
     public String toString()
     {
-        return String.format("%s:%s pos(%s:%d:%d)", VcfId, type(), Chromosome, Position, Orient);
+        return String.format("%s:%s pos(%s:%d:%d)", VcfId, type(), Chromosome, Position, Orient.asByte());
     }
 }

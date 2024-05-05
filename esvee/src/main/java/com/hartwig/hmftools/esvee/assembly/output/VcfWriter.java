@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMLEN;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMLEN_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMSEG;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMSEG_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASSEMBLY_LINKS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASSEMBLY_LINKS_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.BEAOR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.BEAOR_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.BEAPOS;
@@ -24,6 +26,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.INSALN;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INSALN_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.VCF_ITEM_DELIM;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGALEN;
@@ -51,10 +54,12 @@ import static com.hartwig.hmftools.esvee.alignment.AlternativeAlignment.altAlign
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
@@ -89,6 +94,7 @@ public class VcfWriter implements AutoCloseable
     private final VariantContextWriter mWriter;
 
     private final List<String> mSampleNames;
+    private final Map<String,Integer> mSampleNameIndex; // back to config sample ordering, so genotype order can differ
 
     private final List<VariantContext> mVariants;
 
@@ -98,7 +104,19 @@ public class VcfWriter implements AutoCloseable
     {
         mConfig = config;
 
-        mSampleNames = mConfig.combinedSampleIds();
+        // reference sample IDs will be written first
+        mSampleNames = Lists.newArrayList(mConfig.ReferenceIds);
+        mSampleNames.addAll(mConfig.TumorIds);
+
+        mSampleNameIndex = Maps.newHashMap();
+
+        List<String> configSampleIds = mConfig.combinedSampleIds();
+        for(int i = 0; i < configSampleIds.size(); ++i)
+        {
+            String sampleId = configSampleIds.get(i);
+            mSampleNameIndex.put(sampleId, i);
+        }
+
         mVariants = new ArrayList<>();
 
         if(config.WriteTypes.contains(WriteType.VCF) && config.VcfFile != null)
@@ -146,6 +164,7 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFInfoHeaderLine(BEOR, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, BEOR_DESC));
         metaData.add(new VCFInfoHeaderLine(BEAOR, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, BEAOR_DESC));
         metaData.add(new VCFInfoHeaderLine(SEGID, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, SEGID_DESC));
+        metaData.add(new VCFInfoHeaderLine(ASSEMBLY_LINKS, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ASSEMBLY_LINKS_DESC));
         metaData.add(new VCFInfoHeaderLine(SEGALEN, 1, VCFHeaderLineType.Integer, SEGALEN_DESC));
         metaData.add(new VCFInfoHeaderLine(SEGMAPQ, 1, VCFHeaderLineType.Integer, SEGMAPQ_DESC));
         metaData.add(new VCFInfoHeaderLine(SEGSCO, 1, VCFHeaderLineType.Integer, SEGSCO_DESC));
@@ -177,25 +196,20 @@ public class VcfWriter implements AutoCloseable
         if(mWriter == null)
             return;
 
-        // CHECK: ensure standard ordering - added as ordered breakends so no need
-        // mVariants.sort(NaturalSortComparator.of(VariantContext::getContig).thenComparingInt(VariantContext::getStart));
-
         mVariants.forEach(mWriter::add);
         mWriter.close();
     }
 
     private static final int[] NO_HOMOLOGY = new int[] { 0, 0 };
 
-    private static final String VCF_ITEM_DELIM = ITEM_DELIM;
-
     public void addBreakend(final Breakend breakend)
     {
         List<Genotype> genotypes = Lists.newArrayList();
 
-        for(int i = 0; i < mSampleNames.size(); ++i)
+        for(String sampleId : mSampleNames)
         {
-            String sampleId = mSampleNames.get(i);
-            BreakendSupport breakendSupport = breakend.sampleSupport().get(i);
+            int sampleSupportIndex = mSampleNameIndex.get(sampleId);
+            BreakendSupport breakendSupport = breakend.sampleSupport().get(sampleSupportIndex);
             genotypes.add(buildGenotype(breakend, sampleId, breakendSupport));
         }
 
@@ -210,7 +224,7 @@ public class VcfWriter implements AutoCloseable
                 .chr(breakend.Chromosome)
                 .start(breakend.Position)
                 .alleles(alleles)
-                .log10PError(qual)
+                .log10PError(qual / -10.0)
                 .filters(filters)
                 .genotypes(genotypes);
 
@@ -235,8 +249,6 @@ public class VcfWriter implements AutoCloseable
         if(breakend.alternativeAlignments() != null)
             builder.attribute(INSALN, altAlignmentsStr(breakend.alternativeAlignments()));
 
-        mVariants.add(builder.make());
-
         AssemblyAlignment assemblyAlignment = breakend.assembly();
 
         builder.attribute(ASMID, assemblyAlignment.id());
@@ -248,7 +260,17 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(BEAPOS, segments.stream().map(x -> String.valueOf(x.SequenceIndex)).collect(Collectors.joining(VCF_ITEM_DELIM)));
         builder.attribute(BEOR, breakend.Orient.asByte());
         builder.attribute(BEAOR, segments.stream().map(x -> String.valueOf(x.Orient.asByte())).collect(Collectors.joining(VCF_ITEM_DELIM)));
+
         builder.attribute(SEGID, segments.stream().map(x -> x.uniqueId()).collect(Collectors.joining(VCF_ITEM_DELIM)));
+
+        // NOTE: this is used by Linx to form assembly TIs
+        if(!breakend.facingBreakends().isEmpty())
+        {
+            builder.attribute(
+                    ASSEMBLY_LINKS,
+                    breakend.facingBreakends().stream().map(x -> String.valueOf(x.id())).collect(Collectors.joining(VCF_ITEM_DELIM)));
+        }
+
         builder.attribute(SEGALEN, segments.stream().map(x -> String.valueOf(x.Alignment.alignedBases())).collect(Collectors.joining(VCF_ITEM_DELIM)));
         builder.attribute(SEGMAPQ, segments.stream().mapToInt(x -> x.Alignment.MapQual).max().orElse(0));
         builder.attribute(SEGSCO, segments.stream().mapToInt(x -> x.Alignment.Score).max().orElse(0));
@@ -283,10 +305,9 @@ public class VcfWriter implements AutoCloseable
         byte[] refBase = mConfig.RefGenome.getBases(breakend.Chromosome, breakend.Position, breakend.Position);
         Allele refAllele = Allele.create(refBase, true);
 
-        String altBase = String.valueOf(refBase[0]);
+        String altBase = String.valueOf((char)refBase[0]);
 
         String altBases;
-        String insertedBases = "";
 
         if(breakend.isSingle())
         {

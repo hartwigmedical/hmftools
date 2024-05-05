@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.esvee.alignment;
 
-import static java.lang.Math.min;
-import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import com.hartwig.hmftools.common.genome.region.Orientation;

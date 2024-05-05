@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.sv;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.SvUtils.SMALL_DELDUP_SIZE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ALLELE_FRACTION;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASSEMBLY_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT;
@@ -19,10 +20,10 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGALEN;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_CLASS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_ORIENTATION;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.UNTEMPLATED_SEQUENCE_REPEAT_TYPE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_CLASS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_COVERAGE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_ORIENTATION;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_TYPE;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.BREAKEND_REGEX;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.SINGLE_BREAKEND_BYTE;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.SINGLE_BREAKEND_STR;
@@ -271,20 +272,20 @@ public class StructuralVariantFactory
                 .recoveryMethod(context.getAttributeAsString(RECOVERY_METHOD, null))
                 .recoveryFilter(context.getAttributeAsStringList(RECOVERY_FILTER, "").stream().collect(Collectors.joining(",")))
                 .event("")
-                .startLinkedBy(context.getAttributeAsString(SEGID, ""))
+                .startLinkedBy(context.getAttributeAsString(ASSEMBLY_LINKS, ""))
                 .endLinkedBy("")
                 .imprecise(false)
                 .qualityScore(qualityScore)
                 .insertSequenceAlignments(context.getAttributeAsString(INSALN, ""));
 
-       if(context.hasAttribute(UNTEMPLATED_SEQUENCE_REPEAT_CLASS))
+       if(context.hasAttribute(REPEAT_MASK_REPEAT_CLASS))
         {
-            builder.insertSequenceRepeatClass(context.getAttributeAsString(UNTEMPLATED_SEQUENCE_REPEAT_CLASS, ""))
-                    .insertSequenceRepeatType(context.getAttributeAsString(UNTEMPLATED_SEQUENCE_REPEAT_TYPE, ""))
-                    .insertSequenceRepeatOrientation(context.getAttributeAsString(UNTEMPLATED_SEQUENCE_REPEAT_ORIENTATION, "+").equals("+")
+            builder.insertSequenceRepeatClass(context.getAttributeAsString(REPEAT_MASK_REPEAT_CLASS, ""))
+                    .insertSequenceRepeatType(context.getAttributeAsString(REPEAT_MASK_REPEAT_TYPE, ""))
+                    .insertSequenceRepeatOrientation(context.getAttributeAsString(REPEAT_MASK_REPEAT_ORIENTATION, "+").equals("+")
                             ? (byte) 1
                             : (byte) -1)
-                    .insertSequenceRepeatCoverage(context.getAttributeAsDouble(UNTEMPLATED_SEQUENCE_REPEAT_COVERAGE, 0));
+                    .insertSequenceRepeatCoverage(context.getAttributeAsDouble(REPEAT_MASK_REPEAT_COVERAGE, 0));
         }
         return builder;
     }

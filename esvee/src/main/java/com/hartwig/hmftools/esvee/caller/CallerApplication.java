@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations.REPEAT_MASK_FILE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INSALN;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.APP_NAME;
@@ -47,8 +48,7 @@ public class CallerApplication
     private final FilterCache mFilterCache;
 
     public CallerApplication(
-            final CallerConfig config, final FilterConstants filterConstants, final RefGenomeInterface refGenome,
-            final ConfigBuilder configBuilder)
+            final CallerConfig config, final FilterConstants filterConstants, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mFilterConstants = filterConstants;
@@ -77,9 +77,8 @@ public class CallerApplication
     {
         CallerConfig config = new CallerConfig(configBuilder);
         FilterConstants filterConstants = FilterConstants.from(configBuilder);
-        RefGenomeInterface refGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
 
-        return new CallerApplication(config, filterConstants, refGenome, configBuilder);
+        return new CallerApplication(config, filterConstants, configBuilder);
     }
 
     public void run()
@@ -143,7 +142,7 @@ public class CallerApplication
 
         SV_LOGGER.info("writing output VCF files to {}", mConfig.OutputDir);
 
-        final VersionInfo version = new VersionInfo("gripss.version");
+        final VersionInfo version = fromAppName(APP_NAME);
 
         VcfWriter writer = new VcfWriter(mConfig, vcfHeader, version.version(), genotypeIds, mSvDataCache, mFilterCache);
 
@@ -216,9 +215,9 @@ public class CallerApplication
 
         SV_LOGGER.debug("found {} double stranded breaks", dsbLinkStore.getBreakendLinksMap().size());
 
+        /*
         SV_LOGGER.info("rescuing linked variants");
 
-        /*
         LinkRescue linkRescue = new LinkRescue();
         linkRescue.findRescuedBreakends(dsbLinkStore, mFilterCache, false);
         linkRescue.findRescuedDsbLineInsertions(dsbLinkStore, mFilterCache, mFilterConstants.MinQualRescueLine);

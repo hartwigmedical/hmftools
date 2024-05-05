@@ -5,15 +5,10 @@ import static java.lang.Math.round;
 
 public final class QualCalcs
 {
-    public static int calcQual()
+    public static int calcQual(
+            final int repeatAdjustment, final int alignmentScore, final int alignmentMapQual)
     {
-        /*
-        int repeatAdjustment = Alignment.segmentLength() - Alignment.repeatTrimmedLength();
-        double lengthFactor = (Alignment.Score - repeatAdjustment)/100.0;
-        return (int)round(Alignment.MapQual * min(1, lengthFactor));
-         */
-
-        return 0;
+        double lengthFactor = (alignmentScore - repeatAdjustment)/100.0;
+        return (int)round(alignmentMapQual * min(1, lengthFactor));
     }
-
 }

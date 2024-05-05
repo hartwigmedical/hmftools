@@ -24,5 +24,7 @@ public final class SvConstants
     public static final int MIN_INDEL_SUPPORT_LENGTH = 5;
     public static final int MIN_INDEL_LENGTH = MIN_VARIANT_LENGTH;
 
-
+    // double-stranded breaks
+    public static final int MAX_DSB_SEEK_DISTANCE = 1000;
+    public static final int MAX_DSB_DISTANCE = 30;
 }
