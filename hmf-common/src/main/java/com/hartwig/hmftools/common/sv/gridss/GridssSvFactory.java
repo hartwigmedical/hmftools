@@ -14,8 +14,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_CLASS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_COVERAGE;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_ORIENTATION;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_COVERAGE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_ORIENTATION;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_TYPE;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.BREAKEND_REGEX;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.ANCHOR_SUPPORT_CIGAR;
@@ -299,10 +299,10 @@ public class GridssSvFactory
         {
             builder.insertSequenceRepeatClass(context.getAttributeAsString(REPEAT_MASK_REPEAT_CLASS, ""))
                     .insertSequenceRepeatType(context.getAttributeAsString(REPEAT_MASK_REPEAT_TYPE, ""))
-                    .insertSequenceRepeatOrientation(context.getAttributeAsString(REPEAT_MASK_REPEAT_ORIENTATION, "+").equals("+")
+                    .insertSequenceRepeatOrientation(context.getAttributeAsString(REPEAT_MASK_ORIENTATION, "+").equals("+")
                             ? (byte) 1
                             : (byte) -1)
-                    .insertSequenceRepeatCoverage(context.getAttributeAsDouble(REPEAT_MASK_REPEAT_COVERAGE, 0));
+                    .insertSequenceRepeatCoverage(context.getAttributeAsDouble(REPEAT_MASK_COVERAGE, 0));
         }
         return builder;
     }

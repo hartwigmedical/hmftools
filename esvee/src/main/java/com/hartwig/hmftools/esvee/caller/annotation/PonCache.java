@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEFAULT_PON_DISTANCE;
+import static com.hartwig.hmftools.esvee.common.FilterType.PON;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -75,6 +76,21 @@ public class PonCache
 
     public Map<String,List<PonSvRegion>> svRegions() { return mSvRegions; }
     public Map<String,List<PonSglRegion>> sglRegions() { return mSglRegions; }
+
+    public void annotateVariants(final List<SvData> svDataList)
+    {
+        for(SvData var : svDataList)
+        {
+            int ponCount = getPonCount(var);
+
+            if(ponCount > 0)
+            {
+                var.setPonCount(ponCount);
+
+                var.addFilter(PON);
+            }
+        }
+    }
 
     public int getPonCount(final SvData var)
     {

@@ -93,9 +93,13 @@ public final class SvVcfTags
     public static final String HOTSPOT_DESC = "Variant is a hotspot";
 
     public static final String REPEAT_MASK_REPEAT_CLASS = "INSRMRC";
+    public static final String REPEAT_MASK_REPEAT_CLASS_DESC = "Inserted sequence repeatmasker repeat class";
     public static final String REPEAT_MASK_REPEAT_TYPE = "INSRMRT";
-    public static final String REPEAT_MASK_REPEAT_ORIENTATION = "INSRMRO";
-    public static final String REPEAT_MASK_REPEAT_COVERAGE = "INSRMP";
+    public static final String REPEAT_MASK_REPEAT_TYPE_DESC = "Inserted sequence repeatmasker repeat type";
+    public static final String REPEAT_MASK_ORIENTATION = "INSRMRO";
+    public static final String REPEAT_MASK_ORIENTATION_DESC = "INSRMRO";
+    public static final String REPEAT_MASK_COVERAGE = "INSRMP";
+    public static final String REPEAT_MASK_COVERAGE_DESC = "Portion of inserted sequence whose alignment overlaps the repeatmasker repeat";
 
 
     // set by Purple

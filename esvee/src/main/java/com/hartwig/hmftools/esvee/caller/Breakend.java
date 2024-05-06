@@ -39,12 +39,7 @@ public class Breakend
     public final Genotype RefGenotype;
     public final Genotype TumorGenotype;
 
-    public final String Ref;
-    public final String Alt;
     public final String InsertSequence;
-    public final String OtherChromosome;
-    public final int OtherPosition;
-    public final Orientation OtherOrientation;
 
     public final Interval ConfidenceInterval;
     public final Interval InexactHomology;
@@ -77,15 +72,10 @@ public class Breakend
 
         ConfidenceInterval = Interval.fromCiposTag(context.getAttributeAsIntList(CIPOS, 0));
 
-        Ref = context.getAlleles().get(0).getDisplayString();
-
-        final VariantAltInsertCoords altInsertCoords = parseRefAlt(context.getAlleles().get(1).getDisplayString(), Ref);
-        Alt = altInsertCoords.Alt;
-
+        String ref = context.getAlleles().get(0).getDisplayString();
+        final VariantAltInsertCoords altInsertCoords = parseRefAlt(context.getAlleles().get(1).getDisplayString(), ref);
+        // Alt = altInsertCoords.Alt;
         InsertSequence = altInsertCoords.InsertSequence;
-        OtherChromosome = altInsertCoords.Chromsome;
-        OtherPosition = altInsertCoords.Position;
-        OtherOrientation = altInsertCoords.Orient;
 
         IsLineInsertion = isMobileLineElement(orientation.asByte(), InsertSequence);
 
@@ -121,7 +111,7 @@ public class Breakend
                 refGenotype, tumorGenotype);
     }
 
-    public final SvData sv() { return mSvData; }
+    public SvData sv() { return mSvData; }
 
     public Breakend otherBreakend()
     {
@@ -130,6 +120,8 @@ public class Breakend
 
         return IsStart ? mSvData.breakendEnd() : mSvData.breakendStart();
     }
+
+    public boolean isEnd() { return !mSvData.isSgl() && mSvData.breakendEnd() == this;}
 
     public double allelicFrequency() { return mAllelicFrequency; }
 
@@ -144,8 +136,6 @@ public class Breakend
     // convenience
     public boolean isSgl() { return mSvData.isSgl(); }
     public StructuralVariantType type() { return mSvData.type(); }
-
-    public int insertSequenceLength() { return InsertSequence.length(); }
 
     public int minPosition() { return Position + ConfidenceInterval.Start; }
     public int maxPosition() { return Position + ConfidenceInterval.End; }

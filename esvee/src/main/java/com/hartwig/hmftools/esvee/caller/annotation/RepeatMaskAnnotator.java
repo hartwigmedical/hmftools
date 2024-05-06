@@ -1,13 +1,18 @@
 package com.hartwig.hmftools.esvee.caller.annotation;
 
+import static com.hartwig.hmftools.common.sv.SvVcfTags.INSALN;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.caller.annotation.AlignmentData.fromInsertSequenceAlignments;
 
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations;
 import com.hartwig.hmftools.common.gripss.RepeatMaskData;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.esvee.caller.Breakend;
+import com.hartwig.hmftools.esvee.caller.SvData;
 
 public class RepeatMaskAnnotator
 {
@@ -29,6 +34,30 @@ public class RepeatMaskAnnotator
     }
 
     public boolean hasData() { return mAnnotationCache.hasData(); }
+
+    public void annotateVariants(final List<SvData> svDataList)
+    {
+        int annotated = 0;
+        for(SvData var : svDataList)
+        {
+            if(var.insertSequence().isEmpty())
+                continue;
+
+            final String alignments = var.breakendStart().Context.getAttributeAsString(INSALN, "");
+            if(alignments.isEmpty())
+                continue;
+
+            RepeatMaskAnnotation rmAnnotation = annotate(var.insertSequence(), alignments);
+
+            if(rmAnnotation != null)
+            {
+                var.setRepeatMaskAnnotation(rmAnnotation);
+                ++annotated;
+            }
+        }
+
+        SV_LOGGER.debug("marked {} repeat mask annotations", annotated);
+    }
 
     public RepeatMaskAnnotation annotate(final String insertSequence, final String alignmentsStr)
     {

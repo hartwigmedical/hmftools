@@ -56,10 +56,6 @@ public class HotspotCache
         if(sv.isSgl())
             return false;
 
-        // TODO: check where belongs if anywhere
-        // if(LinkRescue.tooShortToRescue(sv.type(), sv.length()))
-        //    return false;
-
         if(isPolyATSequence(sv.contextStart()) || (sv.contextEnd() != null && isPolyATSequence(sv.contextEnd())))
             return false;
 
@@ -72,11 +68,7 @@ public class HotspotCache
         if(sv.type() == SGL)
             return false;
 
-        // TODO: see comment above
-        // if(LinkRescue.tooShortToRescue(sv.type(), SvData.length(sv)))
-        //    return false;
-
-        else if(isPolyATSequence(sv.startContext()) || (sv.endContext() != null && isPolyATSequence(sv.endContext())))
+        if(isPolyATSequence(sv.startContext()) || (sv.endContext() != null && isPolyATSequence(sv.endContext())))
             return false;
 
         return matchesHotspot(
@@ -186,7 +178,6 @@ public class HotspotCache
         catch(IOException e)
         {
             SV_LOGGER.error("failed to load hotspot data file({}): {}", filename, e.toString());
-            return;
         }
     }
 

@@ -9,31 +9,26 @@ import com.google.common.collect.Sets;
 
 public class DuplicateFinder
 {
-    private final FilterCache mFilterCache;
     private final SvDataCache mDataCache;
     
     private final Set<Breakend> mDuplicateBreakends;
-    private final Set<Breakend> mRescueBreakends;
     private final Set<Breakend> mSingleDuplicates; // SGLs which are duplicates or duplicates of SGLs
 
     private static final int MAX_DEDUP_SGL_SEEK_DISTANCE = 1000;
     private static final int MAX_DEDUP_SGL_ADDITIONAL_DISTANCE = 0;
 
-    public DuplicateFinder(final SvDataCache dataCache, final FilterCache filterCache)
+    public DuplicateFinder(final SvDataCache dataCache)
     {
         mDataCache = dataCache;
-        mFilterCache = filterCache;
-        
+
         mDuplicateBreakends = Sets.newHashSet();
-        mRescueBreakends = Sets.newHashSet();
         mSingleDuplicates = Sets.newHashSet();
     }
 
     public Set<Breakend> duplicateBreakends() { return mDuplicateBreakends; }
-    public Set<Breakend> rescueBreakends() { return mRescueBreakends; }
     public Set<Breakend> duplicateSglBreakends() { return mSingleDuplicates; };
 
-    public void findDuplicateSingles(final LinkStore linkStore)
+    public void findDuplicateSingles()
     {
         for(SvData sv : mDataCache.getSvList())
         {
@@ -42,7 +37,7 @@ public class DuplicateFinder
             
             Breakend breakend = sv.breakendStart();
             
-            boolean isPass = !mFilterCache.hasFilters(breakend);
+            boolean isPass = sv.isPass();
 
             List<Breakend> nearbyBreakends = mDataCache.selectOthersNearby(
                     breakend, MAX_DEDUP_SGL_ADDITIONAL_DISTANCE, MAX_DEDUP_SGL_SEEK_DISTANCE);
@@ -56,7 +51,7 @@ public class DuplicateFinder
                 if(!isDuplicateCandidate(breakend, nearBreakend))
                     continue;
 
-                if(!keepSingle(isPass, breakend, nearBreakend, linkStore))
+                if(!keepSingle(isPass, breakend, nearBreakend))
                 {
                     SV_LOGGER.trace("breakend({}) duplicate vs other({})", breakend, nearBreakend);
                     keepSingle = false;
@@ -96,12 +91,13 @@ public class DuplicateFinder
     }
 
     private boolean keepSingle(
-            boolean originalIsPass, final Breakend original, final Breakend alternative, final LinkStore linkStore)
+            boolean originalIsPass, final Breakend original, final Breakend alternative) // , final LinkStore linkStore
     {
-        if(linkStore.getBreakendLinks(alternative) != null)
-            return false;
-        
-        boolean altIsPass = !mFilterCache.hasFilters(alternative);
+        // TODO: check if still applicable
+        // if(linkStore.getBreakendLinks(alternative) != null)
+        //    return false;
+
+        boolean altIsPass = alternative.sv().isPass();
 
         if(originalIsPass != altIsPass)
             return originalIsPass;
@@ -113,6 +109,5 @@ public class DuplicateFinder
     {
         mDuplicateBreakends.clear();
         mSingleDuplicates.clear();
-        mRescueBreakends.clear();
     }
 }

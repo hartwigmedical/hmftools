@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.HOM_INV_LENGTH;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.SGL_INS_SEQ_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.SGL_MAX_STRAND_BIAS;
@@ -30,7 +31,7 @@ import static com.hartwig.hmftools.esvee.common.FilterType.MAX_POLY_A_HOM_LENGTH
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_NORMAL_COVERAGE;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_QUALITY;
-import static com.hartwig.hmftools.esvee.common.FilterType.MIN_TUMOR_AF;
+import static com.hartwig.hmftools.esvee.common.FilterType.MIN_AF;
 import static com.hartwig.hmftools.esvee.common.FilterType.MODIFIED_AF;
 import static com.hartwig.hmftools.esvee.common.FilterType.SGL_INSERT_SEQ_MIN_LENGTH;
 import static com.hartwig.hmftools.esvee.common.FilterType.SGL_STRAND_BIAS;
@@ -39,8 +40,9 @@ import static com.hartwig.hmftools.esvee.common.FilterType.SHORT_SR_SUPPORT;
 import static com.hartwig.hmftools.esvee.common.FilterType.SHORT_STRAND_BIAS;
 
 import java.util.List;
+import java.util.Map;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.esvee.common.FilterType;
 
@@ -50,91 +52,80 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class VariantFilters
 {
     private final FilterConstants mFilterConstants;
-    private final boolean mGermlineMode;
+    private final boolean mHasGermline;
+    private final boolean mHasTumor;
 
-    public VariantFilters(final FilterConstants filterConstants, final boolean germlineMode)
+    public VariantFilters(final FilterConstants filterConstants, final boolean hasGermline, final boolean hasTumor)
     {
         mFilterConstants = filterConstants;
-        mGermlineMode = germlineMode;
+        mHasGermline = hasGermline;
+        mHasTumor = hasTumor;
     }
 
-    public void applyFilters(final SvData sv, final FilterCache filterCache)
+    public void applyFilters(final SvData sv)
     {
-        if(filterCache.isHotspot(sv))
+        if(sv.isHotspot())
         {
             // only limited filters are checked for hotspots
             if(modifiedAF(sv, true))
             {
-                filterCache.addBreakendFilters(sv.breakendStart(), Lists.newArrayList(MODIFIED_AF));
-
-                if(!sv.isSgl())
-                    filterCache.addBreakendFilters(sv.breakendEnd(), Lists.newArrayList(MODIFIED_AF));
+                sv.addFilter(MODIFIED_AF);
             }
 
             return;
         }
-
-        List<FilterType> beStartFilters = null;
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
             if(sv.isSgl() && se == SE_END)
                 continue;
 
-            List<FilterType> filters = Lists.newArrayList();
-
-            if(se == SE_START)
-                beStartFilters = filters;
-
             Breakend breakend = sv.breakends()[se];
 
             if(normalCoverage(breakend))
-                filters.add(MIN_NORMAL_COVERAGE);
+                sv.addFilter(MIN_NORMAL_COVERAGE);
 
             if(normalRelativeSupport(breakend))
-                filters.add(MAX_NORMAL_RELATIVE_SUPPORT);
+                sv.addFilter(MAX_NORMAL_RELATIVE_SUPPORT);
 
             if(allelicFrequency(sv, breakend))
-                filters.add(MIN_TUMOR_AF);
+                sv.addFilter(MIN_AF);
 
             if(minQuality(sv, breakend))
-                filters.add(MIN_QUALITY);
+                sv.addFilter(MIN_QUALITY);
 
             if(shortSplitReadTumor(sv, breakend))
-                filters.add(SHORT_SR_SUPPORT);
+                sv.addFilter(SHORT_SR_SUPPORT);
 
             if(shortSplitReadNormal(sv, breakend))
-                filters.add(SHORT_SR_NORMAL);
+                sv.addFilter(SHORT_SR_NORMAL);
 
             if(singleStrandBias(breakend))
-                filters.add(SGL_STRAND_BIAS);
+                sv.addFilter(SGL_STRAND_BIAS);
 
             if(singleInsertSequenceMinLength(breakend))
-                filters.add(SGL_INSERT_SEQ_MIN_LENGTH);
+                sv.addFilter(SGL_INSERT_SEQ_MIN_LENGTH);
 
             if(strandBias(sv, breakend))
-                filters.add(SHORT_STRAND_BIAS);
+                sv.addFilter(SHORT_STRAND_BIAS);
 
-            if((se == SE_END && beStartFilters.contains(MAX_POLY_A_HOM_LENGTH)) || polyATHomology(sv))
-                filters.add(MAX_POLY_A_HOM_LENGTH);
+            if(polyATHomology(sv))
+                sv.addFilter(MAX_POLY_A_HOM_LENGTH);
 
-            if((se == SE_END && beStartFilters.contains(MAX_HOM_LENGTH_SHORT_INV)) || homologyLengthFilterShortInversion(sv))
-                filters.add(MAX_HOM_LENGTH_SHORT_INV);
+            if(homologyLengthFilterShortInversion(sv))
+                sv.addFilter(MAX_HOM_LENGTH_SHORT_INV);
 
-            if((se == SE_END && beStartFilters.contains(MIN_LENGTH)) || minLength(sv))
-                filters.add(MIN_LENGTH);
+            if(minLength(sv))
+                sv.addFilter(MIN_LENGTH);
 
-            if((se == SE_END && beStartFilters.contains(MODIFIED_AF)) || modifiedAF(sv, false))
-                filters.add(MODIFIED_AF);
-
-            if(!filters.isEmpty())
-                filterCache.addBreakendFilters(breakend, filters);
+            if(modifiedAF(sv, false))
+                sv.addFilter(MODIFIED_AF);
         }
     }
 
     private boolean normalCoverage(final Breakend breakend)
     {
-        if(breakend.RefGenotype == null || mGermlineMode)
+        if(breakend.RefGenotype == null || mHasGermline)
             return false;
 
         int refSupportReads = getGenotypeAttributeAsInt(breakend.RefGenotype, REF_DEPTH, 0);
@@ -145,7 +136,7 @@ public class VariantFilters
 
     private boolean normalRelativeSupport(final Breakend breakend)
     {
-        if(breakend.RefGenotype == null || mGermlineMode)
+        if(breakend.RefGenotype == null || mHasGermline)
             return false;
 
         return breakend.ReferenceFragments > mFilterConstants.SoftMaxNormalRelativeSupport * breakend.TumorFragments;
@@ -242,7 +233,7 @@ public class VariantFilters
 
     private boolean shortSplitReadNormal(final SvData sv, final Breakend breakend)
     {
-        if(breakend.RefGenotype == null || mGermlineMode)
+        if(breakend.RefGenotype == null || mHasGermline)
             return false;
 
         return sv.isShortLocal() && getSplitReadCount(breakend.RefGenotype) > 0;
@@ -304,7 +295,7 @@ public class VariantFilters
 
     private boolean hasExcessiveReferenceSupport(final VariantContext variant, final GenotypeIds genotypeIds, boolean isSgl)
     {
-        if(!genotypeIds.hasReference() || mGermlineMode)
+        if(!genotypeIds.hasReference() || mHasGermline)
             return false;
 
         Genotype refGenotype = variant.getGenotype(genotypeIds.ReferenceOrdinal);
@@ -322,8 +313,22 @@ public class VariantFilters
         return false;
     }
 
+    public static void logFilterTypeCounts(final List<SvData> svDataList)
+    {
+        Map<FilterType,Integer> filterCounts = Maps.newHashMap();
 
+        for(SvData var : svDataList)
+        {
+            for(FilterType filterType : var.filters())
+            {
+                int count = filterCounts.getOrDefault(filterType, 0);
+                filterCounts.put(filterType, count + 1);
+            }
+        }
 
-
-
+        for(Map.Entry<FilterType,Integer> entry : filterCounts.entrySet())
+        {
+            SV_LOGGER.debug("variant filter {}: count({})", entry.getKey(), entry.getValue());
+        }
+    }
 }

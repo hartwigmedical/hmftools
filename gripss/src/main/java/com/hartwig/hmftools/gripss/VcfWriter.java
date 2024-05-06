@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOTSPOT_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_COUNT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_CLASS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_COVERAGE;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_COVERAGE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REPEAT_MASK_REPEAT_TYPE;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.ALT_PATH;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.ALT_PATH_DESC;
@@ -142,7 +142,7 @@ public class VcfWriter
                 REPEAT_MASK_REPEAT_TYPE, 1, VCFHeaderLineType.String, "Inserted sequence repeatmasker repeat type"));
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(
-                REPEAT_MASK_REPEAT_COVERAGE, 1, VCFHeaderLineType.Float,
+                REPEAT_MASK_COVERAGE, 1, VCFHeaderLineType.Float,
                 "Portion of inserted sequence whose alignment overlaps the repeatmasker repeat"));
 
         writer.writeHeader(newHeader);
@@ -229,10 +229,10 @@ public class VcfWriter
             // remove any previously set
             builder.rmAttribute(REPEAT_MASK_REPEAT_CLASS);
             builder.rmAttribute(REPEAT_MASK_REPEAT_TYPE);
-            builder.rmAttribute(REPEAT_MASK_REPEAT_COVERAGE);
+            builder.rmAttribute(REPEAT_MASK_COVERAGE);
             builder.attribute(REPEAT_MASK_REPEAT_CLASS, rmAnnotation.RmData.ClassType);
             builder.attribute(REPEAT_MASK_REPEAT_TYPE, rmAnnotation.RmData.Repeat);
-            builder.attribute(REPEAT_MASK_REPEAT_COVERAGE, rmAnnotation.Coverage);
+            builder.attribute(REPEAT_MASK_COVERAGE, rmAnnotation.Coverage);
         }
 
         List<FilterType> svFilters;
