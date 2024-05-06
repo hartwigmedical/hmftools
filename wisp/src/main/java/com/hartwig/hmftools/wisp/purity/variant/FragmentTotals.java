@@ -21,6 +21,7 @@ public class FragmentTotals
 
     private double mSampleWeightedDepthTotal;
     private double mSampleTumorAdjustedDepthTotal;
+    private double mSampleWeightedAdTotal;
 
     private double mTumorAdjustedAdTotal;
     private double mTumorAdjustedDepthTotal;
@@ -42,6 +43,7 @@ public class FragmentTotals
         mSampleAdjustedDepthTotal = 0;
         mSampleWeightedDepthTotal = 0;
         mSampleTumorAdjustedDepthTotal = 0;
+        mSampleWeightedAdTotal = 0;
         mTumorAdjustedAdTotal = 0;
         mTumorAdjustedDepthTotal = 0;
         mTumorVafOverride = null;
@@ -76,6 +78,8 @@ public class FragmentTotals
         mSampleAdjustedDepthTotal += sampleDepth / copyNumber;
         mSampleTumorAdjustedDepthTotal += sampleDepth * tumorDpPerCn;
 
+        mSampleWeightedAdTotal += tumorDpPerCn * sampleAlleleFrags * sampleDepth;
+
         mSampleWeightedDepthTotal += tumorDpPerCn * pow(sampleDepth, 2);
     }
 
@@ -85,6 +89,8 @@ public class FragmentTotals
     public int tumorDepthTotal() { return mTumorDepthTotal; }
     public int sampleDepthTotal() { return mSampleDepthTotal; }
     public double sampleAdjustedDepthTotal() { return mSampleAdjustedDepthTotal; }
+    public double sampleTumorAdjustedDepthTotal() { return mSampleTumorAdjustedDepthTotal; }
+    public double sampleTumorAdjustedAdTotal() { return mSampleWeightedAdTotal; }
     public int sampleOneFragmentCount() { return mSampleOneFragmentCount; }
     public int sampleTwoPlusCount() { return mSampleTwoPlusCount; }
 

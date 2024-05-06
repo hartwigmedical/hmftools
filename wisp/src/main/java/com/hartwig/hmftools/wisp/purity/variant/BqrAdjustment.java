@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.sage.SageCommon.generateBqrFilename;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -43,6 +45,9 @@ public class BqrAdjustment
     {
         // calculate BQR error rates for each TNC and alt
         loadBqrData(sampleId);
+
+        if(mBqrContextData.isEmpty())
+            return;
 
         for(SomaticVariant variant : variants)
         {
@@ -121,6 +126,9 @@ public class BqrAdjustment
     {
         String vcfDir = !mConfig.SomaticVcf.isEmpty() ? pathFromFile(mConfig.getSomaticVcf(sampleId)) : mConfig.SomaticDir;
         String bqrFilename = generateBqrFilename(vcfDir, sampleId);
+
+        if(!Files.exists(Paths.get(bqrFilename)))
+            return;
 
         List<BqrRecord> allCounts = BqrFile.read(bqrFilename);
 
