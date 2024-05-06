@@ -217,7 +217,9 @@ CREATE INDEX `cpctEcrf_studyEvent` ON `cpctEcrf` (`studyEvent`);
 CREATE INDEX `cpctEcrf_form` ON `cpctEcrf` (`form`);
 CREATE INDEX `cpctEcrf_itemGroup` ON `cpctEcrf` (`itemGroup`);
 CREATE INDEX `cpctEcrf_item` ON `cpctEcrf` (`item`);
-CREATE INDEX `cpctEcrf_itemValue` ON `cpctEcrf` (`itemValue`);
+-- [jooq ignore start]
+CREATE INDEX `cpctEcrf_itemValue` ON `cpctEcrf` (`itemValue`(255));
+-- [jooq ignore stop]
 CREATE INDEX `cpctEcrf_status` ON `cpctEcrf` (`status`);
 CREATE INDEX `cpctEcrf_locked` ON `cpctEcrf` (`locked`);
 CREATE INDEX `cpctEcrf_sequenced` ON `cpctEcrf` (`sequenced`);
