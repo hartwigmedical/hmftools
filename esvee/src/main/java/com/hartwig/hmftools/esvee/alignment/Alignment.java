@@ -292,8 +292,15 @@ public class Alignment
             // count fragments to both breakends if it is in either
             for(BreakendFragmentSupport fragmentSupport : fragmentSupportMap.values())
             {
+                Set<Breakend> processed = Sets.newHashSet();
+
                 for(Breakend breakend : fragmentSupport.Breakends)
                 {
+                    if(processed.contains(breakend) || (!breakend.isSingle() && processed.contains(breakend.otherBreakend())))
+                        continue;
+
+                    processed.add(breakend);
+
                     boolean allowDiscordantSupport = !breakend.isShortLocalDelDupIns();
 
                     BreakendSupport support = breakend.sampleSupport().get(fragmentSupport.SampleIndex);
@@ -303,18 +310,20 @@ public class Alignment
                     else if(allowDiscordantSupport)
                         ++support.DiscordantFragments;
 
+                    if(breakend.isSingle())
+                        continue;
+
                     Breakend otherBreakend = breakend.otherBreakend();
 
-                    if(otherBreakend != null && !fragmentSupport.Breakends.contains(otherBreakend))
-                    {
-                        BreakendSupport otherSupport = otherBreakend.sampleSupport().get(fragmentSupport.SampleIndex);
+                    BreakendSupport otherSupport = otherBreakend.sampleSupport().get(fragmentSupport.SampleIndex);
 
-                        // assign each read preferably as split over discordant
-                        if(fragmentSupport.IsSplit)
-                            ++otherSupport.SplitFragments;
-                        else if(allowDiscordantSupport)
-                            ++otherSupport.DiscordantFragments;
-                    }
+                    processed.add(otherBreakend);
+
+                    // assign each read preferably as split over discordant
+                    if(fragmentSupport.IsSplit)
+                        ++otherSupport.SplitFragments;
+                    else if(allowDiscordantSupport)
+                        ++otherSupport.DiscordantFragments;
                 }
             }
         }

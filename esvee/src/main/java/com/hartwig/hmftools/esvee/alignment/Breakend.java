@@ -234,7 +234,7 @@ public class Breakend implements Comparable<Breakend>
     public String toString()
     {
         return format("%d: %s:%d:%d %s hom(%s) otherId(%d) segs(%d) alts(%d)",
-                mId, Chromosome, Position, Orient, svType(), Homology != null ? Homology : "",
+                mId, Chromosome, Position, Orient.asByte(), svType(), Homology != null ? Homology : "",
                 mOtherBreakend != null ? mOtherBreakend.id() : -1,
                 mSegments.size(), mAlternativeAlignments != null ? mAlternativeAlignments.size() : 0);
     }
