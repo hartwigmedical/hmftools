@@ -47,9 +47,10 @@ public class PurityConfig
 
     public final List<PurityMethod> PurityMethods;
 
+    public final String SampleDataDir;
     public final String SomaticVcf;
     public final String SomaticDir; // if different from sample data dir and not specifying a VCF path
-    public final String SampleDataDir;
+    public final boolean SkipBqr;
     public final String PurpleDir;
     public final String AmberDir;
     public final String CobaltDir;
@@ -73,6 +74,7 @@ public class PurityConfig
     private static final String PURITY_METHODS = "purity_methods";
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String SOMATIC_DIR = "somatic_dir";
+    private static final String SKIP_BQR = "skip_bqr";
     private static final String PLOT_DIR = "plot_dir";
     private static final String NOISE_READS_PER_MILLION = "noise_per_mill";
     private static final String NOISE_READS_PER_MILLION_DUAL = "noise_per_mill_dual";
@@ -122,6 +124,7 @@ public class PurityConfig
         NoiseReadsPerMillionDualStrand = configBuilder.getDecimal(NOISE_READS_PER_MILLION_DUAL);
 
         SummaryMethodOnlyOutput = configBuilder.hasFlag(SUMMARY_METHOD_ONLY);
+        SkipBqr = configBuilder.hasFlag(SKIP_BQR);
 
         WriteTypes = Sets.newHashSet();
 
@@ -260,6 +263,7 @@ public class PurityConfig
         configBuilder.addRequiredDecimal(GC_RATIO_MIN,"GC ratio minimum permitted");
 
         configBuilder.addFlag(SUMMARY_METHOD_ONLY, "Only write summary data for configured purity methods");
+        configBuilder.addFlag(SKIP_BQR, "Skip BQR adjustment for somatic variants");
 
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);

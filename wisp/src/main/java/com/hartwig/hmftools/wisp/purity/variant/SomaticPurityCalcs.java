@@ -9,11 +9,8 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.stats.PoissonCalcs.calcPoissonNoiseValue;
-import static com.hartwig.hmftools.common.stats.PoissonCalcs.findUpperStartValue;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
-import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_QUAL_NOISE_CUTOFF;
-import static com.hartwig.hmftools.wisp.purity.PurityConstants.MIN_QUAL_PER_AD;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 
@@ -24,7 +21,29 @@ public final class SomaticPurityCalcs
         return max(sampleVaf - noiseRate, 0) / tumorVaf * tumorPurity;
     }
 
-    public static double estimatedProbability(int alleleCount, double noise)
+    public static double estimatedProbability(final FragmentTotals fragmentTotals, double noiseRate)
+    {
+        double weightedSampleDepth = fragmentTotals.weightedSampleDepth();
+        double weightedSampleFrags = fragmentTotals.weightedSampleFrags();
+
+        double effectiveDepth = weightedSampleDepth * fragmentTotals.variantCount();
+        double effectiveAlleleFrags = weightedSampleFrags * fragmentTotals.variantCount();
+        double expectedNoiseFragments = noiseRate * effectiveDepth;
+
+        PoissonDistribution poisson = new PoissonDistribution(expectedNoiseFragments);
+
+        int lowerFrags = (int)floor(effectiveAlleleFrags - 1);
+        int upperFrags = (int)ceil(effectiveAlleleFrags - 1);
+        double probabilityLower = 1 - poisson.cumulativeProbability(lowerFrags);
+        double probabilityUpper = 1 - poisson.cumulativeProbability(upperFrags);
+        double upperWeight = effectiveAlleleFrags - floor(effectiveAlleleFrags);
+        double lowerWeight = 1 - upperWeight;
+
+        return lowerWeight * probabilityLower + upperWeight * probabilityUpper;
+    }
+
+    // OLD METHODS: likely deprecated
+    public static double estimatedProbabilityOld(int alleleCount, double noise)
     {
         if(alleleCount <= noise || noise == 0)
             return 1;

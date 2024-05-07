@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.isRecompu
 import static com.hartwig.hmftools.wisp.purity.variant.LowCountModel.filterVariants;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.calcLimitOfDetection;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.estimatedProbability;
+import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.estimatedProbabilityOld;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.estimatedPurity;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult.INVALID_RESULT;
 
@@ -25,12 +26,14 @@ public class SomaticPurityEstimator
     private final PurityConfig mConfig;
     private final ResultsWriter mResultsWriter;
     private final SampleData mSample;
+    private final BqrAdjustment mBqrAdjustment;
 
     public SomaticPurityEstimator(final PurityConfig config, final ResultsWriter resultsWriter, final SampleData sample)
     {
         mConfig = config;
         mResultsWriter = resultsWriter;
         mSample = sample;
+        mBqrAdjustment = new BqrAdjustment(mConfig);
     }
 
     public SomaticPurityResult calculatePurity(
@@ -61,6 +64,9 @@ public class SomaticPurityEstimator
         if(fragmentTotals.sampleDepthTotal() == 0)
             return INVALID_RESULT;
 
+        if(!mConfig.SkipBqr)
+            mBqrAdjustment.processSample(sampleId, variants);
+
         double tumorPurity = purityContext.bestFit().purity();
 
         if(mConfig.hasSyntheticTumor())
@@ -77,7 +83,8 @@ public class SomaticPurityEstimator
                 tumorPurity, fragmentTotals.adjTumorVaf(), fragmentTotals.adjSampleVaf(), noiseRate);
 
         double expectedNoiseFragments = noiseRate * fragmentTotals.sampleDepthTotal();
-        purityCalcData.Probability = estimatedProbability(fragmentTotals.sampleAdTotal(), expectedNoiseFragments);
+        double probabilityOld = estimatedProbabilityOld(fragmentTotals.sampleAdTotal(), expectedNoiseFragments);
+        purityCalcData.Probability = estimatedProbability(fragmentTotals, noiseRate);
 
         purityCalcData.PurityEstimate = purityCalcData.RawPurityEstimate;
 
@@ -132,7 +139,7 @@ public class SomaticPurityEstimator
 
         // report final probability as min of Dual and Normal Prob
         double expectedDualNoiseFragments = mConfig.noiseRate(true) * sampleDualDP;
-        purityCalcData.DualProbability = estimatedProbability(sampleDualAD, expectedDualNoiseFragments);
+        purityCalcData.DualProbability = estimatedProbabilityOld(sampleDualAD, expectedDualNoiseFragments);
 
         // CT_LOGGER.info(format("patient(%s) sample(%s) sampleTotalFrags(%d) noise(%.1f) LOD(%.6f)",
         //        mSample.PatientId, sampleId, sampleDepthTotal, allFragsNoise, lodFragsResult.EstimatedPurity));
