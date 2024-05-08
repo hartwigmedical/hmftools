@@ -1,10 +1,15 @@
 package com.hartwig.hmftools.cup.cli;
 
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.LOG_LEVEL;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.LOG_LEVEL_DESC;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.cli.PythonEnv.DEFAULT_PYENV_DIR;
+import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
 
 import java.io.File;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Level;
@@ -21,11 +26,20 @@ public class PycuppaInstaller
     public static final String PYCUPPA_VENV_NAME = "pycuppa_venv";
     public static final String PYCUPPA_PKG_NAME = "pycuppa";
 
+    public static final String INSTALL_DIR = "install_dir";
+    public static final String INSTALL_DIR_DESC = "Path to the pyenv dir in which to install pycuppa (will be created if not existing). Default: " + DEFAULT_PYENV_DIR;
+
+    public static final String UPDATE_RC_FILE = "update_rc_file";
+    public static final String UPDATE_RC_FILE_DESC = "Add pyenv paths and initialization logic to bashrc or zshrc file? Only required for use of pycuppa in an interactive shell";
+
+    public final ConfigBuilder mConfig;
     public final PythonEnv mPythonEnv;
 
-    public PycuppaInstaller()
+    public PycuppaInstaller(ConfigBuilder config)
     {
-        mPythonEnv = new PythonEnv(PYTHON_VERSION, PYCUPPA_VENV_NAME);
+        mConfig = config;
+        Configurator.setLevel(CUP_LOGGER.getName(), Level.valueOf(config.getValue(LOG_LEVEL)));
+        mPythonEnv = new PythonEnv(PYTHON_VERSION, PYCUPPA_VENV_NAME, config.getValue(INSTALL_DIR));
     }
 
     private void removePycuppaTmpDir()
@@ -48,6 +62,9 @@ public class PycuppaInstaller
             {
                 CUP_LOGGER.debug("Removing existing tmp dir: {}", PYCUPPA_TMP_DIR);
                 removePycuppaTmpDir();
+
+                if(mConfig.hasFlag(UPDATE_RC_FILE))
+                    mPythonEnv.addPyenvPathsToRcFile();
             }
 
             if(PYCUPPA_RESOURCE_DIR.exists())
@@ -84,6 +101,8 @@ public class PycuppaInstaller
             {
                 extractPycuppaToTmpDir();
                 mPythonEnv.pipInstall(PYCUPPA_TMP_DIR.getPath(), true);
+
+                CUP_LOGGER.info("Completed installation of " + PYCUPPA_PKG_NAME);
             }
             else
             {
@@ -92,7 +111,7 @@ public class PycuppaInstaller
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("Failed to install {} to virtual env({}): ", PYCUPPA_PKG_NAME, mPythonEnv.mVirtualEnvName);
+            CUP_LOGGER.error("Failed to install {} to virtual env({}): {}", PYCUPPA_PKG_NAME, mPythonEnv.mVirtualEnvName, e);
             System.exit(1);
         }
         finally
@@ -104,8 +123,13 @@ public class PycuppaInstaller
 
     public static void main(String[] args)
     {
-        Configurator.setLevel(CUP_LOGGER.getName(), Level.DEBUG);
-        PycuppaInstaller installer = new PycuppaInstaller();
+        ConfigBuilder config = new ConfigBuilder(APP_NAME);
+        config.addConfigItem(INSTALL_DIR, true, INSTALL_DIR_DESC);
+        config.addFlag(UPDATE_RC_FILE, UPDATE_RC_FILE_DESC);
+        config.addConfigItem(LOG_LEVEL, false, LOG_LEVEL_DESC, Level.DEBUG.toString());
+        config.checkAndParseCommandLine(args);
+
+        PycuppaInstaller installer = new PycuppaInstaller(config);
         installer.install();
     }
 }
