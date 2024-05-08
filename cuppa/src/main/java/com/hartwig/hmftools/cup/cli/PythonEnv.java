@@ -85,8 +85,7 @@ public class PythonEnv
         return new File(pathToRcFile);
     }
 
-    @VisibleForTesting
-    void addPyenvPathsToRcFile()
+    public void addPyenvPathsToRcFile()
     {
         try
         {
@@ -94,7 +93,7 @@ public class PythonEnv
 
             String lines = String.join("\n",
                 "# Pyenv paths",
-                "export PYENV_ROOT="+ mPyenvDir,
+                "export PYENV_ROOT="+mPyenvDir,
                 "[[ -d $PYENV_ROOT/bin ]] && export PATH=\"$PYENV_ROOT/bin:$PATH\"",
                 "eval \"$(pyenv init -)\"",
                 "eval \"$(pyenv virtualenv-init -)\""
@@ -176,7 +175,6 @@ public class PythonEnv
             return this;
 
         installPyenv();
-        addPyenvPathsToRcFile();
         installPython();
         createVirtualEnvironment();
         return this;
