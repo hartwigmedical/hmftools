@@ -18,7 +18,8 @@ public class PythonEnvironmentTest
 {
     private static final PythonEnv ENV = new PythonEnv(
             PythonEnv.DEFAULT_PYTHON_VERSION,
-            "pycuppa_venv"
+            "pycuppa_venv",
+            "/Users/lnguyen/Desktop/pyenv"
     );
 
     private static final String PYCUPPA_DIR = "/Users/lnguyen/Hartwig/hartwigmedical/hmftools/cuppa/src/main/python/pycuppa";
@@ -31,7 +32,7 @@ public class PythonEnvironmentTest
     @Test
     public void canInitializeEnvironment()
     {
-        PythonEnv.removeExistingPyenv();
+        ENV.removeExistingPyenv();
         ENV.initialize();
         assertTrue(ENV.pythonPath().exists());
     }
@@ -48,7 +49,7 @@ public class PythonEnvironmentTest
         /*
         ## Run these commands manually
         mvn clean install -pl cuppa
-        java -cp /Users/lnguyen/Hartwig/hartwigmedical/hmftools/cuppa/target/cuppa-2.1.1-jar-with-dependencies.jar com.hartwig.hmftools.cup.runners.PycuppaInstaller
+        java -cp /Users/lnguyen/Hartwig/hartwigmedical/hmftools/cuppa/target/cuppa-2.1.1-jar-with-dependencies.jar com.hartwig.hmftools.cup.cli.PycuppaInstaller -install_dir /Users/lnguyen/Desktop/pyenv_test
         */
     }
 }
