@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.qual;
 
+import static java.lang.String.format;
+
 public class BqrRecord implements Comparable<BqrRecord>
 {
     public final BqrKey Key;
@@ -55,4 +57,6 @@ public class BqrRecord implements Comparable<BqrRecord>
 
         return 0;
     }
+
+    public String toString() { return format("%s calc(%.1f)", Key, RecalibratedQuality); }
 }

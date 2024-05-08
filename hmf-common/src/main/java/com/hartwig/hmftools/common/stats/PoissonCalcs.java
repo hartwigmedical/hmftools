@@ -87,7 +87,7 @@ public final class PoissonCalcs
         return currentValue;
     }
 
-    private static double findUpperStartValue(int observedCount, double requiredProb, int maxIterations)
+    public static double findUpperStartValue(int observedCount, double requiredProb, int maxIterations)
     {
         double currentValue = max(1, observedCount * 2);
 

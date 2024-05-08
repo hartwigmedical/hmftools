@@ -2,7 +2,7 @@ package com.hartwig.hmftools.esvee.depth;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.setReadFlag;
@@ -285,12 +285,12 @@ public class DepthAnnotationTest
         alleles.add(Allele.create("T[2:500[", false));
 
         Map<String,Object> commonAttributes = Maps.newHashMap();
-        commonAttributes.put(SV_FRAG_COUNT, 1);
+        commonAttributes.put(TOTAL_FRAGS, 1);
 
         Map<String,Object> genotypeAttributes = Maps.newHashMap();
 
         // defaults to indicate a somatic variant
-        genotypeAttributes.put(SV_FRAG_COUNT, 1);
+        genotypeAttributes.put(TOTAL_FRAGS, 1);
 
         Genotype genotype = new GenotypeBuilder()
                 .attributes(genotypeAttributes)

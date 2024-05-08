@@ -15,20 +15,17 @@ public class VariantBuilder
 {
     private final HotspotCache mHotspotCache;
     private final TargetRegions mTargetRegions;
-    private final VariantFilters mFilters;
     private final StructuralVariantFactory mSvFactory;
     private final Set<String> mHotspotCandidateVcfIds;
     private final Set<String> mHardFilteredVcfIds;
 
     private int mHardFilteredCount;
 
-    public VariantBuilder(
-            final FilterConstants filterConstants, final HotspotCache hotspotCache, final TargetRegions targetRegions, final boolean germlineMode)
+    public VariantBuilder(final HotspotCache hotspotCache, final TargetRegions targetRegions)
     {
         mHotspotCache = hotspotCache;
         mTargetRegions = targetRegions;
 
-        mFilters = new VariantFilters(filterConstants, germlineMode);
         mSvFactory = new StructuralVariantFactory(new CompoundFilter(false));
         mHardFilteredVcfIds = Sets.newHashSet();
         mHotspotCandidateVcfIds = Sets.newHashSet();
@@ -68,13 +65,6 @@ public class VariantBuilder
             hardFiltered = !mTargetRegions.inTargetRegions(variant.getContig(), variant.getStart());
         }
 
-        /*
-        if(!hardFiltered && mHardFilters != null)
-        {
-            hardFiltered = mHardFilters.isFiltered(variant, genotypeIds, isSgl);
-        }
-        */
-
         if(isSgl)
         {
             if(hardFiltered)
@@ -102,8 +92,7 @@ public class VariantBuilder
 
         boolean mateHotspotCandidate = mHotspotCandidateVcfIds.contains(mateId);
 
-        boolean hotspotCandidate = hardFiltered && !mFilters.belowHardMinQual(variant, genotypeIds, isSgl)
-                && mHotspotCache.matchesHotspotBreakend(variant.getContig(), variant.getStart());
+        boolean hotspotCandidate = mHotspotCache.matchesHotspotBreakend(variant.getContig(), variant.getStart());
 
         if(hardFiltered && !hotspotCandidate)
         {

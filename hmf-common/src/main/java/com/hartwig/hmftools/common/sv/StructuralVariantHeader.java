@@ -2,8 +2,6 @@ package com.hartwig.hmftools.common.sv;
 
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.IMPRECISE;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.IMPRECISE_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERED;
@@ -14,6 +12,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_METHOD;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.RECOVERY_METHOD_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE_DESC;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.IMPRECISE;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.IMPRECISE_DESC;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF_DESC;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;

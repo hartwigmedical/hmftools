@@ -147,12 +147,6 @@ public class LowCountModel extends ClonalityModel
 
             SimulatedVafCalcs simVafCalcs = new SimulatedVafCalcs(dropoutRate, simulatedVaf, probTotalFrag1, probTotalFrag2Plus);
             simulatedVafCalcs.add(simVafCalcs);
-
-            /*
-            writeSimulatedDropoutData(
-                    mResultsWriter.getCnPlotCalcWriter(), mConfig, mSample, sampleId, filteredVariants.size(), simVafCalcs,
-                    observedFrag1, observedFrag2Plus);
-            */
         }
 
         // now find the closest ratio to the observed ratio

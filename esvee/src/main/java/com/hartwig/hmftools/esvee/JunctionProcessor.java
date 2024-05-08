@@ -396,7 +396,7 @@ public class JunctionProcessor
     {
         if(mConfig.WriteTypes.contains(WriteType.VCF))
         {
-            SV_LOGGER.debug("writing variant VCF with {} breakends");
+            SV_LOGGER.debug("writing variant VCF with {} breakends", breakends.size());
 
             VcfWriter vcfWriter = new VcfWriter(mConfig);
 

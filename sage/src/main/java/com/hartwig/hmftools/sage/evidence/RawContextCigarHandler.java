@@ -1,20 +1,18 @@
 package com.hartwig.hmftools.sage.evidence;
 
-import static java.lang.Math.max;
-
-import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
-import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_SOFT_CLIP_HIGH_QUAL_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_SOFT_CLIP_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
+import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.ALIGNED;
+import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.DELETED;
+import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.SKIPPED;
+import static com.hartwig.hmftools.sage.evidence.VariantReadPositionType.SOFT_CLIP;
 
 import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.SplitReadUtils;
-import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -44,7 +42,7 @@ public class RawContextCigarHandler implements CigarHandler
     @Override
     public void handleLeftSoftClip(final SAMRecord record, final CigarElement element)
     {
-        if(mVariant.position() > record.getAlignmentStart())
+        if(mVariant.position() >= record.getAlignmentStart())
             return;
 
         if(ignoreSoftClipAdapter(record))
@@ -53,14 +51,12 @@ public class RawContextCigarHandler implements CigarHandler
         if(exceedsSoftClipLowBaseQual(record.getBaseQualities(), 0, element.getLength()))
             return;
 
-        int readStartPos = record.getReadPositionAtReferencePosition(record.getAlignmentStart());
-        int readIndex = readStartPos - 1 - record.getAlignmentStart()
-                + mVariant.position() - mVariant.alt().length() + mVariant.ref().length();
+        // set read index assuming a REF match, not a variant match
+        // eg if soft-clip length = 10 (index 0-9), variant position is 96 vs start of 100, pos diff = 4, then read index = 10 - 4 = 6
+        int variantPosDiff = record.getAlignmentStart() - mVariant.Position;
+        int readIndex = element.getLength() - variantPosDiff;
 
-        boolean altSupport = mIsInsert && element.getLength() >= mVariant.alt().length() && matchesString(record, readIndex, mVariant.alt());
-        int baseQuality = altSupport ? avgBaseQuality(readIndex, record, mVariant.alt().length()) : 0;
-
-        mResult = RawContext.inSoftClip(readIndex, altSupport, baseQuality);
+        mResult = new RawContext(readIndex, SOFT_CLIP);
     }
 
     @Override
@@ -69,8 +65,9 @@ public class RawContextCigarHandler implements CigarHandler
         if(mResult != null && !mIsInsert)
             return;
 
-        int refPositionEnd = refPosition + element.getLength() - 1;
-        if(refPositionEnd < mVariant.position())
+        int unclippedEnd = refPosition + element.getLength() - 1;
+
+        if(mVariant.position() > unclippedEnd)
             return;
 
          if(ignoreSoftClipAdapter(record))
@@ -81,6 +78,12 @@ public class RawContextCigarHandler implements CigarHandler
         if(exceedsSoftClipLowBaseQual(record.getBaseQualities(), scStartIndex, element.getLength()))
             return;
 
+        int variantPosDiff = mVariant.Position - record.getAlignmentEnd();
+        int variantReadIndex = scStartIndex + variantPosDiff - 1;
+        mResult = new RawContext(variantReadIndex, SOFT_CLIP);
+
+        /* CLEANUP: cannot explain any of the logic below
+
         if(mIsInsert)
         {
             // for inserts from the soft-clipped bases, the variant's position will be the last ref position prior to the SC start
@@ -90,12 +93,11 @@ public class RawContextCigarHandler implements CigarHandler
             int readVariantStartPos = readIndex - 1;
 
             boolean altSupport = element.getLength() >= mVariant.alt().length() && matchesString(record, readVariantStartPos, mVariant.alt());
-            int baseQuality = altSupport ? avgBaseQuality(readVariantStartPos, record, mVariant.alt().length()) : 0;
 
             if(!altSupport)
                 return;
 
-            mResult = RawContext.inSoftClip(readVariantStartPos, altSupport, baseQuality);
+            mResult = new RawContext(readVariantStartPos, SOFT_CLIP);
         }
         else
         {
@@ -104,9 +106,10 @@ public class RawContextCigarHandler implements CigarHandler
                 int alignmentEnd = record.getAlignmentEnd();
                 int actualIndex = record.getReadPositionAtReferencePosition(alignmentEnd) - 1 - alignmentEnd + mVariant.position();
 
-                mResult = RawContext.inSoftClip(actualIndex, false, 0);
+                mResult = new RawContext(actualIndex, SOFT_CLIP);
             }
         }
+        */
     }
 
     @Override
@@ -127,13 +130,7 @@ public class RawContextCigarHandler implements CigarHandler
             int readIndexOffset = mVariant.position() - refPosition;
             int variantReadIndex = readIndex + readIndexOffset;
 
-            int baseQuality = record.getBaseQualities()[variantReadIndex];
-
-            // this logic is inadequate for INDELs but is handled in the index matching routine instead - ie to reverse any incorrect
-            // ref support here
-            boolean altSupport = mIsSNV && refPositionEnd >= mVariant.end() && matchesString(record, variantReadIndex, mVariant.alt());
-            boolean refSupport = !altSupport && matchesFirstBase(record, variantReadIndex, mVariant.ref(), true);
-            mResult = RawContext.alignment(variantReadIndex, altSupport, refSupport, baseQuality);
+            mResult = new RawContext(variantReadIndex, ALIGNED);
         }
     }
 
@@ -145,9 +142,7 @@ public class RawContextCigarHandler implements CigarHandler
 
         if(refPosition == mVariant.position())
         {
-            boolean altSupport = mIsInsert && e.getLength() == mVariant.alt().length() - 1 && matchesString(record, readIndex, mVariant.alt());
-            int baseQuality = altSupport ? avgBaseQuality(readIndex, record, mVariant.alt().length()) : 0;
-            mResult = RawContext.indel(readIndex, altSupport, baseQuality);
+            mResult = new RawContext(readIndex, ALIGNED);
         }
     }
 
@@ -160,15 +155,11 @@ public class RawContextCigarHandler implements CigarHandler
         int refPositionEnd = refPosition + e.getLength();
         if(refPosition == mVariant.position())
         {
-            boolean altSupport = mIsDelete && e.getLength() == mVariant.ref().length() - 1
-                    && matchesFirstBase(record, readIndex, mVariant.ref(), false);
-
-            int baseQuality = altSupport ? avgBaseQuality(readIndex, record, 2) : 0;
-            mResult = RawContext.indel(readIndex, altSupport, baseQuality);
+            mResult = new RawContext(readIndex, ALIGNED);
         }
         else if(positionWithin(mVariant.position(), refPosition, refPositionEnd))
         {
-            mResult = RawContext.inDelete(readIndex);
+            mResult = new RawContext(readIndex, DELETED);
         }
     }
 
@@ -183,19 +174,11 @@ public class RawContextCigarHandler implements CigarHandler
             int refPositionEnd = refPosition + e.getLength();
             if(refPositionEnd >= mVariant.position())
             {
-                mResult = RawContext.inSkipped(readIndex);
+                mResult = new RawContext(readIndex, SKIPPED);
             }
         }
 
         handleDelete(record, e, readIndex, refPosition);
-    }
-
-    private static boolean matchesFirstBase(final SAMRecord record, int index, final String expected, boolean allowLowQual)
-    {
-        if(expected.charAt(0) == record.getReadBases()[index])
-            return true;
-
-        return allowLowQual && record.getBaseQualities()[index] < MATCHING_BASE_QUALITY;
     }
 
     private static boolean matchesString(final SAMRecord record, int index, final String expected)
@@ -215,21 +198,6 @@ public class RawContextCigarHandler implements CigarHandler
         }
 
         return true;
-    }
-
-    private int avgBaseQuality(int readIndex, SAMRecord record, int length)
-    {
-        int maxIndex = Math.min(readIndex + length, record.getBaseQualities().length) - 1;
-
-        double qualityTotal = 0;
-
-        for(int i = readIndex; i <= maxIndex; i++)
-        {
-            qualityTotal += record.getBaseQualities()[i];
-        }
-
-        int baseLength = maxIndex - readIndex + 1;
-        return qualityTotal > 0 ? (int)(qualityTotal / baseLength) : 0;
     }
 
     public static boolean exceedsSoftClipLowBaseQual(final byte[] baseQualities, int startIndex, int scLength)
@@ -253,61 +221,5 @@ public class RawContextCigarHandler implements CigarHandler
 
         int lowQualCount = scLength - aboveQual;
         return lowQualCount >= MAX_SOFT_CLIP_LOW_QUAL_COUNT;
-    }
-
-    public static RawContext createRawContextFromCoreMatch(
-            final VariantReadContext readContext, final int maxCandidateDeleteLength, final SAMRecord record)
-    {
-        // check for an exact core match by which to centre the read
-        if(maxCandidateDeleteLength < 5)
-            return RawContext.INVALID_CONTEXT;
-
-        int scLenLeft = leftSoftClipLength(record);
-        int scLenRight = rightSoftClipLength(record);
-
-        if(max(scLenLeft, scLenRight) < 5)
-            return RawContext.INVALID_CONTEXT;
-
-        String variantCore = readContext.coreStr();
-        int coreStartIndex = record.getReadString().indexOf(variantCore);
-        if(coreStartIndex < 0)
-            return RawContext.INVALID_CONTEXT;
-
-        int coreEndIndex = coreStartIndex + variantCore.length() - 1;
-        boolean isValidRead = false;
-        int baseQuality = 0;
-
-        if(scLenLeft > scLenRight)
-        {
-            // the core match must span from the left soft-clipping into the matched bases
-            int readRightCorePosition = record.getReferencePositionAtReadPosition(coreEndIndex + 1);
-
-            if(readRightCorePosition > readContext.variant().position() && coreStartIndex < scLenLeft)
-            {
-                isValidRead = true;
-                baseQuality = record.getBaseQualities()[scLenLeft];
-            }
-        }
-        else
-        {
-            // the core match must span from the matched bases into the right soft-clipping
-            int readLeftCorePosition = record.getReferencePositionAtReadPosition(coreStartIndex + 1);
-            int postCoreIndexDiff = record.getReadBases().length - coreEndIndex;
-
-            if(readLeftCorePosition > 0 && readLeftCorePosition < readContext.variant().position() && postCoreIndexDiff < scLenRight)
-            {
-                isValidRead = true;
-                baseQuality = record.getBaseQualities()[record.getReadBases().length - scLenRight];
-            }
-        }
-
-        if(!isValidRead)
-            return RawContext.INVALID_CONTEXT;
-
-        int readIndex = coreStartIndex + readContext.VarReadIndex - readContext.CoreIndexStart;
-
-        return new RawContext(
-                readIndex, false, false, true,
-                true, false, true, baseQuality);
     }
 }

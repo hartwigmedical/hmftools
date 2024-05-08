@@ -1,13 +1,14 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.createJunctionReads;
 import static com.hartwig.hmftools.esvee.TestUtils.loadRefGenomeBases;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -34,11 +35,11 @@ public class SvScenariosTest
         // minimum reads support
         int posJunctionPos = 200;
         int negJunctionPos = 500;
-        Junction posJunction = new Junction(CHR_1, posJunctionPos, POS_ORIENT);
-        Junction negJunction = new Junction(CHR_1, negJunctionPos, NEG_ORIENT);
+        Junction posJunction = new Junction(CHR_1, posJunctionPos, FORWARD);
+        Junction negJunction = new Junction(CHR_1, negJunctionPos, REVERSE);
 
         List<SAMRecord> junctionReads1 = createJunctionReads(
-                mRefGenome, mReadIds.nextId(), 50, CHR_1, posJunctionPos, POS_ORIENT, CHR_1, negJunctionPos, NEG_ORIENT, 50);
+                mRefGenome, mReadIds.nextId(), 50, CHR_1, posJunctionPos, FORWARD, CHR_1, negJunctionPos, REVERSE, 50);
 
 
     }

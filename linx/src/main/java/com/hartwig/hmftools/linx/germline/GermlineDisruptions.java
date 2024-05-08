@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.linx.germline;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.GERMLINE_DISRUPTION;

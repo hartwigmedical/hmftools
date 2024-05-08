@@ -5,7 +5,6 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ASSEMBLY_LINK_OVERLAP_BASES;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MERGE_MISMATCH;
@@ -14,14 +13,12 @@ import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.MATCH_SUBSEQUEN
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.formLink;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.createMinBaseQuals;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
-import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.isDiscordantFragment;
 
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.esvee.assembly.read.BamReader;
@@ -92,7 +89,7 @@ public class RemoteRegionAssembler
             if(support.isSupplementary() || support.isMateUnmapped())
                 continue;
 
-            boolean matePastJunction = (support.orientation() == POS_ORIENT) == assembly.isForwardJunction();
+            boolean matePastJunction = support.orientation().isForward() == assembly.isForwardJunction();
 
             if(support.isDiscordant())
             {
@@ -195,7 +192,7 @@ public class RemoteRegionAssembler
         boolean assemblyReversed = false;
         boolean remoteReversed = false;
 
-        if(assembly.junction().Orientation == mRemoteRegion.orientation())
+        if(assembly.junction().Orient == mRemoteRegion.orientation())
         {
             if(assembly.junction().isForward())
                 remoteReversed = true;

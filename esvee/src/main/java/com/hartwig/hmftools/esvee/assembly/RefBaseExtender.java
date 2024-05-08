@@ -190,7 +190,7 @@ public class RefBaseExtender
             if(read.negativeStrand())
                 return false;
 
-            if(read.alignmentEnd() >= junctionPosition)
+            if(read.alignmentEnd() > junctionPosition)
                 return false;
         }
         else
@@ -198,7 +198,7 @@ public class RefBaseExtender
             if(read.positiveStrand())
                 return false;
 
-            if(read.alignmentStart() <= junctionPosition)
+            if(read.alignmentStart() < junctionPosition)
                 return false;
         }
 

@@ -11,6 +11,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -69,7 +70,7 @@ public final class RemoteRegionFinder
 
     private static RemoteRegion addOrCreateRemoteRegion(
             final List<RemoteRegion> remoteRegions, final Read read, final RemoteReadType readType,
-            final String remoteChr, final int remotePosStart, final int remotePosEnd, final byte remoteOrientation)
+            final String remoteChr, final int remotePosStart, final int remotePosEnd, final Orientation remoteOrientation)
     {
         RemoteRegion matchedRegion = remoteRegions.stream()
                 .filter(x -> x.overlaps(remoteChr, remotePosStart, remotePosEnd, remoteOrientation)).findFirst().orElse(null);
@@ -104,7 +105,7 @@ public final class RemoteRegionFinder
 
         RemoteRegion region = addOrCreateRemoteRegion(
                 remoteRegions, read, SUPPLEMENTARY, suppData.Chromosome, suppData.Position,
-                remotePosEnd, suppData.orientation());
+                remotePosEnd, Orientation.fromByte(suppData.orientation()));
 
         region.addSoftClipMapQual(readScLength, suppData.MapQuality);
     }

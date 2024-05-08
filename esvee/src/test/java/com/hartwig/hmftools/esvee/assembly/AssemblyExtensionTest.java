@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION_MATE;
@@ -31,7 +31,7 @@ public class AssemblyExtensionTest
         //                 01234567890012345678901234567890123456789012345678901234567890
         String refBases = "AAACCCGGGTTTAACCGGTTAAAAACCCCCGGGGGTTTTTAACCGGTTAAACCCGGGTTTAA";
 
-        Junction posJunction = new Junction(CHR_1, 60, POS_ORIENT);
+        Junction posJunction = new Junction(CHR_1, 60, FORWARD);
 
         byte[] baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(refBases.length());
 
@@ -68,7 +68,7 @@ public class AssemblyExtensionTest
 
         assertFalse(refBaseAssembly.checkAddRead(read4, DISCORDANT, permittedMismatches, requiredOverlap));
 
-        Junction negJunction = new Junction(CHR_1, 60, NEG_ORIENT);
+        Junction negJunction = new Junction(CHR_1, 60, REVERSE);
 
         assembly = new JunctionAssembly(negJunction, existingRefBases.getBytes(), baseQuals, 10); // was 50 -> 70
 

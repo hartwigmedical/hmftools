@@ -2,11 +2,11 @@ package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.assembly.types.ThreadTask.mergePerfCounters;
 
@@ -187,7 +187,7 @@ public class Alignment
 
                 for(Breakend breakend : assemblyAlignment.breakends())
                 {
-                    if(breakend.matches(assembly.junction().Chromosome, assembly.junction().Position, assembly.junction().Orientation))
+                    if(breakend.matches(assembly.junction().Chromosome, assembly.junction().Position, assembly.junction().Orient))
                     {
                         assembly.setAlignmentOutcome(AlignmentOutcome.MATCH);
                         matched = true;
@@ -209,6 +209,7 @@ public class Alignment
         {
             List<String> combinedSampleIds = mConfig.combinedSampleIds();
 
+            // build up a map of read ID to the set of breakends it supports, and the top type of support (split then discordant)
             Map<String,BreakendFragmentSupport> fragmentSupportMap = Maps.newHashMap();
 
             for(Breakend breakend : assemblyAlignment.breakends())
@@ -234,14 +235,18 @@ public class Alignment
                         BreakendSupport support = sampleSupport.get(read.sampleIndex());
 
                         if(breakend.readSpansJunction(read, false))
+                        {
                             isSplitFragment = true;
-                        else
+                        }
+                        else if(breakend.isRelatedDiscordantRead(read.alignmentStart(), read.alignmentEnd(), read.orientation()))
+                        {
                             isDiscFragment = true;
+                        }
 
-                        if((!isSplitFragment && !isDiscFragment))
+                        if(!isSplitFragment && !isDiscFragment)
                             continue;
 
-                        if(read.orientation() == POS_ORIENT)
+                        if(read.orientation().isForward())
                             ++support.ForwardReads;
                         else
                             ++support.ReverseReads;
@@ -250,7 +255,9 @@ public class Alignment
 
                         if(fragmentSupport == null)
                         {
-                            fragmentSupport = new BreakendFragmentSupport(read.sampleIndex(), isSplitFragment, breakend);
+                            int inferredFragLength = breakend.calcInferredFragmentLength(read);
+
+                            fragmentSupport = new BreakendFragmentSupport(read.sampleIndex(), isSplitFragment, breakend, inferredFragLength);
                             fragmentSupportMap.put(read.id(), fragmentSupport);
                         }
                         else
@@ -261,10 +268,39 @@ public class Alignment
                 }
             }
 
+            int inferredFragmentCount = 0;
+            int inferredFragmentTotal = 0;
+
+            for(Map.Entry<String,BreakendFragmentSupport> entry : fragmentSupportMap.entrySet())
+            {
+                BreakendFragmentSupport fragmentSupport = entry.getValue();
+
+                if(fragmentSupport.InferredFragmentLength > 0)
+                {
+                    ++inferredFragmentCount;
+                    inferredFragmentTotal += fragmentSupport.InferredFragmentLength;
+                }
+            }
+
+            int averageInferredFragLength = inferredFragmentCount > 0 ? (int)round(inferredFragmentTotal / (double)inferredFragmentCount) : 0;
+
+            for(Breakend breakend : assemblyAlignment.breakends())
+            {
+                breakend.setAverageInferredFragmentLength(averageInferredFragLength);
+            }
+
+            // count fragments to both breakends if it is in either
             for(BreakendFragmentSupport fragmentSupport : fragmentSupportMap.values())
             {
+                Set<Breakend> processed = Sets.newHashSet();
+
                 for(Breakend breakend : fragmentSupport.Breakends)
                 {
+                    if(processed.contains(breakend) || (!breakend.isSingle() && processed.contains(breakend.otherBreakend())))
+                        continue;
+
+                    processed.add(breakend);
+
                     boolean allowDiscordantSupport = !breakend.isShortLocalDelDupIns();
 
                     BreakendSupport support = breakend.sampleSupport().get(fragmentSupport.SampleIndex);
@@ -273,32 +309,21 @@ public class Alignment
                         ++support.SplitFragments;
                     else if(allowDiscordantSupport)
                         ++support.DiscordantFragments;
-                }
-            }
 
-            // for pairs of breakends, set their support to the maximum of each type
-            Set<Breakend> processedBreakends = Sets.newHashSet();
-            for(Breakend breakend : assemblyAlignment.breakends())
-            {
-                if(breakend.isSingle() || processedBreakends.contains(breakend))
-                    continue;
+                    if(breakend.isSingle())
+                        continue;
 
-                processedBreakends.add(breakend);
+                    Breakend otherBreakend = breakend.otherBreakend();
 
-                Breakend otherBreakend = breakend.otherBreakend();
+                    BreakendSupport otherSupport = otherBreakend.sampleSupport().get(fragmentSupport.SampleIndex);
 
-                for(int i = 0; i < breakend.sampleSupport().size(); ++i)
-                {
-                    BreakendSupport support = breakend.sampleSupport().get(i);
-                    BreakendSupport otherSupport = otherBreakend.sampleSupport().get(i);
+                    processed.add(otherBreakend);
 
-                    int maxSplitFragments = max(support.SplitFragments, otherSupport.SplitFragments);
-                    support.SplitFragments = maxSplitFragments;
-                    otherSupport.SplitFragments = maxSplitFragments;
-
-                    int maxDiscFragments = max(support.DiscordantFragments, otherSupport.DiscordantFragments);
-                    support.DiscordantFragments = maxDiscFragments;
-                    otherSupport.DiscordantFragments = maxDiscFragments;
+                    // assign each read preferably as split over discordant
+                    if(fragmentSupport.IsSplit)
+                        ++otherSupport.SplitFragments;
+                    else if(allowDiscordantSupport)
+                        ++otherSupport.DiscordantFragments;
                 }
             }
         }
@@ -309,12 +334,14 @@ public class Alignment
         public final int SampleIndex;
         public boolean IsSplit;
         public final Set<Breakend> Breakends;
+        public final int InferredFragmentLength;
 
-        public BreakendFragmentSupport(final int sampleIndex, final boolean isSplit, final Breakend breakend)
+        public BreakendFragmentSupport(final int sampleIndex, final boolean isSplit, final Breakend breakend, final int inferredFragLength)
         {
             SampleIndex = sampleIndex;
             IsSplit = isSplit;
             Breakends = Sets.newHashSet(breakend);
+            InferredFragmentLength = inferredFragLength;
         }
 
         public void addBreakend(final Breakend breakend, boolean isSplit)

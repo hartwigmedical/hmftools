@@ -4,6 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
@@ -11,8 +13,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.setReadFlag;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
@@ -31,11 +31,11 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.alignment.AlignData;
-import com.hartwig.hmftools.esvee.alignment.AlternativeAlignment;
 import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
 import com.hartwig.hmftools.esvee.alignment.BreakendBuilder;
@@ -93,7 +93,6 @@ public class AlignmentTest
         assertEquals(5, homology.ExactEnd);
         assertEquals(-6, homology.InexactStart);
         assertEquals(5, homology.InexactEnd);
-        assertEquals(6, homology.positionOffset());
 
         // test 2: first base now no longer matches
         basesStart = "GTCTTCTTCTC";
@@ -158,6 +157,17 @@ public class AlignmentTest
         assertEquals(5, homology.ExactEnd);
         assertEquals(-6, homology.InexactStart);
         assertEquals(5, homology.InexactEnd);
+
+        // test 8: with an even number of bases
+        basesStart = "AA";
+        assemblyOverlap = basesStart;
+        basesEnd = basesStart;
+        homology = determineHomology(assemblyOverlap, basesStart, basesEnd, basesStart.length());
+        assertEquals(basesStart, homology.Homology);
+        assertEquals(-1, homology.ExactStart);
+        assertEquals(1, homology.ExactEnd);
+        assertEquals(-1, homology.InexactStart);
+        assertEquals(1, homology.InexactEnd);
     }
 
     private static void addAssemblyRead(final JunctionAssembly assembly, int junctionOffset)
@@ -191,7 +201,7 @@ public class AlignmentTest
         String refBases1 = REF_BASES_400.substring(100, 200);
         String extBases1 = REF_BASES_400.substring(300, 350);
         String assemblyBases1 = refBases1 + extBases1;
-        JunctionAssembly assembly1 = createAssembly(CHR_1, 200, POS_ORIENT, assemblyBases1, refBases1.length() - 1);
+        JunctionAssembly assembly1 = createAssembly(CHR_1, 200, FORWARD, assemblyBases1, refBases1.length() - 1);
         addAssemblyRead(assembly1, -30);
         addAssemblyRead(assembly1, 10);
 
@@ -204,7 +214,7 @@ public class AlignmentTest
         refBases1 = REF_BASES_400.substring(100, 200);
         extBases1 = REF_BASES_400.substring(300, 350);
         assemblyBases1 = extBases1 + refBases1;
-        assembly1 = createAssembly(CHR_1, 100, NEG_ORIENT, assemblyBases1, extBases1.length());
+        assembly1 = createAssembly(CHR_1, 100, REVERSE, assemblyBases1, extBases1.length());
 
         assemblyAlignment = new AssemblyAlignment(0, assembly1);
         assertEquals(assemblyBases1, assemblyAlignment.fullSequence());
@@ -214,12 +224,12 @@ public class AlignmentTest
         refBases1 = REF_BASES_400.substring(101, 201);
         extBases1 = REF_BASES_400.substring(300, 350);
         assemblyBases1 = refBases1 + extBases1;
-        assembly1 = createAssembly(CHR_1, 200, POS_ORIENT, assemblyBases1, refBases1.length() - 1);
+        assembly1 = createAssembly(CHR_1, 200, FORWARD, assemblyBases1, refBases1.length() - 1);
 
         String refBases2 = REF_BASES_400.substring(300, 400);
         String extBases2 = REF_BASES_400.substring(151, 201);
         String assemblyBases2 = extBases2 + refBases2;
-        JunctionAssembly assembly2 = createAssembly(CHR_1, 300, NEG_ORIENT, assemblyBases2, extBases2.length());
+        JunctionAssembly assembly2 = createAssembly(CHR_1, 300, REVERSE, assemblyBases2, extBases2.length());
         addAssemblyRead(assembly2, -30);
         assertEquals(20, assembly2.support().get(0).junctionAssemblyIndex());
         addAssemblyRead(assembly2, 10);
@@ -253,10 +263,10 @@ public class AlignmentTest
 
         // same again but with matching orientations
         assemblyBases1 = refBases1 + Nucleotides.reverseComplementBases(extBases1);
-        assembly1 = createAssembly(CHR_1, 200, POS_ORIENT, assemblyBases1, refBases1.length() - 1);
+        assembly1 = createAssembly(CHR_1, 200, FORWARD, assemblyBases1, refBases1.length() - 1);
 
         assemblyBases2 = refBases2 + Nucleotides.reverseComplementBases(extBases2);
-        assembly2 = createAssembly(CHR_1, 349, POS_ORIENT, assemblyBases2, refBases2.length() - 1);
+        assembly2 = createAssembly(CHR_1, 349, FORWARD, assemblyBases2, refBases2.length() - 1);
 
         assemblyLink = new AssemblyLink(assembly1, assembly2, LinkType.SPLIT, insertedBases, "");
 
@@ -269,11 +279,11 @@ public class AlignmentTest
         String overlap = Nucleotides.reverseComplementBases(refBases2.substring(0, 10));
         extBases1 = Nucleotides.reverseComplementBases(refBases2.substring(10, 60));
         assemblyBases1 = extBases1 + refBases1;
-        assembly1 = createAssembly(CHR_1, 101, NEG_ORIENT, assemblyBases1, extBases1.length());
+        assembly1 = createAssembly(CHR_1, 101, REVERSE, assemblyBases1, extBases1.length());
 
         extBases2 = Nucleotides.reverseComplementBases(refBases1.substring(10, 60));
         assemblyBases2 = extBases2 + refBases2;
-        assembly2 = createAssembly(CHR_1, 349, NEG_ORIENT, assemblyBases2, extBases2.length());
+        assembly2 = createAssembly(CHR_1, 349, REVERSE, assemblyBases2, extBases2.length());
 
         assemblyLink = new AssemblyLink(assembly1, assembly2, LinkType.SPLIT, "", overlap);
 
@@ -287,7 +297,7 @@ public class AlignmentTest
     public void testBasicSvTypes()
     {
         AssemblyAlignment assemblyAlignment = createAssemblyAlignment(
-                CHR_1, 200, POS_ORIENT, CHR_2, 250, NEG_ORIENT, "");
+                CHR_1, 200, FORWARD, CHR_2, 250, REVERSE, "");
 
         BreakendBuilder breakendBuilder = new BreakendBuilder(mRefGenome, assemblyAlignment);
 
@@ -303,16 +313,16 @@ public class AlignmentTest
         Breakend first = assemblyAlignment.breakends().get(0);
         assertEquals(BND, first.svType());
         assertEquals(200, first.Position);
-        assertEquals(POS_ORIENT, first.Orientation);
+        assertEquals(FORWARD, first.Orient);
         assertNull(first.Homology);
 
         Breakend second = assemblyAlignment.breakends().get(1);
         assertEquals(250, second.Position);
-        assertEquals(NEG_ORIENT, second.Orientation);
+        assertEquals(REVERSE, second.Orient);
 
         // test again for a DUP with inserted bases and SGLs on both ends
         assemblyAlignment = createAssemblyAlignment(
-                CHR_1, 100, NEG_ORIENT, CHR_1, 350, POS_ORIENT, "AAAA");
+                CHR_1, 100, REVERSE, CHR_1, 350, FORWARD, "AAAA");
 
         breakendBuilder = new BreakendBuilder(mRefGenome, assemblyAlignment);
 
@@ -340,19 +350,19 @@ public class AlignmentTest
         first = assemblyAlignment.breakends().get(0);
         assertEquals(DUP, first.svType());
         assertEquals(100, first.Position);
-        assertEquals(NEG_ORIENT, first.Orientation);
+        assertEquals(REVERSE, first.Orient);
         assertEquals(5, first.alternativeAlignments().size());
         assertNull(first.Homology);
 
         second = assemblyAlignment.breakends().get(1);
         assertEquals(350, second.Position);
-        assertEquals(POS_ORIENT, second.Orientation);
+        assertEquals(FORWARD, second.Orient);
         assertEquals(5, second.alternativeAlignments().size());
 
 
         // test outer singles also with alt alignments
         assemblyAlignment = createAssemblyAlignment(
-                CHR_1, 200, POS_ORIENT, CHR_1, 250, NEG_ORIENT, "");
+                CHR_1, 200, FORWARD, CHR_1, 250, REVERSE, "");
 
         breakendBuilder = new BreakendBuilder(mRefGenome, assemblyAlignment);
 
@@ -377,25 +387,25 @@ public class AlignmentTest
         Breakend breakend = assemblyAlignment.breakends().get(0);
         assertEquals(SGL, breakend.svType());
         assertEquals(101, breakend.Position);
-        assertEquals(NEG_ORIENT, breakend.Orientation);
+        assertEquals(REVERSE, breakend.Orient);
         assertEquals(50, breakend.InsertedBases.length());
         assertEquals(3, breakend.alternativeAlignments().size());
 
         breakend = assemblyAlignment.breakends().get(1);
         assertEquals(DEL, breakend.svType());
         assertEquals(200, breakend.Position);
-        assertEquals(POS_ORIENT, breakend.Orientation);
+        assertEquals(FORWARD, breakend.Orient);
         assertNull(breakend.Homology);
 
         breakend = assemblyAlignment.breakends().get(2);
         assertEquals(DEL, breakend.svType());
         assertEquals(250, breakend.Position);
-        assertEquals(NEG_ORIENT, breakend.Orientation);
+        assertEquals(REVERSE, breakend.Orient);
 
         breakend = assemblyAlignment.breakends().get(3);
         assertEquals(SGL, breakend.svType());
         assertEquals(349, breakend.Position);
-        assertEquals(POS_ORIENT, breakend.Orientation);
+        assertEquals(FORWARD, breakend.Orient);
         assertEquals(50, breakend.InsertedBases.length());
         assertEquals(2, breakend.alternativeAlignments().size());
     }
@@ -405,7 +415,7 @@ public class AlignmentTest
     {
         // first a DEL
         AssemblyAlignment assemblyAlignment = createAssemblyAlignment(
-                CHR_1, 200, POS_ORIENT, CHR_1, 251, NEG_ORIENT, "");
+                CHR_1, 200, FORWARD, CHR_1, 251, REVERSE, "");
 
         BreakendBuilder breakendBuilder = new BreakendBuilder(mRefGenome, assemblyAlignment);
 
@@ -420,12 +430,12 @@ public class AlignmentTest
         Breakend first = assemblyAlignment.breakends().get(0);
         assertEquals(DEL, first.svType());
         assertEquals(200, first.Position);
-        assertEquals(POS_ORIENT, first.Orientation);
+        assertEquals(FORWARD, first.Orient);
         assertNull(first.Homology);
 
         Breakend second = assemblyAlignment.breakends().get(1);
         assertEquals(251, second.Position);
-        assertEquals(NEG_ORIENT, second.Orientation);
+        assertEquals(REVERSE, second.Orient);
     }
 
     private static AlignData createAlignment(
@@ -452,14 +462,15 @@ public class AlignmentTest
     }
 
     public AssemblyAlignment createAssemblyAlignment(
-            final String chrStart, int posStart, byte orientStart, final String chrEnd, int posEnd, byte orientEnd, final String insertedBases)
+            final String chrStart, int posStart, Orientation orientStart,
+            final String chrEnd, int posEnd, Orientation orientEnd, final String insertedBases)
     {
         return createAssemblyAlignment(mRefGenome, chrStart, posStart, orientStart, chrEnd, posEnd, orientEnd, insertedBases);
     }
 
     public static AssemblyAlignment createAssemblyAlignment(
-            final RefGenomeInterface refGenome, final String chrStart, int posStart, byte orientStart,
-            final String chrEnd, int posEnd, byte orientEnd, final String insertedBases)
+            final RefGenomeInterface refGenome, final String chrStart, int posStart, Orientation orientStart,
+            final String chrEnd, int posEnd, Orientation orientEnd, final String insertedBases)
     {
         // first a basic exact match junction
         Junction junctionStart = new Junction(chrStart, posStart, orientStart);
@@ -470,12 +481,12 @@ public class AlignmentTest
 
         String firstRefBases, secondRefBases;
 
-        if(orientStart == POS_ORIENT)
+        if(orientStart.isForward())
             firstRefBases = refGenome.getBaseString(chrStart, posStart - refBaseLength + 1, posStart);
         else
             firstRefBases = refGenome.getBaseString(chrStart, posStart, posStart + refBaseLength - 1);
 
-        if(orientEnd == POS_ORIENT)
+        if(orientEnd.isForward())
             secondRefBases = refGenome.getBaseString(chrEnd, posEnd - refBaseLength + 1, posEnd);
         else
             secondRefBases = refGenome.getBaseString(chrEnd, posEnd, posEnd + refBaseLength - 1);
@@ -485,14 +496,14 @@ public class AlignmentTest
 
         if(orientStart == orientEnd)
         {
-            if(orientEnd == POS_ORIENT)
+            if(orientEnd.isForward())
                 firstExtBases += secondRefBases.substring(secondRefBases.length() - extBaseLength);
             else
                 firstExtBases += secondRefBases.substring(0, extBaseLength);
 
             firstExtBases = insertedBases + Nucleotides.reverseComplementBases(firstExtBases);
 
-            if(orientStart == POS_ORIENT)
+            if(orientStart.isForward())
                 secondExtBases += firstRefBases.substring(firstRefBases.length() - extBaseLength);
             else
                 secondExtBases += firstRefBases.substring(0, extBaseLength);
@@ -501,12 +512,12 @@ public class AlignmentTest
         }
         else
         {
-            if(orientEnd == POS_ORIENT)
+            if(orientEnd.isForward())
                 firstExtBases += secondRefBases.substring(secondRefBases.length() - extBaseLength);
             else
                 firstExtBases += secondRefBases.substring(0, extBaseLength);
 
-            if(orientStart == POS_ORIENT)
+            if(orientStart.isForward())
                 secondExtBases += firstRefBases.substring(firstRefBases.length() - extBaseLength);
             else
                 secondExtBases += firstRefBases.substring(0, extBaseLength);
@@ -515,7 +526,7 @@ public class AlignmentTest
         String firstAssemblyBases, secondAssemblyBases;
         int firstJunctionIndex, secondJunctionIndex;
 
-        if(orientStart == POS_ORIENT)
+        if(orientStart.isForward())
         {
             firstAssemblyBases = firstRefBases + firstExtBases;
             firstJunctionIndex = firstRefBases.length() - 1;
@@ -526,7 +537,7 @@ public class AlignmentTest
             firstJunctionIndex = firstExtBases.length();
         }
 
-        if(orientEnd == POS_ORIENT)
+        if(orientEnd.isForward())
         {
             secondAssemblyBases = secondRefBases + secondExtBases;
             secondJunctionIndex = secondRefBases.length() - 1;

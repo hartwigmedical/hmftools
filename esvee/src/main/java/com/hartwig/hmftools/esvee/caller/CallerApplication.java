@@ -1,27 +1,19 @@
 package com.hartwig.hmftools.esvee.caller;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations.REPEAT_MASK_FILE;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEALN;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.APP_NAME;
 import static com.hartwig.hmftools.esvee.caller.CallerConfig.addConfig;
+import static com.hartwig.hmftools.esvee.caller.VariantFilters.logFilterTypeCounts;
 
-import java.util.List;
-import java.util.Map;
-
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.esvee.caller.annotation.PonCache;
-import com.hartwig.hmftools.esvee.caller.annotation.RepeatMaskAnnotation;
 import com.hartwig.hmftools.esvee.caller.annotation.RepeatMaskAnnotator;
 
 import org.jetbrains.annotations.NotNull;
@@ -43,26 +35,22 @@ public class CallerApplication
 
     private int mProcessedVariants;
     private final SvDataCache mSvDataCache;
-    private final FilterCache mFilterCache;
 
-    public CallerApplication(
-            final CallerConfig config, final FilterConstants filterConstants, final RefGenomeInterface refGenome,
-            final ConfigBuilder configBuilder)
+    public CallerApplication(final ConfigBuilder configBuilder)
     {
-        mConfig = config;
-        mFilterConstants = filterConstants;
+        mConfig = new CallerConfig(configBuilder);
+        mFilterConstants = FilterConstants.from(configBuilder);
 
         SV_LOGGER.info("loading reference data");
         mPonCache = new PonCache(configBuilder);
         mHotspotCache = new HotspotCache(configBuilder);
         mTargetRegions = new TargetRegions(configBuilder);
 
-        mVariantBuilder = new VariantBuilder(mFilterConstants, mHotspotCache, mTargetRegions, mConfig.GermlineMode);
-        mVariantFilters = new VariantFilters(mFilterConstants, mConfig.GermlineMode);
+        mVariantBuilder = new VariantBuilder(mHotspotCache, mTargetRegions);
+        mVariantFilters = new VariantFilters(mFilterConstants, mConfig.hasReference(), mConfig.hasTumor());
 
         mProcessedVariants = 0;
         mSvDataCache = new SvDataCache();
-        mFilterCache = new FilterCache();
         mRepeatMaskAnnotator = new RepeatMaskAnnotator();
 
         if(configBuilder.hasValue(REPEAT_MASK_FILE))
@@ -70,15 +58,6 @@ public class CallerApplication
             if(!mRepeatMaskAnnotator.load(configBuilder.getValue(REPEAT_MASK_FILE), mConfig.RefGenVersion))
                 System.exit(1);
         }
-    }
-
-    public static CallerApplication fromCommandArgs(final ConfigBuilder configBuilder)
-    {
-        CallerConfig config = new CallerConfig(configBuilder);
-        FilterConstants filterConstants = FilterConstants.from(configBuilder);
-        RefGenomeInterface refGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
-
-        return new CallerApplication(config, filterConstants, refGenome, configBuilder);
     }
 
     public void run()
@@ -120,9 +99,9 @@ public class CallerApplication
 
         mVariantBuilder.setGenotypeOrdinals(genotypeIds);
 
-        if(mConfig.GermlineMode)
+        if(mConfig.GermlineOnly)
         {
-            SV_LOGGER.info("genotype info: germline mode ref({}: {}) tumor({}: {})",
+            SV_LOGGER.info("germline mode ref({}: {}) tumor({}: {})",
                     genotypeIds.TumorOrdinal, genotypeIds.TumorId, genotypeIds.ReferenceOrdinal, genotypeIds.ReferenceId);
         }
         else if(mConfig.ReferenceId.isEmpty())
@@ -142,9 +121,9 @@ public class CallerApplication
 
         SV_LOGGER.info("writing output VCF files to {}", mConfig.OutputDir);
 
-        final VersionInfo version = new VersionInfo("gripss.version");
+        final VersionInfo version = fromAppName(APP_NAME);
 
-        VcfWriter writer = new VcfWriter(mConfig, vcfHeader, version.version(), genotypeIds, mSvDataCache, mFilterCache);
+        VcfWriter writer = new VcfWriter(mConfig, vcfHeader, version.version(), genotypeIds, mSvDataCache);
 
         if(mSvDataCache.getSvList().isEmpty())
         {
@@ -154,138 +133,44 @@ public class CallerApplication
         }
 
         SV_LOGGER.info("applying soft-filters and realignment");
-        int realignedCount = 0;
 
-        for(final SvData svData : mSvDataCache.getSvList())
+        for(SvData var : mSvDataCache.getSvList())
         {
-            mFilterCache.checkHotspotFilter(mHotspotCache, svData);
+            if(mHotspotCache.isHotspotVariant(var))
+                var.markHotspot();
 
-            mVariantFilters.applyFilters(svData, mFilterCache);
+            mVariantFilters.applyFilters(var);
         }
-
-        SV_LOGGER.info("soft-filtered({}) hotspots({}) realigned({})",
-                mFilterCache.getBreakendFilters().size(), mFilterCache.getHotspots().size(), realignedCount);
 
         mSvDataCache.buildBreakendMap();
 
-        SV_LOGGER.info("applying PON filters");
-
-        for(List<Breakend> chrBreakendList : mSvDataCache.getBreakendMap().values())
-        {
-            for(Breakend breakend : chrBreakendList)
-            {
-                if(breakend == breakend.sv().breakendEnd()) // skip testing the same SV again
-                    continue;
-
-                mFilterCache.checkPonFilter(mPonCache, breakend.sv());
-            }
-        }
-
-        SV_LOGGER.debug("pon filtered count({})", mFilterCache.ponFilteredCount());
-
-        SV_LOGGER.info("finding assembly links");
-
-        // TODO: need to load assembled links or not? for double-stranded breaks, mostlly rescue if still done
-        LinkStore assemblyLinkStore = new LinkStore(); // AssemblyLinks.buildAssembledLinks(mSvDataCache.getBreakendMap());
-        SV_LOGGER.debug("found {} assembly links", assemblyLinkStore.getBreakendLinksMap().size());
-
-        /*
-
-        SV_LOGGER.info("finding alternative paths and transitive links");
-
-        LinkStore combinedTransitiveAssemblyLinks =LinkStore.from(assemblyLinkStore);
-         */
-
         SV_LOGGER.info("deduplication of paired end single breakends");
-        DuplicateFinder duplicateFinder = new DuplicateFinder(mSvDataCache, mFilterCache);
+        DuplicateFinder duplicateFinder = new DuplicateFinder(mSvDataCache);
 
         // duplicateFinder.findDuplicateSVs(alternatePaths);
-
-        mFilterCache.updateFilters(duplicateFinder.rescueBreakends(), duplicateFinder.duplicateBreakends());
-
-        // duplicateFinder.findDuplicateSingles(combinedTransitiveAssemblyLinks);
-
-        mFilterCache.updateFilters(Sets.newHashSet(), duplicateFinder.duplicateSglBreakends());
 
         SV_LOGGER.debug("found {} SV duplications and {} SGL duplications",
                 duplicateFinder.duplicateBreakends().size(), duplicateFinder.duplicateSglBreakends().size());
 
-        SV_LOGGER.info("finding double stranded break links");
-        LinkStore dsbLinkStore = DsbLinkFinder.findBreaks(mSvDataCache, assemblyLinkStore, mFilterCache.getDuplicateBreakends());
-
-        SV_LOGGER.debug("found {} double stranded breaks", dsbLinkStore.getBreakendLinksMap().size());
-
-        SV_LOGGER.info("rescuing linked variants");
-
-        /*
-        LinkRescue linkRescue = new LinkRescue();
-        linkRescue.findRescuedBreakends(dsbLinkStore, mFilterCache, false);
-        linkRescue.findRescuedDsbLineInsertions(dsbLinkStore, mFilterCache, mFilterConstants.MinQualRescueLine);
-        linkRescue.findRescuedBreakends(assemblyLinkStore, mFilterCache, true);
-        linkRescue.findRescuedBreakends(transitiveLinkStore, mFilterCache, true);
-        Set<Breakend> rescuedBreakends = linkRescue.getRescueInfo().keySet();
-
-        SV_LOGGER.debug("rescued {} linked variants", rescuedBreakends.size());
-
-        mFilterCache.updateFilters(rescuedBreakends, Sets.newHashSet());
-        */
+        if(mPonCache.hasValidData())
+        {
+            SV_LOGGER.info("applying PON filters");
+            mPonCache.annotateVariants(mSvDataCache.getSvList());
+        }
 
         if(mRepeatMaskAnnotator.hasData())
         {
-            int annotated = 0;
-            for(List<Breakend> chrBreakendList : mSvDataCache.getBreakendMap().values())
-            {
-                for(Breakend breakend : chrBreakendList)
-                {
-                    if(!breakend.IsStart)
-                        continue;
-
-                    if(breakend.sv().insertSequence().isEmpty())
-                        continue;
-
-                    final String alignments = breakend.Context.getAttributeAsString(BEALN, "");
-                    if(alignments.isEmpty())
-                        continue;
-
-                    RepeatMaskAnnotation rmAnnotation = mRepeatMaskAnnotator.annotate(breakend.sv().insertSequence(), alignments);
-
-                    if(rmAnnotation != null)
-                    {
-                        breakend.sv().setRepeatMaskAnnotation(rmAnnotation);
-                        ++annotated;
-                    }
-                }
-            }
-
-            SV_LOGGER.debug("marked {} repeat mask annotations", annotated);
+            SV_LOGGER.info("annotating with repeat-mask information");
+            mRepeatMaskAnnotator.annotateVariants(mSvDataCache.getSvList());
         }
 
-        // TODO: check
-        LinkStore combinedLinks = dsbLinkStore; // LinkStore.from(combinedTransitiveAssemblyLinks, dsbLinkStore);
-
-        writer.write(combinedLinks, vcfHeader);
+        writer.writeBreakends();
         writer.close();
 
         // summary logging
         if(SV_LOGGER.isDebugEnabled())
         {
-            mFilterCache.logRescuedBreakendFilters();
-
-            Map<FilterType,Integer> filterCounts = Maps.newHashMap();
-
-            for(List<FilterType> filters : mFilterCache.getBreakendFilters().values())
-            {
-                for(FilterType type : filters)
-                {
-                    Integer count = filterCounts.get(type);
-                    filterCounts.put(type, count != null ? count + 1 : 1);
-                }
-            }
-
-            for(Map.Entry<FilterType,Integer> entry : filterCounts.entrySet())
-            {
-                SV_LOGGER.debug("soft filter {}: count({})", entry.getKey(), entry.getValue());
-            }
+            logFilterTypeCounts(mSvDataCache.getSvList());
         }
     }
 
@@ -319,7 +204,7 @@ public class CallerApplication
 
         configBuilder.checkAndParseCommandLine(args);
 
-        CallerApplication caller = CallerApplication.fromCommandArgs(configBuilder);
+        CallerApplication caller = new CallerApplication(configBuilder);
         caller.run();
     }
 }

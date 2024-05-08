@@ -1,11 +1,12 @@
 package com.hartwig.hmftools.esvee.alignment;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_SOFT_CLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
@@ -83,7 +85,7 @@ public class BreakendBuilder
             // check for cigar-based INDELs and SGLs with soft-clips
             boolean formsIndel = formIndelBreakends(singleAlignment);
 
-            if(!formsIndel && singleAlignment.maxSoftClipLength() < ALIGNMENT_MIN_SOFT_CLIP)
+            if(!formsIndel && singleAlignment.maxSoftClipLength() >= ALIGNMENT_MIN_SOFT_CLIP)
             {
                 formSingleBreakend(validAlignments.get(0), zeroQualAlignments);
             }
@@ -116,22 +118,22 @@ public class BreakendBuilder
         HomologyData homology = null;
 
         Breakend lowerBreakend = new Breakend(
-                mAssemblyAlignment, alignment.RefLocation.Chromosome, indelCoords.PosStart, POS_ORIENT, insertedBases, homology);
+                mAssemblyAlignment, alignment.RefLocation.Chromosome, indelCoords.PosStart, FORWARD, insertedBases, homology);
 
         mAssemblyAlignment.addBreakend(lowerBreakend);
 
         BreakendSegment segment = new BreakendSegment(
-                mAssemblyAlignment.id(), mAssemblyAlignment.fullSequenceLength(), indelSeqStart, POS_ORIENT, 1, alignment);
+                mAssemblyAlignment.id(), mAssemblyAlignment.fullSequenceLength(), indelSeqStart, FORWARD, 1, alignment);
 
         lowerBreakend.addSegment(segment);
 
         Breakend upperBreakend = new Breakend(
-                mAssemblyAlignment, alignment.RefLocation.Chromosome, indelCoords.PosEnd, NEG_ORIENT, insertedBases, homology);
+                mAssemblyAlignment, alignment.RefLocation.Chromosome, indelCoords.PosEnd, REVERSE, insertedBases, homology);
 
         mAssemblyAlignment.addBreakend(upperBreakend);
 
         BreakendSegment nextSegment = new BreakendSegment(
-                mAssemblyAlignment.id(), mAssemblyAlignment.fullSequenceLength(), indelSeqEnd, NEG_ORIENT, 1, alignment);
+                mAssemblyAlignment.id(), mAssemblyAlignment.fullSequenceLength(), indelSeqEnd, REVERSE, 1, alignment);
 
         upperBreakend.addSegment(nextSegment);
 
@@ -147,21 +149,21 @@ public class BreakendBuilder
         int fullSequenceLength = mAssemblyAlignment.fullSequenceLength();
 
         int breakendPosition;
-        byte orientation;
+        Orientation orientation;
         int softClipLength;
         String insertedBases;
 
         if(alignment.leftSoftClipLength() >= alignment.rightSoftClipLength())
         {
             breakendPosition = alignment.RefLocation.start();
-            orientation = NEG_ORIENT;
+            orientation = REVERSE;
             softClipLength = alignment.leftSoftClipLength();
             insertedBases = fullSequence.substring(0, softClipLength);
         }
         else
         {
             breakendPosition = alignment.RefLocation.end();
-            orientation = POS_ORIENT;
+            orientation = FORWARD;
             softClipLength = alignment.rightSoftClipLength();
             insertedBases = fullSequence.substring(fullSequenceLength - softClipLength);
         }
@@ -189,7 +191,7 @@ public class BreakendBuilder
             final AlignData alignment, boolean checkStart, int nextSegmentIndex, final List<AlignData> zeroQualAlignments)
     {
         // switch the reference coord and CIGAR end being check if the segment was reverse aligned
-        boolean sqlRefEnd = alignment.orientation() == POS_ORIENT ? checkStart : !checkStart;
+        boolean sqlRefEnd = alignment.orientation().isForward() ? checkStart : !checkStart;
 
         int softClipLength = sqlRefEnd ? alignment.leftSoftClipLength() : alignment.rightSoftClipLength();
 
@@ -204,7 +206,7 @@ public class BreakendBuilder
         String insertSequence = checkStart ?
                 fullSequence.substring(0, softClipLength) : fullSequence.substring(fullSequenceLength - softClipLength);
 
-        byte sglOrientation = segmentOrientation(alignment, !checkStart);
+        Orientation sglOrientation = segmentOrientation(alignment, !checkStart);
 
         Breakend breakend = new Breakend(
                 mAssemblyAlignment, alignment.RefLocation.Chromosome, sglPosition, sglOrientation, insertSequence, null);
@@ -273,7 +275,7 @@ public class BreakendBuilder
         {
             AlignData alignment = alignments.get(i);
 
-            byte breakendOrientation = segmentOrientation(alignment, true);
+            Orientation breakendOrientation = segmentOrientation(alignment, true);
             int breakendPosition = alignment.isForward() ? alignment.RefLocation.end() : alignment.RefLocation.start();
 
             HomologyData homology = null;
@@ -293,8 +295,15 @@ public class BreakendBuilder
                 insertedBases = fullSequence.substring(insertSeqStart, insertSeqEnd);
             }
 
+            Orientation nextOrientation = segmentOrientation(nextAlignment, false);
+            int nextPosition = nextAlignment.isForward() ? nextAlignment.RefLocation.start() : nextAlignment.RefLocation.end();
+
             if(homology != null)
-                breakendPosition += homology.positionOffset();
+            {
+                // shift breakend positions where there is overlap, and move breakends back into the ref bases by the inexact homology
+                breakendPosition += homologyPositionAdjustment(homology.InexactStart, breakendOrientation);
+                nextPosition += homologyPositionAdjustment(homology.InexactEnd, nextOrientation);
+            }
 
             Breakend breakend = new Breakend(
                     mAssemblyAlignment, alignment.RefLocation.Chromosome, breakendPosition, breakendOrientation, insertedBases, homology);
@@ -307,11 +316,7 @@ public class BreakendBuilder
 
             breakend.addSegment(segment);
 
-            byte nextOrientation = segmentOrientation(nextAlignment, false);
-            int nextPosition = nextAlignment.isForward() ? nextAlignment.RefLocation.start() : nextAlignment.RefLocation.end();
-
-            if(homology != null)
-                nextPosition += homology.positionOffset();
+            // TODO: should inserted bases be reversed for same-orientation breakends??
 
             Breakend nextBreakend = new Breakend(
                     mAssemblyAlignment, nextAlignment.RefLocation.Chromosome, nextPosition, nextOrientation, insertedBases, homology);
@@ -339,9 +344,14 @@ public class BreakendBuilder
         checkOuterSingle(alignments.get(alignments.size() - 1), false, nextSegmentIndex, zeroQualAlignments);
     }
 
-    protected static byte segmentOrientation(final AlignData alignment, boolean linksEnd)
+    private static int homologyPositionAdjustment(final int inexact, final Orientation orientation)
     {
-        return (linksEnd == (alignment.orientation() == POS_ORIENT)) ? POS_ORIENT : NEG_ORIENT;
+        return orientation.isForward() ? -abs(inexact) : abs(inexact);
+    }
+
+    protected static Orientation segmentOrientation(final AlignData alignment, boolean linksEnd)
+    {
+        return (linksEnd == (alignment.orientation().isForward())) ? FORWARD : REVERSE;
     }
 
     public static void formBreakendFacingLinks(final List<Breakend> breakends)
@@ -375,7 +385,7 @@ public class BreakendBuilder
 
     private static boolean inFacingLink(final Breakend lowerBreakend, final Breakend upperBreakend)
     {
-        if(lowerBreakend.Orientation != NEG_ORIENT || upperBreakend.Orientation != POS_ORIENT)
+        if(lowerBreakend.Orient.isForward() || upperBreakend.Orient.isReverse())
             return false;
 
         PhaseSet lowerPhaseSet = lowerBreakend.assembly().assemblies().get(0).phaseSet();

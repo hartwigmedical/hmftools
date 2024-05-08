@@ -19,6 +19,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
@@ -42,15 +43,15 @@ public class TruthsetAnnotation
 
     public String findTruthsetAnnotation(final JunctionAssembly assembly)
     {
-        return findAnnotation(assembly.junction().Chromosome, assembly.junction().Position, assembly.junction().Orientation);
+        return findAnnotation(assembly.junction().Chromosome, assembly.junction().Position, assembly.junction().Orient);
     }
 
     public String findTruthsetAnnotation(final Breakend breakend)
     {
-        return findAnnotation(breakend.Chromosome, breakend.Position, breakend.Orientation);
+        return findAnnotation(breakend.Chromosome, breakend.Position, breakend.Orient);
     }
 
-    private String findAnnotation(final String chromosome, final int position, final byte orientation)
+    private String findAnnotation(final String chromosome, final int position, final Orientation orientation)
     {
         List<TruthsetBreakend> breakends = mChrBreakendMap.get(chromosome);
 
@@ -108,7 +109,7 @@ public class TruthsetAnnotation
                 TruthsetBreakend truthsetBreakend = new TruthsetBreakend(
                         chromosome,
                         getIntValue(fieldsIndexMap, "JunctionPosition", values),
-                        getByteValue(fieldsIndexMap, "JunctionOrientation", values),
+                        Orientation.fromByte(getByteValue(fieldsIndexMap, "JunctionOrientation", values)),
                         fragments,
                         cipos,
                         StructuralVariantType.valueOf(values[fieldsIndexMap.get("SvType")]));
@@ -137,26 +138,26 @@ public class TruthsetAnnotation
     {
         public final String Chromosome;
         public final int Position;
-        public final byte Orientation;
+        public final Orientation Orient;
         public final int Fragments;
         public final int[] Cipos;
         public final StructuralVariantType Type;
 
         public TruthsetBreakend(
-                final String chromosome, final int position, final byte orientation, final int fragments, final int[] cipos,
+                final String chromosome, final int position, final Orientation orientation, final int fragments, final int[] cipos,
                 final StructuralVariantType type)
         {
             Chromosome = chromosome;
             Position = position;
-            Orientation = orientation;
+            Orient = orientation;
             Fragments = fragments;
             Cipos = cipos;
             Type = type;
         }
 
-        public boolean matches(final int position, final byte orientation)
+        public boolean matches(final int position, final Orientation orientation)
         {
-            if(Orientation != orientation)
+            if(Orient != orientation)
                 return false;
 
             return positionWithin(position, Position + Cipos[0], Position + Cipos[1]);

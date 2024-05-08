@@ -14,7 +14,7 @@ public interface ItemComparer
 
     boolean processSample(final String sampleId, final List<Mismatch> mismatches);
 
-    List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess);
+    List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName);
 
     List<ComparableItem> loadFromFile(final String sampleId, final FileSources fileSources);
 

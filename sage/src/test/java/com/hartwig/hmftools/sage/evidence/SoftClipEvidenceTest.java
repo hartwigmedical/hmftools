@@ -13,7 +13,7 @@ import com.hartwig.hmftools.sage.common.VariantTier;
 
 import htsjdk.samtools.SAMRecord;
 
-public class ReadContextCounterTest
+public class SoftClipEvidenceTest
 {
     private static final int MAX_COVERAGE = 1000;
     private static final VariantTier TIER = VariantTier.PANEL;

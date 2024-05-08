@@ -2,19 +2,17 @@ package com.hartwig.hmftools.esvee.prep.types;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 
 public class JunctionData
 {
     public final int Position;
-    public final byte Orientation;
+    public final Orientation Orient;
 
     private final boolean mIsExisting;
     public final List<ReadGroup> JunctionGroups; // with a read matching the junction
@@ -29,10 +27,10 @@ public class JunctionData
     private boolean mDiscordantGroup;
     private boolean mHotspot;
 
-    public JunctionData(final int position, final byte orientation, final PrepRead read)
+    public JunctionData(final int position, final Orientation orientation, final PrepRead read)
     {
         Position = position;
-        Orientation = orientation;
+        Orient = orientation;
 
         mIsExisting = read == null;
         JunctionGroups = Lists.newArrayList();
@@ -53,8 +51,8 @@ public class JunctionData
     }
 
     public boolean isExisting() { return mIsExisting; }
-    public boolean isForward() { return Orientation == POS_ORIENT; }
-    public boolean isReverse() { return Orientation == NEG_ORIENT; }
+    public boolean isForward() { return Orient.isForward(); }
+    public boolean isReverse() { return Orient.isReverse(); }
 
     public PrepRead topJunctionRead() { return mTopJunctionRead; }
 
@@ -89,7 +87,7 @@ public class JunctionData
         int maxHighQualBases = 0;
         PrepRead topRead = null;
 
-        boolean useLeftSoftClip = Orientation == NEG_ORIENT;
+        boolean useLeftSoftClip = Orient.isReverse();
 
         List<PrepRead> junctionReads = ReadTypeReads.get(ReadType.JUNCTION);
 
@@ -143,7 +141,7 @@ public class JunctionData
     public String toString()
     {
         return format("loc(%d:%d) frags(junc=%d exact=%d supp=%d) remotes(%d) disc(%s) indel(%s)",
-                Position, Orientation, junctionFragmentCount(), exactSupportFragmentCount(), supportingFragmentCount(),
+                Position, Orient, junctionFragmentCount(), exactSupportFragmentCount(), supportingFragmentCount(),
                 RemoteJunctions.size(), mDiscordantGroup, mInternalIndel);
     }
 }

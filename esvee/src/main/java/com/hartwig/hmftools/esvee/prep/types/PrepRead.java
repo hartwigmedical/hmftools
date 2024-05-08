@@ -7,14 +7,15 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.bam.CigarUtils;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import htsjdk.samtools.Cigar;
@@ -106,8 +107,8 @@ public class PrepRead
     public int leftClipLength() { return max(mAlignmentStart - mUnclippedStart, 0); }
     public int rightClipLength() { return max(mUnclippedEnd - mAlignmentEnd, 0); }
 
-    public byte orientation() { return !isReadReversed() ? POS_ORIENT : NEG_ORIENT; }
-    public byte mateOrientation() { return !hasFlag(SAMFlag.MATE_REVERSE_STRAND) ? POS_ORIENT : NEG_ORIENT; }
+    public Orientation orientation() { return !isReadReversed() ? FORWARD : REVERSE; }
+    public Orientation mateOrientation() { return !hasFlag(SAMFlag.MATE_REVERSE_STRAND) ? FORWARD : REVERSE; }
 
     public int flags() { return mRecord.getFlags(); }
     public Cigar cigar() { return mRecord.getCigar(); }

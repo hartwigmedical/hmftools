@@ -4,8 +4,6 @@ import static com.hartwig.hmftools.common.sv.LineElements.POLY_A_HOMOLOGY;
 import static com.hartwig.hmftools.common.sv.LineElements.POLY_T_HOMOLOGY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
 import java.io.BufferedReader;
@@ -16,6 +14,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -57,10 +56,6 @@ public class HotspotCache
         if(sv.isSgl())
             return false;
 
-        // TODO: check where belongs if anywhere
-        // if(LinkRescue.tooShortToRescue(sv.type(), sv.length()))
-        //    return false;
-
         if(isPolyATSequence(sv.contextStart()) || (sv.contextEnd() != null && isPolyATSequence(sv.contextEnd())))
             return false;
 
@@ -73,17 +68,13 @@ public class HotspotCache
         if(sv.type() == SGL)
             return false;
 
-        // TODO: see comment above
-        // if(LinkRescue.tooShortToRescue(sv.type(), SvData.length(sv)))
-        //    return false;
-
-        else if(isPolyATSequence(sv.startContext()) || (sv.endContext() != null && isPolyATSequence(sv.endContext())))
+        if(isPolyATSequence(sv.startContext()) || (sv.endContext() != null && isPolyATSequence(sv.endContext())))
             return false;
 
         return matchesHotspot(
                 sv.chromosome(true), sv.chromosome(false),
                 sv.position(true).intValue(), sv.position(false).intValue(),
-                sv.orientation(true), sv.orientation(false));
+                Orientation.fromByte(sv.orientation(true)), Orientation.fromByte(sv.orientation(false)));
     }
 
 
@@ -93,7 +84,8 @@ public class HotspotCache
         return homology.contains(POLY_A_HOMOLOGY) || homology.contains(POLY_T_HOMOLOGY);
     }
 
-    private boolean matchesHotspot(final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd)
+    private boolean matchesHotspot(
+            final String chrStart, final String chrEnd, int posStart, int posEnd, Orientation orientStart, Orientation orientEnd)
     {
         List<KnownHotspot> regions = mHotspotRegions.get(chrStart);
         if(regions != null)
@@ -146,8 +138,8 @@ public class HotspotCache
                 // note BED file adjustment for start position
                 ChrBaseRegion regionStart = new ChrBaseRegion(chrStart, Integer.parseInt(items[1]) + 1, Integer.parseInt(items[2]));
                 ChrBaseRegion regionEnd = new ChrBaseRegion(chrEnd, Integer.parseInt(items[4]) + 1, Integer.parseInt(items[5]));
-                Byte orientStart = items[8].equals("+") ? POS_ORIENT : NEG_ORIENT;
-                Byte orientEnd = items[9].equals("+") ? POS_ORIENT : NEG_ORIENT;
+                Orientation orientStart = Orientation.fromChar(items[8].charAt(0));
+                Orientation orientEnd = Orientation.fromChar(items[9].charAt(0));
                 String geneInfo = items[6];
 
                 KnownHotspot knownHotspot = new KnownHotspot(regionStart, orientStart, regionEnd, orientEnd, geneInfo);
@@ -186,7 +178,6 @@ public class HotspotCache
         catch(IOException e)
         {
             SV_LOGGER.error("failed to load hotspot data file({}): {}", filename, e.toString());
-            return;
         }
     }
 

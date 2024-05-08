@@ -10,8 +10,8 @@ import static com.hartwig.hmftools.sage.bqr.BqrConfig.useReadType;
 import static com.hartwig.hmftools.sage.bqr.BqrRegionReader.extractReadType;
 import static com.hartwig.hmftools.sage.evidence.ArtefactContext.NOT_APPLICABLE_BASE_QUAL;
 
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sequencing.SequencingType;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.common.qual.BqrReadType;
@@ -47,13 +47,15 @@ public class QualityCalculator
         mUltimaQualCalculator = mSequencingType == SequencingType.ULTIMA ? new UltimaQualCalculator(refGenome) : null;
     }
 
-    public UltimaQualModel createUltimateQualModel(final SimpleVariant variant)
+    public boolean ultimaEnabled() { return mUltimaQualCalculator != null; }
+
+    public UltimaQualModel createUltimaQualModel(final SimpleVariant variant)
     {
         return mUltimaQualCalculator != null ? mUltimaQualCalculator.buildContext(variant) : null;
     }
 
     public static int modifiedMapQuality(
-            final QualityConfig config, final GenomePosition position, int mapQuality, double readEvents, boolean isImproperPair)
+            final QualityConfig config, final BasePosition position, int mapQuality, double readEvents, boolean isImproperPair)
     {
         if(config.isHighlyPolymorphic(position))
         {

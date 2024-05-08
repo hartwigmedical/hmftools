@@ -30,10 +30,7 @@ import com.hartwig.hmftools.linx.germline.GermlineFilter;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
-import org.apache.commons.cli.CommandLine;
-
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFFileReader;
 
 public final class SvFileLoader
 {

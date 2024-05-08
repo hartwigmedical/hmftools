@@ -2,6 +2,8 @@ package com.hartwig.hmftools.esvee.caller;
 
 import static java.lang.Math.abs;
 
+import java.util.List;
+
 public class Interval
 {
     public final int Start;
@@ -17,6 +19,14 @@ public class Interval
     {
         Start = start;
         End = end;
+    }
+
+    public static Interval fromCiposTag(List<Integer> ciposValues)
+    {
+        if(ciposValues == null || ciposValues.size() != 2)
+            return new Interval();
+
+        return new Interval(ciposValues.get(0), ciposValues.get(1));
     }
 
     public int length() { return abs(End - Start); }

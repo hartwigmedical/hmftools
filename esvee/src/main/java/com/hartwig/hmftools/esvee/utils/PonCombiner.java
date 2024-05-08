@@ -1,8 +1,4 @@
-package com.hartwig.hmftools.gripss.pon;
-
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static java.lang.String.format;
+package com.hartwig.hmftools.esvee.utils;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
@@ -10,7 +6,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT_ID;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT_ID;
-import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.APP_NAME;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -23,6 +20,9 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.esvee.caller.annotation.PonCache;
+import com.hartwig.hmftools.esvee.caller.annotation.PonSglRegion;
+import com.hartwig.hmftools.esvee.caller.annotation.PonSvRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -48,7 +48,7 @@ public class PonCombiner
 
         if(svFiles.length != sglFiles.length)
         {
-            GR_LOGGER.error("requires same number of input files for SVs as for SGLs");
+            SV_LOGGER.error("requires same number of input files for SVs as for SGLs");
             System.exit(1);
         }
 
@@ -74,23 +74,23 @@ public class PonCombiner
     {
         if(mPonCaches.isEmpty() || mOutputSglFile == null || mOutputSvFile == null)
         {
-            GR_LOGGER.error("invalid inputs");
+            SV_LOGGER.error("invalid inputs");
             System.exit(1);
         }
 
-        GR_LOGGER.info("Gripss PON file merge");
+        SV_LOGGER.info("Gripss PON file merge");
 
         mergeSvPonFiles();
         mergeSglPonFiles();
 
-        GR_LOGGER.info("Gripss PON merge complete");
+        SV_LOGGER.info("Gripss PON merge complete");
     }
 
     private static final int LOG_COUNT = 1000000;
 
     private void mergeSvPonFiles()
     {
-        GR_LOGGER.info("merging {} SV PON files to: {}", mPonCaches.size(), mOutputSvFile);
+        SV_LOGGER.info("merging {} SV PON files to: {}", mPonCaches.size(), mOutputSvFile);
 
         try
         {
@@ -115,15 +115,15 @@ public class PonCombiner
                 // sort and merge
                 mergeSvRegions(chrStr, combinedRegions);
 
-                GR_LOGGER.debug("chr({}) writing {} SV regions", chrStr, combinedRegions.size());
+                SV_LOGGER.debug("chr({}) writing {} SV regions", chrStr, combinedRegions.size());
 
                 for(PonSvRegion region : combinedRegions)
                 {
                     // fields: ChrStart,PosStartBegin,PosStartEnd,ChrEnd,PosEndBegin,PosEndEnd,Unknown,PonCount,OrientStart,OrientEnd
-                    writer.write(format("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%s\t%s",
+                    writer.write(String.format("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%s\t%s",
                             chrStr, region.RegionStart.start(), region.RegionStart.end(),
                             region.RegionEnd.chromosome(), region.RegionEnd.start(), region.RegionEnd.end(), ".",
-                            region.PonCount, orientToId(region.OrientStart), orientToId(region.OrientEnd)));
+                            region.PonCount, region.OrientStart.asChar(), region.OrientEnd.asChar()));
 
                     writer.newLine();
                 }
@@ -133,7 +133,7 @@ public class PonCombiner
         }
         catch(IOException e)
         {
-            GR_LOGGER.error("failed to write SV PON output file: {}", e.toString());
+            SV_LOGGER.error("failed to write SV PON output file: {}", e.toString());
             System.exit(1);
         }
     }
@@ -182,14 +182,14 @@ public class PonCombiner
                     }
 
                     // doesn't matter where the end is - but expand to the longer of the two if any end regions overlap
-                    GR_LOGGER.trace("merging region({}:{} -> {}) with next({}:{} -> {})",
+                    SV_LOGGER.trace("merging region({}:{} -> {}) with next({}:{} -> {})",
                             chromosomeStart, currentRegion.RegionStart, currentRegion.RegionEnd,
                             chromosomeStart, nextRegion.RegionStart, nextRegion.RegionEnd);
 
-                    currentRegion.RegionStart.setStart(min(currentRegion.RegionStart.start(), nextRegion.RegionStart.start()));
-                    currentRegion.RegionStart.setEnd(max(currentRegion.RegionStart.end(), nextRegion.RegionStart.end()));
-                    currentRegion.RegionEnd.setStart(min(currentRegion.RegionEnd.start(), nextRegion.RegionEnd.start()));
-                    currentRegion.RegionEnd.setEnd(max(currentRegion.RegionEnd.end(), nextRegion.RegionEnd.end()));
+                    currentRegion.RegionStart.setStart(Math.min(currentRegion.RegionStart.start(), nextRegion.RegionStart.start()));
+                    currentRegion.RegionStart.setEnd(Math.max(currentRegion.RegionStart.end(), nextRegion.RegionStart.end()));
+                    currentRegion.RegionEnd.setStart(Math.min(currentRegion.RegionEnd.start(), nextRegion.RegionEnd.start()));
+                    currentRegion.RegionEnd.setEnd(Math.max(currentRegion.RegionEnd.end(), nextRegion.RegionEnd.end()));
 
                     combinedRegions.remove(nextIndex);
                     foundMerge = true;
@@ -205,12 +205,12 @@ public class PonCombiner
             ++index;
         }
 
-        GR_LOGGER.debug("chr({}) merging {} regions, dropped {}", chromosomeStart, initialCount, mergeCount);
+        SV_LOGGER.debug("chr({}) merging {} regions, dropped {}", chromosomeStart, initialCount, mergeCount);
     }
 
     private void mergeSglPonFiles()
     {
-        GR_LOGGER.info("merging {} SGL PON files to: {}", mPonCaches.size(), mOutputSglFile);
+        SV_LOGGER.info("merging {} SGL PON files to: {}", mPonCaches.size(), mOutputSglFile);
 
         try
         {
@@ -235,13 +235,13 @@ public class PonCombiner
                 // sort and merge
                 mergeSglRegions(chrStr, combinedRegions);
 
-                GR_LOGGER.debug("chr({}) writing {} SGL regions", chrStr, combinedRegions.size());
+                SV_LOGGER.debug("chr({}) writing {} SGL regions", chrStr, combinedRegions.size());
 
                 for(PonSglRegion region : combinedRegions)
                 {
                     // fields: ChrStart,PosStartBegin,PosStartEnd,ChrEnd,PosEndBegin,PosEndEnd,Unknown,PonCount,OrientStart,OrientEnd
-                    writer.write(format("%s\t%d\t%d\t%s\t%d\t%s",
-                            chrStr, region.Region.start(), region.Region.end(), ".", region.PonCount, orientToId(region.Orient)));
+                    writer.write(String.format("%s\t%d\t%d\t%s\t%d\t%s",
+                            chrStr, region.Region.start(), region.Region.end(), ".", region.PonCount, region.Orient.asChar()));
 
                     writer.newLine();
                 }
@@ -251,7 +251,7 @@ public class PonCombiner
         }
         catch(IOException e)
         {
-            GR_LOGGER.error("failed to write SGL PON output file: {}", e.toString());
+            SV_LOGGER.error("failed to write SGL PON output file: {}", e.toString());
             System.exit(1);
         }
     }
@@ -289,10 +289,10 @@ public class PonCombiner
                 }
 
                 // doesn't matter where the end is - but expand to the longer of the two if any end regions overlap
-                GR_LOGGER.trace("merging region({}:{}) with next({}:{})",
+                SV_LOGGER.trace("merging region({}:{}) with next({}:{})",
                         chromosomeStart, currentRegion.Region, chromosomeStart, nextRegion.Region);
 
-                currentRegion.Region.setEnd(max(currentRegion.Region.end(), nextRegion.Region.end()));
+                currentRegion.Region.setEnd(Math.max(currentRegion.Region.end(), nextRegion.Region.end()));
                 combinedRegions.remove(nextIndex);
                 ++mergeCount;
             }
@@ -300,17 +300,13 @@ public class PonCombiner
             ++index;
         }
 
-        GR_LOGGER.debug("chr({}) merging {} regions, dropped {}", chromosomeStart, initialCount, mergeCount);
-    }
-
-    private static String orientToId(final byte orientation)
-    {
-        return orientation == POS_ORIENT ? POS_ORIENT_ID : NEG_ORIENT_ID;
+        SV_LOGGER.debug("chr({}) merging {} regions, dropped {}", chromosomeStart, initialCount, mergeCount);
     }
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+
         configBuilder.addConfigItem(OUTPUT_SGL_PON_FILE, true, "Output SGL PON file");
         configBuilder.addConfigItem(OUTPUT_SV_PON_FILE, true, "Output SV PON file");
 

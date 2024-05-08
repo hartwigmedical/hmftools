@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.utils.version;
 
+import static java.lang.String.format;
 import static java.time.ZoneOffset.UTC;
 
 import java.io.BufferedReader;
@@ -24,6 +25,10 @@ public class VersionInfo
     {
         this.resource = resource;
     }
+
+    public static String appVersionFile(final String appName) { return format("%s.version", appName.toLowerCase()); }
+
+    public static VersionInfo fromAppName(final String appName) { return new VersionInfo(appVersionFile(appName)); }
 
     public String version()
     {

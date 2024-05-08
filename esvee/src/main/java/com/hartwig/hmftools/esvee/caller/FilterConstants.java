@@ -173,11 +173,6 @@ public class FilterConstants
         ModifiedAfHotspot = modifiedAfHotspot;
     }
 
-    public boolean matchesPolyGRegion(final String chromosome, int position)
-    {
-        return PolyGcRegions.stream().anyMatch(x -> x.containsPosition(chromosome, position));
-    }
-
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         addTargetedInteger(

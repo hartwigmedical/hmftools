@@ -4,7 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.READ_ID_TRIMMER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.REMOTE_REGION_WEAK_SUPP_PERCENT;
 import static com.hartwig.hmftools.esvee.assembly.types.RemoteReadType.DISCORDANT;
@@ -17,17 +16,18 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class RemoteRegion extends ChrBaseRegion
 {
-    private final byte mOrientation;
+    private final Orientation mOrientation;
     private final Set<String> mReadIds; // used to link with remote assemblies, and note is trimmed to match ID in SupportRead
 
     private final int[] mReadTypeCount;
     private int mSoftClipMapQualTotal; // from reads with supplementaries
 
-    public RemoteRegion(final ChrBaseRegion region, final byte orientation, final String readId, final RemoteReadType readType)
+    public RemoteRegion(final ChrBaseRegion region, final Orientation orientation, final String readId, final RemoteReadType readType)
     {
         super(region.Chromosome, region.start(), region.end());
         mOrientation = orientation;
@@ -49,8 +49,8 @@ public class RemoteRegion extends ChrBaseRegion
         ++mReadTypeCount[readType.ordinal()];
     }
 
-    public byte orientation() { return mOrientation; }
-    public boolean isForward() { return mOrientation == POS_ORIENT; }
+    public Orientation orientation() { return mOrientation; }
+    public boolean isForward() { return mOrientation.isForward(); }
 
     public Set<String> readIds() { return mReadIds; }
     public int readCount() { return mReadIds.size(); }
@@ -69,15 +69,15 @@ public class RemoteRegion extends ChrBaseRegion
 
     public boolean matches(final RemoteRegion other) { return mOrientation == other.mOrientation && overlaps(other); }
 
-    public boolean overlaps(final String otherChr, final int otherPosStart, final int otherPosEnd, final byte otherOrientation)
+    public boolean overlaps(final String otherChr, final int otherPosStart, final int otherPosEnd, final Orientation otherOrientation)
     {
         return mOrientation == otherOrientation && overlaps(otherChr, otherPosStart, otherPosEnd);
     }
 
     public String toString()
     {
-        return format("%s orient(%d) reads(%d) counts(mate=%d supp=%d disc=%d) softClipMapQual(%d)",
-                super.toString(), mOrientation, mReadIds.size(), mReadTypeCount[RemoteReadType.DISCORDANT.ordinal()],
+        return format("%s orient(%s) reads(%d) counts(mate=%d supp=%d disc=%d) softClipMapQual(%d)",
+                super.toString(), mOrientation.toString(), mReadIds.size(), mReadTypeCount[RemoteReadType.DISCORDANT.ordinal()],
                 mReadTypeCount[SUPPLEMENTARY.ordinal()], mReadTypeCount[DISCORDANT.ordinal()], mSoftClipMapQualTotal);
     }
 

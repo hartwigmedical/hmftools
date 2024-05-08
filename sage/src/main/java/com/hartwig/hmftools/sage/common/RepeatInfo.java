@@ -4,6 +4,9 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
+import static com.hartwig.hmftools.sage.common.RepeatBoundaries.REPEAT_SEARCH_LENGTH;
 
 public class RepeatInfo
 {
@@ -60,7 +63,7 @@ public class RepeatInfo
         return maxRepeat;
     }
 
-    protected static RepeatInfo extendRepeatLower(final RepeatInfo repeatInfo, final byte[] bases)
+    public static RepeatInfo extendRepeatLower(final RepeatInfo repeatInfo, final byte[] bases)
     {
         int extraCount = 0;
 
@@ -132,5 +135,18 @@ public class RepeatInfo
             repeat += (char)bases[index + j];
 
         return new RepeatInfo(index, repeat, repeatLength);
+    }
+
+    public static void setReferenceMaxRepeatInfo(final SageVariant variant, final RefSequence refSequence)
+    {
+        int refIndex = refSequence.index(variant.position());
+
+        int searchIndexStart = refIndex - REPEAT_SEARCH_LENGTH;
+        int searchIndexEnd = refIndex + variant.ref().length();
+
+        RepeatInfo maxRepeat = findMaxRepeat(
+                refSequence.Bases, searchIndexStart, searchIndexEnd, MAX_REPEAT_LENGTH, MIN_REPEAT_COUNT, true, -1);
+
+        variant.readContext().setRefMaxRepeat(maxRepeat);
     }
 }

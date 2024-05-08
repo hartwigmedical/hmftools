@@ -3,7 +3,6 @@ package com.hartwig.hmftools.esvee.assembly.types;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportType.INDEL;
 
 import java.util.StringJoiner;
@@ -25,7 +24,7 @@ public class AssemblyStats
     public int JuncMateUnmappedRefSide;
     public int IndelReads;
 
-    // read qualitites
+    // read qualities
     public int NmCountTotal;
     public int IndelLengthTotal;
     public int BaseQualTotal;
@@ -82,7 +81,7 @@ public class AssemblyStats
             else
             {
                 // don't attempt to set mate info for supplementaries - these counts are for the primary reads (ie the fragment itself)
-                boolean matePastJunction = (supportRead.orientation() == POS_ORIENT) == junction.isForward();
+                boolean matePastJunction = (supportRead.orientation().isForward()) == junction.isForward();
 
                 if(supportRead.isMateUnmapped())
                 {

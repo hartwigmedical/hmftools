@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_MAP_QU
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.cloneSamRecord;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.setReadFlag;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -23,6 +22,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
@@ -89,7 +89,7 @@ public class TestUtils
     }
 
     public static JunctionAssembly createAssembly(
-            final String chromosome, final int junctionPosition, final byte junctionOrientation,
+            final String chromosome, final int junctionPosition, final Orientation junctionOrientation,
             final String assemblyBases, final int junctionIndex)
     {
         Junction junction = new Junction(chromosome, junctionPosition, junctionOrientation);
@@ -159,8 +159,8 @@ public class TestUtils
 
     public static List<SAMRecord> createJunctionReads(
             final MockRefGenome refGenome, final String readId, int anchorLength,
-            final String chrStart, int junctionPosStart, byte junctionOrientStart,
-            final String chrEnd, int junctionPosEnd, byte junctionOrientEnd, int mateStart)
+            final String chrStart, int junctionPosStart, Orientation junctionOrientStart,
+            final String chrEnd, int junctionPosEnd, Orientation junctionOrientEnd, int mateStart)
     {
         // creates a junction read, its supplementary and a local mate if the coords are supplied
         int readBaseLength = anchorLength * 2;
@@ -168,7 +168,7 @@ public class TestUtils
         String readCigar, suppCigar;
         String basesStart, basesEnd;
 
-        if(junctionOrientStart == POS_ORIENT)
+        if(junctionOrientStart.isForward())
         {
             readStart = junctionPosStart - anchorLength + 1;
             readEnd = junctionPosStart;
@@ -183,7 +183,7 @@ public class TestUtils
 
         basesStart = refGenome.getBaseString(chrStart, readStart, readEnd);
 
-        if(junctionOrientEnd == POS_ORIENT)
+        if(junctionOrientEnd.isForward())
         {
             suppStart = junctionPosEnd - anchorLength + 1;
             suppEnd = junctionPosEnd;
@@ -203,7 +203,7 @@ public class TestUtils
 
         if(junctionOrientStart != junctionOrientEnd)
         {
-            if(junctionOrientStart == POS_ORIENT)
+            if(junctionOrientStart.isForward())
                 readBases = basesStart + basesEnd;
             else
                 readBases = basesEnd + basesStart;
@@ -215,7 +215,7 @@ public class TestUtils
             isSuppNegStrand = false;
 
             // keep the first read's bases in the 5' to 3' direction
-            if(junctionOrientStart == POS_ORIENT)
+            if(junctionOrientStart.isForward())
             {
                 readBases = basesStart + Nucleotides.reverseComplementBases(basesEnd);
                 suppBases = basesEnd + Nucleotides.reverseComplementBases(basesStart);

@@ -3,25 +3,26 @@ package com.hartwig.hmftools.gripss.common;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.CIRPOS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BAQ;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
+import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.parseRefAlt;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.CIRPOS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BAQ;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BQ;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.sglFragmentCount;
-import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.parseRefAlt;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.parseAssemblies;
 
 import java.util.List;
 
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.VariantAltInsertCoords;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -102,7 +103,7 @@ public class Breakend
         InsertSequence = altInsertCoords.InsertSequence;
         OtherChromosome = altInsertCoords.Chromsome;
         OtherPosition = altInsertCoords.Position;
-        OtherOrientation = altInsertCoords.Orientation;
+        OtherOrientation = altInsertCoords.Orient.asByte();
 
         IsLineInsertion = isMobileLineElement(orientation, InsertSequence);
 

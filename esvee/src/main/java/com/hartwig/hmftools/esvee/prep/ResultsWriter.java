@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.BAM_RECORD_SAMPLE_ID_TAG;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_EXACT_SUPPORT_FRAGS;
@@ -20,7 +19,6 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.FLD_OTHER_SUPPORT_FR
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.JUNCTIONS;
 import static com.hartwig.hmftools.esvee.prep.types.WriteType.READS;
 
-import static htsjdk.samtools.SAMFlag.DUPLICATE_READ;
 import static htsjdk.samtools.SAMFlag.PROPER_PAIR;
 import static htsjdk.samtools.SAMFlag.READ_UNMAPPED;
 import static htsjdk.samtools.SAMFlag.SUPPLEMENTARY_ALIGNMENT;
@@ -151,7 +149,7 @@ public class ResultsWriter
                 int lowMapQualFrags = 0;
                 int maxSoftClip = 0;
                 PrepRead maxSoftClipRead = null;
-                boolean expectLeftClipped = junctionData.Orientation == NEG_ORIENT;
+                boolean expectLeftClipped = junctionData.Orient.isReverse();
 
                 for(PrepRead read : junctionData.ReadTypeReads.get(ReadType.JUNCTION))
                 {
@@ -193,7 +191,7 @@ public class ResultsWriter
                 }
 
                 mJunctionWriter.write(String.format("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
-                        chromosome, junctionData.Position, junctionData.Orientation, junctionData.junctionFragmentCount(),
+                        chromosome, junctionData.Position, junctionData.Orient, junctionData.junctionFragmentCount(),
                         exactSupportFrags, otherSupportFrags, lowMapQualFrags, maxMapQual));
 
                 mJunctionWriter.write(String.format("\t%d\t%s\t%s\t%s\t%s",
@@ -215,7 +213,7 @@ public class ResultsWriter
                         {
                             RemoteJunction remoteJunction = junctionData.RemoteJunctions.get(i);
                             sj.add(String.format("%s:%d:%d:%d",
-                                    remoteJunction.Chromosome, remoteJunction.Position, remoteJunction.Orientation, remoteJunction.Fragments));
+                                    remoteJunction.Chromosome, remoteJunction.Position, remoteJunction.Orient, remoteJunction.Fragments));
                             // junctionData.RemoteJunctions.forEach(x -> sj.add(format("%s:%d:%d", x.Chromosome, x.Position, x.Orientation)));
                         }
                         remoteJunctionsStr = sj.toString();

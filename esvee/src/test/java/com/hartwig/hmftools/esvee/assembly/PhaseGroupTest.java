@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.TEST_CONFIG;
@@ -43,16 +43,16 @@ public class PhaseGroupTest
     @Test
     public void testLocalPhaseGroupBuilding()
     {
-        Junction posJunction1 = new Junction(CHR_1, 100, POS_ORIENT);
-        Junction negJunction1 = new Junction(CHR_1, 200, NEG_ORIENT);
+        Junction posJunction1 = new Junction(CHR_1, 100, FORWARD);
+        Junction negJunction1 = new Junction(CHR_1, 200, REVERSE);
 
-        Junction posJunction2 = new Junction(CHR_1, 1500, POS_ORIENT);
-        Junction negJunction2 = new Junction(CHR_1, 2700, NEG_ORIENT);
+        Junction posJunction2 = new Junction(CHR_1, 1500, FORWARD);
+        Junction negJunction2 = new Junction(CHR_1, 2700, REVERSE);
 
-        Junction posJunction3 = new Junction(CHR_1, 4000, POS_ORIENT);
-        Junction negJunction3 = new Junction(CHR_1, 4200, NEG_ORIENT);
-        Junction negJunction4 = new Junction(CHR_1, 4500, NEG_ORIENT);
-        Junction posJunction4 = new Junction(CHR_1, 4600, POS_ORIENT);
+        Junction posJunction3 = new Junction(CHR_1, 4000, FORWARD);
+        Junction negJunction3 = new Junction(CHR_1, 4200, REVERSE);
+        Junction negJunction4 = new Junction(CHR_1, 4500, REVERSE);
+        Junction posJunction4 = new Junction(CHR_1, 4600, FORWARD);
 
         String assemblyBases = REF_BASES_200.substring(0, 100);
 
@@ -133,11 +133,11 @@ public class PhaseGroupTest
         Map<String,List<JunctionGroup>> junctionGroupMap = Maps.newHashMap();
 
         String assemblyBases = REF_BASES_200.substring(0, 50);
-        JunctionAssembly assembly1 = createAssembly(CHR_1, 100, POS_ORIENT, assemblyBases, 25);
-        JunctionAssembly assembly2 = createAssembly(CHR_1, 500, POS_ORIENT, assemblyBases, 25);
-        JunctionAssembly assembly3 = createAssembly(CHR_1, 4100, POS_ORIENT, assemblyBases, 25);
-        JunctionAssembly assembly4 = createAssembly(CHR_1, 6100, POS_ORIENT, assemblyBases, 25);
-        JunctionAssembly assembly5 = createAssembly(CHR_1, 6500, POS_ORIENT, assemblyBases, 25);
+        JunctionAssembly assembly1 = createAssembly(CHR_1, 100, FORWARD, assemblyBases, 25);
+        JunctionAssembly assembly2 = createAssembly(CHR_1, 500, FORWARD, assemblyBases, 25);
+        JunctionAssembly assembly3 = createAssembly(CHR_1, 4100, FORWARD, assemblyBases, 25);
+        JunctionAssembly assembly4 = createAssembly(CHR_1, 6100, FORWARD, assemblyBases, 25);
+        JunctionAssembly assembly5 = createAssembly(CHR_1, 6500, FORWARD, assemblyBases, 25);
 
         JunctionGroup junctionGroup1 = new JunctionGroup(assembly1.junction());
         junctionGroup1.addJunction(assembly2.junction());
@@ -152,11 +152,11 @@ public class PhaseGroupTest
 
         junctionGroupMap.put(CHR_1, List.of(junctionGroup1, junctionGroup2, junctionGroup3));
 
-        JunctionAssembly assembly6 = createAssembly(CHR_2, 100, NEG_ORIENT, assemblyBases, 25);
-        JunctionAssembly assembly7 = createAssembly(CHR_2, 500, NEG_ORIENT, assemblyBases, 25);
-        JunctionAssembly assembly8 = createAssembly(CHR_2, 4100, NEG_ORIENT, assemblyBases, 25);
-        JunctionAssembly assembly9 = createAssembly(CHR_2, 6100, NEG_ORIENT, assemblyBases, 25);
-        JunctionAssembly assembly10 = createAssembly(CHR_2, 6500, NEG_ORIENT, assemblyBases, 25);
+        JunctionAssembly assembly6 = createAssembly(CHR_2, 100, REVERSE, assemblyBases, 25);
+        JunctionAssembly assembly7 = createAssembly(CHR_2, 500, REVERSE, assemblyBases, 25);
+        JunctionAssembly assembly8 = createAssembly(CHR_2, 4100, REVERSE, assemblyBases, 25);
+        JunctionAssembly assembly9 = createAssembly(CHR_2, 6100, REVERSE, assemblyBases, 25);
+        JunctionAssembly assembly10 = createAssembly(CHR_2, 6500, REVERSE, assemblyBases, 25);
 
         JunctionGroup junctionGroup4 = new JunctionGroup(assembly6.junction());
         junctionGroup4.addJunction(assembly7.junction());
@@ -189,11 +189,11 @@ public class PhaseGroupTest
 
         // sufficient linking criteria
         RemoteRegion region1 = new RemoteRegion(
-                new ChrBaseRegion(CHR_1, 6000, 6200), POS_ORIENT, readId1, DISCORDANT);
+                new ChrBaseRegion(CHR_1, 6000, 6200), FORWARD, readId1, DISCORDANT);
         region1.addReadDetails(readId2, 6000, 6100, JUNCTION_MATE);
 
         RemoteRegion region1b = new RemoteRegion(
-                new ChrBaseRegion(CHR_2, 6000, 6100), POS_ORIENT, readId3, DISCORDANT);
+                new ChrBaseRegion(CHR_2, 6000, 6100), FORWARD, readId3, DISCORDANT);
         assembly1.addRemoteRegions(List.of(region1, region1b));
 
         assembly4.addJunctionRead(createRead(readId1, 6000, assemblyBases, "50M"));
@@ -209,7 +209,7 @@ public class PhaseGroupTest
         String readId7 = READ_ID_GENERATOR.nextId();
 
         RemoteRegion region2 = new RemoteRegion(
-                new ChrBaseRegion(CHR_2, 4000, 4200), POS_ORIENT, readId4, DISCORDANT);
+                new ChrBaseRegion(CHR_2, 4000, 4200), FORWARD, readId4, DISCORDANT);
         region2.addReadDetails(readId5, 4000, 4100, JUNCTION_MATE);
         assembly3.addRemoteRegions(List.of(region2));
 
@@ -217,7 +217,7 @@ public class PhaseGroupTest
         assembly8.addJunctionRead(createRead(readId5, 6000, assemblyBases, "50M"));
 
         RemoteRegion region3 = new RemoteRegion(
-                new ChrBaseRegion(CHR_1, 450, 600), POS_ORIENT, readId6, DISCORDANT);
+                new ChrBaseRegion(CHR_1, 450, 600), FORWARD, readId6, DISCORDANT);
         region3.addReadDetails(readId7, 450, 600, JUNCTION_MATE);
         assembly8.addRemoteRegions(List.of(region3));
 

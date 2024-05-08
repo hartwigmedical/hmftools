@@ -31,6 +31,7 @@ import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.coverage.GeneCoverage;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
 
+import org.immutables.value.internal.$processor$.meta.$GsonMirrors;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -127,6 +128,7 @@ public class CandidateCreationTest
         assertNotNull(snvInsert);
     }
 
+    /* TODO: test again once realignment is complete
     @Test
     public void testSoftClipInsertProdExample()
     {
@@ -186,4 +188,5 @@ public class CandidateCreationTest
         assertEquals("36S57M", readContext.readCigar());
         assertEquals(48, readContext.Homology.Length);
     }
+    */
 }

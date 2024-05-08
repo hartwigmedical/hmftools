@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData
 import static com.hartwig.hmftools.compar.common.Category.DISRUPTION;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
 import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_CODING_CONTEXT;
 import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_GENE_ORIENT;
 import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_NEXT_SPLICE;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
@@ -63,11 +65,11 @@ public class DisruptionComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
         final List<StructuralVariantData> svDataList = dbAccess.readStructuralVariantData(sampleId);
         final List<LinxBreakend> breakends = dbAccess.readBreakends(sampleId);
-        return buildBreakends(svDataList, breakends);
+        return buildBreakends(svDataList, breakends, sourceName);
     }
 
     @Override
@@ -92,7 +94,7 @@ public class DisruptionComparer implements ItemComparer
 
             CMP_LOGGER.debug("sample({}) loaded {} SVs {} breakends",sampleId, svDataList.size(), breakends.size());
 
-            return buildBreakends(svDataList, breakends);
+            return buildBreakends(svDataList, breakends, fileSources.Source);
 
         }
         catch(IOException e)
@@ -102,7 +104,7 @@ public class DisruptionComparer implements ItemComparer
         }
     }
 
-    private List<ComparableItem> buildBreakends(final List<StructuralVariantData> svDataList, final List<LinxBreakend> breakends)
+    private List<ComparableItem> buildBreakends(final List<StructuralVariantData> svDataList, final List<LinxBreakend> breakends, final String sourceName)
     {
         List<ComparableItem> items = Lists.newArrayList();
 
@@ -114,7 +116,15 @@ public class DisruptionComparer implements ItemComparer
             {
                 breakends.remove(breakend);
 
-                DisruptionData disruptionData = new DisruptionData(var, breakend);
+                BasePosition comparisonPositionStart = determineComparisonGenomePosition(
+                        var.startChromosome(), var.startPosition(), sourceName, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                BasePosition comparisonPositionEnd = determineComparisonGenomePosition(
+                        var.endChromosome(), var.endPosition(), sourceName, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+
+                boolean checkTranscript = !breakend.canonical();
+
+                DisruptionData disruptionData = new DisruptionData(
+                        var, breakend, comparisonPositionStart, comparisonPositionEnd, checkTranscript);
                 items.add(disruptionData);
             }
         }

@@ -6,9 +6,8 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
-import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
+import static com.hartwig.hmftools.sage.common.VariantUtils.createReadContext;
 import static com.hartwig.hmftools.sage.evidence.ArtefactContext.NOT_APPLICABLE_BASE_QUAL;
 
 import static org.junit.Assert.assertEquals;
@@ -16,7 +15,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import com.hartwig.hmftools.sage.common.SimpleVariant;
-import com.hartwig.hmftools.sage.common.VariantTier;
+import com.hartwig.hmftools.sage.common.VariantReadContext;
 
 import org.junit.Test;
 
@@ -32,7 +31,6 @@ public class ArtefactsTest
     // 0123456789 01234567 89012345 67890123
     // AAAAAGGGGG ACGTTGCA TTTTTTTT ACGTTGCA AAAAAGGGGG
 
-    /* CLEAN-UP
     @Test
     public void testHomopolymerArtefacts()
     {
@@ -44,16 +42,10 @@ public class ArtefactsTest
         int varIndex = 17;
         String readContextBases = REF_BASES.substring(0, varIndex) + "T" + REF_BASES.substring(varIndex + 1);
 
-        IndexedBases indexBases = new IndexedBases(
-                pos, varIndex, varIndex - 2, 27, 10, readContextBases.getBytes());
+        VariantReadContext readContext = createReadContext(
+                variant, readContextBases, varIndex - 2, varIndex, varIndex + 10);
 
-        ReadContext readContext = new ReadContext(pos, "", 0, "", indexBases, false);
-
-        ReadContextCounter rcCounter = new ReadContextCounter(
-                1, variant, readContext, VariantTier.PANEL, 100, 0,
-                TEST_CONFIG, QUALITY_CALCULATOR, null);
-
-        ArtefactContext artefactContext = ArtefactContext.buildContext(variant, indexBases);
+        ArtefactContext artefactContext = ArtefactContext.buildContext(readContext);
         assertNotNull(artefactContext);
 
         assertFalse(artefactContext.hasHomopolymerOffset(SE_START));
@@ -83,12 +75,11 @@ public class ArtefactsTest
         varIndex = 16;
         readContextBases = REF_BASES.substring(0, varIndex + 1) + REF_BASES.substring(varIndex + 2);
 
-        indexBases = new IndexedBases(
-                pos, varIndex, varIndex - 2, 27, 10, readContextBases.getBytes());
+        readContext = createReadContext(
+                variant, readContextBases, varIndex - 2, varIndex, varIndex + 10);
 
-        readContext = new ReadContext(pos, "", 0, "", indexBases, false);
+        artefactContext = ArtefactContext.buildContext(readContext);
 
-        artefactContext = ArtefactContext.buildContext(variant, indexBases);
         assertNotNull(artefactContext);
         assertEquals(1, artefactContext.homopolymerOffset(SE_END));
 
@@ -113,12 +104,10 @@ public class ArtefactsTest
         // low-qual               X
         readContextBases = FLANK_BASES + "ACGTTTG" + REF_BASES.substring(18);
 
-        indexBases = new IndexedBases(
-                pos, varIndex, varIndex - 2, 27, 10, readContextBases.getBytes());
+        readContext = createReadContext(variant, readContextBases, varIndex - 2, varIndex, varIndex + 10);
 
-        readContext = new ReadContext(pos, "", 0, "", indexBases, false);
+        artefactContext = ArtefactContext.buildContext(readContext);
 
-        artefactContext = ArtefactContext.buildContext(variant, indexBases);
         assertNotNull(artefactContext);
         assertEquals(2, artefactContext.homopolymerOffset(SE_END));
 
@@ -140,12 +129,10 @@ public class ArtefactsTest
         varIndex = 15;
         readContextBases = FLANK_BASES + "AACGTAGT" + HOMOPOLYMER_SEQ + REF_BASES.substring(26);
 
-        indexBases = new IndexedBases(
-                pos, varIndex, varIndex - 2, 27, 10, readContextBases.getBytes());
+        readContext = createReadContext(variant, readContextBases, varIndex - 2, varIndex, varIndex + 10);
 
-        readContext = new ReadContext(pos, "", 0, "", indexBases, false);
+        artefactContext = ArtefactContext.buildContext(readContext);
 
-        artefactContext = ArtefactContext.buildContext(variant, indexBases);
         assertNotNull(artefactContext);
         assertEquals(3, artefactContext.homopolymerOffset(SE_END));
 
@@ -172,12 +159,10 @@ public class ArtefactsTest
         varIndex = 18;
         readContextBases = FLANK_BASES + "AACGTAG" + "T" + "T" + HOMOPOLYMER_SEQ + REF_BASES.substring(26);
 
-        indexBases = new IndexedBases(
-                pos, varIndex, 15, 27, 10, readContextBases.getBytes());
+        readContext = createReadContext(variant, readContextBases, varIndex - 2, varIndex, varIndex + 10);
 
-        readContext = new ReadContext(pos, "", 0, "", indexBases, false);
+        artefactContext = ArtefactContext.buildContext(readContext);
 
-        artefactContext = ArtefactContext.buildContext(variant, indexBases);
         assertNotNull(artefactContext);
         assertEquals(-1, artefactContext.homopolymerOffset(SE_END));
 
@@ -201,16 +186,11 @@ public class ArtefactsTest
         int varIndex = 26;
         String readContextBases = REF_BASES.substring(0, varIndex) + "T" + REF_BASES.substring(varIndex + 1);
 
-        IndexedBases indexBases = new IndexedBases(
-                pos, varIndex, varIndex - 2, 27, 10, readContextBases.getBytes());
+        VariantReadContext readContext = createReadContext(
+                variant, readContextBases, varIndex - 2, varIndex, varIndex + 10);
 
-        ReadContext readContext = new ReadContext(pos, "", 0, "", indexBases, false);
+        ArtefactContext artefactContext = ArtefactContext.buildContext(readContext);
 
-        ReadContextCounter rcCounter = new ReadContextCounter(
-                1, variant, readContext, VariantTier.PANEL, 100, 0,
-                TEST_CONFIG, QUALITY_CALCULATOR, null);
-
-        ArtefactContext artefactContext = ArtefactContext.buildContext(variant, indexBases);
         assertNotNull(artefactContext);
         assertFalse(artefactContext.hasHomopolymerOffset(SE_END));
         assertEquals(0, artefactContext.homopolymerOffset(SE_START));
@@ -238,12 +218,12 @@ public class ArtefactsTest
         varIndex = 16;
         readContextBases = REF_BASES.substring(0, varIndex + 1) + REF_BASES.substring(varIndex + 2);
 
-        indexBases = new IndexedBases(
-                pos, varIndex, varIndex - 2, 27, 10, readContextBases.getBytes());
+        readContext = createReadContext(
+                variant, readContextBases, varIndex - 2, varIndex, varIndex + 10);
 
-        readContext = new ReadContext(pos, "", 0, "", indexBases, false);
+        artefactContext = ArtefactContext.buildContext(readContext);
 
-        artefactContext = ArtefactContext.buildContext(variant, indexBases);
+
         assertNotNull(artefactContext);
         assertEquals(1, artefactContext.homopolymerOffset(SE_END));
 
@@ -268,12 +248,10 @@ public class ArtefactsTest
         int varIndex = 15;
         String readContextBases = leftFlank + "CTGTTTTTTTTTTTTTTTTTTA" + rightFlank;
 
-        IndexedBases indexBases = new IndexedBases(
-                pos, varIndex, leftFlank.length(),
-                readContextBases.length() - rightFlank.length() - 1, rightFlank.length(), readContextBases.getBytes());
+        VariantReadContext readContext = createReadContext(
+                variant, readContextBases, varIndex - 2, varIndex, varIndex + 10);
 
-        ArtefactContext artefactContext = ArtefactContext.buildContext(variant, indexBases);
-        assertNotNull(artefactContext);
+        ArtefactContext artefactContext = ArtefactContext.buildContext(readContext);
 
         int readLength = readContextBases.length();
         String cigar = format("%dM", readLength);
@@ -288,5 +266,4 @@ public class ArtefactsTest
 
         assertEquals(lowQualBase, adjustedBaseQual);
     }
-    */
 }

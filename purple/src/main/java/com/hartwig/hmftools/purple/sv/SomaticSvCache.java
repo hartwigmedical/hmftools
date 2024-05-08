@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.purple.sv;
 
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.IMPRECISE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INFERRED;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
@@ -142,7 +141,6 @@ public class SomaticSvCache
         long upperRange = Math.max(500, copyNumber.maxStart() - copyNumber.start());
 
         return new VariantContextBuilder("purple", copyNumber.chromosome(), position, copyNumber.start(), alleles).filter(INFERRED)
-                .attribute(IMPRECISE, true)
                 .id("purple_" + mNextVarId++)
                 .attribute(CIPOS, Lists.newArrayList(lowerRange, upperRange))
                 .attribute(SVTYPE, StructuralVariantType.BND.toString())

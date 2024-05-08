@@ -126,8 +126,9 @@ public class SomaticPurityEstimator
             purityCalcData.PurityRangeHigh = estimatedPurity(tumorPurity, fragmentTotals.adjTumorVaf(), sampleAdjVafHigh, noiseRate);
         }
 
-        // calculate a limit-of-detection (LOD), being the number of fragments that would return a 95% confidence of a tumor presence
-        purityCalcData.LodPurityEstimate = calcLimitOfDetection(fragmentTotals, tumorPurity, noiseRate);
+        // calculate a limit-of-detection (LOD), being the number of fragments that would return a 99% confidence of a tumor presence
+        purityCalcData.LodPurityEstimate = calcLimitOfDetection(fragmentTotals, noiseRate);
+        // purityCalcData.LodPurityEstimate = calcLimitOfDetection(fragmentTotals, tumorPurity, noiseRate);
 
         // report final probability as min of Dual and Normal Prob
         double expectedDualNoiseFragments = mConfig.noiseRate(true) * sampleDualDP;

@@ -56,7 +56,7 @@ public class GermlineDeletionComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
         final List<GermlineDeletion> germlineDeletions = dbAccess.readGermlineDeletions(sampleId);
         List<ComparableItem> items = Lists.newArrayList();

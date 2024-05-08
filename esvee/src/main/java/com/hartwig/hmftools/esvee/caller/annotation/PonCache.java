@@ -9,11 +9,9 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT_ID;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.DEFAULT_PON_DISTANCE;
+import static com.hartwig.hmftools.esvee.common.FilterType.PON;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,6 +20,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -77,6 +76,21 @@ public class PonCache
 
     public Map<String,List<PonSvRegion>> svRegions() { return mSvRegions; }
     public Map<String,List<PonSglRegion>> sglRegions() { return mSglRegions; }
+
+    public void annotateVariants(final List<SvData> svDataList)
+    {
+        for(SvData var : svDataList)
+        {
+            int ponCount = getPonCount(var);
+
+            if(ponCount > 0)
+            {
+                var.setPonCount(ponCount);
+
+                var.addFilter(PON);
+            }
+        }
+    }
 
     public int getPonCount(final SvData var)
     {
@@ -292,8 +306,8 @@ public class PonCache
                 BaseRegion regionStart = new BaseRegion(Integer.parseInt(items[1]) + 1, Integer.parseInt(items[2]));
                 ChrBaseRegion regionEnd = new ChrBaseRegion(chrEnd, Integer.parseInt(items[4]) + 1, Integer.parseInt(items[5]));
 
-                Byte orientStart = items[8].equals(POS_ORIENT_ID) ? POS_ORIENT : NEG_ORIENT;
-                Byte orientEnd = items[9].equals(POS_ORIENT_ID) ? POS_ORIENT : NEG_ORIENT;
+                Orientation orientStart = Orientation.fromChar(items[8].charAt(0));
+                Orientation orientEnd = Orientation.fromChar(items[9].charAt(0));
                 int ponCount = Integer.parseInt(items[7]);
 
                 svRegions.add(new PonSvRegion(regionStart, orientStart, regionEnd, orientEnd, ponCount));
@@ -350,7 +364,7 @@ public class PonCache
 
                 BaseRegion region = new BaseRegion(Integer.parseInt(items[1]) + 1, Integer.parseInt(items[2]));
 
-                Byte orient = items[5].equals(POS_ORIENT_ID) ? POS_ORIENT : NEG_ORIENT;
+                Orientation orient = Orientation.fromChar(items[5].charAt(0));
                 int ponCount = Integer.parseInt(items[4]);
 
                 sglRegions.add(new PonSglRegion(region, orient, ponCount));
@@ -375,7 +389,8 @@ public class PonCache
     }
 
     public void addPonSvRegion(
-            final String chrStart, final BaseRegion regionStart, final Byte orientStart, final ChrBaseRegion regionEnd, final Byte orientEnd, final int ponCount)
+            final String chrStart, final BaseRegion regionStart, final Orientation orientStart,
+            final ChrBaseRegion regionEnd, final Orientation orientEnd, final int ponCount)
     {
         List<PonSvRegion> regions = mSvRegions.get(chrStart);
 
@@ -388,7 +403,7 @@ public class PonCache
         regions.add(new PonSvRegion(regionStart, orientStart, regionEnd, orientEnd, ponCount));
     }
 
-    public void addPonSglRegion(final String chromosome, BaseRegion region, final Byte orient, final int ponCount)
+    public void addPonSglRegion(final String chromosome, BaseRegion region, final Orientation orient, final int ponCount)
     {
         List<PonSglRegion> regions = mSglRegions.get(chromosome);
 

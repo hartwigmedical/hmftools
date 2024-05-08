@@ -1,14 +1,14 @@
 package com.hartwig.hmftools.gripss.common;
 
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEID;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEIDL;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_AS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BASRP;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BASSR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_BSC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_CAS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.GRIDSS_RAS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SGL_FRAG_COUNT;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.BEID;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.BEIDL;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_AS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BASRP;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BASSR;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BSC;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_CAS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_RAS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SGL_FRAG_COUNT;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 
 import java.util.List;

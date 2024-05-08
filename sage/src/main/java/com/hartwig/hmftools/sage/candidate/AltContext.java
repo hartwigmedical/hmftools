@@ -11,19 +11,16 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 
 import org.jetbrains.annotations.NotNull;
 
-public class AltContext implements VariantHotspot
+public class AltContext extends SimpleVariant
 {
-    public final String Ref;
-    public final String Alt;
     public final RefContext RefContext;
     
     private final List<ReadContextCandidate> mReadContextCandidates;
@@ -35,9 +32,8 @@ public class AltContext implements VariantHotspot
 
     public AltContext(final RefContext refContext, final String ref, final String alt)
     {
+        super(refContext.Chromosome, refContext.Position, ref, alt);
         RefContext = refContext;
-        Ref = ref;
-        Alt = alt;
 
         mReadContextCandidates = Lists.newArrayList();
         mCandidate = null;
@@ -48,9 +44,8 @@ public class AltContext implements VariantHotspot
             final RefContext refContext, final String ref, final String alt, final ReadContextCandidate candidate,
             int rawSupportAlt, int rawBaseQualAlt)
     {
+        super(refContext.Chromosome, refContext.Position, ref, alt);
         RefContext = refContext;
-        Ref = ref;
-        Alt = alt;
 
         mCandidate = candidate;
         mRawSupportAlt = rawSupportAlt;
@@ -170,13 +165,12 @@ public class AltContext implements VariantHotspot
         if(this == another)
             return true;
 
-        return another instanceof VariantHotspot && equalTo((VariantHotspot) another);
+        return another instanceof SimpleVariant && equalTo((SimpleVariant) another);
     }
 
-    private boolean equalTo(final VariantHotspot other)
+    private boolean equalTo(final SimpleVariant other)
     {
-        return ref().equals(other.ref()) && alt().equals(other.alt()) && chromosome().equals(other.chromosome())
-                && position() == other.position();
+        return Ref.equals(other.Ref) && Alt.equals(other.alt()) && Chromosome.equals(other.Chromosome) && Position == other.Position;
     }
 
     @Override

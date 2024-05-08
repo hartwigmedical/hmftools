@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.compar.mutation;
 
-import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.compar.common.Category.SOMATIC_VARIANT;
@@ -10,7 +7,7 @@ import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
 import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
-import static com.hartwig.hmftools.compar.common.FileSources.liftoverSourceGenomeVersion;
+import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
 import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_NEW;
@@ -21,8 +18,6 @@ import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_LPS;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
-import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
-
 import java.util.List;
 import java.util.Map;
 
@@ -30,8 +25,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
@@ -89,7 +84,7 @@ public class SomaticVariantComparer implements ItemComparer
 
             if(!mConfig.DbConnections.isEmpty())
             {
-                variants.addAll(loadVariants(sourceSampleId, mConfig.DbConnections.get(sourceName)));
+                variants.addAll(loadVariants(sourceSampleId, mConfig.DbConnections.get(sourceName), sourceName));
             }
             else
             {
@@ -306,14 +301,14 @@ public class SomaticVariantComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
         final List<ComparableItem> items = Lists.newArrayList();
-        loadVariants(sampleId, dbAccess).forEach(x -> items.add(x));
+        loadVariants(sampleId, dbAccess, sourceName).forEach(x -> items.add(x));
         return items;
     }
 
-    private List<SomaticVariantData> loadVariants(final String sampleId, final DatabaseAccess dbAccess)
+    private List<SomaticVariantData> loadVariants(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
         final List<SomaticVariantData> variants = Lists.newArrayList();
 
@@ -326,7 +321,11 @@ public class SomaticVariantComparer implements ItemComparer
 
         for(Record record : results)
         {
-            variants.add(SomaticVariantData.fromRecord(record));
+            final SomaticVariantData variant = SomaticVariantData.fromRecord(record);
+            BasePosition comparisonPosition = determineComparisonGenomePosition(
+                    variant.Chromosome, variant.Position, sourceName, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+            variant.setComparisonCoordinates(comparisonPosition.Chromosome, comparisonPosition.Position);
+            variants.add(variant);
         }
 
         return variants;
@@ -356,9 +355,6 @@ public class SomaticVariantComparer implements ItemComparer
             return null;
         }
 
-        RefGenomeVersion sourceVersion = liftoverSourceGenomeVersion(fileSources.Source);
-        RefGenomeVersion destVersion = sourceVersion.is37() ? V38 : V37;
-
         for(VariantContext variantContext : vcfFileReader.iterator())
         {
             if(variantContext.isFiltered())
@@ -369,15 +365,11 @@ public class SomaticVariantComparer implements ItemComparer
             if(mConfig.RestrictToDrivers && !mConfig.DriverGenes.contains(variant.Gene))
                 continue;
 
+            BasePosition comparisonPosition = determineComparisonGenomePosition(
+                    variant.Chromosome, variant.Position, fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+            variant.setComparisonCoordinates(comparisonPosition.Chromosome, comparisonPosition.Position);
+
             variants.add(variant);
-
-            if(mConfig.RequiresLiftover && mConfig.LiftoverCache.hasMappings())
-            {
-                int newPosition = mConfig.LiftoverCache.convertPosition(variant.Chromosome, variant.Position, destVersion);
-
-                if(newPosition != UNMAPPED_POSITION)
-                    variant.setComparisonCoordinates(destVersion.versionedChromosome(variant.Chromosome), newPosition);
-            }
         }
 
         CMP_LOGGER.debug("sample({}) loaded {} {} somatic variants", sampleId, fileSources.Source, variants.size());

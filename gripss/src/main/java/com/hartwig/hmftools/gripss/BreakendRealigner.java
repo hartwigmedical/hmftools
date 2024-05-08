@@ -2,17 +2,18 @@ package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.chromosomeRank;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.CIRPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.REALIGN;
+import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formPairedAltString;
+import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formSingleAltString;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.CIRPOS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.REALIGN;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formPairedAltString;
-import static com.hartwig.hmftools.gripss.common.VariantAltInsertCoords.formSingleAltString;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.Interval;
 
@@ -64,7 +65,8 @@ public class BreakendRealigner
 
         String newAlt = formPairedAltString(
                 refAllele.getDisplayString(), breakend.InsertSequence,
-                realignedOther.Chromosome, realignedOther.Position, breakend.Orientation, realignedOther.Orientation);
+                realignedOther.Chromosome, realignedOther.Position,
+                Orientation.fromByte(breakend.Orientation), Orientation.fromByte(realignedOther.Orientation));
 
         alleles.add(Allele.create(newAlt));
 
@@ -123,7 +125,7 @@ public class BreakendRealigner
 
         String newAlt = formPairedAltString(
                 newRef, otherBreakend.InsertSequence, otherBreakend.Chromosome, otherBreakend.Position,
-                breakend.Orientation, otherBreakend.Orientation);
+                Orientation.fromByte(breakend.Orientation), Orientation.fromByte(otherBreakend.Orientation));
 
         List<Allele> alleles = Lists.newArrayList();
         alleles.add(Allele.create(newRef, true));
@@ -156,7 +158,7 @@ public class BreakendRealigner
 
         String newRef = toStandardNucleotides(mRefGenome.getBaseString(breakend.Chromosome, newStart, newStart));
 
-        String newAlt = formSingleAltString(newRef, breakend.InsertSequence, breakend.Orientation);
+        String newAlt = formSingleAltString(newRef, breakend.InsertSequence, Orientation.fromByte(breakend.Orientation));
 
         List<Allele> alleles = Lists.newArrayList();
         alleles.add(Allele.create(newRef, true));

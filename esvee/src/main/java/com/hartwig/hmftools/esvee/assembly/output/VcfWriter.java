@@ -1,63 +1,80 @@
 package com.hartwig.hmftools.esvee.assembly.output;
 
-import static java.lang.String.format;
-
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.NEG_ORIENTATION_CHAR;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.POS_ORIENTATION_CHAR;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SINGLE_BREAKEND_CHAR;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ANCHOR_SUPPORT_CIGAR;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ANCHOR_SUPPORT_CIGAR_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ANCHOR_SUPPORT_CIGAR_LENGTH;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.ANCHOR_SUPPORT_CIGAR_LENGTH_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEID;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEIDH;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEIDH_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEIDL;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEIDL_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.BEID_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMID;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMID_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMLEN;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMLEN_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMSEG;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMSEG_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASSEMBLY_LINKS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.ASSEMBLY_LINKS_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEAOR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEAOR_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEAPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEAPOS_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEOR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.BEOR_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.DISCORDANT_READS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.DISCORDANT_READS_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.EVENT;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.EVENT_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.DISC_FRAGS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.DISC_FRAGS_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.LOCAL_LINKED_BY;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.LOCAL_LINKED_BY_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.INSALN;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.INSALN_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.MATE_ID_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.REMOTE_LINKED_BY;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.REMOTE_LINKED_BY_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_READS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_READS_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.VCF_ITEM_DELIM;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGALEN;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGALEN_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGID;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGID_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGMAPQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGMAPQ_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGRL;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGRL_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGSCO;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SEGSCO_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SVTYPE_DESC;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.SV_FRAG_COUNT_DESC;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS_DESC;
+import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formPairedAltString;
+import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formSingleAltString;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.esvee.alignment.AlternativeAlignment.altAlignmentsStr;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
+import com.hartwig.hmftools.esvee.alignment.AssemblyAlignment;
 import com.hartwig.hmftools.esvee.alignment.Breakend;
+import com.hartwig.hmftools.esvee.alignment.BreakendSegment;
 import com.hartwig.hmftools.esvee.alignment.BreakendSupport;
-import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
-import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
-import com.hartwig.hmftools.esvee.assembly.filters.FilterType;
+import com.hartwig.hmftools.esvee.common.FilterType;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
@@ -77,6 +94,7 @@ public class VcfWriter implements AutoCloseable
     private final VariantContextWriter mWriter;
 
     private final List<String> mSampleNames;
+    private final Map<String,Integer> mSampleNameIndex; // back to config sample ordering, so genotype order can differ
 
     private final List<VariantContext> mVariants;
 
@@ -86,7 +104,19 @@ public class VcfWriter implements AutoCloseable
     {
         mConfig = config;
 
-        mSampleNames = mConfig.combinedSampleIds();
+        // reference sample IDs will be written first
+        mSampleNames = Lists.newArrayList(mConfig.ReferenceIds);
+        mSampleNames.addAll(mConfig.TumorIds);
+
+        mSampleNameIndex = Maps.newHashMap();
+
+        List<String> configSampleIds = mConfig.combinedSampleIds();
+        for(int i = 0; i < configSampleIds.size(); ++i)
+        {
+            String sampleId = configSampleIds.get(i);
+            mSampleNameIndex.put(sampleId, i);
+        }
+
         mVariants = new ArrayList<>();
 
         if(config.WriteTypes.contains(WriteType.VCF) && config.VcfFile != null)
@@ -112,41 +142,48 @@ public class VcfWriter implements AutoCloseable
 
     private void writeHeader()
     {
-        // no longer written:
-
         Set<VCFHeaderLine> metaData = Sets.newHashSet();
 
-        // TODO: check which of these are required
-        metaData.add(new VCFInfoHeaderLine(EVENT, 1, VCFHeaderLineType.String, EVENT_DESC));
+        metaData.add(new VCFFormatHeaderLine(QUAL, 1, VCFHeaderLineType.Integer, QUAL_DESC));
+
         metaData.add(new VCFInfoHeaderLine(MATE_ID, 1, VCFHeaderLineType.String, MATE_ID_DESC));
         metaData.add(new VCFInfoHeaderLine(SVTYPE, 1, VCFHeaderLineType.String, SVTYPE_DESC));
-        metaData.add(new VCFInfoHeaderLine(BEID, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, BEID_DESC));
-        metaData.add(new VCFInfoHeaderLine(BEIDL, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, BEIDL_DESC));
-        metaData.add(new VCFInfoHeaderLine(BEIDH, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, BEIDH_DESC));
-        metaData.add(new VCFInfoHeaderLine(ANCHOR_SUPPORT_CIGAR, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, ANCHOR_SUPPORT_CIGAR_DESC));
-        metaData.add(new VCFInfoHeaderLine(ANCHOR_SUPPORT_CIGAR_LENGTH, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ANCHOR_SUPPORT_CIGAR_LENGTH_DESC));
-        metaData.add(new VCFInfoHeaderLine(LOCAL_LINKED_BY,  VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, LOCAL_LINKED_BY_DESC));
-        metaData.add(new VCFInfoHeaderLine(REMOTE_LINKED_BY, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, REMOTE_LINKED_BY_DESC));
+
         metaData.add(new VCFInfoHeaderLine(CIPOS, 2, VCFHeaderLineType.Integer, CIPOS_DESC));
         metaData.add(new VCFInfoHeaderLine(HOMSEQ, 1, VCFHeaderLineType.String, HOMSEQ_DESC));
-        // metaData.add(new VCFInfoHeaderLine(MAPQ, 1, VCFHeaderLineType.Integer, MAPQ_DESC));
-        // metaData.add(new VCFInfoHeaderLine(BEALN, 1, VCFHeaderLineType.String, BEALN_DESC));
-        //metaData.add(new VCFInfoHeaderLine(OVERHANG, 1, VCFHeaderLineType.Integer, OVERHANG_DESC));
+        metaData.add(new VCFInfoHeaderLine(IHOMPOS, 2, VCFHeaderLineType.Integer, IHOMPOS_DESC));
+
+        metaData.add(new VCFInfoHeaderLine(INSALN, 1, VCFHeaderLineType.String, INSALN_DESC));
+        metaData.add(new VCFInfoHeaderLine(HOMSEQ, 1, VCFHeaderLineType.String, HOMSEQ_DESC));
+        metaData.add(new VCFInfoHeaderLine(HOMSEQ, 1, VCFHeaderLineType.String, HOMSEQ_DESC));
+
+        metaData.add(new VCFInfoHeaderLine(ASMID, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ASMID_DESC));
+        metaData.add(new VCFInfoHeaderLine(ASMLEN, 1, VCFHeaderLineType.Integer, ASMLEN_DESC));
+        metaData.add(new VCFInfoHeaderLine(ASMSEG, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ASMSEG_DESC));
+        metaData.add(new VCFInfoHeaderLine(BEAPOS, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, BEAPOS_DESC));
+        metaData.add(new VCFInfoHeaderLine(BEOR, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, BEOR_DESC));
+        metaData.add(new VCFInfoHeaderLine(BEAOR, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, BEAOR_DESC));
+        metaData.add(new VCFInfoHeaderLine(SEGID, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, SEGID_DESC));
+        metaData.add(new VCFInfoHeaderLine(ASSEMBLY_LINKS, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ASSEMBLY_LINKS_DESC));
+        metaData.add(new VCFInfoHeaderLine(SEGALEN, 1, VCFHeaderLineType.Integer, SEGALEN_DESC));
+        metaData.add(new VCFInfoHeaderLine(SEGMAPQ, 1, VCFHeaderLineType.Integer, SEGMAPQ_DESC));
+        metaData.add(new VCFInfoHeaderLine(SEGSCO, 1, VCFHeaderLineType.Integer, SEGSCO_DESC));
+        metaData.add(new VCFInfoHeaderLine(SEGRL, 1, VCFHeaderLineType.Integer, SEGRL_DESC));
 
         for(FilterType filter : FilterType.values())
         {
-            metaData.add(new VCFFilterHeaderLine(filter.filterName(), filter.vcfDescription()));
+            metaData.add(new VCFFilterHeaderLine(filter.vcfTag(), filter.vcfDesc()));
         }
-
-        // metaData.add(new VCFFormatHeaderLine(QUAL, 1, VCFHeaderLineType.Integer, QUAL_DESC));
 
         metaData.add(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
         metaData.add(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_ALLELE_DEPTHS)));
         metaData.add(VCFStandardHeaderLines.getFormatLine((VCFConstants.DEPTH_KEY)));
 
-        metaData.add(new VCFFormatHeaderLine(DISCORDANT_READS, 1, VCFHeaderLineType.Integer, DISCORDANT_READS_DESC));
-        metaData.add(new VCFFormatHeaderLine(SPLIT_READS, 1, VCFHeaderLineType.Integer, SPLIT_READS_DESC));
-        metaData.add(new VCFFormatHeaderLine(SV_FRAG_COUNT, 1, VCFHeaderLineType.Integer, SV_FRAG_COUNT_DESC));
+        // per sample
+        metaData.add(new VCFFormatHeaderLine(SPLIT_FRAGS, 1, VCFHeaderLineType.Integer, SPLIT_FRAGS_DESC));
+        metaData.add(new VCFFormatHeaderLine(DISC_FRAGS, 1, VCFHeaderLineType.Integer, DISC_FRAGS_DESC));
+        metaData.add(new VCFFormatHeaderLine(TOTAL_FRAGS, 1, VCFHeaderLineType.Integer, TOTAL_FRAGS_DESC));
+        metaData.add(new VCFFormatHeaderLine(STRAND_BIAS, 1, VCFHeaderLineType.Float, STRAND_BIAS_DESC));
 
         final VCFHeader header = new VCFHeader(metaData, mSampleNames);
 
@@ -159,174 +196,133 @@ public class VcfWriter implements AutoCloseable
         if(mWriter == null)
             return;
 
-        // FIXME: ensure standard ordering
-        // mVariants.sort(NaturalSortComparator.of(VariantContext::getContig).thenComparingInt(VariantContext::getStart));
-
         mVariants.forEach(mWriter::add);
         mWriter.close();
     }
+
+    private static final int[] NO_HOMOLOGY = new int[] { 0, 0 };
 
     public void addBreakend(final Breakend breakend)
     {
         List<Genotype> genotypes = Lists.newArrayList();
 
-        for(int i = 0; i < mSampleNames.size(); ++i)
+        for(String sampleId : mSampleNames)
         {
-            String sampleId = mSampleNames.get(i);
-            BreakendSupport breakendSupport = breakend.sampleSupport().get(i);
+            int sampleSupportIndex = mSampleNameIndex.get(sampleId);
+            BreakendSupport breakendSupport = breakend.sampleSupport().get(sampleSupportIndex);
             genotypes.add(buildGenotype(breakend, sampleId, breakendSupport));
         }
 
-        /*
-        PhaseSet phaseSet = assembly.phaseSet();
-        List<AssemblyLink> assemblyLinks = phaseSet != null ? phaseSet.findAssemblyLinks(assembly) : Collections.emptyList();
-        AssemblyLink splitLink = assemblyLinks.stream().filter(x -> x.type() == LinkType.SPLIT).findFirst().orElse(null);
-        StructuralVariantType svType = splitLink != null ? splitLink.svType() : SGL;
+        Set<String> filters = breakend.filters().stream().map(x -> x.vcfTag()).collect(Collectors.toSet());
 
-        List<Allele> alleles = buildAlleleInfo(assembly, splitLink, svType);
+        int qual = breakend.calcSvQual();
 
-        // see comments when preparing final variants and setting assembly IDs
-        String assemblyId = String.valueOf(assembly.id());
-
-
-        // TODO: modify post-alignment and homology sliding as required
-        int breakendPosition = assembly.junction().Position;
-
-        double mapQualityTotal = assembly.support().stream().mapToInt(x -> x.cachedRead().mappingQuality()).sum();
-        int averageMapQuality = (int)Math.round(mapQualityTotal / assembly.supportCount());
-        double tempQualityScore = sampleDataList.stream().mapToDouble(x -> x.SplitFragments + x.DiscordantFragments).sum();
-
-        Set<String> filters = assembly.filters().stream().map(x -> x.filterName()).collect(Collectors.toSet());
+        List<Allele> alleles = buildAlleleInfo(breakend);
 
         VariantContextBuilder builder = new VariantContextBuilder()
-                .id(assemblyId)
-                .chr(assembly.junction().Chromosome)
-                .start(breakendPosition)
+                .id(String.valueOf(breakend.id()))
+                .chr(breakend.Chromosome)
+                .start(breakend.Position)
                 .alleles(alleles)
-                .log10PError(tempQualityScore / -10.0)
+                .log10PError(qual / -10.0)
                 .filters(filters)
                 .genotypes(genotypes);
 
-        mVariants.add(builder.make());
-         */
+        if(!breakend.isSingle())
+            builder.attribute(MATE_ID, String.valueOf(breakend.otherBreakend().id()));
+
+        builder.attribute(SVTYPE, breakend.svType());
+
+        if(breakend.Homology != null)
+        {
+            builder.attribute(CIPOS, new int[] { breakend.Homology.ExactStart, breakend.Homology.ExactEnd });
+            builder.attribute(IHOMPOS, new int[] { breakend.Homology.InexactStart, breakend.Homology.InexactEnd });
+            builder.attribute(HOMSEQ, breakend.Homology.Homology);
+        }
+        else
+        {
+            // CHECK: are these optional?
+            builder.attribute(CIPOS, NO_HOMOLOGY);
+            builder.attribute(IHOMPOS, NO_HOMOLOGY);
+        }
+
+        if(breakend.alternativeAlignments() != null)
+            builder.attribute(INSALN, altAlignmentsStr(breakend.alternativeAlignments()));
+
+        AssemblyAlignment assemblyAlignment = breakend.assembly();
+
+        builder.attribute(ASMID, assemblyAlignment.id());
+        builder.attribute(ASMLEN, assemblyAlignment.fullSequenceLength());
+
+        List<BreakendSegment> segments = breakend.segments();
+
+        builder.attribute(ASMSEG, segments.stream().map(x -> String.valueOf(x.Index)).collect(Collectors.joining(VCF_ITEM_DELIM)));
+        builder.attribute(BEAPOS, segments.stream().map(x -> String.valueOf(x.SequenceIndex)).collect(Collectors.joining(VCF_ITEM_DELIM)));
+        builder.attribute(BEOR, breakend.Orient.asByte());
+        builder.attribute(BEAOR, segments.stream().map(x -> String.valueOf(x.Orient.asByte())).collect(Collectors.joining(VCF_ITEM_DELIM)));
+
+        builder.attribute(SEGID, segments.stream().map(x -> x.uniqueId()).collect(Collectors.joining(VCF_ITEM_DELIM)));
+
+        // NOTE: this is used by Linx to form assembly TIs
+        if(!breakend.facingBreakends().isEmpty())
+        {
+            builder.attribute(
+                    ASSEMBLY_LINKS,
+                    breakend.facingBreakends().stream().map(x -> String.valueOf(x.id())).collect(Collectors.joining(VCF_ITEM_DELIM)));
+        }
+
+        builder.attribute(SEGALEN, segments.stream().map(x -> String.valueOf(x.Alignment.alignedBases())).collect(Collectors.joining(VCF_ITEM_DELIM)));
+        builder.attribute(SEGMAPQ, segments.stream().mapToInt(x -> x.Alignment.MapQual).max().orElse(0));
+        builder.attribute(SEGSCO, segments.stream().mapToInt(x -> x.Alignment.Score).max().orElse(0));
+        builder.attribute(SEGRL, segments.stream().mapToInt(x -> x.Alignment.repeatTrimmedLength()).max().orElse(0));
+
+        VariantContext variantContext = builder.make();
+
+        mVariants.add(variantContext);
     }
 
     private Genotype buildGenotype(final Breakend breakend, final String sampleId, final BreakendSupport breakendSupport)
     {
         GenotypeBuilder builder = new GenotypeBuilder(sampleId);
 
-        int depth = 0; // set from full BAM in a separate process
-        int altSupport = breakendSupport.SplitFragments + breakendSupport.DiscordantFragments;
-
-        // ideas for more per-sample data:
-        // - average read quality
-        // - trimmed base qualities
-        // - average extension or read base distance
-        // - strand bias
+        int depth = 0; // set later by depth annotation
+        int altSupport = breakendSupport.totalSupport();
 
         builder.DP(depth)
-                .AD(new int[] { 0, altSupport })
-                .alleles(NO_GENOTYPE_ALLELES); // is this optional for a genotype?
+                .AD(new int[] { 0, altSupport }) // set later by depth annotation
+                .alleles(NO_GENOTYPE_ALLELES);
 
+        builder.attribute(SPLIT_FRAGS, breakendSupport.SplitFragments);
+        builder.attribute(DISC_FRAGS, breakendSupport.DiscordantFragments);
+        builder.attribute(TOTAL_FRAGS, altSupport);
+        builder.attribute(STRAND_BIAS, breakendSupport.strandBias());
 
         return builder.make();
     }
 
-    private List<Allele> buildAlleleInfo(final JunctionAssembly assembly, final AssemblyLink splitLink, final StructuralVariantType svType)
+    private List<Allele> buildAlleleInfo(final Breakend breakend)
     {
-        // pos orientation for DEL and DUP: AGAGATTATACTTTGTGTA[10:89712341[
-        // pos orientation for INV: G]3:26664499]
-
-        // neg orientation for DEL and DUP: ]10:89700299]GAGATTATACTTTGTGTAA
-        // neg orientation for INV: [3:24566181[C
-
-        // FIXME: see Gripss method formPairedAltString() and share code if possible
-
-        // position orientation for SG: extension sequence then '.'
-        // negative orientation for SG: '.' then extension sequence
-        byte[] refBase = { assembly.bases()[assembly.junctionIndex()] };
+        byte[] refBase = mConfig.RefGenome.getBases(breakend.Chromosome, breakend.Position, breakend.Position);
         Allele refAllele = Allele.create(refBase, true);
 
-        String insertedBases = "";
+        String altBase = String.valueOf((char)refBase[0]);
 
-        if(splitLink != null)
+        String altBases;
+
+        if(breakend.isSingle())
         {
-            int insertLength = splitLink.insertedBases().length();
-
-            if(insertLength > 0)
-            {
-                String extensionBases = assembly.formJunctionSequence();
-
-                if(assembly.isForwardJunction())
-                {
-                    insertedBases = extensionBases.substring(0, insertLength);
-                }
-                else
-                {
-                    int extBaseLength = extensionBases.length();
-                    insertedBases = extensionBases.substring(extBaseLength - insertLength);
-                }
-            }
+            altBases = formSingleAltString(altBase, breakend.InsertedBases, breakend.Orient);
         }
         else
         {
-            insertedBases = assembly.formJunctionSequence();
-        }
+            final Breakend otherBreakend = breakend.otherBreakend();
 
-        StringBuilder altBases = new StringBuilder();
-
-        if(svType != SGL)
-        {
-            JunctionAssembly otherAssembly = splitLink.otherAssembly(assembly);
-
-            // TODO: see previous comment about using correct breakend position
-            String otherBreakendInfo = formOtherBreakendInfo(
-                    otherAssembly.junction().Chromosome, otherAssembly.junction().Position, otherAssembly.junction().Orientation);
-
-            if(assembly.isForwardJunction())
-            {
-                altBases.append((char)refBase[0]);
-
-                if(!insertedBases.isEmpty())
-                    altBases.append(insertedBases);
-
-                // details about the other breakend
-                altBases.append(otherBreakendInfo);
-            }
-            else
-            {
-                altBases.append(otherBreakendInfo);
-
-                // FIXME: check orientation or take from the extension bses
-                if(!insertedBases.isEmpty())
-                    altBases.append(insertedBases);
-
-                altBases.append((char)refBase[0]);
-            }
-        }
-        else
-        {
-            if(assembly.isForwardJunction())
-            {
-                altBases.append(insertedBases);
-                altBases.append(SINGLE_BREAKEND_CHAR);
-            }
-            else
-            {
-                altBases.append(SINGLE_BREAKEND_CHAR);
-                altBases.append(insertedBases);
-            }
+            altBases = formPairedAltString(
+                    altBase, breakend.InsertedBases, otherBreakend.Chromosome, otherBreakend.Position, breakend.Orient, otherBreakend.Orient);
         }
 
         Allele altAllele = Allele.create(altBases.toString().getBytes(), false);
 
         return List.of(refAllele, altAllele);
-    }
-
-    private static String formOtherBreakendInfo(final String chromosome, final int position, final byte orientation)
-    {
-        // ]3:26664499]
-        char orientationChar = orientation == POS_ORIENT ? POS_ORIENTATION_CHAR : NEG_ORIENTATION_CHAR;
-        return format("%c%s:%d%c", orientationChar, chromosome, position, orientationChar);
     }
 }

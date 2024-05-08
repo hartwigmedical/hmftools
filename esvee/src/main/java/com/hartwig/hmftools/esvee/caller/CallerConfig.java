@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.caller;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificChromsomes;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
@@ -8,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
@@ -15,13 +17,13 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.Ref;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.esvee.caller.annotation.PonCache;
 
 public class CallerConfig
@@ -29,22 +31,23 @@ public class CallerConfig
     // run config
     public final String SampleId;
     public final String ReferenceId;
+    public final boolean GermlineOnly;
     public final RefGenomeVersion RefGenVersion;
     public final String VcfFile;
-    public final boolean GermlineMode;
 
     public final String OutputDir;
     public final String OutputId;
     public final List<String> RestrictedChromosomes;
 
     private static final String VCF_FILE = "vcf";
-    private static final String GERMLINE = "germline";
 
     public CallerConfig(final ConfigBuilder configBuilder)
     {
         SampleId = configBuilder.getValue(SAMPLE);
-        ReferenceId = configBuilder.getValue(REFERENCE, "");
-        GermlineMode = configBuilder.hasFlag(GERMLINE);
+        ReferenceId = configBuilder.getValue(REFERENCE);
+
+        GermlineOnly = ReferenceId != null && SampleId == null;
+
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
@@ -54,18 +57,8 @@ public class CallerConfig
         RestrictedChromosomes = loadSpecificChromsomes(configBuilder);
     }
 
-    public CallerConfig(
-            final String sampleId, final String referenceId, final RefGenomeVersion refGenVersion, final String vcfFile)
-    {
-        SampleId = sampleId;
-        ReferenceId = referenceId;
-        RefGenVersion = refGenVersion;
-        GermlineMode = false;
-        VcfFile = vcfFile;
-        OutputDir = null;
-        OutputId = null;
-        RestrictedChromosomes = Lists.newArrayList();
-    }
+    public boolean hasTumor() { return SampleId != null; }
+    public boolean hasReference() { return ReferenceId != null; }
 
     public boolean isValid()
     {
@@ -101,11 +94,10 @@ public class CallerConfig
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);
         configBuilder.addPath(VCF_FILE, true, "Path to the GRIDSS structural variant VCF file");
-        configBuilder.addFlag(GERMLINE, "Run in germline mode");
 
         addOutputOptions(configBuilder);
-        ConfigUtils.addLoggingOptions(configBuilder);
-        addRefGenomeConfig(configBuilder, true);
+        addLoggingOptions(configBuilder);
+        configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
 
         addSpecificChromosomesRegionsConfig(configBuilder);
 

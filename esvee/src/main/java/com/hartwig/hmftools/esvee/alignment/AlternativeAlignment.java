@@ -2,9 +2,6 @@ package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
@@ -12,29 +9,28 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 
 public class AlternativeAlignment
 {
     // consider moving into common and using in Linx instead of its SglMapping class
     public final String Chromosome;
     public final int Position;
-    public final byte Orientation;
+    public final Orientation Orient;
     public final String Cigar;
     public final int MapQual;
 
-        public AlternativeAlignment(final String chromosome, final int position, final byte orientation, final String cigar, final int mapQual)
+        public AlternativeAlignment(final String chromosome, final int position, final Orientation orientation, final String cigar, final int mapQual)
     {
         Chromosome = chromosome;
         Position = position;
-        Orientation = orientation;
+        Orient = orientation;
         Cigar = cigar;
         MapQual = mapQual;
     }
 
     private static final String MAPPING_DELIM = ";";
     private static final String ITEM_DELIM = ",";
-    private static final char POS_ORIENT_CHAR = '+';
-    private static final char NEG_ORIENT_CHAR = '-';
 
     // expected BWA format: // 16,+24008715,44S28M46S,0;X,+133232624,44S27M47S,0;12,+54042138,37S35M46S,2;4,-84437081,46S25M47S,0;
 
@@ -51,7 +47,7 @@ public class AlternativeAlignment
             return null;
 
         String orientPos = items[1];
-        byte orientation = orientPos.charAt(0) == POS_ORIENT_CHAR ? POS_ORIENT : NEG_ORIENT;
+        Orientation orientation = Orientation.fromChar(orientPos.charAt(0));
 
         int position = Integer.parseInt(orientPos.substring(1));
 
@@ -84,7 +80,7 @@ public class AlternativeAlignment
 
     public String toString()
     {
-        return format("%s:%d:%d mq=%d", Chromosome, Position, Orientation, MapQual);
+        return format("%s:%d:%d mq=%d", Chromosome, Position, Orient, MapQual);
     }
 
     public String vcfString()
@@ -93,7 +89,7 @@ public class AlternativeAlignment
         // make common class for this
         StringJoiner sj = new StringJoiner("|");
         sj.add(format("%s:%d", Chromosome, Position));
-        sj.add(String.valueOf(Orientation == POS_ORIENT ? POS_ORIENT_CHAR : NEG_ORIENT_CHAR));
+        sj.add(String.valueOf(Orient.asChar()));
         sj.add(Cigar);
         sj.add(String.valueOf(MapQual));
         return sj.toString();

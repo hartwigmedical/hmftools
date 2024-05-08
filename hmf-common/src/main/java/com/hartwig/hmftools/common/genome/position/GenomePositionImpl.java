@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-abstract class GenomePositionImpl implements GenomePosition
+public abstract class GenomePositionImpl implements GenomePosition
 {
 
 }

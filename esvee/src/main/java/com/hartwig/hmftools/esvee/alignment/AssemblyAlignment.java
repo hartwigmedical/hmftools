@@ -118,7 +118,7 @@ public class AssemblyAlignment
         boolean firstReversed = false;
         boolean secondReversed = false;
 
-        if(mAssemblyLink.first().junction().Orientation != mAssemblyLink.second().junction().Orientation)
+        if(mAssemblyLink.first().junction().Orient != mAssemblyLink.second().junction().Orient)
         {
             if(mAssemblyLink.first().junction().isForward())
             {

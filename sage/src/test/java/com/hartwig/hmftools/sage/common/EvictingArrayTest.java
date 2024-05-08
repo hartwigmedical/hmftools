@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.sage.common;
 
-import static com.hartwig.hmftools.sage.common.EvictingArray.MIN_CAPACITY;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -9,7 +7,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.sage.candidate.RefContext;
 
 import org.junit.Before;
@@ -116,15 +114,15 @@ public class EvictingArrayTest
 
         assertEquals(1100, mArray.minPosition());
         assertEquals(100, mHandler.items().size());
-        assertEquals(1000, mHandler.items().get(0).position());
-        assertEquals(1099, mHandler.items().get(99).position());
+        assertEquals(1000, mHandler.items().get(0).Position);
+        assertEquals(1099, mHandler.items().get(99).Position);
     }
 
     static class EvictionHandler implements Consumer<RefContext>
     {
-        private final List<GenomePosition> mItems = Lists.newArrayList();
+        private final List<BasePosition> mItems = Lists.newArrayList();
 
-        public List<GenomePosition> items() { return mItems; }
+        public List<BasePosition> items() { return mItems; }
 
         @Override
         public void accept(final RefContext position)

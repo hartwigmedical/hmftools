@@ -189,7 +189,7 @@ public class ReadContextMatchingTest
 
         assertEquals(CORE, matcher.determineReadMatch(read, readVarIndex));
 
-        // low-qual mismatches in the flanks
+        // low-qual mismatches in the flanks - 3 are permitted
         readBases = flankMismatch + leftCore + alt + rightCore + flankMismatch;
         readQualities = buildDefaultBaseQuals(readBases.length());
 
@@ -199,6 +199,20 @@ public class ReadContextMatchingTest
         }
 
         for(int i = readBases.length() - 11; i < readBases.length(); ++i)
+        {
+            readQualities[i] = 10;
+        }
+
+        read = buildSamRecord(position - readVarIndex, cigar, readBases, readQualities);
+
+        assertEquals(CORE, matcher.determineReadMatch(read, readVarIndex));
+
+        // now limited to 3
+        flankMismatch = readContext.rightFlankStr().substring(0, 7) + "TTT";
+        readBases = readContext.leftFlankStr() + leftCore + alt + rightCore + flankMismatch;
+        readQualities = buildDefaultBaseQuals(readBases.length());
+
+        for(int i = readBases.length() - 4; i < readBases.length(); ++i)
         {
             readQualities[i] = 10;
         }

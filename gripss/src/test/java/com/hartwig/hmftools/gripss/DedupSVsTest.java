@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.gripss;
 
-import static com.hartwig.hmftools.common.sv.SvVcfTags.IMPRECISE;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.QUAL;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.IMPRECISE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;

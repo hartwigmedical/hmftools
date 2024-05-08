@@ -27,6 +27,12 @@ public class BreakendSupport
 
     public int totalSupport() { return SplitFragments + DiscordantFragments; }
 
+    public double strandBias()
+    {
+        int totalReads = ForwardReads + ReverseReads;
+        return totalReads > 0 ? ForwardReads / (double)totalReads : 0;
+    }
+
     public String toString()
     {
         return format("support(split=%d disc=%d) strand(fwd=%d rev=%d)",

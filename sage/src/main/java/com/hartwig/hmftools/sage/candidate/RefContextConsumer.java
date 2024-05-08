@@ -24,7 +24,6 @@ import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.bam.CigarHandler;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
@@ -49,7 +48,7 @@ public class RefContextConsumer
 
     public RefContextConsumer(
             final SageConfig config, final ChrBaseRegion bounds, final RefSequence refSequence, final RefContextCache refContextCache,
-            final List<VariantHotspot> regionHotspots)
+            final List<SimpleVariant> regionHotspots)
     {
         mBounds = bounds;
         mRefSequence = refSequence;

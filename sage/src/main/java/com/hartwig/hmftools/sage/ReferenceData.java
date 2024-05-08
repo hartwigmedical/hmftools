@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.genome.bed.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.File;
@@ -26,6 +25,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -33,7 +33,7 @@ public class ReferenceData
 {
     public final ListMultimap<Chromosome,NamedBed> CoveragePanel;
     public final Map<Chromosome,List<BaseRegion>> PanelWithHotspots;
-    public final ListMultimap<Chromosome,VariantHotspot> Hotspots;
+    public final ListMultimap<Chromosome,SimpleVariant> Hotspots;
     public final Map<Chromosome,List<BaseRegion>> HighConfidence;
 
     public final EnsemblDataCache GeneDataCache;
@@ -155,13 +155,20 @@ public class ReferenceData
         if(mConfig.Hotspots.isEmpty())
             return;
 
-        Hotspots.putAll(VariantHotspotFile.readFromVCF(mConfig.Hotspots));
+        ListMultimap<Chromosome,VariantHotspot> hotspotMap = VariantHotspotFile.readFromVCF(mConfig.Hotspots);
+
+        for(VariantHotspot variant : hotspotMap.values())
+        {
+            Hotspots.put(HumanChromosome.fromString(variant.chromosome()),
+                    new SimpleVariant(variant.chromosome(), variant.position(), variant.ref(), variant.alt()));
+        }
+
         SG_LOGGER.info("read {} hotspots from vcf: {}", Hotspots.size(), mConfig.Hotspots);
 
         // add to panel regions as well if not already covering them
         for(Chromosome chromosome : Hotspots.keySet())
         {
-            List<VariantHotspot> hotspots = Hotspots.get(chromosome);
+            List<SimpleVariant> hotspots = Hotspots.get(chromosome);
             List<BaseRegion> panelRegions = PanelWithHotspots.get(chromosome);
 
             if(panelRegions == null)
@@ -170,7 +177,7 @@ public class ReferenceData
                 PanelWithHotspots.put(chromosome, panelRegions);
             }
 
-            for(VariantHotspot hotspot : hotspots)
+            for(SimpleVariant hotspot : hotspots)
             {
                 boolean covered = false;
                 int index = 0;

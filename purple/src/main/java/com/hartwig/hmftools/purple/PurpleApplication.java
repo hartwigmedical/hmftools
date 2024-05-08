@@ -10,7 +10,7 @@ import static com.hartwig.hmftools.common.purple.PurpleQCStatus.MAX_DELETED_GENE
 import static com.hartwig.hmftools.common.purple.GeneCopyNumber.listToMap;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.MemoryCalcs.calcMemoryUsage;
+import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleSummaryData.createPurity;
 import static com.hartwig.hmftools.purple.segment.Segmentation.validateObservedRegions;
@@ -31,10 +31,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.AmplificationDrivers;
 import com.hartwig.hmftools.common.drivercatalog.DeletionDrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
@@ -108,7 +108,7 @@ public class PurpleApplication
 
     private PurpleApplication(final ConfigBuilder configBuilder) throws IOException
     {
-        mPurpleVersion = new VersionInfo("purple.version");
+        mPurpleVersion = fromAppName(APP_NAME);
 
         mConfig = new PurpleConfig(mPurpleVersion.version(), configBuilder);
 
@@ -604,9 +604,11 @@ public class PurpleApplication
         }
     }
 
+    private static final String APP_NAME = "Purple";
+
     public static void main(final String... args) throws IOException
     {
-        ConfigBuilder configBuilder = new ConfigBuilder("Purple");
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         PurpleConfig.addOptions(configBuilder);
 

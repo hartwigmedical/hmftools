@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -97,11 +96,11 @@ public class PonApplication implements AutoCloseable
         SAMSequenceDictionary dictionary = dictionaryReader.getFileHeader().getSequenceDictionary();
         dictionaryReader.close();
 
+        /*
         for(SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
         {
             SG_LOGGER.info("Processing sequence {}", samSequenceRecord.getSequenceName());
             final PonBuilder ponBuilder = new PonBuilder();
-            final RunnableTaskCompletion runnableTaskCompletion = new RunnableTaskCompletion();
 
             List<Future<?>> contigFutures = Lists.newArrayList();
 
@@ -118,6 +117,7 @@ public class PonApplication implements AutoCloseable
 
             vcf.write(ponBuilder.build());
         }
+        */
     }
 
     private void addVariantsFromFileToBuilder(final PonBuilder ponBuilder, final SAMSequenceRecord samSequenceRecord, final Path file)

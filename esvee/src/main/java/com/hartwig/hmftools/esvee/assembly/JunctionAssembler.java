@@ -65,7 +65,7 @@ public class JunctionAssembler
                 }
 
                 if(recordSoftClipsAtJunction(read, mJunction)
-                        && readJunctionExtensionLength(read, mJunction) >= PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
+                && readJunctionExtensionLength(read, mJunction) >= PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH)
                 {
                     extensionReads.add(read);
                 }

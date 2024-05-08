@@ -179,14 +179,19 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
             return 1;
         }
 
+        return compareChromosomes(Chromosome, other.Chromosome);
+    }
+
+    public static int compareChromosomes(final String chr1, final String chr2)
+    {
         // we use chromosome rank such that chr1 is sorted before chr2
-        int rank1 = HumanChromosome.chromosomeRank(Chromosome);
-        int rank2 = HumanChromosome.chromosomeRank(other.Chromosome);
+        int rank1 = HumanChromosome.chromosomeRank(chr1);
+        int rank2 = HumanChromosome.chromosomeRank(chr2);
 
         if(rank1 == rank2)
         {
             // will occur for non-standard contigs, in which case revert to standard string comparison
-            return Chromosome.compareTo(other.Chromosome);
+            return chr1.compareTo(chr2);
         }
 
         return rank1 < rank2 ? -1 : 1;

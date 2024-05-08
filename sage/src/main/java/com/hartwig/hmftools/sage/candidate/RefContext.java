@@ -5,20 +5,16 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.sage.common.VariantReadContext;
 
-public class RefContext implements GenomePosition
+public class RefContext extends BasePosition
 {
-    public final String Chromosome;
-    public final int Position;
-    
     private Map<String,AltContext> mAlts;
 
     public RefContext(final String chromosome, int position)
     {
-        Chromosome = chromosome;
-        Position = position;
+        super(chromosome, position);
         mAlts = null;
     }
 
@@ -38,13 +34,10 @@ public class RefContext implements GenomePosition
         }
     }
 
-    @Override
     public String chromosome()
     {
         return Chromosome;
     }
-
-    @Override
     public int position()
     {
         return Position;
@@ -59,10 +52,7 @@ public class RefContext implements GenomePosition
         return another instanceof RefContext && equalTo((RefContext) another);
     }
 
-    private boolean equalTo(RefContext another)
-    {
-        return Chromosome.equals(another.Chromosome) && Position == another.Position;
-    }
+    private boolean equalTo(final RefContext another) { return matches(another); }
 
     @Override
     public int hashCode()

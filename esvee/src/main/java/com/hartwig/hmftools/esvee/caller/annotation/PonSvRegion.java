@@ -1,18 +1,19 @@
 package com.hartwig.hmftools.esvee.caller.annotation;
 
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class PonSvRegion implements Comparable<PonSvRegion>
 {
     public final BaseRegion RegionStart;
-    public final Byte OrientStart;
+    public final Orientation OrientStart;
     public final ChrBaseRegion RegionEnd;
-    public final Byte OrientEnd;
+    public final Orientation OrientEnd;
     public final int PonCount;
 
     public PonSvRegion(
-            final BaseRegion regionStart, final Byte orientStart, final ChrBaseRegion regionEnd, final Byte orientEnd, final int ponCount)
+            final BaseRegion regionStart, final Orientation orientStart, final ChrBaseRegion regionEnd, final Orientation orientEnd, final int ponCount)
     {
         RegionStart = regionStart;
         OrientStart = orientStart;
@@ -21,7 +22,7 @@ public class PonSvRegion implements Comparable<PonSvRegion>
         PonCount = ponCount;
     }
 
-    public boolean matches(final BaseRegion svStart, final ChrBaseRegion svEnd, byte orientStart, byte orientEnd)
+    public boolean matches(final BaseRegion svStart, final ChrBaseRegion svEnd, Orientation orientStart, Orientation orientEnd)
     {
         return RegionStart.overlaps(svStart) && RegionEnd.overlaps(svEnd) && OrientStart == orientStart && OrientEnd == orientEnd;
     }
@@ -42,6 +43,7 @@ public class PonSvRegion implements Comparable<PonSvRegion>
 
     public String toString()
     {
-        return String.format("region(%s - %s) orients(%d - %d) pon(%d)", RegionStart, RegionEnd, OrientStart, OrientEnd, PonCount);
+        return String.format("region(%s - %s) orients(%d - %d) pon(%d)",
+                RegionStart, RegionEnd, OrientStart.asByte(), OrientEnd.asByte(), PonCount);
     }
 }

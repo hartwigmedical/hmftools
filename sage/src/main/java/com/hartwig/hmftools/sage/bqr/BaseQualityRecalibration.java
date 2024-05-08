@@ -7,6 +7,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.genome.bed.BedFileReader.loadBedFileChrMap;
+import static com.hartwig.hmftools.common.qual.BaseQualAdjustment.probabilityToPhredQual;
 import static com.hartwig.hmftools.common.sage.SageCommon.generateBqrFilename;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.runThreadTasks;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -198,13 +199,32 @@ public class BaseQualityRecalibration
         }
     }
 
-    private List<BqrRecord> convertToRecords(final Map<BqrKey,Integer> allQualityCounts)
+    public static List<BqrRecord> convertToRecords(final Map<BqrKey,Integer> allQualityCounts)
     {
-        final List<BqrRecord> result = Lists.newArrayList();
+        List<BqrRecord> result = Lists.newArrayList();
 
-        final Map<BqrKey,Integer> refCountMap = allQualityCounts.entrySet().stream()
+        // collect the ref counts
+        Map<BqrKey,Integer> refCountMap = allQualityCounts.entrySet().stream()
                 .filter(x -> x.getKey().Ref == x.getKey().Alt)
                 .collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue()));
+
+        // make a map of (per-type) trinuc totals across all entries
+        Map<BqrKey,Integer> triNucMap = Maps.newHashMap();
+        byte noBaseOrQual = 1;
+
+        for(Map.Entry<BqrKey,Integer> entry : allQualityCounts.entrySet())
+        {
+            BqrKey key = entry.getKey();
+            int count = entry.getValue();
+
+            if(key.Quality == 0)
+                continue;
+
+            BqrKey triNucKey = new BqrKey(noBaseOrQual, noBaseOrQual, key.TrinucleotideContext, noBaseOrQual, key.ReadType);
+
+            Integer triNucCount = triNucMap.get(triNucKey);
+            triNucMap.put(triNucKey, triNucCount != null ? triNucCount + count : count);
+        }
 
         Set<BqrKey> syntheticAltKeys = Sets.newHashSet();
 
@@ -215,36 +235,39 @@ public class BaseQualityRecalibration
             if(key.Quality == 0)
                 continue;
 
+            double recalibratedQual = 0;
+
             BqrKey refKey = new BqrKey(key.Ref, key.Ref, key.TrinucleotideContext, key.Quality, key.ReadType);
 
-            int refCount = refCountMap.getOrDefault(refKey, 0);
-
-            if(refCount > 0)
+            if(key.Alt == key.Ref)
             {
-                double recalibratedQual = key.Alt == key.Ref ? key.Quality : recalibratedQual(refCount, entry.getValue());
-                result.add(new BqrRecord(key, entry.getValue(), recalibratedQual));
+                recalibratedQual = key.Quality;
+            }
+            else
+            {
+                recalibratedQual = calcRecalibratedQual(key, 1, refCountMap, triNucMap);
+            }
 
-                double recalQualMin = recalibratedQual(refCount, 1);
+            result.add(new BqrRecord(key, entry.getValue(), recalibratedQual));
 
-                // add alt entries for any which sampled no results
-                for(int i = 0; i < DNA_BASE_BYTES.length; ++i)
+            // add alt entries for any which sample has no results
+            for(int i = 0; i < DNA_BASE_BYTES.length; ++i)
+            {
+                byte alt = DNA_BASE_BYTES[i];
+
+                if(alt == refKey.Ref)
+                    continue;
+
+                BqrKey altKey = new BqrKey(key.Ref, alt, key.TrinucleotideContext, key.Quality, key.ReadType);
+
+                if(!allQualityCounts.containsKey(altKey) && !syntheticAltKeys.contains(altKey))
                 {
-                    byte alt = DNA_BASE_BYTES[i];
+                    syntheticAltKeys.add(altKey);
 
-                    if(alt == refKey.Ref)
-                        continue;
+                    double recalQualMin = calcRecalibratedQual(altKey, 1, refCountMap, triNucMap);
+                    double syntheticQual = max(recalQualMin + 10 * log10(2), key.Quality);
 
-                    BqrKey altKey = new BqrKey(key.Ref, alt, key.TrinucleotideContext, key.Quality, key.ReadType);
-
-                    if(!allQualityCounts.containsKey(altKey) && !syntheticAltKeys.contains(altKey))
-                    {
-                        syntheticAltKeys.add(altKey);
-
-                        double syntheticQual = max(recalQualMin + 10 * log10(2), key.Quality);
-
-                        result.add(new BqrRecord(altKey, 0, syntheticQual));
-                    }
-
+                    result.add(new BqrRecord(altKey, 0, syntheticQual));
                 }
             }
         }
@@ -252,10 +275,35 @@ public class BaseQualityRecalibration
         return result;
     }
 
-    public static double recalibratedQual(int refCount, int altCount)
+    private static final byte NO_BASE_OR_QUAL = 1; // value is irrelevant, just to complete a map entry
+
+    private static double calcRecalibratedQual(
+            final BqrKey key, final int observedCount, final Map<BqrKey,Integer> refCountMap, final Map<BqrKey,Integer> triNucMap)
     {
-        double percent = altCount / (double) (altCount + refCount);
-        return -10 * log10(percent);
+        // example: to calc qual of T>C errors at a GTA trinucleotide, with qual 30
+        // error_rate = (# all GCA sites / # all GTA sites) * (# qual 30 T>Cs GTA sites) / (# qual 30 T>Cs GTA sites + # qual 30 C refs GCA sites)
+
+        // or in general terms:
+        // errorRate = (# alt TN sites / # ref TN sites) * (# alts at ref TN sites) / (# alts at ref TN sites + # refs at alt TN sites)
+
+        byte[] altTriNucContext = new byte[] { key.TrinucleotideContext[0], key.Alt, key.TrinucleotideContext[2] };
+
+        BqrKey altKey = new BqrKey(key.Alt, key.Alt, altTriNucContext, key.Quality, key.ReadType);
+        int altRefCount = refCountMap.getOrDefault(altKey, 0);
+
+        BqrKey altTriNucKey = new BqrKey(NO_BASE_OR_QUAL, NO_BASE_OR_QUAL, altTriNucContext, NO_BASE_OR_QUAL, key.ReadType);
+        int altTriNucCount = triNucMap.getOrDefault(altTriNucKey, 0);
+
+        BqrKey refTriNucKey = new BqrKey(NO_BASE_OR_QUAL, NO_BASE_OR_QUAL, key.TrinucleotideContext, NO_BASE_OR_QUAL, key.ReadType);
+        int refTriNucCount = triNucMap.getOrDefault(refTriNucKey, 0);
+
+        double triNucRate = refTriNucCount > 0 ? altTriNucCount / (double)refTriNucCount : 0;
+
+        if(triNucRate == 0 || (observedCount + altRefCount) == 0)
+            return 0;
+
+        double calcProbability = triNucRate * observedCount / (observedCount + altRefCount);
+        return probabilityToPhredQual(calcProbability);
     }
 
     private static final int END_BUFFER = 1000000;

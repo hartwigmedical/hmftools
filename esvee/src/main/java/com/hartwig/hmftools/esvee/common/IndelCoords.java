@@ -2,11 +2,11 @@ package com.hartwig.hmftools.esvee.common;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-
 import static htsjdk.samtools.CigarOperator.D;
 
 import java.util.List;
+
+import com.hartwig.hmftools.common.genome.region.Orientation;
 
 import htsjdk.samtools.CigarElement;
 
@@ -32,9 +32,9 @@ public class IndelCoords
     public String insertedBases() { return mInsertedBases != null ? mInsertedBases : ""; }
     public void setInsertedBases(final String bases) { mInsertedBases = bases; }
 
-    public boolean matchesJunction(int position, byte orientation)
+    public boolean matchesJunction(int position, Orientation orientation)
     {
-        return orientation == POS_ORIENT ? PosStart == position : PosEnd == position;
+        return orientation.isForward() ? PosStart == position : PosEnd == position;
     }
 
     public boolean matches(final IndelCoords other)

@@ -4,12 +4,14 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FIL
 import static com.hartwig.hmftools.compar.common.Category.GERMLINE_VARIANT;
 import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
+import static com.hartwig.hmftools.compar.common.CommonUtils.determineComparisonGenomePosition;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLINEVARIANT;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.region.BasePosition;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
 import com.hartwig.hmftools.common.variant.GermlineVariantFactory;
 import com.hartwig.hmftools.compar.common.Category;
@@ -59,7 +61,7 @@ public class GermlineVariantComparer implements ItemComparer
     }
 
     @Override
-    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess)
+    public List<ComparableItem> loadFromDb(final String sampleId, final DatabaseAccess dbAccess, final String sourceName)
     {
         Result<Record> result = dbAccess.context().select()
                 .from(GERMLINEVARIANT)
@@ -71,7 +73,9 @@ public class GermlineVariantComparer implements ItemComparer
         for (Record record : result)
         {
             GermlineVariant variant = GermlineVariantDAO.buildFromRecord(record);
-            variants.add(new GermlineVariantData(variant));
+            BasePosition comparisonPosition = determineComparisonGenomePosition(
+                    variant.chromosome(), variant.position(), sourceName, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+            variants.add(new GermlineVariantData(variant, comparisonPosition));
         }
 
         return variants;
@@ -87,7 +91,15 @@ public class GermlineVariantComparer implements ItemComparer
         try
         {
             List<GermlineVariant> variants = GermlineVariantFactory.fromVCFFile(sampleId, vcfFile);
-            variants.stream().filter(x -> !x.isFiltered()).forEach(x -> comparableItems.add(new GermlineVariantData(x)));
+            for(GermlineVariant variant : variants)
+            {
+                if(!variant.isFiltered())
+                {
+                    BasePosition comparisonPosition = determineComparisonGenomePosition(
+                            variant.chromosome(), variant.position(), fileSources.Source, mConfig.RequiresLiftover, mConfig.LiftoverCache);
+                    comparableItems.add(new GermlineVariantData(variant, comparisonPosition));
+                }
+            }
 
             CMP_LOGGER.debug("sample({}) loaded {} {} germline variants", sampleId, fileSources.Source, comparableItems.size());
         }

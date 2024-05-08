@@ -2,8 +2,7 @@ package com.hartwig.hmftools.esvee.assembly.types;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
-import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
+import static com.hartwig.hmftools.common.genome.region.Orientation.fromByteStr;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ORIENTATION;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
@@ -26,14 +25,14 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 
 public class Junction implements Comparable<Junction>
 {
     public final String Chromosome;
     public final int Position;
-    public final byte Orientation;
+    public final Orientation Orient;
 
     public final boolean DiscordantOnly;
     public final boolean IndelBased;
@@ -41,18 +40,18 @@ public class Junction implements Comparable<Junction>
 
     public final String mDetails;
 
-    public Junction(final String chromosome, final int position, final byte orientation)
+    public Junction(final String chromosome, final int position, final Orientation orientation)
     {
         this(chromosome, position, orientation, false, false, false);
     }
 
     public Junction(
-            final String chromosome, final int position, final byte orientation, final boolean discordantOnly,
+            final String chromosome, final int position, final Orientation orientation, final boolean discordantOnly,
             final boolean indelBased, final boolean hotspot)
     {
         Chromosome = chromosome;
         Position = position;
-        Orientation = orientation;
+        Orient = orientation;
         DiscordantOnly = discordantOnly;
         IndelBased = indelBased;
         Hotspot = hotspot;
@@ -75,34 +74,30 @@ public class Junction implements Comparable<Junction>
         }
     }
 
-    // convenience and poossible temporary
-    public String chromosome() { return Chromosome; }
-    public int position() { return Position; }
-    public boolean isForward() { return Orientation == POS_STRAND; }
-    public boolean isReverse() { return Orientation == NEG_STRAND; }
+    public boolean isForward() { return Orient.isForward(); }
+    public boolean isReverse() { return Orient.isReverse(); }
 
     public String toString()
     {
         if(DiscordantOnly || IndelBased || Hotspot)
         {
-            return format("%s:%d:%d %s",Chromosome, Position, Orientation, mDetails);
+            return format("%s:%d:%d %s",Chromosome, Position, Orient.asByte(), mDetails);
         }
 
-        return format("%s:%d:%d", Chromosome, Position, Orientation);
+        return format("%s:%d:%d", Chromosome, Position, Orient.asByte());
     }
 
     // for display and logging
-    public String coords() { return format("%s:%d:%d", Chromosome, Position, Orientation); }
+    public String coords() { return format("%s:%d:%d", Chromosome, Position, Orient.asByte()); }
 
     public boolean isLocalMatch(final Junction other)
     {
-        return Position == other.Position && Orientation == other.Orientation;
+        return Position == other.Position && Orient == other.Orient;
     }
 
     public boolean lower(final Junction other)
     {
-        return Position < other.Position
-                || (Position == other.Position && Orientation == POS_STRAND && other.Orientation == NEG_STRAND);
+        return Position < other.Position || (Position == other.Position && Orient.isForward() && other.Orient.isReverse());
     }
 
     public boolean higher(final Junction other) { return !lower(other); }
@@ -110,7 +105,7 @@ public class Junction implements Comparable<Junction>
     @Override
     public int compareTo(final Junction other)
     {
-        return compareJunctions(Chromosome, other.Chromosome, Position, other.Position, Orientation, other.Orientation);
+        return compareJunctions(Chromosome, other.Chromosome, Position, other.Position, Orient, other.Orient);
     }
 
     public static Map<String,List<Junction>> loadJunctions(
@@ -151,7 +146,7 @@ public class Junction implements Comparable<Junction>
 
                 String chromosome = values[chrIndex];
                 int position = Integer.parseInt(values[posIndex]);
-                byte orientation = Byte.parseByte(values[orientIndex]);
+                Orientation orientation = fromByteStr(values[orientIndex]);
 
                 if(!specificRegions.includeChromosome(chromosome))
                     continue;
@@ -201,7 +196,7 @@ public class Junction implements Comparable<Junction>
 
         String chromosome = values[0];
         int position = Integer.parseInt(values[1]);
-        byte orientation = Byte.parseByte(values[2]);
+        Orientation orientation = fromByteStr(values[2]);
 
         boolean discordantOnly = false;
         boolean indelBased = false;

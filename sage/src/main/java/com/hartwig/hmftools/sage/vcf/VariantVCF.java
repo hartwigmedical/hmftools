@@ -3,18 +3,22 @@ package com.hartwig.hmftools.sage.vcf;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET_DESC;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY_FLAG;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY_FLAG_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_MICROHOMOLOGY;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_MICROHOMOLOGY_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_SEQUENCE;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_SEQUENCE_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT_DESC;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT_FLAG;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_FLAG_DESCRIPTION;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE_DESC;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
@@ -41,14 +45,10 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.MIXED_SOMATIC_GERMLINE_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.QUAL_MODEL_TYPE_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_DEPTH_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_BASE_QUALITY;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_BASE_QUALITY_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_DEPTH;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_DEPTH;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_SUPPORT_DEPTH_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_VS_CONTEXT_DIFFS;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.RAW_VS_CONTEXT_DIFFS_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_ALIGNMENT;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_ALIGNMENT_DESC;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CIGAR;
+import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CIGAR_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CORE;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_AF_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_CORE_DESC;
@@ -62,16 +62,10 @@ import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_JITTER_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_LEFT_FLANK;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_LEFT_FLANK_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_MICRO_HOMOLOGY;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_MICRO_HOMOLOGY_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_REPEAT_SEQUENCE;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_REPEAT_SEQUENCE_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_RIGHT_FLANK;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_CONTEXT_RIGHT_FLANK_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.READ_STRAND_BIAS_DESC;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.TOTAL_RAW_BASE_QUAL;
-import static com.hartwig.hmftools.sage.vcf.VcfTags.TOTAL_RAW_BASE_QUAL_DESC;
 import static com.hartwig.hmftools.sage.vcf.VcfTags.VERSION_META_DATA;
 
 import java.util.Collections;
@@ -168,9 +162,6 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFInfoHeaderLine(
                 LOCAL_PHASE_SET, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, LOCAL_PHASE_SET_DESC));
 
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                READ_CONTEXT_REPEAT_COUNT, 1, VCFHeaderLineType.Integer, READ_CONTEXT_REPEAT_COUNT_DESC));
-
         // standard fields
         header.addMetaDataLine(new VCFHeaderLine(VERSION_META_DATA, version));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
@@ -183,10 +174,25 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_INDEX, 1, VCFHeaderLineType.Integer, READ_CONTEXT_INDEX_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_LEFT_FLANK, 1, VCFHeaderLineType.String, READ_CONTEXT_LEFT_FLANK_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_RIGHT_FLANK, 1, VCFHeaderLineType.String, READ_CONTEXT_RIGHT_FLANK_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_CIGAR, 1, VCFHeaderLineType.String, READ_CONTEXT_CIGAR_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_ALIGNMENT, 2, VCFHeaderLineType.Integer, READ_CONTEXT_ALIGNMENT_DESC));
+
+        header.addMetaDataLine(new VCFInfoHeaderLine(TRINUCLEOTIDE_CONTEXT, 1, VCFHeaderLineType.String, TRINUCLEOTIDE_CONTEXT_DESC));
+
         header.addMetaDataLine(new VCFInfoHeaderLine(
                 READ_CONTEXT_REPEAT_SEQUENCE, 1, VCFHeaderLineType.String, READ_CONTEXT_REPEAT_SEQUENCE_DESC));
+
         header.addMetaDataLine(new VCFInfoHeaderLine(
-                READ_CONTEXT_MICRO_HOMOLOGY, 1, VCFHeaderLineType.String, READ_CONTEXT_MICRO_HOMOLOGY_DESC));
+                READ_CONTEXT_REPEAT_COUNT, 1, VCFHeaderLineType.Integer, READ_CONTEXT_REPEAT_COUNT_DESC));
+
+        header.addMetaDataLine(new VCFInfoHeaderLine(REPEAT_SEQUENCE, 1, VCFHeaderLineType.String, REPEAT_SEQUENCE_DESC));
+        header.addMetaDataLine(new VCFInfoHeaderLine(REPEAT_COUNT, 1, VCFHeaderLineType.Integer, REPEAT_COUNT_DESC));
+
+        header.addMetaDataLine(new VCFInfoHeaderLine(MICROHOMOLOGY, 1, VCFHeaderLineType.String, MICROHOMOLOGY_DESC));
+
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                READ_CONTEXT_MICROHOMOLOGY, 1, VCFHeaderLineType.String, READ_CONTEXT_MICROHOMOLOGY_DESC));
+
         header.addMetaDataLine(new VCFInfoHeaderLine(
                 MIXED_SOMATIC_GERMLINE, 1, VCFHeaderLineType.Integer, MIXED_SOMATIC_GERMLINE_DESC));
         header.addMetaDataLine(new VCFInfoHeaderLine(
@@ -198,23 +204,15 @@ public class VariantVCF implements AutoCloseable
             header.addMetaDataLine(new VCFInfoHeaderLine(QUAL_MODEL_TYPE, 1, VCFHeaderLineType.String, QUAL_MODEL_TYPE_DESC));
         }
 
-        header.addMetaDataLine(new VCFInfoHeaderLine(TRINUCLEOTIDE_CONTEXT, 1, VCFHeaderLineType.String, TRINUCLEOTIDE_CONTEXT_DESC));
-
-        // CLEAN-UP: no longer set these values from ref context, only read context
-        header.addMetaDataLine(new VCFInfoHeaderLine(REPEAT_SEQUENCE_FLAG, 1, VCFHeaderLineType.String, REPEAT_FLAG_DESCRIPTION));
-        header.addMetaDataLine(new VCFInfoHeaderLine(REPEAT_COUNT_FLAG, 1, VCFHeaderLineType.Integer, REPEAT_COUNT_DESC));
-        header.addMetaDataLine(new VCFInfoHeaderLine(MICROHOMOLOGY_FLAG, 1, VCFHeaderLineType.String, MICROHOMOLOGY_FLAG_DESC));
-
         // genotype fields
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 VCFConstants.ALLELE_FREQUENCY_KEY, 1, VCFHeaderLineType.Float, READ_CONTEXT_AF_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_JITTER, 3, VCFHeaderLineType.Integer, READ_CONTEXT_JITTER_DESC));
+
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_MAP_QUALITY_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(RAW_SUPPORT_DEPTH, 2, VCFHeaderLineType.Integer, RAW_SUPPORT_DEPTH_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(RAW_SUPPORT_BASE_QUALITY, 2, VCFHeaderLineType.Integer, RAW_SUPPORT_BASE_QUALITY_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(RAW_DEPTH, 1, VCFHeaderLineType.Integer, RAW_DEPTH_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(RAW_VS_CONTEXT_DIFFS, 2, VCFHeaderLineType.Integer, RAW_VS_CONTEXT_DIFFS_DESC));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 2, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 READ_CONTEXT_COUNT, VariantReadSupport.values().length, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESC));
@@ -227,8 +225,6 @@ public class VariantVCF implements AutoCloseable
 
         header.addMetaDataLine(new VCFFormatHeaderLine(FRAG_STRAND_BIAS, 2, VCFHeaderLineType.Float, FRAG_STRAND_BIAS_DESC));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_STRAND_BIAS, 2, VCFHeaderLineType.Float, READ_STRAND_BIAS_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(TOTAL_RAW_BASE_QUAL, 1, VCFHeaderLineType.Integer, TOTAL_RAW_BASE_QUAL_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESC));

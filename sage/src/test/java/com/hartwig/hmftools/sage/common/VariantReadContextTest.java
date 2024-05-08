@@ -2,13 +2,13 @@ package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.buildDefaultBaseQuals;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FLANK_LENGTH;
+import static com.hartwig.hmftools.sage.common.Microhomology.findHomology;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.REF;
 import static com.hartwig.hmftools.sage.common.RepeatInfo.findMultiBaseRepeat;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.REF_SEQUENCE_200;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildCigarString;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
-import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.findHomology;
 import static com.hartwig.hmftools.sage.common.VariantUtils.createSimpleVariant;
 
 import static org.junit.Assert.assertEquals;

@@ -31,7 +31,7 @@ public final class IndelBuilder
             if(indelCoords != null)
             {
                 // must match junction exactly to be considered for support
-                if(!indelCoords.matchesJunction(junction.Position, junction.Orientation))
+                if(!indelCoords.matchesJunction(junction.Position, junction.Orient))
                     continue;
 
                 if(indelCoords.Length >= MIN_INDEL_LENGTH)

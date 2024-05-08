@@ -1,14 +1,13 @@
 package com.hartwig.hmftools.esvee.alignment;
 
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
-
-import com.hartwig.hmftools.esvee.AssemblyConfig;
 
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAligner;
 import org.broadinstitute.hellbender.utils.bwa.BwaMemAlignment;
@@ -25,7 +24,6 @@ public class BwaAligner implements Aligner
         {
             BwaMemIndex index = null;
 
-            // TEMP: until can resolve local ARM library issues
             try
             {
                 index = new BwaMemIndex(refGenomeImageFile);
@@ -35,7 +33,15 @@ public class BwaAligner implements Aligner
                 SV_LOGGER.error("failed to initialise BWA aligner: {}", e.toString());
             }
 
-            mAligner = index != null ? new BwaMemAligner(index) : null;
+            if(index != null)
+            {
+                mAligner = new BwaMemAligner(index);
+                mAligner.setBandwidthOption(MIN_INDEL_LENGTH - 1);
+            }
+            else
+            {
+                mAligner = null;
+            }
         }
         else
         {
@@ -43,20 +49,47 @@ public class BwaAligner implements Aligner
         }
     }
 
-    public static void loadAlignerLibrary(@Nullable final String bwaLibPath)
-    {
-        final var props = System.getProperties();
-        String candidateBWAPath = bwaLibPath != null ? bwaLibPath : "libbwa." + props.getProperty("os.arch") + osExtension();
+    private static final String LIBBWA_PATH = "LIBBWA_PATH"; // as expected by the BWA library
+    private static final String LIBBWA_PREFIX = "libbwa.";
 
-        if(System.getProperty("LIBBWA_PATH") == null && new File(candidateBWAPath).exists())
+    private static final String MAC_OS = "Mac";
+    private static final String MAC_ARCH = "aarch64";
+    private static final String MAC_BWA_LIB = "libbwa.Darwin.dylib";
+
+    public static void loadAlignerLibrary(@Nullable final String bwaLibraryPath)
+    {
+        if(System.getProperty(LIBBWA_PATH) != null)
+            return;
+
+        if(bwaLibraryPath != null)
         {
-            System.setProperty("LIBBWA_PATH", new File(candidateBWAPath).getAbsolutePath());
+            System.setProperty(LIBBWA_PATH, new File(bwaLibraryPath).getAbsolutePath());
+            return;
+        }
+
+        String osName = System.getProperty("os.name");
+        String osLibExtension = osExtension(osName);
+        String osArchitecture = System.getProperty("os.arch");
+
+        String candidateBWAPath = null;
+
+        if(osName.contains(MAC_OS) && osArchitecture.equals(MAC_ARCH))
+        {
+            candidateBWAPath = MAC_BWA_LIB;
+        }
+        else
+        {
+            candidateBWAPath = LIBBWA_PREFIX + osArchitecture + osLibExtension;
+        }
+
+        if(Files.exists(Paths.get(candidateBWAPath)))
+        {
+            System.setProperty(LIBBWA_PATH, new File(candidateBWAPath).getAbsolutePath());
         }
     }
 
-    private static String osExtension()
+    private static String osExtension(final String osName)
     {
-        final String osName = System.getProperty("os.name");
         if(osName.contains("Mac"))
             return ".dylib";
         else if(osName.contains("Win"))
@@ -74,21 +107,5 @@ public class BwaAligner implements Aligner
         List<BwaMemAlignment> alignmentSet = mAligner.alignSeqs(List.of(bases)).get(0);
 
         return alignmentSet;
-
-        /*
-        @Nullable
-        final BwaMemAlignment best = alignmentSet.stream()
-                .filter(alignment -> alignment.getRefStart() != -1)
-                .max(Comparator.comparingInt(BwaMemAlignment::getMapQual)
-                        .thenComparingInt(BwaMemAlignment::getAlignerScore)
-                        .thenComparing(Comparator.comparingInt(BwaMemAlignment::getNMismatches).reversed()))
-                .orElse(null);
-        if(best == null)
-            return List.of(com.hartwig.hmftools.esvee.old.Alignment.unmapped(sequence.getLength()));
-
-        if(SAMFlag.getFlags(best.getSamFlag()).contains(SAMFlag.READ_UNMAPPED))
-            return List.of(com.hartwig.hmftools.esvee.old.Alignment.unmapped(sequence.getLength()));
-        */
     }
-
 }

@@ -74,7 +74,7 @@ public class RegionAppendTask implements Callable
         SG_LOGGER.trace("{}: region({}) finding evidence", mTaskId, mRegion);
 
         List<Candidate> candidates = mOriginalVariants.stream()
-                .map(x -> CandidateSerialisation.toCandidate(x)).collect(Collectors.toList());
+                .map(x -> CandidateSerialisation.toCandidate(x, mRefGenome)).collect(Collectors.toList());
 
         ReadContextCounters readContextCounters = mEvidenceStage.findEvidence
                 (mRegion, "reference", mConfig.Common.ReferenceIds, candidates, false);

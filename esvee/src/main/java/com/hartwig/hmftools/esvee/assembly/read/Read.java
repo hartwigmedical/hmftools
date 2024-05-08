@@ -8,9 +8,9 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.cigarStringFromElements
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.bam.SupplementaryReadData.extractAlignment;
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 import static com.hartwig.hmftools.esvee.common.SvConstants.BAM_HEADER_SAMPLE_INDEX_TAG;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
@@ -23,6 +23,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.bam.SupplementaryReadData;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
 
 import htsjdk.samtools.CigarElement;
@@ -163,7 +164,7 @@ public class Read
 
     public boolean positiveStrand() { return !mRecord.getReadNegativeStrandFlag(); }
     public boolean negativeStrand() { return mRecord.getReadNegativeStrandFlag(); }
-    public byte orientation() { return mRecord.getReadNegativeStrandFlag() ? NEG_ORIENT : POS_ORIENT; }
+    public Orientation orientation() { return mRecord.getReadNegativeStrandFlag() ? REVERSE : FORWARD; }
 
     public boolean firstInPair() { return mRecord.getReadPairedFlag() && mRecord.getFirstOfPairFlag(); }
     public boolean secondInPair() { return mRecord.getReadPairedFlag() && mRecord.getSecondOfPairFlag(); }
@@ -191,15 +192,12 @@ public class Read
     public boolean isMateMapped() { return mRecord.getReadPairedFlag() && !mRecord.getMateUnmappedFlag(); }
     public boolean isMateUnmapped() { return mRecord.getReadPairedFlag() && mRecord.getMateUnmappedFlag(); }
 
-    public boolean matePositiveStrand() { return mateOrientation() == POS_ORIENT; }
-    public boolean mateNegativeStrand() { return mateOrientation() == NEG_ORIENT; }
-
-    public byte mateOrientation()
+    public Orientation mateOrientation()
     {
         if(!mRecord.getReadPairedFlag())
-            return 0;
+            return FORWARD;
 
-        return mRecord.getMateNegativeStrandFlag() ? NEG_ORIENT : POS_ORIENT; }
+        return mRecord.getMateNegativeStrandFlag() ? REVERSE : FORWARD; }
 
     public boolean hasSupplementary() { return supplementaryData() != null; }
     public boolean isSupplementary() { return mRecord.getSupplementaryAlignmentFlag(); }

@@ -16,6 +16,12 @@ public final class VcfTags
     public static final String READ_CONTEXT_INDEX = "RC_IDX";
     public static final String READ_CONTEXT_INDEX_DESC = "Index in the read context of the variant";
 
+    public static final String READ_CONTEXT_CIGAR = "RC_CIGAR";
+    public static final String READ_CONTEXT_CIGAR_DESC = "Read context CIGAR of the variant";
+
+    public static final String READ_CONTEXT_ALIGNMENT = "RC_ALIGNMENT";
+    public static final String READ_CONTEXT_ALIGNMENT_DESC = "Read context alignment of the variant";
+
     public static final String DEDUP_MNV_FILTER = "dedupMnv";
     public static final String DEDUP_MIXED_GERMLINE_SOMATIC_FILTER = "dedupMixedGermlineSomatic";
     public static final String DEDUP_SNV_MNV_FILTER = "dedupSnvMnv";
@@ -28,29 +34,11 @@ public final class VcfTags
     public static final String READ_CONTEXT_EVENTS = "RC_NM";
     public static final String READ_CONTEXT_EVENTS_DESC = "Minimum number of events in read";
 
-    public static final String READ_CONTEXT_REPEAT_SEQUENCE = "RC_REPS";
-    public static final String READ_CONTEXT_REPEAT_SEQUENCE_DESC = "Repeat sequence at read context";
-
-    public static final String READ_CONTEXT_MICRO_HOMOLOGY = "RC_MH";
-    public static final String READ_CONTEXT_MICRO_HOMOLOGY_DESC = "Micro-homology at read context";
-
     public static final String READ_CONTEXT_AF_DESC =
             "Allelic frequency calculated from read context counts as (Full + Partial + Core + Realigned + Alt) / Coverage";
 
     public static final String READ_CONTEXT_IMPROPER_PAIR = "RC_IPC";
     public static final String READ_CONTEXT_IMPROPER_PAIR_DESC = "Read context improper pair count";
-
-    public static final String RAW_DEPTH = "RDP";
-    public static final String RAW_DEPTH_DESC = "Raw read depth";
-
-    public static final String RAW_SUPPORT_DEPTH = "RAD";
-    public static final String RAW_SUPPORT_DEPTH_DESC = "Raw allelic depth";
-
-    public static final String RAW_SUPPORT_BASE_QUALITY = "RABQ";
-    public static final String RAW_SUPPORT_BASE_QUALITY_DESC = "Raw allelic base quality";
-
-    public static final String RAW_VS_CONTEXT_DIFFS = "RC_DIFFS";
-    public static final String RAW_VS_CONTEXT_DIFFS_DESC = "Diffs between raw context and read context matching (ref,alt)";
 
     public static final String AVG_MAP_QUALITY = "AMQ";
     public static final String AVG_MAP_QUALITY_DESC = "Average map quality count (all,alt)";
@@ -65,7 +53,7 @@ public final class VcfTags
     public static final String READ_STRAND_BIAS_DESC = "Read strand bias - percentage of forward-orientation reads (ref,alt)";
 
     public static final String AVG_BASE_QUAL = "ABQ";
-    public static final String AVG_BASE_QUAL_DESC = "Average calculated base quality";
+    public static final String AVG_BASE_QUAL_DESC = "Average calculated base quality (all,alt)";
 
     public static final String MIXED_SOMATIC_GERMLINE = "MSG";
     public static final String MIXED_SOMATIC_GERMLINE_DESC = "Mixed Somatic and Germline variants";
@@ -75,7 +63,4 @@ public final class VcfTags
 
     public static final String QUAL_MODEL_TYPE = "QMT";
     public static final String QUAL_MODEL_TYPE_DESC = "Qual model type if applicable";
-
-    public static final String TOTAL_RAW_BASE_QUAL = "TRBQ";
-    public static final String TOTAL_RAW_BASE_QUAL_DESC = "Total raw base qual";
 }

@@ -25,7 +25,7 @@ public class RegionTaskTester
     public final SageCallConfig Config;
     public MockRefGenome RefGenome;
 
-    public final List<VariantHotspot> Hotspots;
+    public final List<SimpleVariant> Hotspots;
     public final List<BaseRegion> PanelRegions;
     public final List<TranscriptData> Transcripts;
     public final List<BaseRegion> HighConfidenceRegions;

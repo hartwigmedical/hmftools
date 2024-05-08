@@ -5,16 +5,20 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.EVENT;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.SHORT_CALLING_SIZE;
 
+import java.util.Set;
+
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.esvee.caller.annotation.RepeatMaskAnnotation;
+import com.hartwig.hmftools.esvee.common.FilterType;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -29,14 +33,16 @@ public class SvData
 
     // repeatedly used values for filtering are cached
     private final String mInsertSequence;
-    private final boolean mImprecise;
     private boolean mIsShortLocal;
     private int mPonCount;
+    private boolean mIsHotspot;
     private RepeatMaskAnnotation mRmAnnotation;
+    private final Set<FilterType> mFilters;
 
     public SvData(final StructuralVariant sv, final GenotypeIds genotypeIds)
     {
-        mId = sv.startContext().getAttributeAsString(EVENT, sv.id());
+        // is this used for anything
+        mId = "NONE";// sv.startContext().getAttributeAsString(EVENT, sv.id());
 
         mReferenceOrdinal = genotypeIds.ReferenceOrdinal;
 
@@ -65,19 +71,13 @@ public class SvData
             mBreakends = new Breakend[] { breakendStart, breakendEnd };
         }
 
-        mImprecise = sv.imprecise();
         mInsertSequence = sv.insertSequence();
+
+        mFilters = Sets.newHashSet();
+
         mPonCount = 0;
+        mIsHotspot = false;
         mRmAnnotation = null;
-    }
-
-    public void onPositionsUpdated()
-    {
-        mIsShortLocal = (mType == DEL || mType == DUP || mType == INS) && length() < SHORT_CALLING_SIZE;
-
-        mBreakends[SE_START].setAllelicFrequency();
-        if(mBreakends[SE_END] != null)
-            mBreakends[SE_END].setAllelicFrequency();
     }
 
     public String id() { return mId; }
@@ -88,8 +88,8 @@ public class SvData
     public int posStart() { return mBreakends[SE_START].Position; }
     public int posEnd() { return !isSgl() ? mBreakends[SE_END].Position : -1; }
 
-    public byte orientStart() { return mBreakends[SE_START].Orientation; }
-    public byte orientEnd() { return !isSgl() ? mBreakends[SE_END].Orientation : 0; }
+    public Orientation orientStart() { return mBreakends[SE_START].Orient; }
+    public Orientation orientEnd() { return !isSgl() ? mBreakends[SE_END].Orient : null; }
 
     public StructuralVariantType type() { return mType; }
     public boolean isSgl() { return mType == SGL; }
@@ -102,8 +102,6 @@ public class SvData
     public VariantContext contextEnd() { return !isSgl() ? mBreakends[SE_END].Context : null; }
 
     public String insertSequence() { return mInsertSequence; }
-    public int insertSequenceLength() { return mInsertSequence.length(); }
-    public int duplicationLength() { return mType == DUP ? length() + 1 : 0; }
 
     public int ponCount() { return mPonCount; }
     public void setPonCount(int count) { mPonCount = count; }
@@ -114,7 +112,6 @@ public class SvData
     public boolean hasReference() { return mReferenceOrdinal >= 0; }
 
     public boolean isShortLocal() { return mIsShortLocal; }
-    public boolean imprecise() { return mImprecise; }
 
     public static boolean hasLength(final StructuralVariantType type)
     {
@@ -126,13 +123,19 @@ public class SvData
     public static int length(final StructuralVariant sv)
     {
         if(hasLength(sv.type()))
-            return (int)(sv.position(false) - sv.position(true));
+            return (sv.position(false) - sv.position(true));
 
         return 0;
     }
 
     public String startHomology() { return contextStart().getAttributeAsString(HOMSEQ, ""); }
-    public String endHomology() { return contextEnd() != null ? contextEnd().getAttributeAsString(HOMSEQ, "") : ""; }
+
+    public void markHotspot() { mIsHotspot = true; }
+    public boolean isHotspot() { return mIsHotspot; }
+
+    public void addFilter(final FilterType filter) { mFilters.add(filter); }
+    public Set<FilterType> filters() { return mFilters; }
+    public boolean isPass() { return mFilters.isEmpty(); }
 
     public String toString()
     {
@@ -147,5 +150,4 @@ public class SvData
                     mId, mType.toString(), chromosomeStart(), posStart());
         }
     }
-
 }

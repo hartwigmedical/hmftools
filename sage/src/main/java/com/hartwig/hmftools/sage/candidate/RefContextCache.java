@@ -13,9 +13,9 @@ import java.util.function.Consumer;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.EvictingArray;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.select.HotspotSelector;
 import com.hartwig.hmftools.sage.select.PanelSelector;
 
@@ -27,7 +27,7 @@ public class RefContextCache
     private final List<AltContext> mSavedCandidates;
     private final HotspotSelector mHotspotSelector;
 
-    public RefContextCache(final SageConfig config, final List<VariantHotspot> hotspots, final List<BaseRegion> panel)
+    public RefContextCache(final SageConfig config, final List<SimpleVariant> hotspots, final List<BaseRegion> panel)
     {
         mConfig = config;
         mPanelSelector = new PanelSelector(panel);
@@ -103,7 +103,6 @@ public class RefContextCache
         if(mHotspotSelector.isHotspot(altContext))
             return true;
 
-        return altContext.rawAltBaseQuality() >= mConfig.Filter.HardMinTumorRawBaseQuality
-            && altContext.rawAltSupport() >= mConfig.Filter.HardMinTumorRawAltSupport;
+        return altContext.rawAltSupport() >= mConfig.Filter.HardMinTumorRawAltSupport;
     }
 }

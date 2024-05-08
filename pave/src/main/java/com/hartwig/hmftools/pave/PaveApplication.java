@@ -3,6 +3,7 @@ package com.hartwig.hmftools.pave;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
 
@@ -40,7 +41,7 @@ public class PaveApplication
 
         try
         {
-            final VersionInfo version = new VersionInfo("pave.version");
+            final VersionInfo version = fromAppName(APP_NAME);
             version.write(mConfig.OutputDir);
         }
         catch(IOException e)

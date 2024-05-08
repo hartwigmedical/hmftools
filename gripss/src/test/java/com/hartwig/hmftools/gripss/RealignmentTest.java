@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.CIRPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.IMPRECISE;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.CIRPOS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.IMPRECISE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;

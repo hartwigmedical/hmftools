@@ -8,13 +8,13 @@ import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.maxIndelLength;
 import static com.hartwig.hmftools.common.bam.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateUnmapped;
+import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
+import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_C_INSERT;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_INSERT;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_LENGTH;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
@@ -24,6 +24,8 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_MIN_MAP
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_MIN_SC_LENGTH;
 
 import static htsjdk.samtools.CigarOperator.M;
+
+import com.hartwig.hmftools.common.genome.region.Orientation;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMRecord;
@@ -123,9 +125,9 @@ public class ReadFilters
             else if(scLength >= MIN_LINE_SOFT_CLIP_LENGTH)
             {
                 // make an exception if the soft-clip sequence meets the LINE criteria
-                byte orientation = useLeftClip ? NEG_ORIENT : POS_ORIENT;
+                Orientation orientation = useLeftClip ? REVERSE : FORWARD;
 
-                if(isMobileLineElement(orientation, scBases)
+                if(isMobileLineElement(orientation.asByte(), scBases)
                 && !isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
                 {
                     filters = ReadFilterType.unset(filters, ReadFilterType.SOFT_CLIP_LENGTH);

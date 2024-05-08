@@ -206,7 +206,7 @@ and the desired workflow. When running the targeted sequencing workflow the appl
 ```
 nextflow run nf-core/oncoanalyser \
   -profile docker \
-  -revision 0.4.0 \
+  -revision 0.4.5 \
   --mode wgts \
   --genome GRCh38_hmf \
   --input samplesheet.csv \
@@ -218,7 +218,7 @@ nextflow run nf-core/oncoanalyser \
 ```
 nextflow run nf-core/oncoanalyser \
   -profile docker \
-  -revision 0.4.0 \
+  -revision 0.4.5 \
   --mode targeted \
   --panel tso500 \
   --genome GRCh38_hmf \

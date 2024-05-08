@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MAX_DISTANCE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_FRAGMENTS;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
@@ -69,7 +68,7 @@ public final class DiscordantGroups
                     continue;
                 }
 
-                int group2Boundary = read2.orientation() == POS_ORIENT ? read2.end() : read2.start();
+                int group2Boundary = read2.orientation().isForward() ? read2.end() : read2.start();
 
                 if(abs(group2Boundary - group1Boundaries[SE_START].Position) > DISCORDANT_GROUP_MAX_DISTANCE)
                 {
@@ -129,7 +128,7 @@ public final class DiscordantGroups
             final List<ReadGroup> readGroups, final GroupBoundary[] innerBoundaries, int shortFragmentLength)
     {
         boolean isShortLocalDel = innerBoundaries[SE_START].Chromosome.equals(innerBoundaries[SE_END].Chromosome)
-                && innerBoundaries[SE_START].Orientation != innerBoundaries[SE_END].Orientation
+                && innerBoundaries[SE_START].Orient != innerBoundaries[SE_END].Orient
                 && abs(innerBoundaries[SE_END].Position - innerBoundaries[SE_START].Position) < shortFragmentLength * 2;
 
         int minFragments = isShortLocalDel ? DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT : DISCORDANT_GROUP_MIN_FRAGMENTS;
@@ -146,7 +145,7 @@ public final class DiscordantGroups
             if(!region.containsPosition(innerBoundaries[se].Chromosome, innerBoundaries[se].Position))
                 continue;
 
-            JunctionData junctionData = new JunctionData(innerBoundaries[se].Position, innerBoundaries[se].Orientation, boundaryReads[se]);
+            JunctionData junctionData = new JunctionData(innerBoundaries[se].Position, innerBoundaries[se].Orient, boundaryReads[se]);
             discordantJunctions.add(junctionData);
 
             junctionData.markDiscordantGroup();
@@ -163,7 +162,7 @@ public final class DiscordantGroups
             int seOther = switchIndex(se);
 
             junctionData.addRemoteJunction(new RemoteJunction(
-                    innerBoundaries[seOther].Chromosome, innerBoundaries[seOther].Position, innerBoundaries[seOther].Orientation));
+                    innerBoundaries[seOther].Chromosome, innerBoundaries[seOther].Position, innerBoundaries[seOther].Orient));
         }
     }
 
@@ -197,7 +196,7 @@ public final class DiscordantGroups
 
     private static boolean isCloserToJunction(final GroupBoundary[] current, final GroupBoundary[] test, int seIndex)
     {
-        if(current[seIndex].Orientation == POS_ORIENT)
+        if(current[seIndex].Orient.isForward())
         {
             return test[seIndex].Position > current[seIndex].Position;
         }
@@ -231,7 +230,7 @@ public final class DiscordantGroups
         PrepRead read = readGroup.reads().get(0);
 
         GroupBoundary boundary1 = new GroupBoundary(
-                read.Chromosome, read.orientation() == POS_ORIENT ? read.end() : read.start(),
+                read.Chromosome, read.orientation().isForward() ? read.end() : read.start(),
                 read.orientation());
 
         GroupBoundary boundary2;
@@ -240,14 +239,14 @@ public final class DiscordantGroups
         {
             PrepRead read2 = readGroup.reads().get(1);
             boundary2 = new GroupBoundary(
-                    read2.Chromosome, read2.orientation() == POS_ORIENT ? read2.end() : read2.start(),
+                    read2.Chromosome, read2.orientation().isForward() ? read2.end() : read2.start(),
                     read2.orientation());
         }
         else
         {
             boundary2 = new GroupBoundary(
                     read.MateChromosome,
-                    read.mateOrientation() == POS_ORIENT ? read.MatePosStart + read.record().getReadLength() : read.MatePosStart,
+                    read.mateOrientation().isForward() ? read.MatePosStart + read.record().getReadLength() : read.MatePosStart,
                     read.mateOrientation());
         }
 

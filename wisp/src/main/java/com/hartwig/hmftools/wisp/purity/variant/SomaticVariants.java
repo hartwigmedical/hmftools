@@ -80,6 +80,7 @@ public class SomaticVariants
     private final SomaticPurityEstimator mEstimator;
     private final BufferedWriter mSomaticWriter;
     private final SampleFragmentLengths mFragmentLengths;
+    private final BqrAdjustment mBqrAdjustment;
 
     public SomaticVariants(final PurityConfig config, final ResultsWriter resultsWriter, final SampleData sample)
     {
@@ -93,6 +94,7 @@ public class SomaticVariants
         mVariants = Lists.newArrayList();
 
         mProbeVariants = mConfig.ProbeVariants.getSampleVariants(mSample.TumorId);
+        mBqrAdjustment = new BqrAdjustment(mConfig);
     }
 
     public boolean loadVariants()
@@ -333,6 +335,8 @@ public class SomaticVariants
                 }
             }
         }
+
+        mBqrAdjustment.processSample(sampleId, filteredVariants);
 
         return mEstimator.calculatePurity(sampleId, purityContext, filteredVariants, mVariants.size(), chipVariants.size());
     }

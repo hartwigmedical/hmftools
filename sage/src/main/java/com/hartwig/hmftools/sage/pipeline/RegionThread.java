@@ -15,10 +15,10 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.common.PartitionTask;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
@@ -42,7 +42,7 @@ public class RegionThread extends Thread
 
     // cache of chromosome-specific ref data
     private final List<BaseRegion> mPanelRegions;
-    private final List<VariantHotspot> mHotspots;
+    private final List<SimpleVariant> mHotspots;
     private final List<TranscriptData> mTranscripts;
     private final List<BaseRegion> mHighConfidenceRegions;
 
@@ -52,7 +52,7 @@ public class RegionThread extends Thread
     public RegionThread(
             final String chromosome, final SageCallConfig config,
             final Map<String, BqrRecordMap> qualityRecalibrationMap, final Coverage coverage,
-            final PhaseSetCounter phaseSetCounter, final List<BaseRegion> panelRegions, final List<VariantHotspot> hotspots,
+            final PhaseSetCounter phaseSetCounter, final List<BaseRegion> panelRegions, final List<SimpleVariant> hotspots,
             final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
             final Queue<PartitionTask> partitions, final RegionResults regionResults, final FragmentLengths fragmentLengths)
     {
@@ -121,7 +121,7 @@ public class RegionThread extends Thread
                 .filter(x -> positionsOverlap(region.start(), region.end(), x.start(), x.end())).collect(Collectors.toList())
                 : Lists.newArrayList();
 
-        List<VariantHotspot> regionHotspots = mHotspots != null ? mHotspots.stream()
+        List<SimpleVariant> regionHotspots = mHotspots != null ? mHotspots.stream()
                 .filter(x -> region.containsPosition(x.position())).collect(Collectors.toList()) : Lists.newArrayList();
 
         List<TranscriptData> regionsTranscripts = mTranscripts != null ? mTranscripts.stream()

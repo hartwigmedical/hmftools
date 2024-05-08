@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.cup.somatics;
 
-import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT_FLAG;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_CONTEXT;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.fromVariantContext;
@@ -84,7 +84,7 @@ public class SomaticVariant
         return new SomaticVariant(
                 chromosome, position, ref, alt, VariantType.type(variantContext), gene,
                 variantContext.getAttributeAsString(TRINUCLEOTIDE_CONTEXT, ""),
-                variantContext.getAttributeAsInt(REPEAT_COUNT_FLAG, 0));
+                variantContext.getAttributeAsInt(REPEAT_COUNT, 0));
     }
 
     public static SomaticVariant fromRecord(final Record record)
