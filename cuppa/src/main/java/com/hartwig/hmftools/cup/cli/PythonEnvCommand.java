@@ -14,7 +14,11 @@ public class PythonEnvCommand extends ShellCommand
 
     public static ProcessBuilder createProcessBuilder(PythonEnv pythonEnvironment, String command)
     {
-        String bashCommand =  String.format("source %s/bin/activate && %s && deactivate", pythonEnvironment.virtualEnvPath(), command);
+        String bashCommand = String.format("%s && source %s/bin/activate && %s && deactivate",
+                pythonEnvironment.exportPyenvRootCommand(),
+                pythonEnvironment.virtualEnvPath(),
+                command
+        );
         return new ProcessBuilder("bash", "-c", bashCommand);
     }
 
