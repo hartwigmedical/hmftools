@@ -55,9 +55,10 @@ import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
-public class LoadPurpleData 
+public class LoadPurpleData
 {
     private static final String RNA_SAMPLE = "rna";
+    private static final String DB_SAMPLE = "db_sample";
 
     private static final String SOMATIC_ONLY = "somatic_only";
     private static final String GERMLINE_ONLY = "germline_only";
@@ -79,6 +80,7 @@ public class LoadPurpleData
         try(DatabaseAccess dbAccess = databaseAccess(configBuilder))
         {
             String sampleId = configBuilder.getValue(SAMPLE);
+            String dbSampleId = configBuilder.hasValue(DB_SAMPLE) ? configBuilder.getValue(DB_SAMPLE) : sampleId;
             String referenceId = configBuilder.getValue(REFERENCE);
             String rnaId = configBuilder.getValue(RNA_SAMPLE);
 
@@ -111,13 +113,13 @@ public class LoadPurpleData
 
             dbAccess.context().transaction(tr ->
             {
-                loadCommonData(sample, dbAccess, purpleDir);
+                loadCommonData(dbSampleId, sample, dbAccess, purpleDir);
 
                 if(loadSomatic)
-                    loadSomaticData(sample, referenceId, rnaId, dbAccess, purpleDir);
+                    loadSomaticData(dbSampleId, sample, referenceId, rnaId, dbAccess, purpleDir);
 
                 if(loadGermline)
-                    loadGermlineData(sample, referenceId, rnaId, dbAccess, purpleDir);
+                    loadGermlineData(dbSampleId, sample, referenceId, rnaId, dbAccess, purpleDir);
             });
 
             LOGGER.info("Purple data loading complete");
@@ -130,16 +132,16 @@ public class LoadPurpleData
     }
 
     private static void loadCommonData(
-            final String sampleId, final DatabaseAccess dbAccess, final String purpleDir) throws Exception
+            final String dbSample, final String sampleId, final DatabaseAccess dbAccess, final String purpleDir) throws Exception
     {
         LOGGER.info("loading common data");
         PurityContext purityContext = PurityContextFile.read(purpleDir, sampleId);
 
-        dbAccess.writePurity(sampleId, purityContext, purityContext.qc());
+        dbAccess.writePurity(dbSample, purityContext, purityContext.qc());
     }
 
     private static void loadSomaticData(
-            final String sampleId, final String referenceId, final String rnaId,
+            final String dbSampleId, final String sampleId, final String referenceId, final String rnaId,
             final DatabaseAccess dbAccess, final String purpleDir) throws Exception
     {
         // check all somatic files exist before attempting to load
@@ -167,10 +169,10 @@ public class LoadPurpleData
         List<FittedPurity> bestFitPerPurity = FittedPurityRangeFile.readBestFitPerPurity(purpleDir, sampleId);
         List<DriverCatalog> somaticDriverCatalog = DriverCatalogFile.read(somaticDriversFile);
 
-        dbAccess.writeBestFitPerPurity(sampleId, bestFitPerPurity);
-        dbAccess.writeCopynumbers(sampleId, copyNumbers);
-        dbAccess.writeGeneCopyNumbers(sampleId, geneCopyNumbers);
-        dbAccess.writePurpleDriverCatalog(sampleId, somaticDriverCatalog, null);
+        dbAccess.writeBestFitPerPurity(dbSampleId, bestFitPerPurity);
+        dbAccess.writeCopynumbers(dbSampleId, copyNumbers);
+        dbAccess.writeGeneCopyNumbers(dbSampleId, geneCopyNumbers);
+        dbAccess.writePurpleDriverCatalog(dbSampleId, somaticDriverCatalog, null);
 
         LOGGER.info("loading geneCopyNumber({}) copyNumber({}) purityFits({}) somaticDrivers({})",
                 geneCopyNumbers.size(), copyNumbers.size(), bestFitPerPurity.size(), somaticDriverCatalog.size());
@@ -188,9 +190,9 @@ public class LoadPurpleData
         }
 
         LOGGER.info("loading {} SVs", structuralVariants.size());
-        dbAccess.writeStructuralVariants(sampleId, structuralVariants);
+        dbAccess.writeStructuralVariants(dbSampleId, structuralVariants);
 
-        BufferedWriter<SomaticVariant> somaticWriter = dbAccess.somaticVariantWriter(sampleId);
+        BufferedWriter<SomaticVariant> somaticWriter = dbAccess.somaticVariantWriter(dbSampleId);
 
         SomaticVariantFactory somaticVariantFactory = new SomaticVariantFactory();
 
@@ -202,7 +204,7 @@ public class LoadPurpleData
     }
 
     private static void loadGermlineData(
-            final String sampleId, final String referenceId, final String rnaId,
+            final String dbSampleId, final String sampleId, final String referenceId, final String rnaId,
             final DatabaseAccess dbAccess, final String purpleDir) throws Exception
     {
         final String germlineVcf = PurpleCommon.purpleGermlineVcfFile(purpleDir, sampleId);
@@ -228,14 +230,14 @@ public class LoadPurpleData
 
         LOGGER.info("loading germline drivers({}) deletions({})", germlineDriverCatalog.size(), germlineDeletions.size());
 
-        dbAccess.writeGermlineDeletions(sampleId, germlineDeletions);
-        dbAccess.writePurpleDriverCatalog(sampleId, null, germlineDriverCatalog);
+        dbAccess.writeGermlineDeletions(dbSampleId, germlineDeletions);
+        dbAccess.writePurpleDriverCatalog(dbSampleId, null, germlineDriverCatalog);
 
         int variantCount = 0;
 
         try(AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(germlineVcf, new VCFCodec(), false);
 
-        BufferedWriter<VariantContext> dbWriter = dbAccess.germlineVariantWriter(sampleId, referenceId, rnaId))
+        BufferedWriter<VariantContext> dbWriter = dbAccess.germlineVariantWriter(dbSampleId, referenceId, rnaId))
         {
             dbWriter.initialise();
 
@@ -270,6 +272,7 @@ public class LoadPurpleData
     private static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
+        configBuilder.addConfigItem(DB_SAMPLE, "ID of the sample in the database (optional). Defaults to the sample ID.");
         configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);
         configBuilder.addConfigItem(RNA_SAMPLE, "RNA sample ID");
         configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
