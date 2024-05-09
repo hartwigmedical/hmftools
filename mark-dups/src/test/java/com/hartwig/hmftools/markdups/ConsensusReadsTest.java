@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.markdups.TestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_A;
@@ -347,29 +346,29 @@ public class ConsensusReadsTest
         assertEquals(S, readState.elementType());
         assertEquals(1, readState.elementLength());
 
-        readState.moveNext();
+        readState.moveNextBase();
         assertEquals((byte)'G', readState.currentBase());
         assertEquals(M, readState.elementType());
         assertEquals(2, readState.elementLength());
 
-        readState.moveNext();
-        readState.moveNext();
+        readState.moveNextBase();
+        readState.moveNextBase();
         assertEquals((byte)'C', readState.currentBase());
         assertEquals(I, readState.elementType());
         assertEquals(1, readState.elementLength());
 
-        readState.moveNext();
-        readState.moveNext();
+        readState.moveNextBase();
+        readState.moveNextBase();
         assertFalse(readState.exhausted());
         assertEquals((byte)'G', readState.currentBase());
         assertEquals(M, readState.elementType());
 
-        readState.moveNext();
+        readState.moveNextBase();
         assertFalse(readState.exhausted());
         assertEquals((byte)'A', readState.currentBase());
         assertEquals(S, readState.elementType());
 
-        readState.moveNext();
+        readState.moveNextBase();
         assertTrue(readState.exhausted());
 
         // and in reverse
@@ -379,22 +378,22 @@ public class ConsensusReadsTest
         assertEquals(S, readState.elementType());
         assertEquals(1, readState.elementLength());
 
-        readState.moveNext();
-        readState.moveNext();
-        readState.moveNext();
+        readState.moveNextBase();
+        readState.moveNextBase();
+        readState.moveNextBase();
 
         assertEquals((byte)'C', readState.currentBase());
         assertEquals(I, readState.elementType());
         assertEquals(1, readState.elementLength());
 
-        readState.moveNext();
-        readState.moveNext();
-        readState.moveNext();
+        readState.moveNextBase();
+        readState.moveNextBase();
+        readState.moveNextBase();
         assertFalse(readState.exhausted());
         assertEquals((byte)'A', readState.currentBase());
         assertEquals(S, readState.elementType());
 
-        readState.moveNext();
+        readState.moveNextBase();
         assertTrue(readState.exhausted());
 
         // with a delete
@@ -408,31 +407,31 @@ public class ConsensusReadsTest
         assertEquals((byte)'A', readState.currentBase());
         assertEquals(M, readState.elementType());
 
-        readState.moveNext();
+        readState.moveNextBase();
         assertEquals((byte)'C', readState.currentBase());
         assertEquals(M, readState.elementType());
 
-        readState.moveNext();
+        readState.moveNextBase();
         assertEquals((byte)'C', readState.currentBase());
         assertEquals(D, readState.elementType());
 
-        readState.moveNext();
+        readState.moveNextBase();
         assertEquals((byte)'C', readState.currentBase());
         assertEquals(D, readState.elementType());
 
-        readState.moveNext();
+        readState.moveNextBase();
         assertEquals((byte)'C', readState.currentBase());
         assertEquals(D, readState.elementType());
 
-        readState.moveNext();
+        readState.moveNextBase();
         assertEquals((byte)'G', readState.currentBase());
         assertEquals(M, readState.elementType());
 
-        readState.moveNext();
+        readState.moveNextBase();
         assertEquals((byte)'T', readState.currentBase());
         assertEquals(M, readState.elementType());
 
-        readState.moveNext();
+        readState.moveNextBase();
         assertTrue(readState.exhausted());
     }
 

@@ -134,6 +134,19 @@ public class IndelConsensusReadsTest
         assertEquals(calcBaseQual, readInfo.ConsensusRead.getBaseQualities()[4]);
         assertEquals(calcBaseQual, readInfo.ConsensusRead.getBaseQualities()[5]);
         assertEquals(calcBaseQual, readInfo.ConsensusRead.getBaseQualities()[6]);
+
+        // a basic test for following bases correctly
+        String readBases = "CTTCGATAATGGCCGGGCCG";
+        String shortedReadBases = readBases.substring(0, readBases.length() - 2);
+        String shorterClipped = "3S7M10D5M3S";
+        read1 = createSamRecord(nextReadId(), 10, shortedReadBases, shorterClipped, false);
+        read2 = createSamRecord(nextReadId(), 10, readBases, "5S5M10D5M5S", false);
+
+        readInfo = createConsensusRead(mConsensusReads, List.of(read1, read2), UMI_ID_1);
+
+        assertEquals(shorterClipped, readInfo.ConsensusRead.getCigarString());
+        assertEquals(shortedReadBases, readInfo.ConsensusRead.getReadString());
+        assertEquals(10, readInfo.ConsensusRead.getAlignmentStart());
     }
 
     @Test
@@ -174,6 +187,17 @@ public class IndelConsensusReadsTest
         assertEquals("2H13M2S", readInfo.ConsensusRead.getCigarString());
         assertEquals(readBases, readInfo.ConsensusRead.getReadString());
         assertEquals(12, readInfo.ConsensusRead.getAlignmentStart());
+
+        readBases = "CTTCGATAATGGCCGGGCCG";
+        read1 = createSamRecord(nextReadId(), 10, readBases, "5H10M10D10M10H", false);
+        read2 = createSamRecord(nextReadId(), 10, readBases, "5H10M10D10M10H", false);
+        read3 = createSamRecord(nextReadId(), 15, readBases, "10H5M10D10M10H", false);
+
+        readInfo = createConsensusRead(mConsensusReads, List.of(read1, read2, read3), UMI_ID_1);
+
+        assertEquals("5H10M10D10M10H", readInfo.ConsensusRead.getCigarString());
+        assertEquals(readBases, readInfo.ConsensusRead.getReadString());
+        assertEquals(10, readInfo.ConsensusRead.getAlignmentStart());
     }
 
     @Test
