@@ -39,7 +39,19 @@ public class PycuppaInstaller
     {
         mConfig = config;
         Configurator.setLevel(CUP_LOGGER.getName(), Level.valueOf(config.getValue(LOG_LEVEL)));
-        mPythonEnv = new PythonEnv(PYTHON_VERSION, PYCUPPA_VENV_NAME, config.getValue(INSTALL_DIR));
+
+        String installDir;
+        if(!config.hasValue(INSTALL_DIR))
+        {
+            CUP_LOGGER.info("Installing to default pyenv dir: {}", DEFAULT_PYENV_DIR);
+            installDir = DEFAULT_PYENV_DIR;
+        }
+        else
+        {
+            installDir = config.getValue(INSTALL_DIR);
+        }
+
+        mPythonEnv = new PythonEnv(PYTHON_VERSION, PYCUPPA_VENV_NAME, installDir);
     }
 
     private void removePycuppaTmpDir()
@@ -64,7 +76,7 @@ public class PycuppaInstaller
                 removePycuppaTmpDir();
 
                 if(mConfig.hasFlag(UPDATE_RC_FILE))
-                    mPythonEnv.addPyenvPathsToRcFile();
+                    mPythonEnv.updateRcFile();
             }
 
             if(PYCUPPA_RESOURCE_DIR.exists())
@@ -102,6 +114,9 @@ public class PycuppaInstaller
                 extractPycuppaToTmpDir();
                 mPythonEnv.pipInstall(PYCUPPA_TMP_DIR.getPath(), true);
 
+                if(mConfig.hasFlag(UPDATE_RC_FILE))
+                    mPythonEnv.updateRcFile();
+
                 CUP_LOGGER.info("Completed installation of " + PYCUPPA_PKG_NAME);
             }
             else
@@ -124,7 +139,7 @@ public class PycuppaInstaller
     public static void main(String[] args)
     {
         ConfigBuilder config = new ConfigBuilder(APP_NAME);
-        config.addConfigItem(INSTALL_DIR, true, INSTALL_DIR_DESC);
+        config.addConfigItem(INSTALL_DIR, false, INSTALL_DIR_DESC);
         config.addFlag(UPDATE_RC_FILE, UPDATE_RC_FILE_DESC);
         config.addConfigItem(LOG_LEVEL, false, LOG_LEVEL_DESC, Level.DEBUG.toString());
         config.checkAndParseCommandLine(args);
