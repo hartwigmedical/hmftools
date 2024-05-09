@@ -29,11 +29,6 @@ public class PythonEnv
         mPyenvDir = new File(pyenvDir);
     }
 
-    public PythonEnv(String pythonVersion, String virtualEnvName)
-    {
-        this(pythonVersion, virtualEnvName, DEFAULT_PYENV_DIR);
-    }
-
     public File pyenvPath(){ return new File(mPyenvDir + "/libexec/pyenv"); }
 
     public File virtualEnvPath() { return new File(String.format("%s/versions/%s/envs/%s", mPyenvDir, mPythonVersion, mVirtualEnvName)); }
@@ -45,8 +40,14 @@ public class PythonEnv
     @VisibleForTesting
     void installPyenv()
     {
-        if(!mPyenvDir.exists())
+        if(!pyenvPath().exists())
         {
+            if(!mPyenvDir.getParentFile().canWrite())
+            {
+                CUP_LOGGER.error("No write permission at dir: {}", mPyenvDir);
+                System.exit(1);
+            }
+
             // This command also installs pyenv-virtualenv to $PYENV_ROOT/plugins/pyenv-virtualenv
             ShellCommand command = new BashCommand(exportPyenvRootCommand(), "&& curl https://pyenv.run | bash")
                     .logLevel(Level.DEBUG);
@@ -57,63 +58,6 @@ public class PythonEnv
         else
         {
             CUP_LOGGER.warn("Skipping installing pyenv as it exists at: " + mPyenvDir);
-        }
-
-        if(!mPyenvDir.exists())
-        {
-            CUP_LOGGER.error("Failed to install pyenv to " + mPyenvDir);
-            System.exit(1);
-        }
-    }
-
-    @VisibleForTesting
-    File getRcFilePath() throws FileNotFoundException
-    {
-        String[] basenamesToTry = {".zshrc", ".bashrc"};
-
-        String pathToRcFile = null;
-        for(String basename : basenamesToTry)
-        {
-            String path = System.getProperty("user.home") + "/" + basename;
-            if(new File(path).isFile())
-                pathToRcFile = path;
-        }
-
-        if(pathToRcFile == null)
-            throw new FileNotFoundException("Failed to locate one of the following rc files: " + String.join(", ", basenamesToTry));
-
-        return new File(pathToRcFile);
-    }
-
-    public void addPyenvPathsToRcFile()
-    {
-        try
-        {
-            File RcFilePath = getRcFilePath();
-
-            String lines = String.join("\n",
-                "# Pyenv paths",
-                "export PYENV_ROOT="+mPyenvDir,
-                "[[ -d $PYENV_ROOT/bin ]] && export PATH=\"$PYENV_ROOT/bin:$PATH\"",
-                "eval \"$(pyenv init -)\"",
-                "eval \"$(pyenv virtualenv-init -)\""
-            );
-
-            boolean linesExist = FileUtils.readFileToString(RcFilePath, "UTF-8").contains(lines);
-            if(!linesExist)
-            {
-                CUP_LOGGER.info("Adding pyenv paths to rc file: " + RcFilePath);
-                String command = String.format("echo -e '\n%s' >> %s", lines, RcFilePath);
-                new BashCommand(command).logLevel(null).run();
-            }
-            else
-            {
-                CUP_LOGGER.warn("Skipping adding pyenv paths to rc file: " + RcFilePath);
-            }
-        }
-        catch(IOException e)
-        {
-            CUP_LOGGER.warn("Failed to add pyenv paths to rc file (using pyenv in interactive shell will not work): " + e);
         }
     }
 
@@ -235,4 +179,56 @@ public class PythonEnv
     {
         return checkRequiredPackages(new String[]{packageName});
     }
+
+    @VisibleForTesting
+    File getRcFilePath() throws FileNotFoundException
+    {
+        String[] basenamesToTry = {".zshrc", ".bashrc"};
+
+        String pathToRcFile = null;
+        for(String basename : basenamesToTry)
+        {
+            String path = System.getProperty("user.home") + "/" + basename;
+            if(new File(path).isFile())
+                pathToRcFile = path;
+        }
+
+        if(pathToRcFile == null)
+            throw new FileNotFoundException("Failed to locate one of the following rc files: " + String.join(", ", basenamesToTry));
+
+        return new File(pathToRcFile);
+    }
+
+    public void updateRcFile()
+    {
+        try
+        {
+            File RcFilePath = getRcFilePath();
+
+            String lines = String.join("\n",
+                    "# Pyenv paths",
+                    "export PYENV_ROOT="+mPyenvDir,
+                    "[[ -d $PYENV_ROOT/bin ]] && export PATH=\"$PYENV_ROOT/bin:$PATH\"",
+                    "eval \"$(pyenv init -)\"",
+                    "eval \"$(pyenv virtualenv-init -)\""
+            );
+
+            boolean linesExist = FileUtils.readFileToString(RcFilePath, "UTF-8").contains(lines);
+            if(!linesExist)
+            {
+                CUP_LOGGER.info("Adding pyenv paths to rc file: " + RcFilePath);
+                String command = String.format("echo -e '\n%s' >> %s", lines, RcFilePath);
+                new BashCommand(command).logLevel(null).run();
+            }
+            else
+            {
+                CUP_LOGGER.warn("Skipping adding pyenv paths to rc file: " + RcFilePath);
+            }
+        }
+        catch(IOException e)
+        {
+            CUP_LOGGER.warn("Failed to add pyenv paths to rc file (using pyenv in interactive shell will not work): " + e);
+        }
+    }
+
 }
