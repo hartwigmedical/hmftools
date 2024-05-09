@@ -51,7 +51,7 @@ public class PredictionRunner
 
     public void predict()
     {
-        String[] command = new String[] {
+        String[] commandString = new String[] {
                 "python3 -m cuppa.predict",
 
                 "--sample_id", mPycuppaConfig.SampleId,
@@ -61,9 +61,16 @@ public class PredictionRunner
                 "--features_path", mFeaturesPath
         };
 
-        PythonEnv pythonEnvironment = new PythonEnv(PycuppaInstaller.PYTHON_VERSION, PycuppaInstaller.PYCUPPA_VENV_NAME);
+        PythonEnv pythonEnvironment = new PythonEnv(
+                PycuppaInstaller.PYTHON_VERSION,
+                PycuppaInstaller.PYCUPPA_VENV_NAME,
+                mPycuppaConfig.InstallDir
+        );
         pythonEnvironment.checkRequiredPackage(PycuppaInstaller.PYCUPPA_PKG_NAME);
-        new PythonEnvCommand(pythonEnvironment, String.join(" ", command)).logLevel(Level.INFO).showCommand().run();
+
+        ShellCommand command = new PythonEnvCommand(pythonEnvironment, String.join(" ", commandString)).logLevel(Level.INFO);
+        CUP_LOGGER.info("Predicting using command: {}", command);
+        command.run();
     }
 
     public static void main(String[] args)
