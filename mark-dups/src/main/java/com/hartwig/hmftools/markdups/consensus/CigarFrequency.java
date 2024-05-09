@@ -4,8 +4,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 
-import static htsjdk.samtools.CigarOperator.S;
-
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -19,26 +17,28 @@ import htsjdk.samtools.SAMRecord;
 
 public class CigarFrequency implements Comparable<CigarFrequency>
 {
-    private final List<SAMRecord> mReads;
-    private final int mSoftClipLength;
+    public final List<SAMRecord> Reads;
+    public final int ClippedLength;
 
     public CigarFrequency(final SAMRecord read)
     {
-        mReads = Lists.newArrayList(read);
-        mSoftClipLength = read.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == S).mapToInt(x -> x.getLength()).sum();
+        Reads = Lists.newArrayList(read);
+
+        ClippedLength = read.getCigar().getCigarElements().stream()
+                .filter(x -> x.getOperator().isClipping()).mapToInt(x -> x.getLength()).sum();
     }
 
-    public String cigar() { return mReads.get(0).getCigarString(); }
-    public int frequency() { return mReads.size(); }
+    public String cigar() { return Reads.get(0).getCigarString(); }
+    public int frequency() { return Reads.size(); }
 
-    public SAMRecord firstRead() { return mReads.get(0); }
-    public String firstReadName() { return mReads.get(0).getReadName(); }
+    public SAMRecord firstRead() { return Reads.get(0); }
+    public String firstReadName() { return Reads.get(0).getReadName(); }
 
-    public void addRead(final SAMRecord read) { mReads.add(read); }
+    public void addRead(final SAMRecord read) { Reads.add(read); }
 
     public void sortReads()
     {
-        Collections.sort(mReads, Comparator.comparing(x -> x.getReadName()));
+        Collections.sort(Reads, Comparator.comparing(x -> x.getReadName()));
     }
 
     public String toString()
@@ -52,15 +52,15 @@ public class CigarFrequency implements Comparable<CigarFrequency>
         if(frequency() != other.frequency())
             return frequency() > other.frequency() ? -1 : 1;
 
-        if(mSoftClipLength != other.mSoftClipLength)
-            return mSoftClipLength < other.mSoftClipLength ? -1 : 1;
+        if(ClippedLength != other.ClippedLength)
+            return ClippedLength < other.ClippedLength ? -1 : 1;
 
         return firstReadName().compareTo(other.firstReadName());
     }
 
     public static SAMRecord selectTemplateRead(final List<SAMRecord> reads)
     {
-        // group read by most frequency CIGARs then soft-clip then mate CIGAR frequency, then read ID alphabetically
+        // group read by most frequency CIGARs then clipped length, then mate CIGAR frequency, then read ID alphabetically
         Map<String,CigarFrequency> cigarFrequencies = buildCigarFrequencies(reads, false);
 
         if(cigarFrequencies.size() == 1)
@@ -77,7 +77,7 @@ public class CigarFrequency implements Comparable<CigarFrequency>
     public static SAMRecord selectTemplateRead(final CigarFrequency cigarFrequency)
     {
         // select read by most common mate cigar
-        Map<String,CigarFrequency> mateCigarFrequencies = buildCigarFrequencies(cigarFrequency.mReads, true);
+        Map<String,CigarFrequency> mateCigarFrequencies = buildCigarFrequencies(cigarFrequency.Reads, true);
 
         if(mateCigarFrequencies.size() == 1)
         {

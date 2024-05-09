@@ -139,7 +139,7 @@ public class IndelConsensusReadsTest
     @Test
     public void testMismatchedReads2()
     {
-        // favour least number of soft-clip bases
+        // favour the read with the least number of soft-clip bases
         SAMRecord read1 = createSamRecord(nextReadId(), 10, "CTTCGATAAT", "7M1D3M", true);
         SAMRecord read2 = createSamRecord(nextReadId(), 13, "TTCGATAAAT", "2S8M", true);
 
@@ -159,6 +159,21 @@ public class IndelConsensusReadsTest
         assertEquals("2S8M", readInfo.ConsensusRead.getCigarString());
         assertEquals("TTCGATAAAT", readInfo.ConsensusRead.getReadString());
         assertEquals(13, readInfo.ConsensusRead.getAlignmentStart());
+    }
+
+    @Test
+    public void testHardClippedReads()
+    {
+        String readBases = "CTTCGATAATGGCCG";
+        SAMRecord read1 = createSamRecord(nextReadId(), 13, readBases, "3H8M7S", false);
+        SAMRecord read2 = createSamRecord(nextReadId(), 15, readBases, "5S10M5H", false);
+        SAMRecord read3 = createSamRecord(nextReadId(), 12, readBases, "2H13M2S", false);
+
+        ConsensusReadInfo readInfo = createConsensusRead(mConsensusReads, List.of(read1, read2, read3), UMI_ID_1);
+
+        assertEquals("2H13M2S", readInfo.ConsensusRead.getCigarString());
+        assertEquals(readBases, readInfo.ConsensusRead.getReadString());
+        assertEquals(12, readInfo.ConsensusRead.getAlignmentStart());
     }
 
     @Test
