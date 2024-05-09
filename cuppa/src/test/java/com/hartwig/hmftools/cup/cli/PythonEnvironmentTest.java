@@ -49,7 +49,7 @@ public class PythonEnvironmentTest
         /*
         ## Run these commands manually
         mvn clean install -pl cuppa
-        java -cp /Users/lnguyen/Hartwig/hartwigmedical/hmftools/cuppa/target/cuppa-2.1.1-jar-with-dependencies.jar com.hartwig.hmftools.cup.cli.PycuppaInstaller -install_dir /Users/lnguyen/Desktop/pyenv_test
+        java -cp /Users/lnguyen/Hartwig/hartwigmedical/hmftools/cuppa/target/cuppa-2.1.1-jar-with-dependencies.jar com.hartwig.hmftools.cup.cli.PycuppaInstaller -install_dir /Users/lnguyen/Desktop/pyenv
         */
     }
 }

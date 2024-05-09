@@ -20,6 +20,7 @@ public class PredictionRunnerTest
     private static final String SAMPLE_DATA_DIR = CUPPA_DIR + "/src/test/resources/pipeline_output/TUMOR_SAMPLE";
     private static final String CLASSIFIER_PATH = "/Users/lnguyen/Hartwig/cloud_source_repos/common-resources-public/cuppa/37/cuppa_classifier.37.pickle.gz";
     private static final String OUTPUT_DIR = System.getProperty("java.io.tmpdir") + "/cuppa_output/";
+    private static final String INSTALL_DIR = "/Users/lnguyen/Desktop/pyenv";
 
     @Test
     public void canPredictFromInputFeatures() throws IOException
@@ -31,6 +32,7 @@ public class PredictionRunnerTest
                 "-classifier_path", CLASSIFIER_PATH,
                 "-features_path", CUPPA_DIR + "/src/main/python/pycuppa/resources/mock_data/input_data/new_format/COLO829v003T.cuppa_data.tsv.gz",
                 "-output_dir", OUTPUT_DIR,
+                "-install_dir", INSTALL_DIR
         };
 
         PredictionRunner.main(args);
@@ -46,6 +48,7 @@ public class PredictionRunnerTest
                 "-sample_data_dir", SAMPLE_DATA_DIR,
                 "-classifier_path", CLASSIFIER_PATH,
                 "-output_dir", OUTPUT_DIR,
+                "-install_dir", INSTALL_DIR
         };
 
         PredictionRunner.main(args);
@@ -53,3 +56,13 @@ public class PredictionRunnerTest
         FileUtils.deleteDirectory(new File(OUTPUT_DIR));
     }
 }
+
+/*
+java -cp /Users/lnguyen/Hartwig/hartwigmedical/hmftools/cuppa/target/cuppa-2.1.1-jar-with-dependencies.jar \
+com.hartwig.hmftools.cup.cli.PredictionRunner \
+-sample TUMOR_SAMPLE \
+-output_dir /Users/lnguyen/Desktop/pycuppa_test_output \
+-install_dir /Users/lnguyen/Desktop/pyenv \
+-classifier_path /Users/lnguyen/Hartwig/cloud_source_repos/common-resources-public/cuppa/37/cuppa_classifier.37.pickle.gz \
+-sample_data_dir /Users/lnguyen/Hartwig/hartwigmedical/hmftools/cuppa/src/test/resources/pipeline_output/TUMOR_SAMPLE
+*/
