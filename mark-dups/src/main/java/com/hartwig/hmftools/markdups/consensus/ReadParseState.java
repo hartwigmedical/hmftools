@@ -4,10 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.NO_BASE;
 
-import static htsjdk.samtools.CigarOperator.D;
-import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.I;
-import static htsjdk.samtools.CigarOperator.N;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
@@ -58,15 +55,19 @@ public class ReadParseState
 
     public boolean exhausted() { return mExhausted; }
 
-    public void moveNext()
+    public void moveNextBase()
     {
         if(mExhausted)
             return;
 
         ++mElementIndex;
 
+        boolean skipsFirstElement = false;
+
         if(mElementIndex >= mElementLength)
         {
+            skipsFirstElement = !mElementType.consumesReadBases() && (mCigarIndex == 0 || mCigarIndex == mElementCount - 1);
+
             if(mIsForward)
                 ++mCigarIndex;
             else
@@ -84,7 +85,7 @@ public class ReadParseState
         }
 
         // move the read index to the start of the new element
-        if(mElementType.consumesReadBases())
+        if(!skipsFirstElement && mElementType.consumesReadBases())
         {
             if(mIsForward)
                 ++mReadIndex;
@@ -93,11 +94,11 @@ public class ReadParseState
         }
     }
 
-    public void skipInsert()
+    public void skipInsertElement()
     {
         while(mElementType == I && !exhausted())
         {
-            moveNext();
+            moveNextBase();
         }
     }
 
@@ -105,6 +106,8 @@ public class ReadParseState
     {
         if(mExhausted)
             return;
+
+        boolean skipsFirstElement = !mElementType.consumesReadBases() && (mCigarIndex == 0 || mCigarIndex == mElementCount - 1);
 
         if(mIsForward)
             ++mCigarIndex;
@@ -121,7 +124,8 @@ public class ReadParseState
         mElementType = Read.getCigar().getCigarElement(mCigarIndex).getOperator();
         mElementIndex = 0;
 
-        if(mElementType.consumesReadBases())
+        // if cigar starts with a H, no need to move to the next base
+        if(!skipsFirstElement && mElementType.consumesReadBases())
         {
             if(mIsForward)
                 ++mReadIndex;

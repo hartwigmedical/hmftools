@@ -133,11 +133,11 @@ public class IndelConsensusReads
                 for(int i = 0; i < selectedElement.getLength(); ++i)
                 {
                     if(read.elementType() == I)
-                        read.skipInsert();
+                        read.skipInsertElement();
 
                     if(deleteOrSplit(read.elementType()) || alignedOrClipped(read.elementType()))
                     {
-                        read.moveNext();
+                        read.moveNextBase();
                     }
                 }
             }
@@ -170,7 +170,7 @@ public class IndelConsensusReads
 
                 // first skip past any insert if the selected element is aligned
                 if(selectedElement.getOperator() == M && read.elementType() == I)
-                    read.skipInsert();
+                    read.skipInsertElement();
 
                 boolean useBase = true;
                 boolean moveNext = true;
@@ -223,7 +223,7 @@ public class IndelConsensusReads
                 }
 
                 if(moveNext)
-                    read.moveNext();
+                    read.moveNextBase();
             }
 
             if(!hasMismatch)
