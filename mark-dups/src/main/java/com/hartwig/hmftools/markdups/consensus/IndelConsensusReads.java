@@ -11,13 +11,13 @@ import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MAT
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MISMATCH;
 
 import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.N;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
@@ -38,8 +38,6 @@ public class IndelConsensusReads
     public void buildIndelComponents(final List<SAMRecord> reads, final ConsensusState consensusState, final SAMRecord templateRead)
     {
         boolean hasCigarMismatch = reads.stream().anyMatch(x -> !x.getCigarString().equals(templateRead.getCigarString()));
-
-        // Map<String,CigarFrequency> cigarFrequencies = CigarFrequency.buildFrequencies(reads);
 
         if(!hasCigarMismatch)
         {
@@ -85,7 +83,7 @@ public class IndelConsensusReads
             if(consensusState.outcome() == INDEL_FAIL)
                 break;
 
-            if(!deleteOrSplit(element.getOperator()))
+            if(element.getOperator().consumesReadBases())
             {
                 if(consensusState.IsForward)
                     baseIndex += element.getLength();
@@ -115,7 +113,7 @@ public class IndelConsensusReads
 
         consensusState.addCigarElement(selectedElement.getLength(), selectedElement.getOperator());
 
-        if(deleteOrSplit(selectedElement.getOperator()))
+        if(deleteOrSplit(selectedElement.getOperator()) || selectedElement.getOperator() == H)
         {
             // move past the delete element and any differing aligned bases
             for(int r = 0; r < readCount; ++r)
@@ -125,12 +123,19 @@ public class IndelConsensusReads
                 if(read.exhausted())
                     continue;
 
+                if(read.elementType() == selectedElement.getOperator()
+                && read.elementIndex() == 0 && read.elementLength() == selectedElement.getLength())
+                {
+                    read.skipNonReadBaseElement();
+                    continue;
+                }
+
                 for(int i = 0; i < selectedElement.getLength(); ++i)
                 {
                     if(read.elementType() == I)
                         read.skipInsert();
 
-                    if(deleteOrSplit(read.elementType()) || alignedOrSoftClip(read.elementType()))
+                    if(deleteOrSplit(read.elementType()) || alignedOrClipped(read.elementType()))
                     {
                         read.moveNext();
                     }
@@ -263,9 +268,9 @@ public class IndelConsensusReads
         return operator == D || operator == N;
     }
 
-    public static boolean alignedOrSoftClip(final CigarOperator operator)
+    public static boolean alignedOrClipped(final CigarOperator operator)
     {
-        return operator == M || operator == S;
+        return operator == M || operator.isClipping();
     }
 
     public static SAMRecord selectPrimaryRead(final List<SAMRecord> reads)

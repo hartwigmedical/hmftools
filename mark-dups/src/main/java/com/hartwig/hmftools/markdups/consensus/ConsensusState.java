@@ -56,42 +56,13 @@ public class ConsensusState
     public ConsensusOutcome outcome() { return mOutcome; }
     public void setOutcome(final ConsensusOutcome outcome) { mOutcome = outcome; }
 
-    void setBaseLength(int baseLength)
+    public void setBaseLength(int baseLength)
     {
         Bases = new byte[baseLength];
         BaseQualities = new byte[baseLength];
     }
 
-    void expandBaseLength(int baseLength)
-    {
-        if(Bases == null)
-        {
-            setBaseLength(baseLength);
-            return;
-        }
-
-        if(IsForward)
-        {
-            Bases = Arrays.copyOf(Bases, Bases.length + baseLength);
-            BaseQualities = Arrays.copyOf(BaseQualities, BaseQualities.length + baseLength);
-        }
-        else
-        {
-            byte[] bases = new byte[Bases.length + baseLength];
-            byte[] baseQuals = new byte[Bases.length + baseLength];
-
-            for(int i = 0; i < Bases.length; ++i)
-            {
-                bases[i + baseLength] = Bases[i];
-                baseQuals[i + baseLength] = BaseQualities[i];
-            }
-
-            Bases = bases;
-            BaseQualities = baseQuals;
-        }
-    }
-
-    void setBoundaries(final SAMRecord read)
+    public void setBoundaries(final SAMRecord read)
     {
         int readStart = read.getAlignmentStart();
         int readEnd = read.getAlignmentEnd();

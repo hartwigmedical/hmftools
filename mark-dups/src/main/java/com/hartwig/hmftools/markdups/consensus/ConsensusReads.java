@@ -19,7 +19,7 @@ import static com.hartwig.hmftools.markdups.consensus.CigarFrequency.selectTempl
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.SUPPLEMENTARY;
-import static com.hartwig.hmftools.markdups.consensus.IndelConsensusReads.alignedOrSoftClip;
+import static com.hartwig.hmftools.markdups.consensus.IndelConsensusReads.alignedOrClipped;
 import static com.hartwig.hmftools.markdups.consensus.IndelConsensusReads.selectPrimaryRead;
 import static com.hartwig.hmftools.markdups.umi.UmiConfig.READ_ID_DELIM;
 
@@ -38,6 +38,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
 public class ConsensusReads
@@ -116,7 +117,7 @@ public class ConsensusReads
         boolean isForward = !templateRead.getReadNegativeStrandFlag();
         boolean hasIndels = false;
 
-        // work out the outermost boundaries - soft-clipped and aligned - from amongst all reads
+        // work out the outermost boundaries - clipped and aligned - from amongst all reads
         ConsensusState consensusState = new ConsensusState(isForward, templateRead.getContig(), mRefGenome);
 
         for(SAMRecord read : readsView)
@@ -144,9 +145,6 @@ public class ConsensusReads
         }
         else
         {
-            // Map<String, CigarFrequency> cigarFrequencies = CigarFrequency.buildFrequencies(readsView);
-            // SAMRecord selectedConsensusRead = cigarFrequencies.size() > 1 ? selectConsensusRead(cigarFrequencies) : readsView.get(0);
-
             consensusState.setBaseLength(templateRead.getBaseQualities().length);
             consensusState.setBoundaries(templateRead);
             mBaseBuilder.buildReadBases(readsView, consensusState);
@@ -368,10 +366,10 @@ public class ConsensusReads
 
                 if(i == 0 || i == cigarCount - 1)
                 {
-                    if(!alignedOrSoftClip(element.getOperator()) && element.getOperator() != I)
+                    if(!alignedOrClipped(element.getOperator()) && element.getOperator() != I)
                         return ValidationReason.CIGAR_ELEMENTS;
                 }
-                else if(element.getOperator() == S)
+                else if(element.getOperator().isClipping())
                 {
                     return ValidationReason.CIGAR_ELEMENTS;
                 }

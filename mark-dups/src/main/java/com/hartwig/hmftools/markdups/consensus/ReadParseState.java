@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.NO_BASE;
 
 import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.H;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.N;
 
@@ -24,7 +25,6 @@ public class ReadParseState
     private CigarOperator mElementType;
 
     private boolean mExhausted;
-    private boolean mElementChanged; // on the last move
 
     public ReadParseState(final SAMRecord read, boolean isForward)
     {
@@ -47,7 +47,6 @@ public class ReadParseState
         mElementType = read.getCigar().getCigarElement(mCigarIndex).getOperator();
         mElementIndex = 0;
         mExhausted = false;
-        mElementChanged = false;
     }
 
     public byte currentBase() { return mExhausted ? NO_BASE : Read.getReadBases()[mReadIndex]; }
@@ -68,8 +67,6 @@ public class ReadParseState
 
         if(mElementIndex >= mElementLength)
         {
-            mElementChanged = true;
-
             if(mIsForward)
                 ++mCigarIndex;
             else
@@ -85,14 +82,9 @@ public class ReadParseState
             mElementType = Read.getCigar().getCigarElement(mCigarIndex).getOperator();
             mElementIndex = 0;
         }
-        else
-        {
-            mElementChanged = false;
-        }
 
-        boolean moveReadIndex = (mElementType != D && mElementType != N);
-
-        if(moveReadIndex)
+        // move the read index to the start of the new element
+        if(mElementType.consumesReadBases())
         {
             if(mIsForward)
                 ++mReadIndex;
@@ -106,6 +98,35 @@ public class ReadParseState
         while(mElementType == I && !exhausted())
         {
             moveNext();
+        }
+    }
+
+    public void skipNonReadBaseElement()
+    {
+        if(mExhausted)
+            return;
+
+        if(mIsForward)
+            ++mCigarIndex;
+        else
+            --mCigarIndex;
+
+        if(mCigarIndex < 0 || mCigarIndex >= Read.getCigar().getCigarElements().size())
+        {
+            mExhausted = true;
+            return;
+        }
+
+        mElementLength = Read.getCigar().getCigarElement(mCigarIndex).getLength();
+        mElementType = Read.getCigar().getCigarElement(mCigarIndex).getOperator();
+        mElementIndex = 0;
+
+        if(mElementType.consumesReadBases())
+        {
+            if(mIsForward)
+                ++mReadIndex;
+            else
+                --mReadIndex;
         }
     }
 

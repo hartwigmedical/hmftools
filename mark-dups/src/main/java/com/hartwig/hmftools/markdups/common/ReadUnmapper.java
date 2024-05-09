@@ -272,7 +272,7 @@ public class ReadUnmapper
         if(matchType == RegionMatchType.HIGH_DEPTH)
             return UnmapReason.HIGH_DEPTH;
 
-        if(getSoftClipCountFromCigarStr(read.getCigarString()) > UNMAP_MIN_SOFT_CLIP)
+        if(getClipLengthFromCigarStr(read.getCigarString()) > UNMAP_MIN_SOFT_CLIP)
             return UnmapReason.SOFT_CLIP;
 
         if(read.getReadPairedFlag() && isChimericRead(read, false))
@@ -298,7 +298,7 @@ public class ReadUnmapper
         {
             final String mateCigar = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
 
-            if(getSoftClipCountFromCigarStr(mateCigar) > UNMAP_MIN_SOFT_CLIP)
+            if(getClipLengthFromCigarStr(mateCigar) > UNMAP_MIN_SOFT_CLIP)
                 return true;
         }
 
@@ -323,7 +323,7 @@ public class ReadUnmapper
             if(matchType == RegionMatchType.HIGH_DEPTH)
                 return true;
 
-            if(getSoftClipCountFromCigarStr(suppData.Cigar) >= UNMAP_MIN_SOFT_CLIP)
+            if(getClipLengthFromCigarStr(suppData.Cigar) >= UNMAP_MIN_SOFT_CLIP)
                 return true;
 
             if(isSupplementaryChimericRead(read, suppData))
@@ -363,7 +363,7 @@ public class ReadUnmapper
         if(matchType == RegionMatchType.HIGH_DEPTH)
             return true;
 
-        if(getSoftClipCountFromCigarStr(suppData.Cigar) >= UNMAP_MIN_SOFT_CLIP)
+        if(getClipLengthFromCigarStr(suppData.Cigar) >= UNMAP_MIN_SOFT_CLIP)
             return true;
 
         return false;
@@ -581,14 +581,14 @@ public class ReadUnmapper
     }
 
     @VisibleForTesting
-    public static int getSoftClipCountFromCigarStr(final String cigarStr)
+    public static int getClipLengthFromCigarStr(final String cigarStr)
     {
         int softClipCount = 0;
         int elementLength = 0;
         for(int i = 0; i < cigarStr.length(); ++i)
         {
             final char c = cigarStr.charAt(i);
-            if(c == 'S')
+            if(c == 'S' || c == 'H')
             {
                 softClipCount += elementLength;
                 elementLength = 0;

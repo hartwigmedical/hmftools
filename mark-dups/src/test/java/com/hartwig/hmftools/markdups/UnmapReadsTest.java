@@ -65,10 +65,11 @@ public class UnmapReadsTest
     @Test
     public void testGetSoftClipCountFromCigarStr()
     {
-        assertEquals(0, ReadUnmapper.getSoftClipCountFromCigarStr("151M"));
-        assertEquals(10, ReadUnmapper.getSoftClipCountFromCigarStr("10S141M"));
-        assertEquals(10, ReadUnmapper.getSoftClipCountFromCigarStr("141M10S"));
-        assertEquals(12, ReadUnmapper.getSoftClipCountFromCigarStr("2S138M10S"));
+        assertEquals(0, ReadUnmapper.getClipLengthFromCigarStr("151M"));
+        assertEquals(10, ReadUnmapper.getClipLengthFromCigarStr("10S141M"));
+        assertEquals(10, ReadUnmapper.getClipLengthFromCigarStr("141M10S"));
+        assertEquals(12, ReadUnmapper.getClipLengthFromCigarStr("2S138M10S"));
+        assertEquals(12, ReadUnmapper.getClipLengthFromCigarStr("2H138M10H"));
     }
 
     @Test
