@@ -109,16 +109,40 @@ public class BreakendBuilder
         int indelSeqEnd = indelSeqStart + (indelCoords.isInsert() ? indelCoords.Length : 1);
 
         String insertedBases = "";
+        HomologyData homology = null;
+
+        int indelPosStart = indelCoords.PosStart;
+        int indelPosEnd = indelCoords.PosEnd;
 
         if(indelCoords.isInsert())
         {
             insertedBases = mAssemblyAlignment.fullSequence().substring(indelSeqStart, indelSeqEnd);
         }
+        else
+        {
+            // check for exact homology at the bases either side of the delete
+            int maxLength = indelCoords.Length - 1;
+            int homPosStart = indelPosStart + 1;
+            String basesStart = mRefGenome.getBaseString( alignment.RefLocation.Chromosome, homPosStart, homPosStart + maxLength);
 
-        HomologyData homology = null;
+            int homPosEnd = indelPosEnd;
+            String basesEnd = mRefGenome.getBaseString(alignment.RefLocation.Chromosome, homPosEnd, homPosEnd + maxLength);
+
+            homology = HomologyData.determineHomology(basesEnd, basesStart, basesEnd, maxLength);
+
+            if(homology.Homology.isEmpty())
+                homology = null;
+        }
+
+        if(homology != null)
+        {
+            // shift breakend positions forward by exact homology
+            indelPosStart -= homologyPositionAdjustment(homology.ExactStart, FORWARD);
+            indelPosEnd -= homologyPositionAdjustment(homology.ExactEnd, FORWARD);
+        }
 
         Breakend lowerBreakend = new Breakend(
-                mAssemblyAlignment, alignment.RefLocation.Chromosome, indelCoords.PosStart, FORWARD, insertedBases, homology);
+                mAssemblyAlignment, alignment.RefLocation.Chromosome, indelPosStart, FORWARD, insertedBases, homology);
 
         mAssemblyAlignment.addBreakend(lowerBreakend);
 
@@ -128,7 +152,7 @@ public class BreakendBuilder
         lowerBreakend.addSegment(segment);
 
         Breakend upperBreakend = new Breakend(
-                mAssemblyAlignment, alignment.RefLocation.Chromosome, indelCoords.PosEnd, REVERSE, insertedBases, homology);
+                mAssemblyAlignment, alignment.RefLocation.Chromosome, indelPosEnd, REVERSE, insertedBases, homology);
 
         mAssemblyAlignment.addBreakend(upperBreakend);
 
@@ -227,37 +251,6 @@ public class BreakendBuilder
         return true;
     }
 
-    private static List<AlternativeAlignment> buildAltAlignments(
-            final AlignData alignmentStart, AlignData alignmentEnd, final List<AlignData> zeroQualAlignments)
-    {
-        List<AlignData> relatedAlignments = null;
-
-        if(alignmentStart != null && alignmentEnd != null)
-        {
-            relatedAlignments = zeroQualAlignments.stream()
-                    .filter(x -> x.sequenceStart() > alignmentStart.sequenceStart() && x.sequenceStart() < alignmentEnd.sequenceStart())
-                    .collect(Collectors.toList());
-        }
-        else if(alignmentStart != null)
-        {
-            relatedAlignments = zeroQualAlignments.stream()
-                    .filter(x -> x.sequenceStart() < alignmentStart.sequenceStart())
-                    .collect(Collectors.toList());
-        }
-        else
-        {
-            relatedAlignments = zeroQualAlignments.stream()
-                    .filter(x -> x.sequenceStart() > alignmentEnd.sequenceStart())
-                    .collect(Collectors.toList());
-        }
-
-        List<AlternativeAlignment> altAlignments = Lists.newArrayList();
-
-        relatedAlignments.forEach(x -> altAlignments.addAll(x.altAlignments()));
-
-        return altAlignments;
-    }
-
     private void formMultipleBreakends(final List<AlignData> alignments, final List<AlignData> zeroQualAlignments)
     {
         // look for consecutive non-zero-MQ alignments from which to form breakends
@@ -352,6 +345,37 @@ public class BreakendBuilder
     protected static Orientation segmentOrientation(final AlignData alignment, boolean linksEnd)
     {
         return (linksEnd == (alignment.orientation().isForward())) ? FORWARD : REVERSE;
+    }
+
+    private static List<AlternativeAlignment> buildAltAlignments(
+            final AlignData alignmentStart, AlignData alignmentEnd, final List<AlignData> zeroQualAlignments)
+    {
+        List<AlignData> relatedAlignments = null;
+
+        if(alignmentStart != null && alignmentEnd != null)
+        {
+            relatedAlignments = zeroQualAlignments.stream()
+                    .filter(x -> x.sequenceStart() > alignmentStart.sequenceStart() && x.sequenceStart() < alignmentEnd.sequenceStart())
+                    .collect(Collectors.toList());
+        }
+        else if(alignmentStart != null)
+        {
+            relatedAlignments = zeroQualAlignments.stream()
+                    .filter(x -> x.sequenceStart() < alignmentStart.sequenceStart())
+                    .collect(Collectors.toList());
+        }
+        else
+        {
+            relatedAlignments = zeroQualAlignments.stream()
+                    .filter(x -> x.sequenceStart() > alignmentEnd.sequenceStart())
+                    .collect(Collectors.toList());
+        }
+
+        List<AlternativeAlignment> altAlignments = Lists.newArrayList();
+
+        relatedAlignments.forEach(x -> altAlignments.addAll(x.altAlignments()));
+
+        return altAlignments;
     }
 
     public static void formBreakendFacingLinks(final List<Breakend> breakends)

@@ -436,6 +436,34 @@ public class AlignmentTest
         Breakend second = assemblyAlignment.breakends().get(1);
         assertEquals(251, second.Position);
         assertEquals(REVERSE, second.Orient);
+
+
+        // a DEL with homology
+        assemblyAlignment = createAssemblyAlignment(
+                CHR_1, 132, FORWARD, CHR_1, 190, REVERSE, "");
+
+        breakendBuilder = new BreakendBuilder(mRefGenome, assemblyAlignment);
+
+        // homology at pos 13 and 40
+        alignment = createAlignment(CHR_1, 100, 250, 0, 100, "33M57D60M");
+
+        alignments = Lists.newArrayList(alignment);
+
+        breakendBuilder.formBreakends(alignments);
+
+        assertEquals(2, assemblyAlignment.breakends().size());
+
+        first = assemblyAlignment.breakends().get(0);
+        assertEquals(DEL, first.svType());
+        assertEquals(134, first.Position);
+        assertEquals(FORWARD, first.Orient);
+        assertNotNull(first.Homology);
+        assertEquals("CCCC", first.Homology.Homology);
+
+        second = assemblyAlignment.breakends().get(1);
+        assertEquals(192, second.Position);
+        assertEquals(REVERSE, second.Orient);
+
     }
 
     private static AlignData createAlignment(
