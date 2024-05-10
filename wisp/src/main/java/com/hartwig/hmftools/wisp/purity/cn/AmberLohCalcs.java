@@ -175,7 +175,7 @@ public class AmberLohCalcs
             if(lohSiteAFs.isEmpty() || totalLohSupportCount == 0)
                 return AmberLohResult.INVALID_RESULT;
 
-            double lohPercent = lohSiteAFs.size() / (double)totalAmberSites;
+            double lohPercent = totalAmberSites > 0 ? lohSiteAFs.size() / (double)totalAmberSites : 0;
 
             Collections.sort(lohSiteAFs);
             Collections.sort(lohSiteImpliedPurities);
@@ -199,7 +199,7 @@ public class AmberLohCalcs
         }
         catch(Exception e)
         {
-            CT_LOGGER.error("sample({}) failed to load Amber data: {}", sampleId, e.toString());
+            CT_LOGGER.error("sample({}) failed to process Amber data: {}", sampleId, e.toString());
             e.printStackTrace();
             return null;
         }

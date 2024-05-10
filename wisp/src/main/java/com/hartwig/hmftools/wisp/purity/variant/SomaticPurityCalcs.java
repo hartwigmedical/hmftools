@@ -4,11 +4,9 @@ import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.stats.PoissonCalcs.calcPoissonNoiseValue;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
 
@@ -32,6 +30,11 @@ public final class SomaticPurityCalcs
 
         PoissonDistribution poisson = new PoissonDistribution(expectedNoiseFragments);
 
+        if(effectiveAlleleFrags < 1)
+        {
+            return 1 - poisson.cumulativeProbability(0);
+        }
+
         int lowerFrags = (int)floor(effectiveAlleleFrags - 1);
         int upperFrags = (int)ceil(effectiveAlleleFrags - 1);
         double probabilityLower = 1 - poisson.cumulativeProbability(lowerFrags);
@@ -51,15 +54,6 @@ public final class SomaticPurityCalcs
         PoissonDistribution poisson = new PoissonDistribution(noise);
         double probability = 1 - poisson.cumulativeProbability(alleleCount - 1);
         return probability;
-    }
-
-    public static double calcLimitOfDetectionOld(final FragmentTotals fragmentTotals, final double tumorPurity, final double noiseRate)
-    {
-        double sampleDepthTotal = fragmentTotals.sampleAdjustedDepthTotal();
-        double expectedNoiseFragments = noiseRate * sampleDepthTotal;
-        double lodFragments = calcPoissonNoiseValue((int)round(expectedNoiseFragments), LOW_PROBABILITY);
-        double lodSampleVaf = lodFragments / sampleDepthTotal;
-        return estimatedPurity(tumorPurity, fragmentTotals.adjTumorVaf(), lodSampleVaf, noiseRate);
     }
 
     private static final int MAX_ITERATIONS = 20;
@@ -128,7 +122,7 @@ public final class SomaticPurityCalcs
 
         if(iterations >= MAX_ITERATIONS)
         {
-            CT_LOGGER.warn(format("max iterations reached: value(%.4f) test(%.1f) prob(%.4f diff=%.4f)",
+            CT_LOGGER.warn(format("max iterations reached: value(%.4f) test(%d) prob(%.4f diff=%.4f)",
                     expectedNoiseFrags, currentValue, currentProb, probDiff));
         }
 

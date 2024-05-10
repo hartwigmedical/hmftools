@@ -12,15 +12,17 @@ public class PurityCalcData
 
     public ClonalityData Clonality;
 
+    public static final double CALC_NO_SET = -1;
+
     public PurityCalcData()
     {
         RawPurityEstimate = 0;
         PurityEstimate = 0;
         PurityRangeLow = 0;
         PurityRangeHigh = 0;
-        LodPurityEstimate = 0;
-        Probability = 0;
-        DualProbability = 0;
+        LodPurityEstimate = CALC_NO_SET;
+        Probability = CALC_NO_SET;
+        DualProbability = CALC_NO_SET;
 
         Clonality = ClonalityData.NO_RESULT;
     }

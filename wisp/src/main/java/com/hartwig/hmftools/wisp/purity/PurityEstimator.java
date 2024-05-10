@@ -139,7 +139,16 @@ public class PurityEstimator
         {
             for(SampleData sample : Samples)
             {
-                processSample(sample);
+                try
+                {
+                    processSample(sample);
+                }
+                catch(Throwable t)
+                {
+                    CT_LOGGER.error("failed processing patient({}): {}", sample.PatientId, t.toString());
+                    t.printStackTrace();
+                    System.exit(1);
+                }
             }
 
             return (long)0;

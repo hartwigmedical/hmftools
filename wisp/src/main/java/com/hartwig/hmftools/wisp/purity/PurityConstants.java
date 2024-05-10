@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.wisp.purity;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
 public class PurityConstants
 {
     public static final double MAX_SUBCLONAL_LIKELIHOOD = 0.5;
@@ -37,6 +41,8 @@ public class PurityConstants
     public static final double LOW_COUNT_MODEL_MIN_2_PLUS_FRAG_PERC = 0.002;
 
     public static final double DROPOUT_RATE_INCREMENT = 0.1;
+
+    public static final List<Integer> SNV_QUAL_THRESHOLDS = Lists.newArrayList(0, 38, 42, 45, 48);
 
     public static final double SYNTHETIC_TUMOR_VAF = 0.5;
 
