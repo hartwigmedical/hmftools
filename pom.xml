@@ -34,6 +34,7 @@
         <module>patient-db</module>
         <module>purple</module>
         <module>pave</module>
+        <module>peach</module>
         <module>sage</module>
         <module>sigs</module>
         <module>stat-calcs</module>
@@ -78,10 +79,11 @@
         <mark-dups.version>1.2</mark-dups.version>
         <neo.version>1.2</neo.version>
         <orange.version>3.4.0</orange.version>
-        <orange-datamodel.version>2.4.1</orange-datamodel.version>
+        <orange-datamodel.version>2.5.0</orange-datamodel.version>
         <paddle.version>1.1</paddle.version>
         <patient-db.version>5.35</patient-db.version>
         <pave.version>1.6</pave.version>
+        <peach.version>2.0</peach.version>
         <purple.version>4.1</purple.version>
         <sage.version>3.5</sage.version>
         <sigs.version>1.2.1</sigs.version>

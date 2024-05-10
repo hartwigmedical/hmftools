@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.peach;
 
+import static com.hartwig.hmftools.common.peach.PeachUtil.convertToHaplotypeString;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,7 +14,9 @@ public abstract class PeachGenotype
     public abstract String gene();
 
     @NotNull
-    public abstract String haplotype();
+    public abstract String allele();
+
+    public abstract int alleleCount();
 
     @NotNull
     public abstract String function();
@@ -23,9 +27,27 @@ public abstract class PeachGenotype
     @NotNull
     public abstract String urlPrescriptionInfo();
 
+    @Deprecated
     @NotNull
-    public abstract String panelVersion();
+    @Value.Default
+    public String panelVersion()
+    {
+        return "";
+    }
 
+    @Deprecated
     @NotNull
-    public abstract String repoVersion();
+    @Value.Default
+    public String repoVersion()
+    {
+        return "";
+    }
+
+    @Deprecated
+    @NotNull
+    @Value.Derived
+    public String haplotype()
+    {
+        return convertToHaplotypeString(allele(), alleleCount());
+    }
 }

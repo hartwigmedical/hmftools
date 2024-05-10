@@ -1,0 +1,11 @@
+gene	haplotype	default	wildType	events
+FAKE1	*1	true	true	
+FAKE1	*2	false	false	VAR_chr3_1234567_C_CAT
+FAKE1	*3	false	false	VAR_chr3_1234567_C_CATAT
+FAKE1	*4	false	false	VAR_chr3_1234567_CAT_C
+FAKE2	*1	true	true	VAR_chr3_1234567_CAT_C
+FAKE2	*2	false	false	VAR_chr3_1234567_C_CAT
+FAKE2	*3	false	false	VAR_chr3_1234567_C_CATAT
+FAKE3	*1	true	true	
+FAKE3	*2	false	false	VAR_chr3_1234567_C_CAT
+FAKE3	*3	false	false	VAR_chr3_1234567_C_CATAT

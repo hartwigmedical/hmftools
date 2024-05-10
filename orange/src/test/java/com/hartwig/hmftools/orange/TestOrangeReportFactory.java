@@ -326,6 +326,6 @@ public final class TestOrangeReportFactory
     @NotNull
     private static Set<PeachGenotype> createTestPeachData()
     {
-        return Set.of(OrangeConversion.convert(PeachTestFactory.builder().gene("DPYD").haplotype("haplotype").build()));
+        return Set.of(OrangeConversion.convert(PeachTestFactory.builder().gene("DPYD").allele("allele").build()));
     }
 }

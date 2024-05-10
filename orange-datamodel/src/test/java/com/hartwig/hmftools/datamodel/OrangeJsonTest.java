@@ -333,6 +333,8 @@ public class OrangeJsonTest
         assertEquals(1, peach.size());
         PeachGenotype entry = peach.iterator().next();
         assertEquals("DPYD", entry.gene());
+        assertEquals("*1", entry.allele());
+        assertEquals(2, entry.alleleCount());
         assertEquals("*1_HOM", entry.haplotype());
         assertEquals("Normal Function", entry.function());
         assertEquals("5-Fluorouracil", entry.linkedDrugs());

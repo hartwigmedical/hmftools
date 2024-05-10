@@ -1,0 +1,58 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=LOW_TUMOR_VCN,Description="Germline variant has very low tumor variant copy number">
+##FILTER=<ID=LOW_VAF,Description="Germline variant has very low allelic frequency">
+##FILTER=<ID=PASS,Description="All filters passed">
+##FILTER=<ID=PONGnomad,Description="Filter Gnoamd PON">
+##FILTER=<ID=dedupIndel,Description="Variant duplicate SNV/MNV vs INDEL">
+##FILTER=<ID=dedupMatch,Description="Variant duplicate with different read contexts">
+##FILTER=<ID=dedupMixedGermlineSomatic,Description="Variant duplicate mixed somatic/germline">
+##FILTER=<ID=dedupMnv,Description="Filter duplicate MNV">
+##FILTER=<ID=dedupSnvMnv,Description="Variant duplicate MNV vs SNV">
+##FILTER=<ID=maxGermlineAltSupport,Description="Excess germline alt support">
+##FILTER=<ID=maxGermlineRelRawBaseQual,Description="Excess germline relative quality">
+##FILTER=<ID=maxGermlineVAF,Description="Excess germline VAF">
+##FILTER=<ID=minAvgBaseQual,Description="Variant average base quality below limit">
+##FILTER=<ID=minGermlineDepth,Description="Insufficient germline depth">
+##FILTER=<ID=minTumorQual,Description="Insufficient tumor quality">
+##FILTER=<ID=minTumorVAF,Description="Insufficient tumor VAF">
+##FILTER=<ID=strandBias,Description="Variant exceeds strand bias limit">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=1,length=249250621>
+##contig=<ID=2,length=243199373>
+##contig=<ID=3,length=198022430>
+##contig=<ID=4,length=191154276>
+##contig=<ID=5,length=180915260>
+##contig=<ID=6,length=171115067>
+##contig=<ID=7,length=159138663>
+##contig=<ID=8,length=146364022>
+##contig=<ID=9,length=141213431>
+##contig=<ID=10,length=135534747>
+##contig=<ID=11,length=135006516>
+##contig=<ID=12,length=133851895>
+##contig=<ID=13,length=115169878>
+##contig=<ID=14,length=107349540>
+##contig=<ID=15,length=102531392>
+##contig=<ID=16,length=90354753>
+##contig=<ID=17,length=81195210>
+##contig=<ID=18,length=78077248>
+##contig=<ID=19,length=59128983>
+##contig=<ID=20,length=63025520>
+##contig=<ID=21,length=48129895>
+##contig=<ID=22,length=51304566>
+##contig=<ID=X,length=155270560>
+##contig=<ID=Y,length=59373566>
+##contig=<ID=MT,length=16569>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	FAKET	FAKER
+1	78414310	.	C	CA	116	PASS	.	GT	./.	0/1
+1	97543752	.	G	A	333	PASS	.	GT	./.	0/1
+1	97543764	.	C	T	467	PASS	.	GT	./.	0/1
+1	98205966	.	GATGA	G	721	PASS	.	GT	./.	0/1
+1	98205966	.	G	C	721	PASS	.	GT	./.	0/1
+1	98348885	.	G	A	275	PASS	.	GT	./.	1/1
+2	225449893	.	GGGCGGC	G	444	LOW_VAF	.	GT	./.	0/1
+2	234668879	.	C	CAT	557	PASS	.	GT	./.	./.
+2	234668880	.	A	G	557	PASS	.	GT	./.	0/0
+2	234668880	.	A	T	557	LOW_VAF	.	GT	./.	0/1
+2	234681544	.	G	C	321	PASS	.	GT	./.	0/1
+2	234681645	.	G	C	442	PASS	.	GT	./.	0/1
+3	1733823	.	A	T	447	PASS	.	GT	./.	./.

@@ -1,2 +1,0 @@
-gene	haplotype	function	linked_drugs	url_prescription_info	panel_version	repo_version
-GENE	*1_HET	Reduced Function	Capecitabine	link	panel	pilot
