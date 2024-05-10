@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
@@ -13,6 +14,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.SHORT_DEL_DUP_INS_LEN
 import static com.hartwig.hmftools.esvee.common.CommonUtils.compareJunctions;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
 import static com.hartwig.hmftools.esvee.common.SvConstants.DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
+import static com.hartwig.hmftools.esvee.common.SvConstants.QUAL_CALC_FRAG_SUPPORT_FACTOR;
 
 import java.util.List;
 import java.util.Set;
@@ -129,8 +131,17 @@ public class Breakend implements Comparable<Breakend>
 
     public int calcSvQual()
     {
-        int breakendQual = calcQual();
-        return mOtherBreakend != null ? breakendQual + mOtherBreakend.calcQual() : breakendQual;
+        int finalQual = calcQual();
+
+        if(mOtherBreakend != null)
+            finalQual += mOtherBreakend.calcQual();
+
+        int totalSupport = mBreakendSupport.stream().mapToInt(x -> x.totalSupport()).sum();
+        double supportFactor = totalSupport / (totalSupport + QUAL_CALC_FRAG_SUPPORT_FACTOR);
+
+        finalQual = (int)round(finalQual * supportFactor);
+
+        return finalQual;
     }
 
     public int calcQual()

@@ -157,6 +157,10 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFInfoHeaderLine(HOMSEQ, 1, VCFHeaderLineType.String, HOMSEQ_DESC));
         metaData.add(new VCFInfoHeaderLine(HOMSEQ, 1, VCFHeaderLineType.String, HOMSEQ_DESC));
 
+        metaData.add(new VCFInfoHeaderLine(SPLIT_FRAGS, 1, VCFHeaderLineType.Integer, SPLIT_FRAGS_DESC));
+        metaData.add(new VCFInfoHeaderLine(DISC_FRAGS, 1, VCFHeaderLineType.Integer, DISC_FRAGS_DESC));
+        metaData.add(new VCFInfoHeaderLine(TOTAL_FRAGS, 1, VCFHeaderLineType.Integer, TOTAL_FRAGS_DESC));
+
         metaData.add(new VCFInfoHeaderLine(ASMID, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ASMID_DESC));
         metaData.add(new VCFInfoHeaderLine(ASMLEN, 1, VCFHeaderLineType.Integer, ASMLEN_DESC));
         metaData.add(new VCFInfoHeaderLine(ASMSEG, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ASMSEG_DESC));
@@ -206,11 +210,16 @@ public class VcfWriter implements AutoCloseable
     {
         List<Genotype> genotypes = Lists.newArrayList();
 
+        int totalSplitFrags = 0;
+        int totalDiscFrags = 0;
         for(String sampleId : mSampleNames)
         {
             int sampleSupportIndex = mSampleNameIndex.get(sampleId);
             BreakendSupport breakendSupport = breakend.sampleSupport().get(sampleSupportIndex);
             genotypes.add(buildGenotype(breakend, sampleId, breakendSupport));
+
+            totalSplitFrags += breakendSupport.SplitFragments;
+            totalDiscFrags += breakendSupport.DiscordantFragments;
         }
 
         Set<String> filters = breakend.filters().stream().map(x -> x.vcfTag()).collect(Collectors.toSet());
@@ -245,6 +254,10 @@ public class VcfWriter implements AutoCloseable
             builder.attribute(CIPOS, NO_HOMOLOGY);
             builder.attribute(IHOMPOS, NO_HOMOLOGY);
         }
+
+        builder.attribute(SPLIT_FRAGS, totalSplitFrags);
+        builder.attribute(DISC_FRAGS, totalDiscFrags);
+        builder.attribute(TOTAL_FRAGS, totalSplitFrags + totalDiscFrags);
 
         if(breakend.alternativeAlignments() != null)
             builder.attribute(INSALN, altAlignmentsStr(breakend.alternativeAlignments()));
