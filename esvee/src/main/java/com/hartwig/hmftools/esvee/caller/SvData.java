@@ -32,6 +32,7 @@ public class SvData
     private final Breakend[] mBreakends;
 
     // repeatedly used values for filtering are cached
+    private final double mQual;
     private final String mInsertSequence;
     private boolean mIsShortLocal;
     private int mPonCount;
@@ -71,6 +72,8 @@ public class SvData
             mBreakends = new Breakend[] { breakendStart, breakendEnd };
         }
 
+        mQual = sv.qualityScore();
+
         mInsertSequence = sv.insertSequence();
 
         mFilters = Sets.newHashSet();
@@ -101,6 +104,7 @@ public class SvData
     public VariantContext contextStart() { return mBreakends[SE_START].Context; }
     public VariantContext contextEnd() { return !isSgl() ? mBreakends[SE_END].Context : null; }
 
+    public double qual() { return mQual; }
     public String insertSequence() { return mInsertSequence; }
 
     public int ponCount() { return mPonCount; }

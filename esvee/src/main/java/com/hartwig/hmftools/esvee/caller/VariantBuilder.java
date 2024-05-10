@@ -60,13 +60,11 @@ public class VariantBuilder
 
         boolean hardFiltered = false;
 
-        if(isSgl && mTargetRegions.hasTargetRegions())
-        {
-            hardFiltered = !mTargetRegions.inTargetRegions(variant.getContig(), variant.getStart());
-        }
-
         if(isSgl)
         {
+            if(mTargetRegions.hasTargetRegions())
+                hardFiltered = !mTargetRegions.inTargetRegions(variant.getContig(), variant.getStart());
+
             if(hardFiltered)
             {
                 ++mHardFilteredCount;

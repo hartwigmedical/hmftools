@@ -94,6 +94,7 @@ public class DuplicateFinder
             boolean originalIsPass, final Breakend original, final Breakend alternative) // , final LinkStore linkStore
     {
         // TODO: check if still applicable
+        /*
         // if(linkStore.getBreakendLinks(alternative) != null)
         //    return false;
 
@@ -103,6 +104,9 @@ public class DuplicateFinder
             return originalIsPass;
 
         return original.Qual > alternative.Qual;
+        */
+
+        return false;
     }
 
     public void clear()

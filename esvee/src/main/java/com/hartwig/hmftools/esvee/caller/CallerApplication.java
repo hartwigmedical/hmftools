@@ -47,7 +47,7 @@ public class CallerApplication
         mTargetRegions = new TargetRegions(configBuilder);
 
         mVariantBuilder = new VariantBuilder(mHotspotCache, mTargetRegions);
-        mVariantFilters = new VariantFilters(mFilterConstants, mConfig.hasReference(), mConfig.hasTumor());
+        mVariantFilters = new VariantFilters(mFilterConstants);
 
         mProcessedVariants = 0;
         mSvDataCache = new SvDataCache();

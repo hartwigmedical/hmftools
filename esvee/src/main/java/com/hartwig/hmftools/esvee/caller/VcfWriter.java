@@ -163,7 +163,8 @@ public class VcfWriter
 
         VariantContextBuilder builder = new VariantContextBuilder(breakend.Context).genotypes(genotypes).filters();
 
-        builder.log10PError(breakend.Qual / -10.0);
+        // Qual = getGenotypeAttributeAsDouble(tumorGenotype, QUAL, 0);
+        builder.log10PError(breakend.Context.getPhredScaledQual());
 
         if(sv.isHotspot())
             builder.attribute(HOTSPOT, true);
@@ -190,6 +191,8 @@ public class VcfWriter
 
         writeBreakend(mUnfilteredWriter, builder, allFilters);
 
+
+
         if(mSomaticWriter != null)
         {
             if(somaticFilters.isEmpty() || (somaticFilters.size() == 1 && somaticFilters.contains(PON)))
@@ -198,6 +201,13 @@ public class VcfWriter
 
         if(mGermlineWriter != null && germlineFilters.isEmpty())
             writeBreakend(mGermlineWriter, builder, germlineFilters);
+    }
+
+    private boolean isGermline(final SvData var)
+    {
+        // if a germline sample is present and the max(germline AF) > 0.1 x max(tumor AF), the variant is deemed to be germline, else somatic
+        // return breakend.ReferenceFragments + refSupportReads + refSupportReadPairs < mFilterConstants.MinNormalCoverage;
+        return false;
     }
 
     private static void writeBreakend(final VariantContextWriter writer, final VariantContextBuilder builder, final Set<FilterType> filters)

@@ -4,11 +4,9 @@ import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASSEMBLY_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.parseRefAlt;
 
@@ -31,10 +29,6 @@ public class Breakend
     public final int Position;
     public final Orientation Orient;
     public final boolean IsStart; // the start breakend in an SV, or true if a SGL
-
-    public final double Qual;
-    public final int TumorFragments;
-    public final int ReferenceFragments;
 
     public final Genotype RefGenotype;
     public final Genotype TumorGenotype;
@@ -65,21 +59,13 @@ public class Breakend
         RefGenotype = refGenotype;
         TumorGenotype = tumorGenotype;
 
-        ReferenceFragments = refGenotype != null ? getGenotypeAttributeAsInt(refGenotype, TOTAL_FRAGS, 0) : 0;
-        TumorFragments = getGenotypeAttributeAsInt(tumorGenotype, TOTAL_FRAGS, 0);
-
-        setAllelicFrequency();
-
         ConfidenceInterval = Interval.fromCiposTag(context.getAttributeAsIntList(CIPOS, 0));
 
         String ref = context.getAlleles().get(0).getDisplayString();
         final VariantAltInsertCoords altInsertCoords = parseRefAlt(context.getAlleles().get(1).getDisplayString(), ref);
-        // Alt = altInsertCoords.Alt;
         InsertSequence = altInsertCoords.InsertSequence;
 
         IsLineInsertion = isMobileLineElement(orientation.asByte(), InsertSequence);
-
-        Qual = getGenotypeAttributeAsDouble(tumorGenotype, QUAL, 0);
 
         if(context.hasAttribute(IHOMPOS))
         {
@@ -123,14 +109,20 @@ public class Breakend
 
     public boolean isEnd() { return !mSvData.isSgl() && mSvData.breakendEnd() == this;}
 
-    public double allelicFrequency() { return mAllelicFrequency; }
-
-    public void setAllelicFrequency()
+    public double calcAllelicFrequency(final Genotype genotype)
     {
-        int readPairSupport = (mSvData.isSgl() || !mSvData.isShortLocal()) ? getGenotypeAttributeAsInt(TumorGenotype, REF_DEPTH_PAIR, 0) : 0;
-        int refSupport = getGenotypeAttributeAsInt(TumorGenotype, REF_DEPTH, 0);
-        double totalSupport = TumorFragments + refSupport + readPairSupport;
-        mAllelicFrequency = totalSupport > 0 ? TumorFragments / totalSupport : 0;
+        int readPairSupport = (mSvData.isSgl() || !mSvData.isShortLocal()) ? getGenotypeAttributeAsInt(genotype, REF_DEPTH_PAIR, 0) : 0;
+        int refSupport = getGenotypeAttributeAsInt(genotype, REF_DEPTH, 0);
+
+        int fragmentCount = fragmentCount(genotype);
+        double totalSupport = fragmentCount + refSupport + readPairSupport;
+
+        return totalSupport > 0 ? fragmentCount / totalSupport : 0;
+    }
+
+    public int fragmentCount(final Genotype genotype)
+    {
+        return getGenotypeAttributeAsInt(genotype, TOTAL_FRAGS, 0);
     }
 
     // convenience
