@@ -66,17 +66,15 @@ public class BamCompare
             partitions.add(new PartitionTask(allRegions.get(i), taskId++));
         }
 
-        List<PartitionThread> partitionTasks = Lists.newArrayList();
-        List<Thread> workers = new ArrayList<>();
+        List<PartitionThread> partitionTasks = new ArrayList<>();
 
         for(int i = 0; i < min(allRegions.size(), mConfig.Threads); ++i)
         {
             PartitionThread partitionThread = new PartitionThread(mConfig, partitions, readWriter);
             partitionTasks.add(partitionThread);
-            workers.add(partitionThread);
         }
 
-        if(!runThreadTasks(workers))
+        if(!runThreadTasks(partitionTasks))
             System.exit(1);
 
         Statistics combinedStats = new Statistics();
