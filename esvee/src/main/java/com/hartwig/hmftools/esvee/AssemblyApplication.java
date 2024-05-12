@@ -56,7 +56,7 @@ import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.output.VcfWriter;
 import com.hartwig.hmftools.esvee.assembly.read.ReadStats;
 
-public class JunctionProcessor
+public class AssemblyApplication
 {
     private final AssemblyConfig mConfig;
     private final ResultsWriter mResultsWriter;
@@ -68,7 +68,7 @@ public class JunctionProcessor
 
     private final List<PerformanceCounter> mPerfCounters;
 
-    public JunctionProcessor(final AssemblyConfig config)
+    public AssemblyApplication(final AssemblyConfig config)
     {
         mConfig = config;
 

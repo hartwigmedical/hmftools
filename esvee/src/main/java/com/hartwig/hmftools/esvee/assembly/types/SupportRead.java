@@ -146,6 +146,14 @@ public class SupportRead
 
     public boolean matchesFragment(final SupportRead other) { return mId.equals(other.id()); }
 
+    public boolean matchesFragment(final SupportRead other, boolean allowReadMatch)
+    {
+        if(!mId.equals(other.id()))
+            return false;
+
+        return allowReadMatch || mFlags != other.flags();
+    }
+
     public void clearCachedRead() { mRead = null; }
 
     @Nullable
@@ -177,8 +185,8 @@ public class SupportRead
 
     public String toString()
     {
-        return format("type(%s) read(%s %d-%d %s) index(junc=%d asm=%d linked=%s) hqMatch(%d) mismatch(junc=%d ref=%d)",
-                mType, mId, mAlignmentStart, mAlignmentEnd, mCigar, mJunctionReadIndex, mJunctionAssemblyIndex, mLinkedAssemblyIndex,
-                mJunctionMatches, mJunctionMismatches, mReferenceMismatches);
+        return format("type(%s) read(%s %s:%d-%d %s %d) index(junc=%d asm=%d linked=%s) hqMatch(%d) mismatch(junc=%d ref=%d)",
+                mType, mId, mChromosome, mAlignmentStart, mAlignmentEnd, mCigar, orientation().asByte(), mJunctionReadIndex,
+                mJunctionAssemblyIndex, mLinkedAssemblyIndex, mJunctionMatches, mJunctionMismatches, mReferenceMismatches);
     }
 }

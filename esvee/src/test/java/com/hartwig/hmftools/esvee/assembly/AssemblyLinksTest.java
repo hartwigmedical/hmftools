@@ -13,10 +13,17 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_200;
 import static com.hartwig.hmftools.esvee.TestUtils.REF_BASES_400;
+import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createAssembly;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
+import static com.hartwig.hmftools.esvee.TestUtils.getSupportTypeCount;
+import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.isValidSupportCoordsVsJunction;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.CANDIDATE_DISCORDANT;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.DISCORDANT;
+import static com.hartwig.hmftools.esvee.assembly.types.SupportType.JUNCTION;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -208,8 +215,8 @@ public class AssemblyLinksTest
 
         AssemblyLinker assemblyLinker = new AssemblyLinker();
 
-        // order passed in doesn't matter
         AssemblyLink link = assemblyLinker.tryAssemblyOverlap(firstAssembly, secondAssembly);
+
         assertNotNull(link);
         assertTrue(link.insertedBases().isEmpty());
 
@@ -217,7 +224,8 @@ public class AssemblyLinksTest
         assertEquals(secondAssembly, link.second());
         assertEquals(INV, link.svType());
 
-        // same again but with an insert sequence
+
+        // test 2: same again but with an insert sequence
         firstAssemblyBases = firstRefBases + INSERTED_BASES + firstExtensionBases;
         baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(firstAssemblyBases.length());
 
@@ -290,6 +298,82 @@ public class AssemblyLinksTest
     }
 
     @Test
+    public void testInversionSupport()
+    {
+        String refSequence = REF_BASES_400;
+
+        MockRefGenome refGenome = new MockRefGenome(true);
+        refGenome.RefGenomeMap.put(CHR_1, refSequence);
+
+        // local inversion
+        Junction firstJunction = new Junction(CHR_1, 100, FORWARD);
+        Junction secondJunction = new Junction(CHR_1, 200, FORWARD);
+
+        // create a read which is a discordant candidate for one junction and a junction read for the other
+        String juncReadBases = refSequence.substring(51, 101) + Nucleotides.reverseComplementBases(refSequence.substring(151, 201));
+
+        Read juncRead1 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 51, juncReadBases, "50M50S", CHR_1, 1, false);
+
+        Read juncRead2 = cloneRead(juncRead1, READ_ID_GENERATOR.nextId());
+
+        JunctionAssembler junctionAssembler = new JunctionAssembler(firstJunction);
+        JunctionAssembly firstAssembly = junctionAssembler.processJunction(List.of(juncRead1, juncRead2)).get(0);
+
+        String juncReadBases2 = refSequence.substring(151, 201) + Nucleotides.reverseComplementBases(refSequence.substring(51, 101));
+
+        Read juncRead3 = createRead(
+                READ_ID_GENERATOR.nextId(), CHR_1, 151, juncReadBases2, "50M50S", CHR_1, 1, false);
+
+        Read juncRead4 = cloneRead(juncRead3, READ_ID_GENERATOR.nextId());
+
+        junctionAssembler = new JunctionAssembler(secondJunction);
+        JunctionAssembly secondAssembly = junctionAssembler.processJunction(List.of(juncRead3, juncRead4)).get(0);
+
+        Read discRead2 = createRead(
+                juncRead2.id(), CHR_1, 120, refSequence.substring(120, 170), "50M", CHR_1, 1, false);
+
+        secondAssembly.addCandidateSupport(discRead2, CANDIDATE_DISCORDANT);
+
+        // add the same junction read from the first assembly as a candidate for the second
+        secondAssembly.addCandidateSupport(juncRead1, CANDIDATE_DISCORDANT);
+
+        Read discRead3 = createRead(
+                juncRead3.id(), CHR_1, 20, refSequence.substring(20, 70), "50M", CHR_1, 151, false);
+
+        firstAssembly.addCandidateSupport(discRead3, CANDIDATE_DISCORDANT);
+
+        PhaseGroup phaseGroup = new PhaseGroup(firstAssembly, secondAssembly);
+
+        PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(refGenome, null, phaseGroup);
+
+        phaseSetBuilder.buildPhaseSets();
+
+        assertEquals(1, phaseGroup.phaseSets().size());
+        PhaseSet phaseSet = phaseGroup.phaseSets().get(0);
+
+        assertEquals(2, phaseSet.assemblies().size());
+        AssemblyLink link = phaseSet.assemblyLinks().get(0);
+
+        assertNotNull(link);
+        assertTrue(link.insertedBases().isEmpty());
+
+        assertEquals(firstAssembly, link.first());
+        assertEquals(secondAssembly, link.second());
+        assertEquals(INV, link.svType());
+
+        assertEquals(3, firstAssembly.supportCount());
+        assertEquals(2, getSupportTypeCount(firstAssembly, JUNCTION));
+        assertEquals(1, getSupportTypeCount(firstAssembly, DISCORDANT));
+
+        assertEquals(3, secondAssembly.supportCount());
+
+        assertEquals(3, secondAssembly.supportCount());
+        assertEquals(2, getSupportTypeCount(secondAssembly, JUNCTION));
+        assertEquals(1, getSupportTypeCount(secondAssembly, DISCORDANT));
+    }
+
+    @Test
     public void testChainedLinks()
     {
         // similar to chromosome 3-10-12-3 in COLO - links are:
@@ -298,6 +382,9 @@ public class AssemblyLinksTest
         // chr2:200:1 -> chr3:200:1
         // chr3:200:1 -> chr3:50:-1 (ie segment is reverse-linked)
         // chr3:50:-1 -> chr1:250:-1
+
+        // NOTE: this is also the order of both the assemblies and links as they're added to the phase set
+
 
         String refSequence = REF_BASES_400;
 
@@ -394,16 +481,21 @@ public class AssemblyLinksTest
         assembly6.addJunctionRead(juncRead);
         assembly4.addJunctionRead(juncRead); // for the facing link
 
-        // add a bunch of discordant reads as candidates to check they are assigned as support correctly
+        // add discordant reads as candidates to check they are assigned as support correctly
         String discCigar = "50M";
         Read discRead1 = createRead(
                 READ_ID_GENERATOR.nextId(), CHR_1, 20, REF_BASES_400.substring(20, 70), discCigar, CHR_3, 100, true);
         Read discRead2 = createRead(
                 discRead1.id(), CHR_3, 100, REF_BASES_400.substring(100, 150), discCigar, CHR_1, 20, false);
-        discRead2.bamRecord().setReadNegativeStrandFlag(true);
 
-        assembly1.addCandidateSupport(discRead1, SupportType.CANDIDATE_DISCORDANT);
-        assembly5.addCandidateSupport(discRead2, SupportType.CANDIDATE_DISCORDANT);
+        assertTrue(isValidSupportCoordsVsJunction(discRead1, assembly1.junction().isForward(), assembly1.junction().Position));
+        assembly1.addCandidateSupport(discRead1, CANDIDATE_DISCORDANT);
+
+        assertTrue(isValidSupportCoordsVsJunction(discRead2, assembly4.junction().isForward(), assembly4.junction().Position));
+        assembly4.addCandidateSupport(discRead2, CANDIDATE_DISCORDANT);
+
+        assertFalse(isValidSupportCoordsVsJunction(discRead2, assembly5.junction().isForward(), assembly5.junction().Position));
+        assembly5.addCandidateSupport(discRead2, CANDIDATE_DISCORDANT);
 
         Read discRead3 = createRead(
                 READ_ID_GENERATOR.nextId(), CHR_2, 100, REF_BASES_400.substring(100, 150), discCigar, CHR_1, 300, true);
@@ -411,8 +503,13 @@ public class AssemblyLinksTest
                 discRead3.id(), CHR_1, 300, REF_BASES_400.substring(300, 350), discCigar, CHR_2, 100, false);
         discRead4.bamRecord().setReadNegativeStrandFlag(true);
 
-        assembly3.addCandidateSupport(discRead3, SupportType.CANDIDATE_DISCORDANT);
-        assembly6.addCandidateSupport(discRead4, SupportType.CANDIDATE_DISCORDANT);
+        assertFalse(isValidSupportCoordsVsJunction(discRead3, assembly2.junction().isForward(), assembly2.junction().Position));
+        assertTrue(isValidSupportCoordsVsJunction(discRead3, assembly3.junction().isForward(), assembly3.junction().Position));
+        assembly3.addCandidateSupport(discRead3, CANDIDATE_DISCORDANT);
+
+        assertFalse(isValidSupportCoordsVsJunction(discRead4, assembly1.junction().isForward(), assembly1.junction().Position));
+        assertTrue(isValidSupportCoordsVsJunction(discRead4, assembly6.junction().isForward(), assembly6.junction().Position));
+        assembly6.addCandidateSupport(discRead4, CANDIDATE_DISCORDANT);
 
         PhaseGroup phaseGroup = new PhaseGroup(assembly1, assembly2);
         phaseGroup.addAssembly(assembly3);
@@ -436,10 +533,16 @@ public class AssemblyLinksTest
 
         assertEquals(3, assembly1.supportCount());
         assertEquals(2, assembly2.supportCount());
-        assertEquals(1, assembly1.support().stream().filter(x -> x.type() == SupportType.DISCORDANT).count());
-        assertEquals(1, assembly5.support().stream().filter(x -> x.type() == SupportType.DISCORDANT).count());
-        assertEquals(1, assembly3.support().stream().filter(x -> x.type() == SupportType.DISCORDANT).count());
-        assertEquals(1, assembly6.support().stream().filter(x -> x.type() == SupportType.DISCORDANT).count());
+        assertEquals(3, assembly3.supportCount());
+        assertEquals(4, assembly4.supportCount());
+        assertEquals(2, assembly5.supportCount());
+        assertEquals(3, assembly6.supportCount());
+        assertEquals(1, getSupportTypeCount(assembly1, DISCORDANT));
+        assertEquals(0, getSupportTypeCount(assembly2, DISCORDANT));
+        assertEquals(1, getSupportTypeCount(assembly3, DISCORDANT));
+        assertEquals(1, getSupportTypeCount(assembly4, DISCORDANT));
+        assertEquals(0, getSupportTypeCount(assembly5, DISCORDANT));
+        assertEquals(1, getSupportTypeCount(assembly6, DISCORDANT));
     }
 
     private static boolean hasAssemblyLink(

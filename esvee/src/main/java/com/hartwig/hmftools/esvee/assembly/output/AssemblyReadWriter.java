@@ -56,6 +56,7 @@ public class AssemblyReadWriter
             sj.add("Chromosome");
             sj.add("PosStart");
             sj.add("PosEnd");
+            sj.add("Orient");
             sj.add("Cigar");
             sj.add("InsertSize");
             sj.add("MateChr");
@@ -97,7 +98,7 @@ public class AssemblyReadWriter
 
         try
         {
-            String assemblyInfo = format("%s", assembly.junction().toString());
+            String assemblyInfo = format("%s", assembly.junction().coords());
 
             for(SupportRead support : assembly.support())
             {
@@ -112,6 +113,7 @@ public class AssemblyReadWriter
                 sj.add(support.chromosome());
                 sj.add(String.valueOf(support.alignmentStart()));
                 sj.add(String.valueOf(support.alignmentEnd()));
+                sj.add(String.valueOf(support.orientation().asByte()));
                 sj.add(support.cigar());
                 sj.add(String.valueOf(support.insertSize()));
 

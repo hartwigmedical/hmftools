@@ -29,6 +29,7 @@ import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
+import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
@@ -386,5 +387,10 @@ public class TestUtils
         record.setInferredInsertSize(400);
 
         return record;
+    }
+
+    public static int getSupportTypeCount(final JunctionAssembly assembly, final SupportType type)
+    {
+        return (int)assembly.support().stream().filter(x -> x.type() == type).count();
     }
 }

@@ -110,14 +110,67 @@ public class PhaseSet
 
     public Orientation assemblyOrientation(final JunctionAssembly assembly)
     {
+        // the first assembly is defined as foward, meaning facing up the chain and each successive junction is alternating
+        Orientation assemblyOrientation = Orientation.FORWARD;
+
         for(int i = 0; i < mAssemblies.size(); ++i)
         {
             if(mAssemblies.get(i) == assembly)
-                return mAssemblyOrientations.get(i);
+                return assemblyOrientation;
+                // return mAssemblyOrientations.get(i);
 
+            assemblyOrientation = assemblyOrientation.opposite();
         }
 
         return null;
+    }
+
+    public boolean assembliesFaceInPhaseSet(final JunctionAssembly assembly1, final JunctionAssembly assembly2)
+    {
+        Orientation assemblyOrientation = Orientation.FORWARD;
+
+        int assemblyIndex1 = -1;
+        Orientation assemblyOrientation1 = null;
+        int assemblyIndex2 = -1;
+        Orientation assemblyOrientation2 = null;
+
+        for(int i = 0; i < mAssemblies.size(); ++i)
+        {
+            if(mAssemblies.get(i) == assembly1)
+            {
+                assemblyIndex1 = i;
+                assemblyOrientation1 = assemblyOrientation;
+
+                if(assemblyOrientation2 != null)
+                    break;
+            }
+            else if(mAssemblies.get(i) == assembly2)
+            {
+                assemblyIndex2 = i;
+                assemblyOrientation2 = assemblyOrientation;
+
+                if(assemblyOrientation1 != null)
+                    break;
+            }
+
+            assemblyOrientation = assemblyOrientation.opposite();
+        }
+
+        if(assemblyOrientation1 == null || assemblyOrientation2 == null)
+            return false;
+
+        if(assemblyOrientation1 == assemblyOrientation2)
+            return false;
+
+        // the read of the lower assembly (by index) faces up and vice versa
+        if(assemblyIndex1 < assemblyIndex2)
+        {
+            return assemblyOrientation1.isForward();
+        }
+        else
+        {
+            return assemblyOrientation2.isForward();
+        }
     }
 
     public static boolean readsFaceInPhaseSet(
@@ -136,6 +189,7 @@ public class PhaseSet
         if(adjustedReadOrientation1 == adjustedReadOrientation2)
             return false;
 
+        // the read of the lower assembly (by index) faces up and vice versa
         if(assemblyIndex1 < assemblyIndex2)
         {
             return adjustedReadOrientation1.isForward();

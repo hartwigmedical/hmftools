@@ -3,7 +3,9 @@ package com.hartwig.hmftools.esvee.prep;
 import static java.lang.Math.abs;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
+import static java.lang.Math.pow;
 import static java.lang.Math.round;
+import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
@@ -111,12 +113,17 @@ public class FragmentSizeDistribution
             return INVALID;
 
         int totalFragments = lengthFrequencies.stream().mapToInt(x -> x.Frequency).sum();
+        long lengthCountTotal = lengthFrequencies.stream().mapToInt(x -> x.Frequency * x.Length).sum();
         int cumulativeTotal = 0;
         int requiredMinTotal = (int)floor(totalFragments * (1 - FRAG_LENGTH_DIST_PERCENTILE));
         int requiredMaxTotal = (int)floor(totalFragments * FRAG_LENGTH_DIST_PERCENTILE);
+        int medianFragment = totalFragments / 2;
 
         int lowerBound = 0;
         int upperBound = 0;
+        int median = 0;
+        double average = lengthCountTotal / (double)totalFragments;
+        double sdTotal = 0;
 
         for(LengthFrequency lengthData : lengthFrequencies)
         {
@@ -125,18 +132,26 @@ public class FragmentSizeDistribution
                 lowerBound = lengthData.Length;
             }
 
-            if(lengthData.Frequency + cumulativeTotal >= requiredMaxTotal)
+            if(median == 0 && lengthData.Frequency + cumulativeTotal >= medianFragment)
+            {
+                median = lengthData.Length;
+            }
+
+            if(upperBound == 0 && lengthData.Frequency + cumulativeTotal >= requiredMaxTotal)
             {
                 upperBound = lengthData.Length;
-                break;
             }
             else
             {
                 cumulativeTotal += lengthData.Frequency;
             }
+
+            sdTotal += pow(abs(lengthData.Length - average), 2);
         }
 
-        return new FragmentLengthBounds(lowerBound, upperBound);
+        double stdDeviation = sqrt(sdTotal / totalFragments);
+
+        return new FragmentLengthBounds(lowerBound, upperBound, median, stdDeviation);
     }
 
     private void mergeDistributions(final List<LengthFrequency> lengthFrequencies, final List<LengthFrequency> otherFrequencies)

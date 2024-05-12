@@ -275,15 +275,6 @@ public class PhaseSetBuilder
         List<SupportRead> matchedCandidates1 = Lists.newArrayList();
         List<SupportRead> matchedCandidates2 = Lists.newArrayList();
 
-        /*
-        // list is copied since matched candidates will be removed from repeated matching
-        List<SupportRead> candidateSupport2 = Lists.newArrayList(assembly2.candidateSupport());
-
-        // find matching reads, and link reads to each other where possible
-        checkMatchingCandidateSupport(assembly2, assembly1.candidateSupport(), candidateSupport2, matchedCandidates1, matchedCandidates2);
-        checkMatchingCandidateSupport(assembly1, candidateSupport2, Collections.emptyList(), matchedCandidates2, matchedCandidates1);
-        */
-
         checkMatchingCandidateSupport(assembly2, assembly1.candidateSupport(), assembly2.candidateSupport(), matchedCandidates1, matchedCandidates2);
         checkMatchingCandidateSupport(assembly1, assembly2.candidateSupport(), Collections.emptyList(), matchedCandidates2, matchedCandidates1);
 
@@ -310,7 +301,7 @@ public class PhaseSetBuilder
                 continue;
             }
 
-            // firsrt check for discordant reads with matching support in the other assembly
+            // first check for discordant reads with matching support in the other assembly
             if(hasMatchingFragment(otherAssembly.support(), candidateRead))
             {
                 candidateSupport.remove(index);
@@ -321,7 +312,6 @@ public class PhaseSetBuilder
             // then check for candidate & candidate matches
             if(!otherCandidateSupport.isEmpty())
             {
-
                 List<SupportRead> matchedCandidateSupport = findMatchingFragmentSupport(otherCandidateSupport, candidateRead);
 
                 if(!matchedCandidateSupport.isEmpty())
@@ -591,6 +581,10 @@ public class PhaseSetBuilder
     private static void addMatchingCandidateSupport(
             final PhaseSet phaseSet, final JunctionAssembly assembly1, final JunctionAssembly assembly2)
     {
+        // assemblies must face each other in the chain
+        if(!phaseSet.assembliesFaceInPhaseSet(assembly1, assembly2))
+            return;
+
         int assemblyIndex1 = phaseSet.assemblyIndex(assembly1);
         Orientation assemblyOrientation1 = phaseSet.assemblyOrientation(assembly1);
         int assemblyIndex2 = phaseSet.assemblyIndex(assembly2);
@@ -612,7 +606,7 @@ public class PhaseSetBuilder
 
                 // only link reads into a supporting fragment across chain links if they face towards each other in the chain
                 SupportRead matchedRead = otherAssembly.support().stream()
-                        .filter(x -> x.matchesFragment(candidateRead)).findFirst().orElse(null);
+                        .filter(x -> x.matchesFragment(candidateRead, false)).findFirst().orElse(null);
 
                 if(readsFaceInPhaseSet(
                         assembly1, assemblyIndex1, assemblyOrientation1, candidateRead,
@@ -627,7 +621,7 @@ public class PhaseSetBuilder
                 if(i == 0)
                 {
                     SupportRead matchedCandidate = otherAssembly.candidateSupport().stream()
-                            .filter(x -> x.matchesFragment(candidateRead)).findFirst().orElse(null);
+                            .filter(x -> x.matchesFragment(candidateRead, false)).findFirst().orElse(null);
 
                     if(readsFaceInPhaseSet(
                             assembly1, assemblyIndex1, assemblyOrientation1, candidateRead,

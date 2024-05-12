@@ -24,7 +24,7 @@ public class EsveeApplication
         SV_LOGGER.info("writing to output directory({}){}",
                 mConfig.OutputDir, mConfig.OutputId != null ? format(" outputId(%s)", mConfig.OutputId) : "");
 
-        JunctionProcessor junctionProcessor = new JunctionProcessor(mConfig);
+        AssemblyApplication junctionProcessor = new AssemblyApplication(mConfig);
 
         if(!junctionProcessor.loadJunctionFiles())
         {
