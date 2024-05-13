@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import sys
 
 from cuppa.constants import DEFAULT_FUSION_OVERRIDES_PATH
 
@@ -29,7 +28,7 @@ class DEFAULT_RUNNER_ARGS:
 
     log_to_file: bool = False
     log_path: str | None = None
-
+    log_format: str = "%(asctime)s [%(threadName)s] %(levelname)s %(name)s | %(message)s"
 
 def comma_sep_str_to_list(string) -> list[str]:
     return [s.strip() for s in string.split(",")]
@@ -164,6 +163,11 @@ class RunnerArgs:
         help="Path to log file. Default: $(output_dir)/run.log"
     )
 
+    log_format = dict(
+        default=DEFAULT_RUNNER_ARGS.log_format,
+        help="Log format"
+    )
+
 
 class RunnerArgParser:
     def __init__(self):
@@ -193,6 +197,7 @@ class RunnerArgParser:
             "excl_chroms",
             "log_to_file",
             "log_path",
+            "log_format"
         ]
 
         for name in arg_names:
@@ -222,6 +227,7 @@ class RunnerArgParser:
 
             "log_to_file",
             "log_path",
+            "log_format"
         ]
 
         for name in arg_names:
