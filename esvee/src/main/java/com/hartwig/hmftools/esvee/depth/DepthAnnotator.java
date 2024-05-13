@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.esvee.AssemblyConstants.APP_NAME;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -126,6 +127,8 @@ public class DepthAnnotator
         if(mChrVariantMap.isEmpty())
         {
             SV_LOGGER.warn("all variants filtered from vcf({})", vcfCount, mConfig.InputVcf);
+
+            writeVcf(vcfHeader, Collections.emptyList());
             return;
         }
 
