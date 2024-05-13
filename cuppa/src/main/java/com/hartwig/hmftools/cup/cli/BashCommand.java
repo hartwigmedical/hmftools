@@ -30,7 +30,7 @@ public class BashCommand extends ShellCommand
     @Override
     public String toString()
     {
-        return String.format("bash -c \"%s\"", mCommand);
+        return mCommand;
     }
 }
 
