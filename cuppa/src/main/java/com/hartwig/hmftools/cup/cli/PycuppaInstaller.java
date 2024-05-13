@@ -43,7 +43,7 @@ public class PycuppaInstaller
         Configurator.setLevel(CUP_LOGGER.getName(), Level.valueOf(config.getValue(LOG_LEVEL)));
 
         String installDir = getInstallDir();
-        mPythonEnv = new PythonEnv(PYTHON_VERSION, PYCUPPA_VENV_NAME, installDir);
+        mPythonEnv = new PythonEnv(PYTHON_VERSION, PYCUPPA_VENV_NAME, installDir, false);
     }
 
     private String getInstallDir()
@@ -84,7 +84,7 @@ public class PycuppaInstaller
         }
     }
 
-    private void extractPycuppaToTmpDir()
+    private void extractPycuppa()
     {
         try
         {
@@ -94,26 +94,18 @@ public class PycuppaInstaller
                 removePycuppaTmpDir();
             }
 
-            if(PYCUPPA_RESOURCE_DIR.exists())
-            {
-                // This clause allows PycuppaExecutor to work when run from intellij
-                CUP_LOGGER.debug("Copying {} from resource path({}) to tmp dir({})", PYCUPPA_PKG_NAME, PYCUPPA_RESOURCE_DIR, PYCUPPA_TMP_DIR);
-                FileUtils.copyDirectory(PYCUPPA_RESOURCE_DIR, PYCUPPA_TMP_DIR);
-            }
-            else
-            {
-                String cuppaJarPath = new File( PythonEnv.class.getProtectionDomain().getCodeSource().getLocation().toURI() ).getPath();
+            String cuppaJarPath = new File( PythonEnv.class.getProtectionDomain().getCodeSource().getLocation().toURI() ).getPath();
 
-                // Unzip with `jar` rather than `unzip` to avoid unzipping the whole jar
-                String command = String.format("cd %s && jar -xf %s %s", TMP_DIR, cuppaJarPath, PYCUPPA_PKG_NAME);
+            // Unzip with `jar` rather than `unzip` to avoid unzipping the whole jar
+            ShellCommand command = new BashCommand(String.format("cd %s && jar -xf %s %s", TMP_DIR, cuppaJarPath, PYCUPPA_PKG_NAME))
+                    .logLevel(Level.DEBUG).showCommand();
 
-                CUP_LOGGER.debug("Extracting {} from cuppa jar using command: {}", PYCUPPA_PKG_NAME, command);
-                new BashCommand(command).logLevel(Level.DEBUG).showCommand().run();
-            }
+            CUP_LOGGER.debug("Extracting {} from cuppa jar using command: {}", PYCUPPA_PKG_NAME, command);
+            command.run();
         }
         catch(Exception e)
         {
-            CUP_LOGGER.error("Failed to extract {} to tmp dir: {}", PYCUPPA_PKG_NAME, PYCUPPA_TMP_DIR);
+            CUP_LOGGER.error("Failed to extract {} to tmp dir({}): {}", PYCUPPA_PKG_NAME, PYCUPPA_TMP_DIR, e.toString());
             System.exit(1);
         }
     }
@@ -122,22 +114,32 @@ public class PycuppaInstaller
     {
         try
         {
-            mPythonEnv.initialize();
+            mPythonEnv.install();
 
-            if(!mPythonEnv.packageInstalled(PYCUPPA_PKG_NAME))
+            if(mConfig.hasFlag(UPDATE_RC_FILE))
+                mPythonEnv.updateRcFile();
+
+            if(mPythonEnv.packageInstalled(PYCUPPA_PKG_NAME))
             {
-                extractPycuppaToTmpDir();
-                mPythonEnv.pipInstall(PYCUPPA_TMP_DIR.getPath(), true);
+                CUP_LOGGER.warn("Skipping installing {} as it already exists in virtual env({})", PYCUPPA_PKG_NAME, mPythonEnv.mVirtualEnvName);
+                return;
+            }
 
-                if(mConfig.hasFlag(UPDATE_RC_FILE))
-                    mPythonEnv.updateRcFile();
-
-                CUP_LOGGER.info("Completed installation of " + PYCUPPA_PKG_NAME);
+            File pycuppaDir;
+            if(PYCUPPA_RESOURCE_DIR.exists())
+            {
+                // This clause allows pycuppa to be installed when run from intellij
+                CUP_LOGGER.debug("Using pycuppa from resource path: {}", PYCUPPA_RESOURCE_DIR);
+                pycuppaDir = PYCUPPA_RESOURCE_DIR;
             }
             else
             {
-                CUP_LOGGER.warn("Skipping installing {} as it already exists in virtual env({})", PYCUPPA_PKG_NAME, mPythonEnv.mVirtualEnvName);
+                extractPycuppa();
+                pycuppaDir = PYCUPPA_TMP_DIR;
             }
+            mPythonEnv.pipInstall(true, pycuppaDir.toString());
+
+            CUP_LOGGER.info("Completed installation of " + PYCUPPA_PKG_NAME);
         }
         catch(Exception e)
         {
@@ -154,7 +156,7 @@ public class PycuppaInstaller
     public static void main(String[] args)
     {
         ConfigBuilder config = new ConfigBuilder(APP_NAME);
-        config.addPath(INSTALL_DIR, false, INSTALL_DIR_DESC);
+        config.addConfigItem(INSTALL_DIR, false, INSTALL_DIR_DESC);
         config.addFlag(UPDATE_RC_FILE, UPDATE_RC_FILE_DESC);
         config.addConfigItem(LOG_LEVEL, false, LOG_LEVEL_DESC, Level.DEBUG.toString());
         config.checkAndParseCommandLine(args);
