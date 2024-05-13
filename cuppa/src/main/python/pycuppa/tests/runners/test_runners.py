@@ -75,8 +75,7 @@ class TestPredictionRunner:
 
 class TestTrainingRunner:
 
-    # from cuppa.tests.test_runners import TestTrainingRunner
-    # self = TestTrainingRunner
+    # from tests.runners.test_runners import TestTrainingRunner; self = TestTrainingRunner
 
     output_dir = os.path.join(tempfile.gettempdir(), "pycuppa_prediction_run_test")
     os.makedirs(output_dir, exist_ok=True)
