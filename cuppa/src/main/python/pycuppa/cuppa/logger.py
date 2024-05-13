@@ -1,5 +1,4 @@
 import logging
-import re
 import sys
 from typing import Optional
 
@@ -16,9 +15,12 @@ logging.addLevelName(logging.INFO,      "[INFO ]")
 logging.addLevelName(logging.DEBUG,     "[DEBUG]")
 logging.addLevelName(logging.NOTSET,    "[NOTSET]")
 
-def reset_logging_basic_config(
+
+def initialize_logging(
     filename: Optional[str] = None,
     level: int = logging.DEBUG,
+    format: str = "%(asctime)s [%(threadName)s] %(levelname)s %(name)s.%(funcName)s | %(message)s",
+    datefmt: str = "%H:%M:%S",
     capture_warnings: bool = True
 ):
     ## Remove all handlers associated with the root logger object to allow changing the log path at runtime.
@@ -40,28 +42,17 @@ def reset_logging_basic_config(
         handlers.append(file_handler)
 
     ## Apply config
-    logging.basicConfig(
-        level=level,
-        format='%(asctime)s.%(msecs)03d [%(threadName)s] %(levelname)s %(name)s.%(funcName)s | %(message)s',
-        datefmt='%H:%M:%S',
-        handlers=handlers
-    )
-
+    logging.basicConfig(level=level, format=format, datefmt=datefmt, handlers=handlers)
     logging.captureWarnings(capture=capture_warnings)
-
-## Set default basic config upon module load
-reset_logging_basic_config()
 
 
 class LoggerMixin:
     @property
     def logger(self):
-        module_name = re.sub("^.+[.]", "", self.__module__)
         cls_name = self.__class__.__name__
-        return logging.getLogger(f"{module_name}.{cls_name}")
+        return logging.getLogger(f"{cls_name}")
 
     @staticmethod
     def get_class_logger(obj):
-        module_name = re.sub("^.+[.]", "", obj.__module__)
         cls_name = obj.__name__
-        return logging.getLogger(f"{module_name}.{cls_name}")
+        return logging.getLogger(f"{cls_name}")
