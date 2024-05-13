@@ -19,7 +19,8 @@ public class PythonEnvironmentTest
     private static final PythonEnv ENV = new PythonEnv(
             PythonEnv.DEFAULT_PYTHON_VERSION,
             "pycuppa_venv",
-            "/Users/lnguyen/Desktop/pyenv"
+            "/Users/lnguyen/Desktop/pyenv",
+            false
     );
 
     private static final String PYCUPPA_DIR = "/Users/lnguyen/Hartwig/hartwigmedical/hmftools/cuppa/src/main/python/pycuppa";
@@ -33,14 +34,15 @@ public class PythonEnvironmentTest
     public void canInitializeEnvironment()
     {
         ENV.removeExistingPyenv();
-        ENV.initialize();
+        ENV.install();
         assertTrue(ENV.pythonPath().exists());
     }
 
     @Test
     public void canInstallPycuppa()
     {
-        ENV.pipInstall(PYCUPPA_DIR, true);
+        ENV.pipInstall(true, PYCUPPA_DIR);
+        ENV.checkRequiredPackages("pycuppa");
     }
 
     @Test
