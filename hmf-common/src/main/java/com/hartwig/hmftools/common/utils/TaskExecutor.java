@@ -123,7 +123,7 @@ public class TaskExecutor
         return true;
     }
 
-    public static boolean runThreadTasks(final List<Thread> workers)
+    public static boolean runThreadTasks(final List<? extends Thread> workers)
     {
         workers.stream().filter(x -> x.getState() == NEW).forEach(x -> x.start());
 

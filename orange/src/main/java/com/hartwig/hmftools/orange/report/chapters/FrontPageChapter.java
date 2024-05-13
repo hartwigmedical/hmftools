@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.report.chapters;
 
+import static com.hartwig.hmftools.common.peach.PeachUtil.UNKNOWN_ALLELE_STRING;
+import static com.hartwig.hmftools.common.peach.PeachUtil.convertToZygosityString;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentage;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatTwoDigitDecimal;
@@ -588,7 +590,16 @@ public class FrontPageChapter implements ReportChapter
         {
             if(genotype.gene().equals(gene))
             {
-                haplotypes.add(genotype.haplotype() + " (" + genotype.function() + ")");
+                String haplotype;
+                if(genotype.allele().equals(UNKNOWN_ALLELE_STRING))
+                {
+                    haplotype = genotype.allele();
+                }
+                else
+                {
+                    haplotype = genotype.allele() + " " + convertToZygosityString(genotype.alleleCount());
+                }
+                haplotypes.add(haplotype + " (" + genotype.function() + ")");
             }
         }
         return !haplotypes.isEmpty() ? concat(haplotypes) : NONE;

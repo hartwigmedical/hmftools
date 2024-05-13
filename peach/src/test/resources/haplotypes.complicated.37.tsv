@@ -1,0 +1,13 @@
+gene	haplotype	default	wildType	events
+DPYD	*1	false	true	VAR_chr1_98348885_G_A
+DPYD	*2A	false	false	VAR_chr1_97915614_C_T;VAR_chr1_98348885_G_A
+DPYD	*7	false	false	VAR_chr1_98205966_GATGA_G;VAR_chr1_98348885_G_A
+DPYD	*13	false	false	VAR_chr1_97981343_A_C;VAR_chr1_98348885_G_A
+DPYD	*B3	false	false	VAR_chr1_98039419_C_T;VAR_chr1_98045449_G_C;VAR_chr1_98348885_G_A
+DPYD	2846A>T	false	false	VAR_chr1_97547947_T_A;VAR_chr1_98348885_G_A
+DPYD	*9A	true	false	
+UGT1A1	*1	true	true	
+UGT1A1	*28	false	false	VAR_chr2_234668879_C_CAT
+UGT1A1	*37	false	false	VAR_chr2_234668879_C_CATAT
+UGT1A1	*36	false	false	VAR_chr2_234668879_CAT_C
+UGT1A1	*6	false	false	VAR_chr2_234669144_G_A

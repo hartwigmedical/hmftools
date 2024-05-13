@@ -28,11 +28,13 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DE
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.OrangeConfig.TUMOR_SAMPLE_ID;
 import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
+import static com.hartwig.hmftools.orange.util.PathUtil.optionalPath;
 
 import java.io.File;
 
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
+import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.sage.SageCommon;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -143,7 +145,12 @@ public interface OrangeWGSRefConfig
             builder.linxGermlineDataDirectory(linxGermlineDir);
 
             String peachDir = pathResolver.resolveMandatoryToolDirectory(PEACH_DIR_CFG, PEACH_DIR);
-            builder.peachGenotypeTsv(mandatoryPath(peachDir + File.separator + tumorSampleId + ".peach.genotype.tsv"));
+            String peachGenotypeTsv = optionalPath(PeachGenotypeFile.generateFileName(peachDir, refSampleId));
+            if (peachGenotypeTsv == null)
+            {
+                peachGenotypeTsv = mandatoryPath(peachDir + File.separator + tumorSampleId + ".peach.genotype.tsv");
+            }
+            builder.peachGenotypeTsv(peachGenotypeTsv);
 
             builder.refSampleWGSMetricsFile(pathResolver.resolveMandatoryMetricsFile(REF_SAMPLE_WGS_METRICS_FILE, METRICS_DIR, refSampleId));
             builder.refSampleFlagstatFile(pathResolver.resolveMandatoryMetricsFile(REF_SAMPLE_FLAGSTAT_FILE, FLAGSTAT_DIR, refSampleId));

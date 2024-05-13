@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class PeachCallsFileTest
 {
-    private static final String PEACH_CALLS_FILE = Resources.getResource("peach/sample_calls.txt").getPath();
+    private static final String PEACH_CALLS_FILE = Resources.getResource("peach/python/sample_calls.tsv").getPath();
 
     private static final String GENE_1 = "GENE";
     private static final String CHROMOSOME_1 = "1";
