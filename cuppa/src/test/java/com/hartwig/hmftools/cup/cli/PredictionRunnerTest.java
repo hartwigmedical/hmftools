@@ -22,11 +22,21 @@ public class PredictionRunnerTest
     private static final String OUTPUT_DIR = System.getProperty("java.io.tmpdir") + "/cuppa_output/";
     private static final String INSTALL_DIR = "/Users/lnguyen/Desktop/pyenv";
 
+    public PredictionRunnerTest()
+    {
+        Configurator.setLevel(CUP_LOGGER.getName(), Level.DEBUG);
+    }
+
+    @Test
+    public void canInstallPycuppa()
+    {
+        String[] args = { "-install_dir", INSTALL_DIR };
+        PycuppaInstaller.main(args);
+    }
+
     @Test
     public void canPredictFromInputFeatures() throws IOException
     {
-        Configurator.setLevel(CUP_LOGGER.getName(), Level.DEBUG);
-
         String[] args = new String[] {
                 "-sample","COLO829v003T",
                 "-classifier_path", CLASSIFIER_PATH,
