@@ -22,11 +22,19 @@ public class PythonEnv
     public final File mVirtualEnvName;
     public final File mPyenvDir;
 
-    public PythonEnv(String pythonVersion, String virtualEnvName, String pyenvDir)
+    public PythonEnv(String pythonVersion, String virtualEnvName, String pyenvDir, boolean checkValid)
     {
         mVirtualEnvName = new File(virtualEnvName);
         mPythonVersion = pythonVersion;
         mPyenvDir = new File(pyenvDir);
+
+        if(checkValid)
+            checkValid();
+    }
+
+    public PythonEnv(String pythonVersion, String virtualEnvName, String pyenvDir)
+    {
+        this(pythonVersion, virtualEnvName, pyenvDir, true);
     }
 
     public File pyenvPath(){ return new File(mPyenvDir + "/libexec/pyenv"); }
@@ -37,6 +45,33 @@ public class PythonEnv
 
     public String exportPyenvRootCommand(){ return "export PYENV_ROOT="+mPyenvDir; }
 
+    public void checkValid()
+    {
+        boolean valid = true;
+
+        if(!pyenvPath().exists())
+        {
+            CUP_LOGGER.error("Invalid pyenv dir. Missing pyenv binary: " + pyenvPath());
+            valid = false;
+        }
+
+        if(!pythonPath().exists())
+        {
+            CUP_LOGGER.error("Invalid pyenv virtualEnv({}). Missing python binary: {}", mVirtualEnvName, pythonPath());
+            valid = false;
+        }
+
+        if(!valid)
+            System.exit(1);
+    }
+
+    public void install()
+    {
+        installPyenv();
+        installPython();
+        createVirtualEnvironment();
+    }
+
     @VisibleForTesting
     void installPyenv()
     {
@@ -44,16 +79,22 @@ public class PythonEnv
         {
             if(!mPyenvDir.getParentFile().canWrite())
             {
-                CUP_LOGGER.error("No write permission at dir: {}", mPyenvDir);
+                CUP_LOGGER.error("Dir is not writable: {}", mPyenvDir);
                 System.exit(1);
             }
 
             // This command also installs pyenv-virtualenv to $PYENV_ROOT/plugins/pyenv-virtualenv
             ShellCommand command = new BashCommand(exportPyenvRootCommand(), "&& curl https://pyenv.run | bash")
-                    .logLevel(Level.DEBUG);
+                    .timeout(90).logLevel(Level.DEBUG);
 
             CUP_LOGGER.info("Installing pyenv with command: " + command);
             command.run();
+
+            if(!pyenvPath().exists())
+            {
+                CUP_LOGGER.error("Failed to install pyenv with command: " + command);
+                System.exit(1);
+            }
         }
         else
         {
@@ -69,7 +110,7 @@ public class PythonEnv
         if(!pythonPathInPyenv.exists())
         {
             ShellCommand command = new BashCommand(exportPyenvRootCommand(), "&&", pyenvPath().toString(), "install", mPythonVersion)
-                    .logLevel(Level.DEBUG);
+                    .timeout(90).logLevel(Level.DEBUG);
 
             CUP_LOGGER.info("Installing python version {} with command: {}", mPythonVersion, command);
             command.run();
@@ -88,7 +129,7 @@ public class PythonEnv
             ShellCommand command = new BashCommand(
                     exportPyenvRootCommand(), "&&",
                     pyenvPath().toString(), "virtualenv", mPythonVersion, mVirtualEnvName.toString()
-            ).logLevel(Level.DEBUG);
+            ).timeout(5).logLevel(Level.DEBUG);
 
             CUP_LOGGER.info("Creating python virtual environment with command: " + command);
             command.run();
@@ -113,21 +154,10 @@ public class PythonEnv
         }
     }
 
-    public PythonEnv initialize()
-    {
-        if(pythonPath().exists())
-            return this;
-
-        installPyenv();
-        installPython();
-        createVirtualEnvironment();
-        return this;
-    }
-
     private String pipList()
     {
-        return new PythonEnvCommand(this, "pip --disable-pip-version-check list")
-                .logLevel(null).run().getStdoutAsString();
+        return new PythonEnvCommand(this, "pip list --disable-pip-version-check")
+                .logLevel(null).timeout(10).run().getStdoutAsString();
     }
 
     public boolean packageInstalled(String packageName)
@@ -136,9 +166,11 @@ public class PythonEnv
         return stdout.contains(packageName);
     }
 
-    public void pipInstall(String args, boolean upgradePip)
+    public void pipInstall(boolean upgradePip, String... args)
     {
-        String command = "pip install " + args;
+        String argsParsed = String.join(" ", args);
+
+        String command = "pip install " + argsParsed;
         if(upgradePip)
             command = "pip install --upgrade pip && " + command;
 
@@ -146,16 +178,8 @@ public class PythonEnv
         new PythonEnvCommand(this, command).logLevel(Level.DEBUG).run();
     }
 
-    public void pipInstall(String args){ pipInstall(args, true); }
-
-    public PythonEnv checkRequiredPackages(String[] packageNames)
+    public PythonEnv checkRequiredPackages(String... packageNames)
     {
-        if(!pythonPath().exists())
-        {
-            CUP_LOGGER.error("Missing or invalid python virtual environment: " + virtualEnvPath());
-            System.exit(1);
-        }
-
         String stdout = pipList();
 
         List<String> missingPackages = new ArrayList<>();
@@ -173,11 +197,6 @@ public class PythonEnv
         }
 
         return this;
-    }
-
-    public PythonEnv checkRequiredPackage(String packageName)
-    {
-        return checkRequiredPackages(new String[]{packageName});
     }
 
     @VisibleForTesting
@@ -218,7 +237,7 @@ public class PythonEnv
             {
                 CUP_LOGGER.info("Adding pyenv paths to rc file: " + RcFilePath);
                 String command = String.format("echo -e '\n%s' >> %s", lines, RcFilePath);
-                new BashCommand(command).logLevel(null).run();
+                new BashCommand(command).timeout(5).logLevel(null).run();
             }
             else
             {
