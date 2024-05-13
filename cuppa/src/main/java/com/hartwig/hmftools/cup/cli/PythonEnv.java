@@ -129,7 +129,7 @@ public class PythonEnv
             ShellCommand command = new BashCommand(
                     exportPyenvRootCommand(), "&&",
                     pyenvPath().toString(), "virtualenv", mPythonVersion, mVirtualEnvName.toString()
-            ).timeout(5).logLevel(Level.DEBUG);
+            ).timeout(30).logLevel(Level.DEBUG);
 
             CUP_LOGGER.info("Creating python virtual environment with command: " + command);
             command.run();
@@ -157,7 +157,7 @@ public class PythonEnv
     private String pipList()
     {
         return new PythonEnvCommand(this, "pip list --disable-pip-version-check")
-                .logLevel(null).timeout(10).run().getStdoutAsString();
+                .logLevel(null).timeout(30).run().getStdoutAsString();
     }
 
     public boolean packageInstalled(String packageName)
@@ -237,7 +237,7 @@ public class PythonEnv
             {
                 CUP_LOGGER.info("Adding pyenv paths to rc file: " + RcFilePath);
                 String command = String.format("echo -e '\n%s' >> %s", lines, RcFilePath);
-                new BashCommand(command).timeout(5).logLevel(null).run();
+                new BashCommand(command).timeout(10).logLevel(null).run();
             }
             else
             {
