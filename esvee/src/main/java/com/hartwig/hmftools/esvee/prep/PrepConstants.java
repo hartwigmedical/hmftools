@@ -27,7 +27,6 @@ public final class PrepConstants
     public static final int MIN_INSERT_ALIGNMENT_OVERLAP = 5;
     public static final int MIN_SOFT_CLIP_LENGTH = 30;
     public static final int MIN_LINE_SOFT_CLIP_LENGTH = LineElements.LINE_POLY_AT_TEST_LEN;
-    // public static final int MIN_SOFT_CLIP_MIN_BASE_QUAL = 25;
     public static final double MIN_SOFT_CLIP_HIGH_QUAL_PERC = 0.75;
     public static final int MAX_SOFT_CLIP_LOW_QUAL_COUNT = 5;
     public static final int MIN_INSERT_LENGTH_SUPPORT = 10;
@@ -58,6 +57,7 @@ public final class PrepConstants
     public static final int DISCORDANT_FRAGMENT_LENGTH_MIN = 1100;
     public static final int FRAG_LENGTH_DIST_MAX_LENGTH = 1500;
     public static final double FRAG_LENGTH_DIST_PERCENTILE = 0.9975;
+    public static final double FRAG_LENGTH_1_STD_DEV_PERCENTILE = 0.16;
 
     public static final int DEFAULT_MAX_FRAGMENT_LENGTH = DISCORDANT_FRAGMENT_LENGTH_MIN;
 

@@ -13,12 +13,10 @@ public class PhaseSet
     private int mId;
     private final List<AssemblyLink> mAssemblyLinks;
     private final List<JunctionAssembly> mAssemblies;
-    private final List<Orientation> mAssemblyOrientations;
 
     public PhaseSet(final AssemblyLink link)
     {
         mId = -1;
-        mAssemblyOrientations = Lists.newArrayList();
         mAssemblyLinks = Lists.newArrayList();
         mAssemblies = Lists.newArrayList();
         addAssemblyLink(link, 0);
@@ -38,8 +36,6 @@ public class PhaseSet
         {
             mAssemblies.add(link.first());
             mAssemblies.add(link.second());
-            mAssemblyOrientations.add(link.first().junction().Orient);
-            mAssemblyOrientations.add(link.second().junction().Orient);
             return;
         }
 
@@ -47,34 +43,13 @@ public class PhaseSet
 
         if(!mAssemblies.contains(link.first()))
         {
-            addAssembly(link.first(), assemblyIndex, link.type() == LinkType.FACING);
+            mAssemblies.add(assemblyIndex, link.first());
         }
 
         if(!mAssemblies.contains(link.second()))
         {
-            addAssembly(link.second(), assemblyIndex, link.type() == LinkType.FACING);
+            mAssemblies.add(assemblyIndex, link.second());
         }
-    }
-
-    private void addAssembly(final JunctionAssembly assembly, int index, boolean isFacingLink)
-    {
-        Orientation linkOrientation;
-
-        if(mAssemblies.isEmpty() || !isFacingLink)
-        {
-            linkOrientation = assembly.junction().Orient;
-        }
-        else
-        {
-            // opposite to the facing assembly it links with
-            if(index == 0)
-                linkOrientation = mAssemblies.get(0).junction().Orient.opposite();
-            else
-                linkOrientation = mAssemblies.get(mAssemblies.size() - 1).junction().Orient.opposite();
-        }
-
-        mAssemblies.add(index, assembly);
-        mAssemblyOrientations.add(index, linkOrientation);
     }
 
     public List<AssemblyLink> findAssemblyLinks(final JunctionAssembly assembly)
@@ -117,7 +92,6 @@ public class PhaseSet
         {
             if(mAssemblies.get(i) == assembly)
                 return assemblyOrientation;
-                // return mAssemblyOrientations.get(i);
 
             assemblyOrientation = assemblyOrientation.opposite();
         }
@@ -173,6 +147,7 @@ public class PhaseSet
         }
     }
 
+    /*
     public static boolean readsFaceInPhaseSet(
             final JunctionAssembly assembly1, int assemblyIndex1, Orientation assemblyOrientation1, final SupportRead read1,
             final JunctionAssembly assembly2, int assemblyIndex2, Orientation assemblyOrientation2, final SupportRead read2)
@@ -199,6 +174,7 @@ public class PhaseSet
             return adjustedReadOrientation2.isForward();
         }
     }
+    */
 
     public String toString() { return format("id(%d) links(%d)", mId, mAssemblyLinks.size()); }
 }

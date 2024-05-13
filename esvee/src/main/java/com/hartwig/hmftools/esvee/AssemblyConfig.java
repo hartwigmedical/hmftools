@@ -42,6 +42,7 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.FILE_NAME_DELIM;
 import static com.hartwig.hmftools.esvee.common.SvConstants.PREP_FILE_ID;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_READ;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.VCF;
+import static com.hartwig.hmftools.esvee.prep.PrepConfig.formPrepInputFilename;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_JUNCTIONS_FILE_ID;
 
 import java.nio.file.Files;
@@ -285,12 +286,6 @@ public class AssemblyConfig
     public String outputFilename(final WriteType writeType)
     {
         return formOutputFile(OutputDir, sampleId(), ESVEE_FILE_ID, writeType.fileId(), OutputId);
-    }
-
-    public String formPrepInputFilename(final String sampleId, final String fileId)
-    {
-        String bamPath = pathFromFile(TumorBams.get(0));
-        return bamPath + sampleId + FILE_NAME_DELIM + PREP_FILE_ID + FILE_NAME_DELIM + fileId;
     }
 
     public void logReadId(final SAMRecord record, final String caller)

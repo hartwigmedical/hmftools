@@ -195,7 +195,7 @@ public class BreakendWriter
                 sj.add(String.valueOf(segment.Alignment.MapQual));
                 sj.add(String.valueOf(segment.Alignment.Score));
                 sj.add(String.valueOf(segment.Alignment.repeatTrimmedLength()));
-                sj.add(String.valueOf(breakend.averageInferredFragmentLength()));
+                sj.add(String.valueOf(breakend.averageFragmentLength()));
 
                 sj.add(String.valueOf(breakend.calcQual()));
 

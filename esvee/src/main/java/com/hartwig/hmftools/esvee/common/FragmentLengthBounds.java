@@ -21,6 +21,6 @@ public class FragmentLengthBounds
 
     public boolean isValid() { return LowerBound > 0 && UpperBound > LowerBound; }
 
-    public String toString() { return format("bounds(%d - %d) median(%d stddev=%.1f)",
+    public String toString() { return format("bounds(%d - %d) median(%d stdDev=%.1f)",
             LowerBound, UpperBound, Median, StdDeviation); }
 }

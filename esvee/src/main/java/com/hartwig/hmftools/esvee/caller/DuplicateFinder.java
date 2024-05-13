@@ -30,7 +30,7 @@ public class DuplicateFinder
 
     public void findDuplicateSingles()
     {
-        for(SvData sv : mDataCache.getSvList())
+        for(Variant sv : mDataCache.getSvList())
         {
             if(!sv.isSgl())
                 continue;

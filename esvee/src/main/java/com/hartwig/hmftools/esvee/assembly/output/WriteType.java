@@ -14,7 +14,7 @@ public enum WriteType
     JUNC_ASSEMBLY("assemblies.tsv"),
     ASSEMBLY_READ("assembly_read.tsv"),
     BREAKEND("breakend.tsv"),
-    VCF("unfiltered" + VCF_ZIP_EXTENSION),
+    VCF("raw" + VCF_ZIP_EXTENSION),
     ALIGNMENT("alignment.tsv"),
     ALIGNMENT_DATA("align_detailed.tsv"),
     DECOY_MATCHES("decoy_matches.tsv"),

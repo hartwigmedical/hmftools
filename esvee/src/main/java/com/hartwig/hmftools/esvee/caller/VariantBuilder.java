@@ -48,7 +48,7 @@ public class VariantBuilder
         mHotspotCandidateVcfIds.clear();
     }
 
-    public SvData checkCreateVariant(final VariantContext variant, final GenotypeIds genotypeIds)
+    public Variant checkCreateVariant(final VariantContext variant, final GenotypeIds genotypeIds)
     {
         if(!HumanChromosome.contains(variant.getContig()))
             return null;
@@ -72,7 +72,7 @@ public class VariantBuilder
             }
 
             StructuralVariant sv = mSvFactory.createSingleBreakend(variant);
-            return new SvData(sv, genotypeIds);
+            return new Variant(sv, genotypeIds);
         }
 
         String mateId = StructuralVariantFactory.mateId(variant);
@@ -152,7 +152,7 @@ public class VariantBuilder
             }
         }
 
-        return new SvData(sv, genotypeIds);
+        return new Variant(sv, genotypeIds);
     }
 
     private StructuralVariant popLastSv()

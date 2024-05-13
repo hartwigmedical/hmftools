@@ -50,7 +50,7 @@ public class HotspotCache
         hotspots.add(hotspot);
     }
 
-    public boolean isHotspotVariant(final SvData sv)
+    public boolean isHotspotVariant(final Variant sv)
     {
         // check hotspot rescue
         if(sv.isSgl())

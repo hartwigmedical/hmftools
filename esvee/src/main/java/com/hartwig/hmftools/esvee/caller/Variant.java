@@ -5,7 +5,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.common.sv.SvVcfTags.HOMSEQ;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_FRAG_LENGTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.SHORT_CALLING_SIZE;
@@ -22,7 +23,7 @@ import com.hartwig.hmftools.esvee.common.FilterType;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class SvData
+public class Variant
 {
     // VCF data
     private final String mId;
@@ -37,10 +38,11 @@ public class SvData
     private boolean mIsShortLocal;
     private int mPonCount;
     private boolean mIsHotspot;
+    private boolean mGermline;
     private RepeatMaskAnnotation mRmAnnotation;
     private final Set<FilterType> mFilters;
 
-    public SvData(final StructuralVariant sv, final GenotypeIds genotypeIds)
+    public Variant(final StructuralVariant sv, final GenotypeIds genotypeIds)
     {
         // is this used for anything
         mId = "NONE";// sv.startContext().getAttributeAsString(EVENT, sv.id());
@@ -80,6 +82,7 @@ public class SvData
 
         mPonCount = 0;
         mIsHotspot = false;
+        mGermline = false;
         mRmAnnotation = null;
     }
 
@@ -132,10 +135,15 @@ public class SvData
         return 0;
     }
 
-    public String startHomology() { return contextStart().getAttributeAsString(HOMSEQ, ""); }
+    public int averageFragmentLength() { return contextStart().getAttributeAsInt(AVG_FRAG_LENGTH, 0); }
+
+    public int splitFragmentCount() { return contextStart().getAttributeAsInt(TOTAL_FRAGS, 0); }
 
     public void markHotspot() { mIsHotspot = true; }
     public boolean isHotspot() { return mIsHotspot; }
+
+    public void markGermline() { mGermline = true; }
+    public boolean isGermline() { return mGermline; }
 
     public void addFilter(final FilterType filter) { mFilters.add(filter); }
     public Set<FilterType> filters() { return mFilters; }

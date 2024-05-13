@@ -28,6 +28,7 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.formOutputFile;
+import static com.hartwig.hmftools.esvee.common.SvConstants.FILE_NAME_DELIM;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.PREP_FILE_ID;
@@ -260,6 +261,12 @@ public class PrepConfig
         }
 
         return formOutputFile(OutputDir, sampleId, PREP_FILE_ID, fileExtension, OutputId);
+    }
+
+    public static String formPrepInputFilename(final String sampleId, final String fileId)
+    {
+        String bamPath = pathFromFile(sampleId);
+        return bamPath + sampleId + FILE_NAME_DELIM + PREP_FILE_ID + FILE_NAME_DELIM + fileId;
     }
 
     public boolean writeReads() { return WriteTypes.contains(BAM) || WriteTypes.contains(READS); }

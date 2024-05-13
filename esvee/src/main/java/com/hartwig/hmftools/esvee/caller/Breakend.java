@@ -39,16 +39,16 @@ public class Breakend
     public final Interval InexactHomology;
     public final boolean IsLineInsertion;
 
-    private final SvData mSvData;
+    private final Variant mVariant;
     private final List<String> mLinkedAssemblyIds;
     public double mAllelicFrequency;
     private int mChrLocationIndex;
 
     public Breakend(
-            final SvData svData, final boolean isStart, final VariantContext context, final String chromosome, final int position,
+            final Variant variant, final boolean isStart, final VariantContext context, final String chromosome, final int position,
             final Orientation orientation, final Genotype refGenotype, final Genotype tumorGenotype)
     {
-        mSvData = svData;
+        mVariant = variant;
         VcfId = context.getID();
         Context = context;
         Chromosome = chromosome;
@@ -86,32 +86,32 @@ public class Breakend
     }
 
     public static Breakend from(
-            final SvData svData, final boolean isStart, final StructuralVariantLeg svLeg,
+            final Variant variant, final boolean isStart, final StructuralVariantLeg svLeg,
             final VariantContext variantContext, final int referenceOrdinal, final int tumorOrdinal)
     {
         final Genotype tumorGenotype = variantContext.getGenotype(tumorOrdinal);
         final Genotype refGenotype = referenceOrdinal >= 0 ? variantContext.getGenotype(referenceOrdinal) : null;
 
         return new Breakend(
-                svData, isStart, variantContext, svLeg.chromosome(), svLeg.position(), Orientation.fromByte(svLeg.orientation()),
+                variant, isStart, variantContext, svLeg.chromosome(), svLeg.position(), Orientation.fromByte(svLeg.orientation()),
                 refGenotype, tumorGenotype);
     }
 
-    public SvData sv() { return mSvData; }
+    public Variant sv() { return mVariant; }
 
     public Breakend otherBreakend()
     {
-        if(mSvData.isSgl())
+        if(mVariant.isSgl())
             return null;
 
-        return IsStart ? mSvData.breakendEnd() : mSvData.breakendStart();
+        return IsStart ? mVariant.breakendEnd() : mVariant.breakendStart();
     }
 
-    public boolean isEnd() { return !mSvData.isSgl() && mSvData.breakendEnd() == this;}
+    public boolean isEnd() { return !mVariant.isSgl() && mVariant.breakendEnd() == this;}
 
     public double calcAllelicFrequency(final Genotype genotype)
     {
-        int readPairSupport = (mSvData.isSgl() || !mSvData.isShortLocal()) ? getGenotypeAttributeAsInt(genotype, REF_DEPTH_PAIR, 0) : 0;
+        int readPairSupport = (mVariant.isSgl() || !mVariant.isShortLocal()) ? getGenotypeAttributeAsInt(genotype, REF_DEPTH_PAIR, 0) : 0;
         int refSupport = getGenotypeAttributeAsInt(genotype, REF_DEPTH, 0);
 
         int fragmentCount = fragmentCount(genotype);
@@ -126,8 +126,8 @@ public class Breakend
     }
 
     // convenience
-    public boolean isSgl() { return mSvData.isSgl(); }
-    public StructuralVariantType type() { return mSvData.type(); }
+    public boolean isSgl() { return mVariant.isSgl(); }
+    public StructuralVariantType type() { return mVariant.type(); }
 
     public int minPosition() { return Position + ConfidenceInterval.Start; }
     public int maxPosition() { return Position + ConfidenceInterval.End; }

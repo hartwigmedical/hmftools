@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMSEG;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASMSEG_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASSEMBLY_LINKS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.ASSEMBLY_LINKS_DESC;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_FRAG_LENGTH;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.AVG_FRAG_LENGTH_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.BEAOR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.BEAOR_DESC;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.BEAPOS;
@@ -49,7 +51,6 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS_DESC;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formPairedAltString;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formSingleAltString;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.esvee.alignment.AlternativeAlignment.altAlignmentsStr;
 
 import java.util.ArrayList;
@@ -160,6 +161,7 @@ public class VcfWriter implements AutoCloseable
         metaData.add(new VCFInfoHeaderLine(SPLIT_FRAGS, 1, VCFHeaderLineType.Integer, SPLIT_FRAGS_DESC));
         metaData.add(new VCFInfoHeaderLine(DISC_FRAGS, 1, VCFHeaderLineType.Integer, DISC_FRAGS_DESC));
         metaData.add(new VCFInfoHeaderLine(TOTAL_FRAGS, 1, VCFHeaderLineType.Integer, TOTAL_FRAGS_DESC));
+        metaData.add(new VCFInfoHeaderLine(AVG_FRAG_LENGTH, 1, VCFHeaderLineType.Integer, AVG_FRAG_LENGTH_DESC));
 
         metaData.add(new VCFInfoHeaderLine(ASMID, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ASMID_DESC));
         metaData.add(new VCFInfoHeaderLine(ASMLEN, 1, VCFHeaderLineType.Integer, ASMLEN_DESC));
@@ -258,6 +260,7 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(SPLIT_FRAGS, totalSplitFrags);
         builder.attribute(DISC_FRAGS, totalDiscFrags);
         builder.attribute(TOTAL_FRAGS, totalSplitFrags + totalDiscFrags);
+        builder.attribute(AVG_FRAG_LENGTH, breakend.averageFragmentLength());
 
         if(breakend.alternativeAlignments() != null)
             builder.attribute(INSALN, altAlignmentsStr(breakend.alternativeAlignments()));

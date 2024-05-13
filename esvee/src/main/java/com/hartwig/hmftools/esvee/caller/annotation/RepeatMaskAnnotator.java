@@ -5,14 +5,12 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.caller.annotation.AlignmentData.fromInsertSequenceAlignments;
 
 import java.util.List;
-import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations;
 import com.hartwig.hmftools.common.gripss.RepeatMaskData;
 import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.esvee.caller.Breakend;
-import com.hartwig.hmftools.esvee.caller.SvData;
+import com.hartwig.hmftools.esvee.caller.Variant;
 
 public class RepeatMaskAnnotator
 {
@@ -35,10 +33,10 @@ public class RepeatMaskAnnotator
 
     public boolean hasData() { return mAnnotationCache.hasData(); }
 
-    public void annotateVariants(final List<SvData> svDataList)
+    public void annotateVariants(final List<Variant> variantList)
     {
         int annotated = 0;
-        for(SvData var : svDataList)
+        for(Variant var : variantList)
         {
             if(var.insertSequence().isEmpty())
                 continue;

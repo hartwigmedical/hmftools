@@ -11,7 +11,7 @@ import com.google.common.collect.Maps;
 
 public class SvDataCache
 {
-    private final List<SvData> mSvData;
+    private final List<Variant> mSvData;
     private final Map<String,List<Breakend>> mChromosomeBreakends;
 
     public SvDataCache()
@@ -20,14 +20,14 @@ public class SvDataCache
         mChromosomeBreakends = Maps.newHashMap();
     }
 
-    public List<SvData> getSvList() { return mSvData; }
+    public List<Variant> getSvList() { return mSvData; }
     public Map<String,List<Breakend>> getBreakendMap() { return mChromosomeBreakends; }
 
-    public void addSvData(final SvData sv) { mSvData.add(sv); }
+    public void addSvData(final Variant sv) { mSvData.add(sv); }
 
     public void buildBreakendMap()
     {
-        for(SvData sv : mSvData)
+        for(Variant sv : mSvData)
         {
             for(int se = SE_START; se <= SE_END; ++se)
             {

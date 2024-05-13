@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.common.FragmentLengthBounds.INVALID;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_1_STD_DEV_PERCENTILE;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_DIST_MAX_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_DIST_MIN_QUAL;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.FRAG_LENGTH_DIST_PERCENTILE;
@@ -116,11 +117,13 @@ public class FragmentSizeDistribution
         long lengthCountTotal = lengthFrequencies.stream().mapToInt(x -> x.Frequency * x.Length).sum();
         int cumulativeTotal = 0;
         int requiredMinTotal = (int)floor(totalFragments * (1 - FRAG_LENGTH_DIST_PERCENTILE));
+        int requiredStdDevTotal = (int)floor(totalFragments * FRAG_LENGTH_1_STD_DEV_PERCENTILE);
         int requiredMaxTotal = (int)floor(totalFragments * FRAG_LENGTH_DIST_PERCENTILE);
         int medianFragment = totalFragments / 2;
 
         int lowerBound = 0;
         int upperBound = 0;
+        int stdDevLength = 0;
         int median = 0;
         double average = lengthCountTotal / (double)totalFragments;
         double sdTotal = 0;
@@ -130,6 +133,11 @@ public class FragmentSizeDistribution
             if(lowerBound == 0 && lengthData.Frequency + cumulativeTotal >= requiredMinTotal)
             {
                 lowerBound = lengthData.Length;
+            }
+
+            if(stdDevLength == 0 && lengthData.Frequency + cumulativeTotal >= requiredStdDevTotal)
+            {
+                stdDevLength = lengthData.Length;
             }
 
             if(median == 0 && lengthData.Frequency + cumulativeTotal >= medianFragment)
@@ -146,10 +154,11 @@ public class FragmentSizeDistribution
                 cumulativeTotal += lengthData.Frequency;
             }
 
-            sdTotal += pow(abs(lengthData.Length - average), 2);
+            // sdTotal += pow(abs(lengthData.Length - average), 2);
         }
 
-        double stdDeviation = sqrt(sdTotal / totalFragments);
+        // double stdDeviation = sqrt(sdTotal / totalFragments);
+        double stdDeviation = median - stdDevLength;
 
         return new FragmentLengthBounds(lowerBound, upperBound, median, stdDeviation);
     }

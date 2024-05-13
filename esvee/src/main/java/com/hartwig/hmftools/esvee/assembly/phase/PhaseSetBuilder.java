@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.esvee.assembly.RefBaseExtender.extendRefBases
 import static com.hartwig.hmftools.esvee.assembly.AssemblyLinker.tryAssemblyFacing;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.LOCAL_INDEL;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.REMOTE_REGION;
-import static com.hartwig.hmftools.esvee.assembly.types.PhaseSet.readsFaceInPhaseSet;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.findMatchingFragmentSupport;
 import static com.hartwig.hmftools.esvee.assembly.types.SupportRead.hasMatchingFragment;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.assembliesShareReads;
@@ -30,7 +29,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.AssemblyLinker;
 import com.hartwig.hmftools.esvee.assembly.LocalSequenceMatcher;
 import com.hartwig.hmftools.esvee.assembly.RemoteRegionAssembler;
@@ -585,11 +583,6 @@ public class PhaseSetBuilder
         if(!phaseSet.assembliesFaceInPhaseSet(assembly1, assembly2))
             return;
 
-        int assemblyIndex1 = phaseSet.assemblyIndex(assembly1);
-        Orientation assemblyOrientation1 = phaseSet.assemblyOrientation(assembly1);
-        int assemblyIndex2 = phaseSet.assemblyIndex(assembly2);
-        Orientation assemblyOrientation2 = phaseSet.assemblyOrientation(assembly2);
-
         for(int i = 0; i <= 1; ++i)
         {
             final JunctionAssembly assembly = (i == 0) ? assembly1 : assembly2;
@@ -608,9 +601,7 @@ public class PhaseSetBuilder
                 SupportRead matchedRead = otherAssembly.support().stream()
                         .filter(x -> x.matchesFragment(candidateRead, false)).findFirst().orElse(null);
 
-                if(readsFaceInPhaseSet(
-                        assembly1, assemblyIndex1, assemblyOrientation1, candidateRead,
-                        assembly2, assemblyIndex2, assemblyOrientation2, matchedRead))
+                if(matchedRead != null)
                 {
                     assembly.candidateSupport().remove(index);
                     assembly.addDiscordantSupport(candidateRead);
@@ -623,9 +614,7 @@ public class PhaseSetBuilder
                     SupportRead matchedCandidate = otherAssembly.candidateSupport().stream()
                             .filter(x -> x.matchesFragment(candidateRead, false)).findFirst().orElse(null);
 
-                    if(readsFaceInPhaseSet(
-                            assembly1, assemblyIndex1, assemblyOrientation1, candidateRead,
-                            assembly2, assemblyIndex2, assemblyOrientation2, matchedCandidate))
+                    if(matchedCandidate != null)
                     {
                         assembly.candidateSupport().remove(index);
                         assembly.addDiscordantSupport(candidateRead);

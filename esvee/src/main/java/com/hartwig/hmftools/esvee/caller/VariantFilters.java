@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.caller;
 
 import static java.lang.Math.max;
+import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
@@ -12,12 +13,14 @@ import static com.hartwig.hmftools.esvee.common.FilterType.MIN_QUALITY;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_AF;
 import static com.hartwig.hmftools.esvee.common.FilterType.MIN_SUPPORT;
 import static com.hartwig.hmftools.esvee.common.FilterType.SGL;
+import static com.hartwig.hmftools.esvee.common.FilterType.SHORT_FRAG_LENGTH;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.esvee.common.FilterType;
+import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -25,39 +28,44 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class VariantFilters
 {
     private final FilterConstants mFilterConstants;
+    private final FragmentLengthBounds mFragmentLengthBounds;
 
-    public VariantFilters(final FilterConstants filterConstants)
+    public VariantFilters(final FilterConstants filterConstants, final FragmentLengthBounds fragmentLengthBounds)
     {
         mFilterConstants = filterConstants;
+        mFragmentLengthBounds = fragmentLengthBounds;
     }
 
-    public void applyFilters(final SvData sv)
+    public void applyFilters(final Variant var)
     {
-        if(mFilterConstants.FilterSGLs && sv.isSgl())
-            sv.addFilter(SGL);
+        if(mFilterConstants.FilterSGLs && var.isSgl())
+            var.addFilter(SGL);
 
-        if(belowMinAf(sv))
-            sv.addFilter(MIN_AF);
+        if(belowMinAf(var))
+            var.addFilter(MIN_AF);
 
-        if(belowMinSupport(sv))
-            sv.addFilter(MIN_SUPPORT);
+        if(belowMinSupport(var))
+            var.addFilter(MIN_SUPPORT);
 
-        if(belowMinQuality(sv))
-            sv.addFilter(MIN_QUALITY);
+        if(belowMinQuality(var))
+            var.addFilter(MIN_QUALITY);
 
-        if(hasStrandBias(sv))
-            sv.addFilter(FilterType.STRAND_BIAS);
+        if(hasStrandBias(var))
+            var.addFilter(FilterType.STRAND_BIAS);
 
-        if(belowMinLength(sv))
-            sv.addFilter(MIN_LENGTH);
+        if(belowMinLength(var))
+            var.addFilter(MIN_LENGTH);
+
+        if(belowMinFragmentLength(var))
+            var.addFilter(SHORT_FRAG_LENGTH);
     }
 
-    private boolean belowMinSupport(final SvData sv)
+    private boolean belowMinSupport(final Variant var)
     {
-        double supportThreshold = sv.isHotspot() ? mFilterConstants.MinSupportHotspot :
-                (sv.isSgl() ? mFilterConstants.MinSupportSgl : mFilterConstants.MinSupportJunction);
+        double supportThreshold = var.isHotspot() ? mFilterConstants.MinSupportHotspot :
+                (var.isSgl() ? mFilterConstants.MinSupportSgl : mFilterConstants.MinSupportJunction);
 
-        Breakend breakend = sv.breakendStart();
+        Breakend breakend = var.breakendStart();
 
         for(Genotype genotype : breakend.Context.getGenotypes())
         {
@@ -70,12 +78,12 @@ public class VariantFilters
         return true;
     }
 
-    private boolean belowMinAf(final SvData sv)
+    private boolean belowMinAf(final Variant var)
     {
-        double afThreshold = sv.isHotspot() ? mFilterConstants.MinAfHotspot :
-                (sv.isSgl() ? mFilterConstants.MinAfSgl : mFilterConstants.MinAfJunction);
+        double afThreshold = var.isHotspot() ? mFilterConstants.MinAfHotspot :
+                (var.isSgl() ? mFilterConstants.MinAfSgl : mFilterConstants.MinAfJunction);
 
-        Breakend breakend = sv.breakendStart();
+        Breakend breakend = var.breakendStart();
 
         for(Genotype genotype : breakend.Context.getGenotypes())
         {
@@ -88,34 +96,47 @@ public class VariantFilters
         return true;
     }
 
-    private boolean belowMinQuality(final SvData sv)
+    private boolean belowMinQuality(final Variant var)
     {
         double qualThreshold = mFilterConstants.MinQual;
 
-        Breakend breakend = sv.breakendStart();
-        Breakend otherBreakend = sv.breakendEnd();
+        Breakend breakend = var.breakendStart();
+        Breakend otherBreakend = var.breakendEnd();
 
         if(mFilterConstants.LowQualRegion.containsPosition(breakend.Chromosome, breakend.Position))
             qualThreshold *= 0.5;
         else if(otherBreakend != null && mFilterConstants.LowQualRegion.containsPosition(otherBreakend.Chromosome, otherBreakend.Position))
             qualThreshold *= 0.5;
 
-        return sv.qual() < qualThreshold;
+        return var.qual() < qualThreshold;
     }
 
-    private boolean belowMinLength(final SvData sv)
+    private boolean belowMinLength(final Variant var)
     {
-        if(sv.type() == DEL)
-            return sv.length() + sv.insertSequence().length() - 1 < mFilterConstants.MinLength;
-        else if(sv.type() == DUP)
-            return sv.length() + sv.insertSequence().length() < mFilterConstants.MinLength;
-        else if(sv.type() == INS)
-            return sv.length() + sv.insertSequence().length() + 1 < mFilterConstants.MinLength;
+        if(var.type() == DEL)
+            return var.length() + var.insertSequence().length() - 1 < mFilterConstants.MinLength;
+        else if(var.type() == DUP)
+            return var.length() + var.insertSequence().length() < mFilterConstants.MinLength;
+        else if(var.type() == INS)
+            return var.length() + var.insertSequence().length() + 1 < mFilterConstants.MinLength;
         else
             return false;
     }
 
-    private boolean hasStrandBias(final SvData sv)
+    private boolean belowMinFragmentLength(final Variant var)
+    {
+        int medianLength = mFragmentLengthBounds.Median;
+        double stdDeviation = mFragmentLengthBounds.StdDeviation;
+
+        int totalSplitFrags = var.splitFragmentCount();
+        double lowerLengthLimit = medianLength - (mFilterConstants.MinAvgFragFactor * stdDeviation / sqrt(totalSplitFrags));
+
+        int svAvgLength = var.averageFragmentLength();
+
+        return svAvgLength < lowerLengthLimit;
+    }
+
+    private boolean hasStrandBias(final Variant var)
     {
         /*
         private boolean singleStrandBias(final Breakend breakend)
@@ -146,11 +167,11 @@ public class VariantFilters
         return max(strandBias, 1 - strandBias);
     }
 
-    public static void logFilterTypeCounts(final List<SvData> svDataList)
+    public static void logFilterTypeCounts(final List<Variant> variantList)
     {
         Map<FilterType,Integer> filterCounts = Maps.newHashMap();
 
-        for(SvData var : svDataList)
+        for(Variant var : variantList)
         {
             for(FilterType filterType : var.filters())
             {

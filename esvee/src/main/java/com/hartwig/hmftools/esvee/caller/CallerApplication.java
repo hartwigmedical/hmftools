@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.esvee.caller;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations.REPEAT_MASK_FILE;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
@@ -7,7 +9,10 @@ import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.APP_NAME;
 import static com.hartwig.hmftools.esvee.caller.CallerConfig.addConfig;
+import static com.hartwig.hmftools.esvee.caller.FilterConstants.GERMLINE_AF_THRESHOLD;
 import static com.hartwig.hmftools.esvee.caller.VariantFilters.logFilterTypeCounts;
+import static com.hartwig.hmftools.esvee.prep.PrepConfig.formPrepInputFilename;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -15,9 +20,12 @@ import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.esvee.caller.annotation.PonCache;
 import com.hartwig.hmftools.esvee.caller.annotation.RepeatMaskAnnotator;
+import com.hartwig.hmftools.esvee.common.FragmentLengthBounds;
+import com.hartwig.hmftools.esvee.prep.FragmentSizeDistribution;
 
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 
@@ -47,7 +55,11 @@ public class CallerApplication
         mTargetRegions = new TargetRegions(configBuilder);
 
         mVariantBuilder = new VariantBuilder(mHotspotCache, mTargetRegions);
-        mVariantFilters = new VariantFilters(mFilterConstants);
+
+        String fragLengthFilename = mConfig.OutputDir + formPrepInputFilename(mConfig.SampleId, PREP_FRAG_LENGTH_FILE_ID);
+        FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
+
+        mVariantFilters = new VariantFilters(mFilterConstants, fragmentLengthBounds);
 
         mProcessedVariants = 0;
         mSvDataCache = new SvDataCache();
@@ -134,10 +146,12 @@ public class CallerApplication
 
         SV_LOGGER.info("applying soft-filters and realignment");
 
-        for(SvData var : mSvDataCache.getSvList())
+        for(Variant var : mSvDataCache.getSvList())
         {
             if(mHotspotCache.isHotspotVariant(var))
                 var.markHotspot();
+
+            markGermline(var);
 
             mVariantFilters.applyFilters(var);
         }
@@ -174,6 +188,27 @@ public class CallerApplication
         }
     }
 
+    private void markGermline(final Variant var)
+    {
+        Breakend breakend = var.breakendStart();
+
+        double maxGermlineAf = 0;
+        double maxTumorAf = 0;
+
+        for(Genotype genotype : breakend.Context.getGenotypes())
+        {
+            double af = breakend.calcAllelicFrequency(genotype);
+
+            if(mConfig.ReferenceId.contains(genotype.getSampleName()))
+                maxGermlineAf = max(maxGermlineAf, af);
+            else
+                maxTumorAf = max(maxTumorAf, af);
+        }
+
+        if(maxGermlineAf >= GERMLINE_AF_THRESHOLD * maxTumorAf)
+            var.markGermline();
+    }
+
     public void processVariant(final VariantContext variant, final GenotypeIds genotypeIds)
     {
         // SV_LOGGER.trace("id({}) position({}: {})", variant.getID(), variant.getContig(), variant.getStart());
@@ -185,7 +220,7 @@ public class CallerApplication
             SV_LOGGER.debug("sample({}) processed {} variants", mConfig.SampleId, mProcessedVariants);
         }
 
-        SvData svData = mVariantBuilder.checkCreateVariant(variant, genotypeIds);
+        Variant svData = mVariantBuilder.checkCreateVariant(variant, genotypeIds);
 
         if(svData == null)
             return;

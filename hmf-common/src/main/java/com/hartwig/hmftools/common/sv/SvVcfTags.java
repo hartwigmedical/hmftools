@@ -61,6 +61,9 @@ public final class SvVcfTags
     public static final String TOTAL_FRAGS = "VF";
     public static final String TOTAL_FRAGS_DESC = "Total variant fragments supporting the breakend";
 
+    public static final String AVG_FRAG_LENGTH = "AVGLEN";
+    public static final String AVG_FRAG_LENGTH_DESC = "Average variant fragment length";
+
     // per sample
     public static final String SPLIT_FRAGS = "SF";
     public static final String SPLIT_FRAGS_DESC = "Count of fragments supporting the breakend with a read overlapping the breakend";

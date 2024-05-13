@@ -25,7 +25,7 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.esvee.caller.Breakend;
-import com.hartwig.hmftools.esvee.caller.SvData;
+import com.hartwig.hmftools.esvee.caller.Variant;
 
 public class PonCache
 {
@@ -77,9 +77,9 @@ public class PonCache
     public Map<String,List<PonSvRegion>> svRegions() { return mSvRegions; }
     public Map<String,List<PonSglRegion>> sglRegions() { return mSglRegions; }
 
-    public void annotateVariants(final List<SvData> svDataList)
+    public void annotateVariants(final List<Variant> variantList)
     {
-        for(SvData var : svDataList)
+        for(Variant var : variantList)
         {
             int ponCount = getPonCount(var);
 
@@ -92,7 +92,7 @@ public class PonCache
         }
     }
 
-    public int getPonCount(final SvData var)
+    public int getPonCount(final Variant var)
     {
         // matching routine:
         // - get regions by chromosome
@@ -140,7 +140,7 @@ public class PonCache
         return margins;
     }
 
-    private int findPonMatch(final List<PonSvRegion> regions, final SvData var)
+    private int findPonMatch(final List<PonSvRegion> regions, final Variant var)
     {
         final int[] marginStart = breakendMargin(var.breakendStart());
         final int[] marginEnd = breakendMargin(var.breakendEnd());
@@ -176,7 +176,7 @@ public class PonCache
     }
 
     private int findPonMatch(
-            final List<PonSvRegion> regions, final SvData var, final BaseRegion svStart, final ChrBaseRegion svEnd, int startIndex)
+            final List<PonSvRegion> regions, final Variant var, final BaseRegion svStart, final ChrBaseRegion svEnd, int startIndex)
     {
         // search and up and down from this entry point for a PON match
         for(int i = 0; i <= 1; ++i)
@@ -207,7 +207,7 @@ public class PonCache
         return 0;
     }
 
-    private int findSglPonMatch(final List<PonSglRegion> regions, final SvData var)
+    private int findSglPonMatch(final List<PonSglRegion> regions, final Variant var)
     {
         final int[] marginStart = breakendMargin(var.breakendStart());
 
@@ -238,7 +238,7 @@ public class PonCache
         return 0;
     }
 
-    private int findSglPonMatch(final List<PonSglRegion> regions, final SvData var, final BaseRegion svStart, int startIndex)
+    private int findSglPonMatch(final List<PonSglRegion> regions, final Variant var, final BaseRegion svStart, int startIndex)
     {
         // search and up and down from this entry point for a PON match
 

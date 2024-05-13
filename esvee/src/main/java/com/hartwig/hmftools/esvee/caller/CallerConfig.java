@@ -17,10 +17,8 @@ import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.Ref;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -77,7 +75,7 @@ public class CallerConfig
         return true;
     }
 
-    public boolean excludeVariant(final SvData sv)
+    public boolean excludeVariant(final Variant sv)
     {
         // optionally filter out all but specified chromosomes
         if(!RestrictedChromosomes.isEmpty() && !RestrictedChromosomes.contains(sv.chromosomeStart())

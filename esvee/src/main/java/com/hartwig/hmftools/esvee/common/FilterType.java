@@ -13,6 +13,7 @@ public enum FilterType
     STRAND_BIAS("strandBias", "Outside valid strand bias range", false),
     SGL_STRAND_BIAS("sglStrandBias", "Single breakend with excessive strand bias and not a mobile line insertion", false),
     MIN_LENGTH("minLength", "Variant is too short", false),
+    SHORT_FRAG_LENGTH("shortFrags", "Average variant fragment length is too short", false),
     DUPLICATE("dedup", "Event is duplicate of another", false),
     SGL("sgl", "SGLs filtered entirely", false),
     PON("PON", "Found in panel of normals", true);

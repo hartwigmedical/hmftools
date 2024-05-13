@@ -87,7 +87,7 @@ public class VcfWriter
         return mConfig.OutputDir + sampleId + "." + ESVEE_FILE_ID + "." + fileId + suffix;
     }
 
-    private VariantContextWriter initialiseWriter(final VCFHeader vcfHeader, final String gripssVersion, final String vcfFilename)
+    private VariantContextWriter initialiseWriter(final VCFHeader vcfHeader, final String esveeVersion, final String vcfFilename)
     {
         VariantContextWriter writer = new VariantContextWriterBuilder()
                 .setReferenceDictionary(vcfHeader.getSequenceDictionary())
@@ -106,7 +106,9 @@ public class VcfWriter
 
         VCFHeader newHeader = new VCFHeader(vcfHeader.getMetaDataInInputOrder(), genotypeSampleNames);
 
-        newHeader.addMetaDataLine(new VCFHeaderLine("gripssVersion", gripssVersion));
+        newHeader.addMetaDataLine(new VCFHeaderLine("esveeVersion", esveeVersion));
+
+        newHeader.addMetaDataLine(new VCFFilterHeaderLine(PASS, "Variant passes all filters"));
 
         for(FilterType filter : FilterType.values())
         {
@@ -151,7 +153,7 @@ public class VcfWriter
 
     private void writeBreakend(final Breakend breakend)
     {
-        final SvData sv = breakend.sv();
+        final Variant sv = breakend.sv();
 
         List<Genotype> genotypes = Lists.newArrayList();
 
@@ -164,7 +166,8 @@ public class VcfWriter
         VariantContextBuilder builder = new VariantContextBuilder(breakend.Context).genotypes(genotypes).filters();
 
         // Qual = getGenotypeAttributeAsDouble(tumorGenotype, QUAL, 0);
-        builder.log10PError(breakend.Context.getPhredScaledQual());
+        double qual = breakend.Context.getPhredScaledQual();
+        builder.log10PError(qual / -10);
 
         if(sv.isHotspot())
             builder.attribute(HOTSPOT, true);
@@ -185,25 +188,28 @@ public class VcfWriter
         // first write the unfiltered VCF with all breakends
         Set<FilterType> allFilters = breakend.sv().filters();
 
-        Set<FilterType> germlineFilters = allFilters.stream().filter(x -> !x.germlineOnly()).collect(Collectors.toSet());
-
-        Set<FilterType> somaticFilters = Sets.newHashSet(allFilters);
-
         writeBreakend(mUnfilteredWriter, builder, allFilters);
 
-
-
-        if(mSomaticWriter != null)
+        if(breakend.sv().isGermline())
         {
-            if(somaticFilters.isEmpty() || (somaticFilters.size() == 1 && somaticFilters.contains(PON)))
-                writeBreakend(mUnfilteredWriter, builder, somaticFilters);
-        }
+            Set<FilterType> germlineFilters = allFilters.stream().filter(x -> !x.germlineOnly()).collect(Collectors.toSet());
 
-        if(mGermlineWriter != null && germlineFilters.isEmpty())
-            writeBreakend(mGermlineWriter, builder, germlineFilters);
+            if(mGermlineWriter != null && germlineFilters.isEmpty())
+                writeBreakend(mGermlineWriter, builder, germlineFilters);
+        }
+        else
+        {
+            Set<FilterType> somaticFilters = Sets.newHashSet(allFilters);
+
+            if(mSomaticWriter != null)
+            {
+                if(somaticFilters.isEmpty() || (somaticFilters.size() == 1 && somaticFilters.contains(PON)))
+                    writeBreakend(mSomaticWriter, builder, somaticFilters);
+            }
+        }
     }
 
-    private boolean isGermline(final SvData var)
+    private boolean isGermline(final Variant var)
     {
         // if a germline sample is present and the max(germline AF) > 0.1 x max(tumor AF), the variant is deemed to be germline, else somatic
         // return breakend.ReferenceFragments + refSupportReads + refSupportReadPairs < mFilterConstants.MinNormalCoverage;
