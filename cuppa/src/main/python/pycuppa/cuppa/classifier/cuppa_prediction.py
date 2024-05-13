@@ -359,7 +359,7 @@ class CuppaPredSummaryBuilder(LoggerMixin):
     def _top_preds(self) -> tuple[pd.DataFrame, pd.DataFrame]:
 
         if self.verbose:
-            self.logger.info("Getting top cancer types")
+            self.logger.debug("Getting top cancer types")
 
         sorted_classes, sorted_probs = self._sorted_preds
         top_classes = sorted_classes.iloc[:, 0:self.top_n_classes]
@@ -631,6 +631,9 @@ class CuppaPredSummaryBuilder(LoggerMixin):
 
     def build(self) -> CuppaPredSummary:
 
+        if self.verbose:
+            self.logger.info("Summarizing predictions")
+
         ## Main --------------------------------
         tables = dict()
 
@@ -649,14 +652,11 @@ class CuppaPredSummaryBuilder(LoggerMixin):
 
         ## Optional columns --------------------------------
         if self.show_extra_info:
-            if self.verbose:
-                self.logger.info("Adding extra info")
-
             pred_summ = pd.concat([pred_summ, self.extra_info], axis=1)
 
         if self.actual_classes is not None:
             if self.verbose:
-                self.logger.info("Adding 'correct prediction' info")
+                self.logger.debug("Adding 'correct prediction' info")
 
             pred_summ = pd.concat([self.correct_info, pred_summ], axis=1)
 

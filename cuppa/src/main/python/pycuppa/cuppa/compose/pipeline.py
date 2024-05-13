@@ -45,7 +45,7 @@ class Pipeline(sklearn.pipeline.Pipeline, LoggerMixin):
 
     def __init__(
         self,
-        steps: list,
+        steps: list[tuple],
         *,
         fit_cache_dir: Optional[str] = None,
         verbose: bool = False
@@ -76,13 +76,10 @@ class Pipeline(sklearn.pipeline.Pipeline, LoggerMixin):
         if cache_exists:
             estimator = joblib.load(cache_path)
             if verbose:
-                logger.info(step_name + ": Loaded cache")
+                logger.info("Loaded cache: " + step_name)
             return estimator
 
         ## Fit and write cache
-        if verbose:
-            logger.info(step_name + ": Fitting")
-
         estimator = clone(estimator)  ## Clone to ensure estimator can be pickled
         estimator.fit(X, y, **fit_params)
 
@@ -90,11 +87,18 @@ class Pipeline(sklearn.pipeline.Pipeline, LoggerMixin):
             joblib.dump(estimator, cache_path, compress=3)
 
         if verbose:
-            logger.info(step_name + ": Done fitting")
+            logger.debug("Done fitting: " + step_name)
 
         return estimator
 
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> "Pipeline":
+    def fit(self, X: pd.DataFrame, y: pd.Series, verbose: bool = None) -> "Pipeline":
+
+        if verbose is None:
+            verbose = self.verbose
+
+        if verbose:
+            self.logger.info("Fitting transformers: " + ", ".join([step_name for step_name,_ in self.steps]))
+
         self.steps = list(self.steps)
         self._validate_steps()
 
@@ -129,7 +133,7 @@ class Pipeline(sklearn.pipeline.Pipeline, LoggerMixin):
                 cache_path=cache_path,
 
                 step_name=step_name,
-                verbose=self.verbose,
+                verbose=verbose,
                 logger=self.logger,
 
                 **fit_params_steps[step_name],
@@ -231,12 +235,12 @@ class Pipeline(sklearn.pipeline.Pipeline, LoggerMixin):
         for index, name, estimator in self._iter():
 
             if verbose:
-                self.logger.info(name + ": Transforming")
+                self.logger.info("Transforming: " + name)
 
             X = estimator.transform(X, y)
 
             if verbose:
-                self.logger.info(name + ": Done transforming")
+                self.logger.info("Transforming: " + name + " (done)")
 
             if keep_steps is not None and name in keep_steps:
                 Xs[name] = X
