@@ -15,10 +15,10 @@ public class PredictionRunner
 {
     public final PrepConfig mPrepConfig;
     public final PredictionConfig mPycuppaConfig;
-
     public final PythonEnv mPythonEnv;
-
     private String mFeaturesPath;
+
+    private static final String PYTHON_LOG_FORMAT = "'[python] %(levelname)s %(name)s | %(message)s'";
 
     public PredictionRunner(final ConfigBuilder configBuilder)
     {
@@ -62,12 +62,11 @@ public class PredictionRunner
     {
         String[] commandString = new String[] {
                 "python3 -m cuppa.predict",
-
                 "--sample_id", mPycuppaConfig.SampleId,
                 "--classifier_path", mPycuppaConfig.ClassifierPath,
                 "--output_dir", mPycuppaConfig.OutputDir,
-
-                "--features_path", mFeaturesPath
+                "--features_path", mFeaturesPath,
+                "--log_format", PYTHON_LOG_FORMAT
         };
 
         ShellCommand command = new PythonEnvCommand(mPythonEnv, String.join(" ", commandString)).logLevel(Level.INFO);
