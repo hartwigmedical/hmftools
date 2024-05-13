@@ -16,12 +16,21 @@ public class PredictionRunner
     public final PrepConfig mPrepConfig;
     public final PredictionConfig mPycuppaConfig;
 
+    public final PythonEnv mPythonEnv;
+
     private String mFeaturesPath;
 
     public PredictionRunner(final ConfigBuilder configBuilder)
     {
         mPrepConfig = new PrepConfig(configBuilder);
         mPycuppaConfig = new PredictionConfig(configBuilder);
+
+        mPythonEnv = new PythonEnv(
+                PycuppaInstaller.PYTHON_VERSION,
+                PycuppaInstaller.PYCUPPA_VENV_NAME,
+                mPycuppaConfig.InstallDir
+        );
+        mPythonEnv.checkRequiredPackages(PycuppaInstaller.PYCUPPA_PKG_NAME);
     }
 
     public void createOutputDirIfNotExist()
@@ -61,14 +70,7 @@ public class PredictionRunner
                 "--features_path", mFeaturesPath
         };
 
-        PythonEnv pythonEnvironment = new PythonEnv(
-                PycuppaInstaller.PYTHON_VERSION,
-                PycuppaInstaller.PYCUPPA_VENV_NAME,
-                mPycuppaConfig.InstallDir
-        );
-        pythonEnvironment.checkRequiredPackage(PycuppaInstaller.PYCUPPA_PKG_NAME);
-
-        ShellCommand command = new PythonEnvCommand(pythonEnvironment, String.join(" ", commandString)).logLevel(Level.INFO);
+        ShellCommand command = new PythonEnvCommand(mPythonEnv, String.join(" ", commandString)).logLevel(Level.INFO);
         CUP_LOGGER.info("Predicting using command: {}", command);
         command.run();
     }
