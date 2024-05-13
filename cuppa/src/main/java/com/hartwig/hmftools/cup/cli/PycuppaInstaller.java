@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.cup.cli.PythonEnv.DEFAULT_PYENV_DIR;
 import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
 
 import java.io.File;
+import java.io.IOException;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -38,25 +39,42 @@ public class PycuppaInstaller
     public PycuppaInstaller(ConfigBuilder config)
     {
         mConfig = config;
+
         Configurator.setLevel(CUP_LOGGER.getName(), Level.valueOf(config.getValue(LOG_LEVEL)));
 
-        String installDir;
-        if(!config.hasValue(INSTALL_DIR))
+        String installDir = getInstallDir();
+        mPythonEnv = new PythonEnv(PYTHON_VERSION, PYCUPPA_VENV_NAME, installDir);
+    }
+
+    private String getInstallDir()
+    {
+        String installDir = null;
+        if(!mConfig.hasValue(INSTALL_DIR))
         {
             CUP_LOGGER.info("Installing to default pyenv dir: {}", DEFAULT_PYENV_DIR);
             installDir = DEFAULT_PYENV_DIR;
         }
         else
         {
-            installDir = config.getValue(INSTALL_DIR);
+            String rawInstallDir = mConfig.getValue(INSTALL_DIR);
+            try
+            {
+                installDir = new File(rawInstallDir).getCanonicalPath();
+            }
+            catch(IOException e)
+            {
+                CUP_LOGGER.error("Failed to get absolute path to installDir({}): {}", rawInstallDir, e.toString());
+                System.exit(1);
+            }
         }
 
-        mPythonEnv = new PythonEnv(PYTHON_VERSION, PYCUPPA_VENV_NAME, installDir);
+        return installDir;
     }
 
     private void removePycuppaTmpDir()
     {
-        try {
+        try
+        {
             FileUtils.deleteDirectory(PYCUPPA_TMP_DIR);
         }
         catch(Exception e)
@@ -74,9 +92,6 @@ public class PycuppaInstaller
             {
                 CUP_LOGGER.debug("Removing existing tmp dir: {}", PYCUPPA_TMP_DIR);
                 removePycuppaTmpDir();
-
-                if(mConfig.hasFlag(UPDATE_RC_FILE))
-                    mPythonEnv.updateRcFile();
             }
 
             if(PYCUPPA_RESOURCE_DIR.exists())
@@ -139,7 +154,7 @@ public class PycuppaInstaller
     public static void main(String[] args)
     {
         ConfigBuilder config = new ConfigBuilder(APP_NAME);
-        config.addConfigItem(INSTALL_DIR, false, INSTALL_DIR_DESC);
+        config.addPath(INSTALL_DIR, false, INSTALL_DIR_DESC);
         config.addFlag(UPDATE_RC_FILE, UPDATE_RC_FILE_DESC);
         config.addConfigItem(LOG_LEVEL, false, LOG_LEVEL_DESC, Level.DEBUG.toString());
         config.checkAndParseCommandLine(args);
