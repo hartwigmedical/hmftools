@@ -1,8 +1,8 @@
 class TestLogging:
     def _test_log_output_manually(self):
-        from cuppa.logger import reset_logging_basic_config
+        from cuppa.logger import initialize_logging
 
-        reset_logging_basic_config("/Users/lnguyen/Desktop/train.log")
+        initialize_logging("/Users/lnguyen/Desktop/train.log")
 
         from cuppa.runners.training_runner import TrainingRunner
         from cuppa.constants import DEFAULT_FUSION_OVERRIDES_PATH
