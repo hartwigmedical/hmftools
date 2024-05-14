@@ -50,11 +50,6 @@ CANCER_TYPE_METADATA <- (function(){
 
 VIS_DATA$cancer_supertype <- CANCER_TYPE_METADATA[VIS_DATA$cancer_type, "supertype"]
 
-SNV_COUNT <- subset(VIS_DATA,  str_ends(feat_name, "snv_count"), feat_value)[1,1]
-if(is.na(SNV_COUNT)){
-   stop("`snv_count` was not found as a feature in `VIS_DATA`")
-}
-
 ## Constants ================================
 MAPPINGS_CLASSIFIER_NAMES <- c(
    "combined"="COMBINED",
@@ -133,9 +128,9 @@ format_numbers <- function(values, configs){
 }
 
 ## Heatmap of probs ================================
-get_plot_data_probs <- function(VIS_DATA){
+get_plot_data_probs <- function(vis_data){
 
-   plot_data <- subset(VIS_DATA, data_type=="prob")
+   plot_data <- subset(vis_data, data_type=="prob")
 
    plot_data$row_label <- revalue(plot_data$clf_name, MAPPINGS_CLASSIFIER_NAMES)
    plot_data$row_group <- toupper(plot_data$clf_group)
@@ -382,10 +377,19 @@ plot_heatmap <- function(
    return(p)
 }
 
-plot_probs <- function(VIS_DATA){
-   plot_data <- get_plot_data_probs(VIS_DATA)
+get_snv_count <- function(VIS_DATA){
+   snv_count <- subset(VIS_DATA,  str_ends(feat_name, "snv_count"), feat_value)[1,1]
+   if(is.na(snv_count)){
+      stop("`snv_count` was not found as a feature in `VIS_DATA`")
+   }
+   return(snv_count)
+}
 
-   if(SNV_COUNT < LOW_SNV_COUNT_THRES){
+plot_probs <- function(vis_data){
+   plot_data <- get_plot_data_probs(vis_data)
+
+   snv_count <- get_snv_count(vis_data)
+   if(snv_count < LOW_SNV_COUNT_THRES){
       warning_string <- sprintf(" | WARNING: Sample has <%s SNVs. Predictions may be unreliable", LOW_SNV_COUNT_THRES)
    } else {
       warning_string <- ""
@@ -410,8 +414,8 @@ plot_probs <- function(VIS_DATA){
 
 
 ## Plotting other data_types ================================
-plot_cv_performance <- function(VIS_DATA){
-   plot_data <- subset(VIS_DATA, data_type=="cv_performance")
+plot_cv_performance <- function(vis_data){
+   plot_data <- subset(vis_data, data_type=="cv_performance")
 
    plot_data$row_group <- "training set"
    plot_data$row_label <- plot_data$feat_name
@@ -461,18 +465,19 @@ plot_cv_performance <- function(VIS_DATA){
    theme(legend.justification=c("left", "bottom"))
 }
 
-plot_signatures <- function(VIS_DATA){
+plot_signatures <- function(vis_data){
 
-   plot_data <- subset(VIS_DATA, data_type=="sig_quantile")
+   plot_data <- subset(vis_data, data_type=="sig_quantile")
 
    plot_data$row_group <- "signature"
    
    plot_data$data_label <- format_numbers(plot_data$data_value, NUMBER_FORMATTING_SIGNATURE_QUANTILES)
 
    ## Make row labels --------------------------------
+   snv_count <- get_snv_count(vis_data)
+   
    plot_data$row_label <- with(plot_data, {
-
-      perc <- round((feat_value / SNV_COUNT) * 100, SIGNATURE_PERC_SIGNIF_DIGITS)
+      perc <- round((feat_value / snv_count) * 100, SIGNATURE_PERC_SIGNIF_DIGITS)
       feat_value <- round(feat_value, SIGNATURE_VALUES_DECIMAL_PLACES)
       paste0(gsub("_", " ", feat_name), " = ", feat_value, " (", perc, "%)")
    })
@@ -506,9 +511,9 @@ plot_signatures <- function(VIS_DATA){
    )
 }
 
-plot_feat_contrib <- function(VIS_DATA){
+plot_feat_contrib <- function(vis_data){
 
-   plot_data <- subset(VIS_DATA, data_type=="feat_contrib")
+   plot_data <- subset(vis_data, data_type=="feat_contrib")
    
    ## Format labels --------------------------------
    ## Parse feature names
@@ -581,42 +586,92 @@ plot_feat_contrib <- function(VIS_DATA){
 }
 
 
-## Combine plots ================================
-cuppa_vis <- function(VIS_DATA, plot_path=NULL){
-
+## Combine and export ================================
+plot_one_sample <- function(VIS_DATA, sample_id){
+   
+   vis_data <- VIS_DATA[VIS_DATA$sample_id==sample_id | VIS_DATA$data_type=="cv_performance",]
+   
    ## Plots --------------------------------
    plots <- list()
-
-   plots$probs <- plot_probs(VIS_DATA)
-   plots$signatures <- plot_signatures(VIS_DATA)
-   plots$feat_contrib <- plot_feat_contrib(VIS_DATA)
-
-   if(!("cv_performance" %in% VIS_DATA$data_type)){
+   
+   plots$probs <- plot_probs(vis_data)
+   plots$signatures <- plot_signatures(vis_data)
+   plots$feat_contrib <- plot_feat_contrib(vis_data)
+   
+   if(!("cv_performance" %in% vis_data$data_type)){
       stop("CV performance data is missing from vis data")
    }
-   plots$cv_performance <- plot_cv_performance(VIS_DATA)
-
+   plots$cv_performance <- plot_cv_performance(vis_data)
+   
    ## Combine --------------------------------
    ## Heights
    heights <- sapply(plots, function(p){ p$nrows })
    heights <- heights[heights>0] ## Remove 0 height plots
-
+   
    ## Widths
    widths <-  sapply(plots, function(p){ p$ncols })
-
+   
    plots_combined <- patchwork::wrap_plots(plots, ncol=1, heights=heights)
-
-   ## Export --------------------------------
-   if(is.null(plot_path)) return(plots_combined)
-
-   fixed_height <- 3
-   ggsave(
-      plot=plots_combined,
-      filename=plot_path,
-      height=sum(heights) * 0.25 + fixed_height,
-      width=max(widths) * 0.5,
-      units="in"
-   )
+   
+   plots_combined$heights <- heights
+   plots_combined$widths <- widths
+   
+   return(plots_combined)
 }
 
-cuppa_vis(VIS_DATA, PLOT_PATH)
+write_plots <- function(VIS_DATA){
+   
+   sample_ids <- unique(VIS_DATA[VIS_DATA$data_type=="prob","sample_id"])
+   
+   ## Calculate dimensions --------------------------------
+   if(length(sample_ids)==1){
+      
+      p <- plot_one_sample(VIS_DATA, sample_ids[1])
+      
+      ## Fixed height/width account for axis labels
+      fixed_height <- 3
+      fixed_width <- 6
+      
+      height_scaling <- 0.25
+      width_scaling <- 0.35
+      
+      height <- sum(p$heights) * height_scaling + fixed_height
+      width  <- max(p$widths) * width_scaling + fixed_width
+      
+   } else {
+      ## Use constant dimensions for multi sample plotting
+      height <- 12.5
+      width <- 20
+   }
+   
+   ## Open output file connection --------------------------------
+   if(grepl(".pdf$", PLOT_PATH)){
+      pdf(PLOT_PATH, width, height)
+   } else if(grepl(".png$", PLOT_PATH)){
+      if(length(sample_ids)>1) stop("Plot output file extension must be .pdf for multi-sample plotting")
+      png(PLOT_PATH, width, height, units="in", res=300)
+   } else {
+      stop("Plot output file must have .pdf or .png as the extension")
+   }
+   
+   ## Write to file --------------------------------
+   if(length(sample_ids)==1){
+      plot(p)
+   } else {
+      for(sample_id in sample_ids){
+         message("Plotting sample: ", sample_id)
+         p <- 
+            plot_one_sample(VIS_DATA, sample_id) + 
+            plot_annotation(
+               paste0("Sample: ", sample_id),
+               theme = theme(plot.title=element_text(face="bold"))
+            )
+         plot(p)
+      }
+   }
+   
+   invisible(dev.off())
+}
+
+write_plots(VIS_DATA)
+
