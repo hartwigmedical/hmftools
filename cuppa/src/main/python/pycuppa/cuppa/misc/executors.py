@@ -9,7 +9,7 @@ class RscriptExecutor(LoggerMixin):
     def __init__(
         self,
         args: list[str],
-        ignore_error: bool = False,
+        ignore_error: bool = False, ## Used for testing
         verbose: bool = True
     ):
         self.args = args
@@ -48,7 +48,7 @@ class RscriptExecutor(LoggerMixin):
         with Popen(args=self.command, shell=False, stdout=PIPE, stderr=STDOUT) as process:
             for line in iter(process.stdout.readline, b''):
                 stderr = line.decode("utf-8").strip()
-                self.logger.info("[R] " + stderr)
+                self.logger.debug("[R] " + stderr)
 
                 self.stderrs.append(stderr)
 
