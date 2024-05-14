@@ -279,6 +279,14 @@ public class BreakendBuilder
             if(alignment.sequenceEnd() >= nextAlignment.sequenceStart())
             {
                 String assemblyOverlapBases = mAssemblyAlignment.overlapBases();
+
+                if(assemblyOverlapBases.isEmpty())
+                {
+                    int overlapSeqStart = alignment.sequenceEnd();
+                    int overlap = alignment.sequenceEnd() - nextAlignment.sequenceStart() + 1;
+                    assemblyOverlapBases = fullSequence.substring(overlapSeqStart, overlapSeqStart + overlap);
+                }
+
                 homology = HomologyData.determineHomology(assemblyOverlapBases, alignment, nextAlignment, mRefGenome);
             }
             else if(alignment.sequenceEnd() < nextAlignment.sequenceStart() - 1)

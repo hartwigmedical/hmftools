@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.assembly;
 
+import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
@@ -11,8 +12,10 @@ import static com.hartwig.hmftools.esvee.TestUtils.TEST_READ_ID_2;
 import static com.hartwig.hmftools.esvee.TestUtils.cloneRead;
 import static com.hartwig.hmftools.esvee.TestUtils.createRead;
 import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadFilters.recordSoftClipsAndCrossesJunction;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -46,7 +49,18 @@ public class JunctionAssemblyTest
         readBases = refBases + extBases.substring(0, 32);
         Read read3 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, extBases.length()));
 
-        List<Read> reads = List.of(read1, read2, read3);
+        // a read without soft-clip but mismatches agreeing with the extension
+        String alignedMatchingBases = readBases.substring(0, 22);
+        Read read4 = createRead(READ_ID_GENERATOR.nextId(), 10, alignedMatchingBases, makeCigarString(alignedMatchingBases, 0, 0));
+        read4.bamRecord().setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
+        assertTrue(recordSoftClipsAndCrossesJunction(read4, junction));
+
+        // similar but too long and matching the ref
+        readBases = REF_BASES_200.substring(0, 30);
+        Read read5 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, 0));
+        assertFalse(recordSoftClipsAndCrossesJunction(read5, junction));
+
+        List<Read> reads = List.of(read1, read2, read3, read4);
 
         ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads, 2);
 
@@ -57,7 +71,7 @@ public class JunctionAssemblyTest
         String sequence = refBases.substring(19) + extBases;
         assertEquals(sequence, extSeqBuilder.junctionSequence());
 
-        assertEquals(3, extSeqBuilder.formAssemblySupport().size());
+        assertEquals(4, extSeqBuilder.formAssemblySupport().size());
 
         // now test with low qual mismatches in all 3 three reads but still overall agreement
         read2.getBases()[30] = MockRefGenome.getNextBase(read1.getBases()[30]);
@@ -71,7 +85,7 @@ public class JunctionAssemblyTest
         read3.getBaseQuality()[33] = 20;
 
         readBases = refBases + extBases.substring(0, 29) + "TTTT" + extBases.substring(33, 38);
-        Read read4 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, extBases.length()));
+        read4 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, extBases.length()));
 
         reads = List.of(read1, read2, read3, read4);
         extSeqBuilder = new ExtensionSeqBuilder(junction, reads, 2);
@@ -103,7 +117,12 @@ public class JunctionAssemblyTest
         scLength = extBases.length() - 8;
         Read read3 = createRead(READ_ID_GENERATOR.nextId(), juncPosition, readBases, makeCigarString(readBases, scLength, 0));
 
-        List<Read> reads = List.of(read1, read2, read3);
+        String alignedMatchingBases = readBases.substring(readBases.length() - 22);
+        Read read4 = createRead(READ_ID_GENERATOR.nextId(), juncPosition - 2, alignedMatchingBases, makeCigarString(alignedMatchingBases, 0, 0));
+        read4.bamRecord().setAttribute(NUM_MUTATONS_ATTRIBUTE, 2);
+        assertTrue(recordSoftClipsAndCrossesJunction(read4, junction));
+
+        List<Read> reads = List.of(read1, read2, read3, read4);
 
         ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads, 2);
 
@@ -114,7 +133,7 @@ public class JunctionAssemblyTest
         String sequence = extBases + refBases.substring(0, 1);
         assertEquals(sequence, extSeqBuilder.junctionSequence());
 
-        assertEquals(3, extSeqBuilder.formAssemblySupport().size());
+        assertEquals(4, extSeqBuilder.formAssemblySupport().size());
 
         // low qual mismatches in all 3 three reads but still overall agreement
         read2.getBases()[10] = MockRefGenome.getNextBase(read1.getBases()[30]);
@@ -128,7 +147,7 @@ public class JunctionAssemblyTest
         read3.getBaseQuality()[13] = 20;
 
         readBases = extBases.substring(0, 10) + "TTTT" + extBases.substring(14) + refBases;
-        Read read4 = createRead(READ_ID_GENERATOR.nextId(), juncPosition, readBases, makeCigarString(readBases, extBases.length(), 0));
+        read4 = createRead(READ_ID_GENERATOR.nextId(), juncPosition, readBases, makeCigarString(readBases, extBases.length(), 0));
 
         reads = List.of(read1, read2, read3, read4);
         extSeqBuilder = new ExtensionSeqBuilder(junction, reads, 2);
