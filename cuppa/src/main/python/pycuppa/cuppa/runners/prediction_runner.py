@@ -73,19 +73,13 @@ class PredictionRunner(LoggerMixin):
 
     def get_X(self) -> None:
 
-        if self.using_old_features_format:
-            paths = CuppaFeaturesPaths.from_dir(self.features_path, file_format="old")
-            loader = FeatureLoaderOld(
-                paths=paths,
-                genome_version=self.genome_version,
-                excl_chroms=self.excl_chroms,
-                verbose=True
-            )
-
-            X = loader.load_features()
-        else:
-            loader = FeatureLoader(self.features_path, sample_id=self.sample_id)
+        if not self.using_old_features_format:
+            loader = FeatureLoader(self.features_path, sample_id=self.sample_id, excl_chroms=self.excl_chroms)
             X = loader.load()
+        else:
+            paths = CuppaFeaturesPaths.from_dir(self.features_path, file_format="old")
+            loader = FeatureLoaderOld(paths=paths, genome_version=self.genome_version, excl_chroms=self.excl_chroms, verbose=True)
+            X = loader.load_features()
 
         X = self.cuppa_classifier.fill_missing_cols(X)
 
@@ -144,10 +138,10 @@ class PredictionRunner(LoggerMixin):
 
     def add_filename_affixes(self, filename: str):
         if self.sample_id is not None:
-            filename = f"{self.sample_id}.{filename}"
+            filename = self.sample_id + "." + filename
 
         if self.compress_tsv_files and filename.endswith(".tsv"):
-            filename = f"{filename}.gz"
+            filename += ".gz"
 
         return filename
 
@@ -168,6 +162,11 @@ class PredictionRunner(LoggerMixin):
 
     def run(self) -> None:
         self.get_X()
+
+        if self.sample_id is None and self.X.shape[0] > 1:
+            self.logger.info("`sample_id` must be provided when predicting on one sample")
+            raise ValueError
+
         self.get_predictions()
         self.get_pred_summ()
         self.get_vis_data()
