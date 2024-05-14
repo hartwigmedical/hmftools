@@ -140,6 +140,8 @@ public class AmberLohCalcs
                 }
             }
 
+            sampleChromosomeBafs.clear();
+
             List<Double> lohSiteAFs = Lists.newArrayList();
             List<Double> lohSiteImpliedPurities = Lists.newArrayList();
             int totalLohSupportCount = 0;
