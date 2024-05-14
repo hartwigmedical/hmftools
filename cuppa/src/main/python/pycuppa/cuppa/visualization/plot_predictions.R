@@ -1,18 +1,27 @@
 options(max.print=500)
 options(stringsAsFactors=FALSE)
 
-suppressMessages({
-   library(ggplot2)
-   library(ggh4x)
-   library(stringr)
-   library(patchwork)
-})
-
 ## Args ================================
 args <- commandArgs(trailingOnly = TRUE)
 
 VIS_DATA_PATH <- args[1]
 PLOT_PATH <- args[2]
+
+## Dependencies ================================
+load_packages <- function(){
+   required_packages <- c("ggplot2", "ggh4x", "stringr", "patchwork")
+   
+   missing_packages <- required_packages[!(required_packages %in% rownames(installed.packages()))]
+   if(length(missing_packages) > 0){
+      warning("Installing missing packages: ", paste(missing_packages, collapse=", "))
+      install.packages(missing_packages)
+   }
+   
+   for(package in required_packages)
+      suppressWarnings(suppressMessages(library(package, character.only=TRUE)))
+}
+
+load_packages()
 
 ## Load data ================================
 VIS_DATA <- read.delim(VIS_DATA_PATH)
