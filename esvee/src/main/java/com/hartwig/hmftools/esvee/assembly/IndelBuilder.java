@@ -57,12 +57,12 @@ public final class IndelBuilder
         if(junction.isForward())
         {
             if(read.unclippedEnd() > junction.Position)
-                return read.indelImpliedAlignmentEnd() > 0 || read.isConvertedIndel();
+                return read.indelImpliedAlignmentEnd() > 0;
         }
         else
         {
             if(read.unclippedStart() < junction.Position)
-                return read.indelImpliedAlignmentStart() > 0 || read.isConvertedIndel();
+                return read.indelImpliedAlignmentStart() > 0;
         }
 
         return false;

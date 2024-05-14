@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.basesMatch;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 
+import static htsjdk.samtools.CigarOperator.S;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -182,32 +184,35 @@ public class RefBaseAssembly
 
     private int[] getReadAssemblyStartIndices(final Read read)
     {
+        // ensure no indel-adjusted unclipped start is used when aligned to ref bases
+        int unclippedStart = read.unclippedStart();
+
         if(mJunction.isForward())
         {
-            if(!positionWithin(read.unclippedStart(), mExtensionRefPosition, mJunction.Position))
+            if(!positionWithin(unclippedStart, mExtensionRefPosition, mJunction.Position))
             {
-                if(read.unclippedStart() >= mJunction.Position)
+                if(unclippedStart >= mJunction.Position)
                     return null;
 
-                int readIndex = mExtensionRefPosition - read.unclippedStart();
+                int readIndex = mExtensionRefPosition - unclippedStart;
                 return new int[] {readIndex, 0};
             }
 
-            return new int[] {0, read.unclippedStart() - mExtensionRefPosition};
+            return new int[] {0, unclippedStart - mExtensionRefPosition};
         }
         else
         {
-            if(!positionWithin(read.unclippedStart(), mJunction.Position, mExtensionRefPosition))
+            if(!positionWithin(unclippedStart, mJunction.Position, mExtensionRefPosition))
             {
-                if(read.unclippedStart() >= mExtensionRefPosition)
+                if(unclippedStart >= mExtensionRefPosition)
                     return null;
 
                 // index off the relative start positions
-                int readIndex = mJunction.Position - read.unclippedStart();
+                int readIndex = mJunction.Position - unclippedStart;
                 return new int[] {readIndex, mJunctionSequenceIndex};
             }
 
-            return new int[] {0, read.unclippedStart() - mJunction.Position};
+            return new int[] {0, unclippedStart - mJunction.Position};
         }
     }
 

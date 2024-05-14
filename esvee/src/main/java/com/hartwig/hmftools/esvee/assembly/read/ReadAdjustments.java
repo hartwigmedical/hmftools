@@ -17,11 +17,10 @@ public final class ReadAdjustments
 {
     public static boolean convertEdgeIndelsToSoftClip(final Read read)
     {
-        return convertEdgeIndelsToSoftClip(read, INDEL_TO_SC_MIN_SIZE_SOFTCLIP, INDEL_TO_SC_MAX_SIZE_SOFTCLIP, true);
+        return convertEdgeIndelsToSoftClip(read, INDEL_TO_SC_MIN_SIZE_SOFTCLIP, INDEL_TO_SC_MAX_SIZE_SOFTCLIP);
     }
 
-    public static boolean convertEdgeIndelsToSoftClip(
-            final Read read, final int minIndelLength, final int maxIndelLength, boolean allowDoubleConversion)
+    public static boolean convertEdgeIndelsToSoftClip(final Read read, final int minIndelLength, final int maxIndelLength)
     {
         if(read.cigarElements().size() < 3)
             return false;
@@ -38,52 +37,13 @@ public final class ReadAdjustments
                 read.cigarElements().get(lastIndex), read.cigarElements().get(lastIndex - 1), read.cigarElements().get(lastIndex - 2),
                 minIndelLength, maxIndelLength);
 
-        int rightEdgeDistance = rightSoftClipLength > 0 ? read.cigarElements().get(lastIndex).getLength() : 0;
-
-        if(leftSoftClipLength > 0 && rightSoftClipLength > 0 && !allowDoubleConversion)
-        {
-            if(leftEdgeDistance < rightEdgeDistance)
-                rightSoftClipLength = 0;
-            else
-                leftSoftClipLength = 0;
-        }
-
         if(leftSoftClipLength > 0 || rightSoftClipLength > 0)
         {
-            if(allowDoubleConversion)
-                read.setIndelUnclippedBounds(leftSoftClipLength, rightSoftClipLength);
-            else
-                read.convertEdgeIndelToSoftClip(leftSoftClipLength, rightSoftClipLength);
-
+            read.setIndelUnclippedBounds(leftSoftClipLength, rightSoftClipLength);
             return true;
         }
 
         return false;
-    }
-
-    public static void convertIndelSoftClip(final Read read, boolean onLeft)
-    {
-        if(read.cigarElements().size() < 3)
-            return;
-
-        if(onLeft)
-        {
-            int leftSoftClipLength = calcIndelToSoftClipLength(
-                    read.cigarElements().get(0), read.cigarElements().get(1), read.cigarElements().get(2),
-                    INDEL_TO_SC_MIN_SIZE_SOFTCLIP, INDEL_TO_SC_MAX_SIZE_SOFTCLIP);
-
-            read.convertEdgeIndelToSoftClip(leftSoftClipLength, 0);
-        }
-        else
-        {
-            int lastIndex = read.cigarElements().size() - 1;
-
-            int rightSoftClipLength = calcIndelToSoftClipLength(
-                    read.cigarElements().get(lastIndex), read.cigarElements().get(lastIndex - 1), read.cigarElements().get(lastIndex - 2),
-                    INDEL_TO_SC_MIN_SIZE_SOFTCLIP, INDEL_TO_SC_MAX_SIZE_SOFTCLIP);
-
-            read.convertEdgeIndelToSoftClip(0, rightSoftClipLength);
-        }
     }
 
     private static int calcIndelToSoftClipLength(

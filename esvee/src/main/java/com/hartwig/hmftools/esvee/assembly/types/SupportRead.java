@@ -82,11 +82,8 @@ public class SupportRead
         mFlags = read.getFlags();
         mCigar = read.cigarString();
 
-        mUnclippedStart = read.indelImpliedAlignmentStart() > 0 ?
-                min(read.indelImpliedAlignmentStart(), read.unclippedStart()) : read.unclippedStart();
-
-        mUnclippedEnd = read.indelImpliedAlignmentEnd() > 0 ?
-                max(read.indelImpliedAlignmentEnd(), read.unclippedEnd()) : read.unclippedEnd();
+        mUnclippedStart = read.unclippedStart();
+        mUnclippedEnd = read.unclippedEnd();
 
         mMateChromosome = read.mateChromosome();
         mMateAlignmentStart = read.mateAlignmentStart();

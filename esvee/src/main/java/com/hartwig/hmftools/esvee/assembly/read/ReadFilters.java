@@ -11,11 +11,11 @@ public final class ReadFilters
     {
         if(junction.isForward())
         {
-            return read.isRightClipped() && read.unclippedEnd() > junction.Position;
+            return read.isRightClipped() && read.maxUnclippedEnd() > junction.Position;
         }
         else
         {
-            return read.isLeftClipped() && read.unclippedStart() < junction.Position;
+            return read.isLeftClipped() && read.minUnclippedStart() < junction.Position;
         }
     }
 
@@ -35,11 +35,11 @@ public final class ReadFilters
     {
         if(junction.isForward())
         {
-            return read.isRightClipped() ? max(read.unclippedEnd() - junction.Position, 0) : 0;
+            return read.isRightClipped() ? max(read.maxUnclippedEnd() - junction.Position, 0) : 0;
         }
         else
         {
-            return read.isLeftClipped() ? max(junction.Position - read.unclippedStart(), 0) : 0;
+            return read.isLeftClipped() ? max(junction.Position - read.minUnclippedStart(), 0) : 0;
         }
     }
 

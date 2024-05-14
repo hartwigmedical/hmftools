@@ -32,7 +32,7 @@ public final class ReadUtils
                 return INVALID_INDEX;
 
             int baseDiff = alignmentStart - refPosition;
-            int softClipBases = alignmentStart - read.unclippedStart();
+            int softClipBases = alignmentStart - read.minUnclippedStart();
             return baseDiff <= softClipBases ? softClipBases - baseDiff : INVALID_INDEX;
         }
         else if(refPosition >= alignmentEnd)
@@ -41,7 +41,7 @@ public final class ReadUtils
                 return INVALID_INDEX;
 
             int baseDiff = refPosition - alignmentEnd;
-            int softClipBases = read.unclippedEnd() - alignmentEnd;
+            int softClipBases = read.maxUnclippedEnd() - alignmentEnd;
             return baseDiff <= softClipBases ? read.basesLength() - (softClipBases - baseDiff) - 1 : INVALID_INDEX;
         }
 

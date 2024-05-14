@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.esvee.assembly.read;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.CigarUtils.cigarElementsFromStr;
@@ -53,10 +54,12 @@ public class Read
     private SupplementaryReadData mSupplementaryData;
 
     private boolean mCheckedIndelCoords;
+
     private IndelCoords mIndelCoords;
-    private int mIndelImpliedAlignmentStart;
-    private int mIndelImpliedAlignmentEnd;
-    private boolean mConvertedIndel;
+    private Integer mIndelImpliedAlignmentStart;
+    private Integer mIndelImpliedAlignmentEnd;
+    private Integer mIndelImpliedUnclippedStart;
+    private Integer mIndelImpliedUnclippedEnd;
 
     private boolean mIsReference;
     private int mTrimCount;
@@ -79,10 +82,14 @@ public class Read
         mSuppDataExtracted = false;
         mSupplementaryData = null;
         mCheckedIndelCoords = false;
+
+        // only set for adjusted indel reads
         mIndelCoords = null;
-        mIndelImpliedAlignmentStart = 0;
-        mIndelImpliedAlignmentEnd = 0;
-        mConvertedIndel = false;
+        mIndelImpliedAlignmentStart = null;
+        mIndelImpliedAlignmentEnd = null;
+        mIndelImpliedUnclippedStart = null;
+        mIndelImpliedUnclippedEnd = null;
+
         mTrimCount = 0;
     }
 
@@ -145,10 +152,8 @@ public class Read
     public int unclippedEnd() { return mUnclippedEnd; }
 
     // convenience
-
-    // note: converted INDELs from deletes may have their unclipped position inside the alignment
-    public boolean isLeftClipped() { return mUnclippedStart != mAlignmentStart; }
-    public boolean isRightClipped() { return mUnclippedEnd != mAlignmentEnd; }
+    public boolean isLeftClipped() { return mUnclippedStart != mAlignmentStart || mIndelImpliedUnclippedStart != null; }
+    public boolean isRightClipped() { return mUnclippedEnd != mAlignmentEnd || mIndelImpliedUnclippedEnd != null; }
 
     public int leftClipLength() { return max(mAlignmentStart - mUnclippedStart, 0); } // no known need to use the indel-implied SC value
     public int rightClipLength() { return max(mUnclippedEnd - mAlignmentEnd, 0); }
@@ -359,7 +364,7 @@ public class Read
             if(isDelete)
                 mIndelImpliedAlignmentStart += mCigarElements.get(1).getLength();
 
-            mUnclippedStart = mIndelImpliedAlignmentStart - leftSoftClipBases;
+            mIndelImpliedUnclippedStart = mIndelImpliedAlignmentStart - leftSoftClipBases;
         }
 
         if(rightSoftClipBases > 0)
@@ -372,44 +377,23 @@ public class Read
             if(isDelete)
                 mIndelImpliedAlignmentEnd -= mCigarElements.get(lastIndex - 1).getLength();
 
-            mUnclippedEnd = mIndelImpliedAlignmentEnd + rightSoftClipBases;
+            mIndelImpliedUnclippedEnd = mIndelImpliedAlignmentEnd + rightSoftClipBases;
         }
     }
 
-    public int indelImpliedAlignmentStart() { return mIndelImpliedAlignmentStart; }
-    public int indelImpliedAlignmentEnd() { return mIndelImpliedAlignmentEnd; }
+    public int indelImpliedAlignmentStart() { return mIndelImpliedAlignmentStart != null ? mIndelImpliedAlignmentStart : 0; }
+    public int indelImpliedAlignmentEnd() { return mIndelImpliedAlignmentEnd != null ? mIndelImpliedAlignmentEnd : 0; }
 
-    public void convertEdgeIndelToSoftClip(int leftSoftClipBases, int rightSoftClipBases)
+    // take indel implied read ends into consideration for methods requiring the maximum possible read soft-clip extension
+    // note: converted INDELs from deletes may have their unclipped position inside the alignment
+    public int minUnclippedStart()
     {
-        // convert elements and recompute read state
-        int newReadStart = mAlignmentStart;
-
-        if(leftSoftClipBases > 0)
-        {
-            newReadStart += mCigarElements.get(0).getLength(); // moves by the M alignment at the first position
-            mCigarElements.remove(0);
-
-            if(mCigarElements.get(0).getOperator() == D)
-                newReadStart += mCigarElements.get(0).getLength(); // move past the delete as well
-
-            mCigarElements.set(0, new CigarElement(leftSoftClipBases, S));
-            mConvertedIndel = true;
-        }
-
-        if(rightSoftClipBases > 0)
-        {
-            mCigarElements.remove(mCigarElements.size() - 1);
-            mCigarElements.set(mCigarElements.size() - 1, new CigarElement(rightSoftClipBases, S));
-            mConvertedIndel = true;
-        }
-
-        // revert since these no longer apply
-        mIndelImpliedAlignmentStart = 0;
-        mIndelImpliedAlignmentEnd = 0;
-
-        updateCigarString();
-        setBoundaries(newReadStart);
+        return mIndelImpliedUnclippedStart == null ? mUnclippedStart : min(mUnclippedStart, mIndelImpliedUnclippedStart);
     }
 
-    public boolean isConvertedIndel() { return mConvertedIndel; }
+    public int maxUnclippedEnd()
+    {
+        return mIndelImpliedUnclippedEnd == null ? mUnclippedEnd : max(mUnclippedEnd, mIndelImpliedUnclippedEnd);
+    }
+
 }
