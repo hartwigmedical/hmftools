@@ -202,7 +202,7 @@ public class BreakendWriter
                 String facingBreakendIds = breakend.facingBreakends().stream().map(x -> String.valueOf(x.id())).collect(Collectors.joining(ITEM_DELIM));
                 sj.add(facingBreakendIds);
 
-                sj.add(AlternativeAlignment.altAlignmentsStr(breakend.alternativeAlignments()));
+                sj.add(AlternativeAlignment.toVcfTag(breakend.alternativeAlignments()));
 
                 if(mTruthsetAnnotation.enabled())
                     sj.add(mTruthsetAnnotation.findTruthsetAnnotation(breakend));

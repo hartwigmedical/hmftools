@@ -153,7 +153,7 @@ public class AlignData
         if(XaTag == null || XaTag.isEmpty())
             return Collections.emptyList();
 
-        List<AlternativeAlignment> alternativeAlignments = AlternativeAlignment.convertLocationTag(XaTag);
+        List<AlternativeAlignment> alternativeAlignments = AlternativeAlignment.fromLocationTag(XaTag);
 
         alternativeAlignments.add(
                 0, new AlternativeAlignment(RefLocation.Chromosome, RefLocation.start(), orientation(), Cigar, MapQual));

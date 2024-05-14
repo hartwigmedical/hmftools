@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.types;
 
-import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.calcCigarAlignedLength;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.isPossibleLink;
@@ -60,7 +60,7 @@ public class SglMapping
         byte orientation = (strandSequence == breakendOrientation) ? NEG_ORIENT : POS_ORIENT;
 
         if(orientation == POS_ORIENT)
-            position += calcCigarLength(cigar);
+            position += calcCigarAlignedLength(cigar);
 
         int qualScore = !items[3].isEmpty() ? Integer.parseInt(items[3]) : 0;
 

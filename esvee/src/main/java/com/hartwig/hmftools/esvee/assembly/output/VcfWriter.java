@@ -51,7 +51,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS_DESC;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formPairedAltString;
 import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.formSingleAltString;
-import static com.hartwig.hmftools.esvee.alignment.AlternativeAlignment.altAlignmentsStr;
+import static com.hartwig.hmftools.esvee.alignment.AlternativeAlignment.toVcfTag;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -263,7 +263,7 @@ public class VcfWriter implements AutoCloseable
         builder.attribute(AVG_FRAG_LENGTH, breakend.averageFragmentLength());
 
         if(breakend.alternativeAlignments() != null)
-            builder.attribute(INSALN, altAlignmentsStr(breakend.alternativeAlignments()));
+            builder.attribute(INSALN, toVcfTag(breakend.alternativeAlignments()));
 
         AssemblyAlignment assemblyAlignment = breakend.assembly();
 

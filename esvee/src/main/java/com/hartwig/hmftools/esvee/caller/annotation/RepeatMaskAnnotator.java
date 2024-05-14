@@ -1,8 +1,15 @@
 package com.hartwig.hmftools.esvee.caller.annotation;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.common.bam.CigarUtils.cigarAlignedLength;
+import static com.hartwig.hmftools.common.bam.CigarUtils.leftSoftClipped;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.INSALN;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.caller.annotation.AlignmentData.fromInsertSequenceAlignments;
+
+import static htsjdk.samtools.CigarOperator.I;
+import static htsjdk.samtools.CigarOperator.M;
 
 import java.util.List;
 
@@ -10,7 +17,10 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations;
 import com.hartwig.hmftools.common.gripss.RepeatMaskData;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.esvee.alignment.AlternativeAlignment;
 import com.hartwig.hmftools.esvee.caller.Variant;
+
+import htsjdk.samtools.Cigar;
 
 public class RepeatMaskAnnotator
 {
@@ -59,7 +69,8 @@ public class RepeatMaskAnnotator
 
     public RepeatMaskAnnotation annotate(final String insertSequence, final String alignmentsStr)
     {
-        List<AlignmentData> alignments = fromInsertSequenceAlignments(alignmentsStr);
+        // List<AlignmentData> alignments = fromInsertSequenceAlignments(alignmentsStr);
+        List<AlternativeAlignment> alignments = AlternativeAlignment.fromVcfTag(alignmentsStr);
 
         if(alignments == null || alignments.isEmpty())
             return null;
@@ -67,9 +78,9 @@ public class RepeatMaskAnnotator
         double insSeqLength = insertSequence.length();
 
         // first check for a poly-A or T
-        for(AlignmentData alignment : alignments)
+        for(AlternativeAlignment alignment : alignments)
         {
-            String matchedBases = alignment.extractMatchedBases(insertSequence);
+            String matchedBases = extractMatchedBases(insertSequence, alignment);
             double polyAtPerc = calcPolyATPercent(matchedBases);
 
             if(polyAtPerc >= POLY_A_T_PERC)
@@ -82,19 +93,22 @@ public class RepeatMaskAnnotator
         }
 
         RepeatMaskData topRm = null;
-        AlignmentData topAlignment = null;
+        AlternativeAlignment topAlignment = null;
         double topCoverage = 0;
 
-        for(AlignmentData alignment : alignments)
+        for(AlternativeAlignment alignment : alignments)
         {
-            List<RepeatMaskData> rmMatches = mAnnotationCache.findMatches(alignment.Chromosome, alignment.Region);
+            int cigarLength = cigarAlignedLength(alignment.cigar());
+            int alignmentEnd = alignment.Position + cigarLength - 1;
+            BaseRegion alignmentRegion = new BaseRegion(alignment.Position, alignmentEnd);
+            List<RepeatMaskData> rmMatches = mAnnotationCache.findMatches(alignment.Chromosome, alignmentRegion);
 
             if(rmMatches.isEmpty())
                 continue;
 
             for(RepeatMaskData rmData : rmMatches)
             {
-                int overlap = alignment.overlappingBases(rmData.Region);
+                int overlap = min(alignmentRegion.end(), rmData.Region.end()) - max(alignmentRegion.start(), rmData.Region.start()) + 1;
 
                 if(overlap < MIN_OVERLAP)
                     continue;
@@ -114,6 +128,22 @@ public class RepeatMaskAnnotator
         }
 
         return topRm != null ? new RepeatMaskAnnotation(topRm, topCoverage, topAlignment) : null;
+    }
+
+    private static String extractMatchedBases(final String insertSequence, final AlternativeAlignment alignment)
+    {
+        Cigar cigar = alignment.cigar();
+
+        int matchStartPos = leftSoftClipped(cigar) ? cigar.getFirstCigarElement().getLength() : 0;
+        int matchBases = cigar.getCigarElements().stream()
+                .filter(x -> x.getOperator() == M || x.getOperator() == I)
+                .mapToInt(x -> x.getLength()).sum();
+
+        int insSeqLength = insertSequence.length();
+        int startPos = min(matchStartPos, insSeqLength);
+        int endPos = min(matchStartPos + matchBases, insSeqLength);
+
+        return insertSequence.substring(startPos, endPos);
     }
 
     private static double calcPolyATPercent(final String sequence)
