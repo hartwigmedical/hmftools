@@ -403,7 +403,7 @@ plot_probs <- function(vis_data){
    ) +
    scale_fill_gradient(
       low="white", high="mediumseagreen", na.value="grey95", limits=c(0,1),
-      guide=guide_colorbar(frame.colour="black", ticks.colour="black", barheight=3.5)
+      guide=guide_colorbar(frame.colour="black", ticks.colour="black", barheight=3.5, frame.linewidth=0.25)
    ) +
    labs(
       title=paste0("Probabilities by classifier", warning_string),
@@ -456,7 +456,7 @@ plot_cv_performance <- function(vis_data){
    ) +
    scale_fill_gradientn(
       colors=c("white", "#fffedc", "#76c99b"), na.value="grey95", limits=c(0,1),
-      guide=guide_colorbar(frame.colour="black", ticks.colour="black", barheight=3.5)
+      guide=guide_colorbar(frame.colour="black", ticks.colour="black", barheight=3.5, frame.linewidth=0.25)
    ) +
    labs(
       title=sprintf("%s: Training set performance", MAPPINGS_CLASSIFIER_NAMES[["dna_combined"]]), 
@@ -502,7 +502,7 @@ plot_signatures <- function(vis_data){
          quantile_info$colors[quantile_info$colors != "grey95"], 
          names=quantile_info$labels[quantile_info$labels != "0"]
       ),
-      guide=guide_legend(override.aes=list(colour="black", linetype=1)),
+      guide=guide_legend(override.aes=list(colour="black", linetype=1, linewidth=0.25)),
       na.value="grey95", drop=TRUE
    ) +
    labs(
@@ -576,7 +576,7 @@ plot_feat_contrib <- function(vis_data){
       low="indianred", high="mediumseagreen", trans="log",
       breaks=legend_breaks,
       labels = function(x) sprintf("%g", x),
-      guide=guide_colorbar(frame.colour="black", ticks.colour="black", barheight=5)
+      guide=guide_colorbar(frame.colour="black", ticks.colour="black", barheight=5, frame.linewidth=0.25)
    ) +
    labs(
       fill="Odds ratio\n(subtype / not subtype)", 
@@ -674,4 +674,3 @@ write_plots <- function(VIS_DATA){
 }
 
 write_plots(VIS_DATA)
-
