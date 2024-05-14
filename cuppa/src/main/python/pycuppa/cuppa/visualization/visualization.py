@@ -34,9 +34,7 @@ class CuppaVisDataBuilder(LoggerMixin):
     ):
         self.predictions = predictions
         self.cv_performance = cv_performance
-
         self.sample_id = sample_id
-
         self.require_all_feat_types = require_all_feat_types
 
         self.min_driver_likelihood = min_driver_likelihood
@@ -44,7 +42,8 @@ class CuppaVisDataBuilder(LoggerMixin):
 
         self.verbose = verbose
 
-        self._get_predictions_one_sample()
+        if sample_id is not None:
+            self._get_predictions_one_sample()
 
     COLUMN_NAMES = [
         "sample_id", "data_type", "clf_group", "clf_name",
@@ -56,13 +55,7 @@ class CuppaVisDataBuilder(LoggerMixin):
         if not self.predictions.is_multi_sample:
             return self.predictions
 
-        if self.sample_id is None:
-            self.logger.error("Cannot build vis data of many samples. Please provide `sample_id` when `predictions` contains multiple samples")
-            raise Exception
-
-        predictions = self.predictions.get_samples(self.sample_id)
-
-        self.predictions = predictions
+        self.predictions = self.predictions.get_samples(self.sample_id)
 
     def _check_snv_counts_feature_exists(self):
         FEAT_NAME_SNV_COUNT = "event.tmb.snv_count"
@@ -77,7 +70,7 @@ class CuppaVisDataBuilder(LoggerMixin):
     def get_probs(self) -> pd.DataFrame:
 
         if self.verbose:
-            self.logger.info("Getting probabilities")
+            self.logger.debug("Getting probabilities")
 
         return self.predictions.get_data_types("prob").wide_to_long()
 
@@ -108,7 +101,7 @@ class CuppaVisDataBuilder(LoggerMixin):
 
         return feat_contrib
 
-    def _get_top_drivers(self,) -> CuppaPrediction | None:
+    def _get_top_drivers(self) -> CuppaPrediction | None:
         feat_contrib = self._subset_feat_contrib_by_feat_pattern("driver")
 
         if feat_contrib is None:
@@ -198,7 +191,7 @@ class CuppaVisDataBuilder(LoggerMixin):
     ## Merge ================================
     @staticmethod
     def add_ranks(vis_data: pd.DataFrame) -> None:
-        grouper = vis_data.groupby(["data_type", "clf_name", "feat_name"], dropna=False)
+        grouper = vis_data.groupby(["sample_id", "data_type", "clf_name", "feat_name"], dropna=False)
 
         vis_data["rank"] = grouper["data_value"]\
             .rank(method="first", ascending=False, na_option="bottom")\
@@ -218,9 +211,12 @@ class CuppaVisDataBuilder(LoggerMixin):
 
     def build(self) -> CuppaVisData:
 
-        sample_id = self.predictions.sample_ids[0]
+        sample_ids = self.predictions.sample_ids
         if self.verbose:
-            self.logger.info("Building vis data for sample: " + sample_id)
+            if len(sample_ids) == 1:
+                self.logger.info("Building vis data for sample: " + sample_ids[0])
+            else:
+                self.logger.info("Building vis data for %i samples", len(sample_ids))
 
         vis_data = pd.concat([
             self.get_probs(),
@@ -272,24 +268,24 @@ class CuppaVisData(pd.DataFrame, LoggerMixin):
 class CuppaVisPlotter(LoggerMixin):
     def __init__(self, vis_data: CuppaVisData, plot_path: str, verbose: bool = True):
         self.vis_data = vis_data
-        self._check_vis_data_has_one_sample()
-
         self.plot_path = os.path.expanduser(plot_path)
-        self._check_plot_path_extension()
-
-        self._tmp_vis_data_path = os.path.join(os.path.dirname(self.plot_path), "cuppa.vis_data.tmp.tsv")
-
         self.verbose = verbose
 
-    def _check_vis_data_has_one_sample(self):
+        self._check_number_of_samples()
+        self._check_plot_path_extension()
+        self._tmp_vis_data_path = os.path.join(os.path.dirname(self.plot_path), "cuppa.vis_data.tmp.tsv")
+
+    def _check_number_of_samples(self):
         sample_ids = self.vis_data["sample_id"].dropna().unique()
-        if len(sample_ids) > 1:
-            self.logger.error("Cannot plot visualization when `vis_data` contains multiple samples")
-            raise Exception
+
+        max_samples = 25
+        if len(sample_ids) > max_samples:
+            self.logger.error("Plotting predictions for >", max_samples, " is not supported")
+            raise RuntimeError
 
     def _check_plot_path_extension(self):
-        if not self.plot_path.endswith((".pdf", ".png", ".jpg")):
-            self.logger.error("`plot_path` must end with .pdf, .png, or .jpg")
+        if not self.plot_path.endswith((".pdf", ".png")):
+            self.logger.error("`plot_path` must end with .pdf or .png")
             raise ValueError
 
     def write_tmp_vis_data(self):
@@ -305,19 +301,19 @@ class CuppaVisPlotter(LoggerMixin):
                 self.logger.debug("Removing temporary vis data at: " + self._tmp_vis_data_path)
 
     def plot(self) -> None:
-        self.write_tmp_vis_data()
 
-        executor = RscriptExecutor(
-            args = [
+        try:
+            self.write_tmp_vis_data()
+
+            executor = RscriptExecutor([
                 RSCRIPT_PLOT_PREDICTIONS_PATH,
                 self._tmp_vis_data_path,
                 self.plot_path
-            ],
-            ignore_error=True
-        )
-        executor.run()
+            ])
+            executor.run()
 
-        self.remove_tmp_vis_data()
+        finally:
+            self.remove_tmp_vis_data()
 
         executor.raise_if_error()
 
