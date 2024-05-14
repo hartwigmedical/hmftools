@@ -12,9 +12,9 @@ from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredSummary
 from cuppa.runners.args import DEFAULT_RUNNER_ARGS
 from cuppa.compose.pipeline import PipelineCrossValidator
-from cuppa.logger import LoggerMixin, reset_logging_basic_config
+from cuppa.logger import LoggerMixin, initialize_logging
 from cuppa.performance.confusion_matrix import ConfusionMatrix
-from cuppa.sample_data.cuppa_features import CuppaFeaturesPaths, FeatureLoaderOld, FeatureLoaderNew, CuppaFeatures
+from cuppa.sample_data.cuppa_features import CuppaFeaturesPaths, FeatureLoaderOld, FeatureLoader, CuppaFeatures
 from cuppa.sample_data.sample_metadata import SampleMetadata, TrainingSampleSelector
 from cuppa.performance.performance_stats import PerformanceStats
 
@@ -43,7 +43,8 @@ class TrainingRunner(LoggerMixin):
         n_jobs: int = DEFAULT_RUNNER_ARGS.n_jobs,
 
         log_to_file: bool = DEFAULT_RUNNER_ARGS.log_to_file,
-        log_path: Optional[str] = DEFAULT_RUNNER_ARGS.log_path
+        log_path: Optional[str] = DEFAULT_RUNNER_ARGS.log_path,
+        log_format: str = DEFAULT_RUNNER_ARGS.log_format
     ):
         ## Args --------------------------------
         ## Data
@@ -70,7 +71,8 @@ class TrainingRunner(LoggerMixin):
         ## Logging
         self.log_to_file = log_to_file
         self.log_path = log_path
-        self.set_log_path()
+        self.log_format = log_format
+        self.set_up_logging()
 
         ## Attributes assigned at run time --------------------------------
         self.sample_metadata: SampleMetadata = None
@@ -91,15 +93,11 @@ class TrainingRunner(LoggerMixin):
     def __repr__(self) -> str:
         return self.__class__.__name__ + " args:\n" + pformat(vars(self))
 
-    def set_log_path(self) -> None:
-        if not self.log_to_file:
-            return None
+    def set_up_logging(self) -> None:
+        if self.log_to_file and self.log_path is None:
+            self.log_path = os.path.join(self.output_dir, "train.log")
 
-        log_path = self.log_path
-        if log_path is None:
-            log_path = os.path.join(self.output_dir, "run.log")
-
-        reset_logging_basic_config(filename=log_path)
+        initialize_logging(filename=self.log_path, format=self.log_format)
 
     ## Load data ================================
     def load_sample_metadata(self) -> None:
@@ -134,14 +132,14 @@ class TrainingRunner(LoggerMixin):
     def get_X(self) -> None:
 
         if not self.using_old_features_format:
-            loader = FeatureLoaderNew(self.features_path)
+            loader = FeatureLoader(self.features_path)
             X = loader.load()
             self.X = X
             return None
             ## TODO: add DNA and RNA sample selection
 
 
-        paths = CuppaFeaturesPaths.from_dir(self.features_path, basenames_mode="old")
+        paths = CuppaFeaturesPaths.from_dir(self.features_path, file_format="old")
 
         loader = FeatureLoaderOld(
             paths=paths,

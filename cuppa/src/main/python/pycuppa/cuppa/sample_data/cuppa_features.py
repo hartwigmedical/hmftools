@@ -18,8 +18,7 @@ class CuppaFeaturesPaths(pd.Series, LoggerMixin):
     def __init__(self, paths: dict[str, str] | pd.Series):
         super().__init__(paths)
 
-    BASENAMES_OLD = dict(
-        #metadata="cup_ref_sample_data.csv",
+    PATTERNS_OLD = dict(
         gen_pos="cup_ref_sample_pos_freq_counts.csv",
         snv96="cup_ref_snv_counts.csv",
         driver_fusion_virus="cup_ref_cohort_feature_data.csv",
@@ -31,71 +30,65 @@ class CuppaFeaturesPaths(pd.Series, LoggerMixin):
         alt_sj="cup_ref_alt_sj_sample.csv",
     )
 
-    BASENAMES_NEW = dict(
-        gen_pos="gen_pos.tsv",
-        snv96="snv96.tsv",
-        event="event.tsv",
-        sig="sig.tsv",
+    PATTERNS_NEW = dict(
+        snv="cuppa_data.cohort.snv.*.tsv",
+        sv="cuppa_data.cohort.sv.*.tsv",
+        trait="cuppa_data.cohort.sample_trait.*.tsv",
+        driver_fusion_virus="cuppa_data.cohort.feature.*.tsv",
 
-        gene_exp="gene_exp.tsv",
-        alt_sj="alt_sj.tsv",
+        gene_exp="cuppa_data.cohort.gene_exp.*.tsv",
+        alt_sj="cuppa_data.cohort.alt_sj.*.tsv",
     )
 
-    OPTIONAL_BASENAME_KEYS = ("gene_exp", "alt_sj")
+    OPTIONAL_PATTERN_KEYS = ("gene_exp", "alt_sj")
+
+    @staticmethod
+    def find_files_in_dir_by_pattern(directory: str, pattern: str) -> pd.Series:
+        files = pd.Series(os.listdir(directory))
+        matched_files = files[files.str.match(pattern)]
+        return matched_files
 
     @classmethod
     def from_dir(
         cls,
         directory: str,
-        basenames_mode: Literal["old", "new"] = "new"
+        file_format: Literal["old", "new"] = "new"
     ) -> "CuppaFeaturesPaths":
 
-        if basenames_mode == "new":
-            basenames_expected = cls.BASENAMES_NEW
-        elif basenames_mode == "old":
-            basenames_expected = cls.BASENAMES_OLD
+        logger = cls.get_class_logger(cls)
+
+        if file_format == "new":
+            patterns_expected = cls.PATTERNS_NEW
+        elif file_format == "old":
+            patterns_expected = cls.PATTERNS_OLD
         else:
-            cls.get_class_logger(cls).error("`basenames_mode` must be 'old' or 'new'")
+            cls.get_class_logger(cls).error("`file_format` must be 'old' or 'new'")
             raise ValueError
 
-        basenames = {}
-        basenames_missing = {}
+        patterns_missing = {}
         paths = {}
 
-        for key, basename in basenames_expected.items():
+        for key, pattern in patterns_expected.items():
 
-            basename_gz = basename + ".gz"
-            path = os.path.join(directory, basename_gz)
-            if os.path.exists(path):
-                basenames[key] = basename_gz
-                paths[key] = path
-                continue
+            matched_files = cls.find_files_in_dir_by_pattern(directory, pattern)
 
-            path = os.path.join(directory, basename)
-            if os.path.exists(path):
-                basenames[key] = basename
-                paths[key] = path
-                continue
+            if len(matched_files) == 0:
+                patterns_missing[key] = pattern
 
-            basenames_missing[key] = basename
+                if key in cls.OPTIONAL_PATTERN_KEYS:
+                    logger.warning("Missing optional input file type '%s' with pattern '%s'" % (key, pattern))
+                else:
+                    logger.error("Missing required input file type '%s' with pattern '%s'" % (key, pattern))
 
-        if len(basenames_missing)==0:
-            return CuppaFeaturesPaths(paths)
+            if len(matched_files) > 1:
+                logger.warning("Pattern '%s' matched multiple files. Using the first: %s" % (pattern, ', '.join(matched_files)))
 
+            matched_file = os.path.join(directory, matched_files.iloc[0])
 
-        required_basenames_missing = {}
-        logger = cls.get_class_logger(cls)
-        for key, basename in basenames_missing.items():
+            paths[key] = matched_file
 
-            if key in cls.OPTIONAL_BASENAME_KEYS:
-                logger.warning("Missing optional input file for %s: %s" % (key, basename))
-                continue
-
-            logger.error("Missing required input file for %s: %s" % (key, basename))
-            required_basenames_missing[key] = basename
-
-        if len(required_basenames_missing) > 0:
-            logger.info("Could not load paths to features. Maybe set basenames_mode='old'?")
+        if len(patterns_missing) > 0:
+            logger.info("Could not load paths to features. If using old features format, use `file_format='old'`")
             raise Exception
 
         return CuppaFeaturesPaths(paths)
@@ -185,87 +178,89 @@ class CuppaFeatures(pd.DataFrame, LoggerMixin):
         return CuppaFeatures(features)
 
 
-class FeatureLoaderNew(LoggerMixin):
-
+class FeatureLoader(LoggerMixin):
     def __init__(
         self,
         path: str,
         sample_id: str | None = None,
-        excl_chroms: Iterable[str] | None = ["ChrY", "Y"],
-        fill_value: int | float = NA_FILL_VALUE,
-        verbose: bool = True
+        excl_chroms: Iterable[str] | None = ["ChrY", "Y"], ## TODO: move this logic to java
+        na_fill_value: int | float = NA_FILL_VALUE,
     ):
         self.path = path
         self.sample_id = sample_id
-        self.fill_value = fill_value
         self.excl_chroms = excl_chroms
-        self.verbose = verbose
+        self.na_fill_value = na_fill_value
 
-    REQUIRED_COLS = ["Source","Category","Key","Value"]
+        self.df: pd.DataFrame = None
 
-    def load_file(self) -> pd.DataFrame:
+    FLD_SOURCE = "Source"
+    FLD_CATEGORY = "Category"
+    FLD_KEY = "Key"
+    FLD_VALUE = "Value"
+
+    INDEX_COLS = [FLD_SOURCE, FLD_CATEGORY, FLD_KEY]
+
+    @property
+    def is_multi_sample(self) -> bool:
+        if os.path.isdir(self.path):
+            return True
+        else:
+            header = pd.read_table(self.path, nrows=0).columns
+            return len(header) > len(self.INDEX_COLS)+1
+
+    def _read_single_sample_data(self) -> pd.DataFrame:
         df = pd.read_table(self.path)
-        check_required_columns(df, self.REQUIRED_COLS)
+        check_required_columns(df, self.INDEX_COLS)
 
-        if self.verbose:
-            self.logger.info("Loaded file from: " + self.path)
+        if self.sample_id is None:
+            self.logger.error("`sample_id` must be provided when features are for one sample")
+            raise ValueError
+
+        df.rename(columns={self.FLD_VALUE: self.sample_id}, inplace=True)
 
         return df
 
-    def add_sample_ids(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _read_multi_sample_data(self) -> pd.DataFrame:
+        paths = CuppaFeaturesPaths.from_dir(self.path)
+        dfs = {}
+        for data_type, path in paths.items():
+            self.logger.debug("Loading file: " + os.path.basename(path))
+            df = pd.read_table(path)
+            check_required_columns(df, self.INDEX_COLS)
+            dfs[data_type] = pd.read_table(path)
 
-        if "SampleId" in df.columns:
-            return df
+        df_merged = pd.concat(dfs.values())
 
-        if self.sample_id is not None:
-            df["SampleId"] = self.sample_id
-            return df
+        return df_merged
 
-        df["SampleId"] = "SAMPLE_1"
-        self.logger.warning("No `sample_id` provided. Using `sample_id`='SAMPLE_1'")
-        return df
+    def _read_files(self) -> None:
+        if self.is_multi_sample:
+            self.logger.info("Loading multi-sample data from dir: " + self.path)
+            self.df = self._read_multi_sample_data()
+        else:
+            self.logger.info("Loading single sample data file: " + self.path)
+            self.df = self._read_single_sample_data()
 
-    def filter_gen_pos_chroms(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _assert_no_duplicate_features(self) -> None:
+        duplicated_keys = self.df[self.FLD_KEY][self.df[self.FLD_KEY].duplicated()]
+        if len(duplicated_keys):
+            self.logger.error("The following features are duplicated: ", ", ".join(duplicated_keys.unique()))
+            raise AssertionError
+
+    def _filter_gen_pos_chroms(self) -> None:
 
         if self.excl_chroms is None:
-            return df
+            return
 
         regex = "^(" + "|".join(self.excl_chroms) + ")"
-        is_excluded_feature = (df["Category"] == "gen_pos") & df["Key"].str.match(regex)
+        is_excluded_feature = (self.df[self.FLD_CATEGORY] == "gen_pos") & self.df[self.FLD_KEY].str.match(regex)
 
-        if self.verbose:
-            df_excluded = df[is_excluded_feature]
-            if len(df_excluded) > 0:
-                self.logger.info(
-                    "Removed %i gen_pos bin(s) in %i sample(s) with the regex '%s'",
-                    len(df_excluded["Key"].unique()),
-                    len(df_excluded["SampleId"].unique()),
-                    regex
-                )
-
-        return df[~is_excluded_feature]
-
-    def dedup_drivers(self, df: pd.DataFrame) -> pd.DataFrame:
-        df = df.sort_values(by="Value", ascending=False)
-
-        columns_orig = df.columns
-
-        sample_feature_keys = pd.Series(df[["SampleId","Category","Key"]].itertuples(index=False))
-        df.loc[:,"is_dup_feature"] = sample_feature_keys.duplicated().values
-        df.loc[:,"is_driver"] = df["Category"] == "event.driver"
-
-        df_dup = df.query("is_dup_feature & is_driver")
-        if len(df_dup) > 0:
-            self.logger.warning(
-                "Removed %i duplicate driver(s) from %i sample(s) (kept highest impact driver)",
-                len(df_dup), len(df_dup["SampleId"].unique())
+        if sum(is_excluded_feature) > 0:
+            self.logger.debug(
+                "Removed %i gen_pos bin(s) with the regex '%s'",
+                sum(is_excluded_feature), regex
             )
-
-        is_excluded_feature = df["is_dup_feature"] & df["is_driver"]
-        df = df[~is_excluded_feature]
-
-        df = df.sort_index()
-        return df[columns_orig]
+            self.df = self.df[~is_excluded_feature]
 
     MAPPINGS_SIGS = dict(
         SIG_1="Age (SBS1)",
@@ -278,50 +273,40 @@ class FeatureLoaderNew(LoggerMixin):
         SIG_17="ROS/5FU (SBS17)",
     )
 
-    EXCLUDED_SIGS = (
-        "Age (SBS1)",
-        "POLE (SBS10)",
-        "Temozolomide (SBS11)"
-    )
+    EXCLUDED_SIGS = ("SIG_1", "SIG_10_POLE", "SIG_11") ## TODO: Move this logic to java
 
-    def parse_signatures(self, df: pd.DataFrame) -> pd.DataFrame:
-        df["Key"] = df["Key"].replace(self.MAPPINGS_SIGS)
-        df = df[~df["Key"].isin(self.EXCLUDED_SIGS)]
-        return df
+    def _parse_signatures(self) -> None:
+        self.df = self.df[~self.df[self.FLD_KEY].isin(self.EXCLUDED_SIGS)]
+        self.df[self.FLD_KEY].replace(self.MAPPINGS_SIGS, inplace=True)
 
-    def reshape_long_to_wide(self, df: pd.DataFrame):
+    def _assign_feature_names(self) -> None:
+        feature_names = self.df[self.FLD_CATEGORY] + "." + self.df[self.FLD_KEY]
+        self.df.drop(columns=self.INDEX_COLS, inplace=True)
+        self.df.index = feature_names
 
-        df["FeatureNames"] = df["Category"] + "." + df["Key"]
+    def _print_stats(self) -> None:
 
-        df_wide = df.pivot_table(index="SampleId", columns="FeatureNames", values="Value")
-        df_wide = df_wide[df["FeatureNames"].unique()] ## Preserve original feature order
+        n_samples = self.df.shape[1]
+        n_features = self.df.shape[0]
 
-        df_wide.index.name = "sample_id"
-        df_wide.columns.name = None
+        if self.is_multi_sample:
+            self.logger.debug(f"Loaded {n_features} features from {n_samples} samples")
+        else:
+            self.logger.debug(f"Loaded {n_features} features from sample({self.sample_id})")
 
-        df_wide = df_wide.fillna(self.fill_value)
+    def load(self) -> CuppaFeatures:
+        self._read_files()
+        self._assert_no_duplicate_features()
+        self._filter_gen_pos_chroms()
+        self._parse_signatures()
+        self._assign_feature_names()
+        self._print_stats()
 
-        return df_wide
-
-    def load(self) -> pd.DataFrame:
-        df = self.load_file()
-        df = self.add_sample_ids(df)
-
-        df = self.filter_gen_pos_chroms(df)
-        df = self.dedup_drivers(df)
-        df = self.parse_signatures(df)
-
-        features = self.reshape_long_to_wide(df)
-
-        n_samples = len(df["SampleId"].unique())
-        n_features = features.shape[1]
-        if self.verbose:
-            if n_samples == 0:
-                self.logger.info("Loaded %i features from sample_id: %s" % (n_features, df["SampleId"][0]))
-            else:
-                self.logger.info("Loaded %i features from %i samples" % (n_features, n_samples))
-
-        return CuppaFeatures(features)
+        return CuppaFeatures(
+            self.df
+            .fillna(self.na_fill_value)
+            .transpose()
+        )
 
 
 class FeatureLoaderOld(LoggerMixin):

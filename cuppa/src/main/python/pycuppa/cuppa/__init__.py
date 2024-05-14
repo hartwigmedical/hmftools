@@ -8,6 +8,10 @@ __all__ = [
     if isfile(f) and not f.endswith('__init__.py')
 ]
 
+## Set up logging
+from cuppa.logger import initialize_logging
+initialize_logging()
+
 ## Increase pandas df display width
 import pandas as pd
 pd.set_option('display.max_columns', 10)

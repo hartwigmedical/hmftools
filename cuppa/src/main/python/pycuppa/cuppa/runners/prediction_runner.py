@@ -8,8 +8,8 @@ from typing import Optional
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredSummary
 from cuppa.runners.args import DEFAULT_RUNNER_ARGS
-from cuppa.logger import LoggerMixin, reset_logging_basic_config
-from cuppa.sample_data.cuppa_features import CuppaFeaturesPaths, FeatureLoaderOld, FeatureLoaderNew, CuppaFeatures
+from cuppa.logger import LoggerMixin, initialize_logging
+from cuppa.sample_data.cuppa_features import CuppaFeaturesPaths, FeatureLoaderOld, FeatureLoader, CuppaFeatures
 from cuppa.visualization.visualization import CuppaVisData, CuppaVisPlotter, CuppaVisDataBuilder
 
 
@@ -28,7 +28,8 @@ class PredictionRunner(LoggerMixin):
         cv_predictions: CuppaPrediction | None = None,
         clf_group: str = DEFAULT_RUNNER_ARGS.clf_group,
         log_to_file: bool = DEFAULT_RUNNER_ARGS.log_to_file,
-        log_path: Optional[str] = DEFAULT_RUNNER_ARGS.log_path
+        log_path: Optional[str] = DEFAULT_RUNNER_ARGS.log_path,
+        log_format: str = DEFAULT_RUNNER_ARGS.log_format
     ):
         ## Args --------------------------------
         self.features_path = features_path
@@ -48,7 +49,8 @@ class PredictionRunner(LoggerMixin):
 
         self.log_to_file = log_to_file
         self.log_path = log_path
-        self.set_log_path()
+        self.log_format = log_format
+        self.set_up_logging()
 
         ## Attributes assigned at run time --------------------------------
         self.X: CuppaFeatures = None
@@ -59,15 +61,11 @@ class PredictionRunner(LoggerMixin):
     def __repr__(self) -> str:
         return self.__class__.__name__ + " args:\n" + pformat(vars(self))
 
-    def set_log_path(self) -> None:
-        if not self.log_to_file:
-            return None
+    def set_up_logging(self) -> None:
+        if self.log_to_file and self.log_path is None:
+            self.log_path = os.path.join(self.output_dir, "predict.log")
 
-        log_path = self.log_path
-        if log_path is None:
-            log_path = os.path.join(self.output_dir, "run.log")
-
-        reset_logging_basic_config(filename=log_path)
+        initialize_logging(filename=self.log_path, format=self.log_format)
 
     @cached_property
     def cuppa_classifier(self) -> CuppaClassifier:
@@ -76,7 +74,7 @@ class PredictionRunner(LoggerMixin):
     def get_X(self) -> None:
 
         if self.using_old_features_format:
-            paths = CuppaFeaturesPaths.from_dir(self.features_path, basenames_mode="old")
+            paths = CuppaFeaturesPaths.from_dir(self.features_path, file_format="old")
             loader = FeatureLoaderOld(
                 paths=paths,
                 genome_version=self.genome_version,
@@ -86,7 +84,7 @@ class PredictionRunner(LoggerMixin):
 
             X = loader.load_features()
         else:
-            loader = FeatureLoaderNew(self.features_path, sample_id=self.sample_id)
+            loader = FeatureLoader(self.features_path, sample_id=self.sample_id)
             X = loader.load()
 
         X = self.cuppa_classifier.fill_missing_cols(X)

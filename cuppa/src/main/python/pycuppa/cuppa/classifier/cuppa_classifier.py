@@ -251,11 +251,16 @@ class CuppaClassifier(cuppa.compose.pipeline.Pipeline):
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "CuppaClassifier":
 
         if self.verbose:
-            self.logger.info("Training data: %s samples, %s features, %s classes" % (
+            self.logger.info("Training CuppaClassifier on: %s samples, %s features, %s classes" % (
                 str(X.shape[0]),
                 str(X.shape[1]),
                 len(y.unique())
             ))
+
+            self.logger.info(
+                "Fitting transformers: sig_quantile_transformer, " +
+                ", ".join([step_name for step_name, _ in self.steps])
+            )
 
         self.classes_ = np.unique(y)
 

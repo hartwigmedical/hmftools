@@ -108,13 +108,10 @@ class ColumnTransformer(_BaseComposition, LoggerMixin):
         verbose: bool
     ) -> tuple[str, BaseEstimator, Iterable[str]]:
 
-        if verbose:
-            logger.info(name + ": Fitting")
-
         fitted_transformer = transformer.fit(X[columns], y)
 
         if verbose:
-            logger.info(name + ": Done fitting")
+            logger.debug("Done fitting: " + name)
 
         return name, fitted_transformer, columns
 
@@ -161,6 +158,9 @@ class ColumnTransformer(_BaseComposition, LoggerMixin):
         """
         if verbose is None:
             verbose = self.verbose
+
+        if verbose:
+            self.logger.info("Fitting transformers: " + ", ".join([name for name,_,_ in self.transformers]))
 
         self.feature_names_in_ = X.columns
 
@@ -240,11 +240,14 @@ class ColumnTransformer(_BaseComposition, LoggerMixin):
         if verbose_feature_names_out is None:
             verbose_feature_names_out = self.verbose_feature_names_out
 
+        if verbose:
+            self.logger.info("Processing transformers: " + ", ".join([name for name, _, _ in self.transformers]))
+
         Xs = {}
 
         for name, transformer, columns in self.transformers:
             if verbose:
-                self.logger.info("Transforming: " + name)
+                self.logger.debug("Transforming: " + name)
 
             X_trans = transformer.transform(X[columns])
 

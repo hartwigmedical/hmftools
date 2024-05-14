@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.cup.prep.DataItem.FLD_SOURCE;
 import static com.hartwig.hmftools.cup.prep.DataItem.FLD_VALUE;
 
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -149,9 +148,9 @@ public class CuppaDataPrep
 
                 closeBufferedWriter(writer);
             }
-            catch(IOException e)
+            catch(Exception e)
             {
-                CUP_LOGGER.error("Failed to write features");
+                CUP_LOGGER.error("Failed to write features: ", e);
                 System.exit(1);
             }
         }
@@ -240,7 +239,7 @@ public class CuppaDataPrep
             }
             catch(Exception e)
             {
-                CUP_LOGGER.error("Failed to write multi-sample feature matrix");
+                CUP_LOGGER.error("Failed to write multi-sample feature matrix: " + e);
                 System.exit(1);
             }
         }
