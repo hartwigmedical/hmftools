@@ -42,8 +42,7 @@ class CuppaVisDataBuilder(LoggerMixin):
 
         self.verbose = verbose
 
-        if sample_id is not None:
-            self._get_predictions_one_sample()
+        self._check_snv_counts_feature_exists()
 
     COLUMN_NAMES = [
         "sample_id", "data_type", "clf_group", "clf_name",
@@ -51,15 +50,10 @@ class CuppaVisDataBuilder(LoggerMixin):
         "rank", "rank_group"
     ]
 
-    def _get_predictions_one_sample(self) -> CuppaPrediction:
-        if not self.predictions.is_multi_sample:
-            return self.predictions
-
-        self.predictions = self.predictions.get_samples(self.sample_id)
+    FEAT_NAME_SNV_COUNT = "event.tmb.snv_count"
 
     def _check_snv_counts_feature_exists(self):
-        FEAT_NAME_SNV_COUNT = "event.tmb.snv_count"
-        if FEAT_NAME_SNV_COUNT not in self.predictions.index.get_level_values("feat_name"):
+        if self.FEAT_NAME_SNV_COUNT not in self.predictions.index.get_level_values("feat_name"):
             self.logger.error(
                 "Feature contributions / values for '%s' do not exist. "
                 "This is required for calculating relative mutational signature counts"
@@ -93,10 +87,10 @@ class CuppaVisDataBuilder(LoggerMixin):
 
         if len(feat_contrib) == 0:
             if self.require_all_feat_types:
-                self.logger.error("No features found with pattern '%s'" % pattern)
+                self.logger.error("No features found with regex '%s'" % pattern)
                 raise LookupError
             else:
-                self.logger.warning("No features found with pattern '%s'. Returning None" % pattern)
+                self.logger.warning("No features found with regex '%s'. Returning None" % pattern)
                 return None
 
         return feat_contrib
@@ -212,10 +206,16 @@ class CuppaVisDataBuilder(LoggerMixin):
     def build(self) -> CuppaVisData:
 
         sample_ids = self.predictions.sample_ids
-        if self.verbose:
-            if len(sample_ids) == 1:
-                self.logger.info("Building vis data for sample: " + sample_ids[0])
-            else:
+
+        if len(sample_ids) == 1:
+            if self.verbose:
+                self.logger.info("Building vis data for sample '%s'" % sample_ids[0])
+        elif self.sample_id is not None:
+            if self.verbose:
+                self.logger.info("Building vis data for sample '%s' from %i samples" % (self.sample_id, len(sample_ids)))
+            self.predictions = self.predictions.get_samples(self.sample_id)
+        else:
+            if self.verbose:
                 self.logger.info("Building vis data for %i samples", len(sample_ids))
 
         vis_data = pd.concat([
@@ -266,14 +266,28 @@ class CuppaVisData(pd.DataFrame, LoggerMixin):
 
 
 class CuppaVisPlotter(LoggerMixin):
-    def __init__(self, vis_data: CuppaVisData, plot_path: str, verbose: bool = True):
+    def __init__(
+        self,
+        vis_data: CuppaVisData,
+        plot_path: str,
+        verbose: bool = True
+    ):
         self.vis_data = vis_data
         self.plot_path = os.path.expanduser(plot_path)
         self.verbose = verbose
 
+        self.vis_data_path: str | None = None
+
         self._check_number_of_samples()
         self._check_plot_path_extension()
-        self._tmp_vis_data_path = os.path.join(os.path.dirname(self.plot_path), "cuppa.vis_data.tmp.tsv")
+
+    @classmethod
+    def from_tsv(cls, path: str, **kwargs) -> CuppaVisPlotter:
+        ## This method exists to avoid writing a temporary vis data file if a vis data file already exists
+        vis_data = CuppaVisData.from_tsv(path)
+        plotter = cls(vis_data=vis_data, **kwargs)
+        plotter.vis_data_path = path
+        return plotter
 
     def _check_number_of_samples(self):
         sample_ids = self.vis_data["sample_id"].dropna().unique()
@@ -288,39 +302,35 @@ class CuppaVisPlotter(LoggerMixin):
             self.logger.error("`plot_path` must end with .pdf or .png")
             raise ValueError
 
-    def write_tmp_vis_data(self):
+    @property
+    def _tmp_vis_data_path(self) -> str:
+        return os.path.join(os.path.dirname(self.plot_path), "cuppa.vis_data.tmp.tsv")
+
+    def _write_tmp_vis_data(self):
         if self.verbose:
-            self.logger.debug("Writing vis data to temporary path: " + self._tmp_vis_data_path)
+            self.logger.debug("Writing temporary vis data: " + self._tmp_vis_data_path)
         self.vis_data.to_tsv(self._tmp_vis_data_path)
 
-    def remove_tmp_vis_data(self):
+    def _remove_tmp_vis_data(self):
         if os.path.exists(self._tmp_vis_data_path):
             os.remove(self._tmp_vis_data_path)
 
             if self.verbose:
-                self.logger.debug("Removing temporary vis data at: " + self._tmp_vis_data_path)
+                self.logger.debug("Removing temporary vis data: " + self._tmp_vis_data_path)
 
     def plot(self) -> None:
 
         try:
-            self.write_tmp_vis_data()
+            if self.vis_data_path is None or not os.path.exists(self.vis_data_path):
+                self._write_tmp_vis_data()
+                self.vis_data_path = self._tmp_vis_data_path
 
             executor = RscriptExecutor([
                 RSCRIPT_PLOT_PREDICTIONS_PATH,
-                self._tmp_vis_data_path,
+                self.vis_data_path,
                 self.plot_path
             ])
             executor.run()
 
         finally:
-            self.remove_tmp_vis_data()
-
-        executor.raise_if_error()
-
-    @classmethod
-    def plot_from_tsv(cls, vis_data_path: str, plot_path: str, verbose: bool = True):
-        ## This utility method exists to avoid writing a temporary vis data file if a vis data file already exists
-        vis_data = CuppaVisData.from_tsv(vis_data_path)
-        plotter = cls(vis_data=vis_data, plot_path=plot_path, verbose=verbose)
-        plotter.plot()
-
+            self._remove_tmp_vis_data()
