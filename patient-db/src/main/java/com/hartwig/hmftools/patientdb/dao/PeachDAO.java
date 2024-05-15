@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep9;
+import org.jooq.InsertValuesStep8;
 
 class PeachDAO {
 
@@ -29,32 +29,30 @@ class PeachDAO {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         for (List<PeachGenotype> genotypes : Iterables.partition(peachGenotypes, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep9 inserter = context.insertInto(PEACHGENOTYPE,
+            InsertValuesStep8 inserter = context.insertInto(PEACHGENOTYPE,
                     PEACHGENOTYPE.MODIFIED,
                     PEACHGENOTYPE.SAMPLEID,
                     PEACHGENOTYPE.GENE,
                     PEACHGENOTYPE.HAPLOTYPE,
+                    PEACHGENOTYPE.COUNT,
                     PEACHGENOTYPE.FUNCTION,
                     PEACHGENOTYPE.LINKEDDRUGS,
-                    PEACHGENOTYPE.URLPRESCRIPTIONINFO,
-                    PEACHGENOTYPE.PANELVERSION,
-                    PEACHGENOTYPE.REPOVERSION);
+                    PEACHGENOTYPE.URLPRESCRIPTIONINFO);
             genotypes.forEach(x -> addGenotype(timestamp, inserter, sample, x));
             inserter.execute();
         }
     }
 
-    private static void addGenotype(@NotNull Timestamp timestamp, @NotNull InsertValuesStep9 inserter, @NotNull String sample,
+    private static void addGenotype(@NotNull Timestamp timestamp, @NotNull InsertValuesStep8 inserter, @NotNull String sample,
             @NotNull PeachGenotype genotype) {
         inserter.values(timestamp,
                 sample,
                 genotype.gene(),
-                genotype.haplotype(),
+                genotype.allele(),
+                genotype.alleleCount(),
                 genotype.function(),
                 genotype.linkedDrugs(),
-                genotype.urlPrescriptionInfo(),
-                genotype.panelVersion(),
-                genotype.repoVersion());
+                genotype.urlPrescriptionInfo());
     }
 
     void deletePeachForSample(@NotNull String sample) {

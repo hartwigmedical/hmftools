@@ -1147,11 +1147,10 @@ CREATE TABLE `peachGenotype`
     `sampleId` VARCHAR(255) NOT NULL,
     `gene` VARCHAR(255) NOT NULL,
     `haplotype` VARCHAR(255) NOT NULL,
+    `count` INT NOT NULL,
     `function` VARCHAR(255) NOT NULL,
     `linkedDrugs` VARCHAR(255) NOT NULL,
     `urlPrescriptionInfo` VARCHAR(255) NOT NULL,
-    `panelVersion` VARCHAR(255) NOT NULL,
-    `repoVersion` VARCHAR(255) NOT NULL,
     PRIMARY KEY (`id`)
 );
 
