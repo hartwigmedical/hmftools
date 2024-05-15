@@ -81,7 +81,8 @@ public class AssemblyLinksTest
         assertEquals(secondAssembly, link.second());
         assertEquals(BND, link.svType());
 
-        // DEL with inserted bases
+
+        // test 2: DEL with inserted bases
         posJunction = new Junction(CHR_1, 500, FORWARD);
         negJunction = new Junction(CHR_1, 1000, REVERSE);
 
@@ -134,7 +135,6 @@ public class AssemblyLinksTest
         firstAssembly = new JunctionAssembly(posJunction, firstAssemblyBases.getBytes(), baseQuals, 99);
         secondAssembly = new JunctionAssembly(negJunction, secondAssemblyBases.getBytes(), baseQuals, 80);
 
-        // order passed in doesn't matter
         AssemblyLink link = assemblyLinker.tryAssemblyOverlap(secondAssembly, firstAssembly);
         assertNotNull(link);
         assertTrue(link.insertedBases().isEmpty());
@@ -181,7 +181,6 @@ public class AssemblyLinksTest
 
         secondAssembly = new JunctionAssembly(negJunction, secondAssemblyBases.getBytes(), baseQuals, 60);
 
-        // order passed in doesn't matter
         link = assemblyLinker.tryAssemblyOverlap(secondAssembly, firstAssembly);
         assertNotNull(link);
         assertTrue(link.insertedBases().isEmpty());
@@ -247,8 +246,8 @@ public class AssemblyLinksTest
     @Test
     public void testAssemblyNegativeInvertedSplits()
     {
-        String firstRefBases = REF_BASES_200.substring(0, 100);
-        String secondRefBases = REF_BASES_200.substring(100, 200);
+        String firstRefBases = REF_BASES_400.substring(0, 100);
+        String secondRefBases = REF_BASES_400.substring(100, 200);
 
         // a negative inversion
         Junction firstJunction = new Junction(CHR_1, 100, REVERSE);
@@ -268,7 +267,6 @@ public class AssemblyLinksTest
 
         AssemblyLinker assemblyLinker = new AssemblyLinker();
 
-        // order passed in doesn't matter
         AssemblyLink link = assemblyLinker.tryAssemblyOverlap(firstAssembly, secondAssembly);
         assertNotNull(link);
         assertTrue(link.insertedBases().isEmpty());
@@ -277,7 +275,7 @@ public class AssemblyLinksTest
         assertEquals(secondAssembly, link.second());
         assertEquals(INV, link.svType());
 
-        // same again but with an insert sequence - is it arbitrary who the bases appear reversed for?
+        // test 2: same again but with an insert sequence - always taken from the first assembly without reverse-complimenting
         int insertedBaseLength = INSERTED_BASES.length();
         firstAssemblyBases = firstExtensionBases + INSERTED_BASES + firstRefBases;
         baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(firstAssemblyBases.length());
@@ -291,6 +289,28 @@ public class AssemblyLinksTest
         link = assemblyLinker.tryAssemblyOverlap(firstAssembly, secondAssembly);
         assertNotNull(link);
         assertEquals(INSERTED_BASES, link.insertedBases());
+
+        assertEquals(firstAssembly, link.first());
+        assertEquals(secondAssembly, link.second());
+        assertEquals(INV, link.svType());
+
+        // test 3: with a 5-base overlap
+        int overlapLength = 5;
+        int newExtensionLength = extensionLength - overlapLength;
+        firstAssemblyBases = firstExtensionBases.substring(0, extensionLength - overlapLength) + firstRefBases;
+        baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(firstAssemblyBases.length());
+
+        firstAssembly = new JunctionAssembly(firstJunction, firstAssemblyBases.getBytes(), baseQuals, newExtensionLength);
+
+        secondAssemblyBases = secondExtensionBases.substring(0, extensionLength - overlapLength) + secondRefBases;
+
+        secondAssembly = new JunctionAssembly(secondJunction, secondAssemblyBases.getBytes(), baseQuals, newExtensionLength);
+
+        link = assemblyLinker.tryAssemblyOverlap(firstAssembly, secondAssembly);
+        assertNotNull(link);
+
+        String overlapBases = firstRefBases.substring(0, overlapLength);
+        assertEquals(overlapBases, link.overlapBases());
 
         assertEquals(firstAssembly, link.first());
         assertEquals(secondAssembly, link.second());

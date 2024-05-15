@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
@@ -317,10 +318,14 @@ public class BreakendBuilder
 
             breakend.addSegment(segment);
 
-            // TODO: should inserted bases be reversed for same-orientation breakends??
+            String nextInsertedBases = breakendOrientation != nextOrientation ?
+                    insertedBases : Nucleotides.reverseComplementBases(insertedBases);
+
+            HomologyData nextHomology = homology != null && breakendOrientation == nextOrientation ?
+                    HomologyData.inverse(homology) : homology;
 
             Breakend nextBreakend = new Breakend(
-                    mAssemblyAlignment, nextAlignment.RefLocation.Chromosome, nextPosition, nextOrientation, insertedBases, homology);
+                    mAssemblyAlignment, nextAlignment.RefLocation.Chromosome, nextPosition, nextOrientation, nextInsertedBases, nextHomology);
 
             mAssemblyAlignment.addBreakend(nextBreakend);
 

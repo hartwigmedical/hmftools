@@ -94,17 +94,19 @@ public final class AssemblyLinker
             final JunctionAssembly first, final JunctionAssembly second, final JunctionSequence firstSeq, final JunctionSequence secondSeq,
             int firstIndexStart, int secondIndexStart, boolean isSecondary)
     {
+        // translate a sequence match & overlap into an assemblyt link, capturing any overlapping or inserted bases
         int firstJunctionOffset = firstSeq.junctionIndex() - firstIndexStart;
         int secondJunctionOffset = secondSeq.junctionIndex() - secondIndexStart;
 
         int firstJunctionIndexInSecond = -1;
 
+        // determine whether the junctions align exactly (junctionOffsetDiff = 0), or have an overlap (junctionOffsetDiff < 0)
+        // or there are inserted bases (junctionOffsetDiff > 0)
         int junctionOffsetDiff = 0;
 
         if(!firstSeq.Reversed && !secondSeq.Reversed)
         {
             firstJunctionIndexInSecond = secondIndexStart + firstJunctionOffset;
-
             junctionOffsetDiff = secondJunctionOffset - firstJunctionOffset - 1;
 
         }
@@ -112,13 +114,11 @@ public final class AssemblyLinker
         {
             int firstJunctionIndexInSecondReversed = secondIndexStart + firstJunctionOffset;
             firstJunctionIndexInSecond = secondSeq.indexReverted(firstJunctionIndexInSecondReversed);
-
             junctionOffsetDiff = firstJunctionIndexInSecond - second.junctionIndex() - 1;
         }
         else
         {
             firstJunctionIndexInSecond = secondIndexStart + firstJunctionOffset;
-
             junctionOffsetDiff = second.junctionIndex() - firstJunctionIndexInSecond - 1;
         }
 
@@ -126,51 +126,61 @@ public final class AssemblyLinker
 
         if(junctionOffsetDiff != 0)
         {
-            // inserted bases for any same-orientation break could be reverse-complemented at either breakend,
-            // the convention is to do that for the higher breakend
-            if(firstSeq.Reversed)
-            {
-                // FIXME: doesn't handle overlaps, only inserts
-                extraBases = first.formSequence(
-                        first.junctionIndex() - (junctionOffsetDiff), first.junctionIndex() - 1);
-            }
-            else
-            {
-                int insertStartIndex, insertEndIndex;
+            int extraBasesStartIndex, extraBasesEndIndex;
 
-                // note the first sequence can use its normal junction coords since it is not reversed
+            // the first assembly is always positive orientation and so the extra bases can uses the junction offset diff value directly
+            // around its junction index - with the exception being for when both assemblies are -ve orietation, in which case the
+            // first assembly has been reversed for sequence matching, and so its insert/overlap base capture must be switched
+
+            // the extra bases captured are by convention always taken from the first assembly and not reverse-complimented
+            if(!firstSeq.Reversed)
+            {
                 if(junctionOffsetDiff > 0)
                 {
-                    insertStartIndex = first.junctionIndex() + 1;
-                    insertEndIndex = min(insertStartIndex + junctionOffsetDiff, firstSeq.FullSequence.length());
+                    extraBasesStartIndex = first.junctionIndex() + 1;
+                    extraBasesEndIndex = first.junctionIndex() + junctionOffsetDiff;
                 }
                 else
                 {
-                    insertStartIndex = first.junctionIndex() + junctionOffsetDiff + 1;
-                    insertEndIndex = first.junctionIndex() + 1;
+                    extraBasesStartIndex = first.junctionIndex() + junctionOffsetDiff + 1;
+                    extraBasesEndIndex = first.junctionIndex();
                 }
-
-                if(insertStartIndex < 0 || insertEndIndex <= insertStartIndex || insertEndIndex > firstSeq.BaseLength)
+            }
+            else
+            {
+                // now work around a -ve orientation junction
+                if(junctionOffsetDiff > 0)
                 {
-                    if(isSecondary)
-                        return null;
-
-                    SV_LOGGER.debug("asm({} & {}) invalid insert/overlap indexRange({} -> {} junctOffsetDiff={} firstIndex={} secIndex={}) on firstSeq({}) secSeq({})",
-                            first.junction().coords(), second.junction().coords(), insertStartIndex, insertEndIndex, junctionOffsetDiff,
-                            firstIndexStart, secondIndexStart, firstSeq, secondSeq);
-
-                    // attempt to correct to get some sequence  but needs investigation
-                    if(insertStartIndex < 0)
-                        insertStartIndex = 0;
-
-                    if(insertEndIndex >= firstSeq.BaseLength)
-                        insertEndIndex = firstSeq.BaseLength - 1;
+                    extraBasesStartIndex = first.junctionIndex() - junctionOffsetDiff;
+                    extraBasesEndIndex = first.junctionIndex() - 1;
                 }
-
-                if(insertEndIndex > insertStartIndex)
+                else
                 {
-                    extraBases = firstSeq.FullSequence.substring(insertStartIndex, insertEndIndex);
+                    extraBasesStartIndex = first.junctionIndex();
+                    extraBasesEndIndex = first.junctionIndex() - junctionOffsetDiff - 1;
                 }
+            }
+
+            if(extraBasesStartIndex < 0 || extraBasesEndIndex <= extraBasesStartIndex || extraBasesEndIndex > firstSeq.BaseLength)
+            {
+                if(isSecondary)
+                    return null;
+
+                SV_LOGGER.debug("asm({} & {}) invalid insert/overlap indexRange({} -> {} junctOffsetDiff={} firstIndex={} secIndex={}) on firstSeq({}) secSeq({})",
+                        first.junction().coords(), second.junction().coords(), extraBasesStartIndex, extraBasesEndIndex, junctionOffsetDiff,
+                        firstIndexStart, secondIndexStart, firstSeq, secondSeq);
+
+                // attempt to correct to get some sequence  but needs investigation
+                if(extraBasesStartIndex < 0)
+                    extraBasesStartIndex = 0;
+
+                if(extraBasesEndIndex >= firstSeq.BaseLength)
+                    extraBasesEndIndex = firstSeq.BaseLength - 1;
+            }
+
+            if(extraBasesEndIndex > extraBasesStartIndex)
+            {
+                extraBases = first.formSequence(extraBasesStartIndex, extraBasesEndIndex);
             }
         }
 
