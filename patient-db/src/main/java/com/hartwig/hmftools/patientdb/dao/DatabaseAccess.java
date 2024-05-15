@@ -557,9 +557,9 @@ public class DatabaseAccess implements AutoCloseable
         flagstatDAO.writeFlagstats(sample, refFlagstat, tumorFlagstat);
     }
 
-    public void writePeach(@NotNull String sample, @NotNull List<PeachGenotype> peachGenotypes, @NotNull List<PeachCalls> peachCalls)
+    public void writePeach(@NotNull String sample, @NotNull List<PeachGenotype> peachGenotypes)
     {
-        peachDAO.writePeach(sample, peachGenotypes, peachCalls);
+        peachDAO.writePeach(sample, peachGenotypes);
     }
 
     public void writeCuppa(@NotNull String sample, @NotNull String cancerType, double likelihood)

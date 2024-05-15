@@ -1140,29 +1140,6 @@ CREATE TABLE `chord`
     PRIMARY KEY (`sampleId`)
 );
 
-DROP TABLE IF EXISTS `peachCalls`;
-CREATE TABLE `peachCalls`
-(   `id` INT NOT NULL AUTO_INCREMENT,
-    `modified` DATETIME NOT NULL,
-    `sampleId` VARCHAR(255) NOT NULL,
-    `gene` VARCHAR(255) NOT NULL,
-    `chromosome` VARCHAR(255) NOT NULL,
-    `positionV37` VARCHAR(255) NOT NULL,
-    `positionV38` VARCHAR(255) NOT NULL,
-    `refV37` VARCHAR(255) NOT NULL,
-    `refV38` VARCHAR(255) NOT NULL,
-    `allele1` VARCHAR(255) NOT NULL,
-    `allele2` VARCHAR(255) NOT NULL,
-    `rsid` VARCHAR(255) NOT NULL,
-    `variantAnnotationV37` VARCHAR(255) NOT NULL,
-    `filterV37` VARCHAR(255) NOT NULL,
-    `variantAnnotationV38` VARCHAR(255) NOT NULL,
-    `filterV38` VARCHAR(255) NOT NULL,
-    `panelVersion` VARCHAR(255) NOT NULL,
-    `repoVersion` VARCHAR(255) NOT NULL,
-    PRIMARY KEY (`id`)
-);
-
 DROP TABLE IF EXISTS `peachGenotype`;
 CREATE TABLE `peachGenotype`
 (   `id` INT NOT NULL AUTO_INCREMENT,
