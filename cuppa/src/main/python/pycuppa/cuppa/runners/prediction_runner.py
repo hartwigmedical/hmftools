@@ -85,6 +85,10 @@ class PredictionRunner(LoggerMixin):
 
         self.X = X
 
+    @property
+    def n_samples(self) -> int:
+        return self.X.shape[0]
+
     def get_predictions(self) -> None:
 
         if self.cv_predictions_path is not None:
@@ -92,9 +96,9 @@ class PredictionRunner(LoggerMixin):
             self.cv_predictions = CuppaPrediction.from_tsv(self.cv_predictions_path)
 
         if self.cv_predictions is None:
-            self.logger.info("Computing predictions for %i samples" % len(self.X))
+            self.logger.info("Computing predictions for %i samples" % self.n_samples)
             self.predictions = self.cuppa_classifier.predict(self.X)
-            return None
+            return
 
         is_cv_sample = self.X.index.isin(self.cv_predictions.sample_ids)
         sample_ids_new = self.X.index[~is_cv_sample]
@@ -103,13 +107,13 @@ class PredictionRunner(LoggerMixin):
         predictions = []
 
         if len(sample_ids_new) > 0:
-            self.logger.info("Computing predictions for %i / %i samples" % (len(sample_ids_new), len(self.X)))
+            self.logger.info("Computing predictions for %i / %i samples" % (len(sample_ids_new), self.n_samples))
             X_new = self.X.loc[sample_ids_new]
             predictions.append(self.cuppa_classifier.predict(X_new))
 
         if len(sample_ids_cv) > 0:
             predictions.append(self.cv_predictions.loc[sample_ids_cv])
-            self.logger.info("Found cross-validation predictions for %i / %i samples" % (len(sample_ids_cv), len(self.X)))
+            self.logger.info("Using pre-computed cross-validation predictions for %i / %i samples" % (len(sample_ids_cv), self.n_samples))
 
         predictions = CuppaPrediction.concat(predictions)
         predictions = predictions.loc[self.X.index]
@@ -152,7 +156,16 @@ class PredictionRunner(LoggerMixin):
 
     @property
     def plot_path(self) -> str:
-        filename = self.add_filename_affixes("cuppa.vis.png")
+
+        if self.n_samples == 1 or self.sample_id is not None:
+            ## For single sample, use png so that it can be inserted into the ORANGE pdf
+            filename = "cuppa.vis.png"
+        else:
+            ## For multi sample, use pdf so that the viz for all samples can be contained in one pdf
+            filename = "cuppa.vis.pdf"
+
+        filename = self.add_filename_affixes(filename)
+
         return os.path.join(self.output_dir, filename)
 
     @property
@@ -163,7 +176,7 @@ class PredictionRunner(LoggerMixin):
     def run(self) -> None:
         self.get_X()
 
-        if self.sample_id is None and self.X.shape[0] > 1:
+        if self.n_samples == 1 and self.sample_id is None:
             self.logger.info("`sample_id` must be provided when predicting on one sample")
             raise ValueError
 
@@ -178,8 +191,4 @@ class PredictionRunner(LoggerMixin):
         self.pred_summ.to_tsv(self.pred_summ_path, verbose=True)
         self.vis_data.to_tsv(self.vis_data_path, verbose=True)
 
-        CuppaVisPlotter.plot_from_tsv(
-            vis_data_path=self.vis_data_path,
-            plot_path=self.plot_path,
-            verbose=True
-        )
+        CuppaVisPlotter.from_tsv(path=self.vis_data_path, plot_path=self.plot_path, verbose=True).plot()
