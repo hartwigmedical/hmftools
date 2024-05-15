@@ -111,6 +111,8 @@ public class Breakend
 
     public double calcAllelicFrequency(final Genotype genotype)
     {
+        // TODO: just use AF (tag: ALLELE_FRACTION) if present??
+
         int readPairSupport = (mVariant.isSgl() || !mVariant.isShortLocal()) ? getGenotypeAttributeAsInt(genotype, REF_DEPTH_PAIR, 0) : 0;
         int refSupport = getGenotypeAttributeAsInt(genotype, REF_DEPTH, 0);
 
