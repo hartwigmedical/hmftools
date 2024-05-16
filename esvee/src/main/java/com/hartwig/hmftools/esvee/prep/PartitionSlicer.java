@@ -58,8 +58,7 @@ public class PartitionSlicer
 
     public PartitionSlicer(
             final int id, final ChrBaseRegion region, final PrepConfig config, final List<SamReader> samReaders, final BamSlicer bamSlicer,
-            final SpanningReadCache spanningReadCache, final ExistingJunctionCache existingJunctionCache, final ResultsWriter writer,
-            final CombinedStats combinedStats)
+            final SpanningReadCache spanningReadCache, final ResultsWriter writer, final CombinedStats combinedStats)
     {
         mId = id;
         mConfig = config;
@@ -70,8 +69,6 @@ public class PartitionSlicer
         mCombinedStats = combinedStats;
 
         mJunctionTracker = new JunctionTracker(mRegion, mConfig, mConfig.Hotspots, mConfig.Blacklist);
-
-        mJunctionTracker.addExistingJunctions(existingJunctionCache.getRegionJunctions(mRegion));
 
         mSamReaders = samReaders;
         mBamSlicer = bamSlicer;

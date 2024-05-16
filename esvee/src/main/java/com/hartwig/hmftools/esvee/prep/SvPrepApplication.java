@@ -18,14 +18,12 @@ public class SvPrepApplication
     private final PrepConfig mConfig;
     private final ResultsWriter mWriter;
     private final SpanningReadCache mSpanningReadCache;
-    private final ExistingJunctionCache mExistingJunctionCache;
 
     public SvPrepApplication(final ConfigBuilder configBuilder)
     {
         mConfig = new PrepConfig(configBuilder);
         mWriter = new ResultsWriter(mConfig);
         mSpanningReadCache = new SpanningReadCache(mConfig);
-        mExistingJunctionCache = new ExistingJunctionCache();
     }
 
     public void run()
@@ -41,8 +39,6 @@ public class SvPrepApplication
         if(mConfig.CalcFragmentLength)
             calcFragmentDistribution();
 
-        // mExistingJunctionCache.loadJunctions(mConfig.ExistingJunctionFile);
-
         CombinedStats combinedStats = new CombinedStats();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
@@ -54,7 +50,7 @@ public class SvPrepApplication
 
             SV_LOGGER.info("processing chromosome({})", chromosomeStr);
 
-            ChromosomeTask chromosomeTask = new ChromosomeTask(chromosomeStr, mConfig, mSpanningReadCache, mExistingJunctionCache, mWriter);
+            ChromosomeTask chromosomeTask = new ChromosomeTask(chromosomeStr, mConfig, mSpanningReadCache, mWriter);
             chromosomeTask.process();
             combinedStats.addPartitionStats(chromosomeTask.combinedStats().ReadStats);
 

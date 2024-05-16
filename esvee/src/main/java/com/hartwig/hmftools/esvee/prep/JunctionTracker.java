@@ -218,10 +218,6 @@ public class JunctionTracker
         }
     }
 
-    public void addExistingJunctions(final List<JunctionData> existingJunctions)
-    {
-        mJunctions.addAll(existingJunctions);
-    }
     public void setExpectedReads(final Set<String> expectedReads) { mExpectedReadIds.addAll(expectedReads); }
 
     public void assignFragments()
