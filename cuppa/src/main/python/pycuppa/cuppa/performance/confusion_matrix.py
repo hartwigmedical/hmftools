@@ -141,18 +141,15 @@ class ConfusionMatrix(LoggerMixin):
         self.logger.debug("Writing pred summ to temporary path: " + tmp_pred_summ_path)
         self.pred_summ.to_tsv(tmp_pred_summ_path)
 
-        executor = RscriptExecutor(
-            args=[
+        try:
+            executor = RscriptExecutor([
                 RSCRIPT_PLOT_CONFUSION_PATH,
                 tmp_pred_summ_path,
                 self.clf_name,
                 plot_path,
                 str(width) if width is not None else "",
                 str(height) if height is not None else ""
-            ],
-            ignore_error=True
-        )
-        executor.run()
-
-        os.remove(tmp_pred_summ_path)
-        executor.raise_if_error()
+            ])
+            executor.run()
+        finally:
+            os.remove(tmp_pred_summ_path)

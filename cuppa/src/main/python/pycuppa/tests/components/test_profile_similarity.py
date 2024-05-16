@@ -3,7 +3,6 @@ import pandas as pd
 
 from cuppa.components.profile_similarity import cos_sim, ProfileSimilarityTransformer, NoiseProfileAdder, \
     NonBestSimilarityScaler
-from cuppa.misc.cached_class_property import cached_class_property
 
 
 class TestCosSim:
@@ -41,31 +40,25 @@ class TestCosSim:
 
 class TestProfileSimilarityTransformer:
 
-    @cached_class_property
-    def X(self) -> pd.DataFrame:
-        ## n_samples (6) x n_features (3)
-        return pd.DataFrame([
-            [10000, 100, 100],
-            [10000, 100, 100],
-            [10000, 100, 100],
+    X = pd.DataFrame([
+        [10000, 100, 100],
+        [10000, 100, 100],
+        [10000, 100, 100],
 
-            [10, 20000, 10],
-            [10, 20000, 10],
-            [10, 20000, 10],
-        ])
+        [10, 20000, 10],
+        [10, 20000, 10],
+        [10, 20000, 10],
+    ])
 
-    @cached_class_property
-    ## n_samples (6)
-    def y(self) -> pd.Series:
-        return pd.Series([
-            "Breast",
-            "Breast",
-            "Breast",
+    y = pd.Series([
+        "Breast",
+        "Breast",
+        "Breast",
 
-            "Lung",
-            "Lung",
-            "Lung"
-        ])
+        "Lung",
+        "Lung",
+        "Lung"
+    ])
 
     def test_fit_with_agg_func_sum_gives_expected_profile_matrix(self):
         transformer = ProfileSimilarityTransformer(agg_func="sum")
