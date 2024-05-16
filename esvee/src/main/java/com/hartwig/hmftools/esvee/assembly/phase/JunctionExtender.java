@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.assembly;
+package com.hartwig.hmftools.esvee.assembly.phase;
 
 import java.util.List;
 

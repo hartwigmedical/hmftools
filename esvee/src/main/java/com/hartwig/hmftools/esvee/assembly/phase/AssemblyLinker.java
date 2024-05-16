@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.esvee.assembly;
+package com.hartwig.hmftools.esvee.assembly.phase;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.floor;
@@ -18,6 +18,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.esvee.assembly.SequenceCompare;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.SupportRead;
 import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
@@ -283,9 +284,11 @@ public final class AssemblyLinker
         }
 
         // now perform a full junction sequence search in the second using the sequence matching logic
-        Set<Integer> testedOffsets = Sets.newHashSet();
-
         int minOverlapLength = min(min(first.extensionLength(), second.extensionLength()), ASSEMBLY_LINK_OVERLAP_BASES);
+
+        /*
+
+        Set<Integer> testedOffsets = Sets.newHashSet();
 
         for(int[] indexStarts : alternativeIndexStarts)
         {
@@ -295,6 +298,7 @@ public final class AssemblyLinker
 
             int matchOffset = secondMatchIndex - firstJuncSeqMatchIndex;
 
+            // skip testing a comparison anchored around the same offsets bewteen the 2 sequences
             if(testedOffsets.contains(matchOffset))
                 continue;
 
@@ -333,7 +337,87 @@ public final class AssemblyLinker
                 return formLink(first, second, firstSeq, secondSeq, firstIndexStart, secondIndexStart, false);
             }
         }
+        */
+
+        int[] topMatchIndices = findBestSequenceMatch(firstSeq, secondSeq, minOverlapLength, alternativeIndexStarts);
+
+        if(topMatchIndices != null)
+        {
+            int firstIndexStart = topMatchIndices[0];
+            int secondIndexStart = topMatchIndices[1];
+
+            return formLink(first, second, firstSeq, secondSeq, firstIndexStart, secondIndexStart, false);
+        }
 
         return null;
+    }
+
+    public static int[] findBestSequenceMatch(
+            final JunctionSequence firstSeq, final JunctionSequence secondSeq, int minOverlapLength, final List<int[]> alternativeIndexStarts)
+    {
+        int topMatchLength = 0;
+        int[] topMatchIndices = null;
+
+        Set<Integer> testedOffsets = Sets.newHashSet();
+
+        int firstJunctionSeqLength = firstSeq.junctionSequence().length();
+
+        // take each of the subsequence match locations, build out a longer sequence around it and check for a match
+        // then return the longest of these
+
+        for(int[] indexStarts : alternativeIndexStarts)
+        {
+            // find a comparison range that falls within both sequence's index range around the junction
+            int firstJuncSeqMatchIndex = indexStarts[0];
+            int secondMatchIndex = indexStarts[1];
+
+            int matchOffset = secondMatchIndex - firstJuncSeqMatchIndex;
+
+            // skip testing a comparison anchored around the same offsets bewteen the 2 sequences
+            if(testedOffsets.contains(matchOffset))
+                continue;
+
+            testedOffsets.add(matchOffset);
+
+            int secondIndexStart = secondMatchIndex - firstJuncSeqMatchIndex;
+            int secondIndexEnd = secondIndexStart + firstJunctionSeqLength - 1;
+
+            int firstJuncIndexStart = 0;
+            int firstJuncIndexEnd = firstJunctionSeqLength - 1;
+
+            if(secondIndexStart < 0)
+            {
+                firstJuncIndexStart += -(secondIndexStart);
+                secondIndexStart = 0;
+            }
+
+            // discount this match if the implied end of the match in the second sequence is past its ref base end
+            if(secondIndexEnd >= secondSeq.BaseLength)
+                continue;
+
+            int firstIndexStart = firstJuncIndexStart + firstSeq.junctionSeqStartIndex();
+            int firstIndexEnd = min(firstJuncIndexEnd + firstSeq.junctionSeqStartIndex(), firstSeq.BaseLength - 1);
+
+            int overlapLength = min(firstIndexEnd - firstIndexStart + 1, secondIndexEnd - secondIndexStart + 1);
+
+            if(overlapLength < minOverlapLength)
+                continue;
+
+            int mismatchCount = SequenceCompare.compareSequences(
+                    firstSeq.bases(), firstSeq.baseQuals(), firstIndexStart, firstIndexEnd, firstSeq.repeatInfo(),
+                    secondSeq.bases(), secondSeq.baseQuals(), secondIndexStart, secondIndexEnd, secondSeq.repeatInfo(),
+                    PRIMARY_ASSEMBLY_MERGE_MISMATCH);
+
+            if(mismatchCount > PRIMARY_ASSEMBLY_MERGE_MISMATCH)
+                continue;
+
+            if(overlapLength > topMatchLength)
+            {
+                topMatchLength = overlapLength;
+                topMatchIndices = new int[] {firstIndexStart, secondIndexStart};
+            }
+        }
+
+        return topMatchIndices;
     }
 }

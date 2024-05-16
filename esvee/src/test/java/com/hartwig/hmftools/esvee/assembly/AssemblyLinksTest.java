@@ -32,7 +32,9 @@ import java.util.List;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.esvee.assembly.phase.AssemblyLinker;
 import com.hartwig.hmftools.esvee.assembly.phase.PhaseSetBuilder;
+import com.hartwig.hmftools.esvee.assembly.phase.RemoteRegionAssembler;
 import com.hartwig.hmftools.esvee.assembly.read.Read;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
@@ -40,7 +42,6 @@ import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.LinkType;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
-import com.hartwig.hmftools.esvee.assembly.types.SupportType;
 
 import org.junit.Test;
 

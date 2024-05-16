@@ -9,7 +9,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
-import com.hartwig.hmftools.esvee.assembly.RemoteRegionAssembler;
 import com.hartwig.hmftools.esvee.assembly.read.BamReader;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
