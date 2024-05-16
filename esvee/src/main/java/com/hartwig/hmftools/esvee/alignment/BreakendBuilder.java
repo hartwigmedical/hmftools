@@ -135,13 +135,6 @@ public class BreakendBuilder
                 homology = null;
         }
 
-        if(homology != null)
-        {
-            // shift breakend positions forward by exact homology
-            indelPosStart -= homologyPositionAdjustment(homology.ExactStart, FORWARD);
-            indelPosEnd -= homologyPositionAdjustment(homology.ExactEnd, FORWARD);
-        }
-
         Breakend lowerBreakend = new Breakend(
                 mAssemblyAlignment, alignment.RefLocation.Chromosome, indelPosStart, FORWARD, insertedBases, homology);
 
