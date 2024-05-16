@@ -91,7 +91,7 @@ public final class AssemblyLinker
         return abs(refAlignedPosition - otherJunctionPosition) <= PROXIMATE_REF_SIDE_SOFT_CLIPS;
     }
 
-    public static AssemblyLink formLink(
+    protected static AssemblyLink formLink(
             final JunctionAssembly first, final JunctionAssembly second, final JunctionSequence firstSeq, final JunctionSequence secondSeq,
             int firstIndexStart, int secondIndexStart, boolean isSecondary)
     {
@@ -127,61 +127,21 @@ public final class AssemblyLinker
 
         if(junctionOffsetDiff != 0)
         {
-            int extraBasesStartIndex, extraBasesEndIndex;
-
-            // the first assembly is always positive orientation and so the extra bases can uses the junction offset diff value directly
+            // the first assembly is always positive orientation and so the extra bases can use the junction offset diff value directly
             // around its junction index - with the exception being for when both assemblies are -ve orietation, in which case the
             // first assembly has been reversed for sequence matching, and so its insert/overlap base capture must be switched
+            extraBases = extractExtraBases(first, firstSeq.Reversed, junctionOffsetDiff);
 
-            // the extra bases captured are by convention always taken from the first assembly and not reverse-complimented
-            if(!firstSeq.Reversed)
+            if(extraBases == null)
             {
-                if(junctionOffsetDiff > 0)
+                extraBases = extractExtraBases(second, secondSeq.Reversed, junctionOffsetDiff);
+
+                if(extraBases == null)
                 {
-                    extraBasesStartIndex = first.junctionIndex() + 1;
-                    extraBasesEndIndex = first.junctionIndex() + junctionOffsetDiff;
+                    SV_LOGGER.debug("asm({} & {}) invalid insert/overlap junctOffsetDiff({} firstIndex={} secIndex={}) on firstSeq({}) secSeq({})",
+                            first.junction().coords(), second.junction().coords(), junctionOffsetDiff,
+                            firstIndexStart, secondIndexStart, firstSeq, secondSeq);
                 }
-                else
-                {
-                    extraBasesStartIndex = first.junctionIndex() + junctionOffsetDiff + 1;
-                    extraBasesEndIndex = first.junctionIndex();
-                }
-            }
-            else
-            {
-                // now work around a -ve orientation junction
-                if(junctionOffsetDiff > 0)
-                {
-                    extraBasesStartIndex = first.junctionIndex() - junctionOffsetDiff;
-                    extraBasesEndIndex = first.junctionIndex() - 1;
-                }
-                else
-                {
-                    extraBasesStartIndex = first.junctionIndex();
-                    extraBasesEndIndex = first.junctionIndex() - junctionOffsetDiff - 1;
-                }
-            }
-
-            if(extraBasesStartIndex < 0 || extraBasesEndIndex < extraBasesStartIndex || extraBasesEndIndex > firstSeq.BaseLength)
-            {
-                if(isSecondary)
-                    return null;
-
-                SV_LOGGER.debug("asm({} & {}) invalid insert/overlap indexRange({} -> {} junctOffsetDiff={} firstIndex={} secIndex={}) on firstSeq({}) secSeq({})",
-                        first.junction().coords(), second.junction().coords(), extraBasesStartIndex, extraBasesEndIndex, junctionOffsetDiff,
-                        firstIndexStart, secondIndexStart, firstSeq, secondSeq);
-
-                // attempt to correct to get some sequence  but needs investigation
-                if(extraBasesStartIndex < 0)
-                    extraBasesStartIndex = 0;
-
-                if(extraBasesEndIndex >= firstSeq.BaseLength)
-                    extraBasesEndIndex = firstSeq.BaseLength - 1;
-            }
-
-            if(extraBasesEndIndex > extraBasesStartIndex)
-            {
-                extraBases = first.formSequence(extraBasesStartIndex, extraBasesEndIndex);
             }
         }
 
@@ -189,6 +149,53 @@ public final class AssemblyLinker
         String overlapBases = junctionOffsetDiff < 0 ? extraBases : "";
 
         return new AssemblyLink(first, second, LinkType.SPLIT, insertedBases, overlapBases);
+    }
+
+    private static String extractExtraBases(final JunctionAssembly assembly, boolean isReversed, int junctionOffsetDiff)
+    {
+        int extraBasesStartIndex, extraBasesEndIndex;
+
+        // the first assembly is always positive orientation and so the extra bases can use the junction offset diff value directly
+        // around its junction index - with the exception being for when both assemblies are -ve orietation, in which case the
+        // first assembly has been reversed for sequence matching, and so its insert/overlap base capture must be switched
+
+        // the extra bases captured are by convention always taken from the first assembly and not reverse-complimented
+        if(assembly.isForwardJunction())
+        {
+            if(junctionOffsetDiff > 0)
+            {
+                // an insert, so take bases from after the junction
+                extraBasesStartIndex = assembly.junctionIndex() + 1;
+                extraBasesEndIndex = assembly.junctionIndex() + junctionOffsetDiff;
+            }
+            else
+            {
+                // an overlap, so go back from the junction
+                extraBasesStartIndex = assembly.junctionIndex() + junctionOffsetDiff + 1;
+                extraBasesEndIndex = assembly.junctionIndex();
+            }
+        }
+        else
+        {
+            // now work around a -ve orientation junction
+            if(junctionOffsetDiff > 0)
+            {
+                extraBasesStartIndex = assembly.junctionIndex() - junctionOffsetDiff;
+                extraBasesEndIndex = assembly.junctionIndex() - 1;
+            }
+            else
+            {
+                extraBasesStartIndex = assembly.junctionIndex();
+                extraBasesEndIndex = assembly.junctionIndex() - junctionOffsetDiff - 1;
+            }
+        }
+
+        if(extraBasesStartIndex >= 0 && extraBasesEndIndex >= extraBasesStartIndex && extraBasesEndIndex < assembly.baseLength())
+        {
+            return assembly.formSequence(extraBasesStartIndex, extraBasesEndIndex);
+        }
+
+        return null;
     }
 
     public static final int MATCH_SUBSEQUENCE_LENGTH = 10;
@@ -285,59 +292,6 @@ public final class AssemblyLinker
 
         // now perform a full junction sequence search in the second using the sequence matching logic
         int minOverlapLength = min(min(first.extensionLength(), second.extensionLength()), ASSEMBLY_LINK_OVERLAP_BASES);
-
-        /*
-
-        Set<Integer> testedOffsets = Sets.newHashSet();
-
-        for(int[] indexStarts : alternativeIndexStarts)
-        {
-            // find a comparison range that falls within both sequence's index range around the junction
-            int firstJuncSeqMatchIndex = indexStarts[0];
-            int secondMatchIndex = indexStarts[1];
-
-            int matchOffset = secondMatchIndex - firstJuncSeqMatchIndex;
-
-            // skip testing a comparison anchored around the same offsets bewteen the 2 sequences
-            if(testedOffsets.contains(matchOffset))
-                continue;
-
-            testedOffsets.add(matchOffset);
-
-            int secondIndexStart = secondMatchIndex - firstJuncSeqMatchIndex;
-            int secondIndexEnd = secondIndexStart + firstJunctionSeqLength - 1;
-
-            int firstJuncIndexStart = 0;
-            int firstJuncIndexEnd = firstJunctionSeqLength - 1;
-
-            if(secondIndexStart < 0)
-            {
-                firstJuncIndexStart += -(secondIndexStart);
-                secondIndexStart = 0;
-            }
-
-            // discount this match if the implied end of the match in the second sequence is past its ref base end
-            if(secondIndexEnd >= secondSeq.BaseLength)
-                continue;
-
-            int firstIndexStart = firstJuncIndexStart + firstSeq.junctionSeqStartIndex();
-            int firstIndexEnd = min(firstJuncIndexEnd + firstSeq.junctionSeqStartIndex(), firstSeq.BaseLength - 1);
-
-            if(secondIndexEnd - secondIndexStart + 1 < minOverlapLength || firstIndexEnd - firstIndexStart + 1 < minOverlapLength)
-                continue;
-
-            int mismatchCount = SequenceCompare.compareSequences(
-                    firstSeq.bases(), firstSeq.baseQuals(), firstIndexStart, firstIndexEnd, firstSeq.repeatInfo(),
-                    secondSeq.bases(), secondSeq.baseQuals(), secondIndexStart, secondIndexEnd, secondSeq.repeatInfo(),
-                    PRIMARY_ASSEMBLY_MERGE_MISMATCH);
-
-            if(mismatchCount <= PRIMARY_ASSEMBLY_MERGE_MISMATCH)
-            {
-                // could hold out for a better match if there was more than one, but seem unlikely?
-                return formLink(first, second, firstSeq, secondSeq, firstIndexStart, secondIndexStart, false);
-            }
-        }
-        */
 
         int[] topMatchIndices = findBestSequenceMatch(firstSeq, secondSeq, minOverlapLength, alternativeIndexStarts);
 

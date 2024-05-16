@@ -210,6 +210,16 @@ public class RemoteRegionAssembler
         String firstJunctionSequence = assemblySeq.junctionSequence();
         int firstJunctionSeqLength = firstJunctionSequence.length();
 
+        // first a simple local match
+        int remoteSeqIndexInRef = remoteRefSeq.FullSequence.indexOf(firstJunctionSequence);
+
+        if(remoteSeqIndexInRef >= 0)
+        {
+            return formLinkWithRemote(
+                    assembly, assemblySeq, remoteRefSeq, refGenomeBases, remoteRegionStart, remoteRegionEnd,
+                    assemblySeq.junctionSeqStartIndex(), remoteSeqIndexInRef);
+        }
+
         // take a smaller sections of the first's junction sequence and try to find their start index in the second sequence
         int juncSeqStartIndex = 0;
         List<int[]> alternativeIndexStarts = Lists.newArrayList();
@@ -345,7 +355,6 @@ public class RemoteRegionAssembler
             // suggests that the break is further into the initially selected ref bases, ie they need to be truncated
             // but those bases are still valid extension bases
             // remoteJunctionIndex needs adjusting?
-
         }
 
         List<SupportRead> remoteSupport = Lists.newArrayList();
