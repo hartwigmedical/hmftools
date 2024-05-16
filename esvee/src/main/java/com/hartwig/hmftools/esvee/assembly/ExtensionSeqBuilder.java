@@ -35,7 +35,6 @@ public class ExtensionSeqBuilder
     private byte[] mBases;
     private byte[] mBaseQuals;
     private int[] mReadCount;
-    private int[] mBaseQualTotals;
     private int mMinSupportLength;
 
     private List<RepeatInfo> mExtensionRepeats;
@@ -73,7 +72,6 @@ public class ExtensionSeqBuilder
         mBases = new byte[baseLength];
         mBaseQuals = new byte[baseLength];
         mReadCount = new int[baseLength];
-        mBaseQualTotals = new int[baseLength];
         mMinSupportLength = 0;
         mExtensionRepeats = Lists.newArrayList();
 
@@ -88,7 +86,6 @@ public class ExtensionSeqBuilder
 
     public byte[] extensionBases() { return mBases; }
     public byte[] baseQualitiies() { return mBaseQuals; }
-    public int[] baseQualTotals() { return mBaseQualTotals; }
     public int minSupportLength() { return mMinSupportLength; }
     public List<RepeatInfo> repeatInfo() { return mExtensionRepeats; }
     public boolean isValid() { return mIsValid; }
@@ -198,7 +195,6 @@ public class ExtensionSeqBuilder
 
             mBases[extensionIndex] = consensusBase;
             mBaseQuals[extensionIndex] = (byte)consensusMaxQual;
-            mBaseQualTotals[extensionIndex] = consensusQualTotal;
             mReadCount[extensionIndex] = consensusReadCount;
 
             if(consensusReadCount >= PRIMARY_ASSEMBLY_MIN_READ_SUPPORT)
