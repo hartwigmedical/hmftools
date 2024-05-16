@@ -103,11 +103,10 @@ public class LocalSequenceMatcher
 
         if(topMatchIndices != null)
         {
-            int firstIndexStart = topMatchIndices[0];
             int secondIndexStart = topMatchIndices[1];
 
-            return formLocalLink(assembly, assemblySeq, firstIndexStart, secondIndexStart);
-            // return formLocalLink(assembly, assemblySeq, localRegionStart, secondIndexStart);
+            // return formLocalLink(assembly, assemblySeq, firstIndexStart, secondIndexStart);
+            return formLocalLink(assembly, assemblySeq, localRegionStart, secondIndexStart);
         }
 
         return null;

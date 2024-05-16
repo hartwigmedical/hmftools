@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.compareSequences;
+import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.getReadIndexAtReferencePosition;
 
@@ -53,6 +54,9 @@ public class ExtensionSeqBuilder
         for(Read read : reads)
         {
             int readJunctionIndex = getReadIndexAtReferencePosition(read, junction.Position, true);
+
+            if(readJunctionIndex == INVALID_INDEX)
+                continue;
 
             // calculate how many bases beyond the junction the read extends
             // for positive orientations, if read length is 10, and junction index is at 6, then extends with indices 7-9 ie 3

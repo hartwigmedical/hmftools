@@ -141,6 +141,8 @@ public final class AssemblyLinker
                     SV_LOGGER.debug("asm({} & {}) invalid insert/overlap junctOffsetDiff({} firstIndex={} secIndex={}) on firstSeq({}) secSeq({})",
                             first.junction().coords(), second.junction().coords(), junctionOffsetDiff,
                             firstIndexStart, secondIndexStart, firstSeq, secondSeq);
+
+                    extraBases = "";
                 }
             }
         }

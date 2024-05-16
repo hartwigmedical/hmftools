@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.esvee.AssemblyConfig;
 import com.hartwig.hmftools.esvee.assembly.read.BamReader;
+import com.hartwig.hmftools.esvee.assembly.types.JunctionAssembly;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseGroup;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.assembly.types.ThreadTask;
@@ -79,7 +80,22 @@ public class PhaseSetTask extends ThreadTask
                 // where there are more than 2 assemblies, start with the ones with the most support and overlapping junction reads
                 PhaseSetBuilder phaseSetBuilder = new PhaseSetBuilder(mConfig.RefGenome, mRemoteRegionAssembler, phaseGroup);
 
-                phaseSetBuilder.buildPhaseSets();
+                try
+                {
+                    phaseSetBuilder.buildPhaseSets();
+                }
+                catch(Exception e)
+                {
+                    SV_LOGGER.error("failed building phase group({}) sets", phaseGroup);
+
+                    for(JunctionAssembly assembly : phaseGroup.assemblies())
+                    {
+                        SV_LOGGER.info("assembly: {}", assembly);
+                    }
+
+                    e.printStackTrace();
+                    System.exit(1);
+                }
 
                 // now that all support has been added, set the supporting read indices for each assembly
                 phaseGroup.assemblies().forEach(x -> x.setReadIndices());

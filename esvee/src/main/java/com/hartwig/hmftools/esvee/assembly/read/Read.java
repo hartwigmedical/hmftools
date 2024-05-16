@@ -383,6 +383,8 @@ public class Read
 
     public int indelImpliedAlignmentStart() { return mIndelImpliedAlignmentStart != null ? mIndelImpliedAlignmentStart : 0; }
     public int indelImpliedAlignmentEnd() { return mIndelImpliedAlignmentEnd != null ? mIndelImpliedAlignmentEnd : 0; }
+    public int indelImpliedUnclippedStart() { return mIndelImpliedUnclippedStart != null ? mIndelImpliedUnclippedStart : 0; }
+    public int indelImpliedUnclippedEnd() { return mIndelImpliedUnclippedEnd != null ? mIndelImpliedUnclippedEnd : 0; }
 
     // take indel implied read ends into consideration for methods requiring the maximum possible read soft-clip extension
     // note: converted INDELs from deletes may have their unclipped position inside the alignment
