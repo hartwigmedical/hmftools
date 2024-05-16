@@ -3,11 +3,8 @@ package com.hartwig.hmftools.esvee.utils;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT_ID;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT_ID;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.APP_NAME;
+import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

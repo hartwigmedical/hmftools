@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.esvee.prep;
 
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.createBamSlicer;
+import static com.hartwig.hmftools.esvee.common.FileCommon.createBamSlicer;
 
 import java.io.File;
 import java.io.IOException;

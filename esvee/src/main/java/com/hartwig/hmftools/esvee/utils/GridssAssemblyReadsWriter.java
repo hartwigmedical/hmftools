@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.APP_NAME;
+import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.sv.gridss.GridssVcfTags;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;

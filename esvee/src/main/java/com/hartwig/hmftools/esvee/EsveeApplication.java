@@ -4,7 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.APP_NAME;
+import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 

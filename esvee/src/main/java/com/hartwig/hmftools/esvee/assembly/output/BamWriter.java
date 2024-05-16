@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.bam.SamRecordUtils.MATE_CIGAR_ATTRIBUT
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
-import static com.hartwig.hmftools.esvee.common.CommonUtils.writeSortedBam;
 import static com.hartwig.hmftools.esvee.assembly.output.WriteType.ASSEMBLY_BAM;
+import static com.hartwig.hmftools.esvee.common.FileCommon.writeSortedBam;
 
 import java.io.File;
 import java.util.Set;

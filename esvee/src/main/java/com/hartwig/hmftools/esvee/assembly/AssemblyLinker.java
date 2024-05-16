@@ -161,7 +161,7 @@ public final class AssemblyLinker
                 }
             }
 
-            if(extraBasesStartIndex < 0 || extraBasesEndIndex <= extraBasesStartIndex || extraBasesEndIndex > firstSeq.BaseLength)
+            if(extraBasesStartIndex < 0 || extraBasesEndIndex < extraBasesStartIndex || extraBasesEndIndex > firstSeq.BaseLength)
             {
                 if(isSecondary)
                     return null;

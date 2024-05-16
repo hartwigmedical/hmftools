@@ -595,7 +595,10 @@ public class PhaseSetBuilder
                 SupportRead candidateRead = assembly.candidateSupport().get(index);
 
                 if(candidateRead.type() == SupportType.JUNCTION_MATE)
+                {
+                    ++index;
                     continue;
+                }
 
                 // only link reads into a supporting fragment across chain links if they face towards each other in the chain
                 SupportRead matchedRead = otherAssembly.support().stream()

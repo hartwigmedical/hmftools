@@ -7,11 +7,12 @@ import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsSt
 import static com.hartwig.hmftools.common.utils.version.VersionInfo.fromAppName;
 import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.APP_NAME;
 import static com.hartwig.hmftools.esvee.caller.CallerConfig.addConfig;
 import static com.hartwig.hmftools.esvee.caller.FilterConstants.GERMLINE_AF_THRESHOLD;
 import static com.hartwig.hmftools.esvee.caller.VariantFilters.logFilterTypeCounts;
-import static com.hartwig.hmftools.esvee.prep.PrepConfig.formPrepInputFilename;
+import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formFragmentLengthDistFilename;
+import static com.hartwig.hmftools.esvee.common.FileCommon.formPrepInputFilename;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.PREP_FRAG_LENGTH_FILE_ID;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -56,7 +57,7 @@ public class CallerApplication
 
         mVariantBuilder = new VariantBuilder(mHotspotCache, mTargetRegions);
 
-        String fragLengthFilename = mConfig.OutputDir + formPrepInputFilename(mConfig.SampleId, PREP_FRAG_LENGTH_FILE_ID);
+        String fragLengthFilename = formFragmentLengthDistFilename(mConfig.OutputDir, mConfig.SampleId);
         FragmentLengthBounds fragmentLengthBounds = FragmentSizeDistribution.loadFragmentLengthBounds(fragLengthFilename);
 
         mVariantFilters = new VariantFilters(mFilterConstants, fragmentLengthBounds);

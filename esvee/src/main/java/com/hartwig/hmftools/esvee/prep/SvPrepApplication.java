@@ -2,7 +2,7 @@ package com.hartwig.hmftools.esvee.prep;
 
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
-import static com.hartwig.hmftools.esvee.AssemblyConstants.APP_NAME;
+import static com.hartwig.hmftools.esvee.common.FileCommon.APP_NAME;
 
 import java.util.stream.Collectors;
 
@@ -41,7 +41,7 @@ public class SvPrepApplication
         if(mConfig.CalcFragmentLength)
             calcFragmentDistribution();
 
-        mExistingJunctionCache.loadJunctions(mConfig.ExistingJunctionFile);
+        // mExistingJunctionCache.loadJunctions(mConfig.ExistingJunctionFile);
 
         CombinedStats combinedStats = new CombinedStats();
 

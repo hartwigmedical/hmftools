@@ -5,11 +5,6 @@ import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_VARIANT_LENGTH;
 
 public final class AssemblyConstants
 {
-    public static final String APP_NAME = "Esvee";
-
-    // file related
-    public static final String REF_GENOME_IMAGE_EXTENSION = ".img";
-
     // BAM reading
     public static final int BAM_READ_JUNCTION_BUFFER = 1000;
 
