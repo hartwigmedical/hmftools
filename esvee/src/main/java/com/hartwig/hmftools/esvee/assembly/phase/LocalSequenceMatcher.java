@@ -43,6 +43,11 @@ public class LocalSequenceMatcher
         int localRegionStart = assembly.junction().Position - mLocalMatchDistance;
         int localRegionEnd = assembly.junction().Position + mLocalMatchDistance;
 
+        int chromosomeEnd = mRefGenome.getChromosomeLength(assembly.junction().Chromosome);
+
+        if(localRegionEnd >= chromosomeEnd)
+            return null;
+
         byte[] refGenomeBases = mRefGenome.getBases(assembly.junction().Chromosome, localRegionStart, localRegionEnd);
 
         byte[] refBaseQuals = createMinBaseQuals(refGenomeBases.length);
