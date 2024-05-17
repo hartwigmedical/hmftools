@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.SequenceCompare.compareSequences;
 import static com.hartwig.hmftools.esvee.assembly.read.ReadUtils.INVALID_INDEX;
 import static com.hartwig.hmftools.esvee.common.SvConstants.LOW_BASE_QUAL_THRESHOLD;
@@ -92,10 +93,20 @@ public class ExtensionSeqBuilder
 
     public List<SupportRead> formAssemblySupport()
     {
-        return mReads.stream().filter(x -> x.Mismatches <= mMaxMismatches)
-                .map(x -> new SupportRead(
-                        x.read(), SupportType.JUNCTION, x.junctionIndex(), x.matchedBases(), x.Mismatches))
-                .collect(Collectors.toList());
+        List<SupportRead> supportReads = Lists.newArrayList();
+
+        for(ReadState read : mReads)
+        {
+            int permittedReadMismatches = mismatchesPerComparisonLength(read.extensionLength());
+
+            if(read.Mismatches > permittedReadMismatches)
+                continue;
+
+            supportReads.add(new SupportRead(
+                    read.read(), SupportType.JUNCTION, read.junctionIndex(), read.matchedBases(), read.Mismatches));
+        }
+
+        return supportReads;
     }
 
     public int mismatches() { return (int)mReads.stream().filter(x -> x.Mismatches > mMaxMismatches).count(); }
@@ -189,7 +200,6 @@ public class ExtensionSeqBuilder
 
                 consensusBase = DNA_BASE_BYTES[maxBaseIndex];
                 consensusMaxQual = (byte)maxQuals[maxBaseIndex];
-                consensusQualTotal = totalQuals[maxBaseIndex];
                 consensusReadCount = readCounts[maxBaseIndex];
             }
 

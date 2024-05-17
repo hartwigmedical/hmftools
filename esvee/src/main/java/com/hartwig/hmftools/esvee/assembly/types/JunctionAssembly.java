@@ -9,8 +9,10 @@ import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_READ_MAX_MISMATCH;
 import static com.hartwig.hmftools.esvee.alignment.AlignmentOutcome.NO_SET;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.calcTrimmedRefBaseLength;
+import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.readQualFromJunction;
 import static com.hartwig.hmftools.esvee.assembly.ExtensionSeqBuilder.calcReadSequenceMismatches;
 import static com.hartwig.hmftools.esvee.assembly.IndelBuilder.convertedIndelCrossesJunction;
@@ -183,7 +185,7 @@ public class JunctionAssembly
 
     public AssemblyStats stats() { return mStats; }
 
-    public boolean checkAddJunctionRead(final Read read, int permittedMismatches)
+    public boolean checkAddJunctionRead(final Read read)
     {
         int mismatchCount = 0;
 
@@ -199,6 +201,7 @@ public class JunctionAssembly
             return false;
 
         int highQualMatchCount = 0;
+        int checkedBaseCount = 0;
 
         for(int i = readIndexRange[SE_START]; i <= readIndexRange[SE_END]; ++i, ++assemblyIndex)
         {
@@ -209,6 +212,7 @@ public class JunctionAssembly
                 break;
 
             byte qual = read.getBaseQuality()[i];
+            ++checkedBaseCount;
 
             if(basesMatch(read.getBases()[i], mBases[assemblyIndex], qual, mBaseQuals[assemblyIndex], LOW_BASE_QUAL_THRESHOLD))
             {
@@ -219,10 +223,12 @@ public class JunctionAssembly
             {
                 ++mismatchCount;
 
-                if(mismatchCount > permittedMismatches)
+                if(mismatchCount > PRIMARY_ASSEMBLY_READ_MAX_MISMATCH)
                     break;
             }
         }
+
+        int permittedMismatches = mismatchesPerComparisonLength(checkedBaseCount);
 
         if(mismatchCount > permittedMismatches)
         {

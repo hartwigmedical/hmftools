@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.esvee.assembly;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.floor;
+import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -89,6 +91,11 @@ public final class AssemblyUtils
 
             assembly.extendJunctionReadSupport(support.cachedRead(), support);
         }
+    }
+
+    public static int mismatchesPerComparisonLength(final int sequenceLength)
+    {
+        return (int)floor(log10(sequenceLength + 1));
     }
 
     public static int readQualFromJunction(final Read read, final Junction junction)
