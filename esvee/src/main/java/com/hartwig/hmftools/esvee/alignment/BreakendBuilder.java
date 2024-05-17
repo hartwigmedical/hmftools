@@ -7,6 +7,9 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.ALIGNMENT_MIN_SOFT_CLIP;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PHASED_ASSEMBLY_MAX_TI;
@@ -14,6 +17,9 @@ import static com.hartwig.hmftools.esvee.assembly.types.LinkType.FACING;
 import static com.hartwig.hmftools.esvee.common.IndelCoords.findIndelCoords;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
+
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.I;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -24,10 +30,13 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.esvee.assembly.types.AssemblyLink;
 import com.hartwig.hmftools.esvee.assembly.types.Junction;
 import com.hartwig.hmftools.esvee.assembly.types.PhaseSet;
 import com.hartwig.hmftools.esvee.common.IndelCoords;
+
+import htsjdk.samtools.CigarElement;
 
 public class BreakendBuilder
 {
@@ -100,8 +109,21 @@ public class BreakendBuilder
 
     private boolean formIndelBreakends(final AlignData alignment)
     {
-        // parse the CIGAR to get the indel coords
-        IndelCoords indelCoords = findIndelCoords(alignment.RefLocation.start(), alignment.cigarElements(), MIN_INDEL_SUPPORT_LENGTH);
+        // parse the CIGAR to get the indel coords, first looking for a close match to what was expected
+        IndelCoords indelCoords = null;
+
+        StructuralVariantType svType = mAssemblyAlignment.svType();
+
+        if(svType == DEL || svType == DUP || svType == INS)
+        {
+            int svLength = mAssemblyAlignment.svLength();
+            CigarElement specificIndel = new CigarElement(svLength, svType == DEL ? D : I);
+            indelCoords = findIndelCoords(alignment.RefLocation.start(), alignment.cigarElements(), specificIndel);
+        }
+
+        // if no match was found, just take the longest
+        if(indelCoords == null)
+            indelCoords = findIndelCoords(alignment.RefLocation.start(), alignment.cigarElements(), MIN_INDEL_SUPPORT_LENGTH);
 
         if(indelCoords == null || indelCoords.Length < MIN_INDEL_LENGTH)
             return false;
@@ -117,7 +139,8 @@ public class BreakendBuilder
 
         if(indelCoords.isInsert())
         {
-            insertedBases = mAssemblyAlignment.fullSequence().substring(indelSeqStart, indelSeqEnd);
+            if(indelSeqStart >= 0 && indelSeqEnd < mAssemblyAlignment.fullSequenceLength())
+                insertedBases = mAssemblyAlignment.fullSequence().substring(indelSeqStart, indelSeqEnd);
         }
         else
         {

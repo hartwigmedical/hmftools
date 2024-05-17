@@ -63,11 +63,6 @@ public class AssemblyAlignment
 
     public String overlapBases() { return mAssemblyLink != null ? mAssemblyLink.overlapBases() : ""; }
 
-    public void setOutcome(final AlignmentOutcome outcome)
-    {
-        mAssemblies.forEach(x -> x.setAlignmentOutcome(outcome));
-    }
-
     public String assemblyIds()
     {
         if(mAssemblies.size() == 1)

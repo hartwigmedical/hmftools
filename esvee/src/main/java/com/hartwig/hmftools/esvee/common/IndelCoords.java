@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.esvee.common;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -84,5 +85,37 @@ public class IndelCoords
             return null;
 
         return new IndelCoords(indelStartPos, indelEndPos, maxIndelLength);
+    }
+
+    public static IndelCoords findIndelCoords(final int readStart, final List<CigarElement> cigarElements, final CigarElement specificIndel)
+    {
+        // find the location of the internal delete or insert matching the max indel length
+        int indelStartPos = readStart - 1;
+        int indelEndPos = 0;
+        int matchedIndelLength = 0;
+
+        int refPosition = readStart;
+
+        for(CigarElement element : cigarElements)
+        {
+            if(element.getOperator() == specificIndel.getOperator() && abs(specificIndel.getLength() - element.getLength()) <= 1)
+            {
+                // indel start is the last ref base, indel end is the next ref base
+                indelStartPos = refPosition - 1;
+
+                if(element.getOperator() == D)
+                    indelEndPos = indelStartPos + element.getLength() + 1;
+                else
+                    indelEndPos = indelStartPos + 1;
+
+                matchedIndelLength = element.getLength();
+                break;
+            }
+
+            if(element.getOperator().consumesReferenceBases())
+                refPosition += element.getLength();
+        }
+
+        return new IndelCoords(indelStartPos, indelEndPos, matchedIndelLength);
     }
 }
