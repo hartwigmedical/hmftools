@@ -15,13 +15,11 @@ from cuppa.compose.column_transformer import ColumnTransformer
 from cuppa.compose.pipeline import Pipeline
 
 """
-This module has the classes containing the sub-classifiers and meta-classifiers of CUPPA (as sklearn Pipeline-like
-objects), as well the these classifiers combined into classifier layers (as sklearn ColumnTransformer-like objects). 
-
-Methods are used to return the classifiers to force new classifier objects to always be instantiated. One-time
-instantiation would result in parameters being overwritten e.g. if `fit()` would be called more than once, which is
-unwanted behavior.
+This module contains methods that instantiate components of CUPPA including: 
+- the individual classifiers (as sklearn Pipeline-like objects that chain Transformer objects together)
+- the sub-classifier and meta-classifier layers (as sklearn ColumnTransformer-like objects)
 """
+
 
 class SubClassifiers:
 
@@ -138,6 +136,7 @@ class MetaClassifiers:
             ("calibrator", cls.ProbCalibrator()),
             ("sex_filter", SexProbFilter(show_warnings=False)),
         ])
+
 
 class ClassifierLayers:
 
