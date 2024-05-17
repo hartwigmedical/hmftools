@@ -40,7 +40,7 @@ public class JunctionAssemblyTest
         assertEquals(1, mismatchesPerComparisonLength(10));
         assertEquals(2, mismatchesPerComparisonLength(100));
     }
-    
+
     @Test
     public void testPosJunctionExtensionSequence()
     {

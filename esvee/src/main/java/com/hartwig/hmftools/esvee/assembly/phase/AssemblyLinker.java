@@ -99,7 +99,7 @@ public final class AssemblyLinker
         int firstJunctionOffset = firstSeq.junctionIndex() - firstIndexStart;
         int secondJunctionOffset = secondSeq.junctionIndex() - secondIndexStart;
 
-        int firstJunctionIndexInSecond = -1;
+        int firstJunctionIndexInSecond = secondIndexStart + firstJunctionOffset;
 
         // determine whether the junctions align exactly (junctionOffsetDiff = 0), or have an overlap (junctionOffsetDiff < 0)
         // or there are inserted bases (junctionOffsetDiff > 0)
@@ -113,8 +113,7 @@ public final class AssemblyLinker
         }
         else if(secondSeq.Reversed)
         {
-            int firstJunctionIndexInSecondReversed = secondIndexStart + firstJunctionOffset;
-            firstJunctionIndexInSecond = secondSeq.indexReverted(firstJunctionIndexInSecondReversed);
+            firstJunctionIndexInSecond = secondSeq.indexReverted(firstJunctionIndexInSecond);
             junctionOffsetDiff = firstJunctionIndexInSecond - second.junctionIndex() - 1;
         }
         else
