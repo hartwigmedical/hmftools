@@ -383,7 +383,7 @@ public class RemoteRegionAssembler
 
         remoteAssembly.buildRepeatInfo();
 
-        return formLink(assembly, remoteAssembly, assemblySeq, remoteRefSeq, firstJuncSeqIndexStart, secondIndexStart, false);
+        return formLink(assembly, remoteAssembly, assemblySeq, remoteRefSeq, firstJuncSeqIndexStart, secondIndexStart, 0);
     }
 
     @VisibleForTesting

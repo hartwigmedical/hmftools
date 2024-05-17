@@ -242,6 +242,51 @@ public class AssemblyLinksTest
         assertEquals(firstAssembly, link.first());
         assertEquals(secondAssembly, link.second());
         assertEquals(INV, link.svType());
+
+
+        // test 3: 1 base of homology
+        //                          10        20        30        40        50        60        70        80        90        100
+        //                01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
+        firstRefBases =  "CAAACAAAAATTAAAACAAAAAGGCTAAATACTGCGTGATTTTGTTTACACGGAATTCTAAAAAGAAAAAAAAAAAAAAGACAACACAGAGAAAAAAACA";
+        secondRefBases = "AATTCAAAGGACTGGCTTTAGCCTCCAGCTACTGAACAGCTTTGGTTAATAAGAAGCACCTGCAGAAGACTAGAAGACAACAGGAAAGGGGTTGTCTAGT";
+
+        firstExtensionBases = reverseComplementBases(secondRefBases.substring(19, 99));
+        firstAssemblyBases = firstRefBases + firstExtensionBases;
+        baseQuals = SamRecordTestUtils.buildDefaultBaseQuals(firstAssemblyBases.length());
+
+        firstAssembly = new JunctionAssembly(firstJunction, firstAssemblyBases.getBytes(), baseQuals, 99);
+
+        secondExtensionBases = reverseComplementBases(firstRefBases.substring(19, 99));
+        secondAssemblyBases = secondRefBases + secondExtensionBases;
+
+        secondAssembly = new JunctionAssembly(secondJunction, secondAssemblyBases.getBytes(), baseQuals, 99);
+
+        link = assemblyLinker.tryAssemblyOverlap(firstAssembly, secondAssembly);
+
+        assertNotNull(link);
+        assertTrue(link.insertedBases().isEmpty());
+        assertEquals("A", link.overlapBases());
+
+        assertEquals(firstAssembly, link.first());
+        assertEquals(secondAssembly, link.second());
+        assertEquals(INV, link.svType());
+
+        // test 4: again but with a base from the second's extension bases, so the mismatch must be factored into the offset
+
+        secondExtensionBases = reverseComplementBases(firstRefBases.substring(19, 62) + firstRefBases.substring(63, 99));
+        secondAssemblyBases = secondRefBases + secondExtensionBases;
+
+        secondAssembly = new JunctionAssembly(secondJunction, secondAssemblyBases.getBytes(), baseQuals, 99);
+
+        link = assemblyLinker.tryAssemblyOverlap(firstAssembly, secondAssembly);
+
+        assertNotNull(link);
+        assertTrue(link.insertedBases().isEmpty());
+        assertEquals("A", link.overlapBases());
+
+        assertEquals(firstAssembly, link.first());
+        assertEquals(secondAssembly, link.second());
+        assertEquals(INV, link.svType());
     }
 
     @Test
