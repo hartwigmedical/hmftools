@@ -69,7 +69,9 @@ public class SvCompareVcfs
     private final String mSampleId;
     private final String mReferenceId;
     private final String mOriginalVcf;
+    private final String mOriginalUnfilteredVcf;
     private final String mNewVcf;
+    private final String mNewUnfilteredVcf;
     private final String mOutputDir;
     private final String mOutputId;
 
@@ -91,7 +93,11 @@ public class SvCompareVcfs
     private static final String ORIGINAL_VCF = "original_vcf";
     private static final String NEW_VCF = "new_vcf";
 
+    private static final String ORIGINAL_UNFILTERED_VCF = "original_unfiltered_vcf";
+    private static final String NEW_UNFILTERED_VCF = "new_unfiltered_vcf";
+
     private static final String COMPARE_FILTERS = "compare_filters";
+    private static final String FIELD_FILTERS = "FILTERS";
     private static final String IGNORE_PON_DIFF = "ignore_pon_diff";
 
     private static final int DEFAULT_MAX_DIFF = 20;
@@ -103,6 +109,8 @@ public class SvCompareVcfs
         mReferenceId = configBuilder.getValue(REFERENCE, "");
         mOriginalVcf = configBuilder.getValue(ORIGINAL_VCF);
         mNewVcf = configBuilder.getValue(NEW_VCF);
+        mOriginalUnfilteredVcf = configBuilder.getValue(ORIGINAL_UNFILTERED_VCF);
+        mNewUnfilteredVcf = configBuilder.getValue(NEW_UNFILTERED_VCF);
         mOutputDir = parseOutputDir(configBuilder);
         mOutputId = configBuilder.getValue(OUTPUT_ID);
 
@@ -363,7 +371,80 @@ public class SvCompareVcfs
 
     private void checkFilteredVariants()
     {
+        if(mNewUnfilteredVcf == null && mOriginalUnfilteredVcf == null)
+            return;
 
+        for(int i = 0; i <= 0; ++i)
+        {
+            boolean checkOriginal = (i == 0);
+            Map<String,List<VariantBreakend>> chrBreakendMap = checkOriginal ? mOrigChrBreakendMap : mNewChrBreakendMap;
+            String unfilteredVcf = checkOriginal ? mNewUnfilteredVcf : mOriginalUnfilteredVcf;
+
+            if(unfilteredVcf == null)
+                continue;
+
+            int unmatchedBreakends = chrBreakendMap.values().stream().mapToInt(x -> x.size()).sum();
+
+            if(unmatchedBreakends == 0)
+                continue;
+
+            SV_LOGGER.debug("checking unmatched {} breakends in {} unfiltered VCF",
+                    checkOriginal ? "original" : "new", checkOriginal ? "new" : "original");
+
+            VcfFileReader reader = new VcfFileReader(unfilteredVcf);
+
+            VCFHeader vcfHeader = reader.vcfHeader();
+            String currentChr = "";
+            List<VariantBreakend> breakends = null;
+
+            for(VariantContext variantContext : reader.iterator())
+            {
+                String chromosome = variantContext.getContig();
+
+                if(mRefGenomeVersion == null)
+                    mRefGenomeVersion = chromosome.startsWith(CHR_PREFIX) ? V38 : V37;
+
+                if(!currentChr.equals(chromosome))
+                {
+                    currentChr = chromosome;
+                    breakends = chrBreakendMap.get(chromosome);
+                }
+
+                if(breakends == null || breakends.isEmpty())
+                    continue;
+
+                VariantBreakend filteredBreakend = new VariantBreakend(variantContext);
+
+                for(int j = 0; j < breakends.size(); ++j)
+                {
+                    VariantBreakend breakend = breakends.get(j);
+
+                    if(breakend.matchesWithinHomology(filteredBreakend))
+                    {
+                        String filters = filtersStr(filteredBreakend.Context.getFilters(), true);
+
+                        if(checkOriginal)
+                            writeDiffs(breakend, filteredBreakend, FIELD_FILTERS, PASS, filters);
+                        else
+                            writeDiffs(filteredBreakend, breakend, FIELD_FILTERS, filters, PASS);
+
+                        breakends.remove(j);
+                        --unmatchedBreakends;
+                        break;
+                    }
+                    else if(filteredBreakend.isLowerPosition(breakend))
+                    {
+                        break;
+                    }
+                }
+
+                if(unmatchedBreakends == 0 || breakends.isEmpty())
+                    break;
+            }
+
+            if(unmatchedBreakends == 0)
+                break;
+        }
     }
 
     private void compareBreakends(final VariantBreakend origBreakend, final VariantBreakend newBreakend)
@@ -387,7 +468,7 @@ public class SvCompareVcfs
             if(!newFilterDiffs.isEmpty() || !origFilterDiffs.isEmpty())
             {
                 writeDiffs(
-                        origBreakend, newBreakend, "FILTERS",
+                        origBreakend, newBreakend, FIELD_FILTERS,
                         filtersStr(origFilterDiffs, true), filtersStr(newFilterDiffs, true));
             }
 
@@ -723,8 +804,10 @@ public class SvCompareVcfs
 
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addConfigItem(REFERENCE, false, REFERENCE_DESC);
-        configBuilder.addPath(ORIGINAL_VCF, true, "Optional, name of the reference sample");
-        configBuilder.addPath(NEW_VCF, true, "Path to the GRIDSS structural variant VCF file");
+        configBuilder.addPath(ORIGINAL_VCF, true, "Path to the old VCF file");
+        configBuilder.addPath(ORIGINAL_UNFILTERED_VCF, false, "Path to the old unfiltered VCF file");
+        configBuilder.addPath(NEW_VCF, true, "Path to the new VCF file");
+        configBuilder.addPath(NEW_UNFILTERED_VCF, false, "Path to the new unfiltered VCF file");
         configBuilder.addFlag(IGNORE_PON_DIFF, "Ignore diffs if just PON filter");
         configBuilder.addFlag(COMPARE_FILTERS, "Compare filters within same SV caller");
 
