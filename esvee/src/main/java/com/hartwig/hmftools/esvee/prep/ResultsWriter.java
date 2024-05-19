@@ -191,7 +191,7 @@ public class ResultsWriter
                 }
 
                 mJunctionWriter.write(String.format("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
-                        chromosome, junctionData.Position, junctionData.Orient, junctionData.junctionFragmentCount(),
+                        chromosome, junctionData.Position, junctionData.Orient.asByte(), junctionData.junctionFragmentCount(),
                         exactSupportFrags, otherSupportFrags, lowMapQualFrags, maxMapQual));
 
                 mJunctionWriter.write(String.format("\t%d\t%s\t%s\t%s\t%s",

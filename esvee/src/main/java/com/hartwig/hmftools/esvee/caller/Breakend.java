@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
-import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.parseRefAlt;
+import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.fromRefAlt;
 
 import java.util.Collections;
 import java.util.List;
@@ -62,7 +62,7 @@ public class Breakend
         ConfidenceInterval = Interval.fromCiposTag(context.getAttributeAsIntList(CIPOS, 0));
 
         String ref = context.getAlleles().get(0).getDisplayString();
-        final VariantAltInsertCoords altInsertCoords = parseRefAlt(context.getAlleles().get(1).getDisplayString(), ref);
+        final VariantAltInsertCoords altInsertCoords = fromRefAlt(context.getAlleles().get(1).getDisplayString(), ref);
         InsertSequence = altInsertCoords.InsertSequence;
 
         IsLineInsertion = isMobileLineElement(orientation.asByte(), InsertSequence);

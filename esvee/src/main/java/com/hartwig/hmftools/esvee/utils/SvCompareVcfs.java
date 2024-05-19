@@ -4,16 +4,27 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sv.SvVcfTags.PON_FILTER_PON;
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.DISC_FRAGS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.DISCORDANT_READS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SPLIT_READS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
@@ -21,8 +32,12 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.QUAL;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.esvee.AssemblyConfig.SV_LOGGER;
+import static com.hartwig.hmftools.esvee.common.CommonUtils.formSvType;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -34,14 +49,18 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.common.sv.VariantAltInsertCoords;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
-import com.hartwig.hmftools.esvee.caller.HotspotCache;
-import com.hartwig.hmftools.esvee.caller.TargetRegions;
 
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
 
@@ -54,20 +73,26 @@ public class SvCompareVcfs
     private final String mOutputDir;
     private final String mOutputId;
 
-    private final Map<String,List<VariantContext>> mOrigChrBreakendMap;
-    private final Map<String,List<VariantContext>> mNewChrBreakendMap;
+    private final Map<String,List<VariantBreakend>> mOrigChrBreakendMap;
+    private final Map<String,List<VariantBreakend>> mNewChrBreakendMap;
 
     private final BufferedWriter mWriter;
 
+    private final boolean mCompareFilters; // only relevant for the same caller (ie Esvee or Gridss)
+    private final boolean mOriginalIsGridss;
     private final boolean mIgnorePonDiff;
-    private final boolean mWriteAllDiffs;
 
     private final List<VcfCompareField> mVcfCheckFields;
+    private RefGenomeVersion mRefGenomeVersion;
+
+    private int mMatchedCount;
+    private int mDiffCount;
 
     private static final String ORIGINAL_VCF = "original_vcf";
     private static final String NEW_VCF = "new_vcf";
+
+    private static final String COMPARE_FILTERS = "compare_filters";
     private static final String IGNORE_PON_DIFF = "ignore_pon_diff";
-    private static final String WRITE_ALL_DIFFS = "write_all_diffs";
 
     private static final int DEFAULT_MAX_DIFF = 20;
     private static final double DEFAULT_MAX_DIFF_PERC = 0.2;
@@ -83,45 +108,80 @@ public class SvCompareVcfs
 
         mOrigChrBreakendMap = Maps.newHashMap();
         mNewChrBreakendMap = Maps.newHashMap();
+        mRefGenomeVersion = null;
 
+        mOriginalIsGridss = mOriginalVcf.contains("gridss") || mOriginalVcf.contains("gripss");
         mIgnorePonDiff = configBuilder.hasFlag(IGNORE_PON_DIFF);
-        mWriteAllDiffs = configBuilder.hasFlag(WRITE_ALL_DIFFS);
+        mCompareFilters = configBuilder.hasFlag(COMPARE_FILTERS);
 
         mVcfCheckFields = Lists.newArrayList();
         addComparisonFields();
+
+        mMatchedCount = 0;
+        mDiffCount = 0;
 
         mWriter = initialiseWriter();
     }
 
     private void addComparisonFields()
     {
-        mVcfCheckFields.add(new VcfCompareField(REF_DEPTH, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(REF_DEPTH_PAIR, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(
+                REF_DEPTH, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
 
-        mVcfCheckFields.add(new VcfCompareField(STRAND_BIAS, GenotypeScope.COMBINED, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        mVcfCheckFields.add(new VcfCompareField(
+                REF_DEPTH_PAIR, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+
+        mVcfCheckFields.add(new VcfCompareField(
+                STRAND_BIAS, FieldType.DECIMAL, GenotypeScope.COMBINED, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+
+        mVcfCheckFields.add(new VcfCompareField(
+                IHOMPOS, FieldType.STRING, GenotypeScope.COMBINED, VariantTypeScope.BREAKEND, 0, 0));
+
+        if(mOriginalIsGridss)
+        {
+            mVcfCheckFields.add(new VcfCompareField(
+                    SPLIT_FRAGS, SPLIT_READS, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+
+            mVcfCheckFields.add(new VcfCompareField(
+                    DISC_FRAGS, DISCORDANT_READS, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        }
+        else
+        {
+            mVcfCheckFields.add(new VcfCompareField(
+                    QUAL, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+
+            mVcfCheckFields.add(new VcfCompareField(
+                    SPLIT_FRAGS, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+
+            mVcfCheckFields.add(new VcfCompareField(
+                    DISC_FRAGS, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+        }
 
         /*
-        mVcfCheckFields.add(new VcfCompareField(SPLIT_READS, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
         mVcfCheckFields.add(new VcfCompareField(INDEL_COUNT, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
 
-        // SV only
-        mVcfCheckFields.add(new VcfCompareField(QUAL, GenotypeScope.BOTH, VariantTypeScope.SV, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(SV_FRAG_COUNT, GenotypeScope.BOTH, VariantTypeScope.SV, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
         mVcfCheckFields.add(new VcfCompareField(READ_PAIRS, GenotypeScope.BOTH, VariantTypeScope.SV, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
         mVcfCheckFields.add(new VcfCompareField(GRIDSS_ASRP, GenotypeScope.BOTH, VariantTypeScope.SV, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
 
-        // assembly
-        mVcfCheckFields.add(new VcfCompareField(GRIDSS_AS, GenotypeScope.COMBINED, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(GRIDSS_CAS, GenotypeScope.COMBINED, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(GRIDSS_RAS, GenotypeScope.COMBINED, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+                        // check local and remote linked by for assembled links
+                boolean origHasStartAssembled = origStart.Context.getAttributeAsString(LOCAL_LINKED_BY, "").contains("asm");
+                boolean newHasStartAssembled = newStart.Context.getAttributeAsString(LOCAL_LINKED_BY, "").contains("asm");
+                boolean origHasEndAssembled =
+                        !origSv.isSgl() && origStart.Context.getAttributeAsString(REMOTE_LINKED_BY, "").contains("asm");
+                boolean newHasEndAssembled =
+                        !origSv.isSgl() && newStart.Context.getAttributeAsString(REMOTE_LINKED_BY, "").contains("asm");
 
-        // SGL only
-        mVcfCheckFields.add(new VcfCompareField(SGL_FRAG_COUNT, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(GRIDSS_BQ, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(GRIDSS_BAQ, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(GRIDSS_BSC, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(GRIDSS_BASRP, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        mVcfCheckFields.add(new VcfCompareField(GRIDSS_BASSR, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+                    if(origHasStartAssembled != newHasStartAssembled || origHasEndAssembled != newHasEndAssembled)
+                    {
+                        writeDiffs(
+                                origSv, newSv, "ASSEMBLY",
+                                format("%s_%s", origHasStartAssembled, origHasEndAssembled),
+                                format("%s_%s", newHasStartAssembled, newHasEndAssembled));
+                        ++diffCount;
+                        continue;
+                    }
+                }
+            }
         */
     }
 
@@ -134,15 +194,21 @@ public class SvCompareVcfs
         }
 
         SV_LOGGER.info("loading original VCF({})", mOriginalVcf);
-        loadOriginalVariants(mOriginalVcf);
+        loadVariants(mOriginalVcf, mOrigChrBreakendMap);
+        loadVariants(mNewVcf, mNewChrBreakendMap);
 
-        compareVariants(mNewVcf);
+        compareVariants();
+
+        checkFilteredVariants();
+
+        writeUnmatchedVariants();
+
         closeBufferedWriter(mWriter);
 
-        SV_LOGGER.info("Gripss compare VCFs complete");
+        SV_LOGGER.info("Esvee compare VCFs complete");
     }
 
-    private void loadOriginalVariants(final String vcfFile)
+    private void loadVariants(final String vcfFile, final Map<String,List<VariantBreakend>> chrBreakendMap)
     {
         VcfFileReader reader = new VcfFileReader(vcfFile);
 
@@ -157,231 +223,288 @@ public class SvCompareVcfs
         SV_LOGGER.info("genetype info: ref({}: {}) tumor({}: {})",
                 genotypeIds.ReferenceOrdinal, genotypeIds.ReferenceId, genotypeIds.TumorOrdinal, genotypeIds.TumorId);
 
-
         String currentChr = "";
-        List<VariantContext> breakends = null;
+        List<VariantBreakend> breakends = null;
 
         for(VariantContext variantContext : reader.iterator())
         {
             String chromosome = variantContext.getContig();
 
+            if(mRefGenomeVersion == null)
+                mRefGenomeVersion = chromosome.startsWith(CHR_PREFIX) ? V38 : V37;
+
             if(!currentChr.equals(chromosome))
             {
                 currentChr = chromosome;
                 breakends = Lists.newArrayList();
-                mOrigChrBreakendMap.put(chromosome, breakends);
+                chrBreakendMap.put(chromosome, breakends);
             }
 
-            breakends.add(variantContext);
+            breakends.add(new VariantBreakend(variantContext));
         }
 
-        SV_LOGGER.info("loaded {} original SVs, incomplete({})",
-                mOrigChrBreakendMap.values().stream().mapToInt(x -> x.size()).sum());
+        SV_LOGGER.info("loaded {} SVs from {})",
+                chrBreakendMap.values().stream().mapToInt(x -> x.size()).sum(), vcfFile);
     }
 
-    private void compareVariants(final String newVcfFile)
+    private void compareVariants()
     {
-        SV_LOGGER.info("loading new VCF({})", newVcfFile);
-
-        VcfFileReader reader = new VcfFileReader(newVcfFile);
-
-        VCFHeader vcfHeader = reader.vcfHeader();
-        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mReferenceId, mSampleId);
-
-        if(genotypeIds == null)
-            System.exit(1);
-
-        int diffCount = 0;
-
-        try
+        for(HumanChromosome chromosome : HumanChromosome.values())
         {
-            int newSvCount = 0;
-            String currentChr = "";
-            List<VariantContext> origBreakends = null;
-            VariantContext origBreakend = null;
-            int origBreakendIndex = 0;
+            String chrStr = mRefGenomeVersion.versionedChromosome(chromosome.toString());
 
-            for(VariantContext newBreakend : reader.iterator())
+            List<VariantBreakend> origBreakends = mOrigChrBreakendMap.get(chrStr);
+            List<VariantBreakend> newBreakends = mNewChrBreakendMap.get(chrStr);
+
+            if(origBreakends == null || newBreakends == null)
+                continue;
+
+            int origIndex = 0;
+            int newIndex = 0;
+
+            int processedCount = 0;
+
+            VariantBreakend origBreakend = !origBreakends.isEmpty() ? origBreakends.get(origIndex) : null;
+            VariantBreakend newBreakend = !newBreakends.isEmpty() ? newBreakends.get(newIndex) : null;
+
+            while(origBreakend != null && newBreakend != null)
             {
-                ++newSvCount;
-
-                if((newSvCount % 10000 == 0))
+                if(processedCount > 0 && (processedCount % 1000) == 0)
                 {
-                    SV_LOGGER.debug("processed {} variants", newSvCount);
+                    SV_LOGGER.debug("processed {} variants", processedCount);
                 }
 
-                if(!currentChr.equals(newBreakend.getContig()))
-                {
-                    currentChr = newBreakend.getContig();
-                    origBreakends = mOrigChrBreakendMap.get(currentChr);
-                    origBreakendIndex = 0;
-                    origBreakend = origBreakends != null ? origBreakends.get(origBreakendIndex) : null;
-                }
+                // scenarios:
+                // variants match exactly or match within homology (no distinction for now)
+                // original is ahead, so need to skip past new (or multiple)
+                // new is ahead, so need to skip past original
 
-                // move ahead as required
-                while(origBreakend != null)
+                if(origBreakend.matchesWithinHomology(newBreakend))
                 {
-                    // test positions factoring in homology
-                    break;
-                }
+                    ++mMatchedCount;
+                    compareBreakends(origBreakend, newBreakend);
 
-                if(origBreakend == null)
-                {
-                    writeDiffs(null, newBreakend, "NO_ORIG", "", "");
-                    ++diffCount;
+                    origBreakends.remove(origIndex);
+                    newBreakends.remove(newIndex);
+
+                    origBreakend = origIndex < origBreakends.size() ? origBreakends.get(origIndex) : null;
+                    newBreakend = newIndex < newBreakends.size() ? newBreakends.get(newIndex) : null;
                     continue;
                 }
 
-                // mOriginalSvData.remove(origSv.id());
-
-                Set<String> origFilters = origBreakend.getFilters();
-                Set<String> newFilters = newBreakend.getFilters();
-
-                // first check for a difference in PASS vs not
-                Set<String> origFilterDiffs = origFilters.stream().filter(x -> !newFilters.contains(x)).collect(Collectors.toSet());
-                Set<String> newFilterDiffs = newFilters.stream().filter(x -> !origFilters.contains(x)).collect(Collectors.toSet());
-
-                boolean ignorePonDiff = mIgnorePonDiff
-                        && ((origFilterDiffs.isEmpty() && newFilterDiffs.size() == 1 && newFilterDiffs.contains(PON_FILTER_PON))
-                        || (newFilterDiffs.isEmpty() && origFilterDiffs.size() == 1 && origFilterDiffs.contains(PON_FILTER_PON)));
-
-                /*
-                if(!ignorePonDiff && (!newFilterDiffs.isEmpty() || !origFilterDiffs.isEmpty()))
+                if(origBreakend.isLowerPosition(newBreakend))
                 {
-                    boolean origIsPass = origStart.Context.isNotFiltered() || (origFilters.size() == 1 && origFilters.contains(PASS));
-                    boolean newIsPass = newStart.Context.isNotFiltered() || (newFilters.size() == 1 && newFilters.contains(PASS));
-
-                    if(origIsPass != newIsPass)
+                    // proceed to the next match or past the other breakend
+                    while(origBreakend != null && origBreakend.maxPosition() < newBreakend.minPosition())
                     {
-                        writeDiffs(
-                                origSv, newSv, "FILTER_PASS",
-                                filtersStr(origFilterDiffs, false), filtersStr(newFilterDiffs, false));
+                        ++origIndex;
+
+                        if(origIndex >= origBreakends.size())
+                        {
+                            origBreakend = null;
+                            break;
+                        }
+
+                        origBreakend = origBreakends.get(origIndex);
                     }
+                }
+                else
+                {
+                    while(newBreakend != null && newBreakend.maxPosition() < origBreakend.minPosition())
+                    {
+                        ++newIndex;
+
+                        if(newIndex >= newBreakends.size())
+                        {
+                            newBreakend = null;
+                            break;
+                        }
+
+                        newBreakend = newBreakends.get(newIndex);
+                    }
+                }
+            }
+
+            // SV_LOGGER.info("loaded {} new SVs", newSvCount);
+        }
+
+        // SV_LOGGER.info("diffTotal({})", diffCount);
+    }
+
+    private static final String DIFF_NO_ORIG = "NO_ORIG";
+    private static final String DIFF_NO_NEW = "NO_NEW";
+
+    private void writeUnmatchedVariants()
+    {
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            String chrStr = mRefGenomeVersion.versionedChromosome(chromosome.toString());
+
+            for(int i = 0; i <= 1; ++i)
+            {
+                boolean isOriginal = (i == 0);
+                List<VariantBreakend> breakends = isOriginal ? mOrigChrBreakendMap.get(chrStr) : mNewChrBreakendMap.get(chrStr);
+
+                if(breakends == null)
+                    continue;
+
+                for(VariantBreakend breakend : breakends)
+                {
+                    String breakendInfo = format("QUAL(%.0f)", breakend.Context.getPhredScaledQual());
+
+                    if(isOriginal)
+                        writeDiffs(breakend, null, DIFF_NO_NEW, breakendInfo, "");
                     else
-                    {
-                        writeDiffs(
-                                origSv, newSv, "FILTER_DIFF",
-                                filtersStr(origFilterDiffs, false), filtersStr(newFilterDiffs, false));
-                    }
-
-                 */
-
-                    ++diffCount;
-                    continue;
+                        writeDiffs(null, breakend, DIFF_NO_ORIG, "", breakendInfo);
                 }
+            }
+        }
+    }
+
+    private void checkFilteredVariants()
+    {
+
+    }
+
+    private void compareBreakends(final VariantBreakend origBreakend, final VariantBreakend newBreakend)
+    {
+        // compare each field in turn, building up a set of diffs to write to file
+        if(mCompareFilters)
+        {
+            Set<String> origFilters = origBreakend.Context.getFilters();
+            Set<String> newFilters = newBreakend.Context.getFilters();
+
+            // first check for a difference in PASS vs not
+            Set<String> origFilterDiffs = origFilters.stream().filter(x -> !newFilters.contains(x)).collect(Collectors.toSet());
+            Set<String> newFilterDiffs = newFilters.stream().filter(x -> !origFilters.contains(x)).collect(Collectors.toSet());
 
             /*
-                // check specified VCF tags
-                for(VcfCompareField compareField : mVcfCheckFields)
-                {
-                    checkVcfFieldDiff(origSv, newSv, compareField);
-                }
+            boolean ignorePonDiff = mIgnorePonDiff
+                    && ((origFilterDiffs.isEmpty() && newFilterDiffs.size() == 1 && newFilterDiffs.contains(PON_FILTER_PON))
+                        || (newFilterDiffs.isEmpty() && origFilterDiffs.size() == 1 && origFilterDiffs.contains(PON_FILTER_PON)));
 
-                if(!mGridssDiffsOnly)
-                {
-                    // check local and remote linked by for assembled links
-                    boolean origHasStartAssembled = origStart.Context.getAttributeAsString(LOCAL_LINKED_BY, "").contains("asm");
-                    boolean newHasStartAssembled = newStart.Context.getAttributeAsString(LOCAL_LINKED_BY, "").contains("asm");
-                    boolean origHasEndAssembled =
-                            !origSv.isSgl() && origStart.Context.getAttributeAsString(REMOTE_LINKED_BY, "").contains("asm");
-                    boolean newHasEndAssembled =
-                            !origSv.isSgl() && newStart.Context.getAttributeAsString(REMOTE_LINKED_BY, "").contains("asm");
-
-                    if(origHasStartAssembled != newHasStartAssembled || origHasEndAssembled != newHasEndAssembled)
-                    {
-                        writeDiffs(
-                                origSv, newSv, "ASSEMBLY",
-                                format("%s_%s", origHasStartAssembled, origHasEndAssembled),
-                                format("%s_%s", newHasStartAssembled, newHasEndAssembled));
-                        ++diffCount;
-                        continue;
-                    }
-                }
-            }
             */
+            if(!newFilterDiffs.isEmpty() || !origFilterDiffs.isEmpty())
+            {
+                writeDiffs(
+                        origBreakend, newBreakend, "FILTERS",
+                        filtersStr(origFilterDiffs, true), filtersStr(newFilterDiffs, true));
+            }
 
-            SV_LOGGER.info("loaded {} new SVs", newSvCount);
         }
-        catch(Exception e)
+
+        // compare breakend attributes
+
+        // insert sequence
+        if(!origBreakend.Coords.InsertSequence.equals(newBreakend.Coords.InsertSequence))
         {
-            SV_LOGGER.error("error reading vcf({}): {}", newVcfFile, e.toString());
+            writeDiffs(origBreakend, newBreakend, "INSSEQ", origBreakend.Coords.InsertSequence, newBreakend.Coords.InsertSequence);
         }
 
-        /*
-        for(SvData origSv : mOriginalSvData.values())
+        // check specified VCF tags
+        for(VcfCompareField compareField : mVcfCheckFields)
         {
-            ++diffCount;
-            writeDiffs(origSv, null, "NO_NEW", "", "");
+            checkVcfFieldDiff(origBreakend, newBreakend, compareField);
         }
-        */
-
-        SV_LOGGER.info("diffTotal({})", diffCount);
     }
 
-    private boolean checkVcfFieldDiff(final VariantContext origBreakend, final VariantContext newBreakend, final VcfCompareField compareField)
+    private void checkVcfFieldDiff(final VariantBreakend origBreakend, final VariantBreakend newBreakend, final VcfCompareField compareField)
     {
-        boolean hasDiff = false;
-
-        /*
-        if(compareField.TypeScope == VariantTypeScope.SV && origBreakend.isSgl())
-            return false;
-        if(compareField.TypeScope == VariantTypeScope.SGL && !origBreakend.isSgl())
-            return false;
+        if(compareField.TypeScope == VariantTypeScope.VARIANT && origBreakend.isEnd())
+        {
+            // skip evaluating on the end breakend
+            return;
+        }
 
         if(compareField.Scope == GenotypeScope.COMBINED)
         {
-            double origValue = origBreakend.contextStart().getAttributeAsDouble(compareField.VcfTag, 0);
-            double newValue = newBreakend.contextStart().getAttributeAsDouble(compareField.VcfTag, 0);
-
-            if(hasDiff(origValue, newValue, compareField.DiffAbs, compareField.DiffPerc))
+            if(compareField.Type == FieldType.STRING)
             {
-                hasDiff = true;
-                writeDiffs(origBreakend, newBreakend, compareField.VcfTag, String.valueOf(origValue), String.valueOf(newValue));
+                checkField(
+                        origBreakend, newBreakend, compareField,
+                        origBreakend.Context.getAttributeAsString(compareField.VcfTag, ""),
+                        newBreakend.Context.getAttributeAsString(compareField.VcfTag, ""));
+            }
+            else if(compareField.Type == FieldType.INTEGER)
+            {
+                checkField(
+                        origBreakend, newBreakend, compareField,
+                        origBreakend.Context.getAttributeAsInt(compareField.VcfTag, 0),
+                        newBreakend.Context.getAttributeAsInt(compareField.VcfTag, 0));
+            }
+            else
+            {
+                checkField(
+                        origBreakend, newBreakend, compareField,
+                        origBreakend.Context.getAttributeAsDouble(compareField.VcfTag, 0),
+                        newBreakend.Context.getAttributeAsDouble(compareField.VcfTag, 0));
             }
         }
         else
         {
-            for(int se = SE_START; se <= SE_END; ++se)
+            for(Genotype origGenotype : origBreakend.Context.getGenotypes())
             {
-                if(se == SE_END && origBreakend.isSgl())
+                if(origGenotype.getSampleName().equals(mReferenceId) && compareField.Scope == GenotypeScope.TUMOR)
+                    continue;
+                else if(origGenotype.getSampleName().equals(mSampleId) && compareField.Scope == GenotypeScope.NORMAL)
                     continue;
 
-                Breakend origBreakend = origBreakend.breakends()[se];
-                Breakend newBreakend = newBreakend.breakends()[se];
+                Genotype newGenotype = newBreakend.Context.getGenotype(origGenotype.getSampleName());
 
-                if(!mReferenceId.isEmpty() && (compareField.Scope == GenotypeScope.NORMAL || compareField.Scope == GenotypeScope.BOTH))
+                double origValue = getGenotypeAttributeAsDouble(origGenotype, compareField.VcfTag, 0);
+                double newValue = getGenotypeAttributeAsDouble(newGenotype, compareField.VcfTag, 0);
+
+                if(compareField.Type == FieldType.INTEGER)
                 {
-                    double origValue = getGenotypeAttributeAsDouble(origBreakend.RefGenotype, compareField.VcfTag, 0);
-                    double newValue = getGenotypeAttributeAsDouble(newBreakend.RefGenotype, compareField.VcfTag, 0);
-
-                    if(hasDiff(origValue, newValue, compareField.DiffAbs, compareField.DiffPerc))
-                    {
-                        hasDiff = true;
-                        writeDiffs(origBreakend, newBreakend, format("REF_%s", compareField.VcfTag), String.valueOf(origValue), String.valueOf(newValue));
-                    }
+                    checkField(
+                            origBreakend, newBreakend, compareField,
+                            getGenotypeAttributeAsInt(origGenotype, compareField.VcfTag, 0),
+                            getGenotypeAttributeAsInt(newGenotype, compareField.VcfTag, 0));
+                }
+                else
+                {
+                    checkField(
+                            origBreakend, newBreakend, compareField,
+                            getGenotypeAttributeAsDouble(origGenotype, compareField.VcfTag, 0),
+                            getGenotypeAttributeAsDouble(newGenotype, compareField.VcfTag, 0));
                 }
 
-                if(compareField.Scope == GenotypeScope.TUMOR || compareField.Scope == GenotypeScope.BOTH)
+                if(hasDiff(origValue, newValue, compareField.DiffAbs, compareField.DiffPerc))
                 {
-                    double origValue = getGenotypeAttributeAsDouble(origBreakend.TumorGenotype, compareField.VcfTag, 0);
-                    double newValue = getGenotypeAttributeAsDouble(newBreakend.TumorGenotype, compareField.VcfTag, 0);
-
-                    if(hasDiff(origValue, newValue, compareField.DiffAbs, compareField.DiffPerc))
-                    {
-                        hasDiff = true;
-                        writeDiffs(origBreakend, newBreakend, format("TUMOR_%s", compareField.VcfTag), String.valueOf(origValue), String.valueOf(newValue));
-                    }
+                    writeDiffs(origBreakend, newBreakend, compareField.VcfTag, String.valueOf(origValue), String.valueOf(newValue));
                 }
             }
         }
-        */
-
-        return hasDiff;
     }
 
-    private static boolean hasDiff(double value1, double value2)
+    private void checkField(
+            final VariantBreakend origBreakend, final VariantBreakend newBreakend, final VcfCompareField compareField,
+            final String origValue, final String newValue)
     {
-        return hasDiff(value1, value2, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC);
+        if(!origValue.equals(newValue))
+        {
+            writeDiffs(origBreakend, newBreakend, compareField.VcfTag, origValue, newValue);
+        }
+    }
+
+    private void checkField(
+            final VariantBreakend origBreakend, final VariantBreakend newBreakend, final VcfCompareField compareField,
+            int origValue, int newValue)
+    {
+        if(hasDiff(origValue, newValue, compareField.DiffAbs, compareField.DiffPerc))
+        {
+            writeDiffs(origBreakend, newBreakend, compareField.VcfTag, String.valueOf(origValue), String.valueOf(newValue));
+        }
+    }
+
+    private void checkField(
+            final VariantBreakend origBreakend, final VariantBreakend newBreakend, final VcfCompareField compareField,
+            double origValue, double newValue)
+    {
+        if(hasDiff(origValue, newValue, compareField.DiffAbs, compareField.DiffPerc))
+        {
+            writeDiffs(origBreakend, newBreakend, compareField.VcfTag, format("%.2f", origValue), format("%.2f", newValue));
+        }
     }
 
     private static boolean hasDiff(double value1, double value2, double maxDiff, double maxDiffPerc)
@@ -416,9 +539,10 @@ public class SvCompareVcfs
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            writer.write("OrigId\tNewId");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            writer.write("\tCoords\tType\tDiffType\tOrigValue\tNewValue\tOrigQual\tNewQual\tOrigFilters\tNewFilters");
+            sj.add("OrigId").add("NewId").add("Coords").add("SvType").add("DiffType").add("OrigValue").add("NewValue");
+            writer.write(sj.toString());
             writer.newLine();
 
             return writer;
@@ -430,26 +554,27 @@ public class SvCompareVcfs
         }
     }
 
-    private void writeDiffs(final VariantContext origBreakend, final VariantContext newBreakend, final String diffType, final String origValue, final String newValue)
+    private void writeDiffs(
+            final VariantBreakend origBreakend, final VariantBreakend newBreakend, final String diffType,
+            final String origValue, final String newValue)
     {
         try
         {
-            /*
-            String coords = origBreakend != null ? makeSvCoords(origBreakend) : makeSvCoords(newBreakend);
-            StructuralVariantType type = origBreakend != null ? origBreakend.type() : newBreakend.type();
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            mWriter.write(String.format("%s\t%s",
-                    origBreakend != null ? origBreakend.id() : "", newBreakend != null ? newBreakend.id() : ""));
+            sj.add(origBreakend != null ? origBreakend.Context.getID() : "-1");
+            sj.add(newBreakend != null ? newBreakend.Context.getID() : "-1");
 
-            mWriter.write(format("\t%s\t%s\t%s\t%s\t%s",
-                    coords, type, diffType, origValue, newValue));
+            String breakendCoords = origBreakend != null ? origBreakend.coordStr() : newBreakend.coordStr();
+            sj.add(breakendCoords);
 
-            mWriter.write(String.format("\t%.1f\t%.1f\t%s\t%s",
-                    origBreakend != null ? origBreakend.breakendStart().Qual : -1, newBreakend != null ? newBreakend.breakendStart().Qual : -1,
-                    origBreakend != null ? filtersStr(origBreakend.breakendStart().Context.getFilters(), true) : "",
-                    newBreakend != null ? filtersStr(newBreakend.breakendStart().Context.getFilters(), true) : ""));
+            StructuralVariantType svType = origBreakend != null ? origBreakend.svType() : newBreakend.svType();
+            sj.add(svType.toString());
 
-            */
+            sj.add(diffType);
+            sj.add(origValue);
+            sj.add(newValue);
+            mWriter.write(sj.toString());
             mWriter.newLine();
         }
         catch(IOException e)
@@ -458,21 +583,84 @@ public class SvCompareVcfs
         }
     }
 
-    private static String makeSvCoords(final VariantContext breakend)
+    private class VariantBreakend
     {
-        /*
-        if(sv.isSgl())
-        {
-            return String.format("%s:%d:%d", sv.chromosomeStart(), sv.posStart(), sv.orientStart());
-        }
-        else
-        {
-            return String.format("%s:%d:%d-%s:%d:%d",
-                    sv.chromosomeStart(), sv.posStart(), sv.orientStart(), sv.chromosomeEnd(), sv.posEnd(), sv.orientEnd());
-        }
-        */
+        public final VariantContext Context;
+        public final VariantAltInsertCoords Coords;
+        public final int Position;
+        public final int[] Cipos;
 
-        return null;
+        public VariantBreakend(final VariantContext context)
+        {
+            Context = context;
+            Position = Context.getStart();
+
+            String alt = context.getAlternateAllele(0).getDisplayString();
+            Coords = VariantAltInsertCoords.fromRefAlt(alt, alt.substring(0, 1));
+
+            List<Integer> ciposList = context.getAttributeAsIntList(CIPOS, 0);
+            Cipos = ciposList.size() == 2 ? new int[] { ciposList.get(0), ciposList.get(1) } : new int[] {0, 0};
+        }
+
+        public int minPosition() { return Position + Cipos[0];}
+        public int maxPosition() { return Position + Cipos[1];}
+
+        public boolean isEnd()
+        {
+            if(Coords.OtherChromsome.isEmpty())
+                return false;
+
+            if(Context.getContig().equals(Coords.OtherChromsome))
+            {
+                return Position > Coords.OtherPosition;
+            }
+            else
+            {
+                return HumanChromosome.lowerChromosome(Coords.OtherChromsome, Context.getContig());
+            }
+        }
+
+        public boolean exactMatch(final VariantBreakend other)
+        {
+            return other.Position == Position && other.Coords.Orient == Coords.Orient;
+        }
+
+        public boolean matchesWithinHomology(final VariantBreakend other)
+        {
+            if(other.Coords.Orient != Coords.Orient)
+                return false;
+
+            return positionsOverlap(minPosition(), maxPosition(),  other.minPosition(), other.maxPosition());
+        }
+
+        public boolean isLowerPosition(final VariantBreakend other)
+        {
+            if(Position == other.Position)
+            {
+                if(Coords.Orient == other.Coords.Orient)
+                    return false;
+                else
+                    return Coords.Orient == Orientation.FORWARD;
+            }
+            else
+            {
+                return Position < other.Position;
+            }
+        }
+
+        public String toString() { return format("%d:%d cipos(%d,%d)", Position, Coords.Orient.asByte(), Cipos[0], Cipos[1]); }
+
+        public String coordStr() { return format("%s:%d:%d", Context.getContig(), Position, Coords.Orient.asByte()); }
+
+        public StructuralVariantType svType()
+        {
+            if(Coords.OtherChromsome.equals(""))
+                return SGL;
+
+            return formSvType(
+                    Context.getContig(), Coords.OtherChromsome, Position, Coords.OtherPosition,
+                    Coords.Orient, Coords.OtherOrient, !Coords.InsertSequence.isEmpty());
+        }
     }
 
     private enum GenotypeScope
@@ -489,22 +677,41 @@ public class SvCompareVcfs
         VARIANT;
     }
 
+    private enum FieldType
+    {
+        STRING,
+        INTEGER,
+        DECIMAL;
+    }
+
     private class VcfCompareField
     {
         public final String VcfTag;
+        public final String OldVcfTag;
+        public final FieldType Type;
         public final GenotypeScope Scope;
         public final double DiffAbs;
         public final double DiffPerc;
         public final VariantTypeScope TypeScope;
 
         public VcfCompareField(
-                final String vcfTag, final GenotypeScope scope, final VariantTypeScope typeScope, final double diffAbs, final double diffPerc)
+                final String vcfTag, final String oldVcfTag, final FieldType type, final GenotypeScope scope, final VariantTypeScope typeScope,
+                final double diffAbs, final double diffPerc)
         {
             VcfTag = vcfTag;
+            OldVcfTag = oldVcfTag;
+            Type = type;
             Scope = scope;
             TypeScope = typeScope;
             DiffAbs = diffAbs;
             DiffPerc = diffPerc;
+        }
+
+        public VcfCompareField(
+                final String vcfTag, final FieldType type, final GenotypeScope scope, final VariantTypeScope typeScope,
+                final double diffAbs, final double diffPerc)
+        {
+            this(vcfTag, vcfTag, type, scope, typeScope, diffAbs, diffPerc);
         }
 
         public String toString() { return format("tag(%s) scope(%s) st(%s)", VcfTag, Scope, TypeScope); }
@@ -519,11 +726,7 @@ public class SvCompareVcfs
         configBuilder.addPath(ORIGINAL_VCF, true, "Optional, name of the reference sample");
         configBuilder.addPath(NEW_VCF, true, "Path to the GRIDSS structural variant VCF file");
         configBuilder.addFlag(IGNORE_PON_DIFF, "Ignore diffs if just PON filter");
-        configBuilder.addFlag(WRITE_ALL_DIFFS, "Write all VCF field diffs, not just the first");
-
-        // CHECK: required?
-        HotspotCache.addConfig(configBuilder);
-        TargetRegions.addConfig(configBuilder);
+        configBuilder.addFlag(COMPARE_FILTERS, "Compare filters within same SV caller");
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
@@ -531,7 +734,7 @@ public class SvCompareVcfs
         configBuilder.checkAndParseCommandLine(args);
         setLogLevel(configBuilder);
 
-        SvCompareVcfs gripssCompare = new SvCompareVcfs(configBuilder);
-        gripssCompare.run();
+        SvCompareVcfs svVcfCompare = new SvCompareVcfs(configBuilder);
+        svVcfCompare.run();
     }
 }

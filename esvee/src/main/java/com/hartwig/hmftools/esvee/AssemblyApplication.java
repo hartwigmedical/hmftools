@@ -271,8 +271,10 @@ public class AssemblyApplication
 
         List<Thread> threadTasks = new ArrayList<>();
 
+        int taskCount = mBamReaders.size();
+
         List<PhaseSetTask> phaseSetTasks = PhaseSetTask.createThreadTasks(
-                mConfig, phaseGroupBuilder.phaseGroups(), mBamReaders, mConfig.Threads, threadTasks);
+                mConfig, phaseGroupBuilder.phaseGroups(), mBamReaders, taskCount, threadTasks);
 
         if(!runThreadTasks(threadTasks))
             System.exit(1);

@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.CIPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.IHOMPOS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
-import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.parseRefAlt;
+import static com.hartwig.hmftools.common.sv.VariantAltInsertCoords.fromRefAlt;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.CIRPOS;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BAQ;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.GRIDSS_BQ;
@@ -97,13 +97,13 @@ public class Breakend
 
         Ref = context.getAlleles().get(0).getDisplayString();
 
-        final VariantAltInsertCoords altInsertCoords = parseRefAlt(context.getAlleles().get(1).getDisplayString(), Ref);
+        final VariantAltInsertCoords altInsertCoords = fromRefAlt(context.getAlleles().get(1).getDisplayString(), Ref);
         Alt = altInsertCoords.Alt;
 
         InsertSequence = altInsertCoords.InsertSequence;
-        OtherChromosome = altInsertCoords.Chromsome;
-        OtherPosition = altInsertCoords.Position;
-        OtherOrientation = altInsertCoords.Orient.asByte();
+        OtherChromosome = altInsertCoords.OtherChromsome;
+        OtherPosition = altInsertCoords.OtherPosition;
+        OtherOrientation = altInsertCoords.OtherOrient.asByte();
 
         IsLineInsertion = isMobileLineElement(orientation, InsertSequence);
 

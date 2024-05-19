@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.sv;
 
 import static com.hartwig.hmftools.common.genome.region.Orientation.FORWARD;
 import static com.hartwig.hmftools.common.genome.region.Orientation.REVERSE;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -12,9 +14,11 @@ public class VariantAltInsertCoords
 {
     public final String Alt;
     public final String InsertSequence;
-    public final String Chromsome;
-    public final int Position;
     public final Orientation Orient;
+
+    public final String OtherChromsome;
+    public final int OtherPosition;
+    public final Orientation OtherOrient;
 
     public static final Pattern BREAKEND_REGEX = Pattern.compile("^(.*)([\\[\\]])(.+)[\\[\\]](.*)$");
     public static final Pattern SINGLE_BREAKEND_REGEX = Pattern.compile("^(([.].*)|(.*[.]))$");
@@ -27,22 +31,26 @@ public class VariantAltInsertCoords
     public static final String NEG_ORIENTATION_CHAR = "[";
 
     public VariantAltInsertCoords(
-            final String alt, final String insertSequence, final String chromsome, final int position, final Orientation orientation)
+            final String alt, final String insertSequence, final Orientation orientation,
+            final String otherChromsome, final int otherPosition, final Orientation otherOrientation)
     {
         Alt = alt;
         InsertSequence = insertSequence;
-        Chromsome = chromsome;
-        Position = position;
         Orient = orientation;
+        OtherChromsome = otherChromsome;
+        OtherPosition = otherPosition;
+        OtherOrient = otherOrientation;
     }
 
-    public static VariantAltInsertCoords parseRefAlt(final String altString, final String ref)
+    public static VariantAltInsertCoords fromRefAlt(final String altString, final String ref)
     {
         String alt = "";
-        String chromosome = "";
         String insertSeq = "";
-        int position = 0;
         Orientation orientation = null;
+
+        String otherChromosome = "";
+        int otherPosition = 0;
+        Orientation otherOrientation = null;
 
         if(altString.startsWith("."))
         {
@@ -67,24 +75,26 @@ public class VariantAltInsertCoords
                     String initialSequence = match.group(1);
                     insertSeq = !initialSequence.isEmpty() ? initialSequence.substring(ref.length()) : "";
                     alt = altString.substring(0, 1);
+                    orientation = FORWARD;
                 }
                 else
                 {
                     String finalSequence = match.group(4);
                     insertSeq = !finalSequence.isEmpty() ? finalSequence.substring(0, finalSequence.length() - ref.length()) : "";
                     alt = altString.substring(altString.length() - 1);
+                    orientation = REVERSE;
                 }
 
                 String orientStr = match.group(2);
-                orientation = orientStr.equals(POS_ORIENTATION_CHAR) ? FORWARD : REVERSE;
+                otherOrientation = orientStr.equals(POS_ORIENTATION_CHAR) ? FORWARD : REVERSE;
 
                 String[] chrPos = match.group(3).split(":");
-                chromosome = chrPos[0];
-                position = Integer.parseInt(chrPos[1]);
+                otherChromosome = chrPos[0];
+                otherPosition = Integer.parseInt(chrPos[1]);
             }
         }
 
-        return new VariantAltInsertCoords(alt, insertSeq, chromosome, position, orientation);
+        return new VariantAltInsertCoords(alt, insertSeq, orientation, otherChromosome, otherPosition, otherOrientation);
     }
 
     public static String formPairedAltString(
