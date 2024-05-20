@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatProbabilityVa
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatPurityValue;
 
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 public class SomaticPurityResult
 {
@@ -74,6 +75,7 @@ public class SomaticPurityResult
         sj.add("PeakBandwidth");
         sj.add("PeakBandwidthLow");
         sj.add("PeakBandwidthHigh");
+        sj.add("BqrExtraInfo");
         return sj.toString();
     }
 
@@ -108,6 +110,9 @@ public class SomaticPurityResult
         sj.add(format("%.3f", PurityCalcs.Clonality.PeakBandwidth));
         sj.add(format("%.3f", PurityCalcs.Clonality.PeakBandwidthLow));
         sj.add(format("%.3f", PurityCalcs.Clonality.PeakBandwidthHigh));
+
+        String bqrDataStr = PurityCalcs.ExtraCalcData.stream().collect(Collectors.joining(";"));
+        sj.add(bqrDataStr);
 
         return sj.toString();
     }

@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
 public class PurityCalcData
 {
     public double RawPurityEstimate;
@@ -11,6 +15,8 @@ public class PurityCalcData
     public double DualProbability;
 
     public ClonalityData Clonality;
+
+    public final List<String> ExtraCalcData;
 
     public static final double CALC_NO_SET = -1;
 
@@ -25,5 +31,6 @@ public class PurityCalcData
         DualProbability = CALC_NO_SET;
 
         Clonality = ClonalityData.NO_RESULT;
+        ExtraCalcData = Lists.newArrayList();
     }
 }

@@ -3,20 +3,19 @@ package com.hartwig.hmftools.wisp.purity.variant;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.stats.PoissonCalcs.calcPoissonNoiseValue;
-import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.HIGH_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SNV_QUAL_THRESHOLDS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SYNTHETIC_TUMOR_VAF;
+import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatProbabilityValue;
+import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatPurityValue;
 import static com.hartwig.hmftools.wisp.purity.variant.BqrAdjustment.hasVariantContext;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.isRecomputed;
 import static com.hartwig.hmftools.wisp.purity.variant.LowCountModel.filterVariants;
 import static com.hartwig.hmftools.wisp.purity.variant.PurityCalcData.CALC_NO_SET;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.calcLimitOfDetection;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.estimatedProbability;
-import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.estimatedProbabilityOld;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.estimatedPurity;
-import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.estimatedPurityOld;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult.INVALID_RESULT;
 
 import java.util.Collections;
@@ -131,12 +130,8 @@ public class SomaticPurityEstimator
             double sampleAdjVafLow = lowProbAlleleCount / fragmentTotals.sampleDepthTotal();
             purityCalcData.PurityRangeLow = estimatedPurity(sampleAdjVafLow, noiseRate, fragmentTotals);
 
-            double oldSampleAdjVafLow = fragmentTotals.adjSampleVaf(lowProbAlleleCount - alleleCount);
-            double oldPurityRangeLow = estimatedPurity(oldSampleAdjVafLow, noiseRate, fragmentTotals);
-
             double highProbAlleleCount = calcPoissonNoiseValue(alleleCount, LOW_PROBABILITY);
             double sampleAdjVafHigh = highProbAlleleCount / fragmentTotals.sampleDepthTotal();
-            //double sampleAdjVafHigh = fragmentTotals.adjSampleVaf(highProbAlleleCount - alleleCount);
             purityCalcData.PurityRangeHigh = estimatedPurity(sampleAdjVafHigh, noiseRate, fragmentTotals);
         }
 
@@ -156,7 +151,7 @@ public class SomaticPurityEstimator
 
         // report final probability as min of Dual and Normal Prob
         double expectedDualNoiseFragments = mConfig.noiseRate(true) * sampleDualDP;
-        purityCalcData.DualProbability = estimatedProbabilityOld(sampleDualAD, expectedDualNoiseFragments);
+        purityCalcData.DualProbability = estimatedProbability(sampleDualAD, expectedDualNoiseFragments);
 
         // CT_LOGGER.info(format("patient(%s) sample(%s) sampleTotalFrags(%d) noise(%.1f) LOD(%.6f)",
         //        mSample.PatientId, sampleId, sampleDepthTotal, allFragsNoise, lodFragsResult.EstimatedPurity));
@@ -196,9 +191,16 @@ public class SomaticPurityEstimator
 
         double lodPurityEstimate = calcLimitOfDetection(fragmentTotals, bqrErrorRate);
 
+        /*
         CT_LOGGER.debug(format("patient(%s) sample(%s) errorRatePM(%.1f) variants(%d) frags(dp=%d ad=%d)  probability(%.6f) LOD(%.6f)",
                 mSample.PatientId, sampleId, bqrErrorRate * 1_000_000, fragmentTotals.variantCount(),
                 fragmentTotals.sampleDepthTotal(), fragmentTotals.sampleAdTotal(), probability, lodPurityEstimate));
+        */
+
+        purityCalcData.ExtraCalcData.add(format(
+                "BqrThreshold(%.0f variants=%d AD=%d DP=%d prob=%s lod=%s)",
+                qualThreshold, fragmentTotals.variantCount(), fragmentTotals.sampleAdTotal(), fragmentTotals.sampleDepthTotal(),
+                formatProbabilityValue(probability), formatPurityValue(lodPurityEstimate)));
 
         if(purityCalcData.Probability == CALC_NO_SET || probability < purityCalcData.Probability)
             purityCalcData.Probability = lodPurityEstimate;

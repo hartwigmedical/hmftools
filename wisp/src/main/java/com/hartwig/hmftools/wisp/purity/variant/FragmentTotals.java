@@ -21,7 +21,6 @@ public class FragmentTotals
 
     private double mSampleWeightedDepthTotal;
     private double mSampleTumorAdjustedDepthTotal;
-    private double mSampleWeightedFragsTotal;
 
     private double mTumorAdjustedFragsTotal;
     private double mTumorAdjustedDepthTotal;
@@ -45,7 +44,6 @@ public class FragmentTotals
         mSampleDepthPerCopyNumberTotal = 0;
         mSampleWeightedDepthTotal = 0;
         mSampleTumorAdjustedDepthTotal = 0;
-        mSampleWeightedFragsTotal = 0;
         mTumorAdjustedFragsTotal = 0;
         mTumorAdjustedDepthTotal = 0;
         mVcnSampleDepthTotal = 0;
@@ -88,10 +86,6 @@ public class FragmentTotals
         // for WA_VCN and WA_CN
         mVcnSampleDepthTotal += variantCopyNumber * sampleDepth;
         mCnSampleDepthTotal += copyNumber * sampleDepth;
-
-        // likely now unused
-        mSampleWeightedFragsTotal += tumorDpPerCn * sampleAlleleFrags * sampleDepth;
-
     }
 
     public int variantCount() { return mVariantCount; }
@@ -109,14 +103,6 @@ public class FragmentTotals
             return mTumorVafOverride;
 
         return mTumorDepthTotal > 0 ? mTumorFragsTotal / (double)mTumorDepthTotal : 0;
-    }
-
-    public double adjTumorVaf()
-    {
-        if(mTumorVafOverride != null)
-            return mTumorVafOverride;
-
-        return mTumorAdjustedDepthTotal > 0 ? mTumorAdjustedFragsTotal / mTumorAdjustedDepthTotal : 0;
     }
 
     public double rawSampleVaf() { return mSampleDepthTotal > 0 ? mSampleFragsTotal / (double)mSampleDepthTotal : 0; }
@@ -142,11 +128,5 @@ public class FragmentTotals
     {
         // wAD = Σ(i=1->n)[(DPi_cfDNA)^2*DPi _tissue/CNn] / Σ(i=1->n)[DPi_cfDNA *DPi_Tissue/CNi]
         return mSampleTumorAdjustedDepthTotal > 0 ? mSampleWeightedDepthTotal / mSampleTumorAdjustedDepthTotal : 0;
-    }
-
-    public double weightedSampleFrags()
-    {
-        // wAD = Σ(i=1->n)[(DPi_cfDNA)^2*DPi _tissue/CNn] / Σ(i=1->n)[DPi_cfDNA *DPi_Tissue/CNi]
-        return mSampleTumorAdjustedDepthTotal > 0 ? mSampleWeightedFragsTotal / mSampleTumorAdjustedDepthTotal : 0;
     }
 }

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.Math.round;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sage.SageCommon.generateBqrFilename;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
@@ -58,7 +57,6 @@ public class BqrAdjustment
         }
 
         return depthTotal > 0 ? fragmentTotal / (double)depthTotal : 0;
-        // return sampleErrorPerMillion(depthTotal, fragmentTotal);
     }
 
     public static boolean hasVariantContext(
@@ -76,8 +74,16 @@ public class BqrAdjustment
     {
         mBqrContextData.clear();
 
-        String vcfDir = !mConfig.SomaticVcf.isEmpty() ? pathFromFile(mConfig.getSomaticVcf(sampleId)) : mConfig.SomaticDir;
-        String bqrFilename = generateBqrFilename(vcfDir, sampleId);
+        String bqrFileDir;
+
+        if(!mConfig.BqrDir.isEmpty())
+            bqrFileDir = mConfig.BqrDir;
+        else if(!mConfig.SomaticVcf.isEmpty())
+            bqrFileDir = pathFromFile(mConfig.getSomaticVcf(sampleId));
+        else
+            bqrFileDir = mConfig.SomaticDir;
+
+        String bqrFilename = generateBqrFilename(bqrFileDir, sampleId);
 
         if(!Files.exists(Paths.get(bqrFilename)))
             return;
@@ -145,37 +151,4 @@ public class BqrAdjustment
         mBqrContextData.add(bqrErrorRate);
         return bqrErrorRate;
     }
-
-    /*
-    public void processSample(final String sampleId, final List<SomaticVariant> variants)
-    {
-        // calculate BQR error rates for each TNC and alt
-        loadBqrData(sampleId);
-
-        if(mBqrContextData.isEmpty())
-            return;
-
-        for(SomaticVariant variant : variants)
-        {
-            GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
-
-            if(sampleFragData == null)
-                continue;
-
-            BqrContextData bqrContextData = getOrCreate(variant.decorator().trinucleotideContext(), variant.Alt);
-
-            if(bqrContextData == null)
-                continue;
-
-            bqrContextData.SampleDepthTotal += sampleFragData.Depth;
-            bqrContextData.SampleFragmentTotal += sampleFragData.AlleleCount;
-        }
-
-        // now test out each BQR qual threshold
-        for(Integer qualThreshold : QUAL_THRESHOLDS)
-        {
-            checkQualThreshold(sampleId, qualThreshold);
-        }
-    }
-    */
 }
