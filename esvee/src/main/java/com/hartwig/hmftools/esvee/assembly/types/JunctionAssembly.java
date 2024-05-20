@@ -247,7 +247,7 @@ public class JunctionAssembly
     public int mismatchReadCount() { return mMismatchReadCount; }
     public void addMismatchReadCount(int count) { mMismatchReadCount += count; }
 
-    public void extendJunctionReadSupport(final Read read, final SupportRead existingSupport)
+    public void extendRefBasesWithJunctionRead(final Read read, final SupportRead existingSupport)
     {
         addRead(read, existingSupport.type(), existingSupport);
     }

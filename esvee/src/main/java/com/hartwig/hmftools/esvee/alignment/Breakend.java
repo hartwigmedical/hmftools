@@ -2,6 +2,7 @@ package com.hartwig.hmftools.esvee.alignment;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
@@ -213,9 +214,15 @@ public class Breakend implements Comparable<Breakend>
             return false;
 
         if(Orient.isForward())
-            return readEnd <= Position && readStart >= Position - DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
+        {
+            int maxPosition = max(maxPosition(), Position);
+            return readEnd <= maxPosition && readStart >= Position - DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
+        }
         else
-            return readStart >= Position && readEnd <= Position + DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
+        {
+            int minPosition = min(minPosition(), Position);
+            return readStart >= minPosition && readEnd <= Position + DEFAULT_DISCORDANT_FRAGMENT_LENGTH;
+        }
     }
 
     public int calcInferredFragmentLength(final SupportRead read)

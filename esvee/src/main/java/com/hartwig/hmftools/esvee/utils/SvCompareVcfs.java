@@ -16,8 +16,11 @@ import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.REF_DEPTH_PAIR;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.SPLIT_FRAGS;
 import static com.hartwig.hmftools.common.sv.SvVcfTags.STRAND_BIAS;
+import static com.hartwig.hmftools.common.sv.SvVcfTags.TOTAL_FRAGS;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.DISCORDANT_READS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SGL_FRAG_COUNT;
 import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SPLIT_READS;
+import static com.hartwig.hmftools.common.sv.gridss.GridssVcfTags.SV_FRAG_COUNT;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
@@ -145,15 +148,7 @@ public class SvCompareVcfs
         mVcfCheckFields.add(new VcfCompareField(
                 IHOMPOS, FieldType.STRING, GenotypeScope.COMBINED, VariantTypeScope.BREAKEND, 0, 0));
 
-        if(mOriginalIsGridss)
-        {
-            mVcfCheckFields.add(new VcfCompareField(
-                    SPLIT_FRAGS, SPLIT_READS, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-
-            mVcfCheckFields.add(new VcfCompareField(
-                    DISC_FRAGS, DISCORDANT_READS, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-        }
-        else
+        if(!mOriginalIsGridss)
         {
             mVcfCheckFields.add(new VcfCompareField(
                     QUAL, FieldType.INTEGER, GenotypeScope.BOTH, VariantTypeScope.BREAKEND, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
@@ -378,22 +373,22 @@ public class SvCompareVcfs
         {
             boolean checkOriginal = (i == 0);
             Map<String,List<VariantBreakend>> chrBreakendMap = checkOriginal ? mOrigChrBreakendMap : mNewChrBreakendMap;
-            String unfilteredVcf = checkOriginal ? mNewUnfilteredVcf : mOriginalUnfilteredVcf;
-
-            if(unfilteredVcf == null)
-                continue;
 
             int unmatchedBreakends = chrBreakendMap.values().stream().mapToInt(x -> x.size()).sum();
 
             if(unmatchedBreakends == 0)
                 continue;
 
-            SV_LOGGER.debug("checking unmatched {} breakends in {} unfiltered VCF",
-                    checkOriginal ? "original" : "new", checkOriginal ? "new" : "original");
+            String unfilteredVcf = checkOriginal ? mNewUnfilteredVcf : mOriginalUnfilteredVcf;
+
+            if(unfilteredVcf == null)
+                continue;
+
+            SV_LOGGER.debug("checking unmatched {} {} breakends in {} unfiltered VCF",
+                    unmatchedBreakends, checkOriginal ? "original" : "new", checkOriginal ? "new" : "original");
 
             VcfFileReader reader = new VcfFileReader(unfilteredVcf);
 
-            VCFHeader vcfHeader = reader.vcfHeader();
             String currentChr = "";
             List<VariantBreakend> breakends = null;
 
@@ -497,27 +492,29 @@ public class SvCompareVcfs
             return;
         }
 
+        String origVcfTag = mOriginalIsGridss ? mapToGridssVcfTag(compareField.VcfTag, origBreakend.isSingle()) : compareField.VcfTag;
+
         if(compareField.Scope == GenotypeScope.COMBINED)
         {
             if(compareField.Type == FieldType.STRING)
             {
                 checkField(
                         origBreakend, newBreakend, compareField,
-                        origBreakend.Context.getAttributeAsString(compareField.VcfTag, ""),
+                        origBreakend.Context.getAttributeAsString(origVcfTag, ""),
                         newBreakend.Context.getAttributeAsString(compareField.VcfTag, ""));
             }
             else if(compareField.Type == FieldType.INTEGER)
             {
                 checkField(
                         origBreakend, newBreakend, compareField,
-                        origBreakend.Context.getAttributeAsInt(compareField.VcfTag, 0),
+                        origBreakend.Context.getAttributeAsInt(origVcfTag, 0),
                         newBreakend.Context.getAttributeAsInt(compareField.VcfTag, 0));
             }
             else
             {
                 checkField(
                         origBreakend, newBreakend, compareField,
-                        origBreakend.Context.getAttributeAsDouble(compareField.VcfTag, 0),
+                        origBreakend.Context.getAttributeAsDouble(origVcfTag, 0),
                         newBreakend.Context.getAttributeAsDouble(compareField.VcfTag, 0));
             }
         }
@@ -532,21 +529,21 @@ public class SvCompareVcfs
 
                 Genotype newGenotype = newBreakend.Context.getGenotype(origGenotype.getSampleName());
 
-                double origValue = getGenotypeAttributeAsDouble(origGenotype, compareField.VcfTag, 0);
+                double origValue = getGenotypeAttributeAsDouble(origGenotype, origVcfTag, 0);
                 double newValue = getGenotypeAttributeAsDouble(newGenotype, compareField.VcfTag, 0);
 
                 if(compareField.Type == FieldType.INTEGER)
                 {
                     checkField(
                             origBreakend, newBreakend, compareField,
-                            getGenotypeAttributeAsInt(origGenotype, compareField.VcfTag, 0),
+                            getGenotypeAttributeAsInt(origGenotype, origVcfTag, 0),
                             getGenotypeAttributeAsInt(newGenotype, compareField.VcfTag, 0));
                 }
                 else
                 {
                     checkField(
                             origBreakend, newBreakend, compareField,
-                            getGenotypeAttributeAsDouble(origGenotype, compareField.VcfTag, 0),
+                            getGenotypeAttributeAsDouble(origGenotype, origVcfTag, 0),
                             getGenotypeAttributeAsDouble(newGenotype, compareField.VcfTag, 0));
                 }
 
@@ -556,6 +553,20 @@ public class SvCompareVcfs
                 }
             }
         }
+    }
+
+    private String mapToGridssVcfTag(final String vcfTag, boolean isSingle)
+    {
+        if(vcfTag.equals(SPLIT_FRAGS))
+            return SPLIT_READS;
+
+        if(vcfTag.equals(DISC_FRAGS))
+            return DISCORDANT_READS;
+
+        if(vcfTag.equals(TOTAL_FRAGS))
+            return isSingle ? SV_FRAG_COUNT : SGL_FRAG_COUNT;
+
+        return vcfTag;
     }
 
     private void checkField(
@@ -686,6 +697,8 @@ public class SvCompareVcfs
         public int minPosition() { return Position + Cipos[0];}
         public int maxPosition() { return Position + Cipos[1];}
 
+        public boolean isSingle() { return Coords.OtherChromsome.isEmpty(); }
+
         public boolean isEnd()
         {
             if(Coords.OtherChromsome.isEmpty())
@@ -768,7 +781,6 @@ public class SvCompareVcfs
     private class VcfCompareField
     {
         public final String VcfTag;
-        public final String OldVcfTag;
         public final FieldType Type;
         public final GenotypeScope Scope;
         public final double DiffAbs;
@@ -776,11 +788,10 @@ public class SvCompareVcfs
         public final VariantTypeScope TypeScope;
 
         public VcfCompareField(
-                final String vcfTag, final String oldVcfTag, final FieldType type, final GenotypeScope scope, final VariantTypeScope typeScope,
+                final String vcfTag, final FieldType type, final GenotypeScope scope, final VariantTypeScope typeScope,
                 final double diffAbs, final double diffPerc)
         {
             VcfTag = vcfTag;
-            OldVcfTag = oldVcfTag;
             Type = type;
             Scope = scope;
             TypeScope = typeScope;
@@ -789,10 +800,9 @@ public class SvCompareVcfs
         }
 
         public VcfCompareField(
-                final String vcfTag, final FieldType type, final GenotypeScope scope, final VariantTypeScope typeScope,
-                final double diffAbs, final double diffPerc)
+                final String vcfTag, final FieldType type, final GenotypeScope scope, final VariantTypeScope typeScope)
         {
-            this(vcfTag, vcfTag, type, scope, typeScope, diffAbs, diffPerc);
+            this(vcfTag, type, scope, typeScope, 0, 0);
         }
 
         public String toString() { return format("tag(%s) scope(%s) st(%s)", VcfTag, Scope, TypeScope); }

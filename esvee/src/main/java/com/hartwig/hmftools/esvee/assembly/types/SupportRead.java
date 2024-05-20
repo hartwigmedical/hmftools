@@ -96,7 +96,7 @@ public class SupportRead
         mInsertSize = abs(read.bamRecord().getInferredInsertSize());
         mTrimCount = read.baseTrimCount();
         mMapQual = read.mappingQuality();
-        mNumOfEvents = read.numberOfEvents();
+        mNumOfEvents = read.snvCount() + read.totalIndelBases();
 
         mJunctionReadIndex = junctionReadIndex;
         mJunctionMatches = matches;

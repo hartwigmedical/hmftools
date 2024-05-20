@@ -6,6 +6,7 @@ import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DEL_LENGTH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PROXIMATE_DUP_LENGTH;
 import static com.hartwig.hmftools.esvee.assembly.types.AssemblyOutcome.NO_LINK;
@@ -40,8 +41,7 @@ public final class AssemblyUtils
 
         int maxDistanceFromJunction = 0;
 
-        SupportRead minNmSupport = null;
-        int minNmSupportMaxDistance = 0;
+        SupportRead topSupportRead = null;
 
         for(SupportRead support : assembly.support())
         {
@@ -67,29 +67,36 @@ public final class AssemblyUtils
 
             maxDistanceFromJunction = max(maxDistanceFromJunction, readExtensionDistance);
 
-            if(minNmSupport == null
-            || read.numberOfEvents() < minNmSupport.cachedRead().numberOfEvents()
-            || (read.numberOfEvents() == minNmSupport.cachedRead().numberOfEvents() && readExtensionDistance < minNmSupportMaxDistance))
+            if(topSupportRead == null)
             {
-                minNmSupport = support;
-                minNmSupportMaxDistance = readExtensionDistance;
+                topSupportRead = support; // will be the initial
+            }
+            else
+            {
+                // select the read with the fewest SNVs in the aligned bases that also has the equal least number of junction mismatches
+                if(support.junctionMismatches() <= topSupportRead.junctionMismatches()
+                && support.junctionMatches() >= PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH
+                && read.snvCount() < topSupportRead.cachedRead().snvCount())
+                {
+                    topSupportRead = support;
+                }
             }
         }
 
         assembly.extendBases(maxDistanceFromJunction, minAlignedPosition, maxAlignedPosition, null);
 
         // order by NM to favour the ref where possible
-        if(minNmSupport != null)
+        if(topSupportRead != null)
         {
-            assembly.extendJunctionReadSupport(minNmSupport.cachedRead(), minNmSupport);
+            assembly.extendRefBasesWithJunctionRead(topSupportRead.cachedRead(), topSupportRead);
         }
 
         for(SupportRead support : assembly.support())
         {
-            if(support == minNmSupport)
+            if(support == topSupportRead)
                 continue;
 
-            assembly.extendJunctionReadSupport(support.cachedRead(), support);
+            assembly.extendRefBasesWithJunctionRead(support.cachedRead(), support);
         }
     }
 
