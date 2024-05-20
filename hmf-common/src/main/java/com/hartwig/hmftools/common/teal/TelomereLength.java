@@ -18,6 +18,6 @@ public interface TelomereLength
     double purity();
     double ploidy();
     double duplicateProportion();
-    double meanReadsPerKb();
-    double gc50ReadsPerKb();
+    double meanReadDepth();
+    double gc50ReadDepth();
 }
