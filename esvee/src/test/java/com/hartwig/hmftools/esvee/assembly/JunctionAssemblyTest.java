@@ -72,7 +72,7 @@ public class JunctionAssemblyTest
 
         List<Read> reads = List.of(read1, read2, read3, read4);
 
-        ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads, 2);
+        ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
 
@@ -98,7 +98,7 @@ public class JunctionAssemblyTest
         read4 = createRead(READ_ID_GENERATOR.nextId(), 10, readBases, makeCigarString(readBases, 0, extBases.length()));
 
         reads = List.of(read1, read2, read3, read4);
-        extSeqBuilder = new ExtensionSeqBuilder(junction, reads, 2);
+        extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
         assertEquals(sequence, extSeqBuilder.junctionSequence());
@@ -134,7 +134,7 @@ public class JunctionAssemblyTest
 
         List<Read> reads = List.of(read1, read2, read3, read4);
 
-        ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads, 2);
+        ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
 
@@ -160,7 +160,7 @@ public class JunctionAssemblyTest
         read4 = createRead(READ_ID_GENERATOR.nextId(), juncPosition, readBases, makeCigarString(readBases, extBases.length(), 0));
 
         reads = List.of(read1, read2, read3, read4);
-        extSeqBuilder = new ExtensionSeqBuilder(junction, reads, 2);
+        extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
         assertEquals(sequence, extSeqBuilder.junctionSequence());
@@ -205,19 +205,19 @@ public class JunctionAssemblyTest
 
         List<Read> reads = List.of(read1, read1b, read1c, read1d, read2, read3, read4, read5, read6);
 
-        ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads, 2);
+        ExtensionSeqBuilder extSeqBuilder = new ExtensionSeqBuilder(junction, reads);
 
         assertTrue(extSeqBuilder.isValid());
 
-        assertEquals(consensusExtBases.length() + 2, extSeqBuilder.minSupportLength());
+        assertEquals(consensusExtBases.length() + 1, extSeqBuilder.minSupportLength());
 
         String consensusSequence = extSeqBuilder.junctionSequence();
-        String sequence = refBases.substring(19) + consensusExtBases + "TTTT";
+        String sequence = refBases.substring(19) + consensusExtBases;
         assertEquals(sequence, consensusSequence);
 
         List<SupportRead> supportReads = extSeqBuilder.formAssemblySupport();
-        assertEquals(8, supportReads.size());
-        assertEquals(4, supportReads.stream().filter(x -> x.mismatchCount() == 1).count());
+        assertEquals(4, supportReads.size());
+        assertEquals(4, supportReads.stream().filter(x -> x.mismatchCount() == 0).count());
     }
 
     @Test
