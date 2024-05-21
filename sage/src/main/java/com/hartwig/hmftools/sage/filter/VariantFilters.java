@@ -345,12 +345,6 @@ public class VariantFilters
             filters.add(SoftFilter.MAX_GERMLINE_VAF.filterName());
         }
 
-        // Paired Tests
-        if(aboveMaxGermlineQual(config, normal, primaryTumor))
-        {
-            filters.add(SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL.filterName());
-        }
-
         // MNV Tests
         if(aboveMaxMnvIndelNormalAltSupport(tier, normal))
         {
@@ -385,16 +379,6 @@ public class VariantFilters
         }
 
         return Doubles.greaterThan(normalVaf, config.MaxGermlineVaf);
-    }
-
-    private static boolean aboveMaxGermlineQual(
-            final SoftFilterConfig config, final ReadContextCounter normal, final ReadContextCounter primaryTumor)
-    {
-        boolean isLongInsert = primaryTumor.isIndel() && normal.alt().length() > LONG_GERMLINE_INSERT_LENGTH;
-        double tumorQual = isLongInsert ? primaryTumor.tumorQuality() : primaryTumor.altBaseQualityTotal();
-        double germlineQual = isLongInsert ? normal.tumorQuality() : normal.altBaseQualityTotal();
-
-        return Doubles.positive(tumorQual) && Doubles.greaterThan(germlineQual / tumorQual, config.MaxGermlineRelativeQual);
     }
 
     private static boolean aboveMaxMnvIndelNormalAltSupport(final VariantTier tier, final ReadContextCounter normal)

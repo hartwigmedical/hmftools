@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.sage.common;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.bam.SamRecordUtils.readToString;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -13,14 +11,8 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_REPEAT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_REPEAT_COUNT;
 
-import static htsjdk.samtools.CigarOperator.D;
-import static htsjdk.samtools.CigarOperator.I;
-import static htsjdk.samtools.CigarOperator.M;
-import static htsjdk.samtools.CigarOperator.S;
-
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.evidence.ArtefactContext;
 
@@ -243,5 +235,4 @@ public class VariantReadContextBuilder
 
         return max(min(readIndex, coreIndexEnd), upperRefIndex);
     }
-
 }

@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.sage.common.VariantReadContextBuilder.findPos
 import java.util.List;
 
 import com.hartwig.hmftools.common.bam.CigarUtils;
-import com.hartwig.hmftools.common.bam.SamRecordUtils;
 import com.hartwig.hmftools.common.utils.Arrays;
 import com.hartwig.hmftools.sage.evidence.ArtefactContext;
 import com.hartwig.hmftools.sage.quality.UltimaQualModel;

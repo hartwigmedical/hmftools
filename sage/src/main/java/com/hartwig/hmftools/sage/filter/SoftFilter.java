@@ -10,9 +10,6 @@ public enum SoftFilter
     MIN_TUMOR_VAF("minTumorVAF", "min_tumor_vaf", true, false, "Insufficient tumor VAF"),
     MIN_GERMLINE_DEPTH("minGermlineDepth", "min_germline_depth", false, true, "Insufficient germline depth"),
     MAX_GERMLINE_VAF("maxGermlineVAF", "max_germline_vaf", false, true, "Excess germline VAF"),
-    MAX_GERMLINE_REL_RAW_BASE_QUAL(
-            "maxGermlineRelRawBaseQual", "max_germline_rel_raw_base_qual", false, true,
-            "Excess germline relative quality"),
     MAX_GERMLINE_ALT_SUPPORT(
             "maxGermlineAltSupport", "max_germline_alt_support", false, true, "Excess germline alt support"),
     MIN_AVG_BASE_QUALITY("minAvgBaseQual", "", true, false, "Variant average base quality below limit"),

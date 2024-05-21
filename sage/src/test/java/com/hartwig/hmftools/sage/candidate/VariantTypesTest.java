@@ -8,7 +8,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
@@ -135,5 +134,4 @@ public class VariantTypesTest
         assertEquals(21, readContext.coreLength());
         assertEquals("GGGGG", readContext.homologyBases());
     }
-
 }
