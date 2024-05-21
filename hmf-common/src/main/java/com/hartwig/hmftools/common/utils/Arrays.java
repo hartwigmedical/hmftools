@@ -23,6 +23,16 @@ public final class Arrays
         }
     }
 
+    public static void copyArray(
+            final byte[] source, final byte[] dest, final int sourceIndexStart, final int sourceIndexEnd, final int destIndexStart)
+    {
+        int d = destIndexStart;
+        for(int s = sourceIndexStart; s < source.length & s < sourceIndexEnd && d < dest.length; ++s, ++d)
+        {
+            dest[d] = source[s];
+        }
+    }
+
     public static byte[] copyArray(final byte[] source)
     {
         byte[] dest = new byte[source.length];
