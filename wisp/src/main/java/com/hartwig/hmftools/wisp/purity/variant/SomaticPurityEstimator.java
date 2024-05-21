@@ -59,7 +59,7 @@ public class SomaticPurityEstimator
             GenotypeFragments tumorFragData = variant.findGenotypeData(mSample.TumorId);
 
             fragmentTotals.addVariantData(
-                    variant.copyNumber(), variant.variantCopyNumber(), tumorFragData.AlleleCount, sampleFragData.AlleleCount,
+                    variant.CopyNumber, variant.VariantCopyNumber, tumorFragData.AlleleCount, sampleFragData.AlleleCount,
                     tumorFragData.Depth, sampleFragData.Depth, sampleFragData.QualTotal);
 
             umiTypeCounts.add(sampleFragData.UmiCounts);
@@ -138,7 +138,7 @@ public class SomaticPurityEstimator
         // calculate a limit-of-detection (LOD), being the number of fragments that would return a 99% confidence of a tumor presence
         if(!mConfig.SkipBqr)
         {
-            for(double threshold : SNV_QUAL_THRESHOLDS)
+            for(int threshold : SNV_QUAL_THRESHOLDS)
             {
                 calculateThresholdValues(sampleId, purityCalcData, variants, threshold);
             }
@@ -160,7 +160,7 @@ public class SomaticPurityEstimator
     }
 
     private void calculateThresholdValues(
-            final String sampleId, final PurityCalcData purityCalcData, final List<SomaticVariant> variants, double qualThreshold)
+            final String sampleId, final PurityCalcData purityCalcData, final List<SomaticVariant> variants, int qualThreshold)
     {
         List<BqrContextData> filteredBqrData = mBqrAdjustment.getThresholdBqrData(qualThreshold);
 
@@ -173,14 +173,14 @@ public class SomaticPurityEstimator
 
         for(SomaticVariant variant : variants)
         {
-            if(!hasVariantContext(filteredBqrData, variant.decorator().trinucleotideContext(), variant.Alt))
+            if(!hasVariantContext(filteredBqrData, variant.TriNucContext, variant.Alt))
                 continue;
 
             GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
             GenotypeFragments tumorFragData = variant.findGenotypeData(mSample.TumorId);
 
             fragmentTotals.addVariantData(
-                    variant.copyNumber(), variant.variantCopyNumber(), tumorFragData.AlleleCount, sampleFragData.AlleleCount,
+                    variant.CopyNumber, variant.VariantCopyNumber, tumorFragData.AlleleCount, sampleFragData.AlleleCount,
                     tumorFragData.Depth, sampleFragData.Depth, sampleFragData.QualTotal);
         }
 
@@ -197,21 +197,22 @@ public class SomaticPurityEstimator
                 fragmentTotals.sampleDepthTotal(), fragmentTotals.sampleAdTotal(), probability, lodPurityEstimate));
         */
 
-        purityCalcData.ExtraCalcData.add(format(
-                "BqrThreshold(%.0f variants=%d AD=%d DP=%d prob=%s lod=%s)",
+        purityCalcData.BqrExtraInfo.add(format(
+                "BqrThreshold(%d variants=%d AD=%d DP=%d prob=%s lod=%s)",
                 qualThreshold, fragmentTotals.variantCount(), fragmentTotals.sampleAdTotal(), fragmentTotals.sampleDepthTotal(),
                 formatProbabilityValue(probability), formatPurityValue(lodPurityEstimate)));
 
-        if(purityCalcData.Probability == CALC_NO_SET || probability < purityCalcData.Probability)
-            purityCalcData.Probability = lodPurityEstimate;
-
         if(purityCalcData.LodPurityEstimate == CALC_NO_SET || lodPurityEstimate < purityCalcData.LodPurityEstimate)
+        {
             purityCalcData.LodPurityEstimate = lodPurityEstimate;
+            purityCalcData.Probability = lodPurityEstimate;
+            purityCalcData.BqrQualThreshold = qualThreshold;
+        }
     }
 
     private static double medianVcn(final List<SomaticVariant> variants)
     {
-        List<Double> variantCopyNumbers = variants.stream().map(x -> x.variantCopyNumber()).collect(Collectors.toList());
+        List<Double> variantCopyNumbers = variants.stream().map(x -> x.VariantCopyNumber).collect(Collectors.toList());
         Collections.sort(variantCopyNumbers);
 
         int medIndex = variantCopyNumbers.size() / 2;

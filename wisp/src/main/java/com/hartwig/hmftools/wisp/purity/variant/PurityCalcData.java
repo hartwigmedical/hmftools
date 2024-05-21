@@ -13,10 +13,11 @@ public class PurityCalcData
     public double Probability;
     public double LodPurityEstimate;
     public double DualProbability;
+    public int BqrQualThreshold;
 
     public ClonalityData Clonality;
 
-    public final List<String> ExtraCalcData;
+    public final List<String> BqrExtraInfo;
 
     public static final double CALC_NO_SET = -1;
 
@@ -29,8 +30,9 @@ public class PurityCalcData
         LodPurityEstimate = CALC_NO_SET;
         Probability = CALC_NO_SET;
         DualProbability = CALC_NO_SET;
+        BqrQualThreshold = 0;
 
         Clonality = ClonalityData.NO_RESULT;
-        ExtraCalcData = Lists.newArrayList();
+        BqrExtraInfo = Lists.newArrayList();
     }
 }

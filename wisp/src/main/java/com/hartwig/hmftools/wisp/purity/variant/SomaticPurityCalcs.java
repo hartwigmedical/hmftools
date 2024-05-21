@@ -44,7 +44,6 @@ public final class SomaticPurityCalcs
         return probability;
     }
 
-
     private static final int MAX_ITERATIONS = 20;
     private static final double MIN_PROB_DIFF_PERC = 0.001;
 

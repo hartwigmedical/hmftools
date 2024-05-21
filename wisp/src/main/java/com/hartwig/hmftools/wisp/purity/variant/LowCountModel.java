@@ -43,7 +43,7 @@ public class LowCountModel extends ClonalityModel
 
         for(SomaticVariant variant : variants)
         {
-            if(variant.variantCopyNumber() > vcnThreshold)
+            if(variant.VariantCopyNumber > vcnThreshold)
                 continue;
 
             GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);

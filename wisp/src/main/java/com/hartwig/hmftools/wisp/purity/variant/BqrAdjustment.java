@@ -36,7 +36,7 @@ public class BqrAdjustment
 
     private static final byte NO_KEY_VALUE = 1;
 
-    public List<BqrContextData> getThresholdBqrData(final double qualThreshold)
+    public List<BqrContextData> getThresholdBqrData(final int qualThreshold)
     {
         return qualThreshold <= 0 ?
                 mBqrContextData : mBqrContextData.stream().filter(x -> x.calculatedQual() >= qualThreshold).collect(Collectors.toList());

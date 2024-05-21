@@ -84,7 +84,7 @@ public class PurityEstimator
 
             CT_LOGGER.debug("splitting {} patients across {} threads", mConfig.Samples.size(), purityCalcTasks.size());
 
-            final List<Callable> callableList = purityCalcTasks.stream().collect(Collectors.toList());
+            List<Callable> callableList = purityCalcTasks.stream().collect(Collectors.toList());
             if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             {
                 System.exit(1);
