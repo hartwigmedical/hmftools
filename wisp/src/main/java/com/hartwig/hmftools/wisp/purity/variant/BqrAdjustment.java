@@ -95,7 +95,10 @@ public class BqrAdjustment
         String bqrFilename = generateBqrFilename(bqrFileDir, sampleId);
 
         if(!Files.exists(Paths.get(bqrFilename)))
+        {
+            CT_LOGGER.warn("sample({}) missing BQR file: {}", sampleId, bqrFilename);
             return;
+        }
 
         List<BqrRecord> allCounts = BqrFile.read(bqrFilename);
 
