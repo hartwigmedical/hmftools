@@ -15,6 +15,8 @@ import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_INSERT;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_LENGTH;
 import static com.hartwig.hmftools.common.sv.LineElements.LINE_POLY_AT_REQ;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
+import static com.hartwig.hmftools.common.utils.Arrays.copyArray;
+import static com.hartwig.hmftools.esvee.assembly.types.RepeatInfo.calcTrimmedBaseLength;
 import static com.hartwig.hmftools.esvee.common.CommonUtils.isDiscordantFragment;
 import static com.hartwig.hmftools.esvee.common.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.esvee.prep.PrepConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
@@ -25,9 +27,14 @@ import static com.hartwig.hmftools.esvee.prep.PrepConstants.REPEAT_BREAK_MIN_SC_
 
 import static htsjdk.samtools.CigarOperator.M;
 
+import java.util.Arrays;
+import java.util.List;
+
 import com.hartwig.hmftools.common.genome.region.Orientation;
+import com.hartwig.hmftools.esvee.assembly.types.RepeatInfo;
 
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadFilters
@@ -228,5 +235,37 @@ public class ReadFilters
         }
 
         return allMatch;
+    }
+
+    public static boolean aboveRepeatTrimmedAlignmentThreshold(final PrepRead read, final int minLength)
+    {
+        int readIndex = 0;
+
+        int alignedLength = read.cigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
+
+        if(alignedLength == 0)
+            return false;
+
+        byte[] alignedBases = new byte[alignedLength];
+        int alignedIndex = 0;
+
+        for(CigarElement element : read.cigar().getCigarElements())
+        {
+            if(element.getOperator() == M)
+            {
+                copyArray(read.record().getReadBases(), alignedBases, readIndex, readIndex + element.getLength(), alignedIndex);
+                alignedIndex += element.getLength();
+            }
+
+            if(element.getOperator().consumesReadBases())
+                readIndex += element.getLength();
+        }
+
+        List<RepeatInfo> repeats = RepeatInfo.findRepeats(alignedBases);
+
+        int repeatTrimmedLength = repeats != null ?
+                calcTrimmedBaseLength(0, alignedBases.length - 1, repeats) : alignedBases.length;
+
+        return repeatTrimmedLength >= minLength;
     }
 }

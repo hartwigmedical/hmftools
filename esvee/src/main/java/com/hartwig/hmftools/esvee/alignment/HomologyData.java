@@ -28,6 +28,8 @@ public class HomologyData
         InexactEnd = inexactEnd;
     }
 
+    public int inexactLength() { return InexactEnd - InexactStart; }
+
     public String toString() { return format("%s exact(%d,%d) inexact(%d,%d)", Homology, ExactStart, ExactEnd, InexactStart, ExactEnd); }
 
     public static HomologyData determineHomology(

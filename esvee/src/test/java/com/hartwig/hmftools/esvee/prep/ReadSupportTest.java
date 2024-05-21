@@ -10,12 +10,16 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.DEFAULT_MAP_QU
 import static com.hartwig.hmftools.esvee.TestUtils.READ_ID_GENERATOR;
 import static com.hartwig.hmftools.esvee.TestUtils.buildFlags;
 import static com.hartwig.hmftools.esvee.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.esvee.TestUtils.makeCigarString;
 import static com.hartwig.hmftools.esvee.TestUtils.readIdStr;
+import static com.hartwig.hmftools.esvee.prep.PrepConstants.MIN_ALIGNMENT_BASES;
 import static com.hartwig.hmftools.esvee.prep.TestUtils.READ_FILTERS;
 import static com.hartwig.hmftools.esvee.prep.JunctionTracker.hasOtherJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.JunctionTracker.hasExactJunctionSupport;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.INSERT_MAP_OVERLAP;
+import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.MIN_ALIGN_MATCH;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilterType.SOFT_CLIP_LENGTH;
+import static com.hartwig.hmftools.esvee.prep.types.ReadFilters.aboveRepeatTrimmedAlignmentThreshold;
 import static com.hartwig.hmftools.esvee.prep.types.ReadFilters.isRepetitiveSectionBreak;
 
 import static junit.framework.TestCase.assertFalse;
@@ -45,26 +49,25 @@ public class ReadSupportTest
     @Test
     public void testExactSupportingReads()
     {
-        int readId = 1;
         PrepRead junctionRead = PrepRead.from(createSamRecord(
-                readIdStr(readId++), CHR_1, 230, REF_BASES.substring(0, 100), "30S70M"));
+                READ_ID_GENERATOR.nextId(), CHR_1, 230, REF_BASES.substring(0, 100), "30S70M"));
 
         JunctionData junctionData = new JunctionData(230, REVERSE, junctionRead);
 
         // exact position match
         PrepRead supportRead = PrepRead.from(createSamRecord(
-                readIdStr(readId++), CHR_1, 230, REF_BASES.substring(29, 100), "1S70M"));
+                READ_ID_GENERATOR.nextId(), CHR_1, 230, REF_BASES.substring(29, 100), "1S70M"));
 
         assertTrue(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // offset to an earlier base
         supportRead = PrepRead.from(createSamRecord(
-                readIdStr(readId++), CHR_1, 225, REF_BASES.substring(22, 100), "3S72M"));
+                READ_ID_GENERATOR.nextId(), CHR_1, 225, REF_BASES.substring(22, 100), "3S72M"));
 
         assertTrue(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // offset to an later base
-        SAMRecord record = createSamRecord(readIdStr(readId++), CHR_1, 234, REF_BASES.substring(24, 100), "10S66M");
+        SAMRecord record = createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 234, REF_BASES.substring(24, 100), "10S66M");
         supportRead = PrepRead.from(record);
 
         assertTrue(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
@@ -148,21 +151,20 @@ public class ReadSupportTest
     @Test
     public void testHardClipSupport()
     {
-        int readId = 1;
         PrepRead junctionRead = PrepRead.from(createSamRecord(
-                readIdStr(readId++), CHR_1, 230, REF_BASES.substring(0, 100), "30S70M"));
+                READ_ID_GENERATOR.nextId(), CHR_1, 230, REF_BASES.substring(0, 100), "30S70M"));
 
         JunctionData junctionData = new JunctionData(230, REVERSE, junctionRead);
 
         // exact position match
         PrepRead supportRead = PrepRead.from(createSamRecord(
-                readIdStr(readId++), CHR_1, 230, REF_BASES.substring(30, 100), "1H70M"));
+                READ_ID_GENERATOR.nextId(), CHR_1, 230, REF_BASES.substring(30, 100), "1H70M"));
 
         assertTrue(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // a few ref bases extend past the junction
         supportRead = PrepRead.from(createSamRecord(
-                readIdStr(readId++), CHR_1, 227, REF_BASES.substring(27, 100), "1H73M"));
+                READ_ID_GENERATOR.nextId(), CHR_1, 227, REF_BASES.substring(27, 100), "1H73M"));
 
         assertTrue(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
@@ -174,14 +176,34 @@ public class ReadSupportTest
 
         // exact position match
         supportRead = PrepRead.from(createSamRecord(
-                readIdStr(readId++), CHR_1, 200, REF_BASES.substring(0, 50), "50M3H"));
+                READ_ID_GENERATOR.nextId(), CHR_1, 200, REF_BASES.substring(0, 50), "50M3H"));
 
         assertTrue(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         supportRead = PrepRead.from(createSamRecord(
-                readIdStr(readId++), CHR_1, 200, REF_BASES.substring(0, 53), "53M30H"));
+                READ_ID_GENERATOR.nextId(), CHR_1, 200, REF_BASES.substring(0, 53), "53M30H"));
 
         assertTrue(hasExactJunctionSupport(supportRead, junctionData, READ_FILTERS));
+    }
+
+    @Test
+    public void testReadRepeatTrimming()
+    {
+        String readBases = "ACGTACGTAA" + REF_BASES.substring(10, 40) + REF_BASES.substring(50, 70) + "GGGGGGGGGG" + REF_BASES.substring(70, 100);
+
+        PrepRead read = PrepRead.from(createSamRecord(
+                READ_ID_GENERATOR.nextId(), CHR_1, 10, readBases, "10S30M10D20M10I30M"));
+
+        assertTrue(aboveRepeatTrimmedAlignmentThreshold(read, MIN_ALIGNMENT_BASES));
+
+        String repeat1 = "ACGTT";
+        String repeat2 = "AAGG";
+        readBases = "CGT" + repeat1 + repeat1 + repeat1 + repeat1 + repeat1 + repeat1
+                + "TGAT" + repeat2 + repeat2 + repeat2 + repeat2 + repeat2 + repeat2 + repeat2 + repeat2 + "AAT";
+
+        read = PrepRead.from(createSamRecord(READ_ID_GENERATOR.nextId(), CHR_1, 10, readBases, makeCigarString(readBases, 0, 0)));
+
+        assertFalse(aboveRepeatTrimmedAlignmentThreshold(read, MIN_ALIGNMENT_BASES));
     }
 
     @Test

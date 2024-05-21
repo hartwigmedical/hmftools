@@ -141,7 +141,7 @@ public class JunctionData
     public String toString()
     {
         return format("loc(%d:%d) frags(junc=%d exact=%d supp=%d) remotes(%d) disc(%s) indel(%s)",
-                Position, Orient, junctionFragmentCount(), exactSupportFragmentCount(), supportingFragmentCount(),
+                Position, Orient.asByte(), junctionFragmentCount(), exactSupportFragmentCount(), supportingFragmentCount(),
                 RemoteJunctions.size(), mDiscordantGroup, mInternalIndel);
     }
 }

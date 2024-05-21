@@ -354,6 +354,13 @@ public class BreakendBuilder
             breakend.setOtherBreakend(nextBreakend);
             nextBreakend.setOtherBreakend(breakend);
 
+            if(homology != null)
+            {
+                int inexactLength = homology.inexactLength();
+                alignment.setRepeatTrimmedLength(fullSequence, inexactLength, false);
+                nextAlignment.setRepeatTrimmedLength(fullSequence, inexactLength, true);
+            }
+
             List<AlternativeAlignment> altAlignments = buildAltAlignments(alignment, nextAlignment, zeroQualAlignments);
 
             if(altAlignments != null && !altAlignments.isEmpty())
