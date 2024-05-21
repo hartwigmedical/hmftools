@@ -73,8 +73,6 @@ public class SomaticPurityEstimator
         if(!mConfig.SkipBqr)
             mBqrAdjustment.loadBqrData(sampleId);
 
-        double tumorPurity = purityContext.bestFit().purity();
-
         if(mConfig.hasSyntheticTumor())
         {
             fragmentTotals.setTumorVafOverride(SYNTHETIC_TUMOR_VAF);
@@ -85,11 +83,21 @@ public class SomaticPurityEstimator
         // firstly estimate raw purity without consideration of clonal peaks
         double noiseRate = mConfig.noiseRate(false);
 
-        // purityCalcData.RawPurityEstimate = estimatedPurityOld(
-        //        tumorPurity, fragmentTotals.adjTumorVaf(), fragmentTotals.adjSampleVaf(), noiseRate);
-
-        purityCalcData.RawPurityEstimate = estimatedPurity(fragmentTotals.rawSampleVaf(), noiseRate, fragmentTotals);
-
+        // calculate a limit-of-detection (LOD), being the number of fragments that would return a 99% confidence of a tumor presence
+        if(!mConfig.SkipBqr)
+        {
+            for(int threshold : SNV_QUAL_THRESHOLDS)
+            {
+                calculateThresholdValues(sampleId, purityCalcData, variants, threshold);
+            }
+        }
+        else
+        {
+            purityCalcData.RawPurityEstimate = estimatedPurity(fragmentTotals.rawSampleVaf(), noiseRate, fragmentTotals);
+            purityCalcData.Probability = estimatedProbability(fragmentTotals, noiseRate);
+            purityCalcData.LodPurityEstimate = calcLimitOfDetection(fragmentTotals, noiseRate);
+            purityCalcData.ErrorRate = noiseRate;
+        }
         purityCalcData.PurityEstimate = purityCalcData.RawPurityEstimate;
 
         ClonalityModel model = null;
@@ -133,20 +141,6 @@ public class SomaticPurityEstimator
             double highProbAlleleCount = calcPoissonNoiseValue(alleleCount, LOW_PROBABILITY);
             double sampleAdjVafHigh = highProbAlleleCount / fragmentTotals.sampleDepthTotal();
             purityCalcData.PurityRangeHigh = estimatedPurity(sampleAdjVafHigh, noiseRate, fragmentTotals);
-        }
-
-        // calculate a limit-of-detection (LOD), being the number of fragments that would return a 99% confidence of a tumor presence
-        if(!mConfig.SkipBqr)
-        {
-            for(int threshold : SNV_QUAL_THRESHOLDS)
-            {
-                calculateThresholdValues(sampleId, purityCalcData, variants, threshold);
-            }
-        }
-        else
-        {
-            purityCalcData.Probability = estimatedProbability(fragmentTotals, noiseRate);
-            purityCalcData.LodPurityEstimate = calcLimitOfDetection(fragmentTotals, noiseRate);
         }
 
         // report final probability as min of Dual and Normal Prob
@@ -205,8 +199,10 @@ public class SomaticPurityEstimator
         if(purityCalcData.LodPurityEstimate == CALC_NO_SET || lodPurityEstimate < purityCalcData.LodPurityEstimate)
         {
             purityCalcData.LodPurityEstimate = lodPurityEstimate;
-            purityCalcData.Probability = lodPurityEstimate;
+            purityCalcData.Probability = probability;
             purityCalcData.BqrQualThreshold = qualThreshold;
+            purityCalcData.ErrorRate = bqrErrorRate;
+            purityCalcData.RawPurityEstimate = estimatedPurity(fragmentTotals.rawSampleVaf(), bqrErrorRate, fragmentTotals);
         }
     }
 
