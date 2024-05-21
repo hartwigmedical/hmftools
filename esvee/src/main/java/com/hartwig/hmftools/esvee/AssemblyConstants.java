@@ -21,6 +21,7 @@ public final class AssemblyConstants
     public static final int PROXIMATE_REF_SIDE_SOFT_CLIPS = 3;
     public static final int PRIMARY_ASSEMBLY_MIN_SOFT_CLIP_LENGTH = MIN_VARIANT_LENGTH;
     public static final int PRIMARY_ASSEMBLY_MAX_NON_SOFT_CLIP_OVERLAP = 3;
+    public static final int PRIMARY_ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH = 2;
 
     // primary assembly deduplication
     public static final int PRIMARY_ASSEMBLY_CONSENSUS_MISMATCH = 1;

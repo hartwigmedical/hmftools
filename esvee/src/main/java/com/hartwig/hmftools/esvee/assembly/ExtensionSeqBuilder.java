@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASE_BYTES;
 import static com.hartwig.hmftools.common.utils.Arrays.subsetArray;
+import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH;
 import static com.hartwig.hmftools.esvee.AssemblyConstants.PRIMARY_ASSEMBLY_MIN_READ_SUPPORT;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.N_BASE;
 import static com.hartwig.hmftools.esvee.assembly.AssemblyUtils.mismatchesPerComparisonLength;
@@ -60,6 +61,11 @@ public class ExtensionSeqBuilder
             // for negative orientations, if read length is 10, and junction index is at 4, then extends with indices 0-3 ie 4
             int extensionLength = junction.isForward() ? read.basesLength() - readJunctionIndex - 1 : readJunctionIndex;
 
+            // indel-based reads may have much shorter extensions than the typical 32-base requirement, so ensure they can extend far enough
+            // to satisfy the min-high-qual match filter used post-consensus
+            if(extensionLength < PRIMARY_ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
+                continue;
+
             maxExtension = max(maxExtension, extensionLength);
 
             mReads.add(new ReadState(read, readJunctionIndex, extensionLength));
@@ -100,8 +106,11 @@ public class ExtensionSeqBuilder
             if(read.exceedsMaxMismatches())
                 continue;
 
+            if(read.highQualMatches() < PRIMARY_ASSEMBLY_MIN_EXTENSION_READ_HIGH_QUAL_MATCH)
+                continue;
+
             supportReads.add(new SupportRead(
-                    read.read(), SupportType.JUNCTION, read.junctionIndex(), read.matchedBases(), read.Mismatches));
+                    read.read(), SupportType.JUNCTION, read.junctionIndex(), read.matchedBases(), read.mismatches()));
         }
 
         return supportReads;
@@ -239,7 +248,9 @@ public class ExtensionSeqBuilder
                 if(qual >= LOW_BASE_QUAL_THRESHOLD && mBaseQuals[extensionIndex] >= LOW_BASE_QUAL_THRESHOLD)
                 {
                     if(base != mBases[extensionIndex])
-                        ++read.Mismatches;
+                        read.addMismatch();
+                    else
+                        read.addHighQualMatch();
                 }
 
                 read.moveNext(mIsForward);
@@ -284,7 +295,7 @@ public class ExtensionSeqBuilder
             read.resetIndex();
 
             if(!read.exceedsMaxMismatches())
-                read.Mismatches = 0;
+                read.resetMatches();
         }
 
         while(extensionIndex >= 0 && extensionIndex < mBases.length)
@@ -300,7 +311,9 @@ public class ExtensionSeqBuilder
                 if(qual >= LOW_BASE_QUAL_THRESHOLD && mBaseQuals[extensionIndex] >= LOW_BASE_QUAL_THRESHOLD)
                 {
                     if(base != mBases[extensionIndex])
-                        ++read.Mismatches;
+                        read.addMismatch();
+                    else
+                        read.addHighQualMatch();
                 }
 
                 read.moveNext(mIsForward);
@@ -312,23 +325,7 @@ public class ExtensionSeqBuilder
                 --extensionIndex;
         }
 
-        /* this is no longer done during extension building but handled when re-testing all junction reads
-
-        List<ReadState> mismatchReads = mReads.stream().filter(x -> x.exceedsMaxMismatches()).collect(Collectors.toList());
-
-        if(mismatchReads.isEmpty())
-            return;
-
-        // test mismatch reads using the sequence matcher
-        mismatchReads.forEach(x -> x.resetIndex());
-        mismatchReads.forEach(x -> x.Mismatches = 0);
-
-        for(ReadState read : mismatchReads)
-        {
-            read.Mismatches = calcReadSequenceMismatches(
-                    mIsForward, mBases, mBaseQuals, mExtensionRepeats, read.read(), read.junctionIndex(), mMaxMismatches);
-        }
-        */
+        // no longer use the sequence matcher on reads exceeding the mismatch limit - this is just handled when re-testing all junction reads
     }
 
     private void determineFinalBases()
@@ -398,7 +395,8 @@ public class ExtensionSeqBuilder
         private boolean mExhausted;
         private final int mPermittedMismatches;
 
-        public int Mismatches;
+        private int mMismatches;
+        public int mHighQualMatches;
 
         public ReadState(final Read read, final int junctionIndex, final int extensionLength)
         {
@@ -409,15 +407,31 @@ public class ExtensionSeqBuilder
             mPermittedMismatches = mismatchesPerComparisonLength(extensionLength);
             mExhausted = false;
 
-            Mismatches = 0;
+            mMismatches = 0;
+            mHighQualMatches = 0;
         }
 
         public Read read() { return mRead; }
         public int junctionIndex() { return mJunctionIndex; }
         public int extensionLength() { return mExtensionLength; }
-        public int matchedBases() { return mExtensionLength - Mismatches; }
-        public boolean exceedsMaxMismatches() { return Mismatches > mPermittedMismatches; }
+        public int matchedBases() { return mExtensionLength - mMismatches; }
+        public int mismatches() { return mMismatches; }
+        public int highQualMatches() { return mHighQualMatches; }
+        public boolean exceedsMaxMismatches() { return mMismatches > mPermittedMismatches; }
         public boolean exhausted() { return mExhausted; }
+
+        public void resetMatches()
+        {
+            mMismatches = 0;
+            mHighQualMatches = 0;
+        }
+
+        public void addMismatch() { ++mMismatches; }
+        public void addHighQualMatch()
+        {
+            if(mCurrentIndex != mJunctionIndex)
+                ++mHighQualMatches;
+        }
 
         public byte currentBase() { return mRead.getBases()[mCurrentIndex]; }
         public byte currentQual() { return mRead.getBaseQuality()[mCurrentIndex]; }
@@ -440,9 +454,9 @@ public class ExtensionSeqBuilder
 
         public String toString()
         {
-            return format("%s: range(%d - %d) cigar(%s) extLen(%d) curIndex(%d) mismatches(%d/%d) %s",
+            return format("%s: range(%d - %d) cigar(%s) extLen(%d) curIndex(%d) hqMatch(%d) mismatches(%d/%d) %s",
                     mRead.id(), mRead.unclippedStart(), mRead.unclippedEnd(), mRead.cigarString(),
-                    mExtensionLength, mCurrentIndex, Mismatches, mPermittedMismatches, mExhausted ? "exhausted" : "");
+                    mExtensionLength, mCurrentIndex, mHighQualMatches, mMismatches, mPermittedMismatches, mExhausted ? "exhausted" : "");
         }
     }
 
